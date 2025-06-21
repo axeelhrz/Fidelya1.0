@@ -110,44 +110,55 @@ export default function AlertsTasksDock() {
   const getAlertIcon = (level: string) => {
     switch (level) {
       case 'critical':
-        return <AlertTriangle className="w-4 h-4 text-error" />;
+        return <AlertTriangle size={16} color="#EF4444" />;
       case 'warning':
-        return <AlertCircle className="w-4 h-4 text-warning" />;
+        return <AlertCircle size={16} color="#F59E0B" />;
       default:
-        return <Info className="w-4 h-4 text-info" />;
+        return <Info size={16} color="#3B82F6" />;
     }
   };
 
   const getAlertBgColor = (level: string) => {
     switch (level) {
       case 'critical':
-        return 'bg-error-bg border-l-error';
+        return '#FEF2F2';
       case 'warning':
-        return 'bg-warning-bg border-l-warning';
+        return '#FFFBEB';
       default:
-        return 'bg-info-bg border-l-info';
+        return '#EFF6FF';
+    }
+  };
+
+  const getAlertBorderColor = (level: string) => {
+    switch (level) {
+      case 'critical':
+        return '#EF4444';
+      case 'warning':
+        return '#F59E0B';
+      default:
+        return '#3B82F6';
     }
   };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'high':
-        return 'bg-error text-inverse';
+        return { bg: '#EF4444', text: 'white' };
       case 'medium':
-        return 'bg-warning text-inverse';
+        return { bg: '#F59E0B', text: 'white' };
       default:
-        return 'bg-surface-elevated text-secondary border border-border-light';
+        return { bg: '#E5E7EB', text: '#6B7280' };
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'done':
-        return 'bg-success text-inverse';
+        return { bg: '#10B981', text: 'white' };
       case 'in-progress':
-        return 'bg-accent text-inverse';
+        return { bg: '#2463EB', text: 'white' };
       default:
-        return 'bg-surface-elevated text-secondary border border-border-light';
+        return { bg: '#E5E7EB', text: '#6B7280' };
     }
   };
 
@@ -202,22 +213,67 @@ export default function AlertsTasksDock() {
     <motion.div
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
-      className="bg-surface rounded-card border border-border-light shadow-card"
+      style={{
+        width: '320px',
+        height: '80vh',
+        background: 'rgba(255, 255, 255, 0.9)',
+        backdropFilter: 'blur(20px)',
+        borderRadius: '1.5rem',
+        border: '1px solid rgba(229, 231, 235, 0.6)',
+        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden'
+      }}
     >
       {/* Header con tabs */}
-      <div className="p-4 border-b border-border-light">
-        <div className="flex space-x-1 bg-surface-elevated rounded-lg p-1">
+      <div style={{
+        padding: '1.5rem',
+        borderBottom: '1px solid rgba(229, 231, 235, 0.6)'
+      }}>
+        <div style={{
+          display: 'flex',
+          gap: '0.25rem',
+          background: 'rgba(249, 250, 251, 0.8)',
+          borderRadius: '12px',
+          padding: '0.25rem'
+        }}>
           <button
             onClick={() => setActiveTab('alerts')}
-            className={`
-              flex-1 flex items-center justify-center space-x-2 py-2.5 px-3 rounded-md text-sm font-medium transition-all
-              ${activeTab === 'alerts' ? 'bg-surface text-primary shadow-sm' : 'text-secondary hover:text-primary'}
-            `}
+            style={{
+              flex: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.5rem',
+              padding: '0.75rem 1rem',
+              borderRadius: '8px',
+              fontSize: '0.875rem',
+              fontWeight: 500,
+              transition: 'all 0.2s ease',
+              border: 'none',
+              cursor: 'pointer',
+              background: activeTab === 'alerts' ? 'white' : 'transparent',
+              color: activeTab === 'alerts' ? '#2463EB' : '#6B7280',
+              boxShadow: activeTab === 'alerts' ? '0 2px 4px rgba(0, 0, 0, 0.05)' : 'none',
+              fontFamily: 'Inter, sans-serif'
+            }}
           >
-            <Bell className="w-4 h-4" />
+            <Bell size={16} />
             <span>Alertas</span>
             {unreadAlertsCount > 0 && (
-              <span className="bg-error text-inverse text-xs rounded-full px-1.5 py-0.5 min-w-[18px] h-4 flex items-center justify-center">
+              <span style={{
+                backgroundColor: '#EF4444',
+                color: 'white',
+                fontSize: '0.75rem',
+                borderRadius: '50%',
+                width: '18px',
+                height: '18px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: 600
+              }}>
                 {unreadAlertsCount}
               </span>
             )}
@@ -225,15 +281,40 @@ export default function AlertsTasksDock() {
           
           <button
             onClick={() => setActiveTab('tasks')}
-            className={`
-              flex-1 flex items-center justify-center space-x-2 py-2.5 px-3 rounded-md text-sm font-medium transition-all
-              ${activeTab === 'tasks' ? 'bg-surface text-primary shadow-sm' : 'text-secondary hover:text-primary'}
-            `}
+            style={{
+              flex: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.5rem',
+              padding: '0.75rem 1rem',
+              borderRadius: '8px',
+              fontSize: '0.875rem',
+              fontWeight: 500,
+              transition: 'all 0.2s ease',
+              border: 'none',
+              cursor: 'pointer',
+              background: activeTab === 'tasks' ? 'white' : 'transparent',
+              color: activeTab === 'tasks' ? '#2463EB' : '#6B7280',
+              boxShadow: activeTab === 'tasks' ? '0 2px 4px rgba(0, 0, 0, 0.05)' : 'none',
+              fontFamily: 'Inter, sans-serif'
+            }}
           >
-            <CheckSquare className="w-4 h-4" />
+            <CheckSquare size={16} />
             <span>Tareas</span>
             {pendingTasksCount > 0 && (
-              <span className="bg-accent text-inverse text-xs rounded-full px-1.5 py-0.5 min-w-[18px] h-4 flex items-center justify-center">
+              <span style={{
+                backgroundColor: '#2463EB',
+                color: 'white',
+                fontSize: '0.75rem',
+                borderRadius: '50%',
+                width: '18px',
+                height: '18px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: 600
+              }}>
                 {pendingTasksCount}
               </span>
             )}
@@ -241,26 +322,58 @@ export default function AlertsTasksDock() {
         </div>
       </div>
 
-      {/* Search and Filters */}
-      <div className="p-4 border-b border-border-light">
-        <div className="relative mb-3">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-secondary" />
+      {/* Buscador */}
+      <div style={{
+        padding: '1rem 1.5rem',
+        borderBottom: '1px solid rgba(229, 231, 235, 0.6)'
+      }}>
+        <div style={{ position: 'relative', marginBottom: '0.75rem' }}>
+          <Search size={16} style={{
+            position: 'absolute',
+            left: '0.75rem',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            color: '#6B7280'
+          }} />
           <input
             type="text"
             placeholder={`Buscar ${activeTab === 'alerts' ? 'alertas' : 'tareas'}...`}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-surface-elevated rounded-lg border border-border-light focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent text-sm"
+            style={{
+              width: '100%',
+              paddingLeft: '2.5rem',
+              paddingRight: '1rem',
+              paddingTop: '0.75rem',
+              paddingBottom: '0.75rem',
+              background: 'rgba(249, 250, 251, 0.8)',
+              borderRadius: '8px',
+              border: '1px solid rgba(229, 231, 235, 0.6)',
+              fontSize: '0.875rem',
+              transition: 'all 0.2s ease',
+              outline: 'none',
+              fontFamily: 'Inter, sans-serif'
+            }}
           />
         </div>
 
         {activeTab === 'tasks' && (
-          <div className="flex items-center space-x-2">
-            <Filter className="w-4 h-4 text-secondary" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Filter size={16} color="#6B7280" />
             <select
               value={taskFilter}
               onChange={(e) => setTaskFilter(e.target.value as any)}
-              className="flex-1 text-xs bg-surface-elevated border border-border-light rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-accent"
+              style={{
+                flex: 1,
+                fontSize: '0.75rem',
+                background: 'rgba(249, 250, 251, 0.8)',
+                border: '1px solid rgba(229, 231, 235, 0.6)',
+                borderRadius: '6px',
+                padding: '0.5rem 0.75rem',
+                outline: 'none',
+                cursor: 'pointer',
+                fontFamily: 'Inter, sans-serif'
+              }}
             >
               <option value="all">Todas las tareas</option>
               <option value="today">Vencen hoy</option>
@@ -268,15 +381,26 @@ export default function AlertsTasksDock() {
               <option value="month">Este mes</option>
             </select>
             
-            <button className="p-1.5 rounded-lg hover:bg-surface-hover transition-colors">
-              <Plus className="w-4 h-4 text-secondary" />
+            <button style={{
+              padding: '0.5rem',
+              borderRadius: '6px',
+              border: 'none',
+              background: 'rgba(249, 250, 251, 0.8)',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
+            }}>
+              <Plus size={16} color="#6B7280" />
             </button>
           </div>
         )}
       </div>
 
-      {/* Content */}
-      <div className="h-96 overflow-y-auto">
+      {/* Contenido con scroll interno */}
+      <div style={{
+        flex: 1,
+        overflowY: 'auto',
+        padding: '1rem 1.5rem'
+      }}>
         <AnimatePresence mode="wait">
           {activeTab === 'alerts' ? (
             <motion.div
@@ -284,12 +408,14 @@ export default function AlertsTasksDock() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="p-4 space-y-3"
+              style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}
             >
               {filteredAlerts.length === 0 ? (
-                <div className="text-center py-8">
-                  <Bell className="w-8 h-8 text-tertiary mx-auto mb-2" />
-                  <p className="text-sm text-secondary">No hay alertas</p>
+                <div style={{ textAlign: 'center', padding: '2rem 0' }}>
+                  <Bell size={32} color="#9CA3AF" style={{ marginBottom: '0.5rem' }} />
+                  <p style={{ fontSize: '0.875rem', color: '#6B7280', fontFamily: 'Inter, sans-serif' }}>
+                    No hay alertas
+                  </p>
                 </div>
               ) : (
                 filteredAlerts.map((alert, index) => (
@@ -298,23 +424,47 @@ export default function AlertsTasksDock() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.05 }}
-                    className={`
-                      p-3 rounded-lg border-l-4 cursor-pointer transition-all hover:shadow-sm
-                      ${getAlertBgColor(alert.level)} ${alert.isRead ? 'opacity-60' : ''}
-                    `}
+                    style={{
+                      padding: '1rem',
+                      borderRadius: '12px',
+                      background: getAlertBgColor(alert.level),
+                      borderLeft: `4px solid ${getAlertBorderColor(alert.level)}`,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      opacity: alert.isRead ? 0.7 : 1
+                    }}
                   >
-                    <div className="flex items-start space-x-3">
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
                       {getAlertIcon(alert.level)}
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-primary text-sm mb-1 line-clamp-1">
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <h4 style={{
+                          fontSize: '0.875rem',
+                          fontWeight: 600,
+                          color: '#1C1E21',
+                          marginBottom: '0.25rem',
+                          lineHeight: 1.3,
+                          fontFamily: 'Inter, sans-serif'
+                        }}>
                           {alert.title}
                         </h4>
-                        <p className="text-xs text-secondary mb-2 line-clamp-2">
+                        <p style={{
+                          fontSize: '0.75rem',
+                          color: '#6B7280',
+                          marginBottom: '0.5rem',
+                          lineHeight: 1.4,
+                          fontFamily: 'Inter, sans-serif'
+                        }}>
                           {alert.description}
                         </p>
-                        <div className="flex items-center space-x-2 text-xs text-tertiary">
-                          <Clock className="w-3 h-3" />
-                          <span>{format(alert.timestamp, 'HH:mm', { locale: es })}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                          <Clock size={12} color="#9CA3AF" />
+                          <span style={{
+                            fontSize: '0.75rem',
+                            color: '#9CA3AF',
+                            fontFamily: 'Inter, sans-serif'
+                          }}>
+                            {format(alert.timestamp, 'HH:mm', { locale: es })}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -328,12 +478,14 @@ export default function AlertsTasksDock() {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}
-              className="p-4 space-y-3"
+              style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}
             >
               {filteredTasks.length === 0 ? (
-                <div className="text-center py-8">
-                  <CheckSquare className="w-8 h-8 text-tertiary mx-auto mb-2" />
-                  <p className="text-sm text-secondary">No hay tareas</p>
+                <div style={{ textAlign: 'center', padding: '2rem 0' }}>
+                  <CheckSquare size={32} color="#9CA3AF" style={{ marginBottom: '0.5rem' }} />
+                  <p style={{ fontSize: '0.875rem', color: '#6B7280', fontFamily: 'Inter, sans-serif' }}>
+                    No hay tareas
+                  </p>
                 </div>
               ) : (
                 filteredTasks.map((task, index) => (
@@ -342,40 +494,79 @@ export default function AlertsTasksDock() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.05 }}
-                    className={`
-                      p-3 rounded-lg border border-border-light cursor-pointer transition-all hover:shadow-sm hover:border-border-medium
-                      ${task.status === 'done' ? 'opacity-60' : ''}
-                    `}
+                    style={{
+                      padding: '1rem',
+                      borderRadius: '12px',
+                      border: '1px solid rgba(229, 231, 235, 0.6)',
+                      background: 'rgba(255, 255, 255, 0.8)',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      opacity: task.status === 'done' ? 0.7 : 1
+                    }}
+                    whileHover={{
+                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
+                      borderColor: 'rgba(209, 213, 219, 0.8)'
+                    }}
                   >
-                    <div className="flex items-start justify-between mb-2">
-                      <h4 className="font-medium text-primary text-sm flex-1 line-clamp-1">
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                      <h4 style={{
+                        fontSize: '0.875rem',
+                        fontWeight: 600,
+                        color: '#1C1E21',
+                        flex: 1,
+                        lineHeight: 1.3,
+                        fontFamily: 'Inter, sans-serif'
+                      }}>
                         {task.title}
                       </h4>
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ml-2 ${getPriorityColor(task.priority)}`}>
+                      <span style={{
+                        padding: '0.25rem 0.5rem',
+                        borderRadius: '6px',
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        marginLeft: '0.5rem',
+                        backgroundColor: getPriorityColor(task.priority).bg,
+                        color: getPriorityColor(task.priority).text,
+                        fontFamily: 'Inter, sans-serif'
+                      }}>
                         {task.priority === 'high' ? 'Alta' : task.priority === 'medium' ? 'Media' : 'Baja'}
                       </span>
                     </div>
                     
-                    <p className="text-xs text-secondary mb-3 line-clamp-2">
+                    <p style={{
+                      fontSize: '0.75rem',
+                      color: '#6B7280',
+                      marginBottom: '0.75rem',
+                      lineHeight: 1.4,
+                      fontFamily: 'Inter, sans-serif'
+                    }}>
                       {task.description}
                     </p>
                     
-                    <div className="flex items-center justify-between text-xs mb-2">
-                      <div className="flex items-center space-x-2">
-                        <User className="w-3 h-3 text-secondary" />
-                        <span className="text-secondary">{task.assignedTo}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: '0.5rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                        <User size={12} color="#6B7280" />
+                        <span style={{ color: '#6B7280', fontFamily: 'Inter, sans-serif' }}>{task.assignedTo}</span>
                       </div>
                       
-                      <div className="flex items-center space-x-2">
-                        <Calendar className="w-3 h-3 text-secondary" />
-                        <span className="text-secondary">
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                        <Calendar size={12} color="#6B7280" />
+                        <span style={{ color: '#6B7280', fontFamily: 'Inter, sans-serif' }}>
                           {format(task.dueDate, 'dd/MM', { locale: es })}
                         </span>
                       </div>
                     </div>
                     
                     <div>
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(task.status)}`}>
+                      <span style={{
+                        padding: '0.25rem 0.5rem',
+                        borderRadius: '6px',
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        backgroundColor: getStatusColor(task.status).bg,
+                        color: getStatusColor(task.status).text,
+                        fontFamily: 'Inter, sans-serif'
+                      }}>
                         {getStatusText(task.status)}
                       </span>
                     </div>
@@ -386,6 +577,28 @@ export default function AlertsTasksDock() {
           )}
         </AnimatePresence>
       </div>
+
+      {/* Estilos CSS para scrollbar personalizada */}
+      <style jsx>{`
+        div::-webkit-scrollbar {
+          width: 6px;
+        }
+        
+        div::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        
+        div::-webkit-scrollbar-thumb {
+          background: rgba(209, 213, 219, 0.6);
+          border-radius: 3px;
+          transition: all 0.2s ease;
+        }
+        
+        div::-webkit-scrollbar-thumb:hover {
+          background: rgba(156, 163, 175, 0.8);
+        }
+      `}</style>
     </motion.div>
   );
 }
+
