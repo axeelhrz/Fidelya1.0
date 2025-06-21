@@ -30,43 +30,6 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL('https://centro-psicologico.com'),
-  alternates: {
-    canonical: '/',
-  },
-  openGraph: {
-    title: 'Centro Psicológico | Plataforma Profesional',
-    description: 'Gestión inteligente para centros psicológicos profesionales',
-    url: 'https://centro-psicologico.com',
-    siteName: 'Centro Psicológico',
-    locale: 'es_ES',
-    type: 'website',
-    images: [
-      {
-        url: '/og-image.jpg',
-        width: 1200,
-        height: 630,
-        alt: 'Centro Psicológico - Plataforma Profesional',
-      },
-    ],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Centro Psicológico | Plataforma Profesional',
-    description: 'Gestión inteligente para centros psicológicos profesionales',
-    images: ['/twitter-image.jpg'],
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      'max-video-preview': -1,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
-    },
-  },
 };
 
 export const viewport: Viewport = {
@@ -93,12 +56,6 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head>
-        {/* Favicon and app icons */}
-        <link rel="icon" href="/favicon.ico" sizes="any" />
-        <link rel="icon" href="/icon.svg" type="image/svg+xml" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-        <link rel="manifest" href="/manifest.json" />
-
         {/* Theme initialization script */}
         <script
           dangerouslySetInnerHTML={{
@@ -133,7 +90,6 @@ export default function RootLayout({
         {/* Security headers */}
         <meta httpEquiv="X-Content-Type-Options" content="nosniff" />
         <meta httpEquiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
-        <meta httpEquiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=()" />
       </head>
       <body 
         className={`${outfit.className} antialiased`} 
@@ -151,12 +107,13 @@ export default function RootLayout({
           alignItems: 'center',
           justifyContent: 'center',
           zIndex: 9999,
+          transition: 'opacity 0.5s ease-out',
         }}>
           <div style={{
-            width: '40px',
-            height: '40px',
-            border: '4px solid #5D4FB0',
-            borderTop: '4px solid transparent',
+            width: '60px',
+            height: '60px',
+            border: '4px solid #A593F3',
+            borderTop: '4px solid #5D4FB0',
             borderRadius: '50%',
             animation: 'spin 1s linear infinite',
           }}></div>
@@ -186,25 +143,6 @@ export default function RootLayout({
                   }
                 }, 100);
               });
-            `,
-          }}
-        />
-
-        {/* Service Worker Registration */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              if ('serviceWorker' in navigator) {
-                window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js')
-                    .then(function(registration) {
-                      console.log('SW registered: ', registration);
-                    })
-                    .catch(function(registrationError) {
-                      console.log('SW registration failed: ', registrationError);
-                    });
-                });
-              }
             `,
           }}
         />

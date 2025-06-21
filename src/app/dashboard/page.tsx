@@ -4,7 +4,6 @@ import React from 'react';
 import {
   Box,
   Container,
-  Grid,
   Typography,
   Stack,
   Fade,
@@ -142,8 +141,13 @@ export default function DashboardPage() {
 
           {/* Métricas principales */}
           <Fade in timeout={800}>
-            <Grid container spacing={3} sx={{ mb: 6 }}>
-              <Grid item xs={12} sm={6} md={3}>
+            <Stack 
+              direction={{ xs: 'column', sm: 'row' }} 
+              spacing={3} 
+              sx={{ mb: 6 }}
+              flexWrap="wrap"
+            >
+              <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 calc(50% - 12px)', md: '1 1 calc(25% - 18px)' } }}>
                 <MetricCard
                   title="Pacientes Activos"
                   value="127"
@@ -154,8 +158,8 @@ export default function DashboardPage() {
                   color="primary"
                   progress={85}
                 />
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
+              </Box>
+              <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 calc(50% - 12px)', md: '1 1 calc(25% - 18px)' } }}>
                 <MetricCard
                   title="Sesiones del Mes"
                   value="89"
@@ -166,8 +170,8 @@ export default function DashboardPage() {
                   color="secondary"
                   progress={92}
                 />
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
+              </Box>
+              <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 calc(50% - 12px)', md: '1 1 calc(25% - 18px)' } }}>
                 <MetricCard
                   title="Tasa de Adherencia"
                   value="94%"
@@ -178,8 +182,8 @@ export default function DashboardPage() {
                   color="success"
                   progress={94}
                 />
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
+              </Box>
+              <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 calc(50% - 12px)', md: '1 1 calc(25% - 18px)' } }}>
                 <MetricCard
                   title="Satisfacción"
                   value="4.8"
@@ -190,271 +194,307 @@ export default function DashboardPage() {
                   color="info"
                   progress={96}
                 />
-              </Grid>
-            </Grid>
+              </Box>
+            </Stack>
           </Fade>
 
           {/* Sección principal */}
-          <Grid container spacing={4}>
+          <Stack 
+            direction={{ xs: 'column', md: 'row' }} 
+            spacing={4}
+            alignItems="flex-start"
+          >
             {/* Panel de acceso rápido */}
-            <Grid item xs={12} md={8}>
+            <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 66.666%' } }}>
               <Fade in timeout={1000}>
                 <ModernCard
                   title="Acceso Rápido"
                   subtitle="Herramientas más utilizadas"
                   variant="gradient"
                 >
-                  <Grid container spacing={3}>
-                    <Grid item xs={12} sm={6}>
-                      <Box
-                        sx={{
-                          p: 3,
-                          borderRadius: 4,
-                          background: 'linear-gradient(135deg, rgba(93, 79, 176, 0.08) 0%, rgba(165, 147, 243, 0.04) 100%)',
-                          border: `1px solid ${alpha('#5D4FB0', 0.12)}`,
-                          cursor: 'pointer',
-                          transition: 'all 0.3s ease',
-                          '&:hover': {
-                            transform: 'translateY(-4px)',
-                            boxShadow: '0 8px 24px rgba(93, 79, 176, 0.15)',
-                          },
-                        }}
-                      >
-                        <Stack direction="row" alignItems="center" spacing={2} mb={2}>
-                          <Box
-                            sx={{
-                              width: 48,
-                              height: 48,
-                              borderRadius: 3,
-                              background: 'linear-gradient(135deg, #5D4FB0 0%, #A593F3 100%)',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                            }}
-                          >
-                            <People sx={{ color: 'white', fontSize: 24 }} />
-                          </Box>
-                          <Box>
-                            <Typography
-                              variant="h6"
-                              sx={{
-                                fontFamily: '"Outfit", sans-serif',
-                                fontWeight: 700,
-                                color: 'text.primary',
-                              }}
-                            >
-                              Gestión de Pacientes
-                            </Typography>
-                            <Typography
-                              variant="body2"
-                              sx={{
-                                fontFamily: '"Inter", sans-serif',
-                                color: 'text.secondary',
-                              }}
-                            >
-                              Administrar expedientes
-                            </Typography>
-                          </Box>
-                        </Stack>
-                        <ModernButton
-                          variant="outlined"
-                          size="small"
-                          fullWidth
+                  <Stack spacing={3}>
+                    {/* Primera fila de herramientas */}
+                    <Stack 
+                      direction={{ xs: 'column', sm: 'row' }} 
+                      spacing={3}
+                    >
+                      <Box sx={{ flex: '1 1 50%' }}>
+                        <Box
+                          sx={{
+                            p: 3,
+                            borderRadius: 4,
+                            background: 'linear-gradient(135deg, rgba(93, 79, 176, 0.08) 0%, rgba(165, 147, 243, 0.04) 100%)',
+                            border: `1px solid ${alpha('#5D4FB0', 0.12)}`,
+                            cursor: 'pointer',
+                            transition: 'all 0.3s ease',
+                            height: '100%',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            '&:hover': {
+                              transform: 'translateY(-4px)',
+                              boxShadow: '0 8px 24px rgba(93, 79, 176, 0.15)',
+                            },
+                          }}
                         >
-                          Acceder
-                        </ModernButton>
+                          <Stack direction="row" alignItems="center" spacing={2} mb={2} flex={1}>
+                            <Box
+                              sx={{
+                                width: 48,
+                                height: 48,
+                                borderRadius: 3,
+                                background: 'linear-gradient(135deg, #5D4FB0 0%, #A593F3 100%)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                flexShrink: 0,
+                              }}
+                            >
+                              <People sx={{ color: 'white', fontSize: 24 }} />
+                            </Box>
+                            <Box flex={1}>
+                              <Typography
+                                variant="h6"
+                                sx={{
+                                  fontFamily: '"Outfit", sans-serif',
+                                  fontWeight: 700,
+                                  color: 'text.primary',
+                                  fontSize: '1rem',
+                                }}
+                              >
+                                Gestión de Pacientes
+                              </Typography>
+                              <Typography
+                                variant="body2"
+                                sx={{
+                                  fontFamily: '"Inter", sans-serif',
+                                  color: 'text.secondary',
+                                }}
+                              >
+                                Administrar expedientes
+                              </Typography>
+                            </Box>
+                          </Stack>
+                          <ModernButton
+                            variant="outlined"
+                            size="small"
+                            fullWidth
+                          >
+                            Acceder
+                          </ModernButton>
+                        </Box>
                       </Box>
-                    </Grid>
+                      
+                      <Box sx={{ flex: '1 1 50%' }}>
+                        <Box
+                          sx={{
+                            p: 3,
+                            borderRadius: 4,
+                            background: 'linear-gradient(135deg, rgba(165, 147, 243, 0.08) 0%, rgba(165, 202, 230, 0.04) 100%)',
+                            border: `1px solid ${alpha('#A593F3', 0.12)}`,
+                            cursor: 'pointer',
+                            transition: 'all 0.3s ease',
+                            height: '100%',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            '&:hover': {
+                              transform: 'translateY(-4px)',
+                              boxShadow: '0 8px 24px rgba(165, 147, 243, 0.15)',
+                            },
+                          }}
+                        >
+                          <Stack direction="row" alignItems="center" spacing={2} mb={2} flex={1}>
+                            <Box
+                              sx={{
+                                width: 48,
+                                height: 48,
+                                borderRadius: 3,
+                                background: 'linear-gradient(135deg, #A593F3 0%, #A5CAE6 100%)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                flexShrink: 0,
+                              }}
+                            >
+                              <Schedule sx={{ color: 'white', fontSize: 24 }} />
+                            </Box>
+                            <Box flex={1}>
+                              <Typography
+                                variant="h6"
+                                sx={{
+                                  fontFamily: '"Outfit", sans-serif',
+                                  fontWeight: 700,
+                                  color: 'text.primary',
+                                  fontSize: '1rem',
+                                }}
+                              >
+                                Programar Sesiones
+                              </Typography>
+                              <Typography
+                                variant="body2"
+                                sx={{
+                                  fontFamily: '"Inter", sans-serif',
+                                  color: 'text.secondary',
+                                }}
+                              >
+                                Calendario y citas
+                              </Typography>
+                            </Box>
+                          </Stack>
+                          <ModernButton
+                            variant="outlined"
+                            size="small"
+                            fullWidth
+                          >
+                            Programar
+                          </ModernButton>
+                        </Box>
+                      </Box>
+                    </Stack>
                     
-                    <Grid item xs={12} sm={6}>
-                      <Box
-                        sx={{
-                          p: 3,
-                          borderRadius: 4,
-                          background: 'linear-gradient(135deg, rgba(165, 147, 243, 0.08) 0%, rgba(165, 202, 230, 0.04) 100%)',
-                          border: `1px solid ${alpha('#A593F3', 0.12)}`,
-                          cursor: 'pointer',
-                          transition: 'all 0.3s ease',
-                          '&:hover': {
-                            transform: 'translateY(-4px)',
-                            boxShadow: '0 8px 24px rgba(165, 147, 243, 0.15)',
-                          },
-                        }}
-                      >
-                        <Stack direction="row" alignItems="center" spacing={2} mb={2}>
-                          <Box
-                            sx={{
-                              width: 48,
-                              height: 48,
-                              borderRadius: 3,
-                              background: 'linear-gradient(135deg, #A593F3 0%, #A5CAE6 100%)',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                            }}
-                          >
-                            <Schedule sx={{ color: 'white', fontSize: 24 }} />
-                          </Box>
-                          <Box>
-                            <Typography
-                              variant="h6"
-                              sx={{
-                                fontFamily: '"Outfit", sans-serif',
-                                fontWeight: 700,
-                                color: 'text.primary',
-                              }}
-                            >
-                              Programar Sesiones
-                            </Typography>
-                            <Typography
-                              variant="body2"
-                              sx={{
-                                fontFamily: '"Inter", sans-serif',
-                                color: 'text.secondary',
-                              }}
-                            >
-                              Calendario y citas
-                            </Typography>
-                          </Box>
-                        </Stack>
-                        <ModernButton
-                          variant="outlined"
-                          size="small"
-                          fullWidth
+                    {/* Segunda fila de herramientas */}
+                    <Stack 
+                      direction={{ xs: 'column', sm: 'row' }} 
+                      spacing={3}
+                    >
+                      <Box sx={{ flex: '1 1 50%' }}>
+                        <Box
+                          sx={{
+                            p: 3,
+                            borderRadius: 4,
+                            background: 'linear-gradient(135deg, rgba(165, 202, 230, 0.08) 0%, rgba(217, 125, 183, 0.04) 100%)',
+                            border: `1px solid ${alpha('#A5CAE6', 0.12)}`,
+                            cursor: 'pointer',
+                            transition: 'all 0.3s ease',
+                            height: '100%',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            '&:hover': {
+                              transform: 'translateY(-4px)',
+                              boxShadow: '0 8px 24px rgba(165, 202, 230, 0.15)',
+                            },
+                          }}
                         >
-                          Programar
-                        </ModernButton>
-                      </Box>
-                    </Grid>
-                    
-                    <Grid item xs={12} sm={6}>
-                      <Box
-                        sx={{
-                          p: 3,
-                          borderRadius: 4,
-                          background: 'linear-gradient(135deg, rgba(165, 202, 230, 0.08) 0%, rgba(217, 125, 183, 0.04) 100%)',
-                          border: `1px solid ${alpha('#A5CAE6', 0.12)}`,
-                          cursor: 'pointer',
-                          transition: 'all 0.3s ease',
-                          '&:hover': {
-                            transform: 'translateY(-4px)',
-                            boxShadow: '0 8px 24px rgba(165, 202, 230, 0.15)',
-                          },
-                        }}
-                      >
-                        <Stack direction="row" alignItems="center" spacing={2} mb={2}>
-                          <Box
-                            sx={{
-                              width: 48,
-                              height: 48,
-                              borderRadius: 3,
-                              background: 'linear-gradient(135deg, #A5CAE6 0%, #D97DB7 100%)',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                            }}
+                          <Stack direction="row" alignItems="center" spacing={2} mb={2} flex={1}>
+                            <Box
+                              sx={{
+                                width: 48,
+                                height: 48,
+                                borderRadius: 3,
+                                background: 'linear-gradient(135deg, #A5CAE6 0%, #D97DB7 100%)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                flexShrink: 0,
+                              }}
+                            >
+                              <Assessment sx={{ color: 'white', fontSize: 24 }} />
+                            </Box>
+                            <Box flex={1}>
+                              <Typography
+                                variant="h6"
+                                sx={{
+                                  fontFamily: '"Outfit", sans-serif',
+                                  fontWeight: 700,
+                                  color: 'text.primary',
+                                  fontSize: '1rem',
+                                }}
+                              >
+                                Análisis y Reportes
+                              </Typography>
+                              <Typography
+                                variant="body2"
+                                sx={{
+                                  fontFamily: '"Inter", sans-serif',
+                                  color: 'text.secondary',
+                                }}
+                              >
+                                Métricas y estadísticas
+                              </Typography>
+                            </Box>
+                          </Stack>
+                          <ModernButton
+                            variant="outlined"
+                            size="small"
+                            fullWidth
                           >
-                            <Assessment sx={{ color: 'white', fontSize: 24 }} />
-                          </Box>
-                          <Box>
-                            <Typography
-                              variant="h6"
-                              sx={{
-                                fontFamily: '"Outfit", sans-serif',
-                                fontWeight: 700,
-                                color: 'text.primary',
-                              }}
-                            >
-                              Análisis y Reportes
-                            </Typography>
-                            <Typography
-                              variant="body2"
-                              sx={{
-                                fontFamily: '"Inter", sans-serif',
-                                color: 'text.secondary',
-                              }}
-                            >
-                              Métricas y estadísticas
-                            </Typography>
-                          </Box>
-                        </Stack>
-                        <ModernButton
-                          variant="outlined"
-                          size="small"
-                          fullWidth
-                        >
-                          Ver Reportes
-                        </ModernButton>
+                            Ver Reportes
+                          </ModernButton>
+                        </Box>
                       </Box>
-                    </Grid>
-                    
-                    <Grid item xs={12} sm={6}>
-                      <Box
-                        sx={{
-                          p: 3,
-                          borderRadius: 4,
-                          background: 'linear-gradient(135deg, rgba(217, 125, 183, 0.08) 0%, rgba(93, 79, 176, 0.04) 100%)',
-                          border: `1px solid ${alpha('#D97DB7', 0.12)}`,
-                          cursor: 'pointer',
-                          transition: 'all 0.3s ease',
-                          '&:hover': {
-                            transform: 'translateY(-4px)',
-                            boxShadow: '0 8px 24px rgba(217, 125, 183, 0.15)',
-                          },
-                        }}
-                      >
-                        <Stack direction="row" alignItems="center" spacing={2} mb={2}>
-                          <Box
-                            sx={{
-                              width: 48,
-                              height: 48,
-                              borderRadius: 3,
-                              background: 'linear-gradient(135deg, #D97DB7 0%, #5D4FB0 100%)',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                            }}
+                      
+                      <Box sx={{ flex: '1 1 50%' }}>
+                        <Box
+                          sx={{
+                            p: 3,
+                            borderRadius: 4,
+                            background: 'linear-gradient(135deg, rgba(217, 125, 183, 0.08) 0%, rgba(93, 79, 176, 0.04) 100%)',
+                            border: `1px solid ${alpha('#D97DB7', 0.12)}`,
+                            cursor: 'pointer',
+                            transition: 'all 0.3s ease',
+                            height: '100%',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            '&:hover': {
+                              transform: 'translateY(-4px)',
+                              boxShadow: '0 8px 24px rgba(217, 125, 183, 0.15)',
+                            },
+                          }}
+                        >
+                          <Stack direction="row" alignItems="center" spacing={2} mb={2} flex={1}>
+                            <Box
+                              sx={{
+                                width: 48,
+                                height: 48,
+                                borderRadius: 3,
+                                background: 'linear-gradient(135deg, #D97DB7 0%, #5D4FB0 100%)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                flexShrink: 0,
+                              }}
+                            >
+                              <LocalHospital sx={{ color: 'white', fontSize: 24 }} />
+                            </Box>
+                            <Box flex={1}>
+                              <Typography
+                                variant="h6"
+                                sx={{
+                                  fontFamily: '"Outfit", sans-serif',
+                                  fontWeight: 700,
+                                  color: 'text.primary',
+                                  fontSize: '1rem',
+                                }}
+                              >
+                                Centro de Salud
+                              </Typography>
+                              <Typography
+                                variant="body2"
+                                sx={{
+                                  fontFamily: '"Inter", sans-serif',
+                                  color: 'text.secondary',
+                                }}
+                              >
+                                Monitoreo integral
+                              </Typography>
+                            </Box>
+                          </Stack>
+                          <ModernButton
+                            variant="outlined"
+                            size="small"
+                            fullWidth
                           >
-                            <LocalHospital sx={{ color: 'white', fontSize: 24 }} />
-                          </Box>
-                          <Box>
-                            <Typography
-                              variant="h6"
-                              sx={{
-                                fontFamily: '"Outfit", sans-serif',
-                                fontWeight: 700,
-                                color: 'text.primary',
-                              }}
-                            >
-                              Centro de Salud
-                            </Typography>
-                            <Typography
-                              variant="body2"
-                              sx={{
-                                fontFamily: '"Inter", sans-serif',
-                                color: 'text.secondary',
-                              }}
-                            >
-                              Monitoreo integral
-                            </Typography>
-                          </Box>
-                        </Stack>
-                        <ModernButton
-                          variant="outlined"
-                          size="small"
-                          fullWidth
-                        >
-                          Monitorear
-                        </ModernButton>
+                            Monitorear
+                          </ModernButton>
+                        </Box>
                       </Box>
-                    </Grid>
-                  </Grid>
+                    </Stack>
+                  </Stack>
                 </ModernCard>
               </Fade>
-            </Grid>
+            </Box>
 
             {/* Panel lateral */}
-            <Grid item xs={12} md={4}>
+            <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 33.333%' } }}>
               <Stack spacing={3}>
                 {/* Actividad reciente */}
                 <Fade in timeout={1200}>
@@ -628,8 +668,8 @@ export default function DashboardPage() {
                   </ModernCard>
                 </Fade>
               </Stack>
-            </Grid>
-          </Grid>
+            </Box>
+          </Stack>
         </Container>
       </Box>
     </DashboardLayout>

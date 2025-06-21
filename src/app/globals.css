@@ -186,6 +186,11 @@ p, span, div {
   50% { box-shadow: 0 0 30px rgba(93, 79, 176, 0.5); }
 }
 
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 /* Clases de utilidad para animaciones */
 .animate-fade-in-up {
   animation: fadeInUp 0.6s ease-out;
