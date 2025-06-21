@@ -24,7 +24,16 @@ import {
   ArrowRight,
   TrendingDown,
   Plus,
-  Radio
+  Radio,
+  Settings,
+  Filter,
+  Download,
+  RefreshCw,
+  Maximize2,
+  MoreVertical,
+  Star,
+  Layers,
+  Gauge
 } from 'lucide-react';
 import { 
   RadarChart, 
@@ -50,9 +59,8 @@ import {
 import { useClinicalMetrics } from '@/hooks/useDashboardData';
 import { useStyles } from '@/lib/useStyles';
 
-// Datos mock mejorados y expandidos
+// Datos mock ultra profesionales
 const mockClinicalData = {
-  // Métricas principales de salud operativa
   healthMetrics: {
     operationalHealth: 94.2,
     patientSafety: 98.7,
@@ -60,8 +68,6 @@ const mockClinicalData = {
     riskLevel: 'low',
     trend: 'up'
   },
-
-  // Radar de factores de riesgo con más detalle
   riskRadar: [
     { subject: 'PHQ-9 Crítico', value: 12, max: 25, color: '#EF4444', priority: 'high' },
     { subject: 'GAD-7 Elevado', value: 8, max: 25, color: '#F59E0B', priority: 'medium' },
@@ -70,8 +76,6 @@ const mockClinicalData = {
     { subject: 'Medicación', value: 9, max: 25, color: '#F59E0B', priority: 'medium' },
     { subject: 'Crisis Recientes', value: 4, max: 25, color: '#EF4444', priority: 'high' },
   ],
-
-  // Pronóstico de capacidad con predicción IA
   capacityForecast: [
     { 
       day: 'Lun', 
@@ -137,8 +141,6 @@ const mockClinicalData = {
       alerts: 0
     }
   ],
-
-  // Estadísticas de adherencia mejoradas
   adherenceStats: {
     completed: 73.2,
     pending: 18.5,
@@ -149,8 +151,6 @@ const mockClinicalData = {
       cancelled: -3.1
     }
   },
-
-  // Pacientes en riesgo con categorización
   riskPatients: {
     critical: 12,
     high: 23,
@@ -158,8 +158,6 @@ const mockClinicalData = {
     total: 54,
     trend: -8.3
   },
-
-  // Índice de bienestar con componentes
   wellnessIndex: {
     overall: 87.3,
     components: {
@@ -170,8 +168,6 @@ const mockClinicalData = {
     },
     trend: 3.2
   },
-
-  // Alertas predictivas
   predictiveAlerts: [
     {
       id: 1,
@@ -204,8 +200,6 @@ const mockClinicalData = {
       action: 'optimize'
     }
   ],
-
-  // Métricas de rendimiento clínico
   clinicalPerformance: [
     { metric: 'Tiempo promedio sesión', value: 52, unit: 'min', target: 50, status: 'warning' },
     { metric: 'Satisfacción paciente', value: 4.7, unit: '/5', target: 4.5, status: 'success' },
@@ -226,12 +220,6 @@ export default function ClinicalPanel() {
     if (score >= 90) return theme.colors.success;
     if (score >= 75) return theme.colors.warning;
     return theme.colors.error;
-  };
-
-  const getCapacityColor = (percentage: number) => {
-    if (percentage >= 95) return theme.colors.error;
-    if (percentage >= 85) return theme.colors.warning;
-    return theme.colors.success;
   };
 
   const getSeverityColor = (severity: string) => {
@@ -259,24 +247,29 @@ export default function ClinicalPanel() {
         <motion.div 
           initial={{ opacity: 0, scale: 0.9, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          className="bg-white/95 backdrop-blur-xl p-4 rounded-2xl shadow-2xl border border-gray-200/50"
           style={{
-            background: 'linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.9) 100%)',
-            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+            background: 'linear-gradient(145deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.95) 100%)',
+            backdropFilter: 'blur(24px)',
+            border: '1px solid rgba(226,232,240,0.8)',
+            borderRadius: '16px',
+            padding: '16px',
+            boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25), 0 0 0 1px rgba(255,255,255,0.8)'
           }}
         >
-          <p className="font-bold text-gray-900 mb-2 font-space-grotesk">{label}</p>
+          <p className="font-bold text-slate-900 mb-3 text-sm" style={{ fontFamily: theme.fonts.heading }}>
+            {label}
+          </p>
           <div className="space-y-2">
             {payload.map((entry: any, index: number) => (
-              <div key={index} className="flex items-center justify-between min-w-[120px]">
+              <div key={index} className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <div 
                     className="w-3 h-3 rounded-full shadow-sm" 
                     style={{ backgroundColor: entry.color }} 
                   />
-                  <span className="text-sm font-medium text-gray-700">{entry.name}:</span>
+                  <span className="text-xs font-medium text-slate-700">{entry.name}:</span>
                 </div>
-                <span className="font-bold text-gray-900 ml-3">
+                <span className="font-bold text-slate-900 ml-3 text-sm">
                   {typeof entry.value === 'number' ? `${entry.value}%` : entry.value}
                 </span>
               </div>
@@ -327,165 +320,216 @@ export default function ClinicalPanel() {
       animate="visible"
       className="relative"
     >
-      {/* Contenedor principal con diseño futurista */}
+      {/* CONTENEDOR PRINCIPAL ULTRA PROFESIONAL */}
       <div 
-        className="relative overflow-hidden rounded-3xl"
+        className="relative overflow-hidden"
         style={{
-          background: 'linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.9) 100%)',
-          backdropFilter: 'blur(20px)',
-          border: '1px solid rgba(255,255,255,0.2)',
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(255,255,255,0.05)'
+          background: 'linear-gradient(145deg, #ffffff 0%, #f8fafc 100%)',
+          borderRadius: '24px',
+          border: '1px solid rgba(226,232,240,0.8)',
+          boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04), 0 0 0 1px rgba(255,255,255,0.9)'
         }}
       >
-        {/* Efectos de fondo animados */}
-        <div className="absolute inset-0 overflow-hidden">
+        {/* EFECTOS DE FONDO PROFESIONALES */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {/* Gradiente sutil superior */}
           <div 
-            className="absolute -top-40 -right-40 w-80 h-80 rounded-full opacity-10"
+            className="absolute -top-32 -right-32 w-64 h-64 rounded-full opacity-[0.03]"
             style={{
               background: `radial-gradient(circle, ${theme.colors.primary} 0%, transparent 70%)`
             }}
           />
+          {/* Gradiente sutil inferior */}
           <div 
-            className="absolute -bottom-40 -left-40 w-80 h-80 rounded-full opacity-10"
+            className="absolute -bottom-32 -left-32 w-64 h-64 rounded-full opacity-[0.03]"
             style={{
               background: `radial-gradient(circle, ${theme.colors.success} 0%, transparent 70%)`
             }}
           />
+          {/* Líneas decorativas */}
+          <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent opacity-60" />
         </div>
 
-        {/* Header mejorado */}
+        {/* HEADER ULTRA PROFESIONAL */}
         <motion.div 
-          className="relative z-10 flex items-center justify-between p-8 cursor-pointer"
+          className="relative z-10 p-8 cursor-pointer"
           onClick={() => setIsExpanded(!isExpanded)}
-          whileHover={{ backgroundColor: 'rgba(255,255,255,0.1)' }}
+          whileHover={{ backgroundColor: 'rgba(248,250,252,0.5)' }}
           transition={{ duration: 0.3 }}
         >
-          <div className="flex items-center space-x-6">
-            {/* Icono principal con animación */}
-            <motion.div 
-              className="relative w-16 h-16 rounded-2xl flex items-center justify-center overflow-hidden"
-              style={{
-                background: `linear-gradient(135deg, ${theme.colors.error} 0%, ${theme.colors.errorDark} 100%)`,
-                boxShadow: `0 8px 32px ${theme.colors.error}40`
-              }}
-              whileHover={{ 
-                scale: 1.1, 
-                rotate: [0, -5, 5, 0],
-                boxShadow: `0 12px 40px ${theme.colors.error}60`
-              }}
-              transition={{ duration: 0.4 }}
-            >
-              <Heart className="w-8 h-8 text-white relative z-10" />
-              
-              {/* Efecto de pulso */}
-              <motion.div
-                className="absolute inset-0 rounded-2xl"
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-6">
+              {/* ICONO PRINCIPAL REDISEÑADO */}
+              <motion.div 
+                className="relative flex items-center justify-center overflow-hidden"
                 style={{
-                  background: `linear-gradient(135deg, ${theme.colors.errorLight} 0%, ${theme.colors.error} 100%)`
+                  width: '72px',
+                  height: '72px',
+                  background: 'linear-gradient(145deg, #ef4444 0%, #dc2626 100%)',
+                  borderRadius: '20px',
+                  boxShadow: '0 10px 25px rgba(239,68,68,0.3), 0 0 0 1px rgba(255,255,255,0.2)'
                 }}
-                animate={{
-                  scale: [1, 1.1, 1],
-                  opacity: [0.5, 0.8, 0.5]
+                whileHover={{ 
+                  scale: 1.05,
+                  boxShadow: '0 15px 35px rgba(239,68,68,0.4), 0 0 0 1px rgba(255,255,255,0.3)'
                 }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-              />
-              
-              {/* Shimmer effect */}
-              <div 
-                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -skew-x-12"
-                style={{
-                  animation: 'shimmer 3s infinite'
-                }}
-              />
-            </motion.div>
-
-            {/* Información del panel */}
-            <div className="space-y-2">
-              <div className="flex items-center space-x-3">
-                <h3 
-                  className="font-bold text-2xl"
-                  style={{ 
-                    color: theme.colors.textPrimary,
-                    fontFamily: theme.fonts.heading
-                  }}
-                >
-                  Operaciones Clínicas
-                </h3>
-                
-                {/* Badge de estado */}
-                <motion.div
-                  className="px-3 py-1 rounded-full text-xs font-semibold flex items-center space-x-1"
-                  style={{
-                    backgroundColor: `${getHealthColor(mockClinicalData.healthMetrics.operationalHealth)}20`,
-                    color: getHealthColor(mockClinicalData.healthMetrics.operationalHealth),
-                    border: `1px solid ${getHealthColor(mockClinicalData.healthMetrics.operationalHealth)}30`
-                  }}
-                  whileHover={{ scale: 1.05 }}
-                >
-                  <Radio className="w-3 h-3" />
-                  <span>Salud Operativa: {mockClinicalData.healthMetrics.operationalHealth}%</span>
-                </motion.div>
-              </div>
-              
-              <p 
-                className="text-sm font-medium flex items-center space-x-2"
-                style={{ color: theme.colors.textSecondary }}
+                transition={{ duration: 0.3 }}
               >
-                <Sparkles className="w-4 h-4" />
-                <span>Monitoreo inteligente de salud operativa con alertas predictivas</span>
-              </p>
-            </div>
-          </div>
-          
-          {/* Controles del header */}
-          <div className="flex items-center space-x-4">
-            {/* Indicadores rápidos */}
-            <div className="hidden md:flex items-center space-x-4">
-              <div className="text-center">
-                <div 
-                  className="text-lg font-bold"
-                  style={{ 
-                    color: theme.colors.success,
-                    fontFamily: theme.fonts.heading
+                <Heart className="w-9 h-9 text-white relative z-10" />
+                
+                {/* Efecto de brillo animado */}
+                <motion.div
+                  className="absolute inset-0"
+                  style={{
+                    background: 'linear-gradient(145deg, rgba(255,255,255,0.2) 0%, transparent 50%, rgba(255,255,255,0.1) 100%)',
+                    borderRadius: '20px'
                   }}
-                >
-                  {mockClinicalData.riskPatients.total - mockClinicalData.riskPatients.critical}
-                </div>
-                <div className="text-xs text-gray-500">Estables</div>
-              </div>
-              
-              <div className="w-px h-8 bg-gray-200" />
-              
-              <div className="text-center">
-                <div 
-                  className="text-lg font-bold"
-                  style={{ 
-                    color: theme.colors.error,
-                    fontFamily: theme.fonts.heading
+                  animate={{
+                    opacity: [0.5, 0.8, 0.5],
                   }}
-                >
-                  {mockClinicalData.riskPatients.critical}
-                </div>
-                <div className="text-xs text-gray-500">Críticos</div>
-              </div>
-            </div>
+                  transition={{
+                    duration: 3,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                />
+                
+                {/* Shimmer profesional */}
+                <div 
+                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 opacity-0 hover:opacity-100 transition-opacity duration-500"
+                  style={{
+                    animation: 'shimmer 2s infinite',
+                    borderRadius: '20px'
+                  }}
+                />
+              </motion.div>
 
-            {/* Botón de expansión */}
-            <motion.div
-              animate={{ rotate: isExpanded ? 180 : 0 }}
-              transition={{ duration: 0.4, type: "spring", stiffness: 200 }}
-              className="p-3 rounded-xl hover:bg-white/50 border border-gray-200/50 hover:border-gray-300/50 transition-all duration-300"
-            >
-              <ChevronDown className="w-6 h-6" style={{ color: theme.colors.textSecondary }} />
-            </motion.div>
+              {/* INFORMACIÓN DEL PANEL MEJORADA */}
+              <div className="space-y-3">
+                <div className="flex items-center space-x-4">
+                  <h3 
+                    className="font-bold text-3xl text-slate-900"
+                    style={{ fontFamily: theme.fonts.heading }}
+                  >
+                    Operaciones Clínicas
+                  </h3>
+                  
+                  {/* BADGE DE ESTADO PROFESIONAL */}
+                  <motion.div
+                    className="flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-semibold"
+                    style={{
+                      background: `linear-gradient(145deg, ${getHealthColor(mockClinicalData.healthMetrics.operationalHealth)}15, ${getHealthColor(mockClinicalData.healthMetrics.operationalHealth)}08)`,
+                      color: getHealthColor(mockClinicalData.healthMetrics.operationalHealth),
+                      border: `1px solid ${getHealthColor(mockClinicalData.healthMetrics.operationalHealth)}30`,
+                      boxShadow: `0 4px 12px ${getHealthColor(mockClinicalData.healthMetrics.operationalHealth)}20`
+                    }}
+                    whileHover={{ scale: 1.05 }}
+                  >
+                    <Gauge className="w-4 h-4" />
+                    <span>Salud: {mockClinicalData.healthMetrics.operationalHealth}%</span>
+                    <div 
+                      className="w-2 h-2 rounded-full animate-pulse"
+                      style={{ backgroundColor: getHealthColor(mockClinicalData.healthMetrics.operationalHealth) }}
+                    />
+                  </motion.div>
+                </div>
+                
+                <p className="text-slate-600 font-medium flex items-center space-x-2">
+                  <Sparkles className="w-5 h-5 text-blue-500" />
+                  <span>Monitoreo inteligente de salud operativa con alertas predictivas</span>
+                </p>
+              </div>
+            </div>
+            
+            {/* CONTROLES DEL HEADER PROFESIONALES */}
+            <div className="flex items-center space-x-4">
+              {/* MÉTRICAS RÁPIDAS MEJORADAS */}
+              <div className="hidden lg:flex items-center space-x-6">
+                <div className="text-center">
+                  <div 
+                    className="text-2xl font-bold"
+                    style={{ 
+                      color: theme.colors.success,
+                      fontFamily: theme.fonts.heading
+                    }}
+                  >
+                    {mockClinicalData.riskPatients.total - mockClinicalData.riskPatients.critical}
+                  </div>
+                  <div className="text-xs text-slate-500 font-medium">Pacientes Estables</div>
+                </div>
+                
+                <div className="w-px h-12 bg-slate-200" />
+                
+                <div className="text-center">
+                  <div 
+                    className="text-2xl font-bold"
+                    style={{ 
+                      color: theme.colors.error,
+                      fontFamily: theme.fonts.heading
+                    }}
+                  >
+                    {mockClinicalData.riskPatients.critical}
+                  </div>
+                  <div className="text-xs text-slate-500 font-medium">Críticos</div>
+                </div>
+                
+                <div className="w-px h-12 bg-slate-200" />
+                
+                <div className="text-center">
+                  <div 
+                    className="text-2xl font-bold text-blue-600"
+                    style={{ fontFamily: theme.fonts.heading }}
+                  >
+                    {mockClinicalData.adherenceStats.completed}%
+                  </div>
+                  <div className="text-xs text-slate-500 font-medium">Adherencia</div>
+                </div>
+              </div>
+
+              {/* BOTONES DE ACCIÓN PROFESIONALES */}
+              <div className="flex items-center space-x-2">
+                <motion.button
+                  className="p-3 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all duration-200"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <RefreshCw className="w-5 h-5" />
+                </motion.button>
+                
+                <motion.button
+                  className="p-3 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all duration-200"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Settings className="w-5 h-5" />
+                </motion.button>
+                
+                <motion.button
+                  className="p-3 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all duration-200"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <MoreVertical className="w-5 h-5" />
+                </motion.button>
+              </div>
+
+              {/* BOTÓN DE EXPANSIÓN MEJORADO */}
+              <motion.div
+                animate={{ rotate: isExpanded ? 180 : 0 }}
+                transition={{ duration: 0.4, type: "spring", stiffness: 200 }}
+                className="p-3 rounded-xl hover:bg-slate-100 border border-slate-200 hover:border-slate-300 transition-all duration-300"
+                style={{
+                  background: 'linear-gradient(145deg, #ffffff 0%, #f8fafc 100%)',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+                }}
+              >
+                <ChevronDown className="w-6 h-6 text-slate-600" />
+              </motion.div>
+            </div>
           </div>
         </motion.div>
 
-        {/* Contenido expandible */}
+        {/* CONTENIDO EXPANDIBLE ULTRA PROFESIONAL */}
         <AnimatePresence>
           {isExpanded && (
             <motion.div
@@ -495,14 +539,23 @@ export default function ClinicalPanel() {
               transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
               className="overflow-hidden"
             >
-              <div className="px-8 pb-8 space-y-8 border-t border-gray-200/50">
+              <div className="px-8 pb-8 space-y-8 border-t border-slate-200/60">
                 
-                {/* Navegación por pestañas */}
+                {/* NAVEGACIÓN POR PESTAÑAS PROFESIONAL */}
                 <motion.div 
-                  className="pt-6"
-                  variants={itemVariants}
+                  className="pt-8"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
                 >
-                  <div className="flex space-x-2 p-2 bg-gray-100/50 rounded-2xl backdrop-blur-sm">
+                  <div 
+                    className="flex space-x-1 p-1 rounded-2xl"
+                    style={{
+                      background: 'linear-gradient(145deg, #f1f5f9 0%, #e2e8f0 100%)',
+                      border: '1px solid rgba(226,232,240,0.8)',
+                      boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.05)'
+                    }}
+                  >
                     {[
                       { id: 'overview', label: 'Vista General', icon: Eye },
                       { id: 'capacity', label: 'Capacidad', icon: BarChart3 },
@@ -510,14 +563,26 @@ export default function ClinicalPanel() {
                       { id: 'performance', label: 'Rendimiento', icon: Target }
                     ].map((tab) => {
                       const Icon = tab.icon;
+                      const isActive = activeTab === tab.id;
                       return (
                         <motion.button
                           key={tab.id}
                           onClick={() => setActiveTab(tab.id as any)}
-                          className="flex-1 flex items-center justify-center space-x-2 px-4 py-3 rounded-xl font-medium text-sm transition-all duration-300"
-                          variants={tabVariants}
-                          animate={activeTab === tab.id ? 'active' : 'inactive'}
-                          whileHover={{ scale: 1.02 }}
+                          className="flex-1 flex items-center justify-center space-x-2 px-6 py-4 rounded-xl font-semibold text-sm transition-all duration-300"
+                          style={{
+                            background: isActive 
+                              ? 'linear-gradient(145deg, #ffffff 0%, #f8fafc 100%)'
+                              : 'transparent',
+                            color: isActive ? theme.colors.primary : theme.colors.textSecondary,
+                            boxShadow: isActive 
+                              ? '0 4px 12px rgba(0,0,0,0.1), 0 0 0 1px rgba(255,255,255,0.8)'
+                              : 'none',
+                            border: isActive ? '1px solid rgba(226,232,240,0.8)' : '1px solid transparent'
+                          }}
+                          whileHover={{ 
+                            scale: 1.02,
+                            backgroundColor: isActive ? undefined : 'rgba(255,255,255,0.5)'
+                          }}
                           whileTap={{ scale: 0.98 }}
                         >
                           <Icon className="w-4 h-4" />
@@ -528,7 +593,7 @@ export default function ClinicalPanel() {
                   </div>
                 </motion.div>
 
-                {/* Contenido de las pestañas */}
+                {/* CONTENIDO DE LAS PESTAÑAS */}
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={activeTab}
@@ -539,8 +604,8 @@ export default function ClinicalPanel() {
                   >
                     {activeTab === 'overview' && (
                       <div className="space-y-8">
-                        {/* Métricas principales de salud */}
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                        {/* MÉTRICAS PRINCIPALES ULTRA PROFESIONALES */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                           {[
                             {
                               title: 'Salud Operativa',
@@ -548,7 +613,8 @@ export default function ClinicalPanel() {
                               unit: '%',
                               icon: Heart,
                               color: theme.colors.error,
-                              trend: mockClinicalData.healthMetrics.trend
+                              trend: 'up',
+                              change: '+2.3%'
                             },
                             {
                               title: 'Seguridad Paciente',
@@ -556,7 +622,8 @@ export default function ClinicalPanel() {
                               unit: '%',
                               icon: Shield,
                               color: theme.colors.success,
-                              trend: 'up'
+                              trend: 'up',
+                              change: '+0.8%'
                             },
                             {
                               title: 'Eficiencia Clínica',
@@ -564,7 +631,8 @@ export default function ClinicalPanel() {
                               unit: '%',
                               icon: Zap,
                               color: theme.colors.warning,
-                              trend: 'up'
+                              trend: 'up',
+                              change: '+1.2%'
                             },
                             {
                               title: 'Índice Bienestar',
@@ -572,46 +640,50 @@ export default function ClinicalPanel() {
                               unit: '%',
                               icon: Brain,
                               color: theme.colors.info,
-                              trend: 'up'
+                              trend: 'up',
+                              change: '+3.2%'
                             }
                           ].map((metric, index) => {
                             const Icon = metric.icon;
                             return (
                               <motion.div
                                 key={metric.title}
-                                className="relative p-6 rounded-2xl overflow-hidden group cursor-pointer"
+                                className="relative overflow-hidden group cursor-pointer"
                                 style={{
-                                  background: 'linear-gradient(135deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.6) 100%)',
-                                  border: '1px solid rgba(255,255,255,0.3)',
-                                  backdropFilter: 'blur(10px)'
+                                  background: 'linear-gradient(145deg, #ffffff 0%, #f8fafc 100%)',
+                                  borderRadius: '20px',
+                                  border: '1px solid rgba(226,232,240,0.8)',
+                                  boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1), 0 0 0 1px rgba(255,255,255,0.8)',
+                                  padding: '24px'
                                 }}
                                 whileHover={{ 
                                   scale: 1.02,
                                   y: -4,
-                                  boxShadow: '0 20px 40px -12px rgba(0,0,0,0.15)'
+                                  boxShadow: '0 20px 25px -5px rgba(0,0,0,0.15), 0 0 0 1px rgba(255,255,255,0.9)'
                                 }}
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: index * 0.1 }}
                               >
-                                {/* Fondo gradiente animado */}
+                                {/* Efecto de hover sutil */}
                                 <div 
-                                  className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-500"
+                                  className="absolute inset-0 opacity-0 group-hover:opacity-5 transition-opacity duration-500 rounded-20"
                                   style={{
-                                    background: `linear-gradient(135deg, ${metric.color} 0%, transparent 100%)`
+                                    background: `linear-gradient(145deg, ${metric.color} 0%, transparent 100%)`
                                   }}
                                 />
                                 
-                                <div className="relative z-10">
-                                  <div className="flex items-center justify-between mb-4">
+                                <div className="relative z-10 space-y-4">
+                                  <div className="flex items-center justify-between">
                                     <div 
-                                      className="p-3 rounded-xl"
+                                      className="p-3 rounded-2xl"
                                       style={{
-                                        backgroundColor: `${metric.color}15`,
-                                        border: `1px solid ${metric.color}25`
+                                        background: `linear-gradient(145deg, ${metric.color}15, ${metric.color}08)`,
+                                        border: `1px solid ${metric.color}25`,
+                                        boxShadow: `0 4px 12px ${metric.color}20`
                                       }}
                                     >
-                                      <Icon className="w-5 h-5" style={{ color: metric.color }} />
+                                      <Icon className="w-6 h-6" style={{ color: metric.color }} />
                                     </div>
                                     
                                     <div className="flex items-center space-x-1">
@@ -620,6 +692,9 @@ export default function ClinicalPanel() {
                                       ) : (
                                         <TrendingDown className="w-4 h-4 text-red-500" />
                                       )}
+                                      <span className="text-xs font-semibold text-green-600">
+                                        {metric.change}
+                                      </span>
                                     </div>
                                   </div>
                                   
@@ -633,11 +708,11 @@ export default function ClinicalPanel() {
                                     >
                                       {metric.value}{metric.unit}
                                     </div>
-                                    <div 
-                                      className="text-sm font-medium"
-                                      style={{ color: theme.colors.textSecondary }}
-                                    >
+                                    <div className="text-sm font-semibold text-slate-700">
                                       {metric.title}
+                                    </div>
+                                    <div className="text-xs text-slate-500">
+                                      vs. mes anterior
                                     </div>
                                   </div>
                                 </div>
@@ -646,75 +721,104 @@ export default function ClinicalPanel() {
                           })}
                         </div>
 
-                        {/* Alertas predictivas */}
-                        <motion.div variants={itemVariants}>
-                          <div className="flex items-center space-x-3 mb-6">
-                            <div 
-                              className="p-2 rounded-lg"
-                              style={{
-                                backgroundColor: `${theme.colors.warning}15`,
-                                border: `1px solid ${theme.colors.warning}25`
-                              }}
-                            >
-                              <Sparkles className="w-5 h-5" style={{ color: theme.colors.warning }} />
+                        {/* ALERTAS PREDICTIVAS ULTRA PROFESIONALES */}
+                        <motion.div 
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.3 }}
+                        >
+                          <div className="flex items-center justify-between mb-6">
+                            <div className="flex items-center space-x-3">
+                              <div 
+                                className="p-3 rounded-2xl"
+                                style={{
+                                  background: `linear-gradient(145deg, ${theme.colors.warning}15, ${theme.colors.warning}08)`,
+                                  border: `1px solid ${theme.colors.warning}25`,
+                                  boxShadow: `0 4px 12px ${theme.colors.warning}20`
+                                }}
+                              >
+                                <Sparkles className="w-6 h-6" style={{ color: theme.colors.warning }} />
+                              </div>
+                              <div>
+                                <h4 
+                                  className="font-bold text-xl text-slate-900"
+                                  style={{ fontFamily: theme.fonts.heading }}
+                                >
+                                  Alertas Predictivas IA
+                                </h4>
+                                <p className="text-sm text-slate-600">
+                                  Análisis en tiempo real con machine learning
+                                </p>
+                              </div>
                             </div>
-                            <h4 
-                              className="font-bold text-xl"
-                              style={{ 
-                                color: theme.colors.textPrimary,
-                                fontFamily: theme.fonts.heading
+                            
+                            <motion.button
+                              className="flex items-center space-x-2 px-4 py-2 rounded-xl font-medium text-sm"
+                              style={{
+                                background: `linear-gradient(145deg, ${theme.colors.primary}10, ${theme.colors.primary}05)`,
+                                color: theme.colors.primary,
+                                border: `1px solid ${theme.colors.primary}20`
                               }}
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
                             >
-                              Alertas Predictivas IA
-                            </h4>
+                              <Filter className="w-4 h-4" />
+                              <span>Filtrar</span>
+                            </motion.button>
                           </div>
 
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             {mockClinicalData.predictiveAlerts.map((alert, index) => (
                               <motion.div
                                 key={alert.id}
-                                className="p-5 rounded-2xl cursor-pointer relative overflow-hidden group"
+                                className="relative overflow-hidden group cursor-pointer"
                                 style={{
-                                  background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.7) 100%)',
+                                  background: 'linear-gradient(145deg, #ffffff 0%, #f8fafc 100%)',
+                                  borderRadius: '20px',
                                   border: `1px solid ${getSeverityColor(alert.severity)}30`,
-                                  backdropFilter: 'blur(10px)'
+                                  boxShadow: `0 4px 6px -1px ${getSeverityColor(alert.severity)}10, 0 0 0 1px rgba(255,255,255,0.8)`,
+                                  padding: '24px'
                                 }}
                                 whileHover={{ 
                                   scale: 1.02,
                                   y: -2,
-                                  boxShadow: `0 12px 24px ${getSeverityColor(alert.severity)}20`
+                                  boxShadow: `0 12px 24px ${getSeverityColor(alert.severity)}20, 0 0 0 1px rgba(255,255,255,0.9)`
                                 }}
                                 onClick={() => setSelectedAlert(selectedAlert === alert.id ? null : alert.id)}
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: index * 0.1 }}
                               >
-                                {/* Indicador de severidad */}
+                                {/* Indicador de severidad mejorado */}
                                 <div 
-                                  className="absolute top-0 left-0 w-full h-1 rounded-t-2xl"
-                                  style={{ backgroundColor: getSeverityColor(alert.severity) }}
+                                  className="absolute top-0 left-0 w-full h-1 rounded-t-20"
+                                  style={{ 
+                                    background: `linear-gradient(90deg, ${getSeverityColor(alert.severity)} 0%, ${getSeverityColor(alert.severity)}80 100%)`
+                                  }}
                                 />
                                 
-                                <div className="space-y-3">
+                                <div className="space-y-4">
                                   <div className="flex items-start justify-between">
                                     <div 
-                                      className="p-2 rounded-lg"
+                                      className="p-3 rounded-2xl"
                                       style={{
-                                        backgroundColor: `${getSeverityColor(alert.severity)}15`
+                                        background: `linear-gradient(145deg, ${getSeverityColor(alert.severity)}15, ${getSeverityColor(alert.severity)}08)`,
+                                        border: `1px solid ${getSeverityColor(alert.severity)}25`
                                       }}
                                     >
                                       <AlertTriangle 
-                                        className="w-4 h-4" 
+                                        className="w-5 h-5" 
                                         style={{ color: getSeverityColor(alert.severity) }}
                                       />
                                     </div>
                                     
                                     <div className="text-right">
                                       <div 
-                                        className="text-xs font-semibold px-2 py-1 rounded-full"
+                                        className="text-xs font-bold px-3 py-1 rounded-full"
                                         style={{
-                                          backgroundColor: `${getSeverityColor(alert.severity)}20`,
-                                          color: getSeverityColor(alert.severity)
+                                          background: `linear-gradient(145deg, ${getSeverityColor(alert.severity)}20, ${getSeverityColor(alert.severity)}10)`,
+                                          color: getSeverityColor(alert.severity),
+                                          border: `1px solid ${getSeverityColor(alert.severity)}30`
                                         }}
                                       >
                                         {alert.confidence}% confianza
@@ -722,26 +826,17 @@ export default function ClinicalPanel() {
                                     </div>
                                   </div>
                                   
-                                  <div>
-                                    <h5 
-                                      className="font-semibold text-sm mb-1"
-                                      style={{ color: theme.colors.textPrimary }}
-                                    >
+                                  <div className="space-y-2">
+                                    <h5 className="font-bold text-slate-900 text-sm">
                                       {alert.title}
                                     </h5>
-                                    <p 
-                                      className="text-xs leading-relaxed"
-                                      style={{ color: theme.colors.textSecondary }}
-                                    >
+                                    <p className="text-xs leading-relaxed text-slate-600">
                                       {alert.description}
                                     </p>
                                   </div>
                                   
                                   <div className="flex items-center justify-between">
-                                    <span 
-                                      className="text-xs font-medium"
-                                      style={{ color: theme.colors.textTertiary }}
-                                    >
+                                    <span className="text-xs font-medium text-slate-500">
                                       {alert.timeframe}
                                     </span>
                                     
@@ -761,33 +856,39 @@ export default function ClinicalPanel() {
                     {activeTab === 'capacity' && (
                       <div className="space-y-8">
                         {/* Pronóstico de capacidad */}
-                        <motion.div variants={itemVariants}>
+                        <motion.div 
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                        >
                           <div className="flex items-center justify-between mb-6">
                             <div className="flex items-center space-x-3">
                               <div 
-                                className="p-2 rounded-lg"
+                                className="p-3 rounded-2xl"
                                 style={{
-                                  backgroundColor: `${theme.colors.info}15`,
-                                  border: `1px solid ${theme.colors.info}25`
+                                  background: `linear-gradient(145deg, ${theme.colors.info}15, ${theme.colors.info}08)`,
+                                  border: `1px solid ${theme.colors.info}25`,
+                                  boxShadow: `0 4px 12px ${theme.colors.info}20`
                                 }}
                               >
-                                <Calendar className="w-5 h-5" style={{ color: theme.colors.info }} />
+                                <Calendar className="w-6 h-6" style={{ color: theme.colors.info }} />
                               </div>
-                              <h4 
-                                className="font-bold text-xl"
-                                style={{ 
-                                  color: theme.colors.textPrimary,
-                                  fontFamily: theme.fonts.heading
-                                }}
-                              >
-                                Pronóstico de Capacidad - Próximos 7 días
-                              </h4>
+                              <div>
+                                <h4 
+                                  className="font-bold text-xl text-slate-900"
+                                  style={{ fontFamily: theme.fonts.heading }}
+                                >
+                                  Pronóstico de Capacidad
+                                </h4>
+                                <p className="text-sm text-slate-600">
+                                  Análisis predictivo para los próximos 7 días
+                                </p>
+                              </div>
                             </div>
                             
                             <motion.button
                               className="flex items-center space-x-2 px-4 py-2 rounded-xl font-medium text-sm"
                               style={{
-                                backgroundColor: `${theme.colors.primary}10`,
+                                background: `linear-gradient(145deg, ${theme.colors.primary}10, ${theme.colors.primary}05)`,
                                 color: theme.colors.primary,
                                 border: `1px solid ${theme.colors.primary}20`
                               }}
@@ -800,26 +901,27 @@ export default function ClinicalPanel() {
                           </div>
 
                           <div 
-                            className="h-80 p-6 rounded-2xl"
+                            className="p-8 rounded-2xl"
                             style={{
-                              background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.7) 100%)',
-                              border: '1px solid rgba(255,255,255,0.3)',
-                              backdropFilter: 'blur(10px)'
+                              background: 'linear-gradient(145deg, #ffffff 0%, #f8fafc 100%)',
+                              border: '1px solid rgba(226,232,240,0.8)',
+                              boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1), 0 0 0 1px rgba(255,255,255,0.8)',
+                              height: '400px'
                             }}
                           >
                             <ResponsiveContainer width="100%" height="100%">
                               <BarChart data={mockClinicalData.capacityForecast}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.1)" />
+                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.3)" />
                                 <XAxis 
                                   dataKey="day" 
                                   axisLine={false}
                                   tickLine={false}
-                                  tick={{ fontSize: 12, fill: theme.colors.textSecondary, fontWeight: 500 }}
+                                  tick={{ fontSize: 12, fill: '#64748b', fontWeight: 500 }}
                                 />
                                 <YAxis 
                                   axisLine={false}
                                   tickLine={false}
-                                  tick={{ fontSize: 12, fill: theme.colors.textSecondary, fontWeight: 500 }}
+                                  tick={{ fontSize: 12, fill: '#64748b', fontWeight: 500 }}
                                   tickFormatter={(value) => `${value}%`}
                                 />
                                 <Tooltip content={<CustomTooltip />} />
@@ -827,22 +929,22 @@ export default function ClinicalPanel() {
                                   dataKey="morning" 
                                   fill={theme.colors.success} 
                                   name="Mañana" 
-                                  radius={[4, 4, 0, 0]}
-                                  opacity={0.8}
+                                  radius={[6, 6, 0, 0]}
+                                  opacity={0.9}
                                 />
                                 <Bar 
                                   dataKey="afternoon" 
                                   fill={theme.colors.warning} 
                                   name="Tarde" 
-                                  radius={[4, 4, 0, 0]}
-                                  opacity={0.8}
+                                  radius={[6, 6, 0, 0]}
+                                  opacity={0.9}
                                 />
                                 <Bar 
                                   dataKey="evening" 
                                   fill={theme.colors.info} 
                                   name="Noche" 
-                                  radius={[4, 4, 0, 0]}
-                                  opacity={0.8}
+                                  radius={[6, 6, 0, 0]}
+                                  opacity={0.9}
                                 />
                               </BarChart>
                             </ResponsiveContainer>
@@ -955,7 +1057,9 @@ export default function ClinicalPanel() {
                                       className="h-2 rounded-full"
                                       style={{ backgroundColor: factor.color }}
                                       initial={{ width: 0 }}
-                                      animate={{ width: `${(factor.value / factor.max) * 100}%` }}
+                                      animate={{ 
+                                        width: `${(factor.value / factor.max) * 100}%` 
+                                      }}
                                       transition={{ delay: index * 0.1 + 0.5, duration: 0.8 }}
                                     />
                                   </div>
@@ -1180,63 +1284,65 @@ export default function ClinicalPanel() {
                   </motion.div>
                 </AnimatePresence>
 
-                {/* Recomendación IA al final */}
+                {/* RECOMENDACIÓN IA ULTRA PROFESIONAL */}
                 <motion.div
-                  variants={itemVariants}
-                  className="mt-8 p-6 rounded-2xl relative overflow-hidden"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                  className="relative overflow-hidden"
                   style={{
-                    background: `linear-gradient(135deg, ${theme.colors.primary}08 0%, ${theme.colors.primary}04 100%)`,
-                    border: `1px solid ${theme.colors.primary}20`
+                    background: `linear-gradient(145deg, ${theme.colors.primary}08 0%, ${theme.colors.primary}04 100%)`,
+                    borderRadius: '20px',
+                    border: `1px solid ${theme.colors.primary}20`,
+                    padding: '24px'
                   }}
                 >
                   <div className="flex items-start space-x-4">
                     <motion.div
-                      className="p-3 rounded-xl"
+                      className="p-4 rounded-2xl"
                       style={{
-                        backgroundColor: `${theme.colors.primary}20`
+                        background: `linear-gradient(145deg, ${theme.colors.primary}20, ${theme.colors.primary}10)`,
+                        border: `1px solid ${theme.colors.primary}30`
                       }}
                       animate={{
                         boxShadow: [
                           `0 0 0 0 ${theme.colors.primary}40`,
-                          `0 0 0 10px ${theme.colors.primary}00`,
+                          `0 0 0 8px ${theme.colors.primary}00`,
                           `0 0 0 0 ${theme.colors.primary}40`
                         ]
                       }}
                       transition={{ duration: 2, repeat: Infinity }}
                     >
-                      <Brain className="w-6 h-6" style={{ color: theme.colors.primary }} />
+                      <Brain className="w-7 h-7" style={{ color: theme.colors.primary }} />
                     </motion.div>
                     
-                    <div className="flex-1">
-                      <h5 
-                        className="font-bold text-lg mb-2"
-                        style={{ 
-                          color: theme.colors.textPrimary,
-                          fontFamily: theme.fonts.heading
-                        }}
-                      >
-                        Recomendación del Sistema IA
-                      </h5>
-                      <p 
-                        className="text-sm leading-relaxed mb-4"
-                        style={{ color: theme.colors.textSecondary }}
-                      >
-                        Basado en el análisis predictivo, se recomienda implementar recordatorios automáticos 
-                        vía WhatsApp para reducir cancelaciones en un 23%. Considerar sesiones de seguimiento 
-                        telefónico para pacientes con baja adherencia. Proyección de mejora: +15% en adherencia general.
-                      </p>
+                    <div className="flex-1 space-y-4">
+                      <div>
+                        <h5 
+                          className="font-bold text-xl text-slate-900 mb-2"
+                          style={{ fontFamily: theme.fonts.heading }}
+                        >
+                          Recomendación del Sistema IA
+                        </h5>
+                        <p className="text-sm leading-relaxed text-slate-600">
+                          Basado en el análisis predictivo, se recomienda implementar recordatorios automáticos 
+                          vía WhatsApp para reducir cancelaciones en un 23%. Considerar sesiones de seguimiento 
+                          telefónico para pacientes con baja adherencia. 
+                          <span className="font-semibold text-slate-900"> Proyección de mejora: +15% en adherencia general.</span>
+                        </p>
+                      </div>
                       
                       <div className="flex items-center space-x-3">
                         <motion.button
-                          className="px-6 py-3 rounded-xl font-semibold text-sm flex items-center space-x-2"
+                          className="flex items-center space-x-2 px-6 py-3 rounded-xl font-semibold text-sm"
                           style={{
                             background: theme.gradients.primary,
                             color: theme.colors.textInverse,
-                            boxShadow: theme.shadows.glow
+                            boxShadow: `0 4px 12px ${theme.colors.primary}30`
                           }}
                           whileHover={{ 
                             scale: 1.02,
-                            boxShadow: theme.shadows.glowStrong
+                            boxShadow: `0 8px 20px ${theme.colors.primary}40`
                           }}
                           whileTap={{ scale: 0.98 }}
                         >
@@ -1256,7 +1362,7 @@ export default function ClinicalPanel() {
                             borderColor: theme.colors.primary
                           }}
                         >
-                          Ver Detalles
+                          Ver Análisis Completo
                         </motion.button>
                       </div>
                     </div>
@@ -1268,11 +1374,15 @@ export default function ClinicalPanel() {
         </AnimatePresence>
       </div>
 
-      {/* Estilos CSS adicionales */}
+      {/* ESTILOS CSS PROFESIONALES */}
       <style jsx>{`
         @keyframes shimmer {
           0% { transform: translateX(-100%) skewX(-12deg); }
           100% { transform: translateX(200%) skewX(-12deg); }
+        }
+        
+        .rounded-20 {
+          border-radius: 20px;
         }
       `}</style>
     </motion.div>
