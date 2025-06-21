@@ -1,46 +1,24 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   Users,
-  TrendingUp,
-  TrendingDown,
   BarChart3,
-  PieChart,
   Activity,
-  Heart,
-  Brain,
   Calendar,
-  Clock,
   Target,
-  AlertTriangle,
-  CheckCircle,
-  Filter,
   Download,
   RefreshCw,
   Eye,
   ArrowUpRight,
   ArrowDownRight,
   Minus,
-  Database,
-  Wifi,
-  WifiOff,
   UserCheck,
-  UserX,
   UserPlus,
-  Stethoscope,
-  FileText,
   Award,
-  Zap,
-  Shield,
-  Search,
-  ChevronDown,
-  MoreHorizontal
 } from 'lucide-react';
 import { 
-  LineChart, 
-  Line, 
   AreaChart, 
   Area, 
   BarChart, 
@@ -53,15 +31,10 @@ import {
   Legend, 
   PieChart as RechartsPieChart, 
   Cell,
-  RadialBarChart,
-  RadialBar,
-  ScatterChart,
-  Scatter
 } from 'recharts';
 import { useStyles } from '@/lib/useStyles';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
-import { Patient } from '@/types/dashboard';
 
 interface PatientAnalytics {
   totalPatients: number;
@@ -109,10 +82,8 @@ export default function PatientsAnalyticsPage() {
   const { theme } = useStyles();
   const [analytics, setAnalytics] = useState<PatientAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [selectedPeriod, setSelectedPeriod] = useState('month');
   const [selectedMetric, setSelectedMetric] = useState('patients');
-  const [showFilters, setShowFilters] = useState(false);
 
   // Mock data para desarrollo
   useEffect(() => {
@@ -194,14 +165,12 @@ export default function PatientsAnalyticsPage() {
   }, []);
 
   const handleRefresh = () => {
-    setError(null);
     setLoading(true);
     // Simular recarga
     setTimeout(() => {
       setLoading(false);
     }, 1000);
   };
-
   const handleExport = () => {
     if (!analytics) {
       alert('No hay datos para exportar');
@@ -237,17 +206,15 @@ export default function PatientsAnalyticsPage() {
     return '#6B7280';
   };
 
-  const getRiskColor = (level: string) => {
-    switch (level) {
-      case 'low': return '#10B981';
-      case 'medium': return '#F59E0B';
-      case 'high': return '#EF4444';
-      case 'critical': return '#7C2D12';
-      default: return '#6B7280';
-    }
-  };
-
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload, label }: {
+    active?: boolean;
+    payload?: Array<{
+      color: string;
+      name: string;
+      value: number | string;
+    }>;
+    label?: string;
+  }) => {
     if (active && payload && payload.length) {
       return (
         <div style={{
@@ -266,7 +233,7 @@ export default function PatientsAnalyticsPage() {
           }}>
             {label}
           </p>
-          {payload.map((entry: any, index: number) => (
+          {payload.map((entry: { color: string; name: string; value: number | string }, index: number) => (
             <p key={index} style={{
               fontSize: '0.75rem',
               color: entry.color,
@@ -816,7 +783,7 @@ export default function PatientsAnalyticsPage() {
               <ResponsiveContainer width="100%" height="100%">
                 <RechartsPieChart>
                   <Tooltip 
-                    formatter={(value: any) => [value, 'Pacientes']}
+                    formatter={(value: number) => [value, 'Pacientes']}
                     labelFormatter={(label) => `Riesgo: ${label}`}
                   />
                   <RechartsPieChart 

@@ -6,25 +6,15 @@ import {
   Brain,
   Sparkles,
   TrendingUp,
-  TrendingDown,
   AlertTriangle,
   CheckCircle,
   Clock,
   Users,
   Target,
-  Zap,
   BarChart3,
-  PieChart,
-  Activity,
   Heart,
-  MessageSquare,
-  FileText,
   Download,
-  Filter,
-  Search,
-  Calendar,
   ArrowRight,
-  Eye,
   Lightbulb,
   Shield,
   Star,
@@ -32,14 +22,12 @@ import {
   Gauge,
   RefreshCw,
   Settings,
-  ChevronDown,
   ChevronRight,
   Play,
-  Pause,
   MoreVertical
 } from 'lucide-react';
-import { LineChart, Line, AreaChart, Area, BarChart, Bar, PieChart as RechartsPieChart, Cell, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
-import { Session, AIInsight, Patient } from '@/types/dashboard';
+import { LineChart, Line, AreaChart, Area, BarChart, Bar, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { AIInsight } from '@/types/dashboard';
 
 interface AIAnalysisData {
   overallMetrics: {
@@ -427,7 +415,7 @@ export default function AISessionsPage() {
           ].map((tab) => (
             <motion.button
               key={tab.id}
-              onClick={() => setSelectedView(tab.id as any)}
+              onClick={() => setSelectedView(tab.id as 'overview' | 'trends' | 'predictions' | 'insights')}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               style={{

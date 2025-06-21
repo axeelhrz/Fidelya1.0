@@ -1,25 +1,18 @@
 'use client';
 
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { 
   Brain, 
   TrendingUp, 
   Download, 
   Play, 
-  CheckCircle, 
   AlertCircle, 
   Clock, 
   Sparkles, 
   BarChart3, 
   Shield,
   RefreshCw,
-  Settings,
-  Filter,
-  Star,
-  Zap,
-  Target,
-  Eye,
   AlertTriangle,
   CheckCircle2
 } from 'lucide-react';
@@ -490,7 +483,7 @@ export default function AIInsightsFooter({
             </div>
 
             <div style={styles.insightsGrid}>
-              {mockInsights.map((insight, index) => (
+              {mockInsights.map((insight) => (
                 <Card 
                   key={insight.id} 
                   variant="default" 

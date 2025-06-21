@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LucideIcon, ChevronDown } from 'lucide-react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 
 interface Tab {
   id: string;
@@ -31,9 +31,6 @@ export default function TabNavigation({
   tabs, 
   activeTab, 
   onTabChange,
-  variant = 'cards',
-  size = 'lg',
-  orientation = 'horizontal',
   showDescriptions = true,
   allowMobile = true,
   enableRouting = false
@@ -41,7 +38,6 @@ export default function TabNavigation({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [hoveredTab, setHoveredTab] = useState<string | null>(null);
   const router = useRouter();
-  const pathname = usePathname();
 
   const activeTabData = tabs.find(tab => tab.id === activeTab);
 

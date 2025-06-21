@@ -10,19 +10,14 @@ import {
   Brain,
   Calendar,
   Clock,
-  User,
   DollarSign,
-  TrendingUp,
   AlertCircle,
   CheckCircle,
   XCircle,
   Eye,
   Edit,
-  MoreVertical,
   ChevronDown,
   Sparkles,
-  MessageSquare,
-  BarChart3
 } from 'lucide-react';
 import { Session } from '@/types/dashboard';
 
@@ -128,7 +123,7 @@ export default function SessionsPage() {
 
   // Filtrar sesiones
   useEffect(() => {
-    let filtered = sessions.filter(session => {
+    const filtered = sessions.filter(session => {
       const matchesSearch = 
         session.notes.toLowerCase().includes(searchQuery.toLowerCase()) ||
         session.id.includes(searchQuery);

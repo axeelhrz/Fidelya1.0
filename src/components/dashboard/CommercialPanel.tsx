@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { 
   Target, 
   TrendingUp, 
@@ -9,19 +9,14 @@ import {
   Users,
   DollarSign,
   BarChart3,
-  Filter,
   Download,
   RefreshCw,
   AlertCircle,
   CheckCircle,
-  Clock,
   Zap,
   Star,
-  ArrowRight,
-  Eye,
-  Settings
 } from 'lucide-react';
-import { LineChart, Line, AreaChart, Area, BarChart, Bar, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import { useStyles } from '@/lib/useStyles';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
@@ -34,6 +29,13 @@ interface CommercialData {
   conversions: number;
   roi: number;
 }
+
+interface TooltipPayloadEntry {
+  name: string;
+  value: number;
+  color: string;
+}
+
 
 interface CommercialPanelProps {
   data?: CommercialData[];
@@ -490,7 +492,7 @@ export default function CommercialPanel({
     }).format(value);
   };
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: Array<{ name: string; value: number; color: string }>; label?: string }) => {
     if (active && payload && payload.length) {
       return (
         <div style={{
@@ -502,14 +504,11 @@ export default function CommercialPanel({
           backdropFilter: 'blur(10px)',
         }}>
           <p style={{
-            fontSize: '0.875rem',
-            fontWeight: theme.fontWeights.semibold,
-            color: theme.colors.textPrimary,
             margin: '0 0 0.5rem 0',
           }}>
             {label}
           </p>
-          {payload.map((entry: any, index: number) => (
+          {payload.map((entry: TooltipPayloadEntry, index: number) => (
             <p key={index} style={{
               fontSize: '0.75rem',
               color: entry.color,
@@ -724,7 +723,7 @@ export default function CommercialPanel({
 
         {/* Rendimiento por Canal */}
         <div style={styles.channelGrid}>
-          {channelData.map((channel, index) => (
+          {channelData.map((channel) => (
             <Card key={channel.channel} variant="default" hover>
               <div style={styles.channelCard}>
                 <div style={styles.channelHeader}>
@@ -774,7 +773,7 @@ export default function CommercialPanel({
 
         {/* Campañas Activas */}
         <div style={styles.campaignGrid}>
-          {campaignData.map((campaign, index) => (
+          {campaignData.map((campaign) => (
             <Card 
               key={campaign.name} 
               variant="default" 

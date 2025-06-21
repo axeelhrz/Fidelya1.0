@@ -16,7 +16,6 @@ import {
   DollarSign,
   Heart,
   Target,
-  Bell,
   MessageSquare,
   Shield,
   Database,

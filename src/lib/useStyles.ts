@@ -117,7 +117,7 @@ export const useResponsiveStyles = () => {
       xxl: `@media (min-width: ${THEME_CONSTANTS.breakpoints.xxl}px)`,
     },
     
-    getResponsiveValue: (values: { xs?: any; sm?: any; md?: any; lg?: any; xl?: any; xxl?: any }) => {
+    getResponsiveValue: <T>(values: { xs?: T; sm?: T; md?: T; lg?: T; xl?: T; xxl?: T }) => {
       const currentWidth = typeof window !== 'undefined' ? window.innerWidth : 1024;
       
       if (currentWidth >= THEME_CONSTANTS.breakpoints.xxl && values.xxl !== undefined) return values.xxl;

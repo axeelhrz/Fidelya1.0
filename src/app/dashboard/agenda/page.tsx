@@ -1,30 +1,20 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
-  Calendar,
-  Clock,
   MapPin,
   Users,
   Plus,
-  Filter,
   Download,
   ChevronLeft,
   ChevronRight,
   Settings,
-  AlertTriangle,
-  CheckCircle,
-  XCircle,
-  User,
   Home,
   Wifi,
   WifiOff,
-  Zap,
   Eye,
   Edit,
-  Trash2,
-  MoreVertical
 } from 'lucide-react';
 import { Appointment, ConsultingRoom, Therapist } from '@/types/dashboard';
 
@@ -37,7 +27,6 @@ export default function AgendaPage() {
   const [selectedRoom, setSelectedRoom] = useState<string>('all');
   const [selectedTherapist, setSelectedTherapist] = useState<string>('all');
   const [draggedAppointment, setDraggedAppointment] = useState<Appointment | null>(null);
-  const [showNewAppointment, setShowNewAppointment] = useState(false);
 
   // Mock data para desarrollo
   useEffect(() => {
@@ -307,7 +296,6 @@ export default function AgendaPage() {
   const renderWeekView = () => {
     const weekDays = getWeekDays(currentDate);
     const timeSlots = getTimeSlots();
-    const filteredRooms = selectedRoom === 'all' ? rooms : rooms.filter(r => r.id === selectedRoom);
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', height: '600px' }}>
@@ -944,7 +932,7 @@ export default function AgendaPage() {
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              onClick={() => setShowNewAppointment(true)}
+              onClick={() => {/* TODO: Implement new appointment modal */}}
               style={{
                 display: 'flex',
                 alignItems: 'center',

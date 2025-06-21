@@ -11,21 +11,9 @@ import {
   Eye,
   Edit,
   Trash2,
-  AlertTriangle,
-  Calendar,
-  Phone,
-  Mail,
-  MapPin,
   User,
-  Heart,
-  TrendingUp,
-  Clock,
   Shield,
-  FileText,
-  MoreVertical,
   ChevronDown,
-  X,
-  Check
 } from 'lucide-react';
 import { Patient } from '@/types/dashboard';
 
@@ -41,7 +29,6 @@ export default function PatientsPage() {
   });
   const [selectedPatients, setSelectedPatients] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
-  const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [sortBy, setSortBy] = useState<'name' | 'lastSession' | 'riskLevel' | 'totalSessions'>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
@@ -133,7 +120,7 @@ export default function PatientsPage() {
 
   // Filtrar y buscar pacientes
   useEffect(() => {
-    let filtered = patients.filter(patient => {
+    const filtered = patients.filter(patient => {
       const matchesSearch = 
         patient.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
         patient.lastName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -561,16 +548,28 @@ export default function PatientsPage() {
                     style={{ cursor: 'pointer' }}
                   />
                 </th>
-                <th style={{
-                  padding: '1rem',
-                  textAlign: 'left',
-                  fontSize: '0.875rem',
-                  fontWeight: 600,
-                  color: '#374151',
-                  borderBottom: '1px solid #E5E7EB',
-                  fontFamily: 'Inter, sans-serif'
-                }}>
-                  Paciente
+                <th 
+                  onClick={() => {
+                    if (sortBy === 'name') {
+                      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+                    } else {
+                      setSortBy('name');
+                      setSortOrder('asc');
+                    }
+                  }}
+                  style={{
+                    padding: '1rem',
+                    textAlign: 'left',
+                    fontSize: '0.875rem',
+                    fontWeight: 600,
+                    color: '#374151',
+                    borderBottom: '1px solid #E5E7EB',
+                    fontFamily: 'Inter, sans-serif',
+                    cursor: 'pointer',
+                    userSelect: 'none'
+                  }}
+                >
+                  Paciente {sortBy === 'name' && (sortOrder === 'asc' ? '↑' : '↓')}
                 </th>
                 <th style={{
                   padding: '1rem',
@@ -605,27 +604,51 @@ export default function PatientsPage() {
                 }}>
                   Estado
                 </th>
-                <th style={{
-                  padding: '1rem',
-                  textAlign: 'left',
-                  fontSize: '0.875rem',
-                  fontWeight: 600,
-                  color: '#374151',
-                  borderBottom: '1px solid #E5E7EB',
-                  fontFamily: 'Inter, sans-serif'
-                }}>
-                  Riesgo
+                <th 
+                  onClick={() => {
+                    if (sortBy === 'riskLevel') {
+                      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+                    } else {
+                      setSortBy('riskLevel');
+                      setSortOrder('asc');
+                    }
+                  }}
+                  style={{
+                    padding: '1rem',
+                    textAlign: 'left',
+                    fontSize: '0.875rem',
+                    fontWeight: 600,
+                    color: '#374151',
+                    borderBottom: '1px solid #E5E7EB',
+                    fontFamily: 'Inter, sans-serif',
+                    cursor: 'pointer',
+                    userSelect: 'none'
+                  }}
+                >
+                  Riesgo {sortBy === 'riskLevel' && (sortOrder === 'asc' ? '↑' : '↓')}
                 </th>
-                <th style={{
-                  padding: '1rem',
-                  textAlign: 'left',
-                  fontSize: '0.875rem',
-                  fontWeight: 600,
-                  color: '#374151',
-                  borderBottom: '1px solid #E5E7EB',
-                  fontFamily: 'Inter, sans-serif'
-                }}>
-                  Sesiones
+                <th 
+                  onClick={() => {
+                    if (sortBy === 'totalSessions') {
+                      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+                    } else {
+                      setSortBy('totalSessions');
+                      setSortOrder('asc');
+                    }
+                  }}
+                  style={{
+                    padding: '1rem',
+                    textAlign: 'left',
+                    fontSize: '0.875rem',
+                    fontWeight: 600,
+                    color: '#374151',
+                    borderBottom: '1px solid #E5E7EB',
+                    fontFamily: 'Inter, sans-serif',
+                    cursor: 'pointer',
+                    userSelect: 'none'
+                  }}
+                >
+                  Sesiones {sortBy === 'totalSessions' && (sortOrder === 'asc' ? '↑' : '↓')}
                 </th>
                 <th style={{
                   padding: '1rem',

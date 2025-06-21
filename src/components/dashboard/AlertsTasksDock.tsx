@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Bell, 
@@ -16,19 +16,14 @@ import {
   Search,
   X,
   Check,
-  MoreHorizontal,
-  Edit,
   Trash2,
   ExternalLink
 } from 'lucide-react';
 import { useAlerts, useTasks, updateAlert, createTask, updateTask, deleteTask } from '@/hooks/useDashboardData';
-import { Alert, Task } from '@/types/dashboard';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { useAuth } from '@/contexts/AuthContext';
 
 export default function AlertsTasksDock() {
-  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<'alerts' | 'tasks'>('alerts');
   const [taskFilter, setTaskFilter] = useState<'all' | 'today' | 'week' | 'month'>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -353,7 +348,7 @@ export default function AlertsTasksDock() {
             <Filter size={16} color="#6B7280" />
             <select
               value={taskFilter}
-              onChange={(e) => setTaskFilter(e.target.value as any)}
+              onChange={(e) => setTaskFilter(e.target.value as 'all' | 'today' | 'week' | 'month')}
               style={{
                 flex: 1,
                 fontSize: '0.75rem',
@@ -454,7 +449,7 @@ export default function AlertsTasksDock() {
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
                   <select
                     value={newTask.priority}
-                    onChange={(e) => setNewTask({ ...newTask, priority: e.target.value as any })}
+                    onChange={(e) => setNewTask({ ...newTask, priority: e.target.value as 'high' | 'medium' | 'low' })}
                     style={{
                       flex: 1,
                       padding: '0.5rem',

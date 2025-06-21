@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { TrendingUp, TrendingDown, Minus, MoreHorizontal, Target, Sparkles, Zap, ArrowUpRight } from 'lucide-react';
-import { LineChart, Line, ResponsiveContainer, Area, AreaChart } from 'recharts';
+import { ResponsiveContainer, Area, AreaChart } from 'recharts';
 import { KPIMetric } from '@/types/dashboard';
 import { useStyles } from '@/lib/useStyles';
 
@@ -386,7 +386,7 @@ export default function KPICard({ metric, index, onClick }: KPICardProps) {
   };
 
   const getTrendPercentage = () => {
-    if (metric.previousValue === 0) return 0;
+    if (metric.previousValue === 0) return "0";
     return ((metric.value - metric.previousValue) / metric.previousValue * 100).toFixed(1);
   };
 

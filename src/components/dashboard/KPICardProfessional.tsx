@@ -433,7 +433,7 @@ export default function KPICardProfessional({
   };
 
   const getTrendPercentage = () => {
-    if (metric.previousValue === 0) return 0;
+    if (metric.previousValue === 0) return '0.0';
     return ((metric.value - metric.previousValue) / metric.previousValue * 100).toFixed(1);
   };
 

@@ -6,200 +6,6 @@ import { db } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import { KPIMetric, Alert, Task, FinancialMetrics, ClinicalMetrics } from '@/types/dashboard';
 
-// Datos mock para desarrollo
-const mockKPIMetrics: KPIMetric[] = [
-  {
-    id: 'revenue',
-    name: 'Ingresos Mensuales',
-    value: 89750,
-    previousValue: 78200,
-    trend: 'up',
-    status: 'success',
-    unit: '$',
-    sparklineData: [65000, 72000, 68000, 75000, 82000, 78000, 89750],
-    target: 95000
-  },
-  {
-    id: 'patients',
-    name: 'Pacientes Activos',
-    value: 247,
-    previousValue: 228,
-    trend: 'up',
-    status: 'success',
-    unit: '',
-    sparklineData: [200, 215, 225, 235, 240, 245, 247],
-    target: 300
-  },
-  {
-    id: 'sessions',
-    name: 'Sesiones Completadas',
-    value: 156,
-    previousValue: 142,
-    trend: 'up',
-    status: 'success',
-    unit: '',
-    sparklineData: [120, 125, 135, 140, 145, 150, 156],
-    target: 180
-  },
-  {
-    id: 'satisfaction',
-    name: 'Satisfacción del Cliente',
-    value: 94.2,
-    previousValue: 91.8,
-    trend: 'up',
-    status: 'success',
-    unit: '%',
-    sparklineData: [88, 89, 90, 91, 92, 93, 94.2],
-    target: 95
-  }
-];
-
-const mockAlerts: Alert[] = [
-  {
-    id: '1',
-    title: 'Certificado SSL próximo a expirar',
-    description: 'El certificado SSL expira en 7 días',
-    level: 'critical',
-    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    isRead: false,
-    actionUrl: '/settings/ssl',
-    type: 'system'
-  },
-  {
-    id: '2',
-    title: 'Saldo bajo en cuenta principal',
-    description: 'Quedan $2,450 en la cuenta operativa',
-    level: 'critical',
-    timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000),
-    isRead: false,
-    type: 'financial'
-  },
-  {
-    id: '3',
-    title: 'Stock bajo: Tests PHQ-9',
-    description: 'Quedan 12 unidades, reordenar pronto',
-    level: 'warning',
-    timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000),
-    isRead: true,
-    type: 'operational'
-  },
-  {
-    id: '4',
-    title: 'Alta rotación detectada',
-    description: '3 terapeutas han solicitado cambio de horario',
-    level: 'warning',
-    timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000),
-    isRead: false,
-    type: 'clinical'
-  },
-  {
-    id: '5',
-    title: 'Backup completado exitosamente',
-    description: 'Backup automático de base de datos completado',
-    level: 'info',
-    timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000),
-    isRead: true,
-    type: 'system'
-  }
-];
-
-const mockTasks: Task[] = [
-  {
-    id: '1',
-    title: 'Revisar expedientes pendientes',
-    description: 'Validar 15 expedientes que requieren firma',
-    status: 'todo',
-    priority: 'high',
-    assignedTo: 'Dr. García',
-    dueDate: new Date(Date.now() + 24 * 60 * 60 * 1000),
-    createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-    category: 'administrative'
-  },
-  {
-    id: '2',
-    title: 'Actualizar protocolos COVID',
-    description: 'Revisar y actualizar protocolos según nuevas normativas',
-    status: 'in-progress',
-    priority: 'medium',
-    assignedTo: 'Dra. López',
-    dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-    createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-    category: 'clinical'
-  },
-  {
-    id: '3',
-    title: 'Capacitación nuevo software',
-    description: 'Organizar sesión de capacitación para el equipo',
-    status: 'todo',
-    priority: 'low',
-    assignedTo: 'Admin',
-    dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-    createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
-    category: 'administrative'
-  },
-  {
-    id: '4',
-    title: 'Renovar licencias software',
-    description: 'Renovar licencias de software clínico antes del vencimiento',
-    status: 'done',
-    priority: 'high',
-    assignedTo: 'Admin',
-    dueDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
-    createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
-    category: 'administrative'
-  }
-];
-
-const mockFinancialMetrics: FinancialMetrics = {
-  revenue: {
-    mtd: 89750,
-    ytd: 987500,
-    projection: [95000, 102000, 108000, 115000, 122000, 128000]
-  },
-  expenses: {
-    mtd: 45200,
-    ytd: 498200,
-    projection: [47000, 48500, 50000, 51500, 53000, 54500]
-  },
-  ebitda: 44550,
-  burnRate: [42000, 43500, 45200, 46800, 48200],
-  earnRate: [78000, 82000, 89750, 95000, 102000],
-  cac: 125,
-  ltv: 2850,
-  arpu: 365,
-  churnRate: 3.2
-};
-
-const mockClinicalMetrics: ClinicalMetrics = {
-  occupancyRate: 87.5,
-  cancellationRate: 8.2,
-  noShowRate: 4.1,
-  averagePhq9: 12.3,
-  averageGad7: 10.8,
-  adherenceRate: 92.1,
-  riskPatients: 23,
-  averageSessionsPerPatient: 8.5,
-  improvementRate: 78.9,
-  dischargeRate: 15.2
-};
-
-// Hook para simular carga de datos
-function useSimulatedData<T>(data: T, delay: number = 1000) {
-  const [state, setState] = useState<T | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setState(data);
-      setLoading(false);
-    }, delay);
-
-    return () => clearTimeout(timer);
-  }, [data, delay]);
-
-  return { data: state, loading };
-}
-
 export function useKPIMetrics() {
   const { user } = useAuth();
   const [metrics, setMetrics] = useState<KPIMetric[]>([]);
@@ -407,13 +213,54 @@ export function useClinicalMetrics() {
   return { metrics, loading, error };
 }
 
+interface MonthlyData {
+  period: string;
+  revenue: number;
+  expenses: number;
+  profit: number;
+  growth: number;
+  sessions: number;
+  avgSessionCost: number;
+}
+
+interface PaymentData {
+  id: string;
+  amount: number;
+  date: Date;
+  status: string;
+  [key: string]: unknown;
+}
+
+interface ExpenseBreakdown {
+  category: string;
+  amount: number;
+  percentage: number;
+  color: string;
+}
+
+interface SessionData {
+  id: string;
+  date: Date;
+  cost: number;
+  status: string;
+  [key: string]: unknown;
+}
+
+interface ExpenseData {
+  id: string;
+  date: Date;
+  amount: number;
+  category: string;
+  [key: string]: unknown;
+}
+
 // Hook personalizado para datos financieros detallados calculados desde Firebase
 export function useFinancialData() {
   const { user } = useAuth();
   const [data, setData] = useState({
-    monthlyData: [] as any[],
-    paymentsData: [] as any[],
-    expensesBreakdown: [] as any[],
+    monthlyData: [] as MonthlyData[],
+    paymentsData: [] as PaymentData[],
+    expensesBreakdown: [] as ExpenseBreakdown[],
     totalStats: {
       totalRevenue: 0,
       totalExpenses: 0,
@@ -453,7 +300,7 @@ export function useFinancialData() {
           id: doc.id,
           ...doc.data(),
           date: doc.data().date.toDate()
-        }));
+        })) as SessionData[];
 
         // Cargar pagos
         const paymentsQuery = query(
@@ -467,7 +314,7 @@ export function useFinancialData() {
           id: doc.id,
           ...doc.data(),
           date: doc.data().date.toDate()
-        }));
+        })) as PaymentData[];
 
         // Cargar gastos
         const expensesQuery = query(
@@ -481,13 +328,12 @@ export function useFinancialData() {
           id: doc.id,
           ...doc.data(),
           date: doc.data().date.toDate()
-        }));
+        })) as ExpenseData[];
 
         // Procesar datos
         const monthlyData = processMonthlyData(sessions, expenses);
-        const totalStats = calculateStats(sessions, payments, expenses);
         const expensesBreakdown = processExpensesBreakdown(expenses);
-
+        const totalStats = calculateStats(sessions, payments, expenses);
         setData({
           monthlyData,
           paymentsData: payments,
@@ -495,9 +341,8 @@ export function useFinancialData() {
           totalStats
         });
 
-      } catch (error: any) {
-        console.error('Error loading financial data:', error);
-        setError(`Error cargando datos financieros: ${error.message}`);
+      } catch (error: unknown) {
+        setError(`Error cargando datos financieros: ${error instanceof Error ? error.message : 'Error desconocido'}`);
         setData({
           monthlyData: [],
           paymentsData: [],
@@ -521,17 +366,16 @@ export function useFinancialData() {
     loadFinancialData();
   }, [user?.centerId]);
 
-  const processMonthlyData = (sessions: any[], expenses: any[]) => {
-    const monthlyMap = new Map();
-    
+  const processMonthlyData = (sessions: SessionData[], expenses: ExpenseData[]): MonthlyData[] => {
+    const monthlyMap = new Map<string, MonthlyData>();
+
     // Procesar sesiones por mes
     sessions.forEach(session => {
-      const month = session.date.toLocaleDateString('es-ES', { month: 'short' });
-      const monthKey = `${session.date.getFullYear()}-${session.date.getMonth()}`;
+      const monthKey = `${session.date.getFullYear()}-${String(session.date.getMonth() + 1).padStart(2, '0')}`;
       
       if (!monthlyMap.has(monthKey)) {
         monthlyMap.set(monthKey, {
-          period: month,
+          period: monthKey,
           revenue: 0,
           expenses: 0,
           profit: 0,
@@ -541,19 +385,29 @@ export function useFinancialData() {
         });
       }
       
-      const monthData = monthlyMap.get(monthKey);
+      const monthData = monthlyMap.get(monthKey)!;
       monthData.revenue += session.cost || 0;
       monthData.sessions += 1;
     });
 
     // Procesar gastos por mes
     expenses.forEach(expense => {
-      const monthKey = `${expense.date.getFullYear()}-${expense.date.getMonth()}`;
+      const monthKey = `${expense.date.getFullYear()}-${String(expense.date.getMonth() + 1).padStart(2, '0')}`;
       
-      if (monthlyMap.has(monthKey)) {
-        const monthData = monthlyMap.get(monthKey);
-        monthData.expenses += expense.amount || 0;
+      if (!monthlyMap.has(monthKey)) {
+        monthlyMap.set(monthKey, {
+          period: monthKey,
+          revenue: 0,
+          expenses: 0,
+          profit: 0,
+          growth: 0,
+          sessions: 0,
+          avgSessionCost: 0
+        });
       }
+      
+      const monthData = monthlyMap.get(monthKey)!;
+      monthData.expenses += expense.amount || 0;
     });
 
     // Calcular promedios y beneficios
@@ -563,18 +417,10 @@ export function useFinancialData() {
       return monthData;
     });
 
-    // Calcular crecimiento
-    for (let i = 1; i < result.length; i++) {
-      const current = result[i];
-      const previous = result[i - 1];
-      current.growth = previous.revenue > 0 ? 
-        ((current.revenue - previous.revenue) / previous.revenue) * 100 : 0;
-    }
-
     return result.sort((a, b) => a.period.localeCompare(b.period));
   };
 
-  const processExpensesBreakdown = (expenses: any[]) => {
+  const processExpensesBreakdown = (expenses: ExpenseData[]): ExpenseBreakdown[] => {
     const categoryMap = new Map();
     let totalExpenses = 0;
 
@@ -585,7 +431,6 @@ export function useFinancialData() {
       if (!categoryMap.has(category)) {
         categoryMap.set(category, 0);
       }
-      
       categoryMap.set(category, categoryMap.get(category) + amount);
       totalExpenses += amount;
     });
@@ -601,7 +446,7 @@ export function useFinancialData() {
     }));
   };
 
-  const calculateStats = (sessions: any[], payments: any[], expenses: any[]) => {
+  const calculateStats = (sessions: SessionData[], payments: PaymentData[], expenses: ExpenseData[]) => {
     const totalRevenue = sessions.reduce((sum, session) => sum + (session.cost || 0), 0);
     const totalExpenses = expenses.reduce((sum, expense) => sum + (expense.amount || 0), 0);
     const totalProfit = totalRevenue - totalExpenses;
@@ -658,24 +503,22 @@ export function useFinancialData() {
 }
 
 // Funciones para manipular datos en Firebase
-export const updateAlert = async (alertId: string, updates: Partial<Alert>) => {
-  const { user } = useAuth();
-  if (!user?.centerId) throw new Error('No hay centro asignado');
+export const updateAlert = async (centerId: string, alertId: string, updates: Partial<Alert>) => {
+  if (!centerId) throw new Error('No hay centro asignado');
   
   try {
-    await updateDoc(doc(db, 'centers', user.centerId, 'alerts', alertId), updates);
+    await updateDoc(doc(db, 'centers', centerId, 'alerts', alertId), updates);
   } catch (error) {
     console.error('Error updating alert:', error);
     throw error;
   }
 };
 
-export const createTask = async (task: Omit<Task, 'id' | 'createdAt'>) => {
-  const { user } = useAuth();
-  if (!user?.centerId) throw new Error('No hay centro asignado');
+export const createTask = async (centerId: string, task: Omit<Task, 'id' | 'createdAt'>) => {
+  if (!centerId) throw new Error('No hay centro asignado');
   
   try {
-    await addDoc(collection(db, 'centers', user.centerId, 'tasks'), {
+    await addDoc(collection(db, 'centers', centerId, 'tasks'), {
       ...task,
       createdAt: new Date()
     });
@@ -685,24 +528,22 @@ export const createTask = async (task: Omit<Task, 'id' | 'createdAt'>) => {
   }
 };
 
-export const updateTask = async (taskId: string, updates: Partial<Task>) => {
-  const { user } = useAuth();
-  if (!user?.centerId) throw new Error('No hay centro asignado');
+export const updateTask = async (centerId: string, taskId: string, updates: Partial<Task>) => {
+  if (!centerId) throw new Error('No hay centro asignado');
   
   try {
-    await updateDoc(doc(db, 'centers', user.centerId, 'tasks', taskId), updates);
+    await updateDoc(doc(db, 'centers', centerId, 'tasks', taskId), updates);
   } catch (error) {
     console.error('Error updating task:', error);
     throw error;
   }
 };
 
-export const deleteTask = async (taskId: string) => {
-  const { user } = useAuth();
-  if (!user?.centerId) throw new Error('No hay centro asignado');
+export const deleteTask = async (centerId: string, taskId: string) => {
+  if (!centerId) throw new Error('No hay centro asignado');
   
   try {
-    await deleteDoc(doc(db, 'centers', user.centerId, 'tasks', taskId));
+    await deleteDoc(doc(db, 'centers', centerId, 'tasks', taskId));
   } catch (error) {
     console.error('Error deleting task:', error);
     throw error;

@@ -1,34 +1,26 @@
 'use client';
 
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { 
   DollarSign, 
   TrendingUp, 
   TrendingDown, 
-  Calendar,
-  Filter,
   Download,
   RefreshCw,
-  AlertCircle,
-  CheckCircle,
   Clock,
-  CreditCard,
   PieChart,
   BarChart3,
-  Target,
-  Wallet,
-  Receipt,
-  Calculator,
   FileText,
   ArrowUpRight,
   ArrowDownRight,
   Minus,
   Database,
   Wifi,
-  WifiOff
+  WifiOff,
+  Plus
 } from 'lucide-react';
-import { LineChart, Line, AreaChart, Area, BarChart, Bar, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip, Legend, PieChart as RechartsPieChart, Cell } from 'recharts';
+import {  AreaChart, Area, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip, Legend, PieChart as RechartsPieChart, Cell } from 'recharts';
 import { useStyles } from '@/lib/useStyles';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
@@ -111,7 +103,18 @@ export default function FinancialPanel() {
     }
   };
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  interface ChartEntry {
+    name: string;
+    value: number;
+    color: string;
+  }
+
+  interface TooltipProps {
+    active?: boolean;
+    payload?: Array<ChartEntry>;
+    label?: string;
+  }
+  const CustomTooltip = ({ active, payload, label }: TooltipProps) => {
     if (active && payload && payload.length) {
       return (
         <div style={{
@@ -130,7 +133,7 @@ export default function FinancialPanel() {
           }}>
             {label}
           </p>
-          {payload.map((entry: any, index: number) => (
+          {payload.map((entry: ChartEntry, index: number) => (
             <p key={index} style={{
               fontSize: '0.75rem',
               color: entry.color,
@@ -770,7 +773,7 @@ export default function FinancialPanel() {
                     <ResponsiveContainer width="100%" height="100%">
                       <RechartsPieChart>
                         <Tooltip 
-                          formatter={(value: any) => [formatCurrency(value), 'Importe']}
+                          formatter={(value: number) => [formatCurrency(value), 'Importe']}
                           labelFormatter={(label) => `Categoría: ${label}`}
                         />
                         <RechartsPieChart data={data.expensesBreakdown}>

@@ -11,8 +11,6 @@ import {
   LogOut, 
   Bell, 
   ChevronDown, 
-  Menu,
-  X,
   Shield,
   Activity
 } from 'lucide-react';
@@ -36,7 +34,6 @@ export default function Topbar({ onSearch, onCenterChange }: TopbarProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
   
   // Actualizar tiempo cada segundo

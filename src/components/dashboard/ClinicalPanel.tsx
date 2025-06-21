@@ -1,38 +1,19 @@
 'use client';
 
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { 
   Heart, 
   AlertTriangle, 
-  Calendar, 
-  Activity, 
-  Users, 
   TrendingUp, 
   Shield, 
   Brain,
   Zap,
-  Clock,
-  Target,
-  BarChart3,
-  Eye,
-  CheckCircle2,
-  XCircle,
   AlertCircle,
-  Sparkles,
   ArrowRight,
-  TrendingDown,
-  Plus,
-  Radio,
-  Settings,
   Filter,
   Download,
   RefreshCw,
-  Maximize2,
-  MoreVertical,
-  Star,
-  Layers,
-  Gauge,
   CheckCircle
 } from 'lucide-react';
 import { 
@@ -48,16 +29,8 @@ import {
   YAxis, 
   CartesianGrid, 
   Tooltip,
-  LineChart,
-  Line,
-  Area,
-  AreaChart,
-  Cell,
-  PieChart,
-  Pie,
   Legend
 } from 'recharts';
-import { useClinicalMetrics } from '@/hooks/useDashboardData';
 import { useStyles } from '@/lib/useStyles';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
@@ -88,7 +61,6 @@ export default function ClinicalPanel({
   const { theme } = useStyles();
   const [selectedPeriod, setSelectedPeriod] = useState('week');
   const [selectedMetric, setSelectedMetric] = useState('capacity');
-  const { metrics, loading: metricsLoading } = useClinicalMetrics();
 
   // Mock data mejorado
   const mockClinicalData: ClinicalData[] = [
@@ -179,7 +151,15 @@ export default function ClinicalPanel({
     return `${value.toFixed(1)}%`;
   };
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload, label }: {
+    active?: boolean;
+    payload?: Array<{
+      name: string;
+      value: number;
+      color: string;
+    }>;
+    label?: string;
+  }) => {
     if (active && payload && payload.length) {
       return (
         <div style={{
@@ -198,7 +178,7 @@ export default function ClinicalPanel({
           }}>
             {label}
           </p>
-          {payload.map((entry: any, index: number) => (
+          {payload.map((entry: { name: string; value: number; color: string }, index: number) => (
             <p key={index} style={{
               fontSize: '0.75rem',
               color: entry.color,

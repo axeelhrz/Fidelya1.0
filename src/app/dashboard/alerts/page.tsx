@@ -1,33 +1,25 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   AlertTriangle,
   Bell,
   Clock,
-  User,
-  Calendar,
-  Phone,
   MessageSquare,
   CheckCircle,
-  XCircle,
   Eye,
   Edit,
   Trash2,
-  Filter,
   Search,
   Plus,
   Download,
   Settings,
   Zap,
   Heart,
-  Brain,
   Shield,
   TrendingUp,
   Activity,
-  Wifi,
-  Send
 } from 'lucide-react';
 import { Alert } from '@/types/dashboard';
 
@@ -41,8 +33,6 @@ export default function AlertsPage() {
     status: 'all'
   });
   const [selectedAlerts, setSelectedAlerts] = useState<string[]>([]);
-  const [showFilters, setShowFilters] = useState(false);
-  const [showNewAlert, setShowNewAlert] = useState(false);
 
   // Mock data para desarrollo
   useEffect(() => {
@@ -116,7 +106,7 @@ export default function AlertsPage() {
 
   // Filtrar alertas
   useEffect(() => {
-    let filtered = alerts.filter(alert => {
+    const filtered = alerts.filter(alert => {
       const matchesSearch = 
         alert.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         alert.description.toLowerCase().includes(searchQuery.toLowerCase());
@@ -301,7 +291,7 @@ export default function AlertsPage() {
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              onClick={() => setShowNewAlert(true)}
+              onClick={() => console.log('Nueva alerta')}
               style={{
                 display: 'flex',
                 alignItems: 'center',
