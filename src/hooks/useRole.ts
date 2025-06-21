@@ -3,7 +3,7 @@ import { UserRole } from '@/types/auth';
 import { ROLE_PERMISSIONS } from '@/constants/roles';
 
 export function useRole() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
 
   const hasRole = (role: UserRole): boolean => {
     return user?.role === role;
@@ -31,6 +31,7 @@ export function useRole() {
   return {
     user,
     role: user?.role,
+    loading,
     hasRole,
     hasAnyRole,
     hasPermission,
