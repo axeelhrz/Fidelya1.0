@@ -5,7 +5,6 @@ import { motion } from 'framer-motion';
 import { Search, Calendar, MapPin, Settings, User, LogOut, Bell, ChevronDown, Zap } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { useAuth } from '@/contexts/AuthContext';
 
 interface TopbarProps {
   onSearch?: (query: string) => void;
@@ -13,7 +12,13 @@ interface TopbarProps {
 }
 
 export default function Topbar({ onSearch, onCenterChange }: TopbarProps) {
-  const { user, logout } = useAuth();
+  // Usuario mock para desarrollo
+  const mockUser = {
+    name: 'Dr. Carlos Mendoza',
+    email: 'carlos.mendoza@centropsicologico.com',
+    role: 'admin'
+  };
+
   const [searchQuery, setSearchQuery] = useState('');
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
@@ -26,6 +31,11 @@ export default function Topbar({ onSearch, onCenterChange }: TopbarProps) {
     const query = e.target.value;
     setSearchQuery(query);
     onSearch?.(query);
+  };
+
+  const handleLogout = () => {
+    console.log('Logout clicked');
+    // Aquí puedes agregar la lógica de logout cuando sea necesario
   };
 
   return (
@@ -190,7 +200,7 @@ export default function Topbar({ onSearch, onCenterChange }: TopbarProps) {
                 </div>
                 <div className="hidden md:block text-left">
                   <div className="text-sm font-bold text-primary font-space-grotesk">
-                    {user?.name || 'Usuario'}
+                    {mockUser.name}
                   </div>
                   <div className="text-xs text-accent font-semibold">CEO & Fundador</div>
                 </div>
@@ -219,8 +229,8 @@ export default function Topbar({ onSearch, onCenterChange }: TopbarProps) {
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer-futuristic" />
                       </div>
                       <div>
-                        <div className="text-lg font-bold text-primary font-space-grotesk">{user?.name}</div>
-                        <div className="text-sm text-secondary">{user?.email}</div>
+                        <div className="text-lg font-bold text-primary font-space-grotesk">{mockUser.name}</div>
+                        <div className="text-sm text-secondary">{mockUser.email}</div>
                         <div className="text-sm text-accent font-bold">CEO & Fundador</div>
                       </div>
                     </div>
@@ -244,7 +254,7 @@ export default function Topbar({ onSearch, onCenterChange }: TopbarProps) {
                     <div className="h-px bg-gradient-to-r from-transparent via-border-light to-transparent my-3 mx-8" />
                     
                     <motion.button
-                      onClick={logout}
+                      onClick={handleLogout}
                       className="w-full px-8 py-4 text-left text-sm hover:bg-error-bg/30 flex items-center space-x-4 transition-all duration-300 group"
                       whileHover={{ x: 8 }}
                     >
