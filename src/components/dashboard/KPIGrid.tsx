@@ -5,8 +5,9 @@ import { motion } from 'framer-motion';
 import KPICard from './KPICard';
 import { useKPIMetrics } from '@/hooks/useDashboardData';
 import { KPIMetric } from '@/types/dashboard';
+import { BarChart3, TrendingUp } from 'lucide-react';
 
-// Datos mock para desarrollo
+// Datos mock mejorados para desarrollo
 const mockKPIs: KPIMetric[] = [
   {
     id: '1',
@@ -110,16 +111,23 @@ export default function KPIGrid() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <div className="space-y-2">
-          <div className="h-6 bg-surface-elevated rounded loading-skeleton w-48" />
-          <div className="h-4 bg-surface-elevated rounded loading-skeleton w-64" />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="space-y-8">
+        <motion.div 
+          className="space-y-3"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <div className="h-8 bg-surface-elevated rounded-xl loading-futuristic w-64" />
+          <div className="h-5 bg-surface-elevated rounded-lg loading-futuristic w-80" />
+        </motion.div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {Array.from({ length: 8 }).map((_, index) => (
-            <div
+            <motion.div
               key={index}
-              className="h-48 bg-surface-elevated rounded-card loading-skeleton"
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1, duration: 0.6 }}
+              className="h-64 bg-surface-glass backdrop-blur-xl rounded-card loading-futuristic border border-light"
             />
           ))}
         </div>
@@ -131,18 +139,60 @@ export default function KPIGrid() {
     <motion.section
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="space-y-6"
+      transition={{ duration: 0.8 }}
+      className="space-y-8 particle-container"
     >
-      <div className="space-y-1">
-        <h2 className="text-lg font-semibold font-space-grotesk text-primary">
-          Métricas Clave
-        </h2>
-        <p className="text-sm text-secondary">
-          Indicadores principales del rendimiento del centro
-        </p>
-      </div>
+      {/* Header mejorado */}
+      <motion.div 
+        className="space-y-3"
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+      >
+        <div className="flex items-center space-x-4">
+          <div className="p-3 bg-accent/10 rounded-xl border border-accent/20">
+            <BarChart3 className="w-6 h-6 text-accent" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold font-space-grotesk text-primary text-gradient-accent">
+              Métricas Clave de Rendimiento
+            </h2>
+            <p className="text-sm text-secondary font-medium">
+              Indicadores principales del rendimiento del centro psicológico
+            </p>
+          </div>
+        </div>
+        
+        {/* Resumen estadístico */}
+        <motion.div 
+          className="flex items-center space-x-6 mt-4"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.3, duration: 0.6 }}
+        >
+          <div className="flex items-center space-x-2 bg-success-bg px-4 py-2 rounded-full border border-success/20">
+            <TrendingUp className="w-4 h-4 text-success" />
+            <span className="text-sm font-bold text-success">
+              {displayMetrics.filter(m => m.status === 'success').length} métricas en verde
+            </span>
+          </div>
+          <div className="flex items-center space-x-2 bg-warning-bg px-4 py-2 rounded-full border border-warning/20">
+            <span className="w-2 h-2 bg-warning rounded-full animate-pulse" />
+            <span className="text-sm font-bold text-warning">
+              {displayMetrics.filter(m => m.status === 'warning').length} requieren atención
+            </span>
+          </div>
+          <div className="flex items-center space-x-2 bg-error-bg px-4 py-2 rounded-full border border-error/20">
+            <span className="w-2 h-2 bg-error rounded-full animate-pulse" />
+            <span className="text-sm font-bold text-error">
+              {displayMetrics.filter(m => m.status === 'error').length} críticas
+            </span>
+          </div>
+        </motion.div>
+      </motion.div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* Grid de KPIs */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
         {displayMetrics.map((metric, index) => (
           <KPICard
             key={metric.id}
@@ -152,6 +202,39 @@ export default function KPIGrid() {
           />
         ))}
       </div>
+
+      {/* Insights automáticos */}
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.8, duration: 0.6 }}
+        className="bg-surface-glass backdrop-blur-xl rounded-card border border-light p-6 mt-8"
+      >
+        <div className="flex items-start space-x-4">
+          <div className="p-3 bg-accent/10 rounded-xl border border-accent/20">
+            <TrendingUp className="w-5 h-5 text-accent" />
+          </div>
+          <div className="flex-1">
+            <h3 className="font-bold text-primary font-space-grotesk mb-2">
+              Insights Automáticos del Rendimiento
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <div className="bg-success-bg p-4 rounded-lg border border-success/20">
+                <p className="font-semibold text-success mb-1">Excelente Rendimiento</p>
+                <p className="text-success/80">
+                  Los ingresos superan las expectativas en un 5.9% este mes
+                </p>
+              </div>
+              <div className="bg-warning-bg p-4 rounded-lg border border-warning/20">
+                <p className="font-semibold text-warning mb-1">Oportunidad de Mejora</p>
+                <p className="text-warning/80">
+                  El stock de tests requiere reposición en los próximos 7 días
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </motion.div>
     </motion.section>
   );
 }
