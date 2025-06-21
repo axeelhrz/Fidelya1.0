@@ -39,18 +39,7 @@ export default function LoginPage() {
   const [isClient, setIsClient] = useState(false);
   
   const router = useRouter();
-  const { user, login } = useAuth();
-
-  // Redirigir si ya está autenticado
-  useEffect(() => {
-    if (user) {
-      if (user.role === 'admin') {
-        router.push('/dashboard/ceo');
-      } else {
-        router.push('/dashboard/sessions');
-      }
-    }
-  }, [user, router]);
+  const { user, login, loading: authLoading } = useAuth();
 
   // Ensure we're on the client side before showing time
   useEffect(() => {
@@ -67,6 +56,14 @@ export default function LoginPage() {
     }, 1000);
     return () => clearInterval(timer);
   }, [isClient]);
+
+  // Redirigir si ya está autenticado (solo después de que termine la carga inicial)
+  useEffect(() => {
+    if (!authLoading && user) {
+      const targetPath = user.role === 'admin' ? '/dashboard/ceo' : '/dashboard/sessions';
+      router.push(targetPath);
+    }
+  }, [user, authLoading, router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -108,8 +105,8 @@ export default function LoginPage() {
     }
   ];
 
-  // Si ya está autenticado, mostrar loading
-  if (user) {
+  // Mostrar loading si está cargando la autenticación inicial o si ya está autenticado
+  if (authLoading || (!authLoading && user)) {
     return (
       <div style={{
         minHeight: '100vh',
@@ -142,7 +139,7 @@ export default function LoginPage() {
             color: '#6B7280',
             fontFamily: 'Inter, sans-serif'
           }}>
-            Redirigiendo al dashboard...
+            {authLoading ? 'Verificando sesión...' : 'Redirigiendo al dashboard...'}
           </p>
         </div>
       </div>
