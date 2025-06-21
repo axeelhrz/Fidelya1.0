@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Calendar, MapPin, Settings, User, LogOut, Bell, ChevronDown } from 'lucide-react';
+import { Search, Calendar, MapPin, Settings, User, LogOut, Bell, ChevronDown, Zap } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useAuth } from '@/contexts/AuthContext';
@@ -30,202 +30,230 @@ export default function Topbar({ onSearch, onCenterChange }: TopbarProps) {
 
   return (
     <motion.header
-      initial={{ y: -20, opacity: 0 }}
+      initial={{ y: -30, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
-      className="glass sticky top-0 z-50 border-b border-white/20"
+      transition={{ duration: 0.8, ease: [0.4, 0, 0.2, 1] }}
+      className="glass-premium sticky top-0 z-50 border-b border-glow/30"
     >
       <div className="container-dashboard">
-        <div className="flex items-center justify-between h-20">
-          {/* Logo y título con animación */}
+        <div className="flex items-center justify-between h-24">
+          {/* Logo futurista */}
           <motion.div 
-            className="flex items-center space-x-4"
+            className="flex items-center space-x-5"
             whileHover={{ scale: 1.02 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.3 }}
           >
-            <div className="flex items-center space-x-4">
-              <div className="relative">
-                <div className="w-12 h-12 gradient-primary rounded-2xl flex items-center justify-center shadow-elevated">
-                  <span className="text-inverse font-bold text-lg">CP</span>
-                </div>
-                <div className="absolute -top-1 -right-1 w-4 h-4 bg-success rounded-full border-2 border-white animate-pulse" />
-              </div>
-              <div>
-                <h1 className="text-heading text-xl text-primary">
-                  Centro Psicológico
-                </h1>
+            <div className="relative">
+              <motion.div 
+                className="w-14 h-14 gradient-accent rounded-2xl flex items-center justify-center shadow-glow-strong relative overflow-hidden"
+                whileHover={{ rotate: 5 }}
+                transition={{ duration: 0.3 }}
+              >
+                <span className="text-inverse font-bold text-xl font-space-grotesk">CP</span>
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer-futuristic" />
+              </motion.div>
+              <motion.div 
+                className="absolute -top-1 -right-1 w-5 h-5 bg-success rounded-full border-2 border-white shadow-glow"
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              />
+              <div className="absolute -bottom-1 -left-1 w-3 h-3 bg-accent/60 rounded-full animate-pulse" />
+            </div>
+            <div>
+              <h1 className="text-heading-futuristic text-2xl text-primary">
+                Centro Psicológico
+              </h1>
+              <div className="flex items-center space-x-2">
                 <p className="text-caption text-tertiary">Dashboard Ejecutivo</p>
+                <Zap className="w-3 h-3 text-accent animate-pulse" />
               </div>
             </div>
           </motion.div>
 
-          {/* Centro - Información de fecha y selector de sede */}
-          <div className="hidden lg:flex items-center space-x-8">
+          {/* Centro - Información mejorada */}
+          <div className="hidden lg:flex items-center space-x-10">
             <motion.div 
               className="flex items-center space-x-4 text-sm"
-              initial={{ opacity: 0, x: -20 }}
+              initial={{ opacity: 0, x: -30 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 }}
+              transition={{ delay: 0.3, duration: 0.6 }}
             >
-              <div className="p-3 bg-surface-elevated rounded-xl">
-                <Calendar className="w-5 h-5 text-accent" />
+              <div className="p-4 bg-surface-glass backdrop-blur-xl rounded-2xl border border-light shadow-card">
+                <Calendar className="w-6 h-6 text-accent" />
               </div>
               <div>
-                <div className="font-semibold text-primary">{localTime}</div>
-                <div className="text-sm text-secondary">{currentTime}</div>
+                <div className="font-bold text-primary text-lg font-space-grotesk">{localTime}</div>
+                <div className="text-sm text-accent font-semibold">{currentTime}</div>
               </div>
             </motion.div>
             
-            <div className="h-8 w-px bg-border-light" />
+            <div className="h-12 w-px bg-gradient-to-b from-transparent via-border-light to-transparent" />
             
             <motion.div 
-              className="flex items-center space-x-3"
-              initial={{ opacity: 0, x: -20 }}
+              className="flex items-center space-x-4"
+              initial={{ opacity: 0, x: -30 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 }}
+              transition={{ delay: 0.4, duration: 0.6 }}
             >
-              <div className="p-3 bg-surface-elevated rounded-xl">
-                <MapPin className="w-5 h-5 text-accent" />
+              <div className="p-4 bg-surface-glass backdrop-blur-xl rounded-2xl border border-light shadow-card">
+                <MapPin className="w-6 h-6 text-accent" />
               </div>
               <div className="relative">
                 <select 
-                  className="appearance-none bg-transparent border-none text-sm font-semibold text-primary focus:outline-none cursor-pointer pr-6"
+                  className="appearance-none bg-surface-glass backdrop-blur-xl border border-light rounded-xl px-4 py-3 text-sm font-bold text-primary focus:outline-none focus:border-glow focus:shadow-glow cursor-pointer pr-10 font-space-grotesk"
                   onChange={(e) => onCenterChange?.(e.target.value)}
                 >
                   <option value="main">Sede Principal</option>
                   <option value="north">Sede Norte</option>
                   <option value="south">Sede Sur</option>
                 </select>
-                <ChevronDown className="absolute right-0 top-1/2 transform -translate-y-1/2 w-4 h-4 text-secondary pointer-events-none" />
+                <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-accent pointer-events-none" />
               </div>
             </motion.div>
           </div>
 
-          {/* Derecha - Buscador y usuario */}
-          <div className="flex items-center space-x-4">
-            {/* Buscador global mejorado */}
+          {/* Derecha - Controles futuristas */}
+          <div className="flex items-center space-x-5">
+            {/* Buscador futurista */}
             <motion.div 
               className="relative hidden md:block"
-              initial={{ opacity: 0, x: 20 }}
+              initial={{ opacity: 0, x: 30 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.4 }}
+              transition={{ delay: 0.5, duration: 0.6 }}
             >
-              <div className={`relative transition-all duration-300 ${
-                isSearchFocused ? 'scale-105' : ''
-              }`}>
-                <Search className={`absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 transition-colors duration-300 ${
-                  isSearchFocused ? 'text-accent' : 'text-secondary'
+              <motion.div 
+                className={`relative transition-all duration-500 ${
+                  isSearchFocused ? 'scale-105' : ''
+                }`}
+                animate={{
+                  boxShadow: isSearchFocused ? 'var(--shadow-glow-strong)' : 'var(--shadow-card)'
+                }}
+              >
+                <Search className={`absolute left-5 top-1/2 transform -translate-y-1/2 w-5 h-5 transition-all duration-300 ${
+                  isSearchFocused ? 'text-accent scale-110' : 'text-secondary'
                 }`} />
                 <input
                   type="text"
-                  placeholder="Buscar pacientes, métricas..."
+                  placeholder="Buscar pacientes, métricas, insights..."
                   value={searchQuery}
                   onChange={handleSearch}
                   onFocus={() => setIsSearchFocused(true)}
                   onBlur={() => setIsSearchFocused(false)}
-                  className="pl-12 pr-6 py-3 w-80 bg-surface-elevated/80 backdrop-blur-sm rounded-2xl border border-border-light focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent text-sm transition-all duration-300 placeholder-tertiary"
+                  className="pl-14 pr-8 py-4 w-96 bg-surface-glass backdrop-blur-xl rounded-2xl border border-light focus:outline-none focus:border-glow text-sm transition-all duration-500 placeholder-tertiary font-inter"
                 />
-                {isSearchFocused && (
-                  <div className="absolute inset-0 bg-gradient-to-r from-accent/5 to-accent-light/5 rounded-2xl -z-10" />
-                )}
-              </div>
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: isSearchFocused ? 1 : 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="absolute inset-0 bg-gradient-to-r from-accent/5 via-transparent to-accent/5 rounded-2xl -z-10"
+                />
+              </motion.div>
             </motion.div>
 
-            {/* Notificaciones mejoradas */}
+            {/* Notificaciones futuristas */}
             <motion.button 
-              className="relative p-3 rounded-2xl bg-surface-elevated/80 backdrop-blur-sm hover:bg-surface-hover transition-all duration-300 group"
-              whileHover={{ scale: 1.05 }}
+              className="relative p-4 rounded-2xl bg-surface-glass backdrop-blur-xl border border-light hover:border-glow hover:shadow-glow transition-all duration-400 group"
+              whileHover={{ scale: 1.05, y: -2 }}
               whileTap={{ scale: 0.95 }}
-              initial={{ opacity: 0, x: 20 }}
+              initial={{ opacity: 0, x: 30 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.5 }}
+              transition={{ delay: 0.6, duration: 0.6 }}
             >
               <Bell className="w-5 h-5 text-secondary group-hover:text-accent transition-colors duration-300" />
-              <div className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-error to-error-light rounded-full flex items-center justify-center">
+              <motion.div 
+                className="absolute -top-1 -right-1 w-6 h-6 gradient-error rounded-full flex items-center justify-center shadow-glow"
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
                 <span className="text-xs font-bold text-white">3</span>
-              </div>
-              <div className="absolute -top-1 -right-1 w-5 h-5 bg-error/30 rounded-full animate-ping" />
+              </motion.div>
+              <div className="absolute -top-1 -right-1 w-6 h-6 bg-error/30 rounded-full animate-ping" />
             </motion.button>
 
-            {/* Menú de usuario mejorado */}
+            {/* Menú de usuario futurista */}
             <div className="relative">
               <motion.button
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                className="flex items-center space-x-3 p-3 rounded-2xl bg-surface-elevated/80 backdrop-blur-sm hover:bg-surface-hover transition-all duration-300 group"
-                whileHover={{ scale: 1.02 }}
+                className="flex items-center space-x-4 p-4 rounded-2xl bg-surface-glass backdrop-blur-xl border border-light hover:border-glow hover:shadow-glow transition-all duration-400 group"
+                whileHover={{ scale: 1.02, y: -2 }}
                 whileTap={{ scale: 0.98 }}
-                initial={{ opacity: 0, x: 20 }}
+                initial={{ opacity: 0, x: 30 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.6 }}
+                transition={{ delay: 0.7, duration: 0.6 }}
               >
                 <div className="relative">
-                  <div className="w-10 h-10 gradient-accent rounded-xl flex items-center justify-center shadow-elevated">
-                    <User className="w-5 h-5 text-inverse" />
+                  <div className="w-12 h-12 gradient-accent rounded-2xl flex items-center justify-center shadow-glow relative overflow-hidden">
+                    <User className="w-6 h-6 text-inverse" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer-futuristic" />
                   </div>
-                  <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-success rounded-full border-2 border-white" />
+                  <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-success rounded-full border-2 border-white shadow-glow" />
                 </div>
                 <div className="hidden md:block text-left">
-                  <div className="text-sm font-semibold text-primary">
+                  <div className="text-sm font-bold text-primary font-space-grotesk">
                     {user?.name || 'Usuario'}
                   </div>
-                  <div className="text-xs text-secondary">CEO & Fundador</div>
+                  <div className="text-xs text-accent font-semibold">CEO & Fundador</div>
                 </div>
-                <ChevronDown className={`w-4 h-4 text-secondary transition-transform duration-300 ${
-                  isUserMenuOpen ? 'rotate-180' : ''
-                }`} />
+                <motion.div
+                  animate={{ rotate: isUserMenuOpen ? 180 : 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <ChevronDown className="w-4 h-4 text-secondary group-hover:text-accent transition-colors duration-300" />
+                </motion.div>
               </motion.button>
 
-              {/* Dropdown del usuario mejorado */}
+              {/* Dropdown futurista */}
               {isUserMenuOpen && (
                 <motion.div
-                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                  initial={{ opacity: 0, y: 20, scale: 0.9 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                  transition={{ duration: 0.2 }}
-                  className="absolute right-0 mt-4 w-72 glass rounded-2xl shadow-floating border border-white/20 py-2 z-50 overflow-hidden"
+                  exit={{ opacity: 0, y: 20, scale: 0.9 }}
+                  transition={{ duration: 0.3, type: "spring", stiffness: 300 }}
+                  className="absolute right-0 mt-6 w-80 glass-premium rounded-2xl shadow-floating border border-glow/30 py-3 z-50 overflow-hidden"
                 >
                   {/* Header del dropdown */}
-                  <div className="px-6 py-4 border-b border-white/10">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-12 h-12 gradient-accent rounded-xl flex items-center justify-center">
-                        <User className="w-6 h-6 text-inverse" />
+                  <div className="px-8 py-6 border-b border-light/50">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-16 h-16 gradient-accent rounded-2xl flex items-center justify-center shadow-glow relative overflow-hidden">
+                        <User className="w-8 h-8 text-inverse" />
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer-futuristic" />
                       </div>
                       <div>
-                        <div className="text-sm font-semibold text-primary">{user?.name}</div>
-                        <div className="text-xs text-secondary">{user?.email}</div>
-                        <div className="text-xs text-accent font-medium">CEO & Fundador</div>
+                        <div className="text-lg font-bold text-primary font-space-grotesk">{user?.name}</div>
+                        <div className="text-sm text-secondary">{user?.email}</div>
+                        <div className="text-sm text-accent font-bold">CEO & Fundador</div>
                       </div>
                     </div>
                   </div>
                   
                   {/* Opciones del menú */}
-                  <div className="py-2">
+                  <div className="py-3">
                     <motion.button 
-                      className="w-full px-6 py-3 text-left text-sm hover:bg-surface-hover/50 flex items-center space-x-3 transition-colors group"
-                      whileHover={{ x: 4 }}
+                      className="w-full px-8 py-4 text-left text-sm hover:bg-surface-hover/50 flex items-center space-x-4 transition-all duration-300 group"
+                      whileHover={{ x: 8 }}
                     >
-                      <div className="p-2 rounded-lg bg-accent/10 group-hover:bg-accent/20 transition-colors">
-                        <Settings className="w-4 h-4 text-accent" />
+                      <div className="p-3 rounded-xl bg-accent/10 group-hover:bg-accent/20 transition-colors border border-accent/20">
+                        <Settings className="w-5 h-5 text-accent" />
                       </div>
                       <div>
-                        <div className="font-medium text-primary">Configuración</div>
-                        <div className="text-xs text-secondary">Preferencias y ajustes</div>
+                        <div className="font-bold text-primary font-space-grotesk">Configuración</div>
+                        <div className="text-xs text-secondary">Preferencias y ajustes del sistema</div>
                       </div>
                     </motion.button>
                     
-                    <div className="h-px bg-border-light/50 my-2 mx-6" />
+                    <div className="h-px bg-gradient-to-r from-transparent via-border-light to-transparent my-3 mx-8" />
                     
                     <motion.button
                       onClick={logout}
-                      className="w-full px-6 py-3 text-left text-sm hover:bg-error-bg/50 flex items-center space-x-3 transition-colors group"
-                      whileHover={{ x: 4 }}
+                      className="w-full px-8 py-4 text-left text-sm hover:bg-error-bg/30 flex items-center space-x-4 transition-all duration-300 group"
+                      whileHover={{ x: 8 }}
                     >
-                      <div className="p-2 rounded-lg bg-error/10 group-hover:bg-error/20 transition-colors">
-                        <LogOut className="w-4 h-4 text-error" />
+                      <div className="p-3 rounded-xl bg-error/10 group-hover:bg-error/20 transition-colors border border-error/20">
+                        <LogOut className="w-5 h-5 text-error" />
                       </div>
                       <div>
-                        <div className="font-medium text-error">Cerrar sesión</div>
-                        <div className="text-xs text-error/70">Salir del dashboard</div>
+                        <div className="font-bold text-error font-space-grotesk">Cerrar Sesión</div>
+                        <div className="text-xs text-error/70">Salir del dashboard ejecutivo</div>
                       </div>
                     </motion.button>
                   </div>
