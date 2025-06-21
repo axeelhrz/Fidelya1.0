@@ -12,8 +12,20 @@ import {
   Sparkles,
   Activity,
   Users,
-  Zap
+  Zap,
+  Download,
+  Bell
 } from 'lucide-react';
+import { 
+  Box, 
+  Typography, 
+  Container, 
+  Grid, 
+  Card, 
+  CardContent,
+  Chip,
+  Paper
+} from '@mui/material';
 
 import Topbar from '@/components/dashboard/Topbar';
 import TabNavigation from '@/components/dashboard/TabNavigation';
@@ -23,6 +35,8 @@ import ClinicalPanel from '@/components/dashboard/ClinicalPanel';
 import CommercialPanel from '@/components/dashboard/CommercialPanel';
 import AlertsTasksDock from '@/components/dashboard/AlertsTasksDock';
 import AIInsightsFooter from '@/components/dashboard/AIInsightsFooter';
+import KPICardProfessional from '@/components/dashboard/KPICardProfessional';
+import ButtonProfessional from '@/components/ui/ButtonProfessional';
 
 export default function CEODashboard() {
   const [activeTab, setActiveTab] = useState('executive');
@@ -75,6 +89,10 @@ export default function CEODashboard() {
     console.log('Changing to center:', centerId);
   };
 
+  const handleDownloadBrief = () => {
+    console.log('Downloading daily brief...');
+  };
+
   const renderTabContent = () => {
     const contentVariants = {
       hidden: { opacity: 0, y: 20 },
@@ -99,98 +117,288 @@ export default function CEODashboard() {
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="space-y-10"
           >
-            {/* Welcome Section Mejorado */}
-            <div className="relative">
-              <div className="flex items-start justify-between mb-8">
-                <div className="flex-1">
-                  <div className="flex items-center space-x-4 mb-4">
-                    <motion.div
-                      animate={{ rotate: [0, 360] }}
-                      transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                      className="w-3 h-3 gradient-accent rounded-full shadow-glow"
-                    />
-                    <h1 className="text-5xl font-bold font-space-grotesk text-gradient-accent">
-                      Buenos días, {mockUser.name}
-                    </h1>
-                    <motion.div
-                      animate={{ scale: [1, 1.2, 1] }}
-                      transition={{ duration: 2, repeat: Infinity }}
+            <Box sx={{ mb: 6 }}>
+              {/* Welcome Section Profesional */}
+              <Box sx={{ mb: 6 }}>
+                <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 4 }}>
+                  <Box sx={{ flex: 1 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+                      <motion.div
+                        animate={{ rotate: [0, 360] }}
+                        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                      >
+                        <Box 
+                          sx={{ 
+                            width: 12, 
+                            height: 12, 
+                            background: 'linear-gradient(135deg, #2463EB 0%, #1D4ED8 100%)',
+                            borderRadius: '50%',
+                            mr: 2,
+                            boxShadow: '0 0 20px rgba(36, 99, 235, 0.3)'
+                          }} 
+                        />
+                      </motion.div>
+                      <Typography 
+                        variant="h1" 
+                        sx={{ 
+                          background: 'linear-gradient(135deg, #2463EB 0%, #1D4ED8 100%)',
+                          WebkitBackgroundClip: 'text',
+                          WebkitTextFillColor: 'transparent',
+                          backgroundClip: 'text',
+                          fontFamily: 'var(--font-family-space-grotesk)',
+                          fontSize: { xs: '2.5rem', md: '3.5rem' },
+                          fontWeight: 700,
+                          mr: 2
+                        }}
+                      >
+                        Buenos días, {mockUser.name}
+                      </Typography>
+                      <motion.div
+                        animate={{ scale: [1, 1.2, 1] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                      >
+                        <Sparkles style={{ width: 28, height: 28, color: '#2463EB' }} />
+                      </motion.div>
+                    </Box>
+                    <Typography 
+                      variant="h5" 
+                      sx={{ 
+                        color: 'text.secondary',
+                        fontWeight: 500,
+                        lineHeight: 1.6,
+                        maxWidth: '600px',
+                        fontFamily: 'var(--font-family-inter)'
+                      }}
                     >
-                      <Sparkles className="w-7 h-7 text-accent" />
-                    </motion.div>
-                  </div>
-                  <p className="text-xl text-secondary font-medium leading-relaxed max-w-2xl">
-                    Resumen ejecutivo del estado actual de tu centro psicológico con insights en tiempo real
-                  </p>
-                </div>
-                
-                {/* Status Cards */}
-                <div className="flex flex-col space-y-4">
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.3, duration: 0.6 }}
-                    className="flex items-center space-x-4 bg-surface-glass backdrop-blur-xl rounded-2xl px-8 py-6 border border-success/30 shadow-glow"
-                  >
-                    <div className="w-4 h-4 bg-success rounded-full animate-pulse" />
-                    <div>
-                      <div className="text-lg font-bold text-success font-space-grotesk">Sistema Operativo</div>
-                      <div className="text-sm text-success/70">Todos los servicios activos</div>
-                    </div>
-                  </motion.div>
+                      Resumen ejecutivo del estado actual de tu centro psicológico con insights en tiempo real
+                    </Typography>
+                  </Box>
                   
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.5, duration: 0.6 }}
-                    className="flex items-center space-x-4 bg-surface-glass backdrop-blur-xl rounded-2xl px-8 py-6 border border-accent/30"
-                  >
-                    <Activity className="w-6 h-6 text-accent" />
-                    <div>
-                      <div className="text-lg font-bold text-accent font-space-grotesk">IA Activa</div>
-                      <div className="text-sm text-accent/70">Análisis en tiempo real</div>
-                    </div>
-                  </motion.div>
-                </div>
-              </div>
+                  {/* Status Cards */}
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.3, duration: 0.6 }}
+                    >
+                      <Paper
+                        elevation={1}
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 2,
+                          p: 3,
+                          borderRadius: '1rem',
+                          border: '1px solid rgba(16, 185, 129, 0.2)',
+                          backgroundColor: 'rgba(16, 185, 129, 0.05)',
+                        }}
+                      >
+                        <Box 
+                          sx={{ 
+                            width: 16, 
+                            height: 16, 
+                            backgroundColor: '#10B981', 
+                            borderRadius: '50%',
+                            animation: 'pulse 2s infinite'
+                          }} 
+                        />
+                        <Box>
+                          <Typography 
+                            variant="h6" 
+                            sx={{ 
+                              color: '#10B981', 
+                              fontWeight: 700,
+                              fontFamily: 'var(--font-family-space-grotesk)',
+                              fontSize: '1.125rem'
+                            }}
+                          >
+                            Sistema Operativo
+                          </Typography>
+                          <Typography 
+                            variant="body2" 
+                            sx={{ 
+                              color: 'rgba(16, 185, 129, 0.7)',
+                              fontSize: '0.875rem'
+                            }}
+                          >
+                            Todos los servicios activos
+                          </Typography>
+                        </Box>
+                      </Paper>
+                    </motion.div>
+                    
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.5, duration: 0.6 }}
+                    >
+                      <Paper
+                        elevation={1}
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 2,
+                          p: 3,
+                          borderRadius: '1rem',
+                          border: '1px solid rgba(36, 99, 235, 0.2)',
+                          backgroundColor: 'rgba(36, 99, 235, 0.05)',
+                        }}
+                      >
+                        <Activity style={{ width: 24, height: 24, color: '#2463EB' }} />
+                        <Box>
+                          <Typography 
+                            variant="h6" 
+                            sx={{ 
+                              color: '#2463EB', 
+                              fontWeight: 700,
+                              fontFamily: 'var(--font-family-space-grotesk)',
+                              fontSize: '1.125rem'
+                            }}
+                          >
+                            IA Activa
+                          </Typography>
+                          <Typography 
+                            variant="body2" 
+                            sx={{ 
+                              color: 'rgba(36, 99, 235, 0.7)',
+                              fontSize: '0.875rem'
+                            }}
+                          >
+                            Análisis en tiempo real
+                          </Typography>
+                        </Box>
+                      </Paper>
+                    </motion.div>
+                  </Box>
+                </Box>
 
-              {/* Quick Performance Indicators */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4, duration: 0.6 }}
-                className="flex items-center justify-center space-x-12 mb-12"
-              >
-                <div className="flex items-center space-x-4 bg-surface-glass backdrop-blur-xl rounded-2xl px-8 py-6 border border-light shadow-card">
-                  <TrendingUp className="w-8 h-8 text-success" />
-                  <div>
-                    <div className="text-3xl font-bold text-success font-space-grotesk">+12.5%</div>
-                    <div className="text-sm text-secondary">Crecimiento mensual</div>
-                  </div>
-                </div>
-                
-                <div className="flex items-center space-x-4 bg-surface-glass backdrop-blur-xl rounded-2xl px-8 py-6 border border-light shadow-card">
-                  <Zap className="w-8 h-8 text-accent" />
-                  <div>
-                    <div className="text-3xl font-bold text-accent font-space-grotesk">87.3%</div>
-                    <div className="text-sm text-secondary">Eficiencia operativa</div>
-                  </div>
-                </div>
-                
-                <div className="flex items-center space-x-4 bg-surface-glass backdrop-blur-xl rounded-2xl px-8 py-6 border border-light shadow-card">
-                  <Users className="w-8 h-8 text-warning" />
-                  <div>
-                    <div className="text-3xl font-bold text-warning font-space-grotesk">94.2%</div>
-                    <div className="text-sm text-secondary">Satisfacción pacientes</div>
-                  </div>
-                </div>
-              </motion.div>
-            </div>
+                {/* Quick Performance Indicators */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4, duration: 0.6 }}
+                >
+                  <Grid container spacing={3} sx={{ mb: 6 }}>
+                    <Grid item xs={12} md={4}>
+                      <Paper
+                        elevation={1}
+                        sx={{
+                          p: 4,
+                          borderRadius: '1.5rem',
+                          textAlign: 'center',
+                          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                          '&:hover': {
+                            transform: 'translateY(-4px)',
+                            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.08)',
+                          }
+                        }}
+                      >
+                        <TrendingUp style={{ width: 32, height: 32, color: '#10B981', marginBottom: 16 }} />
+                        <Typography 
+                          variant="h3" 
+                          sx={{ 
+                            color: '#10B981', 
+                            fontWeight: 700,
+                            fontFamily: 'var(--font-family-space-grotesk)',
+                            mb: 1
+                          }}
+                        >
+                          +12.5%
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Crecimiento mensual
+                        </Typography>
+                      </Paper>
+                    </Grid>
+                    
+                    <Grid item xs={12} md={4}>
+                      <Paper
+                        elevation={1}
+                        sx={{
+                          p: 4,
+                          borderRadius: '1.5rem',
+                          textAlign: 'center',
+                          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                          '&:hover': {
+                            transform: 'translateY(-4px)',
+                            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.08)',
+                          }
+                        }}
+                      >
+                        <Zap style={{ width: 32, height: 32, color: '#2463EB', marginBottom: 16 }} />
+                        <Typography 
+                          variant="h3" 
+                          sx={{ 
+                            color: '#2463EB', 
+                            fontWeight: 700,
+                            fontFamily: 'var(--font-family-space-grotesk)',
+                            mb: 1
+                          }}
+                        >
+                          87.3%
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Eficiencia operativa
+                        </Typography>
+                      </Paper>
+                    </Grid>
+                    
+                    <Grid item xs={12} md={4}>
+                      <Paper
+                        elevation={1}
+                        sx={{
+                          p: 4,
+                          borderRadius: '1.5rem',
+                          textAlign: 'center',
+                          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                          '&:hover': {
+                            transform: 'translateY(-4px)',
+                            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.08)',
+                          }
+                        }}
+                      >
+                        <Users style={{ width: 32, height: 32, color: '#F59E0B', marginBottom: 16 }} />
+                        <Typography 
+                          variant="h3" 
+                          sx={{ 
+                            color: '#F59E0B', 
+                            fontWeight: 700,
+                            fontFamily: 'var(--font-family-space-grotesk)',
+                            mb: 1
+                          }}
+                        >
+                          94.2%
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Satisfacción pacientes
+                        </Typography>
+                      </Paper>
+                    </Grid>
+                  </Grid>
+                </motion.div>
 
-            {/* KPI Grid */}
-            <KPIGrid />
+                {/* Daily Brief Button */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.6, duration: 0.6 }}
+                >
+                  <Box sx={{ display: 'flex', justifyContent: 'center', mb: 6 }}>
+                    <ButtonProfessional
+                      variant="primary"
+                      icon={Download}
+                      onClick={handleDownloadBrief}
+                    >
+                      Descargar Resumen Diario PDF
+                    </ButtonProfessional>
+                  </Box>
+                </motion.div>
+              </Box>
+
+              {/* KPI Grid */}
+              <KPIGrid />
+            </Box>
           </motion.div>
         );
 
@@ -202,16 +410,34 @@ export default function CEODashboard() {
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="space-y-8"
           >
-            <div className="text-center mb-12">
-              <h2 className="text-4xl font-bold font-space-grotesk text-gradient-accent mb-4">
+            <Box sx={{ textAlign: 'center', mb: 6 }}>
+              <Typography 
+                variant="h2" 
+                sx={{ 
+                  background: 'linear-gradient(135deg, #2463EB 0%, #1D4ED8 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                  fontFamily: 'var(--font-family-space-grotesk)',
+                  mb: 2
+                }}
+              >
                 Análisis Financiero Detallado
-              </h2>
-              <p className="text-lg text-secondary max-w-2xl mx-auto">
+              </Typography>
+              <Typography 
+                variant="h6" 
+                color="text.secondary" 
+                sx={{ 
+                  maxWidth: '600px', 
+                  mx: 'auto',
+                  fontFamily: 'var(--font-family-inter)',
+                  fontWeight: 400
+                }}
+              >
                 Métricas financieras completas con proyecciones inteligentes y análisis de rentabilidad
-              </p>
-            </div>
+              </Typography>
+            </Box>
             <FinancialPanel />
           </motion.div>
         );
@@ -224,16 +450,34 @@ export default function CEODashboard() {
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="space-y-8"
           >
-            <div className="text-center mb-12">
-              <h2 className="text-4xl font-bold font-space-grotesk text-gradient-accent mb-4">
+            <Box sx={{ textAlign: 'center', mb: 6 }}>
+              <Typography 
+                variant="h2" 
+                sx={{ 
+                  background: 'linear-gradient(135deg, #2463EB 0%, #1D4ED8 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                  fontFamily: 'var(--font-family-space-grotesk)',
+                  mb: 2
+                }}
+              >
                 Operaciones Clínicas
-              </h2>
-              <p className="text-lg text-secondary max-w-2xl mx-auto">
+              </Typography>
+              <Typography 
+                variant="h6" 
+                color="text.secondary" 
+                sx={{ 
+                  maxWidth: '600px', 
+                  mx: 'auto',
+                  fontFamily: 'var(--font-family-inter)',
+                  fontWeight: 400
+                }}
+              >
                 Monitoreo inteligente de salud operativa, riesgos y capacidad del centro
-              </p>
-            </div>
+              </Typography>
+            </Box>
             <ClinicalPanel />
           </motion.div>
         );
@@ -246,16 +490,34 @@ export default function CEODashboard() {
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="space-y-8"
           >
-            <div className="text-center mb-12">
-              <h2 className="text-4xl font-bold font-space-grotesk text-gradient-accent mb-4">
+            <Box sx={{ textAlign: 'center', mb: 6 }}>
+              <Typography 
+                variant="h2" 
+                sx={{ 
+                  background: 'linear-gradient(135deg, #2463EB 0%, #1D4ED8 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                  fontFamily: 'var(--font-family-space-grotesk)',
+                  mb: 2
+                }}
+              >
                 Marketing & Comercial
-              </h2>
-              <p className="text-lg text-secondary max-w-2xl mx-auto">
+              </Typography>
+              <Typography 
+                variant="h6" 
+                color="text.secondary" 
+                sx={{ 
+                  maxWidth: '600px', 
+                  mx: 'auto',
+                  fontFamily: 'var(--font-family-inter)',
+                  fontWeight: 400
+                }}
+              >
                 Análisis completo de conversión, campañas y adquisición de pacientes
-              </p>
-            </div>
+              </Typography>
+            </Box>
             <CommercialPanel />
           </motion.div>
         );
@@ -268,16 +530,34 @@ export default function CEODashboard() {
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="space-y-8"
           >
-            <div className="text-center mb-12">
-              <h2 className="text-4xl font-bold font-space-grotesk text-gradient-accent mb-4">
+            <Box sx={{ textAlign: 'center', mb: 6 }}>
+              <Typography 
+                variant="h2" 
+                sx={{ 
+                  background: 'linear-gradient(135deg, #2463EB 0%, #1D4ED8 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                  fontFamily: 'var(--font-family-space-grotesk)',
+                  mb: 2
+                }}
+              >
                 Insights & Inteligencia Artificial
-              </h2>
-              <p className="text-lg text-secondary max-w-2xl mx-auto">
+              </Typography>
+              <Typography 
+                variant="h6" 
+                color="text.secondary" 
+                sx={{ 
+                  maxWidth: '600px', 
+                  mx: 'auto',
+                  fontFamily: 'var(--font-family-inter)',
+                  fontWeight: 400
+                }}
+              >
                 Recomendaciones inteligentes y análisis predictivo para optimizar tu centro
-              </p>
-            </div>
+              </Typography>
+            </Box>
             <AIInsightsFooter />
           </motion.div>
         );
@@ -288,69 +568,127 @@ export default function CEODashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-surface relative overflow-hidden">
-      {/* Efectos de fondo futuristas mejorados */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-20 left-10 w-3 h-3 bg-accent/20 rounded-full animate-particle-float" />
-        <div className="absolute top-40 right-20 w-2 h-2 bg-accent/30 rounded-full animate-particle-float" style={{ animationDelay: '2s' }} />
-        <div className="absolute bottom-32 left-1/4 w-2.5 h-2.5 bg-success/15 rounded-full animate-particle-float" style={{ animationDelay: '4s' }} />
-        <div className="absolute top-1/3 right-1/3 w-1.5 h-1.5 bg-warning/20 rounded-full animate-particle-float" style={{ animationDelay: '6s' }} />
-        <div className="absolute bottom-1/4 right-1/4 w-2 h-2 bg-accent/25 rounded-full animate-particle-float" style={{ animationDelay: '8s' }} />
-      </div>
+    <Box 
+      sx={{ 
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #F9FAFB 0%, #EFF3FB 100%)',
+        position: 'relative',
+        overflow: 'hidden'
+      }}
+    >
+      {/* Efectos de fondo sutiles */}
+      <Box
+        sx={{
+          position: 'fixed',
+          inset: 0,
+          pointerEvents: 'none',
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: '20%',
+            left: '10%',
+            width: '12px',
+            height: '12px',
+            background: 'rgba(36, 99, 235, 0.1)',
+            borderRadius: '50%',
+            animation: 'float 6s ease-in-out infinite',
+          },
+          '&::after': {
+            content: '""',
+            position: 'absolute',
+            bottom: '30%',
+            right: '15%',
+            width: '8px',
+            height: '8px',
+            background: 'rgba(16, 185, 129, 0.1)',
+            borderRadius: '50%',
+            animation: 'float 8s ease-in-out infinite reverse',
+          }
+        }}
+      />
 
       {/* Topbar */}
       <Topbar onSearch={handleSearch} onCenterChange={handleCenterChange} />
       
       {/* Main Content */}
-      <main className="container-dashboard py-12">
-        <div className="flex space-x-12">
+      <Container maxWidth="xl" sx={{ py: 6 }}>
+        <Grid container spacing={6}>
           {/* Left Column - Main Dashboard */}
-          <div className="flex-1 space-y-12">
+          <Grid item xs={12} lg={9}>
             {/* Tab Navigation */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
             >
-              <TabNavigation 
-                tabs={tabs} 
-                activeTab={activeTab} 
-                onTabChange={setActiveTab} 
-              />
+              <Box sx={{ mb: 6 }}>
+                <TabNavigation 
+                  tabs={tabs} 
+                  activeTab={activeTab} 
+                  onTabChange={setActiveTab} 
+                />
+              </Box>
             </motion.div>
 
             {/* Tab Content */}
             <AnimatePresence mode="wait">
               {renderTabContent()}
             </AnimatePresence>
-          </div>
+          </Grid>
 
           {/* Right Column - Alerts & Tasks Dock */}
-          <div className="w-96">
+          <Grid item xs={12} lg={3}>
             <motion.div
               initial={{ opacity: 0, x: 40 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.3, duration: 0.8 }}
-              className="sticky top-32"
             >
-              <AlertsTasksDock />
+              <Box sx={{ position: 'sticky', top: 120 }}>
+                <AlertsTasksDock />
+              </Box>
             </motion.div>
-          </div>
-        </div>
-      </main>
+          </Grid>
+        </Grid>
+      </Container>
 
-      {/* Floating Action Button Mejorado */}
-      <motion.button
+      {/* Floating Action Button Profesional */}
+      <motion.div
         initial={{ opacity: 0, scale: 0 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 1, duration: 0.6 }}
-        whileHover={{ scale: 1.1, y: -4 }}
-        whileTap={{ scale: 0.9 }}
-        className="fixed bottom-8 right-8 w-20 h-20 gradient-accent rounded-2xl shadow-glow-strong flex items-center justify-center z-40 group"
+        style={{
+          position: 'fixed',
+          bottom: 32,
+          right: 32,
+          zIndex: 1000,
+        }}
       >
-        <Sparkles className="w-10 h-10 text-inverse group-hover:rotate-12 transition-transform duration-300" />
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-      </motion.button>
-    </div>
+        <motion.div
+          whileHover={{ scale: 1.1, y: -4 }}
+          whileTap={{ scale: 0.9 }}
+        >
+          <Paper
+            elevation={3}
+            sx={{
+              width: 80,
+              height: 80,
+              borderRadius: '1.5rem',
+              background: 'linear-gradient(135deg, #2463EB 0%, #1D4ED8 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              boxShadow: '0 0 20px rgba(36, 99, 235, 0.4)',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              '&:hover': {
+                boxShadow: '0 0 30px rgba(36, 99, 235, 0.6)',
+              }
+            }}
+          >
+            <Sparkles style={{ width: 40, height: 40, color: '#FFFFFF' }} />
+          </Paper>
+        </motion.div>
+      </motion.div>
+    </Box>
   );
 }

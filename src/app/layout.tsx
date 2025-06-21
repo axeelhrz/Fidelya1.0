@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -23,8 +23,12 @@ export const metadata: Metadata = {
   description: "Sistema de gestión integral para centros psicológicos - Plataforma profesional para administración clínica",
   keywords: "centro psicológico, dashboard, gestión clínica, administración, salud mental",
   authors: [{ name: "Centro Psicológico" }],
-  viewport: "width=device-width, initial-scale=1",
-  themeColor: "#2463EB",
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  themeColor: '#2463EB',
 };
 
 export default function RootLayout({
