@@ -72,15 +72,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Establecer cookie para el middleware
         document.cookie = `user=${JSON.stringify(userData)}; path=/; max-age=86400`; // 24 horas
         
-        // Redirigir según el rol
-        setTimeout(() => {
-          if (userData.role === 'admin') {
-            router.push('/dashboard/ceo');
-          } else {
-            router.push('/dashboard/sessions');
-          }
-        }, 100);
-        
+        // La redirección se maneja en el componente de login
         return true;
       }
       

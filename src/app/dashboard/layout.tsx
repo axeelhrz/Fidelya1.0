@@ -14,9 +14,23 @@ export default function DashboardLayout({
   const { user, loading } = useAuth();
   const router = useRouter();
 
+  // Consolidar todos los efectos en un solo useEffect para evitar problemas de orden de hooks
   useEffect(() => {
+    // Redirigir al login si no hay usuario autenticado
     if (!loading && !user) {
       router.push('/login');
+      return;
+    }
+
+    // Redirigir según el rol si está en la ruta incorrecta
+    if (user && typeof window !== 'undefined') {
+      const currentPath = window.location.pathname;
+      
+      if (user.role === 'therapist' && currentPath.includes('/ceo')) {
+        router.push('/dashboard/sessions');
+      } else if (user.role === 'admin' && currentPath.includes('/sessions') && !currentPath.includes('/ceo')) {
+        router.push('/dashboard/ceo');
+      }
     }
   }, [user, loading, router]);
 
@@ -63,19 +77,6 @@ export default function DashboardLayout({
   if (!user) {
     return null;
   }
-
-  // Redirigir según el rol si está en la ruta incorrecta
-  useEffect(() => {
-    if (user && typeof window !== 'undefined') {
-      const currentPath = window.location.pathname;
-      
-      if (user.role === 'therapist' && currentPath.includes('/ceo')) {
-        router.push('/dashboard/sessions');
-      } else if (user.role === 'admin' && currentPath.includes('/sessions') && !currentPath.includes('/ceo')) {
-        router.push('/dashboard/ceo');
-      }
-    }
-  }, [user, router]);
 
   return (
     <AdminLayout>
