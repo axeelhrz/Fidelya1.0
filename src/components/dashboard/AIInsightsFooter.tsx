@@ -1,8 +1,31 @@
 'use client';
 
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Brain, TrendingUp, Download, Play, CheckCircle, AlertCircle, Clock, Sparkles, BarChart3, Shield } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Brain, 
+  TrendingUp, 
+  Download, 
+  Play, 
+  CheckCircle, 
+  AlertCircle, 
+  Clock, 
+  Sparkles, 
+  BarChart3, 
+  Shield,
+  RefreshCw,
+  Settings,
+  Filter,
+  Star,
+  Zap,
+  Target,
+  Eye,
+  AlertTriangle,
+  CheckCircle2
+} from 'lucide-react';
+import { useStyles } from '@/lib/useStyles';
+import Card from '@/components/ui/Card';
+import Button from '@/components/ui/Button';
 
 interface AIInsight {
   id: string;
@@ -15,88 +38,328 @@ interface AIInsight {
   estimatedValue?: string;
 }
 
-// Datos mock para desarrollo
-const mockInsights: AIInsight[] = [
-  {
-    id: '1',
-    type: 'recommendation',
-    title: 'Incrementar tarifas 5% en julio',
-    description: 'Análisis histórico sugiere que un aumento del 5% en tarifas durante julio tendría mínimo impacto en retención de pacientes.',
-    impact: 'high',
-    confidence: 87,
-    actionable: true,
-    estimatedValue: '+$12.5k/mes'
-  },
-  {
-    id: '2',
-    type: 'alert',
-    title: 'Patrón de cancelaciones detectado',
-    description: 'Se detectó un aumento del 23% en cancelaciones los viernes por la tarde en las últimas 4 semanas.',
-    impact: 'medium',
-    confidence: 92,
-    actionable: true,
-    estimatedValue: '-$3.2k/mes'
-  },
-  {
-    id: '3',
-    type: 'simulation',
-    title: 'Proyección de capacidad Q2',
-    description: 'Con el crecimiento actual, se alcanzará 95% de capacidad en abril. Considerar expansión o contratación.',
-    impact: 'high',
-    confidence: 78,
-    actionable: true,
-    estimatedValue: '+$25k/mes'
-  }
-];
+interface AIInsightsPanelProps {
+  loading?: boolean;
+  onRefresh?: () => void;
+  onExport?: () => void;
+}
 
-const complianceMetrics = {
-  backups: 98,
-  consents: 94,
-  accessVerification: 89,
-  dataEncryption: 96,
-  overall: 94
-};
-
-export default function AIInsightsFooter() {
+export default function AIInsightsFooter({ 
+  loading = false, 
+  onRefresh, 
+  onExport 
+}: AIInsightsPanelProps) {
+  const { theme } = useStyles();
   const [selectedInsight, setSelectedInsight] = useState<AIInsight | null>(null);
   const [isSimulating, setIsSimulating] = useState(false);
+  const [selectedPeriod, setSelectedPeriod] = useState('week');
 
+  // Mock data mejorado
+  const mockInsights: AIInsight[] = [
+    {
+      id: '1',
+      type: 'recommendation',
+      title: 'Incrementar tarifas 5% en julio',
+      description: 'Análisis histórico sugiere que un aumento del 5% en tarifas durante julio tendría mínimo impacto en retención de pacientes.',
+      impact: 'high',
+      confidence: 87,
+      actionable: true,
+      estimatedValue: '+$12.5k/mes'
+    },
+    {
+      id: '2',
+      type: 'alert',
+      title: 'Patrón de cancelaciones detectado',
+      description: 'Se detectó un aumento del 23% en cancelaciones los viernes por la tarde en las últimas 4 semanas.',
+      impact: 'medium',
+      confidence: 92,
+      actionable: true,
+      estimatedValue: '-$3.2k/mes'
+    },
+    {
+      id: '3',
+      type: 'simulation',
+      title: 'Proyección de capacidad Q2',
+      description: 'Con el crecimiento actual, se alcanzará 95% de capacidad en abril. Considerar expansión o contratación.',
+      impact: 'high',
+      confidence: 78,
+      actionable: true,
+      estimatedValue: '+$25k/mes'
+    }
+  ];
+
+  const complianceMetrics = [
+    { name: 'Backups automáticos', value: 98, description: 'Respaldos diarios completados', status: 'success' },
+    { name: 'Consentimientos firmados', value: 94, description: 'Documentos legales actualizados', status: 'success' },
+    { name: 'Verificación de accesos', value: 89, description: 'Auditoría de permisos pendiente', status: 'warning' },
+    { name: 'Cifrado de datos', value: 96, description: 'Protección de información activa', status: 'success' },
+  ];
+
+  const overallCompliance = Math.round(complianceMetrics.reduce((sum, metric) => sum + metric.value, 0) / complianceMetrics.length);
+
+  const styles = {
+    container: {
+      width: '100%',
+      maxWidth: '1200px',
+      margin: '0 auto',
+      padding: theme.spacing.md,
+    },
+    
+    header: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: theme.spacing.lg,
+      flexWrap: 'wrap' as const,
+      gap: theme.spacing.md,
+    },
+    
+    headerLeft: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: theme.spacing.md,
+    },
+    
+    headerIcon: {
+      width: '3rem',
+      height: '3rem',
+      background: 'linear-gradient(135deg, #8B5CF6 0%, #3B82F6 100%)',
+      borderRadius: theme.borderRadius.lg,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      boxShadow: '0 4px 12px rgba(139, 92, 246, 0.3)',
+    },
+    
+    headerContent: {
+      display: 'flex',
+      flexDirection: 'column' as const,
+      gap: '0.25rem',
+    },
+    
+    title: {
+      fontSize: '1.5rem',
+      fontWeight: theme.fontWeights.bold,
+      color: theme.colors.textPrimary,
+      fontFamily: theme.fonts.heading,
+      margin: 0,
+    },
+    
+    subtitle: {
+      fontSize: '0.875rem',
+      color: theme.colors.textSecondary,
+      fontWeight: theme.fontWeights.medium,
+      margin: 0,
+    },
+    
+    headerActions: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: theme.spacing.sm,
+      flexWrap: 'wrap' as const,
+    },
+    
+    filterContainer: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: theme.spacing.sm,
+      padding: '0.5rem',
+      backgroundColor: theme.colors.surfaceElevated,
+      borderRadius: theme.borderRadius.lg,
+      border: `1px solid ${theme.colors.borderLight}`,
+    },
+    
+    filterButton: {
+      padding: '0.5rem 1rem',
+      borderRadius: theme.borderRadius.md,
+      border: 'none',
+      backgroundColor: 'transparent',
+      color: theme.colors.textSecondary,
+      fontSize: '0.875rem',
+      fontWeight: theme.fontWeights.medium,
+      cursor: 'pointer',
+      transition: theme.animations.transition,
+      outline: 'none',
+    },
+    
+    filterButtonActive: {
+      backgroundColor: theme.colors.surface,
+      color: theme.colors.primary,
+      boxShadow: theme.shadows.card,
+    },
+    
+    insightsGrid: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+      gap: theme.spacing.md,
+      marginBottom: theme.spacing.lg,
+    },
+    
+    insightCard: {
+      padding: theme.spacing.md,
+      display: 'flex',
+      flexDirection: 'column' as const,
+      gap: '0.75rem',
+      cursor: 'pointer',
+      transition: theme.animations.transition,
+      position: 'relative' as const,
+      overflow: 'hidden',
+    },
+    
+    insightHeader: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    
+    insightBadge: {
+      padding: '0.25rem 0.5rem',
+      borderRadius: theme.borderRadius.sm,
+      fontSize: '0.75rem',
+      fontWeight: theme.fontWeights.semibold,
+    },
+    
+    insightContent: {
+      display: 'flex',
+      flexDirection: 'column' as const,
+      gap: '0.5rem',
+    },
+    
+    insightTitle: {
+      fontSize: '0.875rem',
+      fontWeight: theme.fontWeights.semibold,
+      color: theme.colors.textPrimary,
+      margin: 0,
+    },
+    
+    insightDescription: {
+      fontSize: '0.75rem',
+      color: theme.colors.textSecondary,
+      lineHeight: '1.4',
+      margin: 0,
+    },
+    
+    insightFooter: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    
+    complianceGrid: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+      gap: theme.spacing.md,
+    },
+    
+    complianceCard: {
+      padding: theme.spacing.md,
+      display: 'flex',
+      flexDirection: 'column' as const,
+      gap: '0.5rem',
+    },
+    
+    complianceHeader: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: theme.spacing.sm,
+    },
+    
+    complianceTitle: {
+      fontSize: '1rem',
+      fontWeight: theme.fontWeights.semibold,
+      color: theme.colors.textPrimary,
+      fontFamily: theme.fonts.heading,
+      margin: 0,
+    },
+    
+    complianceContent: {
+      display: 'flex',
+      flexDirection: 'column' as const,
+      gap: '0.5rem',
+    },
+    
+    complianceItem: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: '0.75rem',
+      backgroundColor: theme.colors.surfaceElevated,
+      borderRadius: theme.borderRadius.md,
+    },
+    
+    complianceItemLeft: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '0.75rem',
+    },
+    
+    complianceItemRight: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '0.75rem',
+    },
+    
+    complianceProgress: {
+      width: '80px',
+      height: '6px',
+      backgroundColor: theme.colors.borderLight,
+      borderRadius: theme.borderRadius.full,
+      overflow: 'hidden',
+    },
+    
+    loadingContainer: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      height: '200px',
+      flexDirection: 'column' as const,
+      gap: theme.spacing.md,
+    },
+    
+    loadingSpinner: {
+      width: '2rem',
+      height: '2rem',
+      border: `3px solid ${theme.colors.borderLight}`,
+      borderTop: `3px solid ${theme.colors.primary}`,
+      borderRadius: '50%',
+      animation: 'spin 1s linear infinite',
+    },
+    
+    loadingText: {
+      fontSize: '0.875rem',
+      color: theme.colors.textSecondary,
+      fontWeight: theme.fontWeights.medium,
+    },
+  };
+
+  // Funciones de utilidad
   const getImpactColor = (impact: string) => {
     switch (impact) {
-      case 'high':
-        return 'text-error bg-error-bg border-error/20';
-      case 'medium':
-        return 'text-warning bg-warning-bg border-warning/20';
-      default:
-        return 'text-info bg-info-bg border-info/20';
+      case 'high': return theme.colors.error;
+      case 'medium': return theme.colors.warning;
+      default: return theme.colors.info;
     }
   };
 
   const getTypeIcon = (type: string) => {
     switch (type) {
-      case 'recommendation':
-        return <TrendingUp className="w-4 h-4" />;
-      case 'simulation':
-        return <BarChart3 className="w-4 h-4" />;
-      default:
-        return <AlertCircle className="w-4 h-4" />;
+      case 'recommendation': return <TrendingUp size={16} />;
+      case 'simulation': return <BarChart3 size={16} />;
+      default: return <AlertTriangle size={16} />;
     }
   };
 
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case 'recommendation':
-        return 'text-success bg-success-bg';
-      case 'simulation':
-        return 'text-accent bg-accent/10';
-      default:
-        return 'text-warning bg-warning-bg';
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'success': return <CheckCircle2 size={16} color={theme.colors.success} />;
+      case 'warning': return <AlertCircle size={16} color={theme.colors.warning} />;
+      case 'error': return <AlertTriangle size={16} color={theme.colors.error} />;
+      default: return <Clock size={16} color={theme.colors.textSecondary} />;
     }
   };
 
   const handleSimulate = async (insight: AIInsight) => {
     setIsSimulating(true);
-    // Simular llamada a API
     await new Promise(resolve => setTimeout(resolve, 2000));
     setIsSimulating(false);
     console.log('Simulando:', insight);
@@ -107,219 +370,412 @@ export default function AIInsightsFooter() {
   };
 
   return (
-    <motion.footer
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="space-y-6"
-    >
-      {/* AI Insights */}
-      <div className="bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 rounded-card border border-purple-100/50 overflow-hidden">
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-600 rounded-lg flex items-center justify-center">
-                <Brain className="w-5 h-5 text-inverse" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-primary flex items-center space-x-2">
-                  <span>Insights de IA</span>
-                  <Sparkles className="w-4 h-4 text-purple-500" />
-                </h3>
-                <p className="text-sm text-secondary">Recomendaciones basadas en análisis predictivo</p>
-              </div>
+    <>
+      <style jsx>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
+      
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        style={styles.container}
+      >
+        {/* Header */}
+        <div style={styles.header}>
+          <div style={styles.headerLeft}>
+            <div style={styles.headerIcon}>
+              <Brain size={24} color={theme.colors.textInverse} />
+            </div>
+            <div style={styles.headerContent}>
+              <h2 style={styles.title}>IA & Predicciones</h2>
+              <p style={styles.subtitle}>Inteligencia artificial avanzada con modelos predictivos y recomendaciones automáticas</p>
+            </div>
+          </div>
+          
+          <div style={styles.headerActions}>
+            <div style={styles.filterContainer}>
+              {['day', 'week', 'month', 'quarter'].map((period) => (
+                <button
+                  key={period}
+                  onClick={() => setSelectedPeriod(period)}
+                  style={{
+                    ...styles.filterButton,
+                    ...(selectedPeriod === period ? styles.filterButtonActive : {})
+                  }}
+                >
+                  {period === 'day' ? 'Día' : 
+                   period === 'week' ? 'Semana' :
+                   period === 'month' ? 'Mes' : 'Trimestre'}
+                </button>
+              ))}
             </div>
             
-            <div className="text-right">
-              <div className="text-sm font-medium text-primary">3 insights activos</div>
-              <div className="text-xs text-secondary">Última actualización: hace 2h</div>
-            </div>
+            <Button
+              variant="secondary"
+              size="sm"
+              icon={RefreshCw}
+              onClick={onRefresh}
+              loading={loading}
+            >
+              Actualizar
+            </Button>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              icon={Download}
+              onClick={onExport}
+            >
+              Exportar
+            </Button>
           </div>
+        </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
-            {mockInsights.map((insight, index) => (
-              <motion.div
-                key={insight.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                whileHover={{ y: -2 }}
-                className={`
-                  group relative p-4 rounded-lg border cursor-pointer transition-all duration-300
-                  ${selectedInsight?.id === insight.id 
-                    ? 'border-accent bg-surface shadow-elevated' 
-                    : 'border-border-light bg-surface/70 hover:bg-surface hover:border-border-medium hover:shadow-card'
-                  }
-                `}
-                onClick={() => setSelectedInsight(insight)}
-              >
-                {/* Header */}
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center space-x-2">
-                    <div className={`p-1.5 rounded-md ${getTypeColor(insight.type)}`}>
-                      {getTypeIcon(insight.type)}
-                    </div>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getImpactColor(insight.impact)}`}>
-                      {insight.impact === 'high' ? 'Alto' : insight.impact === 'medium' ? 'Medio' : 'Bajo'}
-                    </span>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-xs font-medium text-primary">{insight.confidence}%</div>
-                    <div className="text-xs text-secondary">confianza</div>
-                  </div>
-                </div>
-                
-                {/* Content */}
-                <h4 className="font-medium text-primary text-sm mb-2 line-clamp-2">
-                  {insight.title}
-                </h4>
-                
-                <p className="text-xs text-secondary mb-3 line-clamp-3">
-                  {insight.description}
-                </p>
-
-                {/* Value and Action */}
-                <div className="flex items-center justify-between">
-                  {insight.estimatedValue && (
-                    <div className="text-xs">
-                      <span className="text-secondary">Impacto: </span>
-                      <span className="font-medium text-primary">{insight.estimatedValue}</span>
-                    </div>
-                  )}
-                  
-                  {insight.actionable && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleSimulate(insight);
-                      }}
-                      disabled={isSimulating}
-                      className="ml-auto bg-accent text-inverse text-xs px-3 py-1.5 rounded-md hover:bg-accent-light transition-colors disabled:opacity-50 flex items-center space-x-1"
-                    >
-                      {isSimulating ? (
-                        <>
-                          <div className="w-3 h-3 border border-inverse border-t-transparent rounded-full animate-spin" />
-                          <span>Simulando...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Play className="w-3 h-3" />
-                          <span>Simular</span>
-                        </>
-                      )}
-                    </button>
-                  )}
-                </div>
-
-                {/* Selection indicator */}
-                {selectedInsight?.id === insight.id && (
-                  <div className="absolute top-2 right-2 w-2 h-2 bg-accent rounded-full" />
-                )}
-              </motion.div>
-            ))}
-          </div>
-
-          {/* Daily CEO Brief */}
-          <div className="bg-surface/80 backdrop-blur-sm rounded-lg border border-border-light p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                  <Download className="w-4 h-4 text-inverse" />
+        {/* Insights de IA */}
+        <Card variant="default" style={{ marginBottom: theme.spacing.lg }}>
+          <div style={{ padding: theme.spacing.md }}>
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'space-between', 
+              marginBottom: theme.spacing.md 
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm }}>
+                <div style={{
+                  padding: '0.5rem',
+                  borderRadius: theme.borderRadius.md,
+                  backgroundColor: `${theme.colors.primary}20`,
+                }}>
+                  <Sparkles size={20} color={theme.colors.primary} />
                 </div>
                 <div>
-                  <h4 className="font-medium text-primary">Daily CEO Brief</h4>
-                  <p className="text-sm text-secondary">Resumen ejecutivo personalizado</p>
+                  <h3 style={{
+                    fontSize: '1.125rem',
+                    fontWeight: theme.fontWeights.semibold,
+                    color: theme.colors.textPrimary,
+                    fontFamily: theme.fonts.heading,
+                    margin: 0,
+                  }}>
+                    Insights de IA
+                  </h3>
+                  <p style={{
+                    fontSize: '0.875rem',
+                    color: theme.colors.textSecondary,
+                    margin: 0,
+                  }}>
+                    Recomendaciones basadas en análisis predictivo
+                  </p>
                 </div>
               </div>
-              <button
+              
+              <div style={{ textAlign: 'right' }}>
+                <div style={{
+                  fontSize: '0.875rem',
+                  fontWeight: theme.fontWeights.semibold,
+                  color: theme.colors.textPrimary,
+                }}>
+                  3 insights activos
+                </div>
+                <div style={{
+                  fontSize: '0.75rem',
+                  color: theme.colors.textSecondary,
+                }}>
+                  Última actualización: hace 2h
+                </div>
+              </div>
+            </div>
+
+            <div style={styles.insightsGrid}>
+              {mockInsights.map((insight, index) => (
+                <Card 
+                  key={insight.id} 
+                  variant="default" 
+                  hover
+                  style={{
+                    border: selectedInsight?.id === insight.id 
+                      ? `2px solid ${theme.colors.primary}` 
+                      : undefined
+                  }}
+                >
+                  <div 
+                    style={styles.insightCard}
+                    onClick={() => setSelectedInsight(
+                      selectedInsight?.id === insight.id ? null : insight
+                    )}
+                  >
+                    <div style={styles.insightHeader}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <div style={{
+                          padding: '0.25rem',
+                          borderRadius: theme.borderRadius.sm,
+                          backgroundColor: `${getImpactColor(insight.impact)}20`,
+                          color: getImpactColor(insight.impact),
+                        }}>
+                          {getTypeIcon(insight.type)}
+                        </div>
+                        <div style={{
+                          ...styles.insightBadge,
+                          backgroundColor: `${getImpactColor(insight.impact)}20`,
+                          color: getImpactColor(insight.impact),
+                        }}>
+                          {insight.impact === 'high' ? 'Alto' : 
+                           insight.impact === 'medium' ? 'Medio' : 'Bajo'}
+                        </div>
+                      </div>
+                      
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{
+                          fontSize: '0.875rem',
+                          fontWeight: theme.fontWeights.bold,
+                          color: theme.colors.textPrimary,
+                        }}>
+                          {insight.confidence}%
+                        </div>
+                        <div style={{
+                          fontSize: '0.75rem',
+                          color: theme.colors.textSecondary,
+                        }}>
+                          confianza
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div style={styles.insightContent}>
+                      <h4 style={styles.insightTitle}>{insight.title}</h4>
+                      <p style={styles.insightDescription}>{insight.description}</p>
+                    </div>
+                    
+                    <div style={styles.insightFooter}>
+                      {insight.estimatedValue && (
+                        <div style={{ fontSize: '0.75rem' }}>
+                          <span style={{ color: theme.colors.textSecondary }}>Impacto: </span>
+                          <span style={{ 
+                            fontWeight: theme.fontWeights.semibold, 
+                            color: theme.colors.textPrimary 
+                          }}>
+                            {insight.estimatedValue}
+                          </span>
+                        </div>
+                      )}
+                      
+                      {insight.actionable && (
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          icon={isSimulating ? undefined : Play}
+                          loading={isSimulating}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSimulate(insight);
+                          }}
+                        >
+                          {isSimulating ? 'Simulando...' : 'Simular'}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+
+            {/* Daily CEO Brief */}
+            <div style={{
+              padding: theme.spacing.md,
+              backgroundColor: theme.colors.surfaceElevated,
+              borderRadius: theme.borderRadius.lg,
+              border: `1px solid ${theme.colors.borderLight}`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm }}>
+                <div style={{
+                  padding: '0.5rem',
+                  borderRadius: theme.borderRadius.md,
+                  backgroundColor: `${theme.colors.primary}20`,
+                }}>
+                  <Download size={20} color={theme.colors.primary} />
+                </div>
+                <div>
+                  <h4 style={{
+                    fontSize: '1rem',
+                    fontWeight: theme.fontWeights.semibold,
+                    color: theme.colors.textPrimary,
+                    margin: 0,
+                  }}>
+                    Daily CEO Brief
+                  </h4>
+                  <p style={{
+                    fontSize: '0.875rem',
+                    color: theme.colors.textSecondary,
+                    margin: 0,
+                  }}>
+                    Resumen ejecutivo personalizado
+                  </p>
+                </div>
+              </div>
+              
+              <Button
+                variant="primary"
+                size="sm"
+                icon={Download}
                 onClick={generateDailyCEOBrief}
-                className="flex items-center space-x-2 bg-primary text-inverse px-4 py-2 rounded-lg hover:bg-primary-light transition-colors"
               >
-                <Download className="w-4 h-4" />
-                <span>Generar PDF</span>
-              </button>
+                Generar PDF
+              </Button>
             </div>
           </div>
-        </div>
-      </div>
+        </Card>
 
-      {/* Indicador de Cumplimiento Mejorado */}
-      <div className="bg-surface rounded-card border border-border-light shadow-card">
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-success-bg rounded-lg flex items-center justify-center">
-                <Shield className="w-5 h-5 text-success" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-primary">Indicador de Cumplimiento</h3>
-                <p className="text-sm text-secondary">Estado de procesos críticos y seguridad</p>
-              </div>
-            </div>
-            <div className="text-right">
-              <div className="text-2xl font-semibold text-primary">{complianceMetrics.overall}%</div>
-              <div className="text-sm text-secondary">Cumplimiento general</div>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            {[
-              { name: 'Backups automáticos', value: complianceMetrics.backups, icon: CheckCircle, description: 'Respaldos diarios completados' },
-              { name: 'Consentimientos firmados', value: complianceMetrics.consents, icon: CheckCircle, description: 'Documentos legales actualizados' },
-              { name: 'Verificación de accesos', value: complianceMetrics.accessVerification, icon: Clock, description: 'Auditoría de permisos pendiente' },
-              { name: 'Cifrado de datos', value: complianceMetrics.dataEncryption, icon: CheckCircle, description: 'Protección de información activa' },
-            ].map((metric, index) => (
-              <motion.div 
-                key={metric.name}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="flex items-center justify-between p-3 bg-surface-elevated rounded-lg"
-              >
-                <div className="flex items-center space-x-3">
-                  <metric.icon className={`w-4 h-4 ${
-                    metric.value >= 95 ? 'text-success' : 
-                    metric.value >= 85 ? 'text-warning' : 'text-error'
-                  }`} />
-                  <div>
-                    <div className="text-sm font-medium text-primary">{metric.name}</div>
-                    <div className="text-xs text-secondary">{metric.description}</div>
-                  </div>
+        {/* Indicador de Cumplimiento */}
+        <Card variant="default">
+          <div style={{ padding: theme.spacing.md }}>
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'space-between', 
+              marginBottom: theme.spacing.md 
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm }}>
+                <div style={{
+                  padding: '0.5rem',
+                  borderRadius: theme.borderRadius.md,
+                  backgroundColor: `${theme.colors.success}20`,
+                }}>
+                  <Shield size={20} color={theme.colors.success} />
                 </div>
-                <div className="flex items-center space-x-3">
-                  <div className="w-20 bg-surface rounded-full h-2">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: `${metric.value}%` }}
-                      transition={{ duration: 1, delay: index * 0.2 }}
-                      className={`h-2 rounded-full ${
-                        metric.value >= 95 ? 'bg-success' : 
-                        metric.value >= 85 ? 'bg-warning' : 'bg-error'
-                      }`}
-                    />
-                  </div>
-                  <span className="text-sm font-medium text-primary w-10 text-right">
-                    {metric.value}%
-                  </span>
+                <div>
+                  <h3 style={{
+                    fontSize: '1.125rem',
+                    fontWeight: theme.fontWeights.semibold,
+                    color: theme.colors.textPrimary,
+                    fontFamily: theme.fonts.heading,
+                    margin: 0,
+                  }}>
+                    Indicador de Cumplimiento
+                  </h3>
+                  <p style={{
+                    fontSize: '0.875rem',
+                    color: theme.colors.textSecondary,
+                    margin: 0,
+                  }}>
+                    Estado de procesos críticos y seguridad
+                  </p>
                 </div>
-              </motion.div>
-            ))}
-          </div>
+              </div>
+              
+              <div style={{ textAlign: 'right' }}>
+                <div style={{
+                  fontSize: '2rem',
+                  fontWeight: theme.fontWeights.bold,
+                  color: theme.colors.success,
+                  fontFamily: theme.fonts.heading,
+                }}>
+                  {overallCompliance}%
+                </div>
+                <div style={{
+                  fontSize: '0.875rem',
+                  color: theme.colors.textSecondary,
+                }}>
+                  Cumplimiento general
+                </div>
+              </div>
+            </div>
 
-          {/* Compliance Summary */}
-          <div className="mt-6 p-4 bg-gradient-to-r from-success-bg to-info-bg rounded-lg border border-success/20">
-            <div className="flex items-center space-x-3">
-              <CheckCircle className="w-5 h-5 text-success" />
-              <div>
-                <p className="font-medium text-success">Estado de Cumplimiento: Excelente</p>
-                <p className="text-sm text-success/80">
-                  Todos los procesos críticos están funcionando correctamente. 
-                  Próxima auditoría programada para el 15 de enero.
-                </p>
+            <div style={styles.complianceContent}>
+              {complianceMetrics.map((metric, index) => (
+                <motion.div
+                  key={metric.name}
+                  style={styles.complianceItem}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <div style={styles.complianceItemLeft}>
+                    {getStatusIcon(metric.status)}
+                    <div>
+                      <div style={{
+                        fontSize: '0.875rem',
+                        fontWeight: theme.fontWeights.semibold,
+                        color: theme.colors.textPrimary,
+                      }}>
+                        {metric.name}
+                      </div>
+                      <div style={{
+                        fontSize: '0.75rem',
+                        color: theme.colors.textSecondary,
+                      }}>
+                        {metric.description}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div style={styles.complianceItemRight}>
+                    <div style={styles.complianceProgress}>
+                      <motion.div
+                        style={{
+                          height: '100%',
+                          backgroundColor: metric.status === 'success' ? theme.colors.success :
+                                          metric.status === 'warning' ? theme.colors.warning : theme.colors.error,
+                          borderRadius: theme.borderRadius.full,
+                        }}
+                        initial={{ width: 0 }}
+                        animate={{ width: `${metric.value}%` }}
+                        transition={{ duration: 1, delay: index * 0.2 }}
+                      />
+                    </div>
+                    <span style={{
+                      fontSize: '0.875rem',
+                      fontWeight: theme.fontWeights.semibold,
+                      color: theme.colors.textPrimary,
+                      minWidth: '40px',
+                      textAlign: 'right',
+                    }}>
+                      {metric.value}%
+                    </span>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+
+            {/* Resumen de Cumplimiento */}
+            <div style={{
+              marginTop: theme.spacing.md,
+              padding: theme.spacing.md,
+              backgroundColor: `${theme.colors.success}10`,
+              borderRadius: theme.borderRadius.lg,
+              border: `1px solid ${theme.colors.success}30`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm }}>
+                <CheckCircle2 size={20} color={theme.colors.success} />
+                <div>
+                  <p style={{
+                    fontSize: '0.875rem',
+                    fontWeight: theme.fontWeights.semibold,
+                    color: theme.colors.success,
+                    margin: 0,
+                  }}>
+                    Estado de Cumplimiento: Excelente
+                  </p>
+                  <p style={{
+                    fontSize: '0.75rem',
+                    color: theme.colors.textSecondary,
+                    margin: 0,
+                    marginTop: '0.25rem',
+                  }}>
+                    Todos los procesos críticos están funcionando correctamente. 
+                    Próxima auditoría programada para el 15 de enero.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </div>
-    </motion.footer>
+        </Card>
+      </motion.div>
+    </>
   );
 }
