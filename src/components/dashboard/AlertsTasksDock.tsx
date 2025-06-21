@@ -1,111 +1,113 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, CheckSquare, Plus, Filter, AlertTriangle, Info, AlertCircle, Clock, User, Calendar, Search } from 'lucide-react';
+import { 
+  Bell, 
+  CheckSquare, 
+  Plus, 
+  Filter, 
+  AlertTriangle, 
+  Info, 
+  AlertCircle, 
+  Clock, 
+  User, 
+  Calendar, 
+  Search,
+  X,
+  Check,
+  MoreHorizontal,
+  Edit,
+  Trash2,
+  ExternalLink
+} from 'lucide-react';
 import { useAlerts, useTasks } from '@/hooks/useDashboardData';
 import { Alert, Task } from '@/types/dashboard';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-
-// Datos mock para desarrollo
-const mockAlerts: Alert[] = [
-  {
-    id: '1',
-    title: 'Certificado SSL próximo a expirar',
-    description: 'El certificado SSL expira en 7 días',
-    level: 'critical',
-    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    isRead: false,
-    actionUrl: '/settings/ssl'
-  },
-  {
-    id: '2',
-    title: 'Saldo bajo en cuenta principal',
-    description: 'Quedan $2,450 en la cuenta operativa',
-    level: 'critical',
-    timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000),
-    isRead: false
-  },
-  {
-    id: '3',
-    title: 'Stock bajo: Tests PHQ-9',
-    description: 'Quedan 12 unidades, reordenar pronto',
-    level: 'warning',
-    timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000),
-    isRead: true
-  },
-  {
-    id: '4',
-    title: 'Alta rotación detectada',
-    description: '3 terapeutas han solicitado cambio de horario',
-    level: 'warning',
-    timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000),
-    isRead: false
-  },
-  {
-    id: '5',
-    title: 'Backup completado exitosamente',
-    description: 'Backup automático de base de datos completado',
-    level: 'info',
-    timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000),
-    isRead: true
-  }
-];
-
-const mockTasks: Task[] = [
-  {
-    id: '1',
-    title: 'Revisar expedientes pendientes',
-    description: 'Validar 15 expedientes que requieren firma',
-    status: 'todo',
-    priority: 'high',
-    assignedTo: 'Dr. García',
-    dueDate: new Date(Date.now() + 24 * 60 * 60 * 1000),
-    createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
-  },
-  {
-    id: '2',
-    title: 'Actualizar protocolos COVID',
-    description: 'Revisar y actualizar protocolos según nuevas normativas',
-    status: 'in-progress',
-    priority: 'medium',
-    assignedTo: 'Dra. López',
-    dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-    createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)
-  },
-  {
-    id: '3',
-    title: 'Capacitación nuevo software',
-    description: 'Organizar sesión de capacitación para el equipo',
-    status: 'todo',
-    priority: 'low',
-    assignedTo: 'Admin',
-    dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-    createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000)
-  },
-  {
-    id: '4',
-    title: 'Renovar licencias software',
-    description: 'Renovar licencias de software clínico antes del vencimiento',
-    status: 'done',
-    priority: 'high',
-    assignedTo: 'Admin',
-    dueDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
-    createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000)
-  }
-];
+import { collection, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function AlertsTasksDock() {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<'alerts' | 'tasks'>('alerts');
   const [taskFilter, setTaskFilter] = useState<'all' | 'today' | 'week' | 'month'>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [showNewTaskForm, setShowNewTaskForm] = useState(false);
+  const [newTask, setNewTask] = useState({
+    title: '',
+    description: '',
+    priority: 'medium' as 'high' | 'medium' | 'low',
+    assignedTo: '',
+    dueDate: ''
+  });
+  
   const { alerts, loading: alertsLoading } = useAlerts();
   const { tasks, loading: tasksLoading } = useTasks();
 
-  // Usar datos mock si no hay datos de Firebase
-  const displayAlerts = alerts.length > 0 ? alerts : mockAlerts;
-  const displayTasks = tasks.length > 0 ? tasks : mockTasks;
+  // Función para marcar alerta como leída
+  const markAlertAsRead = async (alertId: string) => {
+    if (!user?.centerId) return;
+    
+    try {
+      await updateDoc(doc(db, 'centers', user.centerId, 'alerts', alertId), {
+        isRead: true
+      });
+    } catch (error) {
+      console.error('Error marking alert as read:', error);
+    }
+  };
+
+  // Función para crear nueva tarea
+  const createTask = async () => {
+    if (!user?.centerId || !newTask.title.trim()) return;
+    
+    try {
+      await addDoc(collection(db, 'centers', user.centerId, 'tasks'), {
+        ...newTask,
+        status: 'todo',
+        dueDate: new Date(newTask.dueDate),
+        createdAt: new Date(),
+        category: 'administrative'
+      });
+      
+      setNewTask({
+        title: '',
+        description: '',
+        priority: 'medium',
+        assignedTo: '',
+        dueDate: ''
+      });
+      setShowNewTaskForm(false);
+    } catch (error) {
+      console.error('Error creating task:', error);
+    }
+  };
+
+  // Función para actualizar estado de tarea
+  const updateTaskStatus = async (taskId: string, newStatus: 'todo' | 'in-progress' | 'done') => {
+    if (!user?.centerId) return;
+    
+    try {
+      await updateDoc(doc(db, 'centers', user.centerId, 'tasks', taskId), {
+        status: newStatus
+      });
+    } catch (error) {
+      console.error('Error updating task status:', error);
+    }
+  };
+
+  // Función para eliminar tarea
+  const deleteTask = async (taskId: string) => {
+    if (!user?.centerId) return;
+    
+    try {
+      await deleteDoc(doc(db, 'centers', user.centerId, 'tasks', taskId));
+    } catch (error) {
+      console.error('Error deleting task:', error);
+    }
+  };
 
   const getAlertIcon = (level: string) => {
     switch (level) {
@@ -173,7 +175,7 @@ export default function AlertsTasksDock() {
     }
   };
 
-  const filteredTasks = displayTasks.filter(task => {
+  const filteredTasks = tasks.filter(task => {
     // Filtro por búsqueda
     if (searchQuery && !task.title.toLowerCase().includes(searchQuery.toLowerCase())) {
       return false;
@@ -199,24 +201,24 @@ export default function AlertsTasksDock() {
     }
   });
 
-  const filteredAlerts = displayAlerts.filter(alert => {
+  const filteredAlerts = alerts.filter(alert => {
     if (searchQuery && !alert.title.toLowerCase().includes(searchQuery.toLowerCase())) {
       return false;
     }
     return true;
   });
 
-  const unreadAlertsCount = displayAlerts.filter(alert => !alert.isRead).length;
-  const pendingTasksCount = displayTasks.filter(task => task.status !== 'done').length;
+  const unreadAlertsCount = alerts.filter(alert => !alert.isRead).length;
+  const pendingTasksCount = tasks.filter(task => task.status !== 'done').length;
 
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       style={{
-        width: '320px',
-        height: '80vh',
-        background: 'rgba(255, 255, 255, 0.9)',
+        width: '380px', // Aumentado para evitar cortes
+        height: '85vh', // Aumentado ligeramente
+        background: 'rgba(255, 255, 255, 0.95)',
         backdropFilter: 'blur(20px)',
         borderRadius: '1.5rem',
         border: '1px solid rgba(229, 231, 235, 0.6)',
@@ -229,7 +231,8 @@ export default function AlertsTasksDock() {
       {/* Header con tabs */}
       <div style={{
         padding: '1.5rem',
-        borderBottom: '1px solid rgba(229, 231, 235, 0.6)'
+        borderBottom: '1px solid rgba(229, 231, 235, 0.6)',
+        flexShrink: 0
       }}>
         <div style={{
           display: 'flex',
@@ -322,10 +325,11 @@ export default function AlertsTasksDock() {
         </div>
       </div>
 
-      {/* Buscador */}
+      {/* Buscador y filtros */}
       <div style={{
         padding: '1rem 1.5rem',
-        borderBottom: '1px solid rgba(229, 231, 235, 0.6)'
+        borderBottom: '1px solid rgba(229, 231, 235, 0.6)',
+        flexShrink: 0
       }}>
         <div style={{ position: 'relative', marginBottom: '0.75rem' }}>
           <Search size={16} style={{
@@ -381,25 +385,179 @@ export default function AlertsTasksDock() {
               <option value="month">Este mes</option>
             </select>
             
-            <button style={{
-              padding: '0.5rem',
-              borderRadius: '6px',
-              border: 'none',
-              background: 'rgba(249, 250, 251, 0.8)',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease'
-            }}>
-              <Plus size={16} color="#6B7280" />
+            <button 
+              onClick={() => setShowNewTaskForm(true)}
+              style={{
+                padding: '0.5rem',
+                borderRadius: '6px',
+                border: 'none',
+                background: '#2463EB',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              <Plus size={16} color="white" />
             </button>
           </div>
         )}
       </div>
 
+      {/* Formulario nueva tarea */}
+      <AnimatePresence>
+        {showNewTaskForm && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            style={{
+              borderBottom: '1px solid rgba(229, 231, 235, 0.6)',
+              overflow: 'hidden',
+              flexShrink: 0
+            }}
+          >
+            <div style={{ padding: '1rem 1.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                <h4 style={{ fontSize: '0.875rem', fontWeight: 600, margin: 0 }}>Nueva Tarea</h4>
+                <button
+                  onClick={() => setShowNewTaskForm(false)}
+                  style={{
+                    padding: '0.25rem',
+                    border: 'none',
+                    background: 'transparent',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <X size={16} color="#6B7280" />
+                </button>
+              </div>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <input
+                  type="text"
+                  placeholder="Título de la tarea"
+                  value={newTask.title}
+                  onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
+                  style={{
+                    padding: '0.5rem',
+                    border: '1px solid rgba(229, 231, 235, 0.6)',
+                    borderRadius: '6px',
+                    fontSize: '0.875rem',
+                    outline: 'none'
+                  }}
+                />
+                
+                <textarea
+                  placeholder="Descripción"
+                  value={newTask.description}
+                  onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
+                  rows={2}
+                  style={{
+                    padding: '0.5rem',
+                    border: '1px solid rgba(229, 231, 235, 0.6)',
+                    borderRadius: '6px',
+                    fontSize: '0.875rem',
+                    outline: 'none',
+                    resize: 'none'
+                  }}
+                />
+                
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <select
+                    value={newTask.priority}
+                    onChange={(e) => setNewTask({ ...newTask, priority: e.target.value as any })}
+                    style={{
+                      flex: 1,
+                      padding: '0.5rem',
+                      border: '1px solid rgba(229, 231, 235, 0.6)',
+                      borderRadius: '6px',
+                      fontSize: '0.875rem',
+                      outline: 'none'
+                    }}
+                  >
+                    <option value="low">Baja</option>
+                    <option value="medium">Media</option>
+                    <option value="high">Alta</option>
+                  </select>
+                  
+                  <input
+                    type="date"
+                    value={newTask.dueDate}
+                    onChange={(e) => setNewTask({ ...newTask, dueDate: e.target.value })}
+                    style={{
+                      flex: 1,
+                      padding: '0.5rem',
+                      border: '1px solid rgba(229, 231, 235, 0.6)',
+                      borderRadius: '6px',
+                      fontSize: '0.875rem',
+                      outline: 'none'
+                    }}
+                  />
+                </div>
+                
+                <input
+                  type="text"
+                  placeholder="Asignado a"
+                  value={newTask.assignedTo}
+                  onChange={(e) => setNewTask({ ...newTask, assignedTo: e.target.value })}
+                  style={{
+                    padding: '0.5rem',
+                    border: '1px solid rgba(229, 231, 235, 0.6)',
+                    borderRadius: '6px',
+                    fontSize: '0.875rem',
+                    outline: 'none'
+                  }}
+                />
+                
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button
+                    onClick={createTask}
+                    disabled={!newTask.title.trim()}
+                    style={{
+                      flex: 1,
+                      padding: '0.5rem',
+                      border: 'none',
+                      borderRadius: '6px',
+                      background: newTask.title.trim() ? '#2463EB' : '#E5E7EB',
+                      color: newTask.title.trim() ? 'white' : '#9CA3AF',
+                      fontSize: '0.875rem',
+                      fontWeight: 600,
+                      cursor: newTask.title.trim() ? 'pointer' : 'not-allowed'
+                    }}
+                  >
+                    Crear
+                  </button>
+                  <button
+                    onClick={() => setShowNewTaskForm(false)}
+                    style={{
+                      flex: 1,
+                      padding: '0.5rem',
+                      border: '1px solid rgba(229, 231, 235, 0.6)',
+                      borderRadius: '6px',
+                      background: 'white',
+                      color: '#6B7280',
+                      fontSize: '0.875rem',
+                      fontWeight: 600,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Contenido con scroll interno */}
       <div style={{
         flex: 1,
         overflowY: 'auto',
-        padding: '1rem 1.5rem'
+        padding: '1rem 1.5rem',
+        minHeight: 0 // Importante para el scroll
       }}>
         <AnimatePresence mode="wait">
           {activeTab === 'alerts' ? (
@@ -410,7 +568,20 @@ export default function AlertsTasksDock() {
               exit={{ opacity: 0, x: -20 }}
               style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}
             >
-              {filteredAlerts.length === 0 ? (
+              {alertsLoading ? (
+                <div style={{ textAlign: 'center', padding: '2rem 0' }}>
+                  <div style={{
+                    width: '32px',
+                    height: '32px',
+                    border: '3px solid #E5E7EB',
+                    borderTop: '3px solid #2463EB',
+                    borderRadius: '50%',
+                    animation: 'spin 1s linear infinite',
+                    margin: '0 auto 1rem'
+                  }} />
+                  <p style={{ fontSize: '0.875rem', color: '#6B7280' }}>Cargando alertas...</p>
+                </div>
+              ) : filteredAlerts.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '2rem 0' }}>
                   <Bell size={32} color="#9CA3AF" style={{ marginBottom: '0.5rem' }} />
                   <p style={{ fontSize: '0.875rem', color: '#6B7280', fontFamily: 'Inter, sans-serif' }}>
@@ -424,6 +595,7 @@ export default function AlertsTasksDock() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.05 }}
+                    onClick={() => markAlertAsRead(alert.id)}
                     style={{
                       padding: '1rem',
                       borderRadius: '12px',
@@ -431,40 +603,76 @@ export default function AlertsTasksDock() {
                       borderLeft: `4px solid ${getAlertBorderColor(alert.level)}`,
                       cursor: 'pointer',
                       transition: 'all 0.2s ease',
-                      opacity: alert.isRead ? 0.7 : 1
+                      opacity: alert.isRead ? 0.7 : 1,
+                      position: 'relative'
                     }}
+                    whileHover={{ scale: 1.02 }}
                   >
                     <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
                       {getAlertIcon(alert.level)}
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <h4 style={{
-                          fontSize: '0.875rem',
-                          fontWeight: 600,
-                          color: '#1C1E21',
-                          marginBottom: '0.25rem',
-                          lineHeight: 1.3,
-                          fontFamily: 'Inter, sans-serif'
-                        }}>
-                          {alert.title}
-                        </h4>
+                        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                          <h4 style={{
+                            fontSize: '0.875rem',
+                            fontWeight: 600,
+                            color: '#1C1E21',
+                            lineHeight: 1.3,
+                            fontFamily: 'Inter, sans-serif',
+                            margin: 0,
+                            wordBreak: 'break-word'
+                          }}>
+                            {alert.title}
+                          </h4>
+                          {alert.actionUrl && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                window.open(alert.actionUrl, '_blank');
+                              }}
+                              style={{
+                                padding: '0.25rem',
+                                border: 'none',
+                                background: 'transparent',
+                                cursor: 'pointer',
+                                marginLeft: '0.5rem'
+                              }}
+                            >
+                              <ExternalLink size={14} color="#6B7280" />
+                            </button>
+                          )}
+                        </div>
+                        
                         <p style={{
                           fontSize: '0.75rem',
                           color: '#6B7280',
-                          marginBottom: '0.5rem',
+                          marginBottom: '0.75rem',
                           lineHeight: 1.4,
-                          fontFamily: 'Inter, sans-serif'
+                          fontFamily: 'Inter, sans-serif',
+                          wordBreak: 'break-word'
                         }}>
                           {alert.description}
                         </p>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                          <Clock size={12} color="#9CA3AF" />
-                          <span style={{
-                            fontSize: '0.75rem',
-                            color: '#9CA3AF',
-                            fontFamily: 'Inter, sans-serif'
-                          }}>
-                            {format(alert.timestamp, 'HH:mm', { locale: es })}
-                          </span>
+                        
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                            <Clock size={12} color="#9CA3AF" />
+                            <span style={{
+                              fontSize: '0.75rem',
+                              color: '#9CA3AF',
+                              fontFamily: 'Inter, sans-serif'
+                            }}>
+                              {format(alert.timestamp, 'HH:mm', { locale: es })}
+                            </span>
+                          </div>
+                          
+                          {!alert.isRead && (
+                            <div style={{
+                              width: '8px',
+                              height: '8px',
+                              borderRadius: '50%',
+                              backgroundColor: getAlertBorderColor(alert.level)
+                            }} />
+                          )}
                         </div>
                       </div>
                     </div>
@@ -480,11 +688,24 @@ export default function AlertsTasksDock() {
               exit={{ opacity: 0, x: 20 }}
               style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}
             >
-              {filteredTasks.length === 0 ? (
+              {tasksLoading ? (
+                <div style={{ textAlign: 'center', padding: '2rem 0' }}>
+                  <div style={{
+                    width: '32px',
+                    height: '32px',
+                    border: '3px solid #E5E7EB',
+                    borderTop: '3px solid #2463EB',
+                    borderRadius: '50%',
+                    animation: 'spin 1s linear infinite',
+                    margin: '0 auto 1rem'
+                  }} />
+                  <p style={{ fontSize: '0.875rem', color: '#6B7280' }}>Cargando tareas...</p>
+                </div>
+              ) : filteredTasks.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '2rem 0' }}>
                   <CheckSquare size={32} color="#9CA3AF" style={{ marginBottom: '0.5rem' }} />
                   <p style={{ fontSize: '0.875rem', color: '#6B7280', fontFamily: 'Inter, sans-serif' }}>
-                    No hay tareas
+                    {searchQuery ? 'No se encontraron tareas' : 'No hay tareas'}
                   </p>
                 </div>
               ) : (
@@ -501,7 +722,8 @@ export default function AlertsTasksDock() {
                       background: 'rgba(255, 255, 255, 0.8)',
                       cursor: 'pointer',
                       transition: 'all 0.2s ease',
-                      opacity: task.status === 'done' ? 0.7 : 1
+                      opacity: task.status === 'done' ? 0.7 : 1,
+                      position: 'relative'
                     }}
                     whileHover={{
                       boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
@@ -515,22 +737,42 @@ export default function AlertsTasksDock() {
                         color: '#1C1E21',
                         flex: 1,
                         lineHeight: 1.3,
-                        fontFamily: 'Inter, sans-serif'
+                        fontFamily: 'Inter, sans-serif',
+                        margin: 0,
+                        wordBreak: 'break-word',
+                        paddingRight: '0.5rem'
                       }}>
                         {task.title}
                       </h4>
-                      <span style={{
-                        padding: '0.25rem 0.5rem',
-                        borderRadius: '6px',
-                        fontSize: '0.75rem',
-                        fontWeight: 600,
-                        marginLeft: '0.5rem',
-                        backgroundColor: getPriorityColor(task.priority).bg,
-                        color: getPriorityColor(task.priority).text,
-                        fontFamily: 'Inter, sans-serif'
-                      }}>
-                        {task.priority === 'high' ? 'Alta' : task.priority === 'medium' ? 'Media' : 'Baja'}
-                      </span>
+                      
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <span style={{
+                          padding: '0.25rem 0.5rem',
+                          borderRadius: '6px',
+                          fontSize: '0.75rem',
+                          fontWeight: 600,
+                          backgroundColor: getPriorityColor(task.priority).bg,
+                          color: getPriorityColor(task.priority).text,
+                          fontFamily: 'Inter, sans-serif',
+                          whiteSpace: 'nowrap'
+                        }}>
+                          {task.priority === 'high' ? 'Alta' : task.priority === 'medium' ? 'Media' : 'Baja'}
+                        </span>
+                        
+                        <div style={{ position: 'relative' }}>
+                          <button
+                            style={{
+                              padding: '0.25rem',
+                              border: 'none',
+                              background: 'transparent',
+                              cursor: 'pointer',
+                              borderRadius: '4px'
+                            }}
+                          >
+                            <MoreHorizontal size={14} color="#6B7280" />
+                          </button>
+                        </div>
+                      </div>
                     </div>
                     
                     <p style={{
@@ -538,12 +780,13 @@ export default function AlertsTasksDock() {
                       color: '#6B7280',
                       marginBottom: '0.75rem',
                       lineHeight: 1.4,
-                      fontFamily: 'Inter, sans-serif'
+                      fontFamily: 'Inter, sans-serif',
+                      wordBreak: 'break-word'
                     }}>
                       {task.description}
                     </p>
                     
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: '0.5rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: '0.75rem' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                         <User size={12} color="#6B7280" />
                         <span style={{ color: '#6B7280', fontFamily: 'Inter, sans-serif' }}>{task.assignedTo}</span>
@@ -557,7 +800,7 @@ export default function AlertsTasksDock() {
                       </div>
                     </div>
                     
-                    <div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                       <span style={{
                         padding: '0.25rem 0.5rem',
                         borderRadius: '6px',
@@ -569,6 +812,50 @@ export default function AlertsTasksDock() {
                       }}>
                         {getStatusText(task.status)}
                       </span>
+                      
+                      <div style={{ display: 'flex', gap: '0.25rem' }}>
+                        {task.status !== 'done' && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              updateTaskStatus(task.id, task.status === 'todo' ? 'in-progress' : 'done');
+                            }}
+                            style={{
+                              padding: '0.25rem',
+                              border: 'none',
+                              background: '#10B981',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center'
+                            }}
+                          >
+                            <Check size={12} color="white" />
+                          </button>
+                        )}
+                        
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (confirm('¿Estás seguro de que quieres eliminar esta tarea?')) {
+                              deleteTask(task.id);
+                            }
+                          }}
+                          style={{
+                            padding: '0.25rem',
+                            border: 'none',
+                            background: '#EF4444',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                        >
+                          <Trash2 size={12} color="white" />
+                        </button>
+                      </div>
                     </div>
                   </motion.div>
                 ))
@@ -578,8 +865,13 @@ export default function AlertsTasksDock() {
         </AnimatePresence>
       </div>
 
-      {/* Estilos CSS para scrollbar personalizada */}
+      {/* Estilos CSS */}
       <style jsx>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        
         div::-webkit-scrollbar {
           width: 6px;
         }
@@ -601,4 +893,3 @@ export default function AlertsTasksDock() {
     </motion.div>
   );
 }
-
