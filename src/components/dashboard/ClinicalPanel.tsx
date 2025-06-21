@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  ChevronDown, 
   Heart, 
   AlertTriangle, 
   Calendar, 
@@ -33,7 +32,8 @@ import {
   MoreVertical,
   Star,
   Layers,
-  Gauge
+  Gauge,
+  CheckCircle
 } from 'lucide-react';
 import { 
   RadarChart, 
@@ -54,228 +54,438 @@ import {
   AreaChart,
   Cell,
   PieChart,
-  Pie
+  Pie,
+  Legend
 } from 'recharts';
 import { useClinicalMetrics } from '@/hooks/useDashboardData';
 import { useStyles } from '@/lib/useStyles';
+import Card from '@/components/ui/Card';
+import Button from '@/components/ui/Button';
 
-// Datos mock ultra profesionales
-const mockClinicalData = {
-  healthMetrics: {
-    operationalHealth: 94.2,
-    patientSafety: 98.7,
-    clinicalEfficiency: 87.3,
-    riskLevel: 'low',
-    trend: 'up'
-  },
-  riskRadar: [
-    { subject: 'PHQ-9 Crítico', value: 12, max: 25, color: '#EF4444', priority: 'high' },
-    { subject: 'GAD-7 Elevado', value: 8, max: 25, color: '#F59E0B', priority: 'medium' },
-    { subject: 'Sin Progreso', value: 15, max: 25, color: '#EF4444', priority: 'high' },
-    { subject: 'Ausentismo', value: 6, max: 25, color: '#10B981', priority: 'low' },
-    { subject: 'Medicación', value: 9, max: 25, color: '#F59E0B', priority: 'medium' },
-    { subject: 'Crisis Recientes', value: 4, max: 25, color: '#EF4444', priority: 'high' },
-  ],
-  capacityForecast: [
-    { 
-      day: 'Lun', 
-      morning: 85, 
-      afternoon: 92, 
-      evening: 78,
-      predicted: 88,
-      optimal: 85,
-      alerts: 1
-    },
-    { 
-      day: 'Mar', 
-      morning: 90, 
-      afternoon: 88, 
-      evening: 82,
-      predicted: 87,
-      optimal: 85,
-      alerts: 0
-    },
-    { 
-      day: 'Mié', 
-      morning: 78, 
-      afternoon: 95, 
-      evening: 85,
-      predicted: 86,
-      optimal: 85,
-      alerts: 2
-    },
-    { 
-      day: 'Jue', 
-      morning: 88, 
-      afternoon: 90, 
-      evening: 80,
-      predicted: 86,
-      optimal: 85,
-      alerts: 0
-    },
-    { 
-      day: 'Vie', 
-      morning: 95, 
-      afternoon: 85, 
-      evening: 75,
-      predicted: 85,
-      optimal: 85,
-      alerts: 1
-    },
-    { 
-      day: 'Sáb', 
-      morning: 60, 
-      afternoon: 70, 
-      evening: 45,
-      predicted: 58,
-      optimal: 60,
-      alerts: 0
-    },
-    { 
-      day: 'Dom', 
-      morning: 45, 
-      afternoon: 55, 
-      evening: 35,
-      predicted: 45,
-      optimal: 50,
-      alerts: 0
-    }
-  ],
-  adherenceStats: {
-    completed: 73.2,
-    pending: 18.5,
-    cancelled: 8.3,
-    trends: {
-      completed: 5.2,
-      pending: -2.1,
-      cancelled: -3.1
-    }
-  },
-  riskPatients: {
-    critical: 12,
-    high: 23,
-    medium: 19,
-    total: 54,
-    trend: -8.3
-  },
-  wellnessIndex: {
-    overall: 87.3,
-    components: {
-      emotional: 89.2,
-      behavioral: 85.7,
-      social: 87.9,
-      cognitive: 86.1
-    },
-    trend: 3.2
-  },
-  predictiveAlerts: [
-    {
-      id: 1,
-      type: 'capacity',
-      severity: 'warning',
-      title: 'Sobrecarga prevista - Miércoles tarde',
-      description: 'Capacidad proyectada del 95%. Considerar redistribución.',
-      confidence: 87,
-      timeframe: '2 días',
-      action: 'redistribute'
-    },
-    {
-      id: 2,
-      type: 'risk',
-      severity: 'critical',
-      title: 'Patrón de deterioro detectado',
-      description: '3 pacientes muestran indicadores de empeoramiento.',
-      confidence: 92,
-      timeframe: 'Inmediato',
-      action: 'review'
-    },
-    {
-      id: 3,
-      type: 'efficiency',
-      severity: 'info',
-      title: 'Oportunidad de optimización',
-      description: 'Reagrupar sesiones matutinas podría mejorar eficiencia 12%.',
-      confidence: 78,
-      timeframe: '1 semana',
-      action: 'optimize'
-    }
-  ],
-  clinicalPerformance: [
-    { metric: 'Tiempo promedio sesión', value: 52, unit: 'min', target: 50, status: 'warning' },
-    { metric: 'Satisfacción paciente', value: 4.7, unit: '/5', target: 4.5, status: 'success' },
-    { metric: 'Adherencia tratamiento', value: 73.2, unit: '%', target: 75, status: 'warning' },
-    { metric: 'Tiempo respuesta crisis', value: 8, unit: 'min', target: 10, status: 'success' }
-  ]
-};
+interface ClinicalData {
+  day: string;
+  morning: number;
+  afternoon: number;
+  evening: number;
+  predicted: number;
+  optimal: number;
+  alerts: number;
+}
 
-export default function ClinicalPanel() {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [activeTab, setActiveTab] = useState<'overview' | 'capacity' | 'risk' | 'performance'>('overview');
-  const [selectedAlert, setSelectedAlert] = useState<number | null>(null);
-  const { metrics, loading } = useClinicalMetrics();
+interface ClinicalPanelProps {
+  data?: ClinicalData[];
+  loading?: boolean;
+  onRefresh?: () => void;
+  onExport?: () => void;
+}
+
+export default function ClinicalPanel({ 
+  data = [], 
+  loading = false, 
+  onRefresh, 
+  onExport 
+}: ClinicalPanelProps) {
   const { theme } = useStyles();
+  const [selectedPeriod, setSelectedPeriod] = useState('week');
+  const [selectedMetric, setSelectedMetric] = useState('capacity');
+  const { metrics, loading: metricsLoading } = useClinicalMetrics();
 
-  // Funciones de utilidad mejoradas
-  const getHealthColor = (score: number) => {
-    if (score >= 90) return theme.colors.success;
-    if (score >= 75) return theme.colors.warning;
-    return theme.colors.error;
+  // Mock data mejorado
+  const mockClinicalData: ClinicalData[] = [
+    { day: 'Lun', morning: 85, afternoon: 92, evening: 78, predicted: 88, optimal: 85, alerts: 1 },
+    { day: 'Mar', morning: 90, afternoon: 88, evening: 82, predicted: 87, optimal: 85, alerts: 0 },
+    { day: 'Mié', morning: 78, afternoon: 95, evening: 85, predicted: 86, optimal: 85, alerts: 2 },
+    { day: 'Jue', morning: 88, afternoon: 90, evening: 80, predicted: 86, optimal: 85, alerts: 0 },
+    { day: 'Vie', morning: 95, afternoon: 85, evening: 75, predicted: 85, optimal: 85, alerts: 1 },
+    { day: 'Sáb', morning: 60, afternoon: 70, evening: 45, predicted: 58, optimal: 60, alerts: 0 },
+    { day: 'Dom', morning: 45, afternoon: 55, evening: 35, predicted: 45, optimal: 50, alerts: 0 }
+  ];
+
+  const riskRadarData = [
+    { subject: 'PHQ-9 Crítico', value: 12, max: 25, fullMark: 25 },
+    { subject: 'GAD-7 Elevado', value: 8, max: 25, fullMark: 25 },
+    { subject: 'Sin Progreso', value: 15, max: 25, fullMark: 25 },
+    { subject: 'Ausentismo', value: 6, max: 25, fullMark: 25 },
+    { subject: 'Medicación', value: 9, max: 25, fullMark: 25 },
+    { subject: 'Crisis Recientes', value: 4, max: 25, fullMark: 25 },
+  ];
+
+  const clinicalData = data.length > 0 ? data : mockClinicalData;
+
+  const styles = {
+    container: {
+      width: '100%',
+      maxWidth: '1200px',
+      margin: '0 auto',
+      padding: theme.spacing.md,
+    },
+    
+    header: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: theme.spacing.lg,
+      flexWrap: 'wrap' as const,
+      gap: theme.spacing.md,
+    },
+    
+    headerLeft: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: theme.spacing.md,
+    },
+    
+    headerIcon: {
+      width: '3rem',
+      height: '3rem',
+      background: theme.gradients.error,
+      borderRadius: theme.borderRadius.lg,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      boxShadow: `0 4px 12px ${theme.colors.error}30`,
+    },
+    
+    headerContent: {
+      display: 'flex',
+      flexDirection: 'column' as const,
+      gap: '0.25rem',
+    },
+    
+    title: {
+      fontSize: '1.5rem',
+      fontWeight: theme.fontWeights.bold,
+      color: theme.colors.textPrimary,
+      fontFamily: theme.fonts.heading,
+      margin: 0,
+    },
+    
+    subtitle: {
+      fontSize: '0.875rem',
+      color: theme.colors.textSecondary,
+      fontWeight: theme.fontWeights.medium,
+      margin: 0,
+    },
+    
+    headerActions: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: theme.spacing.sm,
+      flexWrap: 'wrap' as const,
+    },
+    
+    filterContainer: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: theme.spacing.sm,
+      padding: '0.5rem',
+      backgroundColor: theme.colors.surfaceElevated,
+      borderRadius: theme.borderRadius.lg,
+      border: `1px solid ${theme.colors.borderLight}`,
+    },
+    
+    filterButton: {
+      padding: '0.5rem 1rem',
+      borderRadius: theme.borderRadius.md,
+      border: 'none',
+      backgroundColor: 'transparent',
+      color: theme.colors.textSecondary,
+      fontSize: '0.875rem',
+      fontWeight: theme.fontWeights.medium,
+      cursor: 'pointer',
+      transition: theme.animations.transition,
+      outline: 'none',
+    },
+    
+    filterButtonActive: {
+      backgroundColor: theme.colors.surface,
+      color: theme.colors.primary,
+      boxShadow: theme.shadows.card,
+    },
+    
+    metricsGrid: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+      gap: theme.spacing.md,
+      marginBottom: theme.spacing.lg,
+    },
+    
+    metricCard: {
+      padding: theme.spacing.md,
+      display: 'flex',
+      flexDirection: 'column' as const,
+      gap: '0.75rem',
+    },
+    
+    metricHeader: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    
+    metricIcon: {
+      padding: '0.5rem',
+      borderRadius: theme.borderRadius.md,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    
+    metricValue: {
+      fontSize: '2rem',
+      fontWeight: theme.fontWeights.bold,
+      color: theme.colors.textPrimary,
+      fontFamily: theme.fonts.heading,
+      margin: 0,
+    },
+    
+    metricLabel: {
+      fontSize: '0.875rem',
+      color: theme.colors.textSecondary,
+      fontWeight: theme.fontWeights.medium,
+      margin: 0,
+    },
+    
+    metricChange: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '0.25rem',
+      fontSize: '0.875rem',
+      fontWeight: theme.fontWeights.semibold,
+    },
+    
+    chartContainer: {
+      marginBottom: theme.spacing.lg,
+    },
+    
+    chartHeader: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: theme.spacing.md,
+      padding: `0 ${theme.spacing.md}`,
+    },
+    
+    chartTitle: {
+      fontSize: '1.125rem',
+      fontWeight: theme.fontWeights.semibold,
+      color: theme.colors.textPrimary,
+      fontFamily: theme.fonts.heading,
+      margin: 0,
+    },
+    
+    chartControls: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: theme.spacing.sm,
+    },
+    
+    chartContent: {
+      height: '400px',
+      padding: theme.spacing.md,
+    },
+    
+    loadingContainer: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      height: '400px',
+      flexDirection: 'column' as const,
+      gap: theme.spacing.md,
+    },
+    
+    loadingSpinner: {
+      width: '2rem',
+      height: '2rem',
+      border: `3px solid ${theme.colors.borderLight}`,
+      borderTop: `3px solid ${theme.colors.primary}`,
+      borderRadius: '50%',
+      animation: 'spin 1s linear infinite',
+    },
+    
+    loadingText: {
+      fontSize: '0.875rem',
+      color: theme.colors.textSecondary,
+      fontWeight: theme.fontWeights.medium,
+    },
+    
+    summaryGrid: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+      gap: theme.spacing.md,
+    },
+    
+    summaryCard: {
+      padding: theme.spacing.md,
+      display: 'flex',
+      flexDirection: 'column' as const,
+      gap: '0.5rem',
+    },
+    
+    summaryHeader: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: theme.spacing.sm,
+    },
+    
+    summaryTitle: {
+      fontSize: '1rem',
+      fontWeight: theme.fontWeights.semibold,
+      color: theme.colors.textPrimary,
+      fontFamily: theme.fonts.heading,
+      margin: 0,
+    },
+    
+    summaryContent: {
+      display: 'flex',
+      flexDirection: 'column' as const,
+      gap: '0.5rem',
+    },
+    
+    summaryItem: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: '0.5rem 0',
+      borderBottom: `1px solid ${theme.colors.borderLight}`,
+    },
+    
+    summaryItemLabel: {
+      fontSize: '0.875rem',
+      color: theme.colors.textSecondary,
+      fontWeight: theme.fontWeights.medium,
+    },
+    
+    summaryItemValue: {
+      fontSize: '0.875rem',
+      fontWeight: theme.fontWeights.semibold,
+      color: theme.colors.textPrimary,
+    },
+
+    alertsGrid: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+      gap: theme.spacing.md,
+      marginBottom: theme.spacing.lg,
+    },
+
+    alertCard: {
+      padding: theme.spacing.md,
+      display: 'flex',
+      flexDirection: 'column' as const,
+      gap: '0.75rem',
+      position: 'relative' as const,
+      overflow: 'hidden',
+    },
+
+    alertHeader: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+
+    alertBadge: {
+      padding: '0.25rem 0.5rem',
+      borderRadius: theme.borderRadius.sm,
+      fontSize: '0.75rem',
+      fontWeight: theme.fontWeights.semibold,
+    },
+
+    alertContent: {
+      display: 'flex',
+      flexDirection: 'column' as const,
+      gap: '0.5rem',
+    },
+
+    alertTitle: {
+      fontSize: '0.875rem',
+      fontWeight: theme.fontWeights.semibold,
+      color: theme.colors.textPrimary,
+      margin: 0,
+    },
+
+    alertDescription: {
+      fontSize: '0.75rem',
+      color: theme.colors.textSecondary,
+      lineHeight: '1.4',
+      margin: 0,
+    },
+
+    alertFooter: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      fontSize: '0.75rem',
+      color: theme.colors.textTertiary,
+    },
   };
 
-  const getSeverityColor = (severity: string) => {
-    switch (severity) {
-      case 'critical': return theme.colors.error;
-      case 'warning': return theme.colors.warning;
-      case 'info': return theme.colors.info;
-      default: return theme.colors.textSecondary;
-    }
+  // Funciones de cálculo
+  const calculateOperationalHealth = () => {
+    const avgCapacity = clinicalData.reduce((sum, item) => 
+      sum + (item.morning + item.afternoon + item.evening) / 3, 0) / clinicalData.length;
+    return Math.round(avgCapacity * 100) / 100;
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'success': return <CheckCircle2 className="w-4 h-4" />;
-      case 'warning': return <AlertCircle className="w-4 h-4" />;
-      case 'error': return <XCircle className="w-4 h-4" />;
-      default: return <Clock className="w-4 h-4" />;
-    }
+  const calculatePatientSafety = () => {
+    return 98.7; // Mock value
+  };
+
+  const calculateClinicalEfficiency = () => {
+    return 87.3; // Mock value
+  };
+
+  const calculateWellnessIndex = () => {
+    return 89.2; // Mock value
+  };
+
+  const calculateRiskPatients = () => {
+    return riskRadarData.reduce((sum, item) => sum + item.value, 0);
+  };
+
+  const formatPercentage = (value: number) => {
+    return `${value.toFixed(1)}%`;
   };
 
   // Tooltip personalizado mejorado
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.9, y: 10 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          style={{
-            background: 'linear-gradient(145deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.95) 100%)',
-            backdropFilter: 'blur(24px)',
-            border: '1px solid rgba(226,232,240,0.8)',
-            borderRadius: '16px',
-            padding: '16px',
-            boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25), 0 0 0 1px rgba(255,255,255,0.8)'
-          }}
-        >
-          <p className="font-bold text-slate-900 mb-3 text-sm" style={{ fontFamily: theme.fonts.heading }}>
+        <div style={{
+          backgroundColor: theme.colors.surface,
+          border: `1px solid ${theme.colors.borderLight}`,
+          borderRadius: theme.borderRadius.lg,
+          padding: theme.spacing.sm,
+          boxShadow: theme.shadows.floating,
+          backdropFilter: 'blur(10px)',
+        }}>
+          <p style={{
+            fontSize: '0.875rem',
+            fontWeight: theme.fontWeights.semibold,
+            color: theme.colors.textPrimary,
+            margin: '0 0 0.5rem 0',
+          }}>
             {label}
           </p>
-          <div className="space-y-2">
-            {payload.map((entry: any, index: number) => (
-              <div key={index} className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <div 
-                    className="w-3 h-3 rounded-full shadow-sm" 
-                    style={{ backgroundColor: entry.color }} 
-                  />
-                  <span className="text-xs font-medium text-slate-700">{entry.name}:</span>
-                </div>
-                <span className="font-bold text-slate-900 ml-3 text-sm">
-                  {typeof entry.value === 'number' ? `${entry.value}%` : entry.value}
-                </span>
-              </div>
-            ))}
-          </div>
-        </motion.div>
+          {payload.map((entry: any, index: number) => (
+            <p key={index} style={{
+              fontSize: '0.75rem',
+              color: entry.color,
+              margin: '0.25rem 0',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+            }}>
+              <span style={{
+                width: '0.75rem',
+                height: '0.75rem',
+                backgroundColor: entry.color,
+                borderRadius: '50%',
+              }} />
+              {entry.name}: {entry.value}%
+            </p>
+          ))}
+        </div>
       );
     }
     return null;
@@ -313,1078 +523,434 @@ export default function ClinicalPanel() {
     }
   };
 
+  const predictiveAlerts = [
+    {
+      id: 1,
+      type: 'capacity',
+      severity: 'warning',
+      title: 'Sobrecarga prevista - Miércoles tarde',
+      description: 'Capacidad proyectada del 95%. Considerar redistribución de citas.',
+      confidence: 87,
+      timeframe: '2 días'
+    },
+    {
+      id: 2,
+      type: 'risk',
+      severity: 'critical',
+      title: 'Patrón de deterioro detectado',
+      description: '3 pacientes muestran indicadores de empeoramiento en PHQ-9.',
+      confidence: 92,
+      timeframe: 'Inmediato'
+    },
+    {
+      id: 3,
+      type: 'efficiency',
+      severity: 'info',
+      title: 'Oportunidad de optimización',
+      description: 'Reagrupar sesiones matutinas podría mejorar eficiencia 12%.',
+      confidence: 78,
+      timeframe: '1 semana'
+    }
+  ];
+
   return (
-    <motion.div
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-      className="relative"
-    >
-      {/* CONTENEDOR PRINCIPAL ULTRA PROFESIONAL */}
-      <div 
-        className="relative overflow-hidden"
-        style={{
-          background: 'linear-gradient(145deg, #ffffff 0%, #f8fafc 100%)',
-          borderRadius: '24px',
-          border: '1px solid rgba(226,232,240,0.8)',
-          boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04), 0 0 0 1px rgba(255,255,255,0.9)'
-        }}
-      >
-        {/* EFECTOS DE FONDO PROFESIONALES */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          {/* Gradiente sutil superior */}
-          <div 
-            className="absolute -top-32 -right-32 w-64 h-64 rounded-full opacity-[0.03]"
-            style={{
-              background: `radial-gradient(circle, ${theme.colors.primary} 0%, transparent 70%)`
-            }}
-          />
-          {/* Gradiente sutil inferior */}
-          <div 
-            className="absolute -bottom-32 -left-32 w-64 h-64 rounded-full opacity-[0.03]"
-            style={{
-              background: `radial-gradient(circle, ${theme.colors.success} 0%, transparent 70%)`
-            }}
-          />
-          {/* Líneas decorativas */}
-          <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent opacity-60" />
-        </div>
-
-        {/* HEADER ULTRA PROFESIONAL */}
-        <motion.div 
-          className="relative z-10 p-8 cursor-pointer"
-          onClick={() => setIsExpanded(!isExpanded)}
-          whileHover={{ backgroundColor: 'rgba(248,250,252,0.5)' }}
-          transition={{ duration: 0.3 }}
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-6">
-              {/* ICONO PRINCIPAL REDISEÑADO */}
-              <motion.div 
-                className="relative flex items-center justify-center overflow-hidden"
-                style={{
-                  width: '72px',
-                  height: '72px',
-                  background: 'linear-gradient(145deg, #ef4444 0%, #dc2626 100%)',
-                  borderRadius: '20px',
-                  boxShadow: '0 10px 25px rgba(239,68,68,0.3), 0 0 0 1px rgba(255,255,255,0.2)'
-                }}
-                whileHover={{ 
-                  scale: 1.05,
-                  boxShadow: '0 15px 35px rgba(239,68,68,0.4), 0 0 0 1px rgba(255,255,255,0.3)'
-                }}
-                transition={{ duration: 0.3 }}
-              >
-                <Heart className="w-9 h-9 text-white relative z-10" />
-                
-                {/* Efecto de brillo animado */}
-                <motion.div
-                  className="absolute inset-0"
-                  style={{
-                    background: 'linear-gradient(145deg, rgba(255,255,255,0.2) 0%, transparent 50%, rgba(255,255,255,0.1) 100%)',
-                    borderRadius: '20px'
-                  }}
-                  animate={{
-                    opacity: [0.5, 0.8, 0.5],
-                  }}
-                  transition={{
-                    duration: 3,
-                    repeat: Infinity,
-                    ease: "easeInOut"
-                  }}
-                />
-                
-                {/* Shimmer profesional */}
-                <div 
-                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 opacity-0 hover:opacity-100 transition-opacity duration-500"
-                  style={{
-                    animation: 'shimmer 2s infinite',
-                    borderRadius: '20px'
-                  }}
-                />
-              </motion.div>
-
-              {/* INFORMACIÓN DEL PANEL MEJORADA */}
-              <div className="space-y-3">
-                <div className="flex items-center space-x-4">
-                  <h3 
-                    className="font-bold text-3xl text-slate-900"
-                    style={{ fontFamily: theme.fonts.heading }}
-                  >
-                    Operaciones Clínicas
-                  </h3>
-                  
-                  {/* BADGE DE ESTADO PROFESIONAL */}
-                  <motion.div
-                    className="flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-semibold"
-                    style={{
-                      background: `linear-gradient(145deg, ${getHealthColor(mockClinicalData.healthMetrics.operationalHealth)}15, ${getHealthColor(mockClinicalData.healthMetrics.operationalHealth)}08)`,
-                      color: getHealthColor(mockClinicalData.healthMetrics.operationalHealth),
-                      border: `1px solid ${getHealthColor(mockClinicalData.healthMetrics.operationalHealth)}30`,
-                      boxShadow: `0 4px 12px ${getHealthColor(mockClinicalData.healthMetrics.operationalHealth)}20`
-                    }}
-                    whileHover={{ scale: 1.05 }}
-                  >
-                    <Gauge className="w-4 h-4" />
-                    <span>Salud: {mockClinicalData.healthMetrics.operationalHealth}%</span>
-                    <div 
-                      className="w-2 h-2 rounded-full animate-pulse"
-                      style={{ backgroundColor: getHealthColor(mockClinicalData.healthMetrics.operationalHealth) }}
-                    />
-                  </motion.div>
-                </div>
-                
-                <p className="text-slate-600 font-medium flex items-center space-x-2">
-                  <Sparkles className="w-5 h-5 text-blue-500" />
-                  <span>Monitoreo inteligente de salud operativa con alertas predictivas</span>
-                </p>
-              </div>
-            </div>
-            
-            {/* CONTROLES DEL HEADER PROFESIONALES */}
-            <div className="flex items-center space-x-4">
-              {/* MÉTRICAS RÁPIDAS MEJORADAS */}
-              <div className="hidden lg:flex items-center space-x-6">
-                <div className="text-center">
-                  <div 
-                    className="text-2xl font-bold"
-                    style={{ 
-                      color: theme.colors.success,
-                      fontFamily: theme.fonts.heading
-                    }}
-                  >
-                    {mockClinicalData.riskPatients.total - mockClinicalData.riskPatients.critical}
-                  </div>
-                  <div className="text-xs text-slate-500 font-medium">Pacientes Estables</div>
-                </div>
-                
-                <div className="w-px h-12 bg-slate-200" />
-                
-                <div className="text-center">
-                  <div 
-                    className="text-2xl font-bold"
-                    style={{ 
-                      color: theme.colors.error,
-                      fontFamily: theme.fonts.heading
-                    }}
-                  >
-                    {mockClinicalData.riskPatients.critical}
-                  </div>
-                  <div className="text-xs text-slate-500 font-medium">Críticos</div>
-                </div>
-                
-                <div className="w-px h-12 bg-slate-200" />
-                
-                <div className="text-center">
-                  <div 
-                    className="text-2xl font-bold text-blue-600"
-                    style={{ fontFamily: theme.fonts.heading }}
-                  >
-                    {mockClinicalData.adherenceStats.completed}%
-                  </div>
-                  <div className="text-xs text-slate-500 font-medium">Adherencia</div>
-                </div>
-              </div>
-
-              {/* BOTONES DE ACCIÓN PROFESIONALES */}
-              <div className="flex items-center space-x-2">
-                <motion.button
-                  className="p-3 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all duration-200"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <RefreshCw className="w-5 h-5" />
-                </motion.button>
-                
-                <motion.button
-                  className="p-3 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all duration-200"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Settings className="w-5 h-5" />
-                </motion.button>
-                
-                <motion.button
-                  className="p-3 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all duration-200"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <MoreVertical className="w-5 h-5" />
-                </motion.button>
-              </div>
-
-              {/* BOTÓN DE EXPANSIÓN MEJORADO */}
-              <motion.div
-                animate={{ rotate: isExpanded ? 180 : 0 }}
-                transition={{ duration: 0.4, type: "spring", stiffness: 200 }}
-                className="p-3 rounded-xl hover:bg-slate-100 border border-slate-200 hover:border-slate-300 transition-all duration-300"
-                style={{
-                  background: 'linear-gradient(145deg, #ffffff 0%, #f8fafc 100%)',
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-                }}
-              >
-                <ChevronDown className="w-6 h-6 text-slate-600" />
-              </motion.div>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* CONTENIDO EXPANDIBLE ULTRA PROFESIONAL */}
-        <AnimatePresence>
-          {isExpanded && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
-              className="overflow-hidden"
-            >
-              <div className="px-8 pb-8 space-y-8 border-t border-slate-200/60">
-                
-                {/* NAVEGACIÓN POR PESTAÑAS PROFESIONAL */}
-                <motion.div 
-                  className="pt-8"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                >
-                  <div 
-                    className="flex space-x-1 p-1 rounded-2xl"
-                    style={{
-                      background: 'linear-gradient(145deg, #f1f5f9 0%, #e2e8f0 100%)',
-                      border: '1px solid rgba(226,232,240,0.8)',
-                      boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.05)'
-                    }}
-                  >
-                    {[
-                      { id: 'overview', label: 'Vista General', icon: Eye },
-                      { id: 'capacity', label: 'Capacidad', icon: BarChart3 },
-                      { id: 'risk', label: 'Análisis de Riesgo', icon: AlertTriangle },
-                      { id: 'performance', label: 'Rendimiento', icon: Target }
-                    ].map((tab) => {
-                      const Icon = tab.icon;
-                      const isActive = activeTab === tab.id;
-                      return (
-                        <motion.button
-                          key={tab.id}
-                          onClick={() => setActiveTab(tab.id as any)}
-                          className="flex-1 flex items-center justify-center space-x-2 px-6 py-4 rounded-xl font-semibold text-sm transition-all duration-300"
-                          style={{
-                            background: isActive 
-                              ? 'linear-gradient(145deg, #ffffff 0%, #f8fafc 100%)'
-                              : 'transparent',
-                            color: isActive ? theme.colors.primary : theme.colors.textSecondary,
-                            boxShadow: isActive 
-                              ? '0 4px 12px rgba(0,0,0,0.1), 0 0 0 1px rgba(255,255,255,0.8)'
-                              : 'none',
-                            border: isActive ? '1px solid rgba(226,232,240,0.8)' : '1px solid transparent'
-                          }}
-                          whileHover={{ 
-                            scale: 1.02,
-                            backgroundColor: isActive ? undefined : 'rgba(255,255,255,0.5)'
-                          }}
-                          whileTap={{ scale: 0.98 }}
-                        >
-                          <Icon className="w-4 h-4" />
-                          <span>{tab.label}</span>
-                        </motion.button>
-                      );
-                    })}
-                  </div>
-                </motion.div>
-
-                {/* CONTENIDO DE LAS PESTAÑAS */}
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={activeTab}
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    {activeTab === 'overview' && (
-                      <div className="space-y-8">
-                        {/* MÉTRICAS PRINCIPALES ULTRA PROFESIONALES */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                          {[
-                            {
-                              title: 'Salud Operativa',
-                              value: mockClinicalData.healthMetrics.operationalHealth,
-                              unit: '%',
-                              icon: Heart,
-                              color: theme.colors.error,
-                              trend: 'up',
-                              change: '+2.3%'
-                            },
-                            {
-                              title: 'Seguridad Paciente',
-                              value: mockClinicalData.healthMetrics.patientSafety,
-                              unit: '%',
-                              icon: Shield,
-                              color: theme.colors.success,
-                              trend: 'up',
-                              change: '+0.8%'
-                            },
-                            {
-                              title: 'Eficiencia Clínica',
-                              value: mockClinicalData.healthMetrics.clinicalEfficiency,
-                              unit: '%',
-                              icon: Zap,
-                              color: theme.colors.warning,
-                              trend: 'up',
-                              change: '+1.2%'
-                            },
-                            {
-                              title: 'Índice Bienestar',
-                              value: mockClinicalData.wellnessIndex.overall,
-                              unit: '%',
-                              icon: Brain,
-                              color: theme.colors.info,
-                              trend: 'up',
-                              change: '+3.2%'
-                            }
-                          ].map((metric, index) => {
-                            const Icon = metric.icon;
-                            return (
-                              <motion.div
-                                key={metric.title}
-                                className="relative overflow-hidden group cursor-pointer"
-                                style={{
-                                  background: 'linear-gradient(145deg, #ffffff 0%, #f8fafc 100%)',
-                                  borderRadius: '20px',
-                                  border: '1px solid rgba(226,232,240,0.8)',
-                                  boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1), 0 0 0 1px rgba(255,255,255,0.8)',
-                                  padding: '24px'
-                                }}
-                                whileHover={{ 
-                                  scale: 1.02,
-                                  y: -4,
-                                  boxShadow: '0 20px 25px -5px rgba(0,0,0,0.15), 0 0 0 1px rgba(255,255,255,0.9)'
-                                }}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: index * 0.1 }}
-                              >
-                                {/* Efecto de hover sutil */}
-                                <div 
-                                  className="absolute inset-0 opacity-0 group-hover:opacity-5 transition-opacity duration-500 rounded-20"
-                                  style={{
-                                    background: `linear-gradient(145deg, ${metric.color} 0%, transparent 100%)`
-                                  }}
-                                />
-                                
-                                <div className="relative z-10 space-y-4">
-                                  <div className="flex items-center justify-between">
-                                    <div 
-                                      className="p-3 rounded-2xl"
-                                      style={{
-                                        background: `linear-gradient(145deg, ${metric.color}15, ${metric.color}08)`,
-                                        border: `1px solid ${metric.color}25`,
-                                        boxShadow: `0 4px 12px ${metric.color}20`
-                                      }}
-                                    >
-                                      <Icon className="w-6 h-6" style={{ color: metric.color }} />
-                                    </div>
-                                    
-                                    <div className="flex items-center space-x-1">
-                                      {metric.trend === 'up' ? (
-                                        <TrendingUp className="w-4 h-4 text-green-500" />
-                                      ) : (
-                                        <TrendingDown className="w-4 h-4 text-red-500" />
-                                      )}
-                                      <span className="text-xs font-semibold text-green-600">
-                                        {metric.change}
-                                      </span>
-                                    </div>
-                                  </div>
-                                  
-                                  <div className="space-y-2">
-                                    <div 
-                                      className="text-3xl font-bold"
-                                      style={{ 
-                                        color: metric.color,
-                                        fontFamily: theme.fonts.heading
-                                      }}
-                                    >
-                                      {metric.value}{metric.unit}
-                                    </div>
-                                    <div className="text-sm font-semibold text-slate-700">
-                                      {metric.title}
-                                    </div>
-                                    <div className="text-xs text-slate-500">
-                                      vs. mes anterior
-                                    </div>
-                                  </div>
-                                </div>
-                              </motion.div>
-                            );
-                          })}
-                        </div>
-
-                        {/* ALERTAS PREDICTIVAS ULTRA PROFESIONALES */}
-                        <motion.div 
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.3 }}
-                        >
-                          <div className="flex items-center justify-between mb-6">
-                            <div className="flex items-center space-x-3">
-                              <div 
-                                className="p-3 rounded-2xl"
-                                style={{
-                                  background: `linear-gradient(145deg, ${theme.colors.warning}15, ${theme.colors.warning}08)`,
-                                  border: `1px solid ${theme.colors.warning}25`,
-                                  boxShadow: `0 4px 12px ${theme.colors.warning}20`
-                                }}
-                              >
-                                <Sparkles className="w-6 h-6" style={{ color: theme.colors.warning }} />
-                              </div>
-                              <div>
-                                <h4 
-                                  className="font-bold text-xl text-slate-900"
-                                  style={{ fontFamily: theme.fonts.heading }}
-                                >
-                                  Alertas Predictivas IA
-                                </h4>
-                                <p className="text-sm text-slate-600">
-                                  Análisis en tiempo real con machine learning
-                                </p>
-                              </div>
-                            </div>
-                            
-                            <motion.button
-                              className="flex items-center space-x-2 px-4 py-2 rounded-xl font-medium text-sm"
-                              style={{
-                                background: `linear-gradient(145deg, ${theme.colors.primary}10, ${theme.colors.primary}05)`,
-                                color: theme.colors.primary,
-                                border: `1px solid ${theme.colors.primary}20`
-                              }}
-                              whileHover={{ scale: 1.02 }}
-                              whileTap={{ scale: 0.98 }}
-                            >
-                              <Filter className="w-4 h-4" />
-                              <span>Filtrar</span>
-                            </motion.button>
-                          </div>
-
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            {mockClinicalData.predictiveAlerts.map((alert, index) => (
-                              <motion.div
-                                key={alert.id}
-                                className="relative overflow-hidden group cursor-pointer"
-                                style={{
-                                  background: 'linear-gradient(145deg, #ffffff 0%, #f8fafc 100%)',
-                                  borderRadius: '20px',
-                                  border: `1px solid ${getSeverityColor(alert.severity)}30`,
-                                  boxShadow: `0 4px 6px -1px ${getSeverityColor(alert.severity)}10, 0 0 0 1px rgba(255,255,255,0.8)`,
-                                  padding: '24px'
-                                }}
-                                whileHover={{ 
-                                  scale: 1.02,
-                                  y: -2,
-                                  boxShadow: `0 12px 24px ${getSeverityColor(alert.severity)}20, 0 0 0 1px rgba(255,255,255,0.9)`
-                                }}
-                                onClick={() => setSelectedAlert(selectedAlert === alert.id ? null : alert.id)}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: index * 0.1 }}
-                              >
-                                {/* Indicador de severidad mejorado */}
-                                <div 
-                                  className="absolute top-0 left-0 w-full h-1 rounded-t-20"
-                                  style={{ 
-                                    background: `linear-gradient(90deg, ${getSeverityColor(alert.severity)} 0%, ${getSeverityColor(alert.severity)}80 100%)`
-                                  }}
-                                />
-                                
-                                <div className="space-y-4">
-                                  <div className="flex items-start justify-between">
-                                    <div 
-                                      className="p-3 rounded-2xl"
-                                      style={{
-                                        background: `linear-gradient(145deg, ${getSeverityColor(alert.severity)}15, ${getSeverityColor(alert.severity)}08)`,
-                                        border: `1px solid ${getSeverityColor(alert.severity)}25`
-                                      }}
-                                    >
-                                      <AlertTriangle 
-                                        className="w-5 h-5" 
-                                        style={{ color: getSeverityColor(alert.severity) }}
-                                      />
-                                    </div>
-                                    
-                                    <div className="text-right">
-                                      <div 
-                                        className="text-xs font-bold px-3 py-1 rounded-full"
-                                        style={{
-                                          background: `linear-gradient(145deg, ${getSeverityColor(alert.severity)}20, ${getSeverityColor(alert.severity)}10)`,
-                                          color: getSeverityColor(alert.severity),
-                                          border: `1px solid ${getSeverityColor(alert.severity)}30`
-                                        }}
-                                      >
-                                        {alert.confidence}% confianza
-                                      </div>
-                                    </div>
-                                  </div>
-                                  
-                                  <div className="space-y-2">
-                                    <h5 className="font-bold text-slate-900 text-sm">
-                                      {alert.title}
-                                    </h5>
-                                    <p className="text-xs leading-relaxed text-slate-600">
-                                      {alert.description}
-                                    </p>
-                                  </div>
-                                  
-                                  <div className="flex items-center justify-between">
-                                    <span className="text-xs font-medium text-slate-500">
-                                      {alert.timeframe}
-                                    </span>
-                                    
-                                    <ArrowRight 
-                                      className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity"
-                                      style={{ color: getSeverityColor(alert.severity) }}
-                                    />
-                                  </div>
-                                </div>
-                              </motion.div>
-                            ))}
-                          </div>
-                        </motion.div>
-                      </div>
-                    )}
-
-                    {activeTab === 'capacity' && (
-                      <div className="space-y-8">
-                        {/* Pronóstico de capacidad */}
-                        <motion.div 
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                        >
-                          <div className="flex items-center justify-between mb-6">
-                            <div className="flex items-center space-x-3">
-                              <div 
-                                className="p-3 rounded-2xl"
-                                style={{
-                                  background: `linear-gradient(145deg, ${theme.colors.info}15, ${theme.colors.info}08)`,
-                                  border: `1px solid ${theme.colors.info}25`,
-                                  boxShadow: `0 4px 12px ${theme.colors.info}20`
-                                }}
-                              >
-                                <Calendar className="w-6 h-6" style={{ color: theme.colors.info }} />
-                              </div>
-                              <div>
-                                <h4 
-                                  className="font-bold text-xl text-slate-900"
-                                  style={{ fontFamily: theme.fonts.heading }}
-                                >
-                                  Pronóstico de Capacidad
-                                </h4>
-                                <p className="text-sm text-slate-600">
-                                  Análisis predictivo para los próximos 7 días
-                                </p>
-                              </div>
-                            </div>
-                            
-                            <motion.button
-                              className="flex items-center space-x-2 px-4 py-2 rounded-xl font-medium text-sm"
-                              style={{
-                                background: `linear-gradient(145deg, ${theme.colors.primary}10, ${theme.colors.primary}05)`,
-                                color: theme.colors.primary,
-                                border: `1px solid ${theme.colors.primary}20`
-                              }}
-                              whileHover={{ scale: 1.02 }}
-                              whileTap={{ scale: 0.98 }}
-                            >
-                              <Plus className="w-4 h-4" />
-                              <span>Optimizar Horarios</span>
-                            </motion.button>
-                          </div>
-
-                          <div 
-                            className="p-8 rounded-2xl"
-                            style={{
-                              background: 'linear-gradient(145deg, #ffffff 0%, #f8fafc 100%)',
-                              border: '1px solid rgba(226,232,240,0.8)',
-                              boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1), 0 0 0 1px rgba(255,255,255,0.8)',
-                              height: '400px'
-                            }}
-                          >
-                            <ResponsiveContainer width="100%" height="100%">
-                              <BarChart data={mockClinicalData.capacityForecast}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.3)" />
-                                <XAxis 
-                                  dataKey="day" 
-                                  axisLine={false}
-                                  tickLine={false}
-                                  tick={{ fontSize: 12, fill: '#64748b', fontWeight: 500 }}
-                                />
-                                <YAxis 
-                                  axisLine={false}
-                                  tickLine={false}
-                                  tick={{ fontSize: 12, fill: '#64748b', fontWeight: 500 }}
-                                  tickFormatter={(value) => `${value}%`}
-                                />
-                                <Tooltip content={<CustomTooltip />} />
-                                <Bar 
-                                  dataKey="morning" 
-                                  fill={theme.colors.success} 
-                                  name="Mañana" 
-                                  radius={[6, 6, 0, 0]}
-                                  opacity={0.9}
-                                />
-                                <Bar 
-                                  dataKey="afternoon" 
-                                  fill={theme.colors.warning} 
-                                  name="Tarde" 
-                                  radius={[6, 6, 0, 0]}
-                                  opacity={0.9}
-                                />
-                                <Bar 
-                                  dataKey="evening" 
-                                  fill={theme.colors.info} 
-                                  name="Noche" 
-                                  radius={[6, 6, 0, 0]}
-                                  opacity={0.9}
-                                />
-                              </BarChart>
-                            </ResponsiveContainer>
-                          </div>
-                        </motion.div>
-                      </div>
-                    )}
-
-                    {activeTab === 'risk' && (
-                      <div className="space-y-8">
-                        {/* Radar de factores de riesgo */}
-                        <motion.div variants={itemVariants}>
-                          <div className="flex items-center space-x-3 mb-6">
-                            <div 
-                              className="p-2 rounded-lg"
-                              style={{
-                                backgroundColor: `${theme.colors.error}15`,
-                                border: `1px solid ${theme.colors.error}25`
-                              }}
-                            >
-                              <AlertTriangle className="w-5 h-5" style={{ color: theme.colors.error }} />
-                            </div>
-                            <h4 
-                              className="font-bold text-xl"
-                              style={{ 
-                                color: theme.colors.textPrimary,
-                                fontFamily: theme.fonts.heading
-                              }}
-                            >
-                              Análisis de Factores de Riesgo
-                            </h4>
-                          </div>
-
-                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                            {/* Radar Chart */}
-                            <div 
-                              className="h-80 p-6 rounded-2xl"
-                              style={{
-                                background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.7) 100%)',
-                                border: '1px solid rgba(255,255,255,0.3)',
-                                backdropFilter: 'blur(10px)'
-                              }}
-                            >
-                              <ResponsiveContainer width="100%" height="100%">
-                                <RadarChart data={mockClinicalData.riskRadar}>
-                                  <PolarGrid stroke="rgba(0,0,0,0.1)" />
-                                  <PolarAngleAxis 
-                                    dataKey="subject" 
-                                    tick={{ fontSize: 11, fill: theme.colors.textSecondary, fontWeight: 500 }}
-                                  />
-                                  <PolarRadiusAxis 
-                                    angle={90} 
-                                    domain={[0, 25]} 
-                                    tick={{ fontSize: 9, fill: theme.colors.textTertiary }}
-                                  />
-                                  <Radar
-                                    name="Pacientes en Riesgo"
-                                    dataKey="value"
-                                    stroke={theme.colors.error}
-                                    fill={theme.colors.error}
-                                    fillOpacity={0.3}
-                                    strokeWidth={3}
-                                  />
-                                </RadarChart>
-                              </ResponsiveContainer>
-                            </div>
-
-                            {/* Lista de factores de riesgo */}
-                            <div className="space-y-4">
-                              {mockClinicalData.riskRadar.map((factor, index) => (
-                                <motion.div
-                                  key={factor.subject}
-                                  className="p-4 rounded-xl"
-                                  style={{
-                                    background: 'linear-gradient(135deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.6) 100%)',
-                                    border: `1px solid ${factor.color}30`
-                                  }}
-                                  initial={{ opacity: 0, x: 20 }}
-                                  animate={{ opacity: 1, x: 0 }}
-                                  transition={{ delay: index * 0.1 }}
-                                >
-                                  <div className="flex items-center justify-between mb-2">
-                                    <span 
-                                      className="font-semibold text-sm"
-                                      style={{ color: theme.colors.textPrimary }}
-                                    >
-                                      {factor.subject}
-                                    </span>
-                                    <div className="flex items-center space-x-2">
-                                      <span 
-                                        className="text-sm font-bold"
-                                        style={{ color: factor.color }}
-                                      >
-                                        {factor.value}
-                                      </span>
-                                      <div 
-                                        className="px-2 py-1 rounded-full text-xs font-semibold"
-                                        style={{
-                                          backgroundColor: `${factor.color}20`,
-                                          color: factor.color
-                                        }}
-                                      >
-                                        {factor.priority}
-                                      </div>
-                                    </div>
-                                  </div>
-                                  
-                                  <div className="w-full bg-gray-200 rounded-full h-2">
-                                    <motion.div 
-                                      className="h-2 rounded-full"
-                                      style={{ backgroundColor: factor.color }}
-                                      initial={{ width: 0 }}
-                                      animate={{ 
-                                        width: `${(factor.value / factor.max) * 100}%` 
-                                      }}
-                                      transition={{ delay: index * 0.1 + 0.5, duration: 0.8 }}
-                                    />
-                                  </div>
-                                </motion.div>
-                              ))}
-                            </div>
-                          </div>
-                        </motion.div>
-                      </div>
-                    )}
-
-                    {activeTab === 'performance' && (
-                      <div className="space-y-8">
-                        {/* Métricas de rendimiento clínico */}
-                        <motion.div variants={itemVariants}>
-                          <div className="flex items-center space-x-3 mb-6">
-                            <div 
-                              className="p-2 rounded-lg"
-                              style={{
-                                backgroundColor: `${theme.colors.success}15`,
-                                border: `1px solid ${theme.colors.success}25`
-                              }}
-                            >
-                              <Target className="w-5 h-5" style={{ color: theme.colors.success }} />
-                            </div>
-                            <h4 
-                              className="font-bold text-xl"
-                              style={{ 
-                                color: theme.colors.textPrimary,
-                                fontFamily: theme.fonts.heading
-                              }}
-                            >
-                              Métricas de Rendimiento Clínico
-                            </h4>
-                          </div>
-
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {mockClinicalData.clinicalPerformance.map((metric, index) => (
-                              <motion.div
-                                key={metric.metric}
-                                className="p-6 rounded-2xl"
-                                style={{
-                                  background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.7) 100%)',
-                                  border: '1px solid rgba(255,255,255,0.3)',
-                                  backdropFilter: 'blur(10px)'
-                                }}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: index * 0.1 }}
-                                whileHover={{ scale: 1.02, y: -2 }}
-                              >
-                                <div className="flex items-center justify-between mb-4">
-                                  <div className="flex items-center space-x-3">
-                                    <div 
-                                      className="p-2 rounded-lg"
-                                      style={{
-                                        backgroundColor: `${theme.colors[metric.status as keyof typeof theme.colors] || theme.colors.textSecondary}15`
-                                      }}
-                                    >
-                                      {getStatusIcon(metric.status)}
-                                    </div>
-                                    <span 
-                                      className="font-semibold text-sm"
-                                      style={{ color: theme.colors.textPrimary }}
-                                    >
-                                      {metric.metric}
-                                    </span>
-                                  </div>
-                                  
-                                  <div 
-                                    className="px-3 py-1 rounded-full text-xs font-semibold"
-                                    style={{
-                                      backgroundColor: `${theme.colors[metric.status as keyof typeof theme.colors] || theme.colors.textSecondary}20`,
-                                      color: theme.colors[metric.status as keyof typeof theme.colors] || theme.colors.textSecondary
-                                    }}
-                                  >
-                                    {metric.status}
-                                  </div>
-                                </div>
-                                
-                                <div className="space-y-3">
-                                  <div className="flex items-baseline justify-between">
-                                    <span 
-                                      className="text-2xl font-bold"
-                                      style={{ 
-                                        color: theme.colors[metric.status as keyof typeof theme.colors] || theme.colors.textPrimary,
-                                        fontFamily: theme.fonts.heading
-                                      }}
-                                    >
-                                      {metric.value}{metric.unit}
-                                    </span>
-                                    <span 
-                                      className="text-sm"
-                                      style={{ color: theme.colors.textSecondary }}
-                                    >
-                                      Meta: {metric.target}{metric.unit}
-                                    </span>
-                                  </div>
-                                  
-                                  <div className="w-full bg-gray-200 rounded-full h-2">
-                                    <motion.div 
-                                      className="h-2 rounded-full"
-                                      style={{ 
-                                        backgroundColor: theme.colors[metric.status as keyof typeof theme.colors] || theme.colors.textSecondary
-                                      }}
-                                      initial={{ width: 0 }}
-                                      animate={{ 
-                                        width: `${Math.min((metric.value / metric.target) * 100, 100)}%` 
-                                      }}
-                                      transition={{ delay: index * 0.1 + 0.5, duration: 0.8 }}
-                                    />
-                                  </div>
-                                </div>
-                              </motion.div>
-                            ))}
-                          </div>
-                        </motion.div>
-
-                        {/* Adherencia al tratamiento */}
-                        <motion.div variants={itemVariants}>
-                          <div className="flex items-center space-x-3 mb-6">
-                            <div 
-                              className="p-2 rounded-lg"
-                              style={{
-                                backgroundColor: `${theme.colors.info}15`,
-                                border: `1px solid ${theme.colors.info}25`
-                              }}
-                            >
-                              <Activity className="w-5 h-5" style={{ color: theme.colors.info }} />
-                            </div>
-                            <h4 
-                              className="font-bold text-xl"
-                              style={{ 
-                                color: theme.colors.textPrimary,
-                                fontFamily: theme.fonts.heading
-                              }}
-                            >
-                              Adherencia al Tratamiento
-                            </h4>
-                          </div>
-                          
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            {[
-                              {
-                                label: 'Completadas',
-                                value: mockClinicalData.adherenceStats.completed,
-                                trend: mockClinicalData.adherenceStats.trends.completed,
-                                color: theme.colors.success
-                              },
-                              {
-                                label: 'Pendientes',
-                                value: mockClinicalData.adherenceStats.pending,
-                                trend: mockClinicalData.adherenceStats.trends.pending,
-                                color: theme.colors.warning
-                              },
-                              {
-                                label: 'Canceladas',
-                                value: mockClinicalData.adherenceStats.cancelled,
-                                trend: mockClinicalData.adherenceStats.trends.cancelled,
-                                color: theme.colors.error
-                              }
-                            ].map((stat, index) => (
-                              <motion.div 
-                                key={stat.label}
-                                className="p-6 rounded-2xl text-center"
-                                style={{
-                                  background: `linear-gradient(135deg, ${stat.color}10 0%, ${stat.color}05 100%)`,
-                                  border: `1px solid ${stat.color}30`
-                                }}
-                                whileHover={{ scale: 1.02, y: -2 }}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: index * 0.1 }}
-                              >
-                                <div 
-                                  className="text-3xl font-bold mb-2"
-                                  style={{ 
-                                    color: stat.color,
-                                    fontFamily: theme.fonts.heading
-                                  }}
-                                >
-                                  {stat.value}%
-                                </div>
-                                <div 
-                                  className="text-sm font-medium mb-3"
-                                  style={{ color: theme.colors.textPrimary }}
-                                >
-                                  {stat.label}
-                                </div>
-                                
-                                <div className="flex items-center justify-center space-x-1">
-                                  {stat.trend > 0 ? (
-                                    <TrendingUp className="w-4 h-4 text-green-500" />
-                                  ) : (
-                                    <TrendingDown className="w-4 h-4 text-red-500" />
-                                  )}
-                                  <span 
-                                    className="text-xs font-semibold"
-                                    style={{ 
-                                      color: stat.trend > 0 ? theme.colors.success : theme.colors.error
-                                    }}
-                                  >
-                                    {Math.abs(stat.trend)}%
-                                  </span>
-                                </div>
-                                
-                                <div className="mt-3 w-full bg-gray-200 rounded-full h-2">
-                                  <motion.div 
-                                    className="h-2 rounded-full"
-                                    style={{ backgroundColor: stat.color }}
-                                    initial={{ width: 0 }}
-                                    animate={{ width: `${stat.value}%` }}
-                                    transition={{ delay: index * 0.1 + 0.5, duration: 0.8 }}
-                                  />
-                                </div>
-                              </motion.div>
-                            ))}
-                          </div>
-                        </motion.div>
-                      </div>
-                    )}
-                  </motion.div>
-                </AnimatePresence>
-
-                {/* RECOMENDACIÓN IA ULTRA PROFESIONAL */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 }}
-                  className="relative overflow-hidden"
-                  style={{
-                    background: `linear-gradient(145deg, ${theme.colors.primary}08 0%, ${theme.colors.primary}04 100%)`,
-                    borderRadius: '20px',
-                    border: `1px solid ${theme.colors.primary}20`,
-                    padding: '24px'
-                  }}
-                >
-                  <div className="flex items-start space-x-4">
-                    <motion.div
-                      className="p-4 rounded-2xl"
-                      style={{
-                        background: `linear-gradient(145deg, ${theme.colors.primary}20, ${theme.colors.primary}10)`,
-                        border: `1px solid ${theme.colors.primary}30`
-                      }}
-                      animate={{
-                        boxShadow: [
-                          `0 0 0 0 ${theme.colors.primary}40`,
-                          `0 0 0 8px ${theme.colors.primary}00`,
-                          `0 0 0 0 ${theme.colors.primary}40`
-                        ]
-                      }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                    >
-                      <Brain className="w-7 h-7" style={{ color: theme.colors.primary }} />
-                    </motion.div>
-                    
-                    <div className="flex-1 space-y-4">
-                      <div>
-                        <h5 
-                          className="font-bold text-xl text-slate-900 mb-2"
-                          style={{ fontFamily: theme.fonts.heading }}
-                        >
-                          Recomendación del Sistema IA
-                        </h5>
-                        <p className="text-sm leading-relaxed text-slate-600">
-                          Basado en el análisis predictivo, se recomienda implementar recordatorios automáticos 
-                          vía WhatsApp para reducir cancelaciones en un 23%. Considerar sesiones de seguimiento 
-                          telefónico para pacientes con baja adherencia. 
-                          <span className="font-semibold text-slate-900"> Proyección de mejora: +15% en adherencia general.</span>
-                        </p>
-                      </div>
-                      
-                      <div className="flex items-center space-x-3">
-                        <motion.button
-                          className="flex items-center space-x-2 px-6 py-3 rounded-xl font-semibold text-sm"
-                          style={{
-                            background: theme.gradients.primary,
-                            color: theme.colors.textInverse,
-                            boxShadow: `0 4px 12px ${theme.colors.primary}30`
-                          }}
-                          whileHover={{ 
-                            scale: 1.02,
-                            boxShadow: `0 8px 20px ${theme.colors.primary}40`
-                          }}
-                          whileTap={{ scale: 0.98 }}
-                        >
-                          <Zap className="w-4 h-4" />
-                          <span>Implementar Sugerencias</span>
-                        </motion.button>
-                        
-                        <motion.button
-                          className="px-4 py-3 rounded-xl font-medium text-sm border"
-                          style={{
-                            backgroundColor: 'transparent',
-                            color: theme.colors.primary,
-                            borderColor: `${theme.colors.primary}30`
-                          }}
-                          whileHover={{ 
-                            backgroundColor: `${theme.colors.primary}10`,
-                            borderColor: theme.colors.primary
-                          }}
-                        >
-                          Ver Análisis Completo
-                        </motion.button>
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
-      {/* ESTILOS CSS PROFESIONALES */}
+    <>
       <style jsx>{`
-        @keyframes shimmer {
-          0% { transform: translateX(-100%) skewX(-12deg); }
-          100% { transform: translateX(200%) skewX(-12deg); }
-        }
-        
-        .rounded-20 {
-          border-radius: 20px;
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
         }
       `}</style>
-    </motion.div>
+      
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        style={styles.container}
+      >
+        {/* Header */}
+        <div style={styles.header}>
+          <div style={styles.headerLeft}>
+            <div style={styles.headerIcon}>
+              <Heart size={24} color={theme.colors.textInverse} />
+            </div>
+            <div style={styles.headerContent}>
+              <h2 style={styles.title}>Operaciones Clínicas</h2>
+              <p style={styles.subtitle}>Monitoreo inteligente de salud operativa con alertas predictivas</p>
+            </div>
+          </div>
+          
+          <div style={styles.headerActions}>
+            <div style={styles.filterContainer}>
+              {['day', 'week', 'month', 'quarter'].map((period) => (
+                <button
+                  key={period}
+                  onClick={() => setSelectedPeriod(period)}
+                  style={{
+                    ...styles.filterButton,
+                    ...(selectedPeriod === period ? styles.filterButtonActive : {})
+                  }}
+                >
+                  {period === 'day' ? 'Día' : 
+                   period === 'week' ? 'Semana' :
+                   period === 'month' ? 'Mes' : 'Trimestre'}
+                </button>
+              ))}
+            </div>
+            
+            <Button
+              variant="secondary"
+              size="sm"
+              icon={RefreshCw}
+              onClick={onRefresh}
+              loading={loading}
+            >
+              Actualizar
+            </Button>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              icon={Download}
+              onClick={onExport}
+            >
+              Exportar
+            </Button>
+          </div>
+        </div>
+
+        {/* Métricas Principales */}
+        <div style={styles.metricsGrid}>
+          <Card variant="default" hover>
+            <div style={styles.metricCard}>
+              <div style={styles.metricHeader}>
+                <div style={{
+                  ...styles.metricIcon,
+                  backgroundColor: `${theme.colors.error}20`,
+                }}>
+                  <Heart size={20} color={theme.colors.error} />
+                </div>
+                <div style={{
+                  ...styles.metricChange,
+                  color: theme.colors.success,
+                }}>
+                  <TrendingUp size={16} />
+                  +2.3%
+                </div>
+              </div>
+              <h3 style={styles.metricValue}>
+                {formatPercentage(calculateOperationalHealth())}
+              </h3>
+              <p style={styles.metricLabel}>Salud Operativa</p>
+            </div>
+          </Card>
+
+          <Card variant="default" hover>
+            <div style={styles.metricCard}>
+              <div style={styles.metricHeader}>
+                <div style={{
+                  ...styles.metricIcon,
+                  backgroundColor: `${theme.colors.success}20`,
+                }}>
+                  <Shield size={20} color={theme.colors.success} />
+                </div>
+                <div style={{
+                  ...styles.metricChange,
+                  color: theme.colors.success,
+                }}>
+                  <TrendingUp size={16} />
+                  +0.8%
+                </div>
+              </div>
+              <h3 style={styles.metricValue}>
+                {formatPercentage(calculatePatientSafety())}
+              </h3>
+              <p style={styles.metricLabel}>Seguridad Paciente</p>
+            </div>
+          </Card>
+
+          <Card variant="default" hover>
+            <div style={styles.metricCard}>
+              <div style={styles.metricHeader}>
+                <div style={{
+                  ...styles.metricIcon,
+                  backgroundColor: `${theme.colors.warning}20`,
+                }}>
+                  <Zap size={20} color={theme.colors.warning} />
+                </div>
+                <div style={{
+                  ...styles.metricChange,
+                  color: theme.colors.success,
+                }}>
+                  <TrendingUp size={16} />
+                  +1.2%
+                </div>
+              </div>
+              <h3 style={styles.metricValue}>
+                {formatPercentage(calculateClinicalEfficiency())}
+              </h3>
+              <p style={styles.metricLabel}>Eficiencia Clínica</p>
+            </div>
+          </Card>
+
+          <Card variant="default" hover>
+            <div style={styles.metricCard}>
+              <div style={styles.metricHeader}>
+                <div style={{
+                  ...styles.metricIcon,
+                  backgroundColor: `${theme.colors.info}20`,
+                }}>
+                  <Brain size={20} color={theme.colors.info} />
+                </div>
+                <div style={{
+                  ...styles.metricChange,
+                  color: theme.colors.success,
+                }}>
+                  <TrendingUp size={16} />
+                  +3.2%
+                </div>
+              </div>
+              <h3 style={styles.metricValue}>
+                {formatPercentage(calculateWellnessIndex())}
+              </h3>
+              <p style={styles.metricLabel}>Índice Bienestar</p>
+            </div>
+          </Card>
+        </div>
+
+        {/* Alertas Predictivas */}
+        <div style={styles.alertsGrid}>
+          {predictiveAlerts.map((alert) => (
+            <Card key={alert.id} variant="default" hover>
+              <div style={styles.alertCard}>
+                <div style={styles.alertHeader}>
+                  <div style={{
+                    ...styles.metricIcon,
+                    backgroundColor: `${getSeverityColor(alert.severity)}20`,
+                  }}>
+                    <AlertTriangle size={16} color={getSeverityColor(alert.severity)} />
+                  </div>
+                  <div style={{
+                    ...styles.alertBadge,
+                    backgroundColor: `${getSeverityColor(alert.severity)}20`,
+                    color: getSeverityColor(alert.severity),
+                  }}>
+                    {alert.confidence}% confianza
+                  </div>
+                </div>
+                <div style={styles.alertContent}>
+                  <h4 style={styles.alertTitle}>{alert.title}</h4>
+                  <p style={styles.alertDescription}>{alert.description}</p>
+                </div>
+                <div style={styles.alertFooter}>
+                  <span>{alert.timeframe}</span>
+                  <ArrowRight size={14} color={getSeverityColor(alert.severity)} />
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+
+        {/* Gráfico de Capacidad */}
+        <Card variant="default" style={styles.chartContainer}>
+          <div style={styles.chartHeader}>
+            <h3 style={styles.chartTitle}>Pronóstico de Capacidad - Próximos 7 días</h3>
+            <div style={styles.chartControls}>
+              <div style={styles.filterContainer}>
+                {['capacity', 'risk', 'efficiency'].map((metric) => (
+                  <button
+                    key={metric}
+                    onClick={() => setSelectedMetric(metric)}
+                    style={{
+                      ...styles.filterButton,
+                      ...(selectedMetric === metric ? styles.filterButtonActive : {})
+                    }}
+                  >
+                    {metric === 'capacity' ? 'Capacidad' : 
+                     metric === 'risk' ? 'Riesgo' : 'Eficiencia'}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+          
+          <div style={styles.chartContent}>
+            {loading ? (
+              <div style={styles.loadingContainer}>
+                <div style={styles.loadingSpinner} />
+                <span style={styles.loadingText}>Cargando datos clínicos...</span>
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={clinicalData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={theme.colors.borderLight} />
+                  <XAxis 
+                    dataKey="day" 
+                    stroke={theme.colors.textSecondary}
+                    fontSize={12}
+                  />
+                  <YAxis 
+                    stroke={theme.colors.textSecondary}
+                    fontSize={12}
+                    tickFormatter={(value) => `${value}%`}
+                  />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Legend />
+                  <Bar 
+                    dataKey="morning" 
+                    fill={theme.colors.success} 
+                    name="Mañana" 
+                    radius={[4, 4, 0, 0]}
+                  />
+                  <Bar 
+                    dataKey="afternoon" 
+                    fill={theme.colors.warning} 
+                    name="Tarde" 
+                    radius={[4, 4, 0, 0]}
+                  />
+                  <Bar 
+                    dataKey="evening" 
+                    fill={theme.colors.info} 
+                    name="Noche" 
+                    radius={[4, 4, 0, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </Card>
+
+        {/* Gráfico de Radar de Riesgo */}
+        <Card variant="default" style={styles.chartContainer}>
+          <div style={styles.chartHeader}>
+            <h3 style={styles.chartTitle}>Análisis de Factores de Riesgo</h3>
+            <div style={styles.chartControls}>
+              <Button
+                variant="outline"
+                size="sm"
+                icon={Filter}
+              >
+                Filtrar
+              </Button>
+            </div>
+          </div>
+          
+          <div style={styles.chartContent}>
+            <ResponsiveContainer width="100%" height="100%">
+              <RadarChart data={riskRadarData}>
+                <PolarGrid stroke={theme.colors.borderLight} />
+                <PolarAngleAxis 
+                  dataKey="subject" 
+                  tick={{ fontSize: 11, fill: theme.colors.textSecondary }}
+                />
+                <PolarRadiusAxis 
+                  angle={90} 
+                  domain={[0, 25]} 
+                  tick={{ fontSize: 9, fill: theme.colors.textTertiary }}
+                />
+                <Radar
+                  name="Pacientes en Riesgo"
+                  dataKey="value"
+                  stroke={theme.colors.error}
+                  fill={theme.colors.error}
+                  fillOpacity={0.3}
+                  strokeWidth={3}
+                />
+              </RadarChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
+
+        {/* Resumen y Métricas Adicionales */}
+        <div style={styles.summaryGrid}>
+          <Card variant="default" hover>
+            <div style={styles.summaryCard}>
+              <div style={styles.summaryHeader}>
+                <CheckCircle size={20} color={theme.colors.success} />
+                <h4 style={styles.summaryTitle}>Indicadores Positivos</h4>
+              </div>
+              <div style={styles.summaryContent}>
+                <div style={styles.summaryItem}>
+                  <span style={styles.summaryItemLabel}>Adherencia tratamiento</span>
+                  <span style={{...styles.summaryItemValue, color: theme.colors.success}}>
+                    73.2%
+                  </span>
+                </div>
+                <div style={styles.summaryItem}>
+                  <span style={styles.summaryItemLabel}>Satisfacción pacientes</span>
+                  <span style={{...styles.summaryItemValue, color: theme.colors.success}}>
+                    4.7/5
+                  </span>
+                </div>
+                <div style={styles.summaryItem}>
+                  <span style={styles.summaryItemLabel}>Tiempo respuesta crisis</span>
+                  <span style={{...styles.summaryItemValue, color: theme.colors.success}}>
+                    8 min
+                  </span>
+                </div>
+              </div>
+            </div>
+          </Card>
+
+          <Card variant="default" hover>
+            <div style={styles.summaryCard}>
+              <div style={styles.summaryHeader}>
+                <AlertCircle size={20} color={theme.colors.warning} />
+                <h4 style={styles.summaryTitle}>Áreas de Atención</h4>
+              </div>
+              <div style={styles.summaryContent}>
+                <div style={styles.summaryItem}>
+                  <span style={styles.summaryItemLabel}>Pacientes en riesgo</span>
+                  <span style={{...styles.summaryItemValue, color: theme.colors.warning}}>
+                    {calculateRiskPatients()}
+                  </span>
+                </div>
+                <div style={styles.summaryItem}>
+                  <span style={styles.summaryItemLabel}>Cancelaciones</span>
+                  <span style={{...styles.summaryItemValue, color: theme.colors.warning}}>
+                    8.3%
+                  </span>
+                </div>
+                <div style={styles.summaryItem}>
+                  <span style={styles.summaryItemLabel}>Tiempo promedio sesión</span>
+                  <span style={{...styles.summaryItemValue, color: theme.colors.warning}}>
+                    52 min
+                  </span>
+                </div>
+              </div>
+            </div>
+          </Card>
+
+          <Card variant="default" hover>
+            <div style={styles.summaryCard}>
+              <div style={styles.summaryHeader}>
+                <Brain size={20} color={theme.colors.primary} />
+                <h4 style={styles.summaryTitle}>Recomendaciones IA</h4>
+              </div>
+              <div style={styles.summaryContent}>
+                <div style={styles.summaryItem}>
+                  <span style={styles.summaryItemLabel}>Implementar recordatorios WhatsApp</span>
+                  <span style={{...styles.summaryItemValue, color: theme.colors.primary}}>
+                    -23% cancelaciones
+                  </span>
+                </div>
+                <div style={styles.summaryItem}>
+                  <span style={styles.summaryItemLabel}>Optimizar horarios matutinos</span>
+                  <span style={{...styles.summaryItemValue, color: theme.colors.primary}}>
+                    +12% eficiencia
+                  </span>
+                </div>
+                <div style={styles.summaryItem}>
+                  <span style={styles.summaryItemLabel}>Seguimiento telefónico</span>
+                  <span style={{...styles.summaryItemValue, color: theme.colors.primary}}>
+                    +15% adherencia
+                  </span>
+                </div>
+              </div>
+            </div>
+          </Card>
+        </div>
+      </motion.div>
+    </>
   );
 }
