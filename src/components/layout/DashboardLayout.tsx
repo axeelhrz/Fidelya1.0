@@ -62,6 +62,9 @@ import {
   EventNote,
   Assessment,
   Warning,
+  Campaign,
+  Star,
+  AutoAwesome,
 } from '@mui/icons-material';
 import { useAuth } from '@/context/AuthContext';
 import { useRole } from '@/hooks/useRole';
@@ -73,7 +76,7 @@ import { AlertType, AlertUrgency } from '@/types/alert';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
-const drawerWidth = 340; // Aumentado para mejor espaciado
+const drawerWidth = 380; // Aumentado para mejor espaciado
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -586,7 +589,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           display="flex"
           alignItems="center"
           justifyContent="center"
-          py={5}
+          py={4}
           px={4}
           position="relative"
           zIndex={1}
@@ -867,80 +870,123 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           </Box>
         )}
 
-        {/* Secciones CEO (solo para admin) */}
+        {/* Secciones CEO (solo para admin) - MEJORADO */}
         {role === 'admin' && ceoItems.length > 0 && (
           <Box sx={{ mb: 4 }}>
             <Paper
               elevation={0}
               sx={{
-                borderRadius: 3,
-                background: 'linear-gradient(135deg, rgba(93, 79, 176, 0.08) 0%, rgba(165, 147, 243, 0.04) 100%)',
-                border: `1px solid ${alpha('#5D4FB0', 0.15)}`,
+                borderRadius: 4,
+                background: theme.palette.mode === 'dark'
+                  ? 'linear-gradient(135deg, rgba(93, 79, 176, 0.15) 0%, rgba(165, 147, 243, 0.08) 100%)'
+                  : 'linear-gradient(135deg, rgba(93, 79, 176, 0.08) 0%, rgba(165, 147, 243, 0.04) 100%)',
+                border: `1px solid ${alpha('#5D4FB0', 0.2)}`,
                 overflow: 'hidden',
+                position: 'relative',
+                '&::before': {
+                  content: '""',
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: 4,
+                  background: 'linear-gradient(90deg, #5D4FB0 0%, #A593F3 50%, #A5CAE6 100%)',
+                },
               }}
             >
               <ListItemButton
                 onClick={() => setCeoSectionOpen(!ceoSectionOpen)}
                 sx={{
-                  py: 2,
-                  px: 3,
+                  py: 3,
+                  px: 4,
                   '&:hover': {
                     background: 'linear-gradient(135deg, rgba(93, 79, 176, 0.12) 0%, rgba(165, 147, 243, 0.06) 100%)',
                   }
                 }}
               >
-                <ListItemIcon sx={{ minWidth: 44 }}>
+                <ListItemIcon sx={{ minWidth: 48 }}>
                   <Box
                     sx={{
-                      width: 36,
-                      height: 36,
-                      borderRadius: 2,
+                      width: 40,
+                      height: 40,
+                      borderRadius: 3,
                       background: 'linear-gradient(135deg, #5D4FB0 0%, #A593F3 100%)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      boxShadow: '0 4px 12px rgba(93, 79, 176, 0.3)',
+                      boxShadow: '0 6px 20px rgba(93, 79, 176, 0.4)',
+                      position: 'relative',
+                      '&::before': {
+                        content: '""',
+                        position: 'absolute',
+                        top: -1,
+                        left: -1,
+                        right: -1,
+                        bottom: -1,
+                        background: 'linear-gradient(135deg, #5D4FB0, #A593F3, #A5CAE6)',
+                        borderRadius: 4,
+                        zIndex: -1,
+                        opacity: 0.3,
+                      },
                     }}
                   >
-                    <BusinessCenter sx={{ color: 'white', fontSize: 20 }} />
+                    <BusinessCenter sx={{ color: 'white', fontSize: 22 }} />
                   </Box>
                 </ListItemIcon>
                 <ListItemText
                   primary={
-                    <Typography 
-                      variant="subtitle1" 
-                      sx={{ 
-                        fontWeight: 700,
-                        color: '#5D4FB0',
-                        fontFamily: '"Outfit", sans-serif',
-                        fontSize: '0.95rem',
-                      }}
-                    >
-                      Panel Ejecutivo CEO
-                    </Typography>
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <Typography 
+                        variant="subtitle1" 
+                        sx={{ 
+                          fontWeight: 800,
+                          color: '#5D4FB0',
+                          fontFamily: '"Outfit", sans-serif',
+                          fontSize: '1rem',
+                        }}
+                      >
+                        Panel Ejecutivo CEO
+                      </Typography>
+                      <Star sx={{ color: '#FFD700', fontSize: 16 }} />
+                    </Box>
                   }
                   secondary={
                     <Typography 
                       variant="caption" 
                       sx={{ 
-                        color: alpha('#5D4FB0', 0.7),
+                        color: alpha('#5D4FB0', 0.8),
                         fontFamily: '"Inter", sans-serif',
-                        fontWeight: 500,
+                        fontWeight: 600,
+                        fontSize: '0.75rem',
                       }}
                     >
-                      Métricas estratégicas y KPIs
+                      Métricas estratégicas y análisis ejecutivo
                     </Typography>
                   }
                 />
-                {ceoSectionOpen ? 
-                  <ExpandLess sx={{ color: '#5D4FB0' }} /> : 
-                  <ExpandMore sx={{ color: '#5D4FB0' }} />
-                }
+                <Box display="flex" alignItems="center" gap={1}>
+                  <Chip
+                    label={ceoItems.length}
+                    size="small"
+                    sx={{
+                      background: 'linear-gradient(135deg, #5D4FB0 0%, #A593F3 100%)',
+                      color: 'white',
+                      fontWeight: 700,
+                      fontSize: '0.7rem',
+                      minWidth: 24,
+                      height: 24,
+                    }}
+                  />
+                  {ceoSectionOpen ? 
+                    <ExpandLess sx={{ color: '#5D4FB0', fontSize: 24 }} /> : 
+                    <ExpandMore sx={{ color: '#5D4FB0', fontSize: 24 }} />
+                  }
+                </Box>
               </ListItemButton>
               
               <Collapse in={ceoSectionOpen} timeout="auto" unmountOnExit>
-                <Box sx={{ pb: 1 }}>
-                  <List sx={{ p: 0, pl: 1 }}>
+                <Box sx={{ pb: 2 }}>
+                  <List sx={{ p: 0, pl: 2 }}>
                     {ceoItems.map((item, index) => (
                       <Fade in timeout={600 + index * 100} key={item.path}>
                         <Box>
@@ -969,74 +1015,104 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             <Paper
               elevation={0}
               sx={{
-                borderRadius: 3,
-                background: 'linear-gradient(135deg, rgba(165, 147, 243, 0.08) 0%, rgba(165, 202, 230, 0.04) 100%)',
+                borderRadius: 4,
+                background: theme.palette.mode === 'dark'
+                  ? 'linear-gradient(135deg, rgba(165, 147, 243, 0.12) 0%, rgba(165, 202, 230, 0.06) 100%)'
+                  : 'linear-gradient(135deg, rgba(165, 147, 243, 0.08) 0%, rgba(165, 202, 230, 0.04) 100%)',
                 border: `1px solid ${alpha(theme.palette.secondary.main, 0.15)}`,
                 overflow: 'hidden',
+                position: 'relative',
+                '&::before': {
+                  content: '""',
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: 4,
+                  background: 'linear-gradient(90deg, #A593F3 0%, #A5CAE6 50%, #D97DB7 100%)',
+                },
               }}
             >
               <ListItemButton
                 onClick={() => setOperativeSectionOpen(!operativeSectionOpen)}
                 sx={{
-                  py: 2,
-                  px: 3,
+                  py: 3,
+                  px: 4,
                   '&:hover': {
                     background: 'linear-gradient(135deg, rgba(165, 147, 243, 0.12) 0%, rgba(165, 202, 230, 0.06) 100%)',
                   }
                 }}
               >
-                <ListItemIcon sx={{ minWidth: 44 }}>
+                <ListItemIcon sx={{ minWidth: 48 }}>
                   <Box
                     sx={{
-                      width: 36,
-                      height: 36,
-                      borderRadius: 2,
+                      width: 40,
+                      height: 40,
+                      borderRadius: 3,
                       background: 'linear-gradient(135deg, #A593F3 0%, #A5CAE6 100%)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      boxShadow: '0 4px 12px rgba(165, 147, 243, 0.3)',
+                      boxShadow: '0 6px 20px rgba(165, 147, 243, 0.4)',
                     }}
                   >
-                    <Work sx={{ color: 'white', fontSize: 20 }} />
+                    <Work sx={{ color: 'white', fontSize: 22 }} />
                   </Box>
                 </ListItemIcon>
                 <ListItemText
                   primary={
-                    <Typography 
-                      variant="subtitle1" 
-                      sx={{ 
-                        fontWeight: 700,
-                        color: theme.palette.secondary.main,
-                        fontFamily: '"Outfit", sans-serif',
-                        fontSize: '0.95rem',
-                      }}
-                    >
-                      Operaciones Clínicas
-                    </Typography>
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <Typography 
+                        variant="subtitle1" 
+                        sx={{ 
+                          fontWeight: 800,
+                          color: theme.palette.secondary.main,
+                          fontFamily: '"Outfit", sans-serif',
+                          fontSize: '1rem',
+                        }}
+                      >
+                        Operaciones Clínicas
+                      </Typography>
+                      <AutoAwesome sx={{ color: theme.palette.secondary.main, fontSize: 16 }} />
+                    </Box>
                   }
                   secondary={
                     <Typography 
                       variant="caption" 
                       sx={{ 
-                        color: alpha(theme.palette.secondary.main, 0.7),
+                        color: alpha(theme.palette.secondary.main, 0.8),
                         fontFamily: '"Inter", sans-serif',
-                        fontWeight: 500,
+                        fontWeight: 600,
+                        fontSize: '0.75rem',
                       }}
                     >
-                      Gestión diaria del centro
+                      Gestión diaria del centro psicológico
                     </Typography>
                   }
                 />
-                {operativeSectionOpen ? 
-                  <ExpandLess sx={{ color: theme.palette.secondary.main }} /> : 
-                  <ExpandMore sx={{ color: theme.palette.secondary.main }} />
-                }
+                <Box display="flex" alignItems="center" gap={1}>
+                  <Chip
+                    label={operativeItems.length}
+                    size="small"
+                    sx={{
+                      background: 'linear-gradient(135deg, #A593F3 0%, #A5CAE6 100%)',
+                      color: 'white',
+                      fontWeight: 700,
+                      fontSize: '0.7rem',
+                      minWidth: 24,
+                      height: 24,
+                    }}
+                  />
+                  {operativeSectionOpen ? 
+                    <ExpandLess sx={{ color: theme.palette.secondary.main, fontSize: 24 }} /> : 
+                    <ExpandMore sx={{ color: theme.palette.secondary.main, fontSize: 24 }} />
+                  }
+                </Box>
               </ListItemButton>
               
               <Collapse in={operativeSectionOpen} timeout="auto" unmountOnExit>
-                <Box sx={{ pb: 1 }}>
-                  <List sx={{ p: 0, pl: 1 }}>
+                <Box sx={{ pb: 2 }}>
+                  <List sx={{ p: 0, pl: 2 }}>
                     {operativeItems.map((item, index) => (
                       <Fade in timeout={600 + index * 100} key={item.path}>
                         <Box>
