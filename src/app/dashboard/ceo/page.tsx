@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   BarChart3, 
@@ -14,18 +14,52 @@ import {
   Users,
   Zap,
   Download,
-  Bell
+  Bell,
+  ArrowRight,
+  Eye,
+  Shield,
+  Cpu,
+  Globe,
+  Calendar,
+  Clock,
+  Star,
+  Award,
+  Briefcase,
+  PieChart,
+  LineChart,
+  BarChart,
+  TrendingDown,
+  AlertTriangle,
+  CheckCircle,
+  Info,
+  Settings,
+  Filter,
+  Search,
+  RefreshCw,
+  Maximize2,
+  MoreVertical,
+  ChevronRight,
+  ChevronDown,
+  Play,
+  Pause,
+  Square,
+  Volume2,
+  VolumeX,
+  Wifi,
+  WifiOff,
+  Battery,
+  BatteryLow,
+  Sun,
+  Moon,
+  Monitor,
+  Smartphone,
+  Tablet,
+  Laptop,
+  MapPin,
+  User,
+  GraphOff,
+  InsightsOff
 } from 'lucide-react';
-import { 
-  Box, 
-  Typography, 
-  Container, 
-  Grid, 
-  Card, 
-  CardContent,
-  Chip,
-  Paper
-} from '@mui/material';
 
 import Topbar from '@/components/dashboard/Topbar';
 import TabNavigation from '@/components/dashboard/TabNavigation';
@@ -35,49 +69,204 @@ import ClinicalPanel from '@/components/dashboard/ClinicalPanel';
 import CommercialPanel from '@/components/dashboard/CommercialPanel';
 import AlertsTasksDock from '@/components/dashboard/AlertsTasksDock';
 import AIInsightsFooter from '@/components/dashboard/AIInsightsFooter';
-import KPICardProfessional from '@/components/dashboard/KPICardProfessional';
-import ButtonProfessional from '@/components/ui/ButtonProfessional';
+
+// Interfaces para el nuevo dashboard ultra profesional
+interface SystemStatus {
+  cpu: number;
+  memory: number;
+  network: 'online' | 'offline';
+  battery: number;
+  uptime: string;
+  lastSync: Date;
+}
+
+interface QuickAction {
+  id: string;
+  label: string;
+  icon: React.ElementType;
+  color: string;
+  action: () => void;
+  badge?: number;
+}
+
+interface SmartInsight {
+  id: string;
+  type: 'prediction' | 'recommendation' | 'alert' | 'optimization';
+  title: string;
+  description: string;
+  confidence: number;
+  impact: 'high' | 'medium' | 'low';
+  timeframe: string;
+  value?: string;
+  actionable: boolean;
+}
+
+interface PerformanceMetric {
+  id: string;
+  name: string;
+  current: number;
+  target: number;
+  trend: 'up' | 'down' | 'stable';
+  change: number;
+  unit: string;
+  category: 'financial' | 'clinical' | 'operational' | 'commercial';
+}
 
 export default function CEODashboard() {
   const [activeTab, setActiveTab] = useState('executive');
+  const [systemStatus, setSystemStatus] = useState<SystemStatus>({
+    cpu: 23,
+    memory: 67,
+    network: 'online',
+    battery: 89,
+    uptime: '7d 14h 32m',
+    lastSync: new Date()
+  });
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [isAIAssistantActive, setIsAIAssistantActive] = useState(true);
+  const [notifications, setNotifications] = useState(12);
+  const [hasMetrics, setHasMetrics] = useState(false); // Para simular estado sin métricas
 
-  // Usuario mock para desarrollo
+  // Usuario mock mejorado
   const mockUser = {
     name: 'Dr. Carlos Mendoza',
     email: 'carlos.mendoza@centropsicologico.com',
-    role: 'admin'
+    role: 'CEO & Fundador',
+    avatar: null,
+    lastLogin: new Date(),
+    preferences: {
+      theme: 'light',
+      notifications: true,
+      autoRefresh: true
+    }
   };
 
+  // Actualizar tiempo cada segundo
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Simular actualizaciones del sistema
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setSystemStatus(prev => ({
+        ...prev,
+        cpu: Math.max(10, Math.min(90, prev.cpu + (Math.random() - 0.5) * 10)),
+        memory: Math.max(30, Math.min(95, prev.memory + (Math.random() - 0.5) * 5)),
+        battery: Math.max(20, Math.min(100, prev.battery - 0.1)),
+        lastSync: new Date()
+      }));
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Pestañas mejoradas según especificaciones
   const tabs = [
     {
       id: 'executive',
-      label: 'Resumen Ejecutivo',
+      label: 'Centro de Comando',
       icon: BarChart3,
-      description: 'KPIs principales'
+      description: 'Vista ejecutiva integral',
+      badge: 3
     },
     {
       id: 'financial',
-      label: 'Análisis Financiero',
+      label: 'Inteligencia Financiera',
       icon: DollarSign,
-      description: 'Métricas económicas'
+      description: 'Análisis predictivo de ingresos'
     },
     {
       id: 'clinical',
       label: 'Operaciones Clínicas',
       icon: Heart,
-      description: 'Salud operativa'
+      description: 'Salud operativa en tiempo real'
     },
     {
       id: 'commercial',
-      label: 'Marketing & Comercial',
+      label: 'Marketing Inteligente',
       icon: Target,
-      description: 'Conversión y campañas'
+      description: 'Optimización de conversión'
     },
     {
       id: 'insights',
-      label: 'Insights & IA',
+      label: 'IA & Predicciones',
       icon: Brain,
-      description: 'Recomendaciones inteligentes'
+      description: 'Insights con machine learning',
+      badge: 5
+    }
+  ];
+
+  // Acciones rápidas según especificaciones
+  const quickActions: QuickAction[] = [
+    {
+      id: 'generate-report',
+      label: 'Generar Reporte',
+      icon: Download,
+      color: '#2463EB',
+      action: () => console.log('Generating report...'),
+      badge: 2
+    },
+    {
+      id: 'schedule-meeting',
+      label: 'Agendar Reunión',
+      icon: Calendar,
+      color: '#10B981',
+      action: () => console.log('Scheduling meeting...')
+    },
+    {
+      id: 'ai-analysis',
+      label: 'Análisis IA',
+      icon: Brain,
+      color: '#F59E0B',
+      action: () => console.log('Running AI analysis...'),
+      badge: 1
+    },
+    {
+      id: 'emergency-alert',
+      label: 'Alertas Críticas',
+      icon: AlertTriangle,
+      color: '#EF4444',
+      action: () => console.log('Checking alerts...')
+    }
+  ];
+
+  // Insights inteligentes según especificaciones
+  const smartInsights: SmartInsight[] = [
+    {
+      id: '1',
+      type: 'prediction',
+      title: 'Pico de demanda previsto',
+      description: 'Se espera un aumento del 34% en citas para la próxima semana basado en patrones históricos y tendencias actuales.',
+      confidence: 87,
+      impact: 'high',
+      timeframe: '7 días',
+      value: '+34% demanda',
+      actionable: true
+    },
+    {
+      id: '2',
+      type: 'optimization',
+      title: 'Optimización de horarios',
+      description: 'Reasignar 3 slots de tarde a mañana podría incrementar la eficiencia operativa en un 12%.',
+      confidence: 92,
+      impact: 'medium',
+      timeframe: 'Inmediato',
+      value: '+12% eficiencia',
+      actionable: true
+    },
+    {
+      id: '3',
+      type: 'alert',
+      title: 'Riesgo de cancelaciones',
+      description: 'Patrón anómalo detectado: 23% más cancelaciones los viernes. Posible causa: conflictos de horario.',
+      confidence: 78,
+      impact: 'medium',
+      timeframe: 'Esta semana',
+      value: '-23% retención',
+      actionable: true
     }
   ];
 
@@ -90,8 +279,630 @@ export default function CEODashboard() {
   };
 
   const handleDownloadBrief = () => {
-    console.log('Downloading daily brief...');
+    console.log('Downloading executive brief...');
   };
+
+  const getSystemStatusColor = (value: number, type: 'cpu' | 'memory' | 'battery') => {
+    if (type === 'battery') {
+      if (value > 50) return '#10B981';
+      if (value > 20) return '#F59E0B';
+      return '#EF4444';
+    }
+    if (value < 50) return '#10B981';
+    if (value < 80) return '#F59E0B';
+    return '#EF4444';
+  };
+
+  const getInsightIcon = (type: SmartInsight['type']) => {
+    switch (type) {
+      case 'prediction': return TrendingUp;
+      case 'recommendation': return Star;
+      case 'alert': return AlertTriangle;
+      case 'optimization': return Zap;
+      default: return Info;
+    }
+  };
+
+  const getInsightColor = (impact: SmartInsight['impact']) => {
+    switch (impact) {
+      case 'high': return '#EF4444';
+      case 'medium': return '#F59E0B';
+      case 'low': return '#10B981';
+      default: return '#6B7280';
+    }
+  };
+
+  const getInsightBgColor = (impact: SmartInsight['impact']) => {
+    switch (impact) {
+      case 'high': return '#FEF2F2';
+      case 'medium': return '#FFFBEB';
+      case 'low': return '#ECFDF5';
+      default: return '#F9FAFB';
+    }
+  };
+
+  // Componente de bienvenida profesional
+  const renderWelcomeHero = () => (
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.8 }}
+      style={{
+        background: 'linear-gradient(135deg, #2463EB, #3B82F6)',
+        borderRadius: '2rem',
+        padding: '2.5rem',
+        color: 'white',
+        position: 'relative',
+        overflow: 'hidden',
+        marginBottom: '2rem'
+      }}
+    >
+      {/* Efectos de fondo */}
+      <div
+        style={{
+          position: 'absolute',
+          top: '-50px',
+          right: '-50px',
+          width: '200px',
+          height: '200px',
+          background: 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%)',
+          borderRadius: '50%'
+        }}
+      />
+      
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ flex: 1 }}>
+          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
+            <motion.div
+              animate={{ rotate: [0, 360] }}
+              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+              style={{ marginRight: '1rem' }}
+            >
+              <Sparkles size={28} color="rgba(255, 255, 255, 0.8)" />
+            </motion.div>
+            <h1 style={{ 
+              fontSize: '2.5rem', 
+              fontWeight: 700,
+              fontFamily: 'Space Grotesk, sans-serif',
+              margin: 0
+            }}>
+              Bienvenido, {mockUser.name}
+            </h1>
+          </div>
+          
+          <p style={{ 
+            fontSize: '1.25rem',
+            opacity: 0.9,
+            fontWeight: 400,
+            lineHeight: 1.6,
+            marginBottom: '1.5rem'
+          }}>
+            Centro de comando ejecutivo con inteligencia artificial integrada
+          </p>
+          
+          <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Clock size={16} />
+              <span style={{ fontSize: '0.875rem' }}>
+                {currentTime.toLocaleTimeString('es-ES', { 
+                  hour: '2-digit', 
+                  minute: '2-digit',
+                  second: '2-digit'
+                })}
+              </span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Calendar size={16} />
+              <span style={{ fontSize: '0.875rem' }}>
+                {currentTime.toLocaleDateString('es-ES', { 
+                  weekday: 'long',
+                  day: 'numeric',
+                  month: 'long'
+                })}
+              </span>
+            </div>
+          </div>
+        </div>
+        
+        <div style={{ textAlign: 'center' }}>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleDownloadBrief}
+            style={{
+              backgroundColor: 'rgba(255, 255, 255, 0.2)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              borderRadius: '1rem',
+              padding: '1rem 2rem',
+              color: 'white',
+              fontSize: '1rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              transition: 'all 0.3s ease'
+            }}
+          >
+            <Download size={20} />
+            Resumen Ejecutivo
+          </motion.button>
+        </div>
+      </div>
+    </motion.div>
+  );
+
+  // Estado del sistema según especificaciones
+  const renderSystemStatus = () => (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.2 }}
+      style={{
+        background: 'rgba(255, 255, 255, 0.8)',
+        backdropFilter: 'blur(20px)',
+        border: '1px solid rgba(229, 231, 235, 0.6)',
+        borderRadius: '1.5rem',
+        padding: '1.5rem',
+        marginBottom: '1.5rem'
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+          >
+            <Settings size={24} color="#2463EB" />
+          </motion.div>
+          <h3 style={{ 
+            fontSize: '1.125rem', 
+            fontWeight: 600, 
+            color: '#1C1E21',
+            margin: 0,
+            fontFamily: 'Inter, sans-serif'
+          }}>
+            Estado del Sistema
+          </h3>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <div 
+            style={{ 
+              width: '8px', 
+              height: '8px', 
+              backgroundColor: systemStatus.network === 'online' ? '#10B981' : '#EF4444',
+              borderRadius: '50%',
+              animation: 'pulse 2s infinite'
+            }} 
+          />
+          <span style={{ fontSize: '0.875rem', color: '#6B7280' }}>
+            {systemStatus.network === 'online' ? 'En línea' : 'Desconectado'}
+          </span>
+        </div>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.5rem' }}>
+        {/* CPU */}
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ position: 'relative', display: 'inline-block', marginBottom: '0.5rem' }}>
+            <svg width="60" height="60" style={{ transform: 'rotate(-90deg)' }}>
+              <circle
+                cx="30"
+                cy="30"
+                r="25"
+                stroke="#E5E7EB"
+                strokeWidth="4"
+                fill="transparent"
+              />
+              <circle
+                cx="30"
+                cy="30"
+                r="25"
+                stroke={getSystemStatusColor(systemStatus.cpu, 'cpu')}
+                strokeWidth="4"
+                fill="transparent"
+                strokeDasharray={`${2 * Math.PI * 25}`}
+                strokeDashoffset={`${2 * Math.PI * 25 * (1 - systemStatus.cpu / 100)}`}
+                style={{ transition: 'stroke-dashoffset 0.5s ease' }}
+              />
+            </svg>
+            <div style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              fontSize: '0.75rem',
+              fontWeight: 600,
+              color: '#1C1E21'
+            }}>
+              {systemStatus.cpu.toFixed(0)}%
+            </div>
+          </div>
+          <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>CPU</div>
+        </div>
+
+        {/* Memoria */}
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ position: 'relative', display: 'inline-block', marginBottom: '0.5rem' }}>
+            <svg width="60" height="60" style={{ transform: 'rotate(-90deg)' }}>
+              <circle
+                cx="30"
+                cy="30"
+                r="25"
+                stroke="#E5E7EB"
+                strokeWidth="4"
+                fill="transparent"
+              />
+              <circle
+                cx="30"
+                cy="30"
+                r="25"
+                stroke={getSystemStatusColor(systemStatus.memory, 'memory')}
+                strokeWidth="4"
+                fill="transparent"
+                strokeDasharray={`${2 * Math.PI * 25}`}
+                strokeDashoffset={`${2 * Math.PI * 25 * (1 - systemStatus.memory / 100)}`}
+                style={{ transition: 'stroke-dashoffset 0.5s ease' }}
+              />
+            </svg>
+            <div style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              fontSize: '0.75rem',
+              fontWeight: 600,
+              color: '#1C1E21'
+            }}>
+              {systemStatus.memory.toFixed(0)}%
+            </div>
+          </div>
+          <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>Memoria</div>
+        </div>
+
+        {/* Batería */}
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ position: 'relative', display: 'inline-block', marginBottom: '0.5rem' }}>
+            <svg width="60" height="60" style={{ transform: 'rotate(-90deg)' }}>
+              <circle
+                cx="30"
+                cy="30"
+                r="25"
+                stroke="#E5E7EB"
+                strokeWidth="4"
+                fill="transparent"
+              />
+              <circle
+                cx="30"
+                cy="30"
+                r="25"
+                stroke={getSystemStatusColor(systemStatus.battery, 'battery')}
+                strokeWidth="4"
+                fill="transparent"
+                strokeDasharray={`${2 * Math.PI * 25}`}
+                strokeDashoffset={`${2 * Math.PI * 25 * (1 - systemStatus.battery / 100)}`}
+                style={{ transition: 'stroke-dashoffset 0.5s ease' }}
+              />
+            </svg>
+            <div style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              fontSize: '0.75rem',
+              fontWeight: 600,
+              color: '#1C1E21'
+            }}>
+              {systemStatus.battery.toFixed(0)}%
+            </div>
+          </div>
+          <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>Batería</div>
+        </div>
+
+        {/* Uptime */}
+        <div style={{ textAlign: 'center' }}>
+          <Clock size={60} color="#6B7280" style={{ marginBottom: '0.5rem' }} />
+          <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>Uptime</div>
+          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#1C1E21' }}>
+            {systemStatus.uptime}
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+
+  // Acciones rápidas según especificaciones
+  const renderQuickActions = () => (
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay: 0.4 }}
+      style={{
+        background: 'rgba(255, 255, 255, 0.8)',
+        backdropFilter: 'blur(20px)',
+        border: '1px solid rgba(229, 231, 235, 0.6)',
+        borderRadius: '1.5rem',
+        padding: '1.5rem',
+        marginBottom: '1.5rem'
+      }}
+    >
+      <h3 style={{ 
+        fontSize: '1.125rem', 
+        fontWeight: 600, 
+        marginBottom: '1.5rem', 
+        color: '#1C1E21',
+        fontFamily: 'Inter, sans-serif'
+      }}>
+        Acciones Rápidas
+      </h3>
+      
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+        {quickActions.map((action, index) => (
+          <motion.div
+            key={action.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 * index }}
+            whileHover={{ scale: 1.02, y: -2 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={action.action}
+            style={{
+              background: `linear-gradient(135deg, ${action.color}10 0%, ${action.color}05 100%)`,
+              border: `1px solid ${action.color}20`,
+              borderRadius: '1rem',
+              padding: '1.5rem',
+              cursor: 'pointer',
+              textAlign: 'center',
+              position: 'relative',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+            }}
+          >
+            {action.badge && (
+              <div style={{
+                position: 'absolute',
+                top: '8px',
+                right: '8px',
+                backgroundColor: '#EF4444',
+                color: 'white',
+                borderRadius: '50%',
+                width: '20px',
+                height: '20px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '0.75rem',
+                fontWeight: 600
+              }}>
+                {action.badge}
+              </div>
+            )}
+            
+            <action.icon size={32} color={action.color} style={{ marginBottom: '0.75rem' }} />
+            <div style={{ 
+              fontSize: '0.875rem', 
+              fontWeight: 600, 
+              color: '#1C1E21',
+              fontFamily: 'Inter, sans-serif'
+            }}>
+              {action.label}
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </motion.div>
+  );
+
+  // Insights inteligentes según especificaciones
+  const renderSmartInsights = () => (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.6 }}
+      style={{
+        background: 'rgba(255, 255, 255, 0.8)',
+        backdropFilter: 'blur(20px)',
+        border: '1px solid rgba(229, 231, 235, 0.6)',
+        borderRadius: '1.5rem',
+        padding: '1.5rem',
+        marginBottom: '1.5rem'
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <motion.div
+            animate={{ scale: [1, 1.1, 1] }}
+            transition={{ duration: 2, repeat: Infinity }}
+          >
+            <Brain size={24} color="#2463EB" />
+          </motion.div>
+          <h3 style={{ 
+            fontSize: '1.125rem', 
+            fontWeight: 600, 
+            color: '#1C1E21',
+            margin: 0,
+            fontFamily: 'Inter, sans-serif'
+          }}>
+            Insights Inteligentes
+          </h3>
+        </div>
+        
+        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+          <input
+            type="checkbox"
+            checked={isAIAssistantActive}
+            onChange={(e) => setIsAIAssistantActive(e.target.checked)}
+            style={{ display: 'none' }}
+          />
+          <div style={{
+            width: '44px',
+            height: '24px',
+            backgroundColor: isAIAssistantActive ? '#2463EB' : '#E5E7EB',
+            borderRadius: '12px',
+            position: 'relative',
+            transition: 'all 0.3s ease'
+          }}>
+            <div style={{
+              width: '20px',
+              height: '20px',
+              backgroundColor: 'white',
+              borderRadius: '50%',
+              position: 'absolute',
+              top: '2px',
+              left: isAIAssistantActive ? '22px' : '2px',
+              transition: 'all 0.3s ease',
+              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
+            }} />
+          </div>
+        </label>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        {smartInsights.map((insight, index) => {
+          const IconComponent = getInsightIcon(insight.type);
+          return (
+            <motion.div
+              key={insight.id}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.1 * index }}
+              whileHover={{ x: 4 }}
+              style={{
+                background: getInsightBgColor(insight.impact),
+                border: `1px solid ${getInsightColor(insight.impact)}20`,
+                borderRadius: '1rem',
+                padding: '1.5rem',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
+                <div style={{
+                  padding: '0.5rem',
+                  borderRadius: '0.5rem',
+                  backgroundColor: `${getInsightColor(insight.impact)}10`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <IconComponent size={20} color={getInsightColor(insight.impact)} />
+                </div>
+                
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                    <h4 style={{ 
+                      fontSize: '0.875rem', 
+                      fontWeight: 600, 
+                      color: '#1C1E21',
+                      margin: 0,
+                      fontFamily: 'Inter, sans-serif'
+                    }}>
+                      {insight.title}
+                    </h4>
+                    <span style={{
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                      padding: '0.125rem 0.5rem',
+                      borderRadius: '0.5rem',
+                      backgroundColor: `${getInsightColor(insight.impact)}15`,
+                      color: getInsightColor(insight.impact)
+                    }}>
+                      {insight.confidence}%
+                    </span>
+                  </div>
+                  
+                  <p style={{ 
+                    fontSize: '0.75rem', 
+                    color: '#6B7280', 
+                    marginBottom: '1rem',
+                    lineHeight: 1.5,
+                    fontFamily: 'Inter, sans-serif'
+                  }}>
+                    {insight.description}
+                  </p>
+                  
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                      <span style={{ fontSize: '0.75rem', color: '#6B7280' }}>
+                        {insight.timeframe}
+                      </span>
+                      {insight.value && (
+                        <span style={{ 
+                          fontSize: '0.75rem', 
+                          fontWeight: 600,
+                          color: getInsightColor(insight.impact)
+                        }}>
+                          {insight.value}
+                        </span>
+                      )}
+                    </div>
+                    
+                    {insight.actionable && (
+                      <ChevronRight size={16} color="#6B7280" />
+                    )}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          );
+        })}
+      </div>
+    </motion.div>
+  );
+
+  // Placeholder para "No hay métricas disponibles" según especificaciones
+  const renderNoMetricsPlaceholder = () => (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.8 }}
+      style={{
+        background: '#FFFFFF',
+        border: '1px solid #E5E7EB',
+        borderRadius: '1.5rem',
+        padding: '3rem',
+        textAlign: 'center',
+        marginBottom: '1.5rem',
+        boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.05)'
+      }}
+    >
+      <motion.div
+        animate={{ rotate: [0, 10, -10, 0] }}
+        transition={{ duration: 2, repeat: Infinity }}
+        style={{ marginBottom: '1rem' }}
+      >
+        <GraphOff size={48} color="#9CA3AF" />
+      </motion.div>
+      
+      <h3 style={{ 
+        fontSize: '1.25rem', 
+        fontWeight: 600, 
+        color: '#1C1E21',
+        marginBottom: '0.5rem',
+        fontFamily: 'Inter, sans-serif'
+      }}>
+        No hay métricas disponibles
+      </h3>
+      
+      <p style={{ 
+        fontSize: '0.875rem', 
+        color: '#6B7280',
+        fontFamily: 'Inter, sans-serif'
+      }}>
+        Los datos de KPI se cargarán automáticamente cuando estén disponibles.
+      </p>
+      
+      {/* Ilustración sutil opcional */}
+      <div style={{
+        position: 'absolute',
+        bottom: '1rem',
+        right: '1rem',
+        opacity: 0.1
+      }}>
+        <BarChart size={32} color="#9CA3AF" />
+      </div>
+    </motion.div>
+  );
 
   const renderTabContent = () => {
     const contentVariants = {
@@ -118,287 +929,30 @@ export default function CEODashboard() {
             animate="visible"
             exit="exit"
           >
-            <Box sx={{ mb: 6 }}>
-              {/* Welcome Section Profesional */}
-              <Box sx={{ mb: 6 }}>
-                <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 4 }}>
-                  <Box sx={{ flex: 1 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                      <motion.div
-                        animate={{ rotate: [0, 360] }}
-                        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                      >
-                        <Box 
-                          sx={{ 
-                            width: 12, 
-                            height: 12, 
-                            background: 'linear-gradient(135deg, #2463EB 0%, #1D4ED8 100%)',
-                            borderRadius: '50%',
-                            mr: 2,
-                            boxShadow: '0 0 20px rgba(36, 99, 235, 0.3)'
-                          }} 
-                        />
-                      </motion.div>
-                      <Typography 
-                        variant="h1" 
-                        sx={{ 
-                          background: 'linear-gradient(135deg, #2463EB 0%, #1D4ED8 100%)',
-                          WebkitBackgroundClip: 'text',
-                          WebkitTextFillColor: 'transparent',
-                          backgroundClip: 'text',
-                          fontFamily: 'var(--font-family-space-grotesk)',
-                          fontSize: { xs: '2.5rem', md: '3.5rem' },
-                          fontWeight: 700,
-                          mr: 2
-                        }}
-                      >
-                        Buenos días, {mockUser.name}
-                      </Typography>
-                      <motion.div
-                        animate={{ scale: [1, 1.2, 1] }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                      >
-                        <Sparkles style={{ width: 28, height: 28, color: '#2463EB' }} />
-                      </motion.div>
-                    </Box>
-                    <Typography 
-                      variant="h5" 
-                      sx={{ 
-                        color: 'text.secondary',
-                        fontWeight: 500,
-                        lineHeight: 1.6,
-                        maxWidth: '600px',
-                        fontFamily: 'var(--font-family-inter)'
-                      }}
-                    >
-                      Resumen ejecutivo del estado actual de tu centro psicológico con insights en tiempo real
-                    </Typography>
-                  </Box>
-                  
-                  {/* Status Cards */}
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: 0.3, duration: 0.6 }}
-                    >
-                      <Paper
-                        elevation={1}
-                        sx={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 2,
-                          p: 3,
-                          borderRadius: '1rem',
-                          border: '1px solid rgba(16, 185, 129, 0.2)',
-                          backgroundColor: 'rgba(16, 185, 129, 0.05)',
-                        }}
-                      >
-                        <Box 
-                          sx={{ 
-                            width: 16, 
-                            height: 16, 
-                            backgroundColor: '#10B981', 
-                            borderRadius: '50%',
-                            animation: 'pulse 2s infinite'
-                          }} 
-                        />
-                        <Box>
-                          <Typography 
-                            variant="h6" 
-                            sx={{ 
-                              color: '#10B981', 
-                              fontWeight: 700,
-                              fontFamily: 'var(--font-family-space-grotesk)',
-                              fontSize: '1.125rem'
-                            }}
-                          >
-                            Sistema Operativo
-                          </Typography>
-                          <Typography 
-                            variant="body2" 
-                            sx={{ 
-                              color: 'rgba(16, 185, 129, 0.7)',
-                              fontSize: '0.875rem'
-                            }}
-                          >
-                            Todos los servicios activos
-                          </Typography>
-                        </Box>
-                      </Paper>
-                    </motion.div>
-                    
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: 0.5, duration: 0.6 }}
-                    >
-                      <Paper
-                        elevation={1}
-                        sx={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 2,
-                          p: 3,
-                          borderRadius: '1rem',
-                          border: '1px solid rgba(36, 99, 235, 0.2)',
-                          backgroundColor: 'rgba(36, 99, 235, 0.05)',
-                        }}
-                      >
-                        <Activity style={{ width: 24, height: 24, color: '#2463EB' }} />
-                        <Box>
-                          <Typography 
-                            variant="h6" 
-                            sx={{ 
-                              color: '#2463EB', 
-                              fontWeight: 700,
-                              fontFamily: 'var(--font-family-space-grotesk)',
-                              fontSize: '1.125rem'
-                            }}
-                          >
-                            IA Activa
-                          </Typography>
-                          <Typography 
-                            variant="body2" 
-                            sx={{ 
-                              color: 'rgba(36, 99, 235, 0.7)',
-                              fontSize: '0.875rem'
-                            }}
-                          >
-                            Análisis en tiempo real
-                          </Typography>
-                        </Box>
-                      </Paper>
-                    </motion.div>
-                  </Box>
-                </Box>
-
-                {/* Quick Performance Indicators */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4, duration: 0.6 }}
-                >
-                  <Grid container spacing={3} sx={{ mb: 6 }}>
-                    <Grid item xs={12} md={4}>
-                      <Paper
-                        elevation={1}
-                        sx={{
-                          p: 4,
-                          borderRadius: '1.5rem',
-                          textAlign: 'center',
-                          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                          '&:hover': {
-                            transform: 'translateY(-4px)',
-                            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.08)',
-                          }
-                        }}
-                      >
-                        <TrendingUp style={{ width: 32, height: 32, color: '#10B981', marginBottom: 16 }} />
-                        <Typography 
-                          variant="h3" 
-                          sx={{ 
-                            color: '#10B981', 
-                            fontWeight: 700,
-                            fontFamily: 'var(--font-family-space-grotesk)',
-                            mb: 1
-                          }}
-                        >
-                          +12.5%
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          Crecimiento mensual
-                        </Typography>
-                      </Paper>
-                    </Grid>
-                    
-                    <Grid item xs={12} md={4}>
-                      <Paper
-                        elevation={1}
-                        sx={{
-                          p: 4,
-                          borderRadius: '1.5rem',
-                          textAlign: 'center',
-                          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                          '&:hover': {
-                            transform: 'translateY(-4px)',
-                            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.08)',
-                          }
-                        }}
-                      >
-                        <Zap style={{ width: 32, height: 32, color: '#2463EB', marginBottom: 16 }} />
-                        <Typography 
-                          variant="h3" 
-                          sx={{ 
-                            color: '#2463EB', 
-                            fontWeight: 700,
-                            fontFamily: 'var(--font-family-space-grotesk)',
-                            mb: 1
-                          }}
-                        >
-                          87.3%
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          Eficiencia operativa
-                        </Typography>
-                      </Paper>
-                    </Grid>
-                    
-                    <Grid item xs={12} md={4}>
-                      <Paper
-                        elevation={1}
-                        sx={{
-                          p: 4,
-                          borderRadius: '1.5rem',
-                          textAlign: 'center',
-                          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                          '&:hover': {
-                            transform: 'translateY(-4px)',
-                            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.08)',
-                          }
-                        }}
-                      >
-                        <Users style={{ width: 32, height: 32, color: '#F59E0B', marginBottom: 16 }} />
-                        <Typography 
-                          variant="h3" 
-                          sx={{ 
-                            color: '#F59E0B', 
-                            fontWeight: 700,
-                            fontFamily: 'var(--font-family-space-grotesk)',
-                            mb: 1
-                          }}
-                        >
-                          94.2%
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          Satisfacción pacientes
-                        </Typography>
-                      </Paper>
-                    </Grid>
-                  </Grid>
-                </motion.div>
-
-                {/* Daily Brief Button */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.6, duration: 0.6 }}
-                >
-                  <Box sx={{ display: 'flex', justifyContent: 'center', mb: 6 }}>
-                    <ButtonProfessional
-                      variant="primary"
-                      icon={Download}
-                      onClick={handleDownloadBrief}
-                    >
-                      Descargar Resumen Diario PDF
-                    </ButtonProfessional>
-                  </Box>
-                </motion.div>
-              </Box>
-
-              {/* KPI Grid */}
-              <KPIGrid />
-            </Box>
+            {/* Header de bienvenida */}
+            {renderWelcomeHero()}
+            
+            {/* Estado del sistema */}
+            {renderSystemStatus()}
+            
+            {/* Acciones rápidas */}
+            {renderQuickActions()}
+            
+            {/* Insights inteligentes */}
+            {renderSmartInsights()}
+            
+            {/* KPI Grid o placeholder */}
+            {hasMetrics ? (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.0 }}
+              >
+                <KPIGrid />
+              </motion.div>
+            ) : (
+              renderNoMetricsPlaceholder()
+            )}
           </motion.div>
         );
 
@@ -411,33 +965,30 @@ export default function CEODashboard() {
             animate="visible"
             exit="exit"
           >
-            <Box sx={{ textAlign: 'center', mb: 6 }}>
-              <Typography 
-                variant="h2" 
-                sx={{ 
-                  background: 'linear-gradient(135deg, #2463EB 0%, #1D4ED8 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                  fontFamily: 'var(--font-family-space-grotesk)',
-                  mb: 2
-                }}
-              >
-                Análisis Financiero Detallado
-              </Typography>
-              <Typography 
-                variant="h6" 
-                color="text.secondary" 
-                sx={{ 
-                  maxWidth: '600px', 
-                  mx: 'auto',
-                  fontFamily: 'var(--font-family-inter)',
-                  fontWeight: 400
-                }}
-              >
-                Métricas financieras completas con proyecciones inteligentes y análisis de rentabilidad
-              </Typography>
-            </Box>
+            <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+              <h2 style={{ 
+                fontSize: '2.5rem',
+                background: 'linear-gradient(135deg, #2463EB 0%, #1D4ED8 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+                fontFamily: 'Space Grotesk, sans-serif',
+                marginBottom: '1rem',
+                fontWeight: 700
+              }}>
+                Inteligencia Financiera
+              </h2>
+              <p style={{ 
+                fontSize: '1.125rem', 
+                color: '#6B7280',
+                maxWidth: '600px', 
+                margin: '0 auto',
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 400
+              }}>
+                Análisis predictivo avanzado con machine learning para optimización de ingresos
+              </p>
+            </div>
             <FinancialPanel />
           </motion.div>
         );
@@ -451,33 +1002,30 @@ export default function CEODashboard() {
             animate="visible"
             exit="exit"
           >
-            <Box sx={{ textAlign: 'center', mb: 6 }}>
-              <Typography 
-                variant="h2" 
-                sx={{ 
-                  background: 'linear-gradient(135deg, #2463EB 0%, #1D4ED8 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                  fontFamily: 'var(--font-family-space-grotesk)',
-                  mb: 2
-                }}
-              >
+            <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+              <h2 style={{ 
+                fontSize: '2.5rem',
+                background: 'linear-gradient(135deg, #2463EB 0%, #1D4ED8 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+                fontFamily: 'Space Grotesk, sans-serif',
+                marginBottom: '1rem',
+                fontWeight: 700
+              }}>
                 Operaciones Clínicas
-              </Typography>
-              <Typography 
-                variant="h6" 
-                color="text.secondary" 
-                sx={{ 
-                  maxWidth: '600px', 
-                  mx: 'auto',
-                  fontFamily: 'var(--font-family-inter)',
-                  fontWeight: 400
-                }}
-              >
-                Monitoreo inteligente de salud operativa, riesgos y capacidad del centro
-              </Typography>
-            </Box>
+              </h2>
+              <p style={{ 
+                fontSize: '1.125rem', 
+                color: '#6B7280',
+                maxWidth: '600px', 
+                margin: '0 auto',
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 400
+              }}>
+                Monitoreo inteligente de salud operativa con alertas predictivas
+              </p>
+            </div>
             <ClinicalPanel />
           </motion.div>
         );
@@ -491,33 +1039,30 @@ export default function CEODashboard() {
             animate="visible"
             exit="exit"
           >
-            <Box sx={{ textAlign: 'center', mb: 6 }}>
-              <Typography 
-                variant="h2" 
-                sx={{ 
-                  background: 'linear-gradient(135deg, #2463EB 0%, #1D4ED8 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                  fontFamily: 'var(--font-family-space-grotesk)',
-                  mb: 2
-                }}
-              >
-                Marketing & Comercial
-              </Typography>
-              <Typography 
-                variant="h6" 
-                color="text.secondary" 
-                sx={{ 
-                  maxWidth: '600px', 
-                  mx: 'auto',
-                  fontFamily: 'var(--font-family-inter)',
-                  fontWeight: 400
-                }}
-              >
-                Análisis completo de conversión, campañas y adquisición de pacientes
-              </Typography>
-            </Box>
+            <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+              <h2 style={{ 
+                fontSize: '2.5rem',
+                background: 'linear-gradient(135deg, #2463EB 0%, #1D4ED8 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+                fontFamily: 'Space Grotesk, sans-serif',
+                marginBottom: '1rem',
+                fontWeight: 700
+              }}>
+                Marketing Inteligente
+              </h2>
+              <p style={{ 
+                fontSize: '1.125rem', 
+                color: '#6B7280',
+                maxWidth: '600px', 
+                margin: '0 auto',
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 400
+              }}>
+                Optimización automática de conversión con análisis de comportamiento
+              </p>
+            </div>
             <CommercialPanel />
           </motion.div>
         );
@@ -531,33 +1076,30 @@ export default function CEODashboard() {
             animate="visible"
             exit="exit"
           >
-            <Box sx={{ textAlign: 'center', mb: 6 }}>
-              <Typography 
-                variant="h2" 
-                sx={{ 
-                  background: 'linear-gradient(135deg, #2463EB 0%, #1D4ED8 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                  fontFamily: 'var(--font-family-space-grotesk)',
-                  mb: 2
-                }}
-              >
-                Insights & Inteligencia Artificial
-              </Typography>
-              <Typography 
-                variant="h6" 
-                color="text.secondary" 
-                sx={{ 
-                  maxWidth: '600px', 
-                  mx: 'auto',
-                  fontFamily: 'var(--font-family-inter)',
-                  fontWeight: 400
-                }}
-              >
-                Recomendaciones inteligentes y análisis predictivo para optimizar tu centro
-              </Typography>
-            </Box>
+            <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+              <h2 style={{ 
+                fontSize: '2.5rem',
+                background: 'linear-gradient(135deg, #2463EB 0%, #1D4ED8 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+                fontFamily: 'Space Grotesk, sans-serif',
+                marginBottom: '1rem',
+                fontWeight: 700
+              }}>
+                IA & Predicciones
+              </h2>
+              <p style={{ 
+                fontSize: '1.125rem', 
+                color: '#6B7280',
+                maxWidth: '600px', 
+                margin: '0 auto',
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 400
+              }}>
+                Inteligencia artificial avanzada con modelos predictivos y recomendaciones automáticas
+              </p>
+            </div>
             <AIInsightsFooter />
           </motion.div>
         );
@@ -568,127 +1110,168 @@ export default function CEODashboard() {
   };
 
   return (
-    <Box 
-      sx={{ 
-        minHeight: '100vh',
-        background: 'linear-gradient(135deg, #F9FAFB 0%, #EFF3FB 100%)',
-        position: 'relative',
-        overflow: 'hidden'
-      }}
-    >
-      {/* Efectos de fondo sutiles */}
-      <Box
-        sx={{
-          position: 'fixed',
-          inset: 0,
-          pointerEvents: 'none',
-          '&::before': {
-            content: '""',
-            position: 'absolute',
-            top: '20%',
-            left: '10%',
-            width: '12px',
-            height: '12px',
-            background: 'rgba(36, 99, 235, 0.1)',
-            borderRadius: '50%',
-            animation: 'float 6s ease-in-out infinite',
-          },
-          '&::after': {
-            content: '""',
-            position: 'absolute',
-            bottom: '30%',
-            right: '15%',
-            width: '8px',
-            height: '8px',
-            background: 'rgba(16, 185, 129, 0.1)',
-            borderRadius: '50%',
-            animation: 'float 8s ease-in-out infinite reverse',
-          }
-        }}
-      />
+    <div style={{ 
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #F9FAFB 0%, #EFF3FB 100%)',
+      position: 'relative',
+      overflow: 'hidden'
+    }}>
+      {/* Efectos de fondo futuristas */}
+      <div style={{
+        position: 'fixed',
+        inset: 0,
+        pointerEvents: 'none',
+        background: `
+          radial-gradient(circle at 20% 80%, rgba(36, 99, 235, 0.03) 0%, transparent 50%),
+          radial-gradient(circle at 80% 20%, rgba(16, 185, 129, 0.03) 0%, transparent 50%),
+          radial-gradient(circle at 40% 40%, rgba(245, 158, 11, 0.02) 0%, transparent 50%)
+        `
+      }} />
 
-      {/* Topbar */}
+      {/* Topbar mejorado */}
       <Topbar onSearch={handleSearch} onCenterChange={handleCenterChange} />
       
-      {/* Main Content */}
-      <Container maxWidth="xl" sx={{ py: 6 }}>
-        <Grid container spacing={6}>
-          {/* Left Column - Main Dashboard */}
-          <Grid item xs={12} lg={9}>
-            {/* Tab Navigation */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-            >
-              <Box sx={{ mb: 6 }}>
-                <TabNavigation 
-                  tabs={tabs} 
-                  activeTab={activeTab} 
-                  onTabChange={setActiveTab} 
-                />
-              </Box>
-            </motion.div>
+      {/* Contenido principal */}
+      <div style={{ 
+        maxWidth: '1400px', 
+        margin: '0 auto', 
+        padding: '3rem 2rem',
+        display: 'grid',
+        gridTemplateColumns: '1fr 320px',
+        gap: '3rem'
+      }}>
+        {/* Columna principal */}
+        <div>
+          {/* Navegación de pestañas mejorada */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            style={{ marginBottom: '3rem' }}
+          >
+            <TabNavigation 
+              tabs={tabs} 
+              activeTab={activeTab} 
+              onTabChange={setActiveTab}
+              variant="cards"
+              showDescriptions={true}
+            />
+          </motion.div>
 
-            {/* Tab Content */}
-            <AnimatePresence mode="wait">
-              {renderTabContent()}
-            </AnimatePresence>
-          </Grid>
+          {/* Contenido de pestañas */}
+          <AnimatePresence mode="wait">
+            {renderTabContent()}
+          </AnimatePresence>
+        </div>
 
-          {/* Right Column - Alerts & Tasks Dock */}
-          <Grid item xs={12} lg={3}>
-            <motion.div
-              initial={{ opacity: 0, x: 40 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3, duration: 0.8 }}
-            >
-              <Box sx={{ position: 'sticky', top: 120 }}>
-                <AlertsTasksDock />
-              </Box>
-            </motion.div>
-          </Grid>
-        </Grid>
-      </Container>
+        {/* Columna lateral mejorada */}
+        <div>
+          <motion.div
+            initial={{ opacity: 0, x: 40 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3, duration: 0.8 }}
+            style={{ position: 'sticky', top: '120px' }}
+          >
+            <AlertsTasksDock />
+          </motion.div>
+        </div>
+      </div>
 
-      {/* Floating Action Button Profesional */}
+      {/* Botón flotante de IA mejorado */}
       <motion.div
         initial={{ opacity: 0, scale: 0 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 1, duration: 0.6 }}
+        transition={{ delay: 1.2, duration: 0.6 }}
         style={{
           position: 'fixed',
-          bottom: 32,
-          right: 32,
+          bottom: '32px',
+          right: '32px',
           zIndex: 1000,
         }}
       >
-        <motion.div
+        <motion.button
           whileHover={{ scale: 1.1, y: -4 }}
           whileTap={{ scale: 0.9 }}
+          style={{
+            width: '80px',
+            height: '80px',
+            background: 'linear-gradient(135deg, #2463EB 0%, #1D4ED8 100%)',
+            borderRadius: '50%',
+            border: 'none',
+            cursor: 'pointer',
+            boxShadow: '0 0 30px rgba(36, 99, 235, 0.4)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}
+          title="Asistente IA"
         >
-          <Paper
-            elevation={3}
-            sx={{
-              width: 80,
-              height: 80,
-              borderRadius: '1.5rem',
-              background: 'linear-gradient(135deg, #2463EB 0%, #1D4ED8 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              boxShadow: '0 0 20px rgba(36, 99, 235, 0.4)',
-              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-              '&:hover': {
-                boxShadow: '0 0 30px rgba(36, 99, 235, 0.6)',
-              }
-            }}
+          <motion.div
+            animate={{ rotate: [0, 360] }}
+            transition={{ duration: 10, repeat: Infinity }}
           >
-            <Sparkles style={{ width: 40, height: 40, color: '#FFFFFF' }} />
-          </Paper>
-        </motion.div>
+            <Brain size={32} color="#FFFFFF" />
+          </motion.div>
+        </motion.button>
       </motion.div>
-    </Box>
+
+      {/* Indicador de notificaciones flotante */}
+      {notifications > 0 && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 1.4, duration: 0.6 }}
+          style={{
+            position: 'fixed',
+            top: '100px',
+            right: '32px',
+            zIndex: 1000,
+          }}
+        >
+          <div style={{
+            padding: '1rem',
+            borderRadius: '1rem',
+            background: 'rgba(239, 68, 68, 0.9)',
+            backdropFilter: 'blur(10px)',
+            color: 'white',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            minWidth: '120px',
+            boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)'
+          }}>
+            <motion.div
+              animate={{ scale: [1, 1.2, 1] }}
+              transition={{ duration: 1, repeat: Infinity }}
+            >
+              <Bell size={20} />
+            </motion.div>
+            <span style={{ fontSize: '0.875rem', fontWeight: 600 }}>
+              {notifications} alertas
+            </span>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Estilos CSS adicionales */}
+      <style jsx>{`
+        @keyframes float {
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-20px) rotate(180deg); }
+        }
+        
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+        }
+
+        @media (max-width: 1024px) {
+          .container-dashboard {
+            grid-template-columns: 1fr;
+            gap: 2rem;
+          }
+        }
+      `}</style>
+    </div>
   );
 }
