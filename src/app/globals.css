@@ -11,86 +11,82 @@
 @import "@fontsource/space-grotesk/600.css";
 @import "@fontsource/space-grotesk/700.css";
 
-/* Sistema de colores futurista para centro psicológico */
+/* Sistema de colores profesional clínico según especificaciones */
 @theme {
   /* Fuentes */
   --font-family-inter: 'Inter', ui-sans-serif, system-ui, sans-serif;
   --font-family-space-grotesk: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
   
-  /* Paleta futurista y profesional */
-  --color-primary: #0B0F1A;
-  --color-primary-light: #1A1F2E;
-  --color-primary-lighter: #2A2F42;
-  --color-accent: #00D4FF;
-  --color-accent-light: #33E0FF;
-  --color-accent-dark: #0099CC;
-  --color-secondary: #6366F1;
-  --color-secondary-light: #818CF8;
+  /* Paleta profesional clínica */
+  --color-primary: #2463EB;
+  --color-primary-light: #60A5FA;
+  --color-primary-dark: #1D4ED8;
+  --color-secondary: #EFF3FB;
+  --color-secondary-light: #F8FAFF;
+  --color-secondary-dark: #E2E8F0;
   
-  /* Colores de fondo futuristas */
-  --color-background: #FAFBFE;
+  /* Colores de fondo profesionales */
+  --color-background: #F9FAFB;
   --color-surface: #FFFFFF;
-  --color-surface-elevated: #F8FAFF;
-  --color-surface-hover: #F0F4FF;
+  --color-surface-elevated: #EFF3FB;
+  --color-surface-hover: #F8FAFF;
   --color-surface-glass: rgba(255, 255, 255, 0.85);
-  --color-surface-dark: #0F1419;
   
   /* Colores de texto refinados */
-  --color-text-primary: #0B0F1A;
-  --color-text-secondary: #4A5568;
-  --color-text-tertiary: #718096;
+  --color-text-primary: #1C1E21;
+  --color-text-secondary: #6B7280;
+  --color-text-tertiary: #9CA3AF;
   --color-text-inverse: #FFFFFF;
-  --color-text-accent: #00D4FF;
+  --color-text-accent: #2463EB;
   
-  /* Colores de estado modernos */
-  --color-success: #00C896;
-  --color-success-light: #33D4A8;
-  --color-success-bg: #E6FFF9;
-  --color-warning: #FFB800;
-  --color-warning-light: #FFC533;
-  --color-warning-bg: #FFF8E6;
-  --color-error: #FF4757;
-  --color-error-light: #FF6B7A;
-  --color-error-bg: #FFE6E9;
+  /* Colores de estado clínicos */
+  --color-success: #10B981;
+  --color-success-light: #34D399;
+  --color-success-dark: #059669;
+  --color-success-bg: #ECFDF5;
+  --color-warning: #F59E0B;
+  --color-warning-light: #FBBF24;
+  --color-warning-dark: #D97706;
+  --color-warning-bg: #FFFBEB;
+  --color-error: #EF4444;
+  --color-error-light: #F87171;
+  --color-error-dark: #DC2626;
+  --color-error-bg: #FEF2F2;
   --color-info: #3B82F6;
   --color-info-light: #60A5FA;
+  --color-info-dark: #2563EB;
   --color-info-bg: #EFF6FF;
   
-  /* Bordes futuristas */
-  --color-border-light: #E2E8F0;
-  --color-border-medium: #CBD5E1;
-  --color-border-strong: #94A3B8;
-  --color-border-glow: rgba(0, 212, 255, 0.3);
+  /* Bordes profesionales */
+  --color-border-light: #E5E7EB;
+  --color-border-medium: #D1D5DB;
+  --color-border-strong: #9CA3AF;
+  --color-border-primary: #2463EB;
 
-  /* Sombras futuristas */
+  /* Sombras profesionales */
   --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
   --shadow-elevated: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.06);
   --shadow-floating: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  --shadow-glow: 0 0 0 1px rgba(0, 212, 255, 0.05), 0 1px 3px 0 rgba(0, 212, 255, 0.1);
-  --shadow-glow-strong: 0 0 20px rgba(0, 212, 255, 0.15), 0 0 40px rgba(0, 212, 255, 0.1);
+  --shadow-glow: 0 0 0 1px rgba(36, 99, 235, 0.05), 0 4px 6px -1px rgba(36, 99, 235, 0.25);
+  --shadow-glow-strong: 0 0 20px rgba(36, 99, 235, 0.15), 0 0 40px rgba(36, 99, 235, 0.1);
   --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.03);
 
-  /* Border radius futurista */
+  /* Border radius profesional */
   --radius-card: 1.5rem;
   --radius-button: 1rem;
   --radius-input: 0.875rem;
   --radius-full: 9999px;
 
-  /* Gradientes futuristas */
-  --gradient-primary: linear-gradient(135deg, #0B0F1A 0%, #1A1F2E 100%);
-  --gradient-accent: linear-gradient(135deg, #00D4FF 0%, #33E0FF 100%);
-  --gradient-success: linear-gradient(135deg, #00C896 0%, #33D4A8 100%);
-  --gradient-warning: linear-gradient(135deg, #FFB800 0%, #FFC533 100%);
-  --gradient-error: linear-gradient(135deg, #FF4757 0%, #FF6B7A 100%);
+  /* Gradientes profesionales */
+  --gradient-primary: linear-gradient(135deg, #2463EB 0%, #1D4ED8 100%);
+  --gradient-success: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  --gradient-warning: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+  --gradient-error: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+  --gradient-surface: linear-gradient(135deg, #F9FAFB 0%, #EFF3FB 100%);
   --gradient-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%);
-  --gradient-surface: linear-gradient(135deg, #FAFBFE 0%, #F8FAFF 100%);
-
-  /* Efectos de partículas */
-  --particle-glow: radial-gradient(circle, rgba(0, 212, 255, 0.4) 0%, transparent 70%);
-  --particle-small: radial-gradient(circle, rgba(0, 212, 255, 0.6) 0%, transparent 50%);
 }
 
-/* Reset y configuración base futurista */
+/* Reset y configuración base profesional */
 * {
   box-sizing: border-box;
   padding: 0;
@@ -116,7 +112,7 @@ body {
   overflow-x: hidden;
 }
 
-/* Fondo con partículas futuristas */
+/* Fondo sutil profesional */
 body::before {
   content: '';
   position: fixed;
@@ -125,24 +121,23 @@ body::before {
   width: 100%;
   height: 100%;
   background: 
-    radial-gradient(circle at 20% 80%, rgba(0, 212, 255, 0.03) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(99, 102, 241, 0.03) 0%, transparent 50%),
-    radial-gradient(circle at 40% 40%, rgba(0, 200, 150, 0.02) 0%, transparent 50%);
+    radial-gradient(circle at 20% 80%, rgba(36, 99, 235, 0.02) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(16, 185, 129, 0.02) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(245, 158, 11, 0.01) 0%, transparent 50%);
   pointer-events: none;
   z-index: -1;
 }
 
-/* Clases de utilidad futuristas */
+/* Clases de utilidad profesionales */
 .container-dashboard {
   max-width: 1400px;
   margin: 0 auto;
   padding: 0 2rem;
 }
 
-/* Tarjetas futuristas */
-.card-futuristic {
-  background: var(--color-surface-glass);
-  backdrop-filter: blur(20px);
+/* Tarjetas profesionales */
+.card-professional {
+  background: var(--color-surface);
   border: 1px solid var(--color-border-light);
   border-radius: var(--radius-card);
   box-shadow: var(--shadow-card);
@@ -151,52 +146,71 @@ body::before {
   transition: all 400ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.card-futuristic::before {
+.card-professional:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-elevated);
+  border-color: var(--color-border-medium);
+}
+
+/* KPI Cards específicas */
+.kpi-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: 2rem 1.5rem;
+  position: relative;
+  overflow: hidden;
+  transition: all 400ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.kpi-card::before {
   content: '';
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  height: 1px;
-  background: var(--gradient-accent);
+  height: 4px;
+  background: var(--gradient-primary);
   opacity: 0;
   transition: opacity 400ms ease;
 }
 
-.card-futuristic:hover {
-  transform: translateY(-8px);
-  box-shadow: var(--shadow-floating), var(--shadow-glow);
-  border-color: var(--color-border-glow);
+.kpi-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-floating);
+  border-color: var(--color-border-primary);
 }
 
-.card-futuristic:hover::before {
+.kpi-card:hover::before {
   opacity: 1;
 }
 
-/* Efectos de glassmorphism premium */
-.glass-premium {
+/* Estados de KPI */
+.kpi-card.success::before {
+  background: var(--gradient-success);
+}
+
+.kpi-card.warning::before {
+  background: var(--gradient-warning);
+}
+
+.kpi-card.error::before {
+  background: var(--gradient-error);
+}
+
+/* Efectos de glassmorphism sutil */
+.glass-subtle {
   background: var(--color-surface-glass);
-  backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: var(--shadow-floating);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(229, 231, 235, 0.5);
+  box-shadow: var(--shadow-card);
   position: relative;
 }
 
-.glass-premium::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
-  pointer-events: none;
-  border-radius: inherit;
-}
-
-/* Botones futuristas */
-.btn-futuristic {
-  background: var(--gradient-accent);
+/* Botones profesionales */
+.btn-professional {
+  background: var(--gradient-primary);
   color: var(--color-text-inverse);
   font-weight: 600;
   padding: 0.875rem 2rem;
@@ -209,92 +223,124 @@ body::before {
   overflow: hidden;
   font-family: var(--font-family-space-grotesk);
   letter-spacing: 0.025em;
+  font-size: 0.875rem;
 }
 
-.btn-futuristic::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-  transition: left 600ms ease;
-}
-
-.btn-futuristic:hover {
+.btn-professional:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-glow-strong);
-  filter: brightness(1.1);
+  filter: brightness(1.05);
 }
 
-.btn-futuristic:hover::before {
-  left: 100%;
-}
-
-.btn-futuristic:active {
+.btn-professional:active {
   transform: translateY(0);
 }
 
-/* Inputs futuristas */
-.input-futuristic {
+/* Variantes de botones */
+.btn-secondary {
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border-light);
+  box-shadow: var(--shadow-card);
+}
+
+.btn-secondary:hover {
+  background: var(--color-surface-elevated);
+  border-color: var(--color-border-medium);
+}
+
+.btn-success {
+  background: var(--gradient-success);
+}
+
+.btn-warning {
+  background: var(--gradient-warning);
+}
+
+.btn-error {
+  background: var(--gradient-error);
+}
+
+/* Inputs profesionales */
+.input-professional {
   width: 100%;
   padding: 1rem 1.25rem;
   border: 1px solid var(--color-border-light);
   border-radius: var(--radius-input);
-  background: var(--color-surface-glass);
-  backdrop-filter: blur(10px);
+  background: var(--color-surface);
   color: var(--color-text-primary);
   transition: all 400ms cubic-bezier(0.4, 0, 0.2, 1);
   font-size: 0.875rem;
   font-family: var(--font-family-inter);
 }
 
-.input-futuristic:focus {
+.input-professional:focus {
   outline: none;
-  border-color: var(--color-accent);
-  box-shadow: var(--shadow-glow);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(36, 99, 235, 0.1);
   background: var(--color-surface);
-  transform: translateY(-1px);
 }
 
-.input-futuristic::placeholder {
+.input-professional::placeholder {
   color: var(--color-text-tertiary);
 }
 
-/* Efectos de texto futuristas */
-.text-gradient-accent {
-  background: var(--gradient-accent);
+/* Efectos de texto profesionales */
+.text-gradient-primary {
+  background: var(--gradient-primary);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   font-weight: 700;
 }
 
-.text-glow {
-  text-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+.text-professional-heading {
+  font-family: var(--font-family-space-grotesk);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
 }
 
-/* Animaciones futuristas */
-@keyframes float {
+.text-professional-body {
+  font-family: var(--font-family-inter);
+  font-weight: 400;
+  line-height: 1.6;
+  letter-spacing: 0.01em;
+}
+
+/* Animaciones suaves profesionales */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse-subtle {
   0%, 100% {
-    transform: translateY(0px);
+    opacity: 1;
   }
   50% {
-    transform: translateY(-10px);
+    opacity: 0.8;
   }
 }
 
-@keyframes pulse-glow {
-  0%, 100% {
-    box-shadow: var(--shadow-glow);
-  }
-  50% {
-    box-shadow: var(--shadow-glow-strong);
-  }
-}
-
-@keyframes shimmer-futuristic {
+@keyframes shimmer-professional {
   0% {
     transform: translateX(-100%);
   }
@@ -303,44 +349,33 @@ body::before {
   }
 }
 
-@keyframes particle-float {
-  0%, 100% {
-    transform: translateY(0px) rotate(0deg);
-    opacity: 0.4;
-  }
-  50% {
-    transform: translateY(-20px) rotate(180deg);
-    opacity: 0.8;
-  }
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s ease-out;
 }
 
-.animate-float {
-  animation: float 6s ease-in-out infinite;
+.animate-slide-in-right {
+  animation: slideInRight 0.6s ease-out;
 }
 
-.animate-pulse-glow {
-  animation: pulse-glow 3s ease-in-out infinite;
+.animate-pulse-subtle {
+  animation: pulse-subtle 2s ease-in-out infinite;
 }
 
-.animate-particle-float {
-  animation: particle-float 8s ease-in-out infinite;
-}
-
-/* Estados de carga futuristas */
-.loading-futuristic {
+/* Estados de carga profesionales */
+.loading-professional {
   background: linear-gradient(90deg, 
     var(--color-surface-elevated) 25%, 
     var(--color-surface-hover) 50%, 
     var(--color-surface-elevated) 75%);
   background-size: 200% 100%;
-  animation: shimmer-futuristic 2s infinite;
+  animation: shimmer-professional 2s infinite;
   border-radius: var(--radius-input);
 }
 
-/* Scrollbar futurista */
+/* Scrollbar profesional */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -348,88 +383,56 @@ body::before {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--gradient-accent);
+  background: var(--color-border-medium);
   border-radius: var(--radius-full);
   transition: all 300ms ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-accent-light);
-  box-shadow: var(--shadow-glow);
+  background: var(--color-primary);
 }
 
-/* Efectos de partículas decorativas */
-.particle-container {
-  position: relative;
-  overflow: hidden;
-}
-
-.particle-container::before,
-.particle-container::after {
-  content: '';
-  position: absolute;
-  width: 4px;
-  height: 4px;
-  background: var(--particle-small);
-  border-radius: 50%;
-  opacity: 0;
-  animation: particle-float 10s ease-in-out infinite;
-}
-
-.particle-container::before {
-  top: 20%;
-  right: 15%;
-  animation-delay: -2s;
-}
-
-.particle-container::after {
-  bottom: 25%;
-  left: 10%;
-  animation-delay: -5s;
-}
-
-/* Tipografía futurista */
-.text-display-futuristic {
+/* Tipografía profesional */
+.text-display-professional {
   font-family: var(--font-family-space-grotesk);
   font-weight: 700;
   letter-spacing: -0.03em;
   line-height: 1.2;
 }
 
-.text-heading-futuristic {
+.text-heading-professional {
   font-family: var(--font-family-space-grotesk);
   font-weight: 600;
   letter-spacing: -0.02em;
   line-height: 1.3;
 }
 
-.text-body-futuristic {
+.text-body-professional {
   font-family: var(--font-family-inter);
   font-weight: 400;
   line-height: 1.6;
   letter-spacing: 0.01em;
 }
 
-/* Efectos de hover premium */
-.hover-lift {
+/* Efectos de hover profesionales */
+.hover-lift-subtle {
   transition: all 400ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.hover-lift:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-floating);
+.hover-lift-subtle:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-elevated);
 }
 
-.hover-glow {
+.hover-glow-subtle {
   transition: all 400ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.hover-glow:hover {
-  box-shadow: var(--shadow-glow-strong);
-  filter: brightness(1.05);
+.hover-glow-subtle:hover {
+  box-shadow: var(--shadow-glow);
 }
 
-/* Responsive futurista */
+/* Responsive profesional */
 @media (max-width: 768px) {
   .container-dashboard {
     padding: 0 1rem;
@@ -439,8 +442,10 @@ body::before {
     font-size: 14px;
   }
   
-  .card-futuristic {
+  .card-professional,
+  .kpi-card {
     border-radius: 1.25rem;
+    padding: 1.5rem 1rem;
   }
 }
 
@@ -449,8 +454,9 @@ body::before {
     padding: 0 0.75rem;
   }
   
-  .btn-futuristic {
+  .btn-professional {
     padding: 0.75rem 1.5rem;
+    font-size: 0.8rem;
   }
 }
 
@@ -465,12 +471,12 @@ body::before {
   }
 }
 
-/* Utilidades de color futuristas */
+/* Utilidades de color profesionales */
 .text-primary { color: var(--color-text-primary); }
 .text-secondary { color: var(--color-text-secondary); }
 .text-tertiary { color: var(--color-text-tertiary); }
 .text-inverse { color: var(--color-text-inverse); }
-.text-accent { color: var(--color-accent); }
+.text-accent { color: var(--color-text-accent); }
 .text-success { color: var(--color-success); }
 .text-warning { color: var(--color-warning); }
 .text-error { color: var(--color-error); }
@@ -479,202 +485,92 @@ body::before {
 .bg-surface { background-color: var(--color-surface); }
 .bg-surface-elevated { background-color: var(--color-surface-elevated); }
 .bg-surface-hover { background-color: var(--color-surface-hover); }
-.bg-surface-glass { background: var(--color-surface-glass); }
+.bg-background { background-color: var(--color-background); }
 
 .border-light { border-color: var(--color-border-light); }
 .border-medium { border-color: var(--color-border-medium); }
-.border-glow { border-color: var(--color-border-glow); }
+.border-primary { border-color: var(--color-border-primary); }
 
 .shadow-card { box-shadow: var(--shadow-card); }
 .shadow-elevated { box-shadow: var(--shadow-elevated); }
 .shadow-floating { box-shadow: var(--shadow-floating); }
 .shadow-glow { box-shadow: var(--shadow-glow); }
-.shadow-glow-strong { box-shadow: var(--shadow-glow-strong); }
 
 .rounded-card { border-radius: var(--radius-card); }
 .rounded-button { border-radius: var(--radius-button); }
 .rounded-input { border-radius: var(--radius-input); }
 
-.gradient-accent { background: var(--gradient-accent); }
+.gradient-primary { background: var(--gradient-primary); }
 .gradient-success { background: var(--gradient-success); }
 .gradient-warning { background: var(--gradient-warning); }
 .gradient-error { background: var(--gradient-error); }
-.gradient-glass { background: var(--gradient-glass); }
+.gradient-surface { background: var(--gradient-surface); }
 
-/* Clases de color usando variables CSS */
-.text-primary {
-  color: var(--color-text-primary);
+/* Espaciado profesional */
+.spacing-xs { margin: 0.5rem; }
+.spacing-sm { margin: 1rem; }
+.spacing-md { margin: 1.5rem; }
+.spacing-lg { margin: 2rem; }
+.spacing-xl { margin: 3rem; }
+
+.padding-xs { padding: 0.5rem; }
+.padding-sm { padding: 1rem; }
+.padding-md { padding: 1.5rem; }
+.padding-lg { padding: 2rem; }
+.padding-xl { padding: 3rem; }
+
+/* Grid profesional */
+.grid-professional {
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
 }
 
-.text-secondary {
-  color: var(--color-text-secondary);
+.grid-kpi {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
 }
 
-.text-tertiary {
-  color: var(--color-text-tertiary);
+@media (min-width: 768px) {
+  .grid-kpi {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
-.text-inverse {
-  color: var(--color-text-inverse);
+@media (min-width: 1024px) {
+  .grid-kpi {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
-.text-success {
-  color: var(--color-success);
+@media (min-width: 1280px) {
+  .grid-kpi {
+    grid-template-columns: repeat(4, 1fr);
+  }
 }
 
-.text-warning {
-  color: var(--color-warning);
+/* Flexbox profesional */
+.flex-professional {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
-.text-error {
-  color: var(--color-error);
+.flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.text-info {
-  color: var(--color-info);
+.flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-.text-accent {
-  color: var(--color-accent);
-}
-
-/* Colores de fondo */
-.bg-primary {
-  background-color: var(--color-primary);
-}
-
-.bg-primary-light {
-  background-color: var(--color-primary-light);
-}
-
-.bg-accent {
-  background-color: var(--color-accent);
-}
-
-.bg-accent-light {
-  background-color: var(--color-accent-light);
-}
-
-.bg-surface {
-  background-color: var(--color-surface);
-}
-
-.bg-surface-elevated {
-  background-color: var(--color-surface-elevated);
-}
-
-.bg-surface-hover {
-  background-color: var(--color-surface-hover);
-}
-
-.bg-background {
-  background-color: var(--color-background);
-}
-
-.bg-success {
-  background-color: var(--color-success);
-}
-
-.bg-success-bg {
-  background-color: var(--color-success-bg);
-}
-
-.bg-warning {
-  background-color: var(--color-warning);
-}
-
-.bg-warning-bg {
-  background-color: var(--color-warning-bg);
-}
-
-.bg-error {
-  background-color: var(--color-error);
-}
-
-.bg-error-bg {
-  background-color: var(--color-error-bg);
-}
-
-.bg-info {
-  background-color: var(--color-info);
-}
-
-.bg-info-bg {
-  background-color: var(--color-info-bg);
-}
-
-/* Bordes */
-.border-light {
-  border-color: var(--color-border-light);
-}
-
-.border-medium {
-  border-color: var(--color-border-medium);
-}
-
-.border-strong {
-  border-color: var(--color-border-strong);
-}
-
-.border-success {
-  border-color: var(--color-success);
-}
-
-.border-warning {
-  border-color: var(--color-warning);
-}
-
-.border-error {
-  border-color: var(--color-error);
-}
-
-.border-accent {
-  border-color: var(--color-accent);
-}
-
-/* Sombras */
-.shadow-card {
-  box-shadow: var(--shadow-card);
-}
-
-.shadow-elevated {
-  box-shadow: var(--shadow-elevated);
-}
-
-.shadow-floating {
-  box-shadow: var(--shadow-floating);
-}
-
-.shadow-glow {
-  box-shadow: var(--shadow-glow);
-}
-
-.shadow-glow-strong {
-  box-shadow: var(--shadow-glow-strong);
-}
-
-.shadow-inner {
-  box-shadow: var(--shadow-inner);
-}
-
-/* Border radius */
-.rounded-card {
-  border-radius: var(--radius-card);
-}
-
-.rounded-button {
-  border-radius: var(--radius-button);
-}
-
-.rounded-input {
-  border-radius: var(--radius-input);
-}
-
-/* Fuentes */
-.font-inter {
-  font-family: var(--font-family-inter);
-}
-
-.font-space-grotesk {
-  font-family: var(--font-family-space-grotesk);
+.flex-column {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }

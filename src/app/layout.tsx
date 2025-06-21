@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ThemeProvider } from '@mui/material/styles';
+import { CssBaseline } from '@mui/material';
+import { theme } from '@/lib/theme';
 
 const inter = Inter({
   subsets: ["latin"],
@@ -17,7 +20,11 @@ const spaceGrotesk = Space_Grotesk({
 
 export const metadata: Metadata = {
   title: "Centro Psicológico - Dashboard CEO",
-  description: "Sistema de gestión integral para centros psicológicos",
+  description: "Sistema de gestión integral para centros psicológicos - Plataforma profesional para administración clínica",
+  keywords: "centro psicológico, dashboard, gestión clínica, administración, salud mental",
+  authors: [{ name: "Centro Psicológico" }],
+  viewport: "width=device-width, initial-scale=1",
+  themeColor: "#2463EB",
 };
 
 export default function RootLayout({
@@ -28,9 +35,12 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body className={`${inter.variable} ${spaceGrotesk.variable} font-inter antialiased`}>
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+        <ThemeProvider theme={theme}>
+          <CssBaseline />
+          <AuthProvider>
+            {children}
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
