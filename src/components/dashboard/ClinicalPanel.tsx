@@ -110,7 +110,117 @@ export default function ClinicalPanel({
     { subject: 'Crisis Recientes', value: 4, max: 25, fullMark: 25 },
   ];
 
+  const predictiveAlerts = [
+    {
+      id: 1,
+      type: 'capacity',
+      severity: 'warning',
+      title: 'Sobrecarga prevista - Miércoles tarde',
+      description: 'Capacidad proyectada del 95%. Considerar redistribución de citas.',
+      confidence: 87,
+      timeframe: '2 días'
+    },
+    {
+      id: 2,
+      type: 'risk',
+      severity: 'critical',
+      title: 'Patrón de deterioro detectado',
+      description: '3 pacientes muestran indicadores de empeoramiento en PHQ-9.',
+      confidence: 92,
+      timeframe: 'Inmediato'
+    },
+    {
+      id: 3,
+      type: 'efficiency',
+      severity: 'info',
+      title: 'Oportunidad de optimización',
+      description: 'Reagrupar sesiones matutinas podría mejorar eficiencia 12%.',
+      confidence: 78,
+      timeframe: '1 semana'
+    }
+  ];
+
   const clinicalData = data.length > 0 ? data : mockClinicalData;
+
+  // Funciones de utilidad
+  const getSeverityColor = (severity: string) => {
+    switch (severity) {
+      case 'critical': return theme.colors.error;
+      case 'warning': return theme.colors.warning;
+      case 'info': return theme.colors.info;
+      default: return theme.colors.textSecondary;
+    }
+  };
+
+  // Funciones de cálculo
+  const calculateOperationalHealth = () => {
+    const avgCapacity = clinicalData.reduce((sum, item) => 
+      sum + (item.morning + item.afternoon + item.evening) / 3, 0) / clinicalData.length;
+    return Math.round(avgCapacity * 100) / 100;
+  };
+
+  const calculatePatientSafety = () => {
+    return 98.7;
+  };
+
+  const calculateClinicalEfficiency = () => {
+    return 87.3;
+  };
+
+  const calculateWellnessIndex = () => {
+    return 89.2;
+  };
+
+  const calculateRiskPatients = () => {
+    return riskRadarData.reduce((sum, item) => sum + item.value, 0);
+  };
+
+  const formatPercentage = (value: number) => {
+    return `${value.toFixed(1)}%`;
+  };
+
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div style={{
+          backgroundColor: theme.colors.surface,
+          border: `1px solid ${theme.colors.borderLight}`,
+          borderRadius: theme.borderRadius.lg,
+          padding: theme.spacing.sm,
+          boxShadow: theme.shadows.floating,
+          backdropFilter: 'blur(10px)',
+        }}>
+          <p style={{
+            fontSize: '0.875rem',
+            fontWeight: theme.fontWeights.semibold,
+            color: theme.colors.textPrimary,
+            margin: '0 0 0.5rem 0',
+          }}>
+            {label}
+          </p>
+          {payload.map((entry: any, index: number) => (
+            <p key={index} style={{
+              fontSize: '0.75rem',
+              color: entry.color,
+              margin: '0.25rem 0',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+            }}>
+              <span style={{
+                width: '0.75rem',
+                height: '0.75rem',
+                backgroundColor: entry.color,
+                borderRadius: '50%',
+              }} />
+              {entry.name}: {entry.value}%
+            </p>
+          ))}
+        </div>
+      );
+    }
+    return null;
+  };
 
   const styles = {
     container: {
@@ -419,139 +529,6 @@ export default function ClinicalPanel({
       color: theme.colors.textTertiary,
     },
   };
-
-  // Funciones de cálculo
-  const calculateOperationalHealth = () => {
-    const avgCapacity = clinicalData.reduce((sum, item) => 
-      sum + (item.morning + item.afternoon + item.evening) / 3, 0) / clinicalData.length;
-    return Math.round(avgCapacity * 100) / 100;
-  };
-
-  const calculatePatientSafety = () => {
-    return 98.7; // Mock value
-  };
-
-  const calculateClinicalEfficiency = () => {
-    return 87.3; // Mock value
-  };
-
-  const calculateWellnessIndex = () => {
-    return 89.2; // Mock value
-  };
-
-  const calculateRiskPatients = () => {
-    return riskRadarData.reduce((sum, item) => sum + item.value, 0);
-  };
-
-  const formatPercentage = (value: number) => {
-    return `${value.toFixed(1)}%`;
-  };
-
-  // Tooltip personalizado mejorado
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div style={{
-          backgroundColor: theme.colors.surface,
-          border: `1px solid ${theme.colors.borderLight}`,
-          borderRadius: theme.borderRadius.lg,
-          padding: theme.spacing.sm,
-          boxShadow: theme.shadows.floating,
-          backdropFilter: 'blur(10px)',
-        }}>
-          <p style={{
-            fontSize: '0.875rem',
-            fontWeight: theme.fontWeights.semibold,
-            color: theme.colors.textPrimary,
-            margin: '0 0 0.5rem 0',
-          }}>
-            {label}
-          </p>
-          {payload.map((entry: any, index: number) => (
-            <p key={index} style={{
-              fontSize: '0.75rem',
-              color: entry.color,
-              margin: '0.25rem 0',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-            }}>
-              <span style={{
-                width: '0.75rem',
-                height: '0.75rem',
-                backgroundColor: entry.color,
-                borderRadius: '50%',
-              }} />
-              {entry.name}: {entry.value}%
-            </p>
-          ))}
-        </div>
-      );
-    }
-    return null;
-  };
-
-  // Variantes de animación
-  const containerVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      transition: { 
-        duration: 0.6,
-        staggerChildren: 0.1
-      }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 }
-  };
-
-  const tabVariants = {
-    inactive: { 
-      backgroundColor: 'rgba(255, 255, 255, 0.5)',
-      color: theme.colors.textSecondary,
-      scale: 1
-    },
-    active: { 
-      backgroundColor: theme.colors.primary,
-      color: theme.colors.textInverse,
-      scale: 1.02,
-      boxShadow: theme.shadows.glow
-    }
-  };
-
-  const predictiveAlerts = [
-    {
-      id: 1,
-      type: 'capacity',
-      severity: 'warning',
-      title: 'Sobrecarga prevista - Miércoles tarde',
-      description: 'Capacidad proyectada del 95%. Considerar redistribución de citas.',
-      confidence: 87,
-      timeframe: '2 días'
-    },
-    {
-      id: 2,
-      type: 'risk',
-      severity: 'critical',
-      title: 'Patrón de deterioro detectado',
-      description: '3 pacientes muestran indicadores de empeoramiento en PHQ-9.',
-      confidence: 92,
-      timeframe: 'Inmediato'
-    },
-    {
-      id: 3,
-      type: 'efficiency',
-      severity: 'info',
-      title: 'Oportunidad de optimización',
-      description: 'Reagrupar sesiones matutinas podría mejorar eficiencia 12%.',
-      confidence: 78,
-      timeframe: '1 semana'
-    }
-  ];
 
   return (
     <>

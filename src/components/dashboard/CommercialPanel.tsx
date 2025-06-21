@@ -1,52 +1,434 @@
 'use client';
 
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { ChevronDown, Target, TrendingUp, Users, DollarSign, BarChart3, Zap, Star } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Target, 
+  TrendingUp, 
+  TrendingDown, 
+  Users,
+  DollarSign,
+  BarChart3,
+  Filter,
+  Download,
+  RefreshCw,
+  AlertCircle,
+  CheckCircle,
+  Clock,
+  Zap,
+  Star,
+  ArrowRight,
+  Eye,
+  Settings
+} from 'lucide-react';
+import { LineChart, Line, AreaChart, Area, BarChart, Bar, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { useStyles } from '@/lib/useStyles';
+import Card from '@/components/ui/Card';
+import Button from '@/components/ui/Button';
 
-// Datos mock mejorados para desarrollo
-const mockCommercialData = {
-  conversionByChannel: [
-    { channel: 'Google Ads', leads: 145, conversions: 32, rate: 22.1, color: 'var(--color-accent)', trend: 'up' },
-    { channel: 'Facebook', leads: 89, conversions: 18, rate: 20.2, color: 'var(--color-success)', trend: 'up' },
-    { channel: 'Referidos', leads: 67, conversions: 28, rate: 41.8, color: 'var(--color-warning)', trend: 'up' },
-    { channel: 'Orgánico', leads: 234, conversions: 45, rate: 19.2, color: 'var(--color-info)', trend: 'stable' },
-    { channel: 'Email', leads: 56, conversions: 12, rate: 21.4, color: 'var(--color-error)', trend: 'down' },
-  ],
-  campaignEffectiveness: [
+interface CommercialData {
+  month: string;
+  cac: number;
+  ltv: number;
+  leads: number;
+  conversions: number;
+  roi: number;
+}
+
+interface CommercialPanelProps {
+  data?: CommercialData[];
+  loading?: boolean;
+  onRefresh?: () => void;
+  onExport?: () => void;
+}
+
+export default function CommercialPanel({ 
+  data = [], 
+  loading = false, 
+  onRefresh, 
+  onExport 
+}: CommercialPanelProps) {
+  const { theme } = useStyles();
+  const [selectedPeriod, setSelectedPeriod] = useState('month');
+  const [selectedMetric, setSelectedMetric] = useState('cac');
+  const [selectedCampaign, setSelectedCampaign] = useState<string | null>(null);
+
+  // Mock data mejorado
+  const mockCommercialData: CommercialData[] = [
+    { month: 'Jul', cac: 58.2, ltv: 185.4, leads: 145, conversions: 32, roi: 2.8 },
+    { month: 'Ago', cac: 62.1, ltv: 192.1, leads: 156, conversions: 35, roi: 3.1 },
+    { month: 'Sep', cac: 59.8, ltv: 188.7, leads: 134, conversions: 28, roi: 2.9 },
+    { month: 'Oct', cac: 61.5, ltv: 195.2, leads: 167, conversions: 38, roi: 3.2 },
+    { month: 'Nov', cac: 58.9, ltv: 189.8, leads: 178, conversions: 42, roi: 3.4 },
+    { month: 'Dic', cac: 60.3, ltv: 192.4, leads: 189, conversions: 45, roi: 3.2 },
+  ];
+
+  const channelData = [
+    { channel: 'Google Ads', leads: 145, conversions: 32, rate: 22.1, color: theme.colors.primary, trend: 'up', spent: 3200 },
+    { channel: 'Facebook', leads: 89, conversions: 18, rate: 20.2, color: theme.colors.info, trend: 'up', spent: 1800 },
+    { channel: 'Referidos', leads: 67, conversions: 28, rate: 41.8, color: theme.colors.success, trend: 'up', spent: 0 },
+    { channel: 'Orgánico', leads: 234, conversions: 45, rate: 19.2, color: theme.colors.warning, trend: 'stable', spent: 0 },
+    { channel: 'Email', leads: 56, conversions: 12, rate: 21.4, color: theme.colors.error, trend: 'down', spent: 450 },
+  ];
+
+  const campaignData = [
     { name: 'Ansiedad Jóvenes', spent: 2500, leads: 45, cac: 55.6, status: 'active', roi: 2.8, performance: 'excellent' },
     { name: 'Terapia Parejas', spent: 1800, leads: 28, cac: 64.3, status: 'active', roi: 3.2, performance: 'excellent' },
     { name: 'Depresión Adultos', spent: 3200, leads: 52, cac: 61.5, status: 'paused', roi: 2.1, performance: 'good' },
     { name: 'Mindfulness', spent: 1200, leads: 18, cac: 66.7, status: 'active', roi: 3.5, performance: 'excellent' },
-  ],
-  cacHistory: [
-    { month: 'Jul', cac: 58.2 },
-    { month: 'Ago', cac: 62.1 },
-    { month: 'Sep', cac: 59.8 },
-    { month: 'Oct', cac: 61.5 },
-    { month: 'Nov', cac: 58.9 },
-    { month: 'Dic', cac: 60.3 },
-  ],
-  summary: {
-    avgCAC: 60.13,
-    avgLTV: 192.40,
-    ratio: 3.2,
-    totalLeads: 591,
-    conversionRate: 22.8
-  }
-};
+  ];
 
-export default function CommercialPanel() {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [selectedCampaign, setSelectedCampaign] = useState<string | null>(null);
+  const commercialData = data.length > 0 ? data : mockCommercialData;
 
+  const styles = {
+    container: {
+      width: '100%',
+      maxWidth: '1200px',
+      margin: '0 auto',
+      padding: theme.spacing.md,
+    },
+    
+    header: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: theme.spacing.lg,
+      flexWrap: 'wrap' as const,
+      gap: theme.spacing.md,
+    },
+    
+    headerLeft: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: theme.spacing.md,
+    },
+    
+    headerIcon: {
+      width: '3rem',
+      height: '3rem',
+      background: 'linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%)',
+      borderRadius: theme.borderRadius.lg,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      boxShadow: '0 4px 12px rgba(139, 92, 246, 0.3)',
+    },
+    
+    headerContent: {
+      display: 'flex',
+      flexDirection: 'column' as const,
+      gap: '0.25rem',
+    },
+    
+    title: {
+      fontSize: '1.5rem',
+      fontWeight: theme.fontWeights.bold,
+      color: theme.colors.textPrimary,
+      fontFamily: theme.fonts.heading,
+      margin: 0,
+    },
+    
+    subtitle: {
+      fontSize: '0.875rem',
+      color: theme.colors.textSecondary,
+      fontWeight: theme.fontWeights.medium,
+      margin: 0,
+    },
+    
+    headerActions: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: theme.spacing.sm,
+      flexWrap: 'wrap' as const,
+    },
+    
+    filterContainer: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: theme.spacing.sm,
+      padding: '0.5rem',
+      backgroundColor: theme.colors.surfaceElevated,
+      borderRadius: theme.borderRadius.lg,
+      border: `1px solid ${theme.colors.borderLight}`,
+    },
+    
+    filterButton: {
+      padding: '0.5rem 1rem',
+      borderRadius: theme.borderRadius.md,
+      border: 'none',
+      backgroundColor: 'transparent',
+      color: theme.colors.textSecondary,
+      fontSize: '0.875rem',
+      fontWeight: theme.fontWeights.medium,
+      cursor: 'pointer',
+      transition: theme.animations.transition,
+      outline: 'none',
+    },
+    
+    filterButtonActive: {
+      backgroundColor: theme.colors.surface,
+      color: theme.colors.primary,
+      boxShadow: theme.shadows.card,
+    },
+    
+    metricsGrid: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+      gap: theme.spacing.md,
+      marginBottom: theme.spacing.lg,
+    },
+    
+    metricCard: {
+      padding: theme.spacing.md,
+      display: 'flex',
+      flexDirection: 'column' as const,
+      gap: '0.75rem',
+    },
+    
+    metricHeader: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    
+    metricIcon: {
+      padding: '0.5rem',
+      borderRadius: theme.borderRadius.md,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    
+    metricValue: {
+      fontSize: '2rem',
+      fontWeight: theme.fontWeights.bold,
+      color: theme.colors.textPrimary,
+      fontFamily: theme.fonts.heading,
+      margin: 0,
+    },
+    
+    metricLabel: {
+      fontSize: '0.875rem',
+      color: theme.colors.textSecondary,
+      fontWeight: theme.fontWeights.medium,
+      margin: 0,
+    },
+    
+    metricChange: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '0.25rem',
+      fontSize: '0.875rem',
+      fontWeight: theme.fontWeights.semibold,
+    },
+    
+    chartContainer: {
+      marginBottom: theme.spacing.lg,
+    },
+    
+    chartHeader: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: theme.spacing.md,
+      padding: `0 ${theme.spacing.md}`,
+    },
+    
+    chartTitle: {
+      fontSize: '1.125rem',
+      fontWeight: theme.fontWeights.semibold,
+      color: theme.colors.textPrimary,
+      fontFamily: theme.fonts.heading,
+      margin: 0,
+    },
+    
+    chartControls: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: theme.spacing.sm,
+    },
+    
+    chartContent: {
+      height: '400px',
+      padding: theme.spacing.md,
+    },
+    
+    loadingContainer: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      height: '400px',
+      flexDirection: 'column' as const,
+      gap: theme.spacing.md,
+    },
+    
+    loadingSpinner: {
+      width: '2rem',
+      height: '2rem',
+      border: `3px solid ${theme.colors.borderLight}`,
+      borderTop: `3px solid ${theme.colors.primary}`,
+      borderRadius: '50%',
+      animation: 'spin 1s linear infinite',
+    },
+    
+    loadingText: {
+      fontSize: '0.875rem',
+      color: theme.colors.textSecondary,
+      fontWeight: theme.fontWeights.medium,
+    },
+    
+    summaryGrid: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+      gap: theme.spacing.md,
+    },
+    
+    summaryCard: {
+      padding: theme.spacing.md,
+      display: 'flex',
+      flexDirection: 'column' as const,
+      gap: '0.5rem',
+    },
+    
+    summaryHeader: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: theme.spacing.sm,
+    },
+    
+    summaryTitle: {
+      fontSize: '1rem',
+      fontWeight: theme.fontWeights.semibold,
+      color: theme.colors.textPrimary,
+      fontFamily: theme.fonts.heading,
+      margin: 0,
+    },
+    
+    summaryContent: {
+      display: 'flex',
+      flexDirection: 'column' as const,
+      gap: '0.5rem',
+    },
+    
+    summaryItem: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: '0.5rem 0',
+      borderBottom: `1px solid ${theme.colors.borderLight}`,
+    },
+    
+    summaryItemLabel: {
+      fontSize: '0.875rem',
+      color: theme.colors.textSecondary,
+      fontWeight: theme.fontWeights.medium,
+    },
+    
+    summaryItemValue: {
+      fontSize: '0.875rem',
+      fontWeight: theme.fontWeights.semibold,
+      color: theme.colors.textPrimary,
+    },
+
+    channelGrid: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+      gap: theme.spacing.md,
+      marginBottom: theme.spacing.lg,
+    },
+
+    channelCard: {
+      padding: theme.spacing.md,
+      display: 'flex',
+      flexDirection: 'column' as const,
+      gap: '0.75rem',
+      position: 'relative' as const,
+      overflow: 'hidden',
+    },
+
+    channelHeader: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+
+    channelBadge: {
+      padding: '0.25rem 0.5rem',
+      borderRadius: theme.borderRadius.sm,
+      fontSize: '0.75rem',
+      fontWeight: theme.fontWeights.semibold,
+    },
+
+    channelContent: {
+      display: 'flex',
+      flexDirection: 'column' as const,
+      gap: '0.5rem',
+    },
+
+    channelTitle: {
+      fontSize: '0.875rem',
+      fontWeight: theme.fontWeights.semibold,
+      color: theme.colors.textPrimary,
+      margin: 0,
+    },
+
+    channelStats: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(3, 1fr)',
+      gap: '0.5rem',
+      fontSize: '0.75rem',
+    },
+
+    channelStat: {
+      textAlign: 'center' as const,
+      padding: '0.5rem',
+      backgroundColor: theme.colors.surfaceElevated,
+      borderRadius: theme.borderRadius.sm,
+    },
+
+    campaignGrid: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+      gap: theme.spacing.md,
+      marginBottom: theme.spacing.lg,
+    },
+
+    campaignCard: {
+      padding: theme.spacing.md,
+      display: 'flex',
+      flexDirection: 'column' as const,
+      gap: '0.75rem',
+      cursor: 'pointer',
+      transition: theme.animations.transition,
+    },
+
+    campaignHeader: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+
+    campaignStats: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(4, 1fr)',
+      gap: '0.5rem',
+    },
+
+    campaignStat: {
+      textAlign: 'center' as const,
+      padding: '0.75rem 0.5rem',
+      backgroundColor: theme.colors.surfaceElevated,
+      borderRadius: theme.borderRadius.md,
+    },
+  };
+
+  // Funciones de utilidad
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active': return 'text-success bg-success/10 border-success/30';
-      case 'paused': return 'text-warning bg-warning/10 border-warning/30';
-      case 'stopped': return 'text-error bg-error/10 border-error/30';
-      default: return 'text-secondary bg-surface-elevated border-border-light';
+      case 'active': return theme.colors.success;
+      case 'paused': return theme.colors.warning;
+      case 'stopped': return theme.colors.error;
+      default: return theme.colors.textSecondary;
     }
   };
 
@@ -61,330 +443,602 @@ export default function CommercialPanel() {
 
   const getPerformanceIcon = (performance: string) => {
     switch (performance) {
-      case 'excellent': return <Star className="w-4 h-4 text-success" />;
-      case 'good': return <TrendingUp className="w-4 h-4 text-warning" />;
-      default: return <BarChart3 className="w-4 h-4 text-secondary" />;
+      case 'excellent': return <Star size={16} color={theme.colors.success} />;
+      case 'good': return <TrendingUp size={16} color={theme.colors.warning} />;
+      default: return <BarChart3 size={16} color={theme.colors.textSecondary} />;
     }
   };
 
   const getTrendIcon = (trend: string) => {
     switch (trend) {
-      case 'up': return <TrendingUp className="w-3 h-3 text-success" />;
-      case 'down': return <TrendingUp className="w-3 h-3 text-error rotate-180" />;
-      default: return <div className="w-3 h-3 bg-secondary rounded-full" />;
+      case 'up': return <TrendingUp size={14} color={theme.colors.success} />;
+      case 'down': return <TrendingDown size={14} color={theme.colors.error} />;
+      default: return <div style={{ width: '14px', height: '14px', backgroundColor: theme.colors.textSecondary, borderRadius: '50%' }} />;
     }
+  };
+
+  // Funciones de cálculo
+  const calculateTotalCAC = () => {
+    return commercialData.reduce((sum, item) => sum + item.cac, 0) / commercialData.length;
+  };
+
+  const calculateTotalLTV = () => {
+    return commercialData.reduce((sum, item) => sum + item.ltv, 0) / commercialData.length;
+  };
+
+  const calculateLTVCACRatio = () => {
+    const avgLTV = calculateTotalLTV();
+    const avgCAC = calculateTotalCAC();
+    return avgLTV / avgCAC;
+  };
+
+  const calculateTotalLeads = () => {
+    return channelData.reduce((sum, item) => sum + item.leads, 0);
+  };
+
+  const calculateConversionRate = () => {
+    const totalLeads = calculateTotalLeads();
+    const totalConversions = channelData.reduce((sum, item) => sum + item.conversions, 0);
+    return (totalConversions / totalLeads) * 100;
+  };
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('es-ES', {
+      style: 'currency',
+      currency: 'EUR',
+      minimumFractionDigits: 2,
+    }).format(value);
   };
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="bg-surface-glass backdrop-blur-xl p-5 rounded-xl shadow-floating border border-glow"
-        >
-          <p className="font-bold text-primary mb-3 font-space-grotesk">{label}</p>
-          <p className="text-sm">
-            <span className="text-secondary">CAC: </span>
-            <span className="font-bold">${payload[0].value}</span>
+        <div style={{
+          backgroundColor: theme.colors.surface,
+          border: `1px solid ${theme.colors.borderLight}`,
+          borderRadius: theme.borderRadius.lg,
+          padding: theme.spacing.sm,
+          boxShadow: theme.shadows.floating,
+          backdropFilter: 'blur(10px)',
+        }}>
+          <p style={{
+            fontSize: '0.875rem',
+            fontWeight: theme.fontWeights.semibold,
+            color: theme.colors.textPrimary,
+            margin: '0 0 0.5rem 0',
+          }}>
+            {label}
           </p>
-        </motion.div>
+          {payload.map((entry: any, index: number) => (
+            <p key={index} style={{
+              fontSize: '0.75rem',
+              color: entry.color,
+              margin: '0.25rem 0',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+            }}>
+              <span style={{
+                width: '0.75rem',
+                height: '0.75rem',
+                backgroundColor: entry.color,
+                borderRadius: '50%',
+              }} />
+              {entry.name}: {entry.name === 'CAC' ? formatCurrency(entry.value) : entry.value}
+            </p>
+          ))}
+        </div>
       );
     }
     return null;
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.2, duration: 0.6 }}
-      className="card-futuristic hover-lift"
-    >
-      {/* Header futurista */}
-      <div 
-        className="flex items-center justify-between p-8 cursor-pointer"
-        onClick={() => setIsExpanded(!isExpanded)}
+    <>
+      <style jsx>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
+      
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        style={styles.container}
       >
-        <div className="flex items-center space-x-4">
-          <motion.div 
-            className="w-14 h-14 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-glow relative overflow-hidden"
-            whileHover={{ scale: 1.1, rotate: 5 }}
-            transition={{ duration: 0.3 }}
-          >
-            <Target className="w-7 h-7 text-inverse" />
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer-futuristic" />
-          </motion.div>
-          <div>
-            <h3 className="font-bold text-primary text-xl font-space-grotesk">Pipeline Comercial & Marketing</h3>
-            <p className="text-sm text-secondary font-medium">Análisis inteligente de conversión y adquisición</p>
+        {/* Header */}
+        <div style={styles.header}>
+          <div style={styles.headerLeft}>
+            <div style={styles.headerIcon}>
+              <Target size={24} color={theme.colors.textInverse} />
+            </div>
+            <div style={styles.headerContent}>
+              <h2 style={styles.title}>Pipeline Comercial & Marketing</h2>
+              <p style={styles.subtitle}>Análisis inteligente de conversión y adquisición</p>
+            </div>
+          </div>
+          
+          <div style={styles.headerActions}>
+            <div style={styles.filterContainer}>
+              {['week', 'month', 'quarter', 'year'].map((period) => (
+                <button
+                  key={period}
+                  onClick={() => setSelectedPeriod(period)}
+                  style={{
+                    ...styles.filterButton,
+                    ...(selectedPeriod === period ? styles.filterButtonActive : {})
+                  }}
+                >
+                  {period === 'week' ? 'Semana' : 
+                   period === 'month' ? 'Mes' :
+                   period === 'quarter' ? 'Trimestre' : 'Año'}
+                </button>
+              ))}
+            </div>
+            
+            <Button
+              variant="secondary"
+              size="sm"
+              icon={RefreshCw}
+              onClick={onRefresh}
+              loading={loading}
+            >
+              Actualizar
+            </Button>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              icon={Download}
+              onClick={onExport}
+            >
+              Exportar
+            </Button>
           </div>
         </div>
-        
-        <motion.div
-          animate={{ rotate: isExpanded ? 180 : 0 }}
-          transition={{ duration: 0.4, type: "spring", stiffness: 200 }}
-          className="p-3 rounded-xl hover:bg-surface-hover border border-light hover:border-glow transition-all duration-300"
-        >
-          <ChevronDown className="w-6 h-6 text-secondary" />
-        </motion.div>
-      </div>
 
-      {/* Content expandible */}
-      <motion.div
-        initial={false}
-        animate={{ 
-          height: isExpanded ? 'auto' : 0,
-          opacity: isExpanded ? 1 : 0 
-        }}
-        transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
-        className="overflow-hidden"
-      >
-        <div className="px-8 pb-8 space-y-8 border-t border-light/50">
-          {/* Métricas clave mejoradas */}
-          <motion.div 
-            className="pt-8"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: isExpanded ? 1 : 0, y: isExpanded ? 0 : 20 }}
-            transition={{ delay: 0.2 }}
-          >
-            <div className="grid grid-cols-5 gap-4 mb-8">
-              <div className="bg-surface-glass backdrop-blur-xl rounded-xl p-4 border border-light text-center hover-glow">
-                <div className="text-lg font-bold text-accent font-space-grotesk">
-                  ${mockCommercialData.summary.avgCAC}
+        {/* Métricas Principales */}
+        <div style={styles.metricsGrid}>
+          <Card variant="default" hover>
+            <div style={styles.metricCard}>
+              <div style={styles.metricHeader}>
+                <div style={{
+                  ...styles.metricIcon,
+                  backgroundColor: `${theme.colors.primary}20`,
+                }}>
+                  <DollarSign size={20} color={theme.colors.primary} />
                 </div>
-                <div className="text-xs text-secondary font-medium">CAC Promedio</div>
-              </div>
-              <div className="bg-surface-glass backdrop-blur-xl rounded-xl p-4 border border-light text-center hover-glow">
-                <div className="text-lg font-bold text-success font-space-grotesk">
-                  ${mockCommercialData.summary.avgLTV}
+                <div style={{
+                  ...styles.metricChange,
+                  color: theme.colors.success,
+                }}>
+                  <TrendingUp size={16} />
+                  +5.2%
                 </div>
-                <div className="text-xs text-secondary font-medium">LTV Promedio</div>
               </div>
-              <div className="bg-surface-glass backdrop-blur-xl rounded-xl p-4 border border-light text-center hover-glow">
-                <div className="text-lg font-bold text-warning font-space-grotesk">
-                  {mockCommercialData.summary.ratio}x
-                </div>
-                <div className="text-xs text-secondary font-medium">Ratio LTV/CAC</div>
-              </div>
-              <div className="bg-surface-glass backdrop-blur-xl rounded-xl p-4 border border-light text-center hover-glow">
-                <div className="text-lg font-bold text-primary font-space-grotesk">
-                  {mockCommercialData.summary.totalLeads}
-                </div>
-                <div className="text-xs text-secondary font-medium">Total Leads</div>
-              </div>
-              <div className="bg-surface-glass backdrop-blur-xl rounded-xl p-4 border border-light text-center hover-glow">
-                <div className="text-lg font-bold text-info font-space-grotesk">
-                  {mockCommercialData.summary.conversionRate}%
-                </div>
-                <div className="text-xs text-secondary font-medium">Conversión</div>
-              </div>
+              <h3 style={styles.metricValue}>
+                {formatCurrency(calculateTotalCAC())}
+              </h3>
+              <p style={styles.metricLabel}>CAC Promedio</p>
             </div>
-          </motion.div>
+          </Card>
 
-          {/* Conversión por canal mejorada */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: isExpanded ? 1 : 0, y: isExpanded ? 0 : 20 }}
-            transition={{ delay: 0.3 }}
-          >
-            <div className="flex items-center space-x-3 mb-6">
-              <div className="p-2 bg-accent/10 rounded-lg border border-accent/20">
-                <BarChart3 className="w-4 h-4 text-accent" />
+          <Card variant="default" hover>
+            <div style={styles.metricCard}>
+              <div style={styles.metricHeader}>
+                <div style={{
+                  ...styles.metricIcon,
+                  backgroundColor: `${theme.colors.success}20`,
+                }}>
+                  <TrendingUp size={20} color={theme.colors.success} />
+                </div>
+                <div style={{
+                  ...styles.metricChange,
+                  color: theme.colors.success,
+                }}>
+                  <TrendingUp size={16} />
+                  +8.1%
+                </div>
               </div>
-              <h4 className="font-bold text-primary font-space-grotesk">Rendimiento por Canal</h4>
+              <h3 style={styles.metricValue}>
+                {formatCurrency(calculateTotalLTV())}
+              </h3>
+              <p style={styles.metricLabel}>LTV Promedio</p>
             </div>
-            <div className="space-y-3">
-              {mockCommercialData.conversionByChannel.map((channel, index) => (
-                <motion.div 
-                  key={channel.channel} 
-                  className="flex items-center justify-between p-5 bg-surface-glass backdrop-blur-xl rounded-xl border border-light hover:border-glow hover:shadow-elevated transition-all duration-300"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.4 + index * 0.1 }}
-                  whileHover={{ scale: 1.01, y: -1 }}
-                >
-                  <div className="flex items-center space-x-4">
+          </Card>
+
+          <Card variant="default" hover>
+            <div style={styles.metricCard}>
+              <div style={styles.metricHeader}>
+                <div style={{
+                  ...styles.metricIcon,
+                  backgroundColor: `${theme.colors.warning}20`,
+                }}>
+                  <BarChart3 size={20} color={theme.colors.warning} />
+                </div>
+                <div style={{
+                  ...styles.metricChange,
+                  color: theme.colors.success,
+                }}>
+                  <TrendingUp size={16} />
+                  +12.3%
+                </div>
+              </div>
+              <h3 style={styles.metricValue}>
+                {calculateLTVCACRatio().toFixed(1)}x
+              </h3>
+              <p style={styles.metricLabel}>Ratio LTV/CAC</p>
+            </div>
+          </Card>
+
+          <Card variant="default" hover>
+            <div style={styles.metricCard}>
+              <div style={styles.metricHeader}>
+                <div style={{
+                  ...styles.metricIcon,
+                  backgroundColor: `${theme.colors.info}20`,
+                }}>
+                  <Users size={20} color={theme.colors.info} />
+                </div>
+                <div style={{
+                  ...styles.metricChange,
+                  color: theme.colors.success,
+                }}>
+                  <TrendingUp size={16} />
+                  +18.7%
+                </div>
+              </div>
+              <h3 style={styles.metricValue}>
+                {calculateTotalLeads()}
+              </h3>
+              <p style={styles.metricLabel}>Total Leads</p>
+            </div>
+          </Card>
+
+          <Card variant="default" hover>
+            <div style={styles.metricCard}>
+              <div style={styles.metricHeader}>
+                <div style={{
+                  ...styles.metricIcon,
+                  backgroundColor: `${theme.colors.error}20`,
+                }}>
+                  <Target size={20} color={theme.colors.error} />
+                </div>
+                <div style={{
+                  ...styles.metricChange,
+                  color: theme.colors.success,
+                }}>
+                  <TrendingUp size={16} />
+                  +3.4%
+                </div>
+              </div>
+              <h3 style={styles.metricValue}>
+                {calculateConversionRate().toFixed(1)}%
+              </h3>
+              <p style={styles.metricLabel}>Conversión</p>
+            </div>
+          </Card>
+        </div>
+
+        {/* Rendimiento por Canal */}
+        <div style={styles.channelGrid}>
+          {channelData.map((channel, index) => (
+            <Card key={channel.channel} variant="default" hover>
+              <div style={styles.channelCard}>
+                <div style={styles.channelHeader}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <div 
-                      className="w-4 h-4 rounded-full shadow-glow"
-                      style={{ backgroundColor: channel.color }}
+                      style={{
+                        width: '12px',
+                        height: '12px',
+                        borderRadius: '50%',
+                        backgroundColor: channel.color
+                      }}
                     />
-                    <div>
-                      <span className="font-bold text-primary text-sm font-space-grotesk">{channel.channel}</span>
-                      <div className="flex items-center space-x-2 mt-1">
-                        {getTrendIcon(channel.trend)}
-                        <span className="text-xs text-secondary">Tendencia</span>
-                      </div>
-                    </div>
+                    <h4 style={styles.channelTitle}>{channel.channel}</h4>
                   </div>
-                  <div className="flex items-center space-x-6 text-sm">
-                    <div className="text-center">
-                      <div className="font-bold text-primary">{channel.leads}</div>
-                      <div className="text-xs text-secondary">Leads</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="font-bold text-success">{channel.conversions}</div>
-                      <div className="text-xs text-secondary">Conversiones</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="font-bold text-accent text-lg">{channel.rate}%</div>
-                      <div className="text-xs text-secondary">Tasa</div>
-                    </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                    {getTrendIcon(channel.trend)}
+                    <span style={{ fontSize: '0.75rem', color: theme.colors.textTertiary }}>
+                      Tendencia
+                    </span>
                   </div>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-
-          {/* Campañas mejoradas */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: isExpanded ? 1 : 0, y: isExpanded ? 0 : 20 }}
-            transition={{ delay: 0.4 }}
-          >
-            <div className="flex items-center space-x-3 mb-6">
-              <div className="p-2 bg-accent/10 rounded-lg border border-accent/20">
-                <Users className="w-4 h-4 text-accent" />
+                </div>
+                
+                <div style={styles.channelStats}>
+                  <div style={styles.channelStat}>
+                    <div style={{ fontWeight: theme.fontWeights.bold, color: theme.colors.textPrimary }}>
+                      {channel.leads}
+                    </div>
+                    <div style={{ color: theme.colors.textSecondary }}>Leads</div>
+                  </div>
+                  <div style={styles.channelStat}>
+                    <div style={{ fontWeight: theme.fontWeights.bold, color: theme.colors.success }}>
+                      {channel.conversions}
+                    </div>
+                    <div style={{ color: theme.colors.textSecondary }}>Conversiones</div>
+                  </div>
+                  <div style={styles.channelStat}>
+                    <div style={{ fontWeight: theme.fontWeights.bold, color: channel.color, fontSize: '1rem' }}>
+                      {channel.rate}%
+                    </div>
+                    <div style={{ color: theme.colors.textSecondary }}>Tasa</div>
+                  </div>
+                </div>
               </div>
-              <h4 className="font-bold text-primary font-space-grotesk">Campañas Activas</h4>
-            </div>
-            <div className="grid grid-cols-1 gap-4">
-              {mockCommercialData.campaignEffectiveness.map((campaign, index) => (
-                <motion.div
-                  key={campaign.name}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.5 + index * 0.1 }}
-                  whileHover={{ scale: 1.01, y: -2 }}
-                  className={`
-                    p-6 rounded-xl border cursor-pointer transition-all duration-400 backdrop-blur-xl
-                    ${selectedCampaign === campaign.name 
-                      ? 'border-accent bg-accent/10 shadow-glow' 
-                      : 'border-light hover:border-glow bg-surface-glass hover:shadow-elevated'
-                    }
-                  `}
-                  onClick={() => setSelectedCampaign(
-                    selectedCampaign === campaign.name ? null : campaign.name
-                  )}
-                >
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center space-x-3">
-                      <h5 className="font-bold text-primary text-sm font-space-grotesk">{campaign.name}</h5>
-                      {getPerformanceIcon(campaign.performance)}
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold border ${getStatusColor(campaign.status)}`}>
-                        {getStatusText(campaign.status)}
-                      </span>
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-4 gap-4 text-xs">
-                    <div className="text-center bg-surface-elevated rounded-lg p-3">
-                      <p className="text-secondary mb-1">Invertido</p>
-                      <p className="font-bold text-primary text-lg">${campaign.spent}</p>
-                    </div>
-                    <div className="text-center bg-surface-elevated rounded-lg p-3">
-                      <p className="text-secondary mb-1">Leads</p>
-                      <p className="font-bold text-primary text-lg">{campaign.leads}</p>
-                    </div>
-                    <div className="text-center bg-surface-elevated rounded-lg p-3">
-                      <p className="text-secondary mb-1">CAC</p>
-                      <p className="font-bold text-primary text-lg">${campaign.cac}</p>
-                    </div>
-                    <div className="text-center bg-surface-elevated rounded-lg p-3">
-                      <p className="text-secondary mb-1">ROI</p>
-                      <p className={`font-bold text-lg ${campaign.roi >= 3 ? 'text-success' : campaign.roi >= 2 ? 'text-warning' : 'text-error'}`}>
-                        {campaign.roi}x
-                      </p>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
+            </Card>
+          ))}
+        </div>
 
-          {/* CAC histórico mejorado */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: isExpanded ? 1 : 0, y: isExpanded ? 0 : 20 }}
-            transition={{ delay: 0.5 }}
-          >
-            <div className="flex items-center space-x-3 mb-6">
-              <div className="p-2 bg-accent/10 rounded-lg border border-accent/20">
-                <DollarSign className="w-4 h-4 text-accent" />
+        {/* Campañas Activas */}
+        <div style={styles.campaignGrid}>
+          {campaignData.map((campaign, index) => (
+            <Card 
+              key={campaign.name} 
+              variant="default" 
+              hover
+              style={{
+                border: selectedCampaign === campaign.name 
+                  ? `2px solid ${theme.colors.primary}` 
+                  : undefined
+              }}
+            >
+              <div 
+                style={styles.campaignCard}
+                onClick={() => setSelectedCampaign(
+                  selectedCampaign === campaign.name ? null : campaign.name
+                )}
+              >
+                <div style={styles.campaignHeader}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <h4 style={{ ...styles.channelTitle, fontSize: '0.875rem' }}>
+                      {campaign.name}
+                    </h4>
+                    {getPerformanceIcon(campaign.performance)}
+                  </div>
+                  <div style={{
+                    padding: '0.25rem 0.5rem',
+                    borderRadius: theme.borderRadius.sm,
+                    fontSize: '0.75rem',
+                    fontWeight: theme.fontWeights.semibold,
+                    backgroundColor: `${getStatusColor(campaign.status)}20`,
+                    color: getStatusColor(campaign.status),
+                  }}>
+                    {getStatusText(campaign.status)}
+                  </div>
+                </div>
+                
+                <div style={styles.campaignStats}>
+                  <div style={styles.campaignStat}>
+                    <div style={{ color: theme.colors.textSecondary, fontSize: '0.75rem', marginBottom: '0.25rem' }}>
+                      Invertido
+                    </div>
+                    <div style={{ fontWeight: theme.fontWeights.bold, color: theme.colors.textPrimary }}>
+                      {formatCurrency(campaign.spent)}
+                    </div>
+                  </div>
+                  <div style={styles.campaignStat}>
+                    <div style={{ color: theme.colors.textSecondary, fontSize: '0.75rem', marginBottom: '0.25rem' }}>
+                      Leads
+                    </div>
+                    <div style={{ fontWeight: theme.fontWeights.bold, color: theme.colors.textPrimary }}>
+                      {campaign.leads}
+                    </div>
+                  </div>
+                  <div style={styles.campaignStat}>
+                    <div style={{ color: theme.colors.textSecondary, fontSize: '0.75rem', marginBottom: '0.25rem' }}>
+                      CAC
+                    </div>
+                    <div style={{ fontWeight: theme.fontWeights.bold, color: theme.colors.textPrimary }}>
+                      {formatCurrency(campaign.cac)}
+                    </div>
+                  </div>
+                  <div style={styles.campaignStat}>
+                    <div style={{ color: theme.colors.textSecondary, fontSize: '0.75rem', marginBottom: '0.25rem' }}>
+                      ROI
+                    </div>
+                    <div style={{ 
+                      fontWeight: theme.fontWeights.bold, 
+                      color: campaign.roi >= 3 ? theme.colors.success : 
+                             campaign.roi >= 2 ? theme.colors.warning : theme.colors.error
+                    }}>
+                      {campaign.roi}x
+                    </div>
+                  </div>
+                </div>
               </div>
-              <h4 className="font-bold text-primary font-space-grotesk">Evolución CAC - 6 meses</h4>
+            </Card>
+          ))}
+        </div>
+
+        {/* Gráfico de Evolución CAC */}
+        <Card variant="default" style={styles.chartContainer}>
+          <div style={styles.chartHeader}>
+            <h3 style={styles.chartTitle}>Evolución CAC - 6 meses</h3>
+            <div style={styles.chartControls}>
+              <div style={styles.filterContainer}>
+                {['cac', 'ltv', 'roi'].map((metric) => (
+                  <button
+                    key={metric}
+                    onClick={() => setSelectedMetric(metric)}
+                    style={{
+                      ...styles.filterButton,
+                      ...(selectedMetric === metric ? styles.filterButtonActive : {})
+                    }}
+                  >
+                    {metric === 'cac' ? 'CAC' : 
+                     metric === 'ltv' ? 'LTV' : 'ROI'}
+                  </button>
+                ))}
+              </div>
             </div>
-            <div className="h-48 bg-surface-glass backdrop-blur-xl rounded-xl border border-light p-4">
+          </div>
+          
+          <div style={styles.chartContent}>
+            {loading ? (
+              <div style={styles.loadingContainer}>
+                <div style={styles.loadingSpinner} />
+                <span style={styles.loadingText}>Cargando datos comerciales...</span>
+              </div>
+            ) : (
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={mockCommercialData.cacHistory}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-light)" opacity={0.3} />
+                <LineChart data={commercialData}>
+                  <defs>
+                    <linearGradient id="colorCAC" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={theme.colors.primary} stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor={theme.colors.primary} stopOpacity={0}/>
+                    </linearGradient>
+                    <linearGradient id="colorLTV" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={theme.colors.success} stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor={theme.colors.success} stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke={theme.colors.borderLight} />
                   <XAxis 
                     dataKey="month" 
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fontSize: 12, fill: 'var(--color-text-secondary)', fontWeight: 500 }}
+                    stroke={theme.colors.textSecondary}
+                    fontSize={12}
                   />
                   <YAxis 
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fontSize: 12, fill: 'var(--color-text-secondary)', fontWeight: 500 }}
-                    tickFormatter={(value) => `$${value}`}
+                    stroke={theme.colors.textSecondary}
+                    fontSize={12}
+                    tickFormatter={(value) => selectedMetric === 'roi' ? `${value}x` : `€${value}`}
                   />
                   <Tooltip content={<CustomTooltip />} />
-                  <Line
-                    type="monotone"
-                    dataKey="cac"
-                    stroke="var(--color-accent)"
-                    strokeWidth={3}
-                    dot={{ fill: 'var(--color-accent)', strokeWidth: 0, r: 4 }}
-                    activeDot={{ r: 6, fill: 'var(--color-accent)', stroke: 'white', strokeWidth: 2 }}
-                    filter="drop-shadow(0 2px 8px rgba(0,212,255,0.3))"
-                  />
+                  
+                  {selectedMetric === 'cac' && (
+                    <Line
+                      type="monotone"
+                      dataKey="cac"
+                      stroke={theme.colors.primary}
+                      strokeWidth={3}
+                      dot={{ fill: theme.colors.primary, strokeWidth: 0, r: 4 }}
+                      activeDot={{ r: 6, fill: theme.colors.primary }}
+                      name="CAC"
+                    />
+                  )}
+                  
+                  {selectedMetric === 'ltv' && (
+                    <Line
+                      type="monotone"
+                      dataKey="ltv"
+                      stroke={theme.colors.success}
+                      strokeWidth={3}
+                      dot={{ fill: theme.colors.success, strokeWidth: 0, r: 4 }}
+                      activeDot={{ r: 6, fill: theme.colors.success }}
+                      name="LTV"
+                    />
+                  )}
+                  
+                  {selectedMetric === 'roi' && (
+                    <Line
+                      type="monotone"
+                      dataKey="roi"
+                      stroke={theme.colors.warning}
+                      strokeWidth={3}
+                      dot={{ fill: theme.colors.warning, strokeWidth: 0, r: 4 }}
+                      activeDot={{ r: 6, fill: theme.colors.warning }}
+                      name="ROI"
+                    />
+                  )}
                 </LineChart>
               </ResponsiveContainer>
-            </div>
-          </motion.div>
+            )}
+          </div>
+        </Card>
 
-          {/* Recomendación IA */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: isExpanded ? 1 : 0, y: isExpanded ? 0 : 20 }}
-            transition={{ delay: 0.6 }}
-            className="bg-gradient-to-br from-accent/5 via-transparent to-accent/10 rounded-xl p-6 border border-accent/20"
-          >
-            <div className="flex items-start space-x-4">
-              <div className="p-3 bg-accent/20 rounded-xl">
-                <Zap className="w-5 h-5 text-accent" />
+        {/* Resumen y Recomendaciones */}
+        <div style={styles.summaryGrid}>
+          <Card variant="default" hover>
+            <div style={styles.summaryCard}>
+              <div style={styles.summaryHeader}>
+                <CheckCircle size={20} color={theme.colors.success} />
+                <h4 style={styles.summaryTitle}>Canales Exitosos</h4>
               </div>
-              <div className="flex-1">
-                <p className="text-sm font-bold text-primary mb-2 font-space-grotesk">Optimización Automática IA</p>
-                <p className="text-xs text-secondary leading-relaxed mb-4">
-                  Redirigir 30% del presupuesto de "Depresión Adultos" hacia "Mindfulness" podría aumentar 
-                  el ROI general en 18%. Los referidos muestran la mejor conversión - considera programa de incentivos.
-                </p>
-                <div className="flex space-x-3">
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="px-4 py-2 bg-accent text-white rounded-lg font-semibold text-sm hover:shadow-glow transition-all duration-300"
-                  >
-                    Aplicar Sugerencias
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="px-4 py-2 bg-surface-elevated text-primary rounded-lg font-semibold text-sm hover:bg-surface-hover transition-all duration-300"
-                  >
-                    Ver Detalles
-                  </motion.button>
+              <div style={styles.summaryContent}>
+                <div style={styles.summaryItem}>
+                  <span style={styles.summaryItemLabel}>Referidos - Mejor conversión</span>
+                  <span style={{...styles.summaryItemValue, color: theme.colors.success}}>
+                    41.8%
+                  </span>
+                </div>
+                <div style={styles.summaryItem}>
+                  <span style={styles.summaryItemLabel}>Google Ads - Más volumen</span>
+                  <span style={{...styles.summaryItemValue, color: theme.colors.success}}>
+                    145 leads
+                  </span>
+                </div>
+                <div style={styles.summaryItem}>
+                  <span style={styles.summaryItemLabel}>Mindfulness - Mejor ROI</span>
+                  <span style={{...styles.summaryItemValue, color: theme.colors.success}}>
+                    3.5x
+                  </span>
                 </div>
               </div>
             </div>
-          </motion.div>
+          </Card>
+
+          <Card variant="default" hover>
+            <div style={styles.summaryCard}>
+              <div style={styles.summaryHeader}>
+                <AlertCircle size={20} color={theme.colors.warning} />
+                <h4 style={styles.summaryTitle}>Oportunidades</h4>
+              </div>
+              <div style={styles.summaryContent}>
+                <div style={styles.summaryItem}>
+                  <span style={styles.summaryItemLabel}>Email marketing</span>
+                  <span style={{...styles.summaryItemValue, color: theme.colors.warning}}>
+                    Tendencia bajista
+                  </span>
+                </div>
+                <div style={styles.summaryItem}>
+                  <span style={styles.summaryItemLabel}>Depresión Adultos</span>
+                  <span style={{...styles.summaryItemValue, color: theme.colors.warning}}>
+                    ROI bajo (2.1x)
+                  </span>
+                </div>
+                <div style={styles.summaryItem}>
+                  <span style={styles.summaryItemLabel}>CAC promedio</span>
+                  <span style={{...styles.summaryItemValue, color: theme.colors.warning}}>
+                    Optimizable
+                  </span>
+                </div>
+              </div>
+            </div>
+          </Card>
+
+          <Card variant="default" hover>
+            <div style={styles.summaryCard}>
+              <div style={styles.summaryHeader}>
+                <Zap size={20} color={theme.colors.primary} />
+                <h4 style={styles.summaryTitle}>Optimización Automática IA</h4>
+              </div>
+              <div style={styles.summaryContent}>
+                <div style={styles.summaryItem}>
+                  <span style={styles.summaryItemLabel}>Redirigir 30% presupuesto</span>
+                  <span style={{...styles.summaryItemValue, color: theme.colors.primary}}>
+                    +18% ROI
+                  </span>
+                </div>
+                <div style={styles.summaryItem}>
+                  <span style={styles.summaryItemLabel}>Programa incentivos referidos</span>
+                  <span style={{...styles.summaryItemValue, color: theme.colors.primary}}>
+                    +25% conversión
+                  </span>
+                </div>
+                <div style={styles.summaryItem}>
+                  <span style={styles.summaryItemLabel}>Optimizar email campaigns</span>
+                  <span style={{...styles.summaryItemValue, color: theme.colors.primary}}>
+                    +15% engagement
+                  </span>
+                </div>
+              </div>
+            </div>
+          </Card>
         </div>
       </motion.div>
-    </motion.div>
+    </>
   );
 }
