@@ -1,815 +1,637 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
-  Container,
-  Typography,
   Box,
+  Container,
+  Grid,
+  Typography,
+  Stack,
+  Fade,
   useTheme,
   alpha,
-  Paper,
-  Fade,
-  Chip,
-  IconButton,
-  Tooltip,
-  Grid,
 } from '@mui/material';
 import {
-  TrendingUp,
   Psychology,
-  Business,
-  Download,
-  Refresh,
+  People,
+  EventNote,
+  TrendingUp,
+  LocalHospital,
+  Assessment,
   Schedule,
-  Public,
+  CheckCircle,
 } from '@mui/icons-material';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useAuth } from '@/context/AuthContext';
+import DashboardLayout from '@/components/layout/DashboardLayout';
+import ModernCard from '@/components/common/ModernCard';
+import MetricCard from '@/components/common/MetricCard';
+import ModernButton from '@/components/common/ModernButton';
 import { useRole } from '@/hooks/useRole';
-import { useCEOMetrics } from '@/hooks/useCEOMetrics';
-import { useSearchParams } from 'next/navigation';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { useAuth } from '@/context/AuthContext';
 
-// Import CEO section components
-import CEOTopbar from '@/components/layout/CEOTopbar';
-import KpiCard from '@/components/ceo/KpiCard';
-import BurnEarnChart from '@/components/ceo/charts/BurnEarnChart';
-import ProfitabilityHeatmap from '@/components/ceo/charts/ProfitabilityHeatmap';
-import FinancialPanel from '@/components/ceo/panels/FinancialPanel';
-import RightDock from '@/components/layout/RightDock';
-
-// CEO Brand Colors
-const ceoBrandColors = {
-  primary: '#5D4FB0',
-  secondary: '#A593F3', 
-  accentBlue: '#A5CAE6',
-  accentPink: '#D97DB7',
-  background: '#F2EDEA',
-  text: '#2E2E2E',
-};
-
-// Componente para el dashboard de administrador/CEO
-function CEODashboard() {
-  const { user } = useAuth();
+export default function DashboardPage() {
   const theme = useTheme();
-  const ceoMetrics = useCEOMetrics();
-  const searchParams = useSearchParams();
-  const section = searchParams.get('section') || 'overview';
-  const [selectedKpi, setSelectedKpi] = useState<any>(null);
+  const { role } = useRole();
+  const { user } = useAuth();
 
-  const getCurrentDateTime = () => {
-    const now = new Date();
-    return {
-      local: format(now, "EEEE, dd 'de' MMMM 'de' yyyy - HH:mm", { locale: es }),
-      utc: format(now, "HH:mm 'UTC'")
-    };
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Buenos días';
+    if (hour < 18) return 'Buenas tardes';
+    return 'Buenas noches';
   };
 
-  const { local, utc } = getCurrentDateTime();
-
-  const handleKpiDetailClick = (kpi: any) => {
-    setSelectedKpi(kpi);
-  };
-
-  const handleCloseKpiDialog = () => {
-    setSelectedKpi(null);
-  };
-
-  const handleTaskUpdate = (taskId: string, updates: any) => {
-    console.log('Updating task:', taskId, updates);
-  };
-
-  const handleTaskCreate = () => {
-    console.log('Creating new task...');
-  };
-
-  const handleAlertDismiss = (alertId: string) => {
-    console.log('Dismissing alert:', alertId);
-  };
-
-  const renderSectionContent = () => {
-    switch (section) {
-      case 'kpis':
-        return (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <Typography 
-              variant="h4" 
-              sx={{ 
-                fontFamily: '"Neris", sans-serif',
-                fontWeight: 600,
-                color: ceoBrandColors.text,
-                mb: 4,
-              }}
-            >
-              📊 KPIs Ejecutivos
-            </Typography>
-            
-            <Grid container spacing={3}>
-              {ceoMetrics.kpis.map((kpi, index) => (
-                <Grid item xs={12} sm={6} lg={4} key={kpi.id}>
-                  <KpiCard
-                    kpi={kpi}
-                    onDetailClick={handleKpiDetailClick}
-                    delay={index}
-                  />
-                </Grid>
-              ))}
-            </Grid>
-          </motion.div>
-        );
-
-      case 'financial':
-        return (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <Typography 
-              variant="h4" 
-              sx={{ 
-                fontFamily: '"Neris", sans-serif',
-                fontWeight: 600,
-                color: ceoBrandColors.text,
-                mb: 4,
-              }}
-            >
-              💰 Desempeño Financiero
-            </Typography>
-            
-            <FinancialPanel
-              burnEarnData={ceoMetrics.burnEarnData}
-              profitabilityData={ceoMetrics.profitabilityData}
-              loading={ceoMetrics.loading}
-            />
-          </motion.div>
-        );
-
-      case 'clinical':
-        return (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <Typography 
-              variant="h4" 
-              sx={{ 
-                fontFamily: '"Neris", sans-serif',
-                fontWeight: 600,
-                color: ceoBrandColors.text,
-                mb: 4,
-              }}
-            >
-              🧠 Salud Clínica & Operativa
-            </Typography>
-            
-            <Grid container spacing={4}>
-              {/* Radar de Riesgo */}
-              <Grid item xs={12} lg={6}>
-                <Paper
-                  sx={{
-                    p: 4,
-                    background: 'rgba(255, 255, 255, 0.95)',
-                    backdropFilter: 'blur(10px)',
-                    borderRadius: 4,
-                    border: `1px solid ${alpha('#ef4444', 0.2)}`,
-                    height: '100%',
-                  }}
-                >
-                  <Typography variant="h6" sx={{ fontFamily: '"Neris", sans-serif', fontWeight: 600, mb: 3 }}>
-                    🚨 Radar de Riesgo Activo
-                  </Typography>
-                  
-                  {ceoMetrics.riskRadarData.map((patient, index) => (
-                    <Box
-                      key={patient.pacienteId}
-                      sx={{
-                        p: 3,
-                        mb: 2,
-                        borderRadius: 3,
-                        background: alpha('#ef4444', 0.1),
-                        border: `1px solid ${alpha('#ef4444', 0.3)}`,
-                      }}
-                    >
-                      <Typography variant="subtitle1" sx={{ fontFamily: '"Neris", sans-serif', fontWeight: 600 }}>
-                        {patient.nombre}
-                      </Typography>
-                      <Typography variant="body2" sx={{ fontFamily: '"Neris", sans-serif', fontWeight: 300, mb: 1 }}>
-                        {patient.descripcion}
-                      </Typography>
-                                      <Typography variant="caption" sx={{ fontFamily: '"Neris", sans-serif', fontWeight: 600 }}>
-                        💡 Acciones: {patient.accionesRecomendadas.join(', ')}
-                      </Typography>
-                    </Box>
-                  ))}
-                </Paper>
-              </Grid>
-
-              {/* Adherencia por Programa */}
-              <Grid item xs={12} lg={6}>
-                <Paper
-                  sx={{
-                    p: 4,
-                    background: 'rgba(255, 255, 255, 0.95)',
-                    backdropFilter: 'blur(10px)',
-                    borderRadius: 4,
-                    border: `1px solid ${alpha('#10b981', 0.2)}`,
-                    height: '100%',
-                  }}
-                >
-                  <Typography variant="h6" sx={{ fontFamily: '"Neris", sans-serif', fontWeight: 600, mb: 3 }}>
-                    ✅ Adherencia por Programa
-                  </Typography>
-                  
-                  {ceoMetrics.adherenceData.map((program) => (
-                    <Box key={program.programa} sx={{ mb: 3 }}>
-                      <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
-                        <Typography variant="subtitle2" sx={{ fontFamily: '"Neris", sans-serif', fontWeight: 600 }}>
-                          {program.programa}
-                        </Typography>
-                        <Typography variant="subtitle2" sx={{ fontFamily: '"Neris", sans-serif', fontWeight: 600, color: '#10b981' }}>
-                          {program.porcentajeAdherencia.toFixed(1)}%
-                        </Typography>
-                      </Box>
-                      <Box
-                        sx={{
-                          width: '100%',
-                          height: 8,
-                          bgcolor: alpha('#10b981', 0.1),
-                          borderRadius: 4,
-                          overflow: 'hidden'
-                        }}
-                      >
-                        <Box
-                          sx={{
-                            width: `${program.porcentajeAdherencia}%`,
-                            height: '100%',
-                            bgcolor: '#10b981',
-                            transition: 'width 0.3s ease'
-                          }}
-                        />
-                      </Box>
-                      <Typography variant="caption" sx={{ fontFamily: '"Neris", sans-serif', fontWeight: 300 }}>
-                        {program.sesionesCompletadas}/{program.sesionesProgramadas} sesiones | {program.pacientesActivos} pacientes
-                      </Typography>
-                    </Box>
-                  ))}
-                </Paper>
-              </Grid>
-            </Grid>
-          </motion.div>
-        );
-
-      case 'commercial':
-        return (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <Paper
-              sx={{
-                p: 6,
-                background: 'rgba(255, 255, 255, 0.95)',
-                backdropFilter: 'blur(10px)',
-                borderRadius: 4,
-                border: `1px solid ${alpha(ceoBrandColors.secondary, 0.2)}`,
-                textAlign: 'center',
-              }}
-            >
-              <BusinessCenter sx={{ fontSize: 64, color: ceoBrandColors.secondary, mb: 3 }} />
-              <Typography 
-                variant="h4" 
-                sx={{ 
-                  fontFamily: '"Neris", sans-serif',
-                  fontWeight: 600,
-                  color: ceoBrandColors.text,
-                  mb: 2,
-                }}
-              >
-                📈 Pipeline Comercial & Marketing
-              </Typography>
-              <Typography 
-                variant="h6" 
-                sx={{ 
-                  fontFamily: '"Neris", sans-serif',
-                  fontWeight: 300,
-                  color: alpha(ceoBrandColors.text, 0.7),
-                  mb: 3,
-                }}
-              >
-                Próximamente
-              </Typography>
-              <Typography 
-                variant="body1" 
-                sx={{ 
-                  fontFamily: '"Neris", sans-serif',
-                  fontWeight: 300,
-                  color: alpha(ceoBrandColors.text, 0.6),
-                  maxWidth: 600,
-                  mx: 'auto',
-                }}
-              >
-                Esta sección incluirá campañas activas, funnels de captación, costo por lead, 
-                análisis de conversión y métricas de marketing digital.
-              </Typography>
-            </Paper>
-          </motion.div>
-        );
-
-      case 'compliance':
-        return (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <Typography 
-              variant="h4" 
-              sx={{ 
-                fontFamily: '"Neris", sans-serif',
-                fontWeight: 600,
-                color: ceoBrandColors.text,
-                mb: 4,
-              }}
-            >
-              ⚖️ Compliance & Cumplimiento
-            </Typography>
-            
-            <Grid container spacing={4}>
-              <Grid item xs={12} lg={8}>
-                <Paper
-                  sx={{
-                    p: 4,
-                    background: 'rgba(255, 255, 255, 0.95)',
-                    backdropFilter: 'blur(10px)',
-                    borderRadius: 4,
-                    border: `1px solid ${alpha(ceoBrandColors.primary, 0.2)}`,
-                  }}
-                >
-                  <Typography variant="h6" sx={{ fontFamily: '"Neris", sans-serif', fontWeight: 600, mb: 3 }}>
-                    📋 Estado de Cumplimiento
-                  </Typography>
-                  
-                  {/* Compliance items */}
-                  {[
-                    { item: 'Licencia Sanitaria', estado: 'vigente', vencimiento: '2024-12-15' },
-                    { item: 'Certificado Profesional', estado: 'vigente', vencimiento: '2024-08-30' },
-                    { item: 'Auditoría Interna', estado: 'pendiente', vencimiento: '2024-04-15' },
-                    { item: 'Backup de Datos', estado: 'completado', vencimiento: '2024-04-01' },
-                  ].map((item, index) => (
-                    <Box
-                      key={index}
-                      sx={{
-                        p: 3,
-                        mb: 2,
-                        borderRadius: 3,
-                        background: alpha(
-                          item.estado === 'vigente' || item.estado === 'completado' ? '#10b981' : '#f59e0b',
-                          0.1
-                        ),
-                        border: `1px solid ${alpha(
-                          item.estado === 'vigente' || item.estado === 'completado' ? '#10b981' : '#f59e0b',
-                          0.3
-                        )}`,
-                      }}
-                    >
-                      <Box display="flex" justifyContent="space-between" alignItems="center">
-                        <Typography variant="subtitle1" sx={{ fontFamily: '"Neris", sans-serif', fontWeight: 600 }}>
-                          {item.item}
-                        </Typography>
-                        <Chip
-                          label={item.estado}
-                          size="small"
-                          sx={{
-                            background: item.estado === 'vigente' || item.estado === 'completado' ? '#10b981' : '#f59e0b',
-                            color: 'white',
-                            fontFamily: '"Neris", sans-serif',
-                            fontWeight: 600,
-                          }}
-                        />
-                      </Box>
-                      <Typography variant="body2" sx={{ fontFamily: '"Neris", sans-serif', fontWeight: 300, mt: 1 }}>
-                        Vencimiento: {item.vencimiento}
-                      </Typography>
-                    </Box>
-                  ))}
-                </Paper>
-              </Grid>
-              
-              <Grid item xs={12} lg={4}>
-                <Paper
-                  sx={{
-                    p: 4,
-                    background: `linear-gradient(135deg, ${alpha(ceoBrandColors.primary, 0.1)} 0%, ${alpha(ceoBrandColors.secondary, 0.1)} 100%)`,
-                    backdropFilter: 'blur(10px)',
-                    borderRadius: 4,
-                    border: `1px solid ${alpha(ceoBrandColors.primary, 0.2)}`,
-                    height: '100%',
-                  }}
-                >
-                  <Typography variant="h6" sx={{ fontFamily: '"Neris", sans-serif', fontWeight: 600, mb: 3 }}>
-                    📄 Daily CEO Brief
-                  </Typography>
-                  <Typography variant="body2" sx={{ fontFamily: '"Neris", sans-serif', fontWeight: 300, mb: 3 }}>
-                    Descarga el resumen ejecutivo diario con todas las métricas y alertas.
-                  </Typography>
-                  <Box
-                    sx={{
-                      p: 2,
-                      background: 'rgba(255, 255, 255, 0.7)',
-                      borderRadius: 2,
-                      mb: 3,
-                    }}
-                  >
-                    <Typography variant="caption" sx={{ fontFamily: '"Neris", sans-serif', fontWeight: 600 }}>
-                      Incluye:
-                    </Typography>
-                    <Box component="ul" sx={{ pl: 2, m: 0 }}>
-                      <Typography component="li" variant="caption" sx={{ fontFamily: '"Neris", sans-serif', fontWeight: 300 }}>
-                        KPIs y métricas financieras
-                      </Typography>
-                      <Typography component="li" variant="caption" sx={{ fontFamily: '"Neris", sans-serif', fontWeight: 300 }}>
-                        Alertas críticas y riesgos
-                      </Typography>
-                      <Typography component="li" variant="caption" sx={{ fontFamily: '"Neris", sans-serif', fontWeight: 300 }}>
-                        Estado de compliance
-                      </Typography>
-                    </Box>
-                  </Box>
-                  <Box
-                    component="button"
-                    sx={{
-                      width: '100%',
-                      p: 2,
-                      background: `linear-gradient(135deg, ${ceoBrandColors.primary} 0%, ${ceoBrandColors.secondary} 100%)`,
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: 3,
-                      fontFamily: '"Neris", sans-serif',
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                      '&:hover': {
-                        transform: 'translateY(-2px)',
-                        boxShadow: `0 8px 25px ${alpha(ceoBrandColors.primary, 0.3)}`,
-                      },
-                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                    }}
-                  >
-                    <Download sx={{ mr: 1 }} />
-                    Descargar CEO Brief
-                  </Box>
-                </Paper>
-              </Grid>
-            </Grid>
-          </motion.div>
-        );
-
+  const getRoleTitle = () => {
+    switch (role) {
+      case 'admin':
+        return 'CEO Ejecutivo';
+      case 'psychologist':
+        return 'Psicólogo Profesional';
+      case 'patient':
+        return 'Paciente';
       default:
-        return (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            {/* Vista general del CEO Dashboard */}
-            <Box sx={{ mb: 6 }}>
-              <Typography 
-                variant="h5" 
-                sx={{ 
-                  fontFamily: '"Neris", sans-serif',
-                  fontWeight: 600,
-                  color: ceoBrandColors.text,
-                  mb: 3,
-                }}
-              >
-                📊 KPIs Principales
-              </Typography>
-              
-              <Grid container spacing={3}>
-                {ceoMetrics.kpis.slice(0, 4).map((kpi, index) => (
-                  <Grid item xs={12} sm={6} lg={3} key={kpi.id}>
-                    <KpiCard
-                      kpi={kpi}
-                      onDetailClick={handleKpiDetailClick}
-                      delay={index}
-                    />
-                  </Grid>
-                ))}
-              </Grid>
-            </Box>
-
-            {/* Panel Financiero Resumido */}
-            <Box sx={{ mb: 6 }}>
-              <FinancialPanel
-                burnEarnData={ceoMetrics.burnEarnData}
-                profitabilityData={ceoMetrics.profitabilityData}
-                loading={ceoMetrics.loading}
-              />
-            </Box>
-
-            {/* Alertas y Insights */}
-            <Grid container spacing={4}>
-              <Grid item xs={12} lg={6}>
-                <Paper
-                  sx={{
-                    p: 4,
-                    background: 'rgba(255, 255, 255, 0.95)',
-                    backdropFilter: 'blur(10px)',
-                    borderRadius: 4,
-                    border: `1px solid ${alpha('#ef4444', 0.2)}`,
-                  }}
-                >
-                  <Typography variant="h6" sx={{ fontFamily: '"Neris", sans-serif', fontWeight: 600, mb: 3 }}>
-                    🚨 Alertas Críticas
-                  </Typography>
-                  
-                  {ceoMetrics.criticalAlerts.slice(0, 3).map((alert) => (
-                    <Box
-                      key={alert.id}
-                      sx={{
-                        p: 2,
-                        mb: 2,
-                        borderRadius: 3,
-                        background: alpha('#ef4444', 0.05),
-                        border: `1px solid ${alpha('#ef4444', 0.1)}`,
-                      }}
-                    >
-                      <Typography variant="subtitle2" sx={{ fontFamily: '"Neris", sans-serif', fontWeight: 600 }}>
-                        {alert.titulo}
-                      </Typography>
-                      <Typography variant="body2" sx={{ fontFamily: '"Neris", sans-serif', fontWeight: 300 }}>
-                        {alert.descripcion}
-                      </Typography>
-                    </Box>
-                  ))}
-                </Paper>
-              </Grid>
-
-              <Grid item xs={12} lg={6}>
-                <Paper
-                  sx={{
-                    p: 4,
-                    background: `linear-gradient(135deg, ${alpha(ceoBrandColors.accentBlue, 0.1)} 0%, ${alpha(ceoBrandColors.secondary, 0.1)} 100%)`,
-                    backdropFilter: 'blur(10px)',
-                    borderRadius: 4,
-                    border: `1px solid ${alpha(ceoBrandColors.accentBlue, 0.2)}`,
-                  }}
-                >
-                  <Typography variant="h6" sx={{ fontFamily: '"Neris", sans-serif', fontWeight: 600, mb: 3 }}>
-                    🤖 AI Insights
-                  </Typography>
-                  
-                  {ceoMetrics.aiInsights.length > 0 && (
-                    <Box>
-                      <Typography variant="subtitle1" sx={{ fontFamily: '"Neris", sans-serif', fontWeight: 600, mb: 2 }}>
-                        {ceoMetrics.aiInsights[0].titulo}
-                      </Typography>
-                      <Typography variant="body2" sx={{ fontFamily: '"Neris", sans-serif', fontWeight: 300, mb: 2 }}>
-                        {ceoMetrics.aiInsights[0].descripcion}
-                      </Typography>
-                      <Chip
-                        label={`Confianza: ${ceoMetrics.aiInsights[0].confianza}%`}
-                        size="small"
-                        sx={{
-                          background: ceoBrandColors.accentBlue,
-                          color: 'white',
-                          fontFamily: '"Neris", sans-serif',
-                          fontWeight: 600,
-                        }}
-                      />
-                    </Box>
-                  )}
-                </Paper>
-              </Grid>
-            </Grid>
-          </motion.div>
-        );
+        return 'Usuario';
     }
   };
 
   return (
-    <Box 
-      sx={{ 
-        minHeight: '100vh',
-        background: ceoBrandColors.background,
-        fontFamily: '"Neris", sans-serif',
-      }}
-    >
-      {/* Header / Topbar */}
-      <Paper 
-        elevation={0}
+    <DashboardLayout>
+      <Box
         sx={{
-          background: 'rgba(255, 255, 255, 0.95)',
-          backdropFilter: 'blur(20px)',
-          borderBottom: `1px solid ${alpha(ceoBrandColors.primary, 0.1)}`,
-          position: 'sticky',
-          top: 0,
-          zIndex: 100,
+          minHeight: '100vh',
+          background: theme.palette.mode === 'dark'
+            ? 'linear-gradient(135deg, #0F0F1A 0%, #1A1B2E 100%)'
+            : 'linear-gradient(135deg, #F2EDEA 0%, #F8F6F4 100%)',
+          position: 'relative',
         }}
       >
-        <Container maxWidth="xl">
-          <Box sx={{ py: 3 }}>
-            <Box display="flex" alignItems="center" justifyContent="space-between">
-              <Box display="flex" alignItems="center" gap={3}>
-                <Box display="flex" alignItems="center" gap={2}>
-                  <Box
+        <Container maxWidth="xl" sx={{ py: 4 }}>
+          {/* Header de bienvenida */}
+          <Fade in timeout={600}>
+            <Box sx={{ mb: 6 }}>
+              <Stack direction="row" alignItems="center" spacing={3} mb={3}>
+                <Box
+                  sx={{
+                    width: 80,
+                    height: 80,
+                    borderRadius: 4,
+                    background: 'linear-gradient(135deg, #5D4FB0 0%, #A593F3 100%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 8px 32px rgba(93, 79, 176, 0.3)',
+                    position: 'relative',
+                    '&::before': {
+                      content: '""',
+                      position: 'absolute',
+                      top: -3,
+                      left: -3,
+                      right: -3,
+                      bottom: -3,
+                      background: 'linear-gradient(135deg, #5D4FB0, #A593F3, #A5CAE6)',
+                      borderRadius: 5,
+                      zIndex: -1,
+                      opacity: 0.3,
+                    },
+                  }}
+                >
+                  <Psychology sx={{ fontSize: 40, color: 'white' }} />
+                </Box>
+                <Box>
+                  <Typography
+                    variant="h3"
                     sx={{
-                      width: 48,
-                      height: 48,
-                      borderRadius: 3,
-                      background: `linear-gradient(135deg, ${ceoBrandColors.primary} 0%, ${ceoBrandColors.secondary} 100%)`,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: 'white',
+                      fontFamily: '"Outfit", sans-serif',
+                      fontWeight: 800,
+                      background: 'linear-gradient(135deg, #5D4FB0 0%, #A593F3 100%)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      backgroundClip: 'text',
+                      mb: 1,
                     }}
                   >
-                    <Business sx={{ fontSize: 24 }} />
-                  </Box>
-                  <Box>
-                    <Typography 
-                      variant="h4" 
-                      sx={{ 
-                        fontFamily: '"Neris", sans-serif',
-                        fontWeight: 600,
-                        color: ceoBrandColors.text,
-                        lineHeight: 1.2,
-                      }}
-                    >
-                      Dashboard Ejecutivo
-                    </Typography>
-                    <Typography 
-                      variant="body2" 
-                      sx={{ 
-                        fontFamily: '"Neris", sans-serif',
-                        fontWeight: 300,
-                        color: alpha(ceoBrandColors.text, 0.7),
-                      }}
-                    >
-                      Centro Psicológico Digital
-                    </Typography>
-                  </Box>
-                </Box>
-              </Box>
-
-              <Box display="flex" alignItems="center" gap={3}>
-                {/* Date & Time */}
-                <Box textAlign="right">
-                  <Box display="flex" alignItems="center" gap={1} mb={0.5}>
-                    <Schedule sx={{ fontSize: 16, color: ceoBrandColors.primary }} />
-                    <Typography 
-                      variant="subtitle2" 
-                      sx={{ 
-                        fontFamily: '"Neris", sans-serif',
-                        fontWeight: 600,
-                        color: ceoBrandColors.text,
-                      }}
-                    >
-                      {local}
-                    </Typography>
-                  </Box>
-                  <Box display="flex" alignItems="center" gap={1}>
-                    <Public sx={{ fontSize: 14, color: alpha(ceoBrandColors.text, 0.6) }} />
-                    <Typography 
-                      variant="caption" 
-                      sx={{ 
-                        fontFamily: '"Neris", sans-serif',
-                        fontWeight: 300,
-                        color: alpha(ceoBrandColors.text, 0.6),
-                      }}
-                    >
-                      {utc}
-                    </Typography>
-                  </Box>
-                </Box>
-
-                {/* Actions */}
-                <Box display="flex" alignItems="center" gap={1}>
-                  <Tooltip title="Actualizar datos">
-                    <IconButton
-                      sx={{
-                        background: alpha(ceoBrandColors.primary, 0.1),
-                        '&:hover': {
-                          background: alpha(ceoBrandColors.primary, 0.2),
-                        },
-                      }}
-                    >
-                      <Refresh sx={{ color: ceoBrandColors.primary }} />
-                    </IconButton>
-                  </Tooltip>
-                  
-                  <Chip
-                    label={`CEO: ${user?.displayName?.split(' ')[0] || 'Admin'}`}
+                    {getGreeting()}, {user?.displayName?.split(' ')[0]}
+                  </Typography>
+                  <Typography
+                    variant="h6"
                     sx={{
-                      background: `linear-gradient(135deg, ${ceoBrandColors.primary} 0%, ${ceoBrandColors.secondary} 100%)`,
-                      color: 'white',
-                      fontFamily: '"Neris", sans-serif',
-                      fontWeight: 600,
+                      fontFamily: '"Inter", sans-serif',
+                      color: 'text.secondary',
+                      fontWeight: 500,
                     }}
-                  />
+                  >
+                    {getRoleTitle()} • Centro Psicológico
+                  </Typography>
                 </Box>
-              </Box>
+              </Stack>
+              
+              <Typography
+                variant="body1"
+                sx={{
+                  fontFamily: '"Inter", sans-serif',
+                  color: 'text.secondary',
+                  fontSize: '1.1rem',
+                  maxWidth: 600,
+                }}
+              >
+                Bienvenido a tu plataforma de gestión profesional. 
+                Aquí encontrarás todas las herramientas necesarias para optimizar 
+                la atención y el seguimiento de tus pacientes.
+              </Typography>
             </Box>
-          </Box>
+          </Fade>
+
+          {/* Métricas principales */}
+          <Fade in timeout={800}>
+            <Grid container spacing={3} sx={{ mb: 6 }}>
+              <Grid item xs={12} sm={6} md={3}>
+                <MetricCard
+                  title="Pacientes Activos"
+                  value="127"
+                  subtitle="Total registrados"
+                  trend="up"
+                  trendValue="+12%"
+                  icon={<People />}
+                  color="primary"
+                  progress={85}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <MetricCard
+                  title="Sesiones del Mes"
+                  value="89"
+                  subtitle="Completadas"
+                  trend="up"
+                  trendValue="+8%"
+                  icon={<EventNote />}
+                  color="secondary"
+                  progress={92}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <MetricCard
+                  title="Tasa de Adherencia"
+                  value="94%"
+                  subtitle="Promedio mensual"
+                  trend="up"
+                  trendValue="+3%"
+                  icon={<TrendingUp />}
+                  color="success"
+                  progress={94}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <MetricCard
+                  title="Satisfacción"
+                  value="4.8"
+                  subtitle="De 5.0 estrellas"
+                  trend="flat"
+                  trendValue="Estable"
+                  icon={<CheckCircle />}
+                  color="info"
+                  progress={96}
+                />
+              </Grid>
+            </Grid>
+          </Fade>
+
+          {/* Sección principal */}
+          <Grid container spacing={4}>
+            {/* Panel de acceso rápido */}
+            <Grid item xs={12} md={8}>
+              <Fade in timeout={1000}>
+                <ModernCard
+                  title="Acceso Rápido"
+                  subtitle="Herramientas más utilizadas"
+                  variant="gradient"
+                >
+                  <Grid container spacing={3}>
+                    <Grid item xs={12} sm={6}>
+                      <Box
+                        sx={{
+                          p: 3,
+                          borderRadius: 4,
+                          background: 'linear-gradient(135deg, rgba(93, 79, 176, 0.08) 0%, rgba(165, 147, 243, 0.04) 100%)',
+                          border: `1px solid ${alpha('#5D4FB0', 0.12)}`,
+                          cursor: 'pointer',
+                          transition: 'all 0.3s ease',
+                          '&:hover': {
+                            transform: 'translateY(-4px)',
+                            boxShadow: '0 8px 24px rgba(93, 79, 176, 0.15)',
+                          },
+                        }}
+                      >
+                        <Stack direction="row" alignItems="center" spacing={2} mb={2}>
+                          <Box
+                            sx={{
+                              width: 48,
+                              height: 48,
+                              borderRadius: 3,
+                              background: 'linear-gradient(135deg, #5D4FB0 0%, #A593F3 100%)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                            }}
+                          >
+                            <People sx={{ color: 'white', fontSize: 24 }} />
+                          </Box>
+                          <Box>
+                            <Typography
+                              variant="h6"
+                              sx={{
+                                fontFamily: '"Outfit", sans-serif',
+                                fontWeight: 700,
+                                color: 'text.primary',
+                              }}
+                            >
+                              Gestión de Pacientes
+                            </Typography>
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                fontFamily: '"Inter", sans-serif',
+                                color: 'text.secondary',
+                              }}
+                            >
+                              Administrar expedientes
+                            </Typography>
+                          </Box>
+                        </Stack>
+                        <ModernButton
+                          variant="outlined"
+                          size="small"
+                          fullWidth
+                        >
+                          Acceder
+                        </ModernButton>
+                      </Box>
+                    </Grid>
+                    
+                    <Grid item xs={12} sm={6}>
+                      <Box
+                        sx={{
+                          p: 3,
+                          borderRadius: 4,
+                          background: 'linear-gradient(135deg, rgba(165, 147, 243, 0.08) 0%, rgba(165, 202, 230, 0.04) 100%)',
+                          border: `1px solid ${alpha('#A593F3', 0.12)}`,
+                          cursor: 'pointer',
+                          transition: 'all 0.3s ease',
+                          '&:hover': {
+                            transform: 'translateY(-4px)',
+                            boxShadow: '0 8px 24px rgba(165, 147, 243, 0.15)',
+                          },
+                        }}
+                      >
+                        <Stack direction="row" alignItems="center" spacing={2} mb={2}>
+                          <Box
+                            sx={{
+                              width: 48,
+                              height: 48,
+                              borderRadius: 3,
+                              background: 'linear-gradient(135deg, #A593F3 0%, #A5CAE6 100%)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                            }}
+                          >
+                            <Schedule sx={{ color: 'white', fontSize: 24 }} />
+                          </Box>
+                          <Box>
+                            <Typography
+                              variant="h6"
+                              sx={{
+                                fontFamily: '"Outfit", sans-serif',
+                                fontWeight: 700,
+                                color: 'text.primary',
+                              }}
+                            >
+                              Programar Sesiones
+                            </Typography>
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                fontFamily: '"Inter", sans-serif',
+                                color: 'text.secondary',
+                              }}
+                            >
+                              Calendario y citas
+                            </Typography>
+                          </Box>
+                        </Stack>
+                        <ModernButton
+                          variant="outlined"
+                          size="small"
+                          fullWidth
+                        >
+                          Programar
+                        </ModernButton>
+                      </Box>
+                    </Grid>
+                    
+                    <Grid item xs={12} sm={6}>
+                      <Box
+                        sx={{
+                          p: 3,
+                          borderRadius: 4,
+                          background: 'linear-gradient(135deg, rgba(165, 202, 230, 0.08) 0%, rgba(217, 125, 183, 0.04) 100%)',
+                          border: `1px solid ${alpha('#A5CAE6', 0.12)}`,
+                          cursor: 'pointer',
+                          transition: 'all 0.3s ease',
+                          '&:hover': {
+                            transform: 'translateY(-4px)',
+                            boxShadow: '0 8px 24px rgba(165, 202, 230, 0.15)',
+                          },
+                        }}
+                      >
+                        <Stack direction="row" alignItems="center" spacing={2} mb={2}>
+                          <Box
+                            sx={{
+                              width: 48,
+                              height: 48,
+                              borderRadius: 3,
+                              background: 'linear-gradient(135deg, #A5CAE6 0%, #D97DB7 100%)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                            }}
+                          >
+                            <Assessment sx={{ color: 'white', fontSize: 24 }} />
+                          </Box>
+                          <Box>
+                            <Typography
+                              variant="h6"
+                              sx={{
+                                fontFamily: '"Outfit", sans-serif',
+                                fontWeight: 700,
+                                color: 'text.primary',
+                              }}
+                            >
+                              Análisis y Reportes
+                            </Typography>
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                fontFamily: '"Inter", sans-serif',
+                                color: 'text.secondary',
+                              }}
+                            >
+                              Métricas y estadísticas
+                            </Typography>
+                          </Box>
+                        </Stack>
+                        <ModernButton
+                          variant="outlined"
+                          size="small"
+                          fullWidth
+                        >
+                          Ver Reportes
+                        </ModernButton>
+                      </Box>
+                    </Grid>
+                    
+                    <Grid item xs={12} sm={6}>
+                      <Box
+                        sx={{
+                          p: 3,
+                          borderRadius: 4,
+                          background: 'linear-gradient(135deg, rgba(217, 125, 183, 0.08) 0%, rgba(93, 79, 176, 0.04) 100%)',
+                          border: `1px solid ${alpha('#D97DB7', 0.12)}`,
+                          cursor: 'pointer',
+                          transition: 'all 0.3s ease',
+                          '&:hover': {
+                            transform: 'translateY(-4px)',
+                            boxShadow: '0 8px 24px rgba(217, 125, 183, 0.15)',
+                          },
+                        }}
+                      >
+                        <Stack direction="row" alignItems="center" spacing={2} mb={2}>
+                          <Box
+                            sx={{
+                              width: 48,
+                              height: 48,
+                              borderRadius: 3,
+                              background: 'linear-gradient(135deg, #D97DB7 0%, #5D4FB0 100%)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                            }}
+                          >
+                            <LocalHospital sx={{ color: 'white', fontSize: 24 }} />
+                          </Box>
+                          <Box>
+                            <Typography
+                              variant="h6"
+                              sx={{
+                                fontFamily: '"Outfit", sans-serif',
+                                fontWeight: 700,
+                                color: 'text.primary',
+                              }}
+                            >
+                              Centro de Salud
+                            </Typography>
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                fontFamily: '"Inter", sans-serif',
+                                color: 'text.secondary',
+                              }}
+                            >
+                              Monitoreo integral
+                            </Typography>
+                          </Box>
+                        </Stack>
+                        <ModernButton
+                          variant="outlined"
+                          size="small"
+                          fullWidth
+                        >
+                          Monitorear
+                        </ModernButton>
+                      </Box>
+                    </Grid>
+                  </Grid>
+                </ModernCard>
+              </Fade>
+            </Grid>
+
+            {/* Panel lateral */}
+            <Grid item xs={12} md={4}>
+              <Stack spacing={3}>
+                {/* Actividad reciente */}
+                <Fade in timeout={1200}>
+                  <ModernCard
+                    title="Actividad Reciente"
+                    subtitle="Últimas acciones"
+                    variant="glass"
+                  >
+                    <Stack spacing={2}>
+                      {[
+                        {
+                          action: 'Nueva sesión programada',
+                          patient: 'María González',
+                          time: 'Hace 15 min',
+                          color: '#5D4FB0',
+                        },
+                        {
+                          action: 'Expediente actualizado',
+                          patient: 'Carlos Ruiz',
+                          time: 'Hace 1 hora',
+                          color: '#A593F3',
+                        },
+                        {
+                          action: 'Reporte generado',
+                          patient: 'Ana López',
+                          time: 'Hace 2 horas',
+                          color: '#A5CAE6',
+                        },
+                      ].map((item, index) => (
+                        <Box
+                          key={index}
+                          sx={{
+                            p: 2,
+                            borderRadius: 3,
+                            background: alpha(item.color, 0.05),
+                            border: `1px solid ${alpha(item.color, 0.1)}`,
+                          }}
+                        >
+                          <Typography
+                            variant="subtitle2"
+                            sx={{
+                              fontFamily: '"Outfit", sans-serif',
+                              fontWeight: 600,
+                              color: 'text.primary',
+                              mb: 0.5,
+                            }}
+                          >
+                            {item.action}
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              fontFamily: '"Inter", sans-serif',
+                              color: 'text.secondary',
+                              mb: 0.5,
+                            }}
+                          >
+                            {item.patient}
+                          </Typography>
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              fontFamily: '"Inter", sans-serif',
+                              color: item.color,
+                              fontWeight: 500,
+                            }}
+                          >
+                            {item.time}
+                          </Typography>
+                        </Box>
+                      ))}
+                    </Stack>
+                  </ModernCard>
+                </Fade>
+
+                {/* Próximas citas */}
+                <Fade in timeout={1400}>
+                  <ModernCard
+                    title="Próximas Citas"
+                    subtitle="Agenda de hoy"
+                    variant="gradient"
+                  >
+                    <Stack spacing={2}>
+                      {[
+                        {
+                          time: '10:00 AM',
+                          patient: 'Laura Martín',
+                          type: 'Terapia Individual',
+                          status: 'confirmada',
+                        },
+                        {
+                          time: '2:00 PM',
+                          patient: 'Roberto Silva',
+                          type: 'Seguimiento',
+                          status: 'pendiente',
+                        },
+                        {
+                          time: '4:30 PM',
+                          patient: 'Elena Vega',
+                          type: 'Primera Consulta',
+                          status: 'nueva',
+                        },
+                      ].map((appointment, index) => (
+                        <Box
+                          key={index}
+                          sx={{
+                            p: 2,
+                            borderRadius: 3,
+                            background: theme.palette.mode === 'dark'
+                              ? 'rgba(255, 255, 255, 0.05)'
+                              : 'rgba(255, 255, 255, 0.8)',
+                            border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
+                          }}
+                        >
+                          <Stack direction="row" alignItems="center" justifyContent="space-between" mb={1}>
+                            <Typography
+                              variant="subtitle2"
+                              sx={{
+                                fontFamily: '"Outfit", sans-serif',
+                                fontWeight: 700,
+                                color: 'primary.main',
+                              }}
+                            >
+                              {appointment.time}
+                            </Typography>
+                            <Box
+                              sx={{
+                                width: 8,
+                                height: 8,
+                                borderRadius: '50%',
+                                background: appointment.status === 'confirmada' 
+                                  ? '#10b981' 
+                                  : appointment.status === 'pendiente' 
+                                  ? '#f59e0b' 
+                                  : '#5D4FB0',
+                              }}
+                            />
+                          </Stack>
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              fontFamily: '"Inter", sans-serif',
+                              fontWeight: 600,
+                              color: 'text.primary',
+                              mb: 0.5,
+                            }}
+                          >
+                            {appointment.patient}
+                          </Typography>
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              fontFamily: '"Inter", sans-serif',
+                              color: 'text.secondary',
+                            }}
+                          >
+                            {appointment.type}
+                          </Typography>
+                        </Box>
+                      ))}
+                    </Stack>
+                    <Box sx={{ mt: 2 }}>
+                      <ModernButton
+                        variant="gradient"
+                        size="small"
+                        fullWidth
+                      >
+                        Ver Agenda Completa
+                      </ModernButton>
+                    </Box>
+                  </ModernCard>
+                </Fade>
+              </Stack>
+            </Grid>
+          </Grid>
         </Container>
-      </Paper>
-
-      {/* Main Content */}
-      <Box sx={{ display: 'flex', minHeight: 'calc(100vh - 100px)' }}>
-        {/* Content Area */}
-        <Box sx={{ flex: 1, pr: { xs: 0, lg: '400px' } }}>
-          <Container maxWidth="xl" sx={{ py: 4 }}>
-            <AnimatePresence mode="wait">
-              {renderSectionContent()}
-            </AnimatePresence>
-          </Container>
-        </Box>
-
-        {/* Right Dock */}
-        <RightDock
-          criticalAlerts={ceoMetrics.criticalAlerts}
-          importantAlerts={ceoMetrics.importantAlerts}
-          tasks={ceoMetrics.tasks}
-          onTaskUpdate={handleTaskUpdate}
-          onTaskCreate={handleTaskCreate}
-          onAlertDismiss={handleAlertDismiss}
-        />
       </Box>
-    </Box>
+    </DashboardLayout>
   );
 }
-
-// Componente para dashboard de psicólogo
-function PsychologistDashboard() {
-  const theme = useTheme();
-  
-  return (
-    <Container maxWidth="xl" sx={{ py: 4 }}>
-      <Typography variant="h4" sx={{ mb: 4, fontFamily: '"Neris", sans-serif', fontWeight: 600 }}>
-        Dashboard Psicólogo
-      </Typography>
-      
-      <Paper sx={{ p: 4, borderRadius: 4 }}>
-        <Typography variant="h6" sx={{ mb: 2, fontFamily: '"Neris", sans-serif', fontWeight: 600 }}>
-          Bienvenido al Dashboard de Psicólogo
-        </Typography>
-        <Typography variant="body1" sx={{ fontFamily: '"Neris", sans-serif', fontWeight: 300 }}>
-          Aquí podrás gestionar tus pacientes, sesiones y ver métricas de tu práctica.
-        </Typography>
-      </Paper>
-    </Container>
-  );
-}
-
-// Componente para dashboard de paciente
-function PatientDashboard() {
-  const theme = useTheme();
-  
-  return (
-    <Container maxWidth="xl" sx={{ py: 4 }}>
-      <Typography variant="h4" sx={{ mb: 4, fontFamily: '"Neris", sans-serif', fontWeight: 600 }}>
-        Mi Dashboard
-      </Typography>
-      
-      <Paper sx={{ p: 4, borderRadius: 4 }}>
-        <Typography variant="h6" sx={{ mb: 2, fontFamily: '"Neris", sans-serif', fontWeight: 600 }}>
-          Bienvenido a tu espacio personal
-        </Typography>
-        <Typography variant="body1" sx={{ fontFamily: '"Neris", sans-serif', fontWeight: 300 }}>
-          Aquí podrás ver tus próximas citas, progreso y recursos de apoyo.
-        </Typography>
-      </Paper>
-    </Container>
-  );
-}
-
-// Componente principal
-export default function DashboardPage() {
-  const { role } = useRole();
-
-  // Renderizar dashboard según el rol
-  switch (role) {
-    case 'admin':
-      return <CEODashboard />;
-    case 'psychologist':
-      return <PsychologistDashboard />;
-    case 'patient':
-      return <PatientDashboard />;
-    default:
-      return (
-        <Container maxWidth="xl" sx={{ py: 4 }}>
-          <Typography variant="h4" sx={{ mb: 4 }}>
-            Cargando...
-          </Typography>
-        </Container>
-      );
-  }
-}
-
