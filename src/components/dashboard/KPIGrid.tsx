@@ -105,19 +105,24 @@ export default function KPIGrid() {
   const displayMetrics = metrics.length > 0 ? metrics : mockKPIs;
 
   const handleKPIClick = (metric: KPIMetric) => {
-    // Aquí se abriría el modal con detalles del KPI
     console.log('KPI clicked:', metric);
   };
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {Array.from({ length: 8 }).map((_, index) => (
-          <div
-            key={index}
-            className="h-40 bg-white rounded-card shadow-card animate-pulse"
-          />
-        ))}
+      <div className="space-y-6">
+        <div className="space-y-2">
+          <div className="h-6 bg-surface-elevated rounded loading-skeleton w-48" />
+          <div className="h-4 bg-surface-elevated rounded loading-skeleton w-64" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {Array.from({ length: 8 }).map((_, index) => (
+            <div
+              key={index}
+              className="h-48 bg-surface-elevated rounded-card loading-skeleton"
+            />
+          ))}
+        </div>
       </div>
     );
   }
@@ -126,10 +131,10 @@ export default function KPIGrid() {
     <motion.section
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="mb-8"
+      className="space-y-6"
     >
-      <div className="mb-6">
-        <h2 className="text-xl font-bold font-space-grotesk text-primary mb-2">
+      <div className="space-y-1">
+        <h2 className="text-lg font-semibold font-space-grotesk text-primary">
           Métricas Clave
         </h2>
         <p className="text-sm text-secondary">
