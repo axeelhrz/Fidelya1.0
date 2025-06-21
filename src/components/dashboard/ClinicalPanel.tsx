@@ -16,6 +16,7 @@ import {
   Clock,
   Target,
   BarChart3,
+  Pulse,
   Eye,
   CheckCircle2,
   XCircle,
@@ -424,10 +425,10 @@ export default function ClinicalPanel() {
                     border: `1px solid ${getHealthColor(mockClinicalData.healthMetrics.operationalHealth)}30`
                   }}
                   whileHover={{ scale: 1.05 }}
-                  whileHover={{ scale: 1.05 }}
                 >
-                  <Activity className="w-3 h-3" />
+                  <Pulse className="w-3 h-3" />
                   <span>Salud Operativa: {mockClinicalData.healthMetrics.operationalHealth}%</span>
+                </motion.div>
               </div>
               
               <p 
@@ -634,7 +635,7 @@ export default function ClinicalPanel() {
                                     </div>
                                     <div 
                                       className="text-sm font-medium"
-                                      style={{ color: theme.colors.textPrimary }}
+                                      style={{ color: theme.colors.textSecondary }}
                                     >
                                       {metric.title}
                                     </div>
@@ -675,7 +676,8 @@ export default function ClinicalPanel() {
                                 className="p-5 rounded-2xl cursor-pointer relative overflow-hidden group"
                                 style={{
                                   background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.7) 100%)',
-                                  border: `1px solid ${getSeverityColor(alert.severity)}30`
+                                  border: `1px solid ${getSeverityColor(alert.severity)}30`,
+                                  backdropFilter: 'blur(10px)'
                                 }}
                                 whileHover={{ 
                                   scale: 1.02,
