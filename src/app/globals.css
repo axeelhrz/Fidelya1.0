@@ -1,85 +1,114 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100;200;300;400;500;600;700;800;900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/500.css";
+@import "@fontsource/inter/600.css";
+@import "@fontsource/inter/700.css";
+@import "@fontsource/space-grotesk/400.css";
+@import "@fontsource/space-grotesk/500.css";
+@import "@fontsource/space-grotesk/600.css";
+@import "@fontsource/space-grotesk/700.css";
 
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
+  /* Colores principales */
+  --primary: #2463EB;
+  --secondary: #EFF3FB;
+  --neutral-bg: #F9FAFB;
+  --text-primary: #1C1E21;
+  --text-secondary: #6B7280;
+  --success: #10B981;
+  --warning: #F59E0B;
+  --error: #EF4444;
+  --sparkline-primary: #4F46E5;
+  --sparkline-secondary: #A855F7;
+  
+  /* Tipografía */
+  --font-inter: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-space-grotesk: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  
+  /* Espaciado */
+  --spacing-xs: 0.5rem;
+  --spacing-sm: 0.75rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.25rem;
+  --spacing-xl: 1.5rem;
+  --spacing-2xl: 2rem;
+  
+  /* Sombras */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  
+  /* Border radius */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
-  }
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html {
+  font-display: swap;
 }
 
 body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-inter);
+  background-color: var(--neutral-bg);
+  color: var(--text-primary);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Animaciones personalizadas */
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.8;
-    transform: scale(1.05);
-  }
+/* Clases utilitarias personalizadas */
+.font-inter {
+  font-family: var(--font-inter);
 }
 
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-6px);
-  }
+.font-space-grotesk {
+  font-family: var(--font-space-grotesk);
 }
 
-@keyframes glow {
-  0%, 100% {
-    box-shadow: 0 0 5px rgba(93, 79, 176, 0.3);
-  }
-  50% {
-    box-shadow: 0 0 20px rgba(93, 79, 176, 0.6);
-  }
+.text-primary {
+  color: var(--text-primary);
 }
 
-@keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
+.text-secondary {
+  color: var(--text-secondary);
 }
 
-.animate-float {
-  animation: float 3s ease-in-out infinite;
+.bg-primary {
+  background-color: var(--primary);
 }
 
-.animate-glow {
-  animation: glow 2s ease-in-out infinite;
+.bg-secondary {
+  background-color: var(--secondary);
 }
 
-.animate-shimmer {
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-  background-size: 200% 100%;
-  animation: shimmer 2s infinite;
+.bg-neutral {
+  background-color: var(--neutral-bg);
+}
+
+.shadow-card {
+  box-shadow: var(--shadow-md);
+}
+
+.rounded-card {
+  border-radius: var(--radius-2xl);
+}
+
+/* Animaciones suaves */
+.transition-smooth {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-scale:hover {
+  transform: scale(1.02);
 }
 
 /* Scrollbar personalizado */
@@ -88,161 +117,45 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.05);
-  border-radius: 3px;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, #5D4FB0 0%, #A593F3 100%);
+  background: var(--text-secondary);
   border-radius: 3px;
+  opacity: 0.5;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, #A593F3 0%, #5D4FB0 100%);
+  background: var(--text-primary);
+  opacity: 0.7;
 }
 
-/* Efectos de partículas de fondo */
-.particles-background {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: -1;
-  background: 
-    radial-gradient(circle at 20% 80%, rgba(93, 79, 176, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(165, 147, 243, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 40% 40%, rgba(165, 202, 230, 0.08) 0%, transparent 50%);
+/* Estados de focus mejorados */
+.focus-ring:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 
-/* Mejoras de accesibilidad */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
+/* Gradientes para gráficos */
+.gradient-success {
+  background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
 }
 
-/* Estilos para modo oscuro */
-[data-theme="dark"] {
-  --foreground-rgb: 255, 255, 255;
-  --background-start-rgb: 15, 15, 26;
-  --background-end-rgb: 26, 27, 46;
+.gradient-warning {
+  background: linear-gradient(135deg, var(--warning) 0%, #D97706 100%);
 }
 
-[data-theme="dark"] .particles-background {
-  background: 
-    radial-gradient(circle at 20% 80%, rgba(124, 111, 220, 0.15) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(165, 147, 243, 0.12) 0%, transparent 50%),
-    radial-gradient(circle at 40% 40%, rgba(165, 202, 230, 0.08) 0%, transparent 50%);
+.gradient-error {
+  background: linear-gradient(135deg, var(--error) 0%, #DC2626 100%);
 }
 
-/* Transiciones suaves para elementos interactivos */
-.MuiListItemButton-root,
-.MuiButton-root,
-.MuiIconButton-root,
-.MuiFab-root {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+/* Efectos de hover para cards */
+.card-hover {
+  transition: all 0.2s ease-in-out;
 }
 
-/* Efectos de hover mejorados */
-.MuiListItemButton-root:hover {
-  transform: translateX(4px);
-}
-
-.MuiIconButton-root:hover {
-  transform: scale(1.1);
-}
-
-.MuiFab-root:hover {
-  transform: scale(1.1) translateY(-2px);
-}
-
-/* Estilos para chips y badges */
-.MuiChip-root {
-  transition: all 0.2s ease;
-}
-
-.MuiChip-root:hover {
-  transform: scale(1.05);
-}
-
-/* Mejoras tipográficas */
-.MuiTypography-h1,
-.MuiTypography-h2,
-.MuiTypography-h3,
-.MuiTypography-h4,
-.MuiTypography-h5,
-.MuiTypography-h6 {
-  font-family: 'Outfit', sans-serif !important;
-  font-weight: 600 !important;
-}
-
-.MuiTypography-body1,
-.MuiTypography-body2,
-.MuiTypography-caption {
-  font-family: 'Inter', sans-serif !important;
-}
-
-/* Efectos de glassmorphism */
-.glass-effect {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-[data-theme="dark"] .glass-effect {
-  background: rgba(26, 27, 46, 0.8);
-  border: 1px solid rgba(165, 147, 243, 0.2);
-}
-
-/* Animaciones de entrada */
-.fade-in {
-  animation: fadeIn 0.6s ease-out;
-}
-
-.slide-in-right {
-  animation: slideInRight 0.6s ease-out;
-}
-
-.slide-in-left {
-  animation: slideInLeft 0.6s ease-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes slideInRight {
-  from {
-    opacity: 0;
-    transform: translateX(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes slideInLeft {
-  from {
-    opacity: 0;
-    transform: translateX(-30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
 }

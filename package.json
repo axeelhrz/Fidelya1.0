@@ -1,5 +1,5 @@
 {
-  "name": "centro-psicologico",
+  "name": "centro-psicologico2",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -9,38 +9,19 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@emotion/react": "^11.14.0",
-    "@emotion/styled": "^11.14.0",
-    "@hookform/resolvers": "^5.1.1",
-    "@mui/icons-material": "^7.1.1",
-    "@mui/material": "^7.1.1",
-    "@mui/x-date-pickers": "^8.5.2",
-    "@types/chart.js": "^2.9.41",
-    "chart.js": "^4.5.0",
-    "date-fns": "^4.1.0",
-    "firebase": "^11.9.1",
-    "framer-motion": "^12.18.1",
-    "html2canvas": "^1.4.1",
-    "jspdf": "^3.0.1",
-    "next": "15.3.3",
     "react": "^19.0.0",
-    "react-chartjs-2": "^5.3.0",
     "react-dom": "^19.0.0",
-    "react-hook-form": "^7.58.0",
-    "recharts": "^2.15.3",
-    "xlsx": "^0.18.5",
-    "zod": "^3.25.64"
+    "next": "15.3.4"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3",
-    "@tailwindcss/postcss": "^4",
-    "@types/html2canvas": "^0.5.35",
+    "typescript": "^5",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "15.3.3",
+    "@tailwindcss/postcss": "^4",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "eslint": "^9",
+    "eslint-config-next": "15.3.4",
+    "@eslint/eslintrc": "^3"
   }
 }
