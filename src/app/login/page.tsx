@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   User,
   Lock,
@@ -18,6 +19,16 @@ import {
   Zap
 } from 'lucide-react';
 
+// Pre-defined particle configurations to avoid hydration mismatch
+const PARTICLE_CONFIGS = [
+  { width: 120, height: 80, top: 20, left: 15, duration: 8, delay: 0 },
+  { width: 90, height: 110, top: 60, left: 75, duration: 10, delay: 1 },
+  { width: 140, height: 70, top: 35, left: 85, duration: 7, delay: 0.5 },
+  { width: 100, height: 100, top: 80, left: 25, duration: 9, delay: 1.5 },
+  { width: 80, height: 120, top: 10, left: 60, duration: 11, delay: 0.8 },
+  { width: 110, height: 90, top: 70, left: 45, duration: 6, delay: 2 },
+];
+
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -26,7 +37,20 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
   const [isClient, setIsClient] = useState(false);
+  
   const router = useRouter();
+  const { user, login } = useAuth();
+
+  // Redirigir si ya está autenticado
+  useEffect(() => {
+    if (user) {
+      if (user.role === 'admin') {
+        router.push('/dashboard/ceo');
+      } else {
+        router.push('/dashboard/sessions');
+      }
+    }
+  }, [user, router]);
 
   // Ensure we're on the client side before showing time
   useEffect(() => {
@@ -49,24 +73,19 @@ export default function LoginPage() {
     setIsLoading(true);
     setError('');
 
-    // Simular delay de autenticación
-    await new Promise(resolve => setTimeout(resolve, 1500));
-
-    // Validar credenciales
-    if (email === 'admin' && password === 'admin123') {
-      // Simular guardado de sesión
-      localStorage.setItem('user', JSON.stringify({
-        id: 'admin1',
-        email: 'admin@centropsicologico.com',
-        role: 'admin',
-        centerId: 'center1',
-        name: 'Dr. Carlos Mendoza'
-      }));
+    try {
+      const success = await login(email, password);
       
-      // Redirigir al dashboard
-      router.push('/dashboard/ceo');
-    } else {
-      setError('Credenciales incorrectas. Use: admin / admin123');
+      if (success) {
+        // La redirección se maneja en el useEffect de arriba
+        console.log('Login successful');
+      } else {
+        setError('Credenciales incorrectas. Use: admin / admin123');
+      }
+    } catch (err) {
+      setError('Error al iniciar sesión. Inténtalo de nuevo.');
+      console.error('Login error:', err);
+    } finally {
       setIsLoading(false);
     }
   };
@@ -89,6 +108,47 @@ export default function LoginPage() {
     }
   ];
 
+  // Si ya está autenticado, mostrar loading
+  if (user) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+      }}>
+        <div style={{
+          background: 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(20px)',
+          borderRadius: '1rem',
+          padding: '2rem',
+          textAlign: 'center'
+        }}>
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+            style={{
+              width: '40px',
+              height: '40px',
+              border: '4px solid #E5E7EB',
+              borderTop: '4px solid #2563EB',
+              borderRadius: '50%',
+              margin: '0 auto 1rem'
+            }}
+          />
+          <p style={{
+            fontSize: '1rem',
+            color: '#6B7280',
+            fontFamily: 'Inter, sans-serif'
+          }}>
+            Redirigiendo al dashboard...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{
       minHeight: '100vh',
@@ -108,18 +168,18 @@ export default function LoginPage() {
         `
       }} />
 
-      {/* Partículas flotantes */}
-      {[...Array(6)].map((_, i) => (
+      {/* Partículas flotantes - Solo se renderizan en el cliente */}
+      {isClient && PARTICLE_CONFIGS.map((config, i) => (
         <motion.div
           key={i}
           style={{
             position: 'absolute',
-            width: `${Math.random() * 100 + 50}px`,
-            height: `${Math.random() * 100 + 50}px`,
+            width: `${config.width}px`,
+            height: `${config.height}px`,
             background: 'rgba(255, 255, 255, 0.1)',
             borderRadius: '50%',
-            top: `${Math.random() * 100}%`,
-            left: `${Math.random() * 100}%`,
+            top: `${config.top}%`,
+            left: `${config.left}%`,
           }}
           animate={{
             y: [0, -30, 0],
@@ -127,10 +187,10 @@ export default function LoginPage() {
             scale: [1, 1.1, 1],
           }}
           transition={{
-            duration: 6 + Math.random() * 4,
+            duration: config.duration,
             repeat: Infinity,
             ease: "easeInOut",
-            delay: Math.random() * 2
+            delay: config.delay
           }}
         />
       ))}
@@ -229,7 +289,6 @@ export default function LoginPage() {
             </motion.div>
           </div>
 
-          {/* Características */}
           {/* Características */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             {features.map((feature, index) => (
@@ -444,6 +503,7 @@ export default function LoginPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Ingresa tu usuario"
                   required
+                  disabled={isLoading}
                   style={{
                     width: '100%',
                     padding: '0.75rem 1rem 0.75rem 2.5rem',
@@ -453,11 +513,14 @@ export default function LoginPage() {
                     outline: 'none',
                     transition: 'all 0.2s ease',
                     fontFamily: 'Inter, sans-serif',
-                    backgroundColor: 'white'
+                    backgroundColor: isLoading ? '#F9FAFB' : 'white',
+                    opacity: isLoading ? 0.7 : 1
                   }}
                   onFocus={(e) => {
-                    e.target.style.borderColor = '#2563EB';
-                    e.target.style.boxShadow = '0 0 0 3px rgba(37, 99, 235, 0.1)';
+                    if (!isLoading) {
+                      e.target.style.borderColor = '#2563EB';
+                      e.target.style.boxShadow = '0 0 0 3px rgba(37, 99, 235, 0.1)';
+                    }
                   }}
                   onBlur={(e) => {
                     e.target.style.borderColor = '#E5E7EB';
@@ -492,6 +555,7 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Ingresa tu contraseña"
                   required
+                  disabled={isLoading}
                   style={{
                     width: '100%',
                     padding: '0.75rem 2.5rem 0.75rem 2.5rem',
@@ -501,11 +565,14 @@ export default function LoginPage() {
                     outline: 'none',
                     transition: 'all 0.2s ease',
                     fontFamily: 'Inter, sans-serif',
-                    backgroundColor: 'white'
+                    backgroundColor: isLoading ? '#F9FAFB' : 'white',
+                    opacity: isLoading ? 0.7 : 1
                   }}
                   onFocus={(e) => {
-                    e.target.style.borderColor = '#2563EB';
-                    e.target.style.boxShadow = '0 0 0 3px rgba(37, 99, 235, 0.1)';
+                    if (!isLoading) {
+                      e.target.style.borderColor = '#2563EB';
+                      e.target.style.boxShadow = '0 0 0 3px rgba(37, 99, 235, 0.1)';
+                    }
                   }}
                   onBlur={(e) => {
                     e.target.style.borderColor = '#E5E7EB';
@@ -514,9 +581,10 @@ export default function LoginPage() {
                 />
                 <motion.button
                   type="button"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => setShowPassword(!showPassword)}
+                  whileHover={{ scale: isLoading ? 1 : 1.1 }}
+                  whileTap={{ scale: isLoading ? 1 : 0.9 }}
+                  onClick={() => !isLoading && setShowPassword(!showPassword)}
+                  disabled={isLoading}
                   style={{
                     position: 'absolute',
                     right: '1rem',
@@ -524,8 +592,9 @@ export default function LoginPage() {
                     transform: 'translateY(-50%)',
                     background: 'none',
                     border: 'none',
-                    cursor: 'pointer',
-                    color: '#9CA3AF'
+                    cursor: isLoading ? 'not-allowed' : 'pointer',
+                    color: isLoading ? '#D1D5DB' : '#9CA3AF',
+                    opacity: isLoading ? 0.5 : 1
                   }}
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -587,7 +656,7 @@ export default function LoginPage() {
                 gap: '0.5rem',
                 transition: 'all 0.2s ease',
                 fontFamily: 'Inter, sans-serif',
-                boxShadow: '0 4px 12px rgba(37, 99, 235, 0.3)'
+                boxShadow: isLoading ? 'none' : '0 4px 12px rgba(37, 99, 235, 0.3)'
               }}
             >
               {isLoading ? (

@@ -28,38 +28,67 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // Verificar si hay un usuario guardado en localStorage
-    const savedUser = localStorage.getItem('user');
-    if (savedUser) {
+    const checkAuth = () => {
       try {
-        setUser(JSON.parse(savedUser));
+        const savedUser = localStorage.getItem('user');
+        if (savedUser) {
+          const userData = JSON.parse(savedUser);
+          setUser(userData);
+          
+          // Establecer cookie para el middleware
+          document.cookie = `user=${JSON.stringify(userData)}; path=/; max-age=86400`; // 24 horas
+        }
       } catch (error) {
         console.error('Error parsing saved user:', error);
         localStorage.removeItem('user');
+        // Eliminar cookie corrupta
+        document.cookie = 'user=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT';
+      } finally {
+        setLoading(false);
       }
-    }
-    setLoading(false);
+    };
+
+    checkAuth();
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    // Simular autenticación
-    if (email === 'admin' && password === 'admin123') {
-      const userData: User = {
-        id: 'admin1',
-        email: 'admin@centropsicologico.com',
-        role: 'admin',
-        centerId: 'center1',
-        name: 'Dr. Carlos Mendoza'
-      };
+    try {
+      // Simular delay de autenticación
+      await new Promise(resolve => setTimeout(resolve, 1500));
       
-      setUser(userData);
-      localStorage.setItem('user', JSON.stringify(userData));
+      // Validar credenciales
+      if (email === 'admin' && password === 'admin123') {
+        const userData: User = {
+          id: 'admin1',
+          email: 'admin@centropsicologico.com',
+          role: 'admin',
+          centerId: 'center1',
+          name: 'Dr. Carlos Mendoza'
+        };
+        
+        setUser(userData);
+        localStorage.setItem('user', JSON.stringify(userData));
+        
+        // Establecer cookie para el middleware
+        document.cookie = `user=${JSON.stringify(userData)}; path=/; max-age=86400`; // 24 horas
+        
+        // Redirigir según el rol
+        setTimeout(() => {
+          if (userData.role === 'admin') {
+            router.push('/dashboard/ceo');
+          } else {
+            router.push('/dashboard/sessions');
+          }
+        }, 100);
+        
+        return true;
+      }
       
-      // Establecer cookie para el middleware
-      document.cookie = `user=${JSON.stringify(userData)}; path=/; max-age=86400`; // 24 horas
-      
-      return true;
+      return false;
+    } catch (error) {
+      console.error('Login error:', error);
+      return false;
     }
-    return false;
   };
 
   const logout = () => {

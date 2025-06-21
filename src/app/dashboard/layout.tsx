@@ -50,6 +50,12 @@ export default function DashboardLayout({
             Cargando dashboard...
           </p>
         </div>
+        <style jsx>{`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
       </div>
     );
   }
@@ -58,11 +64,18 @@ export default function DashboardLayout({
     return null;
   }
 
-  // Redirigir según el rol
-  if (user.role === 'therapist' && window.location.pathname.includes('/ceo')) {
-    router.push('/dashboard/therapist');
-    return null;
-  }
+  // Redirigir según el rol si está en la ruta incorrecta
+  useEffect(() => {
+    if (user && typeof window !== 'undefined') {
+      const currentPath = window.location.pathname;
+      
+      if (user.role === 'therapist' && currentPath.includes('/ceo')) {
+        router.push('/dashboard/sessions');
+      } else if (user.role === 'admin' && currentPath.includes('/sessions') && !currentPath.includes('/ceo')) {
+        router.push('/dashboard/ceo');
+      }
+    }
+  }, [user, router]);
 
   return (
     <AdminLayout>
