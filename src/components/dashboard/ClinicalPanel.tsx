@@ -16,7 +16,6 @@ import {
   Clock,
   Target,
   BarChart3,
-  Pulse,
   Eye,
   CheckCircle2,
   XCircle,
@@ -24,7 +23,8 @@ import {
   Sparkles,
   ArrowRight,
   TrendingDown,
-  Plus
+  Plus,
+  Radio
 } from 'lucide-react';
 import { 
   RadarChart, 
@@ -426,7 +426,7 @@ export default function ClinicalPanel() {
                   }}
                   whileHover={{ scale: 1.05 }}
                 >
-                  <Pulse className="w-3 h-3" />
+                  <Radio className="w-3 h-3" />
                   <span>Salud Operativa: {mockClinicalData.healthMetrics.operationalHealth}%</span>
                 </motion.div>
               </div>
