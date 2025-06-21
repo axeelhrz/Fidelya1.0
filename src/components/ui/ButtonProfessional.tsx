@@ -1,7 +1,6 @@
 'use client';
 
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useState } from 'react';
 import { LucideIcon } from 'lucide-react';
 import { useStyles } from '@/lib/useStyles';
 
@@ -29,6 +28,8 @@ const ButtonProfessional: React.FC<ButtonProfessionalProps> = ({
   ...props
 }) => {
   const { theme } = useStyles();
+  const [isHovered, setIsHovered] = useState(false);
+  const [isPressed, setIsPressed] = useState(false);
 
   const getVariantStyles = () => {
     const baseStyles = {
@@ -122,41 +123,56 @@ const ButtonProfessional: React.FC<ButtonProfessionalProps> = ({
     }
   };
 
-  const getHoverStyles = () => {
+  const getInteractionStyles = () => {
     if (disabled || loading) return {};
 
-    switch (variant) {
-      case 'primary':
-        return {
-          filter: 'brightness(1.05)',
-          boxShadow: theme.shadows.glowStrong,
-          transform: 'translateY(-2px)',
-        };
-      case 'secondary':
-        return {
-          backgroundColor: theme.colors.surfaceElevated,
-          borderColor: theme.colors.borderMedium,
-          transform: 'translateY(-2px)',
-        };
-      case 'success':
-      case 'warning':
-      case 'error':
-        return {
-          filter: 'brightness(1.05)',
-          transform: 'translateY(-2px)',
-        };
-      case 'ghost':
-        return {
-          backgroundColor: `${theme.colors.primary}08`,
-        };
-      default:
-        return {};
+    let styles = {};
+
+    if (isPressed) {
+      styles = { ...styles, transform: 'scale(0.98)' };
+    } else if (isHovered) {
+      switch (variant) {
+        case 'primary':
+          styles = {
+            ...styles,
+            filter: 'brightness(1.05)',
+            boxShadow: theme.shadows.glowStrong,
+            transform: 'translateY(-2px)',
+          };
+          break;
+        case 'secondary':
+          styles = {
+            ...styles,
+            backgroundColor: theme.colors.surfaceElevated,
+            borderColor: theme.colors.borderMedium,
+            transform: 'translateY(-2px)',
+          };
+          break;
+        case 'success':
+        case 'warning':
+        case 'error':
+          styles = {
+            ...styles,
+            filter: 'brightness(1.05)',
+            transform: 'translateY(-2px)',
+          };
+          break;
+        case 'ghost':
+          styles = {
+            ...styles,
+            backgroundColor: `${theme.colors.primary}08`,
+          };
+          break;
+      }
     }
+
+    return styles;
   };
 
   const buttonStyles = {
     ...getVariantStyles(),
     ...getSizeStyles(),
+    ...getInteractionStyles(),
     width: fullWidth ? '100%' : 'auto',
     opacity: disabled || loading ? 0.6 : 1,
     ...style,
@@ -187,15 +203,19 @@ const ButtonProfessional: React.FC<ButtonProfessionalProps> = ({
   );
 
   return (
-    <motion.button
+    <button
       {...props}
       disabled={disabled || loading}
       style={buttonStyles}
       className={className}
       onClick={onClick}
-      whileHover={disabled || loading ? {} : getHoverStyles()}
-      whileTap={disabled || loading ? {} : { scale: 0.98 }}
-      transition={{ duration: 0.2 }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => {
+        setIsHovered(false);
+        setIsPressed(false);
+      }}
+      onMouseDown={() => setIsPressed(true)}
+      onMouseUp={() => setIsPressed(false)}
     >
       {loading && <LoadingSpinner />}
       {Icon && iconPosition === 'left' && !loading && (
@@ -205,7 +225,7 @@ const ButtonProfessional: React.FC<ButtonProfessionalProps> = ({
       {Icon && iconPosition === 'right' && !loading && (
         <Icon size={size === 'sm' ? 14 : size === 'lg' ? 18 : 16} />
       )}
-    </motion.button>
+    </button>
   );
 };
 

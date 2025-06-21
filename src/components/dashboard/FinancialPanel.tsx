@@ -885,10 +885,10 @@ export default function FinancialPanel() {
                       style={{ borderBottom: '1px solid #F3F4F6' }}
                     >
                       <td style={{ padding: '0.75rem', fontSize: '0.875rem', color: '#1C1E21' }}>
-                        {payment.patientName}
+                        {String(payment.patientName)}
                       </td>
                       <td style={{ padding: '0.75rem', fontSize: '0.875rem', color: '#6B7280' }}>
-                        {payment.sessionType}
+                        {String(payment.sessionType)}
                       </td>
                       <td style={{ padding: '0.75rem', fontSize: '0.875rem', fontWeight: 600, color: '#1C1E21' }}>
                         {formatCurrency(payment.amount)}
