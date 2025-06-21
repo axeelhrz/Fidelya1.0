@@ -34,9 +34,9 @@ export default function Home() {
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.5 }}
-            className="w-16 h-16 bg-gradient-to-br from-accent to-accent-light rounded-xl flex items-center justify-center mx-auto mb-6"
+            className="w-16 h-16 gradient-accent rounded-xl flex items-center justify-center mx-auto mb-6 shadow-elevated"
           >
-            <span className="text-inverse font-bold text-xl">CP</span>
+            <span className="text-white font-bold text-xl">CP</span>
           </motion.div>
 
           {/* Spinner mejorado */}
@@ -56,8 +56,10 @@ export default function Home() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
           >
-            <p className="text-primary font-medium mb-2">Centro Psicológico</p>
-            <p className="text-secondary text-sm">Cargando dashboard...</p>
+            <h1 className="text-xl font-semibold font-space-grotesk text-primary mb-2">
+              Centro Psicológico
+            </h1>
+            <p className="text-text-secondary text-sm">Cargando dashboard...</p>
           </motion.div>
 
           {/* Indicador de progreso */}
@@ -65,7 +67,7 @@ export default function Home() {
             initial={{ width: 0 }}
             animate={{ width: '100%' }}
             transition={{ duration: 2, ease: 'easeInOut' }}
-            className="mt-6 h-1 bg-accent rounded-full mx-auto max-w-xs"
+            className="mt-6 h-1 bg-accent rounded-full mx-auto max-w-xs shadow-sm"
           />
         </div>
       </div>

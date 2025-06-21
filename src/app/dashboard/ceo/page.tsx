@@ -20,7 +20,7 @@ export default function CEODashboard() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-secondary text-sm">Cargando dashboard...</p>
+          <p className="text-text-secondary text-sm">Cargando dashboard...</p>
         </div>
       </div>
     );
@@ -30,11 +30,15 @@ export default function CEODashboard() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center max-w-md mx-auto p-8">
-          <div className="w-16 h-16 bg-error-bg rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-error-bg rounded-full flex items-center justify-center mx-auto mb-4 shadow-card">
             <span className="text-error text-2xl">⚠</span>
           </div>
-          <h1 className="text-xl font-semibold text-primary mb-2">Acceso Denegado</h1>
-          <p className="text-secondary">No tienes permisos para acceder a esta vista.</p>
+          <h1 className="text-xl font-semibold text-primary mb-2 font-space-grotesk">
+            Acceso Denegado
+          </h1>
+          <p className="text-text-secondary">
+            No tienes permisos para acceder a esta vista.
+          </p>
         </div>
       </div>
     );
@@ -64,10 +68,10 @@ export default function CEODashboard() {
               animate={{ opacity: 1, y: 0 }}
               className="space-y-2"
             >
-              <h1 className="text-2xl font-semibold font-space-grotesk text-primary">
+              <h1 className="text-3xl font-bold font-space-grotesk text-primary">
                 Buenos días, {user.name}
               </h1>
-              <p className="text-secondary">
+              <p className="text-text-secondary text-lg">
                 Resumen ejecutivo del estado actual de tu centro psicológico
               </p>
             </motion.section>
