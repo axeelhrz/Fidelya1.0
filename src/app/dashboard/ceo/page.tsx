@@ -10,53 +10,17 @@ import {
   Brain, 
   TrendingUp, 
   Sparkles,
-  Activity,
-  Users,
-  Zap,
   Download,
   Bell,
-  ArrowRight,
-  Eye,
-  Shield,
-  Cpu,
-  Globe,
-  Calendar,
-  Clock,
-  Star,
-  Award,
-  Briefcase,
-  PieChart,
-  LineChart,
-  BarChart,
-  TrendingDown,
   AlertTriangle,
   CheckCircle,
   Info,
   Settings,
-  Filter,
-  Search,
-  RefreshCw,
-  Maximize2,
-  MoreVertical,
+  Clock,
+  Calendar,
+  Star,
+  Zap,
   ChevronRight,
-  ChevronDown,
-  Play,
-  Pause,
-  Square,
-  Volume2,
-  VolumeX,
-  Wifi,
-  WifiOff,
-  Battery,
-  BatteryLow,
-  Sun,
-  Moon,
-  Monitor,
-  Smartphone,
-  Tablet,
-  Laptop,
-  MapPin,
-  User,
   BarChart2,
   Database
 } from 'lucide-react';
@@ -151,7 +115,7 @@ export default function CEODashboard() {
     return () => clearInterval(interval);
   }, []);
 
-  // Pestañas actualizadas según especificaciones
+  // Pestañas actualizadas con rutas específicas
   const tabs = [
     {
       id: 'executive',
@@ -164,19 +128,22 @@ export default function CEODashboard() {
       id: 'financial',
       label: 'Inteligencia Financiera',
       icon: DollarSign,
-      description: 'Análisis predictivo de ingresos'
+      description: 'Análisis predictivo de ingresos',
+      route: '/dashboard/ceo/financial'
     },
     {
       id: 'clinical',
       label: 'Operaciones Clínicas',
       icon: Heart,
-      description: 'Salud operativa en tiempo real'
+      description: 'Salud operativa en tiempo real',
+      route: '/dashboard/ceo/clinical'
     },
     {
       id: 'commercial',
       label: 'Marketing Inteligente',
       icon: Target,
-      description: 'Optimización de conversión'
+      description: 'Optimización de conversión',
+      route: '/dashboard/ceo/commercial'
     },
     {
       id: 'insights',
@@ -936,117 +903,6 @@ export default function CEODashboard() {
           </motion.div>
         );
 
-      case 'financial':
-        return (
-          <motion.div
-            key="financial"
-            variants={contentVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-          >
-            <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-              <h2 style={{ 
-                fontSize: '2.5rem',
-                background: 'linear-gradient(135deg, #2463EB 0%, #1D4ED8 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-                fontFamily: 'Space Grotesk, sans-serif',
-                marginBottom: '1rem',
-                fontWeight: 700
-              }}>
-                Inteligencia Financiera
-              </h2>
-              <p style={{ 
-                fontSize: '1.125rem', 
-                color: '#6B7280',
-                maxWidth: '600px', 
-                margin: '0 auto',
-                fontFamily: 'Inter, sans-serif',
-                fontWeight: 400
-              }}>
-                Análisis predictivo avanzado con machine learning para optimización de ingresos
-              </p>
-            </div>
-            <FinancialPanel />
-          </motion.div>
-        );
-
-      case 'clinical':
-        return (
-          <motion.div
-            key="clinical"
-            variants={contentVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-          >
-            <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-              <h2 style={{ 
-                fontSize: '2.5rem',
-                background: 'linear-gradient(135deg, #2463EB 0%, #1D4ED8 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-                fontFamily: 'Space Grotesk, sans-serif',
-                marginBottom: '1rem',
-                fontWeight: 700
-              }}>
-                Operaciones Clínicas
-              </h2>
-              <p style={{ 
-                fontSize: '1.125rem', 
-                color: '#6B7280',
-                maxWidth: '600px', 
-                margin: '0 auto',
-                fontFamily: 'Inter, sans-serif',
-                fontWeight: 400
-              }}>
-                Monitoreo inteligente de salud operativa con alertas predictivas
-              </p>
-            </div>
-            <ClinicalPanel />
-          </motion.div>
-        );
-
-      case 'commercial':
-        return (
-          <motion.div
-            key="commercial"
-            variants={contentVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-          >
-            <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-              <h2 style={{ 
-                fontSize: '2.5rem',
-                background: 'linear-gradient(135deg, #2463EB 0%, #1D4ED8 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-                fontFamily: 'Space Grotesk, sans-serif',
-                marginBottom: '1rem',
-                fontWeight: 700
-              }}>
-                Marketing Inteligente
-              </h2>
-              <p style={{ 
-                fontSize: '1.125rem', 
-                color: '#6B7280',
-                maxWidth: '600px', 
-                margin: '0 auto',
-                fontFamily: 'Inter, sans-serif',
-                fontWeight: 400
-              }}>
-                Optimización automática de conversión con análisis de comportamiento
-              </p>
-            </div>
-            <CommercialPanel />
-          </motion.div>
-        );
-
       case 'insights':
         return (
           <motion.div
@@ -1120,7 +976,7 @@ export default function CEODashboard() {
       }}>
         {/* Columna principal */}
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-          {/* Navegación de pestañas mejorada */}
+          {/* Navegación de pestañas mejorada con rutas */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -1133,6 +989,7 @@ export default function CEODashboard() {
               onTabChange={setActiveTab}
               variant="cards"
               showDescriptions={true}
+              enableRouting={true}
             />
           </motion.div>
 
