@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { TrendingUp, TrendingDown, Minus, MoreHorizontal, Target, Sparkles, Zap, ArrowUpRight } from 'lucide-react';
 import { LineChart, Line, ResponsiveContainer, Area, AreaChart } from 'recharts';
 import { KPIMetric } from '@/types/dashboard';
+import { useStyles } from '@/lib/useStyles';
 
 interface KPICardProps {
   metric: KPIMetric;
@@ -13,55 +14,374 @@ interface KPICardProps {
 }
 
 export default function KPICard({ metric, index, onClick }: KPICardProps) {
+  const { theme } = useStyles();
   const [isHovered, setIsHovered] = useState(false);
+
+  // Estilos autocontenidos
+  const styles = {
+    container: {
+      position: 'relative' as const,
+      cursor: 'pointer',
+    },
+    
+    card: {
+      position: 'relative' as const,
+      background: theme.colors.surfaceGlass,
+      backdropFilter: 'blur(20px)',
+      border: `1px solid ${theme.colors.borderLight}`,
+      borderRadius: theme.borderRadius.xxl,
+      overflow: 'hidden',
+      transition: theme.animations.transition,
+    },
+    
+    cardHover: {
+      borderColor: theme.colors.borderPrimary,
+      boxShadow: theme.shadows.glowStrong,
+    },
+    
+    statusGradient: {
+      position: 'absolute' as const,
+      top: 0,
+      left: 0,
+      right: 0,
+      height: isHovered ? '8px' : '2px',
+      background: getStatusGradient(),
+      opacity: isHovered ? 1 : 0.7,
+      transition: theme.animations.transition,
+    },
+    
+    glowEffect: {
+      position: 'absolute' as const,
+      inset: 0,
+      background: getStatusGradient(),
+      filter: 'blur(12px)',
+      opacity: isHovered ? 0.4 : 0,
+      transition: theme.animations.transition,
+    },
+    
+    content: {
+      position: 'relative' as const,
+      padding: theme.spacing.lg,
+      zIndex: 10,
+    },
+    
+    header: {
+      display: 'flex',
+      alignItems: 'flex-start',
+      justifyContent: 'space-between',
+      marginBottom: theme.spacing.lg,
+    },
+    
+    titleContainer: {
+      flex: 1,
+      minWidth: 0,
+    },
+    
+    title: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: theme.spacing.sm,
+      marginBottom: theme.spacing.sm,
+    },
+    
+    titleText: {
+      fontSize: '0.875rem',
+      fontWeight: theme.fontWeights.medium,
+      color: isHovered ? theme.colors.textAccent : theme.colors.textSecondary,
+      fontFamily: theme.fonts.heading,
+      letterSpacing: '0.05em',
+      textTransform: 'uppercase' as const,
+      transition: theme.animations.transition,
+    },
+    
+    valueContainer: {
+      display: 'flex',
+      alignItems: 'baseline',
+      gap: theme.spacing.sm,
+      marginBottom: '0.5rem',
+    },
+    
+    value: {
+      fontSize: '3rem',
+      fontWeight: theme.fontWeights.bold,
+      color: isHovered ? theme.colors.textAccent : theme.colors.textPrimary,
+      fontFamily: theme.fonts.heading,
+      lineHeight: 1,
+      transition: theme.animations.transition,
+    },
+    
+    unit: {
+      fontSize: '1.125rem',
+      fontWeight: theme.fontWeights.semibold,
+      color: theme.colors.textTertiary,
+      backgroundColor: theme.colors.surfaceElevated,
+      padding: '0.375rem 0.75rem',
+      borderRadius: theme.borderRadius.lg,
+      transition: theme.animations.transition,
+    },
+    
+    menuButton: {
+      padding: theme.spacing.sm,
+      borderRadius: theme.borderRadius.xl,
+      backgroundColor: `${theme.colors.surfaceElevated}80`,
+      backdropFilter: 'blur(4px)',
+      border: `1px solid ${theme.colors.borderLight}`,
+      cursor: 'pointer',
+      opacity: isHovered ? 1 : 0,
+      transition: theme.animations.transition,
+      outline: 'none',
+    },
+    
+    menuButtonHover: {
+      backgroundColor: theme.colors.surfaceHover,
+      borderColor: theme.colors.borderPrimary,
+    },
+    
+    trendContainer: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: '2.5rem',
+    },
+    
+    trendLeft: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '1.25rem',
+    },
+    
+    trendIcon: {
+      padding: theme.spacing.sm,
+      borderRadius: theme.borderRadius.xl,
+      backgroundColor: `${getStatusColor()}20`,
+      border: `1px solid ${getStatusColor()}30`,
+      backdropFilter: 'blur(4px)',
+      transition: theme.animations.transition,
+    },
+    
+    trendInfo: {
+      display: 'flex',
+      flexDirection: 'column' as const,
+      gap: '0.25rem',
+    },
+    
+    trendValue: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '0.5rem',
+    },
+    
+    trendPercentage: {
+      fontSize: '1.5rem',
+      fontWeight: theme.fontWeights.bold,
+      color: getStatusColor(),
+      fontFamily: theme.fonts.heading,
+    },
+    
+    trendLabel: {
+      fontSize: '0.875rem',
+      color: theme.colors.textTertiary,
+      fontWeight: theme.fontWeights.medium,
+    },
+    
+    performanceIndicator: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '0.75rem',
+      backgroundColor: `${theme.colors.textAccent}10`,
+      padding: '0.75rem 1rem',
+      borderRadius: theme.borderRadius.xl,
+      border: `1px solid ${theme.colors.textAccent}20`,
+      backdropFilter: 'blur(4px)',
+      opacity: isHovered ? 1 : 0,
+      transform: isHovered ? 'scale(1)' : 'scale(0)',
+      transition: theme.animations.transition,
+    },
+    
+    performanceText: {
+      fontSize: '0.875rem',
+      fontWeight: theme.fontWeights.semibold,
+      color: theme.colors.textAccent,
+    },
+    
+    sparklineContainer: {
+      height: '5rem',
+      margin: '0 -0.5rem 2.5rem -0.5rem',
+      position: 'relative' as const,
+    },
+    
+    sparklineBackground: {
+      position: 'absolute' as const,
+      inset: 0,
+      background: `linear-gradient(to right, transparent, ${theme.colors.textAccent}05, transparent)`,
+      borderRadius: theme.borderRadius.xl,
+    },
+    
+    progressSection: {
+      display: 'flex',
+      flexDirection: 'column' as const,
+      gap: '1.25rem',
+    },
+    
+    progressHeader: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      fontSize: '0.875rem',
+    },
+    
+    progressLeft: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: theme.spacing.sm,
+    },
+    
+    progressIcon: {
+      padding: '0.75rem',
+      borderRadius: theme.borderRadius.lg,
+      backgroundColor: `${theme.colors.textAccent}10`,
+      border: `1px solid ${theme.colors.textAccent}20`,
+    },
+    
+    progressLabel: {
+      fontWeight: theme.fontWeights.semibold,
+      color: theme.colors.textSecondary,
+      fontFamily: theme.fonts.heading,
+      fontSize: '1rem',
+    },
+    
+    progressTarget: {
+      fontWeight: theme.fontWeights.bold,
+      color: theme.colors.textPrimary,
+      backgroundColor: theme.colors.surfaceElevated,
+      padding: '0.5rem 1rem',
+      borderRadius: theme.borderRadius.lg,
+      fontSize: '1.125rem',
+    },
+    
+    progressBarContainer: {
+      position: 'relative' as const,
+    },
+    
+    progressBar: {
+      width: '100%',
+      backgroundColor: theme.colors.surfaceElevated,
+      borderRadius: theme.borderRadius.xl,
+      height: '1rem',
+      overflow: 'hidden',
+      border: `1px solid ${theme.colors.borderLight}`,
+      boxShadow: theme.shadows.inner,
+    },
+    
+    progressFill: {
+      height: '1rem',
+      borderRadius: theme.borderRadius.xl,
+      background: getProgressGradient(),
+      position: 'relative' as const,
+      overflow: 'hidden',
+      transition: 'width 2.5s cubic-bezier(0.4, 0, 0.2, 1)',
+    },
+    
+    progressShimmer: {
+      position: 'absolute' as const,
+      inset: 0,
+      background: 'linear-gradient(to right, transparent, rgba(255,255,255,0.4), transparent)',
+      animation: 'shimmer 2s infinite',
+    },
+    
+    progressOverlay: {
+      position: 'absolute' as const,
+      inset: 0,
+      background: 'linear-gradient(to right, transparent, rgba(255,255,255,0.3), transparent)',
+      borderRadius: theme.borderRadius.xl,
+      opacity: isHovered ? 1 : 0,
+      transition: theme.animations.transition,
+    },
+    
+    interactionOverlay: {
+      position: 'absolute' as const,
+      inset: 0,
+      background: `linear-gradient(135deg, ${theme.colors.textAccent}10, transparent, ${theme.colors.textAccent}15)`,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backdropFilter: 'blur(4px)',
+      opacity: isHovered ? 1 : 0,
+      transition: theme.animations.transition,
+    },
+    
+    interactionContent: {
+      textAlign: 'center' as const,
+      transform: isHovered ? 'translateY(0)' : 'translateY(30px)',
+      opacity: isHovered ? 1 : 0,
+      transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+      transitionDelay: '0.1s',
+    },
+    
+    interactionIcon: {
+      width: '5rem',
+      height: '5rem',
+      backgroundColor: `${theme.colors.textAccent}20`,
+      borderRadius: theme.borderRadius.xl,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      margin: '0 auto 1rem auto',
+      backdropFilter: 'blur(4px)',
+      border: `1px solid ${theme.colors.textAccent}30`,
+      boxShadow: theme.shadows.glow,
+    },
+    
+    interactionText: {
+      fontSize: '1rem',
+      fontWeight: theme.fontWeights.bold,
+      color: theme.colors.textAccent,
+      fontFamily: theme.fonts.heading,
+      letterSpacing: '0.05em',
+    },
+  };
+
+  function getStatusGradient() {
+    switch (metric.status) {
+      case 'success':
+        return theme.gradients.success;
+      case 'warning':
+        return theme.gradients.warning;
+      case 'error':
+        return theme.gradients.error;
+      default:
+        return theme.gradients.primary;
+    }
+  }
+
+  function getStatusColor() {
+    switch (metric.status) {
+      case 'success':
+        return theme.colors.success;
+      case 'warning':
+        return theme.colors.warning;
+      case 'error':
+        return theme.colors.error;
+      default:
+        return theme.colors.textAccent;
+    }
+  }
+
+  function getProgressGradient() {
+    const percentage = getProgressPercentage();
+    if (percentage >= 100) return theme.gradients.success;
+    if (percentage >= 75) return theme.gradients.warning;
+    return theme.gradients.primary;
+  }
 
   const getTrendIcon = () => {
     switch (metric.trend) {
       case 'up':
-        return <TrendingUp className="w-5 h-5 text-success" />;
+        return <TrendingUp size={20} color={theme.colors.success} />;
       case 'down':
-        return <TrendingDown className="w-5 h-5 text-error" />;
+        return <TrendingDown size={20} color={theme.colors.error} />;
       default:
-        return <Minus className="w-5 h-5 text-secondary" />;
-    }
-  };
-
-  const getStatusGradient = () => {
-    switch (metric.status) {
-      case 'success':
-        return 'from-success/20 via-success/10 to-transparent';
-      case 'warning':
-        return 'from-warning/20 via-warning/10 to-transparent';
-      case 'error':
-        return 'from-error/20 via-error/10 to-transparent';
-      default:
-        return 'from-accent/20 via-accent/10 to-transparent';
-    }
-  };
-
-  const getStatusColor = () => {
-    switch (metric.status) {
-      case 'success':
-        return 'text-success';
-      case 'warning':
-        return 'text-warning';
-      case 'error':
-        return 'text-error';
-      default:
-        return 'text-accent';
-    }
-  };
-
-  const getStatusBorder = () => {
-    switch (metric.status) {
-      case 'success':
-        return 'border-success/30';
-      case 'warning':
-        return 'border-warning/30';
-      case 'error':
-        return 'border-error/30';
-      default:
-        return 'border-accent/30';
+        return <Minus size={20} color={theme.colors.textSecondary} />;
     }
   };
 
@@ -78,279 +398,221 @@ export default function KPICard({ metric, index, onClick }: KPICardProps) {
   const sparklineData = metric.sparklineData.map((value, index) => ({
     index,
     value,
-    smoothValue: value + Math.sin(index * 0.5) * (value * 0.05) // Suavizado para mejor visualización
+    smoothValue: value + Math.sin(index * 0.5) * (value * 0.05)
   }));
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 60, scale: 0.9 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ 
-        delay: index * 0.15,
-        duration: 0.8,
-        ease: [0.4, 0, 0.2, 1]
-      }}
-      whileHover={{ 
-        y: -16,
-        scale: 1.03,
-        transition: { duration: 0.4, ease: [0.4, 0, 0.2, 1] }
-      }}
-      className="group relative cursor-pointer"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      onClick={onClick}
-    >
-      {/* Fondo principal con glassmorphism mejorado */}
-      <div className="relative bg-surface-glass backdrop-blur-2xl border border-light rounded-3xl overflow-hidden transition-all duration-500 group-hover:border-glow group-hover:shadow-glow-strong">
-        
-        {/* Gradiente de estado superior animado */}
-        <motion.div 
-          className={`absolute top-0 left-0 right-0 h-2 bg-gradient-to-r ${getStatusGradient()}`}
-          animate={{
-            opacity: isHovered ? 1 : 0.7,
-            height: isHovered ? 8 : 2
-          }}
-          transition={{ duration: 0.3 }}
-        >
-          <div className={`absolute inset-0 bg-gradient-to-r ${getStatusGradient()} blur-sm opacity-50`} />
-        </motion.div>
-        
-        {/* Efecto de brillo dinámico */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ 
-            opacity: isHovered ? 0.4 : 0,
-            scale: isHovered ? 1.2 : 0.8
-          }}
-          transition={{ duration: 0.4 }}
-          className={`absolute inset-0 bg-gradient-to-br ${getStatusGradient()} blur-xl`}
-        />
-        
-        {/* Partículas decorativas animadas */}
-        <motion.div
-          animate={{
-            opacity: isHovered ? 1 : 0,
-            scale: isHovered ? 1 : 0,
-            rotate: isHovered ? 360 : 0
-          }}
-          transition={{ duration: 2, ease: "linear", repeat: isHovered ? Infinity : 0 }}
-          className="absolute top-6 right-6 w-3 h-3 bg-accent/40 rounded-full"
-        />
-        <motion.div
-          animate={{
-            opacity: isHovered ? 1 : 0,
-            y: isHovered ? [0, -10, 0] : 0
-          }}
-          transition={{ duration: 3, ease: "easeInOut", repeat: isHovered ? Infinity : 0 }}
-          className="absolute bottom-8 left-6 w-2 h-2 bg-accent/30 rounded-full"
-        />
-        
-        <div className="relative p-8 z-10">
-          {/* Header con animaciones mejoradas */}
-          <div className="flex items-start justify-between mb-8">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center space-x-4 mb-4">
-                <motion.h3 
-                  className="text-sm font-medium text-secondary truncate font-space-grotesk tracking-wide uppercase"
-                  animate={{ 
-                    color: isHovered ? 'var(--color-accent)' : 'var(--color-text-secondary)',
-                    scale: isHovered ? 1.05 : 1
-                  }}
-                  transition={{ duration: 0.3 }}
-                >
-                  {metric.name}
-                </motion.h3>
-                {metric.status === 'success' && (
-                  <motion.div
-                    initial={{ scale: 0, rotate: -180 }}
-                    animate={{ 
-                      scale: isHovered ? 1.2 : 0,
-                      rotate: isHovered ? 0 : -180
-                    }}
-                    transition={{ duration: 0.5, type: "spring", stiffness: 200 }}
-                  >
-                    <Sparkles className="w-5 h-5 text-success" />
-                  </motion.div>
-                )}
-              </div>
-              
-              <div className="flex items-baseline space-x-4 mb-2">
-                <motion.span 
-                  className="text-5xl font-bold text-display-futuristic text-primary"
-                  animate={{ 
-                    scale: isHovered ? 1.08 : 1,
-                    color: isHovered ? 'var(--color-accent)' : 'var(--color-text-primary)'
-                  }}
-                  transition={{ duration: 0.3 }}
-                >
-                  {metric.value.toLocaleString()}
-                </motion.span>
-                <motion.span 
-                  className="text-lg font-semibold text-tertiary bg-surface-elevated px-3 py-1.5 rounded-xl"
-                  animate={{ scale: isHovered ? 1.1 : 1 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  {metric.unit}
-                </motion.span>
-              </div>
-            </div>
-            
-            <motion.button
-              whileHover={{ scale: 1.3, rotate: 90 }}
-              whileTap={{ scale: 0.9 }}
-              className="p-4 rounded-2xl bg-surface-elevated/50 backdrop-blur-sm hover:bg-surface-hover transition-all duration-300 opacity-0 group-hover:opacity-100 border border-light hover:border-glow"
-            >
-              <MoreHorizontal className="w-5 h-5 text-secondary" />
-            </motion.button>
+    <>
+      <style jsx>{`
+        @keyframes shimmer {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+      `}</style>
+      
+      <motion.div
+        initial={{ opacity: 0, y: 60, scale: 0.9 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ 
+          delay: index * 0.15,
+          duration: 0.8,
+          ease: [0.4, 0, 0.2, 1]
+        }}
+        whileHover={{ 
+          y: -16,
+          scale: 1.03,
+          transition: { duration: 0.4, ease: [0.4, 0, 0.2, 1] }
+        }}
+        style={styles.container}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        onClick={onClick}
+      >
+        <div style={{
+          ...styles.card,
+          ...(isHovered ? styles.cardHover : {})
+        }}>
+          
+          {/* Gradiente de estado superior */}
+          <div style={styles.statusGradient}>
+            <div style={{
+              position: 'absolute',
+              inset: 0,
+              background: getStatusGradient(),
+              filter: 'blur(4px)',
+              opacity: 0.5,
+            }} />
           </div>
-
-          {/* Tendencia con efectos premium */}
-          <div className="flex items-center justify-between mb-10">
-            <div className="flex items-center space-x-5">
-              <motion.div 
-                className={`p-4 rounded-2xl ${getStatusColor()} bg-current/10 backdrop-blur-sm border ${getStatusBorder()}`}
-                whileHover={{ scale: 1.15, rotate: 5 }}
-                transition={{ duration: 0.2 }}
-              >
-                {getTrendIcon()}
-              </motion.div>
-              <div>
-                <motion.div
-                  className="flex items-center space-x-2"
-                  animate={{ scale: isHovered ? 1.1 : 1 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <span className={`text-2xl font-bold ${getStatusColor()} font-space-grotesk`}>
-                    {Math.abs(parseFloat(getTrendPercentage()))}%
-                  </span>
-                  <ArrowUpRight className={`w-4 h-4 ${getStatusColor()}`} />
-                </motion.div>
-                <p className="text-sm text-tertiary font-medium">vs. período anterior</p>
-              </div>
-            </div>
-            
-            {/* Indicador de rendimiento mejorado */}
-            <motion.div
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ 
-                scale: isHovered ? 1 : 0,
-                opacity: isHovered ? 1 : 0
-              }}
-              transition={{ duration: 0.4, delay: 0.1 }}
-              className="flex items-center space-x-3 bg-accent/10 px-4 py-3 rounded-2xl border border-accent/20 backdrop-blur-sm"
-            >
-              <Zap className="w-4 h-4 text-accent" />
-              <span className="text-sm font-semibold text-accent">Excelente</span>
-            </motion.div>
-          </div>
-
-          {/* Sparkline mejorado con área */}
-          <div className="h-20 mb-10 -mx-2 relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-accent/5 to-transparent rounded-2xl" />
-            <motion.div
-              initial={{ opacity: 0, scaleY: 0 }}
-              animate={{ opacity: 1, scaleY: 1 }}
-              transition={{ duration: 0.8, delay: index * 0.1 }}
-              className="h-full"
-            >
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={sparklineData}>
-                  <defs>
-                    <linearGradient id={`gradient-${metric.id}`} x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor={`var(--color-${metric.status === 'success' ? 'success' : 
-                             metric.status === 'warning' ? 'warning' : 
-                             metric.status === 'error' ? 'error' : 'accent'})`} stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor={`var(--color-${metric.status === 'success' ? 'success' : 
-                             metric.status === 'warning' ? 'warning' : 
-                             metric.status === 'error' ? 'error' : 'accent'})`} stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <Area
-                    type="monotone"
-                    dataKey="smoothValue"
-                    stroke={`var(--color-${metric.status === 'success' ? 'success' : 
-                           metric.status === 'warning' ? 'warning' : 
-                           metric.status === 'error' ? 'error' : 'accent'})`}
-                    strokeWidth={3}
-                    fill={`url(#gradient-${metric.id})`}
-                    dot={false}
-                    activeDot={false}
-                    filter="drop-shadow(0 4px 12px rgba(0,212,255,0.3))"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </motion.div>
-          </div>
-
-          {/* Progreso hacia meta con diseño premium */}
-          {metric.target && (
-            <div className="space-y-5">
-              <div className="flex items-center justify-between text-sm">
-                <div className="flex items-center space-x-4">
-                  <div className="p-3 rounded-xl bg-accent/10 border border-accent/20">
-                    <Target className="w-4 h-4 text-accent" />
-                  </div>
-                  <span className="font-semibold text-secondary font-space-grotesk text-base">Meta</span>
-                </div>
-                <span className="font-bold text-primary bg-surface-elevated px-4 py-2 rounded-xl text-lg">
-                  {metric.target.toLocaleString()} {metric.unit}
-                </span>
-              </div>
-              
-              <div className="relative">
-                <div className="w-full bg-surface-elevated rounded-2xl h-4 overflow-hidden border border-light shadow-inner">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${Math.min(getProgressPercentage(), 100)}%` }}
-                    transition={{ duration: 2.5, delay: index * 0.1, ease: [0.4, 0, 0.2, 1] }}
-                    className={`h-4 rounded-2xl ${
-                      getProgressPercentage() >= 100 ? 'gradient-success' :
-                      getProgressPercentage() >= 75 ? 'gradient-warning' : 
-                      'gradient-accent'
-                    } relative overflow-hidden`}
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shimmer-futuristic" />
-                  </motion.div>
-                </div>
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: isHovered ? 1 : 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent rounded-2xl"
-                />
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Overlay de interacción mejorado */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ 
-            opacity: isHovered ? 1 : 0,
-            scale: isHovered ? 1 : 0.8
-          }}
-          transition={{ duration: 0.4 }}
-          className="absolute inset-0 bg-gradient-to-br from-accent/10 via-transparent to-accent/15 flex items-center justify-center backdrop-blur-sm"
-        >
+          
+          {/* Efecto de brillo */}
+          <div style={styles.glowEffect} />
+          
+          {/* Partículas decorativas */}
           <motion.div
-            initial={{ y: 30, opacity: 0 }}
-            animate={{ 
-              y: isHovered ? 0 : 30,
-              opacity: isHovered ? 1 : 0
+            animate={{
+              opacity: isHovered ? 1 : 0,
+              scale: isHovered ? 1 : 0,
+              rotate: isHovered ? 360 : 0
             }}
-            transition={{ duration: 0.4, delay: 0.1 }}
-            className="text-center"
-          >
-            <div className="w-20 h-20 bg-accent/20 rounded-2xl flex items-center justify-center mx-auto mb-4 backdrop-blur-sm border border-accent/30 shadow-glow">
-              <TrendingUp className="w-10 h-10 text-accent" />
+            transition={{ duration: 2, ease: "linear", repeat: isHovered ? Infinity : 0 }}
+            style={{
+              position: 'absolute',
+              top: '1.5rem',
+              right: '1.5rem',
+              width: '0.75rem',
+              height: '0.75rem',
+              backgroundColor: `${theme.colors.textAccent}40`,
+              borderRadius: '50%',
+            }}
+          />
+          
+          <div style={styles.content}>
+            {/* Header */}
+            <div style={styles.header}>
+              <div style={styles.titleContainer}>
+                <div style={styles.title}>
+                  <h3 style={styles.titleText}>
+                    {metric.name}
+                  </h3>
+                  {metric.status === 'success' && (
+                    <motion.div
+                      initial={{ scale: 0, rotate: -180 }}
+                      animate={{ 
+                        scale: isHovered ? 1.2 : 0,
+                        rotate: isHovered ? 0 : -180
+                      }}
+                      transition={{ duration: 0.5, type: "spring", stiffness: 200 }}
+                    >
+                      <Sparkles size={20} color={theme.colors.success} />
+                    </motion.div>
+                  )}
+                </div>
+                
+                <div style={styles.valueContainer}>
+                  <span style={styles.value}>
+                    {metric.value.toLocaleString()}
+                  </span>
+                  <span style={styles.unit}>
+                    {metric.unit}
+                  </span>
+                </div>
+              </div>
+              
+              <motion.button
+                whileHover={{ scale: 1.3, rotate: 90 }}
+                whileTap={{ scale: 0.9 }}
+                style={{
+                  ...styles.menuButton,
+                  ...(isHovered ? styles.menuButtonHover : {})
+                }}
+              >
+                <MoreHorizontal size={20} color={theme.colors.textSecondary} />
+              </motion.button>
             </div>
-            <span className="text-base font-bold text-accent font-space-grotesk tracking-wide">
-              Ver Análisis Detallado
-            </span>
-          </motion.div>
-        </motion.div>
-      </div>
-    </motion.div>
+
+            {/* Tendencia */}
+            <div style={styles.trendContainer}>
+              <div style={styles.trendLeft}>
+                <motion.div 
+                  style={styles.trendIcon}
+                  whileHover={{ scale: 1.15, rotate: 5 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  {getTrendIcon()}
+                </motion.div>
+                <div style={styles.trendInfo}>
+                  <div style={styles.trendValue}>
+                    <span style={styles.trendPercentage}>
+                      {Math.abs(parseFloat(getTrendPercentage()))}%
+                    </span>
+                    <ArrowUpRight size={16} color={getStatusColor()} />
+                  </div>
+                  <p style={styles.trendLabel}>vs. período anterior</p>
+                </div>
+              </div>
+              
+              <div style={styles.performanceIndicator}>
+                <Zap size={16} color={theme.colors.textAccent} />
+                <span style={styles.performanceText}>Excelente</span>
+              </div>
+            </div>
+
+            {/* Sparkline */}
+            <div style={styles.sparklineContainer}>
+              <div style={styles.sparklineBackground} />
+              <motion.div
+                initial={{ opacity: 0, scaleY: 0 }}
+                animate={{ opacity: 1, scaleY: 1 }}
+                transition={{ duration: 0.8, delay: index * 0.1 }}
+                style={{ height: '100%' }}
+              >
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={sparklineData}>
+                    <defs>
+                      <linearGradient id={`gradient-${metric.id}`} x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor={getStatusColor()} stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor={getStatusColor()} stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <Area
+                      type="monotone"
+                      dataKey="smoothValue"
+                      stroke={getStatusColor()}
+                      strokeWidth={3}
+                      fill={`url(#gradient-${metric.id})`}
+                      dot={false}
+                      activeDot={false}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </motion.div>
+            </div>
+
+            {/* Progreso hacia meta */}
+            {metric.target && (
+              <div style={styles.progressSection}>
+                <div style={styles.progressHeader}>
+                  <div style={styles.progressLeft}>
+                    <div style={styles.progressIcon}>
+                      <Target size={16} color={theme.colors.textAccent} />
+                    </div>
+                    <span style={styles.progressLabel}>Meta</span>
+                  </div>
+                  <span style={styles.progressTarget}>
+                    {metric.target.toLocaleString()} {metric.unit}
+                  </span>
+                </div>
+                
+                <div style={styles.progressBarContainer}>
+                  <div style={styles.progressBar}>
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${Math.min(getProgressPercentage(), 100)}%` }}
+                      transition={{ duration: 2.5, delay: index * 0.1, ease: [0.4, 0, 0.2, 1] }}
+                      style={styles.progressFill}
+                    >
+                      <div style={styles.progressShimmer} />
+                    </motion.div>
+                  </div>
+                  <div style={styles.progressOverlay} />
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Overlay de interacción */}
+          <div style={styles.interactionOverlay}>
+            <div style={styles.interactionContent}>
+              <div style={styles.interactionIcon}>
+                <TrendingUp size={40} color={theme.colors.textAccent} />
+              </div>
+              <span style={styles.interactionText}>
+                Ver Análisis Detallado
+              </span>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    </>
   );
 }
