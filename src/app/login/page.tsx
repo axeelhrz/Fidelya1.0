@@ -24,16 +24,25 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [currentTime, setCurrentTime] = useState(new Date());
+  const [currentTime, setCurrentTime] = useState<Date | null>(null);
+  const [isClient, setIsClient] = useState(false);
   const router = useRouter();
 
-  // Actualizar tiempo cada segundo
+  // Ensure we're on the client side before showing time
   useEffect(() => {
+    setIsClient(true);
+    setCurrentTime(new Date());
+  }, []);
+
+  // Actualizar tiempo cada segundo solo en el cliente
+  useEffect(() => {
+    if (!isClient) return;
+    
     const timer = setInterval(() => {
       setCurrentTime(new Date());
     }, 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [isClient]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -221,6 +230,7 @@ export default function LoginPage() {
           </div>
 
           {/* Características */}
+          {/* Características */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             {features.map((feature, index) => (
               <motion.div
@@ -270,46 +280,48 @@ export default function LoginPage() {
             ))}
           </div>
 
-          {/* Información de tiempo */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1.2 }}
-            style={{
-              marginTop: '3rem',
-              padding: '1rem',
-              background: 'rgba(255, 255, 255, 0.1)',
-              backdropFilter: 'blur(10px)',
-              borderRadius: '0.75rem',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              textAlign: 'center'
-            }}
-          >
-            <div style={{
-              fontSize: '2rem',
-              fontWeight: 700,
-              color: 'white',
-              fontFamily: 'Space Grotesk, sans-serif'
-            }}>
-              {currentTime.toLocaleTimeString('es-ES', { 
-                hour: '2-digit', 
-                minute: '2-digit',
-                second: '2-digit'
-              })}
-            </div>
-            <div style={{
-              fontSize: '0.875rem',
-              color: 'rgba(255, 255, 255, 0.8)',
-              fontFamily: 'Inter, sans-serif'
-            }}>
-              {currentTime.toLocaleDateString('es-ES', { 
-                weekday: 'long',
-                day: 'numeric',
-                month: 'long',
-                year: 'numeric'
-              })}
-            </div>
-          </motion.div>
+          {/* Información de tiempo - Solo se muestra en el cliente */}
+          {isClient && currentTime && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.2 }}
+              style={{
+                marginTop: '3rem',
+                padding: '1rem',
+                background: 'rgba(255, 255, 255, 0.1)',
+                backdropFilter: 'blur(10px)',
+                borderRadius: '0.75rem',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                textAlign: 'center'
+              }}
+            >
+              <div style={{
+                fontSize: '2rem',
+                fontWeight: 700,
+                color: 'white',
+                fontFamily: 'Space Grotesk, sans-serif'
+              }}>
+                {currentTime.toLocaleTimeString('es-ES', { 
+                  hour: '2-digit', 
+                  minute: '2-digit',
+                  second: '2-digit'
+                })}
+              </div>
+              <div style={{
+                fontSize: '0.875rem',
+                color: 'rgba(255, 255, 255, 0.8)',
+                fontFamily: 'Inter, sans-serif'
+              }}>
+                {currentTime.toLocaleDateString('es-ES', { 
+                  weekday: 'long',
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric'
+                })}
+              </div>
+            </motion.div>
+          )}
         </motion.div>
       </div>
 
