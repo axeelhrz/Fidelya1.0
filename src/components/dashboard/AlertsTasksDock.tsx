@@ -21,12 +21,10 @@ import {
   Trash2,
   ExternalLink
 } from 'lucide-react';
-import { useAlerts, useTasks } from '@/hooks/useDashboardData';
+import { useAlerts, useTasks, updateAlert, createTask, updateTask, deleteTask } from '@/hooks/useDashboardData';
 import { Alert, Task } from '@/types/dashboard';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { collection, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function AlertsTasksDock() {
@@ -48,27 +46,22 @@ export default function AlertsTasksDock() {
 
   // Función para marcar alerta como leída
   const markAlertAsRead = async (alertId: string) => {
-    if (!user?.centerId) return;
-    
     try {
-      await updateDoc(doc(db, 'centers', user.centerId, 'alerts', alertId), {
-        isRead: true
-      });
+      await updateAlert(alertId, { isRead: true });
     } catch (error) {
       console.error('Error marking alert as read:', error);
     }
   };
 
   // Función para crear nueva tarea
-  const createTask = async () => {
-    if (!user?.centerId || !newTask.title.trim()) return;
+  const handleCreateTask = async () => {
+    if (!newTask.title.trim()) return;
     
     try {
-      await addDoc(collection(db, 'centers', user.centerId, 'tasks'), {
+      await createTask({
         ...newTask,
         status: 'todo',
         dueDate: new Date(newTask.dueDate),
-        createdAt: new Date(),
         category: 'administrative'
       });
       
@@ -87,23 +80,17 @@ export default function AlertsTasksDock() {
 
   // Función para actualizar estado de tarea
   const updateTaskStatus = async (taskId: string, newStatus: 'todo' | 'in-progress' | 'done') => {
-    if (!user?.centerId) return;
-    
     try {
-      await updateDoc(doc(db, 'centers', user.centerId, 'tasks', taskId), {
-        status: newStatus
-      });
+      await updateTask(taskId, { status: newStatus });
     } catch (error) {
       console.error('Error updating task status:', error);
     }
   };
 
   // Función para eliminar tarea
-  const deleteTask = async (taskId: string) => {
-    if (!user?.centerId) return;
-    
+  const handleDeleteTask = async (taskId: string) => {
     try {
-      await deleteDoc(doc(db, 'centers', user.centerId, 'tasks', taskId));
+      await deleteTask(taskId);
     } catch (error) {
       console.error('Error deleting task:', error);
     }
@@ -216,8 +203,8 @@ export default function AlertsTasksDock() {
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       style={{
-        width: '380px', // Aumentado para evitar cortes
-        height: '85vh', // Aumentado ligeramente
+        width: '380px',
+        height: '85vh',
         background: 'rgba(255, 255, 255, 0.95)',
         backdropFilter: 'blur(20px)',
         borderRadius: '1.5rem',
@@ -513,7 +500,7 @@ export default function AlertsTasksDock() {
                 
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
                   <button
-                    onClick={createTask}
+                    onClick={handleCreateTask}
                     disabled={!newTask.title.trim()}
                     style={{
                       flex: 1,
@@ -557,7 +544,7 @@ export default function AlertsTasksDock() {
         flex: 1,
         overflowY: 'auto',
         padding: '1rem 1.5rem',
-        minHeight: 0 // Importante para el scroll
+        minHeight: 0
       }}>
         <AnimatePresence mode="wait">
           {activeTab === 'alerts' ? (
@@ -758,20 +745,6 @@ export default function AlertsTasksDock() {
                         }}>
                           {task.priority === 'high' ? 'Alta' : task.priority === 'medium' ? 'Media' : 'Baja'}
                         </span>
-                        
-                        <div style={{ position: 'relative' }}>
-                          <button
-                            style={{
-                              padding: '0.25rem',
-                              border: 'none',
-                              background: 'transparent',
-                              cursor: 'pointer',
-                              borderRadius: '4px'
-                            }}
-                          >
-                            <MoreHorizontal size={14} color="#6B7280" />
-                          </button>
-                        </div>
                       </div>
                     </div>
                     
@@ -839,7 +812,7 @@ export default function AlertsTasksDock() {
                           onClick={(e) => {
                             e.stopPropagation();
                             if (confirm('¿Estás seguro de que quieres eliminar esta tarea?')) {
-                              deleteTask(task.id);
+                              handleDeleteTask(task.id);
                             }
                           }}
                           style={{
