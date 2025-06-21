@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { motion } from 'framer-motion';
 
 export default function Home() {
   const { user, loading } = useAuth();
@@ -26,10 +27,46 @@ export default function Home() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-neutral flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-secondary">Cargando...</p>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto">
+          {/* Logo animado */}
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            className="w-16 h-16 bg-gradient-to-br from-accent to-accent-light rounded-xl flex items-center justify-center mx-auto mb-6"
+          >
+            <span className="text-inverse font-bold text-xl">CP</span>
+          </motion.div>
+
+          {/* Spinner mejorado */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="relative mb-6"
+          >
+            <div className="w-8 h-8 border-2 border-border-light rounded-full mx-auto"></div>
+            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin"></div>
+          </motion.div>
+
+          {/* Texto de carga */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+          >
+            <p className="text-primary font-medium mb-2">Centro Psicológico</p>
+            <p className="text-secondary text-sm">Cargando dashboard...</p>
+          </motion.div>
+
+          {/* Indicador de progreso */}
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ width: '100%' }}
+            transition={{ duration: 2, ease: 'easeInOut' }}
+            className="mt-6 h-1 bg-accent rounded-full mx-auto max-w-xs"
+          />
         </div>
       </div>
     );
