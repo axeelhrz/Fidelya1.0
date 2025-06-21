@@ -30,6 +30,14 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
   style,
   onFocus,
   onBlur,
+  onDrag,
+  onDragEnd,
+  onDragEnter,
+  onDragExit,
+  onDragLeave,
+  onDragOver,
+  onDragStart,
+  onDrop,
   ...props
 }, ref) => {
   const { theme } = useStyles();
@@ -177,6 +185,18 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
     right: size === 'sm' ? '0.5rem' : size === 'lg' ? '0.75rem' : '0.625rem',
   };
 
+  // Prepare drag event handlers for the motion.input
+  const dragHandlers = {
+    ...(onDrag && { onDrag }),
+    ...(onDragEnd && { onDragEnd }),
+    ...(onDragEnter && { onDragEnter }),
+    ...(onDragExit && { onDragExit }),
+    ...(onDragLeave && { onDragLeave }),
+    ...(onDragOver && { onDragOver }),
+    ...(onDragStart && { onDragStart }),
+    ...(onDrop && { onDrop }),
+  };
+
   return (
     <div style={containerStyles} className={className}>
       {label && (
@@ -200,6 +220,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
         <motion.input
           ref={ref}
           {...props}
+          {...dragHandlers}
           disabled={disabled}
           style={{
             ...inputStyles,
