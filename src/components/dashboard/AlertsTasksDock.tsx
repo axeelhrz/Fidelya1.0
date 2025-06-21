@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, CheckSquare, Plus, Filter, AlertTriangle, Info, AlertCircle, Clock, User, Calendar } from 'lucide-react';
+import { Bell, CheckSquare, Plus, Filter, AlertTriangle, Info, AlertCircle, Clock, User, Calendar, Search } from 'lucide-react';
 import { useAlerts, useTasks } from '@/hooks/useDashboardData';
 import { Alert, Task } from '@/types/dashboard';
 import { format } from 'date-fns';
@@ -99,6 +99,7 @@ const mockTasks: Task[] = [
 export default function AlertsTasksDock() {
   const [activeTab, setActiveTab] = useState<'alerts' | 'tasks'>('alerts');
   const [taskFilter, setTaskFilter] = useState<'all' | 'today' | 'week' | 'month'>('all');
+  const [searchQuery, setSearchQuery] = useState('');
   const { alerts, loading: alertsLoading } = useAlerts();
   const { tasks, loading: tasksLoading } = useTasks();
 
@@ -113,40 +114,40 @@ export default function AlertsTasksDock() {
       case 'warning':
         return <AlertCircle className="w-4 h-4 text-warning" />;
       default:
-        return <Info className="w-4 h-4 text-blue-500" />;
+        return <Info className="w-4 h-4 text-info" />;
     }
   };
 
   const getAlertBgColor = (level: string) => {
     switch (level) {
       case 'critical':
-        return 'bg-red-50 border-l-error';
+        return 'bg-error-bg border-l-error';
       case 'warning':
-        return 'bg-yellow-50 border-l-warning';
+        return 'bg-warning-bg border-l-warning';
       default:
-        return 'bg-blue-50 border-l-blue-500';
+        return 'bg-info-bg border-l-info';
     }
   };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'high':
-        return 'bg-error text-white';
+        return 'bg-error text-inverse';
       case 'medium':
-        return 'bg-warning text-white';
+        return 'bg-warning text-inverse';
       default:
-        return 'bg-gray-300 text-gray-700';
+        return 'bg-surface-elevated text-secondary border border-border-light';
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'done':
-        return 'bg-success text-white';
+        return 'bg-success text-inverse';
       case 'in-progress':
-        return 'bg-blue-500 text-white';
+        return 'bg-accent text-inverse';
       default:
-        return 'bg-gray-300 text-gray-700';
+        return 'bg-surface-elevated text-secondary border border-border-light';
     }
   };
 
@@ -162,6 +163,12 @@ export default function AlertsTasksDock() {
   };
 
   const filteredTasks = displayTasks.filter(task => {
+    // Filtro por búsqueda
+    if (searchQuery && !task.title.toLowerCase().includes(searchQuery.toLowerCase())) {
+      return false;
+    }
+
+    // Filtro por fecha
     if (taskFilter === 'all') return true;
     
     const now = new Date();
@@ -181,6 +188,13 @@ export default function AlertsTasksDock() {
     }
   });
 
+  const filteredAlerts = displayAlerts.filter(alert => {
+    if (searchQuery && !alert.title.toLowerCase().includes(searchQuery.toLowerCase())) {
+      return false;
+    }
+    return true;
+  });
+
   const unreadAlertsCount = displayAlerts.filter(alert => !alert.isRead).length;
   const pendingTasksCount = displayTasks.filter(task => task.status !== 'done').length;
 
@@ -188,22 +202,22 @@ export default function AlertsTasksDock() {
     <motion.div
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
-      className="w-80 bg-white rounded-card shadow-card h-fit sticky top-6"
+      className="bg-surface rounded-card border border-border-light shadow-card"
     >
       {/* Header con tabs */}
-      <div className="p-4 border-b border-gray-100">
-        <div className="flex space-x-1 bg-secondary rounded-xl p-1">
+      <div className="p-4 border-b border-border-light">
+        <div className="flex space-x-1 bg-surface-elevated rounded-lg p-1">
           <button
             onClick={() => setActiveTab('alerts')}
             className={`
-              flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded-lg text-sm font-medium transition-all
-              ${activeTab === 'alerts' ? 'bg-white text-primary shadow-sm' : 'text-secondary hover:text-primary'}
+              flex-1 flex items-center justify-center space-x-2 py-2.5 px-3 rounded-md text-sm font-medium transition-all
+              ${activeTab === 'alerts' ? 'bg-surface text-primary shadow-sm' : 'text-secondary hover:text-primary'}
             `}
           >
             <Bell className="w-4 h-4" />
             <span>Alertas</span>
             {unreadAlertsCount > 0 && (
-              <span className="bg-error text-white text-xs rounded-full px-2 py-0.5 min-w-[20px] h-5 flex items-center justify-center">
+              <span className="bg-error text-inverse text-xs rounded-full px-1.5 py-0.5 min-w-[18px] h-4 flex items-center justify-center">
                 {unreadAlertsCount}
               </span>
             )}
@@ -212,19 +226,53 @@ export default function AlertsTasksDock() {
           <button
             onClick={() => setActiveTab('tasks')}
             className={`
-              flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded-lg text-sm font-medium transition-all
-              ${activeTab === 'tasks' ? 'bg-white text-primary shadow-sm' : 'text-secondary hover:text-primary'}
+              flex-1 flex items-center justify-center space-x-2 py-2.5 px-3 rounded-md text-sm font-medium transition-all
+              ${activeTab === 'tasks' ? 'bg-surface text-primary shadow-sm' : 'text-secondary hover:text-primary'}
             `}
           >
             <CheckSquare className="w-4 h-4" />
             <span>Tareas</span>
             {pendingTasksCount > 0 && (
-              <span className="bg-primary text-white text-xs rounded-full px-2 py-0.5 min-w-[20px] h-5 flex items-center justify-center">
+              <span className="bg-accent text-inverse text-xs rounded-full px-1.5 py-0.5 min-w-[18px] h-4 flex items-center justify-center">
                 {pendingTasksCount}
               </span>
             )}
           </button>
         </div>
+      </div>
+
+      {/* Search and Filters */}
+      <div className="p-4 border-b border-border-light">
+        <div className="relative mb-3">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-secondary" />
+          <input
+            type="text"
+            placeholder={`Buscar ${activeTab === 'alerts' ? 'alertas' : 'tareas'}...`}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 bg-surface-elevated rounded-lg border border-border-light focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent text-sm"
+          />
+        </div>
+
+        {activeTab === 'tasks' && (
+          <div className="flex items-center space-x-2">
+            <Filter className="w-4 h-4 text-secondary" />
+            <select
+              value={taskFilter}
+              onChange={(e) => setTaskFilter(e.target.value as any)}
+              className="flex-1 text-xs bg-surface-elevated border border-border-light rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-accent"
+            >
+              <option value="all">Todas las tareas</option>
+              <option value="today">Vencen hoy</option>
+              <option value="week">Esta semana</option>
+              <option value="month">Este mes</option>
+            </select>
+            
+            <button className="p-1.5 rounded-lg hover:bg-surface-hover transition-colors">
+              <Plus className="w-4 h-4 text-secondary" />
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Content */}
@@ -238,34 +286,41 @@ export default function AlertsTasksDock() {
               exit={{ opacity: 0, x: -20 }}
               className="p-4 space-y-3"
             >
-              {displayAlerts.map((alert, index) => (
-                <motion.div
-                  key={alert.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  className={`
-                    p-3 rounded-xl border-l-4 cursor-pointer transition-all hover:shadow-md
-                    ${getAlertBgColor(alert.level)} ${alert.isRead ? 'opacity-60' : ''}
-                  `}
-                >
-                  <div className="flex items-start space-x-3">
-                    {getAlertIcon(alert.level)}
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-primary text-sm mb-1">
-                        {alert.title}
-                      </h4>
-                      <p className="text-xs text-secondary mb-2">
-                        {alert.description}
-                      </p>
-                      <div className="flex items-center space-x-2 text-xs text-secondary">
-                        <Clock className="w-3 h-3" />
-                        <span>{format(alert.timestamp, 'HH:mm', { locale: es })}</span>
+              {filteredAlerts.length === 0 ? (
+                <div className="text-center py-8">
+                  <Bell className="w-8 h-8 text-tertiary mx-auto mb-2" />
+                  <p className="text-sm text-secondary">No hay alertas</p>
+                </div>
+              ) : (
+                filteredAlerts.map((alert, index) => (
+                  <motion.div
+                    key={alert.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className={`
+                      p-3 rounded-lg border-l-4 cursor-pointer transition-all hover:shadow-sm
+                      ${getAlertBgColor(alert.level)} ${alert.isRead ? 'opacity-60' : ''}
+                    `}
+                  >
+                    <div className="flex items-start space-x-3">
+                      {getAlertIcon(alert.level)}
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium text-primary text-sm mb-1 line-clamp-1">
+                          {alert.title}
+                        </h4>
+                        <p className="text-xs text-secondary mb-2 line-clamp-2">
+                          {alert.description}
+                        </p>
+                        <div className="flex items-center space-x-2 text-xs text-tertiary">
+                          <Clock className="w-3 h-3" />
+                          <span>{format(alert.timestamp, 'HH:mm', { locale: es })}</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </motion.div>
-              ))}
+                  </motion.div>
+                ))
+              )}
             </motion.div>
           ) : (
             <motion.div
@@ -273,56 +328,39 @@ export default function AlertsTasksDock() {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}
-              className="p-4"
+              className="p-4 space-y-3"
             >
-              {/* Filtros de tareas */}
-              <div className="flex items-center space-x-2 mb-4">
-                <Filter className="w-4 h-4 text-secondary" />
-                <select
-                  value={taskFilter}
-                  onChange={(e) => setTaskFilter(e.target.value as any)}
-                  className="text-xs bg-secondary border-none rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-primary"
-                >
-                  <option value="all">Todas</option>
-                  <option value="today">Hoy</option>
-                  <option value="week">Esta semana</option>
-                  <option value="month">Este mes</option>
-                </select>
-                
-                <button className="ml-auto p-1 rounded-lg hover:bg-secondary transition-colors">
-                  <Plus className="w-4 h-4 text-secondary" />
-                </button>
-              </div>
-
-              {/* Lista de tareas */}
-              <div className="space-y-3">
-                {filteredTasks.map((task, index) => (
+              {filteredTasks.length === 0 ? (
+                <div className="text-center py-8">
+                  <CheckSquare className="w-8 h-8 text-tertiary mx-auto mb-2" />
+                  <p className="text-sm text-secondary">No hay tareas</p>
+                </div>
+              ) : (
+                filteredTasks.map((task, index) => (
                   <motion.div
                     key={task.id}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.05 }}
                     className={`
-                      p-3 rounded-xl border border-gray-100 cursor-pointer transition-all hover:shadow-md
+                      p-3 rounded-lg border border-border-light cursor-pointer transition-all hover:shadow-sm hover:border-border-medium
                       ${task.status === 'done' ? 'opacity-60' : ''}
                     `}
                   >
                     <div className="flex items-start justify-between mb-2">
-                      <h4 className="font-medium text-primary text-sm flex-1">
+                      <h4 className="font-medium text-primary text-sm flex-1 line-clamp-1">
                         {task.title}
                       </h4>
-                      <div className="flex space-x-1">
-                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getPriorityColor(task.priority)}`}>
-                          {task.priority === 'high' ? 'Alta' : task.priority === 'medium' ? 'Media' : 'Baja'}
-                        </span>
-                      </div>
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ml-2 ${getPriorityColor(task.priority)}`}>
+                        {task.priority === 'high' ? 'Alta' : task.priority === 'medium' ? 'Media' : 'Baja'}
+                      </span>
                     </div>
                     
-                    <p className="text-xs text-secondary mb-3">
+                    <p className="text-xs text-secondary mb-3 line-clamp-2">
                       {task.description}
                     </p>
                     
-                    <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center justify-between text-xs mb-2">
                       <div className="flex items-center space-x-2">
                         <User className="w-3 h-3 text-secondary" />
                         <span className="text-secondary">{task.assignedTo}</span>
@@ -336,14 +374,14 @@ export default function AlertsTasksDock() {
                       </div>
                     </div>
                     
-                    <div className="mt-2">
+                    <div>
                       <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(task.status)}`}>
                         {getStatusText(task.status)}
                       </span>
                     </div>
                   </motion.div>
-                ))}
-              </div>
+                ))
+              )}
             </motion.div>
           )}
         </AnimatePresence>
