@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   DollarSign, 
@@ -23,246 +23,43 @@ import {
   FileText,
   ArrowUpRight,
   ArrowDownRight,
-  Minus
+  Minus,
+  Database,
+  Wifi,
+  WifiOff
 } from 'lucide-react';
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip, Legend, PieChart as RechartsPieChart, Cell } from 'recharts';
 import { useStyles } from '@/lib/useStyles';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
-import { useFinancialMetrics } from '@/hooks/useDashboardData';
+import { useFinancialData } from '@/hooks/useDashboardData';
 import { useAuth } from '@/contexts/AuthContext';
-import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-
-interface FinancialData {
-  period: string;
-  revenue: number;
-  expenses: number;
-  profit: number;
-  growth: number;
-  sessions: number;
-  avgSessionCost: number;
-}
-
-interface PaymentData {
-  id: string;
-  amount: number;
-  date: Date;
-  status: 'paid' | 'pending' | 'overdue';
-  patientName: string;
-  sessionType: string;
-}
-
-interface ExpenseData {
-  category: string;
-  amount: number;
-  percentage: number;
-  color: string;
-}
 
 export default function FinancialPanel() {
   const { user } = useAuth();
   const { theme } = useStyles();
   const [selectedPeriod, setSelectedPeriod] = useState('month');
   const [selectedMetric, setSelectedMetric] = useState('revenue');
-  const [loading, setLoading] = useState(true);
-  const [financialData, setFinancialData] = useState<FinancialData[]>([]);
-  const [paymentsData, setPaymentsData] = useState<PaymentData[]>([]);
-  const [expensesBreakdown, setExpensesBreakdown] = useState<ExpenseData[]>([]);
-  const [totalStats, setTotalStats] = useState({
-    totalRevenue: 0,
-    totalExpenses: 0,
-    totalProfit: 0,
-    averageGrowth: 0,
-    pendingPayments: 0,
-    overduePayments: 0,
-    totalSessions: 0,
-    avgSessionValue: 0
-  });
+  
+  const { data, loading, error } = useFinancialData();
 
-  // Datos mock mejorados para desarrollo
-  const mockFinancialData: FinancialData[] = [
-    { period: 'Ene', revenue: 45000, expenses: 32000, profit: 13000, growth: 8.5, sessions: 180, avgSessionCost: 250 },
-    { period: 'Feb', revenue: 52000, expenses: 35000, profit: 17000, growth: 15.6, sessions: 208, avgSessionCost: 250 },
-    { period: 'Mar', revenue: 48000, expenses: 33000, profit: 15000, growth: 6.7, sessions: 192, avgSessionCost: 250 },
-    { period: 'Abr', revenue: 58000, expenses: 38000, profit: 20000, growth: 20.8, sessions: 232, avgSessionCost: 250 },
-    { period: 'May', revenue: 62000, expenses: 40000, profit: 22000, growth: 6.9, sessions: 248, avgSessionCost: 250 },
-    { period: 'Jun', revenue: 67000, expenses: 42000, profit: 25000, growth: 8.1, sessions: 268, avgSessionCost: 250 },
-  ];
-
-  const mockPaymentsData: PaymentData[] = [
-    { id: '1', amount: 250, date: new Date(), status: 'paid', patientName: 'Ana García', sessionType: 'Individual' },
-    { id: '2', amount: 180, date: new Date(Date.now() - 86400000), status: 'pending', patientName: 'Carlos López', sessionType: 'Pareja' },
-    { id: '3', amount: 300, date: new Date(Date.now() - 172800000), status: 'overdue', patientName: 'María Rodríguez', sessionType: 'Familiar' },
-    { id: '4', amount: 250, date: new Date(Date.now() - 259200000), status: 'paid', patientName: 'Juan Martínez', sessionType: 'Individual' },
-    { id: '5', amount: 200, date: new Date(Date.now() - 345600000), status: 'pending', patientName: 'Laura Sánchez', sessionType: 'Grupal' },
-  ];
-
-  const mockExpensesBreakdown: ExpenseData[] = [
-    { category: 'Salarios', amount: 25000, percentage: 59.5, color: '#3B82F6' },
-    { category: 'Alquiler', amount: 8000, percentage: 19.0, color: '#10B981' },
-    { category: 'Suministros', amount: 4500, percentage: 10.7, color: '#F59E0B' },
-    { category: 'Marketing', amount: 3000, percentage: 7.1, color: '#EF4444' },
-    { category: 'Otros', amount: 1500, percentage: 3.6, color: '#8B5CF6' },
-  ];
-
-  // Cargar datos financieros desde Firebase
-  useEffect(() => {
-    const loadFinancialData = async () => {
-      if (!user?.centerId) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        setLoading(true);
-
-        // Cargar sesiones completadas y pagadas
-        const sessionsQuery = query(
-          collection(db, 'centers', user.centerId, 'sessions'),
-          where('status', '==', 'completed'),
-          orderBy('date', 'desc'),
-          limit(100)
-        );
-
-        const sessionsSnapshot = await getDocs(sessionsQuery);
-        const sessions = sessionsSnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-          date: doc.data().date.toDate()
-        }));
-
-        // Cargar pagos
-        const paymentsQuery = query(
-          collection(db, 'centers', user.centerId, 'payments'),
-          orderBy('date', 'desc'),
-          limit(50)
-        );
-
-        const paymentsSnapshot = await getDocs(paymentsQuery);
-        const payments = paymentsSnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-          date: doc.data().date.toDate()
-        })) as PaymentData[];
-
-        // Procesar datos por mes
-        const monthlyData = processMonthlyData(sessions);
-        const stats = calculateStats(sessions, payments);
-
-        setFinancialData(monthlyData.length > 0 ? monthlyData : mockFinancialData);
-        setPaymentsData(payments.length > 0 ? payments : mockPaymentsData);
-        setExpensesBreakdown(mockExpensesBreakdown); // Usar mock para gastos por ahora
-        setTotalStats(stats);
-
-      } catch (error) {
-        console.warn('Error loading financial data from Firebase, using mock data:', error);
-        // En caso de error, usar datos mock
-        setFinancialData(mockFinancialData);
-        setPaymentsData(mockPaymentsData);
-        setExpensesBreakdown(mockExpensesBreakdown);
-        setTotalStats(calculateMockStats());
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadFinancialData();
-  }, [user?.centerId]);
-
-  const processMonthlyData = (sessions: any[]): FinancialData[] => {
-    const monthlyMap = new Map();
-    
-    sessions.forEach(session => {
-      const month = session.date.toLocaleDateString('es-ES', { month: 'short' });
-      const monthKey = session.date.getMonth();
-      
-      if (!monthlyMap.has(monthKey)) {
-        monthlyMap.set(monthKey, {
-          period: month,
-          revenue: 0,
-          expenses: 0,
-          profit: 0,
-          growth: 0,
-          sessions: 0,
-          avgSessionCost: 0
-        });
-      }
-      
-      const monthData = monthlyMap.get(monthKey);
-      monthData.revenue += session.cost || 250;
-      monthData.sessions += 1;
-      monthData.avgSessionCost = monthData.revenue / monthData.sessions;
-      monthData.expenses = monthData.revenue * 0.65; // Estimar gastos como 65% de ingresos
-      monthData.profit = monthData.revenue - monthData.expenses;
-    });
-
-    const result = Array.from(monthlyMap.values());
-    
-    // Calcular crecimiento
-    for (let i = 1; i < result.length; i++) {
-      const current = result[i];
-      const previous = result[i - 1];
-      current.growth = previous.revenue > 0 ? 
-        ((current.revenue - previous.revenue) / previous.revenue) * 100 : 0;
-    }
-
-    return result;
-  };
-
-  const calculateStats = (sessions: any[], payments: PaymentData[]) => {
-    const totalRevenue = sessions.reduce((sum, session) => sum + (session.cost || 250), 0);
-    const totalExpenses = totalRevenue * 0.65; // Estimar gastos
-    const totalProfit = totalRevenue - totalExpenses;
-    const pendingPayments = payments.filter(p => p.status === 'pending').reduce((sum, p) => sum + p.amount, 0);
-    const overduePayments = payments.filter(p => p.status === 'overdue').reduce((sum, p) => sum + p.amount, 0);
-    
-    return {
-      totalRevenue,
-      totalExpenses,
-      totalProfit,
-      averageGrowth: 12.5,
-      pendingPayments,
-      overduePayments,
-      totalSessions: sessions.length,
-      avgSessionValue: sessions.length > 0 ? totalRevenue / sessions.length : 250
-    };
-  };
-
-  const calculateMockStats = () => {
-    const totalRevenue = mockFinancialData.reduce((sum, item) => sum + item.revenue, 0);
-    const totalExpenses = mockFinancialData.reduce((sum, item) => sum + item.expenses, 0);
-    const totalProfit = mockFinancialData.reduce((sum, item) => sum + item.profit, 0);
-    const averageGrowth = mockFinancialData.reduce((sum, item) => sum + item.growth, 0) / mockFinancialData.length;
-    const pendingPayments = mockPaymentsData.filter(p => p.status === 'pending').reduce((sum, p) => sum + p.amount, 0);
-    const overduePayments = mockPaymentsData.filter(p => p.status === 'overdue').reduce((sum, p) => sum + p.amount, 0);
-    
-    return {
-      totalRevenue,
-      totalExpenses,
-      totalProfit,
-      averageGrowth,
-      pendingPayments,
-      overduePayments,
-      totalSessions: mockFinancialData.reduce((sum, item) => sum + item.sessions, 0),
-      avgSessionValue: 250
-    };
-  };
-
-  const handleRefresh = async () => {
-    setLoading(true);
-    // Simular recarga de datos
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setLoading(false);
+  const handleRefresh = () => {
+    window.location.reload();
   };
 
   const handleExport = () => {
+    if (!data || data.monthlyData.length === 0) {
+      alert('No hay datos para exportar');
+      return;
+    }
+
     const exportData = {
-      financialData,
-      totalStats,
-      paymentsData,
-      expensesBreakdown,
-      exportDate: new Date().toISOString()
+      financialData: data.monthlyData,
+      totalStats: data.totalStats,
+      paymentsData: data.paymentsData,
+      expensesBreakdown: data.expensesBreakdown,
+      exportDate: new Date().toISOString(),
+      centerId: user?.centerId
     };
 
     const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
@@ -357,6 +154,237 @@ export default function FinancialPanel() {
     return null;
   };
 
+  // Renderizar estado de error
+  if (error) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        style={{
+          width: '100%',
+          maxWidth: '1400px',
+          margin: '0 auto',
+          padding: '2rem',
+        }}
+      >
+        <Card variant="default">
+          <div style={{
+            padding: '3rem',
+            textAlign: 'center',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '1.5rem'
+          }}>
+            <div style={{
+              padding: '1rem',
+              borderRadius: '50%',
+              backgroundColor: '#FEF2F2',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <WifiOff size={48} color="#EF4444" />
+            </div>
+            
+            <div>
+              <h3 style={{
+                fontSize: '1.5rem',
+                fontWeight: 600,
+                color: '#1C1E21',
+                marginBottom: '0.5rem',
+                fontFamily: 'Space Grotesk, sans-serif'
+              }}>
+                Error de Conexión
+              </h3>
+              <p style={{
+                fontSize: '1rem',
+                color: '#6B7280',
+                marginBottom: '2rem',
+                maxWidth: '400px'
+              }}>
+                {error}
+              </p>
+            </div>
+            
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <Button
+                variant="primary"
+                icon={RefreshCw}
+                onClick={handleRefresh}
+              >
+                Reintentar
+              </Button>
+              <Button
+                variant="outline"
+                icon={Database}
+                onClick={() => window.open('https://console.firebase.google.com', '_blank')}
+              >
+                Configurar Firebase
+              </Button>
+            </div>
+          </div>
+        </Card>
+      </motion.div>
+    );
+  }
+
+  // Renderizar estado de carga
+  if (loading) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        style={{
+          width: '100%',
+          maxWidth: '1400px',
+          margin: '0 auto',
+          padding: '2rem',
+        }}
+      >
+        <Card variant="default">
+          <div style={{
+            padding: '3rem',
+            textAlign: 'center',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '1.5rem'
+          }}>
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 2, repeat: Infinity }}
+              style={{
+                padding: '1rem',
+                borderRadius: '50%',
+                backgroundColor: '#EFF6FF',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              <Database size={48} color="#3B82F6" />
+            </motion.div>
+            
+            <div>
+              <h3 style={{
+                fontSize: '1.5rem',
+                fontWeight: 600,
+                color: '#1C1E21',
+                marginBottom: '0.5rem',
+                fontFamily: 'Space Grotesk, sans-serif'
+              }}>
+                Cargando Datos Financieros
+              </h3>
+              <p style={{
+                fontSize: '1rem',
+                color: '#6B7280',
+                maxWidth: '400px'
+              }}>
+                Conectando con Firebase y procesando información financiera...
+              </p>
+            </div>
+            
+            <div style={{
+              width: '200px',
+              height: '4px',
+              backgroundColor: '#E5E7EB',
+              borderRadius: '2px',
+              overflow: 'hidden'
+            }}>
+              <motion.div
+                style={{
+                  width: '50px',
+                  height: '100%',
+                  backgroundColor: '#3B82F6',
+                  borderRadius: '2px'
+                }}
+                animate={{ x: [0, 150, 0] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              />
+            </div>
+          </div>
+        </Card>
+      </motion.div>
+    );
+  }
+
+  // Renderizar estado sin datos
+  if (!data || data.monthlyData.length === 0) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        style={{
+          width: '100%',
+          maxWidth: '1400px',
+          margin: '0 auto',
+          padding: '2rem',
+        }}
+      >
+        <Card variant="default">
+          <div style={{
+            padding: '3rem',
+            textAlign: 'center',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '1.5rem'
+          }}>
+            <div style={{
+              padding: '1rem',
+              borderRadius: '50%',
+              backgroundColor: '#FFFBEB',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <BarChart3 size={48} color="#F59E0B" />
+            </div>
+            
+            <div>
+              <h3 style={{
+                fontSize: '1.5rem',
+                fontWeight: 600,
+                color: '#1C1E21',
+                marginBottom: '0.5rem',
+                fontFamily: 'Space Grotesk, sans-serif'
+              }}>
+                No Hay Datos Financieros
+              </h3>
+              <p style={{
+                fontSize: '1rem',
+                color: '#6B7280',
+                marginBottom: '2rem',
+                maxWidth: '400px'
+              }}>
+                No se encontraron sesiones, pagos o gastos en Firebase. 
+                Agrega datos para ver el análisis financiero.
+              </p>
+            </div>
+            
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <Button
+                variant="primary"
+                icon={Plus}
+                onClick={() => window.open('/dashboard/sessions', '_blank')}
+              >
+                Agregar Sesiones
+              </Button>
+              <Button
+                variant="outline"
+                icon={RefreshCw}
+                onClick={handleRefresh}
+              >
+                Actualizar
+              </Button>
+            </div>
+          </div>
+        </Card>
+      </motion.div>
+    );
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -404,9 +432,13 @@ export default function FinancialPanel() {
             <p style={{
               fontSize: '1rem',
               color: '#6B7280',
-              margin: '0.25rem 0 0 0'
+              margin: '0.25rem 0 0 0',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
             }}>
-              Análisis predictivo de ingresos y rentabilidad
+              <Wifi size={16} color="#10B981" />
+              Datos en tiempo real desde Firebase
             </p>
           </div>
         </div>
@@ -451,7 +483,6 @@ export default function FinancialPanel() {
             size="sm"
             icon={RefreshCw}
             onClick={handleRefresh}
-            loading={loading}
           >
             Actualizar
           </Button>
@@ -477,15 +508,15 @@ export default function FinancialPanel() {
         {[
           {
             title: 'Ingresos Totales',
-            value: totalStats.totalRevenue,
-            change: 12.5,
+            value: data.totalStats.totalRevenue,
+            change: data.totalStats.averageGrowth,
             icon: TrendingUp,
             color: '#10B981',
             bgColor: '#ECFDF5'
           },
           {
             title: 'Gastos Totales',
-            value: totalStats.totalExpenses,
+            value: data.totalStats.totalExpenses,
             change: 8.2,
             icon: TrendingDown,
             color: '#F59E0B',
@@ -493,7 +524,7 @@ export default function FinancialPanel() {
           },
           {
             title: 'Beneficio Neto',
-            value: totalStats.totalProfit,
+            value: data.totalStats.totalProfit,
             change: 18.7,
             icon: DollarSign,
             color: '#3B82F6',
@@ -501,7 +532,7 @@ export default function FinancialPanel() {
           },
           {
             title: 'Pagos Pendientes',
-            value: totalStats.pendingPayments,
+            value: data.totalStats.pendingPayments,
             change: -5.3,
             icon: Clock,
             color: '#EF4444',
@@ -559,27 +590,14 @@ export default function FinancialPanel() {
                 </div>
                 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  {loading ? (
-                    <div style={{
-                      width: '16px',
-                      height: '16px',
-                      border: '2px solid #E5E7EB',
-                      borderTop: '2px solid #2463EB',
-                      borderRadius: '50%',
-                      animation: 'spin 1s linear infinite'
-                    }} />
-                  ) : (
-                    <>
-                      {getTrendIcon(metric.change)}
-                      <span style={{
-                        fontSize: '0.875rem',
-                        fontWeight: 600,
-                        color: getTrendColor(metric.change)
-                      }}>
-                        {Math.abs(metric.change).toFixed(1)}%
-                      </span>
-                    </>
-                  )}
+                  {getTrendIcon(metric.change)}
+                  <span style={{
+                    fontSize: '0.875rem',
+                    fontWeight: 600,
+                    color: getTrendColor(metric.change)
+                  }}>
+                    {Math.abs(metric.change).toFixed(1)}%
+                  </span>
                 </div>
               </div>
               
@@ -591,7 +609,7 @@ export default function FinancialPanel() {
                   margin: '0 0 0.5rem 0',
                   fontFamily: 'Space Grotesk, sans-serif'
                 }}>
-                  {loading ? '...' : formatCurrency(metric.value)}
+                  {formatCurrency(metric.value)}
                 </h3>
                 <p style={{
                   fontSize: '1rem',
@@ -626,7 +644,7 @@ export default function FinancialPanel() {
                   margin: 0,
                   fontFamily: 'Space Grotesk, sans-serif'
                 }}>
-                  Evolución Financiera
+                  Evolución Financiera ({data.monthlyData.length} meses)
                 </h3>
                 <div style={{
                   display: 'flex',
@@ -663,93 +681,70 @@ export default function FinancialPanel() {
               </div>
               
               <div style={{ height: '400px' }}>
-                {loading ? (
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    height: '100%',
-                    flexDirection: 'column',
-                    gap: '1rem'
-                  }}>
-                    <div style={{
-                      width: '2rem',
-                      height: '2rem',
-                      border: '3px solid #E5E7EB',
-                      borderTop: '3px solid #2463EB',
-                      borderRadius: '50%',
-                      animation: 'spin 1s linear infinite'
-                    }} />
-                    <span style={{ fontSize: '0.875rem', color: '#6B7280' }}>
-                      Cargando datos financieros...
-                    </span>
-                  </div>
-                ) : (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={financialData}>
-                      <defs>
-                        <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#10B981" stopOpacity={0.3}/>
-                          <stop offset="95%" stopColor="#10B981" stopOpacity={0}/>
-                        </linearGradient>
-                        <linearGradient id="colorExpenses" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#F59E0B" stopOpacity={0.3}/>
-                          <stop offset="95%" stopColor="#F59E0B" stopOpacity={0}/>
-                        </linearGradient>
-                        <linearGradient id="colorProfit" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3}/>
-                          <stop offset="95%" stopColor="#3B82F6" stopOpacity={0}/>
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                      <XAxis 
-                        dataKey="period" 
-                        stroke="#6B7280"
-                        fontSize={12}
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={data.monthlyData}>
+                    <defs>
+                      <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#10B981" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#10B981" stopOpacity={0}/>
+                      </linearGradient>
+                      <linearGradient id="colorExpenses" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#F59E0B" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#F59E0B" stopOpacity={0}/>
+                      </linearGradient>
+                      <linearGradient id="colorProfit" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#3B82F6" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                    <XAxis 
+                      dataKey="period" 
+                      stroke="#6B7280"
+                      fontSize={12}
+                    />
+                    <YAxis 
+                      stroke="#6B7280"
+                      fontSize={12}
+                      tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
+                    />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend />
+                    
+                    {selectedMetric === 'revenue' && (
+                      <Area
+                        type="monotone"
+                        dataKey="revenue"
+                        stroke="#10B981"
+                        strokeWidth={3}
+                        fill="url(#colorRevenue)"
+                        name="Ingresos"
                       />
-                      <YAxis 
-                        stroke="#6B7280"
-                        fontSize={12}
-                        tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
+                    )}
+                    
+                    {selectedMetric === 'expenses' && (
+                      <Area
+                        type="monotone"
+                        dataKey="expenses"
+                        stroke="#F59E0B"
+                        strokeWidth={3}
+                        fill="url(#colorExpenses)"
+                        name="Gastos"
                       />
-                      <Tooltip content={<CustomTooltip />} />
-                      <Legend />
-                      
-                      {selectedMetric === 'revenue' && (
-                        <Area
-                          type="monotone"
-                          dataKey="revenue"
-                          stroke="#10B981"
-                          strokeWidth={3}
-                          fill="url(#colorRevenue)"
-                          name="Ingresos"
-                        />
-                      )}
-                      
-                      {selectedMetric === 'expenses' && (
-                        <Area
-                          type="monotone"
-                          dataKey="expenses"
-                          stroke="#F59E0B"
-                          strokeWidth={3}
-                          fill="url(#colorExpenses)"
-                          name="Gastos"
-                        />
-                      )}
-                      
-                      {selectedMetric === 'profit' && (
-                        <Area
-                          type="monotone"
-                          dataKey="profit"
-                          stroke="#3B82F6"
-                          strokeWidth={3}
-                          fill="url(#colorProfit)"
-                          name="Beneficios"
-                        />
-                      )}
-                    </AreaChart>
-                  </ResponsiveContainer>
-                )}
+                    )}
+                    
+                    {selectedMetric === 'profit' && (
+                      <Area
+                        type="monotone"
+                        dataKey="profit"
+                        stroke="#3B82F6"
+                        strokeWidth={3}
+                        fill="url(#colorProfit)"
+                        name="Beneficios"
+                      />
+                    )}
+                  </AreaChart>
+                </ResponsiveContainer>
               </div>
             </div>
           </Card>
@@ -766,140 +761,158 @@ export default function FinancialPanel() {
                 margin: '0 0 1.5rem 0',
                 fontFamily: 'Space Grotesk, sans-serif'
               }}>
-                Distribución de Gastos
+                Distribución de Gastos ({data.expensesBreakdown.length} categorías)
               </h3>
               
-              <div style={{ height: '300px' }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <RechartsPieChart>
-                    <Tooltip 
-                      formatter={(value: any) => [formatCurrency(value), 'Importe']}
-                      labelFormatter={(label) => `Categoría: ${label}`}
-                    />
-                    <RechartsPieChart data={expensesBreakdown}>
-                      {expensesBreakdown.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </RechartsPieChart>
-                  </RechartsPieChart>
-                </ResponsiveContainer>
-              </div>
-              
-              <div style={{ marginTop: '1rem' }}>
-                {expensesBreakdown.map((item, index) => (
-                  <div key={index} style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '0.5rem 0',
-                    borderBottom: index < expensesBreakdown.length - 1 ? '1px solid #E5E7EB' : 'none'
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <div style={{
-                        width: '12px',
-                        height: '12px',
-                        backgroundColor: item.color,
-                        borderRadius: '50%'
-                      }} />
-                      <span style={{ fontSize: '0.875rem', color: '#6B7280' }}>
-                        {item.category}
-                      </span>
-                    </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1C1E21' }}>
-                        {formatCurrency(item.amount)}
-                      </div>
-                      <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>
-                        {item.percentage}%
-                      </div>
-                    </div>
+              {data.expensesBreakdown.length > 0 ? (
+                <>
+                  <div style={{ height: '300px' }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <RechartsPieChart>
+                        <Tooltip 
+                          formatter={(value: any) => [formatCurrency(value), 'Importe']}
+                          labelFormatter={(label) => `Categoría: ${label}`}
+                        />
+                        <RechartsPieChart data={data.expensesBreakdown}>
+                          {data.expensesBreakdown.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </RechartsPieChart>
+                      </RechartsPieChart>
+                    </ResponsiveContainer>
                   </div>
-                ))}
-              </div>
+                  
+                  <div style={{ marginTop: '1rem' }}>
+                    {data.expensesBreakdown.map((item, index) => (
+                      <div key={index} style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '0.5rem 0',
+                        borderBottom: index < data.expensesBreakdown.length - 1 ? '1px solid #E5E7EB' : 'none'
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <div style={{
+                            width: '12px',
+                            height: '12px',
+                            backgroundColor: item.color,
+                            borderRadius: '50%'
+                          }} />
+                          <span style={{ fontSize: '0.875rem', color: '#6B7280' }}>
+                            {item.category}
+                          </span>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1C1E21' }}>
+                            {formatCurrency(item.amount)}
+                          </div>
+                          <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>
+                            {item.percentage.toFixed(1)}%
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <div style={{
+                  height: '300px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#6B7280'
+                }}>
+                  <PieChart size={48} style={{ marginBottom: '1rem' }} />
+                  <p>No hay datos de gastos</p>
+                </div>
+              )}
             </div>
           </Card>
         </div>
       </div>
 
       {/* Pagos Recientes */}
-      <Card variant="default">
-        <div style={{ padding: '1.5rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
-            <h3 style={{
-              fontSize: '1.25rem',
-              fontWeight: 600,
-              color: '#1C1E21',
-              margin: 0,
-              fontFamily: 'Space Grotesk, sans-serif'
-            }}>
-              Pagos Recientes
-            </h3>
-            <Button variant="outline" size="sm" icon={FileText}>
-              Ver todos
-            </Button>
+      {data.paymentsData.length > 0 && (
+        <Card variant="default">
+          <div style={{ padding: '1.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+              <h3 style={{
+                fontSize: '1.25rem',
+                fontWeight: 600,
+                color: '#1C1E21',
+                margin: 0,
+                fontFamily: 'Space Grotesk, sans-serif'
+              }}>
+                Pagos Recientes ({data.paymentsData.length} registros)
+              </h3>
+              <Button variant="outline" size="sm" icon={FileText}>
+                Ver todos
+              </Button>
+            </div>
+            
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid #E5E7EB' }}>
+                    <th style={{ padding: '0.75rem', textAlign: 'left', fontSize: '0.875rem', fontWeight: 600, color: '#6B7280' }}>
+                      Paciente
+                    </th>
+                    <th style={{ padding: '0.75rem', textAlign: 'left', fontSize: '0.875rem', fontWeight: 600, color: '#6B7280' }}>
+                      Tipo de Sesión
+                    </th>
+                    <th style={{ padding: '0.75rem', textAlign: 'left', fontSize: '0.875rem', fontWeight: 600, color: '#6B7280' }}>
+                      Importe
+                    </th>
+                    <th style={{ padding: '0.75rem', textAlign: 'left', fontSize: '0.875rem', fontWeight: 600, color: '#6B7280' }}>
+                      Fecha
+                    </th>
+                    <th style={{ padding: '0.75rem', textAlign: 'left', fontSize: '0.875rem', fontWeight: 600, color: '#6B7280' }}>
+                      Estado
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.paymentsData.slice(0, 5).map((payment, index) => (
+                    <motion.tr
+                      key={payment.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      style={{ borderBottom: '1px solid #F3F4F6' }}
+                    >
+                      <td style={{ padding: '0.75rem', fontSize: '0.875rem', color: '#1C1E21' }}>
+                        {payment.patientName}
+                      </td>
+                      <td style={{ padding: '0.75rem', fontSize: '0.875rem', color: '#6B7280' }}>
+                        {payment.sessionType}
+                      </td>
+                      <td style={{ padding: '0.75rem', fontSize: '0.875rem', fontWeight: 600, color: '#1C1E21' }}>
+                        {formatCurrency(payment.amount)}
+                      </td>
+                      <td style={{ padding: '0.75rem', fontSize: '0.875rem', color: '#6B7280' }}>
+                        {payment.date.toLocaleDateString('es-ES')}
+                      </td>
+                      <td style={{ padding: '0.75rem' }}>
+                        <span style={{
+                          padding: '0.25rem 0.75rem',
+                          borderRadius: '0.5rem',
+                          fontSize: '0.75rem',
+                          fontWeight: 600,
+                          backgroundColor: `${getPaymentStatusColor(payment.status)}20`,
+                          color: getPaymentStatusColor(payment.status)
+                        }}>
+                          {getPaymentStatusText(payment.status)}
+                        </span>
+                      </td>
+                    </motion.tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
-          
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ borderBottom: '1px solid #E5E7EB' }}>
-                  <th style={{ padding: '0.75rem', textAlign: 'left', fontSize: '0.875rem', fontWeight: 600, color: '#6B7280' }}>
-                    Paciente
-                  </th>
-                  <th style={{ padding: '0.75rem', textAlign: 'left', fontSize: '0.875rem', fontWeight: 600, color: '#6B7280' }}>
-                    Tipo de Sesión
-                  </th>
-                  <th style={{ padding: '0.75rem', textAlign: 'left', fontSize: '0.875rem', fontWeight: 600, color: '#6B7280' }}>
-                    Importe
-                  </th>
-                  <th style={{ padding: '0.75rem', textAlign: 'left', fontSize: '0.875rem', fontWeight: 600, color: '#6B7280' }}>
-                    Fecha
-                  </th>
-                  <th style={{ padding: '0.75rem', textAlign: 'left', fontSize: '0.875rem', fontWeight: 600, color: '#6B7280' }}>
-                    Estado
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {paymentsData.slice(0, 5).map((payment, index) => (
-                  <motion.tr
-                    key={payment.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    style={{ borderBottom: '1px solid #F3F4F6' }}
-                  >
-                    <td style={{ padding: '0.75rem', fontSize: '0.875rem', color: '#1C1E21' }}>
-                      {payment.patientName}
-                    </td>
-                    <td style={{ padding: '0.75rem', fontSize: '0.875rem', color: '#6B7280' }}>
-                      {payment.sessionType}
-                    </td>
-                    <td style={{ padding: '0.75rem', fontSize: '0.875rem', fontWeight: 600, color: '#1C1E21' }}>
-                      {formatCurrency(payment.amount)}
-                    </td>
-                    <td style={{ padding: '0.75rem', fontSize: '0.875rem', color: '#6B7280' }}>
-                      {payment.date.toLocaleDateString('es-ES')}
-                    </td>
-                    <td style={{ padding: '0.75rem' }}>
-                      <span style={{
-                        padding: '0.25rem 0.75rem',
-                        borderRadius: '0.5rem',
-                        fontSize: '0.75rem',
-                        fontWeight: 600,
-                        backgroundColor: `${getPaymentStatusColor(payment.status)}20`,
-                        color: getPaymentStatusColor(payment.status)
-                      }}>
-                        {getPaymentStatusText(payment.status)}
-                      </span>
-                    </td>
-                  </motion.tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </Card>
+        </Card>
+      )}
 
       {/* Estilos CSS */}
       <style jsx>{`
