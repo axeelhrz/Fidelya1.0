@@ -22,6 +22,22 @@ export interface CenterSettings {
     start: string;
     end: string;
   };
+  integrations: {
+    whatsapp: {
+      enabled: boolean;
+      apiKey?: string;
+      phoneNumber?: string;
+    };
+    googleSheets: {
+      enabled: boolean;
+      spreadsheetId?: string;
+    };
+    notion: {
+      enabled: boolean;
+      apiKey?: string;
+      databaseId?: string;
+    };
+  };
 }
 
 export interface KPIMetric {
@@ -44,6 +60,9 @@ export interface Alert {
   timestamp: Date;
   isRead: boolean;
   actionUrl?: string;
+  patientId?: string;
+  sessionId?: string;
+  type: 'clinical' | 'financial' | 'operational' | 'system';
 }
 
 export interface Task {
@@ -55,6 +74,98 @@ export interface Task {
   assignedTo: string;
   dueDate: Date;
   createdAt: Date;
+  category: 'administrative' | 'clinical' | 'financial' | 'marketing';
+}
+
+export interface Patient {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  dateOfBirth: Date;
+  gender: 'male' | 'female' | 'other';
+  address: string;
+  emergencyContact: {
+    name: string;
+    phone: string;
+    relationship: string;
+  };
+  assignedTherapist: string;
+  status: 'active' | 'inactive' | 'discharged';
+  tags: string[];
+  createdAt: Date;
+  lastSession?: Date;
+  totalSessions: number;
+  diagnosis: string[];
+  riskLevel: 'low' | 'medium' | 'high' | 'critical';
+  phq9Score?: number;
+  gad7Score?: number;
+  notes: string;
+}
+
+export interface Session {
+  id: string;
+  patientId: string;
+  therapistId: string;
+  date: Date;
+  duration: number;
+  type: 'individual' | 'group' | 'family' | 'couple';
+  status: 'scheduled' | 'completed' | 'cancelled' | 'no-show';
+  notes: string;
+  aiSummary?: string;
+  emotionalState: {
+    before: number; // 1-10 scale
+    after: number;
+  };
+  interventions: string[];
+  homework: string[];
+  nextSessionGoals: string[];
+  cost: number;
+  paid: boolean;
+}
+
+export interface Therapist {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  specializations: string[];
+  licenseNumber: string;
+  status: 'active' | 'inactive';
+  schedule: {
+    [key: string]: { // day of week
+      start: string;
+      end: string;
+      breaks: { start: string; end: string }[];
+    };
+  };
+  consultingRooms: string[];
+  hourlyRate: number;
+}
+
+export interface ConsultingRoom {
+  id: string;
+  name: string;
+  capacity: number;
+  equipment: string[];
+  status: 'available' | 'occupied' | 'maintenance';
+  location: string;
+}
+
+export interface Appointment {
+  id: string;
+  patientId: string;
+  therapistId: string;
+  roomId: string;
+  date: Date;
+  duration: number;
+  type: 'individual' | 'group' | 'family' | 'couple';
+  status: 'scheduled' | 'confirmed' | 'cancelled' | 'completed' | 'no-show';
+  notes?: string;
+  reminderSent: boolean;
+  cost: number;
 }
 
 export interface FinancialMetrics {
@@ -71,6 +182,10 @@ export interface FinancialMetrics {
   ebitda: number;
   burnRate: number[];
   earnRate: number[];
+  cac: number; // Customer Acquisition Cost
+  ltv: number; // Lifetime Value
+  arpu: number; // Average Revenue Per User
+  churnRate: number;
 }
 
 export interface ClinicalMetrics {
@@ -81,4 +196,52 @@ export interface ClinicalMetrics {
   averageGad7: number;
   adherenceRate: number;
   riskPatients: number;
+  averageSessionsPerPatient: number;
+  improvementRate: number;
+  dischargeRate: number;
+}
+
+export interface CommercialMetrics {
+  conversionRate: number;
+  leadGeneration: number;
+  campaignEffectiveness: {
+    [campaignId: string]: {
+      impressions: number;
+      clicks: number;
+      conversions: number;
+      cost: number;
+      roi: number;
+    };
+  };
+  referralRate: number;
+  socialMediaEngagement: {
+    followers: number;
+    engagement: number;
+    reach: number;
+  };
+}
+
+export interface AIInsight {
+  id: string;
+  type: 'prediction' | 'recommendation' | 'alert' | 'optimization';
+  title: string;
+  description: string;
+  confidence: number;
+  impact: 'high' | 'medium' | 'low';
+  timeframe: string;
+  value?: string;
+  actionable: boolean;
+  category: 'financial' | 'clinical' | 'operational' | 'commercial';
+  createdAt: Date;
+}
+
+export interface ComplianceMetric {
+  id: string;
+  name: string;
+  status: 'compliant' | 'warning' | 'non-compliant';
+  lastCheck: Date;
+  nextCheck: Date;
+  description: string;
+  requirements: string[];
+  documents: string[];
 }
