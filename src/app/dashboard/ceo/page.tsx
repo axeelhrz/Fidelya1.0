@@ -14,6 +14,7 @@ import {
   Chip,
   IconButton,
   Tooltip,
+  Grid,
 } from '@mui/material';
 import {
   Dashboard,
@@ -39,12 +40,12 @@ import FinanzasAdministracionTab from '@/components/ceo/tabs/FinanzasAdministrac
 
 // CEO Brand Colors - Exact as specified
 const ceoBrandColors = {
-  primary: '#5D4FB0',
-  secondary: '#A593F3', 
-  accentBlue: '#A5CAE6',
-  accentPink: '#D97DB7',
-  background: '#F2EDEA',
-  text: '#2E2E2E',
+  primary: '#5D4FB0',         // púrpura profesional
+  secondary: '#A593F3',       // lavanda claro
+  accentBlue: '#A5CAE6',      // azul suave
+  accentPink: '#D97DB7',      // rosa emocional
+  background: '#F2EDEA',      // fondo claro suave
+  text: '#2E2E2E',            // gris oscuro elegante
 };
 
 interface TabPanelProps {
@@ -102,10 +103,10 @@ function CEODashboardContent() {
 
   const tabs = [
     {
-      label: 'Resumen',
+      label: 'Resumen Ejecutivo',
       icon: <Dashboard />,
       color: ceoBrandColors.primary,
-      description: 'Vista ejecutiva general'
+      description: 'Vista ejecutiva general y KPIs'
     },
     {
       label: 'Clínica & Operativa',
@@ -120,6 +121,16 @@ function CEODashboardContent() {
       description: 'Métricas financieras y compliance'
     }
   ];
+
+  const handleRefreshData = () => {
+    // Trigger data refresh
+    window.location.reload();
+  };
+
+  const handleExportReport = () => {
+    // Export functionality
+    console.log('Exporting CEO report...');
+  };
 
   return (
     <Box 
@@ -144,8 +155,8 @@ function CEODashboardContent() {
         <Container maxWidth="xl">
           <Box sx={{ py: 3 }}>
             {/* Top Row - Logo, Title, Date, Actions */}
-            <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
-              <Box display="flex" alignItems="center" gap={3}>
+            <Grid container spacing={3} alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
+              <Grid item>
                 <Box display="flex" alignItems="center" gap={2}>
                   <Box
                     sx={{
@@ -166,7 +177,7 @@ function CEODashboardContent() {
                       variant="h4" 
                       sx={{ 
                         fontFamily: '"Neris", sans-serif',
-                        fontWeight: 600, // Semibold
+                        fontWeight: 600,
                         color: ceoBrandColors.text,
                         lineHeight: 1.2,
                       }}
@@ -177,7 +188,7 @@ function CEODashboardContent() {
                       variant="body2" 
                       sx={{ 
                         fontFamily: '"Neris", sans-serif',
-                        fontWeight: 300, // Light
+                        fontWeight: 300,
                         color: alpha(ceoBrandColors.text, 0.7),
                       }}
                     >
@@ -185,60 +196,77 @@ function CEODashboardContent() {
                     </Typography>
                   </Box>
                 </Box>
-              </Box>
+              </Grid>
 
-              <Box display="flex" alignItems="center" gap={3}>
-                {/* Date & Time */}
-                <Box textAlign="right">
-                  <Typography 
-                    variant="subtitle1" 
-                    sx={{ 
-                      fontFamily: '"Neris", sans-serif',
-                      fontWeight: 600, // Semibold
-                      color: ceoBrandColors.text,
-                    }}
-                  >
-                    {local}
-                  </Typography>
-                  <Typography 
-                    variant="caption" 
-                    sx={{ 
-                      fontFamily: '"Neris", sans-serif',
-                      fontWeight: 300, // Light
-                      color: alpha(ceoBrandColors.text, 0.6),
-                    }}
-                  >
-                    {utc}
-                  </Typography>
-                </Box>
-
-                {/* Actions */}
-                <Box display="flex" alignItems="center" gap={1}>
-                  <Tooltip title="Actualizar datos">
-                    <IconButton
-                      sx={{
-                        background: alpha(ceoBrandColors.primary, 0.1),
-                        '&:hover': {
-                          background: alpha(ceoBrandColors.primary, 0.2),
-                        },
+              <Grid item>
+                <Box display="flex" alignItems="center" gap={3}>
+                  {/* Date & Time */}
+                  <Box textAlign="right">
+                    <Typography 
+                      variant="subtitle1" 
+                      sx={{ 
+                        fontFamily: '"Neris", sans-serif',
+                        fontWeight: 600,
+                        color: ceoBrandColors.text,
                       }}
                     >
-                      <Refresh sx={{ color: ceoBrandColors.primary }} />
-                    </IconButton>
-                  </Tooltip>
-                  
-                  <Chip
-                    label={`CEO: ${user?.displayName?.split(' ')[0] || 'Admin'}`}
-                    sx={{
-                      background: `linear-gradient(135deg, ${ceoBrandColors.primary} 0%, ${ceoBrandColors.secondary} 100%)`,
-                      color: 'white',
-                      fontFamily: '"Neris", sans-serif',
-                      fontWeight: 600, // Semibold
-                    }}
-                  />
+                      {local}
+                    </Typography>
+                    <Typography 
+                      variant="caption" 
+                      sx={{ 
+                        fontFamily: '"Neris", sans-serif',
+                        fontWeight: 300,
+                        color: alpha(ceoBrandColors.text, 0.6),
+                      }}
+                    >
+                      {utc}
+                    </Typography>
+                  </Box>
+
+                  {/* Actions */}
+                  <Box display="flex" alignItems="center" gap={1}>
+                    <Tooltip title="Actualizar datos">
+                      <IconButton
+                        onClick={handleRefreshData}
+                        sx={{
+                          background: alpha(ceoBrandColors.primary, 0.1),
+                          '&:hover': {
+                            background: alpha(ceoBrandColors.primary, 0.2),
+                          },
+                        }}
+                      >
+                        <Refresh sx={{ color: ceoBrandColors.primary }} />
+                      </IconButton>
+                    </Tooltip>
+
+                    <Tooltip title="Exportar reporte">
+                      <IconButton
+                        onClick={handleExportReport}
+                        sx={{
+                          background: alpha(ceoBrandColors.accentBlue, 0.1),
+                          '&:hover': {
+                            background: alpha(ceoBrandColors.accentBlue, 0.2),
+                          },
+                        }}
+                      >
+                        <Download sx={{ color: ceoBrandColors.accentBlue }} />
+                      </IconButton>
+                    </Tooltip>
+                    
+                    <Chip
+                      label={`CEO: ${user?.displayName?.split(' ')[0] || 'Admin'}`}
+                      sx={{
+                        background: `linear-gradient(135deg, ${ceoBrandColors.primary} 0%, ${ceoBrandColors.secondary} 100%)`,
+                        color: 'white',
+                        fontFamily: '"Neris", sans-serif',
+                        fontWeight: 600,
+                      }}
+                    />
+                  </Box>
                 </Box>
-              </Box>
-            </Box>
+              </Grid>
+            </Grid>
 
             {/* Tabs Navigation */}
             <Box sx={{ borderBottom: `1px solid ${alpha(ceoBrandColors.primary, 0.1)}` }}>
@@ -264,7 +292,7 @@ function CEODashboardContent() {
                           variant="subtitle1" 
                           sx={{ 
                             fontFamily: '"Neris", sans-serif',
-                            fontWeight: 600, // Semibold
+                            fontWeight: 600,
                             textTransform: 'none',
                           }}
                         >
@@ -274,7 +302,7 @@ function CEODashboardContent() {
                           variant="caption" 
                           sx={{ 
                             fontFamily: '"Neris", sans-serif',
-                            fontWeight: 300, // Light
+                            fontWeight: 300,
                             opacity: 0.7,
                             display: 'block',
                           }}

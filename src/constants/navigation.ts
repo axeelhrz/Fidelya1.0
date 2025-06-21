@@ -10,6 +10,12 @@ import {
   AccountBalance,
   Psychology,
   Security,
+  Timeline,
+  Analytics,
+  MonetizationOn,
+  HealthAndSafety,
+  Gavel,
+  Campaign,
 } from '@mui/icons-material';
 import { UserRole } from '@/types/auth';
 
@@ -35,10 +41,19 @@ export const navigationItems: NavigationItem[] = [
     category: 'principal',
   },
 
-  // Secciones CEO (solo para admin)
+  // Secciones CEO (solo para admin) - Rutas específicas
+  {
+    label: 'Panel Ejecutivo',
+    path: '/dashboard/ceo',
+    icon: BusinessCenter,
+    allowedRoles: ['admin'],
+    adminOnly: true,
+    description: 'Dashboard ejecutivo completo',
+    category: 'ceo',
+  },
   {
     label: 'KPIs Ejecutivos',
-    path: '/dashboard?section=kpis',
+    path: '/dashboard/ceo/kpis',
     icon: TrendingUp,
     allowedRoles: ['admin'],
     adminOnly: true,
@@ -47,7 +62,7 @@ export const navigationItems: NavigationItem[] = [
   },
   {
     label: 'Desempeño Financiero',
-    path: '/dashboard?section=financial',
+    path: '/dashboard/ceo/finanzas',
     icon: AccountBalance,
     allowedRoles: ['admin'],
     adminOnly: true,
@@ -56,7 +71,7 @@ export const navigationItems: NavigationItem[] = [
   },
   {
     label: 'Salud Clínica',
-    path: '/dashboard?section=clinical',
+    path: '/dashboard/ceo/clinica',
     icon: LocalHospital,
     allowedRoles: ['admin'],
     adminOnly: true,
@@ -65,8 +80,8 @@ export const navigationItems: NavigationItem[] = [
   },
   {
     label: 'Pipeline Comercial',
-    path: '/dashboard?section=commercial',
-    icon: BusinessCenter,
+    path: '/dashboard/ceo/pipeline',
+    icon: Campaign,
     allowedRoles: ['admin'],
     adminOnly: true,
     description: 'Marketing y captación',
@@ -74,7 +89,7 @@ export const navigationItems: NavigationItem[] = [
   },
   {
     label: 'Compliance',
-    path: '/dashboard?section=compliance',
+    path: '/dashboard/ceo/compliance',
     icon: Security,
     allowedRoles: ['admin'],
     adminOnly: true,

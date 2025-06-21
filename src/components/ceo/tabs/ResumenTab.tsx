@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Typography,
@@ -14,6 +14,11 @@ import {
   LinearProgress,
   IconButton,
   Tooltip,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from '@mui/material';
 import {
   TrendingUp,
@@ -29,6 +34,8 @@ import {
   Lightbulb,
   Warning,
   CheckCircle,
+  ExpandMore,
+  Refresh,
 } from '@mui/icons-material';
 import { LineChart, Line, ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip } from 'recharts';
 import { motion } from 'framer-motion';
@@ -36,12 +43,12 @@ import { CEODashboardState } from '@/types/ceo';
 
 // CEO Brand Colors
 const ceoBrandColors = {
-  primary: '#5D4FB0',
-  secondary: '#A593F3', 
-  accentBlue: '#A5CAE6',
-  accentPink: '#D97DB7',
-  background: '#F2EDEA',
-  text: '#2E2E2E',
+  primary: '#5D4FB0',         // púrpura profesional
+  secondary: '#A593F3',       // lavanda claro
+  accentBlue: '#A5CAE6',      // azul suave
+  accentPink: '#D97DB7',      // rosa emocional
+  background: '#F2EDEA',      // fondo claro suave
+  text: '#2E2E2E',            // gris oscuro elegante
 };
 
 interface ResumenTabProps {
@@ -50,6 +57,8 @@ interface ResumenTabProps {
 
 export default function ResumenTab({ ceoMetrics }: ResumenTabProps) {
   const theme = useTheme();
+  const [selectedKPI, setSelectedKPI] = useState<string | null>(null);
+  const [kpiDialogOpen, setKpiDialogOpen] = useState(false);
 
   const getIcon = (iconName: string) => {
     const iconProps = { sx: { fontSize: 32 } };
@@ -88,6 +97,18 @@ export default function ResumenTab({ ceoMetrics }: ResumenTabProps) {
     return value.toLocaleString();
   };
 
+  const handleKPIClick = (kpiId: string) => {
+    setSelectedKPI(kpiId);
+    setKpiDialogOpen(true);
+  };
+
+  const handleCloseKPIDialog = () => {
+    setKpiDialogOpen(false);
+    setSelectedKPI(null);
+  };
+
+  const selectedKPIData = ceoMetrics.kpis.find(kpi => kpi.id === selectedKPI);
+
   // Prepare burn & earn chart data
   const burnEarnChartData = ceoMetrics.burnEarnData.slice(-14).map(item => ({
     fecha: new Date(item.fecha).getDate(),
@@ -125,38 +146,58 @@ export default function ResumenTab({ ceoMetrics }: ResumenTabProps) {
           }}
         >
           <Box position="relative" zIndex={1}>
-            <Typography 
-              variant="h4" 
-              sx={{ 
-                fontFamily: '"Neris", sans-serif',
-                fontWeight: 600, // Semibold
-                mb: 1,
-              }}
-            >
-              📊 Resumen Ejecutivo
-            </Typography>
-            <Typography 
-              variant="h6" 
-              sx={{ 
-                fontFamily: '"Neris", sans-serif',
-                fontWeight: 300, // Light
-                opacity: 0.9,
-                mb: 2,
-              }}
-            >
-              Vista general de métricas clave y rendimiento del centro
-            </Typography>
-            <Typography 
-              variant="body1" 
-              sx={{ 
-                fontFamily: '"Neris", sans-serif',
-                fontWeight: 300, // Light
-                opacity: 0.8,
-                maxWidth: '60%',
-              }}
-            >
-              Su liderazgo impulsa la excelencia en salud mental. Cada métrica refleja el impacto de su visión estratégica.
-            </Typography>
+            <Box display="flex" justifyContent="space-between" alignItems="flex-start">
+              <Box>
+                <Typography 
+                  variant="h4" 
+                  sx={{ 
+                    fontFamily: '"Neris", sans-serif',
+                    fontWeight: 600,
+                    mb: 1,
+                  }}
+                >
+                  📊 Resumen Ejecutivo
+                </Typography>
+                <Typography 
+                  variant="h6" 
+                  sx={{ 
+                    fontFamily: '"Neris", sans-serif',
+                    fontWeight: 300,
+                    opacity: 0.9,
+                    mb: 2,
+                  }}
+                >
+                  Vista general de métricas clave y rendimiento del centro
+                </Typography>
+                <Typography 
+                  variant="body1" 
+                  sx={{ 
+                    fontFamily: '"Neris", sans-serif',
+                    fontWeight: 300,
+                    opacity: 0.8,
+                    maxWidth: '60%',
+                  }}
+                >
+                  Su liderazgo impulsa la excelencia en salud mental. Cada métrica refleja el impacto de su visión estratégica.
+                </Typography>
+              </Box>
+              
+              <Box display="flex" gap={1}>
+                <Tooltip title="Actualizar métricas">
+                  <IconButton
+                    sx={{
+                      background: 'rgba(255, 255, 255, 0.2)',
+                      color: 'white',
+                      '&:hover': {
+                        background: 'rgba(255, 255, 255, 0.3)',
+                      },
+                    }}
+                  >
+                    <Refresh />
+                  </IconButton>
+                </Tooltip>
+              </Box>
+            </Box>
           </Box>
         </Paper>
       </motion.div>
@@ -167,7 +208,7 @@ export default function ResumenTab({ ceoMetrics }: ResumenTabProps) {
           variant="h5" 
           sx={{ 
             fontFamily: '"Neris", sans-serif',
-            fontWeight: 600, // Semibold
+            fontWeight: 600,
             color: ceoBrandColors.text,
             mb: 3,
             display: 'flex',
@@ -180,22 +221,24 @@ export default function ResumenTab({ ceoMetrics }: ResumenTabProps) {
         
         <Grid container spacing={3}>
           {ceoMetrics.kpis.slice(0, 6).map((kpi, index) => (
-            <Grid item xs={12} sm={6} lg={4} key={kpi.id}>
+            <Grid key={kpi.id} xs={12} sm={6} lg={4}>
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
               >
                 <Card
+                  onClick={() => handleKPIClick(kpi.id)}
                   sx={{
                     height: '100%',
-                    minHeight: 240,
+                    minHeight: 280,
                     background: 'rgba(255, 255, 255, 0.95)',
                     backdropFilter: 'blur(10px)',
                     border: `1px solid ${alpha(getSemaphoreColor(kpi.semaphore), 0.2)}`,
                     borderRadius: 4,
                     position: 'relative',
                     overflow: 'hidden',
+                    cursor: 'pointer',
                     '&::before': {
                       content: '""',
                       position: 'absolute',
@@ -220,7 +263,7 @@ export default function ResumenTab({ ceoMetrics }: ResumenTabProps) {
                           variant="overline" 
                           sx={{ 
                             fontFamily: '"Neris", sans-serif',
-                            fontWeight: 600, // Semibold
+                            fontWeight: 600,
                             color: alpha(ceoBrandColors.text, 0.7),
                             letterSpacing: '0.1em',
                           }}
@@ -249,7 +292,7 @@ export default function ResumenTab({ ceoMetrics }: ResumenTabProps) {
                         variant="h3" 
                         sx={{ 
                           fontFamily: '"Neris", sans-serif',
-                          fontWeight: 600, // Semibold
+                          fontWeight: 600,
                           color: ceoBrandColors.text,
                           mb: 1,
                         }}
@@ -265,7 +308,7 @@ export default function ResumenTab({ ceoMetrics }: ResumenTabProps) {
                               variant="caption" 
                               sx={{ 
                                 fontFamily: '"Neris", sans-serif',
-                                fontWeight: 300, // Light
+                                fontWeight: 300,
                                 color: alpha(ceoBrandColors.text, 0.6),
                               }}
                             >
@@ -275,7 +318,7 @@ export default function ResumenTab({ ceoMetrics }: ResumenTabProps) {
                               variant="caption" 
                               sx={{ 
                                 fontFamily: '"Neris", sans-serif',
-                                fontWeight: 600, // Semibold
+                                fontWeight: 600,
                                 color: getSemaphoreColor(kpi.semaphore),
                               }}
                             >
@@ -303,7 +346,7 @@ export default function ResumenTab({ ceoMetrics }: ResumenTabProps) {
                         variant="body2" 
                         sx={{ 
                           fontFamily: '"Neris", sans-serif',
-                          fontWeight: 300, // Light
+                          fontWeight: 300,
                           color: alpha(ceoBrandColors.text, 0.6),
                           mb: 2,
                           flex: 1,
@@ -347,7 +390,7 @@ export default function ResumenTab({ ceoMetrics }: ResumenTabProps) {
                           variant="caption" 
                           sx={{ 
                             fontFamily: '"Neris", sans-serif',
-                            fontWeight: 600, // Semibold
+                            fontWeight: 600,
                             color: kpi.trend.isPositive ? '#10b981' : '#ef4444',
                           }}
                         >
@@ -379,13 +422,13 @@ export default function ResumenTab({ ceoMetrics }: ResumenTabProps) {
             border: `1px solid ${alpha(ceoBrandColors.primary, 0.1)}`,
           }}
         >
-          <Box display="flex" alignItems="center" justifyContent="between" mb={3}>
+          <Box display="flex" alignItems="center" justifyContent="space-between" mb={3}>
             <Box>
               <Typography 
                 variant="h6" 
                 sx={{ 
                   fontFamily: '"Neris", sans-serif',
-                  fontWeight: 600, // Semibold
+                  fontWeight: 600,
                   color: ceoBrandColors.text,
                   mb: 1,
                 }}
@@ -396,13 +439,26 @@ export default function ResumenTab({ ceoMetrics }: ResumenTabProps) {
                 variant="body2" 
                 sx={{ 
                   fontFamily: '"Neris", sans-serif',
-                  fontWeight: 300, // Light
+                  fontWeight: 300,
                   color: alpha(ceoBrandColors.text, 0.6),
                 }}
               >
                 Análisis diario de flujo de caja y rentabilidad operativa
               </Typography>
             </Box>
+            
+            <Button
+              variant="outlined"
+              size="small"
+              sx={{
+                borderColor: ceoBrandColors.primary,
+                color: ceoBrandColors.primary,
+                fontFamily: '"Neris", sans-serif',
+                fontWeight: 600,
+              }}
+            >
+              Ver Detalle
+            </Button>
           </Box>
           
           <Box sx={{ height: 300 }}>
@@ -453,7 +509,7 @@ export default function ResumenTab({ ceoMetrics }: ResumenTabProps) {
       {/* Alertas Críticas y AI Insights */}
       <Grid container spacing={4}>
         {/* Alertas Críticas */}
-        <Grid item xs={12} lg={6}>
+        <Grid xs={12} lg={6}>
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -476,7 +532,7 @@ export default function ResumenTab({ ceoMetrics }: ResumenTabProps) {
                     variant="h6" 
                     sx={{ 
                       fontFamily: '"Neris", sans-serif',
-                      fontWeight: 600, // Semibold
+                      fontWeight: 600,
                       color: ceoBrandColors.text,
                     }}
                   >
@@ -486,7 +542,7 @@ export default function ResumenTab({ ceoMetrics }: ResumenTabProps) {
                     variant="body2" 
                     sx={{ 
                       fontFamily: '"Neris", sans-serif',
-                      fontWeight: 300, // Light
+                      fontWeight: 300,
                       color: alpha(ceoBrandColors.text, 0.6),
                     }}
                   >
@@ -505,13 +561,18 @@ export default function ResumenTab({ ceoMetrics }: ResumenTabProps) {
                       borderRadius: 3,
                       background: alpha('#ef4444', 0.05),
                       border: `1px solid ${alpha('#ef4444', 0.1)}`,
+                      cursor: 'pointer',
+                      '&:hover': {
+                        background: alpha('#ef4444', 0.08),
+                      },
+                      transition: 'background 0.2s',
                     }}
                   >
                     <Typography 
                       variant="subtitle2" 
                       sx={{ 
                         fontFamily: '"Neris", sans-serif',
-                        fontWeight: 600, // Semibold
+                        fontWeight: 600,
                         color: ceoBrandColors.text,
                         mb: 0.5,
                       }}
@@ -522,7 +583,7 @@ export default function ResumenTab({ ceoMetrics }: ResumenTabProps) {
                       variant="body2" 
                       sx={{ 
                         fontFamily: '"Neris", sans-serif',
-                        fontWeight: 300, // Light
+                        fontWeight: 300,
                         color: alpha(ceoBrandColors.text, 0.7),
                         mb: 1,
                       }}
@@ -536,7 +597,7 @@ export default function ResumenTab({ ceoMetrics }: ResumenTabProps) {
                         background: '#ef4444',
                         color: 'white',
                         fontFamily: '"Neris", sans-serif',
-                        fontWeight: 600, // Semibold
+                        fontWeight: 600,
                       }}
                     />
                   </Box>
@@ -547,7 +608,7 @@ export default function ResumenTab({ ceoMetrics }: ResumenTabProps) {
         </Grid>
 
         {/* AI Insight Destacado */}
-        <Grid item xs={12} lg={6}>
+        <Grid xs={12} lg={6}>
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -570,7 +631,7 @@ export default function ResumenTab({ ceoMetrics }: ResumenTabProps) {
                     variant="h6" 
                     sx={{ 
                       fontFamily: '"Neris", sans-serif',
-                      fontWeight: 600, // Semibold
+                      fontWeight: 600,
                       color: ceoBrandColors.text,
                     }}
                   >
@@ -580,7 +641,7 @@ export default function ResumenTab({ ceoMetrics }: ResumenTabProps) {
                     variant="body2" 
                     sx={{ 
                       fontFamily: '"Neris", sans-serif',
-                      fontWeight: 300, // Light
+                      fontWeight: 300,
                       color: alpha(ceoBrandColors.text, 0.6),
                     }}
                   >
@@ -595,7 +656,7 @@ export default function ResumenTab({ ceoMetrics }: ResumenTabProps) {
                     variant="subtitle1" 
                     sx={{ 
                       fontFamily: '"Neris", sans-serif',
-                      fontWeight: 600, // Semibold
+                      fontWeight: 600,
                       color: ceoBrandColors.text,
                       mb: 2,
                     }}
@@ -606,7 +667,7 @@ export default function ResumenTab({ ceoMetrics }: ResumenTabProps) {
                     variant="body2" 
                     sx={{ 
                       fontFamily: '"Neris", sans-serif',
-                      fontWeight: 300, // Light
+                      fontWeight: 300,
                       color: alpha(ceoBrandColors.text, 0.8),
                       mb: 3,
                       lineHeight: 1.6,
@@ -623,7 +684,7 @@ export default function ResumenTab({ ceoMetrics }: ResumenTabProps) {
                         background: ceoBrandColors.accentBlue,
                         color: 'white',
                         fontFamily: '"Neris", sans-serif',
-                        fontWeight: 600, // Semibold
+                        fontWeight: 600,
                       }}
                     />
                     <Chip
@@ -634,7 +695,7 @@ export default function ResumenTab({ ceoMetrics }: ResumenTabProps) {
                         borderColor: ceoBrandColors.accentBlue,
                         color: ceoBrandColors.accentBlue,
                         fontFamily: '"Neris", sans-serif',
-                        fontWeight: 600, // Semibold
+                        fontWeight: 600,
                       }}
                     />
                   </Box>
@@ -643,7 +704,7 @@ export default function ResumenTab({ ceoMetrics }: ResumenTabProps) {
                     variant="caption" 
                     sx={{ 
                       fontFamily: '"Neris", sans-serif',
-                      fontWeight: 300, // Light
+                      fontWeight: 300,
                       color: alpha(ceoBrandColors.text, 0.6),
                     }}
                   >
@@ -655,6 +716,106 @@ export default function ResumenTab({ ceoMetrics }: ResumenTabProps) {
           </motion.div>
         </Grid>
       </Grid>
+
+      {/* KPI Detail Dialog */}
+      <Dialog
+        open={kpiDialogOpen}
+        onClose={handleCloseKPIDialog}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 4,
+            background: 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(20px)',
+          }
+        }}
+      >
+        {selectedKPIData && (
+          <>
+            <DialogTitle sx={{ 
+              fontFamily: '"Neris", sans-serif',
+              fontWeight: 600,
+              color: ceoBrandColors.text,
+              borderBottom: `1px solid ${alpha(ceoBrandColors.primary, 0.1)}`,
+            }}>
+              <Box display="flex" alignItems="center" gap={2}>
+                {getIcon(selectedKPIData.icon)}
+                <Box>
+                  <Typography variant="h6" sx={{ fontFamily: '"Neris", sans-serif', fontWeight: 600 }}>
+                    {selectedKPIData.title}
+                  </Typography>
+                  <Typography variant="body2" sx={{ fontFamily: '"Neris", sans-serif', fontWeight: 300, color: alpha(ceoBrandColors.text, 0.6) }}>
+                    Análisis detallado de la métrica
+                  </Typography>
+                </Box>
+              </Box>
+            </DialogTitle>
+            <DialogContent sx={{ p: 4 }}>
+              <Grid container spacing={3}>
+                <Grid xs={12} md={6}>
+                  <Box sx={{ p: 3, background: alpha(getSemaphoreColor(selectedKPIData.semaphore), 0.1), borderRadius: 3 }}>
+                    <Typography variant="h3" sx={{ fontFamily: '"Neris", sans-serif', fontWeight: 600, color: getSemaphoreColor(selectedKPIData.semaphore), mb: 1 }}>
+                      {formatValue(selectedKPIData.value, selectedKPIData.unit)}
+                    </Typography>
+                    <Typography variant="body1" sx={{ fontFamily: '"Neris", sans-serif', fontWeight: 300, color: ceoBrandColors.text }}>
+                      {selectedKPIData.subtitle}
+                    </Typography>
+                  </Box>
+                </Grid>
+                <Grid xs={12} md={6}>
+                  <Box sx={{ height: 200 }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={selectedKPIData.sparklineData.map((value, idx) => ({ index: idx, value, label: `Día ${idx + 1}` }))}>
+                        <CartesianGrid strokeDasharray="3 3" stroke={alpha(ceoBrandColors.text, 0.1)} />
+                        <XAxis dataKey="index" stroke={alpha(ceoBrandColors.text, 0.6)} fontSize={12} />
+                        <YAxis stroke={alpha(ceoBrandColors.text, 0.6)} fontSize={12} />
+                        <RechartsTooltip 
+                          contentStyle={{
+                            background: 'rgba(255, 255, 255, 0.95)',
+                            border: `1px solid ${alpha(ceoBrandColors.primary, 0.2)}`,
+                            borderRadius: 8,
+                            fontFamily: '"Neris", sans-serif',
+                          }}
+                        />
+                        <Line 
+                          type="monotone" 
+                          dataKey="value" 
+                          stroke={getSemaphoreColor(selectedKPIData.semaphore)}
+                          strokeWidth={3}
+                          dot={{ fill: getSemaphoreColor(selectedKPIData.semaphore), r: 4 }}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </Box>
+                </Grid>
+              </Grid>
+            </DialogContent>
+            <DialogActions sx={{ p: 3, borderTop: `1px solid ${alpha(ceoBrandColors.primary, 0.1)}` }}>
+              <Button 
+                onClick={handleCloseKPIDialog}
+                sx={{
+                  fontFamily: '"Neris", sans-serif',
+                  fontWeight: 600,
+                  color: ceoBrandColors.primary,
+                }}
+              >
+                Cerrar
+              </Button>
+              <Button 
+                variant="contained"
+                sx={{
+                  background: `linear-gradient(135deg, ${ceoBrandColors.primary} 0%, ${ceoBrandColors.secondary} 100%)`,
+                  fontFamily: '"Neris", sans-serif',
+                  fontWeight: 600,
+                }}
+              >
+                Exportar Datos
+              </Button>
+            </DialogActions>
+          </>
+        )}
+      </Dialog>
     </Box>
   );
 }
