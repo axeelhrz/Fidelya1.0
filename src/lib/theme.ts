@@ -1,3 +1,5 @@
+'use client';
+
 import { createTheme, ThemeOptions } from '@mui/material/styles';
 
 // Paleta de colores profesional clínica según especificaciones
@@ -404,46 +406,43 @@ const themeOptions: ThemeOptions = {
 // Crear el tema
 export const theme = createTheme(themeOptions);
 
-// Extensiones del tema para uso personalizado
+// Extensiones del tema para uso personalizado (solo valores serializables)
 export const customTheme = {
-  ...theme,
-  custom: {
-    colors,
-    typography,
-    breakpoints,
-    spacing: {
-      xs: '0.5rem',
-      sm: '1rem',
-      md: '1.5rem',
-      lg: '2rem',
-      xl: '3rem',
-      xxl: '4rem',
-    },
-    borderRadius: {
-      sm: '0.5rem',
-      md: '0.75rem',
-      lg: '1rem',
-      xl: '1.5rem',
-      xxl: '2rem',
-    },
-    shadows: {
-      card: '0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05)',
-      elevated: '0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.06)',
-      floating: '0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-      glow: `0 0 0 1px ${colors.primary}20, 0 4px 6px -1px ${colors.primary}25`,
-    },
-    gradients: {
-      primary: `linear-gradient(135deg, ${colors.primary} 0%, #1D4ED8 100%)`,
-      success: `linear-gradient(135deg, ${colors.success} 0%, #059669 100%)`,
-      warning: `linear-gradient(135deg, ${colors.warning} 0%, #D97706 100%)`,
-      error: `linear-gradient(135deg, ${colors.error} 0%, #DC2626 100%)`,
-      surface: `linear-gradient(135deg, ${colors.surface} 0%, ${colors.surfaceElevated} 100%)`,
-    },
-    animations: {
-      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-      transitionSlow: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
-      bounce: 'cubic-bezier(0.68, -0.55, 0.265, 1.55)',
-    },
+  colors,
+  typography,
+  breakpoints,
+  spacing: {
+    xs: '0.5rem',
+    sm: '1rem',
+    md: '1.5rem',
+    lg: '2rem',
+    xl: '3rem',
+    xxl: '4rem',
+  },
+  borderRadius: {
+    sm: '0.5rem',
+    md: '0.75rem',
+    lg: '1rem',
+    xl: '1.5rem',
+    xxl: '2rem',
+  },
+  shadows: {
+    card: '0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05)',
+    elevated: '0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.06)',
+    floating: '0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+    glow: `0 0 0 1px ${colors.primary}20, 0 4px 6px -1px ${colors.primary}25`,
+  },
+  gradients: {
+    primary: `linear-gradient(135deg, ${colors.primary} 0%, #1D4ED8 100%)`,
+    success: `linear-gradient(135deg, ${colors.success} 0%, #059669 100%)`,
+    warning: `linear-gradient(135deg, ${colors.warning} 0%, #D97706 100%)`,
+    error: `linear-gradient(135deg, ${colors.error} 0%, #DC2626 100%)`,
+    surface: `linear-gradient(135deg, ${colors.surface} 0%, ${colors.surfaceElevated} 100%)`,
+  },
+  animations: {
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    transitionSlow: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+    bounce: 'cubic-bezier(0.68, -0.55, 0.265, 1.55)',
   },
 };
 
