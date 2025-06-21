@@ -57,8 +57,8 @@ import {
   Laptop,
   MapPin,
   User,
-  GraphOff,
-  InsightsOff
+  BarChart2,
+  Database
 } from 'lucide-react';
 
 import Topbar from '@/components/dashboard/Topbar';
@@ -863,7 +863,8 @@ export default function CEODashboard() {
         padding: '3rem',
         textAlign: 'center',
         marginBottom: '1.5rem',
-        boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.05)'
+        boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.05)',
+        position: 'relative'
       }}
     >
       <motion.div
@@ -871,7 +872,7 @@ export default function CEODashboard() {
         transition={{ duration: 2, repeat: Infinity }}
         style={{ marginBottom: '1rem' }}
       >
-        <GraphOff size={48} color="#9CA3AF" />
+        <BarChart2 size={48} color="#9CA3AF" />
       </motion.div>
       
       <h3 style={{ 
@@ -899,7 +900,7 @@ export default function CEODashboard() {
         right: '1rem',
         opacity: 0.1
       }}>
-        <BarChart size={32} color="#9CA3AF" />
+        <Database size={32} color="#9CA3AF" />
       </div>
     </motion.div>
   );
