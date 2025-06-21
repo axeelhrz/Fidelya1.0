@@ -1,58 +1,79 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { User as FirebaseUser, onAuthStateChanged, signOut } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
-import { auth, db } from '@/lib/firebase';
-import { User } from '@/types/dashboard';
+import { useRouter } from 'next/navigation';
+
+interface User {
+  id: string;
+  email: string;
+  role: 'admin' | 'therapist';
+  centerId: string;
+  name: string;
+  avatar?: string;
+}
 
 interface AuthContextType {
   user: User | null;
-  firebaseUser: FirebaseUser | null;
   loading: boolean;
-  logout: () => Promise<void>;
+  login: (email: string, password: string) => Promise<boolean>;
+  logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        try {
-          const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-          if (userDoc.exists()) {
-            const userData = userDoc.data() as Omit<User, 'id'>;
-            setUser({ id: firebaseUser.uid, ...userData });
-          }
-          setFirebaseUser(firebaseUser);
-        } catch (error) {
-          console.error('Error fetching user data:', error);
-        }
-      } else {
-        setUser(null);
-        setFirebaseUser(null);
+    // Verificar si hay un usuario guardado en localStorage
+    const savedUser = localStorage.getItem('user');
+    if (savedUser) {
+      try {
+        setUser(JSON.parse(savedUser));
+      } catch (error) {
+        console.error('Error parsing saved user:', error);
+        localStorage.removeItem('user');
       }
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
+    }
+    setLoading(false);
   }, []);
 
-  const logout = async () => {
-    try {
-      await signOut(auth);
-    } catch (error) {
-      console.error('Error signing out:', error);
+  const login = async (email: string, password: string): Promise<boolean> => {
+    // Simular autenticación
+    if (email === 'admin' && password === 'admin123') {
+      const userData: User = {
+        id: 'admin1',
+        email: 'admin@centropsicologico.com',
+        role: 'admin',
+        centerId: 'center1',
+        name: 'Dr. Carlos Mendoza'
+      };
+      
+      setUser(userData);
+      localStorage.setItem('user', JSON.stringify(userData));
+      
+      // Establecer cookie para el middleware
+      document.cookie = `user=${JSON.stringify(userData)}; path=/; max-age=86400`; // 24 horas
+      
+      return true;
     }
+    return false;
+  };
+
+  const logout = () => {
+    setUser(null);
+    localStorage.removeItem('user');
+    
+    // Eliminar cookie
+    document.cookie = 'user=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT';
+    
+    router.push('/login');
   };
 
   return (
-    <AuthContext.Provider value={{ user, firebaseUser, loading, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
