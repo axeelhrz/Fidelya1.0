@@ -165,16 +165,12 @@ const translationData = {
         'feature-notifications-item-5': 'Alertas personalizables por tipo de bloque',
         'feature-notifications-item-6': 'Notificaciones en tiempo real',
         'feature-notifications-item-7': 'Filtros avanzados de notificación',
-        // Feature 6: Referidos
+        // Feature 6: Referidos - CONTENIDO ACTUALIZADO
         'feature-referrals-title': 'REFERIDOS',
-        'feature-referrals-description': 'Puede compartir su enlace de referido o su código QR y por cada usuario que se registre con su enlace, usted y el usuario referido gana 1 semana grátis.',
-        'feature-referrals-item-2': 'Llegar',
-        'feature-referrals-item-3': 'Saltar selfie',
-        'feature-referrals-item-4': 'Saltar CAPTCHA-PUZZLE',
-        'feature-referrals-item-5': 'Filtros personalizables',
-        'feature-referrals-item-6': 'Auto búsqueda',
-        'feature-referrals-item-7': 'Notificación persistente',
-        'feature-referrals-item-8': 'Notificación por Llamada Telefónica',
+        'feature-referrals-description': 'Invitá a otros usuarios a unirse a Starflex y obtené beneficios exclusivos por cada referido que se registre.',
+        'feature-referrals-item-1': '<strong>Enlace único de referido</strong><br>Cada usuario recibe un enlace personalizado para invitar a otros de forma rápida y sencilla.',
+        'feature-referrals-item-2': '<strong>Recompensas por referidos</strong><br>Gana 1 semana gratis por cada persona que se registre y active su cuenta desde tu enlace.',
+        'feature-referrals-item-3': '<strong>Código QR de referido</strong><br>Compartí tu código QR para que otros puedan escanearlo directamente e ingresar desde su celular.',
         // Videos Section
         'videos-badge': 'Experiencia Visual Inmersiva',
         'videos-title-main': 'VE STARFLEX',
@@ -303,16 +299,12 @@ const translationData = {
         'feature-notifications-item-5': 'Customizable alerts by block type',
         'feature-notifications-item-6': 'Real-time notifications',
         'feature-notifications-item-7': 'Advanced notification filters',
-        // Feature 6: Referrals
+        // Feature 6: Referrals - CONTENIDO ACTUALIZADO
         'feature-referrals-title': 'REFERRALS',
-        'feature-referrals-description': 'You can share your referral link or QR code and for each user who registers with your link, you and the referred user earn 1 free week.',
-        'feature-referrals-item-2': 'Arrive',
-        'feature-referrals-item-3': 'Skip selfie',
-        'feature-referrals-item-4': 'Skip CAPTCHA-PUZZLE',
-        'feature-referrals-item-5': 'Customizable filters',
-        'feature-referrals-item-6': 'Auto search',
-        'feature-referrals-item-7': 'Persistent notification',
-        'feature-referrals-item-8': 'Phone Call notification',
+        'feature-referrals-description': 'Invite other users to join Starflex and get exclusive benefits for each referral that registers.',
+        'feature-referrals-item-1': '<strong>Unique referral link</strong><br>Each user receives a personalized link to invite others quickly and easily.',
+        'feature-referrals-item-2': '<strong>Referral rewards</strong><br>Earn 1 free week for each person who registers and activates their account from your link.',
+        'feature-referrals-item-3': '<strong>Referral QR code</strong><br>Share your QR code so others can scan it directly and enter from their mobile phone.',
         // Videos Section
         'videos-badge': 'Immersive Visual Experience',
         'videos-title-main': 'SEE STARFLEX',
@@ -2046,4 +2038,3 @@ if ('serviceWorker' in navigator) {
             });
     });
 }
-
