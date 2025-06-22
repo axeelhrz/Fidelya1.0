@@ -1,115 +1,450 @@
 'use client';
 
-import Link from 'next/link';
-import { motion } from 'framer-motion';
-import { Building2, Store, Users, ArrowRight, CheckCircle2, Sparkles } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { motion, useMotionValue, useSpring } from 'framer-motion';
+import { Building2, Store, Users, ArrowRight, Zap, Shield, Star, Cpu } from 'lucide-react';
 
 interface RoleCardProps {
-  role: 'asociacion' | 'socio' | 'comercio';
+  role: 'socio' | 'comercio' | 'asociacion';
   title: string;
   description: string;
+  features: string[];
   href: string;
-  popular?: boolean;
+  isSelected?: boolean;
+  onClick?: () => void;
 }
 
 const roleConfig = {
-  asociacion: {
-    icon: Building2,
-    gradient: 'from-blue-500 to-blue-600',
-    bgGradient: 'from-blue-50 to-blue-100/50',
-    iconColor: 'text-blue-600',
-    features: ['Gestión completa', 'Analytics avanzados', 'Soporte premium']
-  },
   socio: {
     icon: Users,
-    gradient: 'from-emerald-500 to-emerald-600',
-    bgGradient: 'from-emerald-50 to-emerald-100/50',
-    iconColor: 'text-emerald-600',
-    features: ['Beneficios exclusivos', 'Puntos de fidelidad', 'Descuentos especiales']
+    gradient: 'linear-gradient(135deg, #00ffff 0%, #0080ff 100%)',
+    glowColor: '#00ffff',
+    accentColor: '#00ffff',
   },
   comercio: {
     icon: Store,
-    gradient: 'from-violet-500 to-violet-600',
-    bgGradient: 'from-violet-50 to-violet-100/50',
-    iconColor: 'text-violet-600',
-    features: ['Fidelización clientes', 'Dashboard completo', 'Campañas automáticas']
-  }
+    gradient: 'linear-gradient(135deg, #ff00ff 0%, #ff0080 100%)',
+    glowColor: '#ff00ff',
+    accentColor: '#ff00ff',
+  },
+  asociacion: {
+    icon: Building2,
+    gradient: 'linear-gradient(135deg, #ffff00 0%, #ff8000 100%)',
+    glowColor: '#ffff00',
+    accentColor: '#ffff00',
+  },
 };
 
-export function RoleCard({ role, title, description, href, popular = false }: RoleCardProps) {
+const styles = {
+  card: (isSelected: boolean, isHovered: boolean, config: typeof roleConfig.socio) => ({
+    position: 'relative' as const,
+    width: '100%',
+    maxWidth: '380px',
+    background: isSelected ? 
+      'rgba(255, 255, 255, 0.08)' : 
+      'rgba(255, 255, 255, 0.03)',
+    backdropFilter: 'blur(30px)',
+    WebkitBackdropFilter: 'blur(30px)',
+    border: `2px solid ${isSelected ? config.accentColor : 'rgba(255, 255, 255, 0.1)'}`,
+    borderRadius: '24px',
+    padding: '2.5rem',
+    cursor: 'pointer',
+    transition: 'all 0.4s cubic-bezier(0.22, 1, 0.36, 1)',
+    overflow: 'hidden',
+    boxShadow: isSelected ? 
+      `0 20px 80px ${config.glowColor}40, inset 0 1px 0 rgba(255, 255, 255, 0.2)` :
+      '0 10px 40px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05)',
+    transform: isHovered ? 'translateY(-8px) scale(1.02)' : 'translateY(0) scale(1)',
+  }),
+  
+  holographicOverlay: (config: typeof roleConfig.socio) => ({
+    position: 'absolute' as const,
+    inset: 0,
+    background: `linear-gradient(45deg, transparent, ${config.glowColor}20, transparent, ${config.glowColor}10, transparent)`,
+    backgroundSize: '200% 200%',
+    animation: 'holographicShimmer 4s ease-in-out infinite',
+    opacity: 0,
+    borderRadius: 'inherit',
+    pointerEvents: 'none' as const,
+  }),
+  
+  energyField: (config: typeof roleConfig.socio) => ({
+    position: 'absolute' as const,
+    inset: '-3px',
+    background: `conic-gradient(from 0deg, ${config.glowColor}40, transparent, ${config.glowColor}20, transparent, ${config.glowColor}40)`,
+    borderRadius: 'inherit',
+    opacity: 0,
+    animation: 'energyRotate 6s linear infinite',
+    pointerEvents: 'none' as const,
+  }),
+  
+  iconContainer: (config: typeof roleConfig.socio) => ({
+    width: '80px',
+    height: '80px',
+    background: config.gradient,
+    borderRadius: '20px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: '2rem',
+    position: 'relative' as const,
+    boxShadow: `0 10px 40px ${config.glowColor}40`,
+  }),
+  
+  iconGlow: (config: typeof roleConfig.socio) => ({
+    position: 'absolute' as const,
+    inset: '-4px',
+    background: config.gradient,
+    borderRadius: 'inherit',
+    opacity: 0.3,
+    filter: 'blur(8px)',
+    zIndex: -1,
+  }),
+  
+  title: {
+    fontSize: '1.75rem',
+    fontWeight: '900',
+    color: '#ffffff',
+    marginBottom: '1rem',
+    letterSpacing: '-0.02em',
+    textTransform: 'uppercase' as const,
+  },
+  
+  description: {
+    fontSize: '1rem',
+    color: 'rgba(255, 255, 255, 0.7)',
+    lineHeight: 1.6,
+    marginBottom: '2rem',
+  },
+  
+  featuresList: {
+    listStyle: 'none',
+    padding: 0,
+    margin: '0 0 2rem 0',
+  },
+  
+  featureItem: (config: typeof roleConfig.socio) => ({
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.75rem',
+    padding: '0.75rem 0',
+    fontSize: '0.875rem',
+    color: 'rgba(255, 255, 255, 0.8)',
+    borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+  }),
+  
+  featureBullet: (config: typeof roleConfig.socio) => ({
+    width: '6px',
+    height: '6px',
+    background: config.gradient,
+    borderRadius: '50%',
+    boxShadow: `0 0 10px ${config.glowColor}`,
+    flexShrink: 0,
+  }),
+  
+  selectButton: (config: typeof roleConfig.socio) => ({
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '0.75rem',
+    width: '100%',
+    padding: '1rem 1.5rem',
+    background: config.gradient,
+    color: '#000000',
+    fontSize: '0.875rem',
+    fontWeight: '700',
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.05em',
+    border: 'none',
+    borderRadius: '12px',
+    cursor: 'pointer',
+    transition: 'all 0.3s cubic-bezier(0.22, 1, 0.36, 1)',
+    position: 'relative' as const,
+    overflow: 'hidden',
+    boxShadow: `0 8px 32px ${config.glowColor}40`,
+  }),
+  
+  quantumParticles: {
+    position: 'absolute' as const,
+    inset: 0,
+    pointerEvents: 'none' as const,
+    overflow: 'hidden',
+    borderRadius: 'inherit',
+  },
+  
+  particle: (config: typeof roleConfig.socio) => ({
+    position: 'absolute' as const,
+    width: '3px',
+    height: '3px',
+    background: config.accentColor,
+    borderRadius: '50%',
+    boxShadow: `0 0 6px ${config.accentColor}`,
+    pointerEvents: 'none' as const,
+  }),
+  
+  dataStreams: {
+    position: 'absolute' as const,
+    top: 0,
+    right: '10%',
+    width: '1px',
+    height: '100%',
+    background: 'linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.3), transparent)',
+    animation: 'dataFlow 2s linear infinite',
+    opacity: 0.6,
+  },
+  
+  selectedBadge: (config: typeof roleConfig.socio) => ({
+    position: 'absolute' as const,
+    top: '1rem',
+    right: '1rem',
+    padding: '0.5rem 1rem',
+    background: config.gradient,
+    color: '#000000',
+    fontSize: '0.75rem',
+    fontWeight: '700',
+    textTransform: 'uppercase' as const,
+    borderRadius: '8px',
+    boxShadow: `0 4px 16px ${config.glowColor}40`,
+  }),
+};
+
+// Quantum Particles Component
+const QuantumParticles = ({ config, isActive }: { config: typeof roleConfig.socio; isActive: boolean }) => {
+  const [particles, setParticles] = useState<Array<{
+    id: number;
+    x: number;
+    y: number;
+    vx: number;
+    vy: number;
+    life: number;
+  }>>([]);
+
+  React.useEffect(() => {
+    if (!isActive) {
+      setParticles([]);
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setParticles(prev => [
+        ...prev.filter(p => p.life > 0),
+        {
+          id: Date.now() + Math.random(),
+          x: Math.random() * 100,
+          y: Math.random() * 100,
+          vx: (Math.random() - 0.5) * 1,
+          vy: (Math.random() - 0.5) * 1,
+          life: 1,
+        }
+      ]);
+    }, 200);
+
+    const animationFrame = setInterval(() => {
+      setParticles(prev => prev.map(p => ({
+        ...p,
+        x: p.x + p.vx,
+        y: p.y + p.vy,
+        life: p.life - 0.02,
+      })).filter(p => p.life > 0 && p.x >= 0 && p.x <= 100 && p.y >= 0 && p.y <= 100));
+    }, 16);
+
+    return () => {
+      clearInterval(interval);
+      clearInterval(animationFrame);
+    };
+  }, [isActive]);
+
+  return (
+    <div style={styles.quantumParticles}>
+      {particles.map(particle => (
+        <div
+          key={particle.id}
+          style={{
+            ...styles.particle(config),
+            left: `${particle.x}%`,
+            top: `${particle.y}%`,
+            opacity: particle.life,
+          }}
+        />
+      ))}
+    </div>
+  );
+};
+
+export const RoleCard: React.FC<RoleCardProps> = ({
+  role,
+  title,
+  description,
+  features,
+  href,
+  isSelected = false,
+  onClick,
+}) => {
+  const [isHovered, setIsHovered] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  const springX = useSpring(mouseX, { stiffness: 300, damping: 30 });
+  const springY = useSpring(mouseY, { stiffness: 300, damping: 30 });
+
   const config = roleConfig[role];
   const Icon = config.icon;
 
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!cardRef.current) return;
+
+    const rect = cardRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left - rect.width / 2;
+    const y = e.clientY - rect.top - rect.height / 2;
+
+    mouseX.set(x * 0.05);
+    mouseY.set(y * 0.05);
+  };
+
+  React.useEffect(() => {
+    // Inject keyframes for animations
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes holographicShimmer {
+        0% { background-position: 0% 0%; opacity: 0; }
+        50% { background-position: 100% 100%; opacity: 0.3; }
+        100% { background-position: 0% 0%; opacity: 0; }
+      }
+      
+      @keyframes energyRotate {
+        0% { transform: rotate(0deg); opacity: 0; }
+        50% { opacity: 0.4; }
+        100% { transform: rotate(360deg); opacity: 0; }
+      }
+      
+      @keyframes dataFlow {
+        0% { transform: translateY(-100%); }
+        100% { transform: translateY(100%); }
+      }
+      
+      @keyframes quantumPulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+      }
+    `;
+    document.head.appendChild(style);
+
+    return () => {
+      if (document.head.contains(style)) {
+        document.head.removeChild(style);
+      }
+    };
+  }, []);
+
   return (
-    <div className="relative">
-      {/* Popular Badge */}
-      {popular && (
+    <motion.div
+      ref={cardRef}
+      style={{
+        ...styles.card(isSelected, isHovered, config),
+        x: springX,
+        y: springY,
+      }}
+      initial={{ opacity: 0, y: 30, scale: 0.9 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onMouseMove={handleMouseMove}
+      onClick={onClick}
+      whileHover={{
+        boxShadow: `0 25px 100px ${config.glowColor}60, inset 0 1px 0 rgba(255, 255, 255, 0.3)`,
+      }}
+      whileTap={{ scale: 0.98 }}
+    >
+      {/* Selected Badge */}
+      {isSelected && (
         <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.4 }}
-          className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-20 bg-gradient-to-r from-blue-600 to-violet-600 text-white px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider shadow-lg flex items-center gap-1.5"
+          style={styles.selectedBadge(config)}
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.3 }}
         >
-          <Sparkles size={12} />
-          Popular
+          <Star size={12} style={{ marginRight: '0.25rem' }} />
+          SELECCIONADO
         </motion.div>
       )}
 
+      {/* Energy Field */}
+      {(isHovered || isSelected) && (
+        <div style={styles.energyField(config)} />
+      )}
+
+      {/* Holographic Overlay */}
+      {isHovered && (
+        <div style={styles.holographicOverlay(config)} />
+      )}
+
+      {/* Quantum Particles */}
+      <QuantumParticles config={config} isActive={isHovered || isSelected} />
+
+      {/* Data Streams */}
+      <div style={styles.dataStreams} />
+
+      {/* Icon Container */}
       <motion.div
-        whileHover={{ y: -4, scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
-        transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-        className="group"
+        style={styles.iconContainer(config)}
+        animate={{
+          rotate: isHovered ? [0, 360] : 0,
+          scale: isSelected ? [1, 1.1, 1] : 1,
+        }}
+        transition={{
+          rotate: { duration: 2, ease: 'linear' },
+          scale: { duration: 2, repeat: Infinity },
+        }}
       >
-        <Link 
-          href={href}
-          className="block bg-white/80 backdrop-blur-sm border border-slate-200/50 rounded-2xl p-6 hover:shadow-xl transition-all duration-300 group-hover:border-slate-300/50"
-        >
-          {/* Header */}
-          <div className="flex items-start justify-between mb-6">
-            <div className="flex items-center gap-4">
-              <div className={`w-14 h-14 bg-gradient-to-br ${config.bgGradient} rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
-                <Icon size={28} className={config.iconColor} />
-              </div>
-              <div>
-                <h3 className="text-xl font-bold text-slate-900 mb-1">{title}</h3>
-                <div className="flex items-center gap-1.5">
-                  <CheckCircle2 size={14} className="text-slate-400" />
-                  <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">Verificado</span>
-                </div>
-              </div>
-            </div>
-            
-            <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center group-hover:bg-slate-100 transition-colors duration-300">
-              <ArrowRight size={20} className="text-slate-600 group-hover:translate-x-0.5 transition-transform duration-200" />
-            </div>
-          </div>
-
-          {/* Description */}
-          <p className="text-slate-600 mb-6 leading-relaxed">{description}</p>
-
-          {/* Features */}
-          <div className="space-y-3">
-            {config.features.map((feature, index) => (
-              <motion.div
-                key={feature}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="flex items-center gap-3"
-              >
-                <div className={`w-6 h-6 bg-gradient-to-br ${config.bgGradient} rounded-lg flex items-center justify-center`}>
-                  <CheckCircle2 size={14} className={config.iconColor} />
-                </div>
-                <span className="text-sm font-medium text-slate-700">{feature}</span>
-              </motion.div>
-            ))}
-          </div>
-
-          {/* Bottom accent */}
-          <div className={`mt-6 h-1 bg-gradient-to-r ${config.gradient} rounded-full transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left`} />
-        </Link>
+        <div style={styles.iconGlow(config)} />
+        <Icon size={40} color="#000" />
       </motion.div>
-    </div>
+
+      {/* Content */}
+      <div style={{ position: 'relative', zIndex: 10 }}>
+        <motion.h3
+          style={styles.title}
+          animate={{
+            color: isSelected ? config.accentColor : '#ffffff',
+            textShadow: isSelected ? `0 0 20px ${config.glowColor}` : 'none',
+          }}
+          transition={{ duration: 0.3 }}
+        >
+          {title}
+        </motion.h3>
+
+        <p style={styles.description}>{description}</p>
+
+        <ul style={styles.featuresList}>
+          {features.map((feature, index) => (
+            <motion.li
+              key={index}
+              style={styles.featureItem(config)}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.4, delay: index * 0.1 }}
+            >
+              <div style={styles.featureBullet(config)} />
+              <span>{feature}</span>
+            </motion.li>
+          ))}
+        </ul>
+
+        <motion.button
+          style={styles.selectButton(config)}
+          whileHover={{
+            scale: 1.05,
+            boxShadow: `0 12px 48px ${config.glowColor}60`,
+          }}
+          whileTap={{ scale: 0.95 }}
+          transition={{ duration: 0.2 }}
+        >
+          <Zap size={16} />
+          <span>{isSelected ? 'SELECCIONADO' : 'SELECCIONAR'}</span>
+          <ArrowRight size={16} />
+        </motion.button>
+      </div>
+    </motion.div>
   );
-}
+};
