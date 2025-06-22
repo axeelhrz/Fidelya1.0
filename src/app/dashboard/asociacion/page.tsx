@@ -53,119 +53,13 @@ import { useSocios } from '@/hooks/useSocios';
 import { useAuth } from '@/hooks/useAuth';
 import { Socio, SocioFormData } from '@/types/socio';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { OverviewDashboard } from '@/components/asociacion/OverviewDashboard';
 import { AdvancedAnalytics } from '@/components/asociacion/AdvancedAnalytics';
 import { EnhancedMemberManagement } from '@/components/asociacion/EnhancedMemberManagement';
 import { ActivityFeed } from '@/components/asociacion/ActivityFeed';
 import { SocioDialog } from '@/components/asociacion/SocioDialog';
 import { DeleteConfirmDialog } from '@/components/asociacion/DeleteConfirmDialog';
 import { CsvImport } from '@/components/asociacion/CsvImport';
-
-const QuickActionCard: React.FC<{
-  title: string;
-  description: string;
-  icon: React.ReactNode;
-  onClick: () => void;
-  color: string;
-  delay: number;
-  badge?: number;
-}> = ({ title, description, icon, onClick, color, delay, badge }) => {
-  return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95, y: 20 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      transition={{ duration: 0.5, delay }}
-    >
-      <Card
-        elevation={0}
-        onClick={onClick}
-        sx={{
-          cursor: 'pointer',
-          border: '1px solid #f1f5f9',
-          borderRadius: 5,
-          background: 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
-          transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-          position: 'relative',
-          overflow: 'hidden',
-          '&:hover': {
-            borderColor: alpha(color, 0.3),
-            transform: 'translateY(-8px)',
-            boxShadow: `0 20px 60px -10px ${alpha(color, 0.25)}`,
-            '& .action-icon': {
-              transform: 'scale(1.15) rotate(5deg)',
-              bgcolor: alpha(color, 0.2),
-            },
-            '& .action-glow': {
-              opacity: 0.8,
-            }
-          },
-        }}
-      >
-        {/* Glow effect */}
-        <Box
-          className="action-glow"
-          sx={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            height: '4px',
-            background: `linear-gradient(90deg, ${color}, ${alpha(color, 0.6)}, ${color})`,
-            opacity: 0.4,
-            transition: 'opacity 0.3s ease',
-          }}
-        />
-        
-        <CardContent sx={{ p: 4 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-            <Badge badgeContent={badge} color="error" invisible={!badge}>
-              <Avatar
-                className="action-icon"
-                sx={{
-                  width: 72,
-                  height: 72,
-                  borderRadius: 4,
-                  bgcolor: alpha(color, 0.12),
-                  color: color,
-                  flexShrink: 0,
-                  transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                  boxShadow: `0 8px 32px ${alpha(color, 0.2)}`,
-                }}
-              >
-                {icon}
-              </Avatar>
-            </Badge>
-            
-            <Box sx={{ flex: 1 }}>
-              <Typography 
-                variant="h6" 
-                sx={{ 
-                  fontWeight: 800, 
-                  mb: 0.5,
-                  color: '#0f172a',
-                  letterSpacing: '-0.01em',
-                  fontSize: '1.1rem'
-                }}
-              >
-                {title}
-              </Typography>
-              <Typography 
-                variant="body2" 
-                sx={{ 
-                  color: '#64748b', 
-                  lineHeight: 1.5,
-                  fontWeight: 500,
-                  fontSize: '0.9rem'
-                }}
-              >
-                {description}
-              </Typography>
-            </Box>
-          </Box>
-        </CardContent>
-      </Card>
-    </motion.div>
-  );
-};
 
 const LoadingScreen: React.FC<{ message: string }> = ({ message }) => (
   <Box 
@@ -264,6 +158,7 @@ const DashboardSection: React.FC<{
   onBulkAction: (action: string, selectedIds: string[]) => void;
   onCsvImport: () => void;
   onExport: () => void;
+  onNavigate: (section: string) => void;
 }> = ({ 
   section, 
   socios, 
@@ -274,175 +169,20 @@ const DashboardSection: React.FC<{
   onDeleteSocio, 
   onBulkAction,
   onCsvImport,
-  onExport
+  onExport,
+  onNavigate
 }) => {
-  const quickActions = [
-    {
-      title: 'Importación Masiva',
-      description: 'Carga inteligente desde CSV con validación automática',
-      icon: <Upload sx={{ fontSize: 36 }} />,
-      onClick: onCsvImport,
-      color: '#3b82f6',
-      delay: 0.1
-    },
-    {
-      title: 'Exportación Avanzada',
-      description: 'Descarga completa con filtros personalizados',
-      icon: <CloudDownload sx={{ fontSize: 36 }} />,
-      onClick: onExport,
-      color: '#10b981',
-      delay: 0.2
-    },
-    {
-      title: 'Analytics Profundo',
-      description: 'Reportes ejecutivos y métricas de rendimiento',
-      icon: <Assessment sx={{ fontSize: 36 }} />,
-      onClick: () => toast.info('Análisis avanzado disponible en la sección Analytics'),
-      color: '#8b5cf6',
-      delay: 0.3
-    },
-    {
-      title: 'Insights IA',
-      description: 'Predicciones y recomendaciones inteligentes',
-      icon: <AutoGraph sx={{ fontSize: 36 }} />,
-      onClick: () => toast.info('Próximamente: Insights impulsados por IA'),
-      color: '#f59e0b',
-      delay: 0.4
-    }
-  ];
-
+  
   switch (section) {
     case 'overview':
-    case 'all-members':
       return (
-        <Container maxWidth="xl" sx={{ py: 4 }}>
-          {/* Header */}
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <Box sx={{ mb: 6 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, mb: 4 }}>
-                <Avatar
-                  sx={{
-                    width: 64,
-                    height: 64,
-                    borderRadius: 4,
-                    background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%)',
-                    boxShadow: '0 12px 40px rgba(99, 102, 241, 0.3)',
-                  }}
-                >
-                  <Dashboard sx={{ fontSize: 32 }} />
-                </Avatar>
-                <Box>
-                  <Typography
-                    variant="h3"
-                    sx={{
-                      fontWeight: 900,
-                      fontSize: '2.5rem',
-                      background: 'linear-gradient(135deg, #0f172a 0%, #6366f1 60%, #8b5cf6 100%)',
-                      backgroundClip: 'text',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                      letterSpacing: '-0.03em',
-                      lineHeight: 0.9,
-                      mb: 1,
-                    }}
-                  >
-                    Dashboard Ejecutivo
-                  </Typography>
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      color: '#64748b',
-                      fontWeight: 600,
-                      fontSize: '1.2rem',
-                    }}
-                  >
-                    Centro de Control de Asociación
-                  </Typography>
-                </Box>
-                <Box sx={{ ml: 'auto' }}>
-                  <Button
-                    onClick={onAddSocio}
-                    variant="contained"
-                    startIcon={<PersonAdd />}
-                    size="large"
-                    sx={{
-                      py: 2,
-                      px: 4,
-                      borderRadius: 4,
-                      textTransform: 'none',
-                      fontWeight: 700,
-                      background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-                      boxShadow: '0 8px 32px rgba(99, 102, 241, 0.3)',
-                      '&:hover': {
-                        background: 'linear-gradient(135deg, #5b21b6 0%, #7c3aed 100%)',
-                        transform: 'translateY(-2px)',
-                        boxShadow: '0 12px 40px rgba(99, 102, 241, 0.4)',
-                      },
-                      transition: 'all 0.3s ease'
-                    }}
-                  >
-                    Nuevo Miembro
-                  </Button>
-                </Box>
-              </Box>
-            </Box>
-          </motion.div>
-
-          {/* Analytics */}
-          <AdvancedAnalytics socios={socios} stats={stats} loading={loading} />
-
-          {/* Quick Actions */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-          >
-            <Box sx={{ mb: 6 }}>
-              <Typography variant="h4" sx={{ fontWeight: 900, color: '#0f172a', mb: 1 }}>
-                Acciones Ejecutivas
-              </Typography>
-              <Typography variant="body1" sx={{ color: '#64748b', fontSize: '1.1rem', fontWeight: 500, mb: 4 }}>
-                Herramientas avanzadas para gestión profesional
-              </Typography>
-              
-              <Grid container spacing={4}>
-                {quickActions.map((action, index) => (
-                  <Grid item xs={12} sm={6} lg={3} key={index}>
-                    <QuickActionCard
-                      title={action.title}
-                      description={action.description}
-                      icon={action.icon}
-                      onClick={action.onClick}
-                      color={action.color}
-                      delay={action.delay}
-                    />
-                  </Grid>
-                ))}
-              </Grid>
-            </Box>
-          </motion.div>
-
-          {/* Main Content */}
-          <Grid container spacing={6}>
-            <Grid item xs={12} lg={8}>
-              <EnhancedMemberManagement
-                socios={socios}
-                loading={loading}
-                onAdd={onAddSocio}
-                onEdit={onEditSocio}
-                onDelete={onDeleteSocio}
-                onBulkAction={onBulkAction}
-              />
-            </Grid>
-            <Grid item xs={12} lg={4}>
-              <ActivityFeed loading={loading} />
-            </Grid>
-          </Grid>
-        </Container>
+        <OverviewDashboard
+          socios={socios}
+          stats={stats}
+          loading={loading}
+          onNavigate={onNavigate}
+          onAddMember={onAddSocio}
+        />
       );
 
     case 'analytics':
@@ -482,7 +222,16 @@ const DashboardSection: React.FC<{
         </Container>
       );
 
+    case 'all-members':
+    case 'active-members':
+    case 'expired-members':
     case 'members':
+      const filteredSocios = section === 'active-members' 
+        ? socios.filter(s => s.estado === 'activo')
+        : section === 'expired-members'
+        ? socios.filter(s => s.estado === 'vencido')
+        : socios;
+
       return (
         <Container maxWidth="xl" sx={{ py: 4 }}>
           <motion.div
@@ -497,18 +246,28 @@ const DashboardSection: React.FC<{
                     width: 64,
                     height: 64,
                     borderRadius: 4,
-                    background: 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)',
-                    boxShadow: '0 12px 40px rgba(6, 182, 212, 0.3)',
+                    background: section === 'active-members' 
+                      ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
+                      : section === 'expired-members'
+                      ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
+                      : 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)',
+                    boxShadow: section === 'active-members' 
+                      ? '0 12px 40px rgba(16, 185, 129, 0.3)'
+                      : section === 'expired-members'
+                      ? '0 12px 40px rgba(239, 68, 68, 0.3)'
+                      : '0 12px 40px rgba(6, 182, 212, 0.3)',
                   }}
                 >
                   <Group sx={{ fontSize: 32 }} />
                 </Avatar>
                 <Box>
                   <Typography variant="h3" sx={{ fontWeight: 900, color: '#0f172a', mb: 1 }}>
-                    Gestión de Miembros
+                    {section === 'active-members' ? 'Miembros Activos' :
+                     section === 'expired-members' ? 'Miembros Vencidos' :
+                     'Gestión de Miembros'}
                   </Typography>
                   <Typography variant="h6" sx={{ color: '#64748b', fontWeight: 600 }}>
-                    Administración completa de miembros
+                    {filteredSocios.length} miembros encontrados
                   </Typography>
                 </Box>
                 <Box sx={{ ml: 'auto' }}>
@@ -523,12 +282,23 @@ const DashboardSection: React.FC<{
                       borderRadius: 4,
                       textTransform: 'none',
                       fontWeight: 700,
-                      background: 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)',
-                      boxShadow: '0 8px 32px rgba(6, 182, 212, 0.3)',
+                      background: section === 'active-members' 
+                        ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
+                        : section === 'expired-members'
+                        ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
+                        : 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)',
+                      boxShadow: section === 'active-members' 
+                        ? '0 8px 32px rgba(16, 185, 129, 0.3)'
+                        : section === 'expired-members'
+                        ? '0 8px 32px rgba(239, 68, 68, 0.3)'
+                        : '0 8px 32px rgba(6, 182, 212, 0.3)',
                       '&:hover': {
-                        background: 'linear-gradient(135deg, #0891b2 0%, #2563eb 100%)',
                         transform: 'translateY(-2px)',
-                        boxShadow: '0 12px 40px rgba(6, 182, 212, 0.4)',
+                        boxShadow: section === 'active-members' 
+                          ? '0 12px 40px rgba(16, 185, 129, 0.4)'
+                          : section === 'expired-members'
+                          ? '0 12px 40px rgba(239, 68, 68, 0.4)'
+                          : '0 12px 40px rgba(6, 182, 212, 0.4)',
                       },
                       transition: 'all 0.3s ease'
                     }}
@@ -540,7 +310,7 @@ const DashboardSection: React.FC<{
             </Box>
           </motion.div>
           <EnhancedMemberManagement
-            socios={socios}
+            socios={filteredSocios}
             loading={loading}
             onAdd={onAddSocio}
             onEdit={onEditSocio}
@@ -780,6 +550,7 @@ export default function AsociacionDashboard() {
             onBulkAction={handleBulkAction}
             onCsvImport={() => handleCsvImport()}
             onExport={exportToCsv}
+            onNavigate={setActiveSection}
           />
         </motion.div>
       </AnimatePresence>
