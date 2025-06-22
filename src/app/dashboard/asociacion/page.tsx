@@ -55,6 +55,7 @@ import { Socio, SocioFormData } from '@/types/socio';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { OverviewDashboard } from '@/components/asociacion/OverviewDashboard';
 import { AdvancedAnalytics } from '@/components/asociacion/AdvancedAnalytics';
+import { ReportsSection } from '@/components/asociacion/ReportsSection';
 import { EnhancedMemberManagement } from '@/components/asociacion/EnhancedMemberManagement';
 import { ActivityFeed } from '@/components/asociacion/ActivityFeed';
 import { SocioDialog } from '@/components/asociacion/SocioDialog';
@@ -220,6 +221,15 @@ const DashboardSection: React.FC<{
           </motion.div>
           <AdvancedAnalytics socios={socios} stats={stats} loading={loading} />
         </Container>
+      );
+
+    case 'reports':
+      return (
+        <ReportsSection
+          socios={socios}
+          stats={stats}
+          loading={loading}
+        />
       );
 
     case 'all-members':
