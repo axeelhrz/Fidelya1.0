@@ -35,6 +35,7 @@ export default function Topbar({ onSearch, onCenterChange }: TopbarProps) {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isOnline, setIsOnline] = useState(true);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [notifications] = useState([
     { id: 1, title: 'Nueva cita programada', time: '2 min', type: 'info' },
     { id: 2, title: 'Pago pendiente', time: '5 min', type: 'warning' },
@@ -63,6 +64,19 @@ export default function Topbar({ onSearch, onCenterChange }: TopbarProps) {
     };
   }, []);
 
+  // Cerrar menú al hacer clic fuera
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (isUserMenuOpen && !target.closest('[data-user-menu]')) {
+        setIsUserMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isUserMenuOpen]);
+
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value;
     setSearchQuery(query);
@@ -70,11 +84,25 @@ export default function Topbar({ onSearch, onCenterChange }: TopbarProps) {
   };
 
   const handleLogout = async () => {
+    if (isLoggingOut) return; // Prevenir múltiples clics
+    
     try {
-      await logout();
+      setIsLoggingOut(true);
+      console.log('Iniciando proceso de logout...');
+      
+      // Cerrar el menú inmediatamente
       setIsUserMenuOpen(false);
+      
+      // Llamar a la función logout del contexto
+      await logout();
+      
+      console.log('Logout completado exitosamente');
     } catch (error) {
       console.error('Error al cerrar sesión:', error);
+      // En caso de error, mostrar mensaje al usuario
+      alert('Error al cerrar sesión. Por favor, intenta de nuevo.');
+    } finally {
+      setIsLoggingOut(false);
     }
   };
 
@@ -491,7 +519,7 @@ export default function Topbar({ onSearch, onCenterChange }: TopbarProps) {
           </motion.div>
 
           {/* Avatar del usuario mejorado */}
-          <div style={{ position: 'relative' }}>
+          <div style={{ position: 'relative' }} data-user-menu>
             <motion.button
               onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
               initial={{ opacity: 0, x: 20 }}
@@ -499,6 +527,7 @@ export default function Topbar({ onSearch, onCenterChange }: TopbarProps) {
               transition={{ delay: 0.7 }}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
+              disabled={isLoggingOut}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -508,10 +537,11 @@ export default function Topbar({ onSearch, onCenterChange }: TopbarProps) {
                 background: 'rgba(255, 255, 255, 0.9)',
                 backdropFilter: 'blur(16px)',
                 border: '1px solid rgba(229, 231, 235, 0.4)',
-                cursor: 'pointer',
+                cursor: isLoggingOut ? 'not-allowed' : 'pointer',
                 transition: 'all 0.3s ease',
                 outline: 'none',
-                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)'
+                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)',
+                opacity: isLoggingOut ? 0.7 : 1
               }}
             >
               <div style={{ position: 'relative' }}>
@@ -526,7 +556,7 @@ export default function Topbar({ onSearch, onCenterChange }: TopbarProps) {
                     justifyContent: 'center',
                     boxShadow: '0 4px 16px rgba(102, 126, 234, 0.3)'
                   }}
-                  whileHover={{ scale: 1.1 }}
+                  whileHover={{ scale: isLoggingOut ? 1 : 1.1 }}
                   transition={{ duration: 0.2 }}
                 >
                   <User size={20} color="white" />
@@ -744,20 +774,22 @@ export default function Topbar({ onSearch, onCenterChange }: TopbarProps) {
                     
                     <motion.button
                       onClick={handleLogout}
-                      whileHover={{ x: 6, backgroundColor: 'rgba(239, 68, 68, 0.05)' }}
+                      disabled={isLoggingOut}
+                      whileHover={!isLoggingOut ? { x: 6, backgroundColor: 'rgba(239, 68, 68, 0.05)' } : {}}
                       transition={{ duration: 0.2 }}
                       style={{
                         width: '100%',
                         padding: '1rem 1.25rem',
                         textAlign: 'left',
-                        cursor: 'pointer',
+                        cursor: isLoggingOut ? 'not-allowed' : 'pointer',
                         border: 'none',
                         background: 'transparent',
                         display: 'flex',
                         alignItems: 'center',
                         gap: '1rem',
                         transition: 'all 0.2s ease',
-                        outline: 'none'
+                        outline: 'none',
+                        opacity: isLoggingOut ? 0.6 : 1
                       }}
                     >
                       <div style={{
@@ -766,7 +798,21 @@ export default function Topbar({ onSearch, onCenterChange }: TopbarProps) {
                         background: 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)',
                         boxShadow: '0 4px 16px rgba(239, 68, 68, 0.3)'
                       }}>
-                        <LogOut size={16} color="white" />
+                        {isLoggingOut ? (
+                          <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                            style={{
+                              width: '16px',
+                              height: '16px',
+                              border: '2px solid rgba(255, 255, 255, 0.3)',
+                              borderTop: '2px solid white',
+                              borderRadius: '50%'
+                            }}
+                          />
+                        ) : (
+                          <LogOut size={16} color="white" />
+                        )}
                       </div>
                       <div>
                         <div style={{
@@ -776,7 +822,7 @@ export default function Topbar({ onSearch, onCenterChange }: TopbarProps) {
                           margin: 0,
                           fontFamily: 'Inter, sans-serif'
                         }}>
-                          Cerrar Sesión
+                          {isLoggingOut ? 'Cerrando Sesión...' : 'Cerrar Sesión'}
                         </div>
                         <div style={{
                           fontSize: '0.75rem',
@@ -784,7 +830,7 @@ export default function Topbar({ onSearch, onCenterChange }: TopbarProps) {
                           margin: 0,
                           fontFamily: 'Inter, sans-serif'
                         }}>
-                          Salir del dashboard
+                          {isLoggingOut ? 'Por favor espera...' : 'Salir del dashboard'}
                         </div>
                       </div>
                     </motion.button>
