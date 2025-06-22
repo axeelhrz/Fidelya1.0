@@ -1,38 +1,70 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import {
+  Box,
+  Container,
+  Typography,
+  TextField,
+  Button,
+  Card,
+  CardContent,
+  Stack,
+  IconButton,
+  Alert,
+  InputAdornment,
+  useTheme,
+  alpha,
+  Paper,
+  Grid,
+  Divider,
+  Collapse,
+} from '@mui/material';
+import {
+  Email,
+  Lock,
+  ArrowBack,
+  Visibility,
+  VisibilityOff,
+  ArrowForward,
+  Login,
+  PersonAdd,
+  Shield,
+  Speed,
+  Verified,
+  Key,
+  Send,
+  Close,
+} from '@mui/icons-material';
 import Link from 'next/link';
-import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-hot-toast';
-import { AuthLayout } from '@/components/auth/AuthLayout';
-import { AuthForm } from '@/components/auth/AuthForm';
 import { loginSchema, type LoginFormData } from '@/lib/validations/auth';
 import { signIn, resetPassword, getDashboardRoute } from '@/lib/auth';
-import { 
-  Mail, 
-  Lock, 
-  ArrowRight, 
-  Shield, 
-  CheckCircle2, 
-  Zap, 
-  Key, 
-  User, 
-  Sparkles,
-  AlertCircle,
-  Send
-} from 'lucide-react';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
 
-export default function LoginPage() {
+const LoginPage = () => {
+  const theme = useTheme();
   const router = useRouter();
+  const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
   const [isResetting, setIsResetting] = useState(false);
 
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setError,
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+  });
+
   const handleLogin = async (data: LoginFormData) => {
     try {
+      setIsSubmitting(true);
       const userData = await signIn(data.email, data.password);
       
       if (userData.estado === 'inactivo') {
@@ -44,8 +76,39 @@ export default function LoginPage() {
       const dashboardRoute = getDashboardRoute(userData.role);
       router.push(dashboardRoute);
     } catch (error: any) {
-      // El error se maneja en AuthForm
-      throw error;
+      let message = 'Ha ocurrido un error. Inténtalo de nuevo.';
+      
+      if (error && typeof error === 'object' && 'code' in error) {
+        const firebaseError = error as { code: string; message: string };
+        
+        switch (firebaseError.code) {
+          case 'auth/user-not-found':
+            message = 'No existe una cuenta con este email.';
+            break;
+          case 'auth/wrong-password':
+            message = 'Contraseña incorrecta.';
+            break;
+          case 'auth/invalid-email':
+            message = 'El formato del email no es válido.';
+            break;
+          case 'auth/user-disabled':
+            message = 'Esta cuenta ha sido deshabilitada.';
+            break;
+          case 'auth/too-many-requests':
+            message = 'Demasiados intentos fallidos. Intenta más tarde.';
+            break;
+          default:
+            if (firebaseError.message) {
+              message = firebaseError.message;
+            }
+        }
+      } else if (error?.message) {
+        message = error.message;
+      }
+      
+      setError('root', { message });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -77,246 +140,610 @@ export default function LoginPage() {
     }
   };
 
-  const loginFields: { name: "email" | "password"; label: string; type: string; icon?: React.ReactNode; placeholder?: string }[] = [
-    {
-      name: "email",
-      label: "Correo electrónico",
-      type: "email",
-      icon: <Mail size={16} />,
-      placeholder: "tu@email.com"
-    },
-    {
-      name: "password",
-      label: "Contraseña",
-      type: "password",
-      icon: <Lock size={16} />,
-      placeholder: "Tu contraseña"
-    }
+  const securityFeatures = [
+    { icon: <Shield />, text: 'SSL Seguro' },
+    { icon: <Verified />, text: 'Verificado' },
+    { icon: <Speed />, text: 'Acceso Rápido' },
+  ];
+
+  const demoAccounts = [
+    { role: 'Asociación', email: 'asociacion@demo.com', password: 'demo123' },
+    { role: 'Comercio', email: 'comercio@demo.com', password: 'demo123' },
+    { role: 'Socio', email: 'socio@demo.com', password: 'demo123' },
   ];
 
   return (
-    <AuthLayout
-      title="Bienvenido de vuelta"
-      subtitle="Accede a tu cuenta de Fidelita y gestiona tu programa de fidelidad"
+    <Box 
+      sx={{ 
+        minHeight: '100vh',
+        bgcolor: '#fafbfc',
+        background: 'linear-gradient(135deg, #fafbfc 0%, #f8fafc 100%)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        py: 4
+      }}
     >
-      <div className="space-y-8">
-        {/* Login Form */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          <AuthForm
-            schema={loginSchema}
-            onSubmit={handleLogin}
-            fields={loginFields}
-            submitText="Iniciar sesión"
-          />
-        </motion.div>
-
-        {/* Forgot Password Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.1 }}
-          className="text-center"
-        >
-          <motion.button
-            type="button"
-            onClick={() => setShowForgotPassword(!showForgotPassword)}
-            className="text-sm font-semibold text-indigo-600 hover:text-indigo-500 transition-colors duration-200 px-4 py-2 rounded-xl hover:bg-indigo-50"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+      <Container maxWidth="sm">
+        {/* Header */}
+        <Box sx={{ textAlign: 'center', mb: 5 }}>
+          <IconButton
+            component={Link}
+            href="/"
+            sx={{ 
+              position: 'absolute',
+              top: 24,
+              left: 24,
+              bgcolor: 'white',
+              boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
+              '&:hover': { 
+                bgcolor: '#f8fafc',
+                transform: 'translateY(-1px)',
+                boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+              },
+              transition: 'all 0.2s ease'
+            }}
           >
-            ¿Olvidaste tu contraseña?
-          </motion.button>
+            <ArrowBack />
+          </IconButton>
 
-          <AnimatePresence>
-            {showForgotPassword && (
-              <motion.div
-                initial={{ opacity: 0, height: 0, y: -10 }}
-                animate={{ opacity: 1, height: 'auto', y: 0 }}
-                exit={{ opacity: 0, height: 0, y: -10 }}
-                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                className="mt-6 overflow-hidden"
-              >
-                <div className="relative bg-gradient-to-br from-indigo-50 via-blue-50 to-purple-50 border border-indigo-200 rounded-2xl p-6">
-                  {/* Decorative Elements */}
-                  <div className="absolute top-3 right-3">
-                    <motion.div
-                      animate={{ rotate: [0, 360] }}
-                      transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
-                    >
-                      <Sparkles size={16} className="text-indigo-400" />
-                    </motion.div>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    <div className="flex items-start gap-4">
-                      <motion.div
-                        className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-2xl flex items-center justify-center shadow-lg"
-                        whileHover={{ scale: 1.1, rotate: 5 }}
-                        transition={{ duration: 0.3 }}
-                      >
-                        <Key size={20} className="text-white" />
-                      </motion.div>
-                      <div className="text-left flex-1">
-                        <h4 className="text-lg font-bold text-indigo-900 mb-2">
-                          Recuperar Contraseña
-                        </h4>
-                        <p className="text-sm text-indigo-700 mb-4">
-                          Ingresa tu email y te enviaremos un enlace para restablecer tu contraseña.
-                        </p>
-                        
-                        <div className="space-y-3">
-                          <Input
-                            type="email"
-                            placeholder="tu@email.com"
-                            value={resetEmail}
-                            onChange={(e) => setResetEmail(e.target.value)}
-                            icon={<Mail size={16} />}
-                            className="text-sm"
-                          />
-                          
-                          <div className="flex gap-2">
-                            <Button
-                              onClick={handlePasswordReset}
-                              loading={isResetting}
-                              disabled={isResetting || !resetEmail}
-                              size="sm"
-                              leftIcon={<Send size={14} />}
-                              className="flex-1"
-                            >
-                              Enviar enlace
-                            </Button>
-                            <Button
-                              onClick={() => {
-                                setShowForgotPassword(false);
-                                setResetEmail('');
-                              }}
-                              variant="outline"
-                              size="sm"
-                              className="px-4"
-                            >
-                              Cancelar
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.div>
-
-        {/* Elegant Divider */}
-        <motion.div
-          initial={{ opacity: 0, scaleX: 0 }}
-          animate={{ opacity: 1, scaleX: 1 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="relative"
-        >
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-200" />
-          </div>
-          <div className="relative flex justify-center">
-            <span className="px-4 py-2 bg-white text-sm font-medium text-gray-500 rounded-full">
-              ¿No tienes cuenta?
-            </span>
-          </div>
-        </motion.div>
-
-        {/* Register Button */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-        >
-          <Link href="/auth/register" className="block">
-            <motion.div
-              className="relative group w-full"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+          {/* Logo & Brand */}
+          <Box sx={{ mb: 4 }}>
+            <Box
+              component={Link}
+              href="/"
+              sx={{
+                display: 'inline-flex',
+                width: 72,
+                height: 72,
+                borderRadius: 4,
+                background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                color: 'white',
+                textDecoration: 'none',
+                fontSize: '2.2rem',
+                fontWeight: 900,
+                mb: 3,
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 12px 40px rgba(99, 102, 241, 0.3)',
+                letterSpacing: '-0.02em',
+                '&:hover': {
+                  transform: 'translateY(-3px)',
+                  boxShadow: '0 16px 50px rgba(99, 102, 241, 0.4)',
+                },
+                transition: 'all 0.3s ease'
+              }}
             >
-              {/* Button Glow */}
-              <div className="absolute -inset-1 bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 rounded-2xl opacity-0 group-hover:opacity-20 transition-opacity duration-300 blur-xl" />
-              
-              <div className="relative flex items-center justify-center gap-3 w-full px-8 py-4 text-sm font-bold text-gray-700 bg-white border-2 border-gray-200 rounded-2xl hover:bg-gray-50 hover:border-gray-300 hover:shadow-lg transition-all duration-300 shadow-sm">
-                <User size={20} />
-                <span className="tracking-wide">Crear cuenta nueva</span>
-                <ArrowRight size={20} />
-              </div>
-            </motion.div>
-          </Link>
-        </motion.div>
+              F
+            </Box>
 
-        {/* Quick Access Cards */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-          className="grid grid-cols-3 gap-3"
-        >
-          <motion.div 
-            className="text-center p-4 bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-xl"
-            whileHover={{ scale: 1.05, y: -2 }}
-            transition={{ duration: 0.2 }}
-          >
-            <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-emerald-500 rounded-lg flex items-center justify-center mx-auto mb-2 shadow-sm">
-              <Shield size={14} className="text-white" />
-            </div>
-            <span className="text-xs font-semibold text-green-700">Seguro</span>
-          </motion.div>
-          
-          <motion.div 
-            className="text-center p-4 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl"
-            whileHover={{ scale: 1.05, y: -2 }}
-            transition={{ duration: 0.2 }}
-          >
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-lg flex items-center justify-center mx-auto mb-2 shadow-sm">
-              <CheckCircle2 size={14} className="text-white" />
-            </div>
-            <span className="text-xs font-semibold text-blue-700">Confiable</span>
-          </motion.div>
-          
-          <motion.div 
-            className="text-center p-4 bg-gradient-to-br from-yellow-50 to-orange-50 border border-yellow-200 rounded-xl"
-            whileHover={{ scale: 1.05, y: -2 }}
-            transition={{ duration: 0.2 }}
-          >
-            <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center mx-auto mb-2 shadow-sm">
-              <Zap size={14} className="text-white" />
-            </div>
-            <span className="text-xs font-semibold text-yellow-700">Rápido</span>
-          </motion.div>
-        </motion.div>
+            <Typography
+              variant="h6"
+              sx={{
+                fontWeight: 700,
+                color: '#1e293b',
+                fontSize: '1.1rem',
+                letterSpacing: '-0.01em'
+              }}
+            >
+              Fidelita
+            </Typography>
+          </Box>
 
-        {/* Demo Accounts Info */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.5 }}
-          className="bg-gradient-to-r from-gray-50 to-blue-50 border border-gray-200 rounded-2xl p-4"
+          <Typography
+            variant="h3"
+            sx={{
+              fontWeight: 900,
+              mb: 1,
+              fontSize: { xs: '2.2rem', md: '2.8rem' },
+              background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 30%, #6366f1 100%)',
+              backgroundClip: 'text',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              letterSpacing: '-0.03em',
+              lineHeight: 0.95,
+            }}
+          >
+            Bienvenido de vuelta
+          </Typography>
+          
+          <Typography
+            variant="body1"
+            sx={{ 
+              color: '#64748b', 
+              fontWeight: 500,
+              fontSize: '1.05rem',
+              maxWidth: 420,
+              mx: 'auto',
+              lineHeight: 1.5
+            }}
+          >
+            Accede a tu cuenta de Fidelita y gestiona tu programa de fidelidad
+          </Typography>
+        </Box>
+
+        <Card
+          elevation={0}
+          sx={{
+            borderRadius: 5,
+            border: '1px solid #e2e8f0',
+            bgcolor: 'white',
+            boxShadow: '0 8px 40px rgba(0,0,0,0.06)',
+            overflow: 'hidden'
+          }}
         >
-          <div className="flex items-start gap-3">
-            <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-gray-400 to-gray-500 rounded-lg flex items-center justify-center">
-              <AlertCircle size={14} className="text-white" />
-            </div>
-            <div className="flex-1">
-              <h4 className="text-sm font-bold text-gray-900 mb-1">
-                Cuentas de Demostración
-              </h4>
-              <div className="text-xs text-gray-600 space-y-1">
-                <p><strong>Asociación:</strong> asociacion@demo.com / demo123</p>
-                <p><strong>Comercio:</strong> comercio@demo.com / demo123</p>
-                <p><strong>Socio:</strong> socio@demo.com / demo123</p>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-      </div>
-    </AuthLayout>
+          <CardContent sx={{ p: 5 }}>
+            <Box component="form" onSubmit={handleSubmit(handleLogin)}>
+              <Stack spacing={4}>
+                {/* Login Form */}
+                <Box>
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      fontWeight: 700,
+                      color: '#1e293b',
+                      mb: 3,
+                      fontSize: '1.1rem',
+                      letterSpacing: '-0.01em'
+                    }}
+                  >
+                    Iniciar Sesión
+                  </Typography>
+                  
+                  <Stack spacing={3}>
+                    <TextField
+                      {...register('email')}
+                      label="Correo electrónico"
+                      placeholder="tu@email.com"
+                      type="email"
+                      fullWidth
+                      error={!!errors.email}
+                      helperText={errors.email?.message}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <Email sx={{ color: '#94a3b8', fontSize: '1.3rem' }} />
+                          </InputAdornment>
+                        ),
+                      }}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: 3,
+                          bgcolor: '#fafbfc',
+                          '& fieldset': {
+                            borderColor: '#e2e8f0',
+                          },
+                          '&:hover fieldset': {
+                            borderColor: '#6366f1',
+                          },
+                          '&.Mui-focused fieldset': {
+                            borderColor: '#6366f1',
+                            borderWidth: 2,
+                          },
+                          '&.Mui-focused': {
+                            bgcolor: 'white',
+                          }
+                        },
+                        '& .MuiInputLabel-root.Mui-focused': {
+                          color: '#6366f1',
+                        },
+                      }}
+                    />
+
+                    <TextField
+                      {...register('password')}
+                      label="Contraseña"
+                      placeholder="Tu contraseña"
+                      type={showPassword ? 'text' : 'password'}
+                      fullWidth
+                      error={!!errors.password}
+                      helperText={errors.password?.message}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <Lock sx={{ color: '#94a3b8', fontSize: '1.3rem' }} />
+                          </InputAdornment>
+                        ),
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton
+                              onClick={() => setShowPassword(!showPassword)}
+                              edge="end"
+                              sx={{ color: '#94a3b8' }}
+                            >
+                              {showPassword ? <VisibilityOff /> : <Visibility />}
+                            </IconButton>
+                          </InputAdornment>
+                        ),
+                      }}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: 3,
+                          bgcolor: '#fafbfc',
+                          '& fieldset': {
+                            borderColor: '#e2e8f0',
+                          },
+                          '&:hover fieldset': {
+                            borderColor: '#6366f1',
+                          },
+                          '&.Mui-focused fieldset': {
+                            borderColor: '#6366f1',
+                            borderWidth: 2,
+                          },
+                          '&.Mui-focused': {
+                            bgcolor: 'white',
+                          }
+                        },
+                        '& .MuiInputLabel-root.Mui-focused': {
+                          color: '#6366f1',
+                        },
+                      }}
+                    />
+                  </Stack>
+                </Box>
+
+                {/* Forgot Password */}
+                <Box sx={{ textAlign: 'center' }}>
+                  <Button
+                    onClick={() => setShowForgotPassword(!showForgotPassword)}
+                    sx={{
+                      textTransform: 'none',
+                      fontWeight: 600,
+                      color: '#6366f1',
+                      fontSize: '0.9rem',
+                      '&:hover': {
+                        bgcolor: alpha('#6366f1', 0.05),
+                      }
+                    }}
+                  >
+                    ¿Olvidaste tu contraseña?
+                  </Button>
+
+                  <Collapse in={showForgotPassword}>
+                    <Paper
+                      elevation={0}
+                      sx={{
+                        mt: 3,
+                        p: 4,
+                        bgcolor: alpha('#6366f1', 0.05),
+                        border: `1px solid ${alpha('#6366f1', 0.15)}`,
+                        borderRadius: 4,
+                        position: 'relative',
+                        overflow: 'hidden',
+                        '&::before': {
+                          content: '""',
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          height: '2px',
+                          background: 'linear-gradient(90deg, #6366f1, #8b5cf6)',
+                        }
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+                        <Box
+                          sx={{
+                            width: 48,
+                            height: 48,
+                            borderRadius: 3,
+                            bgcolor: alpha('#6366f1', 0.15),
+                            color: '#6366f1',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            flexShrink: 0,
+                          }}
+                        >
+                          <Key sx={{ fontSize: '1.5rem' }} />
+                        </Box>
+                        
+                        <Box sx={{ flex: 1 }}>
+                          <Typography
+                            variant="h6"
+                            sx={{
+                              fontWeight: 700,
+                              color: '#6366f1',
+                              mb: 1,
+                              fontSize: '1.1rem'
+                            }}
+                          >
+                            Recuperar Contraseña
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              color: alpha('#6366f1', 0.8),
+                              mb: 3,
+                              fontSize: '0.9rem'
+                            }}
+                          >
+                            Ingresa tu email y te enviaremos un enlace para restablecer tu contraseña.
+                          </Typography>
+                          
+                          <Stack spacing={2}>
+                            <TextField
+                              label="Email de recuperación"
+                              placeholder="tu@email.com"
+                              type="email"
+                              value={resetEmail}
+                              onChange={(e) => setResetEmail(e.target.value)}
+                              size="small"
+                              fullWidth
+                              InputProps={{
+                                startAdornment: (
+                                  <InputAdornment position="start">
+                                    <Email sx={{ color: '#94a3b8', fontSize: '1.1rem' }} />
+                                  </InputAdornment>
+                                ),
+                              }}
+                              sx={{
+                                '& .MuiOutlinedInput-root': {
+                                  borderRadius: 2,
+                                  bgcolor: 'white',
+                                  '& fieldset': {
+                                    borderColor: alpha('#6366f1', 0.2),
+                                  },
+                                  '&:hover fieldset': {
+                                    borderColor: '#6366f1',
+                                  },
+                                  '&.Mui-focused fieldset': {
+                                    borderColor: '#6366f1',
+                                  }
+                                },
+                                '& .MuiInputLabel-root.Mui-focused': {
+                                  color: '#6366f1',
+                                },
+                              }}
+                            />
+                            
+                            <Box sx={{ display: 'flex', gap: 1 }}>
+                              <Button
+                                onClick={handlePasswordReset}
+                                disabled={isResetting || !resetEmail}
+                                variant="contained"
+                                size="small"
+                                startIcon={<Send />}
+                                sx={{
+                                  flex: 1,
+                                  textTransform: 'none',
+                                  fontWeight: 600,
+                                  borderRadius: 2,
+                                  background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                                  '&:hover': {
+                                    background: 'linear-gradient(135deg, #5b21b6 0%, #7c3aed 100%)',
+                                  }
+                                }}
+                              >
+                                {isResetting ? 'Enviando...' : 'Enviar enlace'}
+                              </Button>
+                              <IconButton
+                                onClick={() => {
+                                  setShowForgotPassword(false);
+                                  setResetEmail('');
+                                }}
+                                size="small"
+                                sx={{ color: '#94a3b8' }}
+                              >
+                                <Close />
+                              </IconButton>
+                            </Box>
+                          </Stack>
+                        </Box>
+                      </Box>
+                    </Paper>
+                  </Collapse>
+                </Box>
+
+                {/* Error Alert */}
+                {errors.root && (
+                  <Alert 
+                    severity="error" 
+                    sx={{ 
+                      borderRadius: 3,
+                      bgcolor: alpha('#ef4444', 0.05),
+                      border: `1px solid ${alpha('#ef4444', 0.2)}`,
+                    }}
+                  >
+                    {errors.root.message}
+                  </Alert>
+                )}
+
+                {/* Submit Button */}
+                <Button
+                  type="submit"
+                  variant="contained"
+                  fullWidth
+                  disabled={isSubmitting}
+                  endIcon={isSubmitting ? null : <Login />}
+                  sx={{
+                    py: 2.5,
+                    borderRadius: 4,
+                    textTransform: 'none',
+                    fontWeight: 700,
+                    fontSize: '1.1rem',
+                    background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                    boxShadow: '0 8px 32px rgba(99, 102, 241, 0.3)',
+                    letterSpacing: '-0.01em',
+                    '&:hover': {
+                      background: 'linear-gradient(135deg, #5b21b6 0%, #7c3aed 100%)',
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 12px 40px rgba(99, 102, 241, 0.4)',
+                    },
+                    '&:disabled': {
+                      background: '#e2e8f0',
+                      color: '#94a3b8',
+                      transform: 'none',
+                      boxShadow: 'none',
+                    },
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  {isSubmitting ? 'Iniciando sesión...' : 'Iniciar sesión'}
+                </Button>
+
+                {/* Divider */}
+                <Box sx={{ position: 'relative', my: 3 }}>
+                  <Divider sx={{ borderColor: '#f1f5f9' }} />
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      top: '50%',
+                      left: '50%',
+                      transform: 'translate(-50%, -50%)',
+                      bgcolor: 'white',
+                      px: 3,
+                    }}
+                  >
+                    <Typography 
+                      variant="body2" 
+                      sx={{ 
+                        color: '#94a3b8', 
+                        fontWeight: 600,
+                        fontSize: '0.9rem',
+                        letterSpacing: '0.02em'
+                      }}
+                    >
+                      ¿No tienes cuenta?
+                    </Typography>
+                  </Box>
+                </Box>
+
+                {/* Register Button */}
+                <Button
+                  component={Link}
+                  href="/auth/register"
+                  variant="outlined"
+                  fullWidth
+                  startIcon={<PersonAdd />}
+                  sx={{
+                    py: 2,
+                    borderRadius: 4,
+                    textTransform: 'none',
+                    fontWeight: 700,
+                    fontSize: '1.05rem',
+                    borderColor: '#e2e8f0',
+                    color: '#475569',
+                    borderWidth: 2,
+                    letterSpacing: '-0.01em',
+                    '&:hover': {
+                      borderColor: '#6366f1',
+                      bgcolor: alpha('#6366f1', 0.03),
+                      color: '#6366f1',
+                      transform: 'translateY(-1px)',
+                      boxShadow: '0 4px 20px rgba(99, 102, 241, 0.1)',
+                    },
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  Crear cuenta nueva
+                </Button>
+
+                {/* Security Features */}
+                <Paper
+                  elevation={0}
+                  sx={{
+                    bgcolor: '#f8fafc',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: 4,
+                    p: 3,
+                    mt: 3
+                  }}
+                >
+                  <Grid container spacing={2} justifyContent="center">
+                    {securityFeatures.map((feature, index) => (
+                      <Grid item xs={4} key={index} sx={{ textAlign: 'center' }}>
+                        <Box
+                          sx={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: 2,
+                            bgcolor: alpha('#10b981', 0.1),
+                            color: '#10b981',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            mx: 'auto',
+                            mb: 1,
+                          }}
+                        >
+                          {React.cloneElement(feature.icon, { sx: { fontSize: '1.1rem' } })}
+                        </Box>
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            color: '#64748b',
+                            fontWeight: 600,
+                            fontSize: '0.75rem'
+                          }}
+                        >
+                          {feature.text}
+                        </Typography>
+                      </Grid>
+                    ))}
+                  </Grid>
+                </Paper>
+
+                {/* Demo Accounts */}
+                <Paper
+                  elevation={0}
+                  sx={{
+                    bgcolor: alpha('#f59e0b', 0.05),
+                    border: `1px solid ${alpha('#f59e0b', 0.2)}`,
+                    borderRadius: 4,
+                    p: 3,
+                    position: 'relative',
+                    overflow: 'hidden',
+                    '&::before': {
+                      content: '""',
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      height: '2px',
+                      background: 'linear-gradient(90deg, #f59e0b, #f97316)',
+                    }
+                  }}
+                >
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      fontWeight: 700,
+                      color: '#f59e0b',
+                      mb: 2,
+                      fontSize: '1rem',
+                      textAlign: 'center'
+                    }}
+                  >
+                    Cuentas de Demostración
+                  </Typography>
+                  
+                  <Stack spacing={1}>
+                    {demoAccounts.map((account, index) => (
+                      <Box key={index} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Typography
+                          variant="body2"
+                          sx={{ fontWeight: 600, color: '#92400e', fontSize: '0.8rem' }}
+                        >
+                          {account.role}:
+                        </Typography>
+                        <Typography
+                          variant="body2"
+                          sx={{ color: '#92400e', fontSize: '0.8rem', fontFamily: 'monospace' }}
+                        >
+                          {account.email} / {account.password}
+                        </Typography>
+                      </Box>
+                    ))}
+                  </Stack>
+                </Paper>
+              </Stack>
+            </Box>
+          </CardContent>
+        </Card>
+      </Container>
+    </Box>
   );
-}
+};
+
+export default LoginPage;

@@ -12,7 +12,8 @@ import {
   Phone,
   Calendar,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Users
 } from 'lucide-react';
 import { Socio } from '@/types/socio';
 import { Button } from '@/components/ui/Button';
