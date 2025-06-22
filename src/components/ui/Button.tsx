@@ -3,73 +3,12 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
-import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
-const buttonVariants = cva(
-  // Base styles con tipografía específica
-  "inline-flex items-center justify-center font-semibold tracking-wider transition-all duration-200 focus-visible:outline-none focus-visible:ring-4 disabled:pointer-events-none disabled:opacity-50 relative overflow-hidden group active:scale-[0.98] uppercase text-sm",
-  {
-    variants: {
-      variant: {
-        primary: [
-          "bg-indigo-600 text-white",
-          "hover:bg-indigo-700",
-          "focus-visible:ring-indigo-500/30",
-          "shadow-lg hover:shadow-xl",
-          "border border-indigo-600/20"
-        ],
-        secondary: [
-          "bg-white text-gray-900 border-2 border-gray-200",
-          "hover:bg-gray-50 hover:border-gray-300",
-          "focus-visible:ring-gray-500/30",
-          "shadow-sm hover:shadow-md"
-        ],
-        outline: [
-          "bg-transparent text-indigo-700 border-2 border-indigo-200",
-          "hover:bg-indigo-50 hover:border-indigo-300",
-          "focus-visible:ring-indigo-500/30"
-        ],
-        ghost: [
-          "bg-transparent text-gray-700",
-          "hover:bg-gray-100 hover:text-gray-900",
-          "focus-visible:ring-gray-500/30"
-        ],
-        destructive: [
-          "bg-gradient-to-r from-red-600 to-red-700 text-white",
-          "hover:from-red-700 hover:to-red-800",
-          "focus-visible:ring-red-500/30",
-          "shadow-lg hover:shadow-xl"
-        ],
-        success: [
-          "bg-gradient-to-r from-green-600 to-green-700 text-white",
-          "hover:from-green-700 hover:to-green-800",
-          "focus-visible:ring-green-500/30",
-          "shadow-lg hover:shadow-xl"
-        ]
-      },
-      size: {
-        sm: "h-9 px-4 text-xs rounded-lg",
-        md: "h-11 px-6 text-sm rounded-xl",
-        lg: "h-12 px-8 text-sm rounded-xl",
-        xl: "h-14 px-10 text-base rounded-2xl"
-      },
-      fullWidth: {
-        true: "w-full",
-        false: "w-auto"
-      }
-    },
-    defaultVariants: {
-      variant: "primary",
-      size: "lg",
-      fullWidth: false
-    }
-  }
-);
-
-interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
+interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'destructive' | 'success';
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+  fullWidth?: boolean;
   loading?: boolean;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
@@ -79,9 +18,9 @@ interface ButtonProps
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ 
     className, 
-    variant, 
-    size, 
-    fullWidth,
+    variant = 'primary',
+    size = 'lg',
+    fullWidth = false,
     loading, 
     leftIcon, 
     rightIcon, 
@@ -91,26 +30,67 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   }, ref) => {
     const isDisabled = disabled || loading;
 
+    // Estilos premium integrados
+    const buttonStyles = {
+      base: "inline-flex items-center justify-center font-semibold tracking-wide transition-all duration-300 focus-visible:outline-none focus-visible:ring-4 disabled:pointer-events-none disabled:opacity-50 relative overflow-hidden group uppercase text-sm",
+      
+      variants: {
+        primary: "bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white shadow-lg shadow-indigo-500/25 hover:shadow-xl hover:shadow-indigo-500/30 focus-visible:ring-indigo-500/30 border border-indigo-500/20",
+        
+        secondary: "bg-white hover:bg-slate-50 text-slate-900 border-2 border-slate-200 hover:border-slate-300 shadow-sm hover:shadow-md focus-visible:ring-slate-500/30",
+        
+        outline: "bg-transparent hover:bg-indigo-50 text-indigo-700 hover:text-indigo-800 border-2 border-indigo-200 hover:border-indigo-300 focus-visible:ring-indigo-500/30",
+        
+        ghost: "bg-transparent hover:bg-slate-100 text-slate-700 hover:text-slate-900 focus-visible:ring-slate-500/30",
+        
+        destructive: "bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white shadow-lg shadow-red-500/25 hover:shadow-xl hover:shadow-red-500/30 focus-visible:ring-red-500/30",
+        
+        success: "bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/30 focus-visible:ring-emerald-500/30"
+      },
+      
+      sizes: {
+        sm: "h-9 px-4 text-xs rounded-lg",
+        md: "h-11 px-6 text-sm rounded-xl",
+        lg: "h-14 px-8 text-sm rounded-2xl",
+        xl: "h-16 px-10 text-base rounded-2xl"
+      },
+      
+      width: {
+        auto: "w-auto",
+        full: "w-full"
+      }
+    };
+
+    const getButtonClasses = () => {
+      return cn(
+        buttonStyles.base,
+        buttonStyles.variants[variant],
+        buttonStyles.sizes[size],
+        fullWidth ? buttonStyles.width.full : buttonStyles.width.auto,
+        className
+      );
+    };
+
     return (
       <motion.button
         ref={ref}
-        className={cn(buttonVariants({ variant, size, fullWidth }), className)}
+        className={getButtonClasses()}
         disabled={isDisabled}
         whileHover={!isDisabled ? { scale: 1.02, y: -1 } : {}}
         whileTap={!isDisabled ? { scale: 0.98 } : {}}
-        transition={{ duration: 0.15 }}
+        transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
         {...props}
       >
-        {/* Shimmer Effect */}
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-out" />
+        {/* Shimmer Effect premium */}
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-out" />
         
         {/* Glow Effect para Primary Variant */}
         {variant === 'primary' && (
-          <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-indigo-700 rounded-xl blur-lg opacity-0 group-hover:opacity-30 transition-opacity duration-300 -z-10 scale-110" />
+          <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-indigo-700 rounded-2xl blur-xl opacity-0 group-hover:opacity-40 transition-opacity duration-500 -z-10 scale-110" />
         )}
 
         {/* Content Container */}
-        <div className="relative z-10 flex items-center justify-center space-x-2">
+        <div className="relative z-10 flex items-center justify-center space-x-3">
           {/* Left Icon or Loading Spinner */}
           <AnimatePresence mode="wait">
             {loading ? (
@@ -119,9 +99,9 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
-                transition={{ duration: 0.15 }}
+                transition={{ duration: 0.2 }}
               >
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <Loader2 className="w-5 h-5 animate-spin" />
               </motion.div>
             ) : leftIcon ? (
               <motion.div
@@ -129,21 +109,21 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -10 }}
-                transition={{ duration: 0.15 }}
-                className="w-4 h-4"
+                transition={{ duration: 0.2 }}
+                className="w-5 h-5"
               >
                 {leftIcon}
               </motion.div>
             ) : null}
           </AnimatePresence>
 
-          {/* Button Text con tracking-wider */}
+          {/* Button Text */}
           <motion.span
-            className="font-semibold tracking-wider uppercase text-sm"
+            className="font-semibold tracking-wide uppercase"
             animate={{
               opacity: loading ? 0.7 : 1
             }}
-            transition={{ duration: 0.15 }}
+            transition={{ duration: 0.2 }}
           >
             {loading ? 'Cargando...' : children}
           </motion.span>
@@ -155,8 +135,8 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
                 initial={{ opacity: 0, x: 10 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 10 }}
-                transition={{ duration: 0.15 }}
-                className="w-4 h-4"
+                transition={{ duration: 0.2 }}
+                className="w-5 h-5"
               >
                 {rightIcon}
               </motion.div>
@@ -166,7 +146,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 
         {/* Ripple Effect */}
         <motion.div
-          className="absolute inset-0 rounded-xl"
+          className="absolute inset-0 rounded-2xl"
           initial={false}
           whileTap={{
             background: [
