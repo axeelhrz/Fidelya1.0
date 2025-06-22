@@ -20,10 +20,12 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { useAlerts, useTasks, updateAlert, createTask, updateTask, deleteTask } from '@/hooks/useDashboardData';
+import { useAuth } from '@/contexts/AuthContext';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 export default function AlertsTasksDock() {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<'alerts' | 'tasks'>('alerts');
   const [taskFilter, setTaskFilter] = useState<'all' | 'today' | 'week' | 'month'>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -41,8 +43,10 @@ export default function AlertsTasksDock() {
 
   // Función para marcar alerta como leída
   const markAlertAsRead = async (alertId: string) => {
+    if (!user?.centerId) return;
+    
     try {
-      await updateAlert(alertId, { isRead: true });
+      await updateAlert(user.centerId, alertId, { isRead: true });
     } catch (error) {
       console.error('Error marking alert as read:', error);
     }
@@ -50,10 +54,10 @@ export default function AlertsTasksDock() {
 
   // Función para crear nueva tarea
   const handleCreateTask = async () => {
-    if (!newTask.title.trim()) return;
+    if (!newTask.title.trim() || !user?.centerId) return;
     
     try {
-      await createTask({
+      await createTask(user.centerId, {
         ...newTask,
         status: 'todo',
         dueDate: new Date(newTask.dueDate),
@@ -75,8 +79,10 @@ export default function AlertsTasksDock() {
 
   // Función para actualizar estado de tarea
   const updateTaskStatus = async (taskId: string, newStatus: 'todo' | 'in-progress' | 'done') => {
+    if (!user?.centerId) return;
+    
     try {
-      await updateTask(taskId, { status: newStatus });
+      await updateTask(user.centerId, taskId, { status: newStatus });
     } catch (error) {
       console.error('Error updating task status:', error);
     }
@@ -84,8 +90,10 @@ export default function AlertsTasksDock() {
 
   // Función para eliminar tarea
   const handleDeleteTask = async (taskId: string) => {
+    if (!user?.centerId) return;
+    
     try {
-      await deleteTask(taskId);
+      await deleteTask(user.centerId, taskId);
     } catch (error) {
       console.error('Error deleting task:', error);
     }
