@@ -15,6 +15,117 @@ interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, '
   helperText?: string;
 }
 
+const styles = {
+  container: {
+    marginBottom: '1.5rem',
+  },
+  label: (isFocused: boolean, error?: string, success?: boolean, disabled?: boolean) => ({
+    display: 'block',
+    fontSize: '0.875rem',
+    fontWeight: '600',
+    letterSpacing: '-0.025em',
+    marginBottom: '0.5rem',
+    color: error ? '#dc2626' : success ? '#059669' : isFocused ? '#4f46e5' : disabled ? '#9ca3af' : '#374151',
+    transition: 'color 0.3s ease',
+  }),
+  inputContainer: {
+    position: 'relative' as const,
+  },
+  input: (isFocused: boolean, error?: string, success?: boolean, hasIcon?: boolean, isPassword?: boolean) => ({
+    width: '100%',
+    height: '56px',
+    padding: hasIcon ? '0 1.25rem 0 3.5rem' : isPassword ? '0 3.5rem 0 1.25rem' : '0 1.25rem',
+    fontSize: '1rem',
+    fontWeight: '500',
+    color: '#1f2937',
+    background: '#ffffff',
+    border: `2px solid ${error ? '#dc2626' : success ? '#059669' : isFocused ? '#4f46e5' : '#e5e7eb'}`,
+    borderRadius: '16px',
+    outline: 'none',
+    transition: 'all 0.3s ease',
+    boxShadow: isFocused ? (error ? '0 0 0 4px rgba(220, 38, 38, 0.1)' : success ? '0 0 0 4px rgba(5, 150, 105, 0.1)' : '0 0 0 4px rgba(79, 70, 229, 0.1)') : '0 1px 3px rgba(0, 0, 0, 0.1)',
+    '::placeholder': {
+      color: '#9ca3af',
+      fontWeight: '400',
+    },
+  }),
+  iconContainer: {
+    position: 'absolute' as const,
+    left: '1.25rem',
+    top: '50%',
+    transform: 'translateY(-50%)',
+    pointerEvents: 'none' as const,
+    zIndex: 10,
+  },
+  icon: (isFocused: boolean, error?: string, success?: boolean) => ({
+    width: '20px',
+    height: '20px',
+    color: error ? '#dc2626' : success ? '#059669' : isFocused ? '#4f46e5' : '#9ca3af',
+    transition: 'color 0.3s ease',
+  }),
+  passwordToggle: {
+    position: 'absolute' as const,
+    right: '1.25rem',
+    top: '50%',
+    transform: 'translateY(-50%)',
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    padding: '0.5rem',
+    borderRadius: '8px',
+    color: '#9ca3af',
+    transition: 'all 0.3s ease',
+    ':hover': {
+      color: '#6b7280',
+      background: '#f3f4f6',
+    },
+  },
+  statusIcon: {
+    position: 'absolute' as const,
+    right: '1.25rem',
+    top: '50%',
+    transform: 'translateY(-50%)',
+    padding: '0.25rem',
+  },
+  errorMessage: {
+    display: 'flex',
+    alignItems: 'flex-start',
+    gap: '0.75rem',
+    marginTop: '0.75rem',
+    padding: '0 0.25rem',
+  },
+  errorText: {
+    fontSize: '0.875rem',
+    fontWeight: '500',
+    color: '#dc2626',
+    lineHeight: 1.4,
+  },
+  helperMessage: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.75rem',
+    marginTop: '0.75rem',
+    padding: '0 0.25rem',
+  },
+  helperText: {
+    fontSize: '0.875rem',
+    color: '#6b7280',
+    lineHeight: 1.4,
+  },
+  successMessage: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.75rem',
+    marginTop: '0.75rem',
+    padding: '0 0.25rem',
+  },
+  successText: {
+    fontSize: '0.875rem',
+    fontWeight: '500',
+    color: '#059669',
+  },
+};
+
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({ 
     className, 
@@ -42,74 +153,31 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
       props.onChange?.(e);
     };
 
-    // Estilos premium integrados
-    const inputStyles = {
-      base: "w-full font-medium transition-all duration-300 ease-out placeholder:text-slate-400 placeholder:font-normal focus:outline-none disabled:cursor-not-allowed disabled:opacity-50",
-      sizes: {
-        sm: "h-10 px-4 text-sm rounded-xl",
-        md: "h-12 px-4 text-base rounded-xl", 
-        lg: "h-14 px-5 text-base rounded-2xl"
-      },
-      variants: {
-        default: {
-          normal: "bg-white border-2 border-slate-200 hover:border-slate-300 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 shadow-sm hover:shadow-md focus:shadow-lg",
-          error: "bg-red-50/50 border-2 border-red-300 focus:border-red-500 focus:ring-4 focus:ring-red-500/10 shadow-sm",
-          success: "bg-emerald-50/50 border-2 border-emerald-300 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 shadow-sm"
-        }
-      }
-    };
-
-    const getInputClasses = () => {
-      const baseClasses = inputStyles.base;
-      const sizeClasses = inputStyles.sizes[size];
-      
-      let variantClasses = inputStyles.variants.default.normal;
-      if (error) variantClasses = inputStyles.variants.default.error;
-      if (success && !error) variantClasses = inputStyles.variants.default.success;
-      
-      const iconPadding = icon ? (size === 'lg' ? 'pl-14' : 'pl-12') : '';
-      const passwordPadding = isPassword ? (size === 'lg' ? 'pr-14' : 'pr-12') : '';
-      
-      return cn(baseClasses, sizeClasses, variantClasses, iconPadding, passwordPadding, className);
-    };
-
     return (
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-        className="space-y-3"
+        style={styles.container}
       >
-        {/* Label premium */}
+        {/* Label */}
         {label && (
-          <motion.label
+          <label
             htmlFor={id}
-            className={cn(
-              "block text-sm font-semibold tracking-tight transition-colors duration-300",
-              error ? "text-red-700" : success ? "text-emerald-700" : "text-slate-700",
-              disabled && "text-slate-400",
-              isFocused && !error && !success && "text-indigo-700"
-            )}
+            style={styles.label(isFocused, error, success, disabled)}
           >
             {label}
-            {props.required && <span className="text-red-500 ml-1.5">*</span>}
-          </motion.label>
+            {props.required && <span style={{ color: '#dc2626', marginLeft: '0.375rem' }}>*</span>}
+          </label>
         )}
 
         {/* Input Container */}
-        <div className="relative group">
-          {/* Icon premium */}
+        <div style={styles.inputContainer}>
+          {/* Icon */}
           {icon && (
-            <div className={cn(
-              "absolute inset-y-0 left-0 flex items-center pointer-events-none z-10",
-              size === 'lg' ? 'pl-5' : 'pl-4'
-            )}>
+            <div style={styles.iconContainer}>
               <motion.div
-                className={cn(
-                  "w-5 h-5 transition-colors duration-300",
-                  error ? "text-red-500" : success ? "text-emerald-500" : "text-slate-400",
-                  isFocused && !error && !success && "text-indigo-600"
-                )}
+                style={styles.icon(isFocused, error, success)}
                 animate={{
                   scale: isFocused ? 1.05 : 1,
                 }}
@@ -120,12 +188,12 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             </div>
           )}
 
-          {/* Input premium */}
+          {/* Input */}
           <input
             ref={ref}
             id={id}
             type={inputType}
-            className={getInputClasses()}
+            style={styles.input(isFocused, error, success, !!icon, isPassword)}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
             onChange={handleChange}
@@ -133,67 +201,46 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             {...props}
           />
 
-          {/* Password Toggle premium */}
+          {/* Password Toggle */}
           {isPassword && (
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className={cn(
-                "absolute inset-y-0 right-0 flex items-center text-slate-400 hover:text-slate-600 transition-colors duration-300 focus:outline-none",
-                size === 'lg' ? 'pr-5' : 'pr-4'
-              )}
+              style={styles.passwordToggle}
               tabIndex={-1}
             >
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="p-1.5 rounded-lg hover:bg-slate-100 transition-colors duration-200"
               >
                 {showPassword ? (
-                  <EyeOff className="w-5 h-5" />
+                  <EyeOff size={20} />
                 ) : (
-                  <Eye className="w-5 h-5" />
+                  <Eye size={20} />
                 )}
               </motion.div>
             </button>
           )}
 
-          {/* Success/Error Icons premium */}
+          {/* Success/Error Icons */}
           {(success || error) && !isPassword && (
-            <div className={cn(
-              "absolute inset-y-0 right-0 flex items-center",
-              size === 'lg' ? 'pr-5' : 'pr-4'
-            )}>
+            <div style={styles.statusIcon}>
               <motion.div
                 initial={{ scale: 0, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-                className="p-1"
               >
                 {success ? (
-                  <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                  <CheckCircle2 size={20} color="#059669" />
                 ) : (
-                  <AlertCircle className="w-5 h-5 text-red-500" />
+                  <AlertCircle size={20} color="#dc2626" />
                 )}
               </motion.div>
             </div>
           )}
-
-          {/* Focus Ring Effect premium */}
-          <motion.div
-            className="absolute inset-0 rounded-2xl pointer-events-none"
-            animate={{
-              opacity: isFocused && !error && !success ? 1 : 0,
-              scale: isFocused ? 1.02 : 1
-            }}
-            transition={{ duration: 0.2 }}
-            style={{
-              background: 'linear-gradient(90deg, rgba(79, 70, 229, 0.05), transparent, rgba(79, 70, 229, 0.05))'
-            }}
-          />
         </div>
 
-        {/* Messages premium */}
+        {/* Error Message */}
         <AnimatePresence mode="wait">
           {error && (
             <motion.div
@@ -201,46 +248,40 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
               animate={{ opacity: 1, y: 0, height: 'auto' }}
               exit={{ opacity: 0, y: -8, height: 0 }}
               transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-              className="flex items-start space-x-3 px-1"
+              style={styles.errorMessage}
             >
-              <AlertCircle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
-              <p className="text-sm font-medium text-red-600 leading-tight">
-                {error}
-              </p>
+              <AlertCircle size={16} color="#dc2626" style={{ marginTop: '0.125rem', flexShrink: 0 }} />
+              <p style={styles.errorText}>{error}</p>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Helper Text premium */}
+        {/* Helper Text */}
         <AnimatePresence>
           {!error && helperText && (
             <motion.div
               initial={{ opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
-              className="flex items-center space-x-3 px-1"
+              style={styles.helperMessage}
             >
-              <Info className="w-4 h-4 text-slate-400" />
-              <p className="text-sm text-slate-500 leading-tight">
-                {helperText}
-              </p>
+              <Info size={16} color="#9ca3af" />
+              <p style={styles.helperText}>{helperText}</p>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Success Message premium */}
+        {/* Success Message */}
         <AnimatePresence>
           {success && !error && (
             <motion.div
               initial={{ opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
-              className="flex items-center space-x-3 px-1"
+              style={styles.successMessage}
             >
-              <CheckCircle2 className="w-4 h-5 text-emerald-500" />
-              <p className="text-sm font-medium text-emerald-600">
-                Campo válido
-              </p>
+              <CheckCircle2 size={16} color="#059669" />
+              <p style={styles.successText}>Campo válido</p>
             </motion.div>
           )}
         </AnimatePresence>

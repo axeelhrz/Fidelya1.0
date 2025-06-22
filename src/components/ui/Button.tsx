@@ -3,7 +3,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'destructive' | 'success';
@@ -14,6 +13,133 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   rightIcon?: React.ReactNode;
   children: React.ReactNode;
 }
+
+const styles = {
+  base: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontWeight: '600',
+    letterSpacing: '0.025em',
+    transition: 'all 0.3s ease',
+    outline: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    position: 'relative' as const,
+    overflow: 'hidden',
+    textTransform: 'uppercase' as const,
+    fontSize: '0.875rem',
+  },
+  variants: {
+    primary: {
+      background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+      color: '#ffffff',
+      boxShadow: '0 8px 32px rgba(79, 70, 229, 0.3)',
+      ':hover': {
+        boxShadow: '0 12px 40px rgba(79, 70, 229, 0.4)',
+        transform: 'translateY(-2px)',
+      },
+      ':active': {
+        transform: 'translateY(0)',
+      },
+    },
+    secondary: {
+      background: '#ffffff',
+      color: '#374151',
+      border: '2px solid #e5e7eb',
+      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+      ':hover': {
+        background: '#f9fafb',
+        borderColor: '#d1d5db',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+      },
+    },
+    outline: {
+      background: 'transparent',
+      color: '#4f46e5',
+      border: '2px solid #4f46e5',
+      ':hover': {
+        background: '#4f46e5',
+        color: '#ffffff',
+      },
+    },
+    ghost: {
+      background: 'transparent',
+      color: '#6b7280',
+      ':hover': {
+        background: '#f3f4f6',
+        color: '#374151',
+      },
+    },
+    destructive: {
+      background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',
+      color: '#ffffff',
+      boxShadow: '0 8px 32px rgba(220, 38, 38, 0.3)',
+      ':hover': {
+        boxShadow: '0 12px 40px rgba(220, 38, 38, 0.4)',
+        transform: 'translateY(-2px)',
+      },
+    },
+    success: {
+      background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+      color: '#ffffff',
+      boxShadow: '0 8px 32px rgba(5, 150, 105, 0.3)',
+      ':hover': {
+        boxShadow: '0 12px 40px rgba(5, 150, 105, 0.4)',
+        transform: 'translateY(-2px)',
+      },
+    },
+  },
+  sizes: {
+    sm: {
+      height: '36px',
+      padding: '0 1rem',
+      fontSize: '0.75rem',
+      borderRadius: '8px',
+    },
+    md: {
+      height: '44px',
+      padding: '0 1.5rem',
+      fontSize: '0.875rem',
+      borderRadius: '12px',
+    },
+    lg: {
+      height: '56px',
+      padding: '0 2rem',
+      fontSize: '0.875rem',
+      borderRadius: '16px',
+    },
+    xl: {
+      height: '64px',
+      padding: '0 2.5rem',
+      fontSize: '1rem',
+      borderRadius: '16px',
+    },
+  },
+  disabled: {
+    opacity: 0.5,
+    cursor: 'not-allowed',
+    pointerEvents: 'none' as const,
+  },
+  fullWidth: {
+    width: '100%',
+  },
+  shimmer: {
+    position: 'absolute' as const,
+    inset: 0,
+    background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)',
+    transform: 'translateX(-100%)',
+    transition: 'transform 1s ease',
+  },
+  content: {
+    position: 'relative' as const,
+    zIndex: 10,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '0.75rem',
+  },
+};
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ 
@@ -26,71 +152,43 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     rightIcon, 
     children, 
     disabled, 
+    style,
     ...props 
   }, ref) => {
     const isDisabled = disabled || loading;
 
-    // Estilos premium integrados
-    const buttonStyles = {
-      base: "inline-flex items-center justify-center font-semibold tracking-wide transition-all duration-300 focus-visible:outline-none focus-visible:ring-4 disabled:pointer-events-none disabled:opacity-50 relative overflow-hidden group uppercase text-sm",
-      
-      variants: {
-        primary: "bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white shadow-lg shadow-indigo-500/25 hover:shadow-xl hover:shadow-indigo-500/30 focus-visible:ring-indigo-500/30 border border-indigo-500/20",
-        
-        secondary: "bg-white hover:bg-slate-50 text-slate-900 border-2 border-slate-200 hover:border-slate-300 shadow-sm hover:shadow-md focus-visible:ring-slate-500/30",
-        
-        outline: "bg-transparent hover:bg-indigo-50 text-indigo-700 hover:text-indigo-800 border-2 border-indigo-200 hover:border-indigo-300 focus-visible:ring-indigo-500/30",
-        
-        ghost: "bg-transparent hover:bg-slate-100 text-slate-700 hover:text-slate-900 focus-visible:ring-slate-500/30",
-        
-        destructive: "bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white shadow-lg shadow-red-500/25 hover:shadow-xl hover:shadow-red-500/30 focus-visible:ring-red-500/30",
-        
-        success: "bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/30 focus-visible:ring-emerald-500/30"
-      },
-      
-      sizes: {
-        sm: "h-9 px-4 text-xs rounded-lg",
-        md: "h-11 px-6 text-sm rounded-xl",
-        lg: "h-14 px-8 text-sm rounded-2xl",
-        xl: "h-16 px-10 text-base rounded-2xl"
-      },
-      
-      width: {
-        auto: "w-auto",
-        full: "w-full"
-      }
-    };
-
-    const getButtonClasses = () => {
-      return cn(
-        buttonStyles.base,
-        buttonStyles.variants[variant],
-        buttonStyles.sizes[size],
-        fullWidth ? buttonStyles.width.full : buttonStyles.width.auto,
-        className
-      );
+    const buttonStyle = {
+      ...styles.base,
+      ...styles.variants[variant],
+      ...styles.sizes[size],
+      ...(fullWidth ? styles.fullWidth : {}),
+      ...(isDisabled ? styles.disabled : {}),
+      ...style,
     };
 
     return (
       <motion.button
         ref={ref}
-        className={getButtonClasses()}
+        style={buttonStyle}
         disabled={isDisabled}
         whileHover={!isDisabled ? { scale: 1.02, y: -1 } : {}}
         whileTap={!isDisabled ? { scale: 0.98 } : {}}
         transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
         {...props}
       >
-        {/* Shimmer Effect premium */}
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-out" />
-        
-        {/* Glow Effect para Primary Variant */}
-        {variant === 'primary' && (
-          <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-indigo-700 rounded-2xl blur-xl opacity-0 group-hover:opacity-40 transition-opacity duration-500 -z-10 scale-110" />
-        )}
+        {/* Shimmer Effect */}
+        <div 
+          style={styles.shimmer}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateX(100%)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateX(-100%)';
+          }}
+        />
 
-        {/* Content Container */}
-        <div className="relative z-10 flex items-center justify-center space-x-3">
+        {/* Content */}
+        <div style={styles.content}>
           {/* Left Icon or Loading Spinner */}
           <AnimatePresence mode="wait">
             {loading ? (
@@ -101,7 +199,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
                 exit={{ opacity: 0, scale: 0.8 }}
                 transition={{ duration: 0.2 }}
               >
-                <Loader2 className="w-5 h-5 animate-spin" />
+                <Loader2 size={20} style={{ animation: 'spin 1s linear infinite' }} />
               </motion.div>
             ) : leftIcon ? (
               <motion.div
@@ -110,7 +208,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -10 }}
                 transition={{ duration: 0.2 }}
-                className="w-5 h-5"
+                style={{ width: '20px', height: '20px' }}
               >
                 {leftIcon}
               </motion.div>
@@ -119,11 +217,11 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 
           {/* Button Text */}
           <motion.span
-            className="font-semibold tracking-wide uppercase"
             animate={{
               opacity: loading ? 0.7 : 1
             }}
             transition={{ duration: 0.2 }}
+            style={{ fontWeight: '600', letterSpacing: '0.025em', textTransform: 'uppercase' }}
           >
             {loading ? 'Cargando...' : children}
           </motion.span>
@@ -136,7 +234,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 10 }}
                 transition={{ duration: 0.2 }}
-                className="w-5 h-5"
+                style={{ width: '20px', height: '20px' }}
               >
                 {rightIcon}
               </motion.div>
@@ -146,7 +244,11 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 
         {/* Ripple Effect */}
         <motion.div
-          className="absolute inset-0 rounded-2xl"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            borderRadius: 'inherit',
+          }}
           initial={false}
           whileTap={{
             background: [
@@ -156,6 +258,13 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           }}
           transition={{ duration: 0.4 }}
         />
+
+        <style jsx>{`
+          @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+          }
+        `}</style>
       </motion.button>
     );
   }
