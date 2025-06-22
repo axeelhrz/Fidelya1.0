@@ -7,7 +7,7 @@ import { AuthLayout } from '@/components/auth/AuthLayout';
 import { AuthForm } from '@/components/auth/AuthForm';
 import { baseRegisterSchema, type BaseRegisterFormData } from '@/lib/validations/auth';
 import { createUser, getDashboardRoute } from '@/lib/auth';
-import { Mail, Lock, User, ArrowLeft } from 'lucide-react';
+import { Mail, Lock, User, Star, Gift, Zap, Crown } from 'lucide-react';
 
 export default function SocioRegisterPage() {
   const router = useRouter();
@@ -64,58 +64,91 @@ export default function SocioRegisterPage() {
   return (
     <AuthLayout
       title="Crear cuenta de Socio"
-      subtitle="Únete y disfruta de beneficios exclusivos en tu comunidad"
+      subtitle="Únete a la comunidad premium y disfruta de beneficios exclusivos"
+      showBackButton={true}
+      backHref="/auth/register"
     >
-      <div className="space-y-6">
-        {/* Botón de regreso */}
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          <Link
-            href="/auth/register"
-            className="inline-flex items-center text-sm font-medium text-gray-600 hover:text-indigo-600 transition-colors duration-200"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Volver a selección de cuenta
-          </Link>
-        </motion.div>
-
-        {/* Indicador de rol */}
+      <div className="space-y-8">
+        {/* Indicador de Rol Premium */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="flex items-center space-x-3 p-4 bg-green-50 border border-green-200 rounded-xl"
+          className="relative bg-gradient-to-r from-green-50 via-green-100/50 to-green-50 border-2 border-green-200 rounded-2xl p-6 overflow-hidden"
         >
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-100 border border-green-200">
-            <User className="h-5 w-5 text-green-600" />
+          {/* Efecto de brillo */}
+          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-green-400/50 to-transparent" />
+          
+          <div className="flex items-center space-x-4">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-green-100 border-2 border-green-200 shadow-lg">
+              <Crown className="h-7 w-7 text-green-600" />
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center space-x-2 mb-1">
+                <h3 className="text-lg font-black text-green-900 tracking-tight">Cuenta Premium de Socio</h3>
+                <Star className="w-5 h-5 text-green-600 fill-current" />
+              </div>
+              <p className="text-sm text-green-700 leading-relaxed">
+                Acceso completo a beneficios exclusivos y programas de fidelidad
+              </p>
+            </div>
           </div>
-          <div>
-            <h3 className="text-sm font-semibold text-green-800">Cuenta de Socio</h3>
-            <p className="text-xs text-green-600">Acceso a beneficios y programas de fidelidad</p>
+
+          {/* Beneficios destacados */}
+          <div className="grid grid-cols-2 gap-3 mt-4">
+            <div className="flex items-center space-x-2">
+              <Gift className="w-4 h-4 text-green-600" />
+              <span className="text-xs font-semibold text-green-800">Descuentos exclusivos</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Zap className="w-4 h-4 text-green-600" />
+              <span className="text-xs font-semibold text-green-800">Puntos de fidelidad</span>
+            </div>
           </div>
         </motion.div>
 
-        <AuthForm
-          schema={baseRegisterSchema}
-          onSubmit={handleRegister}
-          fields={registerFields}
-          submitText="Crear cuenta"
-        />
+        {/* Formulario */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <AuthForm
+            schema={baseRegisterSchema}
+            onSubmit={handleRegister}
+            fields={registerFields}
+            submitText="Crear cuenta premium"
+          />
+        </motion.div>
 
+        {/* Link de Login */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.4 }}
           className="text-center"
         >
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-600">
             ¿Ya tienes cuenta?{' '}
-            <Link href="/auth/login" className="font-medium text-indigo-600 hover:text-indigo-500 transition-colors duration-200">
+            <Link 
+              href="/auth/login" 
+              className="font-bold text-primary-600 hover:text-primary-700 transition-colors duration-200 hover:underline"
+            >
               Iniciar sesión
             </Link>
+          </p>
+        </motion.div>
+
+        {/* Garantía */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-center"
+        >
+          <p className="text-xs text-gray-600 leading-relaxed">
+            <span className="font-semibold">Garantía de satisfacción:</span> Cancela cuando quieras. 
+            Sin compromisos a largo plazo.
           </p>
         </motion.div>
       </div>
