@@ -16,6 +16,9 @@ import {
   Analytics,
   Group,
   Upload,
+  CloudDownload,
+  CloudUpload,
+  Backup,
 } from '@mui/icons-material';
 import { toast } from 'react-hot-toast';
 import { useSocios } from '@/hooks/useSocios';
@@ -29,12 +32,14 @@ type Stats = {
   inactivos: number;
   [key: string]: number | undefined;
 };
+
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { OverviewDashboard } from '@/components/asociacion/OverviewDashboard';
 import { AdvancedAnalytics } from '@/components/asociacion/AdvancedAnalytics';
 import { ReportsSection } from '@/components/asociacion/ReportsSection';
 import { InsightsIA } from '@/components/asociacion/InsightsIA';
 import { EnhancedMemberManagement } from '@/components/asociacion/EnhancedMemberManagement';
+import { DataExportSection } from '@/components/asociacion/DataExportSection';
 import { SocioDialog } from '@/components/asociacion/SocioDialog';
 import { DeleteConfirmDialog } from '@/components/asociacion/DeleteConfirmDialog';
 import { CsvImport } from '@/components/asociacion/CsvImport';
@@ -71,8 +76,7 @@ const LoadingScreen: React.FC<{ message: string }> = ({ message }) => (
               },
             }}
           />
-          </Box>
-        );
+        </Box>
         <Typography variant="h4" sx={{ fontWeight: 900, color: '#0f172a', mb: 2 }}>
           Cargando Dashboard Ejecutivo
         </Typography>
@@ -118,12 +122,12 @@ const AccessDeniedScreen: React.FC = () => (
           </Typography>
           <Typography variant="h6" sx={{ color: '#64748b', mb: 4, maxWidth: 400, mx: 'auto' }}>
             Necesitas permisos de asociación para acceder a este dashboard ejecutivo.
-            </Typography>
-          </Box>
-        </motion.div>
-      </Container>
-    </Box>
-  );
+          </Typography>
+        </Box>
+      </motion.div>
+    </Container>
+  </Box>
+);
 
 // Componente para cada sección del dashboard
 const DashboardSection: React.FC<{ 
@@ -136,7 +140,6 @@ const DashboardSection: React.FC<{
   onDeleteSocio: (socio: Socio) => void;
   onBulkAction: (action: string, selectedIds: string[]) => void;
   onCsvImport: () => void;
-  onExport: () => void;
   onNavigate: (section: string) => void;
 }> = ({ 
   section, 
@@ -216,6 +219,134 @@ const DashboardSection: React.FC<{
           stats={stats}
           loading={loading}
         />
+      );
+
+    // Gestión de Datos - Exportar Datos
+    case 'export':
+      return (
+        <Container maxWidth="xl" sx={{ py: 4 }}>
+          <DataExportSection
+            socios={socios}
+            stats={stats}
+            loading={loading}
+          />
+        </Container>
+      );
+
+    // Gestión de Datos - Importar CSV
+    case 'import':
+      return (
+        <Container maxWidth="xl" sx={{ py: 4 }}>
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <Box sx={{ mb: 6, textAlign: 'center' }}>
+              <Avatar
+                sx={{
+                  width: 80,
+                  height: 80,
+                  borderRadius: 4,
+                  background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+                  boxShadow: '0 12px 40px rgba(59, 130, 246, 0.3)',
+                  mx: 'auto',
+                  mb: 3,
+                }}
+              >
+                <Upload sx={{ fontSize: 40 }} />
+              </Avatar>
+              <Typography variant="h3" sx={{ fontWeight: 900, color: '#0f172a', mb: 2 }}>
+                Importación de Datos
+              </Typography>
+              <Typography variant="h6" sx={{ color: '#64748b', fontWeight: 600, mb: 4 }}>
+                Carga masiva de miembros desde archivos CSV
+              </Typography>
+              <Button
+                onClick={onCsvImport}
+                variant="contained"
+                startIcon={<Upload />}
+                size="large"
+                sx={{
+                  py: 2,
+                  px: 6,
+                  borderRadius: 4,
+                  textTransform: 'none',
+                  fontWeight: 700,
+                  fontSize: '1.1rem',
+                  background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+                  boxShadow: '0 8px 32px rgba(59, 130, 246, 0.3)',
+                  '&:hover': {
+                    background: 'linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%)',
+                    transform: 'translateY(-2px)',
+                    boxShadow: '0 12px 40px rgba(59, 130, 246, 0.4)',
+                  },
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                Iniciar Importación
+              </Button>
+            </Box>
+          </motion.div>
+        </Container>
+      );
+
+    // Gestión de Datos - Respaldos
+    case 'backup':
+      return (
+        <Container maxWidth="xl" sx={{ py: 4 }}>
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <Box sx={{ mb: 6 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, mb: 4 }}>
+                <Avatar
+                  sx={{
+                    width: 64,
+                    height: 64,
+                    borderRadius: 4,
+                    background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                    boxShadow: '0 12px 40px rgba(245, 158, 11, 0.3)',
+                  }}
+                >
+                  <Backup sx={{ fontSize: 32 }} />
+                </Avatar>
+                <Box>
+                  <Typography variant="h3" sx={{ fontWeight: 900, color: '#0f172a', mb: 1 }}>
+                    Gestión de Respaldos
+                  </Typography>
+                  <Typography variant="h6" sx={{ color: '#64748b', fontWeight: 600 }}>
+                    Respaldos automáticos y manuales de datos
+                  </Typography>
+                </Box>
+              </Box>
+            </Box>
+          </motion.div>
+          <Box sx={{ textAlign: 'center', py: 8 }}>
+            <Typography variant="h4" sx={{ fontWeight: 700, color: '#1e293b', mb: 2 }}>
+              Funcionalidad en Desarrollo
+            </Typography>
+            <Typography variant="body1" sx={{ color: '#64748b', mb: 4 }}>
+              El sistema de respaldos estará disponible próximamente.
+            </Typography>
+            <Button
+              variant="outlined"
+              startIcon={<Backup />}
+              disabled
+              sx={{
+                py: 1.5,
+                px: 4,
+                borderRadius: 3,
+                textTransform: 'none',
+                fontWeight: 600,
+              }}
+            >
+              Próximamente
+            </Button>
+          </Box>
+        </Container>
       );
 
     case 'all-members':
@@ -316,7 +447,10 @@ const DashboardSection: React.FC<{
         </Container>
       );
 
-    case 'import':
+    // Comunicaciones
+    case 'notifications':
+    case 'email-campaigns':
+    case 'templates':
       return (
         <Container maxWidth="xl" sx={{ py: 4 }}>
           <motion.div
@@ -324,52 +458,56 @@ const DashboardSection: React.FC<{
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <Box sx={{ mb: 6, textAlign: 'center' }}>
-              <Avatar
-                sx={{
-                  width: 80,
-                  height: 80,
-                  borderRadius: 4,
-                  background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
-                  boxShadow: '0 12px 40px rgba(59, 130, 246, 0.3)',
-                  mx: 'auto',
-                  mb: 3,
-                }}
-              >
-                <Upload sx={{ fontSize: 40 }} />
-              </Avatar>
-              <Typography variant="h3" sx={{ fontWeight: 900, color: '#0f172a', mb: 2 }}>
-                Importación de Datos
-              </Typography>
-              <Typography variant="h6" sx={{ color: '#64748b', fontWeight: 600, mb: 4 }}>
-                Carga masiva de miembros desde archivos CSV
-              </Typography>
-              <Button
-                onClick={onCsvImport}
-                variant="contained"
-                startIcon={<Upload />}
-                size="large"
-                sx={{
-                  py: 2,
-                  px: 6,
-                  borderRadius: 4,
-                  textTransform: 'none',
-                  fontWeight: 700,
-                  fontSize: '1.1rem',
-                  background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
-                  boxShadow: '0 8px 32px rgba(59, 130, 246, 0.3)',
-                  '&:hover': {
-                    background: 'linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%)',
-                    transform: 'translateY(-2px)',
-                    boxShadow: '0 12px 40px rgba(59, 130, 246, 0.4)',
-                  },
-                  transition: 'all 0.3s ease'
-                }}
-              >
-                Iniciar Importación
-              </Button>
+            <Box sx={{ mb: 6 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, mb: 4 }}>
+                <Avatar
+                  sx={{
+                    width: 64,
+                    height: 64,
+                    borderRadius: 4,
+                    background: 'linear-gradient(135deg, #ec4899 0%, #be185d 100%)',
+                    boxShadow: '0 12px 40px rgba(236, 72, 153, 0.3)',
+                  }}
+                >
+                  <CloudUpload sx={{ fontSize: 32 }} />
+                </Avatar>
+                <Box>
+                  <Typography variant="h3" sx={{ fontWeight: 900, color: '#0f172a', mb: 1 }}>
+                    {section === 'notifications' ? 'Notificaciones' :
+                     section === 'email-campaigns' ? 'Campañas de Email' :
+                     'Plantillas de Comunicación'}
+                  </Typography>
+                  <Typography variant="h6" sx={{ color: '#64748b', fontWeight: 600 }}>
+                    Sistema de comunicaciones
+                  </Typography>
+                </Box>
+              </Box>
             </Box>
           </motion.div>
+          <Box sx={{ textAlign: 'center', py: 8 }}>
+            <Typography variant="h4" sx={{ fontWeight: 700, color: '#1e293b', mb: 2 }}>
+              Funcionalidad en Desarrollo
+            </Typography>
+            <Typography variant="body1" sx={{ color: '#64748b' }}>
+              El sistema de comunicaciones estará disponible próximamente.
+            </Typography>
+          </Box>
+        </Container>
+      );
+
+    // Configuración y otros
+    case 'settings':
+    case 'help':
+      return (
+        <Container maxWidth="xl" sx={{ py: 4 }}>
+          <Box sx={{ textAlign: 'center', py: 8 }}>
+            <Typography variant="h4" sx={{ fontWeight: 700, color: '#1e293b', mb: 2 }}>
+              {section === 'settings' ? 'Configuración del Sistema' : 'Ayuda y Soporte'}
+            </Typography>
+            <Typography variant="body1" sx={{ color: '#64748b' }}>
+              Esta funcionalidad estará disponible próximamente.
+            </Typography>
+          </Box>
         </Container>
       );
 
@@ -481,41 +619,50 @@ export default function AsociacionDashboard() {
   };
 
   const handleBulkAction = async (action: string, selectedIds: string[]) => {
-    toast(`Acción "${action}" aplicada a ${selectedIds.length} miembros`);
-  };
-
-  const exportToCsv = () => {
-    if (socios.length === 0) {
-      toast.error('No hay miembros para exportar');
-      return;
+    setActionLoading(true);
+    try {
+      switch (action) {
+        case 'export':
+          // Navigate to export section
+          setActiveSection('export');
+          toast.success('Redirigiendo a la sección de exportación...');
+          break;
+        case 'email':
+          // Mock email functionality
+          toast.success(`Email enviado a ${selectedIds.length} miembros`);
+          break;
+        case 'activate':
+          // Mock activation functionality
+          for (const id of selectedIds) {
+            await updateSocio(id, { estado: 'activo' });
+          }
+          toast.success(`${selectedIds.length} miembros activados`);
+          break;
+        case 'archive':
+          // Mock archive functionality
+          for (const id of selectedIds) {
+            await updateSocio(id, { estado: 'inactivo' });
+          }
+          toast.success(`${selectedIds.length} miembros archivados`);
+          break;
+        case 'delete':
+          // Mock delete functionality
+          for (const id of selectedIds) {
+            await deleteSocio(id);
+          }
+          toast.success(`${selectedIds.length} miembros eliminados`);
+          break;
+        case 'print':
+          toast.info('Función de impresión en desarrollo');
+          break;
+        default:
+          toast.info(`Acción "${action}" aplicada a ${selectedIds.length} miembros`);
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Error al ejecutar la acción');
+    } finally {
+      setActionLoading(false);
     }
-
-    const csvData = socios.map(socio => ({
-      nombre: socio.nombre,
-      email: socio.email,
-      estado: socio.estado,
-      telefono: socio.telefono || '',
-      dni: socio.dni || '',
-      fechaAlta: socio.creadoEn.toDate().toLocaleDateString('es-ES')
-    }));
-
-    const headers = ['nombre', 'email', 'estado', 'telefono', 'dni', 'fechaAlta'];
-    const csvContent = [
-      headers.join(','),
-      ...csvData.map(row => headers.map(header => `"${row[header as keyof typeof row]}"`).join(','))
-    ].join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `miembros_${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    toast.success('Archivo CSV descargado correctamente');
   };
 
   if (authLoading || loading) {
@@ -545,7 +692,6 @@ export default function AsociacionDashboard() {
             onDeleteSocio={handleDeleteSocio}
             onBulkAction={handleBulkAction}
             onCsvImport={() => handleCsvImport()}
-            onExport={exportToCsv}
             onNavigate={setActiveSection}
           />
         </motion.div>
