@@ -2,13 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  BarChart3, 
-  DollarSign, 
-  Heart, 
-  Target, 
-  Brain, 
-  TrendingUp, 
+import {
+  BarChart3,
+  DollarSign,
+  Heart,
+  Target,
+  Brain,
+  TrendingUp,
   Sparkles,
   Download,
   Bell,
@@ -1067,29 +1067,15 @@ export default function CEODashboard() {
   );
 
   const renderTabContent = () => {
-    const contentVariants = {
-      hidden: { opacity: 0, y: 20 },
-      visible: { 
-        opacity: 1, 
-        y: 0,
-        transition: { duration: 0.6, ease: [0.4, 0, 0.2, 1] }
-      },
-      exit: { 
-        opacity: 0, 
-        y: -20,
-        transition: { duration: 0.3 }
-      }
-    };
-
     switch (activeTab) {
       case 'executive':
         return (
           <motion.div
             key="executive"
-            variants={contentVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
           >
             {renderHeroSection()}
             {renderMainMetrics()}
@@ -1102,10 +1088,10 @@ export default function CEODashboard() {
         return (
           <motion.div
             key="financial"
-            variants={contentVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
           >
             <FinancialPanel />
           </motion.div>
@@ -1115,10 +1101,10 @@ export default function CEODashboard() {
         return (
           <motion.div
             key="clinical"
-            variants={contentVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
           >
             <ClinicalPanel />
           </motion.div>
@@ -1128,10 +1114,10 @@ export default function CEODashboard() {
         return (
           <motion.div
             key="commercial"
-            variants={contentVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
           >
             <CommercialPanel />
           </motion.div>
@@ -1141,10 +1127,10 @@ export default function CEODashboard() {
         return (
           <motion.div
             key="insights"
-            variants={contentVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
           >
             <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
               <h2 style={{ 
