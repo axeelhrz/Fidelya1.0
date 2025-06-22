@@ -7,6 +7,202 @@ import { RoleCard } from '@/components/auth/RoleCard';
 import { Button } from '@/components/ui/Button';
 import { LogIn, ArrowRight, Users, Building2, Store, Star, Shield, Zap, Crown, TrendingUp, Award, CheckCircle2 } from 'lucide-react';
 
+const styles = {
+  container: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '2rem',
+  },
+  statsContainer: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(3, 1fr)',
+    gap: '1rem',
+    padding: '1.5rem',
+    background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+    borderRadius: '20px',
+    border: '2px solid #e5e7eb',
+    position: 'relative' as const,
+    overflow: 'hidden',
+    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.05)',
+  },
+  topLine: {
+    position: 'absolute' as const,
+    top: 0,
+    left: 0,
+    right: 0,
+    height: '1px',
+    background: 'linear-gradient(90deg, transparent, rgba(79, 70, 229, 0.3), transparent)',
+  },
+  statItem: {
+    textAlign: 'center' as const,
+  },
+  statIcon: (bgColor: string, borderColor: string) => ({
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '56px',
+    height: '56px',
+    margin: '0 auto 0.75rem',
+    background: `linear-gradient(135deg, ${bgColor} 0%, ${bgColor}80 100%)`,
+    borderRadius: '16px',
+    border: `2px solid ${borderColor}`,
+    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)',
+  }),
+  statNumber: {
+    fontSize: '1.5rem',
+    fontWeight: '900',
+    color: '#1f2937',
+    letterSpacing: '-0.025em',
+    marginBottom: '0.25rem',
+  },
+  statLabel: {
+    fontSize: '0.75rem',
+    fontWeight: '600',
+    color: '#6b7280',
+    letterSpacing: '0.1em',
+    textTransform: 'uppercase' as const,
+  },
+  rolesContainer: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '1rem',
+  },
+  loginSection: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '1.5rem',
+  },
+  divider: {
+    position: 'relative' as const,
+  },
+  dividerLine: {
+    position: 'absolute' as const,
+    inset: 0,
+    display: 'flex',
+    alignItems: 'center',
+  },
+  dividerBorder: {
+    width: '100%',
+    borderTop: '2px solid #e5e7eb',
+  },
+  dividerText: {
+    position: 'relative' as const,
+    display: 'flex',
+    justifyContent: 'center',
+    fontSize: '0.875rem',
+  },
+  dividerSpan: {
+    padding: '0 1.5rem',
+    background: '#ffffff',
+    color: '#6b7280',
+    fontWeight: '600',
+    letterSpacing: '-0.025em',
+  },
+  loginButton: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '0.75rem',
+    width: '100%',
+    height: '56px',
+    padding: '0 2rem',
+    background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+    color: '#374151',
+    border: '2px solid #e5e7eb',
+    borderRadius: '16px',
+    fontSize: '0.875rem',
+    fontWeight: '700',
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.025em',
+    textDecoration: 'none',
+    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.05)',
+    transition: 'all 0.3s ease',
+  },
+  benefitsContainer: {
+    background: 'linear-gradient(135deg, rgba(79, 70, 229, 0.1) 0%, rgba(124, 58, 237, 0.05) 100%)',
+    border: '2px solid rgba(79, 70, 229, 0.2)',
+    borderRadius: '20px',
+    padding: '2rem',
+    position: 'relative' as const,
+    overflow: 'hidden',
+    boxShadow: '0 4px 16px rgba(79, 70, 229, 0.1)',
+  },
+  benefitsTopLine: {
+    position: 'absolute' as const,
+    top: 0,
+    left: 0,
+    right: 0,
+    height: '1px',
+    background: 'linear-gradient(90deg, transparent, rgba(79, 70, 229, 0.5), transparent)',
+  },
+  benefitsHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: '1.5rem',
+  },
+  benefitsIcon: {
+    padding: '0.75rem',
+    background: 'linear-gradient(135deg, rgba(79, 70, 229, 0.15) 0%, rgba(124, 58, 237, 0.1) 100%)',
+    borderRadius: '16px',
+    border: '2px solid rgba(79, 70, 229, 0.2)',
+    boxShadow: '0 4px 16px rgba(79, 70, 229, 0.1)',
+  },
+  benefitsTitle: {
+    fontSize: '1.125rem',
+    fontWeight: '900',
+    color: '#312e81',
+    marginBottom: '1.5rem',
+    textAlign: 'center' as const,
+    letterSpacing: '-0.025em',
+  },
+  benefitsList: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+    gap: '1rem',
+    fontSize: '0.875rem',
+  },
+  benefitItem: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '1rem',
+  },
+  benefitDot: {
+    width: '12px',
+    height: '12px',
+    background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+    borderRadius: '50%',
+    boxShadow: '0 2px 8px rgba(79, 70, 229, 0.3)',
+  },
+  benefitText: {
+    color: '#312e81',
+    fontWeight: '600',
+    letterSpacing: '-0.025em',
+  },
+  decorativeElements: {
+    bottomRight: {
+      position: 'absolute' as const,
+      bottom: '1rem',
+      right: '1rem',
+      width: '48px',
+      height: '48px',
+      background: 'linear-gradient(135deg, rgba(79, 70, 229, 0.1) 0%, rgba(124, 58, 237, 0.05) 100%)',
+      borderRadius: '16px',
+      filter: 'blur(4px)',
+    },
+    topLeft: {
+      position: 'absolute' as const,
+      top: '1rem',
+      left: '1rem',
+      width: '32px',
+      height: '32px',
+      background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(79, 70, 229, 0.05) 100%)',
+      borderRadius: '12px',
+      filter: 'blur(4px)',
+    },
+  },
+};
+
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -36,6 +232,19 @@ const statsVariants = {
   }
 };
 
+const statsData = [
+  { icon: Building2, number: '500+', label: 'Asociaciones', bgColor: '#dbeafe', borderColor: '#93c5fd', iconColor: '#1d4ed8' },
+  { icon: Store, number: '2K+', label: 'Comercios', bgColor: '#e9d5ff', borderColor: '#c4b5fd', iconColor: '#7c3aed' },
+  { icon: Users, number: '50K+', label: 'Socios', bgColor: '#d1fae5', borderColor: '#6ee7b7', iconColor: '#047857' },
+];
+
+const benefits = [
+  'Plataforma premium',
+  'Soporte 24/7',
+  'Seguridad avanzada',
+  'Analytics en tiempo real',
+];
+
 export default function RegisterPage() {
   return (
     <AuthLayout
@@ -46,41 +255,28 @@ export default function RegisterPage() {
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="space-y-8"
+        style={styles.container}
       >
-        {/* Estadísticas de Confianza premium */}
-        <motion.div
-          variants={statsVariants}
-          className="grid grid-cols-3 gap-4 p-6 bg-gradient-to-r from-slate-50 via-white to-indigo-50/30 rounded-2xl border-2 border-slate-200 relative overflow-hidden shadow-sm"
-        >
-          {/* Línea decorativa superior */}
-          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-indigo-400/30 to-transparent" />
+        {/* Statistics */}
+        <motion.div variants={statsVariants} style={styles.statsContainer}>
+          <div style={styles.topLine} />
           
-          <div className="text-center">
-            <div className="flex items-center justify-center w-14 h-14 mx-auto mb-3 bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-2xl border-2 border-blue-200 shadow-sm">
-              <Building2 className="w-7 h-7 text-blue-600" />
-            </div>
-            <div className="text-2xl font-black text-slate-900 tracking-tight mb-1">500+</div>
-            <div className="text-xs font-bold text-slate-600 tracking-[0.1em] uppercase">Asociaciones</div>
-          </div>
-          <div className="text-center">
-            <div className="flex items-center justify-center w-14 h-14 mx-auto mb-3 bg-gradient-to-br from-purple-50 to-purple-100/50 rounded-2xl border-2 border-purple-200 shadow-sm">
-              <Store className="w-7 h-7 text-purple-600" />
-            </div>
-            <div className="text-2xl font-black text-slate-900 tracking-tight mb-1">2K+</div>
-            <div className="text-xs font-bold text-slate-600 tracking-[0.1em] uppercase">Comercios</div>
-          </div>
-          <div className="text-center">
-            <div className="flex items-center justify-center w-14 h-14 mx-auto mb-3 bg-gradient-to-br from-emerald-50 to-emerald-100/50 rounded-2xl border-2 border-emerald-200 shadow-sm">
-              <Users className="w-7 h-7 text-emerald-600" />
-            </div>
-            <div className="text-2xl font-black text-slate-900 tracking-tight mb-1">50K+</div>
-            <div className="text-xs font-bold text-slate-600 tracking-[0.1em] uppercase">Socios</div>
-          </div>
+          {statsData.map((stat, index) => {
+            const Icon = stat.icon;
+            return (
+              <div key={stat.label} style={styles.statItem}>
+                <div style={styles.statIcon(stat.bgColor, stat.borderColor)}>
+                  <Icon size={28} color={stat.iconColor} />
+                </div>
+                <div style={styles.statNumber}>{stat.number}</div>
+                <div style={styles.statLabel}>{stat.label}</div>
+              </div>
+            );
+          })}
         </motion.div>
 
-        {/* Tarjetas de Roles premium */}
-        <div className="space-y-4">
+        {/* Role Cards */}
+        <div style={styles.rolesContainer}>
           <motion.div variants={itemVariants}>
             <RoleCard
               role="asociacion"
@@ -112,83 +308,55 @@ export default function RegisterPage() {
           </motion.div>
         </div>
 
-        {/* Sección de Login premium */}
-        <motion.div
-          variants={itemVariants}
-          className="space-y-6"
-        >
-          {/* Divisor premium */}
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t-2 border-slate-200" />
+        {/* Login Section */}
+        <motion.div variants={itemVariants} style={styles.loginSection}>
+          {/* Divider */}
+          <div style={styles.divider}>
+            <div style={styles.dividerLine}>
+              <div style={styles.dividerBorder} />
             </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-6 bg-white text-slate-500 font-semibold tracking-tight">
-                ¿Ya tienes cuenta?
-              </span>
+            <div style={styles.dividerText}>
+              <span style={styles.dividerSpan}>¿Ya tienes cuenta?</span>
             </div>
           </div>
           
-          {/* Botón de Login premium */}
+          {/* Login Button */}
           <motion.div
-            whileHover={{ scale: 1.02 }}
+            whileHover={{ scale: 1.02, y: -2 }}
             whileTap={{ scale: 0.98 }}
           >
-            <Link href="/auth/login">
-              <Button
-                variant="ghost"
-                size="lg"
-                fullWidth
-                leftIcon={<LogIn />}
-                rightIcon={<ArrowRight />}
-                className="bg-gradient-to-r from-slate-50 to-slate-100/50 hover:from-slate-100 hover:to-slate-200/50 border-2 border-slate-200 hover:border-slate-300 text-slate-800 font-bold shadow-sm hover:shadow-md"
-              >
-                Iniciar sesión
-              </Button>
+            <Link href="/auth/login" style={styles.loginButton}>
+              <LogIn size={20} />
+              Iniciar sesión
+              <ArrowRight size={20} />
             </Link>
           </motion.div>
         </motion.div>
 
-        {/* Beneficios Destacados premium */}
-        <motion.div
-          variants={itemVariants}
-          className="bg-gradient-to-br from-indigo-50 via-indigo-100/50 to-purple-50/30 border-2 border-indigo-200 rounded-2xl p-8 relative overflow-hidden shadow-sm"
-        >
-          {/* Línea decorativa superior */}
-          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-indigo-400/50 to-transparent" />
+        {/* Benefits Section */}
+        <motion.div variants={itemVariants} style={styles.benefitsContainer}>
+          <div style={styles.benefitsTopLine} />
           
-          <div className="flex items-center justify-center mb-6">
-            <div className="p-3 bg-gradient-to-br from-indigo-100 to-indigo-200/50 rounded-2xl border-2 border-indigo-200 shadow-sm">
-              <Crown className="w-7 h-7 text-indigo-600" />
+          <div style={styles.benefitsHeader}>
+            <div style={styles.benefitsIcon}>
+              <Crown size={28} color="#4f46e5" />
             </div>
           </div>
           
-          <h3 className="text-lg font-black text-indigo-900 mb-6 text-center tracking-tight">
-            ¿Por qué elegir Fidelita?
-          </h3>
+          <h3 style={styles.benefitsTitle}>¿Por qué elegir Fidelita?</h3>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-            <div className="flex items-center space-x-4">
-              <div className="w-3 h-3 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-full shadow-sm" />
-              <span className="text-indigo-800 font-bold tracking-tight">Plataforma premium</span>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="w-3 h-3 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-full shadow-sm" />
-              <span className="text-indigo-800 font-bold tracking-tight">Soporte 24/7</span>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="w-3 h-3 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-full shadow-sm" />
-              <span className="text-indigo-800 font-bold tracking-tight">Seguridad avanzada</span>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="w-3 h-3 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-full shadow-sm" />
-              <span className="text-indigo-800 font-bold tracking-tight">Analytics en tiempo real</span>
-            </div>
+          <div style={styles.benefitsList}>
+            {benefits.map((benefit, index) => (
+              <div key={benefit} style={styles.benefitItem}>
+                <div style={styles.benefitDot} />
+                <span style={styles.benefitText}>{benefit}</span>
+              </div>
+            ))}
           </div>
 
-          {/* Elementos decorativos internos */}
-          <div className="absolute bottom-4 right-4 w-12 h-12 bg-gradient-to-br from-indigo-200/30 to-purple-200/20 rounded-2xl blur-sm" />
-          <div className="absolute top-4 left-4 w-8 h-8 bg-gradient-to-br from-blue-100/40 to-indigo-100/30 rounded-xl blur-sm" />
+          {/* Decorative Elements */}
+          <div style={styles.decorativeElements.bottomRight} />
+          <div style={styles.decorativeElements.topLeft} />
         </motion.div>
       </motion.div>
     </AuthLayout>

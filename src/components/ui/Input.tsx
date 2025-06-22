@@ -18,19 +18,23 @@ interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, '
 const styles = {
   container: {
     marginBottom: '1.5rem',
+    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
   },
+  
   label: (isFocused: boolean, error?: string, success?: boolean, disabled?: boolean) => ({
     display: 'block',
     fontSize: '0.875rem',
     fontWeight: '600',
     letterSpacing: '-0.025em',
     marginBottom: '0.5rem',
-    color: error ? '#dc2626' : success ? '#059669' : isFocused ? '#4f46e5' : disabled ? '#9ca3af' : '#374151',
-    transition: 'color 0.3s ease',
+    color: error ? '#dc2626' : success ? '#059669' : isFocused ? '#4f46e5' : disabled ? '#94a3b8' : '#374151',
+    transition: 'color 0.3s cubic-bezier(0.22, 1, 0.36, 1)',
   }),
+  
   inputContainer: {
     position: 'relative' as const,
   },
+  
   input: (isFocused: boolean, error?: string, success?: boolean, hasIcon?: boolean, isPassword?: boolean) => ({
     width: '100%',
     height: '56px',
@@ -38,17 +42,25 @@ const styles = {
     fontSize: '1rem',
     fontWeight: '500',
     color: '#1f2937',
-    background: '#ffffff',
-    border: `2px solid ${error ? '#dc2626' : success ? '#059669' : isFocused ? '#4f46e5' : '#e5e7eb'}`,
-    borderRadius: '16px',
+    background: 'rgba(255, 255, 255, 0.95)',
+    backdropFilter: 'blur(10px)',
+    border: `2px solid ${
+      error ? '#dc2626' : 
+      success ? '#059669' : 
+      isFocused ? '#4f46e5' : 
+      'rgba(148, 163, 184, 0.3)'
+    }`,
+    borderRadius: '14px',
     outline: 'none',
-    transition: 'all 0.3s ease',
-    boxShadow: isFocused ? (error ? '0 0 0 4px rgba(220, 38, 38, 0.1)' : success ? '0 0 0 4px rgba(5, 150, 105, 0.1)' : '0 0 0 4px rgba(79, 70, 229, 0.1)') : '0 1px 3px rgba(0, 0, 0, 0.1)',
-    '::placeholder': {
-      color: '#9ca3af',
-      fontWeight: '400',
-    },
+    transition: 'all 0.3s cubic-bezier(0.22, 1, 0.36, 1)',
+    boxShadow: isFocused ? 
+      (error ? '0 0 0 4px rgba(220, 38, 38, 0.1)' : 
+       success ? '0 0 0 4px rgba(5, 150, 105, 0.1)' : 
+       '0 0 0 4px rgba(79, 70, 229, 0.1)') : 
+      '0 2px 8px rgba(0, 0, 0, 0.04)',
+    fontFamily: 'inherit',
   }),
+  
   iconContainer: {
     position: 'absolute' as const,
     left: '1.25rem',
@@ -57,12 +69,14 @@ const styles = {
     pointerEvents: 'none' as const,
     zIndex: 10,
   },
+  
   icon: (isFocused: boolean, error?: string, success?: boolean) => ({
     width: '20px',
     height: '20px',
-    color: error ? '#dc2626' : success ? '#059669' : isFocused ? '#4f46e5' : '#9ca3af',
-    transition: 'color 0.3s ease',
+    color: error ? '#dc2626' : success ? '#059669' : isFocused ? '#4f46e5' : '#94a3b8',
+    transition: 'color 0.3s cubic-bezier(0.22, 1, 0.36, 1)',
   }),
+  
   passwordToggle: {
     position: 'absolute' as const,
     right: '1.25rem',
@@ -73,13 +87,13 @@ const styles = {
     cursor: 'pointer',
     padding: '0.5rem',
     borderRadius: '8px',
-    color: '#9ca3af',
-    transition: 'all 0.3s ease',
-    ':hover': {
-      color: '#6b7280',
-      background: '#f3f4f6',
-    },
+    color: '#94a3b8',
+    transition: 'all 0.3s cubic-bezier(0.22, 1, 0.36, 1)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
+  
   statusIcon: {
     position: 'absolute' as const,
     right: '1.25rem',
@@ -87,42 +101,32 @@ const styles = {
     transform: 'translateY(-50%)',
     padding: '0.25rem',
   },
-  errorMessage: {
+  
+  messageContainer: {
     display: 'flex',
     alignItems: 'flex-start',
     gap: '0.75rem',
     marginTop: '0.75rem',
     padding: '0 0.25rem',
   },
-  errorText: {
+  
+  messageText: (type: 'error' | 'helper' | 'success') => ({
     fontSize: '0.875rem',
-    fontWeight: '500',
-    color: '#dc2626',
+    fontWeight: type === 'error' ? '500' : '400',
+    color: type === 'error' ? '#dc2626' : type === 'success' ? '#059669' : '#64748b',
     lineHeight: 1.4,
+  }),
+  
+  messageIcon: {
+    marginTop: '0.125rem',
+    flexShrink: 0,
   },
-  helperMessage: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.75rem',
-    marginTop: '0.75rem',
-    padding: '0 0.25rem',
-  },
-  helperText: {
-    fontSize: '0.875rem',
-    color: '#6b7280',
-    lineHeight: 1.4,
-  },
-  successMessage: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.75rem',
-    marginTop: '0.75rem',
-    padding: '0 0.25rem',
-  },
-  successText: {
-    fontSize: '0.875rem',
-    fontWeight: '500',
-    color: '#059669',
+};
+
+const hoverStyles = {
+  passwordToggle: {
+    color: '#64748b',
+    background: 'rgba(79, 70, 229, 0.05)',
   },
 };
 
@@ -198,20 +202,24 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             onBlur={() => setIsFocused(false)}
             onChange={handleChange}
             disabled={disabled}
+            placeholder={props.placeholder}
             {...props}
           />
 
           {/* Password Toggle */}
           {isPassword && (
-            <button
+            <motion.button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
               style={styles.passwordToggle}
+              whileHover={hoverStyles.passwordToggle}
+              whileTap={{ scale: 0.95 }}
+              transition={{ duration: 0.2 }}
               tabIndex={-1}
             >
               <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                animate={{ rotate: showPassword ? 0 : 0 }}
+                transition={{ duration: 0.2 }}
               >
                 {showPassword ? (
                   <EyeOff size={20} />
@@ -219,7 +227,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
                   <Eye size={20} />
                 )}
               </motion.div>
-            </button>
+            </motion.button>
           )}
 
           {/* Success/Error Icons */}
@@ -248,10 +256,10 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
               animate={{ opacity: 1, y: 0, height: 'auto' }}
               exit={{ opacity: 0, y: -8, height: 0 }}
               transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-              style={styles.errorMessage}
+              style={styles.messageContainer}
             >
-              <AlertCircle size={16} color="#dc2626" style={{ marginTop: '0.125rem', flexShrink: 0 }} />
-              <p style={styles.errorText}>{error}</p>
+              <AlertCircle size={16} color="#dc2626" style={styles.messageIcon} />
+              <p style={styles.messageText('error')}>{error}</p>
             </motion.div>
           )}
         </AnimatePresence>
@@ -263,10 +271,10 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
               initial={{ opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
-              style={styles.helperMessage}
+              style={styles.messageContainer}
             >
-              <Info size={16} color="#9ca3af" />
-              <p style={styles.helperText}>{helperText}</p>
+              <Info size={16} color="#94a3b8" style={styles.messageIcon} />
+              <p style={styles.messageText('helper')}>{helperText}</p>
             </motion.div>
           )}
         </AnimatePresence>
@@ -278,10 +286,10 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
               initial={{ opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
-              style={styles.successMessage}
+              style={styles.messageContainer}
             >
-              <CheckCircle2 size={16} color="#059669" />
-              <p style={styles.successText}>Campo válido</p>
+              <CheckCircle2 size={16} color="#059669" style={styles.messageIcon} />
+              <p style={styles.messageText('success')}>Campo válido</p>
             </motion.div>
           )}
         </AnimatePresence>
