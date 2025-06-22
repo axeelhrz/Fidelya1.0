@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  BarChart3,
   DollarSign,
   Heart,
   Target,
@@ -18,8 +17,6 @@ import {
   Calendar,
   Star,
   Zap,
-  BarChart2,
-  Database,
   Users,
   Activity,
   Shield,
@@ -28,15 +25,13 @@ import {
   Minus,
   RefreshCw,
   Eye,
+  ChevronRight,
 } from 'lucide-react';
 
-import TabNavigation from '@/components/dashboard/TabNavigation';
-import KPIGrid from '@/components/dashboard/KPIGrid';
 import FinancialPanel from '@/components/dashboard/FinancialPanel';
 import ClinicalPanel from '@/components/dashboard/ClinicalPanel';
 import CommercialPanel from '@/components/dashboard/CommercialPanel';
 import AlertsTasksDock from '@/components/dashboard/AlertsTasksDock';
-import AIInsightsFooter from '@/components/dashboard/AIInsightsFooter';
 import { useKPIMetrics, useAlerts, useTasks } from '@/hooks/useDashboardData';
 import { useAuth } from '@/contexts/AuthContext';
 import { collection, query, where, getDocs } from 'firebase/firestore';
@@ -78,9 +73,19 @@ interface AIInsight {
   actionable: boolean;
 }
 
+interface ViewSection {
+  id: string;
+  title: string;
+  description: string;
+  icon: React.ElementType;
+  color: string;
+  bgColor: string;
+  component: React.ComponentType;
+}
+
 export default function CEODashboard() {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState('executive');
+  const [activeView, setActiveView] = useState('overview');
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [selectedTimeframe, setSelectedTimeframe] = useState('week');
@@ -97,7 +102,7 @@ export default function CEODashboard() {
   const [statsLoading, setStatsLoading] = useState(true);
   
   // Hooks de datos
-  const { metrics: kpiMetrics, loading: kpiLoading } = useKPIMetrics();
+  useKPIMetrics();
   const { alerts } = useAlerts();
   const { tasks } = useTasks();
 
@@ -216,7 +221,7 @@ export default function CEODashboard() {
       id: 'patients',
       label: 'Pacientes Activos',
       value: dashboardStats.totalPatients.toString(),
-      change: 8.3, // Esto podría calcularse comparando con el mes anterior
+      change: 8.3,
       trend: 'up',
       icon: Users,
       color: '#3B82F6',
@@ -243,6 +248,28 @@ export default function CEODashboard() {
       icon: Star,
       color: '#8B5CF6',
       bgColor: '#F3E8FF',
+      loading: statsLoading
+    },
+    {
+      id: 'sessions',
+      label: 'Sesiones del Mes',
+      value: dashboardStats.totalSessions.toString(),
+      change: 12.5,
+      trend: 'up',
+      icon: Calendar,
+      color: '#06B6D4',
+      bgColor: '#ECFEFF',
+      loading: statsLoading
+    },
+    {
+      id: 'therapists',
+      label: 'Terapeutas Activos',
+      value: dashboardStats.activeTherapists.toString(),
+      change: 0,
+      trend: 'stable',
+      icon: Heart,
+      color: '#EF4444',
+      bgColor: '#FEF2F2',
       loading: statsLoading
     }
   ];
@@ -301,41 +328,34 @@ export default function CEODashboard() {
 
   const aiInsights = generateAIInsights();
 
-  // Pestañas actualizadas
-  const tabs = [
-    {
-      id: 'executive',
-      label: 'Centro de Comando',
-      icon: BarChart3,
-      description: 'Vista ejecutiva integral',
-      badge: alerts.filter(a => !a.isRead).length
-    },
+  // Secciones de vista disponibles
+  const viewSections: ViewSection[] = [
     {
       id: 'financial',
-      label: 'Inteligencia Financiera',
+      title: 'Análisis Financiero',
+      description: 'Ingresos, gastos y proyecciones',
       icon: DollarSign,
-      description: 'Análisis predictivo de ingresos',
-      route: '/dashboard/ceo/financial'
+      color: '#10B981',
+      bgColor: '#ECFDF5',
+      component: FinancialPanel
     },
     {
       id: 'clinical',
-      label: 'Operaciones Clínicas',
+      title: 'Operaciones Clínicas',
+      description: 'Pacientes, sesiones y calidad',
       icon: Heart,
-      description: 'Salud operativa en tiempo real'
+      color: '#EF4444',
+      bgColor: '#FEF2F2',
+      component: ClinicalPanel
     },
     {
       id: 'commercial',
-      label: 'Marketing Inteligente',
+      title: 'Marketing y Ventas',
+      description: 'Conversión y adquisición',
       icon: Target,
-      description: 'Optimización de conversión',
-      route: '/dashboard/ceo/commercial'
-    },
-    {
-      id: 'insights',
-      label: 'IA & Predicciones',
-      icon: Brain,
-      description: 'Insights con machine learning',
-      badge: aiInsights.length
+      color: '#3B82F6',
+      bgColor: '#EFF6FF',
+      component: CommercialPanel
     }
   ];
 
@@ -403,8 +423,8 @@ export default function CEODashboard() {
     }
   };
 
-  // Hero Section Mejorado
-  const renderHeroSection = () => (
+  // Header mejorado
+  const renderHeader = () => (
     <motion.div
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
@@ -433,19 +453,6 @@ export default function CEODashboard() {
         }}
       />
       
-      <div
-        style={{
-          position: 'absolute',
-          bottom: '-50px',
-          left: '-50px',
-          width: '200px',
-          height: '200px',
-          background: 'radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%)',
-          borderRadius: '50%',
-          animation: 'float 8s ease-in-out infinite reverse'
-        }}
-      />
-
       <div style={{ 
         display: 'flex', 
         alignItems: 'center', 
@@ -470,7 +477,7 @@ export default function CEODashboard() {
                 margin: 0,
                 lineHeight: 1.1
               }}>
-                Bienvenido, {user?.name || 'Dr. Mendoza'}
+                Dashboard Ejecutivo
               </h1>
               <p style={{ 
                 fontSize: '1.25rem',
@@ -478,7 +485,7 @@ export default function CEODashboard() {
                 fontWeight: 400,
                 margin: '0.5rem 0 0 0'
               }}>
-                Centro de comando ejecutivo
+                Bienvenido, {user?.name || 'Dr. Mendoza'}
               </p>
             </div>
           </div>
@@ -515,85 +522,98 @@ export default function CEODashboard() {
             </div>
           </div>
 
-          {/* Métricas rápidas en el hero */}
+          {/* Acciones rápidas */}
           <div style={{ 
             display: 'flex', 
-            gap: '1.5rem',
+            gap: '1rem',
             flexWrap: 'wrap'
           }}>
-            {quickMetrics.slice(0, 2).map((metric, index) => (
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleExportReport}
+              style={{
+                backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                borderRadius: '1rem',
+                padding: '1rem 1.5rem',
+                color: 'white',
+                fontSize: '0.875rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                transition: 'all 0.3s ease'
+              }}
+            >
+              <Download size={16} />
+              Exportar Reporte
+            </motion.button>
+
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              style={{
+                backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                borderRadius: '1rem',
+                padding: '1rem 1.5rem',
+                color: 'white',
+                fontSize: '0.875rem',
+                fontWeight: 600,
+                cursor: isRefreshing ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                transition: 'all 0.3s ease',
+                opacity: isRefreshing ? 0.7 : 1
+              }}
+            >
               <motion.div
-                key={metric.id}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.3 + index * 0.1 }}
-                style={{
-                  background: 'rgba(255, 255, 255, 0.15)',
-                  backdropFilter: 'blur(10px)',
-                  borderRadius: '1rem',
-                  padding: '1rem 1.5rem',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  minWidth: '140px'
-                }}
+                animate={isRefreshing ? { rotate: 360 } : {}}
+                transition={{ duration: 1, repeat: isRefreshing ? Infinity : 0 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                  <metric.icon size={20} />
-                  <span style={{ fontSize: '0.875rem', opacity: 0.9 }}>{metric.label}</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  {metric.loading ? (
-                    <div style={{
-                      width: '20px',
-                      height: '20px',
-                      border: '2px solid rgba(255,255,255,0.3)',
-                      borderTop: '2px solid white',
-                      borderRadius: '50%',
-                      animation: 'spin 1s linear infinite'
-                    }} />
-                  ) : (
-                    <>
-                      <span style={{ fontSize: '1.5rem', fontWeight: 700 }}>{metric.value}</span>
-                      {getTrendIcon(metric.trend)}
-                    </>
-                  )}
-                </div>
+                <RefreshCw size={16} />
               </motion.div>
-            ))}
+              {isRefreshing ? 'Actualizando...' : 'Actualizar'}
+            </motion.button>
           </div>
         </div>
         
         <div style={{ textAlign: 'center' }}>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={handleExportReport}
-            style={{
-              backgroundColor: 'rgba(255, 255, 255, 0.2)',
-              backdropFilter: 'blur(10px)',
-              border: '1px solid rgba(255, 255, 255, 0.3)',
-              borderRadius: '1.5rem',
-              padding: '1.5rem 2.5rem',
-              color: 'white',
-              fontSize: '1.125rem',
-              fontWeight: 600,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.75rem',
-              transition: 'all 0.3s ease',
-              marginBottom: '1rem'
-            }}
-          >
-            <Download size={24} />
-            Resumen Ejecutivo
-          </motion.button>
-          
-          <div style={{ fontSize: '0.875rem', opacity: 0.8 }}>
+          <div style={{ fontSize: '0.875rem', opacity: 0.8, marginBottom: '1rem' }}>
             Última actualización: {currentTime.toLocaleTimeString('es-ES', { 
               hour: '2-digit', 
               minute: '2-digit' 
             })}
           </div>
+          
+          {/* Filtros de tiempo */}
+          <select
+            value={selectedTimeframe}
+            onChange={(e) => setSelectedTimeframe(e.target.value)}
+            style={{
+              padding: '0.75rem 1rem',
+              borderRadius: '0.75rem',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              background: 'rgba(255, 255, 255, 0.2)',
+              backdropFilter: 'blur(10px)',
+              color: 'white',
+              fontSize: '0.875rem',
+              outline: 'none',
+              cursor: 'pointer'
+            }}
+          >
+            <option value="day" style={{ color: '#1C1E21' }}>Hoy</option>
+            <option value="week" style={{ color: '#1C1E21' }}>Esta semana</option>
+            <option value="month" style={{ color: '#1C1E21' }}>Este mes</option>
+            <option value="quarter" style={{ color: '#1C1E21' }}>Trimestre</option>
+          </select>
         </div>
       </div>
     </motion.div>
@@ -606,10 +626,10 @@ export default function CEODashboard() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2 }}
       style={{
-        display: 'flex',
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
         gap: '1.5rem',
-        marginBottom: '2rem',
-        flexWrap: 'wrap'
+        marginBottom: '2rem'
       }}
     >
       {quickMetrics.map((metric, index) => (
@@ -620,8 +640,6 @@ export default function CEODashboard() {
           transition={{ delay: 0.1 * index }}
           whileHover={{ y: -8, scale: 1.02 }}
           style={{
-            flex: '1',
-            minWidth: '280px',
             background: 'rgba(255, 255, 255, 0.9)',
             backdropFilter: 'blur(20px)',
             borderRadius: '1.5rem',
@@ -713,12 +731,97 @@ export default function CEODashboard() {
     </motion.div>
   );
 
+  // Navegación de secciones simplificada
+  const renderSectionNavigation = () => (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.4 }}
+      style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+        gap: '1.5rem',
+        marginBottom: '2rem'
+      }}
+    >
+      {viewSections.map((section, index) => (
+        <motion.div
+          key={section.id}
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 * index }}
+          whileHover={{ y: -4, scale: 1.02 }}
+          onClick={() => setActiveView(section.id)}
+          style={{
+            background: activeView === section.id 
+              ? 'rgba(255, 255, 255, 0.95)' 
+              : 'rgba(255, 255, 235, 0.6)',
+            backdropFilter: 'blur(20px)',
+            borderRadius: '1.5rem',
+            padding: '2rem',
+            border: activeView === section.id 
+              ? `2px solid ${section.color}` 
+              : '1px solid rgba(229, 231, 235, 0.6)',
+            boxShadow: activeView === section.id 
+              ? `0 8px 25px ${section.color}20` 
+              : '0 4px 12px rgba(0, 0, 0, 0.05)',
+            cursor: 'pointer',
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            position: 'relative',
+            overflow: 'hidden'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <div
+                style={{
+                  padding: '1rem',
+                  borderRadius: '1rem',
+                  backgroundColor: section.bgColor,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <section.icon size={24} color={section.color} />
+              </div>
+              
+              <div>
+                <h3 style={{
+                  fontSize: '1.25rem',
+                  fontWeight: 600,
+                  color: '#1C1E21',
+                  margin: '0 0 0.25rem 0',
+                  fontFamily: 'Space Grotesk, sans-serif'
+                }}>
+                  {section.title}
+                </h3>
+                <p style={{
+                  fontSize: '0.875rem',
+                  color: '#6B7280',
+                  margin: 0
+                }}>
+                  {section.description}
+                </p>
+              </div>
+            </div>
+            
+            <ChevronRight 
+              size={20} 
+              color={activeView === section.id ? section.color : '#9CA3AF'} 
+            />
+          </div>
+        </motion.div>
+      ))}
+    </motion.div>
+  );
+
   // Panel de insights de IA
   const renderAIInsights = () => (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.4 }}
+      transition={{ delay: 0.6 }}
       style={{
         background: 'rgba(255, 255, 255, 0.9)',
         backdropFilter: 'blur(20px)',
@@ -763,51 +866,6 @@ export default function CEODashboard() {
               Recomendaciones basadas en datos reales
             </p>
           </div>
-        </div>
-        
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <select
-            value={selectedTimeframe}
-            onChange={(e) => setSelectedTimeframe(e.target.value)}
-            style={{
-              padding: '0.75rem 1rem',
-              borderRadius: '0.75rem',
-              border: '1px solid rgba(229, 231, 235, 0.6)',
-              background: 'rgba(249, 250, 251, 0.8)',
-              fontSize: '0.875rem',
-              outline: 'none',
-              cursor: 'pointer'
-            }}
-          >
-            <option value="day">Hoy</option>
-            <option value="week">Esta semana</option>
-            <option value="month">Este mes</option>
-            <option value="quarter">Trimestre</option>
-          </select>
-          
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={handleRefresh}
-            disabled={isRefreshing}
-            style={{
-              padding: '0.75rem',
-              borderRadius: '0.75rem',
-              border: '1px solid rgba(229, 231, 235, 0.6)',
-              background: 'rgba(249, 250, 251, 0.8)',
-              cursor: isRefreshing ? 'not-allowed' : 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-          >
-            <motion.div
-              animate={isRefreshing ? { rotate: 360 } : {}}
-              transition={{ duration: 1, repeat: isRefreshing ? Infinity : 0 }}
-            >
-              <RefreshCw size={16} color="#6B7280" />
-            </motion.div>
-          </motion.button>
         </div>
       </div>
 
@@ -923,7 +981,6 @@ export default function CEODashboard() {
                           whileTap={{ scale: 0.95 }}
                           onClick={(e) => {
                             e.stopPropagation();
-                            // Aquí puedes implementar acciones específicas para cada insight
                             console.log('Acción para insight:', insight.id);
                           }}
                           style={{
@@ -955,212 +1012,60 @@ export default function CEODashboard() {
     </motion.div>
   );
 
-  // KPI Grid mejorado
-  const renderKPISection = () => (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.6 }}
-      style={{ marginBottom: '2rem' }}
-    >
-      {kpiMetrics && kpiMetrics.length > 0 ? (
-        <KPIGrid metrics={kpiMetrics} />
-      ) : (
-        <div
-          style={{
-            background: 'rgba(255, 255, 255, 0.9)',
-            backdropFilter: 'blur(20px)',
-            borderRadius: '1.5rem',
-            padding: '3rem',
-            textAlign: 'center',
-            border: '1px solid rgba(229, 231, 235, 0.6)',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
-          }}
-        >
-          {kpiLoading ? (
-            <>
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 2, repeat: Infinity }}
-                style={{ marginBottom: '1.5rem' }}
-              >
-                <Database size={64} color="#2463EB" />
-              </motion.div>
-              
-              <h3 style={{ 
-                fontSize: '1.5rem', 
-                fontWeight: 600, 
-                color: '#1C1E21',
-                marginBottom: '0.75rem',
-                fontFamily: 'Space Grotesk, sans-serif'
-              }}>
-                Cargando métricas de Firebase
-              </h3>
-              
-              <p style={{ 
-                fontSize: '1rem', 
-                color: '#6B7280',
-                marginBottom: '2rem',
-                maxWidth: '400px',
-                margin: '0 auto'
-              }}>
-                Conectando con la base de datos para obtener las métricas más recientes...
-              </p>
-            </>
-          ) : (
-            <>
-              <motion.div
-                animate={{ rotate: [0, 10, -10, 0] }}
-                transition={{ duration: 2, repeat: Infinity }}
-                style={{ marginBottom: '1.5rem' }}
-              >
-                <BarChart2 size={64} color="#9CA3AF" />
-              </motion.div>
-              
-              <h3 style={{ 
-                fontSize: '1.5rem', 
-                fontWeight: 600, 
-                color: '#1C1E21',
-                marginBottom: '0.75rem',
-                fontFamily: 'Space Grotesk, sans-serif'
-              }}>
-                No hay métricas KPI configuradas
-              </h3>
-              
-              <p style={{ 
-                fontSize: '1rem', 
-                color: '#6B7280',
-                marginBottom: '2rem',
-                maxWidth: '400px',
-                margin: '0 auto 2rem auto'
-              }}>
-                Configura métricas KPI en Firebase para ver análisis detallados aquí.
-              </p>
-              
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={handleRefresh}
-                style={{
-                  padding: '0.75rem 2rem',
-                  borderRadius: '0.75rem',
-                  border: 'none',
-                  background: 'linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%)',
-                  color: 'white',
-                  fontSize: '1rem',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  margin: '0 auto'
-                }}
-              >
-                <RefreshCw size={16} />
-                Actualizar datos
-              </motion.button>
-            </>
-          )}
-        </div>
-      )}
-    </motion.div>
-  );
-
-  const renderTabContent = () => {
-    switch (activeTab) {
-      case 'executive':
-        return (
-          <motion.div
-            key="executive"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
-          >
-            {renderHeroSection()}
-            {renderMainMetrics()}
-            {renderAIInsights()}
-            {renderKPISection()}
-          </motion.div>
-        );
-
-      case 'financial':
-        return (
-          <motion.div
-            key="financial"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
-          >
-            <FinancialPanel />
-          </motion.div>
-        );
-
-      case 'clinical':
-        return (
-          <motion.div
-            key="clinical"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
-          >
-            <ClinicalPanel />
-          </motion.div>
-        );
-
-      case 'commercial':
-        return (
-          <motion.div
-            key="commercial"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
-          >
-            <CommercialPanel />
-          </motion.div>
-        );
-
-      case 'insights':
-        return (
-          <motion.div
-            key="insights"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
-          >
-            <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-              <h2 style={{ 
-                fontSize: '3rem',
-                background: 'linear-gradient(135deg, #8B5CF6 0%, #3B82F6 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-                fontFamily: 'Space Grotesk, sans-serif',
-                marginBottom: '1rem',
-                fontWeight: 700
-              }}>
-                IA & Predicciones
-              </h2>
-              <p style={{ 
-                fontSize: '1.25rem', 
-                color: '#6B7280',
-                maxWidth: '600px', 
-                margin: '0 auto'
-              }}>
-                Inteligencia artificial avanzada con modelos predictivos y recomendaciones automáticas
-              </p>
-            </div>
-            <AIInsightsFooter onRefresh={handleRefresh} onExport={handleExportReport} />
-          </motion.div>
-        );
-
-      default:
-        return null;
+  // Renderizar contenido según la vista activa
+  const renderActiveView = () => {
+    if (activeView === 'overview') {
+      return (
+        <>
+          {renderMainMetrics()}
+          {renderSectionNavigation()}
+          {renderAIInsights()}
+        </>
+      );
     }
+
+    const activeSection = viewSections.find(section => section.id === activeView);
+    if (activeSection) {
+      const Component = activeSection.component;
+      return (
+        <motion.div
+          key={activeView}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
+        >
+          <div style={{ marginBottom: '2rem' }}>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setActiveView('overview')}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                padding: '0.75rem 1.5rem',
+                background: 'rgba(255, 255, 255, 0.8)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(229, 231, 235, 0.6)',
+                borderRadius: '1rem',
+                cursor: 'pointer',
+                fontSize: '0.875rem',
+                fontWeight: 500,
+                color: '#6B7280',
+                transition: 'all 0.3s ease'
+              }}
+            >
+              <ChevronRight size={16} style={{ transform: 'rotate(180deg)' }} />
+              Volver al resumen
+            </motion.button>
+          </div>
+          <Component />
+        </motion.div>
+      );
+    }
+
+    return null;
   };
 
   return (
@@ -1198,27 +1103,12 @@ export default function CEODashboard() {
           flexDirection: 'column',
           minWidth: 0
         }}>
-          {/* Navegación de pestañas */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            style={{ marginBottom: '2rem' }}
-          >
-            <TabNavigation 
-              tabs={tabs} 
-              activeTab={activeTab} 
-              onTabChange={setActiveTab}
-              variant="cards"
-              showDescriptions={true}
-              enableRouting={true}
-            />
-          </motion.div>
-
-          {/* Contenido de pestañas */}
+          {renderHeader()}
+          
+          {/* Contenido principal */}
           <div style={{ flex: 1 }}>
             <AnimatePresence mode="wait">
-              {renderTabContent()}
+              {renderActiveView()}
             </AnimatePresence>
           </div>
         </div>
@@ -1254,7 +1144,13 @@ export default function CEODashboard() {
         <motion.button
           whileHover={{ scale: 1.1, y: -4 }}
           whileTap={{ scale: 0.9 }}
-          onClick={() => setActiveTab('insights')}
+          onClick={() => {
+            // Scroll to AI insights section
+            const insightsSection = document.querySelector('[data-section="ai-insights"]');
+            if (insightsSection) {
+              insightsSection.scrollIntoView({ behavior: 'smooth' });
+            }
+          }}
           style={{
             width: '80px',
             height: '80px',
@@ -1346,7 +1242,7 @@ export default function CEODashboard() {
           }
           
           .metrics-container {
-            flex-direction: column;
+            grid-template-columns: 1fr;
           }
         }
       `}</style>
