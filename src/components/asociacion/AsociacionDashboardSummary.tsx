@@ -14,9 +14,9 @@ import {
   Chip,
 } from '@mui/material';
 import {
-  Users,
-  UserCheck,
-  UserX,
+  Group,
+  HowToReg,
+  PersonOff,
   TrendingUp,
   ArrowUpward,
   ArrowDownward,
@@ -281,7 +281,7 @@ export const AsociacionDashboardSummary: React.FC<AsociacionDashboardSummaryProp
     {
       title: 'Total de Socios',
       value: stats.total,
-      icon: <Users sx={{ fontSize: 28 }} />,
+      icon: <Group sx={{ fontSize: 28 }} />,
       color: '#64748b',
       delay: 0,
       trend: 'neutral' as const
@@ -289,7 +289,7 @@ export const AsociacionDashboardSummary: React.FC<AsociacionDashboardSummaryProp
     {
       title: 'Socios Activos',
       value: stats.activos,
-      icon: <UserCheck sx={{ fontSize: 28 }} />,
+      icon: <HowToReg sx={{ fontSize: 28 }} />,
       color: '#10b981',
       delay: 0.1,
       trend: 'up' as const,
@@ -298,7 +298,7 @@ export const AsociacionDashboardSummary: React.FC<AsociacionDashboardSummaryProp
     {
       title: 'Socios Vencidos',
       value: stats.vencidos,
-      icon: <UserX sx={{ fontSize: 28 }} />,
+      icon: <PersonOff sx={{ fontSize: 28 }} />,
       color: '#ef4444',
       delay: 0.2,
       trend: stats.vencidos > 0 ? 'down' as const : 'neutral' as const,

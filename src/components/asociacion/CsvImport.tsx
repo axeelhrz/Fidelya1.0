@@ -2,12 +2,46 @@
 
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, Download, FileText, AlertCircle, CheckCircle, X } from 'lucide-react';
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  Box,
+  Typography,
+  Stack,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Chip,
+  useTheme,
+  alpha,
+  Avatar,
+  Divider,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+} from '@mui/material';
+import {
+  Upload,
+  Download,
+  FileUpload,
+  CheckCircle,
+  Error,
+  Close,
+  Info,
+  Description,
+  CloudUpload,
+} from '@mui/icons-material';
 import Papa from 'papaparse';
 import { SocioFormData } from '@/types/socio';
 import { csvSocioSchema } from '@/lib/validations/socio';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/Dialog';
-import { Button } from '@/components/ui/Button';
 
 interface CsvImportProps {
   open: boolean;
@@ -27,6 +61,7 @@ export const CsvImport: React.FC<CsvImportProps> = ({
   onImport,
   loading = false
 }) => {
+  const theme = useTheme();
   const [step, setStep] = useState<'upload' | 'preview'>('upload');
   const [parsedData, setParsedData] = useState<ParsedSocio[]>([]);
   const [validData, setValidData] = useState<SocioFormData[]>([]);
@@ -124,199 +159,618 @@ export const CsvImport: React.FC<CsvImportProps> = ({
     }
   };
 
+  const formatRequirements = [
+    { field: 'nombre', description: 'Nombre completo (requerido)', required: true },
+    { field: 'email', description: 'Dirección de email (requerido)', required: true },
+    { field: 'estado', description: 'activo o vencido (opcional, por defecto: activo)', required: false },
+    { field: 'telefono', description: 'Número de teléfono (opcional)', required: false },
+    { field: 'dni', description: 'Documento de identidad (opcional)', required: false },
+  ];
+
   return (
-    <Dialog open={open} onClose={handleClose} className="max-w-4xl">
-      <DialogContent className="max-h-[80vh] overflow-hidden flex flex-col">
-        <DialogHeader>
-          <DialogTitle>Importar Socios desde CSV</DialogTitle>
-        </DialogHeader>
+    <Dialog
+      open={open}
+      onClose={handleClose}
+      maxWidth="lg"
+      fullWidth
+      PaperProps={{
+        sx: {
+          borderRadius: 5,
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+          overflow: 'hidden',
+          maxHeight: '90vh'
+        }
+      }}
+    >
+      {/* Header */}
+      <DialogTitle
+        sx={{
+          p: 0,
+          background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+          color: 'white',
+          position: 'relative',
+          overflow: 'hidden'
+        }}
+      >
+        <Box sx={{ p: 4, position: 'relative', zIndex: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+            <Avatar
+              sx={{
+                width: 56,
+                height: 56,
+                bgcolor: alpha('#ffffff', 0.2),
+                color: 'white',
+              }}
+            >
+              <Upload sx={{ fontSize: 28 }} />
+            </Avatar>
+            <Box>
+              <Typography variant="h5" sx={{ fontWeight: 900, mb: 0.5 }}>
+                Importar Socios desde CSV
+              </Typography>
+              <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                Carga masiva de socios desde archivo CSV
+              </Typography>
+            </Box>
+          </Box>
+        </Box>
+        
+        {/* Decorative elements */}
+        <Box
+          sx={{
+            position: 'absolute',
+            top: -50,
+            right: -50,
+            width: 100,
+            height: 100,
+            borderRadius: '50%',
+            bgcolor: alpha('#ffffff', 0.1),
+          }}
+        />
+        <Box
+          sx={{
+            position: 'absolute',
+            bottom: -30,
+            left: -30,
+            width: 60,
+            height: 60,
+            borderRadius: '50%',
+            bgcolor: alpha('#ffffff', 0.1),
+          }}
+        />
+      </DialogTitle>
 
-        <div className="flex-1 overflow-y-auto">
-          <AnimatePresence mode="wait">
-            {step === 'upload' && (
-              <motion.div
-                key="upload"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                className="space-y-6"
-              >
-                <div className="text-center py-8">
-                  <div className="mx-auto w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mb-4">
-                    <Upload size={24} className="text-indigo-600" />
-                  </div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+      <DialogContent sx={{ p: 4, maxHeight: '60vh', overflow: 'auto' }}>
+        <AnimatePresence mode="wait">
+          {step === 'upload' && (
+            <motion.div
+              key="upload"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Stack spacing={4}>
+                {/* Upload Area */}
+                <Box sx={{ textAlign: 'center', py: 4 }}>
+                  <Avatar
+                    sx={{
+                      width: 80,
+                      height: 80,
+                      bgcolor: alpha('#3b82f6', 0.1),
+                      color: '#3b82f6',
+                      mx: 'auto',
+                      mb: 3,
+                    }}
+                  >
+                    <CloudUpload sx={{ fontSize: 40 }} />
+                  </Avatar>
+                  
+                  <Typography variant="h5" sx={{ fontWeight: 700, color: '#1e293b', mb: 1 }}>
                     Sube tu archivo CSV
-                  </h3>
-                  <p className="text-gray-600 mb-6">
-                    Selecciona un archivo CSV con la información de los socios
-                  </p>
+                  </Typography>
+                  <Typography variant="body1" sx={{ color: '#64748b', mb: 4, maxWidth: 400, mx: 'auto' }}>
+                    Selecciona un archivo CSV con la información de los socios para importar
+                  </Typography>
 
-                  <div className="space-y-4">
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept=".csv"
-                      onChange={handleFileUpload}
-                      className="hidden"
-                    />
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".csv"
+                    onChange={handleFileUpload}
+                    style={{ display: 'none' }}
+                  />
+                  
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent="center">
                     <Button
                       onClick={() => fileInputRef.current?.click()}
-                      leftIcon={<FileText size={16} />}
-                      size="lg"
+                      variant="contained"
+                      startIcon={<FileUpload />}
+                      size="large"
+                      sx={{
+                        py: 2,
+                        px: 4,
+                        borderRadius: 3,
+                        textTransform: 'none',
+                        fontWeight: 700,
+                        background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+                        boxShadow: '0 4px 20px rgba(59, 130, 246, 0.3)',
+                        '&:hover': {
+                          background: 'linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%)',
+                          transform: 'translateY(-1px)',
+                          boxShadow: '0 6px 25px rgba(59, 130, 246, 0.4)',
+                        },
+                        transition: 'all 0.2s ease'
+                      }}
                     >
                       Seleccionar Archivo CSV
                     </Button>
+                    
+                    <Button
+                      onClick={downloadTemplate}
+                      variant="outlined"
+                      startIcon={<Download />}
+                      size="large"
+                      sx={{
+                        py: 2,
+                        px: 4,
+                        borderRadius: 3,
+                        textTransform: 'none',
+                        fontWeight: 700,
+                        borderColor: '#e2e8f0',
+                        color: '#475569',
+                        borderWidth: 2,
+                        '&:hover': {
+                          borderColor: '#3b82f6',
+                          bgcolor: alpha('#3b82f6', 0.03),
+                          color: '#3b82f6',
+                        },
+                        transition: 'all 0.2s ease'
+                      }}
+                    >
+                      Descargar Plantilla
+                    </Button>
+                  </Stack>
+                </Box>
 
-                    <div className="text-sm text-gray-500">
-                      <p>¿No tienes un archivo CSV? 
-                        <button
-                          onClick={downloadTemplate}
-                          className="text-indigo-600 hover:text-indigo-700 ml-1 underline"
-                        >
-                          Descarga la plantilla
-                        </button>
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                <Divider sx={{ my: 2 }}>
+                  <Typography variant="caption" sx={{ color: '#94a3b8', fontWeight: 600, px: 2 }}>
+                    FORMATO REQUERIDO
+                  </Typography>
+                </Divider>
 
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <h4 className="font-medium text-blue-900 mb-2">Formato requerido:</h4>
-                  <ul className="text-sm text-blue-800 space-y-1">
-                    <li>• <strong>nombre:</strong> Nombre completo (requerido)</li>
-                    <li>• <strong>email:</strong> Dirección de email (requerido)</li>
-                    <li>• <strong>estado:</strong> activo o vencido (opcional, por defecto: activo)</li>
-                    <li>• <strong>telefono:</strong> Número de teléfono (opcional)</li>
-                    <li>• <strong>dni:</strong> Documento de identidad (opcional)</li>
-                  </ul>
-                </div>
-              </motion.div>
-            )}
+                {/* Format Requirements */}
+                <Paper
+                  elevation={0}
+                  sx={{
+                    bgcolor: alpha('#3b82f6', 0.05),
+                    border: `1px solid ${alpha('#3b82f6', 0.15)}`,
+                    borderRadius: 4,
+                    p: 3,
+                    position: 'relative',
+                    overflow: 'hidden',
+                    '&::before': {
+                      content: '""',
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      height: '2px',
+                      background: 'linear-gradient(90deg, #3b82f6, #1d4ed8)',
+                    }
+                  }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 3 }}>
+                    <Avatar
+                      sx={{
+                        width: 40,
+                        height: 40,
+                        bgcolor: alpha('#3b82f6', 0.15),
+                        color: '#3b82f6',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <Info sx={{ fontSize: 20 }} />
+                    </Avatar>
+                    
+                    <Box sx={{ flex: 1 }}>
+                      <Typography
+                        variant="h6"
+                        sx={{
+                          fontWeight: 700,
+                          color: '#3b82f6',
+                          mb: 1,
+                          fontSize: '1rem'
+                        }}
+                      >
+                        Estructura del Archivo CSV
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          color: alpha('#3b82f6', 0.8),
+                          fontSize: '0.9rem',
+                          mb: 2
+                        }}
+                      >
+                        Tu archivo CSV debe contener las siguientes columnas:
+                      </Typography>
+                    </Box>
+                  </Box>
 
-            {step === 'preview' && (
-              <motion.div
-                key="preview"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="space-y-6"
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-lg font-medium text-gray-900">
+                  <List dense>
+                    {formatRequirements.map((req, index) => (
+                      <ListItem key={index} sx={{ py: 0.5 }}>
+                        <ListItemIcon sx={{ minWidth: 32 }}>
+                          <Box
+                            sx={{
+                              width: 6,
+                              height: 6,
+                              borderRadius: '50%',
+                              bgcolor: req.required ? '#ef4444' : '#10b981',
+                            }}
+                          />
+                        </ListItemIcon>
+                        <ListItemText
+                          primary={
+                            <Typography variant="body2" sx={{ color: alpha('#3b82f6', 0.9) }}>
+                              <Box component="span" sx={{ fontWeight: 700, fontFamily: 'monospace' }}>
+                                {req.field}:
+                              </Box>{' '}
+                              {req.description}
+                            </Typography>
+                          }
+                        />
+                      </ListItem>
+                    ))}
+                  </List>
+                </Paper>
+              </Stack>
+            </motion.div>
+          )}
+
+          {step === 'preview' && (
+            <motion.div
+              key="preview"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Stack spacing={4}>
+                {/* Header */}
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <Box>
+                    <Typography variant="h5" sx={{ fontWeight: 700, color: '#1e293b', mb: 0.5 }}>
                       Vista previa de importación
-                    </h3>
-                    <p className="text-sm text-gray-600">
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: '#64748b' }}>
                       {validData.length} socios válidos, {errors.length} errores encontrados
-                    </p>
-                  </div>
+                    </Typography>
+                  </Box>
                   <Button
-                    variant="outline"
+                    variant="outlined"
                     onClick={() => setStep('upload')}
-                    leftIcon={<X size={16} />}
+                    startIcon={<Close />}
+                    sx={{
+                      borderRadius: 3,
+                      textTransform: 'none',
+                      fontWeight: 600,
+                      borderColor: '#e2e8f0',
+                      color: '#475569',
+                      '&:hover': {
+                        borderColor: '#6366f1',
+                        bgcolor: alpha('#6366f1', 0.03),
+                        color: '#6366f1',
+                      },
+                    }}
                   >
                     Cambiar archivo
                   </Button>
-                </div>
+                </Box>
 
+                {/* Error Summary */}
                 {errors.length > 0 && (
-                  <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <AlertCircle size={16} className="text-red-600" />
-                      <h4 className="font-medium text-red-900">Errores encontrados:</h4>
-                    </div>
-                    <ul className="text-sm text-red-800 space-y-1">
-                      {errors.map((error, index) => (
-                        <li key={index}>• {error}</li>
-                      ))}
-                    </ul>
-                  </div>
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      bgcolor: alpha('#ef4444', 0.05),
+                      border: `1px solid ${alpha('#ef4444', 0.2)}`,
+                      borderRadius: 4,
+                      p: 3,
+                      position: 'relative',
+                      overflow: 'hidden',
+                      '&::before': {
+                        content: '""',
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        height: '2px',
+                        background: 'linear-gradient(90deg, #ef4444, #dc2626)',
+                      }
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+                      <Avatar
+                        sx={{
+                          width: 40,
+                          height: 40,
+                          bgcolor: alpha('#ef4444', 0.15),
+                          color: '#ef4444',
+                          flexShrink: 0,
+                        }}
+                      >
+                        <Error sx={{ fontSize: 20 }} />
+                      </Avatar>
+                      
+                      <Box sx={{ flex: 1 }}>
+                        <Typography
+                          variant="h6"
+                          sx={{
+                            fontWeight: 700,
+                            color: '#ef4444',
+                            mb: 1,
+                            fontSize: '1rem'
+                          }}
+                        >
+                          Errores encontrados ({errors.length})
+                        </Typography>
+                        <List dense>
+                          {errors.slice(0, 5).map((error, index) => (
+                            <ListItem key={index} sx={{ py: 0.25, pl: 0 }}>
+                              <ListItemText
+                                primary={
+                                  <Typography variant="body2" sx={{ color: alpha('#ef4444', 0.8), fontSize: '0.85rem' }}>
+                                    • {error}
+                                  </Typography>
+                                }
+                              />
+                            </ListItem>
+                          ))}
+                          {errors.length > 5 && (
+                            <ListItem sx={{ py: 0.25, pl: 0 }}>
+                              <ListItemText
+                                primary={
+                                  <Typography variant="body2" sx={{ color: alpha('#ef4444', 0.6), fontSize: '0.85rem', fontStyle: 'italic' }}>
+                                    ... y {errors.length - 5} errores más
+                                  </Typography>
+                                }
+                              />
+                            </ListItem>
+                          )}
+                        </List>
+                      </Box>
+                    </Box>
+                  </Paper>
                 )}
 
+                {/* Success Summary */}
                 {validData.length > 0 && (
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <CheckCircle size={16} className="text-green-600" />
-                      <h4 className="font-medium text-green-900">
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      bgcolor: alpha('#10b981', 0.05),
+                      border: `1px solid ${alpha('#10b981', 0.2)}`,
+                      borderRadius: 4,
+                      p: 3,
+                      position: 'relative',
+                      overflow: 'hidden',
+                      '&::before': {
+                        content: '""',
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        height: '2px',
+                        background: 'linear-gradient(90deg, #10b981, #059669)',
+                      }
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                      <Avatar
+                        sx={{
+                          width: 40,
+                          height: 40,
+                          bgcolor: alpha('#10b981', 0.15),
+                          color: '#10b981',
+                          flexShrink: 0,
+                        }}
+                      >
+                        <CheckCircle sx={{ fontSize: 20 }} />
+                      </Avatar>
+                      
+                      <Typography
+                        variant="h6"
+                        sx={{
+                          fontWeight: 700,
+                          color: '#10b981',
+                          fontSize: '1rem'
+                        }}
+                      >
                         {validData.length} socios listos para importar
-                      </h4>
-                    </div>
-                  </div>
+                      </Typography>
+                    </Box>
+                  </Paper>
                 )}
 
-                <div className="border border-gray-200 rounded-lg overflow-hidden">
-                  <div className="max-h-64 overflow-y-auto">
-                    <table className="w-full text-sm">
-                      <thead className="bg-gray-50 sticky top-0">
-                        <tr>
-                          <th className="px-4 py-2 text-left font-medium text-gray-900">Fila</th>
-                          <th className="px-4 py-2 text-left font-medium text-gray-900">Nombre</th>
-                          <th className="px-4 py-2 text-left font-medium text-gray-900">Email</th>
-                          <th className="px-4 py-2 text-left font-medium text-gray-900">Estado</th>
-                          <th className="px-4 py-2 text-left font-medium text-gray-900">Estado</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-100">
+                {/* Data Preview Table */}
+                <Paper
+                  elevation={0}
+                  sx={{
+                    border: '1px solid #e2e8f0',
+                    borderRadius: 4,
+                    overflow: 'hidden'
+                  }}
+                >
+                  <TableContainer sx={{ maxHeight: 300 }}>
+                    <Table stickyHeader size="small">
+                      <TableHead>
+                        <TableRow sx={{ bgcolor: '#fafbfc' }}>
+                          <TableCell sx={{ fontWeight: 700, fontSize: '0.75rem' }}>Fila</TableCell>
+                          <TableCell sx={{ fontWeight: 700, fontSize: '0.75rem' }}>Nombre</TableCell>
+                          <TableCell sx={{ fontWeight: 700, fontSize: '0.75rem' }}>Email</TableCell>
+                          <TableCell sx={{ fontWeight: 700, fontSize: '0.75rem' }}>Estado</TableCell>
+                          <TableCell sx={{ fontWeight: 700, fontSize: '0.75rem' }}>Validación</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
                         {parsedData.map((socio) => (
-                          <tr key={socio._index} className={socio._errors ? 'bg-red-50' : 'bg-white'}>
-                            <td className="px-4 py-2">{socio._index}</td>
-                            <td className="px-4 py-2">{socio.nombre}</td>
-                            <td className="px-4 py-2">{socio.email}</td>
-                            <td className="px-4 py-2">{socio.estado}</td>
-                            <td className="px-4 py-2">
+                          <TableRow 
+                            key={socio._index} 
+                            sx={{ 
+                              bgcolor: socio._errors ? alpha('#ef4444', 0.05) : 'white',
+                              '&:hover': {
+                                bgcolor: socio._errors ? alpha('#ef4444', 0.1) : '#fafbfc',
+                              }
+                            }}
+                          >
+                            <TableCell sx={{ fontSize: '0.8rem' }}>{socio._index}</TableCell>
+                            <TableCell sx={{ fontSize: '0.8rem' }}>{socio.nombre}</TableCell>
+                            <TableCell sx={{ fontSize: '0.8rem' }}>{socio.email}</TableCell>
+                            <TableCell sx={{ fontSize: '0.8rem' }}>
+                              <Chip
+                                label={socio.estado}
+                                size="small"
+                                sx={{
+                                  bgcolor: socio.estado === 'activo' ? alpha('#10b981', 0.1) : alpha('#ef4444', 0.1),
+                                  color: socio.estado === 'activo' ? '#10b981' : '#ef4444',
+                                  fontWeight: 600,
+                                  fontSize: '0.7rem',
+                                  height: 20,
+                                }}
+                              />
+                            </TableCell>
+                            <TableCell>
                               {socio._errors ? (
-                                <div className="flex items-center gap-1 text-red-600">
-                                  <AlertCircle size={14} />
-                                  <span className="text-xs">Error</span>
-                                </div>
+                                <Chip
+                                  icon={<Error sx={{ fontSize: '0.8rem' }} />}
+                                  label="Error"
+                                  size="small"
+                                  sx={{
+                                    bgcolor: alpha('#ef4444', 0.1),
+                                    color: '#ef4444',
+                                    fontWeight: 600,
+                                    fontSize: '0.7rem',
+                                    height: 20,
+                                  }}
+                                />
                               ) : (
-                                <div className="flex items-center gap-1 text-green-600">
-                                  <CheckCircle size={14} />
-                                  <span className="text-xs">Válido</span>
-                                </div>
+                                <Chip
+                                  icon={<CheckCircle sx={{ fontSize: '0.8rem' }} />}
+                                  label="Válido"
+                                  size="small"
+                                  sx={{
+                                    bgcolor: alpha('#10b981', 0.1),
+                                    color: '#10b981',
+                                    fontWeight: 600,
+                                    fontSize: '0.7rem',
+                                    height: 20,
+                                  }}
+                                />
                               )}
-                            </td>
-                          </tr>
+                            </TableCell>
+                          </TableRow>
                         ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </Paper>
+              </Stack>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </DialogContent>
 
-        <DialogFooter>
+      <DialogActions sx={{ p: 4, pt: 0 }}>
+        <Stack direction="row" spacing={2} sx={{ width: '100%' }}>
           <Button
-            variant="outline"
             onClick={handleClose}
             disabled={loading}
+            variant="outlined"
+            startIcon={<Close />}
+            sx={{
+              flex: step === 'upload' ? 1 : 0,
+              py: 1.5,
+              px: 3,
+              borderRadius: 3,
+              textTransform: 'none',
+              fontWeight: 700,
+              borderColor: '#e2e8f0',
+              color: '#475569',
+              borderWidth: 2,
+              '&:hover': {
+                borderColor: '#6366f1',
+                bgcolor: alpha('#6366f1', 0.03),
+                color: '#6366f1',
+              },
+              transition: 'all 0.2s ease'
+            }}
           >
             Cancelar
           </Button>
+          
           {step === 'upload' && (
             <Button
               onClick={downloadTemplate}
-              leftIcon={<Download size={16} />}
-              variant="outline"
+              variant="outlined"
+              startIcon={<Download />}
+              sx={{
+                flex: 1,
+                py: 1.5,
+                px: 3,
+                borderRadius: 3,
+                textTransform: 'none',
+                fontWeight: 700,
+                borderColor: '#e2e8f0',
+                color: '#475569',
+                borderWidth: 2,
+                '&:hover': {
+                  borderColor: '#3b82f6',
+                  bgcolor: alpha('#3b82f6', 0.03),
+                  color: '#3b82f6',
+                },
+                transition: 'all 0.2s ease'
+              }}
             >
               Descargar Plantilla
             </Button>
           )}
+          
           {step === 'preview' && validData.length > 0 && (
             <Button
               onClick={handleImport}
-              loading={loading}
               disabled={loading || validData.length === 0}
-              leftIcon={<Upload size={16} />}
+              variant="contained"
+              startIcon={<Upload />}
+              sx={{
+                flex: 1,
+                py: 1.5,
+                px: 3,
+                borderRadius: 3,
+                textTransform: 'none',
+                fontWeight: 700,
+                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                boxShadow: '0 4px 20px rgba(16, 185, 129, 0.3)',
+                '&:hover': {
+                  background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+                  transform: 'translateY(-1px)',
+                  boxShadow: '0 6px 25px rgba(16, 185, 129, 0.4)',
+                },
+                '&:disabled': {
+                  background: '#e2e8f0',
+                  color: '#94a3b8',
+                  transform: 'none',
+                  boxShadow: 'none',
+                },
+                transition: 'all 0.2s ease'
+              }}
             >
-              Importar {validData.length} Socios
+              {loading ? 'Importando...' : `Importar ${validData.length} Socios`}
             </Button>
           )}
-        </DialogFooter>
-      </DialogContent>
+        </Stack>
+      </DialogActions>
     </Dialog>
   );
 };
