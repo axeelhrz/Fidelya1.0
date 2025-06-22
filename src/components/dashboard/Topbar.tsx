@@ -88,19 +88,29 @@ export default function Topbar({ onSearch, onCenterChange }: TopbarProps) {
     
     try {
       setIsLoggingOut(true);
-      console.log('Iniciando proceso de logout...');
+      console.log('🔄 Topbar: Iniciando logout...');
       
       // Cerrar el menú inmediatamente
       setIsUserMenuOpen(false);
       
+      // Mostrar confirmación al usuario
+      const confirmLogout = window.confirm('¿Estás seguro de que quieres cerrar sesión?');
+      
+      if (!confirmLogout) {
+        setIsLoggingOut(false);
+        return;
+      }
+      
       // Llamar a la función logout del contexto
       await logout();
       
-      console.log('Logout completado exitosamente');
+      console.log('✅ Topbar: Logout completado');
     } catch (error) {
-      console.error('Error al cerrar sesión:', error);
-      // En caso de error, mostrar mensaje al usuario
-      alert('Error al cerrar sesión. Por favor, intenta de nuevo.');
+      console.error('❌ Topbar: Error al cerrar sesión:', error);
+      
+      // En caso de error, forzar redirección
+      alert('Error al cerrar sesión. Redirigiendo...');
+      window.location.href = '/login';
     } finally {
       setIsLoggingOut(false);
     }
@@ -521,12 +531,12 @@ export default function Topbar({ onSearch, onCenterChange }: TopbarProps) {
           {/* Avatar del usuario mejorado */}
           <div style={{ position: 'relative' }} data-user-menu>
             <motion.button
-              onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+              onClick={() => !isLoggingOut && setIsUserMenuOpen(!isUserMenuOpen)}
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.7 }}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              whileHover={{ scale: isLoggingOut ? 1 : 1.02 }}
+              whileTap={{ scale: isLoggingOut ? 1 : 0.98 }}
               disabled={isLoggingOut}
               style={{
                 display: 'flex',
@@ -618,7 +628,7 @@ export default function Topbar({ onSearch, onCenterChange }: TopbarProps) {
 
             {/* Dropdown Usuario mejorado */}
             <AnimatePresence>
-              {isUserMenuOpen && (
+              {isUserMenuOpen && !isLoggingOut && (
                 <motion.div
                   initial={{ opacity: 0, y: 10, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -774,22 +784,20 @@ export default function Topbar({ onSearch, onCenterChange }: TopbarProps) {
                     
                     <motion.button
                       onClick={handleLogout}
-                      disabled={isLoggingOut}
-                      whileHover={!isLoggingOut ? { x: 6, backgroundColor: 'rgba(239, 68, 68, 0.05)' } : {}}
+                      whileHover={{ x: 6, backgroundColor: 'rgba(239, 68, 68, 0.05)' }}
                       transition={{ duration: 0.2 }}
                       style={{
                         width: '100%',
                         padding: '1rem 1.25rem',
                         textAlign: 'left',
-                        cursor: isLoggingOut ? 'not-allowed' : 'pointer',
+                        cursor: 'pointer',
                         border: 'none',
                         background: 'transparent',
                         display: 'flex',
                         alignItems: 'center',
                         gap: '1rem',
                         transition: 'all 0.2s ease',
-                        outline: 'none',
-                        opacity: isLoggingOut ? 0.6 : 1
+                        outline: 'none'
                       }}
                     >
                       <div style={{
@@ -798,21 +806,7 @@ export default function Topbar({ onSearch, onCenterChange }: TopbarProps) {
                         background: 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)',
                         boxShadow: '0 4px 16px rgba(239, 68, 68, 0.3)'
                       }}>
-                        {isLoggingOut ? (
-                          <motion.div
-                            animate={{ rotate: 360 }}
-                            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                            style={{
-                              width: '16px',
-                              height: '16px',
-                              border: '2px solid rgba(255, 255, 255, 0.3)',
-                              borderTop: '2px solid white',
-                              borderRadius: '50%'
-                            }}
-                          />
-                        ) : (
-                          <LogOut size={16} color="white" />
-                        )}
+                        <LogOut size={16} color="white" />
                       </div>
                       <div>
                         <div style={{
@@ -822,7 +816,7 @@ export default function Topbar({ onSearch, onCenterChange }: TopbarProps) {
                           margin: 0,
                           fontFamily: 'Inter, sans-serif'
                         }}>
-                          {isLoggingOut ? 'Cerrando Sesión...' : 'Cerrar Sesión'}
+                          Cerrar Sesión
                         </div>
                         <div style={{
                           fontSize: '0.75rem',
@@ -830,7 +824,7 @@ export default function Topbar({ onSearch, onCenterChange }: TopbarProps) {
                           margin: 0,
                           fontFamily: 'Inter, sans-serif'
                         }}>
-                          {isLoggingOut ? 'Por favor espera...' : 'Salir del dashboard'}
+                          Salir del dashboard
                         </div>
                       </div>
                     </motion.button>
@@ -844,7 +838,7 @@ export default function Topbar({ onSearch, onCenterChange }: TopbarProps) {
 
       {/* Overlay mejorado */}
       <AnimatePresence>
-        {isUserMenuOpen && (
+        {isUserMenuOpen && !isLoggingOut && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -859,6 +853,69 @@ export default function Topbar({ onSearch, onCenterChange }: TopbarProps) {
             }}
             onClick={() => setIsUserMenuOpen(false)}
           />
+        )}
+      </AnimatePresence>
+
+      {/* Indicador de logout */}
+      <AnimatePresence>
+        {isLoggingOut && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+              backdropFilter: 'blur(8px)',
+              zIndex: 9999,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              style={{
+                background: 'white',
+                borderRadius: '1rem',
+                padding: '2rem',
+                textAlign: 'center',
+                boxShadow: '0 25px 50px rgba(0, 0, 0, 0.25)'
+              }}
+            >
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  border: '4px solid #E5E7EB',
+                  borderTop: '4px solid #2563EB',
+                  borderRadius: '50%',
+                  margin: '0 auto 1rem'
+                }}
+              />
+              <h3 style={{
+                fontSize: '1.125rem',
+                fontWeight: 600,
+                color: '#1F2937',
+                margin: '0 0 0.5rem 0',
+                fontFamily: 'Inter, sans-serif'
+              }}>
+                Cerrando Sesión
+              </h3>
+              <p style={{
+                fontSize: '0.875rem',
+                color: '#6B7280',
+                margin: 0,
+                fontFamily: 'Inter, sans-serif'
+              }}>
+                Por favor espera...
+              </p>
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
 

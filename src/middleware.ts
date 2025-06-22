@@ -25,7 +25,7 @@ export function middleware(request: NextRequest) {
       const userData = JSON.parse(userCookie.value);
       isAuthenticated = !!(userData && userData.id && userData.role);
       console.log('✅ Usuario autenticado:', isAuthenticated);
-    } catch (error) {
+    } catch{
       console.log('❌ Cookie corrupta, eliminando...');
       // Cookie corrupta, crear respuesta para eliminarla
       const response = NextResponse.redirect(new URL('/login', request.url));
