@@ -1,7 +1,6 @@
 'use client';
 
 import React, { forwardRef, HTMLAttributes } from 'react';
-import { motion } from 'framer-motion';
 import { useStyles } from '@/lib/useStyles';
 
 interface CardProps extends HTMLAttributes<HTMLDivElement> {
@@ -26,7 +25,7 @@ const Card = forwardRef<HTMLDivElement, CardProps>(({
     const baseStyles = {
       backgroundColor: theme.colors.surface,
       borderRadius: theme.borderRadius.xl,
-      transition: theme.animations.transition,
+      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
       position: 'relative' as const,
       overflow: 'hidden',
     };
@@ -77,33 +76,49 @@ const Card = forwardRef<HTMLDivElement, CardProps>(({
     }
   };
 
-  const getHoverStyles = () => {
-    if (!hover) return {};
-    
-    return {
-      transform: 'translateY(-4px)',
-      boxShadow: theme.shadows.floating,
-      borderColor: variant === 'glass' ? theme.colors.borderMedium : theme.colors.borderPrimary,
-    };
+  // Generate CSS class name for hover effects
+  const getHoverClassName = () => {
+    if (!hover) return '';
+    return 'card-hover-effect';
   };
 
+  // Combine all style objects
   const cardStyles = {
     ...getVariantStyles(),
     ...getPaddingStyles(),
     ...style,
   };
 
+  // Combine class names
+  const combinedClassName = [
+    className,
+    getHoverClassName()
+  ].filter(Boolean).join(' ');
+
   return (
-    <motion.div
-      ref={ref}
-      {...props}
-      style={cardStyles}
-      className={className}
-      whileHover={hover ? getHoverStyles() : {}}
-      transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-    >
-      {children}
-    </motion.div>
+    <>
+      {/* CSS styles for hover effects */}
+      <style jsx>{`
+        .card-hover-effect:hover {
+          transform: translateY(-4px);
+          box-shadow: ${theme.shadows.floating};
+          border-color: ${variant === 'glass' ? theme.colors.borderMedium : theme.colors.borderPrimary};
+        }
+        
+        .card-hover-effect {
+          cursor: pointer;
+        }
+      `}</style>
+      
+      <div
+        ref={ref}
+        {...props}
+        style={cardStyles}
+        className={combinedClassName}
+      >
+        {children}
+      </div>
+    </>
   );
 });
 
