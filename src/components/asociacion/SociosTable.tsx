@@ -2,23 +2,46 @@
 
 import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Search, 
-  Plus, 
-  Edit, 
-  Trash2, 
-  Filter,
-  Mail,
+import {
+  Box,
+  Typography,
+  Card,
+  CardContent,
+  Button,
+  TextField,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Chip,
+  IconButton,
+  InputAdornment,
+  MenuItem,
+  Select,
+  FormControl,
+  InputLabel,
+  Pagination,
+  Stack,
+  Avatar,
+  useTheme,
+  alpha,
+  Divider,
+} from '@mui/material';
+import {
+  Search,
+  Add,
+  Edit,
+  Delete,
+  Email,
   Phone,
-  Calendar,
-  ChevronLeft,
-  ChevronRight,
-  Users
-} from 'lucide-react';
+  CalendarToday,
+  People,
+  FilterList,
+} from '@mui/icons-material';
 import { Socio } from '@/types/socio';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { TableSkeleton } from '@/components/ui/LoadingSkeleton';
 
 interface SociosTableProps {
   socios: Socio[];
@@ -30,6 +53,39 @@ interface SociosTableProps {
 
 const ITEMS_PER_PAGE = 10;
 
+const TableSkeleton: React.FC = () => (
+  <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 5 }}>
+    <CardContent sx={{ p: 0 }}>
+      <Box sx={{ p: 4, borderBottom: '1px solid #f1f5f9' }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+          <Box>
+            <Box sx={{ width: 200, height: 24, bgcolor: '#f1f5f9', borderRadius: 1, mb: 1 }} />
+            <Box sx={{ width: 150, height: 16, bgcolor: '#f1f5f9', borderRadius: 1 }} />
+          </Box>
+          <Box sx={{ width: 120, height: 40, bgcolor: '#f1f5f9', borderRadius: 2 }} />
+        </Box>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <Box sx={{ flex: 1, height: 48, bgcolor: '#f1f5f9', borderRadius: 3 }} />
+          <Box sx={{ width: 200, height: 48, bgcolor: '#f1f5f9', borderRadius: 3 }} />
+        </Box>
+      </Box>
+      <Box sx={{ p: 4 }}>
+        {Array.from({ length: 5 }).map((_, index) => (
+          <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 3, py: 2, borderBottom: index < 4 ? '1px solid #f1f5f9' : 'none' }}>
+            <Box sx={{ width: 40, height: 40, bgcolor: '#f1f5f9', borderRadius: 2 }} />
+            <Box sx={{ flex: 1 }}>
+              <Box sx={{ width: '60%', height: 16, bgcolor: '#f1f5f9', borderRadius: 1, mb: 1 }} />
+              <Box sx={{ width: '40%', height: 14, bgcolor: '#f1f5f9', borderRadius: 1 }} />
+            </Box>
+            <Box sx={{ width: 80, height: 24, bgcolor: '#f1f5f9', borderRadius: 2 }} />
+            <Box sx={{ width: 60, height: 32, bgcolor: '#f1f5f9', borderRadius: 1 }} />
+          </Box>
+        ))}
+      </Box>
+    </CardContent>
+  </Card>
+);
+
 export const SociosTable: React.FC<SociosTableProps> = ({
   socios,
   loading,
@@ -37,6 +93,7 @@ export const SociosTable: React.FC<SociosTableProps> = ({
   onDelete,
   onAdd
 }) => {
+  const theme = useTheme();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'activo' | 'vencido'>('all');
   const [currentPage, setCurrentPage] = useState(1);
@@ -59,23 +116,27 @@ export const SociosTable: React.FC<SociosTableProps> = ({
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const paginatedSocios = filteredSocios.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
-  const getStatusBadge = (estado: string) => {
-    const styles = {
-      activo: 'bg-green-100 text-green-800',
-      vencido: 'bg-red-100 text-red-800',
-      inactivo: 'bg-gray-100 text-gray-800'
+  const getStatusChip = (estado: string) => {
+    const config = {
+      activo: { color: '#10b981', bgcolor: alpha('#10b981', 0.1), label: 'Activo' },
+      vencido: { color: '#ef4444', bgcolor: alpha('#ef4444', 0.1), label: 'Vencido' },
+      inactivo: { color: '#6b7280', bgcolor: alpha('#6b7280', 0.1), label: 'Inactivo' }
     };
 
-    const labels = {
-      activo: 'Activo',
-      vencido: 'Vencido',
-      inactivo: 'Inactivo'
-    };
+    const { color, bgcolor, label } = config[estado as keyof typeof config] || config.inactivo;
 
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${styles[estado as keyof typeof styles]}`}>
-        {labels[estado as keyof typeof labels]}
-      </span>
+      <Chip
+        label={label}
+        size="small"
+        sx={{
+          bgcolor,
+          color,
+          fontWeight: 600,
+          fontSize: '0.75rem',
+          height: 24,
+        }}
+      />
     );
   };
 
@@ -90,7 +151,15 @@ export const SociosTable: React.FC<SociosTableProps> = ({
   };
 
   if (loading) {
-    return <TableSkeleton />;
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.4 }}
+      >
+        <TableSkeleton />
+      </motion.div>
+    );
   }
 
   return (
@@ -98,177 +167,314 @@ export const SociosTable: React.FC<SociosTableProps> = ({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.4 }}
-      className="bg-white rounded-2xl shadow-sm overflow-hidden"
     >
-      {/* Header */}
-      <div className="p-6 border-b border-gray-100">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900">Gestión de Socios</h2>
-            <p className="text-sm text-gray-600 mt-1">
-              {filteredSocios.length} socios encontrados
-            </p>
-          </div>
-          <Button onClick={onAdd} leftIcon={<Plus size={16} />}>
-            Nuevo Socio
-          </Button>
-        </div>
+      <Card
+        elevation={0}
+        sx={{
+          border: '1px solid #f1f5f9',
+          borderRadius: 5,
+          overflow: 'hidden',
+          boxShadow: '0 8px 40px rgba(0,0,0,0.06)',
+        }}
+      >
+        {/* Header */}
+        <CardContent sx={{ p: 4, borderBottom: '1px solid #f1f5f9' }}>
+          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { sm: 'center' }, justifyContent: 'space-between', gap: 3, mb: 4 }}>
+            <Box>
+              <Typography variant="h5" sx={{ fontWeight: 700, color: '#1e293b', mb: 0.5 }}>
+                Gestión de Socios
+              </Typography>
+              <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500 }}>
+                {filteredSocios.length} socios encontrados
+              </Typography>
+            </Box>
+            <Button
+              onClick={onAdd}
+              variant="contained"
+              startIcon={<Add />}
+              sx={{
+                py: 1.5,
+                px: 3,
+                borderRadius: 3,
+                textTransform: 'none',
+                fontWeight: 700,
+                background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                boxShadow: '0 4px 20px rgba(99, 102, 241, 0.3)',
+                '&:hover': {
+                  background: 'linear-gradient(135deg, #5b21b6 0%, #7c3aed 100%)',
+                  transform: 'translateY(-1px)',
+                  boxShadow: '0 6px 25px rgba(99, 102, 241, 0.4)',
+                },
+                transition: 'all 0.2s ease'
+              }}
+            >
+              Nuevo Socio
+            </Button>
+          </Box>
 
-        {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-4 mt-6">
-          <div className="flex-1">
-            <Input
+          {/* Filters */}
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3}>
+            <TextField
               placeholder="Buscar por nombre, email, DNI o teléfono..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              icon={<Search size={16} />}
+              fullWidth
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Search sx={{ color: '#94a3b8', fontSize: '1.2rem' }} />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 3,
+                  bgcolor: '#fafbfc',
+                  '& fieldset': {
+                    borderColor: '#e2e8f0',
+                  },
+                  '&:hover fieldset': {
+                    borderColor: '#6366f1',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#6366f1',
+                    borderWidth: 2,
+                  },
+                  '&.Mui-focused': {
+                    bgcolor: 'white',
+                  }
+                },
+              }}
             />
-          </div>
-          <div className="sm:w-48">
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as any)}
-              className="w-full px-4 py-3 rounded-xl border border-gray-300 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none"
-            >
-              <option value="all">Todos los estados</option>
-              <option value="activo">Activos</option>
-              <option value="vencido">Vencidos</option>
-            </select>
-          </div>
-        </div>
-      </div>
+            <FormControl sx={{ minWidth: 200 }}>
+              <InputLabel>Estado</InputLabel>
+              <Select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as any)}
+                label="Estado"
+                startAdornment={<FilterList sx={{ color: '#94a3b8', mr: 1 }} />}
+                sx={{
+                  borderRadius: 3,
+                  bgcolor: '#fafbfc',
+                  '& fieldset': {
+                    borderColor: '#e2e8f0',
+                  },
+                  '&:hover fieldset': {
+                    borderColor: '#6366f1',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#6366f1',
+                    borderWidth: 2,
+                  },
+                  '&.Mui-focused': {
+                    bgcolor: 'white',
+                  }
+                }}
+              >
+                <MenuItem value="all">Todos los estados</MenuItem>
+                <MenuItem value="activo">Activos</MenuItem>
+                <MenuItem value="vencido">Vencidos</MenuItem>
+              </Select>
+            </FormControl>
+          </Stack>
+        </CardContent>
 
-      {/* Table */}
-      <div className="overflow-x-auto">
+        {/* Table Content */}
         {paginatedSocios.length === 0 ? (
-          <div className="p-12 text-center">
-            <Users size={48} className="mx-auto text-gray-300 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No hay socios</h3>
-            <p className="text-gray-600 mb-6">
+          <Box sx={{ p: 8, textAlign: 'center' }}>
+            <Avatar
+              sx={{
+                width: 80,
+                height: 80,
+                bgcolor: alpha('#6b7280', 0.1),
+                color: '#6b7280',
+                mx: 'auto',
+                mb: 3,
+              }}
+            >
+              <People sx={{ fontSize: 40 }} />
+            </Avatar>
+            <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', mb: 1 }}>
+              No hay socios
+            </Typography>
+            <Typography variant="body1" sx={{ color: '#64748b', mb: 4, maxWidth: 400, mx: 'auto' }}>
               {searchTerm || statusFilter !== 'all' 
                 ? 'No se encontraron socios con los filtros aplicados'
                 : 'Comienza agregando tu primer socio'
               }
-            </p>
+            </Typography>
             {(!searchTerm && statusFilter === 'all') && (
-              <Button onClick={onAdd} leftIcon={<Plus size={16} />}>
+              <Button
+                onClick={onAdd}
+                variant="contained"
+                startIcon={<Add />}
+                sx={{
+                  py: 1.5,
+                  px: 4,
+                  borderRadius: 3,
+                  textTransform: 'none',
+                  fontWeight: 700,
+                  background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                  boxShadow: '0 4px 20px rgba(99, 102, 241, 0.3)',
+                  '&:hover': {
+                    background: 'linear-gradient(135deg, #5b21b6 0%, #7c3aed 100%)',
+                    transform: 'translateY(-1px)',
+                    boxShadow: '0 6px 25px rgba(99, 102, 241, 0.4)',
+                  },
+                  transition: 'all 0.2s ease'
+                }}
+              >
                 Agregar Primer Socio
               </Button>
             )}
-          </div>
+          </Box>
         ) : (
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Socio
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Contacto
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Estado
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Fecha de Alta
-                </th>
-                <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Acciones
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {paginatedSocios.map((socio, index) => (
-                <motion.tr
-                  key={socio.uid}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: index * 0.05 }}
-                  className="hover:bg-gray-50 transition-colors"
-                >
-                  <td className="px-6 py-4">
-                    <div>
-                      <div className="font-medium text-gray-900">{socio.nombre}</div>
-                      {socio.dni && (
-                        <div className="text-sm text-gray-500">DNI: {socio.dni}</div>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="space-y-1">
-                      <div className="flex items-center text-sm text-gray-600">
-                        <Mail size={14} className="mr-2" />
-                        {socio.email}
-                      </div>
-                      {socio.telefono && (
-                        <div className="flex items-center text-sm text-gray-600">
-                          <Phone size={14} className="mr-2" />
-                          {socio.telefono}
-                        </div>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    {getStatusBadge(socio.estado)}
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center text-sm text-gray-600">
-                      <Calendar size={14} className="mr-2" />
-                      {formatDate(socio.creadoEn)}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <button
-                        onClick={() => onEdit(socio)}
-                        className="p-2 text-gray-400 hover:text-indigo-600 transition-colors"
-                        title="Editar socio"
-                      >
-                        <Edit size={16} />
-                      </button>
-                      <button
-                        onClick={() => onDelete(socio)}
-                        className="p-2 text-gray-400 hover:text-red-600 transition-colors"
-                        title="Eliminar socio"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </td>
-                </motion.tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+          <>
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <TableRow sx={{ bgcolor: '#fafbfc' }}>
+                    <TableCell sx={{ fontWeight: 700, color: '#475569', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      Socio
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 700, color: '#475569', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      Contacto
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 700, color: '#475569', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      Estado
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 700, color: '#475569', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      Fecha de Alta
+                    </TableCell>
+                    <TableCell align="right" sx={{ fontWeight: 700, color: '#475569', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      Acciones
+                    </TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {paginatedSocios.map((socio, index) => (
+                    <motion.tr
+                      key={socio.uid}
+                      component={TableRow}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3, delay: index * 0.05 }}
+                      sx={{
+                        '&:hover': {
+                          bgcolor: '#fafbfc',
+                        },
+                        transition: 'background-color 0.2s ease'
+                      }}
+                    >
+                      <TableCell>
+                        <Box>
+                          <Typography variant="body2" sx={{ fontWeight: 600, color: '#1e293b', mb: 0.5 }}>
+                            {socio.nombre}
+                          </Typography>
+                          {socio.dni && (
+                            <Typography variant="caption" sx={{ color: '#64748b' }}>
+                              DNI: {socio.dni}
+                            </Typography>
+                          )}
+                        </Box>
+                      </TableCell>
+                      <TableCell>
+                        <Stack spacing={0.5}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Email sx={{ fontSize: 14, color: '#94a3b8' }} />
+                            <Typography variant="caption" sx={{ color: '#64748b' }}>
+                              {socio.email}
+                            </Typography>
+                          </Box>
+                          {socio.telefono && (
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <Phone sx={{ fontSize: 14, color: '#94a3b8' }} />
+                              <Typography variant="caption" sx={{ color: '#64748b' }}>
+                                {socio.telefono}
+                              </Typography>
+                            </Box>
+                          )}
+                        </Stack>
+                      </TableCell>
+                      <TableCell>
+                        {getStatusChip(socio.estado)}
+                      </TableCell>
+                      <TableCell>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <CalendarToday sx={{ fontSize: 14, color: '#94a3b8' }} />
+                          <Typography variant="caption" sx={{ color: '#64748b' }}>
+                            {formatDate(socio.creadoEn)}
+                          </Typography>
+                        </Box>
+                      </TableCell>
+                      <TableCell align="right">
+                        <Stack direction="row" spacing={1} justifyContent="flex-end">
+                          <IconButton
+                            onClick={() => onEdit(socio)}
+                            size="small"
+                            sx={{
+                              color: '#94a3b8',
+                              '&:hover': {
+                                color: '#6366f1',
+                                bgcolor: alpha('#6366f1', 0.1),
+                              },
+                              transition: 'all 0.2s ease'
+                            }}
+                          >
+                            <Edit sx={{ fontSize: 16 }} />
+                          </IconButton>
+                          <IconButton
+                            onClick={() => onDelete(socio)}
+                            size="small"
+                            sx={{
+                              color: '#94a3b8',
+                              '&:hover': {
+                                color: '#ef4444',
+                                bgcolor: alpha('#ef4444', 0.1),
+                              },
+                              transition: 'all 0.2s ease'
+                            }}
+                          >
+                            <Delete sx={{ fontSize: 16 }} />
+                          </IconButton>
+                        </Stack>
+                      </TableCell>
+                    </motion.tr>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
-          <div className="text-sm text-gray-600">
-            Mostrando {startIndex + 1} a {Math.min(startIndex + ITEMS_PER_PAGE, filteredSocios.length)} de {filteredSocios.length} socios
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-              className="p-2 text-gray-400 hover:text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <ChevronLeft size={16} />
-            </button>
-            <span className="px-3 py-1 text-sm font-medium text-gray-900">
-              {currentPage} de {totalPages}
-            </span>
-            <button
-              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-              disabled={currentPage === totalPages}
-              className="p-2 text-gray-400 hover:text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <ChevronRight size={16} />
-            </button>
-          </div>
-        </div>
-      )}
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <Box sx={{ p: 3, borderTop: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Typography variant="body2" sx={{ color: '#64748b' }}>
+                  Mostrando {startIndex + 1} a {Math.min(startIndex + ITEMS_PER_PAGE, filteredSocios.length)} de {filteredSocios.length} socios
+                </Typography>
+                <Pagination
+                  count={totalPages}
+                  page={currentPage}
+                  onChange={(_, page) => setCurrentPage(page)}
+                  color="primary"
+                  sx={{
+                    '& .MuiPaginationItem-root': {
+                      borderRadius: 2,
+                      fontWeight: 600,
+                      '&.Mui-selected': {
+                        background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                        color: 'white',
+                        '&:hover': {
+                          background: 'linear-gradient(135deg, #5b21b6 0%, #7c3aed 100%)',
+                        }
+                      }
+                    }
+                  }}
+                />
+              </Box>
+            )}
+          </>
+        )}
+      </Card>
     </motion.div>
   );
 };
