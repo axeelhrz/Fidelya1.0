@@ -190,32 +190,11 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
       ]
     },
     {
-      id: 'communications',
-      label: 'Comunicaciones',
-      icon: <Email />,
+      id: 'notifications',
+      label: 'Notificaciones',
+      icon: <Notifications />,
       badge: 3,
-      color: '#ec4899',
-      children: [
-        {
-          id: 'notifications',
-          label: 'Notificaciones',
-          icon: <Notifications />,
-          badge: 3,
-          color: '#ef4444'
-        },
-        {
-          id: 'email-campaigns',
-          label: 'Campañas Email',
-          icon: <Email />,
-          color: '#06b6d4'
-        },
-        {
-          id: 'templates',
-          label: 'Plantillas',
-          icon: <Print />,
-          color: '#8b5cf6'
-        }
-      ]
+      color: '#ec4899'
     }
   ];
 

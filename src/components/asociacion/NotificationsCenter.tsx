@@ -29,7 +29,6 @@ import {
   Delete,
   Refresh,
   SelectAll,
-  DeselectAll,
   MarkEmailRead,
   FilterList,
 } from '@mui/icons-material';
@@ -471,7 +470,7 @@ export const NotificationsCenter: React.FC<NotificationsCenterProps> = ({
         </MenuItem>
         <Divider />
         <MenuItem onClick={() => setSelectedNotifications([])}>
-          <DeselectAll sx={{ mr: 2 }} />
+          <SelectAll sx={{ mr: 2, transform: 'scaleX(-1)' }} />
           Deseleccionar todo
         </MenuItem>
       </Menu>
