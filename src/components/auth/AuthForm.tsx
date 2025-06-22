@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
+import { motion } from 'framer-motion';
 
 import { ZodTypeAny, TypeOf } from 'zod';
 
@@ -20,7 +21,13 @@ interface AuthFormProps<TSchema extends ZodTypeAny> {
   loading?: boolean;
 }
 
-export function AuthForm<TSchema extends ZodTypeAny>({ schema, onSubmit, fields, submitText, loading }: AuthFormProps<TSchema>) {
+export function AuthForm<TSchema extends ZodTypeAny>({ 
+  schema, 
+  onSubmit, 
+  fields, 
+  submitText, 
+  loading 
+}: AuthFormProps<TSchema>) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const {
@@ -54,34 +61,61 @@ export function AuthForm<TSchema extends ZodTypeAny>({ schema, onSubmit, fields,
     }
   };
 
-
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
-      {fields.map((field) => (
-        <Input
+    <motion.form
+      onSubmit={handleSubmit(handleFormSubmit)}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.4 }}
+      className="space-y-6"
+    >
+      {fields.map((field, index) => (
+        <motion.div
           key={field.name}
-          {...register(field.name)}
-          type={field.type}
-          label={field.label}
-          placeholder={field.placeholder}
-          icon={field.icon}
-          error={errors[field.name]?.message as string}
-        />
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: index * 0.1 }}
+        >
+          <Input
+            {...register(field.name)}
+            type={field.type}
+            label={field.label}
+            placeholder={field.placeholder}
+            icon={field.icon}
+            error={errors[field.name]?.message as string}
+            autoComplete={
+              field.type === 'email' ? 'email' : 
+              field.type === 'password' ? 'current-password' : 
+              'off'
+            }
+          />
+        </motion.div>
       ))}
       
       {errors.root && (
-        <div className="rounded-lg bg-red-50 border border-red-200 p-3">
-          <p className="text-sm text-red-600">{errors.root.message as string}</p>
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="rounded-xl bg-red-50 border border-red-200 p-4"
+        >
+          <p className="text-sm text-red-600 font-medium">{errors.root.message as string}</p>
+        </motion.div>
       )}
 
-      <Button
-        type="submit"
-        className="w-full"
-        loading={isSubmitting || loading}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: fields.length * 0.1 }}
       >
-        {submitText}
-      </Button>
-    </form>
+        <Button
+          type="submit"
+          fullWidth
+          loading={isSubmitting || loading}
+          className="mt-2"
+        >
+          {submitText}
+        </Button>
+      </motion.div>
+    </motion.form>
   );
 }
