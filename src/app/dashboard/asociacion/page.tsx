@@ -41,6 +41,7 @@ import { InsightsIA } from '@/components/asociacion/InsightsIA';
 import { EnhancedMemberManagement } from '@/components/asociacion/EnhancedMemberManagement';
 import { DataExportSection } from '@/components/asociacion/DataExportSection';
 import { BackupManagementSection } from '@/components/asociacion/BackupManagementSection';
+import { NotificationsCenter } from '@/components/asociacion/NotificationsCenter';
 import { SocioDialog } from '@/components/asociacion/SocioDialog';
 import { DeleteConfirmDialog } from '@/components/asociacion/DeleteConfirmDialog';
 import { CsvImport } from '@/components/asociacion/CsvImport';
@@ -292,7 +293,7 @@ const DashboardSection: React.FC<{
         </Container>
       );
 
-    // Gestión de Datos - Respaldos (UPDATED)
+    // Gestión de Datos - Respaldos
     case 'backup':
       return (
         <Container maxWidth="xl" sx={{ py: 4 }}>
@@ -398,8 +399,10 @@ const DashboardSection: React.FC<{
         </Container>
       );
 
-    // Comunicaciones
+    // Comunicaciones - Sistema de Notificaciones
     case 'notifications':
+      return <NotificationsCenter loading={loading} />;
+
     case 'email-campaigns':
     case 'templates':
       return (
@@ -424,9 +427,7 @@ const DashboardSection: React.FC<{
                 </Avatar>
                 <Box>
                   <Typography variant="h3" sx={{ fontWeight: 900, color: '#0f172a', mb: 1 }}>
-                    {section === 'notifications' ? 'Notificaciones' :
-                     section === 'email-campaigns' ? 'Campañas de Email' :
-                     'Plantillas de Comunicación'}
+                    {section === 'email-campaigns' ? 'Campañas de Email' : 'Plantillas de Comunicación'}
                   </Typography>
                   <Typography variant="h6" sx={{ color: '#64748b', fontWeight: 600 }}>
                     Sistema de comunicaciones
@@ -440,7 +441,7 @@ const DashboardSection: React.FC<{
               Funcionalidad en Desarrollo
             </Typography>
             <Typography variant="body1" sx={{ color: '#64748b' }}>
-              El sistema de comunicaciones estará disponible próximamente.
+              El sistema de {section === 'email-campaigns' ? 'campañas de email' : 'plantillas'} estará disponible próximamente.
             </Typography>
           </Box>
         </Container>
