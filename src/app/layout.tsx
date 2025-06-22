@@ -1,51 +1,21 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import { ClientLayout } from './ClientLayout';
+import { Geist, Geist_Mono } from "next/font/google";
+import "./globals.css";
+import { ToastProvider } from "@/components/providers/ToastProvider";
 
-const inter = Inter({
+const geistSans = Geist({
+  variable: "--font-geist-sans",
   subsets: ["latin"],
-  display: "swap",
-  variable: "--font-inter",
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "Fidelitá - Plataforma de Fidelización Inteligente",
-  description: "La plataforma que conecta asociaciones, comercios y socios en un ecosistema único de beneficios mutuos. Fidelización moderna y eficaz.",
-  keywords: ["fidelización", "loyalty", "comercios", "asociaciones", "socios", "beneficios"],
-  authors: [{ name: "Fidelitá Team" }],
-  creator: "Fidelitá",
-  publisher: "Fidelitá",
-  formatDetection: {
-    email: false,
-    address: false,
-    telephone: false,
-  },
-  metadataBase: new URL("https://fidelita.com"),
-  openGraph: {
-    title: "Fidelitá - Plataforma de Fidelización Inteligente",
-    description: "Conecta asociaciones, comercios y socios en un ecosistema único de beneficios mutuos.",
-    url: "https://fidelita.com",
-    siteName: "Fidelitá",
-    locale: "es_ES",
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Fidelitá - Plataforma de Fidelización Inteligente",
-    description: "Conecta asociaciones, comercios y socios en un ecosistema único de beneficios mutuos.",
-    creator: "@fidelita",
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      "max-video-preview": -1,
-      "max-image-preview": "large",
-      "max-snippet": -1,
-    },
-  },
+  title: "Fidelita - Programa de Fidelidad",
+  description: "Plataforma de gestión de programas de fidelidad para asociaciones y comercios",
 };
 
 export default function RootLayout({
@@ -54,16 +24,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" className={inter.variable}>
-      <head>
-        <meta name="theme-color" content="#667eea" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-      </head>
-      <body className={inter.className}>
-        <ClientLayout>
-          {children}
-        </ClientLayout>
+    <html lang="es">
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
+        {children}
+        <ToastProvider />
       </body>
     </html>
   );
