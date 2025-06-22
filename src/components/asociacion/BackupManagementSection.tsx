@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Box,
@@ -80,13 +80,14 @@ import {
   History,
   VerifiedUser,
   AutoMode,
-  ManualMode,
+  Person,
   CalendarToday,
   AccessTime,
   FileDownload,
   FolderZip,
   Lock,
   LockOpen,
+
 } from '@mui/icons-material';
 import { useBackup } from '@/hooks/useBackup';
 import { BackupMetadata, BackupConfig, RestoreOptions, BackupFilterType, BackupSortField, BackupSortOrder } from '@/types/backup';
@@ -165,7 +166,7 @@ const BackupCard: React.FC<BackupCardProps> = ({
 
   const getTypeIcon = (type: BackupMetadata['type']) => {
     switch (type) {
-      case 'manual': return <ManualMode />;
+      case 'manual': return <Person />;
       case 'automatic': return <AutoMode />;
       case 'scheduled': return <Schedule />;
       default: return <Backup />;

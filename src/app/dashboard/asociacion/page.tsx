@@ -40,6 +40,7 @@ import { ReportsSection } from '@/components/asociacion/ReportsSection';
 import { InsightsIA } from '@/components/asociacion/InsightsIA';
 import { EnhancedMemberManagement } from '@/components/asociacion/EnhancedMemberManagement';
 import { DataExportSection } from '@/components/asociacion/DataExportSection';
+import { BackupManagementSection } from '@/components/asociacion/BackupManagementSection';
 import { SocioDialog } from '@/components/asociacion/SocioDialog';
 import { DeleteConfirmDialog } from '@/components/asociacion/DeleteConfirmDialog';
 import { CsvImport } from '@/components/asociacion/CsvImport';
@@ -291,61 +292,11 @@ const DashboardSection: React.FC<{
         </Container>
       );
 
-    // Gestión de Datos - Respaldos
+    // Gestión de Datos - Respaldos (UPDATED)
     case 'backup':
       return (
         <Container maxWidth="xl" sx={{ py: 4 }}>
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <Box sx={{ mb: 6 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, mb: 4 }}>
-                <Avatar
-                  sx={{
-                    width: 64,
-                    height: 64,
-                    borderRadius: 4,
-                    background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-                    boxShadow: '0 12px 40px rgba(245, 158, 11, 0.3)',
-                  }}
-                >
-                  <Backup sx={{ fontSize: 32 }} />
-                </Avatar>
-                <Box>
-                  <Typography variant="h3" sx={{ fontWeight: 900, color: '#0f172a', mb: 1 }}>
-                    Gestión de Respaldos
-                  </Typography>
-                  <Typography variant="h6" sx={{ color: '#64748b', fontWeight: 600 }}>
-                    Respaldos automáticos y manuales de datos
-                  </Typography>
-                </Box>
-              </Box>
-            </Box>
-          </motion.div>
-          <Box sx={{ textAlign: 'center', py: 8 }}>
-            <Typography variant="h4" sx={{ fontWeight: 700, color: '#1e293b', mb: 2 }}>
-              Funcionalidad en Desarrollo
-            </Typography>
-            <Typography variant="body1" sx={{ color: '#64748b', mb: 4 }}>
-              El sistema de respaldos estará disponible próximamente.
-            </Typography>
-            <Button
-              variant="outlined"
-              startIcon={<Backup />}
-              disabled
-              sx={{
-                py: 1.5,
-                px: 4,
-                borderRadius: 3,
-                textTransform: 'none',
-                fontWeight: 600,
-              }}
-            >
-              Próximamente
-            </Button>
-          </Box>
+          <BackupManagementSection loading={loading} />
         </Container>
       );
 
