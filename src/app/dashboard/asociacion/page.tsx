@@ -7,46 +7,17 @@ import {
   Container,
   Typography,
   Button,
-  Card,
-  CardContent,
-  Stack,
-  IconButton,
-  Paper,
-  Grid,
+  Avatar,
   useTheme,
   alpha,
-  Avatar,
-  SpeedDial,
-  SpeedDialAction,
-  SpeedDialIcon,
-  Tooltip,
-  Badge,
-  Fab,
-  Zoom,
 } from '@mui/material';
 import {
-  Upload,
-  Download,
-  TrendingUp,
-  Settings,
-  Notifications,
-  CalendarToday,
-  BarChart,
   PersonAdd,
-  Dashboard,
-  Speed,
   Security,
   Analytics,
-  Timeline,
   Group,
-  Email,
-  Print,
-  Share,
-  CloudDownload,
-  Assessment,
-  Insights,
+  Upload,
   AutoGraph,
-  Add,
 } from '@mui/icons-material';
 import { toast } from 'react-hot-toast';
 import { useSocios } from '@/hooks/useSocios';
@@ -56,8 +27,8 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { OverviewDashboard } from '@/components/asociacion/OverviewDashboard';
 import { AdvancedAnalytics } from '@/components/asociacion/AdvancedAnalytics';
 import { ReportsSection } from '@/components/asociacion/ReportsSection';
+import { InsightsIA } from '@/components/asociacion/InsightsIA';
 import { EnhancedMemberManagement } from '@/components/asociacion/EnhancedMemberManagement';
-import { ActivityFeed } from '@/components/asociacion/ActivityFeed';
 import { SocioDialog } from '@/components/asociacion/SocioDialog';
 import { DeleteConfirmDialog } from '@/components/asociacion/DeleteConfirmDialog';
 import { CsvImport } from '@/components/asociacion/CsvImport';
@@ -226,6 +197,15 @@ const DashboardSection: React.FC<{
     case 'reports':
       return (
         <ReportsSection
+          socios={socios}
+          stats={stats}
+          loading={loading}
+        />
+      );
+
+    case 'insights':
+      return (
+        <InsightsIA
           socios={socios}
           stats={stats}
           loading={loading}
@@ -564,29 +544,6 @@ export default function AsociacionDashboard() {
           />
         </motion.div>
       </AnimatePresence>
-
-      {/* Floating Action Button */}
-      <Zoom in={true}>
-        <Fab
-          color="primary"
-          onClick={handleAddSocio}
-          sx={{
-            position: 'fixed',
-            bottom: 32,
-            right: 32,
-            background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-            boxShadow: '0 8px 32px rgba(99, 102, 241, 0.3)',
-            '&:hover': {
-              background: 'linear-gradient(135deg, #5b21b6 0%, #7c3aed 100%)',
-              transform: 'scale(1.1)',
-              boxShadow: '0 12px 40px rgba(99, 102, 241, 0.4)',
-            },
-            transition: 'all 0.3s ease'
-          }}
-        >
-          <Add />
-        </Fab>
-      </Zoom>
 
       {/* Dialogs */}
       <SocioDialog
