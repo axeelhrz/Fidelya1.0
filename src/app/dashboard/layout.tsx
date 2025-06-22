@@ -4,7 +4,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import AdminLayout from '@/components/layout/AdminLayout';
-import Topbar from '@/components/dashboard/Topbar';
 
 export default function DashboardLayout({
   children,
@@ -80,7 +79,6 @@ export default function DashboardLayout({
 
   return (
     <AdminLayout>
-      <Topbar />
       {children}
     </AdminLayout>
   );

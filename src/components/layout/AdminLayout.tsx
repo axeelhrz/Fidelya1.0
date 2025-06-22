@@ -28,10 +28,16 @@ import {
   Search,
   Bell,
   User,
+  LogOut,
   Minimize2,
   Maximize2,
-  Sparkles
+  ChevronDown,
+  Sparkles,
+  Clock,
 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -48,12 +54,23 @@ interface NavigationItem {
 }
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
+  const { user, logout } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [expandedItems, setExpandedItems] = useState<string[]>(['dashboard']);
   const [searchQuery, setSearchQuery] = useState('');
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const pathname = usePathname();
+
+  // Actualizar tiempo cada segundo
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Responsive behavior
   useEffect(() => {
@@ -273,6 +290,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     );
   });
 
+  const handleLogout = () => {
+    logout();
+    setIsUserMenuOpen(false);
+  };
+
   const renderNavigationItem = (item: NavigationItem, level = 0) => {
     const hasChildren = item.children && item.children.length > 0;
     const isExpanded = expandedItems.includes(item.id);
@@ -298,10 +320,14 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                padding: level === 0 ? '1rem 1.25rem' : '0.75rem 1.25rem 0.75rem 2.5rem',
+                padding: isCollapsed && level === 0 
+                  ? '1rem 0.75rem' 
+                  : level === 0 
+                    ? '1rem 1.25rem' 
+                    : '0.75rem 1.25rem 0.75rem 2.5rem',
                 cursor: 'pointer',
                 borderRadius: '1rem',
-                margin: '0 0.75rem',
+                margin: isCollapsed && level === 0 ? '0 0.5rem' : '0 0.75rem',
                 backgroundColor: active 
                   ? 'rgba(37, 99, 235, 0.1)' 
                   : isHovered 
@@ -314,7 +340,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                   ? '0 4px 12px rgba(37, 99, 235, 0.15)' 
                   : isHovered 
                     ? '0 2px 8px rgba(0, 0, 0, 0.05)' 
-                    : 'none'
+                    : 'none',
+                justifyContent: isCollapsed && level === 0 ? 'center' : 'flex-start'
               }}
             >
               {/* Indicador activo */}
@@ -335,23 +362,26 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 />
               )}
 
-              <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-                {!isCollapsed && (
-                  <div style={{
-                    padding: '0.5rem',
-                    borderRadius: '0.75rem',
-                    backgroundColor: active 
-                      ? 'rgba(37, 99, 235, 0.15)' 
-                      : 'rgba(107, 114, 128, 0.1)',
-                    marginRight: '0.75rem',
-                    transition: 'all 0.3s ease'
-                  }}>
-                    <item.icon 
-                      size={18} 
-                      color={active ? '#2563EB' : '#6B7280'} 
-                    />
-                  </div>
-                )}
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                width: '100%',
+                justifyContent: isCollapsed && level === 0 ? 'center' : 'flex-start'
+              }}>
+                <div style={{
+                  padding: '0.5rem',
+                  borderRadius: '0.75rem',
+                  backgroundColor: active 
+                    ? 'rgba(37, 99, 235, 0.15)' 
+                    : 'rgba(107, 114, 128, 0.1)',
+                  marginRight: isCollapsed && level === 0 ? '0' : '0.75rem',
+                  transition: 'all 0.3s ease'
+                }}>
+                  <item.icon 
+                    size={18} 
+                    color={active ? '#2563EB' : '#6B7280'} 
+                  />
+                </div>
 
                 {(!isCollapsed || level > 0) && (
                   <>
@@ -408,6 +438,51 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                     </motion.div>
                   </>
                 )}
+
+                {/* Tooltip para modo colapsado */}
+                {isCollapsed && level === 0 && isHovered && (
+                  <motion.div
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -10 }}
+                    style={{
+                      position: 'absolute',
+                      left: '100%',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      marginLeft: '0.5rem',
+                      background: 'rgba(0, 0, 0, 0.9)',
+                      color: 'white',
+                      padding: '0.75rem 1rem',
+                      borderRadius: '0.75rem',
+                      fontSize: '0.875rem',
+                      whiteSpace: 'nowrap',
+                      zIndex: 1000,
+                      pointerEvents: 'none',
+                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)'
+                    }}
+                  >
+                    <div style={{ fontWeight: 600, marginBottom: '0.25rem' }}>
+                      {item.label}
+                    </div>
+                    {item.description && (
+                      <div style={{ fontSize: '0.75rem', opacity: 0.8 }}>
+                        {item.description}
+                      </div>
+                    )}
+                    <div style={{
+                      position: 'absolute',
+                      left: '-4px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      width: 0,
+                      height: 0,
+                      borderTop: '4px solid transparent',
+                      borderBottom: '4px solid transparent',
+                      borderRight: '4px solid rgba(0, 0, 0, 0.9)'
+                    }} />
+                  </motion.div>
+                )}
               </div>
             </div>
           ) : (
@@ -422,9 +497,13 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
-                padding: level === 0 ? '1rem 1.25rem' : '0.75rem 1.25rem 0.75rem 2.5rem',
+                padding: isCollapsed && level === 0 
+                  ? '1rem 0.75rem' 
+                  : level === 0 
+                    ? '1rem 1.25rem' 
+                    : '0.75rem 1.25rem 0.75rem 2.5rem',
                 borderRadius: '1rem',
-                margin: '0 0.75rem',
+                margin: isCollapsed && level === 0 ? '0 0.5rem' : '0 0.75rem',
                 backgroundColor: active 
                   ? 'rgba(37, 99, 235, 0.1)' 
                   : isHovered 
@@ -438,7 +517,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                   : isHovered 
                     ? '0 2px 8px rgba(0, 0, 0, 0.05)' 
                     : 'none',
-                position: 'relative'
+                position: 'relative',
+                justifyContent: isCollapsed && level === 0 ? 'center' : 'flex-start'
               }}>
                 {/* Indicador activo */}
                 {active && (
@@ -458,22 +538,20 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                   />
                 )}
 
-                {!isCollapsed && (
-                  <div style={{
-                    padding: '0.5rem',
-                    borderRadius: '0.75rem',
-                    backgroundColor: active 
-                      ? 'rgba(37, 99, 235, 0.15)' 
-                      : 'rgba(107, 114, 128, 0.1)',
-                    marginRight: '0.75rem',
-                    transition: 'all 0.3s ease'
-                  }}>
-                    <item.icon 
-                      size={18} 
-                      color={active ? '#2563EB' : '#6B7280'} 
-                    />
-                  </div>
-                )}
+                <div style={{
+                  padding: '0.5rem',
+                  borderRadius: '0.75rem',
+                  backgroundColor: active 
+                    ? 'rgba(37, 99, 235, 0.15)' 
+                    : 'rgba(107, 114, 128, 0.1)',
+                  marginRight: isCollapsed && level === 0 ? '0' : '0.75rem',
+                  transition: 'all 0.3s ease'
+                }}>
+                  <item.icon 
+                    size={18} 
+                    color={active ? '#2563EB' : '#6B7280'} 
+                  />
+                </div>
 
                 {(!isCollapsed || level > 0) && (
                   <>
@@ -520,6 +598,51 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                         {item.badge > 99 ? '99+' : item.badge}
                       </motion.div>
                     )}
+
+                    {/* Tooltip para modo colapsado */}
+                    {isCollapsed && level === 0 && isHovered && (
+                      <motion.div
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -10 }}
+                        style={{
+                          position: 'absolute',
+                          left: '100%',
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          marginLeft: '0.5rem',
+                          background: 'rgba(0, 0, 0, 0.9)',
+                          color: 'white',
+                          padding: '0.75rem 1rem',
+                          borderRadius: '0.75rem',
+                          fontSize: '0.875rem',
+                          whiteSpace: 'nowrap',
+                          zIndex: 1000,
+                          pointerEvents: 'none',
+                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)'
+                        }}
+                      >
+                        <div style={{ fontWeight: 600, marginBottom: '0.25rem' }}>
+                          {item.label}
+                        </div>
+                        {item.description && (
+                          <div style={{ fontSize: '0.75rem', opacity: 0.8 }}>
+                            {item.description}
+                          </div>
+                        )}
+                        <div style={{
+                          position: 'absolute',
+                          left: '-4px',
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          width: 0,
+                          height: 0,
+                          borderTop: '4px solid transparent',
+                          borderBottom: '4px solid transparent',
+                          borderRight: '4px solid rgba(0, 0, 0, 0.9)'
+                        }} />
+                      </motion.div>
+                    )}
                   </>
                 )}
               </div>
@@ -527,9 +650,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           )}
         </motion.div>
 
-        {/* Submenús con animación mejorada */}
+        {/* Submenús - solo se muestran si no está colapsado */}
         <AnimatePresence>
-          {hasChildren && isExpanded && (
+          {hasChildren && isExpanded && !isCollapsed && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
@@ -855,10 +978,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         flex: 1,
         marginLeft: isSidebarOpen ? sidebarWidth : '0',
         transition: 'margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-        minHeight: '100vh'
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column'
       }}>
-        {/* Barra superior con controles */}
-        <motion.div
+        {/* Topbar integrado */}
+        <motion.header
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
@@ -872,7 +997,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             padding: '1rem 2rem',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'space-between'
+            justifyContent: 'space-between',
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)'
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -918,6 +1044,51 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 {isCollapsed ? <Maximize2 size={18} color="#6B7280" /> : <Minimize2 size={18} color="#6B7280" />}
               </motion.button>
             )}
+
+            {/* Información de fecha y hora */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3 }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '1rem',
+                padding: '0.75rem 1rem',
+                background: 'rgba(249, 250, 251, 0.6)',
+                backdropFilter: 'blur(8px)',
+                borderRadius: '0.75rem',
+                border: '1px solid rgba(229, 231, 235, 0.4)'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Clock size={16} color="#6B7280" />
+                <span style={{
+                  fontSize: '0.875rem',
+                  color: '#374151',
+                  fontFamily: 'Inter, sans-serif',
+                  fontWeight: 500
+                }}>
+                  {format(currentTime, 'HH:mm:ss', { locale: es })}
+                </span>
+              </div>
+              <div style={{
+                width: '1px',
+                height: '16px',
+                backgroundColor: 'rgba(229, 231, 235, 0.6)'
+              }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Calendar size={16} color="#6B7280" />
+                <span style={{
+                  fontSize: '0.875rem',
+                  color: '#374151',
+                  fontFamily: 'Inter, sans-serif',
+                  fontWeight: 500
+                }}>
+                  {format(currentTime, 'EEEE, d MMMM', { locale: es })}
+                </span>
+              </div>
+            </motion.div>
           </div>
 
           {/* Controles de usuario */}
@@ -954,55 +1125,134 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               />
             </motion.button>
 
-            {/* Avatar de usuario */}
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.75rem',
-                padding: '0.5rem 1rem',
-                backgroundColor: 'rgba(249, 250, 251, 0.8)',
-                borderRadius: '0.75rem',
-                border: '1px solid rgba(229, 231, 235, 0.6)',
-                cursor: 'pointer'
-              }}
-            >
-              <div style={{
-                width: '32px',
-                height: '32px',
-                backgroundColor: '#2563EB',
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}>
-                <User size={16} color="white" />
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <span style={{
-                  fontSize: '0.875rem',
-                  fontWeight: 600,
-                  color: '#1F2937',
-                  fontFamily: 'Inter, sans-serif'
+            {/* Avatar de usuario con menú */}
+            <div style={{ position: 'relative' }}>
+              <motion.button
+                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                whileHover={{ scale: 1.05 }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.75rem',
+                  padding: '0.5rem 1rem',
+                  backgroundColor: 'rgba(249, 250, 251, 0.8)',
+                  borderRadius: '0.75rem',
+                  border: '1px solid rgba(229, 231, 235, 0.6)',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                <div style={{
+                  width: '32px',
+                  height: '32px',
+                  backgroundColor: '#2563EB',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
                 }}>
-                  Dr. Mendoza
-                </span>
-                <span style={{
-                  fontSize: '0.75rem',
-                  color: '#6B7280',
-                  fontFamily: 'Inter, sans-serif'
-                }}>
-                  CEO
-                </span>
-              </div>
-            </motion.div>
+                  <User size={16} color="white" />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                  <span style={{
+                    fontSize: '0.875rem',
+                    fontWeight: 600,
+                    color: '#1F2937',
+                    fontFamily: 'Inter, sans-serif'
+                  }}>
+                    {user?.name || 'Dr. Mendoza'}
+                  </span>
+                  <span style={{
+                    fontSize: '0.75rem',
+                    color: '#6B7280',
+                    fontFamily: 'Inter, sans-serif'
+                  }}>
+                    {user?.role === 'admin' ? 'CEO' : 'Terapeuta'}
+                  </span>
+                </div>
+                <motion.div
+                  animate={{ rotate: isUserMenuOpen ? 180 : 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <ChevronDown size={16} color="#9CA3AF" />
+                </motion.div>
+              </motion.button>
+
+              {/* Menú de usuario */}
+              <AnimatePresence>
+                {isUserMenuOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                    transition={{ duration: 0.2 }}
+                    style={{
+                      position: 'absolute',
+                      top: '100%',
+                      right: 0,
+                      marginTop: '0.5rem',
+                      background: 'rgba(255, 255, 255, 0.95)',
+                      backdropFilter: 'blur(20px)',
+                      border: '1px solid rgba(229, 231, 235, 0.6)',
+                      borderRadius: '1rem',
+                      boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
+                      zIndex: 50,
+                      overflow: 'hidden',
+                      minWidth: '200px'
+                    }}
+                  >
+                    <div style={{
+                      padding: '1rem',
+                      borderBottom: '1px solid rgba(229, 231, 235, 0.3)'
+                    }}>
+                      <div style={{
+                        fontSize: '0.875rem',
+                        fontWeight: 600,
+                        color: '#1F2937',
+                        fontFamily: 'Inter, sans-serif'
+                      }}>
+                        {user?.name || 'Dr. Mendoza'}
+                      </div>
+                      <div style={{
+                        fontSize: '0.75rem',
+                        color: '#6B7280',
+                        fontFamily: 'Inter, sans-serif'
+                      }}>
+                        {user?.email || 'admin@centro.com'}
+                      </div>
+                    </div>
+                    
+                    <motion.button
+                      onClick={handleLogout}
+                      whileHover={{ backgroundColor: 'rgba(239, 68, 68, 0.05)' }}
+                      style={{
+                        width: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.75rem',
+                        padding: '0.75rem 1rem',
+                        border: 'none',
+                        background: 'transparent',
+                        cursor: 'pointer',
+                        fontSize: '0.875rem',
+                        color: '#EF4444',
+                        fontFamily: 'Inter, sans-serif',
+                        transition: 'all 0.2s ease'
+                      }}
+                    >
+                      <LogOut size={16} />
+                      Cerrar sesión
+                    </motion.button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
-        </motion.div>
+        </motion.header>
 
         {/* Contenido de la página */}
         <main style={{ 
-          minHeight: 'calc(100vh - 80px)',
+          flex: 1,
           background: 'transparent'
         }}>
           {children}
@@ -1025,6 +1275,23 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               display: window.innerWidth < 1024 ? 'block' : 'none'
             }}
             onClick={() => setIsSidebarOpen(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Overlay para cerrar menú de usuario */}
+      <AnimatePresence>
+        {isUserMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 40,
+            }}
+            onClick={() => setIsUserMenuOpen(false)}
           />
         )}
       </AnimatePresence>
