@@ -655,9 +655,9 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
                     const engagementLevel = getEngagementLevel(engagementScore);
                     
                     return (
-                      <motion.tr
+                      <TableRow
                         key={socio.uid}
-                        component={TableRow}
+                        component={motion.tr}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.3, delay: index * 0.05 }}
@@ -819,7 +819,7 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
                             </Tooltip>
                           </Stack>
                         </TableCell>
-                      </motion.tr>
+                      </TableRow>
                     );
                   })}
                 </TableBody>
@@ -843,4 +843,128 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
                       borderRadius: 3,
                       fontWeight: 600,
                       fontSize: '0.9rem',
-                
+                      '&.Mui-selected': {
+                        background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                        color: 'white',
+                        '&:hover': {
+                          background: 'linear-gradient(135deg, #5b21b6 0%, #7c3aed 100%)',
+                        }
+                      },
+                      '&:hover': {
+                        bgcolor: alpha('#6366f1', 0.1),
+                      }
+                    }
+                  }}
+                />
+              </Box>
+            )}
+          </>
+        )}
+      </Card>
+
+      {/* Context Menus */}
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={() => setAnchorEl(null)}
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
+            border: '1px solid #f1f5f9',
+            minWidth: 200,
+          }
+        }}
+      >
+        <MenuItem onClick={() => setAnchorEl(null)}>
+          <ListItemIcon>
+            <Email fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Enviar Email</ListItemText>
+        </MenuItem>
+        <MenuItem onClick={() => setAnchorEl(null)}>
+          <ListItemIcon>
+            <Star fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Marcar Favorito</ListItemText>
+        </MenuItem>
+        <MenuItem onClick={() => setAnchorEl(null)}>
+          <ListItemIcon>
+            <Archive fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Archivar</ListItemText>
+        </MenuItem>
+        <Divider />
+        <MenuItem onClick={() => setAnchorEl(null)} sx={{ color: '#ef4444' }}>
+          <ListItemIcon>
+            <Delete fontSize="small" sx={{ color: '#ef4444' }} />
+          </ListItemIcon>
+          <ListItemText>Eliminar</ListItemText>
+        </MenuItem>
+      </Menu>
+
+      <Menu
+        anchorEl={bulkMenuAnchor}
+        open={Boolean(bulkMenuAnchor)}
+        onClose={() => setBulkMenuAnchor(null)}
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
+            border: '1px solid #f1f5f9',
+            minWidth: 200,
+          }
+        }}
+      >
+        <MenuItem onClick={() => handleBulkAction('archive')}>
+          <ListItemIcon>
+            <Archive fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Archivar Seleccionados</ListItemText>
+        </MenuItem>
+        <MenuItem onClick={() => handleBulkAction('activate')}>
+          <ListItemIcon>
+            <Restore fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Activar Seleccionados</ListItemText>
+        </MenuItem>
+        <MenuItem onClick={() => handleBulkAction('print')}>
+          <ListItemIcon>
+            <Print fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Imprimir Lista</ListItemText>
+        </MenuItem>
+        <Divider />
+        <MenuItem onClick={() => handleBulkAction('delete')} sx={{ color: '#ef4444' }}>
+          <ListItemIcon>
+            <Delete fontSize="small" sx={{ color: '#ef4444' }} />
+          </ListItemIcon>
+          <ListItemText>Eliminar Seleccionados</ListItemText>
+        </MenuItem>
+      </Menu>
+
+      {/* Floating Action Button */}
+      <Zoom in={selectedMembers.length === 0}>
+        <Fab
+          color="primary"
+          onClick={onAdd}
+          sx={{
+            position: 'fixed',
+            bottom: 24,
+            right: 24,
+            background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+            boxShadow: '0 8px 32px rgba(99, 102, 241, 0.3)',
+            '&:hover': {
+              background: 'linear-gradient(135deg, #5b21b6 0%, #7c3aed 100%)',
+              transform: 'scale(1.1)',
+              boxShadow: '0 12px 40px rgba(99, 102, 241, 0.4)',
+            },
+            transition: 'all 0.3s ease'
+          }}
+        >
+          <Add />
+        </Fab>
+      </Zoom>
+    </motion.div>
+  );
+};

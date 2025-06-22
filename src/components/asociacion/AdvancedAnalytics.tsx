@@ -27,24 +27,10 @@ import {
   Speed,
   Star,
   Timeline,
-} from '@mui/icons-material';
-import {
-  LineChart,
-  Line,
-  AreaChart,
-  Area,
   BarChart,
-  Bar,
+  ShowChart,
   PieChart,
-  Pie,
-  Cell,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-} from 'recharts';
+} from '@mui/icons-material';
 import { Socio, SocioStats } from '@/types/socio';
 
 interface AdvancedAnalyticsProps {
@@ -226,36 +212,158 @@ const MetricCard: React.FC<MetricCardProps> = ({
   );
 };
 
-const CustomTooltip = ({ active, payload, label }: any) => {
-  if (active && payload && payload.length) {
-    return (
-      <Card
-        elevation={0}
-        sx={{
-          p: 2,
-          border: '1px solid #e2e8f0',
-          borderRadius: 3,
-          bgcolor: 'rgba(255, 255, 255, 0.95)',
-          backdropFilter: 'blur(10px)',
-          boxShadow: '0 10px 40px rgba(0,0,0,0.1)'
-        }}
-      >
-        <Typography variant="body2" sx={{ fontWeight: 700, color: '#1e293b', mb: 1 }}>
-          {label}
-        </Typography>
-        {payload.map((entry: any, index: number) => (
-          <Typography
-            key={index}
-            variant="body2"
-            sx={{ color: entry.color, fontWeight: 600 }}
-          >
-            {entry.name}: {entry.value}
-          </Typography>
-        ))}
-      </Card>
-    );
-  }
-  return null;
+const SimpleChart: React.FC<{ 
+  title: string; 
+  data: any[]; 
+  color: string; 
+  type: 'bar' | 'line' | 'pie';
+  icon: React.ReactNode;
+}> = ({ title, data, color, type, icon }) => {
+  const maxValue = Math.max(...data.map(d => d.value || 0));
+  
+  return (
+    <Card
+      elevation={0}
+      sx={{
+        border: '1px solid #f1f5f9',
+        borderRadius: 6,
+        overflow: 'hidden',
+        background: 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
+        height: '100%',
+      }}
+    >
+      <CardContent sx={{ p: 4 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 4 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Avatar
+              sx={{
+                width: 40,
+                height: 40,
+                bgcolor: alpha(color, 0.1),
+                color: color,
+                borderRadius: 2,
+              }}
+            >
+              {icon}
+            </Avatar>
+            <Box>
+              <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', mb: 0.5 }}>
+                {title}
+              </Typography>
+              <Typography variant="body2" sx={{ color: '#64748b' }}>
+                Datos en tiempo real
+              </Typography>
+            </Box>
+          </Box>
+          <Chip
+            label={type.toUpperCase()}
+            sx={{
+              bgcolor: alpha(color, 0.1),
+              color: color,
+              fontWeight: 600,
+              fontSize: '0.7rem',
+            }}
+          />
+        </Box>
+        
+        {type === 'bar' && (
+          <Box sx={{ height: 200 }}>
+            <Stack spacing={2}>
+              {data.map((item, index) => (
+                <Box key={index}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                    <Typography variant="body2" sx={{ fontWeight: 600, color: '#475569' }}>
+                      {item.name || item.category || item.month}
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 700, color: '#1e293b' }}>
+                      {item.value}
+                    </Typography>
+                  </Box>
+                  <LinearProgress
+                    variant="determinate"
+                    value={(item.value / maxValue) * 100}
+                    sx={{
+                      height: 8,
+                      borderRadius: 4,
+                      bgcolor: alpha(color, 0.1),
+                      '& .MuiLinearProgress-bar': {
+                        bgcolor: color,
+                        borderRadius: 4,
+                      }
+                    }}
+                  />
+                </Box>
+              ))}
+            </Stack>
+          </Box>
+        )}
+
+        {type === 'pie' && (
+          <Box sx={{ height: 200 }}>
+            <Stack spacing={2}>
+              {data.map((item, index) => (
+                <Box key={index} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Box
+                      sx={{
+                        width: 12,
+                        height: 12,
+                        borderRadius: '50%',
+                        bgcolor: item.color || color,
+                      }}
+                    />
+                    <Typography variant="body2" sx={{ fontWeight: 600, color: '#475569' }}>
+                      {item.name}
+                    </Typography>
+                  </Box>
+                  <Typography variant="body2" sx={{ fontWeight: 700, color: '#1e293b' }}>
+                    {item.value}
+                  </Typography>
+                </Box>
+              ))}
+            </Stack>
+          </Box>
+        )}
+
+        {type === 'line' && (
+          <Box sx={{ height: 200, display: 'flex', alignItems: 'end', gap: 1, px: 2 }}>
+            {data.map((item, index) => (
+              <Box
+                key={index}
+                sx={{
+                  flex: 1,
+                  height: `${(item.value / maxValue) * 100}%`,
+                  bgcolor: alpha(color, 0.7),
+                  borderRadius: '4px 4px 0 0',
+                  minHeight: 4,
+                  position: 'relative',
+                  '&:hover': {
+                    bgcolor: color,
+                  },
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                <Typography
+                  variant="caption"
+                  sx={{
+                    position: 'absolute',
+                    bottom: -20,
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    fontSize: '0.7rem',
+                    color: '#94a3b8',
+                    fontWeight: 600,
+                  }}
+                >
+                  {item.month || item.name}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+        )}
+      </CardContent>
+    </Card>
+  );
 };
 
 export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
@@ -270,9 +378,7 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
     const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'];
     return months.map((month, index) => ({
       month,
-      nuevos: Math.floor(Math.random() * 20) + 5,
-      activos: Math.floor(Math.random() * 50) + 30,
-      vencidos: Math.floor(Math.random() * 10) + 2,
+      value: Math.floor(Math.random() * 50) + 10,
     }));
   }, []);
 
@@ -487,85 +593,13 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
             >
-              <Card
-                elevation={0}
-                sx={{
-                  border: '1px solid #f1f5f9',
-                  borderRadius: 6,
-                  overflow: 'hidden',
-                  background: 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
-                }}
-              >
-                <CardContent sx={{ p: 4 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 4 }}>
-                    <Box>
-                      <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', mb: 0.5 }}>
-                        Tendencias Mensuales
-                      </Typography>
-                      <Typography variant="body2" sx={{ color: '#64748b' }}>
-                        Evolución de miembros en los últimos 6 meses
-                      </Typography>
-                    </Box>
-                    <Chip
-                      icon={<Timeline />}
-                      label="Últimos 6 meses"
-                      sx={{
-                        bgcolor: alpha('#6366f1', 0.1),
-                        color: '#6366f1',
-                        fontWeight: 600,
-                      }}
-                    />
-                  </Box>
-                  
-                  <Box sx={{ height: 300 }}>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={monthlyData}>
-                        <defs>
-                          <linearGradient id="colorNuevos" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3}/>
-                            <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
-                          </linearGradient>
-                          <linearGradient id="colorActivos" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
-                            <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                        <XAxis 
-                          dataKey="month" 
-                          axisLine={false}
-                          tickLine={false}
-                          tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 600 }}
-                        />
-                        <YAxis 
-                          axisLine={false}
-                          tickLine={false}
-                          tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 600 }}
-                        />
-                        <Tooltip content={<CustomTooltip />} />
-                        <Area
-                          type="monotone"
-                          dataKey="nuevos"
-                          stroke="#6366f1"
-                          strokeWidth={3}
-                          fillOpacity={1}
-                          fill="url(#colorNuevos)"
-                          name="Nuevos Miembros"
-                        />
-                        <Area
-                          type="monotone"
-                          dataKey="activos"
-                          stroke="#10b981"
-                          strokeWidth={3}
-                          fillOpacity={1}
-                          fill="url(#colorActivos)"
-                          name="Miembros Activos"
-                        />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </Box>
-                </CardContent>
-              </Card>
+              <SimpleChart
+                title="Tendencias Mensuales"
+                data={monthlyData}
+                color="#6366f1"
+                type="line"
+                icon={<ShowChart />}
+              />
             </motion.div>
           </Grid>
 
@@ -576,71 +610,13 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.5 }}
             >
-              <Card
-                elevation={0}
-                sx={{
-                  border: '1px solid #f1f5f9',
-                  borderRadius: 6,
-                  overflow: 'hidden',
-                  background: 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
-                  height: '100%',
-                }}
-              >
-                <CardContent sx={{ p: 4 }}>
-                  <Box sx={{ mb: 4 }}>
-                    <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', mb: 0.5 }}>
-                      Distribución de Estados
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: '#64748b' }}>
-                      Composición actual de miembros
-                    </Typography>
-                  </Box>
-                  
-                  <Box sx={{ height: 200, mb: 3 }}>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={statusData}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={40}
-                          outerRadius={80}
-                          paddingAngle={5}
-                          dataKey="value"
-                        >
-                          {statusData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                          ))}
-                        </Pie>
-                        <Tooltip content={<CustomTooltip />} />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </Box>
-
-                  <Stack spacing={2}>
-                    {statusData.map((item, index) => (
-                      <Box key={index} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                          <Box
-                            sx={{
-                              width: 12,
-                              height: 12,
-                              borderRadius: '50%',
-                              bgcolor: item.color,
-                            }}
-                          />
-                          <Typography variant="body2" sx={{ fontWeight: 600, color: '#475569' }}>
-                            {item.name}
-                          </Typography>
-                        </Box>
-                        <Typography variant="body2" sx={{ fontWeight: 700, color: '#1e293b' }}>
-                          {item.value}
-                        </Typography>
-                      </Box>
-                    ))}
-                  </Stack>
-                </CardContent>
-              </Card>
+              <SimpleChart
+                title="Distribución de Estados"
+                data={statusData}
+                color="#10b981"
+                type="pie"
+                icon={<PieChart />}
+              />
             </motion.div>
           </Grid>
 
@@ -651,62 +627,13 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.6 }}
             >
-              <Card
-                elevation={0}
-                sx={{
-                  border: '1px solid #f1f5f9',
-                  borderRadius: 6,
-                  overflow: 'hidden',
-                  background: 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
-                }}
-              >
-                <CardContent sx={{ p: 4 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 4 }}>
-                    <Box>
-                      <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', mb: 0.5 }}>
-                        Niveles de Engagement
-                      </Typography>
-                      <Typography variant="body2" sx={{ color: '#64748b' }}>
-                        Distribución de la participación de miembros
-                      </Typography>
-                    </Box>
-                    <Chip
-                      label="Análisis Comportamental"
-                      sx={{
-                        bgcolor: alpha('#8b5cf6', 0.1),
-                        color: '#8b5cf6',
-                        fontWeight: 600,
-                      }}
-                    />
-                  </Box>
-                  
-                  <Box sx={{ height: 250 }}>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={engagementData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                        <XAxis 
-                          dataKey="category" 
-                          axisLine={false}
-                          tickLine={false}
-                          tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 600 }}
-                        />
-                        <YAxis 
-                          axisLine={false}
-                          tickLine={false}
-                          tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 600 }}
-                        />
-                        <Tooltip content={<CustomTooltip />} />
-                        <Bar 
-                          dataKey="value" 
-                          fill="#8b5cf6"
-                          radius={[4, 4, 0, 0]}
-                          name="Miembros"
-                        />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </Box>
-                </CardContent>
-              </Card>
+              <SimpleChart
+                title="Niveles de Engagement"
+                data={engagementData}
+                color="#8b5cf6"
+                type="bar"
+                icon={<BarChart />}
+              />
             </motion.div>
           </Grid>
         </Grid>
