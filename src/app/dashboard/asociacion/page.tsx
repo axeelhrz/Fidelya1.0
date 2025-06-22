@@ -681,7 +681,7 @@ export default function AsociacionDashboard() {
                       }}
                     >
                       <Badge badgeContent={3} color="error">
-                          <Notifications sx={{ fontSize: 24 }} />
+                        <Notifications sx={{ fontSize: 24 }} />
                       </Badge>
                     </IconButton>
                   </Tooltip>
@@ -869,4 +869,3 @@ export default function AsociacionDashboard() {
     </Box>
   );
 }
-              
