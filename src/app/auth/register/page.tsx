@@ -10,7 +10,6 @@ import {
   CardContent,
   Stack,
   Divider,
-  useTheme,
   alpha,
   IconButton,
 } from '@mui/material';
@@ -25,7 +24,6 @@ import {
 import Link from 'next/link';
 
 const RegisterPage = () => {
-  const theme = useTheme();
 
   const roles = [
     {
@@ -181,7 +179,7 @@ const RegisterPage = () => {
           <CardContent sx={{ p: 5 }}>
             {/* Role Cards */}
             <Stack spacing={3} sx={{ mb: 5 }}>
-              {roles.map((role, index) => (
+              {roles.map((role) => (
                 <Box
                   key={role.id}
                   component={Link}

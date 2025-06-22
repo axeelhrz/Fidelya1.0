@@ -8,7 +8,6 @@ import {
   Typography,
   Button,
   Avatar,
-  useTheme,
   alpha,
 } from '@mui/material';
 import {
@@ -17,12 +16,19 @@ import {
   Analytics,
   Group,
   Upload,
-  AutoGraph,
 } from '@mui/icons-material';
 import { toast } from 'react-hot-toast';
 import { useSocios } from '@/hooks/useSocios';
 import { useAuth } from '@/hooks/useAuth';
 import { Socio, SocioFormData } from '@/types/socio';
+
+type Stats = {
+  total: number;
+  activos: number;
+  vencidos: number;
+  inactivos: number;
+  [key: string]: number | undefined;
+};
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { OverviewDashboard } from '@/components/asociacion/OverviewDashboard';
 import { AdvancedAnalytics } from '@/components/asociacion/AdvancedAnalytics';
@@ -65,7 +71,8 @@ const LoadingScreen: React.FC<{ message: string }> = ({ message }) => (
               },
             }}
           />
-        </Box>
+          </Box>
+        );
         <Typography variant="h4" sx={{ fontWeight: 900, color: '#0f172a', mb: 2 }}>
           Cargando Dashboard Ejecutivo
         </Typography>
@@ -111,18 +118,18 @@ const AccessDeniedScreen: React.FC = () => (
           </Typography>
           <Typography variant="h6" sx={{ color: '#64748b', mb: 4, maxWidth: 400, mx: 'auto' }}>
             Necesitas permisos de asociación para acceder a este dashboard ejecutivo.
-          </Typography>
-        </Box>
-      </motion.div>
-    </Container>
-  </Box>
-);
+            </Typography>
+          </Box>
+        </motion.div>
+      </Container>
+    </Box>
+  );
 
 // Componente para cada sección del dashboard
 const DashboardSection: React.FC<{ 
   section: string; 
   socios: Socio[];
-  stats: any;
+  stats: Stats;
   loading: boolean;
   onAddSocio: () => void;
   onEditSocio: (socio: Socio) => void;
@@ -141,7 +148,6 @@ const DashboardSection: React.FC<{
   onDeleteSocio, 
   onBulkAction,
   onCsvImport,
-  onExport,
   onNavigate
 }) => {
   
@@ -475,7 +481,7 @@ export default function AsociacionDashboard() {
   };
 
   const handleBulkAction = async (action: string, selectedIds: string[]) => {
-    toast.info(`Acción "${action}" aplicada a ${selectedIds.length} miembros`);
+    toast(`Acción "${action}" aplicada a ${selectedIds.length} miembros`);
   };
 
   const exportToCsv = () => {
@@ -558,7 +564,7 @@ export default function AsociacionDashboard() {
         open={deleteDialog.open}
         onClose={() => setDeleteDialog({ open: false })}
         onConfirm={handleConfirmDelete}
-        socio={deleteDialog.socio}
+        socio={deleteDialog.socio ?? null}
         loading={actionLoading}
       />
 

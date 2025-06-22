@@ -8,8 +8,6 @@ import {
   Button,
   Stack,
   Chip,
-  useTheme,
-  alpha,
 } from '@mui/material';
 import {
   ArrowForward,
@@ -18,7 +16,6 @@ import {
 import Link from 'next/link';
 
 const HomePage = () => {
-  const theme = useTheme();
 
   return (
     <Box 

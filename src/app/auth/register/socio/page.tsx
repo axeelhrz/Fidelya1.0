@@ -16,7 +16,6 @@ import {
   IconButton,
   Alert,
   InputAdornment,
-  useTheme,
   alpha,
   Paper,
   Grid,
@@ -31,7 +30,6 @@ import {
   ArrowForward,
   People,
   Star,
-  CardGiftcard,
   Security,
   Verified,
   LocalOffer,
@@ -41,7 +39,6 @@ import { baseRegisterSchema, type BaseRegisterFormData } from '@/lib/validations
 import { createUser, getDashboardRoute } from '@/lib/auth';
 
 const SocioRegisterPage = () => {
-  const theme = useTheme();
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -68,9 +65,13 @@ const SocioRegisterPage = () => {
       
       const dashboardRoute = getDashboardRoute(userData.role);
       router.push(dashboardRoute);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      let message = 'Ha ocurrido un error. Inténtalo de nuevo.';
+      if (error && typeof error === 'object' && 'message' in error && typeof (error as { message?: string }).message === 'string') {
+        message = (error as { message: string }).message;
+      }
       setError('root', {
-        message: error.message || 'Ha ocurrido un error. Inténtalo de nuevo.',
+        message,
       });
     } finally {
       setIsSubmitting(false);

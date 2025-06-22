@@ -16,7 +16,6 @@ import {
   IconButton,
   Alert,
   InputAdornment,
-  useTheme,
   alpha,
   Paper,
   Grid,
@@ -29,7 +28,6 @@ import {
   ArrowBack,
   Visibility,
   VisibilityOff,
-  ArrowForward,
   Login,
   PersonAdd,
   Shield,
@@ -45,7 +43,6 @@ import { loginSchema, type LoginFormData } from '@/lib/validations/auth';
 import { signIn, resetPassword, getDashboardRoute } from '@/lib/auth';
 
 const LoginPage = () => {
-  const theme = useTheme();
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -75,7 +72,7 @@ const LoginPage = () => {
       
       const dashboardRoute = getDashboardRoute(userData.role);
       router.push(dashboardRoute);
-    } catch (error: any) {
+    } catch (error: unknown) {
       let message = 'Ha ocurrido un error. Inténtalo de nuevo.';
       
       if (error && typeof error === 'object' && 'code' in error) {
@@ -102,8 +99,13 @@ const LoginPage = () => {
               message = firebaseError.message;
             }
         }
-      } else if (error?.message) {
-        message = error.message;
+      } else if (
+        typeof error === 'object' &&
+        error !== null &&
+        'message' in error &&
+        typeof (error as { message?: unknown }).message === 'string'
+      ) {
+        message = (error as { message: string }).message;
       }
       
       setError('root', { message });
@@ -129,8 +131,13 @@ const LoginPage = () => {
       toast.success('Enlace de recuperación enviado a tu email');
       setShowForgotPassword(false);
       setResetEmail('');
-    } catch (error: any) {
-      if (error.code === 'auth/user-not-found') {
+    } catch (error: unknown) {
+      if (
+        typeof error === 'object' &&
+        error !== null &&
+        'code' in error &&
+        (error as { code?: unknown }).code === 'auth/user-not-found'
+      ) {
         toast.error('No existe una cuenta con este email');
       } else {
         toast.error('Error al enviar el enlace de recuperación');

@@ -16,7 +16,6 @@ import {
   IconButton,
   Alert,
   InputAdornment,
-  useTheme,
   alpha,
   Paper,
 } from '@mui/material';
@@ -37,7 +36,6 @@ import { comercioRegisterSchema, type ComercioRegisterFormData } from '@/lib/val
 import { createUser, getDashboardRoute } from '@/lib/auth';
 
 const ComercioRegisterPage = () => {
-  const theme = useTheme();
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -64,9 +62,13 @@ const ComercioRegisterPage = () => {
       
       const dashboardRoute = getDashboardRoute(userData.role);
       router.push(dashboardRoute);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      let message = 'Ha ocurrido un error. Inténtalo de nuevo.';
+      if (error instanceof Error) {
+        message = error.message;
+      }
       setError('root', {
-        message: error.message || 'Ha ocurrido un error. Inténtalo de nuevo.',
+        message,
       });
     } finally {
       setIsSubmitting(false);

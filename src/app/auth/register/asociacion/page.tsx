@@ -16,7 +16,6 @@ import {
   IconButton,
   Alert,
   InputAdornment,
-  useTheme,
   alpha,
   Paper,
   Grid,
@@ -41,7 +40,6 @@ import { asociacionRegisterSchema, type AsociacionRegisterFormData } from '@/lib
 import { createUser, getDashboardRoute } from '@/lib/auth';
 
 const AsociacionRegisterPage = () => {
-  const theme = useTheme();
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -68,9 +66,13 @@ const AsociacionRegisterPage = () => {
       
       const dashboardRoute = getDashboardRoute(userData.role);
       router.push(dashboardRoute);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : 'Ha ocurrido un error. Inténtalo de nuevo.';
       setError('root', {
-        message: error.message || 'Ha ocurrido un error. Inténtalo de nuevo.',
+        message: errorMessage,
       });
     } finally {
       setIsSubmitting(false);

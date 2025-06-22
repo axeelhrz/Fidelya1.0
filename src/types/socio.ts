@@ -30,4 +30,5 @@ export interface SocioStats {
   activos: number;
   vencidos: number;
   inactivos: number;
+  [key: string]: number | undefined;
 }
