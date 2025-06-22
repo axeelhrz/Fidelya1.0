@@ -13,32 +13,21 @@ import {
   Download,
   Bell,
   AlertTriangle,
-  CheckCircle,
   Info,
-  Settings,
   Clock,
   Calendar,
   Star,
   Zap,
-  ChevronRight,
   BarChart2,
   Database,
   Users,
   Activity,
   Shield,
-  Briefcase,
-  PieChart,
-  LineChart,
   ArrowUpRight,
   ArrowDownRight,
   Minus,
   RefreshCw,
-  Filter,
   Eye,
-  Plus,
-  Maximize2,
-  FileText,
-  TrendingDown
 } from 'lucide-react';
 
 import TabNavigation from '@/components/dashboard/TabNavigation';
@@ -48,9 +37,9 @@ import ClinicalPanel from '@/components/dashboard/ClinicalPanel';
 import CommercialPanel from '@/components/dashboard/CommercialPanel';
 import AlertsTasksDock from '@/components/dashboard/AlertsTasksDock';
 import AIInsightsFooter from '@/components/dashboard/AIInsightsFooter';
-import { useKPIMetrics, useAlerts, useTasks, useFinancialMetrics, useClinicalMetrics } from '@/hooks/useDashboardData';
+import { useKPIMetrics, useAlerts, useTasks } from '@/hooks/useDashboardData';
 import { useAuth } from '@/contexts/AuthContext';
-import { collection, doc, onSnapshot, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 // Interfaces mejoradas
@@ -109,10 +98,8 @@ export default function CEODashboard() {
   
   // Hooks de datos
   const { metrics: kpiMetrics, loading: kpiLoading } = useKPIMetrics();
-  const { alerts, loading: alertsLoading } = useAlerts();
-  const { tasks, loading: tasksLoading } = useTasks();
-  const { metrics: financialMetrics, loading: financialLoading } = useFinancialMetrics();
-  const { metrics: clinicalMetrics, loading: clinicalLoading } = useClinicalMetrics();
+  const { alerts } = useAlerts();
+  const { tasks } = useTasks();
 
   // Cargar estadísticas del dashboard desde Firebase
   useEffect(() => {
@@ -124,7 +111,6 @@ export default function CEODashboard() {
         
         // Cargar pacientes
         const patientsSnapshot = await getDocs(collection(db, 'centers', user.centerId, 'patients'));
-        const totalPatients = patientsSnapshot.size;
         const activePatients = patientsSnapshot.docs.filter(doc => doc.data().status === 'active').length;
 
         // Cargar terapeutas
@@ -1086,7 +1072,7 @@ export default function CEODashboard() {
       visible: { 
         opacity: 1, 
         y: 0,
-        transition: { duration: 0.6, ease: [0.4, 0, 0.2, 1] }
+        transition: { duration: 0.6, ease: "easeOut" }
       },
       exit: { 
         opacity: 0, 
