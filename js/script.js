@@ -108,7 +108,7 @@ const translationData = {
         'nav-features': 'Características',
         'nav-videos': 'Videos',
         'nav-faq': 'FAQ',
-        'nav-contact': 'Contactos',
+        'nav-contact': 'Contacto',
         'nav-cta': 'Comienza tu prueba gratuita',
         // Hero Section
         'hero-badge': 'Next-Gen Amazon Flex Revolution',
@@ -787,13 +787,13 @@ function updateLanguageSwitcher() {
         const optionLang = option.getAttribute('data-lang');
         if (optionLang === currentLanguage) {
             option.classList.add('active');
-        } else {
+                } else {
             option.classList.remove('active');
         }
     });
 }
 
-// ===== FUNCIONES DEL BOTÓN FLOTANTE (ACTUALIZADO SIN IDIOMA) =====
+// ===== FUNCIONES DEL BOTÓN FLOTANTE (ACTUALIZADO CON ÍCONO DE MENSAJE) =====
 function initializeFloatingWidget() {
     const floatingMainBtn = document.getElementById('floating-main-btn');
     const floatingMenu = document.getElementById('floating-menu');
@@ -1184,13 +1184,13 @@ function initializeNavigation() {
                 closeMobileMenu();
             }
             
-            // Scroll suave a la sección inicio
-            const inicioSection = document.querySelector('#inicio');
-            if (inicioSection) {
-                smoothScrollToSection(inicioSection);
+            // Scroll suave a la sección home (actualizado)
+            const homeSection = document.querySelector('#home');
+            if (homeSection) {
+                smoothScrollToSection(homeSection);
                 
                 // Actualizar enlace activo
-                const homeLink = document.querySelector('.nav__link[href="#inicio"]');
+                const homeLink = document.querySelector('.nav__link[href="#home"]');
                 if (homeLink) {
                     updateActiveNavLink(homeLink);
                 }
