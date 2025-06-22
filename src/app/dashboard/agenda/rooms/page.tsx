@@ -11,20 +11,13 @@ import {
   MapPin,
   Users,
   Settings,
-  Wifi,
   WifiOff,
   AlertTriangle,
   CheckCircle,
   Clock,
-  Calendar,
   Search,
-  Filter,
   Download,
   Upload,
-  MoreVertical,
-  Maximize2,
-  Minimize2,
-  Activity,
   Zap,
   Shield,
   Camera,
@@ -36,7 +29,6 @@ import {
   Coffee,
   Gamepad2,
   BookOpen,
-  Heart,
   Star,
   TrendingUp,
   BarChart3,
@@ -45,16 +37,12 @@ import {
   X,
   Save,
   RefreshCw,
-  AlertCircle,
-  Info,
-  ChevronDown,
-  ChevronRight,
   Grid3X3,
   List,
   SortAsc,
   SortDesc,
 } from 'lucide-react';
-import { ConsultingRoom, Appointment, Therapist } from '@/types/dashboard';
+import { ConsultingRoom, Therapist } from '@/types/dashboard';
 
 interface RoomUsageStats {
   roomId: string;
@@ -110,7 +98,6 @@ export default function RoomsPage() {
   const [roomStats, setRoomStats] = useState<RoomUsageStats[]>([]);
   const [maintenanceRecords, setMaintenanceRecords] = useState<MaintenanceRecord[]>([]);
   const [therapists, setTherapists] = useState<Therapist[]>([]);
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
   
   // UI State
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -1397,7 +1384,7 @@ export default function RoomsPage() {
             {/* Status filter */}
             <select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as any)}
+              onChange={(e) => setStatusFilter(e.target.value as 'all' | 'available' | 'occupied' | 'maintenance')}
               style={{
                 padding: '0.75rem 1rem',
                 borderRadius: '0.75rem',
@@ -1416,7 +1403,7 @@ export default function RoomsPage() {
             {/* Sort */}
             <select
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as any)}
+              onChange={(e) => setSortBy(e.target.value as 'name' | 'capacity' | 'utilization' | 'revenue')}
               style={{
                 padding: '0.75rem 1rem',
                 borderRadius: '0.75rem',
@@ -1426,4 +1413,2220 @@ export default function RoomsPage() {
                 minWidth: '150px'
               }}
             >
+                              <option value="name">Nombre</option>
+              <option value="capacity">Capacidad</option>
+              <option value="utilization">Utilización</option>
+              <option value="revenue">Ingresos</option>
+            </select>
+
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+              style={{
+                padding: '0.75rem',
+                backgroundColor: '#F3F4F6',
+                border: 'none',
+                borderRadius: '0.75rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              {sortOrder === 'asc' ? <SortAsc size={18} color="#374151" /> : <SortDesc size={18} color="#374151" />}
+            </motion.button>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            {/* View mode toggle */}
+            <div style={{
+              display: 'flex',
+              backgroundColor: '#F3F4F6',
+              borderRadius: '0.75rem',
+              padding: '0.25rem'
+            }}>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setViewMode('grid')}
+                style={{
+                  padding: '0.75rem',
+                  backgroundColor: viewMode === 'grid' ? 'white' : 'transparent',
+                  color: viewMode === 'grid' ? '#2563EB' : '#6B7280',
+                  border: 'none',
+                  borderRadius: '0.5rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: viewMode === 'grid' ? '0 1px 2px rgba(0, 0, 0, 0.05)' : 'none'
+                }}
+              >
+                <Grid3X3 size={18} />
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setViewMode('list')}
+                style={{
+                  padding: '0.75rem',
+                  backgroundColor: viewMode === 'list' ? 'white' : 'transparent',
+                  color: viewMode === 'list' ? '#2563EB' : '#6B7280',
+                  border: 'none',
+                  borderRadius: '0.5rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: viewMode === 'list' ? '0 1px 2px rgba(0, 0, 0, 0.05)' : 'none'
+                }}
+              >
+                <List size={18} />
+              </motion.button>
+            </div>
+
+            {/* Export and import buttons */}
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              style={{
+                padding: '0.75rem',
+                backgroundColor: '#F3F4F6',
+                border: 'none',
+                borderRadius: '0.75rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              <Download size={18} color="#374151" />
+            </motion.button>
+
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              style={{
+                padding: '0.75rem',
+                backgroundColor: '#F3F4F6',
+                border: 'none',
+                borderRadius: '0.75rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              <Upload size={18} color="#374151" />
+            </motion.button>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Main content */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+      >
+        {viewMode === 'grid' ? (
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))',
+            gap: '2rem'
+          }}>
+            {sortedRooms.map(room => renderRoomCard(room))}
+          </div>
+        ) : (
+          renderRoomList()
+        )}
+
+        {sortedRooms.length === 0 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            style={{
+              textAlign: 'center',
+              padding: '4rem',
+              backgroundColor: 'white',
+              borderRadius: '1rem',
+              border: '1px solid #E5E7EB'
+            }}
+          >
+            <Home size={64} color="#D1D5DB" style={{ marginBottom: '1rem' }} />
+            <h3 style={{
+              fontSize: '1.5rem',
+              fontWeight: 600,
+              color: '#374151',
+              marginBottom: '0.5rem',
+              fontFamily: 'Space Grotesk, sans-serif'
+            }}>
+              No se encontraron consultorios
+            </h3>
+            <p style={{
+              fontSize: '1rem',
+              color: '#6B7280',
+              marginBottom: '2rem',
+              fontFamily: 'Inter, sans-serif'
+            }}>
+              {searchQuery || statusFilter !== 'all' 
+                ? 'Intenta ajustar los filtros de búsqueda'
+                : 'Comienza creando tu primer consultorio'
+              }
+            </p>
+            {!searchQuery && statusFilter === 'all' && (
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => openModal('create')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '1rem 2rem',
+                  backgroundColor: '#2563EB',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '0.75rem',
+                  fontSize: '1rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  margin: '0 auto',
+                  fontFamily: 'Inter, sans-serif'
+                }}
+              >
+                <Plus size={20} />
+                Crear Primer Consultorio
+              </motion.button>
+            )}
+          </motion.div>
+        )}
+      </motion.div>
+
+      {/* Modal */}
+      <AnimatePresence>
+        {isModalOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
+              backdropFilter: 'blur(8px)',
+              zIndex: 50,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '2rem'
+            }}
+            onClick={closeModal}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                backgroundColor: 'white',
+                borderRadius: '1.5rem',
+                maxWidth: '800px',
+                width: '100%',
+                maxHeight: '90vh',
+                overflow: 'hidden',
+                boxShadow: '0 25px 50px rgba(0, 0, 0, 0.25)'
+              }}
+            >
+              {/* Modal Header */}
+              <div style={{
+                padding: '2rem 2rem 1rem 2rem',
+                borderBottom: '1px solid #E5E7EB',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between'
+              }}>
+                <div>
+                  <h2 style={{
+                    fontSize: '1.5rem',
+                    fontWeight: 700,
+                    color: '#1F2937',
+                    margin: 0,
+                    fontFamily: 'Space Grotesk, sans-serif'
+                  }}>
+                    {modalType === 'create' ? 'Nuevo Consultorio' :
+                     modalType === 'edit' ? 'Editar Consultorio' :
+                     modalType === 'maintenance' ? 'Programar Mantenimiento' :
+                     'Detalles del Consultorio'}
+                  </h2>
+                  <p style={{
+                    fontSize: '0.875rem',
+                    color: '#6B7280',
+                    margin: '0.5rem 0 0 0',
+                    fontFamily: 'Inter, sans-serif'
+                  }}>
+                    {modalType === 'create' ? 'Configura un nuevo espacio terapéutico' :
+                     modalType === 'edit' ? 'Modifica la configuración del consultorio' :
+                     modalType === 'maintenance' ? 'Programa tareas de mantenimiento' :
+                     'Información completa y estadísticas'}
+                  </p>
+                </div>
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={closeModal}
+                  style={{
+                    padding: '0.5rem',
+                    backgroundColor: '#F3F4F6',
+                    border: 'none',
+                    borderRadius: '0.75rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  <X size={20} color="#6B7280" />
+                </motion.button>
+              </div>
+
+              {/* Modal Content */}
+              <div style={{
+                padding: '2rem',
+                maxHeight: 'calc(90vh - 140px)',
+                overflowY: 'auto'
+              }}>
+                {modalType === 'view' && selectedRoom && (
+                  <div>
+                    {/* Tabs for view mode */}
+                    <div style={{
+                      display: 'flex',
+                      gap: '0.5rem',
+                      marginBottom: '2rem',
+                      backgroundColor: '#F3F4F6',
+                      borderRadius: '0.75rem',
+                      padding: '0.25rem'
+                    }}>
+                      {[
+                        { id: 'overview', label: 'Resumen', icon: Eye },
+                        { id: 'maintenance', label: 'Mantenimiento', icon: Settings },
+                        { id: 'analytics', label: 'Análisis', icon: BarChart3 }
+                      ].map(tab => (
+                        <motion.button
+                          key={tab.id}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => setSelectedTab(tab.id as 'overview' | 'maintenance' | 'analytics')}
+                          style={{
+                            flex: 1,
+                            padding: '0.75rem 1rem',
+                            backgroundColor: selectedTab === tab.id ? 'white' : 'transparent',
+                            color: selectedTab === tab.id ? '#2563EB' : '#6B7280',
+                            border: 'none',
+                            borderRadius: '0.5rem',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '0.5rem',
+                            fontSize: '0.875rem',
+                            fontWeight: 600,
+                            fontFamily: 'Inter, sans-serif',
+                            boxShadow: selectedTab === tab.id ? '0 1px 2px rgba(0, 0, 0, 0.05)' : 'none'
+                          }}
+                        >
+                          <tab.icon size={16} />
+                          {tab.label}
+                        </motion.button>
+                      ))}
+                    </div>
+
+                    {/* Tab content */}
+                    <AnimatePresence mode="wait">
+                      {selectedTab === 'overview' && (
+                        <motion.div
+                          key="overview"
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -20 }}
+                        >
+                          {/* Room overview content */}
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '2rem' }}>
+                            <div>
+                              <h3 style={{
+                                fontSize: '1.125rem',
+                                fontWeight: 600,
+                                color: '#1F2937',
+                                marginBottom: '1rem',
+                                fontFamily: 'Inter, sans-serif'
+                              }}>
+                                Información General
+                              </h3>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                <div>
+                                  <label style={{
+                                    fontSize: '0.875rem',
+                                    fontWeight: 600,
+                                    color: '#374151',
+                                    fontFamily: 'Inter, sans-serif'
+                                  }}>
+                                    Nombre
+                                  </label>
+                                  <div style={{
+                                    fontSize: '1rem',
+                                    color: '#1F2937',
+                                    fontFamily: 'Inter, sans-serif'
+                                  }}>
+                                    {selectedRoom.name}
+                                  </div>
+                                </div>
+                                <div>
+                                  <label style={{
+                                    fontSize: '0.875rem',
+                                    fontWeight: 600,
+                                    color: '#374151',
+                                    fontFamily: 'Inter, sans-serif'
+                                  }}>
+                                    Ubicación
+                                  </label>
+                                  <div style={{
+                                    fontSize: '1rem',
+                                    color: '#1F2937',
+                                    fontFamily: 'Inter, sans-serif'
+                                  }}>
+                                    {selectedRoom.location}
+                                  </div>
+                                </div>
+                                <div>
+                                  <label style={{
+                                    fontSize: '0.875rem',
+                                    fontWeight: 600,
+                                    color: '#374151',
+                                    fontFamily: 'Inter, sans-serif'
+                                  }}>
+                                    Capacidad
+                                  </label>
+                                  <div style={{
+                                    fontSize: '1rem',
+                                    color: '#1F2937',
+                                    fontFamily: 'Inter, sans-serif'
+                                  }}>
+                                    {selectedRoom.capacity} personas
+                                  </div>
+                                </div>
+                                <div>
+                                  <label style={{
+                                    fontSize: '0.875rem',
+                                    fontWeight: 600,
+                                    color: '#374151',
+                                    fontFamily: 'Inter, sans-serif'
+                                  }}>
+                                    Estado
+                                  </label>
+                                  <div style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.5rem',
+                                    marginTop: '0.25rem'
+                                  }}>
+                                    <span style={{
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: '0.5rem',
+                                      padding: '0.5rem 1rem',
+                                      borderRadius: '0.75rem',
+                                      fontSize: '0.875rem',
+                                      fontWeight: 600,
+                                      backgroundColor: getStatusBgColor(selectedRoom.status),
+                                      color: getStatusColor(selectedRoom.status),
+                                      fontFamily: 'Inter, sans-serif'
+                                    }}>
+                                      {getStatusIcon(selectedRoom.status)}
+                                      {getStatusText(selectedRoom.status)}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div>
+                              <h3 style={{
+                                fontSize: '1.125rem',
+                                fontWeight: 600,
+                                color: '#1F2937',
+                                marginBottom: '1rem',
+                                fontFamily: 'Inter, sans-serif'
+                              }}>
+                                Estadísticas
+                              </h3>
+                              {(() => {
+                                const stats = roomStats.find(s => s.roomId === selectedRoom.id);
+                                return stats ? (
+                                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                    <div style={{
+                                      padding: '1rem',
+                                      backgroundColor: '#EFF6FF',
+                                      borderRadius: '0.75rem'
+                                    }}>
+                                      <div style={{
+                                        fontSize: '1.5rem',
+                                        fontWeight: 700,
+                                        color: '#2563EB',
+                                        fontFamily: 'Space Grotesk, sans-serif'
+                                      }}>
+                                        {stats.utilizationRate}%
+                                      </div>
+                                      <div style={{
+                                        fontSize: '0.875rem',
+                                        color: '#1E40AF',
+                                        fontFamily: 'Inter, sans-serif'
+                                      }}>
+                                        Utilización
+                                      </div>
+                                    </div>
+                                    <div style={{
+                                      padding: '1rem',
+                                      backgroundColor: '#ECFDF5',
+                                      borderRadius: '0.75rem'
+                                    }}>
+                                      <div style={{
+                                        fontSize: '1.5rem',
+                                        fontWeight: 700,
+                                        color: '#10B981',
+                                        fontFamily: 'Space Grotesk, sans-serif'
+                                      }}>
+                                        €{stats.revenue.toLocaleString()}
+                                      </div>
+                                      <div style={{
+                                        fontSize: '0.875rem',
+                                        color: '#047857',
+                                        fontFamily: 'Inter, sans-serif'
+                                      }}>
+                                        Ingresos
+                                      </div>
+                                    </div>
+                                    <div style={{
+                                      padding: '1rem',
+                                      backgroundColor: '#FFFBEB',
+                                      borderRadius: '0.75rem'
+                                    }}>
+                                      <div style={{
+                                        fontSize: '1.5rem',
+                                        fontWeight: 700,
+                                        color: '#F59E0B',
+                                        fontFamily: 'Space Grotesk, sans-serif'
+                                      }}>
+                                        {stats.totalSessions}
+                                      </div>
+                                      <div style={{
+                                        fontSize: '0.875rem',
+                                        color: '#92400E',
+                                        fontFamily: 'Inter, sans-serif'
+                                      }}>
+                                        Sesiones
+                                      </div>
+                                    </div>
+                                    <div style={{
+                                      padding: '1rem',
+                                      backgroundColor: '#F3E8FF',
+                                      borderRadius: '0.75rem'
+                                    }}>
+                                      <div style={{
+                                        fontSize: '1.5rem',
+                                        fontWeight: 700,
+                                        color: '#8B5CF6',
+                                        fontFamily: 'Space Grotesk, sans-serif'
+                                      }}>
+                                        {stats.averageSessionDuration}min
+                                      </div>
+                                      <div style={{
+                                        fontSize: '0.875rem',
+                                        color: '#6B21A8',
+                                        fontFamily: 'Inter, sans-serif'
+                                      }}>
+                                        Duración promedio
+                                      </div>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div style={{
+                                    padding: '2rem',
+                                    textAlign: 'center',
+                                    color: '#9CA3AF'
+                                  }}>
+                                    <BarChart3 size={32} color="#D1D5DB" style={{ marginBottom: '0.5rem' }} />
+                                    <p style={{ fontSize: '0.875rem', fontFamily: 'Inter, sans-serif' }}>
+                                      No hay estadísticas disponibles
+                                    </p>
+                                  </div>
+                                );
+                              })()}
+                            </div>
+                          </div>
+
+                          {/* Equipment section */}
+                          <div style={{ marginBottom: '2rem' }}>
+                            <h3 style={{
+                              fontSize: '1.125rem',
+                              fontWeight: 600,
+                              color: '#1F2937',
+                              marginBottom: '1rem',
+                              fontFamily: 'Inter, sans-serif'
+                            }}>
+                              Equipamiento
+                            </h3>
+                            <div style={{
+                              display: 'grid',
+                              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                              gap: '1rem'
+                            }}>
+                              {selectedRoom.equipment.map((item, idx) => (
+                                <div
+                                  key={idx}
+                                  style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.75rem',
+                                    padding: '1rem',
+                                    backgroundColor: '#F9FAFB',
+                                    borderRadius: '0.75rem',
+                                    border: '1px solid #E5E7EB'
+                                  }}
+                                >
+                                  <div style={{
+                                    padding: '0.5rem',
+                                    backgroundColor: '#EFF6FF',
+                                    borderRadius: '0.5rem'
+                                  }}>
+                                    {getEquipmentIcon(item)}
+                                  </div>
+                                  <span style={{
+                                    fontSize: '0.875rem',
+                                    color: '#374151',
+                                    fontFamily: 'Inter, sans-serif'
+                                  }}>
+                                    {item}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Therapist usage */}
+                          {(() => {
+                            const stats = roomStats.find(s => s.roomId === selectedRoom.id);
+                            return stats && stats.therapistUsage.length > 0 && (
+                              <div>
+                                <h3 style={{
+                                  fontSize: '1.125rem',
+                                  fontWeight: 600,
+                                  color: '#1F2937',
+                                  marginBottom: '1rem',
+                                  fontFamily: 'Inter, sans-serif'
+                                }}>
+                                  Uso por Terapeuta
+                                </h3>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                  {stats.therapistUsage.map(usage => {
+                                    const therapist = therapists.find(t => t.id === usage.therapistId);
+                                    const percentage = (usage.hours / stats.totalHours) * 100;
+                                    return (
+                                      <div
+                                        key={usage.therapistId}
+                                        style={{
+                                          padding: '1rem',
+                                          backgroundColor: '#F9FAFB',
+                                          borderRadius: '0.75rem',
+                                          border: '1px solid #E5E7EB'
+                                        }}
+                                      >
+                                        <div style={{
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                          justifyContent: 'space-between',
+                                          marginBottom: '0.5rem'
+                                        }}>
+                                          <span style={{
+                                            fontSize: '0.875rem',
+                                            fontWeight: 600,
+                                            color: '#1F2937',
+                                            fontFamily: 'Inter, sans-serif'
+                                          }}>
+                                            {therapist ? `${therapist.firstName} ${therapist.lastName}` : 'Terapeuta desconocido'}
+                                          </span>
+                                          <span style={{
+                                            fontSize: '0.875rem',
+                                            color: '#6B7280',
+                                            fontFamily: 'Inter, sans-serif'
+                                          }}>
+                                            {usage.hours}h ({percentage.toFixed(1)}%)
+                                          </span>
+                                        </div>
+                                        <div style={{
+                                          width: '100%',
+                                          height: '6px',
+                                          backgroundColor: '#E5E7EB',
+                                          borderRadius: '3px',
+                                          overflow: 'hidden'
+                                        }}>
+                                          <motion.div
+                                            initial={{ width: 0 }}
+                                            animate={{ width: `${percentage}%` }}
+                                            transition={{ duration: 1, delay: 0.2 }}
+                                            style={{
+                                              height: '100%',
+                                              backgroundColor: '#2563EB',
+                                              borderRadius: '3px'
+                                            }}
+                                          />
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            );
+                          })()}
+                        </motion.div>
+                      )}
+
+                      {selectedTab === 'maintenance' && (
+                        <motion.div
+                          key="maintenance"
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -20 }}
+                        >
+                          {/* Maintenance content */}
+                          <div style={{ marginBottom: '2rem' }}>
+                            <div style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              marginBottom: '1.5rem'
+                            }}>
+                              <h3 style={{
+                                fontSize: '1.125rem',
+                                fontWeight: 600,
+                                color: '#1F2937',
+                                margin: 0,
+                                fontFamily: 'Inter, sans-serif'
+                              }}>
+                                Historial de Mantenimiento
+                              </h3>
+                              <motion.button
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={() => setModalType('maintenance')}
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '0.5rem',
+                                  padding: '0.5rem 1rem',
+                                  backgroundColor: '#2563EB',
+                                  color: 'white',
+                                  border: 'none',
+                                  borderRadius: '0.5rem',
+                                  fontSize: '0.875rem',
+                                  fontWeight: 600,
+                                  cursor: 'pointer',
+                                  fontFamily: 'Inter, sans-serif'
+                                }}
+                              >
+                                <Plus size={16} />
+                                Programar
+                              </motion.button>
+                            </div>
+
+                            {(() => {
+                              const roomMaintenance = maintenanceRecords.filter(m => m.roomId === selectedRoom?.id);
+                              return roomMaintenance.length > 0 ? (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                  {roomMaintenance.map(record => (
+                                    <div
+                                      key={record.id}
+                                      style={{
+                                        padding: '1.5rem',
+                                        backgroundColor: '#F9FAFB',
+                                        borderRadius: '0.75rem',
+                                        border: '1px solid #E5E7EB'
+                                      }}
+                                    >
+                                      <div style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                        marginBottom: '1rem'
+                                      }}>
+                                        <div>
+                                          <h4 style={{
+                                            fontSize: '1rem',
+                                            fontWeight: 600,
+                                            color: '#1F2937',
+                                            margin: 0,
+                                            fontFamily: 'Inter, sans-serif'
+                                          }}>
+                                            {record.description}
+                                          </h4>
+                                          <p style={{
+                                            fontSize: '0.875rem',
+                                            color: '#6B7280',
+                                            margin: '0.25rem 0 0 0',
+                                            fontFamily: 'Inter, sans-serif'
+                                          }}>
+                                            {record.technician}
+                                          </p>
+                                        </div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                          <span style={{
+                                            padding: '0.25rem 0.75rem',
+                                            borderRadius: '0.5rem',
+                                            fontSize: '0.75rem',
+                                            fontWeight: 600,
+                                            backgroundColor: `${getPriorityColor(record.priority)}15`,
+                                            color: getPriorityColor(record.priority),
+                                            fontFamily: 'Inter, sans-serif'
+                                          }}>
+                                            {record.priority === 'critical' ? 'Crítico' :
+                                             record.priority === 'high' ? 'Alto' :
+                                             record.priority === 'medium' ? 'Medio' : 'Bajo'}
+                                          </span>
+                                          <span style={{
+                                            padding: '0.25rem 0.75rem',
+                                            borderRadius: '0.5rem',
+                                            fontSize: '0.75rem',
+                                            fontWeight: 600,
+                                            backgroundColor: `${getMaintenanceStatusColor(record.status)}15`,
+                                            color: getMaintenanceStatusColor(record.status),
+                                            fontFamily: 'Inter, sans-serif'
+                                          }}>
+                                            {record.status === 'completed' ? 'Completado' :
+                                             record.status === 'in-progress' ? 'En progreso' :
+                                             record.status === 'scheduled' ? 'Programado' : 'Cancelado'}
+                                          </span>
+                                        </div>
+                                      </div>
+                                      <div style={{
+                                        display: 'grid',
+                                        gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+                                        gap: '1rem',
+                                        marginBottom: '1rem'
+                                      }}>
+                                        <div>
+                                          <label style={{
+                                            fontSize: '0.75rem',
+                                            fontWeight: 600,
+                                            color: '#6B7280',
+                                            fontFamily: 'Inter, sans-serif'
+                                          }}>
+                                            Fecha de inicio
+                                          </label>
+                                          <div style={{
+                                            fontSize: '0.875rem',
+                                            color: '#1F2937',
+                                            fontFamily: 'Inter, sans-serif'
+                                          }}>
+                                            {record.startDate.toLocaleDateString('es-ES')}
+                                          </div>
+                                        </div>
+                                        {record.endDate && (
+                                          <div>
+                                            <label style={{
+                                              fontSize: '0.75rem',
+                                              fontWeight: 600,
+                                              color: '#6B7280',
+                                              fontFamily: 'Inter, sans-serif'
+                                            }}>
+                                              Fecha de fin
+                                            </label>
+                                            <div style={{
+                                              fontSize: '0.875rem',
+                                              color: '#1F2937',
+                                              fontFamily: 'Inter, sans-serif'
+                                            }}>
+                                              {record.endDate.toLocaleDateString('es-ES')}
+                                            </div>
+                                          </div>
+                                        )}
+                                        <div>
+                                          <label style={{
+                                            fontSize: '0.75rem',
+                                            fontWeight: 600,
+                                            color: '#6B7280',
+                                            fontFamily: 'Inter, sans-serif'
+                                          }}>
+                                            Costo
+                                          </label>
+                                          <div style={{
+                                            fontSize: '0.875rem',
+                                            color: '#1F2937',
+                                            fontFamily: 'Inter, sans-serif'
+                                          }}>
+                                            €{record.cost}
+                                          </div>
+                                        </div>
+                                        <div>
+                                          <label style={{
+                                            fontSize: '0.75rem',
+                                            fontWeight: 600,
+                                            color: '#6B7280',
+                                            fontFamily: 'Inter, sans-serif'
+                                          }}>
+                                            Tipo
+                                          </label>
+                                          <div style={{
+                                            fontSize: '0.875rem',
+                                            color: '#1F2937',
+                                            fontFamily: 'Inter, sans-serif'
+                                          }}>
+                                            {record.type === 'preventive' ? 'Preventivo' :
+                                             record.type === 'corrective' ? 'Correctivo' : 'Mejora'}
+                                          </div>
+                                        </div>
+                                      </div>
+                                      {record.notes && (
+                                        <div>
+                                          <label style={{
+                                            fontSize: '0.75rem',
+                                            fontWeight: 600,
+                                            color: '#6B7280',
+                                            fontFamily: 'Inter, sans-serif'
+                                          }}>
+                                            Notas
+                                          </label>
+                                          <p style={{
+                                            fontSize: '0.875rem',
+                                            color: '#374151',
+                                            margin: '0.25rem 0 0 0',
+                                            fontFamily: 'Inter, sans-serif'
+                                          }}>
+                                            {record.notes}
+                                          </p>
+                                        </div>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <div style={{
+                                  padding: '3rem',
+                                  textAlign: 'center',
+                                  color: '#9CA3AF'
+                                }}>
+                                  <Settings size={48} color="#D1D5DB" style={{ marginBottom: '1rem' }} />
+                                  <h4 style={{
+                                    fontSize: '1.125rem',
+                                    fontWeight: 600,
+                                    marginBottom: '0.5rem',
+                                    fontFamily: 'Inter, sans-serif'
+                                  }}>
+                                    Sin historial de mantenimiento
+                                  </h4>
+                                  <p style={{
+                                    fontSize: '0.875rem',
+                                    marginBottom: '2rem',
+                                    fontFamily: 'Inter, sans-serif'
+                                  }}>
+                                    Este consultorio no tiene registros de mantenimiento
+                                  </p>
+                                  <motion.button
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={() => setModalType('maintenance')}
+                                    style={{
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: '0.5rem',
+                                      padding: '0.75rem 1.5rem',
+                                      backgroundColor: '#2563EB',
+                                      color: 'white',
+                                      border: 'none',
+                                      borderRadius: '0.75rem',
+                                      fontSize: '0.875rem',
+                                      fontWeight: 600,
+                                      cursor: 'pointer',
+                                      margin: '0 auto',
+                                      fontFamily: 'Inter, sans-serif'
+                                    }}
+                                  >
+                                    <Plus size={16} />
+                                    Programar Primer Mantenimiento
+                                  </motion.button>
+                                </div>
+                              );
+                            })()}
+                          </div>
+                        </motion.div>
+                      )}
+
+                      {selectedTab === 'analytics' && (
+                        <motion.div
+                          key="analytics"
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -20 }}
+                        >
+                          {/* Analytics content */}
+                          {(() => {
+                            const stats = roomStats.find(s => s.roomId === selectedRoom?.id);
+                            return stats ? (
+                              <div>
+                                {/* Popular time slots */}
+                                <div style={{ marginBottom: '2rem' }}>
+                                  <h3 style={{
+                                    fontSize: '1.125rem',
+                                    fontWeight: 600,
+                                    color: '#1F2937',
+                                    marginBottom: '1rem',
+                                    fontFamily: 'Inter, sans-serif'
+                                  }}>
+                                    Horarios Más Populares
+                                  </h3>
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                    {stats.popularTimeSlots.map((slot, idx) => (
+                                      <div
+                                        key={idx}
+                                        style={{
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                          justifyContent: 'space-between',
+                                          padding: '1rem',
+                                          backgroundColor: '#F9FAFB',
+                                          borderRadius: '0.75rem',
+                                          border: '1px solid #E5E7EB'
+                                        }}
+                                      >
+                                        <span style={{
+                                          fontSize: '0.875rem',
+                                          fontWeight: 600,
+                                          color: '#1F2937',
+                                          fontFamily: 'Inter, sans-serif'
+                                        }}>
+                                          {slot.time}
+                                        </span>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flex: 1, marginLeft: '1rem' }}>
+                                          <div style={{
+                                            flex: 1,
+                                            height: '8px',
+                                            backgroundColor: '#E5E7EB',
+                                            borderRadius: '4px',
+                                            overflow: 'hidden'
+                                          }}>
+                                            <motion.div
+                                              initial={{ width: 0 }}
+                                              animate={{ width: `${slot.usage}%` }}
+                                              transition={{ duration: 1, delay: idx * 0.1 }}
+                                              style={{
+                                                height: '100%',
+                                                backgroundColor: slot.usage > 80 ? '#10B981' : slot.usage > 60 ? '#F59E0B' : '#3B82F6',
+                                                borderRadius: '4px'
+                                              }}
+                                            />
+                                          </div>
+                                          <span style={{
+                                            fontSize: '0.875rem',
+                                            fontWeight: 600,
+                                            color: slot.usage > 80 ? '#10B981' : slot.usage > 60 ? '#F59E0B' : '#3B82F6',
+                                            fontFamily: 'Inter, sans-serif',
+                                            minWidth: '40px'
+                                          }}>
+                                            {slot.usage}%
+                                          </span>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+
+                                {/* Performance metrics */}
+                                <div style={{
+                                  display: 'grid',
+                                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                                  gap: '1rem',
+                                  marginBottom: '2rem'
+                                }}>
+                                  <div style={{
+                                    padding: '1.5rem',
+                                    backgroundColor: '#EFF6FF',
+                                    borderRadius: '1rem',
+                                    textAlign: 'center'
+                                  }}>
+                                    <div style={{
+                                      fontSize: '2rem',
+                                      fontWeight: 700,
+                                      color: '#2563EB',
+                                      marginBottom: '0.5rem',
+                                      fontFamily: 'Space Grotesk, sans-serif'
+                                    }}>
+                                      {stats.totalHours}h
+                                    </div>
+                                    <div style={{
+                                      fontSize: '0.875rem',
+                                      color: '#1E40AF',
+                                      fontFamily: 'Inter, sans-serif'
+                                    }}>
+                                      Horas totales
+                                    </div>
+                                  </div>
+
+                                  <div style={{
+                                    padding: '1.5rem',
+                                    backgroundColor: '#ECFDF5',
+                                    borderRadius: '1rem',
+                                    textAlign: 'center'
+                                  }}>
+                                    <div style={{
+                                      fontSize: '2rem',
+                                      fontWeight: 700,
+                                      color: '#10B981',
+                                      marginBottom: '0.5rem',
+                                      fontFamily: 'Space Grotesk, sans-serif'
+                                    }}>
+                                      €{(stats.revenue / stats.totalSessions).toFixed(0)}
+                                    </div>
+                                    <div style={{
+                                      fontSize: '0.875rem',
+                                      color: '#047857',
+                                      fontFamily: 'Inter, sans-serif'
+                                    }}>
+                                      Ingreso por sesión
+                                    </div>
+                                  </div>
+
+                                  <div style={{
+                                    padding: '1.5rem',
+                                    backgroundColor: '#FEF2F2',
+                                    borderRadius: '1rem',
+                                    textAlign: 'center'
+                                  }}>
+                                    <div style={{
+                                      fontSize: '2rem',
+                                      fontWeight: 700,
+                                      color: '#EF4444',
+                                      marginBottom: '0.5rem',
+                                      fontFamily: 'Space Grotesk, sans-serif'
+                                    }}>
+                                      {stats.maintenanceHours}h
+                                    </div>
+                                    <div style={{
+                                      fontSize: '0.875rem',
+                                      color: '#DC2626',
+                                      fontFamily: 'Inter, sans-serif'
+                                    }}>
+                                      Mantenimiento
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Maintenance schedule */}
+                                <div>
+                                  <h3 style={{
+                                    fontSize: '1.125rem',
+                                    fontWeight: 600,
+                                    color: '#1F2937',
+                                    marginBottom: '1rem',
+                                    fontFamily: 'Inter, sans-serif'
+                                  }}>
+                                    Programación de Mantenimiento
+                                  </h3>
+                                  <div style={{
+                                    display: 'grid',
+                                    gridTemplateColumns: '1fr 1fr',
+                                    gap: '1rem'
+                                  }}>
+                                    <div style={{
+                                      padding: '1.5rem',
+                                      backgroundColor: '#F9FAFB',
+                                      borderRadius: '0.75rem',
+                                      border: '1px solid #E5E7EB'
+                                    }}>
+                                      <div style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '0.5rem',
+                                        marginBottom: '0.75rem'
+                                      }}>
+                                        <Clock size={16} color="#6B7280" />
+                                        <span style={{
+                                          fontSize: '0.875rem',
+                                          fontWeight: 600,
+                                          color: '#374151',
+                                          fontFamily: 'Inter, sans-serif'
+                                        }}>
+                                          Último Mantenimiento
+                                        </span>
+                                      </div>
+                                      <div style={{
+                                        fontSize: '1rem',
+                                        color: '#1F2937',
+                                        fontFamily: 'Inter, sans-serif'
+                                      }}>
+                                        {stats.lastMaintenance.toLocaleDateString('es-ES', {
+                                          day: 'numeric',
+                                          month: 'long',
+                                          year: 'numeric'
+                                        })}
+                                      </div>
+                                    </div>
+
+                                    <div style={{
+                                      padding: '1.5rem',
+                                      backgroundColor: '#F9FAFB',
+                                      borderRadius: '0.75rem',
+                                      border: '1px solid #E5E7EB'
+                                    }}>
+                                      <div style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '0.5rem',
+                                        marginBottom: '0.75rem'
+                                      }}>
+                                        <CalendarIcon size={16} color="#6B7280" />
+                                        <span style={{
+                                          fontSize: '0.875rem',
+                                          fontWeight: 600,
+                                          color: '#374151',
+                                          fontFamily: 'Inter, sans-serif'
+                                        }}>
+                                          Próximo Mantenimiento
+                                        </span>
+                                      </div>
+                                      <div style={{
+                                        fontSize: '1rem',
+                                        color: '#1F2937',
+                                        fontFamily: 'Inter, sans-serif'
+                                      }}>
+                                        {stats.nextMaintenance.toLocaleDateString('es-ES', {
+                                          day: 'numeric',
+                                          month: 'long',
+                                          year: 'numeric'
+                                        })}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            ) : (
+                              <div style={{
+                                padding: '3rem',
+                                textAlign: 'center',
+                                color: '#9CA3AF'
+                              }}>
+                                <PieChart size={48} color="#D1D5DB" style={{ marginBottom: '1rem' }} />
+                                <h4 style={{
+                                  fontSize: '1.125rem',
+                                  fontWeight: 600,
+                                  marginBottom: '0.5rem',
+                                  fontFamily: 'Inter, sans-serif'
+                                }}>
+                                  Sin datos analíticos
+                                </h4>
+                                <p style={{
+                                  fontSize: '0.875rem',
+                                  fontFamily: 'Inter, sans-serif'
+                                }}>
+                                  Los análisis se generarán automáticamente cuando haya actividad en el consultorio
+                                </p>
+                              </div>
+                            );
+                          })()}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                )}
+
+                {(modalType === 'create' || modalType === 'edit') && (
+                  <div>
+                    {/* Room form */}
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: '1fr 1fr',
+                      gap: '2rem'
+                    }}>
+                      <div>
+                        <h3 style={{
+                          fontSize: '1.125rem',
+                          fontWeight: 600,
+                          color: '#1F2937',
+                          marginBottom: '1rem',
+                          fontFamily: 'Inter, sans-serif'
+                        }}>
+                          Información Básica
+                        </h3>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                          <div>
+                            <label style={{
+                              display: 'block',
+                              fontSize: '0.875rem',
+                              fontWeight: 600,
+                              color: '#374151',
+                              marginBottom: '0.5rem',
+                              fontFamily: 'Inter, sans-serif'
+                            }}>
+                              Nombre del Consultorio *
+                            </label>
+                            <input
+                              type="text"
+                              value={formData.name}
+                              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                              placeholder="Ej: Consultorio Serenidad"
+                              style={{
+                                width: '100%',
+                                padding: '0.75rem',
+                                borderRadius: '0.5rem',
+                                border: '1px solid #E5E7EB',
+                                fontSize: '0.875rem',
+                                outline: 'none',
+                                transition: 'border-color 0.2s ease',
+                                fontFamily: 'Inter, sans-serif'
+                              }}
+                              onFocus={(e) => e.target.style.borderColor = '#2563EB'}
+                              onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
+                            />
+                          </div>
+
+                          <div>
+                            <label style={{
+                              display: 'block',
+                              fontSize: '0.875rem',
+                              fontWeight: 600,
+                              color: '#374151',
+                              marginBottom: '0.5rem',
+                              fontFamily: 'Inter, sans-serif'
+                            }}>
+                              Ubicación *
+                            </label>
+                            <input
+                              type="text"
+                              value={formData.location}
+                              onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
+                              placeholder="Ej: Planta baja - Ala Este"
+                              style={{
+                                width: '100%',
+                                padding: '0.75rem',
+                                borderRadius: '0.5rem',
+                                border: '1px solid #E5E7EB',
+                                fontSize: '0.875rem',
+                                outline: 'none',
+                                transition: 'border-color 0.2s ease',
+                                fontFamily: 'Inter, sans-serif'
+                              }}
+                              onFocus={(e) => e.target.style.borderColor = '#2563EB'}
+                              onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
+                            />
+                          </div>
+
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                            <div>
+                              <label style={{
+                                display: 'block',
+                                fontSize: '0.875rem',
+                                fontWeight: 600,
+                                color: '#374151',
+                                marginBottom: '0.5rem',
+                                fontFamily: 'Inter, sans-serif'
+                              }}>
+                                Capacidad *
+                              </label>
+                              <input
+                                type="number"
+                                min="1"
+                                max="20"
+                                value={formData.capacity}
+                                onChange={(e) => setFormData(prev => ({ ...prev, capacity: parseInt(e.target.value) || 1 }))}
+                                style={{
+                                  width: '100%',
+                                  padding: '0.75rem',
+                                  borderRadius: '0.5rem',
+                                  border: '1px solid #E5E7EB',
+                                  fontSize: '0.875rem',
+                                  outline: 'none',
+                                  transition: 'border-color 0.2s ease',
+                                  fontFamily: 'Inter, sans-serif'
+                                }}
+                                onFocus={(e) => e.target.style.borderColor = '#2563EB'}
+                                onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
+                              />
+                            </div>
+
+                            <div>
+                              <label style={{
+                                display: 'block',
+                                fontSize: '0.875rem',
+                                                                fontWeight: 600,
+                                color: '#374151',
+                                marginBottom: '0.5rem',
+                                fontFamily: 'Inter, sans-serif'
+                              }}>
+                                Estado
+                              </label>
+                              <select
+                                value={formData.status}
+                                onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as 'available' | 'occupied' | 'maintenance' }))}
+                                style={{
+                                  width: '100%',
+                                  padding: '0.75rem',
+                                  borderRadius: '0.5rem',
+                                  border: '1px solid #E5E7EB',
+                                  fontSize: '0.875rem',
+                                  outline: 'none',
+                                  transition: 'border-color 0.2s ease',
+                                  fontFamily: 'Inter, sans-serif'
+                                }}
+                                onFocus={(e) => e.target.style.borderColor = '#2563EB'}
+                                onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
+                              >
+                                <option value="available">Disponible</option>
+                                <option value="occupied">Ocupado</option>
+                                <option value="maintenance">Mantenimiento</option>
+                              </select>
+                            </div>
+                          </div>
+
+                          <div>
+                            <label style={{
+                              display: 'block',
+                              fontSize: '0.875rem',
+                              fontWeight: 600,
+                              color: '#374151',
+                              marginBottom: '0.5rem',
+                              fontFamily: 'Inter, sans-serif'
+                            }}>
+                              Descripción
+                            </label>
+                            <textarea
+                              value={formData.description}
+                              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                              placeholder="Descripción del consultorio..."
+                              rows={3}
+                              style={{
+                                width: '100%',
+                                padding: '0.75rem',
+                                borderRadius: '0.5rem',
+                                border: '1px solid #E5E7EB',
+                                fontSize: '0.875rem',
+                                outline: 'none',
+                                transition: 'border-color 0.2s ease',
+                                fontFamily: 'Inter, sans-serif',
+                                resize: 'vertical'
+                              }}
+                              onFocus={(e) => e.target.style.borderColor = '#2563EB'}
+                              onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div>
+                        <h3 style={{
+                          fontSize: '1.125rem',
+                          fontWeight: 600,
+                          color: '#1F2937',
+                          marginBottom: '1rem',
+                          fontFamily: 'Inter, sans-serif'
+                        }}>
+                          Configuración Avanzada
+                        </h3>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                          <div>
+                            <label style={{
+                              display: 'block',
+                              fontSize: '0.875rem',
+                              fontWeight: 600,
+                              color: '#374151',
+                              marginBottom: '0.5rem',
+                              fontFamily: 'Inter, sans-serif'
+                            }}>
+                              Tarifa por Hora (€)
+                            </label>
+                            <input
+                              type="number"
+                              min="0"
+                              step="5"
+                              value={formData.hourlyRate}
+                              onChange={(e) => setFormData(prev => ({ ...prev, hourlyRate: parseFloat(e.target.value) || 0 }))}
+                              style={{
+                                width: '100%',
+                                padding: '0.75rem',
+                                borderRadius: '0.5rem',
+                                border: '1px solid #E5E7EB',
+                                fontSize: '0.875rem',
+                                outline: 'none',
+                                transition: 'border-color 0.2s ease',
+                                fontFamily: 'Inter, sans-serif'
+                              }}
+                              onFocus={(e) => e.target.style.borderColor = '#2563EB'}
+                              onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
+                            />
+                          </div>
+
+                          <div>
+                            <label style={{
+                              display: 'block',
+                              fontSize: '0.875rem',
+                              fontWeight: 600,
+                              color: '#374151',
+                              marginBottom: '0.75rem',
+                              fontFamily: 'Inter, sans-serif'
+                            }}>
+                              Características
+                            </label>
+                            <div style={{
+                              display: 'grid',
+                              gridTemplateColumns: '1fr 1fr',
+                              gap: '0.75rem'
+                            }}>
+                              {[
+                                { key: 'soundproofing', label: 'Insonorización', icon: Volume2 },
+                                { key: 'airConditioning', label: 'Aire acondicionado', icon: Thermometer },
+                                { key: 'naturalLight', label: 'Luz natural', icon: Lightbulb },
+                                { key: 'accessibility', label: 'Accesibilidad', icon: Shield }
+                              ].map(feature => (
+                                <label
+                                  key={feature.key}
+                                  style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.5rem',
+                                    cursor: 'pointer',
+                                    padding: '0.75rem',
+                                    borderRadius: '0.5rem',
+                                    border: '1px solid #E5E7EB',
+                                    backgroundColor: formData[feature.key as keyof typeof formData] ? '#EFF6FF' : '#F9FAFB',
+                                    transition: 'all 0.2s ease'
+                                  }}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={formData[feature.key as keyof typeof formData] as boolean}
+                                    onChange={(e) => setFormData(prev => ({ 
+                                      ...prev, 
+                                      [feature.key]: e.target.checked 
+                                    }))}
+                                    style={{ display: 'none' }}
+                                  />
+                                  <feature.icon 
+                                    size={16} 
+                                    color={formData[feature.key as keyof typeof formData] ? '#2563EB' : '#6B7280'} 
+                                  />
+                                  <span style={{
+                                    fontSize: '0.875rem',
+                                    color: formData[feature.key as keyof typeof formData] ? '#2563EB' : '#374151',
+                                    fontFamily: 'Inter, sans-serif'
+                                  }}>
+                                    {feature.label}
+                                  </span>
+                                  {formData[feature.key as keyof typeof formData] && (
+                                    <CheckCircle size={14} color="#2563EB" />
+                                  )}
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div>
+                            <label style={{
+                              display: 'block',
+                              fontSize: '0.875rem',
+                              fontWeight: 600,
+                              color: '#374151',
+                              marginBottom: '0.5rem',
+                              fontFamily: 'Inter, sans-serif'
+                            }}>
+                              Dimensiones (metros)
+                            </label>
+                            <div style={{
+                              display: 'grid',
+                              gridTemplateColumns: '1fr 1fr 1fr',
+                              gap: '0.5rem'
+                            }}>
+                              <input
+                                type="number"
+                                min="0"
+                                step="0.1"
+                                placeholder="Largo"
+                                value={formData.dimensions.length || ''}
+                                onChange={(e) => setFormData(prev => ({ 
+                                  ...prev, 
+                                  dimensions: { 
+                                    ...prev.dimensions, 
+                                    length: parseFloat(e.target.value) || 0 
+                                  }
+                                }))}
+                                style={{
+                                  padding: '0.75rem',
+                                  borderRadius: '0.5rem',
+                                  border: '1px solid #E5E7EB',
+                                  fontSize: '0.875rem',
+                                  outline: 'none',
+                                  transition: 'border-color 0.2s ease',
+                                  fontFamily: 'Inter, sans-serif'
+                                }}
+                                onFocus={(e) => e.target.style.borderColor = '#2563EB'}
+                                onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
+                              />
+                              <input
+                                type="number"
+                                min="0"
+                                step="0.1"
+                                placeholder="Ancho"
+                                value={formData.dimensions.width || ''}
+                                onChange={(e) => setFormData(prev => ({ 
+                                  ...prev, 
+                                  dimensions: { 
+                                    ...prev.dimensions, 
+                                    width: parseFloat(e.target.value) || 0 
+                                  }
+                                }))}
+                                style={{
+                                  padding: '0.75rem',
+                                  borderRadius: '0.5rem',
+                                  border: '1px solid #E5E7EB',
+                                  fontSize: '0.875rem',
+                                  outline: 'none',
+                                  transition: 'border-color 0.2s ease',
+                                  fontFamily: 'Inter, sans-serif'
+                                }}
+                                onFocus={(e) => e.target.style.borderColor = '#2563EB'}
+                                onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
+                              />
+                              <input
+                                type="number"
+                                min="0"
+                                step="0.1"
+                                placeholder="Alto"
+                                value={formData.dimensions.height || ''}
+                                onChange={(e) => setFormData(prev => ({ 
+                                  ...prev, 
+                                  dimensions: { 
+                                    ...prev.dimensions, 
+                                    height: parseFloat(e.target.value) || 0 
+                                  }
+                                }))}
+                                style={{
+                                  padding: '0.75rem',
+                                  borderRadius: '0.5rem',
+                                  border: '1px solid #E5E7EB',
+                                  fontSize: '0.875rem',
+                                  outline: 'none',
+                                  transition: 'border-color 0.2s ease',
+                                  fontFamily: 'Inter, sans-serif'
+                                }}
+                                onFocus={(e) => e.target.style.borderColor = '#2563EB'}
+                                onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Equipment section */}
+                    <div style={{ marginTop: '2rem' }}>
+                      <h3 style={{
+                        fontSize: '1.125rem',
+                        fontWeight: 600,
+                        color: '#1F2937',
+                        marginBottom: '1rem',
+                        fontFamily: 'Inter, sans-serif'
+                      }}>
+                        Equipamiento
+                      </h3>
+                      <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                        gap: '1rem',
+                        marginBottom: '1rem'
+                      }}>
+                        {[
+                          'Sillas ergonómicas',
+                          'Mesa auxiliar',
+                          'Aire acondicionado',
+                          'Insonorización',
+                          'Iluminación LED',
+                          'Pizarra interactiva',
+                          'Proyector',
+                          'Sistema de sonido',
+                          'Cámara de seguridad',
+                          'Sofás cómodos',
+                          'Mesa de centro',
+                          'Juguetes terapéuticos',
+                          'Biblioteca',
+                          'Difusor de aromas',
+                          'Colchonetas de yoga',
+                          'Cojines de meditación'
+                        ].map(equipment => (
+                          <label
+                            key={equipment}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.75rem',
+                              cursor: 'pointer',
+                              padding: '1rem',
+                              borderRadius: '0.75rem',
+                              border: '1px solid #E5E7EB',
+                              backgroundColor: formData.equipment.includes(equipment) ? '#EFF6FF' : '#F9FAFB',
+                              transition: 'all 0.2s ease'
+                            }}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={formData.equipment.includes(equipment)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setFormData(prev => ({ 
+                                    ...prev, 
+                                    equipment: [...prev.equipment, equipment] 
+                                  }));
+                                } else {
+                                  setFormData(prev => ({ 
+                                    ...prev, 
+                                    equipment: prev.equipment.filter(item => item !== equipment) 
+                                  }));
+                                }
+                              }}
+                              style={{ display: 'none' }}
+                            />
+                            <div style={{
+                              padding: '0.5rem',
+                              backgroundColor: formData.equipment.includes(equipment) ? '#DBEAFE' : '#F3F4F6',
+                              borderRadius: '0.5rem'
+                            }}>
+                              {getEquipmentIcon(equipment)}
+                            </div>
+                            <span style={{
+                              fontSize: '0.875rem',
+                              color: formData.equipment.includes(equipment) ? '#2563EB' : '#374151',
+                              fontFamily: 'Inter, sans-serif',
+                              flex: 1
+                            }}>
+                              {equipment}
+                            </span>
+                            {formData.equipment.includes(equipment) && (
+                              <CheckCircle size={16} color="#2563EB" />
+                            )}
+                          </label>
+                        ))}
+                      </div>
+
+                      {/* Custom equipment input */}
+                      <div style={{
+                        display: 'flex',
+                        gap: '0.5rem',
+                        alignItems: 'center'
+                      }}>
+                        <input
+                          type="text"
+                          placeholder="Agregar equipamiento personalizado..."
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter' && e.currentTarget.value.trim()) {
+                              const newEquipment = e.currentTarget.value.trim();
+                              if (!formData.equipment.includes(newEquipment)) {
+                                setFormData(prev => ({ 
+                                  ...prev, 
+                                  equipment: [...prev.equipment, newEquipment] 
+                                }));
+                              }
+                              e.currentTarget.value = '';
+                            }
+                          }}
+                          style={{
+                            flex: 1,
+                            padding: '0.75rem',
+                            borderRadius: '0.5rem',
+                            border: '1px solid #E5E7EB',
+                            fontSize: '0.875rem',
+                            outline: 'none',
+                            transition: 'border-color 0.2s ease',
+                            fontFamily: 'Inter, sans-serif'
+                          }}
+                          onFocus={(e) => e.target.style.borderColor = '#2563EB'}
+                          onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
+                        />
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={(e) => {
+                            const input = e.currentTarget.previousElementSibling as HTMLInputElement;
+                            const newEquipment = input.value.trim();
+                            if (newEquipment && !formData.equipment.includes(newEquipment)) {
+                              setFormData(prev => ({ 
+                                ...prev, 
+                                equipment: [...prev.equipment, newEquipment] 
+                              }));
+                              input.value = '';
+                            }
+                          }}
+                          style={{
+                            padding: '0.75rem',
+                            backgroundColor: '#2563EB',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '0.5rem',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                        >
+                          <Plus size={16} />
+                        </motion.button>
+                      </div>
+
+                      {/* Selected equipment tags */}
+                      {formData.equipment.length > 0 && (
+                        <div style={{
+                          marginTop: '1rem',
+                          padding: '1rem',
+                          backgroundColor: '#F9FAFB',
+                          borderRadius: '0.75rem',
+                          border: '1px solid #E5E7EB'
+                        }}>
+                          <h4 style={{
+                            fontSize: '0.875rem',
+                            fontWeight: 600,
+                            color: '#374151',
+                            marginBottom: '0.75rem',
+                            fontFamily: 'Inter, sans-serif'
+                          }}>
+                            Equipamiento seleccionado ({formData.equipment.length})
+                          </h4>
+                          <div style={{
+                            display: 'flex',
+                            flexWrap: 'wrap',
+                            gap: '0.5rem'
+                          }}>
+                            {formData.equipment.map((item, idx) => (
+                              <motion.span
+                                key={idx}
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '0.5rem',
+                                  padding: '0.5rem 0.75rem',
+                                  backgroundColor: '#EFF6FF',
+                                  color: '#2563EB',
+                                  borderRadius: '0.75rem',
+                                  fontSize: '0.875rem',
+                                  fontFamily: 'Inter, sans-serif'
+                                }}
+                              >
+                                {getEquipmentIcon(item)}
+                                {item}
+                                <motion.button
+                                  whileHover={{ scale: 1.1 }}
+                                  whileTap={{ scale: 0.9 }}
+                                  onClick={() => setFormData(prev => ({ 
+                                    ...prev, 
+                                    equipment: prev.equipment.filter(e => e !== item) 
+                                  }))}
+                                  style={{
+                                    background: 'none',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    padding: '0.25rem',
+                                    borderRadius: '50%',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                  }}
+                                >
+                                  <X size={12} color="#2563EB" />
+                                </motion.button>
+                              </motion.span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {modalType === 'maintenance' && selectedRoom && (
+                  <div>
+                    {/* Maintenance form */}
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: '1fr 1fr',
+                      gap: '2rem'
+                    }}>
+                      <div>
+                        <h3 style={{
+                          fontSize: '1.125rem',
+                          fontWeight: 600,
+                          color: '#1F2937',
+                          marginBottom: '1rem',
+                          fontFamily: 'Inter, sans-serif'
+                        }}>
+                          Detalles del Mantenimiento
+                        </h3>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                          <div>
+                            <label style={{
+                              display: 'block',
+                              fontSize: '0.875rem',
+                              fontWeight: 600,
+                              color: '#374151',
+                              marginBottom: '0.5rem',
+                              fontFamily: 'Inter, sans-serif'
+                            }}>
+                              Tipo de Mantenimiento *
+                            </label>
+                            <select
+                              style={{
+                                width: '100%',
+                                padding: '0.75rem',
+                                borderRadius: '0.5rem',
+                                border: '1px solid #E5E7EB',
+                                fontSize: '0.875rem',
+                                outline: 'none',
+                                transition: 'border-color 0.2s ease',
+                                fontFamily: 'Inter, sans-serif'
+                              }}
+                              onFocus={(e) => e.target.style.borderColor = '#2563EB'}
+                              onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
+                            >
+                              <option value="preventive">Preventivo</option>
+                              <option value="corrective">Correctivo</option>
+                              <option value="upgrade">Mejora</option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label style={{
+                              display: 'block',
+                              fontSize: '0.875rem',
+                              fontWeight: 600,
+                              color: '#374151',
+                              marginBottom: '0.5rem',
+                              fontFamily: 'Inter, sans-serif'
+                            }}>
+                              Prioridad *
+                            </label>
+                            <select
+                              style={{
+                                width: '100%',
+                                padding: '0.75rem',
+                                borderRadius: '0.5rem',
+                                border: '1px solid #E5E7EB',
+                                fontSize: '0.875rem',
+                                outline: 'none',
+                                transition: 'border-color 0.2s ease',
+                                fontFamily: 'Inter, sans-serif'
+                              }}
+                              onFocus={(e) => e.target.style.borderColor = '#2563EB'}
+                              onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
+                            >
+                              <option value="low">Baja</option>
+                              <option value="medium">Media</option>
+                              <option value="high">Alta</option>
+                              <option value="critical">Crítica</option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label style={{
+                              display: 'block',
+                              fontSize: '0.875rem',
+                              fontWeight: 600,
+                              color: '#374151',
+                              marginBottom: '0.5rem',
+                              fontFamily: 'Inter, sans-serif'
+                            }}>
+                              Descripción *
+                            </label>
+                            <textarea
+                              placeholder="Describe el trabajo de mantenimiento a realizar..."
+                              rows={4}
+                              style={{
+                                width: '100%',
+                                padding: '0.75rem',
+                                borderRadius: '0.5rem',
+                                border: '1px solid #E5E7EB',
+                                fontSize: '0.875rem',
+                                outline: 'none',
+                                transition: 'border-color 0.2s ease',
+                                fontFamily: 'Inter, sans-serif',
+                                resize: 'vertical'
+                              }}
+                              onFocus={(e) => e.target.style.borderColor = '#2563EB'}
+                              onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div>
+                        <h3 style={{
+                          fontSize: '1.125rem',
+                          fontWeight: 600,
+                          color: '#1F2937',
+                          marginBottom: '1rem',
+                          fontFamily: 'Inter, sans-serif'
+                        }}>
+                          Programación y Costos
+                        </h3>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                          <div>
+                            <label style={{
+                              display: 'block',
+                              fontSize: '0.875rem',
+                              fontWeight: 600,
+                              color: '#374151',
+                              marginBottom: '0.5rem',
+                              fontFamily: 'Inter, sans-serif'
+                            }}>
+                              Fecha de Inicio *
+                            </label>
+                            <input
+                              type="date"
+                              min={new Date().toISOString().split('T')[0]}
+                              style={{
+                                width: '100%',
+                                padding: '0.75rem',
+                                borderRadius: '0.5rem',
+                                border: '1px solid #E5E7EB',
+                                fontSize: '0.875rem',
+                                outline: 'none',
+                                transition: 'border-color 0.2s ease',
+                                fontFamily: 'Inter, sans-serif'
+                              }}
+                              onFocus={(e) => e.target.style.borderColor = '#2563EB'}
+                              onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
+                            />
+                          </div>
+
+                          <div>
+                            <label style={{
+                              display: 'block',
+                              fontSize: '0.875rem',
+                              fontWeight: 600,
+                              color: '#374151',
+                              marginBottom: '0.5rem',
+                              fontFamily: 'Inter, sans-serif'
+                            }}>
+                              Técnico Responsable *
+                            </label>
+                            <input
+                              type="text"
+                              placeholder="Nombre del técnico o empresa"
+                              style={{
+                                width: '100%',
+                                padding: '0.75rem',
+                                borderRadius: '0.5rem',
+                                border: '1px solid #E5E7EB',
+                                fontSize: '0.875rem',
+                                outline: 'none',
+                                transition: 'border-color 0.2s ease',
+                                fontFamily: 'Inter, sans-serif'
+                              }}
+                              onFocus={(e) => e.target.style.borderColor = '#2563EB'}
+                              onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
+                            />
+                          </div>
+
+                          <div>
+                            <label style={{
+                              display: 'block',
+                              fontSize: '0.875rem',
+                              fontWeight: 600,
+                              color: '#374151',
+                              marginBottom: '0.5rem',
+                              fontFamily: 'Inter, sans-serif'
+                            }}>
+                              Costo Estimado (€)
+                            </label>
+                            <input
+                              type="number"
+                              min="0"
+                              step="10"
+                              placeholder="0"
+                              style={{
+                                width: '100%',
+                                padding: '0.75rem',
+                                borderRadius: '0.5rem',
+                                border: '1px solid #E5E7EB',
+                                fontSize: '0.875rem',
+                                outline: 'none',
+                                transition: 'border-color 0.2s ease',
+                                fontFamily: 'Inter, sans-serif'
+                              }}
+                              onFocus={(e) => e.target.style.borderColor = '#2563EB'}
+                              onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
+                            />
+                          </div>
+
+                          <div>
+                            <label style={{
+                              display: 'block',
+                              fontSize: '0.875rem',
+                              fontWeight: 600,
+                              color: '#374151',
+                              marginBottom: '0.5rem',
+                              fontFamily: 'Inter, sans-serif'
+                            }}>
+                              Notas Adicionales
+                            </label>
+                            <textarea
+                              placeholder="Información adicional, instrucciones especiales..."
+                              rows={3}
+                              style={{
+                                width: '100%',
+                                padding: '0.75rem',
+                                borderRadius: '0.5rem',
+                                border: '1px solid #E5E7EB',
+                                fontSize: '0.875rem',
+                                outline: 'none',
+                                transition: 'border-color 0.2s ease',
+                                fontFamily: 'Inter, sans-serif',
+                                resize: 'vertical'
+                              }}
+                              onFocus={(e) => e.target.style.borderColor = '#2563EB'}
+                              onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Modal Footer */}
+              {(modalType === 'create' || modalType === 'edit' || modalType === 'maintenance') && (
+                <div style={{
+                  padding: '1.5rem 2rem',
+                  borderTop: '1px solid #E5E7EB',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  backgroundColor: '#F9FAFB'
+                }}>
+                  <div style={{
+                    fontSize: '0.875rem',
+                    color: '#6B7280',
+                    fontFamily: 'Inter, sans-serif'
+                  }}>
+                    * Campos obligatorios
+                  </div>
+                  <div style={{ display: 'flex', gap: '1rem' }}>
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={closeModal}
+                      style={{
+                        padding: '0.75rem 1.5rem',
+                        backgroundColor: 'white',
+                        color: '#374151',
+                        border: '1px solid #E5E7EB',
+                        borderRadius: '0.75rem',
+                        fontSize: '0.875rem',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        fontFamily: 'Inter, sans-serif'
+                      }}
+                    >
+                      Cancelar
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={modalType === 'maintenance' ? () => {
+                        // Handle maintenance save
+                        closeModal();
+                      } : handleSaveRoom}
+                      disabled={isLoading || !formData.name || !formData.location}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        padding: '0.75rem 1.5rem',
+                        backgroundColor: (!formData.name || !formData.location) ? '#9CA3AF' : '#2563EB',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '0.75rem',
+                        fontSize: '0.875rem',
+                        fontWeight: 600,
+                        cursor: (!formData.name || !formData.location) ? 'not-allowed' : 'pointer',
+                        fontFamily: 'Inter, sans-serif',
+                        opacity: isLoading ? 0.7 : 1
+                      }}
+                    >
+                      {isLoading ? (
+                        <>
+                          <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 1, repeat: Infinity }}
+                          >
+                            <RefreshCw size={16} />
+                          </motion.div>
+                          Guardando...
+                        </>
+                      ) : (
+                        <>
+                          <Save size={16} />
+                          {modalType === 'create' ? 'Crear Consultorio' :
+                           modalType === 'edit' ? 'Guardar Cambios' :
+                           'Programar Mantenimiento'}
+                        </>
+                      )}
+                    </motion.button>
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* CSS Styles */}
+      <style jsx>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 768px) {
+          .rooms-grid {
+            grid-template-columns: 1fr;
+          }
+          
+          .controls-container {
+            flex-direction: column;
+            align-items: stretch;
+          }
+          
+          .search-container {
+            min-width: auto;
+          }
+        }
+        
+        /* Scrollbar personalizado */
+        div::-webkit-scrollbar {
+          width: 6px;
+        }
+        
+        div::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        
+        div::-webkit-scrollbar-thumb {
+          background: rgba(156, 163, 175, 0.3);
+          border-radius: 3px;
+        }
+        
+        div::-webkit-scrollbar-thumb:hover {
+          background: rgba(156, 163, 175, 0.5);
+        }
+      `}</style>
+    </div>
+  );
+}
+
+
               
