@@ -8,7 +8,7 @@ import { AuthLayout } from '@/components/auth/AuthLayout';
 import { AuthForm } from '@/components/auth/AuthForm';
 import { loginSchema, type LoginFormData } from '@/lib/validations/auth';
 import { signIn, getDashboardRoute } from '@/lib/auth';
-import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();

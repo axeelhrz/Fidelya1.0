@@ -7,17 +7,17 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 const buttonVariants = cva(
-  // Base styles
-  "inline-flex items-center justify-center font-semibold tracking-wide transition-all duration-200 focus-visible:outline-none focus-visible:ring-4 disabled:pointer-events-none disabled:opacity-50 relative overflow-hidden group active:scale-[0.98]",
+  // Base styles con tipografía específica
+  "inline-flex items-center justify-center font-semibold tracking-wider transition-all duration-200 focus-visible:outline-none focus-visible:ring-4 disabled:pointer-events-none disabled:opacity-50 relative overflow-hidden group active:scale-[0.98] uppercase text-sm",
   {
     variants: {
       variant: {
         primary: [
-          "bg-gradient-to-r from-primary-600 to-primary-700 text-white",
-          "hover:from-primary-700 hover:to-primary-800",
-          "focus-visible:ring-primary-500/30",
+          "bg-indigo-600 text-white",
+          "hover:bg-indigo-700",
+          "focus-visible:ring-indigo-500/30",
           "shadow-lg hover:shadow-xl",
-          "border border-primary-600/20"
+          "border border-indigo-600/20"
         ],
         secondary: [
           "bg-white text-gray-900 border-2 border-gray-200",
@@ -26,9 +26,9 @@ const buttonVariants = cva(
           "shadow-sm hover:shadow-md"
         ],
         outline: [
-          "bg-transparent text-primary-700 border-2 border-primary-200",
-          "hover:bg-primary-50 hover:border-primary-300",
-          "focus-visible:ring-primary-500/30"
+          "bg-transparent text-indigo-700 border-2 border-indigo-200",
+          "hover:bg-indigo-50 hover:border-indigo-300",
+          "focus-visible:ring-indigo-500/30"
         ],
         ghost: [
           "bg-transparent text-gray-700",
@@ -36,23 +36,23 @@ const buttonVariants = cva(
           "focus-visible:ring-gray-500/30"
         ],
         destructive: [
-          "bg-gradient-to-r from-error-600 to-error-700 text-white",
-          "hover:from-error-700 hover:to-error-800",
-          "focus-visible:ring-error-500/30",
+          "bg-gradient-to-r from-red-600 to-red-700 text-white",
+          "hover:from-red-700 hover:to-red-800",
+          "focus-visible:ring-red-500/30",
           "shadow-lg hover:shadow-xl"
         ],
         success: [
-          "bg-gradient-to-r from-success-600 to-success-700 text-white",
-          "hover:from-success-700 hover:to-success-800",
-          "focus-visible:ring-success-500/30",
+          "bg-gradient-to-r from-green-600 to-green-700 text-white",
+          "hover:from-green-700 hover:to-green-800",
+          "focus-visible:ring-green-500/30",
           "shadow-lg hover:shadow-xl"
         ]
       },
       size: {
-        sm: "h-9 px-4 text-sm rounded-lg",
+        sm: "h-9 px-4 text-xs rounded-lg",
         md: "h-11 px-6 text-sm rounded-xl",
-        lg: "h-13 px-8 text-base rounded-xl",
-        xl: "h-15 px-10 text-lg rounded-2xl"
+        lg: "h-12 px-8 text-sm rounded-xl",
+        xl: "h-14 px-10 text-base rounded-2xl"
       },
       fullWidth: {
         true: "w-full",
@@ -61,7 +61,7 @@ const buttonVariants = cva(
     },
     defaultVariants: {
       variant: "primary",
-      size: "md",
+      size: "lg",
       fullWidth: false
     }
   }
@@ -96,7 +96,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         className={cn(buttonVariants({ variant, size, fullWidth }), className)}
         disabled={isDisabled}
-        whileHover={!isDisabled ? { scale: 1.02 } : {}}
+        whileHover={!isDisabled ? { scale: 1.02, y: -1 } : {}}
         whileTap={!isDisabled ? { scale: 0.98 } : {}}
         transition={{ duration: 0.15 }}
         {...props}
@@ -104,9 +104,9 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         {/* Shimmer Effect */}
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-out" />
         
-        {/* Glow Effect for Primary Variant */}
+        {/* Glow Effect para Primary Variant */}
         {variant === 'primary' && (
-          <div className="absolute inset-0 bg-gradient-to-r from-primary-600 to-primary-700 rounded-xl blur-lg opacity-0 group-hover:opacity-30 transition-opacity duration-300 -z-10 scale-110" />
+          <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-indigo-700 rounded-xl blur-lg opacity-0 group-hover:opacity-30 transition-opacity duration-300 -z-10 scale-110" />
         )}
 
         {/* Content Container */}
@@ -137,9 +137,9 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
             ) : null}
           </AnimatePresence>
 
-          {/* Button Text */}
+          {/* Button Text con tracking-wider */}
           <motion.span
-            className="font-semibold tracking-wide uppercase text-sm"
+            className="font-semibold tracking-wider uppercase text-sm"
             animate={{
               opacity: loading ? 0.7 : 1
             }}

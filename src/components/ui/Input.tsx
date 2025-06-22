@@ -17,19 +17,19 @@ interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, '
 
 const inputVariants = {
   default: {
-    base: "bg-white border-2 border-gray-200 focus:border-primary-500 focus:bg-white",
-    error: "border-error-500 focus:border-error-500 bg-error-50/50",
-    success: "border-success-500 focus:border-success-500 bg-success-50/50"
+    base: "bg-white border border-gray-300 focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-600 focus:bg-white",
+    error: "border-red-500 focus:border-red-500 focus:ring-red-500/20 bg-red-50/50",
+    success: "border-green-500 focus:border-green-500 focus:ring-green-500/20 bg-green-50/50"
   },
   filled: {
-    base: "bg-gray-50 border-2 border-transparent focus:border-primary-500 focus:bg-white",
-    error: "bg-error-50 border-error-500 focus:border-error-500",
-    success: "bg-success-50 border-success-500 focus:border-success-500"
+    base: "bg-gray-50 border border-transparent focus:border-indigo-600 focus:bg-white focus:ring-4 focus:ring-indigo-500/20",
+    error: "bg-red-50 border-red-500 focus:border-red-500 focus:ring-red-500/20",
+    success: "bg-green-50 border-green-500 focus:border-green-500 focus:ring-green-500/20"
   },
   minimal: {
-    base: "bg-transparent border-0 border-b-2 border-gray-200 focus:border-primary-500 rounded-none",
-    error: "border-error-500 focus:border-error-500",
-    success: "border-success-500 focus:border-success-500"
+    base: "bg-transparent border-0 border-b-2 border-gray-300 focus:border-indigo-600 rounded-none focus:ring-0",
+    error: "border-red-500 focus:border-red-500",
+    success: "border-green-500 focus:border-green-500"
   }
 };
 
@@ -80,42 +80,42 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
         transition={{ duration: 0.3 }}
         className="space-y-2"
       >
-        {/* Label */}
+        {/* Label con tipografía mejorada */}
         {label && (
           <motion.label
             htmlFor={id}
             className={cn(
               "block text-sm font-semibold tracking-tight transition-colors duration-200",
-              error ? "text-error-700" : success ? "text-success-700" : "text-gray-700",
+              error ? "text-red-700" : success ? "text-green-700" : "text-gray-700",
               disabled && "text-gray-400"
             )}
             animate={{
               color: isFocused 
-                ? error ? 'var(--error-700)' : success ? 'var(--success-700)' : 'var(--primary-700)'
-                : error ? 'var(--error-700)' : success ? 'var(--success-700)' : 'var(--gray-700)'
+                ? error ? 'rgb(185, 28, 28)' : success ? 'rgb(4, 120, 87)' : 'rgb(79, 70, 229)'
+                : error ? 'rgb(185, 28, 28)' : success ? 'rgb(4, 120, 87)' : 'rgb(55, 65, 81)'
             }}
           >
             {label}
-            {props.required && <span className="text-error-500 ml-1">*</span>}
+            {props.required && <span className="text-red-500 ml-1">*</span>}
           </motion.label>
         )}
 
         {/* Input Container */}
         <div className="relative group">
-          {/* Icon */}
+          {/* Icon con animación mejorada */}
           {icon && (
             <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none z-10">
               <motion.div
                 className={cn(
                   "w-5 h-5 transition-colors duration-200",
-                  error ? "text-error-500" : success ? "text-success-500" : "text-gray-400",
-                  isFocused && !error && !success && "text-primary-600"
+                  error ? "text-red-500" : success ? "text-green-500" : "text-gray-400",
+                  isFocused && !error && !success && "text-indigo-600"
                 )}
                 animate={{
                   scale: isFocused ? 1.1 : 1,
                   color: isFocused 
-                    ? error ? 'var(--error-500)' : success ? 'var(--success-500)' : 'var(--primary-600)'
-                    : error ? 'var(--error-500)' : success ? 'var(--success-500)' : 'var(--gray-400)'
+                    ? error ? 'rgb(239, 68, 68)' : success ? 'rgb(16, 185, 129)' : 'rgb(79, 70, 229)'
+                    : error ? 'rgb(239, 68, 68)' : success ? 'rgb(16, 185, 129)' : 'rgb(156, 163, 175)'
                 }}
                 transition={{ duration: 0.2 }}
               >
@@ -124,22 +124,22 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             </div>
           )}
 
-          {/* Input */}
+          {/* Input con estilos específicos */}
           <input
             ref={ref}
             id={id}
             type={inputType}
             className={cn(
-              // Base styles
+              // Base styles con tipografía Inter
               "w-full rounded-xl font-medium transition-all duration-200 ease-out",
-              "placeholder:text-gray-400 placeholder:font-normal",
-              "focus:outline-none focus:ring-4 focus:ring-primary-500/20",
+              "placeholder:text-gray-400 placeholder:font-normal placeholder:text-sm",
+              "focus:outline-none",
               "disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-gray-100",
               
               // Size variants
               sizeVariants[size],
               
-              // Variant styles
+              // Variant styles específicos
               getVariantClasses(),
               
               // Icon padding
@@ -156,17 +156,18 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             {...props}
           />
 
-          {/* Password Toggle */}
+          {/* Password Toggle mejorado */}
           {isPassword && (
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-400 hover:text-gray-600 transition-colors duration-200"
+              className="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-400 hover:text-gray-600 transition-colors duration-200 focus:outline-none"
               tabIndex={-1}
             >
               <motion.div
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
+                className="p-1 rounded-lg hover:bg-gray-100 transition-colors duration-200"
               >
                 {showPassword ? (
                   <EyeOff className="w-5 h-5" />
@@ -184,21 +185,22 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
                 initial={{ scale: 0, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.2 }}
+                className="p-1"
               >
                 {success ? (
-                  <Check className="w-5 h-5 text-success-500" />
+                  <Check className="w-5 h-5 text-green-500" />
                 ) : (
-                  <AlertCircle className="w-5 h-5 text-error-500" />
+                  <AlertCircle className="w-5 h-5 text-red-500" />
                 )}
               </motion.div>
             </div>
           )}
 
-          {/* Focus Ring Effect */}
+          {/* Focus Ring Effect suave */}
           <motion.div
             className={cn(
               "absolute inset-0 rounded-xl pointer-events-none transition-opacity duration-200",
-              "bg-gradient-to-r from-primary-500/10 via-transparent to-primary-500/10",
+              "bg-gradient-to-r from-indigo-500/5 via-transparent to-indigo-500/5",
               variant === 'minimal' && "rounded-none"
             )}
             animate={{
@@ -209,7 +211,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           {/* Floating Label Effect (for minimal variant) */}
           {variant === 'minimal' && label && (
             <motion.div
-              className="absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-primary-500 to-primary-600"
+              className="absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-indigo-600 to-indigo-700"
               initial={{ width: 0 }}
               animate={{ width: isFocused ? '100%' : '0%' }}
               transition={{ duration: 0.3 }}
@@ -217,9 +219,9 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           )}
         </div>
 
-        {/* Helper Text / Error Message */}
+        {/* Error Message debajo de cada input */}
         <AnimatePresence mode="wait">
-          {(error || helperText) && (
+          {error && (
             <motion.div
               initial={{ opacity: 0, y: -5, height: 0 }}
               animate={{ opacity: 1, y: 0, height: 'auto' }}
@@ -227,19 +229,26 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
               transition={{ duration: 0.2 }}
               className="flex items-start space-x-2"
             >
-              {error && (
-                <>
-                  <AlertCircle className="w-4 h-4 text-error-500 mt-0.5 flex-shrink-0" />
-                  <p className="text-sm font-medium text-error-600 leading-tight">
-                    {error}
-                  </p>
-                </>
-              )}
-              {!error && helperText && (
-                <p className="text-sm text-gray-500 leading-tight ml-6">
-                  {helperText}
-                </p>
-              )}
+              <AlertCircle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
+              <p className="text-sm font-medium text-red-600 leading-tight">
+                {error}
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Helper Text */}
+        <AnimatePresence>
+          {!error && helperText && (
+            <motion.div
+              initial={{ opacity: 0, y: -5 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -5 }}
+              className="flex items-center space-x-2"
+            >
+              <p className="text-sm text-gray-500 leading-tight ml-6">
+                {helperText}
+              </p>
             </motion.div>
           )}
         </AnimatePresence>
@@ -253,8 +262,8 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
               exit={{ opacity: 0, y: -5 }}
               className="flex items-center space-x-2"
             >
-              <Check className="w-4 h-4 text-success-500" />
-              <p className="text-sm font-medium text-success-600">
+              <Check className="w-4 h-4 text-green-500" />
+              <p className="text-sm font-medium text-green-600">
                 Campo válido
               </p>
             </motion.div>
