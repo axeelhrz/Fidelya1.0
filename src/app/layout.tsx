@@ -56,9 +56,11 @@ export default function RootLayout({
   return (
     <html lang="es" className={inter.variable}>
       <head>
-        <meta name="theme-color" content="#4f46e5" />
+        <meta name="theme-color" content="#667eea" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
-      <body className="font-sans antialiased bg-gray-50 text-gray-900">
+      <body className={inter.className}>
         <ClientLayout>
           {children}
         </ClientLayout>

@@ -28,8 +28,8 @@ body {
 }
 
 ::selection {
-  background-color: rgba(59, 130, 246, 0.2);
-  color: rgb(59, 130, 246);
+  background-color: rgba(102, 126, 234, 0.2);
+  color: rgb(102, 126, 234);
 }
 
 ::-webkit-scrollbar {
@@ -42,12 +42,12 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.3);
+  background: rgba(102, 126, 234, 0.3);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(148, 163, 184, 0.5);
+  background: rgba(102, 126, 234, 0.5);
 }
 
 input[type="number"]::-webkit-outer-spin-button,
@@ -99,4 +99,17 @@ input[type="number"] {
     backdrop-filter: blur(12px);
     border: 1px solid rgba(255, 255, 255, 0.2);
   }
+}
+
+/* Smooth transitions for MUI components */
+.MuiButton-root {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.MuiCard-root {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.MuiPaper-root {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
