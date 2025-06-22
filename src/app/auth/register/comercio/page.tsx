@@ -2,11 +2,12 @@
 
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 import { AuthLayout } from '@/components/auth/AuthLayout';
 import { AuthForm } from '@/components/auth/AuthForm';
 import { comercioRegisterSchema, type ComercioRegisterFormData } from '@/lib/validations/auth';
 import { createUser, getDashboardRoute } from '@/lib/auth';
-import { Mail, Lock, User, Store, Tag } from 'lucide-react';
+import { Mail, Lock, User, Store, Tag, ArrowLeft } from 'lucide-react';
 
 export default function ComercioRegisterPage() {
   const router = useRouter();
@@ -79,22 +80,60 @@ export default function ComercioRegisterPage() {
   return (
     <AuthLayout
       title="Crear cuenta de Comercio"
-      subtitle="Ofrece beneficios exclusivos a tus clientes"
+      subtitle="Ofrece beneficios exclusivos y fideliza a tus clientes"
     >
-      <AuthForm
-        schema={comercioRegisterSchema}
-        onSubmit={handleRegister}
-        fields={registerFields}
-        submitText="Crear cuenta"
-      />
-
-      <div className="mt-6 text-center">
-        <p className="text-sm text-gray-500">
-          ¿Ya tienes cuenta?{' '}
-          <Link href="/auth/login" className="font-medium text-indigo-600 hover:text-indigo-500">
-            Iniciar sesión
+      <div className="space-y-6">
+        {/* Botón de regreso */}
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <Link
+            href="/auth/register"
+            className="inline-flex items-center text-sm font-medium text-gray-600 hover:text-indigo-600 transition-colors duration-200"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Volver a selección de cuenta
           </Link>
-        </p>
+        </motion.div>
+
+        {/* Indicador de rol */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="flex items-center space-x-3 p-4 bg-purple-50 border border-purple-200 rounded-xl"
+        >
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-100 border border-purple-200">
+            <Store className="h-5 w-5 text-purple-600" />
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold text-purple-800">Cuenta de Comercio</h3>
+            <p className="text-xs text-purple-600">Gestiona beneficios para tus clientes</p>
+          </div>
+        </motion.div>
+
+        <AuthForm
+          schema={comercioRegisterSchema}
+          onSubmit={handleRegister}
+          fields={registerFields}
+          submitText="Crear cuenta"
+        />
+
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4 }}
+          className="text-center"
+        >
+          <p className="text-sm text-gray-500">
+            ¿Ya tienes cuenta?{' '}
+            <Link href="/auth/login" className="font-medium text-indigo-600 hover:text-indigo-500 transition-colors duration-200">
+              Iniciar sesión
+            </Link>
+          </p>
+        </motion.div>
       </div>
     </AuthLayout>
   );
