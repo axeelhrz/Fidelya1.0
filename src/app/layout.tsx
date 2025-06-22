@@ -9,12 +9,12 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Fidelita - Plataforma de Fidelización Inteligente",
+  title: "Fidelitá - Plataforma de Fidelización Inteligente",
   description: "La plataforma que conecta asociaciones, comercios y socios en un ecosistema único de beneficios mutuos. Fidelización moderna y eficaz.",
   keywords: ["fidelización", "loyalty", "comercios", "asociaciones", "socios", "beneficios"],
-  authors: [{ name: "Fidelita Team" }],
-  creator: "Fidelita",
-  publisher: "Fidelita",
+  authors: [{ name: "Fidelitá Team" }],
+  creator: "Fidelitá",
+  publisher: "Fidelitá",
   formatDetection: {
     email: false,
     address: false,
@@ -22,16 +22,16 @@ export const metadata: Metadata = {
   },
   metadataBase: new URL("https://fidelita.com"),
   openGraph: {
-    title: "Fidelita - Plataforma de Fidelización Inteligente",
+    title: "Fidelitá - Plataforma de Fidelización Inteligente",
     description: "Conecta asociaciones, comercios y socios en un ecosistema único de beneficios mutuos.",
     url: "https://fidelita.com",
-    siteName: "Fidelita",
+    siteName: "Fidelitá",
     locale: "es_ES",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Fidelita - Plataforma de Fidelización Inteligente",
+    title: "Fidelitá - Plataforma de Fidelización Inteligente",
     description: "Conecta asociaciones, comercios y socios en un ecosistema único de beneficios mutuos.",
     creator: "@fidelita",
   },
@@ -56,9 +56,9 @@ export default function RootLayout({
   return (
     <html lang="es" className={inter.variable}>
       <head>
-        <meta name="theme-color" content="#0a0a0f" />
+        <meta name="theme-color" content="#4f46e5" />
       </head>
-      <body style={{ margin: 0, padding: 0 }}>
+      <body className="font-sans antialiased bg-gray-50 text-gray-900">
         <ClientLayout>
           {children}
         </ClientLayout>
