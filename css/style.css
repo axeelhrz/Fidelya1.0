@@ -1029,7 +1029,7 @@ box-shadow:
 0 0 30px var(--starflex-crimson-glow);
 }
 
-/* ===== MENÚ MÓVIL FULLSCREEN OPTIMIZADO - CORRECCIÓN SIDEBAR ===== */
+/* ===== MENÚ MÓVIL FULLSCREEN OPTIMIZADO - MODIFICACIONES PARA TAPAR CTA ===== */
 @media (max-width: 1024px) {
 .nav__menu {
 position: fixed;
@@ -1051,9 +1051,10 @@ align-items: center;
 transition: left 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 transform: none;
 pointer-events: auto;
-z-index: var(--menu-overlay-z-index);
-/* CORRECCIÓN: Padding bottom suficiente para evitar solapamiento */
-padding: var(--mobile-menu-padding) var(--mobile-menu-padding) calc(var(--mobile-menu-padding) + 80px) var(--mobile-menu-padding);
+/* MODIFICACIÓN: Z-index más alto para tapar el botón CTA */
+z-index: calc(var(--navbar-z-index) + 3);
+/* MODIFICACIÓN: Padding más compacto */
+padding: var(--space-xl) var(--space-xl) calc(var(--space-xl) + 60px) var(--space-xl);
 overflow-y: auto;
 -webkit-overflow-scrolling: touch;
 }
@@ -1078,14 +1079,15 @@ animation: mobile-menu-glow 8s ease-in-out infinite;
 
 .nav__list {
 flex-direction: column;
-gap: var(--space-3xl);
+/* MODIFICACIÓN: Gap más compacto */
+gap: var(--space-xl);
 background: transparent;
 border: none;
 padding: 0;
 box-shadow: none;
 animation: none;
 width: 100%;
-max-width: 400px;
+max-width: 350px;
 }
 
 .nav__list::before {
@@ -1093,13 +1095,16 @@ display: none;
 }
 
 .nav__link {
-font-size: 1.3rem;
-padding: var(--space-lg) var(--space-2xl);
+/* MODIFICACIÓN: Tamaño de fuente más compacto */
+font-size: 1.1rem;
+/* MODIFICACIÓN: Padding más compacto */
+padding: var(--space-md) var(--space-xl);
 text-align: center;
 border-radius: 15px;
 background: rgba(21, 25, 34, 0.6);
 border: 1px solid rgba(255, 255, 255, 0.1);
-min-width: 280px;
+/* MODIFICACIÓN: Ancho mínimo más compacto */
+min-width: 240px;
 backdrop-filter: blur(15px);
 -webkit-backdrop-filter: blur(15px);
 transition: all var(--transition);
@@ -1130,6 +1135,15 @@ transform: translateY(-1px) scale(0.98);
 
 .nav__toggle {
 display: flex;
+/* MODIFICACIÓN: Z-index más alto para mantener visibilidad */
+z-index: calc(var(--navbar-z-index) + 4);
+}
+
+/* MODIFICACIÓN: Ocultar el botón CTA en móvil cuando el menú está activo */
+.nav__menu.active ~ .nav__cta {
+opacity: 0;
+visibility: hidden;
+pointer-events: none;
 }
 
 /* Ocultar elementos desktop en móvil */
@@ -1142,7 +1156,8 @@ display: none;
 @media (max-width: 768px) {
 :root {
 --navbar-height: var(--navbar-height-mobile);
---mobile-menu-padding: 1.5rem;
+/* MODIFICACIÓN: Padding más compacto para móvil */
+--mobile-menu-padding: 1rem;
 /* Ajustar filtros para móvil */
 --phone-image-sharpness: 1.12;
 --phone-image-contrast: 1.06;
@@ -1175,14 +1190,25 @@ width: 20px;
 }
 
 .nav__link {
-font-size: 1.2rem;
-min-width: 260px;
-padding: var(--space-md) var(--space-xl);
+/* MODIFICACIÓN: Tamaño más compacto para móvil */
+font-size: 1rem;
+min-width: 220px;
+padding: var(--space-sm) var(--space-lg);
 }
 
 .btn--primary {
 padding: var(--space-sm) var(--space-lg);
 font-size: 0.8rem;
+}
+
+/* MODIFICACIÓN: Menú móvil más compacto */
+.nav__menu {
+padding: var(--space-lg) var(--space-lg) calc(var(--space-lg) + 50px) var(--space-lg);
+}
+
+.nav__list {
+gap: var(--space-lg);
+max-width: 300px;
 }
 
 /* Optimización de imágenes para móvil */
@@ -1197,7 +1223,8 @@ saturate(1.08);
 
 @media (max-width: 480px) {
 :root {
---mobile-menu-padding: 1rem;
+/* MODIFICACIÓN: Padding aún más compacto para pantallas pequeñas */
+--mobile-menu-padding: 0.75rem;
 /* Filtros más conservadores para pantallas pequeñas */
 --phone-image-sharpness: 1.08;
 --phone-image-contrast: 1.04;
@@ -1226,14 +1253,25 @@ width: 18px;
 }
 
 .nav__link {
-font-size: 1.1rem;
-min-width: 240px;
-padding: var(--space-sm) var(--space-lg);
+/* MODIFICACIÓN: Tamaño muy compacto para pantallas pequeñas */
+font-size: 0.95rem;
+min-width: 200px;
+padding: var(--space-xs) var(--space-md);
 }
 
 .btn--primary {
 padding: var(--space-xs) var(--space-md);
 font-size: 0.75rem;
+}
+
+/* MODIFICACIÓN: Menú móvil ultra compacto */
+.nav__menu {
+padding: var(--space-md) var(--space-md) calc(var(--space-md) + 40px) var(--space-md);
+}
+
+.nav__list {
+gap: var(--space-md);
+max-width: 280px;
 }
 }
 
@@ -1242,6 +1280,8 @@ font-size: 0.75rem;
 .language-switcher {
     top: var(--language-switcher-safe-area);
     right: var(--language-switcher-safe-area);
+    /* MODIFICACIÓN: Z-index más alto para mantenerse visible */
+    z-index: calc(var(--navbar-z-index) + 5);
 }
 
 .language-switcher__btn {
@@ -1276,6 +1316,8 @@ font-size: 0.75rem;
 .language-switcher {
     top: var(--language-switcher-safe-area);
     right: var(--language-switcher-safe-area);
+    /* MODIFICACIÓN: Z-index más alto para mantenerse visible */
+    z-index: calc(var(--navbar-z-index) + 5);
 }
 
 .language-switcher__btn {
@@ -4530,7 +4572,8 @@ gap: var(--space-xl);
 @media (max-width: 768px) {
 :root {
 --navbar-height: var(--navbar-height-mobile);
---mobile-menu-padding: 1.5rem;
+/* MODIFICACIÓN: Padding más compacto para móvil */
+--mobile-menu-padding: 1rem;
 /* Ajustar filtros para móvil */
 --phone-image-sharpness: 1.12;
 --phone-image-contrast: 1.06;
@@ -4563,14 +4606,25 @@ width: 20px;
 }
 
 .nav__link {
-font-size: 1.2rem;
-min-width: 260px;
-padding: var(--space-md) var(--space-xl);
+/* MODIFICACIÓN: Tamaño más compacto para móvil */
+font-size: 1rem;
+min-width: 220px;
+padding: var(--space-sm) var(--space-lg);
 }
 
 .btn--primary {
 padding: var(--space-sm) var(--space-lg);
 font-size: 0.8rem;
+}
+
+/* MODIFICACIÓN: Menú móvil más compacto */
+.nav__menu {
+padding: var(--space-lg) var(--space-lg) calc(var(--space-lg) + 50px) var(--space-lg);
+}
+
+.nav__list {
+gap: var(--space-lg);
+max-width: 300px;
 }
 
 /* Optimización de imágenes para móvil */
@@ -4743,7 +4797,8 @@ font-size: 0.9rem;
 
 @media (max-width: 480px) {
 :root {
---mobile-menu-padding: 1rem;
+/* MODIFICACIÓN: Padding aún más compacto para pantallas pequeñas */
+--mobile-menu-padding: 0.75rem;
 /* Filtros más conservadores para pantallas pequeñas */
 --phone-image-sharpness: 1.08;
 --phone-image-contrast: 1.04;
@@ -4906,6 +4961,8 @@ display: none;
 .language-switcher {
     top: calc(var(--navbar-height-mobile) + 10px);
     right: var(--language-switcher-safe-area);
+    /* MODIFICACIÓN: Z-index más alto para mantenerse visible */
+    z-index: calc(var(--navbar-z-index) + 5);
 }
 
 /* Asegurar que el CTA del navbar no se solape */
@@ -4918,6 +4975,8 @@ display: none;
 .language-switcher {
     top: calc(var(--navbar-height-mobile) + 5px);
     right: var(--language-switcher-safe-area);
+    /* MODIFICACIÓN: Z-index más alto para mantenerse visible */
+    z-index: calc(var(--navbar-z-index) + 5);
 }
 
 .nav__cta {
@@ -5050,4 +5109,3 @@ border: 1px solid rgba(255, 45, 85, 0.4) !important;
 *[style*="box-shadow"][style*="rgb(255, 255, 0)"] {
 box-shadow: 0 0 16px rgba(255, 45, 85, 0.6) !important;
 }
-
