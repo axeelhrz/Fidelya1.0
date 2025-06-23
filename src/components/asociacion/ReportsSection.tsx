@@ -1,5 +1,4 @@
 'use client';
-
 import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
@@ -7,7 +6,6 @@ import {
   Typography,
   Card,
   CardContent,
-  Grid,
   alpha,
   Avatar,
   Stack,
@@ -96,6 +94,7 @@ const ReportCard: React.FC<ReportCardProps> = ({
           transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
           position: 'relative',
           overflow: 'hidden',
+          height: '100%',
           '&:hover': {
             borderColor: alpha(color, 0.3),
             transform: 'translateY(-4px)',
@@ -124,7 +123,6 @@ const ReportCard: React.FC<ReportCardProps> = ({
             transition: 'opacity 0.3s ease',
           }}
         />
-        
         <CardContent sx={{ p: 4 }}>
           <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 3, mb: 3 }}>
             <Avatar
@@ -140,7 +138,6 @@ const ReportCard: React.FC<ReportCardProps> = ({
             >
               {icon}
             </Avatar>
-            
             <Box sx={{ flex: 1 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
                 <Typography variant="h6" sx={{ fontWeight: 700, color: '#0f172a', fontSize: '1rem' }}>
@@ -169,7 +166,6 @@ const ReportCard: React.FC<ReportCardProps> = ({
               )}
             </Box>
           </Box>
-
           <Stack direction="row" spacing={1}>
             <Button
               onClick={onPreview}
@@ -227,6 +223,7 @@ const MetricSummaryCard: React.FC<{
         background: 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
         position: 'relative',
         overflow: 'hidden',
+        height: '100%',
       }}
     >
       <Box
@@ -327,7 +324,6 @@ const ReportPreviewModal: React.FC<{
               <Download />
             </IconButton>
           </Box>
-          
           {/* Aquí iría el contenido del reporte */}
           <Box sx={{ minHeight: 400, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Typography variant="body1" sx={{ color: '#64748b' }}>
@@ -355,7 +351,7 @@ export const ReportsSection: React.FC<ReportsSectionProps> = ({
     { label: 'Crecimiento', value: 'growth' },
   ];
 
-  const availableReports = [
+  const availableReports = useMemo(() => [
     {
       id: 'member-summary',
       title: 'Resumen de Miembros',
@@ -436,12 +432,12 @@ export const ReportsSection: React.FC<ReportsSectionProps> = ({
       reportType: 'summary' as const,
       lastGenerated: 'Hace 4 días'
     }
-  ];
+  ], []);
 
   const filteredReports = useMemo(() => {
     if (reportFilter === 'all') return availableReports;
     return availableReports.filter(report => report.category === reportFilter);
-  }, [reportFilter]);
+  }, [reportFilter, availableReports]);
 
   const handleGenerateReport = (reportId: string) => {
     // Aquí iría la lógica para generar el reporte
@@ -496,43 +492,51 @@ export const ReportsSection: React.FC<ReportsSectionProps> = ({
       subtitle: 'Registros'
     }
   ];
-
   if (loading) {
     return (
       <Box sx={{ p: 4 }}>
-        <Grid container spacing={4}>
+        {/* Loading state using CSS Grid */}
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: {
+              xs: 'repeat(1, 1fr)',
+              sm: 'repeat(2, 1fr)',
+              lg: 'repeat(4, 1fr)'
+            },
+            gap: 4,
+          }}
+        >
           {Array.from({ length: 8 }).map((_, index) => (
-            <Grid item xs={12} sm={6} lg={3} key={index}>
-              <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 5 }}>
-                <CardContent sx={{ p: 4 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, mb: 3 }}>
-                    <Box
-                      sx={{
-                        width: 56,
-                        height: 56,
-                        bgcolor: '#f1f5f9',
-                        borderRadius: 3,
-                        animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                        '@keyframes pulse': {
-                          '0%, 100%': { opacity: 1 },
-                          '50%': { opacity: 0.5 },
-                        },
-                      }}
-                    />
-                    <Box sx={{ flex: 1 }}>
-                      <Box sx={{ width: '80%', height: 16, bgcolor: '#f1f5f9', borderRadius: 1, mb: 1 }} />
-                      <Box sx={{ width: '60%', height: 14, bgcolor: '#f1f5f9', borderRadius: 1 }} />
-                    </Box>
+            <Card key={index} elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 5 }}>
+              <CardContent sx={{ p: 4 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, mb: 3 }}>
+                  <Box
+                    sx={{
+                      width: 56,
+                      height: 56,
+                      bgcolor: '#f1f5f9',
+                      borderRadius: 3,
+                      animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                      '@keyframes pulse': {
+                        '0%, 100%': { opacity: 1 },
+                        '50%': { opacity: 0.5 },
+                      },
+                    }}
+                  />
+                  <Box sx={{ flex: 1 }}>
+                    <Box sx={{ width: '80%', height: 16, bgcolor: '#f1f5f9', borderRadius: 1, mb: 1 }} />
+                    <Box sx={{ width: '60%', height: 14, bgcolor: '#f1f5f9', borderRadius: 1 }} />
                   </Box>
-                  <Box sx={{ display: 'flex', gap: 1 }}>
-                    <Box sx={{ width: 80, height: 32, bgcolor: '#f1f5f9', borderRadius: 2 }} />
-                    <Box sx={{ width: 80, height: 32, bgcolor: '#f1f5f9', borderRadius: 2 }} />
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
+                </Box>
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  <Box sx={{ width: 80, height: 32, bgcolor: '#f1f5f9', borderRadius: 2 }} />
+                  <Box sx={{ width: 80, height: 32, bgcolor: '#f1f5f9', borderRadius: 2 }} />
+                </Box>
+              </CardContent>
+            </Card>
           ))}
-        </Grid>
+        </Box>
       </Box>
     );
   }
@@ -588,7 +592,6 @@ export const ReportsSection: React.FC<ReportsSectionProps> = ({
                 </Typography>
               </Box>
             </Box>
-            
             <Stack direction="row" spacing={2}>
               <IconButton
                 sx={{
@@ -603,7 +606,6 @@ export const ReportsSection: React.FC<ReportsSectionProps> = ({
               >
                 <Refresh />
               </IconButton>
-              
               <Button
                 variant="contained"
                 startIcon={<Download />}
@@ -627,7 +629,6 @@ export const ReportsSection: React.FC<ReportsSectionProps> = ({
               </Button>
             </Stack>
           </Box>
-
           {/* Filters */}
           <Paper
             elevation={0}
@@ -654,7 +655,6 @@ export const ReportsSection: React.FC<ReportsSectionProps> = ({
                   ))}
                 </Select>
               </FormControl>
-
               <FormControl sx={{ minWidth: 200 }}>
                 <InputLabel>Período</InputLabel>
                 <Select
@@ -671,7 +671,6 @@ export const ReportsSection: React.FC<ReportsSectionProps> = ({
                   <MenuItem value="custom">Personalizado</MenuItem>
                 </Select>
               </FormControl>
-
               <Box sx={{ ml: 'auto' }}>
                 <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 600 }}>
                   {filteredReports.length} reportes disponibles
@@ -682,53 +681,72 @@ export const ReportsSection: React.FC<ReportsSectionProps> = ({
         </Box>
       </motion.div>
 
-      {/* Summary Metrics */}
-      <Grid container spacing={4} sx={{ mb: 6 }}>
+      {/* Summary Metrics using CSS Grid */}
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: {
+            xs: 'repeat(1, 1fr)',
+            sm: 'repeat(2, 1fr)',
+            lg: 'repeat(4, 1fr)'
+          },
+          gap: 4,
+          mb: 6,
+        }}
+      >
         {summaryMetrics.map((metric, index) => (
-          <Grid item xs={12} sm={6} lg={3} key={index}>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-            >
-              <MetricSummaryCard
-                title={metric.title}
-                value={metric.value}
-                change={metric.change}
-                icon={metric.icon}
-                color={metric.color}
-                subtitle={metric.subtitle}
-              />
-            </motion.div>
-          </Grid>
-        ))}
-      </Grid>
-
-      {/* Reports Grid */}
-      <Grid container spacing={4}>
-        {filteredReports.map((report, index) => (
-          <Grid item xs={12} sm={6} lg={3} key={report.id}>
-            <ReportCard
-              title={report.title}
-              description={report.description}
-              icon={report.icon}
-              color={report.color}
-              delay={index * 0.1}
-              onGenerate={() => handleGenerateReport(report.id)}
-              onPreview={() => handlePreviewReport(report.id)}
-              lastGenerated={report.lastGenerated}
-              reportType={report.reportType}
+          <motion.div
+            key={index}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: index * 0.1 }}
+          >
+            <MetricSummaryCard
+              title={metric.title}
+              value={metric.value}
+              change={metric.change}
+              icon={metric.icon}
+              color={metric.color}
+              subtitle={metric.subtitle}
             />
-          </Grid>
+          </motion.div>
         ))}
-      </Grid>
+      </Box>
+
+      {/* Reports Grid using CSS Grid */}
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: {
+            xs: 'repeat(1, 1fr)',
+            sm: 'repeat(2, 1fr)',
+            lg: 'repeat(4, 1fr)'
+          },
+          gap: 4,
+        }}
+      >
+        {filteredReports.map((report, index) => (
+          <ReportCard
+            key={report.id}
+            title={report.title}
+            description={report.description}
+            icon={report.icon}
+            color={report.color}
+            delay={index * 0.1}
+            onGenerate={() => handleGenerateReport(report.id)}
+            onPreview={() => handlePreviewReport(report.id)}
+            lastGenerated={report.lastGenerated}
+            reportType={report.reportType}
+          />
+        ))}
+      </Box>
 
       {/* Preview Modal */}
-      <ReportPreviewModal
       <ReportPreviewModal
         open={previewModal.open}
         onClose={() => setPreviewModal({ open: false, type: '', data: null })}
         reportType={previewModal.type}
       />
+    </Box>
   );
 };

@@ -15,7 +15,6 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Paper,
   Chip,
   IconButton,
   InputAdornment,
@@ -26,9 +25,7 @@ import {
   Pagination,
   Stack,
   Avatar,
-  useTheme,
   alpha,
-  Divider,
 } from '@mui/material';
 import {
   Search,
@@ -42,6 +39,7 @@ import {
   FilterList,
 } from '@mui/icons-material';
 import { Socio } from '@/types/socio';
+import { SelectChangeEvent } from '@mui/material/Select';
 
 interface SociosTableProps {
   socios: Socio[];
@@ -93,7 +91,6 @@ export const SociosTable: React.FC<SociosTableProps> = ({
   onDelete,
   onAdd
 }) => {
-  const theme = useTheme();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'activo' | 'vencido'>('all');
   const [currentPage, setCurrentPage] = useState(1);
@@ -139,10 +136,22 @@ export const SociosTable: React.FC<SociosTableProps> = ({
       />
     );
   };
+  
+  /* Add this CSS to your global styles or in a <style jsx global> block if using Next.js */
+  <style jsx global>{`
+    .socio-row:hover {
+      background-color: #fafbfc;
+    }
+  `}</style>
 
-  const formatDate = (timestamp: any) => {
+  const formatDate = (
+    timestamp: Date | { toDate: () => Date } | string | number | undefined
+  ) => {
     if (!timestamp) return '-';
-    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+    const date =
+      typeof timestamp === 'object' && timestamp !== null && 'toDate' in timestamp
+        ? (timestamp as { toDate: () => Date }).toDate()
+        : new Date(timestamp as string | number | Date);
     return date.toLocaleDateString('es-ES', {
       year: 'numeric',
       month: 'short',
@@ -249,8 +258,7 @@ export const SociosTable: React.FC<SociosTableProps> = ({
             <FormControl sx={{ minWidth: 200 }}>
               <InputLabel>Estado</InputLabel>
               <Select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as any)}
+                onChange={(e: SelectChangeEvent) => setStatusFilter(e.target.value as 'all' | 'activo' | 'vencido')}
                 label="Estado"
                 startAdornment={<FilterList sx={{ color: '#94a3b8', mr: 1 }} />}
                 sx={{
@@ -346,25 +354,17 @@ export const SociosTable: React.FC<SociosTableProps> = ({
                     <TableCell sx={{ fontWeight: 700, color: '#475569', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                       Fecha de Alta
                     </TableCell>
-                    <TableCell align="right" sx={{ fontWeight: 700, color: '#475569', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                      Acciones
-                    </TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {paginatedSocios.map((socio, index) => (
                     <motion.tr
                       key={socio.uid}
-                      component={TableRow}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.3, delay: index * 0.05 }}
-                      sx={{
-                        '&:hover': {
-                          bgcolor: '#fafbfc',
-                        },
-                        transition: 'background-color 0.2s ease'
-                      }}
+                      style={{ transition: 'background-color 0.2s ease' }}
+                      className="socio-row"
                     >
                       <TableCell>
                         <Box>

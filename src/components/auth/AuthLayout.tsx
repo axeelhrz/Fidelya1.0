@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Sparkles } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 interface AuthLayoutProps {
   children: React.ReactNode;

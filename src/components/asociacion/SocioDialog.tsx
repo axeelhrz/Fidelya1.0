@@ -19,7 +19,6 @@ import {
   InputLabel,
   Select,
   FormHelperText,
-  useTheme,
   alpha,
   Avatar,
   Divider,
@@ -49,9 +48,7 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
   onClose,
   onSave,
   socio,
-  loading = false
 }) => {
-  const theme = useTheme();
   const isEditing = !!socio;
 
   const {
@@ -59,8 +56,6 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
-    setValue,
-    watch
   } = useForm<SocioFormData>({
     resolver: zodResolver(socioSchema),
     defaultValues: {

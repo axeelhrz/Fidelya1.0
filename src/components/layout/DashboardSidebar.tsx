@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   Box,
   Drawer,
@@ -27,36 +27,22 @@ import {
   Group,
   Analytics,
   Upload,
-  Download,
   Settings,
   Notifications,
   Help,
   Logout,
   ChevronLeft,
   ChevronRight,
-  ExpandLess,
   ExpandMore,
   PersonAdd,
   Assessment,
-  Timeline,
-  BarChart,
-  PieChart,
   TrendingUp,
-  Email,
-  Print,
-  Share,
   Security,
   AccountCircle,
   Business,
-  Payment,
-  Report,
   CloudDownload,
   CloudUpload,
-  Insights,
   AutoGraph,
-  Speed,
-  Star,
-  Bookmark,
   History,
 } from '@mui/icons-material';
 import { useAuth } from '@/hooks/useAuth';
