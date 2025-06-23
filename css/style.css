@@ -10,7 +10,7 @@
 --glass-bg-strong: rgba(255, 255, 255, 0.12);
 
 /* Colores de marca Starflex - ACTUALIZADOS A TONOS ROJIZOS */
---starflex-red: #e6002d;
+--starflex-red: #FF2D55;
 --starflex-red-dark: #cc1744;
 --starflex-red-bright: #ff4569;
 --starflex-orange: #ff6b35;
@@ -60,10 +60,10 @@
 --shadow-xl: 0 25px 50px rgba(0, 0, 0, 0.3);
 --shadow-2xl: 0 35px 70px rgba(0, 0, 0, 0.4);
 
-/* Sombras rojizas simplificadas */
---shadow-crimson: 0 15px 40px rgba(184, 0, 46, 0.4);
---shadow-crimson-hover: 0 25px 60px rgba(184, 0, 46, 0.6);
---shadow-crimson-ultra: 0 30px 80px rgba(255, 23, 68, 0.5);
+/* Sombras rojizas simplificadas - CORREGIDA PARA MODAL QR */
+--shadow-crimson: 0 15px 40px rgba(255, 45, 85, 0.4);
+--shadow-crimson-hover: 0 25px 60px rgba(255, 45, 85, 0.6);
+--shadow-crimson-ultra: 0 30px 80px rgba(255, 45, 85, 0.5);
 
 /* Tipografía */
 --font-primary: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -110,6 +110,8 @@ box-sizing: border-box;
 html {
 scroll-behavior: smooth;
 font-size: 16px;
+/* CORRECCIÓN: Eliminar scroll lateral */
+overflow-x: hidden;
 }
 
 body {
@@ -117,6 +119,7 @@ font-family: var(--font-primary);
 background: var(--primary-bg);
 color: var(--text-primary);
 line-height: 1.5;
+/* CORRECCIÓN: Eliminar scroll lateral */
 overflow-x: hidden;
 -webkit-font-smoothing: antialiased;
 -moz-osx-font-smoothing: grayscale;
@@ -125,7 +128,9 @@ position: relative;
 
 /* ===== OPTIMIZACIÓN AVANZADA DE IMÁGENES DE CELULAR ===== */
 .image-optimized {
-transition: all var(--transition);
+/* CORRECCIÓN: Eliminar delay visual en carga inicial */
+opacity: 1;
+transition: none;
 position: relative;
 overflow: hidden;
 /* Optimización de renderizado para máxima calidad */
@@ -192,7 +197,8 @@ position: absolute;
 top: 0;
 left: 0;
 z-index: 1;
-transition: all var(--transition);
+/* CORRECCIÓN: Eliminar transición para evitar delay */
+transition: none;
 background-size: cover;
 background-position: center;
 background-repeat: no-repeat;
@@ -204,9 +210,9 @@ image-rendering: crisp-edges;
 image-rendering: high-quality;
 /* Filtros para máxima nitidez y calidad */
 filter: 
-brightness(var(--phone-image-brightness)) 
-contrast(var(--phone-image-contrast)) 
-saturate(var(--phone-image-saturation));
+brightness(1.02) 
+contrast(1.05) 
+saturate(1.08);
 /* Aceleración por hardware */
 transform: translateZ(0) scale(1.001);
 backface-visibility: hidden;
@@ -219,6 +225,8 @@ contain: layout style paint;
 /* Optimización para pantallas de alta densidad */
 background-blend-mode: normal;
 isolation: isolate;
+/* CORRECCIÓN: Carga inmediata sin delay */
+opacity: 1;
 }
 
 /* Optimización específica para el hero */
@@ -239,9 +247,9 @@ background-image: url('../assets/phones/Hero.jpg');
 border-radius: 40px;
 /* Filtros específicos para imágenes de características */
 filter: 
-brightness(var(--phone-image-brightness)) 
-contrast(var(--phone-image-contrast)) 
-saturate(var(--phone-image-saturation))
+brightness(1.02) 
+contrast(1.05) 
+saturate(1.08)
 drop-shadow(0 0 0.5px rgba(0, 0, 0, 0.08));
 }
 
@@ -255,9 +263,9 @@ transform: translateZ(0) scale(0.999);
 .hero__phone-app-image.loaded,
 .phone__app-image.loaded {
 filter: 
-brightness(var(--phone-image-brightness)) 
-contrast(var(--phone-image-contrast)) 
-saturate(var(--phone-image-saturation));
+brightness(1.04) 
+contrast(1.12) 
+saturate(1.15);
 transform: translateZ(0) scale(1.001);
 }
 
@@ -1021,7 +1029,7 @@ box-shadow:
 0 0 30px var(--starflex-crimson-glow);
 }
 
-/* ===== MENÚ MÓVIL FULLSCREEN OPTIMIZADO ===== */
+/* ===== MENÚ MÓVIL FULLSCREEN OPTIMIZADO - CORRECCIÓN SIDEBAR ===== */
 @media (max-width: 1024px) {
 .nav__menu {
 position: fixed;
@@ -1044,7 +1052,8 @@ transition: left 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 transform: none;
 pointer-events: auto;
 z-index: var(--menu-overlay-z-index);
-padding: var(--mobile-menu-padding);
+/* CORRECCIÓN: Padding bottom suficiente para evitar solapamiento */
+padding: var(--mobile-menu-padding) var(--mobile-menu-padding) calc(var(--mobile-menu-padding) + 80px) var(--mobile-menu-padding);
 overflow-y: auto;
 -webkit-overflow-scrolling: touch;
 }
@@ -1180,9 +1189,9 @@ font-size: 0.8rem;
 .hero__phone-app-image,
 .phone__app-image {
 filter: 
-brightness(var(--phone-image-brightness)) 
-contrast(var(--phone-image-contrast)) 
-saturate(var(--phone-image-saturation));
+brightness(1.02) 
+contrast(1.05) 
+saturate(1.08);
 }
 }
 
@@ -1238,7 +1247,7 @@ font-size: 0.75rem;
 .language-switcher__btn {
     padding: var(--space-sm) var(--space-md);
     font-size: 0.8rem;
-    min-width: 100px;
+        min-width: 100px;
     border-radius: 20px;
 }
 
@@ -1431,27 +1440,41 @@ align-items: center;
 animation: fadeInUp 1s ease-out;
 }
 
-.hero__badge {
+/* ===== BOTONES DE ETIQUETAS UNIFICADOS ===== */
+.hero__badge,
+.videos__badge {
 display: inline-flex;
 align-items: center;
 gap: var(--space-sm);
-padding: var(--space-sm) var(--space-lg);
-background: var(--glass-bg);
-backdrop-filter: blur(20px);
-border: 1px solid var(--border-accent);
-border-radius: 25px;
+padding: 6px 16px;
+background-color: transparent;
+border: 1px solid var(--starflex-red);
+color: var(--starflex-red);
+border-radius: 999px;
 font-size: 0.8rem;
 font-weight: 600;
-color: var(--starflex-crimson-bright);
+font-family: 'Sora', sans-serif;
+text-transform: uppercase;
+letter-spacing: 0.8px;
 margin-bottom: var(--space-xl);
 position: relative;
 overflow: hidden;
-text-transform: uppercase;
-letter-spacing: 0.8px;
-box-shadow: var(--glow-subtle);
+transition: all var(--transition);
+cursor: pointer;
 }
 
-.hero__badge::before {
+.hero__badge:hover,
+.videos__badge:hover {
+background-color: var(--starflex-red);
+color: white;
+transform: translateY(-2px);
+box-shadow: 
+0 8px 25px rgba(255, 45, 85, 0.3),
+0 0 20px rgba(255, 45, 85, 0.4);
+}
+
+.hero__badge::before,
+.videos__badge::before {
 content: '';
 width: 8px;
 height: 8px;
@@ -1459,6 +1482,13 @@ background: var(--starflex-crimson-bright);
 border-radius: 50%;
 animation: pulse-gentle 3s infinite;
 box-shadow: var(--glow-subtle);
+}
+
+.videos__badge-icon {
+font-size: 1rem;
+color: var(--starflex-crimson-bright);
+animation: pulse-gentle 3s infinite;
+text-shadow: 0 0 10px var(--starflex-crimson-glow);
 }
 
 /* ===== TÍTULO HERO ===== */
@@ -1882,7 +1912,7 @@ background: #000000;
 border-radius: 45px;
 }
 
-/* ===== VIDEO DEL HERO OPTIMIZADO ===== */
+/* ===== VIDEO DEL HERO OPTIMIZADO - CARGA INMEDIATA ===== */
 .hero__phone-video {
 width: 100%;
 height: 100%;
@@ -1893,13 +1923,16 @@ left: 0;
 z-index: 2;
 object-fit: cover;
 object-position: center;
-transition: all var(--transition);
+/* CORRECCIÓN: Eliminar transición para carga inmediata */
+transition: none;
 filter: brightness(1.02) contrast(1.05) saturate(1.08);
 /* Optimización de renderizado */
 transform: translateZ(0);
 backface-visibility: hidden;
 image-rendering: -webkit-optimize-contrast;
 image-rendering: crisp-edges;
+/* CORRECCIÓN: Carga inmediata sin delay */
+opacity: 1;
 }
 
 .hero__phone-video::-webkit-media-controls {
@@ -1955,7 +1988,8 @@ position: absolute;
 top: 0;
 left: 0;
 z-index: 1;
-transition: all var(--transition);
+/* CORRECCIÓN: Eliminar transición para carga inmediata */
+transition: none;
 background-size: cover;
 background-position: center;
 background-repeat: no-repeat;
@@ -1978,6 +2012,8 @@ transform: translateZ(0) scale(1.001);
 backface-visibility: hidden;
 will-change: transform, filter;
 contain: layout style paint;
+/* CORRECCIÓN: Carga inmediata sin delay */
+opacity: 1;
 }
 
 /* ===== ESTADOS DE CARGA PARA VIDEO ===== */
@@ -2144,6 +2180,8 @@ color: var(--text-secondary);
 padding: var(--space-sm) 0;
 transition: all var(--transition);
 line-height: 1.6;
+/* CORRECCIÓN: Alineación a la izquierda para todos los ítems */
+text-align: left;
 }
 
 .feature__list-item::before {
@@ -2163,43 +2201,36 @@ color: var(--text-primary);
 transform: translateX(5px);
 }
 
-/* ===== ESTILOS ESPECÍFICOS PARA LA SECCIÓN REFERIDOS ===== */
+/* ===== CORRECCIÓN: ESTILOS UNIFICADOS PARA LA SECCIÓN REFERIDOS ===== */
 .feature[data-feature="referrals"] .feature__list-item {
-flex-direction: column;
+/* REMOVIDO: Estilos especiales que diferían del resto */
+display: flex;
 align-items: flex-start;
-gap: var(--space-sm);
-background: var(--glass-bg);
-backdrop-filter: blur(15px);
-border: 1px solid var(--border-subtle);
-border-radius: 15px;
-padding: var(--space-lg);
-margin-bottom: var(--space-xl);
-position: relative;
-overflow: hidden;
+gap: var(--space-md);
+margin-bottom: var(--space-lg);
+font-size: 1.1rem;
+color: var(--text-secondary);
+padding: var(--space-sm) 0;
+transition: all var(--transition);
+line-height: 1.6;
+text-align: left;
+/* REMOVIDO: background, border, border-radius para unificar con el resto */
 }
 
 .feature[data-feature="referrals"] .feature__list-item::before {
-position: absolute;
-top: var(--space-lg);
-left: var(--space-lg);
-margin-top: 0;
+/* MANTENER: El mismo estilo de bullet que el resto */
+content: '';
+width: 8px;
+height: 8px;
+background: var(--starflex-crimson-glow);
+border-radius: 50%;
+flex-shrink: 0;
+box-shadow: 0 0 10px var(--starflex-crimson-glow);
+animation: pulse-gentle 3s infinite;
+margin-top: 8px;
 }
 
-.feature[data-feature="referrals"] .feature__list-item strong {
-color: var(--starflex-crimson-bright);
-font-size: 1.2rem;
-font-weight: 700;
-margin-left: var(--space-xl);
-margin-bottom: var(--space-sm);
-display: block;
-}
-
-.feature[data-feature="referrals"] .feature__list-item br + * {
-margin-left: var(--space-xl);
-color: var(--text-muted);
-font-size: 1rem;
-line-height: 1.6;
-}
+/* REMOVIDO: Estilos especiales para strong y br que diferían del resto */
 
 .feature__phone {
 position: relative;
@@ -2248,8 +2279,9 @@ filter: drop-shadow(0 0 25px rgba(184, 0, 46, 0.12));
 filter: drop-shadow(0 0 25px rgba(255, 69, 105, 0.12));
 }
 
+/* CORRECCIÓN: Sombra rojiza para la sección de referidos */
 .feature:nth-child(6) .phone {
-filter: drop-shadow(0 0 25px rgba(255, 215, 0, 0.15));
+filter: drop-shadow(0 0 25px rgba(255, 45, 85, 0.15));
 }
 
 .phone::before {
@@ -2272,10 +2304,11 @@ animation: feature-ambient-glow 10s ease-in-out infinite;
 filter: blur(20px);
 }
 
+/* CORRECCIÓN: Sombra rojiza para referidos */
 .feature:nth-child(6) .phone::before {
 background: radial-gradient(ellipse, 
-rgba(255, 215, 0, 0.1) 0%,
-rgba(255, 193, 7, 0.05) 40%,
+rgba(255, 45, 85, 0.1) 0%,
+rgba(255, 45, 85, 0.05) 40%,
 transparent 70%
 );
 }
@@ -2316,9 +2349,9 @@ background-repeat: no-repeat;
 background-attachment: scroll;
 /* Filtros ultra-optimizados para máxima nitidez */
 filter: 
-brightness(var(--phone-image-brightness)) 
-contrast(var(--phone-image-contrast)) 
-saturate(var(--phone-image-saturation))
+brightness(1.02) 
+contrast(1.05) 
+saturate(1.08)
 drop-shadow(0 0 0.5px rgba(0, 0, 0, 0.08));
 image-rendering: -webkit-optimize-contrast;
 image-rendering: -moz-crisp-edges;
@@ -2352,9 +2385,9 @@ animation: image-loading-shimmer 1.5s infinite;
 
 .phone__app-image.loaded {
 filter: 
-brightness(var(--phone-image-brightness)) 
-contrast(var(--phone-image-contrast)) 
-saturate(var(--phone-image-saturation))
+brightness(1.02) 
+contrast(1.05) 
+saturate(1.08)
 drop-shadow(0 0 0.5px rgba(0, 0, 0, 0.08));
 transform: translateZ(0) scale(1.001);
 }
@@ -2405,33 +2438,6 @@ z-index: 3;
 opacity: 0;
 transform: translateY(30px);
 animation: fadeInUp 1s ease-out 0.2s forwards;
-}
-
-.videos__badge {
-display: inline-flex;
-align-items: center;
-gap: var(--space-sm);
-padding: var(--space-sm) var(--space-lg);
-background: var(--glass-bg);
-backdrop-filter: blur(20px);
-border: 1px solid var(--border-accent);
-border-radius: 25px;
-font-size: 0.8rem;
-font-weight: 600;
-color: var(--starflex-red);
-margin-bottom: var(--space-xl);
-position: relative;
-overflow: hidden;
-text-transform: uppercase;
-letter-spacing: 0.8px;
-box-shadow: var(--glow-subtle);
-}
-
-.videos__badge-icon {
-font-size: 1rem;
-color: var(--starflex-crimson-bright);
-animation: pulse-gentle 3s infinite;
-text-shadow: 0 0 10px var(--starflex-crimson-glow);
 }
 
 .videos__title {
@@ -4571,9 +4577,9 @@ font-size: 0.8rem;
 .hero__phone-app-image,
 .phone__app-image {
 filter: 
-brightness(var(--phone-image-brightness)) 
-contrast(var(--phone-image-contrast)) 
-saturate(var(--phone-image-saturation));
+brightness(1.02) 
+contrast(1.05) 
+saturate(1.08);
 }
 
 .hero {
@@ -4681,8 +4687,7 @@ border-radius: 30px;
 }
 
 .contact {
-padding: var(--space-5xl
-) 0;
+padding: var(--space-5xl) 0;
 }
 
 .contact__title {
@@ -5025,3 +5030,24 @@ background-position: -200% 0;
 background-position: 200% 0;
 }
 }
+
+/* ===== CORRECCIÓN ESPECÍFICA PARA MODAL QR DE REFERIDOS ===== */
+/* Aplicar sombra rojiza a cualquier modal QR que aparezca */
+.modal,
+.qr-modal,
+[class*="modal"],
+[class*="qr"],
+.referral-modal,
+.popup,
+.overlay {
+box-shadow: 0 0 16px rgba(255, 45, 85, 0.6) !important;
+border: 1px solid rgba(255, 45, 85, 0.4) !important;
+}
+
+/* Asegurar que cualquier elemento con sombra amarilla sea reemplazado */
+*[style*="box-shadow"][style*="yellow"],
+*[style*="box-shadow"][style*="#ffff"],
+*[style*="box-shadow"][style*="rgb(255, 255, 0)"] {
+box-shadow: 0 0 16px rgba(255, 45, 85, 0.6) !important;
+}
+
