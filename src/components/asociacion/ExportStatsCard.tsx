@@ -6,7 +6,6 @@ import {
   CardContent,
   Typography,
   Box,
-  Grid,
   Avatar,
   alpha,
   Chip,
@@ -15,7 +14,6 @@ import {
 import {
   Assessment,
   Storage,
-  Speed,
   Timeline,
   TrendingUp,
   DataUsage,
@@ -108,54 +106,64 @@ export const ExportStatsCard: React.FC<ExportStatsCardProps> = ({
             </Box>
           </Box>
 
-          <Grid container spacing={3}>
+          {/* CSS Grid Layout for Stats */}
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: {
+                xs: '1fr',
+                sm: 'repeat(2, 1fr)',
+              },
+              gap: 3,
+              mb: 4,
+            }}
+          >
             {stats.map((stat, index) => (
-              <Grid item xs={12} sm={6} key={index}>
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.3, delay: index * 0.1 }}
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.3, delay: index * 0.1 }}
+              >
+                <Box
+                  sx={{
+                    p: 3,
+                    borderRadius: 4,
+                    bgcolor: alpha(stat.color, 0.05),
+                    border: `1px solid ${alpha(stat.color, 0.1)}`,
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      bgcolor: alpha(stat.color, 0.08),
+                      transform: 'translateY(-2px)',
+                    }
+                  }}
                 >
-                  <Box
-                    sx={{
-                      p: 3,
-                      borderRadius: 4,
-                      bgcolor: alpha(stat.color, 0.05),
-                      border: `1px solid ${alpha(stat.color, 0.1)}`,
-                      transition: 'all 0.3s ease',
-                      '&:hover': {
-                        bgcolor: alpha(stat.color, 0.08),
-                        transform: 'translateY(-2px)',
-                      }
-                    }}
-                  >
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                      <Avatar
-                        sx={{
-                          width: 32,
-                          height: 32,
-                          bgcolor: alpha(stat.color, 0.1),
-                          color: stat.color,
-                          borderRadius: 2,
-                        }}
-                      >
-                        {stat.icon}
-                      </Avatar>
-                      <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#64748b' }}>
-                        {stat.label}
-                      </Typography>
-                    </Box>
-                    <Typography variant="h5" sx={{ fontWeight: 800, color: stat.color, mb: 1 }}>
-                      {stat.value}
-                    </Typography>
-                    <Typography variant="caption" sx={{ color: '#64748b' }}>
-                      {stat.description}
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                    <Avatar
+                      sx={{
+                        width: 32,
+                        height: 32,
+                        bgcolor: alpha(stat.color, 0.1),
+                        color: stat.color,
+                        borderRadius: 2,
+                      }}
+                    >
+                      {stat.icon}
+                    </Avatar>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#64748b' }}>
+                      {stat.label}
                     </Typography>
                   </Box>
-                </motion.div>
-              </Grid>
+                  <Typography variant="h5" sx={{ fontWeight: 800, color: stat.color, mb: 1 }}>
+                    {stat.value}
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: '#64748b' }}>
+                    {stat.description}
+                  </Typography>
+                </Box>
+              </motion.div>
             ))}
-          </Grid>
+          </Box>
 
           <Box sx={{ mt: 4 }}>
             <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#64748b', mb: 2 }}>
@@ -190,7 +198,6 @@ export const ExportStatsCard: React.FC<ExportStatsCardProps> = ({
                   />
                 </Box>
               </Box>
-              
               <Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
                   <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>
