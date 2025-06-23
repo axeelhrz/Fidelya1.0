@@ -7,26 +7,20 @@ import {
   Typography,
   Card,
   CardContent,
-  Grid,
-  useTheme,
   alpha,
   Avatar,
   Stack,
   Chip,
   LinearProgress,
-  Divider,
 } from '@mui/material';
 import {
   TrendingUp,
   TrendingDown,
   Group,
-  PersonAdd,
   Schedule,
-  AttachMoney,
   Analytics,
   Speed,
   Star,
-  Timeline,
   BarChart,
   ShowChart,
   PieChart,
@@ -60,7 +54,6 @@ const MetricCard: React.FC<MetricCardProps> = ({
   subtitle,
   trend = 'neutral'
 }) => {
-  const theme = useTheme();
   
   return (
     <motion.div
@@ -212,9 +205,17 @@ const MetricCard: React.FC<MetricCardProps> = ({
   );
 };
 
+type ChartDataItem = {
+  name?: string;
+  category?: string;
+  month?: string;
+  value: number;
+  color?: string;
+};
+
 const SimpleChart: React.FC<{ 
   title: string; 
-  data: any[]; 
+  data: ChartDataItem[]; 
   color: string; 
   type: 'bar' | 'line' | 'pie';
   icon: React.ReactNode;
@@ -367,16 +368,14 @@ const SimpleChart: React.FC<{
 };
 
 export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
-  socios,
   stats,
   loading
 }) => {
-  const theme = useTheme();
 
   // Generate mock data for charts (in real app, this would come from your data)
   const monthlyData = useMemo(() => {
     const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'];
-    return months.map((month, index) => ({
+    return months.map((month) => ({
       month,
       value: Math.floor(Math.random() * 50) + 10,
     }));
@@ -447,68 +446,77 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
   if (loading) {
     return (
       <Box sx={{ mb: 6 }}>
-        <Grid container spacing={4}>
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: {
+              xs: '1fr',
+              sm: 'repeat(2, 1fr)',
+              lg: 'repeat(4, 1fr)'
+            },
+            gap: 4
+          }}
+        >
           {Array.from({ length: 4 }).map((_, index) => (
-            <Grid item xs={12} sm={6} lg={3} key={index}>
-              <Card
-                elevation={0}
-                sx={{
-                  border: '1px solid #f1f5f9',
-                  borderRadius: 6,
-                  overflow: 'hidden'
-                }}
-              >
-                <CardContent sx={{ p: 4 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 3 }}>
-                    <Box
-                      sx={{
-                        width: 64,
-                        height: 64,
-                        bgcolor: '#f1f5f9',
-                        borderRadius: 5,
-                        animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                        '@keyframes pulse': {
-                          '0%, 100%': { opacity: 1 },
-                          '50%': { opacity: 0.5 },
-                        },
-                      }}
-                    />
-                    <Box
-                      sx={{
-                        width: 48,
-                        height: 24,
-                        bgcolor: '#f1f5f9',
-                        borderRadius: 2,
-                        animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                      }}
-                    />
-                  </Box>
-                  <Box sx={{ mb: 2 }}>
-                    <Box
-                      sx={{
-                        width: '60%',
-                        height: 16,
-                        bgcolor: '#f1f5f9',
-                        borderRadius: 1,
-                        mb: 2,
-                        animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                      }}
-                    />
-                    <Box
-                      sx={{
-                        width: '40%',
-                        height: 32,
-                        bgcolor: '#f1f5f9',
-                        borderRadius: 1,
-                        animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                      }}
-                    />
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
+            <Card
+              key={index}
+              elevation={0}
+              sx={{
+                border: '1px solid #f1f5f9',
+                borderRadius: 6,
+                overflow: 'hidden'
+              }}
+            >
+              <CardContent sx={{ p: 4 }}>
+                <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 3 }}>
+                  <Box
+                    sx={{
+                      width: 64,
+                      height: 64,
+                      bgcolor: '#f1f5f9',
+                      borderRadius: 5,
+                      animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                      '@keyframes pulse': {
+                        '0%, 100%': { opacity: 1 },
+                        '50%': { opacity: 0.5 },
+                      },
+                    }}
+                  />
+                  <Box
+                    sx={{
+                      width: 48,
+                      height: 24,
+                      bgcolor: '#f1f5f9',
+                      borderRadius: 2,
+                      animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }}
+                  />
+                </Box>
+                <Box sx={{ mb: 2 }}>
+                  <Box
+                    sx={{
+                      width: '60%',
+                      height: 16,
+                      bgcolor: '#f1f5f9',
+                      borderRadius: 1,
+                      mb: 2,
+                      animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }}
+                  />
+                  <Box
+                    sx={{
+                      width: '40%',
+                      height: 32,
+                      bgcolor: '#f1f5f9',
+                      borderRadius: 1,
+                      animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }}
+                  />
+                </Box>
+              </CardContent>
+            </Card>
           ))}
-        </Grid>
+        </Box>
       </Box>
     );
   }
@@ -566,77 +574,91 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
           </motion.div>
         </Box>
 
-        {/* Metrics Cards */}
-        <Grid container spacing={4} sx={{ mb: 6 }}>
+        {/* Metrics Cards - Replaced Grid with CSS Grid */}
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: {
+              xs: '1fr',
+              sm: 'repeat(2, 1fr)',
+              lg: 'repeat(4, 1fr)'
+            },
+            gap: 4,
+            mb: 6
+          }}
+        >
           {metrics.map((metric, index) => (
-            <Grid item xs={12} sm={6} lg={3} key={index}>
-              <MetricCard
-                title={metric.title}
-                value={metric.value}
-                change={metric.change}
-                icon={metric.icon}
-                color={metric.color}
-                delay={metric.delay}
-                subtitle={metric.subtitle}
-                trend={metric.trend}
-              />
-            </Grid>
+            <MetricCard
+              key={index}
+              title={metric.title}
+              value={metric.value}
+              change={metric.change}
+              icon={metric.icon}
+              color={metric.color}
+              delay={metric.delay}
+              subtitle={metric.subtitle}
+              trend={metric.trend}
+            />
           ))}
-        </Grid>
+        </Box>
 
-        {/* Charts Section */}
-        <Grid container spacing={4}>
+        {/* Charts Section - Replaced Grid with CSS Grid */}
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: {
+              xs: '1fr',
+              lg: '2fr 1fr'
+            },
+            gap: 4,
+            mb: 4
+          }}
+        >
           {/* Monthly Trends */}
-          <Grid item xs={12} lg={8}>
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-            >
-              <SimpleChart
-                title="Tendencias Mensuales"
-                data={monthlyData}
-                color="#6366f1"
-                type="line"
-                icon={<ShowChart />}
-              />
-            </motion.div>
-          </Grid>
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+          >
+            <SimpleChart
+              title="Tendencias Mensuales"
+              data={monthlyData}
+              color="#6366f1"
+              type="line"
+              icon={<ShowChart />}
+            />
+          </motion.div>
 
           {/* Status Distribution */}
-          <Grid item xs={12} lg={4}>
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.5 }}
-            >
-              <SimpleChart
-                title="Distribución de Estados"
-                data={statusData}
-                color="#10b981"
-                type="pie"
-                icon={<PieChart />}
-              />
-            </motion.div>
-          </Grid>
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.5 }}
+          >
+            <SimpleChart
+              title="Distribución de Estados"
+              data={statusData}
+              color="#10b981"
+              type="pie"
+              icon={<PieChart />}
+            />
+          </motion.div>
+        </Box>
 
-          {/* Engagement Levels */}
-          <Grid item xs={12}>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.6 }}
-            >
-              <SimpleChart
-                title="Niveles de Engagement"
-                data={engagementData}
-                color="#8b5cf6"
-                type="bar"
-                icon={<BarChart />}
-              />
-            </motion.div>
-          </Grid>
-        </Grid>
+        {/* Engagement Levels - Full Width */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.6 }}
+        >
+          <SimpleChart
+            title="Niveles de Engagement"
+            data={engagementData}
+            color="#8b5cf6"
+            type="bar"
+            icon={<BarChart />}
+          />
+        </motion.div>
       </Box>
     </motion.div>
   );
