@@ -4,22 +4,16 @@ import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { 
   BookOpen, 
-  ClipboardList, 
   Users, 
   Calendar,
   ArrowRight,
-  X
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { DailyOrdersQuery } from './dashboard/DailyOrdersQuery'
 
-interface QuickActionsProps {
-  pendingOrdersCount: number
-}
+// Removed unused QuickActionsProps and pendingOrdersCount prop
 
-export function QuickActions({ pendingOrdersCount }: QuickActionsProps) {
+export function QuickActions() {
   const [showDailyQuery, setShowDailyQuery] = useState(false)
 
   const quickActions = [
