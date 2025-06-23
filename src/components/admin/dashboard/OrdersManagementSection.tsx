@@ -27,6 +27,9 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Separator } from '@/components/ui/separator'
 import { ExportToExcelButton } from '@/components/admin/pedidos/ExportToExcelButton'
+import { AdminOrderView } from '@/types/adminOrder'
+// Import OrderHistoryItem type (adjust the path if needed)
+import type { OrderHistoryItem } from '@/types/adminOrder'
 import { useAdminOrdersSimple } from '@/hooks/useAdminOrdersSimple'
 import { format, parseISO, startOfWeek } from 'date-fns'
 import { es } from 'date-fns/locale'
@@ -100,45 +103,84 @@ export function OrdersManagementSection() {
   }
 
   // Convertir pedidos al formato AdminOrderView para la exportación
-  const convertToAdminOrderView = (orders: any[]) => {
-    return orders.map(order => ({
-      ...order,
-      // Mapear campos para compatibilidad con ExportToExcelButton
-      user: {
-        id: order.user?.id || order.userId,
-        firstName: order.user?.firstName || '',
-        lastName: order.user?.lastName || '',
-        email: order.user?.email || '',
-        userType: order.tipoUsuario === 'apoderado' ? 'estudiante' : 'funcionario'
-      },
-      // Procesar itemsSummary desde resumenPedido
-      itemsSummary: {
-        totalAlmuerzos: order.resumenPedido?.filter((s: any) => s.almuerzo).length || 0,
-        totalColaciones: order.resumenPedido?.filter((s: any) => s.colacion).length || 0,
-        almuerzosPrice: order.resumenPedido?.reduce((sum: number, s: any) => 
-          sum + (s.almuerzo?.price || 0), 0) || 0,
-        colacionesPrice: order.resumenPedido?.reduce((sum: number, s: any) => 
-          sum + (s.colacion?.price || 0), 0) || 0,
-        itemsDetail: order.resumenPedido?.map((selection: any) => ({
-          date: selection.date,
-          dayName: format(parseISO(selection.date), 'EEEE', { locale: es }),
-          almuerzo: selection.almuerzo ? {
-            code: selection.almuerzo.code,
-            name: selection.almuerzo.name,
-            price: selection.almuerzo.price
-          } : undefined,
-          colacion: selection.colacion ? {
-            code: selection.colacion.code,
-            name: selection.colacion.name,
-            price: selection.colacion.price
-          } : undefined
-        })) || []
-      },
-      itemsCount: (order.resumenPedido?.filter((s: any) => s.almuerzo).length || 0) + 
-                  (order.resumenPedido?.filter((s: any) => s.colacion).length || 0),
-      hasColaciones: order.resumenPedido?.some((s: any) => s.colacion) || false,
-      selections: order.resumenPedido || []
-    }))
+  const convertToAdminOrderView = (orders: OrderHistoryItem[]): AdminOrderView[] => {
+    return orders.map(order => {
+      // Determinar el userType correcto
+      const getUserType = (tipoUsuario: string): 'funcionario' | 'estudiante' => {
+        if (tipoUsuario === 'funcionario') return 'funcionario'
+        return 'estudiante' // apoderado se mapea a estudiante para el admin
+      }
+
+      // Procesar itemsDetail desde resumenPedido
+      const itemsDetail = order.selections?.map((selection: AdminOrderView['selections'][number]) => {
+        try {
+          return {
+            date: selection.date,
+            dayName: format(parseISO(selection.date), 'EEEE', { locale: es }),
+            almuerzo: selection.almuerzo ? {
+              code: selection.almuerzo.code || 'ALM',
+              name: selection.almuerzo.name || selection.almuerzo.description || 'Almuerzo',
+              price: Number(selection.almuerzo.price) || 0
+            } : undefined,
+            colacion: selection.colacion ? {
+              code: selection.colacion.code || 'COL',
+              name: selection.colacion.name || selection.colacion.description || 'Colación',
+              price: Number(selection.colacion.price) || 0
+            } : undefined
+          }
+        } catch (error) {
+          console.error('Error processing selection for export:', selection, error)
+          return {
+            date: selection.date || '',
+            dayName: 'Fecha inválida',
+            almuerzo: undefined,
+            colacion: undefined
+          }
+        }
+      }) || []
+
+      // Calcular totales
+      const totalAlmuerzos = order.selections?.filter((s: AdminOrderView['selections'][number]) => s.almuerzo).length || 0
+      const totalColaciones = order.selections?.filter((s: AdminOrderView['selections'][number]) => s.colacion).length || 0
+      const almuerzosPrice = order.selections?.reduce((sum: number, s: AdminOrderView['selections'][number]) => 
+        sum + (Number(s.almuerzo?.price) || 0), 0) || 0
+      const colacionesPrice = order.selections?.reduce((sum: number, s: AdminOrderView['selections'][number]) => 
+        sum + (Number(s.colacion?.price) || 0), 0) || 0
+
+      const adminOrder: AdminOrderView = {
+        id: order.id,
+        userId: order.userId,
+        weekStart: order.weekStart,
+        selections: order.selections || [],
+        total: Number(order.total) || 0,
+        status: order.status || 'pending',
+        createdAt: order.createdAt,
+        paidAt: order.paidAt,
+        cancelledAt: order.cancelledAt,
+        daysSincePending: order.daysSincePending,
+        paymentId: order.paymentId,
+        user: {
+          id: order.user?.id || order.userId,
+          firstName: order.user?.firstName || '',
+          lastName: order.user?.lastName || '',
+          email: order.user?.email || '',
+          userType: getUserType(order.user?.userType)
+        },
+        dayName: format(order.createdAt, 'EEEE', { locale: es }),
+        formattedDate: format(order.createdAt, 'dd/MM/yyyy HH:mm'),
+        itemsCount: totalAlmuerzos + totalColaciones,
+        hasColaciones: totalColaciones > 0,
+        itemsSummary: {
+          totalAlmuerzos,
+          totalColaciones,
+          almuerzosPrice,
+          colacionesPrice,
+          itemsDetail
+        }
+      }
+
+      return adminOrder
+    })
   }
 
   // Función para obtener el color del estado
