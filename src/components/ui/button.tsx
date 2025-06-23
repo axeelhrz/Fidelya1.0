@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { motion } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -29,36 +28,35 @@ const sizes = {
 };
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ 
-    className, 
+  ({
+    className,
     variant = 'primary',
     size = 'lg',
     fullWidth = false,
-    loading = false, 
-    leftIcon, 
-    rightIcon, 
-    children, 
-    disabled, 
-    ...props 
+    loading = false,
+    leftIcon,
+    rightIcon,
+    children,
+    disabled,
+    ...props
   }, ref) => {
     const isDisabled = disabled || loading;
 
     return (
-      <motion.button
+      <button
         ref={ref}
         className={cn(
           'inline-flex items-center justify-center gap-2 font-semibold rounded-xl',
           'transition-all duration-200 ease-in-out',
           'focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2',
           'disabled:opacity-50 disabled:cursor-not-allowed',
+          'active:scale-[0.98] hover:scale-[1.02]',
           variants[variant],
           sizes[size],
           fullWidth && 'w-full',
           className
         )}
         disabled={isDisabled}
-        whileTap={{ scale: isDisabled ? 1 : 0.98 }}
-        transition={{ duration: 0.1 }}
         {...props}
       >
         {loading ? (
@@ -66,13 +64,13 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         ) : leftIcon ? (
           <span className="w-4 h-4">{leftIcon}</span>
         ) : null}
-
+        
         <span>{loading ? 'Cargando...' : children}</span>
-
+        
         {rightIcon && !loading && (
           <span className="w-4 h-4">{rightIcon}</span>
         )}
-      </motion.button>
+      </button>
     );
   }
 );

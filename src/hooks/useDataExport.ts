@@ -54,7 +54,7 @@ export const useDataExport = () => {
   const generateExportData = useCallback((socios: Socio[], fields: string[], format: string) => {
     return socios.map(socio => {
       const analytics = calculateAnalytics(socio);
-      const row: any = {};
+      const row: Record<string, unknown> = {};
       
       fields.forEach(field => {
         switch (field) {
@@ -251,7 +251,7 @@ export const useDataExport = () => {
           });
           
           downloadFile(excelContent, filename.replace('.xlsx', '.csv'), 'text/csv;charset=utf-8;');
-          toast.info('Archivo exportado como CSV compatible con Excel');
+          toast('Archivo exportado como CSV compatible con Excel');
           break;
           
         case 'pdf':
@@ -296,7 +296,7 @@ Versión 1.0 - ${new Date().getFullYear()}
           `.trim();
           
           downloadFile(pdfContent, filename.replace('.pdf', '.txt'), 'text/plain;charset=utf-8;');
-          toast.info('Reporte exportado como archivo de texto estructurado');
+          toast('Reporte exportado como archivo de texto estructurado');
           break;
       }
       

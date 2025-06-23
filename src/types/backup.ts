@@ -26,8 +26,8 @@ export interface BackupMetadata {
 export interface BackupData {
   metadata: BackupMetadata;
   socios: Socio[];
-  settings?: Record<string, any>;
-  customData?: Record<string, any>;
+  settings?: Record<string, unknown>;
+  customData?: Record<string, unknown>;
 }
 
 export interface BackupConfig {

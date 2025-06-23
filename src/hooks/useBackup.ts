@@ -15,13 +15,6 @@ import {
   limit,
   getDocs
 } from 'firebase/firestore';
-import { 
-  ref, 
-  uploadBytes, 
-  getDownloadURL, 
-  deleteObject,
-  getMetadata
-} from 'firebase/storage';
 import { db } from '@/lib/firebase';
 import { useAuth } from './useAuth';
 import { useSocios } from './useSocios';
@@ -33,26 +26,21 @@ import {
   BackupProgress, 
   BackupStats,
   BackupVerification,
-  BackupSchedule,
-  BackupFilterType,
-  BackupSortField,
-  BackupSortOrder
 } from '@/types/backup';
-import { Socio, SocioFormData } from '@/types/socio';
 import toast from 'react-hot-toast';
 
 // Simulated Firebase Storage (in real implementation, import from firebase/storage)
 const storage = {
   ref: (path: string) => ({ path }),
-  uploadBytes: async (ref: any, data: Blob) => ({ ref }),
-  getDownloadURL: async (ref: any) => `https://storage.example.com/${ref.path}`,
-  deleteObject: async (ref: any) => {},
-  getMetadata: async (ref: any) => ({ size: 1024, timeCreated: new Date().toISOString() })
+  uploadBytes: async (ref: { path: string }, data: Blob) => ({ ref, data }),
+  getDownloadURL: async (ref: { path: string }) => `https://storage.example.com/${ref.path}`,
+  deleteObject: async () => {},
+  getMetadata: async () => ({ size: 1024, timeCreated: new Date().toISOString() })
 };
 
 export const useBackup = () => {
   const { user } = useAuth();
-  const { socios, addMultipleSocios, stats } = useSocios();
+  const { socios } = useSocios();
   
   const [backups, setBackups] = useState<BackupMetadata[]>([]);
   const [config, setConfig] = useState<BackupConfig>({
@@ -67,7 +55,6 @@ export const useBackup = () => {
     retentionDays: 90,
     notificationsEnabled: true
   });
-  const [schedules, setSchedules] = useState<BackupSchedule[]>([]);
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState<BackupProgress | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -491,11 +478,9 @@ export const useBackup = () => {
     // State
     backups,
     config,
-    schedules,
     loading,
     progress,
     error,
-    
     // Actions
     createBackup,
     restoreBackup,
