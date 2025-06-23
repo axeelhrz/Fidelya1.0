@@ -1,20 +1,16 @@
 "use client"
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { 
   Calendar,
   Users,
   ShoppingCart,
   Filter,
-  Download,
   ChefHat,
   Clock,
   AlertTriangle,
   CheckCircle,
   XCircle,
-  Eye,
-  MoreHorizontal,
-  FileSpreadsheet,
   Utensils,
   Coffee,
   Package,
@@ -27,31 +23,12 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Separator } from '@/components/ui/separator'
-import { OrderService, OrderStateByChild } from '@/services/orderService'
-import { collection, getDocs, doc, getDoc, query, orderBy, limit } from 'firebase/firestore'
-import { db } from '@/app/lib/firebase'
-import { format, parseISO, subWeeks, startOfWeek, differenceInDays } from 'date-fns'
+import { useAdminOrdersSimple } from '@/hooks/useAdminOrdersSimple'
+import { format, parseISO, startOfWeek } from 'date-fns'
 import { es } from 'date-fns/locale'
-
-interface OrderHistoryItem extends OrderStateByChild {
-  weekLabel: string
-  formattedDate: string
-  itemsCount: number
-  hasColaciones: boolean
-  user?: {
-    id: string
-    firstName: string
-    lastName: string
-    email: string
-    userType: string
-  }
-  daysSincePending?: number
-}
 
 interface OrderFilters {
   status: 'all' | 'pendiente' | 'pagado' | 'cancelado'
@@ -61,10 +38,7 @@ interface OrderFilters {
 }
 
 export function OrdersManagementSection() {
-  const [orders, setOrders] = useState<OrderHistoryItem[]>([])
-  const [filteredOrders, setFilteredOrders] = useState<OrderHistoryItem[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { orders, isLoading, error, refreshOrders, updateOrderStatus } = useAdminOrdersSimple()
   const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set())
   const [filters, setFilters] = useState<OrderFilters>({
     status: 'all',
@@ -87,115 +61,8 @@ export function OrdersManagementSection() {
     })
   }
 
-  // Función para formatear pedidos
-  const formatOrders = useCallback((rawOrders: OrderStateByChild[]): OrderHistoryItem[] => {
-    return rawOrders.map(order => {
-      const weekStartDate = new Date(order.weekStart)
-      const weekEndDate = new Date(weekStartDate)
-      weekEndDate.setDate(weekEndDate.getDate() + 6)
-      
-      const weekLabel = `Del ${format(weekStartDate, 'd')} al ${format(weekEndDate, 'd')} de ${format(weekEndDate, 'MMMM yyyy', { locale: es })}`
-      const formattedDate = format(order.createdAt, "d 'de' MMMM, yyyy", { locale: es })
-      
-      const itemsCount = order.resumenPedido.reduce((count, selection) => {
-        return count + (selection.almuerzo ? 1 : 0) + (selection.colacion ? 1 : 0)
-      }, 0)
-      
-      const hasColaciones = order.resumenPedido.some(selection => selection.colacion)
-
-      const daysSincePending = order.status === 'pendiente' 
-        ? differenceInDays(new Date(), order.createdAt)
-        : 0
-
-      return {
-        ...order,
-        weekLabel,
-        formattedDate,
-        itemsCount,
-        hasColaciones,
-        daysSincePending
-      }
-    })
-  }, [])
-
-  // Cargar pedidos desde Firebase
-  const loadOrders = useCallback(async () => {
-    setIsLoading(true)
-    setError(null)
-
-    try {
-      console.log('Loading orders from Firebase...')
-      
-      // Obtener pedidos de los últimos 3 meses
-      const threeMonthsAgo = subWeeks(new Date(), 12)
-      
-      const rawOrders = await OrderService.getOrdersWithFilters({
-        dateRange: {
-          start: threeMonthsAgo,
-          end: new Date()
-        }
-      })
-
-      console.log(`Found ${rawOrders.length} orders`)
-
-      // Obtener información de usuarios para cada pedido
-      const ordersWithUsers = await Promise.all(
-        rawOrders.map(async (order) => {
-          try {
-            const userDoc = await getDoc(doc(db, 'users', order.userId))
-            let userData = null
-            
-            if (userDoc.exists()) {
-              const data = userDoc.data()
-              userData = {
-                id: data.id || order.userId,
-                firstName: data.firstName || data.nombre || '',
-                lastName: data.lastName || data.apellido || '',
-                email: data.email || data.correo || '',
-                userType: data.userType || data.tipoUsuario || 'apoderado'
-              }
-            }
-
-            return {
-              ...order,
-              user: userData
-            }
-          } catch (error) {
-            console.error(`Error loading user for order ${order.id}:`, error)
-            return {
-              ...order,
-              user: {
-                id: order.userId,
-                firstName: 'Usuario',
-                lastName: 'Desconocido',
-                email: 'email@desconocido.com',
-                userType: order.tipoUsuario
-              }
-            }
-          }
-        })
-      )
-
-      // Ordenar por fecha de creación (más recientes primero)
-      const sortedOrders = ordersWithUsers.sort((a, b) => 
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      )
-
-      const formattedOrders = formatOrders(sortedOrders)
-      setOrders(formattedOrders)
-
-      console.log(`Processed ${formattedOrders.length} orders successfully`)
-
-    } catch (error) {
-      console.error('Error loading orders:', error)
-      setError(error instanceof Error ? error.message : 'Error al cargar los pedidos')
-    } finally {
-      setIsLoading(false)
-    }
-  }, [formatOrders])
-
   // Filtrar pedidos
-  const applyFilters = useCallback(() => {
+  const filteredOrders = useMemo(() => {
     let filtered = [...orders]
 
     // Filtrar por estado
@@ -223,32 +90,12 @@ export function OrdersManagementSection() {
       filtered = filtered.filter(order => order.weekStart === filters.weekStart)
     }
 
-    setFilteredOrders(filtered)
+    return filtered
   }, [orders, filters])
-
-  // Efectos
-  useEffect(() => {
-    loadOrders()
-  }, [loadOrders])
-
-  useEffect(() => {
-    applyFilters()
-  }, [applyFilters])
 
   // Función para actualizar filtros
   const updateFilters = (newFilters: Partial<OrderFilters>) => {
     setFilters(prev => ({ ...prev, ...newFilters }))
-  }
-
-  // Función para actualizar estado de pedido
-  const updateOrderStatus = async (orderId: string, newStatus: 'pendiente' | 'pagado' | 'cancelado') => {
-    try {
-      await OrderService.updateOrder(orderId, { status: newStatus })
-      await loadOrders() // Recargar pedidos
-    } catch (error) {
-      console.error('Error updating order status:', error)
-      setError('Error al actualizar el estado del pedido')
-    }
   }
 
   // Función para obtener el color del estado
@@ -358,7 +205,7 @@ export function OrdersManagementSection() {
         <AlertTriangle className="h-4 w-4" />
         <AlertDescription className="flex items-center justify-between">
           <span>{error}</span>
-          <Button variant="outline" size="sm" onClick={loadOrders}>
+          <Button variant="outline" size="sm" onClick={refreshOrders}>
             <RefreshCw className="w-4 h-4 mr-2" />
             Reintentar
           </Button>
@@ -435,6 +282,9 @@ export function OrdersManagementSection() {
             <CardTitle className="flex items-center space-x-2">
               <ChefHat className="w-5 h-5 text-blue-600" />
               <span>Gestión de Pedidos para Cocina</span>
+              {isLoading && (
+                <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+              )}
             </CardTitle>
             
             <div className="flex flex-wrap items-center gap-2">
@@ -447,7 +297,7 @@ export function OrdersManagementSection() {
                 Filtros
               </Button>
               
-              <Button variant="outline" size="sm" onClick={loadOrders}>
+              <Button variant="outline" size="sm" onClick={refreshOrders} disabled={isLoading}>
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Actualizar
               </Button>
@@ -476,7 +326,7 @@ export function OrdersManagementSection() {
                 </label>
                 <Select
                   value={filters.status}
-                  onValueChange={(value) => updateFilters({ status: value as any })}
+                  onValueChange={(value) => updateFilters({ status: value as OrderFilters['status'] })}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -496,7 +346,7 @@ export function OrdersManagementSection() {
                 </label>
                 <Select
                   value={filters.userType}
-                  onValueChange={(value) => updateFilters({ userType: value as any })}
+                  onValueChange={(value) => updateFilters({ userType: value as OrderFilters['userType'] })}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -538,11 +388,22 @@ export function OrdersManagementSection() {
                 No hay pedidos
               </h3>
               <p className="text-slate-600 dark:text-slate-400">
-                No se encontraron pedidos con los filtros aplicados
+                {orders.length === 0 
+                  ? "No se encontraron pedidos en la base de datos."
+                  : "No hay pedidos que coincidan con los filtros aplicados."
+                }
               </p>
+              <Button onClick={refreshOrders} className="mt-4">
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Recargar
+              </Button>
             </div>
           ) : (
             <div className="space-y-4">
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                Mostrando {filteredOrders.length} de {orders.length} pedidos
+              </p>
+              
               {filteredOrders.map((order) => {
                 const isExpanded = expandedOrders.has(order.id!)
                 

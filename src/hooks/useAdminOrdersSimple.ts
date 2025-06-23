@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { OrderService, OrderStateByChild } from '@/services/orderService'
-import { collection, getDocs, doc, getDoc } from 'firebase/firestore'
+import { doc, getDoc } from 'firebase/firestore'
 import { db } from '@/app/lib/firebase'
 import { format, subWeeks, differenceInDays } from 'date-fns'
 import { es } from 'date-fns/locale'
@@ -20,12 +20,7 @@ interface OrderHistoryItem extends OrderStateByChild {
   daysSincePending?: number
 }
 
-interface OrderFilters {
-  status: 'all' | 'pendiente' | 'pagado' | 'cancelado'
-  userType: 'all' | 'apoderado' | 'funcionario'
-  searchTerm: string
-  weekStart?: string
-}
+
 
 export function useAdminOrdersSimple() {
   const [orders, setOrders] = useState<OrderHistoryItem[]>([])

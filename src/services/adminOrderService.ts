@@ -13,6 +13,7 @@ import {
 } from 'firebase/firestore'
 import { db } from '@/app/lib/firebase'
 import { AdminOrderView, OrderFilters, OrderMetrics, OrderUpdateRequest, OrderDetailView } from '@/types/adminOrder'
+import { OrderSelectionByChild } from '@/types/panel'
 import { format, parseISO, startOfWeek, endOfWeek, addDays, differenceInDays } from 'date-fns'
 import { es } from 'date-fns/locale'
 
@@ -62,40 +63,30 @@ export class AdminOrderService {
     return new Date()
   }
 
-  // Función helper para extraer información de productos desde description o name
-  private static parseProductInfo(orderData: {
-    description?: string;
-    name?: string;
-    selections?: Array<{
-      date: string;
-      almuerzo?: {
-        code?: string;
-        codigo?: string;
-        name?: string;
-        nombre?: string;
-        description?: string;
-        price?: number;
-        precio?: number;
-      };
-      colacion?: {
-        code?: string;
-        codigo?: string;
-        name?: string;
-        nombre?: string;
-        description?: string;
-        price?: number;
-        precio?: number;
-      };
-    }>;
-  }): {
-    productsSummary: string
-    itemsDetail: Array<{
-      date: string
-      dayName: string
-      almuerzo?: { code: string; name: string; price: number }
-      colacion?: { code: string; name: string; price: number }
-    }>
+  // Función helper para procesar resumenPedido y calcular estadísticas
+  private static processResumenPedido(resumenPedido: OrderSelectionByChild[]): {
+    itemsCount: number
+    hasColaciones: boolean
+    itemsSummary: AdminOrderView['itemsSummary']
   } {
+    if (!resumenPedido || !Array.isArray(resumenPedido)) {
+      return {
+        itemsCount: 0,
+        hasColaciones: false,
+        itemsSummary: {
+          totalAlmuerzos: 0,
+          totalColaciones: 0,
+          almuerzosPrice: 0,
+          colacionesPrice: 0,
+          itemsDetail: []
+        }
+      }
+    }
+
+    let totalAlmuerzos = 0
+    let totalColaciones = 0
+    let almuerzosPrice = 0
+    let colacionesPrice = 0
     const itemsDetail: Array<{
       date: string
       dayName: string
@@ -103,212 +94,59 @@ export class AdminOrderService {
       colacion?: { code: string; name: string; price: number }
     }> = []
 
-    let productsSummary = ''
+    resumenPedido.forEach(selection => {
+      if (!selection.date) return
 
-    // Intentar extraer desde description si existe
-    if (orderData.description) {
-      productsSummary = orderData.description
-      console.log('Found description:', orderData.description)
-    }
-
-    // Intentar extraer desde name si existe
-    if (orderData.name && !productsSummary) {
-      productsSummary = orderData.name
-      console.log('Found name:', orderData.name)
-    }
-
-    // Si tenemos selections, procesarlas
-    if (orderData.selections && Array.isArray(orderData.selections)) {
-      orderData.selections.forEach((selection: {
-        date: string;
-        almuerzo?: {
-          code?: string;
-          codigo?: string;
-          name?: string;
-          nombre?: string;
-          description?: string;
-          price?: number;
-          precio?: number;
-        };
-        colacion?: {
-          code?: string;
-          codigo?: string;
-          name?: string;
-          nombre?: string;
-          description?: string;
-          price?: number;
-          precio?: number;
-        };
-      }) => {
-        try {
-          const dayName = format(parseISO(selection.date), 'EEEE', { locale: es })
-          
-          const dayDetail: {
-            date: string;
-            dayName: string;
-            almuerzo?: { code: string; name: string; price: number };
-            colacion?: { code: string; name: string; price: number };
-          } = {
-            date: selection.date,
-            dayName: dayName
-          }
-
-          // Procesar almuerzo
-          if (selection.almuerzo) {
-            dayDetail.almuerzo = {
-              code: selection.almuerzo.code || selection.almuerzo.codigo || 'ALM',
-              name: selection.almuerzo.name || selection.almuerzo.nombre || selection.almuerzo.description || 'Almuerzo',
-              price: Number(selection.almuerzo.price || selection.almuerzo.precio) || 0
-            }
-          }
-
-          // Procesar colación
-          if (selection.colacion) {
-            dayDetail.colacion = {
-              code: selection.colacion.code || selection.colacion.codigo || 'COL',
-              name: selection.colacion.name || selection.colacion.nombre || selection.colacion.description || 'Colación',
-              price: Number(selection.colacion.price || selection.colacion.precio) || 0
-            }
-          }
-
-          itemsDetail.push(dayDetail)
-        } catch (error) {
-          console.error('Error processing selection:', selection, error)
+      try {
+        const dayName = format(parseISO(selection.date), 'EEEE', { locale: es })
+        
+        const dayDetail: {
+          date: string;
+          dayName: string;
+          almuerzo?: { code: string; name: string; price: number };
+          colacion?: { code: string; name: string; price: number };
+        } = {
+          date: selection.date,
+          dayName: dayName
         }
-      })
-    }
 
-    // Si no hay selections pero hay description/name, intentar parsear
-    if (itemsDetail.length === 0 && productsSummary) {
-      // Intentar extraer información de productos desde el texto
-      const lines = productsSummary.split('\n').filter(line => line.trim())
-      
-      lines.forEach((line) => {
-        // Buscar patrones como "Lunes: ALM001 - Almuerzo especial"
-        const dayMatch = line.match(/(lunes|martes|miércoles|jueves|viernes)/i)
-        if (dayMatch) {
-          const dayName = dayMatch[1].toLowerCase()
+        // Procesar almuerzo
+        if (selection.almuerzo) {
+          totalAlmuerzos++
+          const price = selection.almuerzo.price || 0
+          almuerzosPrice += price
           
-          // Crear fecha estimada basada en el índice
-          const today = new Date()
-          const dayIndex = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes'].indexOf(dayName)
-          const estimatedDate = new Date(today)
-          estimatedDate.setDate(today.getDate() + dayIndex)
+          dayDetail.almuerzo = {
+            code: selection.almuerzo.code || 'ALM',
+            name: selection.almuerzo.name || selection.almuerzo.description || 'Almuerzo',
+            price: price
+          }
+        }
+
+        // Procesar colación
+        if (selection.colacion) {
+          totalColaciones++
+          const price = selection.colacion.price || 0
+          colacionesPrice += price
           
-          const dayDetail: {
-            date: string;
-            dayName: string;
-            almuerzo?: { code: string; name: string; price: number };
-            colacion?: { code: string; name: string; price: number };
-          } = {
-            date: format(estimatedDate, 'yyyy-MM-dd'),
-            dayName: dayName
+          dayDetail.colacion = {
+            code: selection.colacion.code || 'COL',
+            name: selection.colacion.name || selection.colacion.description || 'Colación',
+            price: price
           }
+        }
 
-          // Buscar códigos de productos en la línea
-          const almuerzoMatch = line.match(/ALM\d+|A\d+/i)
-          const colacionMatch = line.match(/COL\d+|C\d+/i)
-
-          if (almuerzoMatch) {
-            dayDetail.almuerzo = {
-              code: almuerzoMatch[0],
-              name: line.replace(/.*?ALM\d+\s*-?\s*/i, '').split(',')[0].trim() || 'Almuerzo',
-              price: 0 // No podemos extraer precio del texto
-            }
-          }
-
-          if (colacionMatch) {
-            dayDetail.colacion = {
-              code: colacionMatch[0],
-              name: line.replace(/.*?COL\d+\s*-?\s*/i, '').split(',')[0].trim() || 'Colación',
-              price: 0 // No podemos extraer precio del texto
-            }
-          }
-
+        if (dayDetail.almuerzo || dayDetail.colacion) {
           itemsDetail.push(dayDetail)
         }
-      })
-    }
-
-    return { productsSummary, itemsDetail }
-  }
-
-  // Función helper para procesar selecciones y calcular resumen de items
-  private static processOrderSelections(orderData: {
-    description?: string;
-    name?: string;
-    total?: number | string;
-    selections?: Array<{
-      date: string;
-      almuerzo?: {
-        code?: string;
-        codigo?: string;
-        name?: string;
-        nombre?: string;
-        description?: string;
-        price?: number;
-        precio?: number;
-      };
-      colacion?: {
-        code?: string;
-        codigo?: string;
-        name?: string;
-        nombre?: string;
-        description?: string;
-        price?: number;
-        precio?: number;
-      };
-    }>;
-  }): {
-    itemsCount: number
-    hasColaciones: boolean
-    itemsSummary: AdminOrderView['itemsSummary']
-    productsSummary: string
-  } {
-    const { productsSummary, itemsDetail } = this.parseProductInfo(orderData)
-    
-    let totalAlmuerzos = 0
-    let totalColaciones = 0
-    let almuerzosPrice = 0
-    let colacionesPrice = 0
-
-    itemsDetail.forEach(detail => {
-      if (detail.almuerzo) {
-        totalAlmuerzos++
-        almuerzosPrice += detail.almuerzo.price
-      }
-      if (detail.colacion) {
-        totalColaciones++
-        colacionesPrice += detail.colacion.price
+      } catch (error) {
+        console.error('Error processing selection:', selection, error)
       }
     })
-
-    // Si no pudimos extraer precios de las selections, usar el total del pedido
-    const orderTotal = Number(orderData.total) || 0
-    if (almuerzosPrice === 0 && colacionesPrice === 0 && orderTotal > 0) {
-      // Distribuir el total proporcionalmente
-      const totalItems = totalAlmuerzos + totalColaciones
-      if (totalItems > 0) {
-        const pricePerItem = orderTotal / totalItems
-        almuerzosPrice = totalAlmuerzos * pricePerItem
-        colacionesPrice = totalColaciones * pricePerItem
-        
-        // Actualizar precios en itemsDetail
-        itemsDetail.forEach(detail => {
-          if (detail.almuerzo && detail.almuerzo.price === 0) {
-            detail.almuerzo.price = pricePerItem
-          }
-          if (detail.colacion && detail.colacion.price === 0) {
-            detail.colacion.price = pricePerItem
-          }
-        })
-      }
-    }
 
     return {
       itemsCount: totalAlmuerzos + totalColaciones,
       hasColaciones: totalColaciones > 0,
-      productsSummary,
       itemsSummary: {
         totalAlmuerzos,
         totalColaciones,
@@ -356,9 +194,7 @@ export class AdminOrderService {
             const orderData = orderDoc.data()
             
             console.log(`Processing order ${orderDoc.id}:`, {
-              description: orderData.description,
-              name: orderData.name,
-              selections: orderData.selections?.length || 0,
+              resumenPedido: orderData.resumenPedido?.length || 0,
               total: orderData.total
             })
             
@@ -399,8 +235,8 @@ export class AdminOrderService {
             const paidAt = orderData.paidAt ? this.safeTimestampToDate(orderData.paidAt) : undefined
             const cancelledAt = orderData.cancelledAt ? this.safeTimestampToDate(orderData.cancelledAt) : undefined
 
-            // Procesar selecciones y calcular estadísticas
-            const { itemsCount, hasColaciones, itemsSummary } = this.processOrderSelections(orderData)
+            // Procesar resumenPedido para obtener información detallada de productos
+            const { itemsCount, hasColaciones, itemsSummary } = this.processResumenPedido(orderData.resumenPedido || [])
             const total = Number(orderData.total) || 0
 
             // Calcular días desde que está pendiente
@@ -412,7 +248,7 @@ export class AdminOrderService {
               id: orderDoc.id,
               userId: orderData.userId,
               weekStart: orderData.weekStart,
-              selections: orderData.selections || [],
+              selections: orderData.resumenPedido || [],
               total: total,
               status: orderData.status || 'pending',
               createdAt: createdAt,
@@ -749,9 +585,7 @@ export class AdminOrderService {
       const userData = userDoc.data()
 
       console.log(`Loading order detail for ${orderId}:`, {
-        description: orderData.description,
-        name: orderData.name,
-        selections: orderData.selections?.length || 0,
+        resumenPedido: orderData.resumenPedido?.length || 0,
         total: orderData.total
       })
 
@@ -760,8 +594,8 @@ export class AdminOrderService {
       const paidAt = orderData.paidAt ? this.safeTimestampToDate(orderData.paidAt) : undefined
       const cancelledAt = orderData.cancelledAt ? this.safeTimestampToDate(orderData.cancelledAt) : undefined
 
-      // Procesar información de productos
-      const { itemsSummary } = this.processOrderSelections(orderData)
+      // Procesar información de productos desde resumenPedido
+      const { itemsSummary } = this.processResumenPedido(orderData.resumenPedido || [])
 
       // Usar itemsDetail del procesamiento mejorado
       const processedSelections = itemsSummary.itemsDetail.map(detail => ({
