@@ -1,378 +1,756 @@
-"use client"
+'use client';
 
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { motion } from "framer-motion"
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
-import { signInWithEmailAndPassword } from "firebase/auth"
-import { doc, getDoc } from "firebase/firestore"
-import { auth, db } from "@/app/lib/firebase"
+import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import {
+  Box,
+  Container,
+  Typography,
+  TextField,
+  Button,
+  Card,
+  CardContent,
+  Stack,
+  IconButton,
+  Alert,
+  InputAdornment,
+  alpha,
+  Paper,
+  Grid,
+  Divider,
+  Collapse,
+} from '@mui/material';
+import {
+  Email,
+  Lock,
+  ArrowBack,
+  Visibility,
+  VisibilityOff,
+  Login,
+  PersonAdd,
+  Shield,
+  Speed,
+  Verified,
+  Key,
+  Send,
+  Close,
+} from '@mui/icons-material';
+import Link from 'next/link';
+import { toast } from 'react-hot-toast';
+import { loginSchema, type LoginFormData } from '@/lib/validations/auth';
+import { signIn, resetPassword, getDashboardRoute } from '@/lib/auth';
 
-export default function LoginPage() {
-  const router = useRouter()
-  const [mounted, setMounted] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState("")
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-    rememberMe: false
-  })
+const LoginPage = () => {
+  const router = useRouter();
+  const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [isResetting, setIsResetting] = useState(false);
 
-  useEffect(() => {
-    setMounted(true)
-  }, [])
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setError,
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+  });
 
-  if (!mounted) {
-    return null
-  }
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target
-    setFormData({
-      ...formData,
-      [name]: type === 'checkbox' ? checked : value
-    })
-    // Limpiar error cuando el usuario empiece a escribir
-    if (error) setError("")
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setError("")
-
+  const handleLogin = async (data: LoginFormData) => {
     try {
-      // Autenticar con Firebase
-      const userCredential = await signInWithEmailAndPassword(auth, formData.email, formData.password)
-      const user = userCredential.user
-
-      // Verificar si el usuario existe en Firestore
-      const userDoc = await getDoc(doc(db, 'users', user.uid))
+      setIsSubmitting(true);
+      const userData = await signIn(data.email, data.password);
       
-      if (!userDoc.exists()) {
-        // Si no existe en Firestore, redirigir al registro para completar perfil
-        setError("Usuario no encontrado. Por favor, completa tu registro.")
-        await auth.signOut()
-        router.push('/auth/registro')
-        return
+      if (userData.estado === 'inactivo') {
+        throw new Error('Tu cuenta está inactiva. Contacta al administrador.');
       }
 
-      // Login exitoso, redirigir al panel
-      router.push('/panel')
+      toast.success(`¡Bienvenido, ${userData.nombre}!`);
       
+      const dashboardRoute = getDashboardRoute(userData.role);
+      router.push(dashboardRoute);
     } catch (error: unknown) {
-      console.error('Error al iniciar sesión:', error)
+      let message = 'Ha ocurrido un error. Inténtalo de nuevo.';
       
-      // Manejar diferentes tipos de errores de Firebase
-      const firebaseError = error as { code?: string }
-      switch (firebaseError.code) {
-        case 'auth/user-not-found':
-          setError('No existe una cuenta con este correo electrónico.')
-          break
-        case 'auth/wrong-password':
-          setError('Contraseña incorrecta.')
-          break
-        case 'auth/invalid-email':
-          setError('Correo electrónico inválido.')
-          break
-        case 'auth/user-disabled':
-          setError('Esta cuenta ha sido deshabilitada.')
-          break
-        case 'auth/too-many-requests':
-          setError('Demasiados intentos fallidos. Intenta más tarde.')
-          break
-        case 'auth/invalid-credential':
-          setError('Credenciales inválidas. Verifica tu correo y contraseña.')
-          break
-        default:
-          setError('Error al iniciar sesión. Intenta nuevamente.')
+      if (error && typeof error === 'object' && 'code' in error) {
+        const firebaseError = error as { code: string; message: string };
+        
+        switch (firebaseError.code) {
+          case 'auth/user-not-found':
+            message = 'No existe una cuenta con este email.';
+            break;
+          case 'auth/wrong-password':
+            message = 'Contraseña incorrecta.';
+            break;
+          case 'auth/invalid-email':
+            message = 'El formato del email no es válido.';
+            break;
+          case 'auth/user-disabled':
+            message = 'Esta cuenta ha sido deshabilitada.';
+            break;
+          case 'auth/too-many-requests':
+            message = 'Demasiados intentos fallidos. Intenta más tarde.';
+            break;
+          default:
+            if (firebaseError.message) {
+              message = firebaseError.message;
+            }
+        }
+      } else if (
+        typeof error === 'object' &&
+        error !== null &&
+        'message' in error &&
+        typeof (error as { message?: unknown }).message === 'string'
+      ) {
+        message = (error as { message: string }).message;
+      }
+      
+      setError('root', { message });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handlePasswordReset = async () => {
+    if (!resetEmail) {
+      toast.error('Ingresa tu email para recuperar la contraseña');
+      return;
+    }
+
+    if (!resetEmail.includes('@')) {
+      toast.error('Ingresa un email válido');
+      return;
+    }
+
+    setIsResetting(true);
+    try {
+      await resetPassword(resetEmail);
+      toast.success('Enlace de recuperación enviado a tu email');
+      setShowForgotPassword(false);
+      setResetEmail('');
+    } catch (error: unknown) {
+      if (
+        typeof error === 'object' &&
+        error !== null &&
+        'code' in error &&
+        (error as { code?: unknown }).code === 'auth/user-not-found'
+      ) {
+        toast.error('No existe una cuenta con este email');
+      } else {
+        toast.error('Error al enviar el enlace de recuperación');
       }
     } finally {
-      setIsLoading(false)
+      setIsResetting(false);
     }
-  }
+  };
+
+  const securityFeatures = [
+    { icon: <Shield />, text: 'SSL Seguro' },
+    { icon: <Verified />, text: 'Verificado' },
+    { icon: <Speed />, text: 'Acceso Rápido' },
+  ];
+
+  const demoAccounts = [
+    { role: 'Asociación', email: 'asociacion@demo.com', password: 'demo123' },
+    { role: 'Comercio', email: 'comercio@demo.com', password: 'demo123' },
+    { role: 'Socio', email: 'socio@demo.com', password: 'demo123' },
+  ];
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-      {/* Subtle Background Elements */}
-      <div className="absolute inset-0">
-        {/* Soft geometric shapes */}
-        <motion.div
-          className="absolute top-20 right-20 w-96 h-96 bg-gradient-to-br from-blue-100/30 to-indigo-100/30 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-full blur-3xl"
-          animate={{
-            scale: [1, 1.1, 1],
-            opacity: [0.2, 0.4, 0.2],
-          }}
-          transition={{
-            duration: 8,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-        />
-        
-        <motion.div
-          className="absolute bottom-20 left-20 w-80 h-80 bg-gradient-to-br from-emerald-100/30 to-teal-100/30 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-full blur-3xl"
-          animate={{
-            scale: [1, 1.2, 1],
-            opacity: [0.15, 0.35, 0.15],
-          }}
-          transition={{
-            duration: 10,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: 2
-          }}
-        />
-
-        {/* Subtle pattern overlay */}
-        <div className="absolute inset-0 opacity-5 dark:opacity-10">
-          <div 
-            className="w-full h-full"
-            style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='1'%3E%3Ccircle cx='30' cy='30' r='1'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+    <Box 
+      sx={{ 
+        minHeight: '100vh',
+        bgcolor: '#fafbfc',
+        background: 'linear-gradient(135deg, #fafbfc 0%, #f8fafc 100%)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        py: 4
+      }}
+    >
+      <Container maxWidth="sm">
+        {/* Header */}
+        <Box sx={{ textAlign: 'center', mb: 5 }}>
+          <IconButton
+            component={Link}
+            href="/"
+            sx={{ 
+              position: 'absolute',
+              top: 24,
+              left: 24,
+              bgcolor: 'white',
+              boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
+              '&:hover': { 
+                bgcolor: '#f8fafc',
+                transform: 'translateY(-1px)',
+                boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+              },
+              transition: 'all 0.2s ease'
             }}
-          />
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4">
-        
-        {/* Auth Form Container */}
-        <motion.div
-          initial={{ opacity: 0, y: 30, scale: 0.95 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          className="w-full max-w-md"
-        >
-          <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl p-8 shadow-2xl border border-white/20 dark:border-slate-700/50">
-            
-            {/* Header */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="text-center mb-8"
-            >
-              <h1 className="text-3xl font-light text-slate-800 dark:text-slate-100 mb-2 text-elegant">
-                Bienvenido
-              </h1>
-              <p className="text-slate-600 dark:text-slate-300 text-clean">
-                Inicia sesión en Delicias Food Service
-              </p>
-              
-              {/* Elegant separator */}
-              <motion.div
-                className="flex items-center justify-center mt-4"
-                initial={{ opacity: 0, scale: 0 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.6, delay: 0.4 }}
-              >
-                <div className="w-8 h-px bg-slate-300 dark:bg-slate-600" />
-                <div className="mx-4 w-2 h-2 bg-emerald-400 dark:bg-emerald-500 rounded-full" />
-                <div className="w-8 h-px bg-slate-300 dark:bg-slate-600" />
-              </motion.div>
-            </motion.div>
-
-            {/* Error Message */}
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mb-6 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg"
-              >
-                <p className="text-sm text-red-600 dark:text-red-400 text-clean">{error}</p>
-              </motion.div>
-            )}
-
-            {/* Login Form */}
-            <motion.form
-              onSubmit={handleSubmit}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-              className="space-y-6"
-            >
-              {/* Email Field */}
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: 0.6 }}
-              >
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                  Correo Electrónico
-                </label>
-                <Input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  placeholder="tu@email.com"
-                  required
-                  disabled={isLoading}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-300"
-                />
-              </motion.div>
-
-              {/* Password Field */}
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: 0.7 }}
-              >
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                  Contraseña
-                </label>
-                <Input
-                  type="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  placeholder="••••••••"
-                  required
-                  disabled={isLoading}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-300"
-                />
-              </motion.div>
-
-              {/* Remember Me & Forgot Password */}
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: 0.8 }}
-                className="flex items-center justify-between"
-              >
-                <label className="flex items-center space-x-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    name="rememberMe"
-                    checked={formData.rememberMe}
-                    onChange={handleInputChange}
-                    disabled={isLoading}
-                    className="w-4 h-4 text-emerald-600 bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600 rounded focus:ring-emerald-500 focus:ring-2"
-                  />
-                  <span className="text-sm text-slate-600 dark:text-slate-300 text-clean">Recordarme</span>
-                </label>
-                
-                <Link 
-                  href="/auth/forgot-password" 
-                  className="text-sm text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors duration-300 text-clean"
-                >
-                  ¿Olvidaste tu contraseña?
-                </Link>
-              </motion.div>
-
-              {/* Submit Button */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.9 }}
-                className="pt-2"
-              >
-                <motion.div
-                  whileHover={!isLoading ? { y: -2 } : {}}
-                  whileTap={!isLoading ? { scale: 0.98 } : {}}
-                >
-                  <Button
-                    type="submit"
-                    disabled={isLoading}
-                    className="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-semibold py-3 px-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 group relative overflow-hidden"
-                  >
-                    {isLoading ? (
-                      <div className="flex items-center justify-center space-x-2">
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                        <span>Iniciando sesión...</span>
-                      </div>
-                    ) : (
-                      <>
-                        <motion.div
-                          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100"
-                          animate={{ x: ["-100%", "100%"] }}
-                          transition={{
-                            duration: 1.5,
-                            repeat: Infinity,
-                            repeatDelay: 3
-                          }}
-                        />
-                        <span className="relative z-10">Iniciar Sesión</span>
-                      </>
-                    )}
-                  </Button>
-                </motion.div>
-              </motion.div>
-            </motion.form>
-
-            {/* Separator */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.6, delay: 1 }}
-              className="flex items-center my-8"
-            >
-              <div className="flex-1 h-px bg-slate-200 dark:bg-slate-600"></div>
-              <span className="px-4 text-sm text-slate-500 dark:text-slate-400 text-clean">o</span>
-              <div className="flex-1 h-px bg-slate-200 dark:bg-slate-600"></div>
-            </motion.div>
-
-            {/* Sign Up Link */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 1.1 }}
-              className="text-center"
-            >
-              <p className="text-sm text-slate-600 dark:text-slate-300 text-clean">
-                ¿No tienes una cuenta?{" "}
-                <Link 
-                  href="/auth/registro" 
-                  className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors duration-300 font-medium"
-                >
-                  Crear cuenta
-                </Link>
-              </p>
-            </motion.div>
-          </div>
-        </motion.div>
-
-        {/* Back to Home Button */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 1.2 }}
-          className="mt-8"
-        >
-          <Link href="/">
-            <motion.button
-              whileHover={{ y: -1, scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors duration-300 font-medium"
-            >
-              ← Volver al inicio
-            </motion.button>
-          </Link>
-        </motion.div>
-
-        {/* Bottom accent - Más separado */}
-        <motion.div
-          className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-center"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.8, delay: 1.4 }}
-        >
-          <motion.div
-            className="flex items-center space-x-2 text-slate-400 dark:text-slate-500 text-sm"
-            animate={{ y: [0, -4, 0] }}
-            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
           >
-            <div className="w-1 h-1 bg-slate-400 dark:bg-slate-500 rounded-full" />
-            <span className="text-clean">Sistema de gestión alimentaria</span>
-            <div className="w-1 h-1 bg-slate-400 dark:bg-slate-500 rounded-full" />
-          </motion.div>
-        </motion.div>
-      </div>
-    </div>
-  )
-}
+            <ArrowBack />
+          </IconButton>
+
+          {/* Logo & Brand */}
+          <Box sx={{ mb: 4 }}>
+            <Box
+              component={Link}
+              href="/"
+              sx={{
+                display: 'inline-flex',
+                width: 72,
+                height: 72,
+                borderRadius: 4,
+                background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                color: 'white',
+                textDecoration: 'none',
+                fontSize: '2.2rem',
+                fontWeight: 900,
+                mb: 3,
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 12px 40px rgba(99, 102, 241, 0.3)',
+                letterSpacing: '-0.02em',
+                '&:hover': {
+                  transform: 'translateY(-3px)',
+                  boxShadow: '0 16px 50px rgba(99, 102, 241, 0.4)',
+                },
+                transition: 'all 0.3s ease'
+              }}
+            >
+              F
+            </Box>
+
+            <Typography
+              variant="h6"
+              sx={{
+                fontWeight: 700,
+                color: '#1e293b',
+                fontSize: '1.1rem',
+                letterSpacing: '-0.01em'
+              }}
+            >
+              Fidelita
+            </Typography>
+          </Box>
+
+          <Typography
+            variant="h3"
+            sx={{
+              fontWeight: 900,
+              mb: 1,
+              fontSize: { xs: '2.2rem', md: '2.8rem' },
+              background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 30%, #6366f1 100%)',
+              backgroundClip: 'text',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              letterSpacing: '-0.03em',
+              lineHeight: 0.95,
+            }}
+          >
+            Bienvenido de vuelta
+          </Typography>
+          
+          <Typography
+            variant="body1"
+            sx={{ 
+              color: '#64748b', 
+              fontWeight: 500,
+              fontSize: '1.05rem',
+              maxWidth: 420,
+              mx: 'auto',
+              lineHeight: 1.5
+            }}
+          >
+            Accede a tu cuenta de Fidelita y gestiona tu programa de fidelidad
+          </Typography>
+        </Box>
+
+        <Card
+          elevation={0}
+          sx={{
+            borderRadius: 5,
+            border: '1px solid #e2e8f0',
+            bgcolor: 'white',
+            boxShadow: '0 8px 40px rgba(0,0,0,0.06)',
+            overflow: 'hidden'
+          }}
+        >
+          <CardContent sx={{ p: 5 }}>
+            <Box component="form" onSubmit={handleSubmit(handleLogin)}>
+              <Stack spacing={4}>
+                {/* Login Form */}
+                <Box>
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      fontWeight: 700,
+                      color: '#1e293b',
+                      mb: 3,
+                      fontSize: '1.1rem',
+                      letterSpacing: '-0.01em'
+                    }}
+                  >
+                    Iniciar Sesión
+                  </Typography>
+                  
+                  <Stack spacing={3}>
+                    <TextField
+                      {...register('email')}
+                      label="Correo electrónico"
+                      placeholder="tu@email.com"
+                      type="email"
+                      fullWidth
+                      error={!!errors.email}
+                      helperText={errors.email?.message}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <Email sx={{ color: '#94a3b8', fontSize: '1.3rem' }} />
+                          </InputAdornment>
+                        ),
+                      }}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: 3,
+                          bgcolor: '#fafbfc',
+                          '& fieldset': {
+                            borderColor: '#e2e8f0',
+                          },
+                          '&:hover fieldset': {
+                            borderColor: '#6366f1',
+                          },
+                          '&.Mui-focused fieldset': {
+                            borderColor: '#6366f1',
+                            borderWidth: 2,
+                          },
+                          '&.Mui-focused': {
+                            bgcolor: 'white',
+                          }
+                        },
+                        '& .MuiInputLabel-root.Mui-focused': {
+                          color: '#6366f1',
+                        },
+                      }}
+                    />
+
+                    <TextField
+                      {...register('password')}
+                      label="Contraseña"
+                      placeholder="Tu contraseña"
+                      type={showPassword ? 'text' : 'password'}
+                      fullWidth
+                      error={!!errors.password}
+                      helperText={errors.password?.message}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <Lock sx={{ color: '#94a3b8', fontSize: '1.3rem' }} />
+                          </InputAdornment>
+                        ),
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton
+                              onClick={() => setShowPassword(!showPassword)}
+                              edge="end"
+                              sx={{ color: '#94a3b8' }}
+                            >
+                              {showPassword ? <VisibilityOff /> : <Visibility />}
+                            </IconButton>
+                          </InputAdornment>
+                        ),
+                      }}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: 3,
+                          bgcolor: '#fafbfc',
+                          '& fieldset': {
+                            borderColor: '#e2e8f0',
+                          },
+                          '&:hover fieldset': {
+                            borderColor: '#6366f1',
+                          },
+                          '&.Mui-focused fieldset': {
+                            borderColor: '#6366f1',
+                            borderWidth: 2,
+                          },
+                          '&.Mui-focused': {
+                            bgcolor: 'white',
+                          }
+                        },
+                        '& .MuiInputLabel-root.Mui-focused': {
+                          color: '#6366f1',
+                        },
+                      }}
+                    />
+                  </Stack>
+                </Box>
+
+                {/* Forgot Password */}
+                <Box sx={{ textAlign: 'center' }}>
+                  <Button
+                    onClick={() => setShowForgotPassword(!showForgotPassword)}
+                    sx={{
+                      textTransform: 'none',
+                      fontWeight: 600,
+                      color: '#6366f1',
+                      fontSize: '0.9rem',
+                      '&:hover': {
+                        bgcolor: alpha('#6366f1', 0.05),
+                      }
+                    }}
+                  >
+                    ¿Olvidaste tu contraseña?
+                  </Button>
+
+                  <Collapse in={showForgotPassword}>
+                    <Paper
+                      elevation={0}
+                      sx={{
+                        mt: 3,
+                        p: 4,
+                        bgcolor: alpha('#6366f1', 0.05),
+                        border: `1px solid ${alpha('#6366f1', 0.15)}`,
+                        borderRadius: 4,
+                        position: 'relative',
+                        overflow: 'hidden',
+                        '&::before': {
+                          content: '""',
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          height: '2px',
+                          background: 'linear-gradient(90deg, #6366f1, #8b5cf6)',
+                        }
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+                        <Box
+                          sx={{
+                            width: 48,
+                            height: 48,
+                            borderRadius: 3,
+                            bgcolor: alpha('#6366f1', 0.15),
+                            color: '#6366f1',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            flexShrink: 0,
+                          }}
+                        >
+                          <Key sx={{ fontSize: '1.5rem' }} />
+                        </Box>
+                        
+                        <Box sx={{ flex: 1 }}>
+                          <Typography
+                            variant="h6"
+                            sx={{
+                              fontWeight: 700,
+                              color: '#6366f1',
+                              mb: 1,
+                              fontSize: '1.1rem'
+                            }}
+                          >
+                            Recuperar Contraseña
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              color: alpha('#6366f1', 0.8),
+                              mb: 3,
+                              fontSize: '0.9rem'
+                            }}
+                          >
+                            Ingresa tu email y te enviaremos un enlace para restablecer tu contraseña.
+                          </Typography>
+                          
+                          <Stack spacing={2}>
+                            <TextField
+                              label="Email de recuperación"
+                              placeholder="tu@email.com"
+                              type="email"
+                              value={resetEmail}
+                              onChange={(e) => setResetEmail(e.target.value)}
+                              size="small"
+                              fullWidth
+                              InputProps={{
+                                startAdornment: (
+                                  <InputAdornment position="start">
+                                    <Email sx={{ color: '#94a3b8', fontSize: '1.1rem' }} />
+                                  </InputAdornment>
+                                ),
+                              }}
+                              sx={{
+                                '& .MuiOutlinedInput-root': {
+                                  borderRadius: 2,
+                                  bgcolor: 'white',
+                                  '& fieldset': {
+                                    borderColor: alpha('#6366f1', 0.2),
+                                  },
+                                  '&:hover fieldset': {
+                                    borderColor: '#6366f1',
+                                  },
+                                  '&.Mui-focused fieldset': {
+                                    borderColor: '#6366f1',
+                                  }
+                                },
+                                '& .MuiInputLabel-root.Mui-focused': {
+                                  color: '#6366f1',
+                                },
+                              }}
+                            />
+                            
+                            <Box sx={{ display: 'flex', gap: 1 }}>
+                              <Button
+                                onClick={handlePasswordReset}
+                                disabled={isResetting || !resetEmail}
+                                variant="contained"
+                                size="small"
+                                startIcon={<Send />}
+                                sx={{
+                                  flex: 1,
+                                  textTransform: 'none',
+                                  fontWeight: 600,
+                                  borderRadius: 2,
+                                  background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                                  '&:hover': {
+                                    background: 'linear-gradient(135deg, #5b21b6 0%, #7c3aed 100%)',
+                                  }
+                                }}
+                              >
+                                {isResetting ? 'Enviando...' : 'Enviar enlace'}
+                              </Button>
+                              <IconButton
+                                onClick={() => {
+                                  setShowForgotPassword(false);
+                                  setResetEmail('');
+                                }}
+                                size="small"
+                                sx={{ color: '#94a3b8' }}
+                              >
+                                <Close />
+                              </IconButton>
+                            </Box>
+                          </Stack>
+                        </Box>
+                      </Box>
+                    </Paper>
+                  </Collapse>
+                </Box>
+
+                {/* Error Alert */}
+                {errors.root && (
+                  <Alert 
+                    severity="error" 
+                    sx={{ 
+                      borderRadius: 3,
+                      bgcolor: alpha('#ef4444', 0.05),
+                      border: `1px solid ${alpha('#ef4444', 0.2)}`,
+                    }}
+                  >
+                    {errors.root.message}
+                  </Alert>
+                )}
+
+                {/* Submit Button */}
+                <Button
+                  type="submit"
+                  variant="contained"
+                  fullWidth
+                  disabled={isSubmitting}
+                  endIcon={isSubmitting ? null : <Login />}
+                  sx={{
+                    py: 2.5,
+                    borderRadius: 4,
+                    textTransform: 'none',
+                    fontWeight: 700,
+                    fontSize: '1.1rem',
+                    background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                    boxShadow: '0 8px 32px rgba(99, 102, 241, 0.3)',
+                    letterSpacing: '-0.01em',
+                    '&:hover': {
+                      background: 'linear-gradient(135deg, #5b21b6 0%, #7c3aed 100%)',
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 12px 40px rgba(99, 102, 241, 0.4)',
+                    },
+                    '&:disabled': {
+                      background: '#e2e8f0',
+                      color: '#94a3b8',
+                      transform: 'none',
+                      boxShadow: 'none',
+                    },
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  {isSubmitting ? 'Iniciando sesión...' : 'Iniciar sesión'}
+                </Button>
+
+                {/* Divider */}
+                <Box sx={{ position: 'relative', my: 3 }}>
+                  <Divider sx={{ borderColor: '#f1f5f9' }} />
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      top: '50%',
+                      left: '50%',
+                      transform: 'translate(-50%, -50%)',
+                      bgcolor: 'white',
+                      px: 3,
+                    }}
+                  >
+                    <Typography 
+                      variant="body2" 
+                      sx={{ 
+                        color: '#94a3b8', 
+                        fontWeight: 600,
+                        fontSize: '0.9rem',
+                        letterSpacing: '0.02em'
+                      }}
+                    >
+                      ¿No tienes cuenta?
+                    </Typography>
+                  </Box>
+                </Box>
+
+                {/* Register Button */}
+                <Button
+                  component={Link}
+                  href="/auth/register"
+                  variant="outlined"
+                  fullWidth
+                  startIcon={<PersonAdd />}
+                  sx={{
+                    py: 2,
+                    borderRadius: 4,
+                    textTransform: 'none',
+                    fontWeight: 700,
+                    fontSize: '1.05rem',
+                    borderColor: '#e2e8f0',
+                    color: '#475569',
+                    borderWidth: 2,
+                    letterSpacing: '-0.01em',
+                    '&:hover': {
+                      borderColor: '#6366f1',
+                      bgcolor: alpha('#6366f1', 0.03),
+                      color: '#6366f1',
+                      transform: 'translateY(-1px)',
+                      boxShadow: '0 4px 20px rgba(99, 102, 241, 0.1)',
+                    },
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  Crear cuenta nueva
+                </Button>
+
+                {/* Security Features */}
+                <Paper
+                  elevation={0}
+                  sx={{
+                    bgcolor: '#f8fafc',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: 4,
+                    p: 3,
+                    mt: 3
+                  }}
+                >
+                  <Grid container spacing={2} justifyContent="center">
+                    {securityFeatures.map((feature, index) => (
+                      <Grid item xs={4} key={index} sx={{ textAlign: 'center' }}>
+                        <Box
+                          sx={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: 2,
+                            bgcolor: alpha('#10b981', 0.1),
+                            color: '#10b981',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            mx: 'auto',
+                            mb: 1,
+                          }}
+                        >
+                          {React.cloneElement(feature.icon, { sx: { fontSize: '1.1rem' } })}
+                        </Box>
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            color: '#64748b',
+                            fontWeight: 600,
+                            fontSize: '0.75rem'
+                          }}
+                        >
+                          {feature.text}
+                        </Typography>
+                      </Grid>
+                    ))}
+                  </Grid>
+                </Paper>
+
+                {/* Demo Accounts */}
+                <Paper
+                  elevation={0}
+                  sx={{
+                    bgcolor: alpha('#f59e0b', 0.05),
+                    border: `1px solid ${alpha('#f59e0b', 0.2)}`,
+                    borderRadius: 4,
+                    p: 3,
+                    position: 'relative',
+                    overflow: 'hidden',
+                    '&::before': {
+                      content: '""',
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      height: '2px',
+                      background: 'linear-gradient(90deg, #f59e0b, #f97316)',
+                    }
+                  }}
+                >
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      fontWeight: 700,
+                      color: '#f59e0b',
+                      mb: 2,
+                      fontSize: '1rem',
+                      textAlign: 'center'
+                    }}
+                  >
+                    Cuentas de Demostración
+                  </Typography>
+                  
+                  <Stack spacing={1}>
+                    {demoAccounts.map((account, index) => (
+                      <Box key={index} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Typography
+                          variant="body2"
+                          sx={{ fontWeight: 600, color: '#92400e', fontSize: '0.8rem' }}
+                        >
+                          {account.role}:
+                        </Typography>
+                        <Typography
+                          variant="body2"
+                          sx={{ color: '#92400e', fontSize: '0.8rem', fontFamily: 'monospace' }}
+                        >
+                          {account.email} / {account.password}
+                        </Typography>
+                      </Box>
+                    ))}
+                  </Stack>
+                </Paper>
+              </Stack>
+            </Box>
+          </CardContent>
+        </Card>
+      </Container>
+    </Box>
+  );
+};
+
+export default LoginPage;

@@ -1,60 +1,80 @@
-import * as React from "react"
-import { Slot } from "@radix-ui/react-slot"
-import { cva, type VariantProps } from "class-variance-authority"
+'use client';
 
-import { cn } from "@/lib/utils"
+import React from 'react';
+import { motion } from 'framer-motion';
+import { Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-all duration-300 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-elegant",
-  {
-    variants: {
-      variant: {
-        default:
-          "btn-primary-elegant",
-        destructive:
-          "btn-elegant bg-red-600 text-white hover:bg-red-700 shadow-soft hover:shadow-soft-lg",
-        outline:
-          "btn-secondary-elegant",
-        secondary:
-          "btn-elegant bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200",
-        ghost:
-          "btn-elegant bg-transparent text-slate-700 hover:bg-slate-100 shadow-none hover:shadow-soft",
-        link: 
-          "text-education-accent underline-offset-4 hover:underline font-medium text-clean transition-colors duration-300",
-      },
-      size: {
-        default: "px-6 py-3 rounded-xl has-[>svg]:px-5",
-        sm: "px-4 py-2 rounded-lg gap-1.5 text-sm has-[>svg]:px-3",
-        lg: "px-8 py-4 rounded-xl text-base has-[>svg]:px-6",
-        icon: "size-10 rounded-xl",
-      },
-    },
-    defaultVariants: {
-      variant: "default",
-      size: "default",
-    },
-  }
-)
-
-function Button({
-  className,
-  variant,
-  size,
-  asChild = false,
-  ...props
-}: React.ComponentProps<"button"> &
-  VariantProps<typeof buttonVariants> & {
-    asChild?: boolean
-  }) {
-  const Comp = asChild ? Slot : "button"
-
-  return (
-    <Comp
-      data-slot="button"
-      className={cn(buttonVariants({ variant, size, className }))}
-      {...props}
-    />
-  )
+interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
+  size?: 'sm' | 'md' | 'lg';
+  fullWidth?: boolean;
+  loading?: boolean;
+  leftIcon?: React.ReactNode;
+  rightIcon?: React.ReactNode;
+  children: React.ReactNode;
 }
 
-export { Button, buttonVariants }
+const variants = {
+  primary: 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm hover:shadow-md',
+  secondary: 'bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300',
+  outline: 'border border-gray-300 text-gray-700 hover:bg-gray-50',
+  ghost: 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+};
+
+const sizes = {
+  sm: 'px-4 py-2 text-sm',
+  md: 'px-6 py-3 text-sm',
+  lg: 'px-4 py-3 text-sm'
+};
+
+export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ 
+    className, 
+    variant = 'primary',
+    size = 'lg',
+    fullWidth = false,
+    loading = false, 
+    leftIcon, 
+    rightIcon, 
+    children, 
+    disabled, 
+    ...props 
+  }, ref) => {
+    const isDisabled = disabled || loading;
+
+    return (
+      <motion.button
+        ref={ref}
+        className={cn(
+          'inline-flex items-center justify-center gap-2 font-semibold rounded-xl',
+          'transition-all duration-200 ease-in-out',
+          'focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2',
+          'disabled:opacity-50 disabled:cursor-not-allowed',
+          variants[variant],
+          sizes[size],
+          fullWidth && 'w-full',
+          className
+        )}
+        disabled={isDisabled}
+        whileTap={{ scale: isDisabled ? 1 : 0.98 }}
+        transition={{ duration: 0.1 }}
+        {...props}
+      >
+        {loading ? (
+          <Loader2 size={16} className="animate-spin" />
+        ) : leftIcon ? (
+          <span className="w-4 h-4">{leftIcon}</span>
+        ) : null}
+
+        <span>{loading ? 'Cargando...' : children}</span>
+
+        {rightIcon && !loading && (
+          <span className="w-4 h-4">{rightIcon}</span>
+        )}
+      </motion.button>
+    );
+  }
+);
+
+Button.displayName = "Button";
