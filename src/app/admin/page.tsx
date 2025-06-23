@@ -100,7 +100,7 @@ export default function AdminPage() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
             >
-              <QuickActions pendingOrdersCount={dashboardData.stats.pendingOrders} />
+              <QuickActions />
             </motion.div>
 
             {/* Alertas del sistema - 1 columna */}
