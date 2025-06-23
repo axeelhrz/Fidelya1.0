@@ -106,13 +106,13 @@ export function OrdersManagementSection() {
   const convertToAdminOrderView = (orders: OrderHistoryItem[]): AdminOrderView[] => {
     return orders.map(order => {
       // Determinar el userType correcto
-      const getUserType = (tipoUsuario: string): 'funcionario' | 'estudiante' => {
+      const getUserType = (tipoUsuario: string | undefined): 'funcionario' | 'estudiante' => {
         if (tipoUsuario === 'funcionario') return 'funcionario'
         return 'estudiante' // apoderado se mapea a estudiante para el admin
       }
 
       // Procesar itemsDetail desde resumenPedido
-      const itemsDetail = order.selections?.map((selection: AdminOrderView['selections'][number]) => {
+      const itemsDetail = order.resumenPedido?.map((selection) => {
         try {
           return {
             date: selection.date,
@@ -140,18 +140,18 @@ export function OrdersManagementSection() {
       }) || []
 
       // Calcular totales
-      const totalAlmuerzos = order.selections?.filter((s: AdminOrderView['selections'][number]) => s.almuerzo).length || 0
-      const totalColaciones = order.selections?.filter((s: AdminOrderView['selections'][number]) => s.colacion).length || 0
-      const almuerzosPrice = order.selections?.reduce((sum: number, s: AdminOrderView['selections'][number]) => 
+      const totalAlmuerzos = order.resumenPedido?.filter((s) => s.almuerzo).length || 0
+      const totalColaciones = order.resumenPedido?.filter((s) => s.colacion).length || 0
+      const almuerzosPrice = order.resumenPedido?.reduce((sum, s) => 
         sum + (Number(s.almuerzo?.price) || 0), 0) || 0
-      const colacionesPrice = order.selections?.reduce((sum: number, s: AdminOrderView['selections'][number]) => 
+      const colacionesPrice = order.resumenPedido?.reduce((sum, s) => 
         sum + (Number(s.colacion?.price) || 0), 0) || 0
 
       const adminOrder: AdminOrderView = {
         id: order.id,
         userId: order.userId,
         weekStart: order.weekStart,
-        selections: order.selections || [],
+        selections: order.resumenPedido || [],
         total: Number(order.total) || 0,
         status: order.status || 'pending',
         createdAt: order.createdAt,
@@ -164,7 +164,7 @@ export function OrdersManagementSection() {
           firstName: order.user?.firstName || '',
           lastName: order.user?.lastName || '',
           email: order.user?.email || '',
-          userType: getUserType(order.user?.userType)
+          userType: getUserType(order.user?.userType || order.tipoUsuario)
         },
         dayName: format(order.createdAt, 'EEEE', { locale: es }),
         formattedDate: format(order.createdAt, 'dd/MM/yyyy HH:mm'),
