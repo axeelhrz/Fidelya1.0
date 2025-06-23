@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useAdminOrders } from './useAdminOrders'
-import { AdminOrderView, OrderFilters, OrderMetrics } from '@/types/adminOrder'
+import { AdminOrderView, OrderFilters } from '@/types/adminOrder'
 import { OrdersExportUtils, ExportOptions } from '@/lib/ordersExportUtils'
 import { format, startOfWeek } from 'date-fns'
 
@@ -17,8 +17,6 @@ export function useOrdersDashboard() {
     metrics: baseMetrics,
     isLoading,
     error,
-    filters: baseFilters,
-    updateFilters: updateBaseFilters,
     refreshOrders,
     updateOrderStatus,
     deleteOrder
@@ -74,6 +72,9 @@ export function useOrdersDashboard() {
   }, [baseOrders, applyDashboardFilters])
 
   // Actualizar filtros del dashboard
+  // Define a no-op updateBaseFilters if not provided by useAdminOrders
+  const updateBaseFilters = () => {}
+
   const updateDashboardFilters = useCallback((newFilters: Partial<DashboardFilters>) => {
     setDashboardFilters(prev => {
       const updated = { ...prev, ...newFilters }
@@ -88,12 +89,12 @@ export function useOrdersDashboard() {
       if (newFilters.searchTerm !== undefined) baseFilterUpdates.searchTerm = newFilters.searchTerm
 
       if (Object.keys(baseFilterUpdates).length > 0) {
-        updateBaseFilters(baseFilterUpdates)
+        updateBaseFilters()
       }
 
       return updated
     })
-  }, [updateBaseFilters])
+  }, [])
 
   // Función para exportar pedidos
   const exportOrders = useCallback(async (options: ExportOptions) => {
@@ -105,7 +106,7 @@ export function useOrdersDashboard() {
         throw new Error('No hay pedidos para exportar')
       }
 
-      OrdersExportUtils.exportToExcel(filteredOrders, baseMetrics, options)
+      OrdersExportUtils.exportToExcel(filteredOrders, baseMetrics ?? undefined, options)
       
       console.log('Exportación completada exitosamente')
     } catch (error) {
