@@ -16,9 +16,7 @@ import {
   Analytics,
   Group,
   Upload,
-  CloudDownload,
   CloudUpload,
-  Backup,
 } from '@mui/icons-material';
 import { toast } from 'react-hot-toast';
 import { useSocios } from '@/hooks/useSocios';
@@ -593,7 +591,7 @@ export default function AsociacionDashboard() {
         case 'archive':
           // Mock archive functionality
           for (const id of selectedIds) {
-            await updateSocio(id, { estado: 'inactivo' });
+            await updateSocio(id, { estado: 'vencido' });
           }
           toast.success(`${selectedIds.length} miembros archivados`);
           break;
@@ -605,10 +603,10 @@ export default function AsociacionDashboard() {
           toast.success(`${selectedIds.length} miembros eliminados`);
           break;
         case 'print':
-          toast.info('Función de impresión en desarrollo');
+          toast('Función de impresión en desarrollo');
           break;
         default:
-          toast.info(`Acción "${action}" aplicada a ${selectedIds.length} miembros`);
+          toast(`Acción "${action}" aplicada a ${selectedIds.length} miembros`);
       }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Error al ejecutar la acción');

@@ -18,7 +18,6 @@ import {
   InputAdornment,
   alpha,
   Paper,
-  Grid,
 } from '@mui/material';
 import {
   Person,
@@ -274,7 +273,7 @@ const SocioRegisterPage = () => {
           }}
         >
           <CardContent sx={{ p: 5 }}>
-            {/* Benefits Section */}
+            {/* Benefits Section - Replaced Grid with Flexbox */}
             <Paper
               elevation={0}
               sx={{
@@ -309,23 +308,37 @@ const SocioRegisterPage = () => {
                 ¿Qué incluye tu cuenta premium?
               </Typography>
               
-              <Grid container spacing={2}>
+              <Box 
+                sx={{ 
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: 2,
+                  justifyContent: 'space-between'
+                }}
+              >
                 {benefits.map((benefit, index) => (
-                  <Grid item xs={6} key={index}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Box sx={{ color: '#10b981', fontSize: '1rem' }}>
-                        {benefit.icon}
-                      </Box>
-                      <Typography
-                        variant="body2"
-                        sx={{ color: '#10b981', fontWeight: 600, fontSize: '0.85rem' }}
-                      >
-                        {benefit.text}
-                      </Typography>
+                  <Box 
+                    key={index} 
+                    sx={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: 1,
+                      flex: '1 1 calc(50% - 8px)',
+                      minWidth: 'calc(50% - 8px)'
+                    }}
+                  >
+                    <Box sx={{ color: '#10b981', fontSize: '1rem' }}>
+                      {benefit.icon}
                     </Box>
-                  </Grid>
+                    <Typography
+                      variant="body2"
+                      sx={{ color: '#10b981', fontWeight: 600, fontSize: '0.85rem' }}
+                    >
+                      {benefit.text}
+                    </Typography>
+                  </Box>
                 ))}
-              </Grid>
+              </Box>
             </Paper>
 
             <Box component="form" onSubmit={handleSubmit(handleRegister)}>

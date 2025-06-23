@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   Box,
   Typography,
@@ -11,7 +11,6 @@ import {
   Stack,
   Chip,
   IconButton,
-  useTheme,
   alpha,
   Divider,
   Button,
@@ -21,28 +20,21 @@ import {
   ListItemText,
   Badge,
   Tooltip,
-  Paper,
 } from '@mui/material';
 import {
   PersonAdd,
   Edit,
   Delete,
-  Email,
   Upload,
   Download,
-  Notifications,
   MoreVert,
   FilterList,
   Refresh,
   Timeline,
-  TrendingUp,
   Group,
   Payment,
   Settings,
   Security,
-  CheckCircle,
-  Warning,
-  Error,
   Info,
 } from '@mui/icons-material';
 
@@ -53,7 +45,11 @@ interface ActivityItem {
   description: string;
   timestamp: Date;
   user: string;
-  metadata?: any;
+  metadata?: {
+    count?: number;
+    amount?: number;
+    [key: string]: unknown;
+  };
   severity?: 'info' | 'success' | 'warning' | 'error';
 }
 
@@ -361,7 +357,6 @@ export const ActivityFeed: React.FC<ActivityFeedProps> = ({
   activities = mockActivities,
   loading = false
 }) => {
-  const theme = useTheme();
   const [filter, setFilter] = useState<'all' | 'members' | 'system' | 'security'>('all');
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
