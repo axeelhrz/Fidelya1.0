@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Box,
@@ -165,57 +165,21 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
     return { label: 'Bajo', color: '#ef4444' };
   };
 
-  const filteredAndSortedSocios = useMemo(() => {
-    let filtered = socios.filter(socio => {
-      const matchesSearch = 
-        socio.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        socio.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        socio.dni?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        socio.telefono?.includes(searchTerm);
+  const filtered = socios.filter(socio => {
+    const matchesSearch = 
+      socio.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      socio.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      socio.dni?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      socio.telefono?.includes(searchTerm);
 
-      const matchesStatus = statusFilter === 'all' || socio.estado === statusFilter;
+    const matchesStatus = statusFilter === 'all' || socio.estado === statusFilter;
 
-      return matchesSearch && matchesStatus;
-    });
+    return matchesSearch && matchesStatus;
+  });
 
-    // Sort
-    filtered.sort((a, b) => {
-      let aValue: unknown = a[sortBy as keyof Socio];
-      let bValue: unknown = b[sortBy as keyof Socio];
-
-      if (sortBy === 'creadoEn') {
-        interface WithToDate {
-          toDate: () => Date;
-        }
-        aValue =
-          typeof aValue === 'object' && aValue !== null && typeof (aValue as WithToDate).toDate === 'function'
-            ? (aValue as WithToDate).toDate()
-            : new Date(
-                typeof aValue === 'string' || typeof aValue === 'number' || aValue instanceof Date
-                  ? (aValue as string | number | Date)
-                  : 0
-              );
-        bValue =
-          typeof bValue === 'object' && bValue !== null && typeof (bValue as WithToDate).toDate === 'function'
-            ? (bValue as WithToDate).toDate()
-            : new Date(
-                typeof bValue === 'string' || typeof bValue === 'number' || bValue instanceof Date
-                  ? (bValue as string | number | Date)
-                  : 0
-              );
-      }
-
-      if ((aValue as string | number) < (bValue as string | number)) return sortOrder === 'asc' ? -1 : 1;
-      if ((aValue as string | number) > (bValue as string | number)) return sortOrder === 'asc' ? 1 : -1;
-      return 0;
-    });
-
-    return filtered;
-  }, [socios, searchTerm, statusFilter, sortBy, sortOrder]);
-
-  const totalPages = Math.ceil(filteredAndSortedSocios.length / itemsPerPage);
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedSocios = filteredAndSortedSocios.slice(startIndex, startIndex + itemsPerPage);
+  const paginatedSocios = filtered.slice(startIndex, startIndex + itemsPerPage);
 
   const handleSort = (column: string) => {
     if (sortBy === column) {
@@ -342,7 +306,7 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
               </Typography>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                 <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500 }}>
-                  {filteredAndSortedSocios.length} miembros encontrados
+                  {filtered.length} miembros encontrados
                 </Typography>
                 {selectedMembers.length > 0 && (
                   <Chip
@@ -859,7 +823,7 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
             {totalPages > 1 && (
               <Box sx={{ p: 4, borderTop: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500 }}>
-                  Mostrando {startIndex + 1} a {Math.min(startIndex + itemsPerPage, filteredAndSortedSocios.length)} de {filteredAndSortedSocios.length} miembros
+                  Mostrando {startIndex + 1} a {Math.min(startIndex + itemsPerPage, filtered.length)} de {filtered.length} miembros
                 </Typography>
                 <Pagination
                   count={totalPages}

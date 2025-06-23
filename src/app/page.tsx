@@ -41,7 +41,8 @@ const HomePage = () => {
               fontSize: '0.85rem',
               px: 2,
               py: 0.5,
-              border: '1px solid rgba(99, 102, 241, 0.1)'
+              border: '1px solid rgba(99, 102, 241, 0.1)',
+              fontFamily: '"Plus Jakarta Sans", sans-serif'
             }} 
           />
           
@@ -49,17 +50,18 @@ const HomePage = () => {
             variant="h1"
             sx={{
               fontSize: { xs: '3.5rem', md: '4.5rem' },
-              fontWeight: 900,
+              fontWeight: 800,
               lineHeight: 0.9,
               mb: 2,
               background: 'linear-gradient(135deg, #1e293b 0%, #6366f1 70%, #8b5cf6 100%)',
               backgroundClip: 'text',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
-              letterSpacing: '-0.02em'
+              letterSpacing: '-0.02em',
+              fontFamily: '"Plus Jakarta Sans", sans-serif'
             }}
           >
-            Fidelita
+            Fidelya
           </Typography>
           
           <Typography
@@ -71,7 +73,8 @@ const HomePage = () => {
               lineHeight: 1.5,
               fontSize: { xs: '1.1rem', md: '1.25rem' },
               maxWidth: 480,
-              mx: 'auto'
+              mx: 'auto',
+              fontFamily: 'Inter, sans-serif'
             }}
           >
             La plataforma que conecta asociaciones, comercios y socios en un ecosistema único de beneficios mutuos.
@@ -95,6 +98,7 @@ const HomePage = () => {
                 textTransform: 'none',
                 fontSize: '1rem',
                 fontWeight: 700,
+                fontFamily: '"Plus Jakarta Sans", sans-serif',
                 background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
                 boxShadow: '0 4px 20px rgba(99, 102, 241, 0.25)',
                 '&:hover': {
@@ -121,6 +125,7 @@ const HomePage = () => {
                 textTransform: 'none',
                 fontSize: '1rem',
                 fontWeight: 600,
+                fontFamily: 'Inter, sans-serif',
                 color: '#475569',
                 borderColor: '#e2e8f0',
                 bgcolor: 'white',

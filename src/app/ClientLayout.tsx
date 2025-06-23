@@ -2,28 +2,50 @@
 
 import React from 'react';
 import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
-import { Inter } from 'next/font/google';
-
-const inter = Inter({
-  subsets: ['latin'],
-  display: 'swap',
-});
 
 const theme = createTheme({
   typography: {
-    fontFamily: inter.style.fontFamily,
+    fontFamily: 'Inter, system-ui, sans-serif',
+    h1: {
+      fontFamily: '"Plus Jakarta Sans", sans-serif',
+      fontWeight: 800,
+    },
+    h2: {
+      fontFamily: '"Plus Jakarta Sans", sans-serif',
+      fontWeight: 700,
+    },
+    h3: {
+      fontFamily: '"Plus Jakarta Sans", sans-serif',
+      fontWeight: 700,
+    },
+    h4: {
+      fontFamily: '"Plus Jakarta Sans", sans-serif',
+      fontWeight: 600,
+    },
+    h5: {
+      fontFamily: '"Plus Jakarta Sans", sans-serif',
+      fontWeight: 600,
+    },
+    h6: {
+      fontFamily: '"Plus Jakarta Sans", sans-serif',
+      fontWeight: 600,
+    },
+    button: {
+      fontFamily: '"Plus Jakarta Sans", sans-serif',
+      fontWeight: 600,
+    },
   },
   palette: {
     mode: 'light',
     primary: {
-      main: '#667eea',
+      main: '#6366f1',
       light: '#8fa5f3',
-      dark: '#4c63d2',
+      dark: '#4f46e5',
     },
     secondary: {
-      main: '#764ba2',
-      light: '#9575cd',
-      dark: '#5e35b1',
+      main: '#8b5cf6',
+      light: '#a78bfa',
+      dark: '#7c3aed',
     },
     background: {
       default: '#fafafa',
@@ -44,6 +66,7 @@ const theme = createTheme({
           textTransform: 'none',
           fontWeight: 600,
           borderRadius: 12,
+          fontFamily: '"Plus Jakarta Sans", sans-serif',
         },
       },
     },
@@ -61,6 +84,14 @@ const theme = createTheme({
         },
       },
     },
+    MuiChip: {
+      styleOverrides: {
+        root: {
+          fontFamily: '"Plus Jakarta Sans", sans-serif',
+          fontWeight: 600,
+        },
+      },
+    },
   },
 });
 
@@ -68,7 +99,7 @@ interface ClientLayoutProps {
   children: React.ReactNode;
 }
 
-export function ClientLayout({ children }: ClientLayoutProps) {
+export default function ClientLayout({ children }: ClientLayoutProps) {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
