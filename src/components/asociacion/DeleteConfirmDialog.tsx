@@ -10,7 +10,6 @@ import {
   Box,
   Typography,
   Stack,
-  useTheme,
   alpha,
   Avatar,
   Paper,
@@ -38,7 +37,6 @@ export const DeleteConfirmDialog: React.FC<DeleteConfirmDialogProps> = ({
   socio,
   loading = false
 }) => {
-  const theme = useTheme();
 
   const handleConfirm = async () => {
     try {

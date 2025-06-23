@@ -26,7 +26,6 @@ import {
   Pagination,
   Stack,
   Avatar,
-  useTheme,
   alpha,
   Divider,
   Checkbox,
@@ -34,11 +33,11 @@ import {
   ListItemIcon,
   ListItemText,
   Tooltip,
-  Badge,
   ButtonGroup,
   Fab,
   Zoom,
 } from '@mui/material';
+import { SelectChangeEvent } from '@mui/material/Select';
 import {
   Search,
   Add,
@@ -51,22 +50,15 @@ import {
   FilterList,
   MoreVert,
   Download,
-  Upload,
   Visibility,
-  Send,
   Archive,
   Restore,
   Star,
-  StarBorder,
   Sort,
   ViewColumn,
   Refresh,
   PersonAdd,
-  GroupAdd,
-  Settings,
-  Analytics,
   Print,
-  Share,
 } from '@mui/icons-material';
 import { Socio } from '@/types/socio';
 
@@ -84,7 +76,7 @@ interface TableColumn {
   label: string;
   minWidth?: number;
   align?: 'right' | 'left' | 'center';
-  format?: (value: any) => string;
+  format?: (value: unknown) => string;
   sortable?: boolean;
 }
 
@@ -144,7 +136,6 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
   onAdd,
   onBulkAction
 }) => {
-  const theme = useTheme();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'activo' | 'vencido'>('all');
   const [sortBy, setSortBy] = useState<string>('creadoEn');
@@ -156,9 +147,15 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [bulkMenuAnchor, setBulkMenuAnchor] = useState<null | HTMLElement>(null);
 
-  // Mock engagement scores (in real app, this would come from your data)
+  // Deterministic engagement score based on UID or email (for demo purposes)
   const getEngagementScore = (socio: Socio) => {
-    return Math.floor(Math.random() * 100) + 1;
+    const str = socio.uid || socio.email || '';
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const score = Math.abs(hash % 100) + 1;
+    return score;
   };
 
   const getEngagementLevel = (score: number) => {
@@ -183,16 +180,33 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
 
     // Sort
     filtered.sort((a, b) => {
-      let aValue: any = a[sortBy as keyof Socio];
-      let bValue: any = b[sortBy as keyof Socio];
+      let aValue: unknown = a[sortBy as keyof Socio];
+      let bValue: unknown = b[sortBy as keyof Socio];
 
       if (sortBy === 'creadoEn') {
-        aValue = aValue?.toDate?.() || new Date(aValue);
-        bValue = bValue?.toDate?.() || new Date(bValue);
+        interface WithToDate {
+          toDate: () => Date;
+        }
+        aValue =
+          typeof aValue === 'object' && aValue !== null && typeof (aValue as WithToDate).toDate === 'function'
+            ? (aValue as WithToDate).toDate()
+            : new Date(
+                typeof aValue === 'string' || typeof aValue === 'number' || aValue instanceof Date
+                  ? (aValue as string | number | Date)
+                  : 0
+              );
+        bValue =
+          typeof bValue === 'object' && bValue !== null && typeof (bValue as WithToDate).toDate === 'function'
+            ? (bValue as WithToDate).toDate()
+            : new Date(
+                typeof bValue === 'string' || typeof bValue === 'number' || bValue instanceof Date
+                  ? (bValue as string | number | Date)
+                  : 0
+              );
       }
 
-      if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
-      if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
+      if ((aValue as string | number) < (bValue as string | number)) return sortOrder === 'asc' ? -1 : 1;
+      if ((aValue as string | number) > (bValue as string | number)) return sortOrder === 'asc' ? 1 : -1;
       return 0;
     });
 
@@ -261,9 +275,25 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
     );
   };
 
-  const formatDate = (timestamp: any) => {
+  const formatDate = (
+    timestamp: Date | { toDate: () => Date } | string | number | null | undefined
+  ) => {
     if (!timestamp) return '-';
-    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+    let date: Date;
+    if (
+      timestamp &&
+      typeof timestamp === 'object' &&
+      'toDate' in timestamp &&
+      typeof (timestamp as { toDate: () => Date }).toDate === 'function'
+    ) {
+      date = (timestamp as { toDate: () => Date }).toDate();
+    } else if (timestamp instanceof Date) {
+      date = timestamp;
+    } else if (typeof timestamp === 'string' || typeof timestamp === 'number') {
+      date = new Date(timestamp);
+    } else {
+      return '-';
+    }
     return date.toLocaleDateString('es-ES', {
       year: 'numeric',
       month: 'short',
@@ -426,8 +456,7 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
             <FormControl sx={{ minWidth: 200 }}>
               <InputLabel>Estado</InputLabel>
               <Select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as any)}
+                onChange={(e: SelectChangeEvent) => setStatusFilter(e.target.value as 'all' | 'activo' | 'vencido')}
                 label="Estado"
                 startAdornment={<FilterList sx={{ color: '#94a3b8', mr: 1 }} />}
                 sx={{

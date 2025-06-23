@@ -1,5 +1,4 @@
 'use client';
-
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -7,8 +6,6 @@ import {
   Typography,
   Card,
   CardContent,
-  Grid,
-  useTheme,
   alpha,
   Avatar,
   Stack,
@@ -21,18 +18,12 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  TextField,
   Checkbox,
   FormControlLabel,
   FormGroup,
   Stepper,
   Step,
   StepLabel,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
-  Switch,
   Tooltip,
   CircularProgress,
   Accordion,
@@ -43,41 +34,24 @@ import {
 } from '@mui/material';
 import {
   CloudDownload,
-  GetApp,
   Description,
   TableChart,
   PictureAsPdf,
-  InsertChart,
-  Code,
   DataObject,
   FilterList,
   CalendarToday,
   Group,
   Email,
-  Phone,
-  Business,
-  LocationOn,
-  Schedule,
   CheckCircle,
   Warning,
   Info,
   Settings,
   Refresh,
-  Visibility,
   Download,
-  Share,
-  Security,
   ExpandMore,
   ArrowForward,
   ArrowBack,
-  FileDownload,
-  CloudSync,
-  Storage,
   Assessment,
-  Timeline,
-  BarChart,
-  PieChart,
-  ShowChart,
   DateRange,
   TrendingUp,
   Analytics,
@@ -139,7 +113,7 @@ const ExportFormatCard: React.FC<{
           cursor: 'pointer',
           border: selected ? `2px solid ${format.color}` : '1px solid #f1f5f9',
           borderRadius: 5,
-          background: selected 
+          background: selected
             ? `linear-gradient(135deg, ${alpha(format.color, 0.05)} 0%, ${alpha(format.color, 0.02)} 100%)`
             : 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
           transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -171,7 +145,6 @@ const ExportFormatCard: React.FC<{
             }}
           />
         )}
-        
         <CardContent sx={{ p: 4 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, mb: 3 }}>
             <Avatar
@@ -187,7 +160,6 @@ const ExportFormatCard: React.FC<{
             >
               {format.icon}
             </Avatar>
-            
             <Box sx={{ flex: 1 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
                 <Typography variant="h6" sx={{ fontWeight: 700, color: '#0f172a', fontSize: '1.1rem' }}>
@@ -209,12 +181,10 @@ const ExportFormatCard: React.FC<{
                 {format.description}
               </Typography>
             </Box>
-            
             {selected && (
               <CheckCircle sx={{ color: format.color, fontSize: 24 }} />
             )}
           </Box>
-
           <Box>
             <Typography variant="caption" sx={{ color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', mb: 1, display: 'block' }}>
               Características
@@ -342,16 +312,16 @@ const FieldSelectionCard: React.FC<{
                     {field.sensitive && (
                       <Chip label="Sensible" size="small" sx={{ bgcolor: '#f59e0b', color: 'white', fontSize: '0.6rem', height: 16 }} />
                     )}
-                    <Chip 
-                      label={field.dataType} 
-                      size="small" 
-                      sx={{ 
-                        bgcolor: alpha('#64748b', 0.1), 
-                        color: '#64748b', 
-                        fontSize: '0.6rem', 
+                    <Chip
+                      label={field.dataType}
+                      size="small"
+                      sx={{
+                        bgcolor: alpha('#64748b', 0.1),
+                        color: '#64748b',
+                        fontSize: '0.6rem',
                         height: 16,
                         textTransform: 'uppercase'
-                      }} 
+                      }}
                     />
                   </Box>
                   <Typography variant="caption" sx={{ color: '#64748b' }}>
@@ -418,18 +388,18 @@ const ExportPreview: React.FC<{
                 {progress.progress}%
               </Typography>
             </Box>
-            <LinearProgress 
-              variant="determinate" 
-              value={progress.progress} 
-              sx={{ 
-                borderRadius: 2, 
+            <LinearProgress
+              variant="determinate"
+              value={progress.progress}
+              sx={{
+                borderRadius: 2,
                 height: 8,
                 bgcolor: alpha('#6366f1', 0.1),
                 '& .MuiLinearProgress-bar': {
                   bgcolor: '#6366f1',
                   borderRadius: 2,
                 }
-              }} 
+              }}
             />
             <Typography variant="caption" sx={{ color: '#64748b', mt: 1, display: 'block' }}>
               {progress.message}
@@ -441,28 +411,37 @@ const ExportPreview: React.FC<{
           <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#1e293b', mb: 2 }}>
             Resumen del Archivo
           </Typography>
-          <Grid container spacing={2}>
-            <Grid item xs={6}>
-              <Paper sx={{ p: 2, bgcolor: alpha(format.color, 0.05), border: `1px solid ${alpha(format.color, 0.1)}` }}>
-                <Typography variant="caption" sx={{ color: '#94a3b8', fontWeight: 600 }}>
-                  Formato
-                </Typography>
-                <Typography variant="h6" sx={{ fontWeight: 700, color: format.color }}>
-                  {format.name}
-                </Typography>
-              </Paper>
-            </Grid>
-            <Grid item xs={6}>
-              <Paper sx={{ p: 2, bgcolor: alpha('#10b981', 0.05), border: `1px solid ${alpha('#10b981', 0.1)}` }}>
-                <Typography variant="caption" sx={{ color: '#94a3b8', fontWeight: 600 }}>
-                  Registros
-                </Typography>
-                <Typography variant="h6" sx={{ fontWeight: 700, color: '#10b981' }}>
-                  {filteredCount.toLocaleString()}
-                </Typography>
-              </Paper>
-            </Grid>
-          </Grid>
+          {/* Replace Grid with Flexbox */}
+          <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+            <Paper sx={{ 
+              flex: '1 1 calc(50% - 8px)', 
+              minWidth: '200px',
+              p: 2, 
+              bgcolor: alpha(format.color, 0.05), 
+              border: `1px solid ${alpha(format.color, 0.1)}` 
+            }}>
+              <Typography variant="caption" sx={{ color: '#94a3b8', fontWeight: 600 }}>
+                Formato
+              </Typography>
+              <Typography variant="h6" sx={{ fontWeight: 700, color: format.color }}>
+                {format.name}
+              </Typography>
+            </Paper>
+            <Paper sx={{ 
+              flex: '1 1 calc(50% - 8px)', 
+              minWidth: '200px',
+              p: 2, 
+              bgcolor: alpha('#10b981', 0.05), 
+              border: `1px solid ${alpha('#10b981', 0.1)}` 
+            }}>
+              <Typography variant="caption" sx={{ color: '#94a3b8', fontWeight: 600 }}>
+                Registros
+              </Typography>
+              <Typography variant="h6" sx={{ fontWeight: 700, color: '#10b981' }}>
+                {filteredCount.toLocaleString()}
+              </Typography>
+            </Paper>
+          </Box>
         </Box>
 
         <Box sx={{ mb: 4 }}>
@@ -532,7 +511,6 @@ export const DataExportSection: React.FC<DataExportSectionProps> = ({
   stats,
   loading
 }) => {
-  const theme = useTheme();
   const [activeStep, setActiveStep] = useState(0);
   const [selectedFormat, setSelectedFormat] = useState<string>('csv');
   const [selectedFields, setSelectedFields] = useState<string[]>(['nombre', 'email', 'estado', 'creadoEn']);
@@ -587,129 +565,124 @@ export const DataExportSection: React.FC<DataExportSectionProps> = ({
 
   const exportFields: ExportFieldProps[] = [
     // Basic Information
-    { 
-      id: 'nombre', 
-      label: 'Nombre Completo', 
-      description: 'Nombre y apellidos del miembro', 
-      category: 'basic', 
+    {
+      id: 'nombre',
+      label: 'Nombre Completo',
+      description: 'Nombre y apellidos del miembro',
+      category: 'basic',
       required: true,
       dataType: 'string'
     },
-    { 
-      id: 'dni', 
-      label: 'DNI/Documento', 
-      description: 'Documento de identidad', 
-      category: 'basic', 
+    {
+      id: 'dni',
+      label: 'DNI/Documento',
+      description: 'Documento de identidad',
+      category: 'basic',
       sensitive: true,
       dataType: 'string'
     },
-    
     // Contact Information
-    { 
-      id: 'email', 
-      label: 'Email', 
-      description: 'Dirección de correo electrónico', 
-      category: 'contact', 
+    {
+      id: 'email',
+      label: 'Email',
+      description: 'Dirección de correo electrónico',
+      category: 'contact',
       required: true,
       dataType: 'string'
     },
-    { 
-      id: 'telefono', 
-      label: 'Teléfono', 
-      description: 'Número de teléfono de contacto', 
+    {
+      id: 'telefono',
+      label: 'Teléfono',
+      description: 'Número de teléfono de contacto',
       category: 'contact',
       dataType: 'string'
     },
-    
     // Dates and Time
-    { 
-      id: 'creadoEn', 
-      label: 'Fecha de Alta', 
-      description: 'Fecha de registro en el sistema', 
+    {
+      id: 'creadoEn',
+      label: 'Fecha de Alta',
+      description: 'Fecha de registro en el sistema',
       category: 'dates',
       dataType: 'date'
     },
-    { 
-      id: 'ultimaActividad', 
-      label: 'Última Actividad', 
-      description: 'Fecha de última actividad registrada', 
+    {
+      id: 'ultimaActividad',
+      label: 'Última Actividad',
+      description: 'Fecha de última actividad registrada',
       category: 'dates',
       dataType: 'date'
     },
-    { 
-      id: 'antiguedad', 
-      label: 'Antigüedad', 
-      description: 'Tiempo como miembro (en días)', 
+    {
+      id: 'antiguedad',
+      label: 'Antigüedad',
+      description: 'Tiempo como miembro (en días)',
       category: 'dates',
       dataType: 'number'
     },
-    
     // Status and Membership
-    { 
-      id: 'estado', 
-      label: 'Estado', 
-      description: 'Estado actual del miembro', 
-      category: 'status', 
+    {
+      id: 'estado',
+      label: 'Estado',
+      description: 'Estado actual del miembro',
+      category: 'status',
       required: true,
       dataType: 'string'
     },
-    { 
-      id: 'tipoMembresia', 
-      label: 'Tipo de Membresía', 
-      description: 'Categoría de membresía', 
+    {
+      id: 'tipoMembresia',
+      label: 'Tipo de Membresía',
+      description: 'Categoría de membresía',
       category: 'status',
       dataType: 'string'
     },
-    
     // Analytics and Metrics
-    { 
-      id: 'totalPagos', 
-      label: 'Total de Pagos', 
-      description: 'Cantidad total de pagos realizados', 
+    {
+      id: 'totalPagos',
+      label: 'Total de Pagos',
+      description: 'Cantidad total de pagos realizados',
       category: 'analytics',
       dataType: 'number'
     },
-    { 
-      id: 'montoTotal', 
-      label: 'Monto Total', 
-      description: 'Suma total de todos los pagos', 
+    {
+      id: 'montoTotal',
+      label: 'Monto Total',
+      description: 'Suma total de todos los pagos',
       category: 'analytics',
       dataType: 'number'
     },
-    { 
-      id: 'promedioMensual', 
-      label: 'Promedio Mensual', 
-      description: 'Promedio de pagos por mes', 
+    {
+      id: 'promedioMensual',
+      label: 'Promedio Mensual',
+      description: 'Promedio de pagos por mes',
       category: 'analytics',
       dataType: 'number'
     },
-    { 
-      id: 'engagement', 
-      label: 'Nivel de Engagement', 
-      description: 'Puntuación de participación del miembro', 
+    {
+      id: 'engagement',
+      label: 'Nivel de Engagement',
+      description: 'Puntuación de participación del miembro',
       category: 'analytics',
       dataType: 'number'
     },
-    
     // Custom Fields
-    { 
-      id: 'notas', 
-      label: 'Notas', 
-      description: 'Comentarios y observaciones', 
+    {
+      id: 'notas',
+      label: 'Notas',
+      description: 'Comentarios y observaciones',
       category: 'custom',
       dataType: 'string'
     },
-    { 
-      id: 'tags', 
-      label: 'Etiquetas', 
-      description: 'Tags y categorías personalizadas', 
+    {
+      id: 'tags',
+      label: 'Etiquetas',
+      description: 'Tags y categorías personalizadas',
       category: 'custom',
       dataType: 'array'
     },
-    { 
-      id: 'asociacionId', 
-      label: 'ID de Asociación', 
-      description: 'Identificador único de la asociación', 
+    {
+      id: 'asociacionId',
+      label: 'ID de Asociación',
+      description: 'Identificador único de la asociación',
       category: 'custom',
       dataType: 'string'
     },
@@ -727,7 +700,7 @@ export const DataExportSection: React.FC<DataExportSectionProps> = ({
     if (dateRange !== 'all') {
       const now = new Date();
       const cutoffDate = new Date();
-      
+
       switch (dateRange) {
         case 'last30days':
           cutoffDate.setDate(now.getDate() - 30);
@@ -739,7 +712,7 @@ export const DataExportSection: React.FC<DataExportSectionProps> = ({
           cutoffDate.setFullYear(now.getFullYear() - 1);
           break;
       }
-      
+
       filtered = filtered.filter(socio => {
         const socioDate = socio.creadoEn.toDate();
         return socioDate >= cutoffDate;
@@ -753,16 +726,16 @@ export const DataExportSection: React.FC<DataExportSectionProps> = ({
     const now = new Date();
     const createdDate = socio.creadoEn.toDate();
     const antiguedad = Math.floor((now.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
-    
+
     const pagos = socio.pagos || [];
     const totalPagos = pagos.length;
     const montoTotal = pagos.reduce((sum, pago) => sum + pago.monto, 0);
     const promedioMensual = totalPagos > 0 ? montoTotal / Math.max(1, Math.ceil(antiguedad / 30)) : 0;
-    
+
     // Mock engagement score (in real app, this would be calculated based on actual activity)
-    const engagement = Math.min(100, Math.max(0, 
-      (totalPagos * 20) + 
-      (antiguedad > 365 ? 30 : antiguedad / 365 * 30) + 
+    const engagement = Math.min(100, Math.max(0,
+      (totalPagos * 20) +
+      (antiguedad > 365 ? 30 : antiguedad / 365 * 30) +
       (socio.estado === 'activo' ? 50 : 0)
     ));
 
@@ -779,8 +752,8 @@ export const DataExportSection: React.FC<DataExportSectionProps> = ({
   const generateExportData = (format: string) => {
     return filteredSocios.map(socio => {
       const analytics = calculateAnalytics(socio);
-      const row: any = {};
-      
+      const row: Record<string, unknown> = {};
+
       selectedFields.forEach(field => {
         switch (field) {
           case 'nombre':
@@ -835,20 +808,20 @@ export const DataExportSection: React.FC<DataExportSectionProps> = ({
             row[field] = '';
         }
       });
-      
+
       return row;
     });
   };
 
   const downloadFile = (content: string | object, filename: string, mimeType: string) => {
     let blob: Blob;
-    
+
     if (typeof content === 'string') {
       blob = new Blob([content], { type: mimeType });
     } else {
       blob = new Blob([JSON.stringify(content, null, 2)], { type: mimeType });
     }
-    
+
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
@@ -868,7 +841,7 @@ export const DataExportSection: React.FC<DataExportSectionProps> = ({
 
     setExportLoading(true);
     const selectedFormatData = exportFormats.find(f => f.id === selectedFormat);
-    
+
     try {
       // Step 1: Preparing data
       setExportProgress({
@@ -876,45 +849,42 @@ export const DataExportSection: React.FC<DataExportSectionProps> = ({
         progress: 10,
         message: 'Recopilando información de miembros'
       });
-      
       await new Promise(resolve => setTimeout(resolve, 500));
-      
+
       // Step 2: Processing
       setExportProgress({
         step: 'Procesando información...',
         progress: 40,
         message: 'Calculando métricas y análisis'
       });
-      
       const exportData = generateExportData(selectedFormat);
       await new Promise(resolve => setTimeout(resolve, 800));
-      
+
       // Step 3: Generating file
       setExportProgress({
         step: 'Generando archivo...',
         progress: 70,
         message: `Creando archivo ${selectedFormatData?.fileExtension}`
       });
-      
+
       const timestamp = new Date().toISOString().split('T')[0];
       const filename = `miembros_export_${timestamp}${selectedFormatData?.fileExtension}`;
-      
       await new Promise(resolve => setTimeout(resolve, 500));
-      
+
       // Step 4: Download
       setExportProgress({
         step: 'Descargando archivo...',
         progress: 90,
         message: 'Preparando descarga'
       });
-      
+
       switch (selectedFormat) {
         case 'csv':
           const headers = selectedFields.map(field => {
             const fieldData = exportFields.find(f => f.id === field);
             return fieldData?.label || field;
           });
-          
+
           const csvContent = Papa.unparse({
             fields: headers,
             data: exportData.map(row => headers.map((_, index) => {
@@ -922,10 +892,10 @@ export const DataExportSection: React.FC<DataExportSectionProps> = ({
               return row[fieldId] || '';
             }))
           });
-          
+
           downloadFile(csvContent, filename, 'text/csv;charset=utf-8;');
           break;
-          
+
         case 'json':
           const jsonData = {
             metadata: {
@@ -939,17 +909,16 @@ export const DataExportSection: React.FC<DataExportSectionProps> = ({
             },
             data: exportData
           };
-          
           downloadFile(jsonData, filename, 'application/json');
           break;
-          
+
         case 'excel':
           // For Excel, we'll create a CSV for now (in a real app, you'd use a library like xlsx)
           const excelHeaders = selectedFields.map(field => {
             const fieldData = exportFields.find(f => f.id === field);
             return fieldData?.label || field;
           });
-          
+
           const excelContent = Papa.unparse({
             fields: excelHeaders,
             data: exportData.map(row => excelHeaders.map((_, index) => {
@@ -957,11 +926,11 @@ export const DataExportSection: React.FC<DataExportSectionProps> = ({
               return row[fieldId] || '';
             }))
           });
-          
+
           downloadFile(excelContent, filename.replace('.xlsx', '.csv'), 'text/csv;charset=utf-8;');
-          toast.info('Archivo Excel exportado como CSV. Para funcionalidad completa de Excel, considera usar una biblioteca especializada.');
+          toast('Archivo Excel exportado como CSV. Para funcionalidad completa de Excel, considera usar una biblioteca especializada.');
           break;
-          
+
         case 'pdf':
           // For PDF, we'll create a simple text report (in a real app, you'd use a PDF library)
           const pdfContent = `
@@ -975,28 +944,27 @@ Campos incluidos: ${selectedFields.length}
 DATOS:
 ------
 ${exportData.map((row, index) => {
-  return `${index + 1}. ${row.nombre || 'Sin nombre'} - ${row.email || 'Sin email'} - ${row.estado || 'Sin estado'}`;
-}).join('\n')}
+            return `${index + 1}. ${row.nombre || 'Sin nombre'} - ${row.email || 'Sin email'} - ${row.estado || 'Sin estado'}`;
+          }).join('\n')}
 
 Generado por Fidelita - Sistema de Gestión de Miembros
           `.trim();
-          
+
           downloadFile(pdfContent, filename.replace('.pdf', '.txt'), 'text/plain;charset=utf-8;');
-          toast.info('Reporte PDF exportado como texto. Para funcionalidad completa de PDF, considera usar una biblioteca especializada.');
+          toast('Reporte PDF exportado como texto. Para funcionalidad completa de PDF, considera usar una biblioteca especializada.');
           break;
       }
-      
+
       // Step 5: Complete
       setExportProgress({
         step: 'Completado',
         progress: 100,
         message: 'Archivo descargado exitosamente'
       });
-      
+
       await new Promise(resolve => setTimeout(resolve, 500));
-      
       toast.success(`Archivo ${filename} descargado correctamente`);
-      
+
     } catch (error) {
       console.error('Error exporting data:', error);
       toast.error('Error al exportar los datos');
@@ -1007,8 +975,8 @@ Generado por Fidelita - Sistema de Gestión de Miembros
   };
 
   const handleFieldToggle = (fieldId: string) => {
-    setSelectedFields(prev => 
-      prev.includes(fieldId) 
+    setSelectedFields(prev =>
+      prev.includes(fieldId)
         ? prev.filter(id => id !== fieldId)
         : [...prev, fieldId]
     );
@@ -1016,7 +984,7 @@ Generado por Fidelita - Sistema de Gestión de Miembros
 
   const handleCategoryToggle = (category: string, selected: boolean) => {
     const categoryFields = exportFields.filter(field => field.category === category).map(field => field.id);
-    
+
     if (selected) {
       setSelectedFields(prev => [...new Set([...prev, ...categoryFields])]);
     } else {
@@ -1040,35 +1008,42 @@ Generado por Fidelita - Sistema de Gestión de Miembros
   if (loading) {
     return (
       <Box sx={{ p: 4 }}>
-        <Grid container spacing={4}>
+        {/* Replace Grid with Flexbox for loading skeleton */}
+        <Box sx={{ 
+          display: 'flex', 
+          flexWrap: 'wrap', 
+          gap: 4,
+          '& > *': {
+            flex: '1 1 calc(25% - 24px)',
+            minWidth: '250px'
+          }
+        }}>
           {Array.from({ length: 4 }).map((_, index) => (
-            <Grid item xs={12} sm={6} lg={3} key={index}>
-              <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 5 }}>
-                <CardContent sx={{ p: 4 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, mb: 3 }}>
-                    <Box
-                      sx={{
-                        width: 56,
-                        height: 56,
-                        bgcolor: '#f1f5f9',
-                        borderRadius: 3,
-                        animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                        '@keyframes pulse': {
-                          '0%, 100%': { opacity: 1 },
-                          '50%': { opacity: 0.5 },
-                        },
-                      }}
-                    />
-                    <Box sx={{ flex: 1 }}>
-                      <Box sx={{ width: '80%', height: 16, bgcolor: '#f1f5f9', borderRadius: 1, mb: 1 }} />
-                      <Box sx={{ width: '60%', height: 14, bgcolor: '#f1f5f9', borderRadius: 1 }} />
-                    </Box>
+            <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 5 }} key={index}>
+              <CardContent sx={{ p: 4 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, mb: 3 }}>
+                  <Box
+                    sx={{
+                      width: 56,
+                      height: 56,
+                      bgcolor: '#f1f5f9',
+                      borderRadius: 3,
+                      animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                      '@keyframes pulse': {
+                        '0%, 100%': { opacity: 1 },
+                        '50%': { opacity: 0.5 },
+                      },
+                    }}
+                  />
+                  <Box sx={{ flex: 1 }}>
+                    <Box sx={{ width: '80%', height: 16, bgcolor: '#f1f5f9', borderRadius: 1, mb: 1 }} />
+                    <Box sx={{ width: '60%', height: 14, bgcolor: '#f1f5f9', borderRadius: 1 }} />
                   </Box>
-                </CardContent>
-              </Card>
-            </Grid>
+                </Box>
+              </CardContent>
+            </Card>
           ))}
-        </Grid>
+        </Box>
       </Box>
     );
   }
@@ -1124,7 +1099,6 @@ Generado por Fidelita - Sistema de Gestión de Miembros
                 </Typography>
               </Box>
             </Box>
-            
             <Stack direction="row" spacing={2}>
               <Tooltip title="Actualizar datos">
                 <IconButton
@@ -1144,85 +1118,89 @@ Generado por Fidelita - Sistema de Gestión de Miembros
             </Stack>
           </Box>
 
-          {/* Enhanced Stats Cards */}
-          <Grid container spacing={3} sx={{ mb: 4 }}>
-            <Grid item xs={12} sm={6} md={3}>
-              <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 4 }}>
-                <CardContent sx={{ p: 3 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Avatar sx={{ bgcolor: alpha('#6366f1', 0.1), color: '#6366f1' }}>
-                      <Group />
-                    </Avatar>
-                    <Box>
-                      <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b' }}>
-                        {stats.total.toLocaleString()}
-                      </Typography>
-                      <Typography variant="caption" sx={{ color: '#64748b' }}>
-                        Total Miembros
-                      </Typography>
-                    </Box>
+          {/* Enhanced Stats Cards - Replace Grid with Flexbox */}
+          <Box sx={{ 
+            display: 'flex', 
+            flexWrap: 'wrap', 
+            gap: 3, 
+            mb: 4,
+            '& > *': {
+              flex: '1 1 calc(25% - 18px)',
+              minWidth: '200px'
+            }
+          }}>
+            <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 4 }}>
+              <CardContent sx={{ p: 3 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Avatar sx={{ bgcolor: alpha('#6366f1', 0.1), color: '#6366f1' }}>
+                    <Group />
+                  </Avatar>
+                  <Box>
+                    <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b' }}>
+                      {stats.total.toLocaleString()}
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: '#64748b' }}>
+                      Total Miembros
+                    </Typography>
                   </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 4 }}>
-                <CardContent sx={{ p: 3 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Avatar sx={{ bgcolor: alpha('#10b981', 0.1), color: '#10b981' }}>
-                      <TrendingUp />
-                    </Avatar>
-                    <Box>
-                      <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b' }}>
-                        {stats.activos.toLocaleString()}
-                      </Typography>
-                      <Typography variant="caption" sx={{ color: '#64748b' }}>
-                        Miembros Activos
-                      </Typography>
-                    </Box>
+                </Box>
+              </CardContent>
+            </Card>
+
+            <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 4 }}>
+              <CardContent sx={{ p: 3 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Avatar sx={{ bgcolor: alpha('#10b981', 0.1), color: '#10b981' }}>
+                    <TrendingUp />
+                  </Avatar>
+                  <Box>
+                    <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b' }}>
+                      {stats.activos.toLocaleString()}
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: '#64748b' }}>
+                      Miembros Activos
+                    </Typography>
                   </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 4 }}>
-                <CardContent sx={{ p: 3 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Avatar sx={{ bgcolor: alpha('#f59e0b', 0.1), color: '#f59e0b' }}>
-                      <Warning />
-                    </Avatar>
-                    <Box>
-                      <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b' }}>
-                        {stats.vencidos.toLocaleString()}
-                      </Typography>
-                      <Typography variant="caption" sx={{ color: '#64748b' }}>
-                        Membresías Vencidas
-                      </Typography>
-                    </Box>
+                </Box>
+              </CardContent>
+            </Card>
+
+            <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 4 }}>
+              <CardContent sx={{ p: 3 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Avatar sx={{ bgcolor: alpha('#f59e0b', 0.1), color: '#f59e0b' }}>
+                    <Warning />
+                  </Avatar>
+                  <Box>
+                    <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b' }}>
+                      {stats.vencidos.toLocaleString()}
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: '#64748b' }}>
+                      Membresías Vencidas
+                    </Typography>
                   </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 4 }}>
-                <CardContent sx={{ p: 3 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Avatar sx={{ bgcolor: alpha('#ef4444', 0.1), color: '#ef4444' }}>
-                      <Analytics />
-                    </Avatar>
-                    <Box>
-                      <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b' }}>
-                        {filteredSocios.length.toLocaleString()}
-                      </Typography>
-                      <Typography variant="caption" sx={{ color: '#64748b' }}>
-                        Para Exportar
-                      </Typography>
-                    </Box>
+                </Box>
+              </CardContent>
+            </Card>
+
+            <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 4 }}>
+              <CardContent sx={{ p: 3 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Avatar sx={{ bgcolor: alpha('#ef4444', 0.1), color: '#ef4444' }}>
+                    <Analytics />
+                  </Avatar>
+                  <Box>
+                    <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b' }}>
+                      {filteredSocios.length.toLocaleString()}
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: '#64748b' }}>
+                      Para Exportar
+                    </Typography>
                   </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-          </Grid>
+                </Box>
+              </CardContent>
+            </Card>
+          </Box>
 
           {/* Progress Stepper */}
           <Paper
@@ -1274,19 +1252,26 @@ Generado por Fidelita - Sistema de Gestión de Miembros
               <Typography variant="body1" sx={{ color: '#64748b', fontWeight: 500, mb: 4 }}>
                 Elige el formato que mejor se adapte a tus necesidades de análisis y presentación
               </Typography>
-              
-              <Grid container spacing={4}>
+              {/* Replace Grid with Flexbox */}
+              <Box sx={{ 
+                display: 'flex', 
+                flexWrap: 'wrap', 
+                gap: 4,
+                '& > *': {
+                  flex: '1 1 calc(25% - 24px)',
+                  minWidth: '280px'
+                }
+              }}>
                 {exportFormats.map((format, index) => (
-                  <Grid item xs={12} sm={6} lg={3} key={format.id}>
-                    <ExportFormatCard
-                      format={format}
-                      selected={selectedFormat === format.id}
-                      onSelect={() => setSelectedFormat(format.id)}
-                      delay={index * 0.1}
-                    />
-                  </Grid>
+                  <ExportFormatCard
+                    key={format.id}
+                    format={format}
+                    selected={selectedFormat === format.id}
+                    onSelect={() => setSelectedFormat(format.id)}
+                    delay={index * 0.1}
+                  />
                 ))}
-              </Grid>
+              </Box>
             </Box>
           )}
 
@@ -1298,138 +1283,139 @@ Generado por Fidelita - Sistema de Gestión de Miembros
               <Typography variant="body1" sx={{ color: '#64748b', fontWeight: 500, mb: 4 }}>
                 Filtra y segmenta los datos que deseas incluir en tu exportación
               </Typography>
-              
-              <Grid container spacing={4}>
-                <Grid item xs={12} md={6}>
-                  <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 4 }}>
-                    <CardContent sx={{ p: 4 }}>
-                      <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', mb: 3 }}>
-                        Filtros de Segmentación
-                      </Typography>
-                      
-                      <Stack spacing={3}>
-                        <FormControl fullWidth>
-                          <InputLabel>Estado de Miembros</InputLabel>
-                          <Select
-                            value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value)}
-                            label="Estado de Miembros"
-                            startAdornment={<FilterList sx={{ color: '#94a3b8', mr: 1 }} />}
-                          >
-                            <MenuItem value="all">Todos los estados</MenuItem>
-                            <MenuItem value="activo">Solo activos</MenuItem>
-                            <MenuItem value="vencido">Solo vencidos</MenuItem>
-                            <MenuItem value="inactivo">Solo inactivos</MenuItem>
-                          </Select>
-                        </FormControl>
+              {/* Replace Grid with Flexbox */}
+              <Box sx={{ 
+                display: 'flex', 
+                flexWrap: 'wrap', 
+                gap: 4,
+                '& > *': {
+                  flex: '1 1 calc(50% - 16px)',
+                  minWidth: '400px'
+                }
+              }}>
+                <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 4 }}>
+                  <CardContent sx={{ p: 4 }}>
+                    <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', mb: 3 }}>
+                      Filtros de Segmentación
+                    </Typography>
+                    <Stack spacing={3}>
+                      <FormControl fullWidth>
+                        <InputLabel>Estado de Miembros</InputLabel>
+                        <Select
+                          value={statusFilter}
+                          onChange={(e) => setStatusFilter(e.target.value)}
+                          label="Estado de Miembros"
+                          startAdornment={<FilterList sx={{ color: '#94a3b8', mr: 1 }} />}
+                        >
+                          <MenuItem value="all">Todos los estados</MenuItem>
+                          <MenuItem value="activo">Solo activos</MenuItem>
+                          <MenuItem value="vencido">Solo vencidos</MenuItem>
+                          <MenuItem value="inactivo">Solo inactivos</MenuItem>
+                        </Select>
+                      </FormControl>
 
-                        <FormControl fullWidth>
-                          <InputLabel>Rango de Fechas</InputLabel>
-                          <Select
-                            value={dateRange}
-                            onChange={(e) => setDateRange(e.target.value)}
-                            label="Rango de Fechas"
-                            startAdornment={<DateRange sx={{ color: '#94a3b8', mr: 1 }} />}
-                          >
-                            <MenuItem value="all">Todas las fechas</MenuItem>
-                            <MenuItem value="last30days">Últimos 30 días</MenuItem>
-                            <MenuItem value="last3months">Últimos 3 meses</MenuItem>
-                            <MenuItem value="lastyear">Último año</MenuItem>
-                          </Select>
-                        </FormControl>
-                      </Stack>
-                    </CardContent>
-                  </Card>
-                </Grid>
-                
-                <Grid item xs={12} md={6}>
-                  <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 4 }}>
-                    <CardContent sx={{ p: 4 }}>
-                      <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', mb: 3 }}>
-                        Resumen de Filtros Aplicados
-                      </Typography>
-                      
-                      <Stack spacing={3}>
-                        <Box>
-                          <Typography variant="subtitle2" sx={{ color: '#64748b', fontWeight: 600, mb: 1 }}>
-                            Registros Totales vs Filtrados
+                      <FormControl fullWidth>
+                        <InputLabel>Rango de Fechas</InputLabel>
+                        <Select
+                          value={dateRange}
+                          onChange={(e) => setDateRange(e.target.value)}
+                          label="Rango de Fechas"
+                          startAdornment={<DateRange sx={{ color: '#94a3b8', mr: 1 }} />}
+                        >
+                          <MenuItem value="all">Todas las fechas</MenuItem>
+                          <MenuItem value="last30days">Últimos 30 días</MenuItem>
+                          <MenuItem value="last3months">Últimos 3 meses</MenuItem>
+                          <MenuItem value="lastyear">Último año</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Stack>
+                  </CardContent>
+                </Card>
+
+                <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 4 }}>
+                  <CardContent sx={{ p: 4 }}>
+                    <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', mb: 3 }}>
+                      Resumen de Filtros Aplicados
+                    </Typography>
+                    <Stack spacing={3}>
+                      <Box>
+                        <Typography variant="subtitle2" sx={{ color: '#64748b', fontWeight: 600, mb: 1 }}>
+                          Registros Totales vs Filtrados
+                        </Typography>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                          <Typography variant="body2" sx={{ color: '#64748b' }}>
+                            Total disponible:
                           </Typography>
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                            <Typography variant="body2" sx={{ color: '#64748b' }}>
-                              Total disponible:
-                            </Typography>
-                            <Typography variant="body2" sx={{ color: '#1e293b', fontWeight: 700 }}>
-                              {socios.length.toLocaleString()}
-                            </Typography>
-                          </Box>
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                            <Typography variant="body2" sx={{ color: '#64748b' }}>
-                              Después de filtros:
-                            </Typography>
-                            <Typography variant="body2" sx={{ color: '#10b981', fontWeight: 700 }}>
-                              {filteredSocios.length.toLocaleString()}
-                            </Typography>
-                          </Box>
-                          <LinearProgress 
-                            variant="determinate" 
-                            value={socios.length > 0 ? (filteredSocios.length / socios.length) * 100 : 0}
-                            sx={{ 
-                              borderRadius: 2, 
-                              height: 8,
-                              bgcolor: alpha('#10b981', 0.1),
-                              '& .MuiLinearProgress-bar': {
-                                bgcolor: '#10b981',
-                                borderRadius: 2,
-                              }
-                            }} 
+                          <Typography variant="body2" sx={{ color: '#1e293b', fontWeight: 700 }}>
+                            {socios.length.toLocaleString()}
+                          </Typography>
+                        </Box>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                          <Typography variant="body2" sx={{ color: '#64748b' }}>
+                            Después de filtros:
+                          </Typography>
+                          <Typography variant="body2" sx={{ color: '#10b981', fontWeight: 700 }}>
+                            {filteredSocios.length.toLocaleString()}
+                          </Typography>
+                        </Box>
+                        <LinearProgress
+                          variant="determinate"
+                          value={socios.length > 0 ? (filteredSocios.length / socios.length) * 100 : 0}
+                          sx={{
+                            borderRadius: 2,
+                            height: 8,
+                            bgcolor: alpha('#10b981', 0.1),
+                            '& .MuiLinearProgress-bar': {
+                              bgcolor: '#10b981',
+                              borderRadius: 2,
+                            }
+                          }}
+                        />
+                      </Box>
+
+                      <Divider />
+
+                      <Box>
+                        <Typography variant="subtitle2" sx={{ color: '#64748b', fontWeight: 600, mb: 2 }}>
+                          Filtros Activos
+                        </Typography>
+                        <Stack spacing={1}>
+                          <Chip
+                            label={`Estado: ${statusFilter === 'all' ? 'Todos' : statusFilter}`}
+                            size="small"
+                            sx={{
+                              bgcolor: alpha('#6366f1', 0.1),
+                              color: '#6366f1',
+                              justifyContent: 'flex-start'
+                            }}
                           />
-                        </Box>
-                        
-                        <Divider />
-                        
-                        <Box>
-                          <Typography variant="subtitle2" sx={{ color: '#64748b', fontWeight: 600, mb: 2 }}>
-                            Filtros Activos
-                          </Typography>
-                          <Stack spacing={1}>
-                            <Chip
-                              label={`Estado: ${statusFilter === 'all' ? 'Todos' : statusFilter}`}
-                              size="small"
-                              sx={{ 
-                                bgcolor: alpha('#6366f1', 0.1), 
-                                color: '#6366f1',
-                                justifyContent: 'flex-start'
-                              }}
-                            />
-                            <Chip
-                              label={`Período: ${dateRange === 'all' ? 'Completo' : dateRange}`}
-                              size="small"
-                              sx={{ 
-                                bgcolor: alpha('#8b5cf6', 0.1), 
-                                color: '#8b5cf6',
-                                justifyContent: 'flex-start'
-                              }}
-                            />
-                          </Stack>
-                        </Box>
-                        
-                        <Box>
-                          <Typography variant="subtitle2"
-                          sx={{ color: '#64748b', fontWeight: 600, mb: 1 }}>
-                            Porcentaje de Datos
-                          </Typography>
-                          <Typography variant="h4" sx={{ color: '#10b981', fontWeight: 800 }}>
-                            {socios.length > 0 ? Math.round((filteredSocios.length / socios.length) * 100) : 0}%
-                          </Typography>
-                          <Typography variant="caption" sx={{ color: '#64748b' }}>
-                            de los datos totales serán exportados
-                          </Typography>
-                        </Box>
-                      </Stack>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              </Grid>
+                          <Chip
+                            label={`Período: ${dateRange === 'all' ? 'Completo' : dateRange}`}
+                            size="small"
+                            sx={{
+                              bgcolor: alpha('#8b5cf6', 0.1),
+                              color: '#8b5cf6',
+                              justifyContent: 'flex-start'
+                            }}
+                          />
+                        </Stack>
+                      </Box>
+
+                      <Box>
+                        <Typography variant="subtitle2" sx={{ color: '#64748b', fontWeight: 600, mb: 1 }}>
+                          Porcentaje de Datos
+                        </Typography>
+                        <Typography variant="h4" sx={{ color: '#10b981', fontWeight: 800 }}>
+                          {socios.length > 0 ? Math.round((filteredSocios.length / socios.length) * 100) : 0}%
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: '#64748b' }}>
+                          de los datos totales serán exportados
+                        </Typography>
+                      </Box>
+                    </Stack>
+                  </CardContent>
+                </Card>
+              </Box>
             </Box>
           )}
 
@@ -1441,7 +1427,6 @@ Generado por Fidelita - Sistema de Gestión de Miembros
               <Typography variant="body1" sx={{ color: '#64748b', fontWeight: 500, mb: 4 }}>
                 Elige qué información específica incluir en tu exportación. Los campos están organizados por categorías para facilitar la selección.
               </Typography>
-              
               <Stack spacing={3}>
                 {Object.entries(fieldsByCategory).map(([category, fields]) => (
                   <FieldSelectionCard
@@ -1523,175 +1508,176 @@ Generado por Fidelita - Sistema de Gestión de Miembros
               <Typography variant="body1" sx={{ color: '#64748b', fontWeight: 500, mb: 4 }}>
                 Revisa la configuración final y procede con la descarga de tu archivo de datos
               </Typography>
-              
-              <Grid container spacing={6}>
-                <Grid item xs={12} lg={8}>
-                  <ExportPreview
-                    format={exportFormats.find(f => f.id === selectedFormat)!}
-                    selectedFields={selectedFields}
-                    filteredCount={filteredSocios.length}
-                    onExport={handleExport}
-                    loading={exportLoading}
-                    progress={exportProgress || undefined}
-                  />
-                </Grid>
-                
-                <Grid item xs={12} lg={4}>
-                  <Stack spacing={3}>
-                    {/* Configuration Summary */}
-                    <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 5 }}>
-                      <CardContent sx={{ p: 4 }}>
-                        <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', mb: 3 }}>
-                          Configuración Final
-                        </Typography>
-                        
-                        <Stack spacing={3}>
-                          <Box>
-                            <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#64748b', mb: 1 }}>
-                              Formato Seleccionado
-                            </Typography>
+              {/* Replace Grid with Flexbox */}
+              <Box sx={{ 
+                display: 'flex', 
+                flexWrap: 'wrap', 
+                gap: 6,
+                '& > *:first-of-type': {
+                  flex: '2 1 calc(66.67% - 24px)',
+                  minWidth: '500px'
+                },
+                '& > *:last-of-type': {
+                  flex: '1 1 calc(33.33% - 24px)',
+                  minWidth: '300px'
+                }
+              }}>
+                <ExportPreview
+                  format={exportFormats.find(f => f.id === selectedFormat)!}
+                  selectedFields={selectedFields}
+                  filteredCount={filteredSocios.length}
+                  onExport={handleExport}
+                  loading={exportLoading}
+                  progress={exportProgress || undefined}
+                />
+
+                <Stack spacing={3}>
+                  {/* Configuration Summary */}
+                  <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 5 }}>
+                    <CardContent sx={{ p: 4 }}>
+                      <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', mb: 3 }}>
+                        Configuración Final
+                      </Typography>
+                      <Stack spacing={3}>
+                        <Box>
+                          <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#64748b', mb: 1 }}>
+                            Formato Seleccionado
+                          </Typography>
+                          <Chip
+                            label={exportFormats.find(f => f.id === selectedFormat)?.name}
+                            sx={{
+                              bgcolor: alpha('#10b981', 0.1),
+                              color: '#10b981',
+                              fontWeight: 600,
+                            }}
+                          />
+                        </Box>
+                        <Box>
+                          <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#64748b', mb: 1 }}>
+                            Filtros Aplicados
+                          </Typography>
+                          <Stack spacing={1}>
                             <Chip
-                              label={exportFormats.find(f => f.id === selectedFormat)?.name}
-                              sx={{
-                                bgcolor: alpha('#10b981', 0.1),
-                                color: '#10b981',
-                                fontWeight: 600,
-                              }}
+                              label={`Estado: ${statusFilter === 'all' ? 'Todos' : statusFilter}`}
+                              size="small"
+                              sx={{ bgcolor: alpha('#6366f1', 0.1), color: '#6366f1' }}
                             />
-                          </Box>
-                          
-                          <Box>
-                            <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#64748b', mb: 1 }}>
-                              Filtros Aplicados
-                            </Typography>
-                            <Stack spacing={1}>
-                              <Chip
-                                label={`Estado: ${statusFilter === 'all' ? 'Todos' : statusFilter}`}
-                                size="small"
-                                sx={{ bgcolor: alpha('#6366f1', 0.1), color: '#6366f1' }}
-                              />
-                              <Chip
-                                label={`Fecha: ${dateRange === 'all' ? 'Todas' : dateRange}`}
-                                size="small"
-                                sx={{ bgcolor: alpha('#8b5cf6', 0.1), color: '#8b5cf6' }}
-                              />
-                            </Stack>
-                          </Box>
-                          
-                          <Box>
-                            <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#64748b', mb: 1 }}>
-                              Campos Incluidos
-                            </Typography>
-                            <Typography variant="body2" sx={{ color: '#1e293b', fontWeight: 700 }}>
-                              {selectedFields.length} de {exportFields.length} campos
-                            </Typography>
-                            <LinearProgress 
-                              variant="determinate" 
-                              value={(selectedFields.length / exportFields.length) * 100}
-                              sx={{ 
-                                mt: 1,
-                                borderRadius: 2, 
-                                height: 6,
-                                bgcolor: alpha('#6366f1', 0.1),
-                                '& .MuiLinearProgress-bar': {
-                                  bgcolor: '#6366f1',
-                                  borderRadius: 2,
-                                }
-                              }} 
+                            <Chip
+                              label={`Fecha: ${dateRange === 'all' ? 'Todas' : dateRange}`}
+                              size="small"
+                              sx={{ bgcolor: alpha('#8b5cf6', 0.1), color: '#8b5cf6' }}
                             />
-                          </Box>
-                        </Stack>
-                      </CardContent>
-                    </Card>
+                          </Stack>
+                        </Box>
+                        <Box>
+                          <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#64748b', mb: 1 }}>
+                            Campos Incluidos
+                          </Typography>
+                          <Typography variant="body2" sx={{ color: '#1e293b', fontWeight: 700 }}>
+                            {selectedFields.length} de {exportFields.length} campos
+                          </Typography>
+                          <LinearProgress
+                            variant="determinate"
+                            value={(selectedFields.length / exportFields.length) * 100}
+                            sx={{
+                              mt: 1,
+                              borderRadius: 2,
+                              height: 6,
+                              bgcolor: alpha('#6366f1', 0.1),
+                              '& .MuiLinearProgress-bar': {
+                                bgcolor: '#6366f1',
+                                borderRadius: 2,
+                              }
+                            }}
+                          />
+                        </Box>
+                      </Stack>
+                    </CardContent>
+                  </Card>
 
-                    {/* Export Tips */}
-                    <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 5 }}>
-                      <CardContent sx={{ p: 4 }}>
-                        <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', mb: 3 }}>
-                          Consejos de Exportación
-                        </Typography>
-                        
-                        <Stack spacing={2}>
-                          <Alert severity="info" sx={{ borderRadius: 3 }}>
-                            <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                              Los archivos CSV son ideales para análisis en Excel o Google Sheets
-                            </Typography>
-                          </Alert>
-                          
-                          <Alert severity="success" sx={{ borderRadius: 3 }}>
-                            <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                              Los datos JSON mantienen la estructura completa para desarrolladores
-                            </Typography>
-                          </Alert>
-                          
-                          <Alert severity="warning" sx={{ borderRadius: 3 }}>
-                            <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                              Los campos sensibles requieren permisos especiales
-                            </Typography>
-                          </Alert>
-                        </Stack>
-                      </CardContent>
-                    </Card>
+                  {/* Export Tips */}
+                  <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 5 }}>
+                    <CardContent sx={{ p: 4 }}>
+                      <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', mb: 3 }}>
+                        Consejos de Exportación
+                      </Typography>
+                      <Stack spacing={2}>
+                        <Alert severity="info" sx={{ borderRadius: 3 }}>
+                          <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                            Los archivos CSV son ideales para análisis en Excel o Google Sheets
+                          </Typography>
+                        </Alert>
+                        <Alert severity="success" sx={{ borderRadius: 3 }}>
+                          <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                            Los datos JSON mantienen la estructura completa para desarrolladores
+                          </Typography>
+                        </Alert>
+                        <Alert severity="warning" sx={{ borderRadius: 3 }}>
+                          <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                            Los campos sensibles requieren permisos especiales
+                          </Typography>
+                        </Alert>
+                      </Stack>
+                    </CardContent>
+                  </Card>
 
-                    {/* Data Preview */}
-                    <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 5 }}>
-                      <CardContent sx={{ p: 4 }}>
-                        <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', mb: 3 }}>
-                          Vista Previa de Datos
-                        </Typography>
-                        
-                        {filteredSocios.length > 0 && (
-                          <Box sx={{ bgcolor: '#f8fafc', borderRadius: 3, p: 3 }}>
-                            <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em', mb: 1, display: 'block' }}>
-                              Primer Registro
-                            </Typography>
-                            <Stack spacing={1}>
-                              {selectedFields.slice(0, 3).map(fieldId => {
-                                const field = exportFields.find(f => f.id === fieldId);
-                                const socio = filteredSocios[0];
-                                let value = '';
-                                
-                                switch (fieldId) {
-                                  case 'nombre':
-                                    value = socio.nombre;
-                                    break;
-                                  case 'email':
-                                    value = socio.email;
-                                    break;
-                                  case 'estado':
-                                    value = socio.estado;
-                                    break;
-                                  case 'creadoEn':
-                                    value = socio.creadoEn.toDate().toLocaleDateString('es-ES');
-                                    break;
-                                  default:
-                                    value = 'Dato de ejemplo';
-                                }
-                                
-                                return (
-                                  <Box key={fieldId} sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                    <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>
-                                      {field?.label}:
-                                    </Typography>
-                                    <Typography variant="caption" sx={{ color: '#1e293b', fontWeight: 700 }}>
-                                      {value}
-                                    </Typography>
-                                  </Box>
-                                );
-                              })}
-                              {selectedFields.length > 3 && (
-                                <Typography variant="caption" sx={{ color: '#94a3b8', fontStyle: 'italic' }}>
-                                  ... y {selectedFields.length - 3} campos más
-                                </Typography>
-                              )}
-                            </Stack>
-                          </Box>
-                        )}
-                      </CardContent>
-                    </Card>
-                  </Stack>
-                </Grid>
-              </Grid>
+                  {/* Data Preview */}
+                  <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 5 }}>
+                    <CardContent sx={{ p: 4 }}>
+                      <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', mb: 3 }}>
+                        Vista Previa de Datos
+                      </Typography>
+                      {filteredSocios.length > 0 && (
+                        <Box sx={{ bgcolor: '#f8fafc', borderRadius: 3, p: 3 }}>
+                          <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em', mb: 1, display: 'block' }}>
+                            Primer Registro
+                          </Typography>
+                          <Stack spacing={1}>
+                            {selectedFields.slice(0, 3).map(fieldId => {
+                              const field = exportFields.find(f => f.id === fieldId);
+                              const socio = filteredSocios[0];
+                              let value = '';
+
+                              switch (fieldId) {
+                                case 'nombre':
+                                  value = socio.nombre;
+                                  break;
+                                case 'email':
+                                  value = socio.email;
+                                  break;
+                                case 'estado':
+                                  value = socio.estado;
+                                  break;
+                                case 'creadoEn':
+                                  value = socio.creadoEn.toDate().toLocaleDateString('es-ES');
+                                  break;
+                                default:
+                                  value = 'Dato de ejemplo';
+                              }
+
+                              return (
+                                <Box key={fieldId} sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                  <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>
+                                    {field?.label}:
+                                  </Typography>
+                                  <Typography variant="caption" sx={{ color: '#1e293b', fontWeight: 700 }}>
+                                    {value}
+                                  </Typography>
+                                </Box>
+                              );
+                            })}
+                            {selectedFields.length > 3 && (
+                              <Typography variant="caption" sx={{ color: '#94a3b8', fontStyle: 'italic' }}>
+                                ... y {selectedFields.length - 3} campos más
+                              </Typography>
+                            )}
+                          </Stack>
+                        </Box>
+                      )}
+                    </CardContent>
+                  </Card>
+                </Stack>
+              </Box>
             </Box>
           )}
         </motion.div>
@@ -1717,7 +1703,7 @@ Generado por Fidelita - Sistema de Gestión de Miembros
         >
           Anterior
         </Button>
-        
+
         {activeStep < steps.length - 1 && (
           <Button
             onClick={() => setActiveStep(prev => prev + 1)}

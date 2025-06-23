@@ -20,10 +20,8 @@ import {
   InputLabel,
   Select,
   FormHelperText,
-  useTheme,
   alpha,
   Avatar,
-  Divider,
   Stepper,
   Step,
   StepLabel,
@@ -31,27 +29,20 @@ import {
   Paper,
   Chip,
   IconButton,
-  Tooltip,
   LinearProgress,
 } from '@mui/material';
 import {
   Person,
   Email,
   Phone,
-  CreditCard,
   Close,
   Save,
   PersonAdd,
   CheckCircle,
   ArrowForward,
   ArrowBack,
-  Info,
-  Security,
   ContactMail,
   Badge,
-  LocationOn,
-  Work,
-  School,
 } from '@mui/icons-material';
 import { Socio, SocioFormData } from '@/types/socio';
 import { socioSchema } from '@/lib/validations/socio';
@@ -87,9 +78,7 @@ export const EnhancedSocioDialog: React.FC<EnhancedSocioDialogProps> = ({
   onClose,
   onSave,
   socio,
-  loading = false
 }) => {
-  const theme = useTheme();
   const isEditing = !!socio;
   const [activeStep, setActiveStep] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
@@ -99,10 +88,8 @@ export const EnhancedSocioDialog: React.FC<EnhancedSocioDialogProps> = ({
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
-    setValue,
     watch,
     trigger,
-    getValues
   } = useForm<SocioFormData>({
     resolver: zodResolver(socioSchema),
     defaultValues: {
@@ -151,7 +138,7 @@ export const EnhancedSocioDialog: React.FC<EnhancedSocioDialogProps> = ({
 
     const fields = fieldsToValidate[step as keyof typeof fieldsToValidate];
     if (fields.length > 0) {
-      const isValid = await trigger(fields as any);
+      const isValid = await trigger(fields as (keyof SocioFormData)[]);
       return isValid;
     }
     return true;
