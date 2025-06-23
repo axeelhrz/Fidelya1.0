@@ -86,14 +86,15 @@
 --transition-fast: 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 --transition-slow: 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 
-/* Variables específicas para navbar responsive */
+/* Variables específicas para navbar responsive - MEJORADAS */
 --navbar-height: 80px;
 --navbar-height-mobile: 70px;
 --navbar-z-index: 1000;
 --menu-overlay-z-index: 999;
 --hamburger-size: 24px;
 --mobile-menu-width: 100vw;
---mobile-menu-padding: 2rem;
+--mobile-menu-padding: 1.5rem;
+--mobile-menu-safe-area: 20px;
 
 /* Variables para el selector de idioma - MEJORADO PARA RESPONSIVIDAD */
 --language-switcher-z-index: 1050;
@@ -1029,7 +1030,7 @@ box-shadow:
 0 0 30px var(--starflex-crimson-glow);
 }
 
-/* ===== MENÚ MÓVIL FULLSCREEN OPTIMIZADO - MODIFICACIONES PARA TAPAR CTA ===== */
+/* ===== MENÚ MÓVIL FULLSCREEN ULTRA OPTIMIZADO ===== */
 @media (max-width: 1024px) {
 .nav__menu {
 position: fixed;
@@ -1051,12 +1052,16 @@ align-items: center;
 transition: left 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 transform: none;
 pointer-events: auto;
-/* MODIFICACIÓN: Z-index más alto para tapar el botón CTA */
 z-index: calc(var(--navbar-z-index) + 3);
-/* MODIFICACIÓN: Padding más compacto */
-padding: var(--space-xl) var(--space-xl) calc(var(--space-xl) + 60px) var(--space-xl);
+/* MEJORA: Padding optimizado para evitar cortes */
+padding: var(--mobile-menu-safe-area) var(--mobile-menu-padding) calc(var(--mobile-menu-safe-area) + 80px) var(--mobile-menu-padding);
 overflow-y: auto;
 -webkit-overflow-scrolling: touch;
+/* MEJORA: Safe area para dispositivos con notch */
+padding-top: max(var(--mobile-menu-safe-area), env(safe-area-inset-top));
+padding-bottom: max(calc(var(--mobile-menu-safe-area) + 80px), env(safe-area-inset-bottom));
+padding-left: max(var(--mobile-menu-padding), env(safe-area-inset-left));
+padding-right: max(var(--mobile-menu-padding), env(safe-area-inset-right));
 }
 
 .nav__menu.active {
@@ -1079,15 +1084,17 @@ animation: mobile-menu-glow 8s ease-in-out infinite;
 
 .nav__list {
 flex-direction: column;
-/* MODIFICACIÓN: Gap más compacto */
-gap: var(--space-xl);
+/* MEJORA: Gap optimizado para mejor distribución */
+gap: clamp(var(--space-lg), 4vw, var(--space-2xl));
 background: transparent;
 border: none;
 padding: 0;
 box-shadow: none;
 animation: none;
 width: 100%;
-max-width: 350px;
+max-width: min(350px, calc(100vw - 2 * var(--mobile-menu-padding)));
+/* MEJORA: Altura mínima para evitar cortes */
+min-height: auto;
 }
 
 .nav__list::before {
@@ -1095,21 +1102,27 @@ display: none;
 }
 
 .nav__link {
-/* MODIFICACIÓN: Tamaño de fuente más compacto */
-font-size: 1.1rem;
-/* MODIFICACIÓN: Padding más compacto */
-padding: var(--space-md) var(--space-xl);
+/* MEJORA: Tamaño de fuente responsive */
+font-size: clamp(1rem, 3vw, 1.2rem);
+/* MEJORA: Padding optimizado */
+padding: clamp(var(--space-sm), 2vw, var(--space-lg)) clamp(var(--space-lg), 4vw, var(--space-2xl));
 text-align: center;
 border-radius: 15px;
 background: rgba(21, 25, 34, 0.6);
 border: 1px solid rgba(255, 255, 255, 0.1);
-/* MODIFICACIÓN: Ancho mínimo más compacto */
-min-width: 240px;
+/* MEJORA: Ancho responsive */
+width: 100%;
+min-width: auto;
 backdrop-filter: blur(15px);
 -webkit-backdrop-filter: blur(15px);
 transition: all var(--transition);
 position: relative;
 overflow: hidden;
+/* MEJORA: Altura mínima para touch targets */
+min-height: 48px;
+display: flex;
+align-items: center;
+justify-content: center;
 }
 
 .nav__link::before {
@@ -1135,11 +1148,10 @@ transform: translateY(-1px) scale(0.98);
 
 .nav__toggle {
 display: flex;
-/* MODIFICACIÓN: Z-index más alto para mantener visibilidad */
 z-index: calc(var(--navbar-z-index) + 4);
 }
 
-/* MODIFICACIÓN: Ocultar el botón CTA en móvil cuando el menú está activo */
+/* MEJORA: Ocultar el botón CTA en móvil cuando el menú está activo */
 .nav__menu.active ~ .nav__cta {
 opacity: 0;
 visibility: hidden;
@@ -1152,12 +1164,12 @@ display: none;
 }
 }
 
-/* ===== RESPONSIVE BREAKPOINTS ESPECÍFICOS ===== */
+/* ===== RESPONSIVE BREAKPOINTS ESPECÍFICOS MEJORADOS ===== */
 @media (max-width: 768px) {
 :root {
 --navbar-height: var(--navbar-height-mobile);
-/* MODIFICACIÓN: Padding más compacto para móvil */
---mobile-menu-padding: 1rem;
+--mobile-menu-padding: 1.25rem;
+--mobile-menu-safe-area: 15px;
 /* Ajustar filtros para móvil */
 --phone-image-sharpness: 1.12;
 --phone-image-contrast: 1.06;
@@ -1190,10 +1202,10 @@ width: 20px;
 }
 
 .nav__link {
-/* MODIFICACIÓN: Tamaño más compacto para móvil */
-font-size: 1rem;
-min-width: 220px;
-padding: var(--space-sm) var(--space-lg);
+/* MEJORA: Tamaño optimizado para tablets */
+font-size: clamp(0.95rem, 2.5vw, 1.1rem);
+padding: var(--space-md) var(--space-xl);
+min-height: 50px;
 }
 
 .btn--primary {
@@ -1201,14 +1213,14 @@ padding: var(--space-sm) var(--space-lg);
 font-size: 0.8rem;
 }
 
-/* MODIFICACIÓN: Menú móvil más compacto */
+/* MEJORA: Menú móvil optimizado para tablets */
 .nav__menu {
-padding: var(--space-lg) var(--space-lg) calc(var(--space-lg) + 50px) var(--space-lg);
+padding: var(--mobile-menu-safe-area) var(--mobile-menu-padding) calc(var(--mobile-menu-safe-area) + 60px) var(--mobile-menu-padding);
 }
 
 .nav__list {
-gap: var(--space-lg);
-max-width: 300px;
+gap: var(--space-xl);
+max-width: min(320px, calc(100vw - 2 * var(--mobile-menu-padding)));
 }
 
 /* Optimización de imágenes para móvil */
@@ -1223,8 +1235,8 @@ saturate(1.08);
 
 @media (max-width: 480px) {
 :root {
-/* MODIFICACIÓN: Padding aún más compacto para pantallas pequeñas */
---mobile-menu-padding: 0.75rem;
+--mobile-menu-padding: 1rem;
+--mobile-menu-safe-area: 12px;
 /* Filtros más conservadores para pantallas pequeñas */
 --phone-image-sharpness: 1.08;
 --phone-image-contrast: 1.04;
@@ -1253,10 +1265,10 @@ width: 18px;
 }
 
 .nav__link {
-/* MODIFICACIÓN: Tamaño muy compacto para pantallas pequeñas */
-font-size: 0.95rem;
-min-width: 200px;
-padding: var(--space-xs) var(--space-md);
+/* MEJORA: Tamaño muy optimizado para móviles pequeños */
+font-size: clamp(0.9rem, 3.5vw, 1rem);
+padding: var(--space-sm) var(--space-lg);
+min-height: 46px;
 }
 
 .btn--primary {
@@ -1264,14 +1276,45 @@ padding: var(--space-xs) var(--space-md);
 font-size: 0.75rem;
 }
 
-/* MODIFICACIÓN: Menú móvil ultra compacto */
+/* MEJORA: Menú móvil ultra optimizado */
 .nav__menu {
-padding: var(--space-md) var(--space-md) calc(var(--space-md) + 40px) var(--space-md);
+padding: var(--mobile-menu-safe-area) var(--mobile-menu-padding) calc(var(--mobile-menu-safe-area) + 50px) var(--mobile-menu-padding);
+}
+
+.nav__list {
+gap: var(--space-lg);
+max-width: min(300px, calc(100vw - 2 * var(--mobile-menu-padding)));
+}
+}
+
+/* ===== MEJORAS ESPECÍFICAS PARA PANTALLAS MUY PEQUEÑAS ===== */
+@media (max-width: 360px) {
+:root {
+--mobile-menu-padding: 0.875rem;
+--mobile-menu-safe-area: 10px;
+}
+
+.nav__link {
+font-size: 0.875rem;
+padding: var(--space-xs) var(--space-md);
+min-height: 44px;
 }
 
 .nav__list {
 gap: var(--space-md);
-max-width: 280px;
+max-width: calc(100vw - 2 * var(--mobile-menu-padding));
+}
+}
+
+/* ===== MEJORAS PARA DISPOSITIVOS CON NOTCH ===== */
+@supports (padding: max(0px)) {
+@media (max-width: 1024px) {
+.nav__menu {
+padding-top: max(var(--mobile-menu-safe-area), env(safe-area-inset-top, 20px));
+padding-bottom: max(calc(var(--mobile-menu-safe-area) + 80px), calc(env(safe-area-inset-bottom, 0px) + 80px));
+padding-left: max(var(--mobile-menu-padding), env(safe-area-inset-left, var(--mobile-menu-padding)));
+padding-right: max(var(--mobile-menu-padding), env(safe-area-inset-right, var(--mobile-menu-padding)));
+}
 }
 }
 
@@ -1280,7 +1323,6 @@ max-width: 280px;
 .language-switcher {
     top: var(--language-switcher-safe-area);
     right: var(--language-switcher-safe-area);
-    /* MODIFICACIÓN: Z-index más alto para mantenerse visible */
     z-index: calc(var(--navbar-z-index) + 5);
 }
 
@@ -1316,7 +1358,6 @@ max-width: 280px;
 .language-switcher {
     top: var(--language-switcher-safe-area);
     right: var(--language-switcher-safe-area);
-    /* MODIFICACIÓN: Z-index más alto para mantenerse visible */
     z-index: calc(var(--navbar-z-index) + 5);
 }
 
@@ -4572,14 +4613,12 @@ gap: var(--space-xl);
 @media (max-width: 768px) {
 :root {
 --navbar-height: var(--navbar-height-mobile);
-/* MODIFICACIÓN: Padding más compacto para móvil */
---mobile-menu-padding: 1rem;
-/* Ajustar filtros para móvil */
+--mobile-menu-padding: 1.25rem;
+--mobile-menu-safe-area: 15px;
 --phone-image-sharpness: 1.12;
 --phone-image-contrast: 1.06;
 --phone-image-brightness: 1.02;
 --phone-image-saturation: 1.1;
-/* Ajustar espaciado del selector de idioma */
 --language-switcher-safe-area: 15px;
 }
 
@@ -4606,10 +4645,9 @@ width: 20px;
 }
 
 .nav__link {
-/* MODIFICACIÓN: Tamaño más compacto para móvil */
-font-size: 1rem;
-min-width: 220px;
-padding: var(--space-sm) var(--space-lg);
+font-size: clamp(0.95rem, 2.5vw, 1.1rem);
+padding: var(--space-md) var(--space-xl);
+min-height: 50px;
 }
 
 .btn--primary {
@@ -4617,17 +4655,15 @@ padding: var(--space-sm) var(--space-lg);
 font-size: 0.8rem;
 }
 
-/* MODIFICACIÓN: Menú móvil más compacto */
 .nav__menu {
-padding: var(--space-lg) var(--space-lg) calc(var(--space-lg) + 50px) var(--space-lg);
+padding: var(--mobile-menu-safe-area) var(--mobile-menu-padding) calc(var(--mobile-menu-safe-area) + 60px) var(--mobile-menu-padding);
 }
 
 .nav__list {
-gap: var(--space-lg);
-max-width: 300px;
+gap: var(--space-xl);
+max-width: min(320px, calc(100vw - 2 * var(--mobile-menu-padding)));
 }
 
-/* Optimización de imágenes para móvil */
 .hero__phone-app-image,
 .phone__app-image {
 filter: 
@@ -4701,13 +4737,11 @@ border-radius: 14px;
 
 .download-btn__image {
 height: 50px;
-/* REMOVIDO: border-radius para mantener forma original */
 }
 
 .download-btn--app-store .download-btn__image {
 height: 50px;
 min-width: 150px;
-/* REMOVIDO: border-radius para mantener forma original */
 }
 
 .features__title {
@@ -4797,14 +4831,12 @@ font-size: 0.9rem;
 
 @media (max-width: 480px) {
 :root {
-/* MODIFICACIÓN: Padding aún más compacto para pantallas pequeñas */
---mobile-menu-padding: 0.75rem;
-/* Filtros más conservadores para pantallas pequeñas */
+--mobile-menu-padding: 1rem;
+--mobile-menu-safe-area: 12px;
 --phone-image-sharpness: 1.08;
 --phone-image-contrast: 1.04;
 --phone-image-brightness: 1.01;
 --phone-image-saturation: 1.08;
-/* Ajustar espaciado del selector de idioma para pantallas muy pequeñas */
 --language-switcher-safe-area: 10px;
 }
 
@@ -4857,13 +4889,11 @@ border-radius: 30px;
 
 .download-btn__image {
 height: 45px;
-/* REMOVIDO: border-radius para mantener forma original */
 }
 
 .download-btn--app-store .download-btn__image {
 height: 45px;
 min-width: 135px;
-/* REMOVIDO: border-radius para mantener forma original */
 }
 
 .features__title {
@@ -4961,7 +4991,6 @@ display: none;
 .language-switcher {
     top: calc(var(--navbar-height-mobile) + 10px);
     right: var(--language-switcher-safe-area);
-    /* MODIFICACIÓN: Z-index más alto para mantenerse visible */
     z-index: calc(var(--navbar-z-index) + 5);
 }
 
@@ -4975,7 +5004,6 @@ display: none;
 .language-switcher {
     top: calc(var(--navbar-height-mobile) + 5px);
     right: var(--language-switcher-safe-area);
-    /* MODIFICACIÓN: Z-index más alto para mantenerse visible */
     z-index: calc(var(--navbar-z-index) + 5);
 }
 
