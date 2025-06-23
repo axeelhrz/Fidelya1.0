@@ -3,8 +3,8 @@ import "./globals.css";
 import { ToastProvider } from "@/components/providers/ToastProvider";
 
 export const metadata: Metadata = {
-  title: "Fidelya - Programa de Fidelidad",
-  description: "Plataforma de gestión de programas de fidelidad para asociaciones y comercios",
+  title: "Fidelya - El futuro de los programas de fidelidad",
+  description: "Conecta asociaciones, comercios y socios en un ecosistema inteligente potenciado por IA para maximizar la fidelización y el crecimiento.",
 };
 
 export default function RootLayout({
@@ -14,7 +14,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es">
-      <body className="font-body antialiased">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      </head>
+      <body 
+        className="antialiased"
+        style={{ fontFamily: 'var(--font-inter)' }}
+      >
         {children}
         <ToastProvider />
       </body>
