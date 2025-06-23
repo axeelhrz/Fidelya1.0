@@ -1,14 +1,12 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import {
   Box,
   Typography,
   Card,
   CardContent,
-  Grid,
-  useTheme,
   alpha,
   Avatar,
   Stack,
@@ -16,20 +14,12 @@ import {
   Button,
   IconButton,
   Paper,
-  Divider,
   LinearProgress,
   CircularProgress,
-  Tabs,
-  Tab,
   List,
   ListItem,
   ListItemIcon,
   ListItemText,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  Tooltip,
-  Badge,
   Switch,
   FormControlLabel,
 } from '@mui/material';
@@ -45,36 +35,17 @@ import {
   Star,
   Speed,
   Timeline,
-  Analytics,
-  Insights,
   SmartToy,
   Memory,
   Refresh,
-  Settings,
   Visibility,
-  ExpandMore,
   ArrowForward,
   Group,
-  PersonAdd,
   Schedule,
   AttachMoney,
-  Email,
-  Phone,
-  Business,
-  LocationOn,
   DataUsage,
-  PieChart,
-  BarChart,
-  ShowChart,
-  Assessment,
-  Notifications,
-  Security,
-  CloudSync,
   AutoAwesome,
-  Bolt,
-  FlashOn,
   Recommend,
-  PsychologyAlt,
 } from '@mui/icons-material';
 import { Socio, SocioStats } from '@/types/socio';
 
@@ -95,7 +66,21 @@ interface InsightCardProps {
   delay: number;
   onViewDetails: () => void;
   onApply?: () => void;
-  data?: any;
+  data?: {
+    growth?: number;
+    timeframe?: string;
+    at_risk?: number;
+    action?: string;
+    day?: string;
+    time?: string;
+    improvement?: number;
+    segment_size?: number;
+    revenue_potential?: number;
+    age_group?: string;
+    increase?: number;
+    content_type?: string;
+    retention_boost?: number;
+  };
 }
 
 const InsightCard: React.FC<InsightCardProps> = ({
@@ -109,7 +94,6 @@ const InsightCard: React.FC<InsightCardProps> = ({
   delay,
   onViewDetails,
   onApply,
-  data
 }) => {
   const getImpactColor = () => {
     switch (impact) {
@@ -472,12 +456,9 @@ const PredictionChart: React.FC<{
 };
 
 export const InsightsIA: React.FC<InsightsIAProps> = ({
-  socios,
   stats,
   loading
 }) => {
-  const theme = useTheme();
-  const [activeTab, setActiveTab] = useState(0);
   const [aiProcessing, setAiProcessing] = useState(false);
   const [autoRefresh, setAutoRefresh] = useState(true);
 
@@ -612,40 +593,48 @@ export const InsightsIA: React.FC<InsightsIAProps> = ({
   if (loading) {
     return (
       <Box sx={{ p: 4 }}>
-        <Grid container spacing={4}>
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: {
+              xs: '1fr',
+              sm: 'repeat(2, 1fr)',
+              lg: 'repeat(3, 1fr)',
+            },
+            gap: 4,
+          }}
+        >
           {Array.from({ length: 6 }).map((_, index) => (
-            <Grid item xs={12} sm={6} lg={4} key={index}>
-              <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 5 }}>
-                <CardContent sx={{ p: 4 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, mb: 3 }}>
-                    <Box
-                      sx={{
-                        width: 56,
-                        height: 56,
-                        bgcolor: '#f1f5f9',
-                        borderRadius: 3,
-                        animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                        '@keyframes pulse': {
-                          '0%, 100%': { opacity: 1 },
-                          '50%': { opacity: 0.5 },
-                        },
-                      }}
-                    />
-                    <Box sx={{ flex: 1 }}>
-                      <Box sx={{ width: '80%', height: 16, bgcolor: '#f1f5f9', borderRadius: 1, mb: 1 }} />
-                      <Box sx={{ width: '60%', height: 14, bgcolor: '#f1f5f9', borderRadius: 1 }} />
-                    </Box>
+            <Card key={index} elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 5 }}>
+              <CardContent sx={{ p: 4 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, mb: 3 }}>
+                  <Box
+                    sx={{
+                      width: 56,
+                      height: 56,
+                      bgcolor: '#f1f5f9',
+                      borderRadius: 3,
+                      animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                      '@keyframes pulse': {
+                        '0%, 100%': { opacity: 1 },
+                        '50%': { opacity: 0.5 },
+                      },
+                    }}
+                  />
+                  <Box sx={{ flex: 1 }}>
+                    <Box sx={{ width: '80%', height: 16, bgcolor: '#f1f5f9', borderRadius: 1, mb: 1 }} />
+                    <Box sx={{ width: '60%', height: 14, bgcolor: '#f1f5f9', borderRadius: 1 }} />
                   </Box>
-                  <Box sx={{ width: '100%', height: 8, bgcolor: '#f1f5f9', borderRadius: 1, mb: 2 }} />
-                  <Box sx={{ display: 'flex', gap: 1 }}>
-                    <Box sx={{ width: 80, height: 32, bgcolor: '#f1f5f9', borderRadius: 2 }} />
-                    <Box sx={{ width: 80, height: 32, bgcolor: '#f1f5f9', borderRadius: 2 }} />
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
+                </Box>
+                <Box sx={{ width: '100%', height: 8, bgcolor: '#f1f5f9', borderRadius: 1, mb: 2 }} />
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  <Box sx={{ width: 80, height: 32, bgcolor: '#f1f5f9', borderRadius: 2 }} />
+                  <Box sx={{ width: 80, height: 32, bgcolor: '#f1f5f9', borderRadius: 2 }} />
+                </Box>
+              </CardContent>
+            </Card>
           ))}
-        </Grid>
+        </Box>
       </Box>
     );
   }
@@ -834,32 +823,51 @@ export const InsightsIA: React.FC<InsightsIAProps> = ({
       </motion.div>
 
       {/* AI Metrics */}
-      <Grid container spacing={4} sx={{ mb: 6 }}>
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: {
+            xs: '1fr',
+            sm: 'repeat(2, 1fr)',
+            lg: 'repeat(4, 1fr)',
+          },
+          gap: 4,
+          mb: 6,
+        }}
+      >
         {aiMetrics.map((metric, index) => (
-          <Grid item xs={12} sm={6} lg={3} key={index}>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-            >
-              <AIMetricCard
-                title={metric.title}
-                value={metric.value}
-                subtitle={metric.subtitle}
-                icon={metric.icon}
-                color={metric.color}
-                trend={metric.trend}
-                processing={metric.processing}
-              />
-            </motion.div>
-          </Grid>
+          <motion.div
+            key={index}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: index * 0.1 }}
+          >
+            <AIMetricCard
+              title={metric.title}
+              value={metric.value}
+              subtitle={metric.subtitle}
+              icon={metric.icon}
+              color={metric.color}
+              trend={metric.trend}
+              processing={metric.processing}
+            />
+          </motion.div>
         ))}
-      </Grid>
+      </Box>
 
       {/* Main Content */}
-      <Grid container spacing={6}>
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: {
+            xs: '1fr',
+            lg: '2fr 1fr',
+          },
+          gap: 6,
+        }}
+      >
         {/* Insights Grid */}
-        <Grid item xs={12} lg={8}>
+        <Box>
           <Box sx={{ mb: 4 }}>
             <Typography variant="h5" sx={{ fontWeight: 800, color: '#0f172a', mb: 1 }}>
               Insights Inteligentes
@@ -869,111 +877,117 @@ export const InsightsIA: React.FC<InsightsIAProps> = ({
             </Typography>
           </Box>
           
-          <Grid container spacing={4}>
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: {
+                xs: '1fr',
+                lg: 'repeat(2, 1fr)',
+              },
+              gap: 4,
+            }}
+          >
             {aiInsights.map((insight, index) => (
-              <Grid item xs={12} lg={6} key={insight.id}>
-                <InsightCard
-                  title={insight.title}
-                  description={insight.description}
-                  confidence={insight.confidence}
-                  impact={insight.impact}
-                  category={insight.category}
-                  icon={insight.icon}
-                  color={insight.color}
-                  delay={index * 0.1}
-                  onViewDetails={() => handleViewDetails(insight.id)}
-                  onApply={insight.category === 'recommendation' ? () => handleApplyInsight(insight.id) : undefined}
-                  data={insight.data}
-                />
-              </Grid>
+              <InsightCard
+                key={insight.id}
+                title={insight.title}
+                description={insight.description}
+                confidence={insight.confidence}
+                impact={insight.impact}
+                category={insight.category}
+                icon={insight.icon}
+                color={insight.color}
+                delay={index * 0.1}
+                onViewDetails={() => handleViewDetails(insight.id)}
+                onApply={insight.category === 'recommendation' ? () => handleApplyInsight(insight.id) : undefined}
+                data={insight.data}
+              />
             ))}
-          </Grid>
-        </Grid>
+          </Box>
+        </Box>
 
         {/* Predictions Panel */}
-        <Grid item xs={12} lg={4}>
-          <Stack spacing={4}>
-            {/* Growth Prediction */}
-            <PredictionChart
-              title="Predicción de Crecimiento"
-              data={predictionData}
-              color="#10b981"
-            />
+        <Stack spacing={4}>
+          {/* Growth Prediction */}
+          <PredictionChart
+            title="Predicción de Crecimiento"
+            data={predictionData}
+            color="#10b981"
+          />
 
-            {/* AI Recommendations */}
-            <Card
-              elevation={0}
-              sx={{
-                border: '1px solid #f1f5f9',
-                borderRadius: 5,
-                background: 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
-              }}
-            >
-              <CardContent sx={{ p: 4 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-                  <Avatar
-                    sx={{
-                      width: 40,
-                      height: 40,
-                      bgcolor: alpha('#6366f1', 0.1),
-                      color: '#6366f1',
-                      borderRadius: 2,
-                    }}
-                  >
-                    <Recommend />
-                  </Avatar>
-                  <Box>
-                    <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b' }}>
-                      Acciones Recomendadas
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: '#64748b' }}>
-                      Prioridad alta
-                    </Typography>
-                  </Box>
+          {/* AI Recommendations */}
+          <Card
+            elevation={0}
+            sx={{
+              border: '1px solid #f1f5f9',
+              borderRadius: 5,
+              background: 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
+            }}
+          >
+            <CardContent sx={{ p: 4 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+                <Avatar
+                  sx={{
+                    width: 40,
+                    height: 40,
+                    bgcolor: alpha('#6366f1', 0.1),
+                    color: '#6366f1',
+                    borderRadius: 2,
+                  }}
+                >
+                  <Recommend />
+                </Avatar>
+                <Box>
+                  <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b' }}>
+                    Acciones Recomendadas
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: '#64748b' }}>
+                    Prioridad alta
+                  </Typography>
                 </Box>
+              </Box>
+              
+              <List dense>
+                <ListItem sx={{ px: 0 }}>
+                  <ListItemIcon>
+                    <CheckCircle sx={{ color: '#10b981', fontSize: 20 }} />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary="Campaña de retención"
+                    secondary="Para 15 miembros en riesgo"
+                    primaryTypographyProps={{ fontSize: '0.9rem', fontWeight: 600 }}
+                    secondaryTypographyProps={{ fontSize: '0.8rem' }}
+                  />
+                </ListItem>
                 
-                <List dense>
-                  <ListItem sx={{ px: 0 }}>
-                    <ListItemIcon>
-                      <CheckCircle sx={{ color: '#10b981', fontSize: 20 }} />
-                    </ListItemIcon>
-                    <ListItemText
-                      primary="Campaña de retención"
-                      secondary="Para 15 miembros en riesgo"
-                      primaryTypographyProps={{ fontSize: '0.9rem', fontWeight: 600 }}
-                      secondaryTypographyProps={{ fontSize: '0.8rem' }}
-                    />
-                  </ListItem>
-                  
-                  <ListItem sx={{ px: 0 }}>
-                    <ListItemIcon>
-                      <Schedule sx={{ color: '#f59e0b', fontSize: 20 }} />
-                    </ListItemIcon>
-                    <ListItemText
-                      primary="Optimizar horarios"
-                      secondary="Martes 10:00 AM (+34% engagement)"
-                      primaryTypographyProps={{ fontSize: '0.9rem', fontWeight: 600 }}
-                      secondaryTypographyProps={{ fontSize: '0.8rem' }}
-                    />
-                  </ListItem>
-                  
-                  <ListItem sx={{ px: 0 }}>
-                    <ListItemIcon>
-                      <AttachMoney sx={{ color: '#06b6d4', fontSize: 20 }} />
-                    </ListItemIcon>
-                    <ListItemText
-                      primary="Segmento premium"
-                      secondary="28 miembros potenciales"
-                      primaryTypographyProps={{ fontSize: '0.9rem', fontWeight: 600 }}
-                      secondaryTypographyProps={{ fontSize: '0.8rem' }}
-                    />
-                  </ListItem>
-                </List>
-              </CardContent>
-            </Card>
-          </Stack>
-        </Grid>
-      </Grid>
+                <ListItem sx={{ px: 0 }}>
+                  <ListItemIcon>
+                    <Schedule sx={{ color: '#f59e0b', fontSize: 20 }} />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary="Optimizar horarios"
+                    secondary="Martes 10:00 AM (+34% engagement)"
+                    primaryTypographyProps={{ fontSize: '0.9rem', fontWeight: 600 }}
+                    secondaryTypographyProps={{ fontSize: '0.8rem' }}
+                  />
+                </ListItem>
+                
+                <ListItem sx={{ px: 0 }}>
+                  <ListItemIcon>
+                    <AttachMoney sx={{ color: '#06b6d4', fontSize: 20 }} />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary="Segmento premium"
+                    secondary="28 miembros potenciales"
+                    primaryTypographyProps={{ fontSize: '0.9rem', fontWeight: 600 }}
+                    secondaryTypographyProps={{ fontSize: '0.8rem' }}
+                  />
+                </ListItem>
+              </List>
+            </CardContent>
+          </Card>
+        </Stack>
+      </Box>
     </Box>
   );
 };

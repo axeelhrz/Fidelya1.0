@@ -12,9 +12,7 @@ import {
   Menu,
   MenuItem,
   Avatar,
-  Tooltip,
   alpha,
-  useTheme,
 } from '@mui/material';
 import {
   MoreVert,
@@ -92,7 +90,6 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({
   selected = false,
   onSelect
 }) => {
-  const theme = useTheme();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const menuOpen = Boolean(anchorEl);
 
