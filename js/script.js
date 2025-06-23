@@ -51,7 +51,7 @@ const CONFIG = {
         phones: {
             horario: {
                 avif: './assets/phones/Horario.avif',
-                     webp: './assets/phones/Horario.webp',
+                webp: './assets/phones/Horario.webp',
                 jpg: './assets/phones/Horario.jpg'
             },
             estaciones: {
@@ -168,9 +168,9 @@ const translationData = {
         // Feature 6: Referidos - CONTENIDO ACTUALIZADO
         'feature-referrals-title': 'REFERIDOS',
         'feature-referrals-description': 'Invitá a otros usuarios a unirse a Starflex y obtené beneficios exclusivos por cada referido que se registre.',
-        'feature-referrals-item-1': '<strong>Enlace único de referido</strong><br>Cada usuario recibe un enlace personalizado para invitar a otros de forma rápida y sencilla.',
-        'feature-referrals-item-2': '<strong>Recompensas por referidos</strong><br>Gana 1 semana gratis por cada persona que se registre y active su cuenta desde tu enlace.',
-        'feature-referrals-item-3': '<strong>Código QR de referido</strong><br>Compartí tu código QR para que otros puedan escanearlo directamente e ingresar desde su celular.',
+        'feature-referrals-item-1': 'Enlace único de referido personalizado',
+        'feature-referrals-item-2': 'Gana 1 semana gratis por cada referido',
+        'feature-referrals-item-3': 'Código QR para compartir fácilmente',
         // Videos Section
         'videos-badge': 'Experiencia Visual Inmersiva',
         'videos-title-main': 'VE STARFLEX',
@@ -302,9 +302,9 @@ const translationData = {
         // Feature 6: Referrals - CONTENIDO ACTUALIZADO
         'feature-referrals-title': 'REFERRALS',
         'feature-referrals-description': 'Invite other users to join Starflex and get exclusive benefits for each referral that registers.',
-        'feature-referrals-item-1': '<strong>Unique referral link</strong><br>Each user receives a personalized link to invite others quickly and easily.',
-        'feature-referrals-item-2': '<strong>Referral rewards</strong><br>Earn 1 free week for each person who registers and activates their account from your link.',
-        'feature-referrals-item-3': '<strong>Referral QR code</strong><br>Share your QR code so others can scan it directly and enter from their mobile phone.',
+        'feature-referrals-item-1': 'Unique personalized referral link',
+        'feature-referrals-item-2': 'Earn 1 free week for each referral',
+        'feature-referrals-item-3': 'QR code for easy sharing',
         // Videos Section
         'videos-badge': 'Immersive Visual Experience',
         'videos-title-main': 'SEE STARFLEX',
@@ -779,7 +779,7 @@ function updateLanguageSwitcher() {
         const optionLang = option.getAttribute('data-lang');
         if (optionLang === currentLanguage) {
             option.classList.add('active');
-                } else {
+        } else {
             option.classList.remove('active');
         }
     });
@@ -1027,7 +1027,7 @@ function initializeParticleSystems() {
             'rgba(255, 45, 107, 0.2)',
             'rgba(184, 0, 46, 0.2)',
             'rgba(255, 69, 105, 0.2)',
-            'rgba(255, 215, 0, 0.25)'
+            'rgba(255, 45, 85, 0.25)' // CORRECCIÓN: Color rojizo para referidos
         ];
         
         const particleSystem = new ParticleSystem(phone, {
@@ -1042,22 +1042,26 @@ function initializeParticleSystems() {
     });
 }
 
-// ===== INICIALIZACIÓN DEL VIDEO HERO =====
+// ===== INICIALIZACIÓN DEL VIDEO HERO - CARGA INMEDIATA =====
 function initializeHeroVideo() {
     const heroVideo = document.getElementById('hero-video');
     const heroFallbackImage = document.querySelector('.hero__phone-app-image');
     
     if (!heroVideo) return;
     
-    // Configurar el video
+    // CORRECCIÓN: Configurar el video para carga inmediata
     heroVideo.muted = true;
     heroVideo.autoplay = true;
     heroVideo.loop = true;
     heroVideo.playsInline = true;
+    heroVideo.preload = 'auto'; // CORRECCIÓN: Cambiar a 'auto' para carga inmediata
+    
+    // CORRECCIÓN: Eliminar delay visual - cargar inmediatamente
+    heroVideo.style.opacity = '1';
+    heroVideo.style.transition = 'none';
     
     // Manejar eventos del video
     heroVideo.addEventListener('loadstart', () => {
-        heroVideo.classList.add('loading');
         console.log('Hero video: Iniciando carga');
     });
     
@@ -1072,7 +1076,7 @@ function initializeHeroVideo() {
         heroVideo.classList.add('loaded');
         console.log('Hero video: Listo para reproducir');
         
-        // Intentar reproducir el video
+        // Intentar reproducir el video inmediatamente
         const playPromise = heroVideo.play();
         if (playPromise !== undefined) {
             playPromise.catch(error => {
@@ -1090,7 +1094,7 @@ function initializeHeroVideo() {
     });
     
     heroVideo.addEventListener('stalled', () => {
-                   console.warn('Hero video: Reproducción interrumpida');
+        console.warn('Hero video: Reproducción interrumpida');
     });
     
     heroVideo.addEventListener('waiting', () => {
@@ -1112,12 +1116,8 @@ function initializeHeroVideo() {
         }
     }
     
-    // Intentar cargar el video después de un breve delay
-    setTimeout(() => {
-        if (heroVideo.readyState === 0) {
-            heroVideo.load();
-        }
-    }, 100);
+    // CORRECCIÓN: Cargar el video inmediatamente sin delay
+    heroVideo.load();
     
     // Manejar visibilidad de la página para pausar/reanudar video
     document.addEventListener('visibilitychange', () => {
@@ -1807,6 +1807,63 @@ function setupImageLazyLoading() {
     waitForOptimizer();
 }
 
+// ===== CORRECCIÓN ESPECÍFICA PARA MODAL QR DE REFERIDOS =====
+function applyQRModalCorrection() {
+    // Función para aplicar sombra rojiza a modales QR
+    function applyRedShadowToQRModals() {
+        // Buscar elementos que podrían ser modales QR
+        const potentialQRModals = document.querySelectorAll([
+            '.modal',
+            '.qr-modal',
+            '[class*="modal"]',
+            '[class*="qr"]',
+            '.referral-modal',
+            '.popup',
+            '.overlay',
+            '[style*="box-shadow"]'
+        ].join(', '));
+        
+        potentialQRModals.forEach(modal => {
+            // Verificar si tiene sombra amarilla y reemplazarla
+            const computedStyle = window.getComputedStyle(modal);
+            const boxShadow = computedStyle.boxShadow;
+            
+            if (boxShadow && (boxShadow.includes('yellow') || boxShadow.includes('255, 255, 0'))) {
+                modal.style.boxShadow = '0 0 16px rgba(255, 45, 85, 0.6)';
+                modal.style.border = '1px solid rgba(255, 45, 85, 0.4)';
+            }
+        });
+    }
+    
+    // Aplicar corrección inmediatamente
+    applyRedShadowToQRModals();
+    
+    // Observar cambios en el DOM para aplicar corrección a nuevos modales
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            if (mutation.type === 'childList') {
+                mutation.addedNodes.forEach((node) => {
+                    if (node.nodeType === Node.ELEMENT_NODE) {
+                        // Verificar si el nuevo elemento es un modal QR
+                        if (node.classList.contains('modal') || 
+                            node.classList.contains('qr-modal') ||
+                            node.className.includes('modal') ||
+                            node.className.includes('qr')) {
+                            node.style.boxShadow = '0 0 16px rgba(255, 45, 85, 0.6)';
+                            node.style.border = '1px solid rgba(255, 45, 85, 0.4)';
+                        }
+                    }
+                });
+            }
+        });
+    });
+    
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true
+    });
+}
+
 // ===== UTILIDADES =====
 function debounce(func, wait) {
     let timeout;
@@ -1852,7 +1909,7 @@ function initializeLazyLoading() {
 
 function preloadCriticalResources() {
     const criticalResources = [
-        './assets/Hero.mp4',
+        './assets/phones/Hero.mp4', // CORRECCIÓN: Precargar video del hero
         './assets/phones/Hero.jpg',
         './assets/phones/Horario.jpg',
         './assets/phones/Estaciones.jpg',
@@ -1986,7 +2043,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeAnimations();
     initializeIntersectionObserver();
     
-    // Inicializar video del hero
+    // CORRECCIÓN: Inicializar video del hero con carga inmediata
     initializeHeroVideo();
     
     // Inicializar funcionalidades adicionales
@@ -1998,6 +2055,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Configurar lazy loading para imágenes
     setupImageLazyLoading();
+    
+    // CORRECCIÓN: Aplicar corrección para modal QR de referidos
+    applyQRModalCorrection();
     
     // Detectar cambios en preferencias de movimiento
     checkReducedMotion();
