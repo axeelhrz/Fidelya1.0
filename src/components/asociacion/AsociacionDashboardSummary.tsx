@@ -7,8 +7,6 @@ import {
   Typography,
   Card,
   CardContent,
-  Grid,
-  useTheme,
   alpha,
   Avatar,
   Chip,
@@ -47,7 +45,6 @@ const StatCard: React.FC<StatCardProps> = ({
   trend = 'neutral',
   percentage 
 }) => {
-  const theme = useTheme();
   
   return (
     <motion.div
@@ -263,13 +260,21 @@ export const AsociacionDashboardSummary: React.FC<AsociacionDashboardSummaryProp
   if (loading) {
     return (
       <Box sx={{ mb: 6 }}>
-        <Grid container spacing={4}>
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: {
+              xs: '1fr',
+              sm: 'repeat(2, 1fr)',
+              lg: 'repeat(4, 1fr)'
+            },
+            gap: 4
+          }}
+        >
           {Array.from({ length: 4 }).map((_, index) => (
-            <Grid item xs={12} sm={6} lg={3} key={index}>
-              <LoadingSkeleton />
-            </Grid>
+            <LoadingSkeleton key={index} />
           ))}
-        </Grid>
+        </Box>
       </Box>
     );
   }
@@ -358,22 +363,31 @@ export const AsociacionDashboardSummary: React.FC<AsociacionDashboardSummaryProp
           </motion.div>
         </Box>
 
-        {/* Cards Grid */}
-        <Grid container spacing={4}>
+        {/* Cards Grid - Replaced Grid with CSS Grid */}
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: {
+              xs: '1fr',
+              sm: 'repeat(2, 1fr)',
+              lg: 'repeat(4, 1fr)'
+            },
+            gap: 4
+          }}
+        >
           {cards.map((card, index) => (
-            <Grid item xs={12} sm={6} lg={3} key={index}>
-              <StatCard
-                title={card.title}
-                value={card.value}
-                icon={card.icon}
-                color={card.color}
-                delay={card.delay}
-                trend={card.trend}
-                percentage={card.percentage}
-              />
-            </Grid>
+            <StatCard
+              key={index}
+              title={card.title}
+              value={card.value}
+              icon={card.icon}
+              color={card.color}
+              delay={card.delay}
+              trend={card.trend}
+              percentage={card.percentage}
+            />
           ))}
-        </Grid>
+        </Box>
       </Box>
     </motion.div>
   );
