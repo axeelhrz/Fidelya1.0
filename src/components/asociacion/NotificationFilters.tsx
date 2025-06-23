@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
   Box,
   Paper,
@@ -15,7 +14,6 @@ import {
   Button,
   IconButton,
   Collapse,
-  Divider,
   alpha,
   SelectChangeEvent,
 } from '@mui/material';
@@ -24,17 +22,10 @@ import {
   Clear,
   Search,
   ExpandMore,
-  ExpandLess,
-  Refresh,
 } from '@mui/icons-material';
-import { NotificationFilters, NotificationType, NotificationPriority, NotificationStatus, NotificationCategory } from '@/types/notification';
+import { NotificationType, NotificationPriority, NotificationStatus, NotificationCategory } from '@/types/notification';
 
-interface NotificationFiltersProps {
-  filters: NotificationFilters;
-  onFiltersChange: (filters: NotificationFilters) => void;
-  onClearFilters: () => void;
-  loading?: boolean;
-}
+
 
 const typeLabels: Record<NotificationType, string> = {
   info: 'Información',
@@ -65,11 +56,26 @@ const categoryLabels: Record<NotificationCategory, string> = {
   general: 'General'
 };
 
+interface NotificationFilters {
+  search?: string;
+  status?: NotificationStatus[];
+  type?: NotificationType[];
+  priority?: NotificationPriority[];
+  category?: NotificationCategory[];
+  dateRange?: { from: Date; to: Date };
+}
+
+interface NotificationFiltersProps {
+  filters: NotificationFilters;
+  onFiltersChange: (filters: NotificationFilters) => void;
+  onClearFilters: () => void;
+  loading?: boolean;
+}
+
 export const NotificationFilters: React.FC<NotificationFiltersProps> = ({
   filters,
   onFiltersChange,
   onClearFilters,
-  loading = false
 }) => {
   const [expanded, setExpanded] = useState(false);
   const [searchValue, setSearchValue] = useState(filters.search || '');

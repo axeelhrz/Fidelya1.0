@@ -9,9 +9,7 @@ import {
   Button,
   Paper,
   Avatar,
-  Chip,
   IconButton,
-  Tooltip,
   alpha,
   Divider,
   Checkbox,
@@ -27,10 +25,8 @@ import {
   CheckCircle,
   Archive,
   Delete,
-  Refresh,
   SelectAll,
   MarkEmailRead,
-  FilterList,
 } from '@mui/icons-material';
 import { toast } from 'react-hot-toast';
 import { useNotifications } from '@/hooks/useNotifications';
@@ -98,7 +94,7 @@ export const NotificationsCenter: React.FC<NotificationsCenterProps> = ({
       
       toast.success(actionMessages[action]);
       setSelectedNotifications([]);
-    } catch (error) {
+    } catch {
       toast.error('Error al ejecutar la acción');
     } finally {
       setActionLoading(false);
@@ -124,7 +120,7 @@ export const NotificationsCenter: React.FC<NotificationsCenterProps> = ({
     try {
       await markAllAsRead();
       toast.success('Todas las notificaciones marcadas como leídas');
-    } catch (error) {
+    } catch {
       toast.error('Error al marcar las notificaciones');
     } finally {
       setActionLoading(false);
@@ -256,8 +252,20 @@ export const NotificationsCenter: React.FC<NotificationsCenterProps> = ({
 
       {/* Filters */}
       <NotificationFilters
-        filters={filters}
-        onFiltersChange={setFilters}
+        filters={{
+          ...filters,
+          dateRange: filters.dateRange
+            ? { from: filters.dateRange.start, to: filters.dateRange.end }
+            : undefined
+        }}
+        onFiltersChange={(newFilters) => {
+          setFilters({
+            ...newFilters,
+            dateRange: newFilters.dateRange
+              ? { start: newFilters.dateRange.from, end: newFilters.dateRange.to }
+              : undefined
+          });
+        }}
         onClearFilters={clearFilters}
         loading={isLoading}
       />
