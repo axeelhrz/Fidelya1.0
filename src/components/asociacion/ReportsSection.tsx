@@ -1,14 +1,13 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   Box,
   Typography,
   Card,
   CardContent,
   Grid,
-  useTheme,
   alpha,
   Avatar,
   Stack,
@@ -16,53 +15,27 @@ import {
   Button,
   IconButton,
   Paper,
-  Divider,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
-  TextField,
-  DatePicker,
-  Tabs,
-  Tab,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  LinearProgress,
-  Tooltip,
-  Badge,
 } from '@mui/material';
 import {
   Assessment,
   TrendingUp,
   TrendingDown,
   Download,
-  Print,
-  Share,
   Refresh,
   FilterList,
   CalendarToday,
   BarChart,
-  PieChart,
-  ShowChart,
   Timeline,
   Group,
-  PersonAdd,
-  Schedule,
   Star,
-  Warning,
-  CheckCircle,
   Email,
-  Phone,
-  Business,
   LocationOn,
   AttachMoney,
   Speed,
-  Analytics,
-  Insights,
   DataUsage,
   TableChart,
   Visibility,
@@ -315,9 +288,8 @@ const MetricSummaryCard: React.FC<{
 const ReportPreviewModal: React.FC<{
   open: boolean;
   onClose: () => void;
-  reportData: any;
   reportType: string;
-}> = ({ open, onClose, reportData, reportType }) => {
+}> = ({ open, onClose, reportType }) => {
   if (!open) return null;
 
   return (
@@ -369,15 +341,11 @@ const ReportPreviewModal: React.FC<{
 };
 
 export const ReportsSection: React.FC<ReportsSectionProps> = ({
-  socios,
-  stats,
   loading
 }) => {
-  const theme = useTheme();
-  const [activeTab, setActiveTab] = useState(0);
   const [dateRange, setDateRange] = useState('last30days');
   const [reportFilter, setReportFilter] = useState('all');
-  const [previewModal, setPreviewModal] = useState({ open: false, type: '', data: null });
+  const [previewModal, setPreviewModal] = useState<{ open: boolean; type: string; data: null | { reportId: string } }>({ open: false, type: '', data: null });
 
   const reportCategories = [
     { label: 'Todos los Reportes', value: 'all' },
@@ -757,11 +725,10 @@ export const ReportsSection: React.FC<ReportsSectionProps> = ({
 
       {/* Preview Modal */}
       <ReportPreviewModal
+      <ReportPreviewModal
         open={previewModal.open}
         onClose={() => setPreviewModal({ open: false, type: '', data: null })}
-        reportData={previewModal.data}
         reportType={previewModal.type}
       />
-    </Box>
   );
 };
