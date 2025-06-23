@@ -18,7 +18,6 @@ import {
   InputAdornment,
   alpha,
   Paper,
-  Grid,
   Divider,
   Collapse,
 } from '@mui/material';
@@ -646,7 +645,7 @@ const LoginPage = () => {
                   Crear cuenta nueva
                 </Button>
 
-                {/* Security Features */}
+                {/* Security Features - Replaced Grid with Flexbox */}
                 <Paper
                   elevation={0}
                   sx={{
@@ -657,9 +656,16 @@ const LoginPage = () => {
                     mt: 3
                   }}
                 >
-                  <Grid container spacing={2} justifyContent="center">
+                  <Box 
+                    sx={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-around',
+                      alignItems: 'center',
+                      gap: 2
+                    }}
+                  >
                     {securityFeatures.map((feature, index) => (
-                      <Grid item xs={4} key={index} sx={{ textAlign: 'center' }}>
+                      <Box key={index} sx={{ textAlign: 'center', flex: 1 }}>
                         <Box
                           sx={{
                             width: 32,
@@ -686,9 +692,9 @@ const LoginPage = () => {
                         >
                           {feature.text}
                         </Typography>
-                      </Grid>
+                      </Box>
                     ))}
-                  </Grid>
+                  </Box>
                 </Paper>
 
                 {/* Demo Accounts */}

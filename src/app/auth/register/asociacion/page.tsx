@@ -18,7 +18,6 @@ import {
   InputAdornment,
   alpha,
   Paper,
-  Grid,
 } from '@mui/material';
 import {
   Person,
@@ -272,7 +271,7 @@ const AsociacionRegisterPage = () => {
           }}
         >
           <CardContent sx={{ p: 5 }}>
-            {/* Features Section */}
+            {/* Features Section - Replaced Grid with Flexbox */}
             <Paper
               elevation={0}
               sx={{
@@ -307,23 +306,37 @@ const AsociacionRegisterPage = () => {
                 Herramientas para organizaciones
               </Typography>
               
-              <Grid container spacing={2}>
+              <Box 
+                sx={{ 
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: 2,
+                  justifyContent: 'space-between'
+                }}
+              >
                 {features.map((feature, index) => (
-                  <Grid item xs={6} key={index}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Box sx={{ color: '#0ea5e9', fontSize: '1rem' }}>
-                        {feature.icon}
-                      </Box>
-                      <Typography
-                        variant="body2"
-                        sx={{ color: '#0ea5e9', fontWeight: 600, fontSize: '0.85rem' }}
-                      >
-                        {feature.text}
-                      </Typography>
+                  <Box 
+                    key={index} 
+                    sx={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: 1,
+                      flex: '1 1 calc(50% - 8px)',
+                      minWidth: 'calc(50% - 8px)'
+                    }}
+                  >
+                    <Box sx={{ color: '#0ea5e9', fontSize: '1rem' }}>
+                      {feature.icon}
                     </Box>
-                  </Grid>
+                    <Typography
+                      variant="body2"
+                      sx={{ color: '#0ea5e9', fontWeight: 600, fontSize: '0.85rem' }}
+                    >
+                      {feature.text}
+                    </Typography>
+                  </Box>
                 ))}
-              </Grid>
+              </Box>
             </Paper>
 
             <Box component="form" onSubmit={handleSubmit(handleRegister)}>
