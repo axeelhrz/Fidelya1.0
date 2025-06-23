@@ -1,7 +1,6 @@
 import * as XLSX from 'xlsx'
 import { AdminOrderView } from '@/types/adminOrder'
 import { format } from 'date-fns'
-import { es } from 'date-fns/locale'
 
 export interface ExcelExportOptions {
   includeDetails: boolean
@@ -56,7 +55,7 @@ export class ExcelExportUtils {
   private static createMainOrdersSheet(orders: AdminOrderView[], includeDetails: boolean): XLSX.WorkSheet {
     const data = orders.map(order => {
       const baseData = {
-        'ID Pedido': order.id,
+        'ID Pedido': Number(order.id) || 0,
         'Cliente': `${order.user.firstName} ${order.user.lastName}`,
         'Email': order.user.email,
         'Tipo Usuario': order.user.userType === 'estudiante' ? 'Estudiante' : 'Funcionario',
@@ -94,13 +93,23 @@ export class ExcelExportUtils {
   
   // Crear hoja con detalle de productos por pedido
   private static createOrderDetailsSheet(orders: AdminOrderView[]): XLSX.WorkSheet {
-    const data: any[] = []
+    const data: {
+      'ID Pedido': number
+      'Cliente': string
+      'Fecha': string
+      'Día': string
+      'Tipo': string
+      'Código': string
+      'Producto': string
+      'Precio': number
+      'Estado Pedido': string
+    }[] = []
     
     orders.forEach(order => {
       order.itemsSummary.itemsDetail.forEach(detail => {
         if (detail.almuerzo) {
           data.push({
-            'ID Pedido': order.id,
+            'ID Pedido': Number(order.id) || 0,
             'Cliente': `${order.user.firstName} ${order.user.lastName}`,
             'Fecha': detail.date,
             'Día': detail.dayName,
@@ -114,7 +123,7 @@ export class ExcelExportUtils {
         
         if (detail.colacion) {
           data.push({
-            'ID Pedido': order.id,
+            'ID Pedido': Number(order.id) || 0,
             'Cliente': `${order.user.firstName} ${order.user.lastName}`,
             'Fecha': detail.date,
             'Día': detail.dayName,
@@ -163,10 +172,11 @@ export class ExcelExportUtils {
         const dayData = dailyData.get(key)!
         dayData.totalOrders++
         
-        if (order.status === 'paid' || order.status === 'pagado') {
+        // Corregir la comparación de estados
+        if (this.isPaidStatus(order.status)) {
           dayData.totalRevenue += order.total
           dayData.paidOrders++
-        } else if (order.status === 'pending' || order.status === 'pendiente') {
+        } else if (this.isPendingStatus(order.status)) {
           dayData.pendingOrders++
         }
         
@@ -192,12 +202,12 @@ export class ExcelExportUtils {
   // Crear hoja de estadísticas generales
   private static createStatsSheet(orders: AdminOrderView[]): XLSX.WorkSheet {
     const totalOrders = orders.length
-    const paidOrders = orders.filter(o => o.status === 'paid' || o.status === 'pagado').length
-    const pendingOrders = orders.filter(o => o.status === 'pending' || o.status === 'pendiente').length
-    const cancelledOrders = orders.filter(o => o.status === 'cancelled' || o.status === 'cancelado').length
+    const paidOrders = orders.filter(o => this.isPaidStatus(o.status)).length
+    const pendingOrders = orders.filter(o => this.isPendingStatus(o.status)).length
+    const cancelledOrders = orders.filter(o => this.isCancelledStatus(o.status)).length
     
     const totalRevenue = orders
-      .filter(o => o.status === 'paid' || o.status === 'pagado')
+      .filter(o => this.isPaidStatus(o.status))
       .reduce((sum, o) => sum + o.total, 0)
     
     const totalAlmuerzos = orders.reduce((sum, o) => sum + o.itemsSummary.totalAlmuerzos, 0)
@@ -262,6 +272,19 @@ export class ExcelExportUtils {
     }
     
     return `pedidos_${dateStr}.xlsx`
+  }
+  
+  // Funciones helper para verificar estados
+  private static isPaidStatus(status: string): boolean {
+    return status === 'paid' || status === 'pagado'
+  }
+  
+  private static isPendingStatus(status: string): boolean {
+    return status === 'pending' || status === 'pendiente'
+  }
+  
+  private static isCancelledStatus(status: string): boolean {
+    return status === 'cancelled' || status === 'cancelado'
   }
   
   // Obtener texto del estado
