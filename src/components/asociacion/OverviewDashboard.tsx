@@ -1,20 +1,16 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import {
   Box,
   Typography,
   Card,
   CardContent,
-  Grid,
-  useTheme,
   alpha,
   Avatar,
   Stack,
-  Chip,
   LinearProgress,
-  Divider,
   Paper,
   IconButton,
   Button,
@@ -24,19 +20,13 @@ import {
   TrendingDown,
   Group,
   PersonAdd,
-  Schedule,
-  AttachMoney,
   Analytics,
-  Speed,
   Star,
   Timeline,
   BarChart,
-  ShowChart,
   PieChart,
-  Notifications,
   CalendarToday,
   Assessment,
-  Email,
   Warning,
   CheckCircle,
   Info,
@@ -80,8 +70,8 @@ const KPICard: React.FC<KPICardProps> = ({
     <motion.div
       initial={{ opacity: 0, scale: 0.95, y: 20 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
-      transition={{ 
-        duration: 0.6, 
+      transition={{
+        duration: 0.6,
         delay,
         type: "spring",
         stiffness: 100,
@@ -127,7 +117,6 @@ const KPICard: React.FC<KPICardProps> = ({
             transition: 'opacity 0.3s ease',
           }}
         />
-        
         <CardContent sx={{ p: 4 }}>
           <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 3 }}>
             <Avatar
@@ -144,7 +133,6 @@ const KPICard: React.FC<KPICardProps> = ({
             >
               {icon}
             </Avatar>
-            
             {/* Trend indicator */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               {trend === 'up' && <TrendingUp sx={{ fontSize: 20, color: '#10b981' }} />}
@@ -161,7 +149,6 @@ const KPICard: React.FC<KPICardProps> = ({
               </Typography>
             </Box>
           </Box>
-
           <Box>
             <Typography
               variant="overline"
@@ -177,7 +164,6 @@ const KPICard: React.FC<KPICardProps> = ({
             >
               {title}
             </Typography>
-            
             <Typography
               variant="h3"
               sx={{
@@ -191,7 +177,6 @@ const KPICard: React.FC<KPICardProps> = ({
             >
               {value}
             </Typography>
-            
             {subtitle && (
               <Typography
                 variant="body2"
@@ -205,7 +190,6 @@ const KPICard: React.FC<KPICardProps> = ({
               </Typography>
             )}
           </Box>
-
           {/* Progress indicator */}
           <Box sx={{ mt: 3 }}>
             <LinearProgress
@@ -222,7 +206,6 @@ const KPICard: React.FC<KPICardProps> = ({
               }}
             />
           </Box>
-
           {onClick && (
             <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
               <IconButton
@@ -309,7 +292,6 @@ const QuickStatsCard: React.FC<{
               </Button>
             )}
           </Box>
-          
           <Stack spacing={3}>
             {stats.map((stat, index) => (
               <Box key={index}>
@@ -354,10 +336,10 @@ const QuickStatsCard: React.FC<{
 };
 
 const RecentActivityCard: React.FC<{
-  activities: Array<{ 
-    id: string; 
-    title: string; 
-    time: string; 
+  activities: Array<{
+    id: string;
+    title: string;
+    time: string;
     type: 'success' | 'warning' | 'info' | 'error';
     icon: React.ReactNode;
   }>;
@@ -427,9 +409,8 @@ const RecentActivityCard: React.FC<{
               </Button>
             )}
           </Box>
-          
           <Stack spacing={3}>
-            {activities.slice(0, 5).map((activity, index) => (
+            {activities.slice(0, 5).map((activity) => (
               <Box key={activity.id} sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
                 <Avatar
                   sx={{
@@ -474,18 +455,13 @@ const RecentActivityCard: React.FC<{
 };
 
 export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
-  socios,
   stats,
   loading,
   onNavigate,
   onAddMember
 }) => {
-  const theme = useTheme();
-
-  const activityRate = stats.total > 0 ? Math.round((stats.activos / stats.total) * 100) : 0;
   const growthRate = 12.5; // Mock growth rate
   const retentionRate = 87.3; // Mock retention rate
-  const avgLifetime = 18.5; // Mock average lifetime in months
 
   const kpiMetrics = [
     {
@@ -581,68 +557,78 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
   if (loading) {
     return (
       <Box sx={{ p: 4 }}>
-        <Grid container spacing={4}>
+        {/* Loading skeleton using CSS Grid */}
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: {
+              xs: '1fr',
+              sm: 'repeat(2, 1fr)',
+              lg: 'repeat(4, 1fr)'
+            },
+            gap: 4
+          }}
+        >
           {Array.from({ length: 4 }).map((_, index) => (
-            <Grid item xs={12} sm={6} lg={3} key={index}>
-              <Card
-                elevation={0}
-                sx={{
-                  border: '1px solid #f1f5f9',
-                  borderRadius: 6,
-                  overflow: 'hidden'
-                }}
-              >
-                <CardContent sx={{ p: 4 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 3 }}>
-                    <Box
-                      sx={{
-                        width: 64,
-                        height: 64,
-                        bgcolor: '#f1f5f9',
-                        borderRadius: 5,
-                        animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                        '@keyframes pulse': {
-                          '0%, 100%': { opacity: 1 },
-                          '50%': { opacity: 0.5 },
-                        },
-                      }}
-                    />
-                    <Box
-                      sx={{
-                        width: 48,
-                        height: 24,
-                        bgcolor: '#f1f5f9',
-                        borderRadius: 2,
-                        animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                      }}
-                    />
-                  </Box>
-                  <Box sx={{ mb: 2 }}>
-                    <Box
-                      sx={{
-                        width: '60%',
-                        height: 16,
-                        bgcolor: '#f1f5f9',
-                        borderRadius: 1,
-                        mb: 2,
-                        animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                      }}
-                    />
-                    <Box
-                      sx={{
-                        width: '40%',
-                        height: 32,
-                        bgcolor: '#f1f5f9',
-                        borderRadius: 1,
-                        animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                      }}
-                    />
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
+            <Card
+              key={index}
+              elevation={0}
+              sx={{
+                border: '1px solid #f1f5f9',
+                borderRadius: 6,
+                overflow: 'hidden'
+              }}
+            >
+              <CardContent sx={{ p: 4 }}>
+                <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 3 }}>
+                  <Box
+                    sx={{
+                      width: 64,
+                      height: 64,
+                      bgcolor: '#f1f5f9',
+                      borderRadius: 5,
+                      animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                      '@keyframes pulse': {
+                        '0%, 100%': { opacity: 1 },
+                        '50%': { opacity: 0.5 },
+                      },
+                    }}
+                  />
+                  <Box
+                    sx={{
+                      width: 48,
+                      height: 24,
+                      bgcolor: '#f1f5f9',
+                      borderRadius: 2,
+                      animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }}
+                  />
+                </Box>
+                <Box sx={{ mb: 2 }}>
+                  <Box
+                    sx={{
+                      width: '60%',
+                      height: 16,
+                      bgcolor: '#f1f5f9',
+                      borderRadius: 1,
+                      mb: 2,
+                      animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }}
+                  />
+                  <Box
+                    sx={{
+                      width: '40%',
+                      height: 32,
+                      bgcolor: '#f1f5f9',
+                      borderRadius: 1,
+                      animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }}
+                  />
+                </Box>
+              </CardContent>
+            </Card>
           ))}
-        </Grid>
+        </Box>
       </Box>
     );
   }
@@ -698,7 +684,6 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                 </Typography>
               </Box>
             </Box>
-            
             <Stack direction="row" spacing={2}>
               <IconButton
                 onClick={() => window.location.reload()}
@@ -714,7 +699,6 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
               >
                 <Refresh />
               </IconButton>
-              
               <Button
                 onClick={onAddMember}
                 variant="contained"
@@ -740,7 +724,6 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
               </Button>
             </Stack>
           </Box>
-
           {/* Welcome Message */}
           <Paper
             elevation={0}
@@ -782,11 +765,11 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
               <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center', gap: 2 }}>
                 <CalendarToday sx={{ fontSize: 18, color: '#94a3b8' }} />
                 <Typography variant="body2" sx={{ color: '#94a3b8', fontWeight: 700 }}>
-                  {new Date().toLocaleDateString('es-ES', { 
-                    weekday: 'long', 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric' 
+                  {new Date().toLocaleDateString('es-ES', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
                   })}
                 </Typography>
               </Box>
@@ -795,47 +778,62 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
         </Box>
       </motion.div>
 
-      {/* KPI Cards */}
-      <Grid container spacing={4} sx={{ mb: 6 }}>
+      {/* KPI Cards using CSS Grid */}
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: {
+            xs: '1fr',
+            sm: 'repeat(2, 1fr)',
+            lg: 'repeat(4, 1fr)'
+          },
+          gap: 4,
+          mb: 6
+        }}
+      >
         {kpiMetrics.map((metric, index) => (
-          <Grid item xs={12} sm={6} lg={3} key={index}>
-            <KPICard
-              title={metric.title}
-              value={metric.value}
-              change={metric.change}
-              icon={metric.icon}
-              color={metric.color}
-              delay={metric.delay}
-              subtitle={metric.subtitle}
-              trend={metric.trend}
-              onClick={metric.onClick}
-            />
-          </Grid>
-        ))}
-      </Grid>
-
-      {/* Secondary Stats and Activity */}
-      <Grid container spacing={6}>
-        {/* Member Distribution */}
-        <Grid item xs={12} lg={4}>
-          <QuickStatsCard
-            title="Distribución de Miembros"
-            stats={memberStats}
-            icon={<PieChart />}
-            color="#6366f1"
-            delay={0.4}
-            onViewMore={() => onNavigate('members')}
+          <KPICard
+            key={index}
+            title={metric.title}
+            value={metric.value}
+            change={metric.change}
+            icon={metric.icon}
+            color={metric.color}
+            delay={metric.delay}
+            subtitle={metric.subtitle}
+            trend={metric.trend}
+            onClick={metric.onClick}
           />
-        </Grid>
+        ))}
+      </Box>
+
+      {/* Secondary Stats and Activity using CSS Grid */}
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: {
+            xs: '1fr',
+            lg: '1fr 2fr'
+          },
+          gap: 6
+        }}
+      >
+        {/* Member Distribution */}
+        <QuickStatsCard
+          title="Distribución de Miembros"
+          stats={memberStats}
+          icon={<PieChart />}
+          color="#6366f1"
+          delay={0.4}
+          onViewMore={() => onNavigate('members')}
+        />
 
         {/* Recent Activity */}
-        <Grid item xs={12} lg={8}>
-          <RecentActivityCard
-            activities={recentActivities}
-            onViewAll={() => onNavigate('communications')}
-          />
-        </Grid>
-      </Grid>
+        <RecentActivityCard
+          activities={recentActivities}
+          onViewAll={() => onNavigate('communications')}
+        />
+      </Box>
     </Box>
   );
 };
