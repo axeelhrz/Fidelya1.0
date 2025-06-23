@@ -19,7 +19,6 @@ import {
   TableHead,
   TableRow,
   Chip,
-  useTheme,
   alpha,
   Avatar,
   Divider,
@@ -36,7 +35,6 @@ import {
   Error,
   Close,
   Info,
-  Description,
   CloudUpload,
 } from '@mui/icons-material';
 import Papa from 'papaparse';
@@ -61,7 +59,6 @@ export const CsvImport: React.FC<CsvImportProps> = ({
   onImport,
   loading = false
 }) => {
-  const theme = useTheme();
   const [step, setStep] = useState<'upload' | 'preview'>('upload');
   const [parsedData, setParsedData] = useState<ParsedSocio[]>([]);
   const [validData, setValidData] = useState<SocioFormData[]>([]);
@@ -99,7 +96,7 @@ export const CsvImport: React.FC<CsvImportProps> = ({
         const validSocios: SocioFormData[] = [];
         const parseErrors: string[] = [];
 
-        results.data.forEach((row: any, index: number) => {
+        results.data.forEach((row: unknown, index: number) => {
           try {
             const validated = csvSocioSchema.parse(row);
             const socio: ParsedSocio = {
@@ -108,18 +105,33 @@ export const CsvImport: React.FC<CsvImportProps> = ({
             };
             parsed.push(socio);
             validSocios.push(validated);
-          } catch (error: any) {
+          } catch (error: unknown) {
+            // Attempt to extract fields if row is an object
+            const safeRow = typeof row === 'object' && row !== null ? row as Record<string, unknown> : {};
+            let errorMessages: string[] = ['Error de validación'];
+            if (
+              typeof error === 'object' &&
+              error !== null &&
+              'errors' in error &&
+              Array.isArray((error as { errors?: unknown }).errors)
+            ) {
+              errorMessages = ((error as { errors: { message: string }[] }).errors)
+                .map((e) => typeof e.message === 'string' ? e.message : 'Error de validación');
+            }
             const socio: ParsedSocio = {
-              nombre: row.nombre || '',
-              email: row.email || '',
-              estado: row.estado || 'activo',
-              telefono: row.telefono || '',
-              dni: row.dni || '',
+              nombre: typeof safeRow.nombre === 'string' ? safeRow.nombre : '',
+              email: typeof safeRow.email === 'string' ? safeRow.email : '',
+              estado:
+                typeof safeRow.estado === 'string' && (safeRow.estado === 'activo' || safeRow.estado === 'vencido')
+                  ? safeRow.estado
+                  : 'activo',
+              telefono: typeof safeRow.telefono === 'string' ? safeRow.telefono : '',
+              dni: typeof safeRow.dni === 'string' ? safeRow.dni : '',
               _index: index + 1,
-              _errors: error.errors?.map((e: any) => e.message) || ['Error de validación']
+              _errors: errorMessages
             };
             parsed.push(socio);
-            parseErrors.push(`Fila ${index + 1}: ${error.errors?.map((e: any) => e.message).join(', ')}`);
+            parseErrors.push(`Fila ${index + 1}: ${errorMessages.join(', ')}`);
           }
         });
 

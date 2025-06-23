@@ -1,14 +1,12 @@
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   Box,
   Typography,
   Card,
   CardContent,
-  Grid,
-  useTheme,
   alpha,
   Avatar,
   Stack,
@@ -16,7 +14,6 @@ import {
   Button,
   IconButton,
   Paper,
-  Divider,
   FormControl,
   InputLabel,
   Select,
@@ -24,11 +21,6 @@ import {
   TextField,
   Switch,
   FormControlLabel,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
-  ListItemSecondaryAction,
   Tooltip,
   CircularProgress,
   LinearProgress,
@@ -37,57 +29,36 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Stepper,
-  Step,
-  StepLabel,
   Accordion,
   AccordionSummary,
   AccordionDetails,
-  Badge,
   SpeedDial,
   SpeedDialAction,
   SpeedDialIcon,
 } from '@mui/material';
 import {
   Backup,
-  CloudDownload,
-  CloudUpload,
   Settings,
   Schedule,
-  Verified,
   Warning,
   Error as ErrorIcon,
   CheckCircle,
   Info,
   Download,
-  Delete,
   Restore,
-  Visibility,
-  Security,
   Storage,
-  Timeline,
-  Assessment,
   Refresh,
   Add,
-  PlayArrow,
-  Pause,
-  Stop,
   ExpandMore,
-  CloudSync,
-  Shield,
-  Speed,
   DataUsage,
   History,
-  VerifiedUser,
   AutoMode,
   Person,
-  CalendarToday,
-  AccessTime,
-  FileDownload,
-  FolderZip,
   Lock,
-  LockOpen,
-
+  ArrowUpward,
+  ArrowDownward,
+  Search,
+  Save,
 } from '@mui/icons-material';
 import { useBackup } from '@/hooks/useBackup';
 import { BackupMetadata, BackupConfig, RestoreOptions, BackupFilterType, BackupSortField, BackupSortOrder } from '@/types/backup';
@@ -135,15 +106,9 @@ interface BackupConfigDialogProps {
 const BackupCard: React.FC<BackupCardProps> = ({
   backup,
   onRestore,
-  onDelete,
   onDownload,
-  onVerify,
-  onViewDetails,
   delay
 }) => {
-  const theme = useTheme();
-  const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
-
   const getStatusColor = (status: BackupMetadata['status']) => {
     switch (status) {
       case 'completed': return '#10b981';
@@ -259,36 +224,52 @@ const BackupCard: React.FC<BackupCardProps> = ({
             </Box>
             
             <IconButton
-              onClick={(e) => setMenuAnchor(e.currentTarget)}
               sx={{ color: '#94a3b8' }}
+              disabled
             >
               <Settings />
             </IconButton>
           </Box>
 
-          {/* Metrics */}
-          <Grid container spacing={2} sx={{ mb: 3 }}>
-            <Grid item xs={6}>
-              <Paper sx={{ p: 2, bgcolor: alpha('#10b981', 0.05), border: `1px solid ${alpha('#10b981', 0.1)}` }}>
-                <Typography variant="caption" sx={{ color: '#94a3b8', fontWeight: 600 }}>
-                  Registros
-                </Typography>
-                <Typography variant="h6" sx={{ fontWeight: 700, color: '#10b981' }}>
-                  {backup.recordCount.toLocaleString()}
-                </Typography>
-              </Paper>
-            </Grid>
-            <Grid item xs={6}>
-              <Paper sx={{ p: 2, bgcolor: alpha('#6366f1', 0.05), border: `1px solid ${alpha('#6366f1', 0.1)}` }}>
-                <Typography variant="caption" sx={{ color: '#94a3b8', fontWeight: 600 }}>
-                  Tamaño
-                </Typography>
-                <Typography variant="h6" sx={{ fontWeight: 700, color: '#6366f1' }}>
-                  {formatFileSize(backup.size)}
-                </Typography>
-              </Paper>
-            </Grid>
-          </Grid>
+          {/* Metrics - Replaced Grid with Flexbox */}
+          <Box 
+            sx={{ 
+              display: 'flex',
+              gap: 2,
+              mb: 3
+            }}
+          >
+            <Paper 
+              sx={{ 
+                flex: 1,
+                p: 2, 
+                bgcolor: alpha('#10b981', 0.05), 
+                border: `1px solid ${alpha('#10b981', 0.1)}` 
+              }}
+            >
+              <Typography variant="caption" sx={{ color: '#94a3b8', fontWeight: 600 }}>
+                Registros
+              </Typography>
+              <Typography variant="h6" sx={{ fontWeight: 700, color: '#10b981' }}>
+                {backup.recordCount.toLocaleString()}
+              </Typography>
+            </Paper>
+            <Paper 
+              sx={{ 
+                flex: 1,
+                p: 2, 
+                bgcolor: alpha('#6366f1', 0.05), 
+                border: `1px solid ${alpha('#6366f1', 0.1)}` 
+              }}
+            >
+              <Typography variant="caption" sx={{ color: '#94a3b8', fontWeight: 600 }}>
+                Tamaño
+              </Typography>
+              <Typography variant="h6" sx={{ fontWeight: 700, color: '#6366f1' }}>
+                {formatFileSize(backup.size)}
+              </Typography>
+            </Paper>
+          </Box>
 
           {/* Details */}
           <Box sx={{ mb: 3 }}>
@@ -500,7 +481,7 @@ const RestoreDialog: React.FC<RestoreDialogProps> = ({
             <InputLabel>Tipo de restauración</InputLabel>
             <Select
               value={restoreType}
-              onChange={(e) => setRestoreType(e.target.value as any)}
+              onChange={(e) => setRestoreType(e.target.value as 'full' | 'socios_only' | 'settings_only')}
               label="Tipo de restauración"
             >
               <MenuItem value="full">Restauración completa</MenuItem>
@@ -562,7 +543,6 @@ const RestoreDialog: React.FC<RestoreDialogProps> = ({
 export const BackupManagementSection: React.FC<BackupManagementSectionProps> = ({
   loading: externalLoading = false
 }) => {
-  const theme = useTheme();
   const {
     backups,
     config,
@@ -614,12 +594,12 @@ export const BackupManagementSection: React.FC<BackupManagementSectionProps> = (
 
     // Apply sort
     filtered.sort((a, b) => {
-      let aValue: any = a[sortField];
-      let bValue: any = b[sortField];
+      let aValue: string | number | Date = a[sortField as keyof BackupMetadata] as unknown as string | number | Date;
+      let bValue: string | number | Date = b[sortField as keyof BackupMetadata] as unknown as string | number | Date;
 
       if (sortField === 'createdAt') {
-        aValue = aValue.toMillis();
-        bValue = bValue.toMillis();
+        aValue = (aValue instanceof Date) ? aValue.getTime() : aValue;
+        bValue = (bValue instanceof Date) ? bValue.getTime() : bValue;
       }
 
       if (sortOrder === 'asc') {
@@ -664,35 +644,43 @@ export const BackupManagementSection: React.FC<BackupManagementSectionProps> = (
   if (externalLoading || loading) {
     return (
       <Box sx={{ p: 4 }}>
-        <Grid container spacing={4}>
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: {
+              xs: '1fr',
+              sm: 'repeat(2, 1fr)',
+              lg: 'repeat(3, 1fr)'
+            },
+            gap: 4
+          }}
+        >
           {Array.from({ length: 6 }).map((_, index) => (
-            <Grid item xs={12} sm={6} lg={4} key={index}>
-              <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 5 }}>
-                <CardContent sx={{ p: 4 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, mb: 3 }}>
-                    <Box
-                      sx={{
-                        width: 56,
-                        height: 56,
-                        bgcolor: '#f1f5f9',
-                        borderRadius: 3,
-                        animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                        '@keyframes pulse': {
-                          '0%, 100%': { opacity: 1 },
-                          '50%': { opacity: 0.5 },
-                        },
-                      }}
-                    />
-                    <Box sx={{ flex: 1 }}>
-                      <Box sx={{ width: '80%', height: 16, bgcolor: '#f1f5f9', borderRadius: 1, mb: 1 }} />
-                      <Box sx={{ width: '60%', height: 14, bgcolor: '#f1f5f9', borderRadius: 1 }} />
-                    </Box>
+            <Card key={index} elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 5 }}>
+              <CardContent sx={{ p: 4 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, mb: 3 }}>
+                  <Box
+                    sx={{
+                      width: 56,
+                      height: 56,
+                      bgcolor: '#f1f5f9',
+                      borderRadius: 3,
+                      animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                      '@keyframes pulse': {
+                        '0%, 100%': { opacity: 1 },
+                        '50%': { opacity: 0.5 },
+                      },
+                    }}
+                  />
+                  <Box sx={{ flex: 1 }}>
+                    <Box sx={{ width: '80%', height: 16, bgcolor: '#f1f5f9', borderRadius: 1, mb: 1 }} />
+                    <Box sx={{ width: '60%', height: 14, bgcolor: '#f1f5f9', borderRadius: 1 }} />
                   </Box>
-                </CardContent>
-              </Card>
-            </Grid>
+                </Box>
+              </CardContent>
+            </Card>
           ))}
-        </Grid>
+        </Box>
       </Box>
     );
   }
@@ -840,87 +828,90 @@ export const BackupManagementSection: React.FC<BackupManagementSectionProps> = (
             </motion.div>
           )}
 
-          {/* Stats Cards */}
-          <Grid container spacing={3} sx={{ mb: 4 }}>
-            <Grid item xs={12} sm={6} md={3}>
-              <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 4 }}>
-                <CardContent sx={{ p: 3 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Avatar sx={{ bgcolor: alpha('#f59e0b', 0.1), color: '#f59e0b' }}>
-                      <Storage />
-                    </Avatar>
-                    <Box>
-                      <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b' }}>
-                        {stats.totalBackups}
-                      </Typography>
-                      <Typography variant="caption" sx={{ color: '#64748b' }}>
-                        Total Respaldos
-                      </Typography>
-                    </Box>
+          {/* Stats Cards - Replaced Grid with CSS Grid */}
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: {
+                xs: '1fr',
+                sm: 'repeat(2, 1fr)',
+                md: 'repeat(4, 1fr)'
+              },
+              gap: 3,
+              mb: 4
+            }}
+          >
+            <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 4 }}>
+              <CardContent sx={{ p: 3 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Avatar sx={{ bgcolor: alpha('#f59e0b', 0.1), color: '#f59e0b' }}>
+                    <Storage />
+                  </Avatar>
+                  <Box>
+                    <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b' }}>
+                      {stats.totalBackups}
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: '#64748b' }}>
+                      Total Respaldos
+                    </Typography>
                   </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 4 }}>
-                <CardContent sx={{ p: 3 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Avatar sx={{ bgcolor: alpha('#10b981', 0.1), color: '#10b981' }}>
-                      <CheckCircle />
-                    </Avatar>
-                    <Box>
-                      <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b' }}>
-                        {stats.successfulBackups}
-                      </Typography>
-                      <Typography variant="caption" sx={{ color: '#64748b' }}>
-                        Exitosos
-                      </Typography>
-                    </Box>
+                </Box>
+              </CardContent>
+            </Card>
+            <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 4 }}>
+              <CardContent sx={{ p: 3 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Avatar sx={{ bgcolor: alpha('#10b981', 0.1), color: '#10b981' }}>
+                    <CheckCircle />
+                  </Avatar>
+                  <Box>
+                    <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b' }}>
+                      {stats.successfulBackups}
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: '#64748b' }}>
+                      Exitosos
+                    </Typography>
                   </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 4 }}>
-                <CardContent sx={{ p: 3 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Avatar sx={{ bgcolor: alpha('#6366f1', 0.1), color: '#6366f1' }}>
-                      <DataUsage />
-                    </Avatar>
-                    <Box>
-                      <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b' }}>
-                        {formatFileSize(stats.totalSize)}
-                      </Typography>
-                      <Typography variant="caption" sx={{ color: '#64748b' }}>
-                        Espacio Usado
-                      </Typography>
-                    </Box>
+                </Box>
+              </CardContent>
+            </Card>
+            <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 4 }}>
+              <CardContent sx={{ p: 3 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Avatar sx={{ bgcolor: alpha('#6366f1', 0.1), color: '#6366f1' }}>
+                    <DataUsage />
+                  </Avatar>
+                  <Box>
+                    <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b' }}>
+                      {formatFileSize(stats.totalSize)}
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: '#64748b' }}>
+                      Espacio Usado
+                    </Typography>
                   </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 4 }}>
-                <CardContent sx={{ p: 3 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Avatar sx={{ bgcolor: alpha('#8b5cf6', 0.1), color: '#8b5cf6' }}>
-                      <History />
-                    </Avatar>
-                    <Box>
-                      <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b' }}>
-                        {stats.lastBackup ? formatDistanceToNow(stats.lastBackup.toDate(), { locale: es }) : 'Nunca'}
-                      </Typography>
-                      <Typography variant="caption" sx={{ color: '#64748b' }}>
-                        Último Respaldo
-                      </Typography>
-                    </Box>
+                </Box>
+              </CardContent>
+            </Card>
+            <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 4 }}>
+              <CardContent sx={{ p: 3 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Avatar sx={{ bgcolor: alpha('#8b5cf6', 0.1), color: '#8b5cf6' }}>
+                    <History />
+                  </Avatar>
+                  <Box>
+                    <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b' }}>
+                      {stats.lastBackup ? formatDistanceToNow(stats.lastBackup.toDate(), { locale: es }) : 'Nunca'}
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: '#64748b' }}>
+                      Último Respaldo
+                    </Typography>
                   </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-          </Grid>
+                </Box>
+              </CardContent>
+            </Card>
+          </Box>
 
-          {/* Filters and Search */}
+          {/* Filters and Search - Replaced Grid with CSS Grid */}
           <Paper
             elevation={0}
             sx={{
@@ -931,82 +922,84 @@ export const BackupManagementSection: React.FC<BackupManagementSectionProps> = (
               mb: 4,
             }}
           >
-            <Grid container spacing={3} alignItems="center">
-              <Grid item xs={12} md={4}>
-                <TextField
-                  fullWidth
-                  placeholder="Buscar respaldos..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  InputProps={{
-                    startAdornment: <Search sx={{ color: '#94a3b8', mr: 1 }} />,
-                  }}
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      bgcolor: 'white',
-                      borderRadius: 3,
-                    }
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} md={3}>
-                <FormControl fullWidth>
-                  <InputLabel>Filtrar por tipo</InputLabel>
-                  <Select
-                    value={filter}
-                    onChange={(e) => setFilter(e.target.value as BackupFilterType)}
-                    label="Filtrar por tipo"
-                    sx={{
-                      bgcolor: 'white',
-                      borderRadius: 3,
-                    }}
-                  >
-                    <MenuItem value="all">Todos</MenuItem>
-                    <MenuItem value="manual">Manuales</MenuItem>
-                    <MenuItem value="automatic">Automáticos</MenuItem>
-                    <MenuItem value="scheduled">Programados</MenuItem>
-                    <MenuItem value="failed">Fallidos</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} md={3}>
-                <FormControl fullWidth>
-                  <InputLabel>Ordenar por</InputLabel>
-                  <Select
-                    value={sortField}
-                    onChange={(e) => setSortField(e.target.value as BackupSortField)}
-                    label="Ordenar por"
-                    sx={{
-                      bgcolor: 'white',
-                      borderRadius: 3,
-                    }}
-                  >
-                    <MenuItem value="createdAt">Fecha de creación</MenuItem>
-                    <MenuItem value="name">Nombre</MenuItem>
-                    <MenuItem value="size">Tamaño</MenuItem>
-                    <MenuItem value="recordCount">Registros</MenuItem>
-                    <MenuItem value="status">Estado</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} md={2}>
-                <Button
-                  onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-                  variant="outlined"
-                  fullWidth
-                  startIcon={sortOrder === 'asc' ? <ArrowUpward /> : <ArrowDownward />}
-                  sx={{
-                    py: 1.5,
-                    borderRadius: 3,
-                    textTransform: 'none',
-                    fontWeight: 600,
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: {
+                  xs: '1fr',
+                  md: '2fr 1fr 1fr 1fr'
+                },
+                gap: 3,
+                alignItems: 'center'
+              }}
+            >
+              <TextField
+                fullWidth
+                placeholder="Buscar respaldos..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                InputProps={{
+                  startAdornment: <Search sx={{ color: '#94a3b8', mr: 1 }} />,
+                }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
                     bgcolor: 'white',
+                    borderRadius: 3,
+                  }
+                }}
+              />
+              <FormControl fullWidth>
+                <InputLabel>Filtrar por tipo</InputLabel>
+                <Select
+                  value={filter}
+                  onChange={(e) => setFilter(e.target.value as BackupFilterType)}
+                  label="Filtrar por tipo"
+                  sx={{
+                    bgcolor: 'white',
+                    borderRadius: 3,
                   }}
                 >
-                  {sortOrder === 'asc' ? 'Ascendente' : 'Descendente'}
-                </Button>
-              </Grid>
-            </Grid>
+                  <MenuItem value="all">Todos</MenuItem>
+                  <MenuItem value="manual">Manuales</MenuItem>
+                  <MenuItem value="automatic">Automáticos</MenuItem>
+                  <MenuItem value="scheduled">Programados</MenuItem>
+                  <MenuItem value="failed">Fallidos</MenuItem>
+                </Select>
+              </FormControl>
+              <FormControl fullWidth>
+                <InputLabel>Ordenar por</InputLabel>
+                <Select
+                  value={sortField}
+                  onChange={(e) => setSortField(e.target.value as BackupSortField)}
+                  label="Ordenar por"
+                  sx={{
+                    bgcolor: 'white',
+                    borderRadius: 3,
+                  }}
+                >
+                  <MenuItem value="createdAt">Fecha de creación</MenuItem>
+                  <MenuItem value="name">Nombre</MenuItem>
+                  <MenuItem value="size">Tamaño</MenuItem>
+                  <MenuItem value="recordCount">Registros</MenuItem>
+                  <MenuItem value="status">Estado</MenuItem>
+                </Select>
+              </FormControl>
+              <Button
+                onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                variant="outlined"
+                fullWidth
+                startIcon={sortOrder === 'asc' ? <ArrowUpward /> : <ArrowDownward />}
+                sx={{
+                  py: 1.5,
+                  borderRadius: 3,
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  bgcolor: 'white',
+                }}
+              >
+                {sortOrder === 'asc' ? 'Ascendente' : 'Descendente'}
+              </Button>
+            </Box>
           </Paper>
         </Box>
       </motion.div>
@@ -1077,27 +1070,36 @@ export const BackupManagementSection: React.FC<BackupManagementSectionProps> = (
           </Paper>
         </motion.div>
       ) : (
-        <Grid container spacing={4}>
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: {
+              xs: '1fr',
+              sm: 'repeat(2, 1fr)',
+              lg: 'repeat(3, 1fr)'
+            },
+            gap: 4
+          }}
+        >
           {filteredBackups.map((backup, index) => (
-            <Grid item xs={12} sm={6} lg={4} key={backup.id}>
-              <BackupCard
-                backup={backup}
-                onRestore={(backup) => {
-                  setSelectedBackup(backup);
-                  setRestoreDialogOpen(true);
-                }}
-                onDelete={handleDeleteBackup}
-                onDownload={(backup) => downloadBackup(backup.id)}
-                onVerify={(backup) => verifyBackup(backup.id)}
-                onViewDetails={(backup) => {
-                  // TODO: Implement view details
-                  toast.info('Funcionalidad de detalles próximamente');
-                }}
-                delay={index * 0.1}
-              />
-            </Grid>
+            <BackupCard
+              key={backup.id}
+              backup={backup}
+              onRestore={(backup) => {
+                setSelectedBackup(backup);
+                setRestoreDialogOpen(true);
+              }}
+              onDelete={handleDeleteBackup}
+              onDownload={(backup) => downloadBackup(backup.id)}
+              onVerify={(backup) => verifyBackup(backup.id)}
+              onViewDetails={() => {
+                // TODO: Implement view details
+                toast('Funcionalidad de detalles próximamente');
+              }}
+              delay={index * 0.1}
+            />
           ))}
-        </Grid>
+        </Box>
       )}
 
       {/* Dialogs */}
@@ -1168,7 +1170,7 @@ export const BackupManagementSection: React.FC<BackupManagementSectionProps> = (
                 verifyBackup(backup.id);
               }
             });
-            toast.info('Verificación de respaldos iniciada');
+            toast('Verificación de respaldos iniciada');
           }}
         />
       </SpeedDial>
@@ -1247,7 +1249,7 @@ const BackupConfigDialog: React.FC<BackupConfigDialogProps> = ({
                         value={localConfig.backupFrequency}
                         onChange={(e) => setLocalConfig({
                           ...localConfig,
-                          backupFrequency: e.target.value as any
+                          backupFrequency: e.target.value as 'daily' | 'weekly' | 'monthly'
                         })}
                         label="Frecuencia"
                       >
@@ -1416,6 +1418,3 @@ const BackupConfigDialog: React.FC<BackupConfigDialogProps> = ({
     </Dialog>
   );
 };
-
-// Add missing imports
-import { ArrowUpward, ArrowDownward, Search, Save } from '@mui/icons-material';

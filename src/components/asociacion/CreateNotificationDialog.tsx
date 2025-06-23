@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
 import {
   Dialog,
   DialogTitle,
@@ -79,7 +78,10 @@ export const CreateNotificationDialog: React.FC<CreateNotificationDialogProps> =
   });
   const [tagInput, setTagInput] = useState('');
 
-  const handleInputChange = (field: keyof NotificationFormData, value: any) => {
+  const handleInputChange = (
+    field: keyof NotificationFormData,
+    value: string | string[] | undefined
+  ) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -233,7 +235,7 @@ export const CreateNotificationDialog: React.FC<CreateNotificationDialogProps> =
               <Select
                 value={formData.type}
                 onChange={(e) => handleInputChange('type', e.target.value)}
-                renderValue={(value) => (
+                renderValue={() => (
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     {selectedType && (
                       <>
@@ -260,7 +262,7 @@ export const CreateNotificationDialog: React.FC<CreateNotificationDialogProps> =
               <Select
                 value={formData.priority}
                 onChange={(e) => handleInputChange('priority', e.target.value)}
-                renderValue={(value) => (
+                renderValue={() => (
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     {selectedPriority && (
                       <>
