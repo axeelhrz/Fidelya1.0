@@ -70,6 +70,7 @@ export class AdminOrderService {
     itemsSummary: AdminOrderView['itemsSummary']
   } {
     if (!resumenPedido || !Array.isArray(resumenPedido)) {
+      console.log('No resumenPedido found or not an array:', resumenPedido)
       return {
         itemsCount: 0,
         hasColaciones: false,
@@ -83,6 +84,8 @@ export class AdminOrderService {
       }
     }
 
+    console.log('Processing resumenPedido:', resumenPedido.length, 'selections')
+
     let totalAlmuerzos = 0
     let totalColaciones = 0
     let almuerzosPrice = 0
@@ -94,8 +97,19 @@ export class AdminOrderService {
       colacion?: { code: string; name: string; price: number }
     }> = []
 
-    resumenPedido.forEach(selection => {
-      if (!selection.date) return
+    resumenPedido.forEach((selection, index) => {
+      console.log(`Processing selection ${index}:`, {
+        date: selection.date,
+        hasAlmuerzo: !!selection.almuerzo,
+        hasColacion: !!selection.colacion,
+        almuerzoCode: selection.almuerzo?.code,
+        colacionCode: selection.colacion?.code
+      })
+
+      if (!selection.date) {
+        console.warn('Selection without date:', selection)
+        return
+      }
 
       try {
         const dayName = format(parseISO(selection.date), 'EEEE', { locale: es })
@@ -121,6 +135,8 @@ export class AdminOrderService {
             name: selection.almuerzo.name || selection.almuerzo.description || 'Almuerzo',
             price: price
           }
+          
+          console.log('Added almuerzo:', dayDetail.almuerzo)
         }
 
         // Procesar colación
@@ -134,6 +150,8 @@ export class AdminOrderService {
             name: selection.colacion.name || selection.colacion.description || 'Colación',
             price: price
           }
+          
+          console.log('Added colacion:', dayDetail.colacion)
         }
 
         if (dayDetail.almuerzo || dayDetail.colacion) {
@@ -144,7 +162,7 @@ export class AdminOrderService {
       }
     })
 
-    return {
+    const result = {
       itemsCount: totalAlmuerzos + totalColaciones,
       hasColaciones: totalColaciones > 0,
       itemsSummary: {
@@ -155,6 +173,9 @@ export class AdminOrderService {
         itemsDetail
       }
     }
+
+    console.log('Processing result:', result)
+    return result
   }
 
   static async getOrdersWithFilters(filters: OrderFilters): Promise<AdminOrderView[]> {
@@ -195,7 +216,9 @@ export class AdminOrderService {
             
             console.log(`Processing order ${orderDoc.id}:`, {
               resumenPedido: orderData.resumenPedido?.length || 0,
-              total: orderData.total
+              total: orderData.total,
+              status: orderData.status,
+              weekStart: orderData.weekStart
             })
             
             // Aplicar filtro de semana del lado del cliente
@@ -248,7 +271,7 @@ export class AdminOrderService {
               id: orderDoc.id,
               userId: orderData.userId,
               weekStart: orderData.weekStart,
-              selections: orderData.resumenPedido || [],
+              selections: orderData.resumenPedido || [], // Usar resumenPedido como selections
               total: total,
               status: orderData.status || 'pending',
               createdAt: createdAt,
@@ -287,7 +310,8 @@ export class AdminOrderService {
               itemsCount: order.itemsCount,
               hasColaciones: order.hasColaciones,
               totalAlmuerzos: itemsSummary.totalAlmuerzos,
-              totalColaciones: itemsSummary.totalColaciones
+              totalColaciones: itemsSummary.totalColaciones,
+              itemsDetailLength: itemsSummary.itemsDetail.length
             })
 
             return order
