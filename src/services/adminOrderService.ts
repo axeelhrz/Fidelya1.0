@@ -33,7 +33,7 @@ export class AdminOrderService {
   }
 
   // Función helper para convertir timestamps de Firebase de forma segura
-  private static safeTimestampToDate(timestamp: Date | Timestamp | { seconds: number; nanoseconds?: number } | string | number | null | undefined): Date {
+  private static safeTimestampToDate(timestamp: any): Date {
     if (!timestamp) return new Date()
     
     // Si ya es una fecha
@@ -64,7 +64,7 @@ export class AdminOrderService {
   }
 
   // Función helper para procesar resumenPedido y calcular estadísticas
-  private static processResumenPedido(resumenPedido: OrderSelectionByChild[]): {
+  private static processResumenPedido(resumenPedido: any[]): {
     itemsCount: number
     hasColaciones: boolean
     itemsSummary: AdminOrderView['itemsSummary']
@@ -103,7 +103,8 @@ export class AdminOrderService {
         hasAlmuerzo: !!selection.almuerzo,
         hasColacion: !!selection.colacion,
         almuerzoCode: selection.almuerzo?.code,
-        colacionCode: selection.colacion?.code
+        colacionCode: selection.colacion?.code,
+        hijo: selection.hijo?.name
       })
 
       if (!selection.date) {
@@ -127,12 +128,12 @@ export class AdminOrderService {
         // Procesar almuerzo
         if (selection.almuerzo) {
           totalAlmuerzos++
-          const price = selection.almuerzo.price || 0
+          const price = Number(selection.almuerzo.price) || 0
           almuerzosPrice += price
           
           dayDetail.almuerzo = {
-            code: selection.almuerzo.code || 'ALM',
-            name: selection.almuerzo.name || selection.almuerzo.description || 'Almuerzo',
+            code: selection.almuerzo.code || selection.almuerzo.codigo || 'ALM',
+            name: selection.almuerzo.name || selection.almuerzo.nombre || selection.almuerzo.description || selection.almuerzo.descripcion || 'Almuerzo',
             price: price
           }
           
@@ -142,12 +143,12 @@ export class AdminOrderService {
         // Procesar colación
         if (selection.colacion) {
           totalColaciones++
-          const price = selection.colacion.price || 0
+          const price = Number(selection.colacion.price) || Number(selection.colacion.precio) || 0
           colacionesPrice += price
           
           dayDetail.colacion = {
-            code: selection.colacion.code || 'COL',
-            name: selection.colacion.name || selection.colacion.description || 'Colación',
+            code: selection.colacion.code || selection.colacion.codigo || 'COL',
+            name: selection.colacion.name || selection.colacion.nombre || selection.colacion.description || selection.colacion.descripcion || 'Colación',
             price: price
           }
           
@@ -218,7 +219,8 @@ export class AdminOrderService {
               resumenPedido: orderData.resumenPedido?.length || 0,
               total: orderData.total,
               status: orderData.status,
-              weekStart: orderData.weekStart
+              weekStart: orderData.weekStart,
+              tipoUsuario: orderData.tipoUsuario
             })
             
             // Aplicar filtro de semana del lado del cliente
@@ -235,12 +237,18 @@ export class AdminOrderService {
 
             const userData = userDoc.data()
 
-            // Normalizar userType
-            const userType = userData.userType || userData.tipoUsuario || 'estudiante'
+            // Normalizar userType - usar tipoUsuario del pedido como prioridad
+            const userType = orderData.tipoUsuario || userData.userType || userData.tipoUsuario || 'funcionario'
 
             // Aplicar filtros del lado del cliente
-            if (filters.userType && filters.userType !== 'all' && userType !== filters.userType) {
-              return null
+            if (filters.userType && filters.userType !== 'all') {
+              // Mapear tipos para compatibilidad
+              const filterUserType = filters.userType === 'estudiante' ? 'apoderado' : filters.userType
+              const orderUserType = userType === 'estudiante' ? 'apoderado' : userType
+              
+              if (orderUserType !== filterUserType) {
+                return null
+              }
             }
 
             if (filters.searchTerm) {
@@ -263,7 +271,7 @@ export class AdminOrderService {
             const total = Number(orderData.total) || 0
 
             // Calcular días desde que está pendiente
-            const daysSincePending = orderData.status === 'pending' 
+            const daysSincePending = orderData.status === 'pendiente' 
               ? differenceInDays(new Date(), createdAt)
               : 0
 
@@ -273,7 +281,7 @@ export class AdminOrderService {
               weekStart: orderData.weekStart,
               selections: orderData.resumenPedido || [], // Usar resumenPedido como selections
               total: total,
-              status: orderData.status || 'pending',
+              status: orderData.status || 'pendiente',
               createdAt: createdAt,
               paidAt: paidAt,
               cancelledAt: cancelledAt,
@@ -284,7 +292,7 @@ export class AdminOrderService {
                 firstName: userData.firstName || userData.nombre || '',
                 lastName: userData.lastName || userData.apellido || '',
                 email: userData.email || userData.correo || '',
-                userType: userType
+                userType: userType === 'apoderado' ? 'estudiante' : userType
               },
               dayName: format(createdAt, 'EEEE', { locale: es }),
               formattedDate: format(createdAt, 'dd/MM/yyyy HH:mm'),
@@ -311,7 +319,8 @@ export class AdminOrderService {
               hasColaciones: order.hasColaciones,
               totalAlmuerzos: itemsSummary.totalAlmuerzos,
               totalColaciones: itemsSummary.totalColaciones,
-              itemsDetailLength: itemsSummary.itemsDetail.length
+              itemsDetailLength: itemsSummary.itemsDetail.length,
+              userType: order.user.userType
             })
 
             return order
@@ -390,8 +399,12 @@ export class AdminOrderService {
       orders.forEach(order => {
         const orderTotal = Number(order.total) || 0
         
-        // Contadores por estado
-        switch (order.status) {
+        // Contadores por estado - mapear estados de Firebase
+        const status = order.status === 'pendiente' ? 'pending' : 
+                     order.status === 'pagado' ? 'paid' : 
+                     order.status === 'cancelado' ? 'cancelled' : order.status
+        
+        switch (status) {
           case 'pending':
             metrics.pendingOrders++
             metrics.totalByStatus.pending++
@@ -525,8 +538,13 @@ export class AdminOrderService {
       const currentData = orderDoc.data()
       console.log(`Updating order ${request.orderId} from ${currentData.status} to ${request.status}`)
 
+      // Mapear estados del admin a Firebase
+      const firebaseStatus = request.status === 'pending' ? 'pendiente' :
+                           request.status === 'paid' ? 'pagado' :
+                           request.status === 'cancelled' ? 'cancelado' : request.status
+
       const updateData: Record<string, string | Timestamp | null> = {
-        status: request.status || 'pending',
+        status: firebaseStatus,
         updatedAt: Timestamp.now()
       }
 
@@ -565,7 +583,7 @@ export class AdminOrderService {
 
       await updateDoc(orderRef, updateData)
       
-      console.log(`Order ${request.orderId} updated successfully to ${request.status}`)
+      console.log(`Order ${request.orderId} updated successfully to ${firebaseStatus}`)
       
       // Limpiar cache relacionado
       this.clearCache()
@@ -671,7 +689,7 @@ export class AdminOrderService {
       }
 
       // Procesar información del usuario
-      const userType = userData.userType || userData.tipoUsuario || 'estudiante'
+      const userType = orderData.tipoUsuario || userData.userType || userData.tipoUsuario || 'funcionario'
 
       const detail: OrderDetailView = {
         id: orderDoc.id,
@@ -683,14 +701,14 @@ export class AdminOrderService {
         createdAt: createdAt,
         paidAt: paidAt,
         cancelledAt: cancelledAt,
-        daysSincePending: orderData.status === 'pending' ? differenceInDays(new Date(), createdAt) : 0,
+        daysSincePending: orderData.status === 'pendiente' ? differenceInDays(new Date(), createdAt) : 0,
         paymentId: orderData.paymentId,
         user: {
           id: userData.id || orderData.userId,
           firstName: userData.firstName || userData.nombre || '',
           lastName: userData.lastName || userData.apellido || '',
           email: userData.email || userData.correo || '',
-          userType: userType
+          userType: userType === 'apoderado' ? 'estudiante' : userType
         },
         dayName: format(createdAt, 'EEEE', { locale: es }),
         formattedDate: format(createdAt, 'dd/MM/yyyy HH:mm'),
@@ -760,7 +778,10 @@ export class AdminOrderService {
 
     // Solo aplicar filtros simples para evitar errores de índice
     if (filters.status && filters.status !== 'all') {
-      q = query(ordersRef, where('status', '==', filters.status), orderBy('createdAt', 'desc'))
+      const firebaseStatus = filters.status === 'pending' ? 'pendiente' :
+                           filters.status === 'paid' ? 'pagado' :
+                           filters.status === 'cancelled' ? 'cancelado' : filters.status
+      q = query(ordersRef, where('status', '==', firebaseStatus), orderBy('createdAt', 'desc'))
     }
 
     return onSnapshot(q, () => {
