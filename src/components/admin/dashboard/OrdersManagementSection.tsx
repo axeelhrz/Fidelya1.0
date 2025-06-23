@@ -26,6 +26,7 @@ import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Separator } from '@/components/ui/separator'
+import { ExportToExcelButton } from '@/components/admin/pedidos/ExportToExcelButton'
 import { useAdminOrdersSimple } from '@/hooks/useAdminOrdersSimple'
 import { format, parseISO, startOfWeek } from 'date-fns'
 import { es } from 'date-fns/locale'
@@ -96,6 +97,48 @@ export function OrdersManagementSection() {
   // Función para actualizar filtros
   const updateFilters = (newFilters: Partial<OrderFilters>) => {
     setFilters(prev => ({ ...prev, ...newFilters }))
+  }
+
+  // Convertir pedidos al formato AdminOrderView para la exportación
+  const convertToAdminOrderView = (orders: any[]) => {
+    return orders.map(order => ({
+      ...order,
+      // Mapear campos para compatibilidad con ExportToExcelButton
+      user: {
+        id: order.user?.id || order.userId,
+        firstName: order.user?.firstName || '',
+        lastName: order.user?.lastName || '',
+        email: order.user?.email || '',
+        userType: order.tipoUsuario === 'apoderado' ? 'estudiante' : 'funcionario'
+      },
+      // Procesar itemsSummary desde resumenPedido
+      itemsSummary: {
+        totalAlmuerzos: order.resumenPedido?.filter((s: any) => s.almuerzo).length || 0,
+        totalColaciones: order.resumenPedido?.filter((s: any) => s.colacion).length || 0,
+        almuerzosPrice: order.resumenPedido?.reduce((sum: number, s: any) => 
+          sum + (s.almuerzo?.price || 0), 0) || 0,
+        colacionesPrice: order.resumenPedido?.reduce((sum: number, s: any) => 
+          sum + (s.colacion?.price || 0), 0) || 0,
+        itemsDetail: order.resumenPedido?.map((selection: any) => ({
+          date: selection.date,
+          dayName: format(parseISO(selection.date), 'EEEE', { locale: es }),
+          almuerzo: selection.almuerzo ? {
+            code: selection.almuerzo.code,
+            name: selection.almuerzo.name,
+            price: selection.almuerzo.price
+          } : undefined,
+          colacion: selection.colacion ? {
+            code: selection.colacion.code,
+            name: selection.colacion.name,
+            price: selection.colacion.price
+          } : undefined
+        })) || []
+      },
+      itemsCount: (order.resumenPedido?.filter((s: any) => s.almuerzo).length || 0) + 
+                  (order.resumenPedido?.filter((s: any) => s.colacion).length || 0),
+      hasColaciones: order.resumenPedido?.some((s: any) => s.colacion) || false,
+      selections: order.resumenPedido || []
+    }))
   }
 
   // Función para obtener el color del estado
@@ -301,6 +344,18 @@ export function OrdersManagementSection() {
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Actualizar
               </Button>
+
+              {/* Botón de exportación a Excel */}
+              <ExportToExcelButton 
+                orders={convertToAdminOrderView(filteredOrders)} 
+                isLoading={isLoading}
+                filters={{
+                  weekStart: filters.weekStart,
+                  status: filters.status === 'all' ? undefined : filters.status,
+                  userType: filters.userType === 'all' ? undefined : filters.userType,
+                  searchTerm: filters.searchTerm
+                }}
+              />
             </div>
           </div>
         </CardHeader>
