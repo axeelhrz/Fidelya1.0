@@ -13,7 +13,6 @@ import {
 } from 'firebase/firestore'
 import { db } from '@/app/lib/firebase'
 import { AdminOrderView, OrderFilters, OrderMetrics, OrderUpdateRequest, OrderDetailView } from '@/types/adminOrder'
-import { OrderSelectionByChild } from '@/types/panel'
 import { format, parseISO, startOfWeek, endOfWeek, addDays, differenceInDays } from 'date-fns'
 import { es } from 'date-fns/locale'
 
@@ -33,7 +32,9 @@ export class AdminOrderService {
   }
 
   // Función helper para convertir timestamps de Firebase de forma segura
-  private static safeTimestampToDate(timestamp: any): Date {
+  private static safeTimestampToDate(
+    timestamp: Date | { toDate: () => Date } | { seconds: number; nanoseconds?: number } | string | number | null | undefined
+  ): Date {
     if (!timestamp) return new Date()
     
     // Si ya es una fecha
@@ -64,7 +65,14 @@ export class AdminOrderService {
   }
 
   // Función helper para procesar resumenPedido y calcular estadísticas
-  private static processResumenPedido(resumenPedido: any[]): {
+  private static processResumenPedido(
+    resumenPedido: Array<{
+      date: string
+      almuerzo?: { code?: string; codigo?: string; name?: string; nombre?: string; description?: string; descripcion?: string; price?: number }
+      colacion?: { code?: string; codigo?: string; name?: string; nombre?: string; description?: string; descripcion?: string; price?: number; precio?: number }
+      hijo?: { name?: string }
+    }>
+  ): {
     itemsCount: number
     hasColaciones: boolean
     itemsSummary: AdminOrderView['itemsSummary']
@@ -400,9 +408,15 @@ export class AdminOrderService {
         const orderTotal = Number(order.total) || 0
         
         // Contadores por estado - mapear estados de Firebase
-        const status = order.status === 'pendiente' ? 'pending' : 
-                     order.status === 'pagado' ? 'paid' : 
-                     order.status === 'cancelado' ? 'cancelled' : order.status
+        // Normalizar status a los valores esperados en inglés
+        const normalizedStatus =
+          ((order.status as string) === 'pendiente' || (order.status as string) === 'pending') ? 'pending' :
+          ((order.status as string) === 'pagado' || (order.status as string) === 'paid') ? 'paid' :
+          ((order.status as string) === 'cancelado' || (order.status as string) === 'cancelled') ? 'cancelled' :
+          (order.status as string) === 'draft' ? 'draft' :
+          order.status
+
+        const status = normalizedStatus as 'pending' | 'paid' | 'cancelled' | 'draft'
         
         switch (status) {
           case 'pending':
@@ -544,7 +558,7 @@ export class AdminOrderService {
                            request.status === 'cancelled' ? 'cancelado' : request.status
 
       const updateData: Record<string, string | Timestamp | null> = {
-        status: firebaseStatus,
+        status: firebaseStatus ?? '',
         updatedAt: Timestamp.now()
       }
 
