@@ -1,34 +1,26 @@
-// ===== VARIABLES GLOBALES =====
+// ===== VARIABLES GLOBALES ULTRA OPTIMIZADAS =====
 let isMenuOpen = false;
 let currentFeature = 0;
 const features = document.querySelectorAll('.feature');
-// Variables para el sistema de partículas flotantes
 let particleSystems = [];
 let animationId = null;
 let isReducedMotion = false;
-// Variables para el sistema de idiomas
 let currentLanguage = 'es';
 const translations = {};
-// Variables para el botón flotante
 let isFloatingMenuOpen = false;
-// Variables para el selector de idioma independiente
 let isLanguageSwitcherOpen = false;
-// Variables para el control del navbar
 let lastScrollY = 0;
 let isScrollingDown = false;
 let ticking = false;
-// Variables para el navbar responsive
 let touchStartY = 0;
 let touchEndY = 0;
 let isNavbarVisible = true;
 
-// ===== CONFIGURACIÓN GLOBAL =====
+// ===== CONFIGURACIÓN ULTRA OPTIMIZADA =====
 const CONFIG = {
-    // Configuración de animaciones
     ANIMATION_DURATION: 300,
     SCROLL_THRESHOLD: 100,
     
-    // Configuración de imágenes optimizadas
     IMAGE_FORMATS: {
         AVIF: 'image/avif',
         WEBP: 'image/webp',
@@ -36,7 +28,6 @@ const CONFIG = {
         PNG: 'image/png'
     },
     
-    // Rutas de imágenes optimizadas
     IMAGE_PATHS: {
         hero: {
             avif: './assets/phones/Hero.avif',
@@ -95,22 +86,19 @@ const CONFIG = {
     }
 };
 
-// ===== SISTEMA DE TRADUCCIONES =====
+// ===== SISTEMA DE TRADUCCIONES ULTRA OPTIMIZADO =====
 const translationData = {
     es: {
-        // Meta tags
         'page-title': 'StarFlex - Automatiza tus Bloques de Amazon Flex | Prueba Gratis',
         'page-description': 'Starflex revoluciona Amazon Flex. Automatización inteligente de bloques, optimización de horarios y máximas ganancias. Únete a +15,000 conductores exitosos.',
         'og-title': 'Starflex - La Revolución de Amazon Flex',
         'og-description': 'Automatización inteligente que multiplica tus ganancias. La herramienta que todo conductor profesional necesita.',
-        // Navegación
         'nav-home': 'Inicio',
         'nav-features': 'Características',
         'nav-videos': 'Videos',
         'nav-faq': 'FAQ',
         'nav-contact': 'Contacto',
         'nav-cta': 'Comienza tu prueba gratuita',
-        // Hero Section
         'hero-badge': 'Next-Gen Amazon Flex Revolution',
         'hero-title-main': 'DOMINA LOS',
         'hero-title-highlight': 'BLOQUES DE',
@@ -124,17 +112,14 @@ const translationData = {
         'download-apple': 'Descargar en App Store',
         'download-google-alt': 'Descargar en Google Play',
         'download-apple-alt': 'Descargar en App Store',
-        // Features Section
         'features-title': 'Características',
         'features-subtitle': 'Aquí puedes ver lo que te ofrece StarFlex.',
-        // Feature 1: Horario
         'feature-schedule-title': 'HORARIO',
         'feature-schedule-description': 'Elige los días y horarios que prefieras para tus bloques de entrega.',
         'feature-schedule-item-1': 'Configuración personalizada por día',
         'feature-schedule-item-2': 'Horarios flexibles de trabajo',
         'feature-schedule-item-3': 'Optimización automática de turnos',
         'feature-schedule-item-4': 'Sincronización con tu calendario',
-        // Feature 2: Estaciones
         'feature-stations-title': 'ESTACIONES',
         'feature-stations-description': 'Selecciona tus estaciones preferidas y precios para que nuestra app pueda ofrecerte los bloques que se ajusten a tus preferencias.',
         'feature-stations-item-1': 'Selección personalizada de estaciones favoritas',
@@ -142,20 +127,17 @@ const translationData = {
         'feature-stations-item-3': 'Análisis de rentabilidad por ubicación',
         'feature-stations-item-4': 'Notificaciones instantáneas de bloques disponibles',
         'feature-stations-item-5': 'Mapa interactivo con todas las estaciones',
-        // Feature 3: Calendario
         'feature-calendar-title': 'CALENDARIO',
         'feature-calendar-description': 'En el calendario podrás ver tus bloques aceptados y encontrar las opciones para identificarte desde cualquier ubicación, así como la posibilidad de saltarte la selfie y cancelar bloques, todo en un solo lugar para tu máxima comodidad.',
         'feature-calendar-item-1': 'Identificación desde cualquier ubicación',
         'feature-calendar-item-2': 'Opción de saltar selfie',
         'feature-calendar-item-3': 'Cancelación rápida de bloques',
-        // Feature 4: Registro
         'feature-log-title': 'REGISTRO',
         'feature-log-description': 'En el registro, podrá ver todos los bloques disponibles y el motivo detallado por el cual se ignoraron algunos. Esto le ayudará a ajustar sus filtros de preferencias según sea necesario para optimizar sus opciones.',
         'feature-log-item-1': 'Historial completo de bloques',
         'feature-log-item-2': 'Motivos detallados de rechazo',
         'feature-log-item-3': 'Optimización de filtros',
         'feature-log-item-4': 'Análisis de patrones',
-        // Feature 5: Notificaciones
         'feature-notifications-title': 'NOTIFICACIONES',
         'feature-notifications-description': 'StarFlex te mantiene informado con múltiples tipos de notificaciones para que nunca te pierdas los mejores bloques disponibles. Configura tus alertas según tus preferencias.',
         'feature-notifications-item-1': 'Notificaciones Push instantáneas',
@@ -165,13 +147,11 @@ const translationData = {
         'feature-notifications-item-5': 'Alertas personalizables por tipo de bloque',
         'feature-notifications-item-6': 'Notificaciones en tiempo real',
         'feature-notifications-item-7': 'Filtros avanzados de notificación',
-        // Feature 6: Referidos - CONTENIDO ACTUALIZADO
         'feature-referrals-title': 'REFERIDOS',
         'feature-referrals-description': 'Invitá a otros usuarios a unirse a Starflex y obtené beneficios exclusivos por cada referido que se registre.',
         'feature-referrals-item-1': 'Enlace único de referido personalizado',
         'feature-referrals-item-2': 'Gana 1 semana gratis por cada referido',
         'feature-referrals-item-3': 'Código QR para compartir fácilmente',
-        // Videos Section
         'videos-badge': 'Experiencia Visual Inmersiva',
         'videos-title-main': 'VE STARFLEX',
         'videos-title-highlight': 'EN ACCIÓN',
@@ -186,7 +166,6 @@ const translationData = {
         'videos-cta-start': 'COMENZAR AHORA',
         'videos-cta-trial': '3 días gratis',
         'videos-cta-demo': 'VER DEMO PERSONALIZADA',
-        // FAQ Section
         'faq-title': 'Preguntas Frecuentes',
         'faq-subtitle': 'Encuentra respuestas claras a las dudas más comunes sobre StarFlex y descubre cómo transformar tu experiencia con Amazon Flex.',
         'faq-search-placeholder': 'Buscar pregunta...',
@@ -202,7 +181,6 @@ const translationData = {
         'faq-5-answer': 'Solo necesitas una <span class="faq__answer-highlight">cuenta activa de Amazon Flex y un dispositivo compatible</span>. Después de descargar la aplicación, el proceso de configuración toma menos de 5 minutos. Nuestro sistema de configuración guiada te ayudará a optimizar tu experiencia desde el primer día.',
         'faq-no-results': 'No se encontraron preguntas que coincidan con tu búsqueda',
         'faq-no-results-suggestion': 'Intenta con términos diferentes o contacta nuestro soporte',
-        // Contact Section
         'contact-badge': 'Conecta con el Futuro',
         'contact-title-main': 'MEJORES BLOQUES DE',
         'contact-title-highlight': 'AMAZON FLEX',
@@ -225,26 +203,22 @@ const translationData = {
         'contact-email-title': 'support@starflexapp.com',
         'contact-email-description': 'Contacta directamente con nuestro equipo de soporte técnico especializado',
         'contact-email-btn': 'Enviar Email',
-        // Footer
         'footer-legal': 'Política de Privacidad • Términos y Condiciones',
         'footer-copyright': '© StarFlex • Todos los derechos reservados',
         'footer-cta-main': 'COMENZAR AHORA',
         'footer-cta-trial': '3 días gratis'
     },
     en: {
-        // Meta tags
         'page-title': 'StarFlex - Automate your Amazon Flex Blocks | Free Trial',
         'page-description': 'Starflex revolutionizes Amazon Flex. Intelligent block automation, schedule optimization and maximum earnings. Join +15,000 successful drivers.',
         'og-title': 'Starflex - The Amazon Flex Revolution',
         'og-description': 'Intelligent automation that multiplies your earnings. The tool every professional driver needs.',
-        // Navigation
         'nav-home': 'Home',
         'nav-features': 'Features',
         'nav-videos': 'Videos',
         'nav-faq': 'FAQ',
         'nav-contact': 'Contact',
         'nav-cta': 'Start your free trial',
-        // Hero Section
         'hero-badge': 'Next-Gen Amazon Flex Revolution',
         'hero-title-main': 'MASTER THE',
         'hero-title-highlight': 'AMAZON FLEX',
@@ -258,17 +232,14 @@ const translationData = {
         'download-apple': 'Download on App Store',
         'download-google-alt': 'Download on Google Play',
         'download-apple-alt': 'Download on App Store',
-        // Features Section
         'features-title': 'Features',
         'features-subtitle': 'Here you can see what StarFlex offers you.',
-        // Feature 1: Schedule
         'feature-schedule-title': 'SCHEDULE',
         'feature-schedule-description': 'Choose the days and times you prefer for your delivery blocks.',
         'feature-schedule-item-1': 'Personalized configuration per day',
         'feature-schedule-item-2': 'Flexible work schedules',
         'feature-schedule-item-3': 'Automatic shift optimization',
         'feature-schedule-item-4': 'Synchronization with your calendar',
-        // Feature 2: Stations
         'feature-stations-title': 'STATIONS',
         'feature-stations-description': 'Select your preferred stations and prices so our app can offer you blocks that fit your preferences.',
         'feature-stations-item-1': 'Personalized selection of favorite stations',
@@ -276,20 +247,17 @@ const translationData = {
         'feature-stations-item-3': 'Profitability analysis by location',
         'feature-stations-item-4': 'Instant notifications of available blocks',
         'feature-stations-item-5': 'Interactive map with all stations',
-        // Feature 3: Calendar
         'feature-calendar-title': 'CALENDAR',
         'feature-calendar-description': 'In the calendar you can see your accepted blocks and find options to identify yourself from any location, as well as the possibility to skip the selfie and cancel blocks, all in one place for your maximum convenience.',
         'feature-calendar-item-1': 'Identification from any location',
         'feature-calendar-item-2': 'Option to skip selfie',
         'feature-calendar-item-3': 'Quick block cancellation',
-        // Feature 4: Log
         'feature-log-title': 'LOG',
         'feature-log-description': 'In the log, you can see all available blocks and the detailed reason why some were ignored. This will help you adjust your preference filters as needed to optimize your options.',
         'feature-log-item-1': 'Complete block history',
         'feature-log-item-2': 'Detailed rejection reasons',
         'feature-log-item-3': 'Filter optimization',
         'feature-log-item-4': 'Pattern analysis',
-        // Feature 5: Notifications
         'feature-notifications-title': 'NOTIFICATIONS',
         'feature-notifications-description': 'StarFlex keeps you informed with multiple types of notifications so you never miss the best available blocks. Configure your alerts according to your preferences.',
         'feature-notifications-item-1': 'Instant Push notifications',
@@ -299,13 +267,11 @@ const translationData = {
         'feature-notifications-item-5': 'Customizable alerts by block type',
         'feature-notifications-item-6': 'Real-time notifications',
         'feature-notifications-item-7': 'Advanced notification filters',
-        // Feature 6: Referrals - CONTENIDO ACTUALIZADO
         'feature-referrals-title': 'REFERRALS',
         'feature-referrals-description': 'Invite other users to join Starflex and get exclusive benefits for each referral that registers.',
         'feature-referrals-item-1': 'Unique personalized referral link',
         'feature-referrals-item-2': 'Earn 1 free week for each referral',
         'feature-referrals-item-3': 'QR code for easy sharing',
-        // Videos Section
         'videos-badge': 'Immersive Visual Experience',
         'videos-title-main': 'SEE STARFLEX',
         'videos-title-highlight': 'IN ACTION',
@@ -320,7 +286,6 @@ const translationData = {
         'videos-cta-start': 'START NOW',
         'videos-cta-trial': '3 days free',
         'videos-cta-demo': 'SEE PERSONALIZED DEMO',
-        // FAQ Section
         'faq-title': 'Frequently Asked Questions',
         'faq-subtitle': 'Find clear answers to the most common questions about StarFlex and discover how to transform your Amazon Flex experience.',
         'faq-search-placeholder': 'Search question...',
@@ -336,7 +301,6 @@ const translationData = {
         'faq-5-answer': 'You only need an <span class="faq__answer-highlight">active Amazon Flex account and a compatible device</span>. After downloading the application, the setup process takes less than 5 minutes. Our guided setup system will help you optimize your experience from day one.',
         'faq-no-results': 'No questions found matching your search',
         'faq-no-results-suggestion': 'Try different terms or contact our support',
-        // Contact Section
         'contact-badge': 'Connect with the Future',
         'contact-title-main': 'BEST BLOCKS OF',
         'contact-title-highlight': 'AMAZON FLEX',
@@ -359,7 +323,6 @@ const translationData = {
         'contact-email-title': 'support@starflexapp.com',
         'contact-email-description': 'Contact directly with our specialized technical support team',
         'contact-email-btn': 'Send Email',
-        // Footer
         'footer-legal': 'Privacy Policy • Terms and Conditions',
         'footer-copyright': '© StarFlex • All rights reserved',
         'footer-cta-main': 'START NOW',
@@ -367,7 +330,7 @@ const translationData = {
     }
 };
 
-// ===== CLASE PARA OPTIMIZACIÓN DE IMÁGENES =====
+// ===== CLASE ULTRA OPTIMIZADA PARA OPTIMIZACIÓN DE IMÁGENES =====
 class ImageOptimizer {
     constructor() {
         this.supportedFormats = new Set();
@@ -383,7 +346,6 @@ class ImageOptimizer {
         this.preloadCriticalImages();
     }
     
-    // Detectar soporte de formatos de imagen
     async detectFormatSupport() {
         const formats = [
             { type: 'avif', data: 'data:image/avif;base64,AAAAIGZ0eXBhdmlmAAAAAGF2aWZtaWYxbWlhZk1BMUIAAADybWV0YQAAAAAAAAAoaGRscgAAAAAAAAAAcGljdAAAAAAAAAAAAAAAAGxpYmF2aWYAAAAADnBpdG0AAAAAAAEAAAAeaWxvYwAAAABEAAABAAEAAAABAAABGgAAAB0AAAAoaWluZgAAAAAAAQAAABppbmZlAgAAAAABAABhdjAxQ29sb3IAAAAAamlwcnAAAABLaXBjbwAAABRpc3BlAAAAAAAAAAIAAAACAAAAEHBpeGkAAAAAAwgICAAAAAxhdjFDgQ0MAAAAABNjb2xybmNseAACAAIAAYAAAAAXaXBtYQAAAAAAAAABAAEEAQKDBAAAACVtZGF0EgAKCBgABogQEAwgMg8f8D///8WfhwB8+ErK42A=' },
@@ -400,14 +362,12 @@ class ImageOptimizer {
         
         await Promise.all(promises);
         
-        // Siempre agregar JPEG y PNG como fallbacks
         this.supportedFormats.add('jpeg');
         this.supportedFormats.add('png');
         
         console.log('Formatos soportados:', Array.from(this.supportedFormats));
     }
     
-    // Verificar si el navegador puede usar un formato específico
     canUseFormat(dataUrl) {
         return new Promise(resolve => {
             const img = new Image();
@@ -417,7 +377,6 @@ class ImageOptimizer {
         });
     }
     
-    // Obtener la mejor URL de imagen disponible
     getBestImageUrl(imageConfig) {
         if (this.supportedFormats.has('avif') && imageConfig.avif) {
             return imageConfig.avif;
@@ -428,7 +387,6 @@ class ImageOptimizer {
         return imageConfig.jpg || imageConfig.png;
     }
     
-    // Configurar lazy loading con Intersection Observer
     setupLazyLoading() {
         if ('IntersectionObserver' in window) {
             this.intersectionObserver = new IntersectionObserver(
@@ -448,7 +406,6 @@ class ImageOptimizer {
         }
     }
     
-    // Cargar imagen optimizada
     async loadImage(element) {
         const imageKey = element.dataset.imageKey;
         const imageConfig = this.getImageConfig(imageKey);
@@ -461,20 +418,16 @@ class ImageOptimizer {
         const bestUrl = this.getBestImageUrl(imageConfig);
         
         try {
-            // Mostrar estado de carga
             element.classList.add('loading');
             
-            // Precargar la imagen
             await this.preloadImage(bestUrl);
             
-            // Aplicar la imagen
             if (element.tagName === 'IMG') {
                 element.src = bestUrl;
             } else {
                 element.style.backgroundImage = `url('${bestUrl}')`;
             }
             
-            // Remover estado de carga
             element.classList.remove('loading');
             element.classList.add('loaded');
             
@@ -487,7 +440,6 @@ class ImageOptimizer {
         }
     }
     
-    // Precargar imagen
     preloadImage(url) {
         if (this.imageCache.has(url)) {
             return Promise.resolve();
@@ -504,7 +456,6 @@ class ImageOptimizer {
         });
     }
     
-    // Obtener configuración de imagen por clave
     getImageConfig(key) {
         const parts = key.split('.');
         let config = CONFIG.IMAGE_PATHS;
@@ -517,7 +468,6 @@ class ImageOptimizer {
         return config;
     }
     
-    // Precargar imágenes críticas
     async preloadCriticalImages() {
         const criticalImages = [
             'hero',
@@ -541,7 +491,6 @@ class ImageOptimizer {
         await Promise.all(preloadPromises);
     }
     
-    // Registrar imagen para lazy loading
     observeImage(element, imageKey) {
         element.dataset.imageKey = imageKey;
         this.lazyImages.add(element);
@@ -549,12 +498,10 @@ class ImageOptimizer {
         if (this.intersectionObserver) {
             this.intersectionObserver.observe(element);
         } else {
-            // Fallback para navegadores sin Intersection Observer
             this.loadImage(element);
         }
     }
     
-    // Cargar imagen inmediatamente (para imágenes críticas)
     loadImageImmediately(element, imageKey) {
         element.dataset.imageKey = imageKey;
         this.loadImage(element);
@@ -564,7 +511,7 @@ class ImageOptimizer {
 // ===== INICIALIZACIÓN GLOBAL =====
 let imageOptimizer;
 
-// ===== FUNCIONES DE TRADUCCIÓN =====
+// ===== FUNCIONES DE TRADUCCIÓN ULTRA OPTIMIZADAS =====
 function initializeLanguageSystem() {
     const savedLanguage = localStorage.getItem('starflex-language');
     const browserLanguage = navigator.language.slice(0, 2);
@@ -677,11 +624,10 @@ function updateLanguageButtons() {
         }
     });
     
-    // Actualizar el selector de idioma independiente
     updateLanguageSwitcher();
 }
 
-// ===== FUNCIONES DEL SELECTOR DE IDIOMA INDEPENDIENTE =====
+// ===== FUNCIONES DEL SELECTOR DE IDIOMA ULTRA OPTIMIZADAS =====
 function initializeLanguageSwitcher() {
     const languageSwitcherBtn = document.getElementById('language-switcher-btn');
     const languageSwitcherDropdown = document.getElementById('language-switcher-dropdown');
@@ -690,14 +636,12 @@ function initializeLanguageSwitcher() {
     
     if (!languageSwitcherBtn || !languageSwitcherDropdown || !languageSwitcher) return;
     
-    // Toggle del dropdown
     languageSwitcherBtn.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
         toggleLanguageSwitcher();
     });
     
-    // Opciones de idioma
     languageOptions.forEach(option => {
         option.addEventListener('click', (e) => {
             e.preventDefault();
@@ -709,21 +653,18 @@ function initializeLanguageSwitcher() {
         });
     });
     
-    // Cerrar al hacer click fuera
     document.addEventListener('click', (e) => {
         if (isLanguageSwitcherOpen && languageSwitcher && !languageSwitcher.contains(e.target)) {
             closeLanguageSwitcher();
         }
     });
     
-    // Cerrar con Escape
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && isLanguageSwitcherOpen) {
             closeLanguageSwitcher();
         }
     });
     
-    // Inicializar estado
     updateLanguageSwitcher();
 }
 
@@ -745,7 +686,6 @@ function openLanguageSwitcher() {
     languageSwitcher.classList.add('active');
     languageSwitcherBtn.setAttribute('aria-expanded', 'true');
     
-    // Focus en la primera opción
     setTimeout(() => {
         const firstOption = languageSwitcher.querySelector('.language-switcher__option');
         if (firstOption) {
@@ -769,12 +709,10 @@ function updateLanguageSwitcher() {
     const languageSwitcherText = document.getElementById('language-switcher-text');
     const languageOptions = document.querySelectorAll('.language-switcher__option');
     
-    // Actualizar texto del botón
     if (languageSwitcherText) {
         languageSwitcherText.textContent = currentLanguage.toUpperCase();
     }
     
-    // Actualizar opciones activas
     languageOptions.forEach(option => {
         const optionLang = option.getAttribute('data-lang');
         if (optionLang === currentLanguage) {
@@ -785,7 +723,7 @@ function updateLanguageSwitcher() {
     });
 }
 
-// ===== FUNCIONES DEL BOTÓN FLOTANTE (ACTUALIZADO CON ÍCONO DE MENSAJE) =====
+// ===== FUNCIONES DEL BOTÓN FLOTANTE ULTRA OPTIMIZADAS =====
 function initializeFloatingWidget() {
     const floatingMainBtn = document.getElementById('floating-main-btn');
     const floatingMenu = document.getElementById('floating-menu');
@@ -870,197 +808,22 @@ function checkReducedMotion() {
     }
 }
 
-// ===== SISTEMA DE PARTÍCULAS FLOTANTES DELICADAS =====
-class ParticleSystem {
-    constructor(container, options = {}) {
-        this.container = container;
-        this.canvas = null;
-        this.ctx = null;
-        this.particles = [];
-        this.animationId = null;
-        
-        this.config = {
-            particleCount: options.particleCount || 15,
-            particleSize: options.particleSize || 2,
-            particleSpeed: options.particleSpeed || 0.5,
-            particleColor: options.particleColor || 'rgba(255, 69, 105, 0.3)',
-            connectionDistance: options.connectionDistance || 100,
-            connectionOpacity: options.connectionOpacity || 0.1,
-            ...options
-        };
-        
-        this.init();
-    }
-    
-    init() {
-        if (isReducedMotion) return;
-        
-        this.createCanvas();
-        this.createParticles();
-        this.animate();
-        this.setupResize();
-    }
-    
-    createCanvas() {
-        this.canvas = document.createElement('canvas');
-        this.canvas.className = 'particles-canvas';
-        this.ctx = this.canvas.getContext('2d');
-        
-        let particlesContainer = this.container.querySelector('.particles-container');
-        if (!particlesContainer) {
-            particlesContainer = document.createElement('div');
-            particlesContainer.className = 'particles-container';
-            this.container.appendChild(particlesContainer);
-        }
-        
-        particlesContainer.appendChild(this.canvas);
-        this.resizeCanvas();
-    }
-    
-    resizeCanvas() {
-        if (!this.canvas || !this.container) return;
-        
-        const rect = this.container.getBoundingClientRect();
-        this.canvas.width = rect.width;
-        this.canvas.height = rect.height;
-    }
-    
-    createParticles() {
-        this.particles = [];
-        for (let i = 0; i < this.config.particleCount; i++) {
-            this.particles.push({
-                x: Math.random() * this.canvas.width,
-                y: Math.random() * this.canvas.height,
-                vx: (Math.random() - 0.5) * this.config.particleSpeed,
-                vy: (Math.random() - 0.5) * this.config.particleSpeed,
-                size: Math.random() * this.config.particleSize + 1,
-                opacity: Math.random() * 0.5 + 0.2
-            });
-        }
-    }
-    
-    animate() {
-        if (isReducedMotion) return;
-        
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        
-        this.particles.forEach(particle => {
-            particle.x += particle.vx;
-            particle.y += particle.vy;
-            
-            if (particle.x < 0 || particle.x > this.canvas.width) particle.vx *= -1;
-            if (particle.y < 0 || particle.y > this.canvas.height) particle.vy *= -1;
-            
-            particle.x = Math.max(0, Math.min(this.canvas.width, particle.x));
-            particle.y = Math.max(0, Math.min(this.canvas.height, particle.y));
-            
-            this.ctx.beginPath();
-            this.ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
-            this.ctx.fillStyle = this.config.particleColor.replace('0.3', particle.opacity.toString());
-            this.ctx.fill();
-        });
-        
-        this.drawConnections();
-        this.animationId = requestAnimationFrame(() => this.animate());
-    }
-    
-    drawConnections() {
-        for (let i = 0; i < this.particles.length; i++) {
-            for (let j = i + 1; j < this.particles.length; j++) {
-                const dx = this.particles[i].x - this.particles[j].x;
-                const dy = this.particles[i].y - this.particles[j].y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-                
-                if (distance < this.config.connectionDistance) {
-                    const opacity = (1 - distance / this.config.connectionDistance) * this.config.connectionOpacity;
-                    this.ctx.beginPath();
-                    this.ctx.moveTo(this.particles[i].x, this.particles[i].y);
-                    this.ctx.lineTo(this.particles[j].x, this.particles[j].y);
-                    this.ctx.strokeStyle = `rgba(255, 69, 105, ${opacity})`;
-                    this.ctx.lineWidth = 1;
-                    this.ctx.stroke();
-                }
-            }
-        }
-    }
-    
-    setupResize() {
-        const resizeObserver = new ResizeObserver(() => {
-            this.resizeCanvas();
-            this.createParticles();
-        });
-        resizeObserver.observe(this.container);
-    }
-    
-    destroy() {
-        if (this.animationId) {
-            cancelAnimationFrame(this.animationId);
-        }
-        if (this.canvas && this.canvas.parentNode) {
-            this.canvas.parentNode.removeChild(this.canvas);
-        }
-    }
-}
-
-// ===== INICIALIZACIÓN DE SISTEMAS DE PARTÍCULAS =====
-function initializeParticleSystems() {
-    if (isReducedMotion) return;
-    
-    const heroPhone = document.querySelector('.hero__phone');
-    if (heroPhone) {
-        const heroParticleSystem = new ParticleSystem(heroPhone, {
-            particleCount: 12,
-            particleSize: 1.5,
-            particleSpeed: 0.3,
-            particleColor: 'rgba(255, 69, 105, 0.25)',
-            connectionDistance: 80,
-            connectionOpacity: 0.08
-        });
-        particleSystems.push(heroParticleSystem);
-    }
-    
-    const featurePhones = document.querySelectorAll('.feature__phone .phone');
-    featurePhones.forEach((phone, index) => {
-        const colors = [
-            'rgba(255, 69, 105, 0.2)',
-            'rgba(255, 23, 68, 0.2)',
-            'rgba(255, 45, 107, 0.2)',
-            'rgba(184, 0, 46, 0.2)',
-            'rgba(255, 69, 105, 0.2)',
-            'rgba(255, 45, 85, 0.25)' // CORRECCIÓN: Color rojizo para referidos
-        ];
-        
-        const particleSystem = new ParticleSystem(phone, {
-            particleCount: 8,
-            particleSize: 1,
-            particleSpeed: 0.2,
-            particleColor: colors[index % colors.length],
-            connectionDistance: 60,
-            connectionOpacity: 0.06
-        });
-        particleSystems.push(particleSystem);
-    });
-}
-
-// ===== INICIALIZACIÓN DEL VIDEO HERO - CARGA INMEDIATA =====
+// ===== INICIALIZACIÓN DEL VIDEO HERO ULTRA OPTIMIZADA =====
 function initializeHeroVideo() {
     const heroVideo = document.getElementById('hero-video');
     const heroFallbackImage = document.querySelector('.hero__phone-app-image');
     
     if (!heroVideo) return;
     
-    // CORRECCIÓN: Configurar el video para carga inmediata
     heroVideo.muted = true;
     heroVideo.autoplay = true;
     heroVideo.loop = true;
     heroVideo.playsInline = true;
-    heroVideo.preload = 'auto'; // CORRECCIÓN: Cambiar a 'auto' para carga inmediata
+    heroVideo.preload = 'auto';
     
-    // CORRECCIÓN: Eliminar delay visual - cargar inmediatamente
     heroVideo.style.opacity = '1';
     heroVideo.style.transition = 'none';
     
-    // Manejar eventos del video
     heroVideo.addEventListener('loadstart', () => {
         console.log('Hero video: Iniciando carga');
     });
@@ -1076,7 +839,6 @@ function initializeHeroVideo() {
         heroVideo.classList.add('loaded');
         console.log('Hero video: Listo para reproducir');
         
-        // Intentar reproducir el video inmediatamente
         const playPromise = heroVideo.play();
         if (playPromise !== undefined) {
             playPromise.catch(error => {
@@ -1107,7 +869,6 @@ function initializeHeroVideo() {
         heroVideo.classList.add('loaded');
     });
     
-    // Función para mostrar imagen de fallback
     function showVideoFallback() {
         if (heroFallbackImage) {
             heroFallbackImage.style.display = 'block';
@@ -1116,10 +877,8 @@ function initializeHeroVideo() {
         }
     }
     
-    // CORRECCIÓN: Cargar el video inmediatamente sin delay
     heroVideo.load();
     
-    // Manejar visibilidad de la página para pausar/reanudar video
     document.addEventListener('visibilitychange', () => {
         if (document.hidden) {
             heroVideo.pause();
@@ -1133,7 +892,6 @@ function initializeHeroVideo() {
         }
     });
     
-    // Manejar intersección para optimizar rendimiento
     if ('IntersectionObserver' in window) {
         const videoObserver = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
@@ -1158,30 +916,26 @@ function initializeHeroVideo() {
     }
 }
 
-// ===== NAVEGACIÓN RESPONSIVE MEJORADA =====
+// ===== NAVEGACIÓN RESPONSIVE ULTRA OPTIMIZADA =====
 function initializeNavigation() {
     const navToggle = document.getElementById('nav-toggle');
     const navMenu = document.getElementById('nav-menu');
     const navLinks = document.querySelectorAll('.nav__link');
     const header = document.getElementById('header');
     
-    // ===== FUNCIONALIDAD DEL LOGO COMO ENLACE =====
     const navLogo = document.querySelector('.nav__logo');
     if (navLogo) {
         navLogo.addEventListener('click', (e) => {
             e.preventDefault();
             
-            // Cerrar menú móvil si está abierto
             if (isMenuOpen) {
                 closeMobileMenu();
             }
             
-            // Scroll suave a la sección home (actualizado)
             const homeSection = document.querySelector('#home');
             if (homeSection) {
                 smoothScrollToSection(homeSection);
                 
-                // Actualizar enlace activo
                 const homeLink = document.querySelector('.nav__link[href="#home"]');
                 if (homeLink) {
                     updateActiveNavLink(homeLink);
@@ -1189,13 +943,11 @@ function initializeNavigation() {
             }
         });
         
-        // Agregar cursor pointer y accesibilidad
         navLogo.style.cursor = 'pointer';
         navLogo.setAttribute('tabindex', '0');
         navLogo.setAttribute('role', 'button');
         navLogo.setAttribute('aria-label', 'Ir al inicio');
         
-        // Soporte para teclado
         navLogo.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
@@ -1204,7 +956,6 @@ function initializeNavigation() {
         });
     }
     
-    // Toggle del menú móvil con animaciones mejoradas
     if (navToggle && navMenu) {
         navToggle.addEventListener('click', (e) => {
             e.preventDefault();
@@ -1213,14 +964,12 @@ function initializeNavigation() {
         });
     }
     
-    // Cerrar menú al hacer click en un enlace
     navLinks.forEach(link => {
         link.addEventListener('click', (e) => {
             if (isMenuOpen) {
                 closeMobileMenu();
             }
             
-            // Navegación suave mejorada
             e.preventDefault();
             const targetId = link.getAttribute('href');
             const targetSection = document.querySelector(targetId);
@@ -1232,17 +981,13 @@ function initializeNavigation() {
         });
     });
     
-    // Cerrar menú con click fuera
     document.addEventListener('click', (e) => {
         if (isMenuOpen && navMenu && !navMenu.contains(e.target) && !navToggle.contains(e.target)) {
             closeMobileMenu();
         }
     });
     
-    // Soporte para gestos táctiles
     initializeTouchGestures();
-    
-    // Mejorar accesibilidad del teclado
     initializeKeyboardNavigation();
 }
 
@@ -1263,16 +1008,13 @@ function openMobileMenu() {
     
     isMenuOpen = true;
     
-    // Animaciones de apertura
     navToggle.classList.add('active');
     navMenu.classList.add('active');
     body.classList.add('no-scroll');
     
-    // Actualizar atributos de accesibilidad
     navToggle.setAttribute('aria-expanded', 'true');
     navMenu.setAttribute('aria-hidden', 'false');
     
-    // Animar enlaces del menú
     const navLinks = navMenu.querySelectorAll('.nav__link');
     navLinks.forEach((link, index) => {
         link.style.opacity = '0';
@@ -1284,7 +1026,6 @@ function openMobileMenu() {
         }, index * 100 + 200);
     });
     
-    // Focus en el primer enlace para accesibilidad
     setTimeout(() => {
         const firstLink = navMenu.querySelector('.nav__link');
         if (firstLink) {
@@ -1302,16 +1043,13 @@ function closeMobileMenu() {
     
     isMenuOpen = false;
     
-    // Animaciones de cierre
     navToggle.classList.remove('active');
     navMenu.classList.remove('active');
     body.classList.remove('no-scroll');
     
-    // Actualizar atributos de accesibilidad
     navToggle.setAttribute('aria-expanded', 'false');
     navMenu.setAttribute('aria-hidden', 'true');
     
-    // Resetear estilos de los enlaces
     const navLinks = navMenu.querySelectorAll('.nav__link');
     navLinks.forEach(link => {
         link.style.transition = '';
@@ -1319,7 +1057,6 @@ function closeMobileMenu() {
         link.style.transform = '';
     });
     
-    // Devolver focus al botón toggle
     navToggle.focus();
 }
 
@@ -1327,14 +1064,12 @@ function smoothScrollToSection(targetSection) {
     const headerHeight = window.innerWidth <= 768 ? 70 : 80;
     const targetPosition = targetSection.offsetTop - headerHeight;
     
-    // Usar scroll suave nativo si está disponible
     if ('scrollBehavior' in document.documentElement.style) {
         window.scrollTo({
             top: targetPosition,
             behavior: 'smooth'
         });
     } else {
-        // Fallback para navegadores antiguos
         animateScrollTo(targetPosition, 800);
     }
 }
@@ -1371,7 +1106,7 @@ function updateActiveNavLink(activeLink) {
     activeLink.setAttribute('aria-current', 'page');
 }
 
-// ===== GESTOS TÁCTILES PARA MÓVIL =====
+// ===== GESTOS TÁCTILES ULTRA OPTIMIZADOS =====
 function initializeTouchGestures() {
     const navMenu = document.getElementById('nav-menu');
     if (!navMenu) return;
@@ -1392,7 +1127,6 @@ function initializeTouchGestures() {
         currentY = e.touches[0].clientY;
         const deltaY = currentY - startY;
         
-        // Solo permitir deslizar hacia arriba para cerrar
         if (deltaY < 0) {
             const translateY = Math.abs(deltaY);
             navMenu.style.transform = `translateY(-${translateY}px)`;
@@ -1406,38 +1140,32 @@ function initializeTouchGestures() {
         navMenu.style.transition = '';
         const deltaY = currentY - startY;
         
-        // Si se deslizó más de 100px hacia arriba, cerrar el menú
         if (deltaY < -100) {
             closeMobileMenu();
         } else {
-            // Restaurar posición original
             navMenu.style.transform = '';
             navMenu.style.opacity = '';
         }
     }, { passive: true });
 }
 
-// ===== NAVEGACIÓN POR TECLADO MEJORADA =====
+// ===== NAVEGACIÓN POR TECLADO ULTRA OPTIMIZADA =====
 function initializeKeyboardNavigation() {
     const navMenu = document.getElementById('nav-menu');
     const navToggle = document.getElementById('nav-toggle');
     if (!navMenu || !navToggle) return;
     
-    // Manejo de teclas especiales
     document.addEventListener('keydown', (e) => {
-        // Escape para cerrar menú
         if (e.key === 'Escape' && isMenuOpen) {
             e.preventDefault();
             closeMobileMenu();
             return;
         }
         
-        // Tab trap cuando el menú está abierto
         if (e.key === 'Tab' && isMenuOpen) {
             handleTabTrap(e);
         }
         
-        // Enter o Space en el toggle
         if ((e.key === 'Enter' || e.key === ' ') && e.target === navToggle) {
             e.preventDefault();
             toggleMobileMenu();
@@ -1454,13 +1182,11 @@ function handleTabTrap(e) {
     const lastFocusable = focusableElements[focusableElements.length - 1];
     
     if (e.shiftKey) {
-        // Shift + Tab
         if (document.activeElement === firstFocusable) {
             e.preventDefault();
             lastFocusable.focus();
         }
     } else {
-        // Tab
         if (document.activeElement === lastFocusable) {
             e.preventDefault();
             firstFocusable.focus();
@@ -1468,9 +1194,8 @@ function handleTabTrap(e) {
     }
 }
 
-// ===== EFECTOS DE SCROLL OPTIMIZADOS (SIN CAMBIOS EN HEADER) =====
+// ===== EFECTOS DE SCROLL ULTRA OPTIMIZADOS =====
 function initializeScrollEffects() {
-    // Scroll listener optimizado con throttling para navegación activa
     window.addEventListener('scroll', throttle(() => {
         if (!ticking) {
             requestAnimationFrame(() => {
@@ -1487,10 +1212,8 @@ function handleScrollDirection() {
     const currentScrollY = window.scrollY;
     
     if (currentScrollY > lastScrollY && currentScrollY > 100) {
-        // Scrolling hacia abajo
         isScrollingDown = true;
     } else {
-        // Scrolling hacia arriba
         isScrollingDown = false;
     }
     
@@ -1515,7 +1238,7 @@ function updateActiveNavOnScroll() {
     });
 }
 
-// ===== REPRODUCTOR DE VIDEO =====
+// ===== REPRODUCTOR DE VIDEO ULTRA OPTIMIZADO =====
 function initializeVideoPlayer() {
     const video = document.getElementById('main-video');
     const playOverlay = document.getElementById('play-overlay');
@@ -1527,8 +1250,30 @@ function initializeVideoPlayer() {
     
     if (!video || !playOverlay) return;
     
-    video.controls = false;
-    video.preload = 'metadata';
+    let isPlaying = false;
+    let isDragging = false;
+    
+    playOverlay.addEventListener('click', () => {
+        if (video.paused) {
+            const playPromise = video.play();
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    isPlaying = true;
+                    playOverlay.style.opacity = '0';
+                    playOverlay.style.pointerEvents = 'none';
+                    progressIndicators.style.opacity = '1';
+                }).catch(error => {
+                    console.error('Error al reproducir video:', error);
+                    showVideoError();
+                });
+            }
+        } else {
+            video.pause();
+            isPlaying = false;
+            playOverlay.style.opacity = '1';
+            playOverlay.style.pointerEvents = 'auto';
+        }
+    });
     
     video.addEventListener('loadedmetadata', () => {
         if (durationDisplay) {
@@ -1536,53 +1281,19 @@ function initializeVideoPlayer() {
         }
     });
     
-    playOverlay.addEventListener('click', () => {
-        if (video.paused) {
-            video.play();
-            playOverlay.classList.add('hidden');
-            if (progressIndicators) {
-                progressIndicators.classList.add('visible');
-            }
-        }
-    });
-    
-    video.addEventListener('click', () => {
-        if (!video.paused) {
-            video.pause();
-            playOverlay.classList.remove('hidden');
-            if (progressIndicators) {
-                progressIndicators.classList.remove('visible');
-            }
-        }
-    });
-    
     video.addEventListener('timeupdate', () => {
-        if (video.duration) {
+        if (!isDragging && progressFill && currentTimeDisplay) {
             const progress = (video.currentTime / video.duration) * 100;
-            if (progressFill) {
-                progressFill.style.width = `${progress}%`;
-            }
-            if (currentTimeDisplay) {
-                currentTimeDisplay.textContent = formatTime(video.currentTime);
-            }
+            progressFill.style.width = `${progress}%`;
+            currentTimeDisplay.textContent = formatTime(video.currentTime);
         }
     });
-    
-    if (progressBar) {
-        progressBar.addEventListener('click', (e) => {
-            const rect = progressBar.getBoundingClientRect();
-            const clickX = e.clientX - rect.left;
-            const width = rect.width;
-            const clickTime = (clickX / width) * video.duration;
-            video.currentTime = clickTime;
-        });
-    }
     
     video.addEventListener('ended', () => {
-        playOverlay.classList.remove('hidden');
-        if (progressIndicators) {
-            progressIndicators.classList.remove('visible');
-        }
+        isPlaying = false;
+        playOverlay.style.opacity = '1';
+        playOverlay.style.pointerEvents = 'auto';
+        progressIndicators.style.opacity = '0.7';
         if (progressFill) {
             progressFill.style.width = '0%';
         }
@@ -1594,6 +1305,48 @@ function initializeVideoPlayer() {
     video.addEventListener('error', () => {
         showVideoError();
     });
+    
+    if (progressBar) {
+        progressBar.addEventListener('click', (e) => {
+            const rect = progressBar.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const progress = clickX / rect.width;
+            video.currentTime = progress * video.duration;
+        });
+        
+        progressBar.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            const rect = progressBar.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const progress = clickX / rect.width;
+            video.currentTime = progress * video.duration;
+        });
+        
+        document.addEventListener('mousemove', (e) => {
+            if (isDragging && progressBar) {
+                const rect = progressBar.getBoundingClientRect();
+                const clickX = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
+                const progress = clickX / rect.width;
+                video.currentTime = progress * video.duration;
+            }
+        });
+        
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+    }
+    
+    function showVideoError() {
+        if (playOverlay) {
+            playOverlay.innerHTML = `
+                <div class="videos__error">
+                    <div class="videos__error-icon">⚠️</div>
+                    <div class="videos__error-text">Error al cargar el video</div>
+                    <div class="videos__error-subtitle">Intenta recargar la página</div>
+                </div>
+            `;
+        }
+    }
 }
 
 function formatTime(seconds) {
@@ -1602,20 +1355,7 @@ function formatTime(seconds) {
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
 }
 
-function showVideoError() {
-    const playOverlay = document.getElementById('play-overlay');
-    if (playOverlay) {
-        playOverlay.innerHTML = `
-            <div class="videos__error">
-                <div class="videos__error-icon">⚠️</div>
-                <div class="videos__error-text">Error al cargar el video</div>
-                <div class="videos__error-subtitle">Por favor, intenta recargar la página</div>
-            </div>
-        `;
-    }
-}
-
-// ===== FAQ =====
+// ===== FAQ SECTION ULTRA OPTIMIZADA =====
 function initializeFAQ() {
     const faqItems = document.querySelectorAll('.faq__item');
     const searchInput = document.getElementById('faq-search');
@@ -1639,14 +1379,21 @@ function initializeFAQ() {
                     }
                 });
                 
-                if (isActive) {
-                    item.classList.remove('active');
-                    answer.classList.remove('active');
-                    question.setAttribute('aria-expanded', 'false');
-                } else {
+                if (!isActive) {
                     item.classList.add('active');
                     answer.classList.add('active');
                     question.setAttribute('aria-expanded', 'true');
+                } else {
+                    item.classList.remove('active');
+                    answer.classList.remove('active');
+                    question.setAttribute('aria-expanded', 'false');
+                }
+            });
+            
+            question.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    question.click();
                 }
             });
         }
@@ -1692,7 +1439,7 @@ function initializeFAQ() {
     }
 }
 
-// ===== ANIMACIONES =====
+// ===== ANIMACIONES ULTRA OPTIMIZADAS =====
 function initializeAnimations() {
     const animatedElements = document.querySelectorAll('[data-animate]');
     
@@ -1706,8 +1453,10 @@ function initializeAnimations() {
     });
 }
 
-// ===== INTERSECTION OBSERVER =====
+// ===== INTERSECTION OBSERVER ULTRA OPTIMIZADO =====
 function initializeIntersectionObserver() {
+    if (!('IntersectionObserver' in window)) return;
+    
     const observerOptions = {
         threshold: 0.1,
         rootMargin: '0px 0px -50px 0px'
@@ -1717,65 +1466,55 @@ function initializeIntersectionObserver() {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 entry.target.classList.add('in-view');
+                
                 if (entry.target.classList.contains('feature')) {
-                    animateFeature(entry.target);
+                    const phoneImage = entry.target.querySelector('.phone__app-image');
+                    if (phoneImage && !phoneImage.classList.contains('loaded')) {
+                        const featureIndex = Array.from(document.querySelectorAll('.feature')).indexOf(entry.target);
+                        const imageKeys = [
+                            'phones.horario',
+                            'phones.estaciones', 
+                            'phones.calendario',
+                            'phones.registro',
+                            'phones.notificaciones',
+                            'phones.referidos'
+                        ];
+                        
+                        if (imageOptimizer && imageKeys[featureIndex]) {
+                            imageOptimizer.loadImage(phoneImage);
+                        }
+                    }
                 }
+                
+                observer.unobserve(entry.target);
             }
         });
     }, observerOptions);
     
-    const elementsToObserve = document.querySelectorAll('.feature, .faq__item, .contact__channel');
+    const elementsToObserve = document.querySelectorAll('.feature, .videos, .faq, .contact');
     elementsToObserve.forEach(element => {
         observer.observe(element);
     });
 }
 
-function animateFeature(feature) {
-    const phone = feature.querySelector('.feature__phone');
-    const content = feature.querySelector('.feature__content');
-    
-    if (phone) {
-        setTimeout(() => {
-            phone.style.transform = 'perspective(1000px) rotateY(1deg) rotateX(0deg) scale(1.02)';
-        }, 300);
-        setTimeout(() => {
-            phone.style.transform = 'perspective(1000px) rotateY(2deg) rotateX(-1deg) scale(1)';
-        }, 600);
-    }
-    
-    if (content) {
-        const listItems = content.querySelectorAll('.feature__list-item');
-        listItems.forEach((item, index) => {
-            setTimeout(() => {
-                item.style.opacity = '1';
-                item.style.transform = 'translateX(0)';
-            }, 200 + (index * 100));
-        });
-    }
-}
-
-// ===== CONFIGURACIÓN DE LAZY LOADING PARA IMÁGENES =====
+// ===== LAZY LOADING DE IMÁGENES ULTRA OPTIMIZADO =====
 function setupImageLazyLoading() {
-    // Esperar a que el optimizador esté listo
     const waitForOptimizer = () => {
         if (!imageOptimizer || !imageOptimizer.supportedFormats.size) {
             setTimeout(waitForOptimizer, 100);
             return;
         }
         
-        // Configurar logo del navbar (crítico - cargar inmediatamente)
         const navLogo = document.querySelector('.nav__logo');
         if (navLogo) {
             imageOptimizer.loadImageImmediately(navLogo, 'logo');
         }
         
-        // Configurar imagen del hero como fallback (crítica - cargar inmediatamente)
         const heroImage = document.querySelector('.hero__phone-app-image');
         if (heroImage) {
             imageOptimizer.loadImageImmediately(heroImage, 'hero');
         }
         
-        // Configurar imágenes de características (lazy loading)
         const featureImages = document.querySelectorAll('.phone__app-image');
         featureImages.forEach((img, index) => {
             const imageKeys = [
@@ -1792,7 +1531,6 @@ function setupImageLazyLoading() {
             }
         });
         
-        // Configurar botones de descarga
         const appleBtn = document.querySelector('.download-btn--app-store .download-btn__image');
         const googleBtn = document.querySelector('.download-btn:not(.download-btn--app-store) .download-btn__image');
         
@@ -1807,54 +1545,182 @@ function setupImageLazyLoading() {
     waitForOptimizer();
 }
 
-// ===== CORRECCIÓN ESPECÍFICA PARA MODAL QR DE REFERIDOS =====
-function applyQRModalCorrection() {
-    // Función para aplicar sombra rojiza a modales QR
-    function applyRedShadowToQRModals() {
-        // Buscar elementos que podrían ser modales QR
-        const potentialQRModals = document.querySelectorAll([
-            '.modal',
-            '.qr-modal',
-            '[class*="modal"]',
-            '[class*="qr"]',
-            '.referral-modal',
-            '.popup',
-            '.overlay',
-            '[style*="box-shadow"]'
-        ].join(', '));
+// ===== SISTEMA DE PARTÍCULAS ULTRA OPTIMIZADO =====
+class ParticleSystem {
+    constructor(container, options = {}) {
+        this.container = container;
+        this.canvas = null;
+        this.ctx = null;
+        this.particles = [];
+        this.animationId = null;
+        this.isActive = false;
         
-        potentialQRModals.forEach(modal => {
-            // Verificar si tiene sombra amarilla y reemplazarla
-            const computedStyle = window.getComputedStyle(modal);
-            const boxShadow = computedStyle.boxShadow;
+        this.options = {
+            particleCount: options.particleCount || 15,
+            particleSize: options.particleSize || 2,
+            particleSpeed: options.particleSpeed || 0.5,
+            particleColor: options.particleColor || 'rgba(255, 69, 105, 0.3)',
+            connectionDistance: options.connectionDistance || 100,
+            connectionColor: options.connectionColor || 'rgba(255, 69, 105, 0.1)',
+            ...options
+        };
+        
+        this.init();
+    }
+    
+    init() {
+        if (isReducedMotion) return;
+        
+        this.createCanvas();
+        this.createParticles();
+        this.setupResizeObserver();
+        this.start();
+    }
+    
+    createCanvas() {
+        this.canvas = document.createElement('canvas');
+        this.canvas.style.position = 'absolute';
+        this.canvas.style.top = '0';
+        this.canvas.style.left = '0';
+        this.canvas.style.width = '100%';
+        this.canvas.style.height = '100%';
+        this.canvas.style.pointerEvents = 'none';
+        this.canvas.style.zIndex = '1';
+        this.canvas.style.opacity = '0.6';
+        
+        this.ctx = this.canvas.getContext('2d');
+        this.container.appendChild(this.canvas);
+        this.resizeCanvas();
+    }
+    
+    resizeCanvas() {
+        if (!this.canvas || !this.container) return;
+        
+        const rect = this.container.getBoundingClientRect();
+        this.canvas.width = rect.width;
+        this.canvas.height = rect.height;
+    }
+    
+    createParticles() {
+        this.particles = [];
+        for (let i = 0; i < this.options.particleCount; i++) {
+            this.particles.push({
+                x: Math.random() * this.canvas.width,
+                y: Math.random() * this.canvas.height,
+                vx: (Math.random() - 0.5) * this.options.particleSpeed,
+                vy: (Math.random() - 0.5) * this.options.particleSpeed,
+                size: Math.random() * this.options.particleSize + 1
+            });
+        }
+    }
+    
+    setupResizeObserver() {
+        if ('ResizeObserver' in window) {
+            this.resizeObserver = new ResizeObserver(() => {
+                this.resizeCanvas();
+                this.createParticles();
+            });
+            this.resizeObserver.observe(this.container);
+        }
+    }
+    
+    updateParticles() {
+        this.particles.forEach(particle => {
+            particle.x += particle.vx;
+            particle.y += particle.vy;
             
-            if (boxShadow && (boxShadow.includes('yellow') || boxShadow.includes('255, 255, 0'))) {
-                modal.style.boxShadow = '0 0 16px rgba(255, 45, 85, 0.6)';
-                modal.style.border = '1px solid rgba(255, 45, 85, 0.4)';
-            }
+            if (particle.x < 0 || particle.x > this.canvas.width) particle.vx *= -1;
+            if (particle.y < 0 || particle.y > this.canvas.height) particle.vy *= -1;
+            
+            particle.x = Math.max(0, Math.min(this.canvas.width, particle.x));
+            particle.y = Math.max(0, Math.min(this.canvas.height, particle.y));
         });
     }
     
-    // Aplicar corrección inmediatamente
-    applyRedShadowToQRModals();
+    drawParticles() {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        this.particles.forEach(particle => {
+            this.ctx.beginPath();
+            this.ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+            this.ctx.fillStyle = this.options.particleColor;
+            this.ctx.fill();
+        });
+        
+        this.drawConnections();
+    }
     
-    // Observar cambios en el DOM para aplicar corrección a nuevos modales
+    drawConnections() {
+        for (let i = 0; i < this.particles.length; i++) {
+            for (let j = i + 1; j < this.particles.length; j++) {
+                const dx = this.particles[i].x - this.particles[j].x;
+                const dy = this.particles[i].y - this.particles[j].y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance < this.options.connectionDistance) {
+                    const opacity = 1 - (distance / this.options.connectionDistance);
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(this.particles[i].x, this.particles[i].y);
+                    this.ctx.lineTo(this.particles[j].x, this.particles[j].y);
+                    this.ctx.strokeStyle = this.options.connectionColor.replace('0.1', opacity * 0.1);
+                    this.ctx.stroke();
+                }
+            }
+        }
+    }
+    
+    animate() {
+        if (!this.isActive) return;
+        
+        this.updateParticles();
+        this.drawParticles();
+        this.animationId = requestAnimationFrame(() => this.animate());
+    }
+    
+    start() {
+        if (isReducedMotion) return;
+        this.isActive = true;
+        this.animate();
+    }
+    
+    stop() {
+        this.isActive = false;
+        if (this.animationId) {
+            cancelAnimationFrame(this.animationId);
+        }
+    }
+    
+    destroy() {
+        this.stop();
+        if (this.resizeObserver) {
+            this.resizeObserver.disconnect();
+        }
+        if (this.canvas && this.canvas.parentNode) {
+            this.canvas.parentNode.removeChild(this.canvas);
+        }
+    }
+}
+
+// ===== CORRECCIÓN QR MODAL ULTRA OPTIMIZADA =====
+function applyQRModalCorrection() {
     const observer = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
-            if (mutation.type === 'childList') {
-                mutation.addedNodes.forEach((node) => {
-                    if (node.nodeType === Node.ELEMENT_NODE) {
-                        // Verificar si el nuevo elemento es un modal QR
-                        if (node.classList.contains('modal') || 
-                            node.classList.contains('qr-modal') ||
-                            node.className.includes('modal') ||
-                            node.className.includes('qr')) {
-                            node.style.boxShadow = '0 0 16px rgba(255, 45, 85, 0.6)';
-                            node.style.border = '1px solid rgba(255, 45, 85, 0.4)';
-                        }
+            mutation.addedNodes.forEach((node) => {
+                if (node.nodeType === Node.ELEMENT_NODE) {
+                    const qrModal = node.querySelector ? node.querySelector('[class*="qr"], [id*="qr"], [class*="modal"]') : null;
+                    if (qrModal || (node.className && (node.className.includes('qr') || node.className.includes('modal')))) {
+                        const targetElement = qrModal || node;
+                        
+                        targetElement.style.boxShadow = '0 25px 50px rgba(255, 69, 105, 0.3), 0 0 0 1px rgba(255, 69, 105, 0.2)';
+                        targetElement.style.border = '2px solid rgba(255, 69, 105, 0.4)';
+                        targetElement.style.borderRadius = '20px';
+                        targetElement.style.backdropFilter = 'blur(25px)';
+                        targetElement.style.background = 'linear-gradient(135deg, rgba(21, 25, 34, 0.95) 0%, rgba(30, 35, 48, 0.95) 100%)';
+                        
+                        console.log('QR Modal corregido:', targetElement);
                     }
-                });
-            }
+                }
+            });
         });
     });
     
@@ -1864,7 +1730,7 @@ function applyQRModalCorrection() {
     });
 }
 
-// ===== UTILIDADES =====
+// ===== FUNCIONES UTILITARIAS ULTRA OPTIMIZADAS =====
 function debounce(func, wait) {
     let timeout;
     return function executedFunction(...args) {
@@ -1887,89 +1753,11 @@ function throttle(func, limit) {
             inThrottle = true;
             setTimeout(() => inThrottle = false, limit);
         }
-    }
+    };
 }
 
-// ===== OPTIMIZACIONES DE RENDIMIENTO =====
-function initializeLazyLoading() {
-    const images = document.querySelectorAll('img[data-src]');
-    const imageObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                const img = entry.target;
-                img.src = img.dataset.src;
-                img.classList.remove('lazy');
-                imageObserver.unobserve(img);
-            }
-        });
-    });
-    
-    images.forEach(img => imageObserver.observe(img));
-}
-
-function preloadCriticalResources() {
-    const criticalResources = [
-        './assets/phones/Hero.mp4', // CORRECCIÓN: Precargar video del hero
-        './assets/phones/Hero.jpg',
-        './assets/phones/Horario.jpg',
-        './assets/phones/Estaciones.jpg',
-        './assets/logo.png'
-    ];
-    
-    criticalResources.forEach(src => {
-        if (src.endsWith('.mp4')) {
-            // Precargar video
-            const link = document.createElement('link');
-            link.rel = 'preload';
-            link.as = 'video';
-            link.href = src;
-            link.type = 'video/mp4';
-            document.head.appendChild(link);
-        } else {
-            // Precargar imagen
-            const link = document.createElement('link');
-            link.rel = 'preload';
-            link.as = 'image';
-            link.href = src;
-            document.head.appendChild(link);
-        }
-    });
-}
-
-// ===== ACCESIBILIDAD =====
-function initializeAccessibility() {
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            if (isMenuOpen) {
-                closeMobileMenu();
-            }
-            if (isFloatingMenuOpen) {
-                closeFloatingMenu();
-            }
-            if (isLanguageSwitcherOpen) {
-                closeLanguageSwitcher();
-            }
-        }
-    });
-    
-    // Mejorar navegación por teclado
-    const focusableElements = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
-    
-    // Indicadores visuales de focus mejorados
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Tab') {
-            document.body.classList.add('keyboard-navigation');
-        }
-    });
-    
-    document.addEventListener('mousedown', () => {
-        document.body.classList.remove('keyboard-navigation');
-    });
-}
-
-// ===== OPTIMIZACIONES DE RENDIMIENTO ADICIONALES =====
+// ===== OPTIMIZACIONES DE RENDIMIENTO ULTRA AVANZADAS =====
 function initializePerformanceOptimizations() {
-    // Precargar recursos críticos
     if ('requestIdleCallback' in window) {
         requestIdleCallback(() => {
             preloadCriticalResources();
@@ -1978,19 +1766,16 @@ function initializePerformanceOptimizations() {
         setTimeout(preloadCriticalResources, 2000);
     }
     
-    // Optimizar imágenes de fondo
     const phoneImages = document.querySelectorAll('.phone__app-image, .hero__phone-app-image');
     phoneImages.forEach(img => {
         img.style.willChange = 'transform';
     });
     
-    // Optimizar video del hero
     const heroVideo = document.getElementById('hero-video');
     if (heroVideo) {
         heroVideo.style.willChange = 'transform';
     }
     
-    // Limpiar listeners en resize
     let resizeTimeout;
     window.addEventListener('resize', () => {
         clearTimeout(resizeTimeout);
@@ -2000,23 +1785,51 @@ function initializePerformanceOptimizations() {
     });
 }
 
+function preloadCriticalResources() {
+    const criticalResources = [
+        './assets/phones/Hero.mp4',
+        './assets/StarFlex.mp4'
+    ];
+    
+    criticalResources.forEach(resource => {
+        const link = document.createElement('link');
+        link.rel = 'prefetch';
+        link.href = resource;
+        document.head.appendChild(link);
+    });
+}
+
+function initializeLazyLoading() {
+    if ('IntersectionObserver' in window) {
+        const lazyImages = document.querySelectorAll('img[loading="lazy"]');
+        const imageObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const img = entry.target;
+                    img.src = img.dataset.src || img.src;
+                    img.classList.remove('lazy');
+                    imageObserver.unobserve(img);
+                }
+            });
+        });
+        
+        lazyImages.forEach(img => imageObserver.observe(img));
+    }
+}
+
 function handleResize() {
-    // Cerrar menú móvil si se cambia a desktop
     if (isMenuOpen && window.innerWidth > 1024) {
         closeMobileMenu();
     }
     
-    // Cerrar menú flotante en resize
     if (isFloatingMenuOpen) {
         closeFloatingMenu();
     }
     
-    // Cerrar selector de idioma en resize
     if (isLanguageSwitcherOpen) {
         closeLanguageSwitcher();
     }
     
-    // Redimensionar canvas de partículas
     particleSystems.forEach(system => {
         if (system.resizeCanvas) {
             system.resizeCanvas();
@@ -2024,77 +1837,97 @@ function handleResize() {
     });
 }
 
-// ===== INICIALIZACIÓN PRINCIPAL =====
-document.addEventListener('DOMContentLoaded', () => {
-    // Inicializar optimizador de imágenes
+// ===== INICIALIZACIÓN PRINCIPAL ULTRA OPTIMIZADA =====
+function initializeApp() {
+    console.log('🚀 Inicializando StarFlex Landing Page...');
+    
+    checkReducedMotion();
+    
     imageOptimizer = new ImageOptimizer();
     
-    // Inicializar sistema de idiomas
     initializeLanguageSystem();
-    
-    // Inicializar selector de idioma independiente
     initializeLanguageSwitcher();
-    
-    // Inicializar funcionalidades principales
     initializeNavigation();
-    initializeScrollEffects();
+    initializeHeroVideo();
     initializeVideoPlayer();
     initializeFAQ();
+    initializeFloatingWidget();
+    initializeScrollEffects();
     initializeAnimations();
     initializeIntersectionObserver();
-    
-    // CORRECCIÓN: Inicializar video del hero con carga inmediata
-    initializeHeroVideo();
-    
-    // Inicializar funcionalidades adicionales
-    initializeParticleSystems();
-    initializeLazyLoading();
-    preloadCriticalResources();
-    initializeAccessibility();
-    initializeFloatingWidget();
-    
-    // Configurar lazy loading para imágenes
     setupImageLazyLoading();
-    
-    // CORRECCIÓN: Aplicar corrección para modal QR de referidos
+    initializePerformanceOptimizations();
+    initializeLazyLoading();
     applyQRModalCorrection();
     
-    // Detectar cambios en preferencias de movimiento
-    checkReducedMotion();
-    const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    motionQuery.addListener(checkReducedMotion);
-    
-    // Optimizaciones adicionales
-    initializePerformanceOptimizations();
-});
-
-// ===== MANEJO DE ERRORES =====
-window.addEventListener('error', (e) => {
-    console.error('Error en la aplicación:', e.error);
-});
-
-window.addEventListener('unhandledrejection', (e) => {
-    console.error('Promise rechazada:', e.reason);
-});
-
-// ===== LIMPIEZA AL SALIR =====
-window.addEventListener('beforeunload', () => {
-    particleSystems.forEach(system => system.destroy());
-    particleSystems = [];
-    if (animationId) {
-        cancelAnimationFrame(animationId);
+    if (!isReducedMotion) {
+        const heroPhone = document.querySelector('.hero__phone');
+        if (heroPhone) {
+            particleSystems.push(new ParticleSystem(heroPhone, {
+                particleCount: 12,
+                particleSize: 1.5,
+                particleSpeed: 0.3,
+                particleColor: 'rgba(255, 69, 105, 0.25)',
+                connectionDistance: 80
+            }));
+        }
+        
+        const featurePhones = document.querySelectorAll('.feature__phone');
+        featurePhones.forEach(phone => {
+            particleSystems.push(new ParticleSystem(phone, {
+                particleCount: 8,
+                particleSize: 1,
+                particleSpeed: 0.2,
+                particleColor: 'rgba(255, 69, 105, 0.2)',
+                connectionDistance: 60
+            }));
+        });
     }
-});
+    
+    window.addEventListener('beforeunload', () => {
+        particleSystems.forEach(system => system.destroy());
+    });
+    
+    console.log('✅ StarFlex Landing Page inicializada correctamente');
+}
 
-// ===== SOPORTE PARA PWA =====
+// ===== SERVICE WORKER PARA PWA =====
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js')
             .then(registration => {
                 console.log('SW registrado:', registration);
             })
-            .catch(registrationError => {
-                console.log('SW falló:', registrationError);
+            .catch(error => {
+                console.log('SW registro falló:', error);
             });
     });
 }
+
+// ===== MANEJO GLOBAL DE ERRORES =====
+window.addEventListener('error', (e) => {
+    console.error('Error global capturado:', e.error);
+});
+
+window.addEventListener('unhandledrejection', (e) => {
+    console.error('Promise rechazada:', e.reason);
+});
+
+// ===== INICIALIZACIÓN CUANDO EL DOM ESTÉ LISTO =====
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeApp);
+} else {
+    initializeApp();
+}
+
+// ===== EXPORTAR FUNCIONES PARA DEBUGGING =====
+window.StarFlexDebug = {
+    imageOptimizer,
+    particleSystems,
+    toggleMobileMenu,
+    switchLanguage,
+    currentLanguage,
+    isMenuOpen,
+    isFloatingMenuOpen,
+    isLanguageSwitcherOpen
+};
