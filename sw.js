@@ -1,44 +1,32 @@
-// ===== SERVICE WORKER ULTRA OPTIMIZADO PARA STARFLEX =====
-const CACHE_NAME = 'starflex-v1.0.0';
-const STATIC_CACHE = 'starflex-static-v1.0.0';
-const DYNAMIC_CACHE = 'starflex-dynamic-v1.0.0';
+// ===== SERVICE WORKER ULTRA OPTIMIZADO PARA PERFORMANCE =====
+const CACHE_NAME = 'starflex-v2.0.0';
+const STATIC_CACHE = 'starflex-static-v2.0.0';
+const DYNAMIC_CACHE = 'starflex-dynamic-v2.0.0';
+const IMAGE_CACHE = 'starflex-images-v2.0.0';
 
 // Recursos críticos para cachear inmediatamente
 const CRITICAL_RESOURCES = [
     '/',
     '/index.html',
-    '/css/style.css',
-    '/js/script.js',
+    '/css/critical.css',
+    '/js/script-optimized.js',
     '/assets/logo.avif',
     '/assets/logo.webp',
     '/assets/logo.png',
     '/assets/phones/Hero.avif',
     '/assets/phones/Hero.webp',
     '/assets/phones/Hero.jpg',
-    '/assets/phones/Hero.mp4',
     '/manifest.json'
 ];
 
 // Recursos de imágenes para cachear bajo demanda
 const IMAGE_RESOURCES = [
     '/assets/phones/Horario.avif',
-    '/assets/phones/Horario.webp',
-    '/assets/phones/Horario.jpg',
     '/assets/phones/Estaciones.avif',
-    '/assets/phones/Estaciones.webp',
-    '/assets/phones/Estaciones.jpg',
     '/assets/phones/Calendario.avif',
-    '/assets/phones/Calendario.webp',
-    '/assets/phones/Calendario.jpg',
     '/assets/phones/Registro.avif',
-    '/assets/phones/Registro.webp',
-    '/assets/phones/Registro.jpg',
     '/assets/phones/Notificaciones.avif',
-    '/assets/phones/Notificaciones.webp',
-    '/assets/phones/Notificaciones.jpg',
     '/assets/phones/Referidos.avif',
-    '/assets/phones/Referidos.webp',
-    '/assets/phones/Referidos.jpg',
     '/assets/AppleStore.avif',
     '/assets/AppleStore.webp',
     '/assets/AppleStore.png',
@@ -47,14 +35,9 @@ const IMAGE_RESOURCES = [
     '/assets/GooglePlay.png'
 ];
 
-// Recursos de video para cachear bajo demanda
-const VIDEO_RESOURCES = [
-    '/assets/StarFlex.mp4'
-];
-
-// ===== INSTALACIÓN DEL SERVICE WORKER =====
+// ===== INSTALACIÓN OPTIMIZADA =====
 self.addEventListener('install', (event) => {
-    console.log('SW: Instalando Service Worker...');
+    console.log('SW: Instalando Service Worker optimizado...');
     
     event.waitUntil(
         caches.open(STATIC_CACHE)
@@ -63,7 +46,7 @@ self.addEventListener('install', (event) => {
                 return cache.addAll(CRITICAL_RESOURCES);
             })
             .then(() => {
-                console.log('SW: Recursos críticos cacheados exitosamente');
+                console.log('SW: Recursos críticos cacheados');
                 return self.skipWaiting();
             })
             .catch((error) => {
@@ -72,28 +55,31 @@ self.addEventListener('install', (event) => {
     );
 });
 
-// ===== ACTIVACIÓN DEL SERVICE WORKER =====
+// ===== ACTIVACIÓN OPTIMIZADA =====
 self.addEventListener('activate', (event) => {
     console.log('SW: Activando Service Worker...');
     
     event.waitUntil(
-        caches.keys()
-            .then((cacheNames) => {
+        Promise.all([
+            // Limpiar caches antiguos
+            caches.keys().then((cacheNames) => {
                 return Promise.all(
                     cacheNames.map((cacheName) => {
                         if (cacheName !== STATIC_CACHE && 
                             cacheName !== DYNAMIC_CACHE && 
-                            cacheName !== CACHE_NAME) {
+                            cacheName !== IMAGE_CACHE &&
+                            cacheName.includes('starflex')) {
                             console.log('SW: Eliminando cache obsoleto:', cacheName);
                             return caches.delete(cacheName);
                         }
                     })
                 );
-            })
-            .then(() => {
-                console.log('SW: Service Worker activado');
-                return self.clients.claim();
-            })
+            }),
+            // Tomar control inmediatamente
+            self.clients.claim()
+        ]).then(() => {
+            console.log('SW: Service Worker activado y optimizado');
+        })
     );
 });
 
@@ -107,32 +93,32 @@ self.addEventListener('fetch', (event) => {
         return;
     }
     
-    // Estrategia Cache First para recursos estáticos
-    if (isCriticalResource(request.url) || isImageResource(request.url)) {
-        event.respondWith(cacheFirstStrategy(request));
+    // Estrategia Cache First para recursos críticos
+    if (isCriticalResource(request.url)) {
+        event.respondWith(cacheFirstStrategy(request, STATIC_CACHE));
         return;
     }
     
-    // Estrategia Network First para videos
-    if (isVideoResource(request.url)) {
-        event.respondWith(networkFirstStrategy(request));
+    // Estrategia Cache First optimizada para imágenes
+    if (isImageResource(request.url)) {
+        event.respondWith(imageOptimizedStrategy(request));
         return;
     }
     
-    // Estrategia Stale While Revalidate para el HTML principal
+    // Estrategia Stale While Revalidate para HTML
     if (request.mode === 'navigate') {
         event.respondWith(staleWhileRevalidateStrategy(request));
         return;
     }
     
-    // Estrategia por defecto: Network First
+    // Estrategia Network First para otros recursos
     event.respondWith(networkFirstStrategy(request));
 });
 
-// ===== ESTRATEGIAS DE CACHING =====
+// ===== ESTRATEGIAS OPTIMIZADAS =====
 
-// Cache First: Ideal para recursos estáticos que no cambian
-async function cacheFirstStrategy(request) {
+// Cache First optimizado para recursos críticos
+async function cacheFirstStrategy(request, cacheName) {
     try {
         const cachedResponse = await caches.match(request);
         if (cachedResponse) {
@@ -141,7 +127,7 @@ async function cacheFirstStrategy(request) {
         
         const networkResponse = await fetch(request);
         if (networkResponse.ok) {
-            const cache = await caches.open(STATIC_CACHE);
+            const cache = await caches.open(cacheName);
             cache.put(request, networkResponse.clone());
         }
         
@@ -152,7 +138,33 @@ async function cacheFirstStrategy(request) {
     }
 }
 
-// Network First: Ideal para contenido dinámico
+// Estrategia optimizada para imágenes con compresión
+async function imageOptimizedStrategy(request) {
+    try {
+        const cachedResponse = await caches.match(request);
+        if (cachedResponse) {
+            return cachedResponse;
+        }
+        
+        const networkResponse = await fetch(request);
+        if (networkResponse.ok) {
+            const cache = await caches.open(IMAGE_CACHE);
+            
+            // Solo cachear imágenes menores a 1MB
+            const contentLength = networkResponse.headers.get('content-length');
+            if (!contentLength || parseInt(contentLength) < 1048576) {
+                cache.put(request, networkResponse.clone());
+            }
+        }
+        
+        return networkResponse;
+    } catch (error) {
+        console.error('SW: Error cargando imagen:', error);
+        return new Response('Imagen no disponible', { status: 503 });
+    }
+}
+
+// Network First optimizado
 async function networkFirstStrategy(request) {
     try {
         const networkResponse = await fetch(request);
@@ -162,20 +174,16 @@ async function networkFirstStrategy(request) {
         }
         return networkResponse;
     } catch (error) {
-        console.log('SW: Red no disponible, buscando en cache...');
         const cachedResponse = await caches.match(request);
         if (cachedResponse) {
             return cachedResponse;
         }
         
-        return new Response('Contenido no disponible offline', { 
-            status: 503,
-            headers: { 'Content-Type': 'text/plain' }
-        });
+        return new Response('Contenido no disponible', { status: 503 });
     }
 }
 
-// Stale While Revalidate: Ideal para HTML que puede cambiar
+// Stale While Revalidate optimizado
 async function staleWhileRevalidateStrategy(request) {
     const cache = await caches.open(DYNAMIC_CACHE);
     const cachedResponse = await cache.match(request);
@@ -185,12 +193,8 @@ async function staleWhileRevalidateStrategy(request) {
             cache.put(request, networkResponse.clone());
         }
         return networkResponse;
-    }).catch(() => {
-        // Si falla la red, devolver la versión cacheada
-        return cachedResponse;
-    });
+    }).catch(() => cachedResponse);
     
-    // Devolver inmediatamente la versión cacheada si existe
     return cachedResponse || fetchPromise;
 }
 
@@ -204,99 +208,55 @@ function isImageResource(url) {
            url.match(/\.(avif|webp|jpg|jpeg|png|gif|svg)$/i);
 }
 
-function isVideoResource(url) {
-    return VIDEO_RESOURCES.some(resource => url.includes(resource)) ||
-           url.match(/\.(mp4|webm|ogg|avi|mov)$/i);
-}
-
 // ===== LIMPIEZA AUTOMÁTICA DE CACHE =====
 self.addEventListener('message', (event) => {
     if (event.data && event.data.type === 'CLEAN_CACHE') {
         cleanOldCaches();
+    }
+    
+    if (event.data && event.data.type === 'PRELOAD_IMAGES') {
+        preloadCriticalImages();
     }
 });
 
 async function cleanOldCaches() {
     const cacheNames = await caches.keys();
     const oldCaches = cacheNames.filter(name => 
-        !name.includes('v1.0.0') && 
-        (name.includes('starflex') || name.includes('STATIC') || name.includes('DYNAMIC'))
+        name.includes('starflex') && !name.includes('v2.0.0')
     );
     
     await Promise.all(oldCaches.map(name => caches.delete(name)));
     console.log('SW: Caches antiguos limpiados');
 }
 
-// ===== PRECARGA DE RECURSOS BAJO DEMANDA =====
-self.addEventListener('message', (event) => {
-    if (event.data && event.data.type === 'PRELOAD_IMAGES') {
-        preloadImages();
-    }
-});
-
-async function preloadImages() {
+async function preloadCriticalImages() {
     try {
-        const cache = await caches.open(STATIC_CACHE);
-        const imagePromises = IMAGE_RESOURCES.map(async (url) => {
+        const cache = await caches.open(IMAGE_CACHE);
+        const criticalImages = [
+            '/assets/phones/Hero.avif',
+            '/assets/phones/Hero.webp',
+            '/assets/phones/Hero.jpg',
+            '/assets/logo.avif',
+            '/assets/logo.webp',
+            '/assets/logo.png'
+        ];
+        
+        const imagePromises = criticalImages.map(async (url) => {
             try {
                 const response = await fetch(url);
                 if (response.ok) {
                     await cache.put(url, response);
                 }
             } catch (error) {
-                console.warn('SW: No se pudo precargar imagen:', url);
+                console.warn('SW: No se pudo precargar imagen crítica:', url);
             }
         });
         
         await Promise.all(imagePromises);
-        console.log('SW: Imágenes precargadas exitosamente');
+        console.log('SW: Imágenes críticas precargadas');
     } catch (error) {
-        console.error('SW: Error precargando imágenes:', error);
+        console.error('SW: Error precargando imágenes críticas:', error);
     }
 }
 
-// ===== NOTIFICACIONES PUSH (PREPARADO PARA FUTURO) =====
-self.addEventListener('push', (event) => {
-    if (event.data) {
-        const data = event.data.json();
-        const options = {
-            body: data.body,
-            icon: '/assets/icon-192.png',
-            badge: '/assets/badge-72.png',
-            vibrate: [100, 50, 100],
-            data: {
-                dateOfArrival: Date.now(),
-                primaryKey: data.primaryKey
-            },
-            actions: [
-                {
-                    action: 'explore',
-                    title: 'Ver más',
-                    icon: '/assets/checkmark.png'
-                },
-                {
-                    action: 'close',
-                    title: 'Cerrar',
-                    icon: '/assets/xmark.png'
-                }
-            ]
-        };
-        
-        event.waitUntil(
-            self.registration.showNotification(data.title, options)
-        );
-    }
-});
-
-// ===== MANEJO DE CLICS EN NOTIFICACIONES =====
-self.addEventListener('notificationclick', (event) => {
-    event.notification.close();
-    
-    if (event.action === 'explore') {
-        event.waitUntil(
-            clients.openWindow('https://starflexapp.com')
-        );
-    }
-});
-
-console.log('SW: Service Worker de StarFlex cargado exitosamente');
+console.log('SW: Service Worker optimizado de StarFlex cargado');

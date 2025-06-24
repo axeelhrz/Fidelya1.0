@@ -29,11 +29,6 @@ const CONFIG = {
     },
     
     IMAGE_PATHS: {
-        hero: {
-            avif: './assets/phones/Hero.avif',
-            webp: './assets/phones/Hero.webp',
-            jpg: './assets/phones/Hero.jpg'
-        },
         logo: {
             avif: './assets/logo.avif',
             webp: './assets/logo.webp',
@@ -41,34 +36,22 @@ const CONFIG = {
         },
         phones: {
             horario: {
-                avif: './assets/phones/Horario.avif',
-                webp: './assets/phones/Horario.webp',
-                jpg: './assets/phones/Horario.jpg'
+                avif: './assets/phones/Horario.avif'
             },
             estaciones: {
-                avif: './assets/phones/Estaciones.avif',
-                webp: './assets/phones/Estaciones.webp',
-                jpg: './assets/phones/Estaciones.jpg'
+                avif: './assets/phones/Estaciones.avif'
             },
             calendario: {
-                avif: './assets/phones/Calendario.avif',
-                webp: './assets/phones/Calendario.webp',
-                jpg: './assets/phones/Calendario.jpg'
+                avif: './assets/phones/Calendario.avif'
             },
             registro: {
-                avif: './assets/phones/Registro.avif',
-                webp: './assets/phones/Registro.webp',
-                jpg: './assets/phones/Registro.jpg'
+                avif: './assets/phones/Registro.avif'
             },
             notificaciones: {
-                avif: './assets/phones/Notificaciones.avif',
-                webp: './assets/phones/Notificaciones.webp',
-                jpg: './assets/phones/Notificaciones.jpg'
+                avif: './assets/phones/Notificaciones.avif'
             },
             referidos: {
-                avif: './assets/phones/Referidos.avif',
-                webp: './assets/phones/Referidos.webp',
-                jpg: './assets/phones/Referidos.jpg'
+                avif: './assets/phones/Referidos.avif'
             }
         },
         downloads: {

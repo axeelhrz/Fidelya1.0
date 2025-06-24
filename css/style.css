@@ -210,15 +210,6 @@ isolation: isolate;
 opacity: 1;
 }
 
-.hero__phone-app-image {
-border-radius: 45px;
-filter: 
-brightness(1.04) 
-contrast(1.12) 
-saturate(1.15)
-drop-shadow(0 0 1px rgba(0, 0, 0, 0.1));
-background-image: url('../assets/phones/Hero.jpg');
-}
 
 .phone__app-image {
 border-radius: 40px;
@@ -250,34 +241,6 @@ transform: translateZ(0) scale(1.001);
 filter: brightness(0.7) contrast(0.8) grayscale(1);
 }
 
-/* Soporte para WebP con optimización */
-.webp .hero__phone-app-image {
-background-image: url('../assets/phones/Hero.webp');
-}
-
-.webp .feature:nth-child(1) .phone__app-image {
-background-image: url('../assets/phones/Horario.webp');
-}
-
-.webp .feature:nth-child(2) .phone__app-image {
-background-image: url('../assets/phones/Estaciones.webp');
-}
-
-.webp .feature:nth-child(3) .phone__app-image {
-background-image: url('../assets/phones/Calendario.webp');
-}
-
-.webp .feature:nth-child(4) .phone__app-image {
-background-image: url('../assets/phones/Registro.webp');
-}
-
-.webp .feature:nth-child(5) .phone__app-image {
-background-image: url('../assets/phones/Notificaciones.webp');
-}
-
-.webp .feature:nth-child(6) .phone__app-image {
-background-image: url('../assets/phones/Referidos.webp');
-}
 
 /* Soporte para AVIF con máxima calidad */
 .avif .hero__phone-app-image {
@@ -308,30 +271,7 @@ background-image: url('../assets/phones/Notificaciones.avif');
 background-image: url('../assets/phones/Referidos.avif');
 }
 
-/* Fallbacks para navegadores sin soporte de formatos modernos */
-.feature:nth-child(1) .phone__app-image {
-background-image: url('../assets/phones/Horario.jpg');
-}
 
-.feature:nth-child(2) .phone__app-image {
-background-image: url('../assets/phones/Estaciones.jpg');
-}
-
-.feature:nth-child(3) .phone__app-image {
-background-image: url('../assets/phones/Calendario.jpg');
-}
-
-.feature:nth-child(4) .phone__app-image {
-background-image: url('../assets/phones/Registro.jpg');
-}
-
-.feature:nth-child(5) .phone__app-image {
-background-image: url('../assets/phones/Notificaciones.jpg');
-}
-
-.feature:nth-child(6) .phone__app-image {
-background-image: url('../assets/phones/Referidos.jpg');
-}
 
 /* ===== OPTIMIZACIÓN PARA PANTALLAS DE ALTA DENSIDAD ===== */
 @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi), (min-resolution: 2dppx) {
