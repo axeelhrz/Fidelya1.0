@@ -99,10 +99,24 @@
             min-height: 55px;
         }
         
-        .download-btn__image {
+        .download-btn__text {
             background-color: rgba(255, 255, 255, 0.1);
             min-width: 180px;
             min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            padding: 12px 24px;
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .download-btn__text:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
         }
         
         .hero__phone {
@@ -123,7 +137,7 @@
                 min-height: 50px;
             }
             
-            .download-btn__image {
+            .download-btn__text {
                 min-width: 160px;
                 min-height: 50px;
             }
@@ -141,7 +155,7 @@
                 min-height: 35px;
             }
             
-            .download-btn__image {
+            .download-btn__text {
                 min-width: 140px;
                 min-height: 45px;
             }
@@ -221,23 +235,11 @@
                         
                         <div class="hero__download">
                             <a href="https://play.google.com/store/apps/details?id=com.minoka.starflex&pli=1" class="download-btn" rel="noopener">
-                                <img class="download-btn__image" 
-                                     alt="Descargar en Google Play" 
-                                     loading="eager" 
-                                     width="180" 
-                                     height="60" 
-                                     src="./assets/GooglePlay.jpg"
-                                     style="min-width: 180px; min-height: 60px;">
+                                <span class="download-btn__text">Descargar en Google Play</span>
                             </a>
                             
                             <a href="https://starflex.web.app/" class="download-btn" rel="noopener">
-                                <img class="download-btn__image" 
-                                     alt="Descargar en App Store" 
-                                     loading="eager" 
-                                     width="180" 
-                                     height="60" 
-                                     src="./assets/AppleStore.jpg"
-                                     style="min-width: 180px; min-height: 60px;">
+                                <span class="download-btn__text">Descargar en App Store</span>
                             </a>
                         </div>
                     </div>
@@ -262,20 +264,6 @@
                                         <source src="./assets/StarFlex.mp4" type="video/mp4">
                                         Tu navegador no soporta videos HTML5.
                                     </video>
-                                    
-                                    <!-- Imagen de fallback con dimensiones fijas -->
-                                    <picture style="display: none;">
-                                        <source srcset="./assets/phones/Hero.avif" type="image/avif">
-                                        <source srcset="./assets/phones/Hero.webp" type="image/webp">
-                                        <img class="hero__phone-image" 
-                                             src="./assets/phones/Hero.jpg" 
-                                             alt="Interfaz principal de StarFlex" 
-                                             loading="eager" 
-                                             fetchpriority="high"
-                                             width="320" 
-                                             height="640"
-                                             style="min-width: 320px; min-height: 640px;">
-                                    </picture>
                                 </div>
                             </div>
                         </div>
@@ -384,11 +372,7 @@
         const heroVideo = document.getElementById('hero-video');
         if (heroVideo) {
             heroVideo.addEventListener('error', () => {
-                const fallbackImage = document.querySelector('.hero__phone-image').parentElement;
-                if (fallbackImage) {
-                    fallbackImage.style.display = 'block';
-                    heroVideo.style.display = 'none';
-                }
+                console.log('Video no disponible, continuando sin video');
             });
         }
     </script>
