@@ -1,118 +1,76 @@
-// ===== JAVASCRIPT ULTRA OPTIMIZADO - SOLO FUNCIONALIDAD CRÍTICA =====
+// ===== SCRIPT ULTRA OPTIMIZADO PARA CORE WEB VITALS =====
 
-// Variables globales mínimas
+// Variables globales optimizadas
 let isMenuOpen = false;
+let isFloatingMenuOpen = false;
+let isLanguageSwitcherOpen = false;
 let currentLanguage = 'es';
+let imageOptimizer = null;
 
 // Configuración optimizada
 const CONFIG = {
     ANIMATION_DURATION: 300,
-    IMAGE_FORMATS: ['avif', 'webp', 'jpg', 'png']
-};
-
-// Traducciones mínimas
-const translations = {
-    es: {
-        'nav-home': 'Inicio',
-        'nav-features': 'Características',
-        'nav-videos': 'Videos',
-        'nav-faq': 'FAQ',
-        'nav-contact': 'Contacto'
-    },
-    en: {
-        'nav-home': 'Home',
-        'nav-features': 'Features',
-        'nav-videos': 'Videos',
-        'nav-faq': 'FAQ',
-        'nav-contact': 'Contact'
+    DEBOUNCE_DELAY: 150,
+    THROTTLE_DELAY: 16,
+    
+    IMAGE_FORMATS: {
+        AVIF: 'image/avif',
+        WEBP: 'image/webp',
+        JPEG: 'image/jpeg'
     }
 };
 
-// ===== OPTIMIZACIÓN DE IMÁGENES CRÍTICAS =====
-class CriticalImageOptimizer {
+// ===== OPTIMIZADOR DE IMÁGENES SIMPLIFICADO =====
+class ImageOptimizer {
     constructor() {
-        this.supportedFormats = new Set();
+        this.supportedFormats = new Set(['jpeg', 'png']);
         this.init();
     }
     
     init() {
-        this.detectFormats();
-        this.optimizeCriticalImages();
-    }
-    
-    detectFormats() {
-        const html = document.documentElement;
-        if (html.classList.contains('avif')) this.supportedFormats.add('avif');
-        if (html.classList.contains('webp')) this.supportedFormats.add('webp');
-        this.supportedFormats.add('jpg');
-    }
-    
-    optimizeCriticalImages() {
-        // Optimizar logo
-        const logo = document.querySelector('.nav__logo');
-        if (logo) {
-            const logoSrc = this.getBestFormat('logo');
-            logo.style.backgroundImage = `url('${logoSrc}')`;
+        // Detectar formatos soportados usando las clases del HTML
+        if (document.documentElement.classList.contains('avif')) {
+            this.supportedFormats.add('avif');
+        }
+        if (document.documentElement.classList.contains('webp')) {
+            this.supportedFormats.add('webp');
         }
         
-        // Optimizar imágenes de descarga
-        this.optimizeDownloadButtons();
+        this.setupLazyLoading();
     }
     
-    getBestFormat(imageKey) {
-        const basePath = './assets/';
-        const paths = {
-            logo: {
-                avif: `${basePath}logo.avif`,
-                webp: `${basePath}logo.webp`,
-                jpg: `${basePath}logo.png`
-            }
-        };
-        
-        const imagePaths = paths[imageKey];
-        if (!imagePaths) return '';
-        
-        if (this.supportedFormats.has('avif') && imagePaths.avif) return imagePaths.avif;
-        if (this.supportedFormats.has('webp') && imagePaths.webp) return imagePaths.webp;
-        return imagePaths.jpg;
+    setupLazyLoading() {
+        if ('IntersectionObserver' in window) {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        this.loadImage(entry.target);
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, {
+                rootMargin: '50px 0px',
+                threshold: 0.01
+            });
+            
+            // Observar imágenes lazy
+            document.querySelectorAll('img[data-src]').forEach(img => {
+                observer.observe(img);
+            });
+        }
     }
     
-    optimizeDownloadButtons() {
-        const downloadImages = document.querySelectorAll('.download-btn__image');
-        downloadImages.forEach((img, index) => {
-            const imageType = index === 0 ? 'google' : 'apple';
-            const optimizedSrc = this.getDownloadButtonSrc(imageType);
-            if (optimizedSrc) {
-                img.src = optimizedSrc;
-            }
-        });
-    }
-    
-    getDownloadButtonSrc(type) {
-        const basePath = './assets/';
-        const paths = {
-            google: {
-                avif: `${basePath}GooglePlay.avif`,
-                webp: `${basePath}GooglePlay.webp`,
-                jpg: `${basePath}GooglePlay.png`
-            },
-            apple: {
-                avif: `${basePath}AppleStore.avif`,
-                webp: `${basePath}AppleStore.webp`,
-                jpg: `${basePath}AppleStore.png`
-            }
-        };
-        
-        const imagePaths = paths[type];
-        if (!imagePaths) return '';
-        
-        if (this.supportedFormats.has('avif') && imagePaths.avif) return imagePaths.avif;
-        if (this.supportedFormats.has('webp') && imagePaths.webp) return imagePaths.webp;
-        return imagePaths.jpg;
+    loadImage(img) {
+        const src = img.dataset.src;
+        if (src) {
+            img.src = src;
+            img.removeAttribute('data-src');
+            img.classList.add('loaded');
+        }
     }
 }
 
-// ===== NAVEGACIÓN CRÍTICA =====
+// ===== FUNCIONES DE NAVEGACIÓN OPTIMIZADAS =====
 function initializeNavigation() {
     const navToggle = document.getElementById('nav-toggle');
     const navMenu = document.getElementById('nav-menu');
@@ -126,12 +84,20 @@ function initializeNavigation() {
             if (isMenuOpen) closeMobileMenu();
             smoothScrollTo(0);
         });
+        
+        navLogo.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                navLogo.click();
+            }
+        });
     }
     
     // Mobile menu toggle
     if (navToggle && navMenu) {
         navToggle.addEventListener('click', (e) => {
             e.preventDefault();
+            e.stopPropagation();
             toggleMobileMenu();
         });
     }
@@ -143,11 +109,13 @@ function initializeNavigation() {
             if (isMenuOpen) closeMobileMenu();
             
             const targetId = link.getAttribute('href');
-            const targetElement = document.querySelector(targetId);
-            if (targetElement) {
+            const targetSection = document.querySelector(targetId);
+            
+            if (targetSection) {
                 const headerHeight = window.innerWidth <= 768 ? 70 : 80;
-                const targetPosition = targetElement.offsetTop - headerHeight;
+                const targetPosition = targetSection.offsetTop - headerHeight;
                 smoothScrollTo(targetPosition);
+                updateActiveNavLink(link);
             }
         });
     });
@@ -155,6 +123,14 @@ function initializeNavigation() {
     // Close menu on outside click
     document.addEventListener('click', (e) => {
         if (isMenuOpen && navMenu && !navMenu.contains(e.target) && !navToggle.contains(e.target)) {
+            closeMobileMenu();
+        }
+    });
+    
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && isMenuOpen) {
+            e.preventDefault();
             closeMobileMenu();
         }
     });
@@ -178,7 +154,15 @@ function openMobileMenu() {
     navToggle.classList.add('active');
     navMenu.classList.add('active');
     document.body.classList.add('no-scroll');
+    
     navToggle.setAttribute('aria-expanded', 'true');
+    navMenu.setAttribute('aria-hidden', 'false');
+    
+    // Focus first link after animation
+    setTimeout(() => {
+        const firstLink = navMenu.querySelector('.nav__link');
+        if (firstLink) firstLink.focus();
+    }, CONFIG.ANIMATION_DURATION);
 }
 
 function closeMobileMenu() {
@@ -191,7 +175,20 @@ function closeMobileMenu() {
     navToggle.classList.remove('active');
     navMenu.classList.remove('active');
     document.body.classList.remove('no-scroll');
+    
     navToggle.setAttribute('aria-expanded', 'false');
+    navMenu.setAttribute('aria-hidden', 'true');
+    
+    navToggle.focus();
+}
+
+function updateActiveNavLink(activeLink) {
+    document.querySelectorAll('.nav__link').forEach(link => {
+        link.classList.remove('active');
+        link.setAttribute('aria-current', 'false');
+    });
+    activeLink.classList.add('active');
+    activeLink.setAttribute('aria-current', 'page');
 }
 
 // ===== SMOOTH SCROLL OPTIMIZADO =====
@@ -202,24 +199,23 @@ function smoothScrollTo(targetPosition) {
             behavior: 'smooth'
         });
     } else {
-        // Fallback para navegadores antiguos
+        // Fallback para navegadores sin soporte
         window.scrollTo(0, targetPosition);
     }
 }
 
-// ===== SELECTOR DE IDIOMA CRÍTICO =====
+// ===== SELECTOR DE IDIOMA OPTIMIZADO =====
 function initializeLanguageSwitcher() {
     const languageSwitcherBtn = document.getElementById('language-switcher-btn');
+    const languageSwitcher = document.getElementById('language-switcher');
     const languageOptions = document.querySelectorAll('.language-switcher__option');
     
-    if (!languageSwitcherBtn) return;
+    if (!languageSwitcherBtn || !languageSwitcher) return;
     
     languageSwitcherBtn.addEventListener('click', (e) => {
         e.preventDefault();
-        const switcher = document.getElementById('language-switcher');
-        if (switcher) {
-            switcher.classList.toggle('active');
-        }
+        e.stopPropagation();
+        toggleLanguageSwitcher();
     });
     
     languageOptions.forEach(option => {
@@ -228,94 +224,247 @@ function initializeLanguageSwitcher() {
             const selectedLanguage = option.getAttribute('data-lang');
             if (selectedLanguage && selectedLanguage !== currentLanguage) {
                 switchLanguage(selectedLanguage);
+                closeLanguageSwitcher();
             }
         });
     });
-}
-
-function switchLanguage(newLanguage) {
-    if (!translations[newLanguage]) return;
     
-    currentLanguage = newLanguage;
-    localStorage.setItem('starflex-language', newLanguage);
-    
-    // Aplicar traducciones críticas
-    const currentTranslations = translations[currentLanguage];
-    document.querySelectorAll('[data-translate]').forEach(element => {
-        const key = element.getAttribute('data-translate');
-        const translation = currentTranslations[key];
-        if (translation) {
-            element.textContent = translation;
+    // Close on outside click
+    document.addEventListener('click', (e) => {
+        if (isLanguageSwitcherOpen && !languageSwitcher.contains(e.target)) {
+            closeLanguageSwitcher();
         }
     });
     
-    // Actualizar selector de idioma
+    // Close on escape
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && isLanguageSwitcherOpen) {
+            closeLanguageSwitcher();
+        }
+    });
+}
+
+function toggleLanguageSwitcher() {
+    if (isLanguageSwitcherOpen) {
+        closeLanguageSwitcher();
+    } else {
+        openLanguageSwitcher();
+    }
+}
+
+function openLanguageSwitcher() {
+    const languageSwitcher = document.getElementById('language-switcher');
+    const languageSwitcherBtn = document.getElementById('language-switcher-btn');
+    
+    if (!languageSwitcher || !languageSwitcherBtn) return;
+    
+    isLanguageSwitcherOpen = true;
+    languageSwitcher.classList.add('active');
+    languageSwitcherBtn.setAttribute('aria-expanded', 'true');
+}
+
+function closeLanguageSwitcher() {
+    const languageSwitcher = document.getElementById('language-switcher');
+    const languageSwitcherBtn = document.getElementById('language-switcher-btn');
+    
+    if (!languageSwitcher || !languageSwitcherBtn) return;
+    
+    isLanguageSwitcherOpen = false;
+    languageSwitcher.classList.remove('active');
+    languageSwitcherBtn.setAttribute('aria-expanded', 'false');
+}
+
+function switchLanguage(newLanguage) {
+    currentLanguage = newLanguage;
+    localStorage.setItem('starflex-language', newLanguage);
+    
+    // Update language switcher text
     const languageSwitcherText = document.getElementById('language-switcher-text');
     if (languageSwitcherText) {
         languageSwitcherText.textContent = newLanguage.toUpperCase();
     }
     
-    // Cerrar dropdown
-    const switcher = document.getElementById('language-switcher');
-    if (switcher) {
-        switcher.classList.remove('active');
-    }
-}
-
-// ===== LAZY LOADING DE CONTENIDO NO CRÍTICO =====
-function initializeLazyContent() {
-    // Cargar contenido no crítico después de que se complete el LCP
-    if ('requestIdleCallback' in window) {
-        requestIdleCallback(() => {
-            loadNonCriticalContent();
-        });
-    } else {
-        setTimeout(loadNonCriticalContent, 2000);
-    }
-}
-
-function loadNonCriticalContent() {
-    // Cargar CSS no crítico si no se ha cargado
-    const criticalCSS = document.querySelector('link[href*="style.css"]');
-    if (!criticalCSS) {
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = 'css/style.css';
-        document.head.appendChild(link);
-    }
+    // Update active option
+    document.querySelectorAll('.language-switcher__option').forEach(option => {
+        const optionLang = option.getAttribute('data-lang');
+        if (optionLang === currentLanguage) {
+            option.classList.add('active');
+        } else {
+            option.classList.remove('active');
+        }
+    });
     
-    // Cargar JavaScript no crítico
-    const script = document.createElement('script');
-    script.src = 'js/script.js';
-    script.defer = true;
-    document.body.appendChild(script);
+    document.documentElement.lang = newLanguage;
 }
 
-// ===== INICIALIZACIÓN CRÍTICA =====
-function initializeCriticalApp() {
-    // Solo funcionalidad crítica para el LCP
-    const imageOptimizer = new CriticalImageOptimizer();
+// ===== WIDGET FLOTANTE OPTIMIZADO =====
+function initializeFloatingWidget() {
+    const floatingMainBtn = document.getElementById('floating-main-btn');
+    const floatingMenu = document.getElementById('floating-menu');
+    
+    if (!floatingMainBtn || !floatingMenu) return;
+    
+    floatingMainBtn.addEventListener('click', () => {
+        toggleFloatingMenu();
+    });
+    
+    // Close on outside click
+    document.addEventListener('click', (e) => {
+        const floatingWidget = document.getElementById('floating-widget');
+        if (isFloatingMenuOpen && floatingWidget && !floatingWidget.contains(e.target)) {
+            closeFloatingMenu();
+        }
+    });
+    
+    // Close on escape
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && isFloatingMenuOpen) {
+            closeFloatingMenu();
+        }
+    });
+}
+
+function toggleFloatingMenu() {
+    if (isFloatingMenuOpen) {
+        closeFloatingMenu();
+    } else {
+        openFloatingMenu();
+    }
+}
+
+function openFloatingMenu() {
+    const floatingMainBtn = document.getElementById('floating-main-btn');
+    const floatingMenu = document.getElementById('floating-menu');
+    
+    if (!floatingMainBtn || !floatingMenu) return;
+    
+    isFloatingMenuOpen = true;
+    floatingMainBtn.classList.add('active');
+    floatingMenu.classList.add('active');
+    floatingMainBtn.setAttribute('aria-expanded', 'true');
+}
+
+function closeFloatingMenu() {
+    const floatingMainBtn = document.getElementById('floating-main-btn');
+    const floatingMenu = document.getElementById('floating-menu');
+    
+    if (!floatingMainBtn || !floatingMenu) return;
+    
+    isFloatingMenuOpen = false;
+    floatingMainBtn.classList.remove('active');
+    floatingMenu.classList.remove('active');
+    floatingMainBtn.setAttribute('aria-expanded', 'false');
+}
+
+// ===== SCROLL EFFECTS OPTIMIZADOS =====
+function initializeScrollEffects() {
+    let ticking = false;
+    
+    const handleScroll = () => {
+        if (!ticking) {
+            requestAnimationFrame(() => {
+                updateActiveNavOnScroll();
+                ticking = false;
+            });
+            ticking = true;
+        }
+    };
+    
+    window.addEventListener('scroll', handleScroll, { passive: true });
+}
+
+function updateActiveNavOnScroll() {
+    const sections = document.querySelectorAll('section[id]');
+    const scrollY = window.scrollY + 100;
+    
+    sections.forEach(section => {
+        const sectionTop = section.offsetTop;
+        const sectionHeight = section.offsetHeight;
+        const sectionId = section.getAttribute('id');
+        
+        if (scrollY >= sectionTop && scrollY < sectionTop + sectionHeight) {
+            const activeLink = document.querySelector(`.nav__link[href="#${sectionId}"]`);
+            if (activeLink && !activeLink.classList.contains('active')) {
+                updateActiveNavLink(activeLink);
+            }
+        }
+    });
+}
+
+// ===== OPTIMIZACIÓN DE RESIZE =====
+function initializeResizeHandler() {
+    let resizeTimeout;
+    
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+            if (isMenuOpen && window.innerWidth > 1024) {
+                closeMobileMenu();
+            }
+            if (isFloatingMenuOpen) {
+                closeFloatingMenu();
+            }
+            if (isLanguageSwitcherOpen) {
+                closeLanguageSwitcher();
+            }
+        }, 250);
+    });
+}
+
+// ===== INICIALIZACIÓN PRINCIPAL OPTIMIZADA =====
+function initializeApp() {
+    console.log('🚀 Inicializando StarFlex Landing Page Optimizada...');
+    
+    // Inicializar componentes críticos
     initializeNavigation();
     initializeLanguageSwitcher();
+    initializeFloatingWidget();
     
-    // Cargar idioma guardado
-    const savedLanguage = localStorage.getItem('starflex-language');
-    if (savedLanguage && translations[savedLanguage]) {
-        switchLanguage(savedLanguage);
+    // Usar requestIdleCallback para componentes menos críticos
+    const initializeNonCritical = () => {
+        imageOptimizer = new ImageOptimizer();
+        initializeScrollEffects();
+        initializeResizeHandler();
+        
+        // Cargar idioma guardado
+        const savedLanguage = localStorage.getItem('starflex-language');
+        if (savedLanguage && savedLanguage !== currentLanguage) {
+            switchLanguage(savedLanguage);
+        }
+    };
+    
+    if ('requestIdleCallback' in window) {
+        requestIdleCallback(initializeNonCritical);
+    } else {
+        setTimeout(initializeNonCritical, 100);
     }
     
-    // Inicializar lazy loading después del LCP
-    initializeLazyContent();
-}
-
-// ===== INICIALIZACIÓN INMEDIATA =====
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeCriticalApp);
-} else {
-    initializeCriticalApp();
+    console.log('✅ StarFlex Landing Page Optimizada inicializada');
 }
 
 // ===== MANEJO DE ERRORES =====
 window.addEventListener('error', (e) => {
-    console.error('Error crítico:', e.error);
+    console.error('Error capturado:', e.error);
 });
+
+window.addEventListener('unhandledrejection', (e) => {
+    console.error('Promise rechazada:', e.reason);
+});
+
+// ===== INICIALIZACIÓN =====
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeApp);
+} else {
+    initializeApp();
+}
+
+// ===== EXPORTAR PARA DEBUGGING =====
+window.StarFlexDebug = {
+    imageOptimizer,
+    toggleMobileMenu,
+    switchLanguage,
+    currentLanguage,
+    isMenuOpen,
+    isFloatingMenuOpen,
+    isLanguageSwitcherOpen
+};

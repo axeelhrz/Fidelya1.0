@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- ULTRA CRITICAL RESOURCE HINTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="dns-prefetch" href="https://starflex.web.app">
+    
+    <!-- CRITICAL RESOURCE PRELOADS CON FETCHPRIORITY -->
+    <link rel="preload" href="./assets/phones/Hero.avif" as="image" type="image/avif" fetchpriority="high">
+    <link rel="preload" href="./assets/phones/Hero.webp" as="image" type="image/webp" fetchpriority="high">
+    <link rel="preload" href="./assets/phones/Hero.jpg" as="image" type="image/jpeg" fetchpriority="high">
+    <link rel="preload" href="./assets/logo.avif" as="image" type="image/avif" fetchpriority="high">
+    <link rel="preload" href="css/critical-optimized.css" as="style" fetchpriority="high">
+    
+    <!-- FONT PRELOAD OPTIMIZADO PARA PREVENIR CLS -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800;900&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800;900&display=swap"></noscript>
+    
+    <!-- SEO Optimizado -->
+    <title data-translate="page-title">StarFlex - Automatiza tus Bloques de Amazon Flex | Prueba Gratis</title>
+    <meta name="description" data-translate="page-description" content="Starflex revoluciona Amazon Flex. Automatización inteligente de bloques, optimización de horarios y máximas ganancias. Únete a +15,000 conductores exitosos.">
+    <meta name="keywords" content="Amazon Flex, automatización bloques, ganancias delivery, optimizar horarios, conductor profesional, Starflex">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://starflexapp.com">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="Starflex - La Revolución de Amazon Flex">
+    <meta property="og:description" content="Automatización inteligente que multiplica tus ganancias.">
+    <meta property="og:image" content="https://starflexapp.com/assets/og-starflex-hero.jpg">
+    <meta property="og:url" content="https://starflexapp.com">
+    <meta property="og:type" content="website">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="./assets/icon.png" sizes="32x32">
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#FF2D55">
+    
+    <!-- CRITICAL CSS INLINE OPTIMIZADO -->
+    <link rel="stylesheet" href="css/critical-optimized.css">
+    
+    <!-- NON-CRITICAL CSS ASYNC CON MEDIA QUERY -->
+    <link rel="preload" href="css/style.css" as="style" onload="this.onload=null;this.rel='stylesheet'" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="css/style.css"></noscript>
+    
+    <!-- FONT LOADING DETECTION SCRIPT -->
+    <script>
+        (function() {
+            // Detectar soporte de formatos de imagen
+            const formats = [
+                { type: 'avif', data: 'data:image/avif;base64,AAAAIGZ0eXBhdmlmAAAAAGF2aWZtaWYxbWlhZk1BMUIAAADybWV0YQAAAAAAAAAoaGRscgAAAAAAAAAAcGljdAAAAAAAAAAAAAAAAGxpYmF2aWYAAAAADnBpdG0AAAAAAAEAAAAeaWxvYwAAAABEAAABAAEAAAABAAABGgAAAB0AAAAoaWluZgAAAAAAAQAAABppbmZlAgAAAAABAABhdjAxQ29sb3IAAAAAamlwcnAAAABLaXBjbwAAABRpc3BlAAAAAAAAAAIAAAACAAAAEHBpeGkAAAAAAwgICAAAAAxhdjFDgQ0MAAAAABNjb2xybmNseAACAAIAAYAAAAAXaXBtYQAAAAAAAAABAAEEAQKDBAAAACVtZGF0EgAKCBgABogQEAwgMg8f8D///8WfhwB8+ErK42A=' },
+                { type: 'webp', data: 'data:image/webp;base64,UklGRjoAAABXRUJQVlA4IC4AAACyAgCdASoCAAIALmk0mk0iIiIiIgBoSygABc6WWgAA/veff/0PP8bA//LwYAAA' }
+            ];
+            
+            Promise.all(formats.map(f => {
+                return new Promise(resolve => {
+                    const img = new Image();
+                    img.onload = img.onerror = () => resolve({ type: f.type, supported: img.width > 0 && img.height > 0 });
+                    img.src = f.data;
+                });
+            })).then(results => {
+                const html = document.documentElement;
+                results.forEach(({ type, supported }) => {
+                    html.classList.add(supported ? type : `no-${type}`);
+                });
+            });
+            
+            // Detectar carga de fuentes para prevenir CLS
+            if ('fonts' in document) {
+                document.fonts.ready.then(() => {
+                    document.documentElement.classList.add('fonts-loaded');
+                });
+            } else {
+                // Fallback para navegadores sin soporte
+                setTimeout(() => {
+                    document.documentElement.classList.add('fonts-loaded');
+                }, 3000);
+            }
+        })();
+    </script>
+    
+    <!-- PREVENT LAYOUT SHIFT STYLES -->
+    <style>
+        /* Prevenir CLS durante la carga */
+        .hero__title--main,
+        .hero__title--highlight,
+        .hero__title--amazon {
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .nav__logo {
+            background-color: rgba(255, 255, 255, 0.1);
+            min-width: 55px;
+            min-height: 55px;
+        }
+        
+        .download-btn__image {
+            background-color: rgba(255, 255, 255, 0.1);
+            min-width: 180px;
+            min-height: 60px;
+        }
+        
+        .hero__phone {
+            background-color: #000000;
+            min-width: 320px;
+            min-height: 640px;
+        }
+        
+        @media (max-width: 768px) {
+            .hero__title--main,
+            .hero__title--highlight,
+            .hero__title--amazon {
+                min-height: 45px;
+            }
+            
+            .nav__logo {
+                min-width: 50px;
+                min-height: 50px;
+            }
+            
+            .download-btn__image {
+                min-width: 160px;
+                min-height: 50px;
+            }
+            
+            .hero__phone {
+                min-width: 260px;
+                min-height: 520px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .hero__title--main,
+            .hero__title--highlight,
+            .hero__title--amazon {
+                min-height: 35px;
+            }
+            
+            .download-btn__image {
+                min-width: 140px;
+                min-height: 45px;
+            }
+            
+            .hero__phone {
+                min-width: 220px;
+                min-height: 440px;
+            }
+        }
+    </style>
+</head>
+
+<body class="font-loading">
+    <!-- Language Switcher CON DIMENSIONES FIJAS -->
+    <div class="language-switcher" id="language-switcher">
+        <button class="language-switcher__btn" id="language-switcher-btn" aria-label="Cambiar idioma" aria-expanded="false">
+            <span class="language-switcher__text" id="language-switcher-text">ES</span>
+        </button>
+        <div class="language-switcher__dropdown" id="language-switcher-dropdown">
+            <button class="language-switcher__option" data-lang="es">🇪🇸 Español</button>
+            <button class="language-switcher__option" data-lang="en">🇺🇸 English</button>
+        </div>
+    </div>
+    
+    <!-- Header CON DIMENSIONES FIJAS -->
+    <header class="header" id="header">
+        <nav class="nav">
+            <div class="nav__brand">
+                <div class="nav__logo" tabindex="0" role="button" aria-label="StarFlex - Ir al inicio"></div>
+            </div>
+            
+            <div class="nav__menu" id="nav-menu">
+                <ul class="nav__list">
+                    <li><a href="#home" class="nav__link">Inicio</a></li>
+                    <li><a href="#features" class="nav__link">Características</a></li>
+                    <li><a href="#videos" class="nav__link">Videos</a></li>
+                    <li><a href="#faq" class="nav__link">FAQ</a></li>
+                    <li><a href="#contact" class="nav__link">Contacto</a></li>
+                </ul>
+            </div>
+            
+            <div class="nav__cta">
+                <a href="https://starflex.web.app/" class="btn btn--primary" rel="noopener">Comienza tu prueba gratuita</a>
+            </div>
+            
+            <button class="nav__toggle" id="nav-toggle" aria-label="Abrir menú" aria-expanded="false">
+                <span class="nav__toggle-line"></span>
+                <span class="nav__toggle-line"></span>
+                <span class="nav__toggle-line"></span>
+            </button>
+        </nav>
+    </header>
+
+    <!-- Hero Section CON DIMENSIONES RESERVADAS -->
+    <section class="hero" id="home">
+        <div class="container">
+            <div class="hero__container">
+                <div class="hero__content">
+                    <div class="hero__badge">Next-Gen Amazon Flex Revolution</div>
+                    
+                    <h1 class="hero__title">
+                        <span class="hero__title--main">DOMINA LOS</span>
+                        <span class="hero__title--highlight">BLOQUES DE</span>
+                        <span class="hero__title--amazon">AMAZON FLEX</span>
+                    </h1>
+                    
+                    <p class="hero__subtitle">
+                        Automatización inteligente de última generación que multiplica tus ganancias. 
+                        La plataforma más avanzada para conductores profesionales del futuro.
+                    </p>
+                    
+                    <div class="hero__cta-group">
+                        <a href="https://starflex.web.app/" class="btn btn--primary btn--cta" rel="noopener">
+                            <span>PRUEBA GRATUITA</span>
+                            <small>3 DÍAS GRATIS</small>
+                        </a>
+                        
+                        <div class="hero__download">
+                            <a href="https://play.google.com/store/apps/details?id=com.minoka.starflex&pli=1" class="download-btn" rel="noopener">
+                                <img class="download-btn__image" 
+                                     alt="Descargar en Google Play" 
+                                     loading="eager" 
+                                     width="180" 
+                                     height="60" 
+                                     src="./assets/GooglePlay.jpg"
+                                     style="min-width: 180px; min-height: 60px;">
+                            </a>
+                            
+                            <a href="https://starflex.web.app/" class="download-btn" rel="noopener">
+                                <img class="download-btn__image" 
+                                     alt="Descargar en App Store" 
+                                     loading="eager" 
+                                     width="180" 
+                                     height="60" 
+                                     src="./assets/AppleStore.jpg"
+                                     style="min-width: 180px; min-height: 60px;">
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="hero__media">
+                    <div class="hero__phone-container">
+                        <div class="hero__phone">
+                            <div class="hero__phone-screen">
+                                <div class="hero__phone-content">
+                                    <!-- Video con fallback optimizado -->
+                                    <video class="hero__phone-video" 
+                                           id="hero-video"
+                                           muted 
+                                           autoplay 
+                                           loop 
+                                           playsinline 
+                                           preload="metadata"
+                                           width="320" 
+                                           height="640"
+                                           style="min-width: 320px; min-height: 640px;">
+                                        <source src="./assets/StarFlex.mp4" type="video/mp4">
+                                        Tu navegador no soporta videos HTML5.
+                                    </video>
+                                    
+                                    <!-- Imagen de fallback con dimensiones fijas -->
+                                    <picture style="display: none;">
+                                        <source srcset="./assets/phones/Hero.avif" type="image/avif">
+                                        <source srcset="./assets/phones/Hero.webp" type="image/webp">
+                                        <img class="hero__phone-image" 
+                                             src="./assets/phones/Hero.jpg" 
+                                             alt="Interfaz principal de StarFlex" 
+                                             loading="eager" 
+                                             fetchpriority="high"
+                                             width="320" 
+                                             height="640"
+                                             style="min-width: 320px; min-height: 640px;">
+                                    </picture>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contenido lazy-loaded -->
+    <div id="lazy-content" style="display: none;">
+        <!-- Features Section -->
+        <section class="features" id="features">
+            <div class="container">
+                <div class="features__header">
+                    <h2 class="features__title">Características Revolucionarias</h2>
+                    <p class="features__subtitle">Descubre las herramientas que transformarán tu experiencia con Amazon Flex</p>
+                </div>
+                
+                <div class="features__grid">
+                    <!-- Feature items se cargarán aquí -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Videos Section -->
+        <section class="videos" id="videos">
+            <div class="container">
+                <div class="videos__header">
+                    <div class="videos__badge">
+                        <div class="videos__badge-icon">🎬</div>
+                        Experiencia Visual Inmersiva
+                    </div>
+                    <h2 class="videos__title">
+                        <span class="videos__title--main">VE STARFLEX</span>
+                        <span class="videos__title--highlight">EN ACCIÓN</span>
+                    </h2>
+                    <p class="videos__subtitle">Descubre cómo StarFlex revoluciona tu experiencia con Amazon Flex</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- FAQ Section -->
+        <section class="faq" id="faq">
+            <div class="container">
+                <div class="faq__header">
+                    <h2 class="faq__title">Preguntas Frecuentes</h2>
+                    <p class="faq__subtitle">Encuentra respuestas a las dudas más comunes sobre StarFlex</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact Section -->
+        <section class="contact" id="contact">
+            <div class="container">
+                <div class="contact__header">
+                    <div class="contact__badge">Conecta con el Futuro</div>
+                    <h2 class="contact__title">
+                        <span class="contact__title--main">MEJORES BLOQUES DE</span>
+                        <span class="contact__title--highlight">AMAZON FLEX</span>
+                    </h2>
+                    <p class="contact__subtitle">Síguenos en nuestras redes sociales para los mejores bloques diarios</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Floating Widget -->
+    <div class="floating-widget" id="floating-widget">
+        <div class="floating-widget__container">
+            <div class="floating-widget__menu" id="floating-menu">
+                <a href="https://whatsapp.com/channel/0029VaAqKKk4yltPrYqJzV1h" class="floating-widget__menu-item floating-widget__whatsapp" rel="noopener">
+                    <svg class="floating-widget__icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.488"/>
+                    </svg>
+                    <div class="floating-widget__tooltip">WhatsApp</div>
+                </a>
+                
+                <a href="https://t.me/starflexoficial" class="floating-widget__menu-item floating-widget__telegram" rel="noopener">
+                    <svg class="floating-widget__icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+                    </svg>
+                    <div class="floating-widget__tooltip">Telegram</div>
+                </a>
+            </div>
+            
+            <button class="floating-widget__main-btn" id="floating-main-btn" aria-label="Abrir menú de contacto" aria-expanded="false">
+                <svg class="floating-widget__main-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- JavaScript optimizado -->
+    <script>
+        // Cargar contenido no crítico después del LCP
+        window.addEventListener('load', () => {
+            const lazyContent = document.getElementById('lazy-content');
+            if (lazyContent) {
+                lazyContent.style.display = 'block';
+            }
+        });
+        
+        // Optimización de video hero
+        const heroVideo = document.getElementById('hero-video');
+        if (heroVideo) {
+            heroVideo.addEventListener('error', () => {
+                const fallbackImage = document.querySelector('.hero__phone-image').parentElement;
+                if (fallbackImage) {
+                    fallbackImage.style.display = 'block';
+                    heroVideo.style.display = 'none';
+                }
+            });
+        }
+    </script>
+    
+    <script src="js/script-optimized.js" defer></script>
+    
+    <!-- Service Worker -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => console.log('SW registered'))
+                    .catch(error => console.log('SW registration failed'));
+            });
+        }
+    </script>
+</body>
+</html>
