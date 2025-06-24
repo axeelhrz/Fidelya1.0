@@ -13,11 +13,6 @@
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800;900&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800;900&display=swap"></noscript>
     
-    <!-- CRITICAL RESOURCE PRELOADS - Fixed paths -->
-    <link rel="preload" href="./assets/phones/Hero.jpg" as="image" type="image/jpeg" fetchpriority="high">
-    <link rel="preload" href="./assets/logo.png" as="image" type="image/png" fetchpriority="high">
-    <link rel="preload" href="css/critical-optimized.css" as="style" fetchpriority="high">
-    
     <!-- SEO Optimizado -->
     <title data-translate="page-title">StarFlex - Automatiza tus Bloques de Amazon Flex | Prueba Gratis</title>
     <meta name="description" data-translate="page-description" content="Starflex revoluciona Amazon Flex. Automatización inteligente de bloques, optimización de horarios y máximas ganancias. Únete a +15,000 conductores exitosos.">
@@ -51,8 +46,8 @@
             font-display: swap;
         }
         
-        /* Reserve space for images to prevent CLS */
-        .hero__phone-image {
+        /* Reserve space for video to prevent CLS */
+        .hero__phone-video {
             width: 320px;
             height: 640px;
             background-color: #000;
@@ -66,11 +61,23 @@
             display: block;
         }
         
-        .download-btn__image {
+        .download-btn__text {
             width: 180px;
             height: 60px;
             background-color: #2a2a2a;
-            display: block;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .download-btn__text:hover {
+            background-color: #3a3a3a;
+            transform: translateY(-2px);
         }
         
         /* Prevent layout shift from language switcher */
@@ -116,7 +123,7 @@
     <header class="header" id="header" style="min-height: 80px;">
         <nav class="nav">
             <div class="nav__brand">
-                <div class="nav__logo" tabindex="0" role="button" aria-label="StarFlex - Ir al inicio" style="width: 55px; height: 55px; background-image: url('./assets/logo.png'); background-size: contain; background-repeat: no-repeat; background-position: center;"></div>
+                <div class="nav__logo" tabindex="0" role="button" aria-label="StarFlex - Ir al inicio" style="width: 55px; height: 55px; background-color: #1a1a1a; border-radius: 12px;"></div>
             </div>
             
             <div class="nav__menu" id="nav-menu">
@@ -167,11 +174,11 @@
                         
                         <div class="hero__download">
                             <a href="https://play.google.com/store/apps/details?id=com.minoka.starflex&pli=1" class="download-btn" rel="noopener">
-                                <img class="download-btn__image" alt="Descargar en Google Play" loading="lazy" width="180" height="60" src="./assets/GooglePlay.avif" style="width: 180px; height: 60px; background-color: #2a2a2a;">
+                                <span class="download-btn__text">Descargar en Google Play</span>
                             </a>
                             
                             <a href="https://starflex.web.app/" class="download-btn" rel="noopener">
-                                <img class="download-btn__image" alt="Descargar en App Store" loading="lazy" width="180" height="60" src="./assets/AppleStore.avif" style="width: 180px; height: 60px; background-color: #2a2a2a;">
+                                <span class="download-btn__text">Descargar en App Store</span>
                             </a>
                         </div>
                     </div>
@@ -182,15 +189,19 @@
                         <div class="hero__phone">
                             <div class="hero__phone-screen">
                                 <div class="hero__phone-content">
-                                    <!-- Reserved space for image to prevent CLS -->
-                                    <img class="hero__phone-image" 
-                                         src="./assets/phones/Hero.jpg" 
-                                         alt="Interfaz principal de StarFlex" 
-                                         loading="eager" 
-                                         fetchpriority="high"
-                                         width="320" 
-                                         height="640"
-                                         style="width: 320px; height: 640px; background-color: #000; display: block;">
+                                    <!-- Reserved space for video to prevent CLS -->
+                                    <video class="hero__phone-video" 
+                                           muted 
+                                           autoplay 
+                                           loop 
+                                           playsinline 
+                                           preload="metadata"
+                                           width="320" 
+                                           height="640"
+                                           style="width: 320px; height: 640px; background-color: #000; display: block;">
+                                        <source src="./assets/StarFlex.mp4" type="video/mp4">
+                                        Tu navegador no soporta videos HTML5.
+                                    </video>
                                 </div>
                             </div>
                         </div>
@@ -199,453 +210,6 @@
             </div>
         </div>
     </section>
-
-    <!-- Features Section -->
-    <section class="features" id="features">
-        <div class="container">
-            <div class="features__header">
-                <h2 class="features__title">Características Revolucionarias</h2>
-                <p class="features__subtitle">Descubre las herramientas que transformarán tu experiencia con Amazon Flex</p>
-            </div>
-            
-            <div class="features__grid">
-                <!-- Feature 1: Horario -->
-                <div class="feature">
-                    <div class="feature__content">
-                        <h3 class="feature__title">HORARIO</h3>
-                        <p class="feature__description">Elige los días y horarios que prefieras para tus bloques de entrega.</p>
-                        <ul class="feature__list">
-                            <li class="feature__list-item">Configuración personalizada por día</li>
-                            <li class="feature__list-item">Horarios flexibles de trabajo</li>
-                            <li class="feature__list-item">Optimización automática de turnos</li>
-                            <li class="feature__list-item">Sincronización con tu calendario</li>
-                        </ul>
-                    </div>
-                    <div class="feature__phone">
-                        <div class="phone">
-                            <div class="phone__screen">
-                                <div class="phone__content">
-                                    <!-- Reserved space for lazy-loaded image -->
-                                    <div class="phone__app-image" style="width: 100%; height: 100%; background-color: #000;" data-src="./assets/phones/Horario.avif"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Feature 2: Estaciones -->
-                <div class="feature">
-                    <div class="feature__content">
-                        <h3 class="feature__title">ESTACIONES</h3>
-                        <p class="feature__description">Selecciona tus estaciones preferidas y precios para que nuestra app pueda ofrecerte los bloques que se ajusten a tus preferencias.</p>
-                        <ul class="feature__list">
-                            <li class="feature__list-item">Selección personalizada de estaciones favoritas</li>
-                            <li class="feature__list-item">Configuración de precios mínimos por estación</li>
-                            <li class="feature__list-item">Análisis de rentabilidad por ubicación</li>
-                            <li class="feature__list-item">Notificaciones instantáneas de bloques disponibles</li>
-                            <li class="feature__list-item">Mapa interactivo con todas las estaciones</li>
-                        </ul>
-                    </div>
-                    <div class="feature__phone">
-                        <div class="phone">
-                            <div class="phone__screen">
-                                <div class="phone__content">
-                                    <div class="phone__app-image" style="width: 100%; height: 100%; background-color: #000;" data-src="./assets/phones/Estaciones.avif"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Feature 3: Calendario -->
-                <div class="feature">
-                    <div class="feature__content">
-                        <h3 class="feature__title">CALENDARIO</h3>
-                        <p class="feature__description">En el calendario podrás ver tus bloques aceptados y encontrar las opciones para identificarte desde cualquier ubicación.</p>
-                        <ul class="feature__list">
-                            <li class="feature__list-item">Identificación desde cualquier ubicación</li>
-                            <li class="feature__list-item">Opción de saltar selfie</li>
-                            <li class="feature__list-item">Cancelación rápida de bloques</li>
-                        </ul>
-                    </div>
-                    <div class="feature__phone">
-                        <div class="phone">
-                            <div class="phone__screen">
-                                <div class="phone__content">
-                                    <div class="phone__app-image" style="width: 100%; height: 100%; background-color: #000;" data-src="./assets/phones/Calendario.avif"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Feature 4: Registro -->
-                <div class="feature">
-                    <div class="feature__content">
-                        <h3 class="feature__title">REGISTRO</h3>
-                        <p class="feature__description">En el registro, podrá ver todos los bloques disponibles y el motivo detallado por el cual se ignoraron algunos.</p>
-                        <ul class="feature__list">
-                            <li class="feature__list-item">Historial completo de bloques</li>
-                            <li class="feature__list-item">Motivos detallados de rechazo</li>
-                            <li class="feature__list-item">Optimización de filtros</li>
-                            <li class="feature__list-item">Análisis de patrones</li>
-                        </ul>
-                    </div>
-                    <div class="feature__phone">
-                        <div class="phone">
-                            <div class="phone__screen">
-                                <div class="phone__content">
-                                    <div class="phone__app-image" style="width: 100%; height: 100%; background-color: #000;" data-src="./assets/phones/Registro.avif"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Feature 5: Notificaciones -->
-                <div class="feature">
-                    <div class="feature__content">
-                        <h3 class="feature__title">NOTIFICACIONES</h3>
-                        <p class="feature__description">StarFlex te mantiene informado con múltiples tipos de notificaciones para que nunca te pierdas los mejores bloques disponibles.</p>
-                        <ul class="feature__list">
-                            <li class="feature__list-item">Notificaciones Push instantáneas</li>
-                            <li class="feature__list-item">Alertas por correo electrónico</li>
-                            <li class="feature__list-item">Llamadas telefónicas automáticas</li>
-                            <li class="feature__list-item">Mensajes SMS directos</li>
-                            <li class="feature__list-item">Alertas personalizables por tipo de bloque</li>
-                        </ul>
-                    </div>
-                    <div class="feature__phone">
-                        <div class="phone">
-                            <div class="phone__screen">
-                                <div class="phone__content">
-                                    <div class="phone__app-image" style="width: 100%; height: 100%; background-color: #000;" data-src="./assets/phones/Notificaciones.avif"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Feature 6: Referidos -->
-                <div class="feature">
-                    <div class="feature__content">
-                        <h3 class="feature__title">REFERIDOS</h3>
-                        <p class="feature__description">Invitá a otros usuarios a unirse a Starflex y obtené beneficios exclusivos por cada referido que se registre.</p>
-                        <ul class="feature__list">
-                            <li class="feature__list-item">Enlace único de referido personalizado</li>
-                            <li class="feature__list-item">Gana 1 semana gratis por cada referido</li>
-                            <li class="feature__list-item">Código QR para compartir fácilmente</li>
-                        </ul>
-                    </div>
-                    <div class="feature__phone">
-                        <div class="phone">
-                            <div class="phone__screen">
-                                <div class="phone__content">
-                                    <div class="phone__app-image" style="width: 100%; height: 100%; background-color: #000;" data-src="./assets/phones/Referidos.avif"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Videos Section -->
-    <section class="videos" id="videos">
-        <div class="container">
-            <div class="videos__header">
-                <div class="videos__badge">
-                    <span class="videos__badge-icon">🎬</span>
-                    Experiencia Visual Inmersiva
-                </div>
-                <h2 class="videos__title">
-                    <span class="videos__title--main">VE STARFLEX</span>
-                    <span class="videos__title--highlight">EN ACCIÓN</span>
-                </h2>
-                <p class="videos__subtitle">Descubre cómo StarFlex revoluciona tu experiencia con Amazon Flex. Mira la automatización inteligente trabajando en tiempo real.</p>
-            </div>
-            
-            <div class="videos__main-container">
-                <div class="videos__player-container">
-                    <div class="videos__player-frame">
-                        <video class="videos__player" id="main-video" poster="./assets/video-poster.jpg" preload="none">
-                            <source src="./assets/StarFlex.mp4" type="video/mp4">
-                            Tu navegador no soporta videos HTML5. <a href="./assets/StarFlex.mp4">Descargar video</a>.
-                        </video>
-                        
-                        <div class="videos__play-overlay" id="play-overlay">
-                            <div class="videos__play-button">
-                                <svg class="videos__play-icon" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M8 5v14l11-7z"/>
-                                </svg>
-                                <div class="videos__play-pulse"></div>
-                            </div>
-                            <div class="videos__play-text">
-                                <span class="videos__play-title">REPRODUCIR DEMO</span>
-                                <span class="videos__play-subtitle">Ver StarFlex en acción</span>
-                            </div>
-                        </div>
-                        
-                        <div class="videos__progress-indicators">
-                            <div class="videos__progress-bar">
-                                <div class="videos__progress-fill"></div>
-                            </div>
-                            <div class="videos__time-display">
-                                <span class="videos__current-time">0:00</span>
-                                <span class="videos__duration">0:00</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="videos__info">
-                    <h3 class="videos__info-title">StarFlex Demo Completo</h3>
-                    <p class="videos__info-description">Observa cómo StarFlex automatiza completamente tu experiencia con Amazon Flex. Desde la configuración inicial hasta la captura automática de bloques.</p>
-                </div>
-            </div>
-            
-            <div class="videos__cta">
-                <div class="videos__cta-content">
-                    <h3 class="videos__cta-title">¿Listo para Transformar tus Ganancias?</h3>
-                    <p class="videos__cta-description">Únete a más de 15,000 conductores que ya están maximizando sus ingresos con StarFlex</p>
-                    <div class="videos__cta-buttons">
-                        <a href="https://starflex.web.app/" class="btn btn--primary btn--cta-video" rel="noopener">
-                            <span>COMENZAR AHORA</span>
-                            <small>3 días gratis</small>
-                        </a>
-                        <a href="#contact" class="btn btn--secondary">VER DEMO PERSONALIZADA</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- FAQ Section -->
-    <section class="faq" id="faq">
-        <div class="container">
-            <div class="faq__header">
-                <h2 class="faq__title">Preguntas Frecuentes</h2>
-                <p class="faq__subtitle">Encuentra respuestas claras a las dudas más comunes sobre StarFlex y descubre cómo transformar tu experiencia con Amazon Flex.</p>
-                
-                <div class="faq__search-container">
-                    <input type="text" class="faq__search" id="faq-search" placeholder="Buscar pregunta...">
-                    <div class="faq__search-icon"></div>
-                </div>
-            </div>
-            
-            <div class="faq__container">
-                <div class="faq__list">
-                    <div class="faq__item">
-                        <button class="faq__question" aria-expanded="false">
-                            <span class="faq__question-text">¿Cuáles son los principales beneficios de utilizar StarFlex?</span>
-                            <div class="faq__icon"></div>
-                        </button>
-                        <div class="faq__answer">
-                            <div class="faq__answer-content">
-                                <p class="faq__answer-text">StarFlex está diseñado para <span class="faq__answer-highlight">eliminar la conducción distraída</span> mediante automatización inteligente. Te permite concentrarte completamente en la conducción segura mientras nuestro sistema trabaja para encontrar los mejores bloques. Con StarFlex, no necesitas revisar constantemente tu teléfono, garantizando una experiencia más segura y eficiente que te permite maximizar tus ganancias.</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="faq__item">
-                        <button class="faq__question" aria-expanded="false">
-                            <span class="faq__question-text">¿StarFlex puede resolver automáticamente los CAPTCHA?</span>
-                            <div class="faq__icon"></div>
-                        </button>
-                        <div class="faq__answer">
-                            <div class="faq__answer-content">
-                                <p class="faq__answer-text">Sí, StarFlex incluye <span class="faq__answer-highlight">tecnología avanzada para resolver CAPTCHA automáticamente</span>. Nuestro sistema utiliza algoritmos inteligentes que pueden interpretar y resolver diferentes tipos de verificaciones, permitiendo una navegación fluida sin interrupciones manuales. Esto optimiza tu tiempo y hace que tu experiencia diaria sea más eficiente.</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="faq__item">
-                        <button class="faq__question" aria-expanded="false">
-                            <span class="faq__question-text">¿Es seguro usar StarFlex? ¿Amazon puede detectarlo?</span>
-                            <div class="faq__icon"></div>
-                        </button>
-                        <div class="faq__answer">
-                            <div class="faq__answer-content">
-                                <p class="faq__answer-text">StarFlex utiliza <span class="faq__answer-highlight">tecnología avanzada de simulación humana</span> que incluye patrones de comportamiento naturales, tiempos de respuesta variables y gestos táctiles realistas. Nuestro enfoque se centra en ayudar a los conductores a brindar un mejor servicio a Amazon y sus clientes, asegurando entregas eficientes y de alta calidad.</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="faq__item">
-                        <button class="faq__question" aria-expanded="false">
-                            <span class="faq__question-text">¿StarFlex funciona en iPhone y Android?</span>
-                            <div class="faq__icon"></div>
-                        </button>
-                        <div class="faq__answer">
-                            <div class="faq__answer-content">
-                                <p class="faq__answer-text">Sí, StarFlex está disponible para <span class="faq__answer-highlight">iOS (iPhone 8+) y Android (8.0+)</span>. Hemos desarrollado aplicaciones nativas optimizadas para cada plataforma, garantizando el mejor rendimiento y una experiencia de usuario superior. Ambas versiones incluyen todas las funcionalidades y reciben actualizaciones automáticas.</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="faq__item">
-                        <button class="faq__question" aria-expanded="false">
-                            <span class="faq__question-text">¿Qué necesito para empezar a usar StarFlex?</span>
-                            <div class="faq__icon"></div>
-                        </button>
-                        <div class="faq__answer">
-                            <div class="faq__answer-content">
-                                <p class="faq__answer-text">Solo necesitas una <span class="faq__answer-highlight">cuenta activa de Amazon Flex y un dispositivo compatible</span>. Después de descargar la aplicación, el proceso de configuración toma menos de 5 minutos. Nuestro sistema de configuración guiada te ayudará a optimizar tu experiencia desde el primer día.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="faq__no-results" id="faq-no-results">
-                    <p class="faq__no-results-text">No se encontraron preguntas que coincidan con tu búsqueda</p>
-                    <p class="faq__no-results-suggestion">Intenta con términos diferentes o contacta nuestro soporte</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Contact Section -->
-    <section class="contact" id="contact">
-        <div class="container">
-            <div class="contact__header">
-                <div class="contact__badge">
-                    Conecta con el Futuro
-                </div>
-                <h2 class="contact__title">
-                    <span class="contact__title--main">MEJORES BLOQUES DE</span>
-                    <span class="contact__title--highlight">AMAZON FLEX</span>
-                </h2>
-                <p class="contact__subtitle">No olvides seguirnos en nuestras redes sociales ya que publicamos diariamente en nuestros canales la recopilación de los mejores bloques aceptados y así podrás estar al tanto de los horarios y ubicaciones más rentables.</p>
-            </div>
-            
-            <div class="contact__grid">
-                <div class="contact__channel" data-channel="whatsapp">
-                    <svg class="contact__channel-icon" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.893 3.386"/>
-                    </svg>
-                    <div class="contact__channel-content">
-                        <h3 class="contact__channel-title">Canales de noticias de WhatsApp</h3>
-                        <p class="contact__channel-description">Únete a nuestro canal de WhatsApp para recibir las últimas actualizaciones y mejores bloques disponibles</p>
-                        <a href="https://whatsapp.com/channel/0029VaAqmWa4yltJOTBfbH3u" class="contact__channel-btn" rel="noopener">
-                            Unirse al Canal
-                            <span class="contact__channel-arrow">→</span>
-                        </a>
-                    </div>
-                </div>
-
-                <div class="contact__channel" data-channel="instagram">
-                    <svg class="contact__channel-icon" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
-                    </svg>
-                    <div class="contact__channel-content">
-                        <h3 class="contact__channel-title">Instagram</h3>
-                        <p class="contact__channel-description">Síguenos para contenido visual, tips y actualizaciones diarias sobre los mejores bloques</p>
-                        <a href="https://instagram.com/starflexapp" class="contact__channel-btn" rel="noopener">
-                            Seguir
-                            <span class="contact__channel-arrow">→</span>
-                        </a>
-                    </div>
-                </div>
-
-                <div class="contact__channel" data-channel="facebook">
-                    <svg class="contact__channel-icon" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                    </svg>
-                    <div class="contact__channel-content">
-                        <h3 class="contact__channel-title">Facebook</h3>
-                        <p class="contact__channel-description">Únete a nuestra comunidad en Facebook para interactuar con otros conductores y compartir experiencias</p>
-                        <a href="https://facebook.com/starflexapp" class="contact__channel-btn" rel="noopener">
-                            Seguir
-                            <span class="contact__channel-arrow">→</span>
-                        </a>
-                    </div>
-                </div>
-
-                <div class="contact__channel" data-channel="tiktok">
-                    <svg class="contact__channel-icon" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/>
-                    </svg>
-                    <div class="contact__channel-content">
-                        <h3 class="contact__channel-title">TikTok</h3>
-                        <p class="contact__channel-description">Descubre contenido viral, tips rápidos y las últimas tendencias de Amazon Flex</p>
-                        <a href="https://tiktok.com/@starflexapp" class="contact__channel-btn" rel="noopener">
-                            Seguir
-                            <span class="contact__channel-arrow">→</span>
-                        </a>
-                    </div>
-                </div>
-
-                <div class="contact__channel" data-channel="telegram">
-                    <svg class="contact__channel-icon" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
-                    </svg>
-                    <div class="contact__channel-content">
-                        <h3 class="contact__channel-title">Canales de noticias de Telegram</h3>
-                        <p class="contact__channel-description">Recibe notificaciones instantáneas de los mejores bloques y actualizaciones importantes</p>
-                        <a href="https://t.me/starflexapp" class="contact__channel-btn" rel="noopener">
-                            Unirse al Canal
-                            <span class="contact__channel-arrow">→</span>
-                        </a>
-                    </div>
-                </div>
-
-                <div class="contact__channel" data-channel="email">
-                    <svg class="contact__channel-icon" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
-                    </svg>
-                    <div class="contact__channel-content">
-                        <h3 class="contact__channel-title">support@starflexapp.com</h3>
-                        <p class="contact__channel-description">Contacta directamente con nuestro equipo de soporte técnico especializado</p>
-                        <a href="mailto:support@starflexapp.com" class="contact__channel-btn">
-                            Enviar Email
-                            <span class="contact__channel-arrow">→</span>
-                        </a>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="contact__footer">
-                <div class="contact__footer-content">
-                    <div class="contact__footer-text">
-                        <h3>Política de Privacidad • Términos y Condiciones</h3>
-                        <p>© StarFlex • Todos los derechos reservados</p>
-                    </div>
-                    <a href="https://starflex.web.app/" class="btn btn--primary btn--footer" rel="noopener">
-                        <span>COMENZAR AHORA</span>
-                        <small>3 días gratis</small>
-                    </a>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Floating Widget -->
-    <div class="floating-widget" id="floating-widget">
-        <div class="floating-widget__container">
-            <div class="floating-widget__menu" id="floating-menu">
-                <a href="https://whatsapp.com/channel/0029VaAqmWa4yltJOTBfbH3u" class="floating-widget__menu-item floating-widget__whatsapp" rel="noopener">
-                    <svg class="floating-widget__icon" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.893 3.386"/>
-                    </svg>
-                    <div class="floating-widget__tooltip">WhatsApp</div>
-                </a>
-                
-                <a href="https://t.me/starflexapp" class="floating-widget__menu-item floating-widget__telegram" rel="noopener">
-                    <svg class="floating-widget__icon" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
-                    </svg>
-                    <div class="floating-widget__tooltip">Telegram</div>
-                </a>
-            </div>
-            
-            <button class="floating-widget__main-btn" id="floating-main-btn" aria-expanded="false" aria-label="Abrir menú de contacto">
-                <svg class="floating-widget__main-icon" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M20 15.5c-1.25 0-2.45-.2-3.57-.57-.35-.11-.74-.03-1.02.24l-2.2 2.2c-2.83-1.44-5.15-3.75-6.59-6.59l2.2-2.2c.27-.27.35-.67.24-1.02C8.7 6.45 8.5 5.25 8.5 4c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1 0 9.39 7.61 17 17 17 .55 0 1-.45 1-1v-3.5c0-.55-.45-1-1-1zM19 12h2c0-4.97-4.03-9-9-9v2c3.87 0 7 3.13 7 7zm-4 0h2c0-2.76-2.24-5-5-5v2c1.66 0 3 1.34 3 3z"/>
-                </svg>
-            </button>
-        </div>
-    </div>
 
     <!-- JavaScript optimizado -->
     <script src="js/script-performance-optimized.js" defer></script>
