@@ -9,12 +9,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="dns-prefetch" href="https://starflex.web.app">
     
-    <!-- CRITICAL RESOURCE PRELOADS -->
-    <link rel="preload" href="./assets/phones/Hero.avif" as="image" type="image/avif" fetchpriority="high">
-    <link rel="preload" href="./assets/phones/Hero.webp" as="image" type="image/webp" fetchpriority="high">
-    <link rel="preload" href="./assets/phones/Hero.jpg" as="image" type="image/jpeg" fetchpriority="high">
-    <link rel="preload" href="./assets/logo.avif" as="image" type="image/avif" fetchpriority="high">
-    <link rel="preload" href="css/critical.css" as="style" fetchpriority="high">
+    <!-- CRITICAL CSS INLINE -->
+    <link rel="stylesheet" href="css/critical.css">
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800;900&display=swap" as="style">
     
     <!-- SEO Optimizado -->
@@ -35,9 +31,6 @@
     <link rel="icon" type="image/png" href="./assets/icon.png" sizes="32x32">
     <link rel="manifest" href="./manifest.json">
     <meta name="theme-color" content="#FF2D55">
-    
-    <!-- CRITICAL CSS INLINE -->
-    <link rel="stylesheet" href="css/critical.css">
     
     <!-- NON-CRITICAL CSS ASYNC -->
     <link rel="preload" href="css/style.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
@@ -137,11 +130,11 @@
                         
                         <div class="hero__download">
                             <a href="https://play.google.com/store/apps/details?id=com.minoka.starflex&pli=1" class="download-btn" rel="noopener">
-                                <img class="download-btn__image" alt="Descargar en Google Play" loading="lazy" width="180" height="60" src="./assets/GooglePlay.jpg">
+                                <span class="download-btn__text">Descargar en Google Play</span>
                             </a>
                             
                             <a href="https://starflex.web.app/" class="download-btn" rel="noopener">
-                                <img class="download-btn__image" alt="Descargar en App Store" loading="lazy" width="180" height="60" src="./assets/AppleStore.jpg">
+                                <span class="download-btn__text">Descargar en App Store</span>
                             </a>
                         </div>
                     </div>
@@ -152,17 +145,19 @@
                         <div class="hero__phone">
                             <div class="hero__phone-screen">
                                 <div class="hero__phone-content">
-                                    <picture>
-                                        <source srcset="./assets/phones/Hero.avif" type="image/avif">
-                                        <source srcset="./assets/phones/Hero.webp" type="image/webp">
-                                        <img class="hero__phone-image" 
-                                             src="./assets/phones/Hero.jpg" 
-                                             alt="Interfaz principal de StarFlex" 
-                                             loading="eager" 
-                                             fetchpriority="high"
-                                             width="320" 
-                                             height="640">
-                                    </picture>
+                                    <!-- Video principal -->
+                                    <video class="hero__phone-video" 
+                                           id="hero-video"
+                                           muted 
+                                           autoplay 
+                                           loop 
+                                           playsinline 
+                                           preload="metadata"
+                                           width="320" 
+                                           height="640">
+                                        <source src="./assets/StarFlex.mp4" type="video/mp4">
+                                        Tu navegador no soporta videos HTML5.
+                                    </video>
                                 </div>
                             </div>
                         </div>
