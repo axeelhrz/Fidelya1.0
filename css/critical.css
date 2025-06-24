@@ -58,17 +58,6 @@ body {
     pointer-events: auto;
 }
 
-.nav__logo {
-    width: 55px;
-    height: 55px;
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center;
-    border-radius: 12px;
-    background-image: url('../assets/logo.jpg');
-    cursor: pointer;
-}
-
 /* Hero crítico */
 .hero {
     min-height: 100vh;

@@ -57,13 +57,9 @@ const CONFIG = {
         downloads: {
             apple: {
                 avif: './assets/AppleStore.avif',
-                webp: './assets/AppleStore.webp',
-                png: './assets/AppleStore.png'
             },
             google: {
                 avif: './assets/GooglePlay.avif',
-                webp: './assets/GooglePlay.webp',
-                png: './assets/GooglePlay.png'
             }
         }
     }
@@ -234,7 +230,6 @@ class ImageOptimizer {
     async detectFormatSupport() {
         const formats = [
             { type: 'avif', data: 'data:image/avif;base64,AAAAIGZ0eXBhdmlmAAAAAGF2aWZtaWYxbWlhZk1BMUIAAADybWV0YQAAAAAAAAAoaGRscgAAAAAAAAAAcGljdAAAAAAAAAAAAAAAAGxpYmF2aWYAAAAADnBpdG0AAAAAAAEAAAAeaWxvYwAAAABEAAABAAEAAAABAAABGgAAAB0AAAAoaWluZgAAAAAAAQAAABppbmZlAgAAAAABAABhdjAxQ29sb3IAAAAAamlwcnAAAABLaXBjbwAAABRpc3BlAAAAAAAAAAIAAAACAAAAEHBpeGkAAAAAAwgICAAAAAxhdjFDgQ0MAAAAABNjb2xybmNseAACAAIAAYAAAAAXaXBtYQAAAAAAAAABAAEEAQKDBAAAACVtZGF0EgAKCBgABogQEAwgMg8f8D///8WfhwB8+ErK42A=' },
-            { type: 'webp', data: 'data:image/webp;base64,UklGRjoAAABXRUJQVlA4IC4AAACyAgCdASoCAAIALmk0mk0iIiIiIgBoSygABc6WWgAA/veff/0PP8bA//LwYAAA' }
         ];
         
         const promises = formats.map(format => 
