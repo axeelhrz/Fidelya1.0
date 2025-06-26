@@ -36,60 +36,40 @@ const CONFIG = {
         PNG: 'image/png'
     },
     
-    // Rutas de imágenes optimizadas con soporte AVIF
+    // Rutas de imágenes optimizadas - SOLO AVIF (archivos que realmente existen)
     IMAGE_PATHS: {
         hero: {
-            avif: './assets/phones/Hero.avif',
-            webp: './assets/phones/Hero.webp',
-            jpg: './assets/phones/Hero.jpg'
+            avif: './assets/phones/Hero.avif'
         },
         logo: {
-            avif: './assets/logo.avif',
-            webp: './assets/logo.webp',
-            png: './assets/logo.png'
+            avif: './assets/logo.avif'
         },
         phones: {
             horario: {
-                avif: './assets/phones/Horario.avif',
-                webp: './assets/phones/Horario.webp',
-                jpg: './assets/phones/Horario.jpg'
+                avif: './assets/phones/Horario.avif'
             },
             estaciones: {
-                avif: './assets/phones/Estaciones.avif',
-                webp: './assets/phones/Estaciones.webp',
-                jpg: './assets/phones/Estaciones.jpg'
+                avif: './assets/phones/Estaciones.avif'
             },
             calendario: {
-                avif: './assets/phones/Calendario.avif',
-                webp: './assets/phones/Calendario.webp',
-                jpg: './assets/phones/Calendario.jpg'
+                avif: './assets/phones/Calendario.avif'
             },
             registro: {
-                avif: './assets/phones/Registro.avif',
-                webp: './assets/phones/Registro.webp',
-                jpg: './assets/phones/Registro.jpg'
+                avif: './assets/phones/Registro.avif'
             },
             notificaciones: {
-                avif: './assets/phones/Notificaciones.avif',
-                webp: './assets/phones/Notificaciones.webp',
-                jpg: './assets/phones/Notificaciones.jpg'
+                avif: './assets/phones/Notificaciones.avif'
             },
             referidos: {
-                avif: './assets/phones/Referidos.avif',
-                webp: './assets/phones/Referidos.webp',
-                jpg: './assets/phones/Referidos.jpg'
+                avif: './assets/phones/Referidos.avif'
             }
         },
         downloads: {
             apple: {
-                avif: './assets/AppleStore.avif',
-                webp: './assets/AppleStore.webp',
-                png: './assets/AppleStore.png'
+                avif: './assets/AppleStore.avif'
             },
             google: {
-                avif: './assets/GooglePlay.avif',
-                webp: './assets/GooglePlay.webp',
-                png: './assets/GooglePlay.png'
+                avif: './assets/GooglePlay.avif'
             }
         }
     }
@@ -483,7 +463,7 @@ class MobileImageOptimizer {
     getBestImageUrl(imageConfig) {
         if (!imageConfig) return null;
         
-        // Priorizar AVIF si está soportado
+        // Priorizar AVIF si está soportado (y es el único formato disponible)
         if (this.supportedFormats.avif && imageConfig.avif) {
             return imageConfig.avif;
         }
@@ -494,7 +474,7 @@ class MobileImageOptimizer {
         }
         
         // Fallback a JPG o PNG
-        return imageConfig.jpg || imageConfig.png;
+        return imageConfig.jpg || imageConfig.png || imageConfig.avif;
     }
     
     // Cargar imagen optimizada para móvil
@@ -618,6 +598,8 @@ class MobileImageOptimizer {
 
 // ===== INICIALIZACIÓN GLOBAL OPTIMIZADA =====
 let imageOptimizer;
+
+// ... resto del código permanece igual hasta el final del archivo ...
 
 // ===== FUNCIONES DE TRADUCCIÓN OPTIMIZADAS =====
 function initializeLanguageSystem() {
