@@ -1161,7 +1161,7 @@ align-items: center;
 animation: fadeInUp 1s ease-out;
 }
 
-/* ===== BOTONES DE ETIQUETAS UNIFICADOS ===== */
+/* ===== BOTONES DE ETIQUETAS NO CLICKEABLES ===== */
 .hero__badge,
 .videos__badge {
 display: inline-flex;
@@ -1181,17 +1181,10 @@ margin-bottom: var(--space-xl);
 position: relative;
 overflow: hidden;
 transition: all var(--transition);
-cursor: pointer;
-}
-
-.hero__badge:hover,
-.videos__badge:hover {
-background-color: var(--starflex-red);
-color: white;
-transform: translateY(-2px);
-box-shadow: 
-0 8px 25px rgba(255, 45, 85, 0.3),
-0 0 20px rgba(255, 45, 85, 0.4);
+/* REMOVIDO: cursor: pointer; */
+/* REMOVIDO: hover effects */
+pointer-events: none; /* Hace que no sea clickeable */
+user-select: none; /* Evita selección de texto */
 }
 
 .hero__badge::before,
@@ -1623,7 +1616,7 @@ background: #000000;
 border-radius: 45px;
 }
 
-/* ===== VIDEO DEL HERO OPTIMIZADO - CARGA INMEDIATA ===== */
+/* ===== VIDEO DEL HERO OPTIMIZADO - MOSTRAR SIEMPRE ===== */
 .hero__phone-video {
 width: 100%;
 height: 100%;
@@ -1641,6 +1634,7 @@ backface-visibility: hidden;
 image-rendering: -webkit-optimize-contrast;
 image-rendering: crisp-edges;
 opacity: 1;
+display: block; /* Siempre visible */
 }
 
 .hero__phone-video::-webkit-media-controls {
@@ -2923,6 +2917,9 @@ margin-bottom: var(--space-2xl);
 text-transform: uppercase;
 letter-spacing: 1px;
 box-shadow: 0 8px 25px rgba(255, 69, 105, 0.15);
+/* REMOVIDO: cursor: pointer; */
+pointer-events: none; /* Hace que no sea clickeable */
+user-select: none; /* Evita selección de texto */
 }
 
 .contact__badge-icon {

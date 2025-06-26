@@ -25,7 +25,7 @@
     <link rel="icon" type="image/png" sizes="32x32" href="./assets/icon.png">
     
     <!-- Preload de recursos críticos optimizado para móvil -->
-    <link rel="preload" href="./assets/phones/Hero.jpg" as="image" type="image/jpeg">
+    <link rel="preload" href="./assets/phones/Hero.mp4" as="video" type="video/mp4">
     <link rel="preload" href="./assets/logo.png" as="image" type="image/png">
     
     <!-- Fuentes Google optimizadas para móvil -->
@@ -160,13 +160,13 @@
                     </div>
                 </div>
 
-                <!-- iPhone optimizado para móvil -->
+                <!-- iPhone optimizado para móvil con video -->
                 <div class="hero__media">
                     <div class="hero__phone-container">
                         <div class="hero__phone">
                             <div class="hero__phone-screen">
                                 <div class="hero__phone-content">
-                                    <!-- Video deshabilitado en móvil para mejor rendimiento -->
+                                    <!-- Video principal del Hero -->
                                     <video 
                                         class="hero__phone-video" 
                                         id="hero-video"
@@ -174,14 +174,13 @@
                                         muted 
                                         loop 
                                         playsinline
-                                        preload="none"
+                                        preload="auto"
                                         poster="./assets/phones/Hero.jpg"
-                                        style="display: none;"
                                     >
                                         <source src="./assets/phones/Hero.mp4" type="video/mp4">
                                     </video>
-                                    <!-- Imagen de fallback siempre visible en móvil -->
-                                    <div class="hero__phone-app-image image-optimized" role="img" aria-label="Interfaz principal de StarFlex" loading="eager"></div>
+                                    <!-- Imagen de fallback para casos de error -->
+                                    <div class="hero__phone-app-image image-optimized" role="img" aria-label="Interfaz principal de StarFlex" loading="eager" style="display: none;"></div>
                                 </div>
                             </div>
                         </div>
@@ -347,7 +346,6 @@
                             Invitá a otros usuarios a unirse a Starflex y obtené beneficios exclusivos por cada referido que se registre.
                         </p>
                         <ul class="feature__list">
-                            <li class="feature__list-item" data-translate
                             <li class="feature__list-item" data-translate="feature-referrals-item-1">Enlace único de referido personalizado</li>
                             <li class="feature__list-item" data-translate="feature-referrals-item-2">Gana 1 semana gratis por cada referido</li>
                             <li class="feature__list-item" data-translate="feature-referrals-item-3">Código QR para compartir fácilmente</li>
