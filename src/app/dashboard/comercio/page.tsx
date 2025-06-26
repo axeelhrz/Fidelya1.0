@@ -1,11 +1,25 @@
 'use client';
 
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Box,
+  Container,
+  Typography,
+  Avatar,
+  alpha,
+} from '@mui/material';
+import {
+  Store,
+  Security,
+} from '@mui/icons-material';
 import { useAuth } from '@/hooks/useAuth';
 import { useComercios } from '@/hooks/useComercios';
 import { useBeneficios } from '@/hooks/useBeneficios';
 import { useValidaciones } from '@/hooks/useValidaciones';
+
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { ComercioSidebar } from '@/components/layout/ComercioSidebar';
 import { DashboardHeader } from '@/components/comercio/DashboardHeader';
 import { StatsCards } from '@/components/comercio/StatsCards';
 import { ValidationsChart } from '@/components/comercio/ValidationsChart';
@@ -13,103 +27,141 @@ import { TopBenefits } from '@/components/comercio/TopBenefits';
 import { Alerts } from '@/components/comercio/Alerts';
 import { RecentValidations } from '@/components/comercio/RecentValidations';
 import { QuickActions } from '@/components/comercio/QuickActions';
-import { Shield } from 'lucide-react';
 
 const LoadingScreen: React.FC<{ message: string }> = ({ message }) => (
-  <div style={{
-    minHeight: '100vh',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#fafbfc'
-  }}>
+  <Box 
+    sx={{ 
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
+    }}
+  >
     <motion.div 
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5 }}
-      style={{ textAlign: 'center' }}
     >
-      <div style={{
-        width: '48px',
-        height: '48px',
-        border: '3px solid #e2e8f0',
-        borderTop: '3px solid #06b6d4',
-        borderRadius: '50%',
-        animation: 'spin 1s linear infinite',
-        margin: '0 auto 24px'
-      }} />
-      <h1 style={{
-        fontSize: '24px',
-        fontWeight: 600,
-        color: '#1e293b',
-        marginBottom: '8px'
-      }}>
-        Cargando Panel de Control
-      </h1>
-      <p style={{
-        fontSize: '16px',
-        color: '#64748b'
-      }}>
-        {message}
-      </p>
-      <style>{`
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      `}</style>
+      <Box sx={{ textAlign: 'center' }}>
+        <Box sx={{ position: 'relative', mb: 4 }}>
+          <Box
+            sx={{
+              width: 80,
+              height: 80,
+              border: '6px solid #e2e8f0',
+              borderRadius: '50%',
+              borderTopColor: '#06b6d4',
+              borderRightColor: '#0891b2',
+              animation: 'spin 1.5s linear infinite',
+              mx: 'auto',
+              '@keyframes spin': {
+                '0%': { transform: 'rotate(0deg)' },
+                '100%': { transform: 'rotate(360deg)' },
+              },
+            }}
+          />
+        </Box>
+        <Typography variant="h4" sx={{ fontWeight: 900, color: '#0f172a', mb: 2 }}>
+          Cargando Panel de Control
+        </Typography>
+        <Typography variant="h6" sx={{ color: '#64748b', fontWeight: 500 }}>
+          {message}
+        </Typography>
+      </Box>
     </motion.div>
-  </div>
+  </Box>
 );
 
 const AccessDeniedScreen: React.FC = () => (
-  <div style={{
-    minHeight: '100vh',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#fafbfc'
-  }}>
-    <motion.div 
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6 }}
-      style={{
-        textAlign: 'center',
-        maxWidth: '400px',
-        padding: '0 24px'
-      }}
-    >
-      <div style={{
-        width: '64px',
-        height: '64px',
-        backgroundColor: '#fef2f2',
-        borderRadius: '50%',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        margin: '0 auto 24px'
-      }}>
-        <Shield style={{ width: '32px', height: '32px', color: '#ef4444' }} />
-      </div>
-      
-      <h1 style={{
-        fontSize: '24px',
-        fontWeight: 600,
-        color: '#1e293b',
-        marginBottom: '8px'
-      }}>
-        Acceso Restringido
-      </h1>
-      <p style={{
-        fontSize: '16px',
-        color: '#64748b'
-      }}>
-        Necesitas permisos de comercio para acceder a este panel de control.
-      </p>
-    </motion.div>
-  </div>
+  <Box 
+    sx={{ 
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
+    }}
+  >
+    <Container maxWidth="sm">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+      >
+        <Box sx={{ textAlign: 'center' }}>
+          <Avatar
+            sx={{
+              width: 100,
+              height: 100,
+              bgcolor: alpha('#ef4444', 0.1),
+              color: '#ef4444',
+              mx: 'auto',
+              mb: 4,
+            }}
+          >
+            <Security sx={{ fontSize: 50 }} />
+          </Avatar>
+          
+          <Typography variant="h3" sx={{ fontWeight: 900, color: '#0f172a', mb: 2 }}>
+            Acceso Restringido
+          </Typography>
+          <Typography variant="h6" sx={{ color: '#64748b', mb: 4, maxWidth: 400, mx: 'auto' }}>
+            Necesitas permisos de comercio para acceder a este panel de control.
+          </Typography>
+        </Box>
+      </motion.div>
+    </Container>
+  </Box>
 );
+
+// Componente para cada sección del dashboard
+const ComercioSection: React.FC<{ 
+  section: string;
+}> = ({ section }) => {
+  
+  switch (section) {
+    case 'resumen':
+    case 'estadisticas':
+    default:
+      return (
+        <Container maxWidth="xl" sx={{ py: 4 }}>
+          <DashboardHeader />
+          
+          {/* Stats Cards */}
+          <Box sx={{ mb: 6 }}>
+            <StatsCards />
+          </Box>
+
+          {/* Main Content Grid */}
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: {
+                xs: '1fr',
+                lg: '2fr 1fr'
+              },
+              gap: 6,
+              mb: 6
+            }}
+          >
+            {/* Left Column - Charts */}
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <ValidationsChart />
+              <TopBenefits />
+            </Box>
+
+            {/* Right Column - Alerts & Quick Actions */}
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <Alerts />
+              <QuickActions />
+            </Box>
+          </Box>
+
+          {/* Recent Validations */}
+          <RecentValidations />
+        </Container>
+      );
+  }
+};
 
 export default function ComercioDashboard() {
   const { user, loading: authLoading } = useAuth();
@@ -117,8 +169,11 @@ export default function ComercioDashboard() {
   const { loading: beneficiosLoading } = useBeneficios();
   const { loading: validacionesLoading } = useValidaciones();
 
+  const [activeSection, setActiveSection] = useState('resumen');
+
   const loading = authLoading || comercioLoading || beneficiosLoading || validacionesLoading;
 
+  // Redirect if not authenticated
   if (!authLoading && !user) {
     return <AccessDeniedScreen />;
   }
@@ -127,73 +182,23 @@ export default function ComercioDashboard() {
     return <LoadingScreen message="Preparando tu panel de control comercial..." />;
   }
 
-  const mainGridStyle = {
-    display: 'grid',
-    gridTemplateColumns: '1fr',
-    gap: '32px',
-    '@media (min-width: 1024px)': {
-      gridTemplateColumns: '2fr 1fr'
-    }
-  };
-
   return (
-    <div style={{
-      minHeight: '100vh',
-      backgroundColor: '#fafbfc'
-    }}>
-      <div style={{
-        maxWidth: '1200px',
-        margin: '0 auto',
-        padding: '32px 24px'
-      }}>
-        {/* Header */}
-        <DashboardHeader />
-
-        {/* Stats Cards */}
-        <div style={{ marginBottom: '32px' }}>
-          <StatsCards />
-        </div>
-
-        {/* Main Content Grid */}
-        <div style={{ marginBottom: '32px' }}>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: window.innerWidth >= 1024 ? '2fr 1fr' : '1fr',
-            gap: '32px'
-          }}>
-            {/* Left Column - Charts */}
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '32px'
-            }}>
-              <ValidationsChart />
-              <TopBenefits />
-            </div>
-
-            {/* Right Column - Alerts & Quick Actions */}
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '32px'
-            }}>
-              <Alerts />
-              <QuickActions />
-            </div>
-          </div>
-        </div>
-
-        {/* Recent Validations */}
-        <RecentValidations />
-      </div>
-
-      <style>{`
-        @media (min-width: 1024px) {
-          .main-grid {
-            grid-template-columns: 2fr 1fr;
-          }
-        }
-      `}</style>
-    </div>
+    <DashboardLayout 
+      activeSection={activeSection} 
+      onSectionChange={setActiveSection}
+      sidebarComponent={ComercioSidebar}
+    >
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeSection}
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -20 }}
+          transition={{ duration: 0.3 }}
+        >
+          <ComercioSection section={activeSection} />
+        </motion.div>
+      </AnimatePresence>
+    </DashboardLayout>
   );
 }

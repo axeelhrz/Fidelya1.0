@@ -2,23 +2,221 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
+import {
+  Box,
+  Typography,
+  Card,
+  CardContent,
+  alpha,
+  Avatar,
+  LinearProgress,
+  IconButton,
+} from '@mui/material';
+import {
+  TrendingUp,
+  TrendingDown,
+  Receipt,
+  CardGiftcard,
+  Group,
+  AccessTime,
+  ArrowForward,
+} from '@mui/icons-material';
 import { useBeneficios } from '@/hooks/useBeneficios';
 import { useValidaciones } from '@/hooks/useValidaciones';
 import { useComercios } from '@/hooks/useComercios';
-import { 
-  Receipt, 
-  Gift, 
-  Users, 
-  Clock,
-  TrendingUp,
-  TrendingDown
-} from 'lucide-react';
 import { format, subDays, startOfMonth } from 'date-fns';
+import { useRouter } from 'next/navigation';
+
+interface KPICardProps {
+  title: string;
+  value: string | number;
+  change: number;
+  icon: React.ReactNode;
+  color: string;
+  delay: number;
+  subtitle?: string;
+  trend?: 'up' | 'down' | 'neutral';
+  onClick?: () => void;
+}
+
+const KPICard: React.FC<KPICardProps> = ({
+  title,
+  value,
+  change,
+  icon,
+  color,
+  delay,
+  subtitle,
+  trend = 'neutral',
+  onClick
+}) => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95, y: 20 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      transition={{
+        duration: 0.6,
+        delay,
+        type: "spring",
+        stiffness: 100,
+        damping: 15
+      }}
+    >
+      <Card
+        elevation={0}
+        onClick={onClick}
+        sx={{
+          position: 'relative',
+          overflow: 'hidden',
+          border: '1px solid #f1f5f9',
+          borderRadius: 6,
+          background: 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
+          transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+          cursor: onClick ? 'pointer' : 'default',
+          '&:hover': {
+            borderColor: alpha(color, 0.3),
+            transform: onClick ? 'translateY(-8px)' : 'translateY(-4px)',
+            boxShadow: `0 25px 80px -15px ${alpha(color, 0.25)}`,
+            '& .kpi-icon': {
+              transform: 'scale(1.15) rotate(5deg)',
+              bgcolor: alpha(color, 0.2),
+            },
+            '& .kpi-glow': {
+              opacity: 0.8,
+            }
+          },
+        }}
+      >
+        {/* Glow effect */}
+        <Box
+          className="kpi-glow"
+          sx={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: '4px',
+            background: `linear-gradient(90deg, ${color}, ${alpha(color, 0.6)}, ${color})`,
+            opacity: 0.4,
+            transition: 'opacity 0.3s ease',
+          }}
+        />
+        <CardContent sx={{ p: 4 }}>
+          <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 3 }}>
+            <Avatar
+              className="kpi-icon"
+              sx={{
+                width: 64,
+                height: 64,
+                bgcolor: alpha(color, 0.12),
+                color: color,
+                borderRadius: 5,
+                transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                boxShadow: `0 8px 32px ${alpha(color, 0.2)}`,
+              }}
+            >
+              {icon}
+            </Avatar>
+            {/* Trend indicator */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              {trend === 'up' && <TrendingUp sx={{ fontSize: 20, color: '#10b981' }} />}
+              {trend === 'down' && <TrendingDown sx={{ fontSize: 20, color: '#ef4444' }} />}
+              <Typography
+                variant="body2"
+                sx={{
+                  fontWeight: 700,
+                  color: trend === 'up' ? '#10b981' : trend === 'down' ? '#ef4444' : '#6b7280',
+                  fontSize: '0.9rem'
+                }}
+              >
+                {change > 0 ? '+' : ''}{change}%
+              </Typography>
+            </Box>
+          </Box>
+          <Box>
+            <Typography
+              variant="overline"
+              sx={{
+                color: '#94a3b8',
+                fontWeight: 800,
+                fontSize: '0.75rem',
+                letterSpacing: '0.15em',
+                textTransform: 'uppercase',
+                mb: 1,
+                display: 'block'
+              }}
+            >
+              {title}
+            </Typography>
+            <Typography
+              variant="h3"
+              sx={{
+                fontWeight: 900,
+                color: '#0f172a',
+                fontSize: '2.8rem',
+                letterSpacing: '-0.03em',
+                lineHeight: 0.9,
+                mb: subtitle ? 1 : 0,
+              }}
+            >
+              {value}
+            </Typography>
+            {subtitle && (
+              <Typography
+                variant="body2"
+                sx={{
+                  color: '#64748b',
+                  fontWeight: 600,
+                  fontSize: '0.9rem'
+                }}
+              >
+                {subtitle}
+              </Typography>
+            )}
+          </Box>
+          {/* Progress indicator */}
+          <Box sx={{ mt: 3 }}>
+            <LinearProgress
+              variant="determinate"
+              value={Math.abs(change) > 100 ? 100 : Math.abs(change)}
+              sx={{
+                height: 4,
+                borderRadius: 2,
+                bgcolor: alpha(color, 0.1),
+                '& .MuiLinearProgress-bar': {
+                  bgcolor: color,
+                  borderRadius: 2,
+                }
+              }}
+            />
+          </Box>
+          {onClick && (
+            <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
+              <IconButton
+                size="small"
+                sx={{
+                  color: color,
+                  bgcolor: alpha(color, 0.1),
+                  '&:hover': {
+                    bgcolor: alpha(color, 0.2),
+                  }
+                }}
+              >
+                <ArrowForward sx={{ fontSize: 16 }} />
+              </IconButton>
+            </Box>
+          )}
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+};
 
 export const StatsCards: React.FC = () => {
   const { activeBeneficios, beneficios } = useBeneficios();
   const { validaciones } = useValidaciones();
   const { comercio } = useComercios();
+  const router = useRouter();
 
   // Calculate stats
   const now = new Date();
@@ -37,142 +235,79 @@ export const StatsCards: React.FC = () => {
 
   const asociacionesVinculadas = comercio?.asociacionesVinculadas?.length || 0;
 
-  const stats = [
+  const kpiMetrics = [
     {
       title: 'Validaciones este mes',
-      value: validacionesEsteMes.length,
-      icon: Receipt,
+      value: validacionesEsteMes.length.toLocaleString(),
+      change: 12.5,
+      icon: <Receipt sx={{ fontSize: 32 }} />,
       color: '#06b6d4',
-      change: '+12%',
-      isPositive: true,
-      subtitle: `${(validacionesEsteMes.length / new Date().getDate()).toFixed(1)} por día`
+      delay: 0,
+      subtitle: `${(validacionesEsteMes.length / new Date().getDate()).toFixed(1)} por día`,
+      trend: 'up' as const,
+      onClick: () => router.push('/dashboard/comercio/validaciones')
     },
     {
       title: 'Beneficios activos',
-      value: activeBeneficios.length,
-      icon: Gift,
+      value: activeBeneficios.length.toLocaleString(),
+      change: 0,
+      icon: <CardGiftcard sx={{ fontSize: 32 }} />,
       color: '#10b981',
-      change: '0%',
-      isPositive: null,
-      subtitle: `${beneficios.length} total`
+      delay: 0.1,
+      subtitle: `${beneficios.length} total`,
+      trend: 'neutral' as const,
+      onClick: () => router.push('/dashboard/comercio/beneficios')
     },
     {
       title: 'Asociaciones vinculadas',
-      value: asociacionesVinculadas,
-      icon: Users,
+      value: asociacionesVinculadas.toLocaleString(),
+      change: 5.2,
+      icon: <Group sx={{ fontSize: 32 }} />,
       color: '#8b5cf6',
-      change: '+5%',
-      isPositive: true,
-      subtitle: 'Activas'
+      delay: 0.2,
+      subtitle: 'Activas',
+      trend: 'up' as const,
+      onClick: () => router.push('/dashboard/comercio/perfil')
     },
     {
       title: 'Última validación',
       value: tiempoUltimaValidacion,
-      icon: Clock,
+      change: 0,
+      icon: <AccessTime sx={{ fontSize: 32 }} />,
       color: '#f59e0b',
-      change: null,
-      isPositive: null,
-      subtitle: ultimaValidacion ? format(ultimaValidacion.fechaHora.toDate(), 'dd/MM HH:mm') : ''
+      delay: 0.3,
+      subtitle: ultimaValidacion ? format(ultimaValidacion.fechaHora.toDate(), 'dd/MM HH:mm') : '',
+      trend: 'neutral' as const,
     }
   ];
 
   return (
-    <div style={{
-      display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-      gap: '24px'
-    }}>
-      {stats.map((stat, index) => (
-        <motion.div
+    <Box
+      sx={{
+        display: 'grid',
+        gridTemplateColumns: {
+          xs: '1fr',
+          sm: 'repeat(2, 1fr)',
+          lg: 'repeat(4, 1fr)'
+        },
+        gap: 4
+      }}
+    >
+      {kpiMetrics.map((metric, index) => (
+        <KPICard
           key={index}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: index * 0.1 }}
-          whileHover={{ y: -2, transition: { duration: 0.2 } }}
-          style={{
-            backgroundColor: 'white',
-            borderRadius: '12px',
-            padding: '24px',
-            border: '1px solid #e2e8f0',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-            transition: 'all 0.2s ease',
-            cursor: 'pointer'
-          }}
-        >
-          {/* Header */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginBottom: '16px'
-          }}>
-            <div style={{
-              width: '40px',
-              height: '40px',
-              backgroundColor: stat.color,
-              borderRadius: '8px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}>
-              <stat.icon style={{ width: '20px', height: '20px', color: 'white' }} />
-            </div>
-            
-            {stat.change && (
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px',
-                padding: '4px 8px',
-                borderRadius: '6px',
-                fontSize: '12px',
-                fontWeight: 600,
-                backgroundColor: stat.isPositive ? '#dcfce7' : '#fecaca',
-                color: stat.isPositive ? '#166534' : '#991b1b'
-              }}>
-                {stat.isPositive ? (
-                  <TrendingUp style={{ width: '12px', height: '12px' }} />
-                ) : (
-                  <TrendingDown style={{ width: '12px', height: '12px' }} />
-                )}
-                {stat.change}
-              </div>
-            )}
-          </div>
-
-          {/* Value */}
-          <div style={{ marginBottom: '8px' }}>
-            <h3 style={{
-              fontSize: '32px',
-              fontWeight: 700,
-              color: '#1e293b',
-              marginBottom: '4px',
-              lineHeight: 1
-            }}>
-              {typeof stat.value === 'number' ? stat.value.toLocaleString() : stat.value}
-            </h3>
-            <p style={{
-              fontSize: '14px',
-              fontWeight: 500,
-              color: '#64748b'
-            }}>
-              {stat.title}
-            </p>
-          </div>
-
-          {/* Subtitle */}
-          {stat.subtitle && (
-            <p style={{
-              fontSize: '12px',
-              color: '#94a3b8',
-              fontWeight: 500
-            }}>
-              {stat.subtitle}
-            </p>
-          )}
-        </motion.div>
+          title={metric.title}
+          value={metric.value}
+          change={metric.change}
+          icon={metric.icon}
+          color={metric.color}
+          delay={metric.delay}
+          subtitle={metric.subtitle}
+          trend={metric.trend}
+          onClick={metric.onClick}
+        />
       ))}
-    </div>
+    </Box>
   );
 };
 

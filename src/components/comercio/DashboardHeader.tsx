@@ -2,173 +2,185 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
+import {
+  Box,
+  Typography,
+  Avatar,
+  Button,
+  Paper,
+  alpha,
+  Stack,
+  IconButton,
+} from '@mui/material';
+import {
+  Store,
+  CalendarToday,
+  Refresh,
+  Add,
+  Analytics,
+} from '@mui/icons-material';
 import { useComercios } from '@/hooks/useComercios';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Store, Calendar } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 export const DashboardHeader: React.FC = () => {
   const { comercio } = useComercios();
+  const router = useRouter();
   
-  const today = format(new Date(), "EEEE, d 'de' MMMM", { locale: es });
+  const today = format(new Date(), "EEEE, d 'de' MMMM 'de' yyyy", { locale: es });
   const capitalizedToday = today.charAt(0).toUpperCase() + today.slice(1);
-
-  const [isMobile, setIsMobile] = React.useState(false);
-
-  React.useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
 
   return (
     <motion.div
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
-      style={{ marginBottom: '40px' }}
     >
-      <div style={{
-        display: 'flex',
-        flexDirection: isMobile ? 'column' : 'row',
-        alignItems: isMobile ? 'flex-start' : 'center',
-        justifyContent: 'space-between',
-        gap: '24px'
-      }}>
-        {/* Welcome Section */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '16px',
-          flex: 1
-        }}>
-          {/* Logo/Avatar */}
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            style={{ position: 'relative' }}
-          >
-            {comercio?.logoUrl ? (
-              <img
-                src={comercio.logoUrl}
-                alt={`Logo de ${comercio.nombreComercio}`}
-                style={{
-                  width: '56px',
-                  height: '56px',
-                  borderRadius: '12px',
-                  objectFit: 'cover',
-                  border: '2px solid white',
-                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+      <Box sx={{ mb: 6 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 4 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+            <Avatar
+              sx={{
+                width: 64,
+                height: 64,
+                borderRadius: 4,
+                background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 50%, #0e7490 100%)',
+                boxShadow: '0 12px 40px rgba(6, 182, 212, 0.3)',
+              }}
+            >
+              {comercio?.logoUrl ? (
+                <img
+                  src={comercio.logoUrl}
+                  alt={`Logo de ${comercio.nombreComercio}`}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    borderRadius: '16px'
+                  }}
+                />
+              ) : (
+                <Store sx={{ fontSize: 32 }} />
+              )}
+            </Avatar>
+            <Box>
+              <Typography
+                variant="h3"
+                sx={{
+                  fontWeight: 900,
+                  fontSize: '2.5rem',
+                  background: 'linear-gradient(135deg, #0f172a 0%, #06b6d4 60%, #0891b2 100%)',
+                  backgroundClip: 'text',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  letterSpacing: '-0.03em',
+                  lineHeight: 0.9,
+                  mb: 1,
                 }}
-              />
-            ) : (
-              <div style={{
-                width: '56px',
-                height: '56px',
-                backgroundColor: '#06b6d4',
-                borderRadius: '12px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
-              }}>
-                <Store style={{ width: '24px', height: '24px', color: 'white' }} />
-              </div>
-            )}
-            <div style={{
-              position: 'absolute',
-              bottom: '-2px',
-              right: '-2px',
-              width: '16px',
-              height: '16px',
-              backgroundColor: '#10b981',
-              borderRadius: '50%',
-              border: '2px solid white'
-            }} />
-          </motion.div>
-
-          {/* Welcome Text */}
-          <div style={{ flex: 1 }}>
-            <motion.h1
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-              style={{
-                fontSize: isMobile ? '24px' : '28px',
+              >
+                Hola, {comercio?.nombreComercio || 'Comercio'} 👋
+              </Typography>
+              <Typography
+                variant="h6"
+                sx={{
+                  color: '#64748b',
+                  fontWeight: 600,
+                  fontSize: '1.2rem',
+                }}
+              >
+                Este es el resumen de tu actividad en Fidelitá
+              </Typography>
+            </Box>
+          </Box>
+          <Stack direction="row" spacing={2}>
+            <IconButton
+              onClick={() => window.location.reload()}
+              sx={{
+                bgcolor: alpha('#06b6d4', 0.1),
+                color: '#06b6d4',
+                '&:hover': {
+                  bgcolor: alpha('#06b6d4', 0.2),
+                  transform: 'rotate(180deg)',
+                },
+                transition: 'all 0.3s ease',
+              }}
+            >
+              <Refresh />
+            </IconButton>
+            <Button
+              onClick={() => router.push('/dashboard/comercio/beneficios')}
+              variant="contained"
+              startIcon={<Add />}
+              size="large"
+              sx={{
+                py: 2,
+                px: 4,
+                borderRadius: 4,
+                textTransform: 'none',
                 fontWeight: 700,
-                color: '#1e293b',
-                marginBottom: '4px',
-                lineHeight: 1.2
+                background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
+                boxShadow: '0 8px 32px rgba(6, 182, 212, 0.3)',
+                '&:hover': {
+                  background: 'linear-gradient(135deg, #0891b2 0%, #0e7490 100%)',
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 12px 40px rgba(6, 182, 212, 0.4)',
+                },
+                transition: 'all 0.3s ease'
               }}
             >
-              Hola, {comercio?.nombreComercio || 'Comercio'} 👋
-            </motion.h1>
-            <motion.p
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-              style={{
-                fontSize: '16px',
-                color: '#64748b',
-                fontWeight: 500
-              }}
-            >
-              Este es el resumen de tu actividad en Fidelitá.
-            </motion.p>
-          </div>
-        </div>
-
-        {/* Date Section */}
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6, delay: 0.5 }}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            backgroundColor: 'white',
-            borderRadius: '12px',
-            padding: '16px 20px',
-            border: '1px solid #e2e8f0',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-            alignSelf: isMobile ? 'stretch' : 'auto'
+              Nuevo Beneficio
+            </Button>
+          </Stack>
+        </Box>
+        
+        {/* Welcome Message */}
+        <Paper
+          elevation={0}
+          sx={{
+            bgcolor: alpha('#06b6d4', 0.05),
+            border: `2px solid ${alpha('#06b6d4', 0.15)}`,
+            borderRadius: 5,
+            p: 4,
+            position: 'relative',
+            overflow: 'hidden',
+            '&::before': {
+              content: '""',
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              height: '3px',
+              background: 'linear-gradient(90deg, #06b6d4, #0891b2, #0e7490)',
+            }
           }}
         >
-          <div style={{
-            width: '40px',
-            height: '40px',
-            backgroundColor: '#8b5cf6',
-            borderRadius: '8px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}>
-            <Calendar style={{ width: '20px', height: '20px', color: 'white' }} />
-          </div>
-          <div>
-            <p style={{
-              fontSize: '12px',
-              fontWeight: 600,
-              color: '#64748b',
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px',
-              marginBottom: '2px'
-            }}>
-              Hoy
-            </p>
-            <p style={{
-              fontSize: '14px',
-              fontWeight: 600,
-              color: '#1e293b'
-            }}>
-              {capitalizedToday}
-            </p>
-          </div>
-        </motion.div>
-      </div>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+            <Box
+              sx={{
+                width: 12,
+                height: 12,
+                bgcolor: '#10b981',
+                borderRadius: '50%',
+                animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                '@keyframes pulse': {
+                  '0%, 100%': { opacity: 1, transform: 'scale(1)' },
+                  '50%': { opacity: 0.5, transform: 'scale(1.1)' },
+                },
+              }}
+            />
+            <Typography variant="body1" sx={{ color: '#475569', fontWeight: 700, fontSize: '1.1rem' }}>
+              <Box component="span" sx={{ fontWeight: 900 }}>Sistema operativo</Box> - Tu comercio está listo para recibir validaciones
+            </Typography>
+            <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center', gap: 2 }}>
+              <CalendarToday sx={{ fontSize: 18, color: '#94a3b8' }} />
+              <Typography variant="body2" sx={{ color: '#94a3b8', fontWeight: 700 }}>
+                {capitalizedToday}
+              </Typography>
+            </Box>
+          </Box>
+        </Paper>
+      </Box>
     </motion.div>
   );
 };
