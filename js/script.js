@@ -30,45 +30,66 @@ const CONFIG = {
     
     // Configuración de imágenes optimizadas para móvil
     IMAGE_FORMATS: {
+        AVIF: 'image/avif',
         WEBP: 'image/webp',
         JPEG: 'image/jpeg',
         PNG: 'image/png'
     },
     
-    // Rutas de imágenes optimizadas para móvil (solo JPG para mejor compatibilidad)
+    // Rutas de imágenes optimizadas con soporte AVIF
     IMAGE_PATHS: {
         hero: {
-            jpg: './assets/phones/Hero.mp4'
+            avif: './assets/phones/Hero.avif',
+            webp: './assets/phones/Hero.webp',
+            jpg: './assets/phones/Hero.jpg'
         },
         logo: {
+            avif: './assets/logo.avif',
+            webp: './assets/logo.webp',
             png: './assets/logo.png'
         },
         phones: {
             horario: {
-                jpg: './assets/phones/Horario.avif'
+                avif: './assets/phones/Horario.avif',
+                webp: './assets/phones/Horario.webp',
+                jpg: './assets/phones/Horario.jpg'
             },
             estaciones: {
-                jpg: './assets/phones/Estaciones.avif'
+                avif: './assets/phones/Estaciones.avif',
+                webp: './assets/phones/Estaciones.webp',
+                jpg: './assets/phones/Estaciones.jpg'
             },
             calendario: {
-                jpg: './assets/phones/Calendario.avif'
+                avif: './assets/phones/Calendario.avif',
+                webp: './assets/phones/Calendario.webp',
+                jpg: './assets/phones/Calendario.jpg'
             },
             registro: {
-                jpg: './assets/phones/Registro.avif'
+                avif: './assets/phones/Registro.avif',
+                webp: './assets/phones/Registro.webp',
+                jpg: './assets/phones/Registro.jpg'
             },
             notificaciones: {
-                jpg: './assets/phones/Notificaciones.avif'
+                avif: './assets/phones/Notificaciones.avif',
+                webp: './assets/phones/Notificaciones.webp',
+                jpg: './assets/phones/Notificaciones.jpg'
             },
             referidos: {
-                jpg: './assets/phones/Referidos.avif'
+                avif: './assets/phones/Referidos.avif',
+                webp: './assets/phones/Referidos.webp',
+                jpg: './assets/phones/Referidos.jpg'
             }
         },
         downloads: {
             apple: {
-                png: './assets/AppleStore.avif'
+                avif: './assets/AppleStore.avif',
+                webp: './assets/AppleStore.webp',
+                png: './assets/AppleStore.png'
             },
             google: {
-                png: './assets/GooglePlay.avif'
+                avif: './assets/GooglePlay.avif',
+                webp: './assets/GooglePlay.webp',
+                png: './assets/GooglePlay.png'
             }
         }
     }
@@ -105,51 +126,58 @@ const translationData = {
         'download-apple-alt': 'Descargar en App Store',
         // Features Section
         'features-title': 'Características',
-        'features-subtitle': 'Aquí puedes ver lo que te ofrece StarFlex.',
+        'features-subtitle': 'Descubre todas las funcionalidades que StarFlex te ofrece para maximizar tus ganancias.',
         // Feature 1: Horario
         'feature-schedule-title': 'HORARIO',
-        'feature-schedule-description': 'Elige los días y horarios que prefieras para tus bloques de entrega.',
-        'feature-schedule-item-1': 'Configuración personalizada por día',
-        'feature-schedule-item-2': 'Horarios flexibles de trabajo',
-        'feature-schedule-item-3': 'Optimización automática de turnos',
-        'feature-schedule-item-4': 'Sincronización con tu calendario',
+        'feature-schedule-description': 'Elige los días y horarios que prefieras para tus bloques de entrega. Configura tu disponibilidad de manera inteligente y deja que StarFlex encuentre los mejores bloques en tus horarios preferidos.',
+        'feature-schedule-item-1': 'Configuración personalizada por día de la semana',
+        'feature-schedule-item-2': 'Horarios flexibles adaptados a tu estilo de vida',
+        'feature-schedule-item-3': 'Optimización automática de turnos rentables',
+        'feature-schedule-item-4': 'Sincronización inteligente con tu calendario personal',
+        'feature-schedule-item-5': 'Alertas de disponibilidad en tiempo real',
         // Feature 2: Estaciones
         'feature-stations-title': 'ESTACIONES',
-        'feature-stations-description': 'Selecciona tus estaciones preferidas y precios para que nuestra app pueda ofrecerte los bloques que se ajusten a tus preferencias.',
+        'feature-stations-description': 'Selecciona tus estaciones preferidas y configura precios mínimos para que nuestra aplicación pueda ofrecerte automáticamente los bloques que se ajusten perfectamente a tus preferencias y ubicación.',
         'feature-stations-item-1': 'Selección personalizada de estaciones favoritas',
         'feature-stations-item-2': 'Configuración de precios mínimos por estación',
-        'feature-stations-item-3': 'Análisis de rentabilidad por ubicación',
+        'feature-stations-item-3': 'Análisis detallado de rentabilidad por ubicación',
         'feature-stations-item-4': 'Notificaciones instantáneas de bloques disponibles',
-        'feature-stations-item-5': 'Mapa interactivo con todas las estaciones',
+        'feature-stations-item-5': 'Mapa interactivo con todas las estaciones cercanas',
+        'feature-stations-item-6': 'Filtros avanzados por distancia y tipo de entrega',
         // Feature 3: Calendario
         'feature-calendar-title': 'CALENDARIO',
-        'feature-calendar-description': 'En el calendario podrás ver tus bloques aceptados y encontrar las opciones para identificarte desde cualquier ubicación, así como la posibilidad de saltarte la selfie y cancelar bloques, todo en un solo lugar para tu máxima comodidad.',
-        'feature-calendar-item-1': 'Identificación desde cualquier ubicación',
-        'feature-calendar-item-2': 'Opción de saltar selfie',
-        'feature-calendar-item-3': 'Cancelación rápida de bloques',
+        'feature-calendar-description': 'En el calendario podrás ver todos tus bloques aceptados y acceder a funciones avanzadas como identificación desde cualquier ubicación, opción de saltar la selfie y cancelación rápida de bloques, todo centralizado para tu máxima comodidad.',
+        'feature-calendar-item-1': 'Identificación automática desde cualquier ubicación',
+        'feature-calendar-item-2': 'Opción inteligente para saltar verificación selfie',
+        'feature-calendar-item-3': 'Cancelación rápida y segura de bloques',
+        'feature-calendar-item-4': 'Vista mensual y semanal de tus entregas',
+        'feature-calendar-item-5': 'Recordatorios automáticos de bloques próximos',
         // Feature 4: Registro
         'feature-log-title': 'REGISTRO',
-        'feature-log-description': 'En el registro, podrá ver todos los bloques disponibles y el motivo detallado por el cual se ignoraron algunos. Esto le ayudará a ajustar sus filtros de preferencias según sea necesario para optimizar sus opciones.',
-        'feature-log-item-1': 'Historial completo de bloques',
-        'feature-log-item-2': 'Motivos detallados de rechazo',
-        'feature-log-item-3': 'Optimización de filtros',
-        'feature-log-item-4': 'Análisis de patrones',
+        'feature-log-description': 'En el registro detallado podrás ver todos los bloques disponibles y el motivo específico por el cual algunos fueron ignorados. Esta información te ayudará a ajustar tus filtros y preferencias para optimizar continuamente tus opciones de entrega.',
+        'feature-log-item-1': 'Historial completo y detallado de todos los bloques',
+        'feature-log-item-2': 'Motivos específicos y detallados de rechazo automático',
+        'feature-log-item-3': 'Herramientas de optimización de filtros inteligentes',
+        'feature-log-item-4': 'Análisis avanzado de patrones y tendencias',
+        'feature-log-item-5': 'Estadísticas de rendimiento y ganancias',
         // Feature 5: Notificaciones
         'feature-notifications-title': 'NOTIFICACIONES',
-        'feature-notifications-description': 'StarFlex te mantiene informado con múltiples tipos de notificaciones para que nunca te pierdas los mejores bloques disponibles. Configura tus alertas según tus preferencias.',
-        'feature-notifications-item-1': 'Notificaciones Push instantáneas',
-        'feature-notifications-item-2': 'Alertas por correo electrónico',
-        'feature-notifications-item-3': 'Llamadas telefónicas automáticas',
-        'feature-notifications-item-4': 'Mensajes SMS directos',
-        'feature-notifications-item-5': 'Alertas personalizables por tipo de bloque',
-        'feature-notifications-item-6': 'Notificaciones en tiempo real',
-        'feature-notifications-item-7': 'Filtros avanzados de notificación',
+        'feature-notifications-description': 'StarFlex te mantiene siempre informado con un sistema completo de notificaciones múltiples para que nunca te pierdas los mejores bloques disponibles. Configura tus alertas según tus preferencias específicas y recibe notificaciones en tiempo real.',
+        'feature-notifications-item-1': 'Notificaciones Push instantáneas y personalizables',
+        'feature-notifications-item-2': 'Alertas automáticas por correo electrónico',
+        'feature-notifications-item-3': 'Llamadas telefónicas automáticas para bloques premium',
+        'feature-notifications-item-4': 'Mensajes SMS directos y urgentes',
+        'feature-notifications-item-5': 'Alertas personalizables por tipo y valor de bloque',
+        'feature-notifications-item-6': 'Sistema de notificaciones en tiempo real 24/7',
+        'feature-notifications-item-7': 'Filtros avanzados de notificación por prioridad',
         // Feature 6: Referidos
         'feature-referrals-title': 'REFERIDOS',
-        'feature-referrals-description': 'Invitá a otros usuarios a unirse a Starflex y obtené beneficios exclusivos por cada referido que se registre.',
-        'feature-referrals-item-1': 'Enlace único de referido personalizado',
-        'feature-referrals-item-2': 'Gana 1 semana gratis por cada referido',
-        'feature-referrals-item-3': 'Código QR para compartir fácilmente',
+        'feature-referrals-description': 'Invita a otros conductores a unirse a la revolución StarFlex y obtén beneficios exclusivos por cada referido que se registre exitosamente. Comparte tu experiencia y gana recompensas mientras ayudas a otros conductores a maximizar sus ganancias.',
+        'feature-referrals-item-1': 'Enlace único de referido personalizado y rastreable',
+        'feature-referrals-item-2': 'Gana 1 semana completamente gratis por cada referido exitoso',
+        'feature-referrals-item-3': 'Código QR dinámico para compartir fácilmente',
+        'feature-referrals-item-4': 'Panel de seguimiento de referidos en tiempo real',
+        'feature-referrals-item-5': 'Bonificaciones adicionales por referidos activos',
         // Videos Section
         'videos-badge': 'Experiencia Visual Inmersiva',
         'videos-title-main': 'VE STARFLEX',
@@ -239,51 +267,58 @@ const translationData = {
         'download-apple-alt': 'Download on App Store',
         // Features Section
         'features-title': 'Features',
-        'features-subtitle': 'Here you can see what StarFlex offers you.',
+        'features-subtitle': 'Discover all the functionalities that StarFlex offers you to maximize your earnings.',
         // Feature 1: Schedule
         'feature-schedule-title': 'SCHEDULE',
-        'feature-schedule-description': 'Choose the days and times you prefer for your delivery blocks.',
-        'feature-schedule-item-1': 'Personalized configuration per day',
-        'feature-schedule-item-2': 'Flexible work schedules',
-        'feature-schedule-item-3': 'Automatic shift optimization',
-        'feature-schedule-item-4': 'Synchronization with your calendar',
+        'feature-schedule-description': 'Choose the days and times you prefer for your delivery blocks. Configure your availability intelligently and let StarFlex find the best blocks in your preferred schedules.',
+        'feature-schedule-item-1': 'Personalized configuration per day of the week',
+        'feature-schedule-item-2': 'Flexible schedules adapted to your lifestyle',
+        'feature-schedule-item-3': 'Automatic optimization of profitable shifts',
+        'feature-schedule-item-4': 'Intelligent synchronization with your personal calendar',
+        'feature-schedule-item-5': 'Real-time availability alerts',
         // Feature 2: Stations
         'feature-stations-title': 'STATIONS',
-        'feature-stations-description': 'Select your preferred stations and prices so our app can offer you blocks that fit your preferences.',
+        'feature-stations-description': 'Select your preferred stations and configure minimum prices so our application can automatically offer you blocks that perfectly fit your preferences and location.',
         'feature-stations-item-1': 'Personalized selection of favorite stations',
         'feature-stations-item-2': 'Minimum price configuration per station',
-        'feature-stations-item-3': 'Profitability analysis by location',
+        'feature-stations-item-3': 'Detailed profitability analysis by location',
         'feature-stations-item-4': 'Instant notifications of available blocks',
-        'feature-stations-item-5': 'Interactive map with all stations',
+        'feature-stations-item-5': 'Interactive map with all nearby stations',
+        'feature-stations-item-6': 'Advanced filters by distance and delivery type',
         // Feature 3: Calendar
         'feature-calendar-title': 'CALENDAR',
-        'feature-calendar-description': 'In the calendar you can see your accepted blocks and find options to identify yourself from any location, as well as the possibility to skip the selfie and cancel blocks, all in one place for your maximum convenience.',
-        'feature-calendar-item-1': 'Identification from any location',
-        'feature-calendar-item-2': 'Option to skip selfie',
-        'feature-calendar-item-3': 'Quick block cancellation',
+        'feature-calendar-description': 'In the calendar you can see all your accepted blocks and access advanced functions like identification from any location, option to skip selfie and quick block cancellation, all centralized for your maximum convenience.',
+        'feature-calendar-item-1': 'Automatic identification from any location',
+        'feature-calendar-item-2': 'Smart option to skip selfie verification',
+        'feature-calendar-item-3': 'Quick and secure block cancellation',
+        'feature-calendar-item-4': 'Monthly and weekly view of your deliveries',
+        'feature-calendar-item-5': 'Automatic reminders of upcoming blocks',
         // Feature 4: Log
         'feature-log-title': 'LOG',
-        'feature-log-description': 'In the log, you can see all available blocks and the detailed reason why some were ignored. This will help you adjust your preference filters as needed to optimize your options.',
-        'feature-log-item-1': 'Complete block history',
-        'feature-log-item-2': 'Detailed rejection reasons',
-        'feature-log-item-3': 'Filter optimization',
-        'feature-log-item-4': 'Pattern analysis',
+        'feature-log-description': 'In the detailed log you can see all available blocks and the specific reason why some were ignored. This information will help you adjust your filters and preferences to continuously optimize your delivery options.',
+        'feature-log-item-1': 'Complete and detailed history of all blocks',
+        'feature-log-item-2': 'Specific and detailed reasons for automatic rejection',
+        'feature-log-item-3': 'Smart filter optimization tools',
+        'feature-log-item-4': 'Advanced pattern and trend analysis',
+        'feature-log-item-5': 'Performance and earnings statistics',
         // Feature 5: Notifications
         'feature-notifications-title': 'NOTIFICATIONS',
-        'feature-notifications-description': 'StarFlex keeps you informed with multiple types of notifications so you never miss the best available blocks. Configure your alerts according to your preferences.',
-        'feature-notifications-item-1': 'Instant Push notifications',
-        'feature-notifications-item-2': 'Email alerts',
-        'feature-notifications-item-3': 'Automatic phone calls',
-        'feature-notifications-item-4': 'Direct SMS messages',
-        'feature-notifications-item-5': 'Customizable alerts by block type',
-        'feature-notifications-item-6': 'Real-time notifications',
-        'feature-notifications-item-7': 'Advanced notification filters',
+        'feature-notifications-description': 'StarFlex keeps you always informed with a complete system of multiple notifications so you never miss the best available blocks. Configure your alerts according to your specific preferences and receive real-time notifications.',
+        'feature-notifications-item-1': 'Instant and customizable Push notifications',
+        'feature-notifications-item-2': 'Automatic email alerts',
+        'feature-notifications-item-3': 'Automatic phone calls for premium blocks',
+        'feature-notifications-item-4': 'Direct and urgent SMS messages',
+        'feature-notifications-item-5': 'Customizable alerts by block type and value',
+        'feature-notifications-item-6': '24/7 real-time notification system',
+        'feature-notifications-item-7': 'Advanced notification filters by priority',
         // Feature 6: Referrals
         'feature-referrals-title': 'REFERRALS',
-        'feature-referrals-description': 'Invite other users to join Starflex and get exclusive benefits for each referral that registers.',
-        'feature-referrals-item-1': 'Unique personalized referral link',
-        'feature-referrals-item-2': 'Earn 1 free week for each referral',
-        'feature-referrals-item-3': 'QR code for easy sharing',
+        'feature-referrals-description': 'Invite other drivers to join the StarFlex revolution and get exclusive benefits for each referral that successfully registers. Share your experience and earn rewards while helping other drivers maximize their earnings.',
+        'feature-referrals-item-1': 'Unique personalized and trackable referral link',
+        'feature-referrals-item-2': 'Earn 1 completely free week for each successful referral',
+        'feature-referrals-item-3': 'Dynamic QR code for easy sharing',
+        'feature-referrals-item-4': 'Real-time referral tracking panel',
+        'feature-referrals-item-5': 'Additional bonuses for active referrals',
         // Videos Section
         'videos-badge': 'Immersive Visual Experience',
         'videos-title-main': 'SEE STARFLEX',
@@ -364,16 +399,62 @@ function detectDeviceCapabilities() {
     }
 }
 
+// ===== DETECCIÓN DE SOPORTE DE FORMATOS DE IMAGEN =====
+function detectImageFormats() {
+    return new Promise((resolve) => {
+        const formats = {
+            avif: false,
+            webp: false
+        };
+        
+        let testsCompleted = 0;
+        const totalTests = 2;
+        
+        function checkComplete() {
+            testsCompleted++;
+            if (testsCompleted === totalTests) {
+                // Aplicar clases al documento
+                if (formats.avif) {
+                    document.documentElement.classList.add('avif');
+                }
+                if (formats.webp) {
+                    document.documentElement.classList.add('webp');
+                }
+                resolve(formats);
+            }
+        }
+        
+        // Test AVIF
+        const avifImg = new Image();
+        avifImg.onload = avifImg.onerror = function() {
+            formats.avif = avifImg.height === 2;
+            checkComplete();
+        };
+        avifImg.src = 'data:image/avif;base64,AAAAIGZ0eXBhdmlmAAAAAGF2aWZtaWYxbWlhZk1BMUIAAADybWV0YQAAAAAAAAAoaGRscgAAAAAAAAAAcGljdAAAAAAAAAAAAAAAAGxpYmF2aWYAAAAADnBpdG0AAAAAAAEAAAAeaWxvYwAAAABEAAABAAEAAAABAAABGgAAAB0AAAAoaWluZgAAAAAAAQAAABppbmZlAgAAAAABAABhdjAxQ29sb3IAAAAAamlwcnAAAABLaXBjbwAAABRpc3BlAAAAAAAAAAIAAAACAAAAEHBpeGkAAAAAAwgICAAAAAxhdjFDgQ0MAAAAABNjb2xybmNseAACAAIAAYAAAAAXaXBtYQAAAAAAAAABAAEEAQKDBAAAACVtZGF0EgAKCBgABogQEAwgMg8f8D///8WfhwB8+ErK42A=';
+        
+        // Test WebP
+        const webpImg = new Image();
+        webpImg.onload = webpImg.onerror = function() {
+            formats.webp = webpImg.height === 2;
+            checkComplete();
+        };
+        webpImg.src = 'data:image/webp;base64,UklGRjoAAABXRUJQVlA4IC4AAACyAgCdASoCAAIALmk0mk0iIiIiIgBoSygABc6WWgAA/veff/0PP8bA//LwYAAA';
+    });
+}
+
 // ===== CLASE OPTIMIZADA PARA IMÁGENES MÓVILES =====
 class MobileImageOptimizer {
     constructor() {
         this.imageCache = new Map();
         this.lazyImages = new Set();
         this.intersectionObserver = null;
+        this.supportedFormats = { avif: false, webp: false };
         this.init();
     }
     
     async init() {
+        // Detectar formatos soportados
+        this.supportedFormats = await detectImageFormats();
         this.setupLazyLoading();
         this.preloadCriticalImages();
     }
@@ -398,6 +479,24 @@ class MobileImageOptimizer {
         }
     }
     
+    // Obtener la mejor URL de imagen según el soporte del navegador
+    getBestImageUrl(imageConfig) {
+        if (!imageConfig) return null;
+        
+        // Priorizar AVIF si está soportado
+        if (this.supportedFormats.avif && imageConfig.avif) {
+            return imageConfig.avif;
+        }
+        
+        // Luego WebP si está soportado
+        if (this.supportedFormats.webp && imageConfig.webp) {
+            return imageConfig.webp;
+        }
+        
+        // Fallback a JPG o PNG
+        return imageConfig.jpg || imageConfig.png;
+    }
+    
     // Cargar imagen optimizada para móvil
     async loadImage(element) {
         const imageKey = element.dataset.imageKey;
@@ -408,8 +507,12 @@ class MobileImageOptimizer {
             return;
         }
         
-        // En móvil, usar siempre JPG para mejor compatibilidad
-        const imageUrl = imageConfig.jpg || imageConfig.png;
+        const imageUrl = this.getBestImageUrl(imageConfig);
+        
+        if (!imageUrl) {
+            console.warn(`No se encontró URL válida para: ${imageKey}`);
+            return;
+        }
         
         try {
             element.classList.add('loading');
@@ -420,6 +523,7 @@ class MobileImageOptimizer {
             // Aplicar la imagen
             if (element.tagName === 'IMG') {
                 element.src = imageUrl;
+                element.alt = element.dataset.alt || '';
             } else {
                 element.style.backgroundImage = `url('${imageUrl}')`;
             }
@@ -470,17 +574,21 @@ class MobileImageOptimizer {
         
         const criticalImages = [
             'hero',
-            'logo'
+            'logo',
+            'downloads.apple',
+            'downloads.google'
         ];
         
         const preloadPromises = criticalImages.map(async (key) => {
             const config = this.getImageConfig(key);
             if (config) {
-                const url = config.jpg || config.png;
-                try {
-                    await this.preloadImage(url);
-                } catch (error) {
-                    console.warn(`Error precargando imagen crítica ${key}:`, error);
+                const url = this.getBestImageUrl(config);
+                if (url) {
+                    try {
+                        await this.preloadImage(url);
+                    } catch (error) {
+                        console.warn(`Error precargando imagen crítica ${key}:`, error);
+                    }
                 }
             }
         });
@@ -1481,9 +1589,9 @@ function setupImageLazyLoading() {
             }
         });
         
-        // Botones de descarga
+        // Botones de descarga - CORREGIDOS PARA MISMO TAMAÑO
         const appleBtn = document.querySelector('.download-btn--app-store .download-btn__image');
-        const googleBtn = document.querySelector('.download-btn:not(.download-btn--app-store) .download-btn__image');
+        const googleBtn = document.querySelector('.download-btn--google .download-btn__image');
         
         if (appleBtn) {
             imageOptimizer.loadImageImmediately(appleBtn, 'downloads.apple');
@@ -1609,9 +1717,11 @@ function initializePerformanceOptimizations() {
 
 function preloadCriticalResources() {
     const criticalResources = [
-        './assets/phones/Hero.jpg',
-        './assets/phones/Horario.jpg',
-        './assets/logo.png'
+        './assets/phones/Hero.avif',
+        './assets/phones/Horario.avif',
+        './assets/logo.avif',
+        './assets/AppleStore.avif',
+        './assets/GooglePlay.avif'
     ];
     
     criticalResources.forEach(src => {
