@@ -4152,3 +4152,43 @@ opacity: 1;
 transform: scale(1.02);
 }
 }
+/* ELEMENTOS ESPECÍFICOS PARA MÓVIL - OCULTOS EN DESKTOP */
+.nav__close,
+.nav__language-mobile,
+.nav__cta-mobile {
+display: none;
+}
+
+/* EN DESKTOP - FORZAR OCULTACIÓN DE ELEMENTOS MÓVILES */
+@media (min-width: 1024px) {
+.nav__close,
+.nav__language-mobile,
+.nav__cta-mobile {
+display: none !important;
+}
+
+.nav__toggle {
+display: none !important;
+}
+}
+
+/* EN MÓVIL - MOSTRAR ELEMENTOS MÓVILES Y OCULTAR DESKTOP */
+@media (max-width: 1023px) {
+.nav__close,
+.nav__language-mobile,
+.nav__cta-mobile {
+display: block;
+}
+
+.nav__toggle {
+display: flex;
+}
+
+.nav__cta {
+display: none;
+}
+
+.language-switcher {
+display: none;
+}
+}
