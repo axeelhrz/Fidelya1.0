@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Box,
@@ -17,7 +17,6 @@ import {
   Chip,
   useTheme,
   alpha,
-  Collapse,
   Badge,
   Tooltip,
   Paper,
@@ -25,7 +24,7 @@ import {
 } from '@mui/material';
 import {
   Dashboard,
-  BarChart3,
+  BarChart,
   Store,
   LocalOffer,
   QrCode,
@@ -37,8 +36,6 @@ import {
   ChevronLeft,
   ChevronRight,
   TrendingUp,
-  Zap,
-  Users,
 } from '@mui/icons-material';
 import { useAuth } from '@/hooks/useAuth';
 import { useComercios } from '@/hooks/useComercios';
@@ -96,7 +93,7 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
     {
       id: 'estadisticas',
       label: 'Analytics',
-      icon: <BarChart3 />,
+      icon: <BarChart />,
       color: '#06b6d4',
       gradient: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
       description: 'Métricas y reportes',
@@ -328,183 +325,184 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
   };
 
   const sidebarContent = (
-    <Box
-      sx={{
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        background: 'linear-gradient(180deg, #ffffff 0%, #fafbfc 100%)',
-        position: 'relative',
-        overflow: 'hidden',
-      }}
-    >
-      {/* Animated background pattern */}
+    <>
       <Box
         sx={{
-          position: 'absolute',
-          inset: 0,
-          opacity: 0.4,
-          background: `
-            radial-gradient(circle at 20% 20%, ${alpha('#6366f1', 0.1)} 0%, transparent 50%),
-            radial-gradient(circle at 80% 80%, ${alpha('#06b6d4', 0.1)} 0%, transparent 50%),
-            radial-gradient(circle at 1px 1px, ${alpha('#e2e8f0', 0.8)} 1px, transparent 0)
-          `,
-          backgroundSize: '400px 400px, 300px 300px, 20px 20px',
-          animation: 'float 20s ease-in-out infinite',
-          '@keyframes float': {
-            '0%, 100%': { transform: 'translate(0, 0) rotate(0deg)' },
-            '33%': { transform: 'translate(10px, -10px) rotate(1deg)' },
-            '66%': { transform: 'translate(-5px, 5px) rotate(-1deg)' },
-          },
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          background: 'linear-gradient(180deg, #ffffff 0%, #fafbfc 100%)',
+          position: 'relative',
+          overflow: 'hidden',
         }}
-      />
+      >
+        {/* Animated background pattern */}
+        <Box
+          sx={{
+            position: 'absolute',
+            inset: 0,
+            opacity: 0.4,
+            background: `
+              radial-gradient(circle at 20% 20%, ${alpha('#6366f1', 0.1)} 0%, transparent 50%),
+              radial-gradient(circle at 80% 80%, ${alpha('#06b6d4', 0.1)} 0%, transparent 50%),
+              radial-gradient(circle at 1px 1px, ${alpha('#e2e8f0', 0.8)} 1px, transparent 0)
+            `,
+            backgroundSize: '400px 400px, 300px 300px, 20px 20px',
+            animation: 'float 20s ease-in-out infinite',
+            '@keyframes float': {
+              '0%, 100%': { transform: 'translate(0, 0) rotate(0deg)' },
+              '33%': { transform: 'translate(10px, -10px) rotate(1deg)' },
+              '66%': { transform: 'translate(-5px, 5px) rotate(-1deg)' },
+            },
+          }}
+        />
 
-      {/* Header */}
-      <Box sx={{ p: open ? 3 : 2, position: 'relative', zIndex: 1 }}>
-        <Stack direction="row" alignItems="center" justifyContent="space-between">
+        {/* Header */}
+        <Box sx={{ p: open ? 3 : 2, position: 'relative', zIndex: 1 }}>
+          <Stack direction="row" alignItems="center" justifyContent="space-between">
+            <AnimatePresence>
+              {open && (
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <Stack direction="row" alignItems="center" spacing={2}>
+                    <motion.div
+                      whileHover={{ scale: 1.05, rotate: 5 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <Avatar
+                        src={comercio?.logoUrl}
+                        sx={{
+                          width: 48,
+                          height: 48,
+                          background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                          border: '3px solid rgba(255,255,255,0.9)',
+                          boxShadow: '0 8px 32px rgba(99, 102, 241, 0.3)',
+                        }}
+                      >
+                        <Store sx={{ fontSize: 24 }} />
+                      </Avatar>
+                    </motion.div>
+                    <Box>
+                      <Typography 
+                        variant="h6" 
+                        sx={{ 
+                          fontWeight: 900, 
+                          color: '#0f172a', 
+                          fontSize: '1.1rem',
+                          lineHeight: 1.2,
+                        }}
+                      >
+                        {comercio?.nombreComercio || 'Mi Comercio'}
+                      </Typography>
+                      <Typography 
+                        variant="caption" 
+                        sx={{ 
+                          color: '#64748b', 
+                          fontWeight: 600,
+                          fontSize: '0.75rem',
+                        }}
+                      >
+                        Panel de Control
+                      </Typography>
+                    </Box>
+                  </Stack>
+                </motion.div>
+              )}
+            </AnimatePresence>
+            
+            <motion.div
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+            >
+              <Tooltip title={open ? 'Contraer' : 'Expandir'}>
+                <IconButton
+                  onClick={onToggle}
+                  sx={{
+                    background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                    color: 'white',
+                    width: 40,
+                    height: 40,
+                    boxShadow: '0 4px 20px rgba(99, 102, 241, 0.3)',
+                    '&:hover': {
+                      background: 'linear-gradient(135deg, #5b21b6 0%, #7c3aed 100%)',
+                      boxShadow: '0 6px 25px rgba(99, 102, 241, 0.4)',
+                    },
+                    transition: 'all 0.3s ease',
+                  }}
+                >
+                  {open ? <ChevronLeft /> : <ChevronRight />}
+                </IconButton>
+              </Tooltip>
+            </motion.div>
+          </Stack>
+
+          {/* Status Card */}
           <AnimatePresence>
             {open && (
               <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.3 }}
+                initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -20, scale: 0.9 }}
+                transition={{ duration: 0.4, delay: 0.1 }}
               >
-                <Stack direction="row" alignItems="center" spacing={2}>
-                  <motion.div
-                    whileHover={{ scale: 1.05, rotate: 5 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <Avatar
-                      src={comercio?.logoUrl}
-                      sx={{
-                        width: 48,
-                        height: 48,
-                        background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-                        border: '3px solid rgba(255,255,255,0.9)',
-                        boxShadow: '0 8px 32px rgba(99, 102, 241, 0.3)',
-                      }}
-                    >
-                      <Store sx={{ fontSize: 24 }} />
-                    </Avatar>
-                  </motion.div>
-                  <Box>
-                    <Typography 
-                      variant="h6" 
-                      sx={{ 
-                        fontWeight: 900, 
-                        color: '#0f172a', 
-                        fontSize: '1.1rem',
-                        lineHeight: 1.2,
-                      }}
-                    >
-                      {comercio?.nombreComercio || 'Mi Comercio'}
-                    </Typography>
-                    <Typography 
-                      variant="caption" 
-                      sx={{ 
-                        color: '#64748b', 
-                        fontWeight: 600,
-                        fontSize: '0.75rem',
-                      }}
-                    >
-                      Panel de Control
-                    </Typography>
-                  </Box>
-                </Stack>
-              </motion.div>
-            )}
-          </AnimatePresence>
-          
-          <motion.div
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-          >
-            <Tooltip title={open ? 'Contraer' : 'Expandir'}>
-              <IconButton
-                onClick={onToggle}
-                sx={{
-                  background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-                  color: 'white',
-                  width: 40,
-                  height: 40,
-                  boxShadow: '0 4px 20px rgba(99, 102, 241, 0.3)',
-                  '&:hover': {
-                    background: 'linear-gradient(135deg, #5b21b6 0%, #7c3aed 100%)',
-                    boxShadow: '0 6px 25px rgba(99, 102, 241, 0.4)',
-                  },
-                  transition: 'all 0.3s ease',
-                }}
-              >
-                {open ? <ChevronLeft /> : <ChevronRight />}
-              </IconButton>
-            </Tooltip>
-          </motion.div>
-        </Stack>
-
-        {/* Status Card */}
-        <AnimatePresence>
-          {open && (
-            <motion.div
-              initial={{ opacity: 0, y: 20, scale: 0.9 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -20, scale: 0.9 }}
-              transition={{ duration: 0.4, delay: 0.1 }}
-            >
-              <Paper
-                elevation={0}
-                sx={{
-                  mt: 3,
-                  p: 3,
-                  background: 'linear-gradient(135deg, #f8fafc 0%, #ffffff 100%)',
-                  border: '1px solid #e2e8f0',
-                  borderRadius: 3,
-                  position: 'relative',
-                  overflow: 'hidden',
-                }}
-              >
-                {/* Animated background */}
-                <Box
+                <Paper
+                  elevation={0}
                   sx={{
-                    position: 'absolute',
-                    top: -50,
-                    right: -50,
-                    width: 100,
-                    height: 100,
-                    background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-                    borderRadius: '50%',
-                    opacity: 0.1,
-                    animation: 'pulse 3s ease-in-out infinite',
-                    '@keyframes pulse': {
-                      '0%, 100%': { transform: 'scale(1)', opacity: 0.1 },
-                      '50%': { transform: 'scale(1.1)', opacity: 0.2 },
-                    },
+                    mt: 3,
+                    p: 3,
+                    background: 'linear-gradient(135deg, #f8fafc 0%, #ffffff 100%)',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: 3,
+                    position: 'relative',
+                    overflow: 'hidden',
                   }}
-                />
-                
-                <Stack direction="row" alignItems="center" spacing={2}>
-                  <Avatar
-                  <Avatar
+                >
+                  {/* Animated background */}
+                  <Box
                     sx={{
-                      width: 40,
-                      height: 40,
-                      background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                      color: 'white',
+                      position: 'absolute',
+                      top: -50,
+                      right: -50,
+                      width: 100,
+                      height: 100,
+                      background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                      borderRadius: '50%',
+                      opacity: 0.1,
+                      animation: 'pulse 3s ease-in-out infinite',
+                      '@keyframes pulse': {
+                        '0%, 100%': { transform: 'scale(1)', opacity: 0.1 },
+                        '50%': { transform: 'scale(1.1)', opacity: 0.2 },
+                      },
                     }}
-                  >
-                    <BarChart3 />
-                  </Avatar>
-                    <Typography 
-                      variant="body2" 
-                      sx={{ 
-                        fontWeight: 700, 
-                        color: '#1e293b', 
-                        fontSize: '0.9rem',
-                        mb: 0.5,
-                      }}
-                    >
-                      Estado: Activo
-                    </Typography>
+                  />
+                  
+                  <Stack direction="column" spacing={2}>
+                    <Stack direction="row" alignItems="center" spacing={2}>
+                      <Avatar
+                        sx={{
+                          width: 40,
+                          height: 40,
+                          background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                          color: 'white',
+                        }}
+                      >
+                        <BarChart />
+                      </Avatar>
+                      <Typography 
+                        variant="body2" 
+                        sx={{ 
+                          fontWeight: 700, 
+                          color: '#1e293b', 
+                          fontSize: '0.9rem',
+                        }}
+                      >
+                        Estado: Activo
+                      </Typography>
+                    </Stack>
                     <Stack direction="row" spacing={1} alignItems="center">
                       <Chip
                         icon={<TrendingUp sx={{ fontSize: 14 }} />}
@@ -535,166 +533,166 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
                         }}
                       />
                     </Stack>
-                  </Box>
-                </Stack>
-              </Paper>
+                  </Stack>
+                </Paper>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </Box>
+
+        <Divider sx={{ mx: 2, opacity: 0.3 }} />
+
+        {/* Main Navigation */}
+        <Box sx={{ flex: 1, overflow: 'auto', py: 2, position: 'relative', zIndex: 1 }}>
+          <List sx={{ px: 1 }}>
+            {menuItems.map(item => renderMenuItem(item))}
+          </List>
+        </Box>
+
+        <Divider sx={{ mx: 2, opacity: 0.3 }} />
+
+        {/* Bottom Navigation */}
+        <Box sx={{ p: 2, position: 'relative', zIndex: 1 }}>
+          <List sx={{ px: 1 }}>
+            {bottomMenuItems.map(item => renderMenuItem(item, true))}
+            
+            {/* Logout Button */}
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <ListItem disablePadding sx={{ mt: 2 }}>
+                <Tooltip title={!open ? 'Cerrar Sesión' : ''} placement="right" arrow>
+                  <ListItemButton
+                    onClick={() => {/* Handle logout */}}
+                    sx={{
+                      minHeight: 48,
+                      justifyContent: open ? 'initial' : 'center',
+                      px: open ? 3 : 2,
+                      mx: 1,
+                      borderRadius: 3,
+                      color: '#ef4444',
+                      border: '1px solid',
+                      borderColor: alpha('#ef4444', 0.2),
+                      transition: 'all 0.3s ease',
+                      '&:hover': {
+                        bgcolor: alpha('#ef4444', 0.1),
+                        borderColor: '#ef4444',
+                        transform: 'translateX(4px)',
+                      },
+                    }}
+                  >
+                    <ListItemIcon
+                      sx={{
+                        minWidth: 0,
+                        mr: open ? 3 : 'auto',
+                        justifyContent: 'center',
+                        color: 'inherit',
+                      }}
+                    >
+                      <Logout />
+                    </ListItemIcon>
+                    <AnimatePresence>
+                      {open && (
+                        <motion.div
+                          initial={{ opacity: 0, width: 0 }}
+                          animate={{ opacity: 1, width: 'auto' }}
+                          exit={{ opacity: 0, width: 0 }}
+                          transition={{ duration: 0.3 }}
+                          style={{ overflow: 'hidden' }}
+                        >
+                          <ListItemText 
+                            primary={
+                              <Typography
+                                variant="body2"
+                                sx={{ fontWeight: 600, fontSize: '0.9rem' }}
+                              >
+                                Cerrar Sesión
+                              </Typography>
+                            }
+                          />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </ListItemButton>
+                </Tooltip>
+              </ListItem>
+            </motion.div>
+          </List>
+        </Box>
+
+        {/* Quick Stats Footer */}
+        <AnimatePresence>
+          {open && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.4, delay: 0.2 }}
+            >
+              <Box sx={{ p: 3, position: 'relative', zIndex: 1 }}>
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 3,
+                    background: 'linear-gradient(135deg, #f1f5f9 0%, #ffffff 100%)',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: 3,
+                    position: 'relative',
+                    overflow: 'hidden',
+                  }}
+                >
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      top: -30,
+                      left: -30,
+                      width: 60,
+                      height: 60,
+                      background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
+                      borderRadius: '50%',
+                      opacity: 0.1,
+                    }}
+                  />
+                  
+                  <Typography 
+                    variant="caption" 
+                    sx={{ 
+                      color: '#06b6d4', 
+                      fontWeight: 700, 
+                      textTransform: 'uppercase', 
+                      letterSpacing: '0.1em',
+                      fontSize: '0.7rem',
+                    }}
+                  >
+                    Resumen Rápido
+                  </Typography>
+                  
+                  <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mt: 2 }}>
+                    <Box>
+                      <Typography variant="h6" sx={{ fontWeight: 900, color: '#1e293b', lineHeight: 1 }}>
+                        {stats.totalValidaciones}
+                      </Typography>
+                      <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 500 }}>
+                        Total validaciones
+                      </Typography>
+                    </Box>
+                    <Box sx={{ textAlign: 'right' }}>
+                      <Typography variant="h6" sx={{ fontWeight: 900, color: '#1e293b', lineHeight: 1 }}>
+                        {activeBeneficios.length}
+                      </Typography>
+                      <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 500 }}>
+                        Beneficios activos
+                      </Typography>
+                    </Box>
+                  </Stack>
+                </Paper>
+              </Box>
             </motion.div>
           )}
         </AnimatePresence>
       </Box>
-
-      <Divider sx={{ mx: 2, opacity: 0.3 }} />
-
-      {/* Main Navigation */}
-      <Box sx={{ flex: 1, overflow: 'auto', py: 2, position: 'relative', zIndex: 1 }}>
-        <List sx={{ px: 1 }}>
-          {menuItems.map(item => renderMenuItem(item))}
-        </List>
-      </Box>
-
-      <Divider sx={{ mx: 2, opacity: 0.3 }} />
-
-      {/* Bottom Navigation */}
-      <Box sx={{ p: 2, position: 'relative', zIndex: 1 }}>
-        <List sx={{ px: 1 }}>
-          {bottomMenuItems.map(item => renderMenuItem(item, true))}
-          
-          {/* Logout Button */}
-          <motion.div
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            <ListItem disablePadding sx={{ mt: 2 }}>
-              <Tooltip title={!open ? 'Cerrar Sesión' : ''} placement="right" arrow>
-                <ListItemButton
-                  onClick={() => {/* Handle logout */}}
-                  sx={{
-                    minHeight: 48,
-                    justifyContent: open ? 'initial' : 'center',
-                    px: open ? 3 : 2,
-                    mx: 1,
-                    borderRadius: 3,
-                    color: '#ef4444',
-                    border: '1px solid',
-                    borderColor: alpha('#ef4444', 0.2),
-                    transition: 'all 0.3s ease',
-                    '&:hover': {
-                      bgcolor: alpha('#ef4444', 0.1),
-                      borderColor: '#ef4444',
-                      transform: 'translateX(4px)',
-                    },
-                  }}
-                >
-                  <ListItemIcon
-                    sx={{
-                      minWidth: 0,
-                      mr: open ? 3 : 'auto',
-                      justifyContent: 'center',
-                      color: 'inherit',
-                    }}
-                  >
-                    <Logout />
-                  </ListItemIcon>
-                  <AnimatePresence>
-                    {open && (
-                      <motion.div
-                        initial={{ opacity: 0, width: 0 }}
-                        animate={{ opacity: 1, width: 'auto' }}
-                        exit={{ opacity: 0, width: 0 }}
-                        transition={{ duration: 0.3 }}
-                        style={{ overflow: 'hidden' }}
-                      >
-                        <ListItemText 
-                          primary={
-                            <Typography
-                              variant="body2"
-                              sx={{ fontWeight: 600, fontSize: '0.9rem' }}
-                            >
-                              Cerrar Sesión
-                            </Typography>
-                          }
-                        />
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </ListItemButton>
-              </Tooltip>
-            </ListItem>
-          </motion.div>
-        </List>
-      </Box>
-
-      {/* Quick Stats Footer */}
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-          >
-            <Box sx={{ p: 3, position: 'relative', zIndex: 1 }}>
-              <Paper
-                elevation={0}
-                sx={{
-                  p: 3,
-                  background: 'linear-gradient(135deg, #f1f5f9 0%, #ffffff 100%)',
-                  border: '1px solid #e2e8f0',
-                  borderRadius: 3,
-                  position: 'relative',
-                  overflow: 'hidden',
-                }}
-              >
-                <Box
-                  sx={{
-                    position: 'absolute',
-                    top: -30,
-                    left: -30,
-                    width: 60,
-                    height: 60,
-                    background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
-                    borderRadius: '50%',
-                    opacity: 0.1,
-                  }}
-                />
-                
-                <Typography 
-                  variant="caption" 
-                  sx={{ 
-                    color: '#06b6d4', 
-                    fontWeight: 700, 
-                    textTransform: 'uppercase', 
-                    letterSpacing: '0.1em',
-                    fontSize: '0.7rem',
-                  }}
-                >
-                  Resumen Rápido
-                </Typography>
-                
-                <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mt: 2 }}>
-                  <Box>
-                    <Typography variant="h6" sx={{ fontWeight: 900, color: '#1e293b', lineHeight: 1 }}>
-                      {stats.totalValidaciones}
-                    </Typography>
-                    <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 500 }}>
-                      Total validaciones
-                    </Typography>
-                  </Box>
-                  <Box sx={{ textAlign: 'right' }}>
-                    <Typography variant="h6" sx={{ fontWeight: 900, color: '#1e293b', lineHeight: 1 }}>
-                      {activeBeneficios.length}
-                    </Typography>
-                    <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 500 }}>
-                      Beneficios activos
-                    </Typography>
-                  </Box>
-                </Stack>
-              </Paper>
-            </Box>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </Box>
+    </>
   );
 
   return (

@@ -4,10 +4,18 @@ import React, { useState } from 'react';
 import { Box, useTheme } from '@mui/material';
 import { DashboardSidebar } from './DashboardSidebar';
 
+interface SidebarProps {
+  open: boolean;
+  onToggle: () => void;
+  onMenuClick: (section: string) => void;
+  activeSection: string;
+}
+
 interface DashboardLayoutProps {
   children: React.ReactNode;
   activeSection?: string;
   onSectionChange?: (section: string) => void;
+  sidebarComponent?: React.ComponentType<SidebarProps>;
 }
 
 const SIDEBAR_WIDTH = 280;
@@ -16,7 +24,8 @@ const SIDEBAR_COLLAPSED_WIDTH = 80;
 export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   children,
   activeSection = 'overview',
-  onSectionChange
+  onSectionChange,
+  sidebarComponent: SidebarComponent = DashboardSidebar
 }) => {
   const theme = useTheme();
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -33,7 +42,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh' }}>
-      <DashboardSidebar
+      <SidebarComponent
         open={sidebarOpen}
         onToggle={handleSidebarToggle}
         onMenuClick={handleMenuClick}
