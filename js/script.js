@@ -7,8 +7,9 @@ let currentLanguage = 'es';
 const translations = {};
 // Variables para el botón flotante
 let isFloatingMenuOpen = false;
-// Variables para el selector de idioma independiente
-let isLanguageSwitcherOpen = false;
+// Variables para los selectores de idioma independientes
+let isDesktopLanguageSwitcherOpen = false;
+let isNavLanguageSwitcherOpen = false;
 // Variables para el control del navbar
 let lastScrollY = 0;
 let isScrollingDown = false;
@@ -599,8 +600,6 @@ class MobileImageOptimizer {
 // ===== INICIALIZACIÓN GLOBAL OPTIMIZADA =====
 let imageOptimizer;
 
-// ... resto del código permanece igual hasta el final del archivo ...
-
 // ===== FUNCIONES DE TRADUCCIÓN OPTIMIZADAS =====
 function initializeLanguageSystem() {
     const savedLanguage = localStorage.getItem('starflex-language');
@@ -720,33 +719,83 @@ function updateLanguageButtons() {
         }
     });
     
-    updateLanguageSwitcher();
+    updateLanguageSwitchers();
 }
 
-// ===== FUNCIONES DEL SELECTOR DE IDIOMA OPTIMIZADAS =====
-function initializeLanguageSwitcher() {
-    const languageSwitcherBtn = document.getElementById('language-switcher-btn');
-    const languageSwitcherDropdown = document.getElementById('language-switcher-dropdown');
-    const languageSwitcher = document.getElementById('language-switcher');
-    const languageOptions = document.querySelectorAll('.language-switcher__option');
+// ===== FUNCIONES DE LOS SELECTORES DE IDIOMA OPTIMIZADAS =====
+function initializeLanguageSwitchers() {
+    // Inicializar selector de idioma en desktop (debajo del CTA)
+    initializeDesktopLanguageSwitcher();
     
-    if (!languageSwitcherBtn || !languageSwitcherDropdown || !languageSwitcher) return;
+    // Inicializar selector de idioma en móvil (dentro del menú hamburguesa)
+    initializeNavLanguageSwitcher();
+}
+
+function initializeDesktopLanguageSwitcher() {
+    const desktopSwitcherBtn = document.getElementById('desktop-language-switcher-btn');
+    const desktopSwitcherDropdown = document.getElementById('desktop-language-switcher-dropdown');
+    const desktopSwitcher = document.getElementById('desktop-language-switcher');
+    const desktopOptions = desktopSwitcher?.querySelectorAll('.language-switcher__option');
     
-    // Toggle del dropdown optimizado para móvil
-    languageSwitcherBtn.addEventListener('click', (e) => {
+    if (!desktopSwitcherBtn || !desktopSwitcherDropdown || !desktopSwitcher) return;
+    
+    // Toggle del dropdown optimizado para desktop
+    desktopSwitcherBtn.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        toggleLanguageSwitcher();
+        toggleDesktopLanguageSwitcher();
     });
     
-    // Opciones de idioma con mejor feedback táctil
-    languageOptions.forEach(option => {
+    // Opciones de idioma
+    desktopOptions?.forEach(option => {
         option.addEventListener('click', (e) => {
             e.preventDefault();
             const selectedLanguage = option.getAttribute('data-lang');
             if (selectedLanguage && selectedLanguage !== currentLanguage) {
                 switchLanguage(selectedLanguage);
-                closeLanguageSwitcher();
+                closeDesktopLanguageSwitcher();
+            }
+        });
+    });
+    
+    // Cerrar al hacer click fuera
+    document.addEventListener('click', (e) => {
+        if (isDesktopLanguageSwitcherOpen && desktopSwitcher && !desktopSwitcher.contains(e.target)) {
+            closeDesktopLanguageSwitcher();
+        }
+    });
+    
+    // Cerrar con Escape
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && isDesktopLanguageSwitcherOpen) {
+            closeDesktopLanguageSwitcher();
+        }
+    });
+}
+
+function initializeNavLanguageSwitcher() {
+    const navSwitcherBtn = document.getElementById('nav-language-switcher-btn');
+    const navSwitcherDropdown = document.getElementById('nav-language-switcher-dropdown');
+    const navSwitcher = document.getElementById('nav-language-switcher');
+    const navOptions = navSwitcher?.querySelectorAll('.language-switcher__option');
+    
+    if (!navSwitcherBtn || !navSwitcherDropdown || !navSwitcher) return;
+    
+    // Toggle del dropdown optimizado para móvil
+    navSwitcherBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleNavLanguageSwitcher();
+    });
+    
+    // Opciones de idioma con mejor feedback táctil
+    navOptions?.forEach(option => {
+        option.addEventListener('click', (e) => {
+            e.preventDefault();
+            const selectedLanguage = option.getAttribute('data-lang');
+            if (selectedLanguage && selectedLanguage !== currentLanguage) {
+                switchLanguage(selectedLanguage);
+                closeNavLanguageSwitcher();
             }
         });
         
@@ -763,70 +812,95 @@ function initializeLanguageSwitcher() {
     
     // Cerrar al hacer click fuera
     document.addEventListener('click', (e) => {
-        if (isLanguageSwitcherOpen && languageSwitcher && !languageSwitcher.contains(e.target)) {
-            closeLanguageSwitcher();
+        if (isNavLanguageSwitcherOpen && navSwitcher && !navSwitcher.contains(e.target)) {
+            closeNavLanguageSwitcher();
         }
     });
     
     // Cerrar con Escape
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && isLanguageSwitcherOpen) {
-            closeLanguageSwitcher();
+        if (e.key === 'Escape' && isNavLanguageSwitcherOpen) {
+            closeNavLanguageSwitcher();
         }
     });
-    
-    updateLanguageSwitcher();
 }
 
-function toggleLanguageSwitcher() {
-    if (isLanguageSwitcherOpen) {
-        closeLanguageSwitcher();
+function toggleDesktopLanguageSwitcher() {
+    if (isDesktopLanguageSwitcherOpen) {
+        closeDesktopLanguageSwitcher();
     } else {
-        openLanguageSwitcher();
+        openDesktopLanguageSwitcher();
     }
 }
 
-function openLanguageSwitcher() {
-    const languageSwitcher = document.getElementById('language-switcher');
-    const languageSwitcherBtn = document.getElementById('language-switcher-btn');
+function openDesktopLanguageSwitcher() {
+    const desktopSwitcher = document.getElementById('desktop-language-switcher');
+    const desktopSwitcherBtn = document.getElementById('desktop-language-switcher-btn');
     
-    if (!languageSwitcher || !languageSwitcherBtn) return;
+    if (!desktopSwitcher || !desktopSwitcherBtn) return;
     
-    isLanguageSwitcherOpen = true;
-    languageSwitcher.classList.add('active');
-    languageSwitcherBtn.setAttribute('aria-expanded', 'true');
+    isDesktopLanguageSwitcherOpen = true;
+    desktopSwitcher.classList.add('active');
+    desktopSwitcherBtn.setAttribute('aria-expanded', 'true');
+}
+
+function closeDesktopLanguageSwitcher() {
+    const desktopSwitcher = document.getElementById('desktop-language-switcher');
+    const desktopSwitcherBtn = document.getElementById('desktop-language-switcher-btn');
     
-    // Focus optimizado para móvil
-    if (!isMobile) {
-        setTimeout(() => {
-            const firstOption = languageSwitcher.querySelector('.language-switcher__option');
-            if (firstOption) {
-                firstOption.focus();
-            }
-        }, 100);
+    if (!desktopSwitcher || !desktopSwitcherBtn) return;
+    
+    isDesktopLanguageSwitcherOpen = false;
+    desktopSwitcher.classList.remove('active');
+    desktopSwitcherBtn.setAttribute('aria-expanded', 'false');
+}
+
+function toggleNavLanguageSwitcher() {
+    if (isNavLanguageSwitcherOpen) {
+        closeNavLanguageSwitcher();
+    } else {
+        openNavLanguageSwitcher();
     }
 }
 
-function closeLanguageSwitcher() {
-    const languageSwitcher = document.getElementById('language-switcher');
-    const languageSwitcherBtn = document.getElementById('language-switcher-btn');
+function openNavLanguageSwitcher() {
+    const navSwitcher = document.getElementById('nav-language-switcher');
+    const navSwitcherBtn = document.getElementById('nav-language-switcher-btn');
     
-    if (!languageSwitcher || !languageSwitcherBtn) return;
+    if (!navSwitcher || !navSwitcherBtn) return;
     
-    isLanguageSwitcherOpen = false;
-    languageSwitcher.classList.remove('active');
-    languageSwitcherBtn.setAttribute('aria-expanded', 'false');
+    isNavLanguageSwitcherOpen = true;
+    navSwitcher.classList.add('active');
+    navSwitcherBtn.setAttribute('aria-expanded', 'true');
 }
 
-function updateLanguageSwitcher() {
-    const languageSwitcherText = document.getElementById('language-switcher-text');
-    const languageOptions = document.querySelectorAll('.language-switcher__option');
+function closeNavLanguageSwitcher() {
+    const navSwitcher = document.getElementById('nav-language-switcher');
+    const navSwitcherBtn = document.getElementById('nav-language-switcher-btn');
     
-    if (languageSwitcherText) {
-        languageSwitcherText.textContent = currentLanguage.toUpperCase();
+    if (!navSwitcher || !navSwitcherBtn) return;
+    
+    isNavLanguageSwitcherOpen = false;
+    navSwitcher.classList.remove('active');
+    navSwitcherBtn.setAttribute('aria-expanded', 'false');
+}
+
+function updateLanguageSwitchers() {
+    // Actualizar texto de los botones
+    const desktopSwitcherText = document.getElementById('desktop-language-switcher-text');
+    const navSwitcherText = document.getElementById('nav-language-switcher-text');
+    
+    if (desktopSwitcherText) {
+        desktopSwitcherText.textContent = currentLanguage.toUpperCase();
     }
     
-    languageOptions.forEach(option => {
+    if (navSwitcherText) {
+        navSwitcherText.textContent = currentLanguage.toUpperCase();
+    }
+    
+    // Actualizar opciones activas
+    const allOptions = document.querySelectorAll('.language-switcher__option');
+    allOptions.forEach(option => {
         const optionLang = option.getAttribute('data-lang');
         if (optionLang === currentLanguage) {
             option.classList.add('active');
@@ -1088,6 +1162,11 @@ function closeMobileMenu() {
     if (!navToggle || !navMenu) return;
     
     isMenuOpen = false;
+    
+    // Cerrar también los selectores de idioma si están abiertos
+    if (isNavLanguageSwitcherOpen) {
+        closeNavLanguageSwitcher();
+    }
     
     // Animaciones de cierre optimizadas
     navToggle.classList.remove('active');
@@ -1590,19 +1669,42 @@ function setupImageLazyLoading() {
 function initializeHeroVideoFallback() {
     const heroVideo = document.getElementById('hero-video');
     const heroFallbackImage = document.querySelector('.hero__phone-app-image');
+    const heroMobileVideo = document.getElementById('hero-mobile-video');
+    
+    // Configurar video móvil
+    if (heroMobileVideo && isMobile) {
+        heroMobileVideo.muted = true;
+        heroMobileVideo.autoplay = true;
+        heroMobileVideo.loop = true;
+        heroMobileVideo.playsInline = true;
+        heroMobileVideo.preload = 'auto';
+        
+        heroMobileVideo.addEventListener('loadeddata', () => {
+            console.log('Video móvil del hero cargado correctamente');
+        });
+        
+        heroMobileVideo.addEventListener('error', (e) => {
+            console.error('Error cargando video móvil del hero:', e);
+            // Ocultar el contenedor del video si hay error
+            const mobileVideoContainer = document.querySelector('.hero__mobile-video');
+            if (mobileVideoContainer) {
+                mobileVideoContainer.style.display = 'none';
+            }
+        });
+    }
     
     if (!heroVideo || !heroFallbackImage) return;
     
-    // En móvil, usar siempre imagen estática
+    // En móvil, usar siempre imagen estática para el video del teléfono
     if (isMobile) {
         heroVideo.style.display = 'none';
         heroFallbackImage.style.display = 'block';
         heroFallbackImage.style.zIndex = '2';
-        console.log('Video deshabilitado en móvil, usando imagen estática');
+        console.log('Video del teléfono deshabilitado en móvil, usando imagen estática');
         return;
     }
     
-    // En desktop, intentar cargar video
+    // En desktop, intentar cargar video del teléfono
     heroVideo.muted = true;
     heroVideo.autoplay = true;
     heroVideo.loop = true;
@@ -1733,8 +1835,12 @@ function handleResize() {
         closeFloatingMenu();
     }
     
-    if (isLanguageSwitcherOpen) {
-        closeLanguageSwitcher();
+    if (isDesktopLanguageSwitcherOpen) {
+        closeDesktopLanguageSwitcher();
+    }
+    
+    if (isNavLanguageSwitcherOpen) {
+        closeNavLanguageSwitcher();
     }
 }
 
@@ -1748,8 +1854,11 @@ function initializeAccessibility() {
             if (isFloatingMenuOpen) {
                 closeFloatingMenu();
             }
-            if (isLanguageSwitcherOpen) {
-                closeLanguageSwitcher();
+            if (isDesktopLanguageSwitcherOpen) {
+                closeDesktopLanguageSwitcher();
+            }
+            if (isNavLanguageSwitcherOpen) {
+                closeNavLanguageSwitcher();
             }
         }
     });
@@ -1784,8 +1893,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Inicializar sistema de idiomas
     initializeLanguageSystem();
     
-    // Inicializar selector de idioma independiente
-    initializeLanguageSwitcher();
+    // Inicializar selectores de idioma independientes
+    initializeLanguageSwitchers();
     
     // Inicializar funcionalidades principales
     initializeNavigation();
