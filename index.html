@@ -59,6 +59,28 @@
             
             <!-- Navegación optimizada para móvil -->
             <div class="nav__menu" id="nav-menu">
+                <!-- Botón de cerrar para móvil (solo visible en móvil) -->
+                <div class="nav__close" id="nav-close">
+                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                    </svg>
+                </div>
+
+                <!-- Selector de idioma móvil (solo visible en móvil) -->
+                <div class="nav__language-mobile">
+                    <div class="nav__language-title" data-translate="nav-language-title">Idioma</div>
+                    <div class="nav__language-options">
+                        <button class="nav__language-option" data-lang="es">
+                            <span class="nav__language-flag">🇪🇸</span>
+                            <span class="nav__language-name">Español</span>
+                        </button>
+                        <button class="nav__language-option" data-lang="en">
+                            <span class="nav__language-flag">🇺🇸</span>
+                            <span class="nav__language-name">English</span>
+                        </button>
+                    </div>
+                </div>
+
                 <ul class="nav__list">
                     <li><a href="#home" class="nav__link" data-translate="nav-home">Inicio</a></li>
                     <li><a href="#features" class="nav__link" data-translate="nav-features">Características</a></li>
@@ -66,6 +88,11 @@
                     <li><a href="#faq" class="nav__link" data-translate="nav-faq">FAQ</a></li>
                     <li><a href="#contact" class="nav__link" data-translate="nav-contact">Contacto</a></li>
                 </ul>
+
+                <!-- CTA móvil (solo visible en móvil) -->
+                <div class="nav__cta-mobile">
+                    <a href="https://starflex.web.app/" class="btn btn--primary btn--mobile" data-translate="nav-cta">Comienza tu prueba gratuita</a>
+                </div>
             </div>
             
             <!-- Botón CTA (oculto en móvil) -->
