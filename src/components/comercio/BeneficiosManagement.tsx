@@ -51,10 +51,9 @@ import {
   People,
   AttachMoney,
   Percent,
-  Gift,
+  CardGiftcard,
   LocalShipping,
   Star,
-  DollarSign,
   CalendarToday,
   AccessTime,
   Group,
@@ -223,10 +222,10 @@ export const BeneficiosManagement: React.FC = () => {
   const getTipoIcon = (tipo: TipoBeneficio) => {
     switch (tipo) {
       case 'descuento_porcentaje': return <Percent />;
-      case 'descuento_fijo': return <DollarSign />;
-      case '2x1': return <Gift />;
+      case 'descuento_fijo': return <AttachMoney />;
+      case '2x1': return <CardGiftcard />;
       case 'envio_gratis': return <LocalShipping />;
-      case 'regalo': return <Gift />;
+      case 'regalo': return <CardGiftcard />;
       case 'puntos': return <Star />;
       default: return <LocalOffer />;
     }
@@ -846,8 +845,8 @@ export const BeneficiosManagement: React.FC = () => {
                   sx={{
                     '& .MuiOutlinedInput-root': {
                       borderRadius: 2,
-                      '&.Mui-focused fieldset':
-                      borderColor: '#06b6d4',
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#06b6d4',
                       }
                     }
                   }}
