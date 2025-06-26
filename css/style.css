@@ -96,8 +96,8 @@
 --mobile-menu-padding: 1.5rem;
 --mobile-menu-safe-area: 30px;
 
-/* Variables para el selector de idioma - MEJORADO PARA RESPONSIVIDAD */
---language-switcher-z-index: 1050;
+/* Variables para el selector de idioma - CORREGIDO Z-INDEX */
+--language-switcher-z-index: 950;
 --language-switcher-safe-area: 20px;
 
 /* Variables móviles específicas con escalado fluido */
@@ -415,7 +415,7 @@ transform: translateZ(0) scale(1.0002);
 }
 }
 
-/* ===== BOTÓN DE CAMBIO DE IDIOMA INDEPENDIENTE - RESPONSIVIDAD MEJORADA ===== */
+/* ===== BOTÓN DE CAMBIO DE IDIOMA INDEPENDIENTE - Z-INDEX CORREGIDO ===== */
 .language-switcher {
 position: fixed;
 top: var(--language-switcher-safe-area);
@@ -449,8 +449,8 @@ box-shadow:
     var(--shadow-lg),
     var(--glow-subtle),
     inset 0 1px 0 rgba(255, 255, 255, 0.08);
-animation: language-switcher-float 6s ease-in-out infinite;
 min-width: 120px;
+/* ELIMINADA ANIMACIÓN FLOTANTE PROBLEMÁTICA */
 }
 
 .language-switcher__btn::before {
@@ -633,16 +633,6 @@ text-align: left;
 font-weight: 600;
 }
 
-/* ===== ANIMACIONES PARA EL SELECTOR DE IDIOMA ===== */
-@keyframes language-switcher-float {
-0%, 100% {
-    transform: translateY(0px);
-}
-50% {
-    transform: translateY(-3px);
-}
-}
-
 /* ===== ANIMACIONES DE CARGA DE IMÁGENES ===== */
 @keyframes image-loading-shimmer {
 0% {
@@ -714,13 +704,13 @@ border-radius: 12px;
 position: relative;
 transition: all var(--transition);
 cursor: pointer;
-animation: logo-gentle-float 6s ease-in-out infinite;
 filter: drop-shadow(0 8px 25px rgba(0, 0, 0, 0.3));
 background-image: url('../assets/logo.avif');
 image-rendering: -webkit-optimize-contrast;
 image-rendering: crisp-edges;
 transform: translateZ(0);
 backface-visibility: hidden;
+/* ELIMINADA ANIMACIÓN FLOTANTE PROBLEMÁTICA */
 }
 
 /* Soporte para WebP */
@@ -776,7 +766,7 @@ box-shadow:
 0 8px 32px rgba(0, 0, 0, 0.4),
 0 0 0 1px rgba(255, 69, 105, 0.1),
 inset 0 1px 0 rgba(255, 255, 255, 0.08);
-animation: nav-gentle-float 8s ease-in-out infinite;
+/* ELIMINADA ANIMACIÓN FLOTANTE PROBLEMÁTICA */
 }
 
 .nav__list::before {
@@ -916,7 +906,7 @@ box-shadow:
 var(--shadow-crimson),
 var(--neon-crimson);
 border: 2px solid rgba(255, 69, 105, 0.4);
-animation: cta-gentle-float 7s ease-in-out infinite;
+/* ELIMINADA ANIMACIÓN FLOTANTE PROBLEMÁTICA */
 }
 
 .btn--primary::before {
@@ -1508,7 +1498,7 @@ overflow: visible;
 text-decoration: none;
 cursor: pointer;
 filter: drop-shadow(0 8px 25px rgba(0, 0, 0, 0.3));
-animation: download-float 6s ease-in-out infinite;
+/* ELIMINADA ANIMACIÓN FLOTANTE PROBLEMÁTICA */
 }
 
 .download-btn:hover {
@@ -1617,7 +1607,7 @@ animation: fadeInRight 1s ease-out 0.3s both;
 position: relative;
 transform: perspective(1200px) rotateY(-8deg) rotateX(2deg);
 transition: transform var(--transition-slow);
-animation: phone-float 8s ease-in-out infinite;
+/* ELIMINADA ANIMACIÓN FLOTANTE PROBLEMÁTICA */
 }
 
 .hero__phone {
@@ -1674,7 +1664,7 @@ background: #000000;
 border-radius: var(--phone-border-radius);
 }
 
-/* ===== VIDEO DEL HERO OPTIMIZADO - MOSTRAR SIEMPRE ===== */
+/* ===== VIDEO DEL HERO OPTIMIZADO - PARA MÓVIL DEBAJO DEL TEXTO ===== */
 .hero__phone-video {
 width: 100%;
 height: 100%;
@@ -1693,6 +1683,30 @@ image-rendering: -webkit-optimize-contrast;
 image-rendering: crisp-edges;
 opacity: 1;
 display: block;
+}
+
+/* ===== VIDEO MÓVIL DEBAJO DEL TEXTO DE CONFIANZA ===== */
+.hero__mobile-video {
+display: none;
+width: 100%;
+max-width: 400px;
+margin: var(--space-xl) auto 0;
+border-radius: 20px;
+overflow: hidden;
+box-shadow: 
+0 20px 60px rgba(0, 0, 0, 0.4),
+0 8px 30px rgba(0, 0, 0, 0.3),
+0 0 0 1px rgba(255, 255, 255, 0.05);
+filter: drop-shadow(0 0 20px rgba(255, 69, 105, 0.15));
+}
+
+.hero__mobile-video video {
+width: 100%;
+height: auto;
+display: block;
+border-radius: 20px;
+object-fit: cover;
+filter: brightness(1.02) contrast(1.05) saturate(1.08);
 }
 
 .hero__phone-video::-webkit-media-controls {
@@ -1946,7 +1960,7 @@ height: var(--phone-height-desktop);
 margin: 0 auto;
 transform: perspective(1000px) rotateY(2deg) rotateX(-1deg);
 transition: transform var(--transition);
-animation: feature-phone-float 10s ease-in-out infinite;
+/* ELIMINADA ANIMACIÓN FLOTANTE PROBLEMÁTICA */
 /* Efectos visuales mejorados para hacer las imágenes más atractivas */
 filter: drop-shadow(0 10px 30px rgba(255, 69, 105, 0.15));
 }
@@ -2432,7 +2446,7 @@ var(--shadow-crimson),
 var(--neon-crimson),
 inset 0 2px 0 rgba(255, 255, 255, 0.2);
 transition: all var(--transition);
-animation: play-button-pulse 3s ease-in-out infinite;
+/* ELIMINADA ANIMACIÓN PULSANTE PROBLEMÁTICA */
 }
 
 .videos__play-button:hover {
@@ -3435,7 +3449,7 @@ box-shadow:
 var(--shadow-crimson),
 var(--neon-crimson),
 inset 0 2px 0 rgba(255, 255, 255, 0.15);
-animation: floating-widget-pulse 4s ease-in-out infinite;
+/* ELIMINADA ANIMACIÓN PULSANTE PROBLEMÁTICA */
 overflow: hidden;
 }
 
@@ -3500,7 +3514,7 @@ height: 40px;
 color: white;
 transition: all var(--transition);
 filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.4));
-animation: floating-widget-icon-breathe 6s ease-in-out infinite;
+/* ELIMINADA ANIMACIÓN RESPIRATORIA PROBLEMÁTICA */
 z-index: 1;
 }
 
@@ -3512,7 +3526,7 @@ filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.6)) brightness(1.3) saturate(1.2)
 .floating-widget__main-btn.active .floating-widget__main-icon {
 transform: scale(0.9);
 filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.4)) brightness(1.1);
-animation: floating-widget-icon-pulse 1s ease-in-out infinite;
+/* ELIMINADA ANIMACIÓN PULSANTE PROBLEMÁTICA */
 }
 
 /* ===== MENÚ DESPLEGABLE ===== */
@@ -3554,11 +3568,9 @@ overflow: hidden;
 box-shadow: 
 0 8px 25px rgba(0, 0, 0, 0.3),
 inset 0 1px 0 rgba(255, 255, 255, 0.1);
-animation: floating-widget-item-float 6s ease-in-out infinite;
+/* ELIMINADA ANIMACIÓN FLOTANTE PROBLEMÁTICA */
 }
 
-.floating-widget__menu-item:nth-child(1) { animation-delay: 0.2s; }
-.floating-widget__menu-item:nth-child(2) { animation-delay: 0.4s; }
 
 /* ===== EFECTO SHIMMER ===== */
 .floating-widget__menu-item::before {
@@ -3669,47 +3681,7 @@ visibility: visible;
 transform: translateY(-50%) translateX(-8px);
 }
 
-/* ===== ANIMACIONES ESPECÍFICAS PARA EL ÍCONO ===== */
-@keyframes floating-widget-icon-breathe {
-0%, 100% {
-transform: scale(1);
-filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.4));
-}
-50% {
-transform: scale(1.05);
-filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5)) brightness(1.15) saturate(1.1);
-}
-}
-
-@keyframes floating-widget-icon-pulse {
-0%, 100% {
-transform: scale(0.9);
-filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.4)) brightness(1.1);
-}
-50% {
-transform: scale(1.1);
-filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.6)) brightness(1.3);
-}
-}
-
 /* ===== ANIMACIONES OPTIMIZADAS ===== */
-@keyframes floating-widget-pulse {
-0%, 100% {
-transform: scale(1);
-box-shadow: 
-var(--shadow-crimson),
-var(--neon-crimson),
-inset 0 2px 0 rgba(255, 255, 255, 0.15);
-}
-50% {
-transform: scale(1.05);
-box-shadow: 
-var(--shadow-crimson-hover),
-var(--neon-crimson-strong),
-inset 0 2px 0 rgba(255, 255, 255, 0.2);
-}
-}
-
 @keyframes floating-widget-ring {
 0%, 100% {
 opacity: 0;
@@ -3736,15 +3708,6 @@ opacity: 0;
 }
 }
 
-@keyframes floating-widget-item-float {
-0%, 100% {
-transform: translateY(0px);
-}
-50% {
-transform: translateY(-4px);
-}
-}
-
 /* ===== ANIMACIONES OPTIMIZADAS ===== */
 @keyframes ambient-glow {
 0%, 100% {
@@ -3765,15 +3728,6 @@ transform: scale(1);
 50% {
 opacity: 0.7;
 transform: scale(1.03);
-}
-}
-
-@keyframes feature-phone-float {
-0%, 100% {
-transform: perspective(1000px) rotateY(2deg) rotateX(-1deg) translateY(0px);
-}
-50% {
-transform: perspective(1000px) rotateY(2deg) rotateX(-1deg) translateY(-8px);
 }
 }
 
@@ -3821,15 +3775,6 @@ left: 100%;
 }
 100% {
 left: -100%;
-}
-}
-
-@keyframes play-button-pulse {
-0%, 100% {
-transform: scale(1);
-}
-50% {
-transform: scale(1.05);
 }
 }
 
@@ -4031,24 +3976,6 @@ transform: scale(1.03);
 }
 }
 
-@keyframes phone-float {
-0%, 100% {
-transform: perspective(1200px) rotateY(-8deg) rotateX(2deg) translateY(0px);
-}
-50% {
-transform: perspective(1200px) rotateY(-8deg) rotateX(2deg) translateY(-10px);
-}
-}
-
-@keyframes download-float {
-0%, 100% {
-transform: translateY(0px);
-}
-50% {
-transform: translateY(-3px);
-}
-}
-
 @keyframes slideInUp {
 from {
 opacity: 0;
@@ -4057,33 +3984,6 @@ transform: translateY(50px);
 to {
 opacity: 1;
 transform: translateY(0);
-}
-}
-
-@keyframes logo-gentle-float {
-0%, 100% {
-transform: translateY(0px);
-}
-50% {
-transform: translateY(-6px);
-}
-}
-
-@keyframes nav-gentle-float {
-0%, 100% {
-transform: translateY(0px);
-}
-50% {
-transform: translateY(-4px);
-}
-}
-
-@keyframes cta-gentle-float {
-0%, 100% {
-transform: translateY(0px);
-}
-50% {
-transform: translateY(-5px);
 }
 }
 
@@ -4214,6 +4114,15 @@ color: var(--text-primary);
 
 /* ===== MENÚ MÓVIL FULLSCREEN ULTRA OPTIMIZADO ===== */
 @media (max-width: 1024px) {
+/* ===== MOSTRAR VIDEO EN MÓVIL DEBAJO DEL TEXTO DE CONFIANZA ===== */
+.hero__mobile-video {
+display: block;
+}
+
+.hero__phone-container {
+display: none;
+}
+
 .nav__menu {
 position: fixed;
 top: 0;
