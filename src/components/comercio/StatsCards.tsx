@@ -15,104 +15,6 @@ import {
 } from 'lucide-react';
 import { format, subDays, startOfMonth } from 'date-fns';
 
-const styles = {
-  grid: {
-    display: 'grid',
-    gridTemplateColumns: '1fr',
-    gap: '1.5rem'
-  },
-  gridMd: {
-    '@media (min-width: 768px)': {
-      gridTemplateColumns: 'repeat(2, 1fr)'
-    }
-  },
-  gridLg: {
-    '@media (min-width: 1024px)': {
-      gridTemplateColumns: 'repeat(4, 1fr)'
-    }
-  },
-  card: {
-    background: 'rgba(255, 255, 255, 0.8)',
-    backdropFilter: 'blur(12px)',
-    borderRadius: '1rem',
-    padding: '1.5rem',
-    boxShadow: '0 4px 15px rgba(0, 0, 0, 0.05)',
-    border: '1px solid rgba(148, 163, 184, 0.2)',
-    transition: 'all 0.3s ease',
-    cursor: 'pointer'
-  },
-  cardHover: {
-    ':hover': {
-      transform: 'translateY(-4px)',
-      boxShadow: '0 10px 40px rgba(0, 0, 0, 0.1)',
-      borderColor: 'rgba(148, 163, 184, 0.4)'
-    }
-  },
-  cardHeader: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: '1rem'
-  },
-  iconContainer: {
-    width: '3rem',
-    height: '3rem',
-    borderRadius: '0.75rem',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
-    transition: 'transform 0.3s ease'
-  },
-  iconContainerHover: {
-    ':hover': {
-      transform: 'scale(1.1)'
-    }
-  },
-  changeIndicator: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.25rem',
-    padding: '0.25rem 0.5rem',
-    borderRadius: '0.5rem',
-    fontSize: '0.75rem',
-    fontWeight: 600
-  },
-  changePositive: {
-    backgroundColor: '#dcfce7',
-    color: '#166534'
-  },
-  changeNegative: {
-    backgroundColor: '#fecaca',
-    color: '#991b1b'
-  },
-  valueSection: {
-    marginBottom: '0.5rem'
-  },
-  value: {
-    fontSize: '1.5rem',
-    fontWeight: 900,
-    color: '#0f172a',
-    marginBottom: '0.25rem',
-    lineHeight: 1.2
-  },
-  valueLg: {
-    '@media (min-width: 1024px)': {
-      fontSize: '1.875rem'
-    }
-  },
-  title: {
-    fontSize: '0.875rem',
-    fontWeight: 600,
-    color: '#64748b'
-  },
-  subtitle: {
-    fontSize: '0.75rem',
-    color: '#94a3b8',
-    fontWeight: 500
-  }
-};
-
 export const StatsCards: React.FC = () => {
   const { activeBeneficios, beneficios } = useBeneficios();
   const { validaciones } = useValidaciones();
@@ -140,9 +42,7 @@ export const StatsCards: React.FC = () => {
       title: 'Validaciones este mes',
       value: validacionesEsteMes.length,
       icon: Receipt,
-      color: 'linear-gradient(135deg, #06b6d4 0%, #1e40af 100%)',
-      bgColor: '#f0f9ff',
-      textColor: '#0369a1',
+      color: '#06b6d4',
       change: '+12%',
       isPositive: true,
       subtitle: `${(validacionesEsteMes.length / new Date().getDate()).toFixed(1)} por día`
@@ -151,9 +51,7 @@ export const StatsCards: React.FC = () => {
       title: 'Beneficios activos',
       value: activeBeneficios.length,
       icon: Gift,
-      color: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-      bgColor: '#f0fdf4',
-      textColor: '#059669',
+      color: '#10b981',
       change: '0%',
       isPositive: null,
       subtitle: `${beneficios.length} total`
@@ -162,9 +60,7 @@ export const StatsCards: React.FC = () => {
       title: 'Asociaciones vinculadas',
       value: asociacionesVinculadas,
       icon: Users,
-      color: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
-      bgColor: '#faf5ff',
-      textColor: '#7c3aed',
+      color: '#8b5cf6',
       change: '+5%',
       isPositive: true,
       subtitle: 'Activas'
@@ -173,9 +69,7 @@ export const StatsCards: React.FC = () => {
       title: 'Última validación',
       value: tiempoUltimaValidacion,
       icon: Clock,
-      color: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-      bgColor: '#fffbeb',
-      textColor: '#d97706',
+      color: '#f59e0b',
       change: null,
       isPositive: null,
       subtitle: ultimaValidacion ? format(ultimaValidacion.fechaHora.toDate(), 'dd/MM HH:mm') : ''
@@ -184,13 +78,9 @@ export const StatsCards: React.FC = () => {
 
   return (
     <div style={{
-      ...styles.grid,
-      '@media (min-width: 768px)': {
-        gridTemplateColumns: 'repeat(2, 1fr)'
-      },
-      '@media (min-width: 1024px)': {
-        gridTemplateColumns: 'repeat(4, 1fr)'
-      }
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+      gap: '24px'
     }}>
       {stats.map((stat, index) => (
         <motion.div
@@ -198,28 +88,52 @@ export const StatsCards: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: index * 0.1 }}
-          whileHover={{ y: -4, transition: { duration: 0.2 } }}
-          style={styles.card}
-          className="group"
+          whileHover={{ y: -2, transition: { duration: 0.2 } }}
+          style={{
+            backgroundColor: 'white',
+            borderRadius: '12px',
+            padding: '24px',
+            border: '1px solid #e2e8f0',
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+            transition: 'all 0.2s ease',
+            cursor: 'pointer'
+          }}
         >
-          {/* Icon */}
-          <div style={styles.cardHeader}>
+          {/* Header */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: '16px'
+          }}>
             <div style={{
-              ...styles.iconContainer,
-              background: stat.color
+              width: '40px',
+              height: '40px',
+              backgroundColor: stat.color,
+              borderRadius: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
             }}>
-              <stat.icon style={{ width: '1.5rem', height: '1.5rem', color: 'white' }} />
+              <stat.icon style={{ width: '20px', height: '20px', color: 'white' }} />
             </div>
             
             {stat.change && (
               <div style={{
-                ...styles.changeIndicator,
-                ...(stat.isPositive ? styles.changePositive : styles.changeNegative)
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                padding: '4px 8px',
+                borderRadius: '6px',
+                fontSize: '12px',
+                fontWeight: 600,
+                backgroundColor: stat.isPositive ? '#dcfce7' : '#fecaca',
+                color: stat.isPositive ? '#166534' : '#991b1b'
               }}>
                 {stat.isPositive ? (
-                  <TrendingUp style={{ width: '0.75rem', height: '0.75rem' }} />
+                  <TrendingUp style={{ width: '12px', height: '12px' }} />
                 ) : (
-                  <TrendingDown style={{ width: '0.75rem', height: '0.75rem' }} />
+                  <TrendingDown style={{ width: '12px', height: '12px' }} />
                 )}
                 {stat.change}
               </div>
@@ -227,42 +141,35 @@ export const StatsCards: React.FC = () => {
           </div>
 
           {/* Value */}
-          <div style={styles.valueSection}>
+          <div style={{ marginBottom: '8px' }}>
             <h3 style={{
-              ...styles.value,
-              '@media (min-width: 1024px)': {
-                fontSize: '1.875rem'
-              }
+              fontSize: '32px',
+              fontWeight: 700,
+              color: '#1e293b',
+              marginBottom: '4px',
+              lineHeight: 1
             }}>
               {typeof stat.value === 'number' ? stat.value.toLocaleString() : stat.value}
             </h3>
-            <p style={styles.title}>
+            <p style={{
+              fontSize: '14px',
+              fontWeight: 500,
+              color: '#64748b'
+            }}>
               {stat.title}
             </p>
           </div>
 
           {/* Subtitle */}
           {stat.subtitle && (
-            <p style={styles.subtitle}>
+            <p style={{
+              fontSize: '12px',
+              color: '#94a3b8',
+              fontWeight: 500
+            }}>
               {stat.subtitle}
             </p>
           )}
-
-          <style jsx>{`
-            .group:hover .icon-container {
-              transform: scale(1.1);
-            }
-            @media (min-width: 768px) {
-              .grid-md {
-                grid-template-columns: repeat(2, 1fr);
-              }
-            }
-            @media (min-width: 1024px) {
-              .grid-lg {
-                grid-template-columns: repeat(4, 1fr);
-              }
-            }
-          `}</style>
         </motion.div>
       ))}
     </div>

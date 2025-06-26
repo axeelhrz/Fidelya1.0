@@ -29,15 +29,15 @@ export const TopBenefits: React.FC = () => {
   const getStatusColor = (estado: string) => {
     switch (estado) {
       case 'activo':
-        return 'bg-emerald-100 text-emerald-700';
+        return { backgroundColor: '#dcfce7', color: '#166534' };
       case 'inactivo':
-        return 'bg-slate-100 text-slate-700';
+        return { backgroundColor: '#f1f5f9', color: '#475569' };
       case 'vencido':
-        return 'bg-red-100 text-red-700';
+        return { backgroundColor: '#fecaca', color: '#991b1b' };
       case 'agotado':
-        return 'bg-amber-100 text-amber-700';
+        return { backgroundColor: '#fef3c7', color: '#92400e' };
       default:
-        return 'bg-slate-100 text-slate-700';
+        return { backgroundColor: '#f1f5f9', color: '#475569' };
     }
   };
 
@@ -56,23 +56,63 @@ export const TopBenefits: React.FC = () => {
     }
   };
 
+  const getRankingStyle = (index: number) => {
+    switch (index) {
+      case 0:
+        return { backgroundColor: '#f59e0b', color: 'white' };
+      case 1:
+        return { backgroundColor: '#9ca3af', color: 'white' };
+      case 2:
+        return { backgroundColor: '#92400e', color: 'white' };
+      default:
+        return { backgroundColor: '#f1f5f9', color: '#64748b' };
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay: 0.2 }}
-      className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-soft border border-slate-200/50"
+      style={{
+        backgroundColor: 'white',
+        borderRadius: '12px',
+        padding: '24px',
+        border: '1px solid #e2e8f0',
+        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+      }}
     >
       {/* Header */}
-      <div className="flex items-center gap-4 mb-6">
-        <div className="w-12 h-12 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-          <Gift className="w-6 h-6 text-white" />
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px',
+        marginBottom: '24px'
+      }}>
+        <div style={{
+          width: '40px',
+          height: '40px',
+          backgroundColor: '#8b5cf6',
+          borderRadius: '8px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <Gift style={{ width: '20px', height: '20px', color: 'white' }} />
         </div>
         <div>
-          <h3 className="text-xl font-bold text-slate-900 mb-1">
+          <h3 style={{
+            fontSize: '18px',
+            fontWeight: 600,
+            color: '#1e293b',
+            marginBottom: '2px'
+          }}>
             Beneficios más canjeados
           </h3>
-          <p className="text-sm text-slate-600">
+          <p style={{
+            fontSize: '14px',
+            color: '#64748b'
+          }}>
             Top 5 beneficios por uso
           </p>
         </div>
@@ -80,59 +120,117 @@ export const TopBenefits: React.FC = () => {
 
       {/* Benefits List */}
       {benefitUsage.length > 0 ? (
-        <div className="space-y-4">
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '16px'
+        }}>
           {benefitUsage.map((benefit, index) => (
             <motion.div
               key={benefit.id}
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.4, delay: index * 0.1 }}
-              className="group"
             >
-              <div className="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-slate-50 to-white border border-slate-200/50 hover:border-slate-300/50 hover:shadow-md transition-all duration-300">
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '16px',
+                padding: '16px',
+                borderRadius: '8px',
+                backgroundColor: '#f8fafc',
+                border: '1px solid #e2e8f0',
+                transition: 'all 0.2s ease'
+              }}>
                 {/* Ranking */}
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm ${
-                  index === 0 
-                    ? 'bg-gradient-to-br from-amber-400 to-orange-500 text-white' 
-                    : index === 1
-                    ? 'bg-gradient-to-br from-slate-300 to-slate-400 text-white'
-                    : index === 2
-                    ? 'bg-gradient-to-br from-amber-600 to-amber-700 text-white'
-                    : 'bg-slate-100 text-slate-600'
-                }`}>
-                  {index === 0 ? <Award className="w-4 h-4" /> : index + 1}
+                <div style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '6px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  ...getRankingStyle(index)
+                }}>
+                  {index === 0 ? <Award style={{ width: '16px', height: '16px' }} /> : index + 1}
                 </div>
 
                 {/* Benefit Info */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h4 className="font-semibold text-slate-900 truncate">
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    marginBottom: '4px'
+                  }}>
+                    <h4 style={{
+                      fontWeight: 600,
+                      color: '#1e293b',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      fontSize: '14px'
+                    }}>
                       {benefit.titulo}
                     </h4>
-                    <span className={`px-2 py-1 rounded-lg text-xs font-semibold ${getStatusColor(benefit.estado)}`}>
+                    <span style={{
+                      padding: '2px 8px',
+                      borderRadius: '4px',
+                      fontSize: '12px',
+                      fontWeight: 500,
+                      ...getStatusColor(benefit.estado)
+                    }}>
                       {getStatusText(benefit.estado)}
                     </span>
                   </div>
                   
-                  <p className="text-sm text-slate-600 mb-2">
+                  <p style={{
+                    fontSize: '12px',
+                    color: '#64748b',
+                    marginBottom: '8px'
+                  }}>
                     {benefit.asociacionesVinculadas.length} asociación{benefit.asociacionesVinculadas.length !== 1 ? 'es' : ''}
                   </p>
 
                   {/* Progress Bar */}
-                  <div className="relative">
-                    <div className="w-full bg-slate-200 rounded-full h-2">
+                  <div>
+                    <div style={{
+                      width: '100%',
+                      height: '6px',
+                      backgroundColor: '#e2e8f0',
+                      borderRadius: '3px',
+                      overflow: 'hidden'
+                    }}>
                       <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: `${benefit.porcentaje}%` }}
                         transition={{ duration: 1, delay: index * 0.2 }}
-                        className="bg-gradient-to-r from-violet-500 to-purple-600 h-2 rounded-full"
+                        style={{
+                          height: '100%',
+                          backgroundColor: '#8b5cf6',
+                          borderRadius: '3px'
+                        }}
                       />
                     </div>
-                    <div className="flex justify-between items-center mt-1">
-                      <span className="text-xs text-slate-500">
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginTop: '4px'
+                    }}>
+                      <span style={{
+                        fontSize: '11px',
+                        color: '#94a3b8'
+                      }}>
                         {benefit.porcentaje.toFixed(0)}% del más usado
                       </span>
-                      <span className="text-xs font-semibold text-slate-700">
+                      <span style={{
+                        fontSize: '11px',
+                        fontWeight: 500,
+                        color: '#64748b'
+                      }}>
                         {benefit.usos} uso{benefit.usos !== 1 ? 's' : ''}
                       </span>
                     </div>
@@ -140,26 +238,49 @@ export const TopBenefits: React.FC = () => {
                 </div>
 
                 {/* Usage Count */}
-                <div className="text-right">
-                  <div className="flex items-center gap-1 text-violet-600">
-                    <TrendingUp className="w-4 h-4" />
-                    <span className="text-2xl font-bold">{benefit.usos}</span>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    color: '#8b5cf6',
+                    marginBottom: '2px'
+                  }}>
+                    <TrendingUp style={{ width: '16px', height: '16px' }} />
+                    <span style={{ fontSize: '20px', fontWeight: 700 }}>{benefit.usos}</span>
                   </div>
-                  <p className="text-xs text-slate-500">canjes</p>
+                  <p style={{ fontSize: '11px', color: '#94a3b8' }}>canjes</p>
                 </div>
               </div>
             </motion.div>
           ))}
         </div>
       ) : (
-        <div className="text-center py-12">
-          <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Star className="w-8 h-8 text-slate-400" />
+        <div style={{
+          textAlign: 'center',
+          padding: '48px 0'
+        }}>
+          <div style={{
+            width: '64px',
+            height: '64px',
+            backgroundColor: '#f1f5f9',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 16px'
+          }}>
+            <Star style={{ width: '32px', height: '32px', color: '#94a3b8' }} />
           </div>
-          <h4 className="text-lg font-semibold text-slate-900 mb-2">
+          <h4 style={{
+            fontSize: '16px',
+            fontWeight: 600,
+            color: '#1e293b',
+            marginBottom: '8px'
+          }}>
             No hay datos de uso
           </h4>
-          <p className="text-slate-600">
+          <p style={{ color: '#64748b', fontSize: '14px' }}>
             Cuando tengas validaciones, aquí verás tus beneficios más populares.
           </p>
         </div>

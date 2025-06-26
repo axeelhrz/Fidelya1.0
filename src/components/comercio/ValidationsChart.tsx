@@ -17,148 +17,6 @@ import { format, subDays, startOfDay, endOfDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { BarChart3, Calendar, TrendingUp } from 'lucide-react';
 
-const styles = {
-  container: {
-    background: 'rgba(255, 255, 255, 0.8)',
-    backdropFilter: 'blur(12px)',
-    borderRadius: '1rem',
-    padding: '1.5rem',
-    boxShadow: '0 4px 15px rgba(0, 0, 0, 0.05)',
-    border: '1px solid rgba(148, 163, 184, 0.2)'
-  },
-  header: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '1rem',
-    marginBottom: '1.5rem'
-  },
-  headerLg: {
-    '@media (min-width: 1024px)': {
-      flexDirection: 'row' as const,
-      alignItems: 'center',
-      justifyContent: 'space-between'
-    }
-  },
-  headerContent: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '1rem'
-  },
-  iconContainer: {
-    width: '3rem',
-    height: '3rem',
-    background: 'linear-gradient(135deg, #06b6d4 0%, #1e40af 100%)',
-    borderRadius: '0.75rem',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)'
-  },
-  headerText: {
-    flex: 1
-  },
-  title: {
-    fontSize: '1.25rem',
-    fontWeight: 700,
-    color: '#0f172a',
-    marginBottom: '0.25rem'
-  },
-  subtitle: {
-    fontSize: '0.875rem',
-    color: '#64748b'
-  },
-  periodSelector: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem'
-  },
-  periodContainer: {
-    display: 'flex',
-    backgroundColor: '#f1f5f9',
-    borderRadius: '0.75rem',
-    padding: '0.25rem'
-  },
-  periodButton: {
-    padding: '0.5rem 1rem',
-    borderRadius: '0.5rem',
-    fontSize: '0.875rem',
-    fontWeight: 600,
-    border: 'none',
-    cursor: 'pointer',
-    transition: 'all 0.2s ease'
-  },
-  periodButtonActive: {
-    backgroundColor: 'white',
-    color: '#0891b2',
-    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
-  },
-  periodButtonInactive: {
-    backgroundColor: 'transparent',
-    color: '#64748b'
-  },
-  statsGrid: {
-    display: 'grid',
-    gridTemplateColumns: '1fr',
-    gap: '1rem',
-    marginBottom: '1.5rem'
-  },
-  statsGridMd: {
-    '@media (min-width: 768px)': {
-      gridTemplateColumns: 'repeat(3, 1fr)'
-    }
-  },
-  statCard: {
-    borderRadius: '0.75rem',
-    padding: '1rem'
-  },
-  statCardCyan: {
-    background: 'linear-gradient(135deg, #ecfeff 0%, #cffafe 100%)'
-  },
-  statCardEmerald: {
-    background: 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)'
-  },
-  statCardViolet: {
-    background: 'linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%)'
-  },
-  statContent: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.75rem'
-  },
-  statIcon: {
-    width: '2rem',
-    height: '2rem',
-    borderRadius: '0.5rem',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  statIconCyan: {
-    backgroundColor: '#06b6d4'
-  },
-  statIconEmerald: {
-    backgroundColor: '#10b981'
-  },
-  statIconViolet: {
-    backgroundColor: '#8b5cf6'
-  },
-  statText: {
-    flex: 1
-  },
-  statValue: {
-    fontSize: '1.5rem',
-    fontWeight: 700,
-    color: '#0f172a'
-  },
-  statLabel: {
-    fontSize: '0.875rem',
-    color: '#64748b'
-  },
-  chartContainer: {
-    height: '20rem'
-  }
-};
-
 export const ValidationsChart: React.FC = () => {
   const { validaciones } = useValidaciones();
   const [selectedPeriod, setSelectedPeriod] = useState<'7d' | '30d'>('7d');
@@ -202,16 +60,15 @@ export const ValidationsChart: React.FC = () => {
     if (active && payload && payload.length) {
       return (
         <div style={{
-          background: 'rgba(255, 255, 255, 0.95)',
-          backdropFilter: 'blur(12px)',
-          border: '1px solid rgba(148, 163, 184, 0.2)',
-          borderRadius: '0.75rem',
-          padding: '1rem',
-          boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)'
+          backgroundColor: 'white',
+          border: '1px solid #e2e8f0',
+          borderRadius: '8px',
+          padding: '12px',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
         }}>
-          <p style={{ fontWeight: 600, color: '#0f172a', marginBottom: '0.5rem' }}>{label}</p>
+          <p style={{ fontWeight: 600, color: '#1e293b', marginBottom: '8px' }}>{label}</p>
           {payload.map((entry: any, index: number) => (
-            <p key={index} style={{ fontSize: '0.875rem', color: entry.color }}>
+            <p key={index} style={{ fontSize: '14px', color: entry.color, marginBottom: '4px' }}>
               <span style={{ fontWeight: 500 }}>{entry.name}:</span> {entry.value}
             </p>
           ))}
@@ -226,34 +83,67 @@ export const ValidationsChart: React.FC = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
-      style={styles.container}
+      style={{
+        backgroundColor: 'white',
+        borderRadius: '12px',
+        padding: '24px',
+        border: '1px solid #e2e8f0',
+        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+      }}
     >
       {/* Header */}
       <div style={{
-        ...styles.header,
-        '@media (min-width: 1024px)': {
-          flexDirection: 'row',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '16px',
+        marginBottom: '24px'
+      }}>
+        <div style={{
+          display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between'
-        }
-      }}>
-        <div style={styles.headerContent}>
-          <div style={styles.iconContainer}>
-            <BarChart3 style={{ width: '1.5rem', height: '1.5rem', color: 'white' }} />
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px'
+          }}>
+            <div style={{
+              width: '40px',
+              height: '40px',
+              backgroundColor: '#06b6d4',
+              borderRadius: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <BarChart3 style={{ width: '20px', height: '20px', color: 'white' }} />
+            </div>
+            <div>
+              <h3 style={{
+                fontSize: '18px',
+                fontWeight: 600,
+                color: '#1e293b',
+                marginBottom: '2px'
+              }}>
+                Validaciones por día
+              </h3>
+              <p style={{
+                fontSize: '14px',
+                color: '#64748b'
+              }}>
+                Últimos {selectedPeriod === '7d' ? '7 días' : '30 días'}
+              </p>
+            </div>
           </div>
-          <div style={styles.headerText}>
-            <h3 style={styles.title}>
-              Validaciones por día
-            </h3>
-            <p style={styles.subtitle}>
-              Últimos {selectedPeriod === '7d' ? '7 días' : '30 días'}
-            </p>
-          </div>
-        </div>
 
-        {/* Period Selector */}
-        <div style={styles.periodSelector}>
-          <div style={styles.periodContainer}>
+          {/* Period Selector */}
+          <div style={{
+            display: 'flex',
+            backgroundColor: '#f1f5f9',
+            borderRadius: '8px',
+            padding: '4px'
+          }}>
             {[
               { value: '7d', label: '7 días' },
               { value: '30d', label: '30 días' },
@@ -262,8 +152,16 @@ export const ValidationsChart: React.FC = () => {
                 key={period.value}
                 onClick={() => setSelectedPeriod(period.value as '7d' | '30d')}
                 style={{
-                  ...styles.periodButton,
-                  ...(selectedPeriod === period.value ? styles.periodButtonActive : styles.periodButtonInactive)
+                  padding: '8px 16px',
+                  borderRadius: '6px',
+                  fontSize: '14px',
+                  fontWeight: 500,
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  backgroundColor: selectedPeriod === period.value ? 'white' : 'transparent',
+                  color: selectedPeriod === period.value ? '#0891b2' : '#64748b',
+                  boxShadow: selectedPeriod === period.value ? '0 1px 2px rgba(0, 0, 0, 0.1)' : 'none'
                 }}
               >
                 {period.label}
@@ -271,54 +169,68 @@ export const ValidationsChart: React.FC = () => {
             ))}
           </div>
         </div>
-      </div>
 
-      {/* Stats Summary */}
-      <div style={{
-        ...styles.statsGrid,
-        '@media (min-width: 768px)': {
-          gridTemplateColumns: 'repeat(3, 1fr)'
-        }
-      }}>
-        <div style={{ ...styles.statCard, ...styles.statCardCyan }}>
-          <div style={styles.statContent}>
-            <div style={{ ...styles.statIcon, ...styles.statIconCyan }}>
-              <Calendar style={{ width: '1rem', height: '1rem', color: 'white' }} />
+        {/* Stats Summary */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
+          gap: '16px'
+        }}>
+          <div style={{
+            backgroundColor: '#f0f9ff',
+            borderRadius: '8px',
+            padding: '16px'
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              marginBottom: '4px'
+            }}>
+              <Calendar style={{ width: '16px', height: '16px', color: '#06b6d4' }} />
+              <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 500 }}>Total</span>
             </div>
-            <div style={styles.statText}>
-              <p style={styles.statValue}>{totalValidaciones}</p>
-              <p style={styles.statLabel}>Total validaciones</p>
-            </div>
+            <p style={{ fontSize: '24px', fontWeight: 700, color: '#1e293b' }}>{totalValidaciones}</p>
           </div>
-        </div>
 
-        <div style={{ ...styles.statCard, ...styles.statCardEmerald }}>
-          <div style={styles.statContent}>
-            <div style={{ ...styles.statIcon, ...styles.statIconEmerald }}>
-              <TrendingUp style={{ width: '1rem', height: '1rem', color: 'white' }} />
+          <div style={{
+            backgroundColor: '#f0fdf4',
+            borderRadius: '8px',
+            padding: '16px'
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              marginBottom: '4px'
+            }}>
+              <TrendingUp style={{ width: '16px', height: '16px', color: '#10b981' }} />
+              <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 500 }}>Exitosas</span>
             </div>
-            <div style={styles.statText}>
-              <p style={styles.statValue}>{totalExitosas}</p>
-              <p style={styles.statLabel}>Exitosas</p>
-            </div>
+            <p style={{ fontSize: '24px', fontWeight: 700, color: '#1e293b' }}>{totalExitosas}</p>
           </div>
-        </div>
 
-        <div style={{ ...styles.statCard, ...styles.statCardViolet }}>
-          <div style={styles.statContent}>
-            <div style={{ ...styles.statIcon, ...styles.statIconViolet }}>
-              <span style={{ color: 'white', fontSize: '0.75rem', fontWeight: 700 }}>%</span>
+          <div style={{
+            backgroundColor: '#faf5ff',
+            borderRadius: '8px',
+            padding: '16px'
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              marginBottom: '4px'
+            }}>
+              <span style={{ fontSize: '12px', color: '#8b5cf6', fontWeight: 700 }}>%</span>
+              <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 500 }}>Tasa éxito</span>
             </div>
-            <div style={styles.statText}>
-              <p style={styles.statValue}>{tasaExito.toFixed(1)}%</p>
-              <p style={styles.statLabel}>Tasa de éxito</p>
-            </div>
+            <p style={{ fontSize: '24px', fontWeight: 700, color: '#1e293b' }}>{tasaExito.toFixed(1)}%</p>
           </div>
         </div>
       </div>
 
       {/* Chart */}
-      <div style={styles.chartContainer}>
+      <div style={{ height: '300px' }}>
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
             <defs>
@@ -351,7 +263,7 @@ export const ValidationsChart: React.FC = () => {
               type="monotone"
               dataKey="total"
               stroke="#06b6d4"
-              strokeWidth={3}
+              strokeWidth={2}
               fill="url(#totalGradient)"
               name="Total Validaciones"
             />
@@ -359,28 +271,13 @@ export const ValidationsChart: React.FC = () => {
               type="monotone"
               dataKey="exitosas"
               stroke="#10b981"
-              strokeWidth={3}
+              strokeWidth={2}
               fill="url(#exitosasGradient)"
               name="Validaciones Exitosas"
             />
           </AreaChart>
         </ResponsiveContainer>
       </div>
-
-      <style jsx>{`
-        @media (min-width: 768px) {
-          .stats-grid-md {
-            grid-template-columns: repeat(3, 1fr);
-          }
-        }
-        @media (min-width: 1024px) {
-          .header-lg {
-            flex-direction: row;
-            align-items: center;
-            justify-content: space-between;
-          }
-        }
-      `}</style>
     </motion.div>
   );
 };

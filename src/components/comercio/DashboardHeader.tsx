@@ -7,125 +7,6 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Store, Calendar } from 'lucide-react';
 
-const styles = {
-  container: {
-    marginBottom: '2rem'
-  },
-  flexContainer: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '1.5rem'
-  },
-  flexContainerLg: {
-    '@media (min-width: 1024px)': {
-      flexDirection: 'row' as const,
-      alignItems: 'center',
-      justifyContent: 'space-between'
-    }
-  },
-  welcomeSection: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '1rem'
-  },
-  logoContainer: {
-    position: 'relative' as const
-  },
-  logoImage: {
-    width: '4rem',
-    height: '4rem',
-    borderRadius: '1rem',
-    objectFit: 'cover' as const,
-    boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
-    border: '2px solid white'
-  },
-  logoPlaceholder: {
-    width: '4rem',
-    height: '4rem',
-    background: 'linear-gradient(135deg, #06b6d4 0%, #1e40af 100%)',
-    borderRadius: '1rem',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)'
-  },
-  statusIndicator: {
-    position: 'absolute' as const,
-    bottom: '-0.25rem',
-    right: '-0.25rem',
-    width: '1.5rem',
-    height: '1.5rem',
-    backgroundColor: '#10b981',
-    borderRadius: '50%',
-    border: '2px solid white',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  statusDot: {
-    width: '0.5rem',
-    height: '0.5rem',
-    backgroundColor: 'white',
-    borderRadius: '50%'
-  },
-  welcomeText: {
-    flex: 1
-  },
-  welcomeTitle: {
-    fontSize: '1.875rem',
-    fontWeight: 900,
-    color: '#0f172a',
-    marginBottom: '0.5rem',
-    lineHeight: 1.2
-  },
-  welcomeTitleLg: {
-    '@media (min-width: 1024px)': {
-      fontSize: '2.25rem'
-    }
-  },
-  welcomeSubtitle: {
-    fontSize: '1.125rem',
-    color: '#64748b',
-    fontWeight: 500
-  },
-  dateSection: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.75rem',
-    background: 'rgba(255, 255, 255, 0.8)',
-    backdropFilter: 'blur(12px)',
-    borderRadius: '1rem',
-    padding: '1rem 1.5rem',
-    boxShadow: '0 4px 15px rgba(0, 0, 0, 0.05)',
-    border: '1px solid rgba(148, 163, 184, 0.2)'
-  },
-  dateIcon: {
-    width: '2.5rem',
-    height: '2.5rem',
-    background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
-    borderRadius: '0.75rem',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  dateContent: {
-    display: 'flex',
-    flexDirection: 'column' as const
-  },
-  dateLabel: {
-    fontSize: '0.875rem',
-    fontWeight: 600,
-    color: '#64748b',
-    textTransform: 'uppercase' as const,
-    letterSpacing: '0.05em'
-  },
-  dateValue: {
-    fontSize: '1.125rem',
-    fontWeight: 700,
-    color: '#0f172a'
-  }
-};
-
 export const DashboardHeader: React.FC = () => {
   const { comercio } = useComercios();
   
@@ -137,52 +18,77 @@ export const DashboardHeader: React.FC = () => {
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
-      style={styles.container}
+      style={{ marginBottom: '40px' }}
     >
       <div style={{
-        ...styles.flexContainer,
-        '@media (min-width: 1024px)': {
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between'
-        }
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '24px'
       }}>
         {/* Welcome Section */}
-        <div style={styles.welcomeSection}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '16px'
+        }}>
           {/* Logo/Avatar */}
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            style={styles.logoContainer}
+            style={{ position: 'relative' }}
           >
             {comercio?.logoUrl ? (
               <img
                 src={comercio.logoUrl}
                 alt={`Logo de ${comercio.nombreComercio}`}
-                style={styles.logoImage}
+                style={{
+                  width: '56px',
+                  height: '56px',
+                  borderRadius: '12px',
+                  objectFit: 'cover',
+                  border: '2px solid white',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+                }}
               />
             ) : (
-              <div style={styles.logoPlaceholder}>
-                <Store style={{ width: '2rem', height: '2rem', color: 'white' }} />
+              <div style={{
+                width: '56px',
+                height: '56px',
+                backgroundColor: '#06b6d4',
+                borderRadius: '12px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+              }}>
+                <Store style={{ width: '24px', height: '24px', color: 'white' }} />
               </div>
             )}
-            <div style={styles.statusIndicator}>
-              <div style={styles.statusDot} />
-            </div>
+            <div style={{
+              position: 'absolute',
+              bottom: '-2px',
+              right: '-2px',
+              width: '16px',
+              height: '16px',
+              backgroundColor: '#10b981',
+              borderRadius: '50%',
+              border: '2px solid white'
+            }} />
           </motion.div>
 
           {/* Welcome Text */}
-          <div style={styles.welcomeText}>
+          <div style={{ flex: 1 }}>
             <motion.h1
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.3 }}
               style={{
-                ...styles.welcomeTitle,
-                '@media (min-width: 1024px)': {
-                  fontSize: '2.25rem'
-                }
+                fontSize: '28px',
+                fontWeight: 700,
+                color: '#1e293b',
+                marginBottom: '4px',
+                lineHeight: 1.2
               }}
             >
               Hola, {comercio?.nombreComercio || 'Comercio'} 👋
@@ -191,43 +97,74 @@ export const DashboardHeader: React.FC = () => {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
-              style={styles.welcomeSubtitle}
+              style={{
+                fontSize: '16px',
+                color: '#64748b',
+                fontWeight: 500
+              }}
             >
               Este es el resumen de tu actividad en Fidelitá.
             </motion.p>
           </div>
-        </div>
 
-        {/* Date Section */}
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6, delay: 0.5 }}
-          style={styles.dateSection}
-        >
-          <div style={styles.dateIcon}>
-            <Calendar style={{ width: '1.25rem', height: '1.25rem', color: 'white' }} />
-          </div>
-          <div style={styles.dateContent}>
-            <p style={styles.dateLabel}>
-              Hoy
-            </p>
-            <p style={styles.dateValue}>
-              {capitalizedToday}
-            </p>
-          </div>
-        </motion.div>
+          {/* Date Section */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.5 }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              backgroundColor: 'white',
+              borderRadius: '12px',
+              padding: '16px 20px',
+              border: '1px solid #e2e8f0',
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+            }}
+          >
+            <div style={{
+              width: '40px',
+              height: '40px',
+              backgroundColor: '#8b5cf6',
+              borderRadius: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <Calendar style={{ width: '20px', height: '20px', color: 'white' }} />
+            </div>
+            <div>
+              <p style={{
+                fontSize: '12px',
+                fontWeight: 600,
+                color: '#64748b',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+                marginBottom: '2px'
+              }}>
+                Hoy
+              </p>
+              <p style={{
+                fontSize: '14px',
+                fontWeight: 600,
+                color: '#1e293b'
+              }}>
+                {capitalizedToday}
+              </p>
+            </div>
+          </motion.div>
+        </div>
       </div>
 
       <style jsx>{`
-        @media (min-width: 1024px) {
-          .flex-container-lg {
-            flex-direction: row;
-            align-items: center;
-            justify-content: space-between;
+        @media (max-width: 768px) {
+          .header-container {
+            flex-direction: column;
+            align-items: flex-start;
           }
-          .welcome-title-lg {
-            font-size: 2.25rem;
+          .date-section {
+            align-self: stretch;
           }
         }
       `}</style>

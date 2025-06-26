@@ -13,7 +13,6 @@ import {
   CheckCircle,
   XCircle
 } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
 import { useRouter } from 'next/navigation';
 
 export const Alerts: React.FC = () => {
@@ -35,9 +34,7 @@ export const Alerts: React.FC = () => {
       message: 'Necesitas un código QR para que los socios puedan validar beneficios.',
       action: 'Generar QR',
       actionPath: '/dashboard/comercio/qr',
-      color: 'from-amber-500 to-orange-600',
-      bgColor: 'from-amber-50 to-orange-50',
-      textColor: 'text-amber-700'
+      color: '#f59e0b'
     });
   }
 
@@ -51,9 +48,7 @@ export const Alerts: React.FC = () => {
       message: `Tenés ${expiredBeneficios.length} beneficio${expiredBeneficios.length > 1 ? 's' : ''} vencido${expiredBeneficios.length > 1 ? 's' : ''}. Editalos para volver a activarlos.`,
       action: 'Editar beneficios',
       actionPath: '/dashboard/comercio/beneficios',
-      color: 'from-red-500 to-red-600',
-      bgColor: 'from-red-50 to-red-50',
-      textColor: 'text-red-700'
+      color: '#ef4444'
     });
   }
 
@@ -68,9 +63,7 @@ export const Alerts: React.FC = () => {
       message: 'Completá los datos de tu comercio para que los socios te encuentren más fácil.',
       action: 'Ir a perfil',
       actionPath: '/dashboard/comercio/perfil',
-      color: 'from-blue-500 to-cyan-600',
-      bgColor: 'from-blue-50 to-cyan-50',
-      textColor: 'text-blue-700'
+      color: '#06b6d4'
     });
   }
 
@@ -84,9 +77,7 @@ export const Alerts: React.FC = () => {
       message: 'Tu comercio está configurado correctamente y listo para recibir validaciones.',
       action: null,
       actionPath: null,
-      color: 'from-emerald-500 to-green-600',
-      bgColor: 'from-emerald-50 to-green-50',
-      textColor: 'text-emerald-700'
+      color: '#10b981'
     });
   }
 
@@ -96,43 +87,61 @@ export const Alerts: React.FC = () => {
     }
   };
 
-  const getAlertIcon = (type: string) => {
-    switch (type) {
-      case 'warning':
-        return AlertTriangle;
-      case 'error':
-        return XCircle;
-      case 'success':
-        return CheckCircle;
-      default:
-        return AlertTriangle;
-    }
-  };
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay: 0.3 }}
-      className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-soft border border-slate-200/50"
+      style={{
+        backgroundColor: 'white',
+        borderRadius: '12px',
+        padding: '24px',
+        border: '1px solid #e2e8f0',
+        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+      }}
     >
       {/* Header */}
-      <div className="flex items-center gap-4 mb-6">
-        <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg">
-          <AlertTriangle className="w-6 h-6 text-white" />
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px',
+        marginBottom: '24px'
+      }}>
+        <div style={{
+          width: '40px',
+          height: '40px',
+          backgroundColor: '#ef4444',
+          borderRadius: '8px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <AlertTriangle style={{ width: '20px', height: '20px', color: 'white' }} />
         </div>
         <div>
-          <h3 className="text-xl font-bold text-slate-900 mb-1">
+          <h3 style={{
+            fontSize: '18px',
+            fontWeight: 600,
+            color: '#1e293b',
+            marginBottom: '2px'
+          }}>
             Alertas y recordatorios
           </h3>
-          <p className="text-sm text-slate-600">
+          <p style={{
+            fontSize: '14px',
+            color: '#64748b'
+          }}>
             Mantené tu comercio optimizado
           </p>
         </div>
       </div>
 
       {/* Alerts List */}
-      <div className="space-y-4">
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '16px'
+      }}>
         {alerts.map((alert, index) => {
           const IconComponent = alert.icon;
           
@@ -142,35 +151,82 @@ export const Alerts: React.FC = () => {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.4, delay: index * 0.1 }}
-              className="group"
             >
-              <div className={`p-4 rounded-xl bg-gradient-to-r ${alert.bgColor} border border-slate-200/50 hover:border-slate-300/50 transition-all duration-300`}>
-                <div className="flex items-start gap-4">
+              <div style={{
+                padding: '16px',
+                borderRadius: '8px',
+                backgroundColor: '#f8fafc',
+                border: '1px solid #e2e8f0',
+                transition: 'all 0.2s ease'
+              }}>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '12px'
+                }}>
                   {/* Icon */}
-                  <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${alert.color} flex items-center justify-center shadow-lg flex-shrink-0`}>
-                    <IconComponent className="w-5 h-5 text-white" />
+                  <div style={{
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '6px',
+                    backgroundColor: alert.color,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0
+                  }}>
+                    <IconComponent style={{ width: '18px', height: '18px', color: 'white' }} />
                   </div>
 
                   {/* Content */}
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-semibold text-slate-900 mb-1">
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <h4 style={{
+                      fontWeight: 600,
+                      color: '#1e293b',
+                      marginBottom: '4px',
+                      fontSize: '14px'
+                    }}>
                       {alert.title}
                     </h4>
-                    <p className="text-sm text-slate-600 mb-3">
+                    <p style={{
+                      fontSize: '13px',
+                      color: '#64748b',
+                      marginBottom: alert.action ? '12px' : '0',
+                      lineHeight: 1.4
+                    }}>
                       {alert.message}
                     </p>
 
                     {/* Action Button */}
                     {alert.action && (
-                      <Button
-                        variant="outline"
-                        size="sm"
+                      <button
                         onClick={() => handleAction(alert.actionPath)}
-                        rightIcon={<ArrowRight className="w-4 h-4" />}
-                        className={`${alert.textColor} border-current hover:bg-white/50`}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          padding: '6px 12px',
+                          borderRadius: '6px',
+                          fontSize: '12px',
+                          fontWeight: 500,
+                          border: `1px solid ${alert.color}`,
+                          backgroundColor: 'white',
+                          color: alert.color,
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = alert.color;
+                          e.currentTarget.style.color = 'white';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = 'white';
+                          e.currentTarget.style.color = alert.color;
+                        }}
                       >
                         {alert.action}
-                      </Button>
+                        <ArrowRight style={{ width: '12px', height: '12px' }} />
+                      </button>
                     )}
                   </div>
                 </div>
