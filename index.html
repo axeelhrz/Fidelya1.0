@@ -49,34 +49,6 @@
     <!-- Canvas de fondo futurista optimizado -->
     <div class="bg-canvas"></div>
     
-    <!-- Botón de Cambio de Idioma Independiente optimizado para móvil -->
-    <div class="language-switcher" id="language-switcher">
-        <button class="language-switcher__btn" id="language-switcher-btn" aria-label="Cambiar idioma">
-            <div class="language-switcher__icon">
-                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                    <path d="M12.87 15.07l-2.54-2.51.03-.03c1.74-1.94 2.98-4.17 3.71-6.53H17V4h-7V2H8v2H1v1.99h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"/>
-                </svg>
-            </div>
-            <span class="language-switcher__text" id="language-switcher-text">ES</span>
-            <div class="language-switcher__arrow">
-                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                    <path d="M7 10l5 5 5-5z"/>
-                </svg>
-            </div>
-        </button>
-        
-        <div class="language-switcher__dropdown" id="language-switcher-dropdown">
-            <button class="language-switcher__option" data-lang="es">
-                <span class="language-switcher__flag">🇪🇸</span>
-                <span class="language-switcher__name">Español</span>
-            </button>
-            <button class="language-switcher__option" data-lang="en">
-                <span class="language-switcher__flag">🇺🇸</span>
-                <span class="language-switcher__name">English</span>
-            </button>
-        </div>
-    </div>
-    
     <!-- Header optimizado para móvil -->
     <header class="header" id="header">
         <nav class="nav">
@@ -94,11 +66,67 @@
                     <li><a href="#faq" class="nav__link" data-translate="nav-faq">FAQ</a></li>
                     <li><a href="#contact" class="nav__link" data-translate="nav-contact">Contacto</a></li>
                 </ul>
+                
+                <!-- Botón de Cambio de Idioma en móvil (dentro del menú hamburguesa) -->
+                <div class="nav__language-switcher mobile-only" id="nav-language-switcher">
+                    <div class="language-switcher__btn" id="nav-language-switcher-btn" aria-label="Cambiar idioma">
+                        <div class="language-switcher__icon">
+                            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                <path d="M12.87 15.07l-2.54-2.51.03-.03c1.74-1.94 2.98-4.17 3.71-6.53H17V4h-7V2H8v2H1v1.99h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"/>
+                            </svg>
+                        </div>
+                        <span class="language-switcher__text" id="nav-language-switcher-text">ES</span>
+                        <div class="language-switcher__arrow">
+                            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                <path d="M7 10l5 5 5-5z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    <div class="language-switcher__dropdown" id="nav-language-switcher-dropdown">
+                        <button class="language-switcher__option" data-lang="es">
+                            <span class="language-switcher__flag">🇪🇸</span>
+                            <span class="language-switcher__name">Español</span>
+                        </button>
+                        <button class="language-switcher__option" data-lang="en">
+                            <span class="language-switcher__flag">🇺🇸</span>
+                            <span class="language-switcher__name">English</span>
+                        </button>
+                    </div>
+                </div>
             </div>
             
             <!-- Botón CTA (oculto en móvil) -->
             <div class="nav__cta">
                 <a href="https://starflex.web.app/" class="btn btn--primary" data-translate="nav-cta">Comienza tu prueba gratuita</a>
+                
+                <!-- Botón de Cambio de Idioma en desktop (debajo del CTA) -->
+                <div class="nav__language-switcher desktop-only" id="desktop-language-switcher">
+                    <div class="language-switcher__btn" id="desktop-language-switcher-btn" aria-label="Cambiar idioma">
+                        <div class="language-switcher__icon">
+                            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                <path d="M12.87 15.07l-2.54-2.51.03-.03c1.74-1.94 2.98-4.17 3.71-6.53H17V4h-7V2H8v2H1v1.99h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"/>
+                            </svg>
+                        </div>
+                        <span class="language-switcher__text" id="desktop-language-switcher-text">ES</span>
+                        <div class="language-switcher__arrow">
+                            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                <path d="M7 10l5 5 5-5z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    <div class="language-switcher__dropdown" id="desktop-language-switcher-dropdown">
+                        <button class="language-switcher__option" data-lang="es">
+                            <span class="language-switcher__flag">🇪🇸</span>
+                            <span class="language-switcher__name">Español</span>
+                        </button>
+                        <button class="language-switcher__option" data-lang="en">
+                            <span class="language-switcher__flag">🇺🇸</span>
+                            <span class="language-switcher__name">English</span>
+                        </button>
+                    </div>
+                </div>
             </div>
             
             <!-- Toggle móvil optimizado -->
@@ -157,11 +185,27 @@
                         <div class="hero__trust" data-translate="hero-trust">
                             Más de 15,000 conductores han transformado sus ganancias
                         </div>
+                        
+                        <!-- Video móvil debajo del texto de confianza -->
+                        <div class="hero__mobile-video mobile-only">
+                            <video 
+                                class="hero__mobile-video-player" 
+                                id="hero-mobile-video"
+                                autoplay 
+                                muted 
+                                loop 
+                                playsinline
+                                preload="auto"
+                                poster="./assets/phones/Hero.jpg"
+                            >
+                                <source src="./assets/phones/Hero.mp4" type="video/mp4">
+                            </video>
+                        </div>
                     </div>
                 </div>
 
-                <!-- iPhone optimizado para móvil con video -->
-                <div class="hero__media">
+                <!-- iPhone optimizado para móvil con video (solo desktop) -->
+                <div class="hero__media desktop-only">
                     <div class="hero__phone-container">
                         <div class="hero__phone">
                             <div class="hero__phone-screen">
@@ -175,6 +219,7 @@
                                         loop 
                                         playsinline
                                         preload="auto"
+                                        poster="./assets/phones/Hero.jpg"
                                     >
                                         <source src="./assets/phones/Hero.mp4" type="video/mp4">
                                     </video>
@@ -773,3 +818,4 @@
     <script src="js/script.js"></script>
 </body>
 </html>
+                
