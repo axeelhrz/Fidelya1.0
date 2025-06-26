@@ -13,6 +13,15 @@ export const DashboardHeader: React.FC = () => {
   const today = format(new Date(), "EEEE, d 'de' MMMM", { locale: es });
   const capitalizedToday = today.charAt(0).toUpperCase() + today.slice(1);
 
+  const [isMobile, setIsMobile] = React.useState(false);
+
+  React.useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: -20 }}
@@ -22,14 +31,17 @@ export const DashboardHeader: React.FC = () => {
     >
       <div style={{
         display: 'flex',
-        flexDirection: 'column',
+        flexDirection: isMobile ? 'column' : 'row',
+        alignItems: isMobile ? 'flex-start' : 'center',
+        justifyContent: 'space-between',
         gap: '24px'
       }}>
         {/* Welcome Section */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '16px'
+          gap: '16px',
+          flex: 1
         }}>
           {/* Logo/Avatar */}
           <motion.div
@@ -84,7 +96,7 @@ export const DashboardHeader: React.FC = () => {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.3 }}
               style={{
-                fontSize: '28px',
+                fontSize: isMobile ? '24px' : '28px',
                 fontWeight: 700,
                 color: '#1e293b',
                 marginBottom: '4px',
@@ -106,68 +118,69 @@ export const DashboardHeader: React.FC = () => {
               Este es el resumen de tu actividad en Fidelitá.
             </motion.p>
           </div>
-
-          {/* Date Section */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.5 }}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              backgroundColor: 'white',
-              borderRadius: '12px',
-              padding: '16px 20px',
-              border: '1px solid #e2e8f0',
-              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
-            }}
-          >
-            <div style={{
-              width: '40px',
-              height: '40px',
-              backgroundColor: '#8b5cf6',
-              borderRadius: '8px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}>
-              <Calendar style={{ width: '20px', height: '20px', color: 'white' }} />
-            </div>
-            <div>
-              <p style={{
-                fontSize: '12px',
-                fontWeight: 600,
-                color: '#64748b',
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px',
-                marginBottom: '2px'
-              }}>
-                Hoy
-              </p>
-              <p style={{
-                fontSize: '14px',
-                fontWeight: 600,
-                color: '#1e293b'
-              }}>
-                {capitalizedToday}
-              </p>
-            </div>
-          </motion.div>
         </div>
-      </div>
 
-      <style jsx>{`
-        @media (max-width: 768px) {
-          .header-container {
-            flex-direction: column;
-            align-items: flex-start;
-          }
-          .date-section {
-            align-self: stretch;
-          }
-        }
-      `}</style>
+        {/* Date Section */}
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.6, delay: 0.5 }}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            backgroundColor: 'white',
+            borderRadius: '12px',
+            padding: '16px 20px',
+            border: '1px solid #e2e8f0',
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+            alignSelf: isMobile ? 'stretch' : 'auto'
+          }}
+        >
+          <div style={{
+            width: '40px',
+            height: '40px',
+            backgroundColor: '#8b5cf6',
+            borderRadius: '8px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
+            <Calendar style={{ width: '20px', height: '20px', color: 'white' }} />
+          </div>
+          <div>
+            <p style={{
+              fontSize: '12px',
+              fontWeight: 600,
+              color: '#64748b',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px',
+              marginBottom: '2px'
+            }}>
+              Hoy
+            </p>
+            <p style={{
+              fontSize: '14px',
+              fontWeight: 600,
+              color: '#1e293b'
+            }}>
+              {capitalizedToday}
+            </p>
+          </div>
+        </motion.div>
+      </div>
     </motion.div>
   );
 };
+
+<style jsx>{`
+  @media (max-width: 768px) {
+    .header-container {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .date-section {
+      align-self: stretch;
+    }
+  }
+`}</style>

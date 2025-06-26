@@ -52,7 +52,7 @@ const LoadingScreen: React.FC<{ message: string }> = ({ message }) => (
       }}>
         {message}
       </p>
-      <style jsx>{`
+      <style>{`
         @keyframes spin {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
@@ -127,6 +127,15 @@ export default function ComercioDashboard() {
     return <LoadingScreen message="Preparando tu panel de control comercial..." />;
   }
 
+  const mainGridStyle = {
+    display: 'grid',
+    gridTemplateColumns: '1fr',
+    gap: '32px',
+    '@media (min-width: 1024px)': {
+      gridTemplateColumns: '2fr 1fr'
+    }
+  };
+
   return (
     <div style={{
       minHeight: '100vh',
@@ -146,24 +155,10 @@ export default function ComercioDashboard() {
         </div>
 
         {/* Main Content Grid */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr',
-          gap: '32px',
-          marginBottom: '32px'
-        }}>
-          {/* Desktop: 2 columns, Mobile: 1 column */}
-          <style jsx>{`
-            @media (min-width: 1024px) {
-              .main-grid {
-                grid-template-columns: 2fr 1fr;
-              }
-            }
-          `}</style>
-          
-          <div className="main-grid" style={{
+        <div style={{ marginBottom: '32px' }}>
+          <div style={{
             display: 'grid',
-            gridTemplateColumns: '1fr',
+            gridTemplateColumns: window.innerWidth >= 1024 ? '2fr 1fr' : '1fr',
             gap: '32px'
           }}>
             {/* Left Column - Charts */}
@@ -192,7 +187,7 @@ export default function ComercioDashboard() {
         <RecentValidations />
       </div>
 
-      <style jsx>{`
+      <style>{`
         @media (min-width: 1024px) {
           .main-grid {
             grid-template-columns: 2fr 1fr;

@@ -15,7 +15,6 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Button } from '@/components/ui/Button';
 import { useRouter } from 'next/navigation';
 
 export const RecentValidations: React.FC = () => {
@@ -50,14 +49,14 @@ export const RecentValidations: React.FC = () => {
   const getResultColor = (resultado: string) => {
     switch (resultado) {
       case 'valido':
-        return 'text-emerald-600 bg-emerald-100';
+        return { backgroundColor: '#dcfce7', color: '#166534' };
       case 'invalido':
       case 'vencido':
       case 'agotado':
       case 'no_autorizado':
-        return 'text-red-600 bg-red-100';
+        return { backgroundColor: '#fecaca', color: '#991b1b' };
       default:
-        return 'text-amber-600 bg-amber-100';
+        return { backgroundColor: '#fef3c7', color: '#92400e' };
     }
   };
 
@@ -83,48 +82,124 @@ export const RecentValidations: React.FC = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay: 0.5 }}
-      className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-soft border border-slate-200/50"
+      style={{
+        backgroundColor: 'white',
+        borderRadius: '12px',
+        padding: '24px',
+        border: '1px solid #e2e8f0',
+        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+      }}
     >
       {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-gradient-to-br from-slate-600 to-slate-700 rounded-xl flex items-center justify-center shadow-lg">
-            <FileText className="w-6 h-6 text-white" />
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '16px',
+        marginBottom: '24px'
+      }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between'
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px'
+          }}>
+            <div style={{
+              width: '40px',
+              height: '40px',
+              backgroundColor: '#475569',
+              borderRadius: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <FileText style={{ width: '20px', height: '20px', color: 'white' }} />
+            </div>
+            <div>
+              <h3 style={{
+                fontSize: '18px',
+                fontWeight: 600,
+                color: '#1e293b',
+                marginBottom: '2px'
+              }}>
+                Últimas validaciones
+              </h3>
+              <p style={{
+                fontSize: '14px',
+                color: '#64748b'
+              }}>
+                Actividad reciente de tu comercio
+              </p>
+            </div>
           </div>
-          <div>
-            <h3 className="text-xl font-bold text-slate-900 mb-1">
-              Últimas validaciones
-            </h3>
-            <p className="text-sm text-slate-600">
-              Actividad reciente de tu comercio
-            </p>
-          </div>
-        </div>
 
-        <Button
-          variant="outline"
-          onClick={() => router.push('/dashboard/comercio/validaciones')}
-          rightIcon={<ArrowRight className="w-4 h-4" />}
-          className="text-slate-600 border-slate-300 hover:bg-slate-50"
-        >
-          Ver todas
-        </Button>
+          <button
+            onClick={() => router.push('/dashboard/comercio/validaciones')}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '8px 16px',
+              borderRadius: '6px',
+              fontSize: '14px',
+              fontWeight: 500,
+              border: '1px solid #e2e8f0',
+              backgroundColor: 'white',
+              color: '#64748b',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#f8fafc';
+              e.currentTarget.style.borderColor = '#cbd5e1';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'white';
+              e.currentTarget.style.borderColor = '#e2e8f0';
+            }}
+          >
+            Ver todas
+            <ArrowRight style={{ width: '14px', height: '14px' }} />
+          </button>
+        </div>
       </div>
 
       {/* Validations Table */}
       {recentValidations.length > 0 ? (
-        <div className="overflow-hidden">
-          {/* Table Header - Hidden on mobile */}
-          <div className="hidden lg:grid grid-cols-12 gap-4 px-4 py-3 bg-slate-50 rounded-xl mb-4 text-sm font-semibold text-slate-600">
-            <div className="col-span-3">Fecha y hora</div>
-            <div className="col-span-3">Socio</div>
-            <div className="col-span-3">Beneficio</div>
-            <div className="col-span-2">Asociación</div>
-            <div className="col-span-1">Resultado</div>
+        <div>
+          {/* Table Header - Desktop only */}
+          <div style={{
+            display: 'none',
+            gridTemplateColumns: '2fr 2fr 2fr 1.5fr 1fr',
+            gap: '16px',
+            padding: '12px 16px',
+            backgroundColor: '#f8fafc',
+            borderRadius: '8px',
+            marginBottom: '16px',
+            fontSize: '12px',
+            fontWeight: 600,
+            color: '#64748b',
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px'
+          }}
+          className="desktop-header"
+          >
+            <div>Fecha y hora</div>
+            <div>Socio</div>
+            <div>Beneficio</div>
+            <div>Asociación</div>
+            <div>Resultado</div>
           </div>
 
           {/* Table Rows */}
-          <div className="space-y-3">
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '12px'
+          }}>
             {recentValidations.map((validacion, index) => {
               const ResultIcon = getResultIcon(validacion.resultado);
               
@@ -134,79 +209,148 @@ export const RecentValidations: React.FC = () => {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.3, delay: index * 0.1 }}
-                  className="group"
                 >
                   {/* Desktop Layout */}
-                  <div className="hidden lg:grid grid-cols-12 gap-4 items-center p-4 rounded-xl bg-gradient-to-r from-slate-50 to-white border border-slate-200/50 hover:border-slate-300/50 hover:shadow-md transition-all duration-300">
-                    <div className="col-span-3">
-                      <p className="font-semibold text-slate-900">
+                  <div style={{
+                    display: 'none',
+                    gridTemplateColumns: '2fr 2fr 2fr 1.5fr 1fr',
+                    gap: '16px',
+                    alignItems: 'center',
+                    padding: '16px',
+                    borderRadius: '8px',
+                    backgroundColor: '#f8fafc',
+                    border: '1px solid #e2e8f0',
+                    transition: 'all 0.2s ease'
+                  }}
+                  className="desktop-row"
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = '#cbd5e1';
+                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = '#e2e8f0';
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}
+                  >
+                    <div>
+                      <p style={{ fontWeight: 600, color: '#1e293b', fontSize: '14px' }}>
                         {format(validacion.fechaHora.toDate(), 'dd/MM/yyyy')}
                       </p>
-                      <p className="text-sm text-slate-600">
+                      <p style={{ fontSize: '12px', color: '#64748b' }}>
                         {format(validacion.fechaHora.toDate(), 'HH:mm')}
                       </p>
                     </div>
                     
-                    <div className="col-span-3">
-                      <p className="font-semibold text-slate-900">
+                    <div>
+                      <p style={{ fontWeight: 600, color: '#1e293b', fontSize: '14px' }}>
                         {validacion.socioId.substring(0, 8)}...
                       </p>
-                      <p className="text-sm text-slate-600">ID del socio</p>
+                      <p style={{ fontSize: '12px', color: '#64748b' }}>ID del socio</p>
                     </div>
                     
-                    <div className="col-span-3">
-                      <p className="font-semibold text-slate-900 truncate">
+                    <div>
+                      <p style={{ 
+                        fontWeight: 600, 
+                        color: '#1e293b', 
+                        fontSize: '14px',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap'
+                      }}>
                         {getBeneficioTitle(validacion.beneficioId)}
                       </p>
                       {validacion.montoTransaccion && (
-                        <p className="text-sm text-slate-600">
+                        <p style={{ fontSize: '12px', color: '#64748b' }}>
                           ${validacion.montoTransaccion.toFixed(2)}
                         </p>
                       )}
                     </div>
                     
-                    <div className="col-span-2">
-                      <p className="text-sm text-slate-600 truncate">
+                    <div>
+                      <p style={{ 
+                        fontSize: '12px', 
+                        color: '#64748b',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap'
+                      }}>
                         {validacion.asociacionId.substring(0, 12)}...
                       </p>
                     </div>
                     
-                    <div className="col-span-1">
-                      <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-lg text-sm font-semibold ${getResultColor(validacion.resultado)}`}>
-                        <ResultIcon className="w-4 h-4" />
-                        <span className="hidden xl:inline">
-                          {getResultText(validacion.resultado)}
-                        </span>
+                    <div>
+                      <div style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        padding: '4px 8px',
+                        borderRadius: '6px',
+                        fontSize: '12px',
+                        fontWeight: 500,
+                        ...getResultColor(validacion.resultado)
+                      }}>
+                        <ResultIcon style={{ width: '12px', height: '12px' }} />
+                        <span>{getResultText(validacion.resultado)}</span>
                       </div>
                     </div>
                   </div>
 
                   {/* Mobile Layout */}
-                  <div className="lg:hidden p-4 rounded-xl bg-gradient-to-r from-slate-50 to-white border border-slate-200/50">
-                    <div className="flex items-start justify-between mb-3">
+                  <div style={{
+                    display: 'block',
+                    padding: '16px',
+                    borderRadius: '8px',
+                    backgroundColor: '#f8fafc',
+                    border: '1px solid #e2e8f0'
+                  }}
+                  className="mobile-row"
+                  >
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      justifyContent: 'space-between',
+                      marginBottom: '12px'
+                    }}>
                       <div>
-                        <p className="font-semibold text-slate-900">
+                        <p style={{ fontWeight: 600, color: '#1e293b', fontSize: '14px' }}>
                           {format(validacion.fechaHora.toDate(), 'dd/MM/yyyy HH:mm')}
                         </p>
-                        <p className="text-sm text-slate-600">
+                        <p style={{ fontSize: '12px', color: '#64748b' }}>
                           Socio: {validacion.socioId.substring(0, 8)}...
                         </p>
                       </div>
-                      <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-lg text-sm font-semibold ${getResultColor(validacion.resultado)}`}>
-                        <ResultIcon className="w-4 h-4" />
+                      <div style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        padding: '4px 8px',
+                        borderRadius: '6px',
+                        fontSize: '12px',
+                        fontWeight: 500,
+                        ...getResultColor(validacion.resultado)
+                      }}>
+                        <ResultIcon style={{ width: '12px', height: '12px' }} />
                         {getResultText(validacion.resultado)}
                       </div>
                     </div>
                     
-                    <div className="space-y-1">
-                      <p className="font-medium text-slate-900 truncate">
+                    <div style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '4px'
+                    }}>
+                      <p style={{ 
+                        fontWeight: 500, 
+                        color: '#1e293b',
+                        fontSize: '14px'
+                      }}>
                         {getBeneficioTitle(validacion.beneficioId)}
                       </p>
-                      <p className="text-sm text-slate-600">
+                      <p style={{ fontSize: '12px', color: '#64748b' }}>
                         Asociación: {validacion.asociacionId.substring(0, 15)}...
                       </p>
                       {validacion.montoTransaccion && (
-                        <p className="text-sm font-semibold text-slate-700">
+                        <p style={{ fontSize: '12px', fontWeight: 600, color: '#475569' }}>
                           Monto: ${validacion.montoTransaccion.toFixed(2)}
                         </p>
                       )}
@@ -218,25 +362,79 @@ export const RecentValidations: React.FC = () => {
           </div>
         </div>
       ) : (
-        <div className="text-center py-12">
-          <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Users className="w-8 h-8 text-slate-400" />
+        <div style={{
+          textAlign: 'center',
+          padding: '48px 0'
+        }}>
+          <div style={{
+            width: '64px',
+            height: '64px',
+            backgroundColor: '#f1f5f9',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 16px'
+          }}>
+            <Users style={{ width: '32px', height: '32px', color: '#94a3b8' }} />
           </div>
-          <h4 className="text-lg font-semibold text-slate-900 mb-2">
+          <h4 style={{
+            fontSize: '16px',
+            fontWeight: 600,
+            color: '#1e293b',
+            marginBottom: '8px'
+          }}>
             No hay validaciones aún
           </h4>
-          <p className="text-slate-600 mb-6">
+          <p style={{
+            color: '#64748b',
+            marginBottom: '24px',
+            fontSize: '14px'
+          }}>
             Cuando los socios empiecen a usar tus beneficios, las validaciones aparecerán aquí.
           </p>
-          <Button
-            variant="primary"
+          <button
             onClick={() => router.push('/dashboard/comercio/beneficios')}
-            leftIcon={<Plus className="w-4 h-4" />}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '10px 20px',
+              borderRadius: '8px',
+              fontSize: '14px',
+              fontWeight: 500,
+              border: 'none',
+              backgroundColor: '#6366f1',
+              color: 'white',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#4f46e5';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = '#6366f1';
+            }}
           >
+            <Plus style={{ width: '16px', height: '16px' }} />
             Crear primer beneficio
-          </Button>
+          </button>
         </div>
       )}
+
+      <style jsx>{`
+        @media (min-width: 1024px) {
+          .desktop-header {
+            display: grid !important;
+          }
+          .desktop-row {
+            display: grid !important;
+          }
+          .mobile-row {
+            display: none !important;
+          }
+        }
+      `}</style>
     </motion.div>
   );
 };

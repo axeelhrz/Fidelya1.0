@@ -21,40 +21,32 @@ export const QuickActions: React.FC = () => {
       title: 'Publicar nuevo beneficio',
       description: 'Creá un beneficio para tus socios',
       icon: Plus,
-      color: 'from-emerald-500 to-green-600',
-      bgColor: 'from-emerald-50 to-green-50',
-      path: '/dashboard/comercio/beneficios',
-      hoverColor: 'hover:from-emerald-600 hover:to-green-700'
+      color: '#10b981',
+      path: '/dashboard/comercio/beneficios'
     },
     {
       id: 'qr-code',
       title: 'Ver o descargar QR',
       description: 'Gestioná tu código QR',
       icon: QrCode,
-      color: 'from-blue-500 to-cyan-600',
-      bgColor: 'from-blue-50 to-cyan-50',
-      path: '/dashboard/comercio/qr',
-      hoverColor: 'hover:from-blue-600 hover:to-cyan-700'
+      color: '#06b6d4',
+      path: '/dashboard/comercio/qr'
     },
     {
       id: 'validations',
       title: 'Ver historial completo',
       description: 'Todas las validaciones',
       icon: FileText,
-      color: 'from-violet-500 to-purple-600',
-      bgColor: 'from-violet-50 to-purple-50',
-      path: '/dashboard/comercio/validaciones',
-      hoverColor: 'hover:from-violet-600 hover:to-purple-700'
+      color: '#8b5cf6',
+      path: '/dashboard/comercio/validaciones'
     },
     {
       id: 'profile',
       title: 'Editar perfil',
       description: 'Actualizá tu información',
       icon: User,
-      color: 'from-amber-500 to-orange-600',
-      bgColor: 'from-amber-50 to-orange-50',
-      path: '/dashboard/comercio/perfil',
-      hoverColor: 'hover:from-amber-600 hover:to-orange-700'
+      color: '#f59e0b',
+      path: '/dashboard/comercio/perfil'
     }
   ];
 
@@ -67,25 +59,56 @@ export const QuickActions: React.FC = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay: 0.4 }}
-      className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-soft border border-slate-200/50"
+      style={{
+        backgroundColor: 'white',
+        borderRadius: '12px',
+        padding: '24px',
+        border: '1px solid #e2e8f0',
+        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+      }}
     >
       {/* Header */}
-      <div className="flex items-center gap-4 mb-6">
-        <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-          <Zap className="w-6 h-6 text-white" />
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px',
+        marginBottom: '24px'
+      }}>
+        <div style={{
+          width: '40px',
+          height: '40px',
+          backgroundColor: '#6366f1',
+          borderRadius: '8px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <Zap style={{ width: '20px', height: '20px', color: 'white' }} />
         </div>
         <div>
-          <h3 className="text-xl font-bold text-slate-900 mb-1">
+          <h3 style={{
+            fontSize: '18px',
+            fontWeight: 600,
+            color: '#1e293b',
+            marginBottom: '2px'
+          }}>
             Accesos rápidos
           </h3>
-          <p className="text-sm text-slate-600">
+          <p style={{
+            fontSize: '14px',
+            color: '#64748b'
+          }}>
             Acciones frecuentes
           </p>
         </div>
       </div>
 
       {/* Actions Grid */}
-      <div className="grid grid-cols-1 gap-4">
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '12px'
+      }}>
         {quickActions.map((action, index) => {
           const IconComponent = action.icon;
           
@@ -98,28 +121,73 @@ export const QuickActions: React.FC = () => {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => handleAction(action.path)}
-              className="group w-full text-left"
+              style={{
+                width: '100%',
+                textAlign: 'left',
+                border: 'none',
+                cursor: 'pointer',
+                backgroundColor: 'transparent'
+              }}
             >
-              <div className={`p-4 rounded-xl bg-gradient-to-r ${action.bgColor} border border-slate-200/50 hover:border-slate-300/50 hover:shadow-md transition-all duration-300`}>
-                <div className="flex items-center gap-4">
+              <div style={{
+                padding: '16px',
+                borderRadius: '8px',
+                backgroundColor: '#f8fafc',
+                border: '1px solid #e2e8f0',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = '#cbd5e1';
+                e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = '#e2e8f0';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
+              >
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px'
+                }}>
                   {/* Icon */}
-                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${action.color} ${action.hoverColor} flex items-center justify-center shadow-lg transition-all duration-300 group-hover:scale-110`}>
-                    <IconComponent className="w-6 h-6 text-white" />
+                  <div style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '8px',
+                    backgroundColor: action.color,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'transform 0.2s ease'
+                  }}>
+                    <IconComponent style={{ width: '20px', height: '20px', color: 'white' }} />
                   </div>
 
                   {/* Content */}
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-semibold text-slate-900 mb-1 group-hover:text-slate-700 transition-colors">
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <h4 style={{
+                      fontWeight: 600,
+                      color: '#1e293b',
+                      marginBottom: '2px',
+                      fontSize: '14px'
+                    }}>
                       {action.title}
                     </h4>
-                    <p className="text-sm text-slate-600">
+                    <p style={{
+                      fontSize: '12px',
+                      color: '#64748b'
+                    }}>
                       {action.description}
                     </p>
                   </div>
 
                   {/* Arrow */}
-                  <div className="text-slate-400 group-hover:text-slate-600 group-hover:translate-x-1 transition-all duration-300">
-                    <ArrowRight className="w-5 h-5" />
+                  <div style={{
+                    color: '#94a3b8',
+                    transition: 'all 0.2s ease'
+                  }}>
+                    <ArrowRight style={{ width: '16px', height: '16px' }} />
                   </div>
                 </div>
               </div>
