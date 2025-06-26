@@ -22,7 +22,6 @@ import {
   Cell,
   ResponsiveContainer,
   Tooltip,
-  Legend,
 } from 'recharts';
 
 interface ByAssociationChartProps {
@@ -35,7 +34,19 @@ interface ByAssociationChartProps {
 }
 
 export const ByAssociationChart: React.FC<ByAssociationChartProps> = ({ data }) => {
-  const CustomTooltip = ({ active, payload }: any) => {
+  interface CustomTooltipProps {
+    active?: boolean;
+    payload?: Array<{
+      payload: {
+        name: string;
+        value: number;
+        percentage: number;
+        color: string;
+      };
+    }>;
+  }
+
+  const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (

@@ -7,7 +7,6 @@ import {
   Container,
   Typography,
   Grid,
-  Paper,
   Stack,
   Avatar,
   alpha,
@@ -77,7 +76,12 @@ const LoadingScreen: React.FC<{ message: string }> = ({ message }) => (
   </Box>
 );
 
-const AccessDeniedScreen: React.FC<{ user: any }> = ({ user }) => (
+type User = {
+  role?: string;
+  uid?: string;
+};
+
+const AccessDeniedScreen: React.FC<{ user: User | null }> = ({ user }) => (
   <Box 
     sx={{ 
       minHeight: '100vh',
@@ -138,7 +142,7 @@ const AccessDeniedScreen: React.FC<{ user: any }> = ({ user }) => (
 
 export default function ComercioAnalytics() {
   const { user, loading: authLoading } = useAuth();
-  const { comercio, loading: comercioLoading } = useComercios();
+  const { loading: comercioLoading } = useComercios();
   const { loading: beneficiosLoading } = useBeneficios();
   const { loading: validacionesLoading } = useValidaciones();
 

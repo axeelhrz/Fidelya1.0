@@ -10,7 +10,6 @@ import {
   alpha,
 } from '@mui/material';
 import {
-  Store,
   Security,
 } from '@mui/icons-material';
 import { useAuth } from '@/hooks/useAuth';
@@ -165,7 +164,7 @@ const ComercioSection: React.FC<{
 
 export default function ComercioDashboard() {
   const { user, loading: authLoading } = useAuth();
-  const { comercio, loading: comercioLoading } = useComercios();
+  const { loading: comercioLoading } = useComercios();
   const { loading: beneficiosLoading } = useBeneficios();
   const { loading: validacionesLoading } = useValidaciones();
 
