@@ -7,9 +7,8 @@ let currentLanguage = 'es';
 const translations = {};
 // Variables para el botón flotante
 let isFloatingMenuOpen = false;
-// Variables para los selectores de idioma independientes
-let isDesktopLanguageSwitcherOpen = false;
-let isNavLanguageSwitcherOpen = false;
+// Variables para el selector de idioma flotante
+let isLanguageSwitcherOpen = false;
 // Variables para el control del navbar
 let lastScrollY = 0;
 let isScrollingDown = false;
@@ -25,8 +24,8 @@ let performanceMode = false;
 
 // ===== CONFIGURACIÓN GLOBAL OPTIMIZADA =====
 const CONFIG = {
-    // Configuración de animaciones optimizada para móvil
-    ANIMATION_DURATION: isMobile ? 200 : 300,
+    // Configuración de animaciones optimizada para móvil - RALENTIZADA
+    ANIMATION_DURATION: isMobile ? 400 : 600,
     SCROLL_THRESHOLD: isMobile ? 50 : 100,
     
     // Configuración de imágenes optimizadas para móvil
@@ -225,7 +224,7 @@ const translationData = {
         'page-description': 'Starflex revolutionizes Amazon Flex. Intelligent block automation, schedule optimization and maximum earnings. Join +15,000 successful drivers.',
         'og-title': 'Starflex - The Amazon Flex Revolution',
         'og-description': 'Intelligent automation that multiplies your earnings. The tool every professional driver needs.',
-        // Navigation
+        // Navegación
         'nav-home': 'Home',
         'nav-features': 'Features',
         'nav-videos': 'Videos',
@@ -719,83 +718,33 @@ function updateLanguageButtons() {
         }
     });
     
-    updateLanguageSwitchers();
+    updateLanguageSwitcher();
 }
 
-// ===== FUNCIONES DE LOS SELECTORES DE IDIOMA OPTIMIZADAS =====
-function initializeLanguageSwitchers() {
-    // Inicializar selector de idioma en desktop (debajo del CTA)
-    initializeDesktopLanguageSwitcher();
+// ===== SELECTOR DE IDIOMA FLOTANTE =====
+function initializeLanguageSwitcher() {
+    const languageSwitcherBtn = document.getElementById('language-switcher-btn');
+    const languageSwitcherDropdown = document.getElementById('language-switcher-dropdown');
+    const languageSwitcher = document.getElementById('language-switcher');
+    const languageOptions = languageSwitcher?.querySelectorAll('.language-switcher__option');
     
-    // Inicializar selector de idioma en móvil (dentro del menú hamburguesa)
-    initializeNavLanguageSwitcher();
-}
-
-function initializeDesktopLanguageSwitcher() {
-    const desktopSwitcherBtn = document.getElementById('desktop-language-switcher-btn');
-    const desktopSwitcherDropdown = document.getElementById('desktop-language-switcher-dropdown');
-    const desktopSwitcher = document.getElementById('desktop-language-switcher');
-    const desktopOptions = desktopSwitcher?.querySelectorAll('.language-switcher__option');
+    if (!languageSwitcherBtn || !languageSwitcherDropdown || !languageSwitcher) return;
     
-    if (!desktopSwitcherBtn || !desktopSwitcherDropdown || !desktopSwitcher) return;
-    
-    // Toggle del dropdown optimizado para desktop
-    desktopSwitcherBtn.addEventListener('click', (e) => {
+    // Toggle del dropdown
+    languageSwitcherBtn.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        toggleDesktopLanguageSwitcher();
+        toggleLanguageSwitcher();
     });
     
     // Opciones de idioma
-    desktopOptions?.forEach(option => {
+    languageOptions?.forEach(option => {
         option.addEventListener('click', (e) => {
             e.preventDefault();
             const selectedLanguage = option.getAttribute('data-lang');
             if (selectedLanguage && selectedLanguage !== currentLanguage) {
                 switchLanguage(selectedLanguage);
-                closeDesktopLanguageSwitcher();
-            }
-        });
-    });
-    
-    // Cerrar al hacer click fuera
-    document.addEventListener('click', (e) => {
-        if (isDesktopLanguageSwitcherOpen && desktopSwitcher && !desktopSwitcher.contains(e.target)) {
-            closeDesktopLanguageSwitcher();
-        }
-    });
-    
-    // Cerrar con Escape
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && isDesktopLanguageSwitcherOpen) {
-            closeDesktopLanguageSwitcher();
-        }
-    });
-}
-
-function initializeNavLanguageSwitcher() {
-    const navSwitcherBtn = document.getElementById('nav-language-switcher-btn');
-    const navSwitcherDropdown = document.getElementById('nav-language-switcher-dropdown');
-    const navSwitcher = document.getElementById('nav-language-switcher');
-    const navOptions = navSwitcher?.querySelectorAll('.language-switcher__option');
-    
-    if (!navSwitcherBtn || !navSwitcherDropdown || !navSwitcher) return;
-    
-    // Toggle del dropdown optimizado para móvil
-    navSwitcherBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        toggleNavLanguageSwitcher();
-    });
-    
-    // Opciones de idioma con mejor feedback táctil
-    navOptions?.forEach(option => {
-        option.addEventListener('click', (e) => {
-            e.preventDefault();
-            const selectedLanguage = option.getAttribute('data-lang');
-            if (selectedLanguage && selectedLanguage !== currentLanguage) {
-                switchLanguage(selectedLanguage);
-                closeNavLanguageSwitcher();
+                closeLanguageSwitcher();
             }
         });
         
@@ -812,90 +761,55 @@ function initializeNavLanguageSwitcher() {
     
     // Cerrar al hacer click fuera
     document.addEventListener('click', (e) => {
-        if (isNavLanguageSwitcherOpen && navSwitcher && !navSwitcher.contains(e.target)) {
-            closeNavLanguageSwitcher();
+        if (isLanguageSwitcherOpen && languageSwitcher && !languageSwitcher.contains(e.target)) {
+            closeLanguageSwitcher();
         }
     });
     
     // Cerrar con Escape
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && isNavLanguageSwitcherOpen) {
-            closeNavLanguageSwitcher();
+        if (e.key === 'Escape' && isLanguageSwitcherOpen) {
+            closeLanguageSwitcher();
         }
     });
 }
 
-function toggleDesktopLanguageSwitcher() {
-    if (isDesktopLanguageSwitcherOpen) {
-        closeDesktopLanguageSwitcher();
+function toggleLanguageSwitcher() {
+    if (isLanguageSwitcherOpen) {
+        closeLanguageSwitcher();
     } else {
-        openDesktopLanguageSwitcher();
+        openLanguageSwitcher();
     }
 }
 
-function openDesktopLanguageSwitcher() {
-    const desktopSwitcher = document.getElementById('desktop-language-switcher');
-    const desktopSwitcherBtn = document.getElementById('desktop-language-switcher-btn');
+function openLanguageSwitcher() {
+    const languageSwitcher = document.getElementById('language-switcher');
+    const languageSwitcherBtn = document.getElementById('language-switcher-btn');
     
-    if (!desktopSwitcher || !desktopSwitcherBtn) return;
+    if (!languageSwitcher || !languageSwitcherBtn) return;
     
-    isDesktopLanguageSwitcherOpen = true;
-    desktopSwitcher.classList.add('active');
-    desktopSwitcherBtn.setAttribute('aria-expanded', 'true');
+    isLanguageSwitcherOpen = true;
+    languageSwitcher.classList.add('active');
+    languageSwitcherBtn.setAttribute('aria-expanded', 'true');
 }
 
-function closeDesktopLanguageSwitcher() {
-    const desktopSwitcher = document.getElementById('desktop-language-switcher');
-    const desktopSwitcherBtn = document.getElementById('desktop-language-switcher-btn');
+function closeLanguageSwitcher() {
+    const languageSwitcher = document.getElementById('language-switcher');
+    const languageSwitcherBtn = document.getElementById('language-switcher-btn');
     
-    if (!desktopSwitcher || !desktopSwitcherBtn) return;
+    if (!languageSwitcher || !languageSwitcherBtn) return;
     
-    isDesktopLanguageSwitcherOpen = false;
-    desktopSwitcher.classList.remove('active');
-    desktopSwitcherBtn.setAttribute('aria-expanded', 'false');
+    isLanguageSwitcherOpen = false;
+    languageSwitcher.classList.remove('active');
+    languageSwitcherBtn.setAttribute('aria-expanded', 'false');
 }
 
-function toggleNavLanguageSwitcher() {
-    if (isNavLanguageSwitcherOpen) {
-        closeNavLanguageSwitcher();
-    } else {
-        openNavLanguageSwitcher();
-    }
-}
-
-function openNavLanguageSwitcher() {
-    const navSwitcher = document.getElementById('nav-language-switcher');
-    const navSwitcherBtn = document.getElementById('nav-language-switcher-btn');
+function updateLanguageSwitcher() {
+    // Actualizar texto del botón
+    const languageSwitcherText = document.getElementById('language-switcher-text');
     
-    if (!navSwitcher || !navSwitcherBtn) return;
-    
-    isNavLanguageSwitcherOpen = true;
-    navSwitcher.classList.add('active');
-    navSwitcherBtn.setAttribute('aria-expanded', 'true');
-}
-
-function closeNavLanguageSwitcher() {
-    const navSwitcher = document.getElementById('nav-language-switcher');
-    const navSwitcherBtn = document.getElementById('nav-language-switcher-btn');
-    
-    if (!navSwitcher || !navSwitcherBtn) return;
-    
-    isNavLanguageSwitcherOpen = false;
-    navSwitcher.classList.remove('active');
-    navSwitcherBtn.setAttribute('aria-expanded', 'false');
-}
-
-function updateLanguageSwitchers() {
-    // Actualizar texto de los botones
-    const desktopSwitcherText = document.getElementById('desktop-language-switcher-text');
-    const navSwitcherText = document.getElementById('nav-language-switcher-text');
-    
-    if (desktopSwitcherText) {
-        desktopSwitcherText.textContent = currentLanguage.toUpperCase();
-    }
-    
-    if (navSwitcherText) {
-        navSwitcherText.textContent = currentLanguage.toUpperCase();
+    if (languageSwitcherText) {
+        languageSwitcherText.textContent = currentLanguage.toUpperCase();
     }
     
     // Actualizar opciones activas
@@ -964,13 +878,13 @@ function openFloatingMenu() {
     floatingMenu.classList.add('active');
     floatingMainBtn.setAttribute('aria-expanded', 'true');
     
-    // Animación optimizada para móvil
+    // Animación optimizada para móvil - RALENTIZADA
     const menuItems = floatingMenu.querySelectorAll('.floating-widget__menu-item');
     menuItems.forEach((item, index) => {
         setTimeout(() => {
             item.style.transform = 'translateY(0) scale(1)';
             item.style.opacity = '1';
-        }, index * (isMobile ? 50 : 100));
+        }, index * (isMobile ? 100 : 150));
     });
 }
 
@@ -1122,7 +1036,7 @@ function openMobileMenu() {
     
     isMenuOpen = true;
     
-    // Animaciones optimizadas para móvil
+    // Animaciones optimizadas para móvil - RALENTIZADAS
     navToggle.classList.add('active');
     navMenu.classList.add('active');
     body.classList.add('no-scroll');
@@ -1131,16 +1045,16 @@ function openMobileMenu() {
     navToggle.setAttribute('aria-expanded', 'true');
     navMenu.setAttribute('aria-hidden', 'false');
     
-    // Animar enlaces del menú con mejor rendimiento
+    // Animar enlaces del menú con mejor rendimiento - RALENTIZADO
     const navLinks = navMenu.querySelectorAll('.nav__link');
     navLinks.forEach((link, index) => {
         link.style.opacity = '0';
         link.style.transform = 'translateY(20px)';
         setTimeout(() => {
-            link.style.transition = `all ${isMobile ? '0.2s' : '0.3s'} ease`;
+            link.style.transition = `all ${isMobile ? '0.4s' : '0.6s'} ease`;
             link.style.opacity = '1';
             link.style.transform = 'translateY(0)';
-        }, index * (isMobile ? 50 : 100) + (isMobile ? 100 : 200));
+        }, index * (isMobile ? 100 : 150) + (isMobile ? 200 : 300));
     });
     
     // Focus optimizado para móvil
@@ -1150,7 +1064,7 @@ function openMobileMenu() {
             if (firstLink) {
                 firstLink.focus();
             }
-        }, 300);
+        }, 600);
     }
 }
 
@@ -1162,11 +1076,6 @@ function closeMobileMenu() {
     if (!navToggle || !navMenu) return;
     
     isMenuOpen = false;
-    
-    // Cerrar también los selectores de idioma si están abiertos
-    if (isNavLanguageSwitcherOpen) {
-        closeNavLanguageSwitcher();
-    }
     
     // Animaciones de cierre optimizadas
     navToggle.classList.remove('active');
@@ -1315,7 +1224,7 @@ function handleTabTrap(e) {
 
 // ===== EFECTOS DE SCROLL OPTIMIZADOS =====
 function initializeScrollEffects() {
-    // Scroll listener optimizado con throttling
+    // Scroll listener optimizado con throttling - RALENTIZADO
     window.addEventListener('scroll', throttle(() => {
         if (!ticking) {
             requestAnimationFrame(() => {
@@ -1325,7 +1234,7 @@ function initializeScrollEffects() {
             });
             ticking = true;
         }
-    }, isMobile ? 32 : 16), { passive: true });
+    }, isMobile ? 64 : 32), { passive: true });
 }
 
 function handleScrollDirection() {
@@ -1552,7 +1461,7 @@ function initializeFAQ() {
                     noResults.classList.remove('show');
                 }
             }
-        }, isMobile ? 500 : 300));
+        }, isMobile ? 800 : 600));
     }
 }
 
@@ -1588,13 +1497,14 @@ function animateFeature(feature) {
     const phone = feature.querySelector('.feature__phone');
     const content = feature.querySelector('.feature__content');
     
+    // ELIMINAR ANIMACIONES DE HOVER EN MÓVIL
     if (phone && !isMobile) {
         setTimeout(() => {
             phone.style.transform = 'perspective(1000px) rotateY(1deg) rotateX(0deg) scale(1.02)';
-        }, 300);
+        }, 600);
         setTimeout(() => {
             phone.style.transform = 'perspective(1000px) rotateY(2deg) rotateX(-1deg) scale(1)';
-        }, 600);
+        }, 1200);
     }
     
     if (content) {
@@ -1603,7 +1513,7 @@ function animateFeature(feature) {
             setTimeout(() => {
                 item.style.opacity = '1';
                 item.style.transform = 'translateX(0)';
-            }, 200 + (index * (isMobile ? 50 : 100)));
+            }, 400 + (index * (isMobile ? 100 : 200)));
         });
     }
 }
@@ -1665,13 +1575,13 @@ function setupImageLazyLoading() {
     waitForOptimizer();
 }
 
-// ===== CORRECCIÓN DEL VIDEO HERO PARA MÓVIL =====
+// ===== CORRECCIÓN DEL VIDEO HERO PARA MÓVIL - SIN IMAGEN HERO.JPG =====
 function initializeHeroVideoFallback() {
     const heroVideo = document.getElementById('hero-video');
     const heroFallbackImage = document.querySelector('.hero__phone-app-image');
     const heroMobileVideo = document.getElementById('hero-mobile-video');
     
-    // Configurar video móvil
+    // Configurar video móvil - MÁS COMPACTO
     if (heroMobileVideo && isMobile) {
         heroMobileVideo.muted = true;
         heroMobileVideo.autoplay = true;
@@ -1777,7 +1687,7 @@ function initializePerformanceOptimizations() {
                 preloadCriticalResources();
             });
         } else {
-            setTimeout(preloadCriticalResources, 2000);
+            setTimeout(preloadCriticalResources, 3000);
         }
     }
     
@@ -1795,7 +1705,7 @@ function initializePerformanceOptimizations() {
         clearTimeout(resizeTimeout);
         resizeTimeout = setTimeout(() => {
             handleResize();
-        }, isMobile ? 500 : 250);
+        }, isMobile ? 800 : 400);
     });
 }
 
@@ -1835,12 +1745,8 @@ function handleResize() {
         closeFloatingMenu();
     }
     
-    if (isDesktopLanguageSwitcherOpen) {
-        closeDesktopLanguageSwitcher();
-    }
-    
-    if (isNavLanguageSwitcherOpen) {
-        closeNavLanguageSwitcher();
+    if (isLanguageSwitcherOpen) {
+        closeLanguageSwitcher();
     }
 }
 
@@ -1854,11 +1760,8 @@ function initializeAccessibility() {
             if (isFloatingMenuOpen) {
                 closeFloatingMenu();
             }
-            if (isDesktopLanguageSwitcherOpen) {
-                closeDesktopLanguageSwitcher();
-            }
-            if (isNavLanguageSwitcherOpen) {
-                closeNavLanguageSwitcher();
+            if (isLanguageSwitcherOpen) {
+                closeLanguageSwitcher();
             }
         }
     });
@@ -1893,8 +1796,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Inicializar sistema de idiomas
     initializeLanguageSystem();
     
-    // Inicializar selectores de idioma independientes
-    initializeLanguageSwitchers();
+    // Inicializar selector de idioma flotante
+    initializeLanguageSwitcher();
     
     // Inicializar funcionalidades principales
     initializeNavigation();
