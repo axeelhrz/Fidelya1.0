@@ -59,6 +59,28 @@
             
             <!-- Navegación optimizada para móvil -->
             <div class="nav__menu" id="nav-menu">
+                <!-- Botón de cerrar para móvil -->
+                <button class="nav__close" id="nav-close" aria-label="Cerrar menú">
+                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                    </svg>
+                </button>
+                
+                <!-- Selector de idioma móvil -->
+                <div class="nav__language-mobile">
+                    <div class="nav__language-title" data-translate="nav-language-title">Idioma</div>
+                    <div class="nav__language-options">
+                        <button class="nav__language-option" data-lang="es">
+                            <span class="nav__language-flag">🇪🇸</span>
+                            <span class="nav__language-name">Español</span>
+                        </button>
+                        <button class="nav__language-option" data-lang="en">
+                            <span class="nav__language-flag">🇺🇸</span>
+                            <span class="nav__language-name">English</span>
+                        </button>
+                    </div>
+                </div>
+                
                 <ul class="nav__list">
                     <li><a href="#home" class="nav__link" data-translate="nav-home">Inicio</a></li>
                     <li><a href="#features" class="nav__link" data-translate="nav-features">Características</a></li>
@@ -66,6 +88,11 @@
                     <li><a href="#faq" class="nav__link" data-translate="nav-faq">FAQ</a></li>
                     <li><a href="#contact" class="nav__link" data-translate="nav-contact">Contacto</a></li>
                 </ul>
+                
+                <!-- CTA móvil -->
+                <div class="nav__cta-mobile">
+                    <a href="https://starflex.web.app/" class="btn btn--primary btn--mobile" data-translate="nav-cta">Comienza tu prueba gratuita</a>
+                </div>
             </div>
             
             <!-- Botón CTA (oculto en móvil) -->
@@ -88,27 +115,27 @@
             <div class="language-switcher__icon">
                 <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                     <path d="M12.87 15.07l-2.54-2.51.03-.03c1.74-1.94 2.98-4.17 3.71-6.53H17V4h-7V2H8v2H1v1.99h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"/>
-                </svg>
+                    </svg>
+                </div>
+                <span class="language-switcher__text" id="language-switcher-text">ES</span>
+                <div class="language-switcher__arrow">
+                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <path d="M7 10l5 5 5-5z"/>
+                    </svg>
+                </div>
             </div>
-            <span class="language-switcher__text" id="language-switcher-text">ES</span>
-            <div class="language-switcher__arrow">
-                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                    <path d="M7 10l5 5 5-5z"/>
-                </svg>
+            
+            <div class="language-switcher__dropdown" id="language-switcher-dropdown">
+                <button class="language-switcher__option" data-lang="es">
+                    <span class="language-switcher__flag">🇪🇸</span>
+                    <span class="language-switcher__name">Español</span>
+                </button>
+                <button class="language-switcher__option" data-lang="en">
+                    <span class="language-switcher__flag">🇺🇸</span>
+                    <span class="language-switcher__name">English</span>
+                </button>
             </div>
         </div>
-        
-        <div class="language-switcher__dropdown" id="language-switcher-dropdown">
-            <button class="language-switcher__option" data-lang="es">
-                <span class="language-switcher__flag">🇪🇸</span>
-                <span class="language-switcher__name">Español</span>
-            </button>
-            <button class="language-switcher__option" data-lang="en">
-                <span class="language-switcher__flag">🇺🇸</span>
-                <span class="language-switcher__name">English</span>
-            </button>
-        </div>
-    </div>
 
     <!-- Hero Section optimizado para móvil -->
     <section class="hero" id="home">
