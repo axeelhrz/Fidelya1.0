@@ -111,6 +111,7 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
       color: '#10b981',
       gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
       description: 'Perfil y configuración',
+      route: '/dashboard/comercio/perfil',
     },
     {
       id: 'beneficios',
