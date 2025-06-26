@@ -77,7 +77,7 @@ const LoadingScreen: React.FC<{ message: string }> = ({ message }) => (
   </Box>
 );
 
-const AccessDeniedScreen: React.FC = () => (
+const AccessDeniedScreen: React.FC<{ user: any }> = ({ user }) => (
   <Box 
     sx={{ 
       minHeight: '100vh',
@@ -112,6 +112,24 @@ const AccessDeniedScreen: React.FC = () => (
           <Typography variant="h6" sx={{ color: '#64748b', mb: 4, maxWidth: 400, mx: 'auto' }}>
             Necesitas permisos de comercio para acceder a este panel de analytics.
           </Typography>
+          
+          {/* Debug info */}
+          {process.env.NODE_ENV === 'development' && (
+            <Box sx={{ mt: 4, p: 2, bgcolor: '#f8f9fa', borderRadius: 2 }}>
+              <Typography variant="caption" sx={{ color: '#6c757d', display: 'block', mb: 1 }}>
+                Debug Info:
+              </Typography>
+              <Typography variant="caption" sx={{ color: '#6c757d', display: 'block' }}>
+                User: {user ? 'Authenticated' : 'Not authenticated'}
+              </Typography>
+              <Typography variant="caption" sx={{ color: '#6c757d', display: 'block' }}>
+                Role: {user?.role || 'No role'}
+              </Typography>
+              <Typography variant="caption" sx={{ color: '#6c757d', display: 'block' }}>
+                UID: {user?.uid || 'No UID'}
+              </Typography>
+            </Box>
+          )}
         </Box>
       </motion.div>
     </Container>
@@ -134,9 +152,18 @@ export default function ComercioAnalytics() {
 
   const loading = authLoading || comercioLoading || beneficiosLoading || validacionesLoading || analyticsLoading;
 
+  // Show loading while checking authentication
+  if (authLoading) {
+    return <LoadingScreen message="Verificando autenticación..." />;
+  }
+
   // Check authentication and role
-  if (!authLoading && (!user || user.role !== 'comercio')) {
-    return <AccessDeniedScreen />;
+  if (!user) {
+    return <AccessDeniedScreen user={user} />;
+  }
+
+  if (user.role !== 'comercio') {
+    return <AccessDeniedScreen user={user} />;
   }
 
   if (loading) {
