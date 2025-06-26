@@ -15,6 +15,104 @@ import {
 } from 'lucide-react';
 import { format, subDays, startOfMonth } from 'date-fns';
 
+const styles = {
+  grid: {
+    display: 'grid',
+    gridTemplateColumns: '1fr',
+    gap: '1.5rem'
+  },
+  gridMd: {
+    '@media (min-width: 768px)': {
+      gridTemplateColumns: 'repeat(2, 1fr)'
+    }
+  },
+  gridLg: {
+    '@media (min-width: 1024px)': {
+      gridTemplateColumns: 'repeat(4, 1fr)'
+    }
+  },
+  card: {
+    background: 'rgba(255, 255, 255, 0.8)',
+    backdropFilter: 'blur(12px)',
+    borderRadius: '1rem',
+    padding: '1.5rem',
+    boxShadow: '0 4px 15px rgba(0, 0, 0, 0.05)',
+    border: '1px solid rgba(148, 163, 184, 0.2)',
+    transition: 'all 0.3s ease',
+    cursor: 'pointer'
+  },
+  cardHover: {
+    ':hover': {
+      transform: 'translateY(-4px)',
+      boxShadow: '0 10px 40px rgba(0, 0, 0, 0.1)',
+      borderColor: 'rgba(148, 163, 184, 0.4)'
+    }
+  },
+  cardHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: '1rem'
+  },
+  iconContainer: {
+    width: '3rem',
+    height: '3rem',
+    borderRadius: '0.75rem',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
+    transition: 'transform 0.3s ease'
+  },
+  iconContainerHover: {
+    ':hover': {
+      transform: 'scale(1.1)'
+    }
+  },
+  changeIndicator: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.25rem',
+    padding: '0.25rem 0.5rem',
+    borderRadius: '0.5rem',
+    fontSize: '0.75rem',
+    fontWeight: 600
+  },
+  changePositive: {
+    backgroundColor: '#dcfce7',
+    color: '#166534'
+  },
+  changeNegative: {
+    backgroundColor: '#fecaca',
+    color: '#991b1b'
+  },
+  valueSection: {
+    marginBottom: '0.5rem'
+  },
+  value: {
+    fontSize: '1.5rem',
+    fontWeight: 900,
+    color: '#0f172a',
+    marginBottom: '0.25rem',
+    lineHeight: 1.2
+  },
+  valueLg: {
+    '@media (min-width: 1024px)': {
+      fontSize: '1.875rem'
+    }
+  },
+  title: {
+    fontSize: '0.875rem',
+    fontWeight: 600,
+    color: '#64748b'
+  },
+  subtitle: {
+    fontSize: '0.75rem',
+    color: '#94a3b8',
+    fontWeight: 500
+  }
+};
+
 export const StatsCards: React.FC = () => {
   const { activeBeneficios, beneficios } = useBeneficios();
   const { validaciones } = useValidaciones();
@@ -42,9 +140,9 @@ export const StatsCards: React.FC = () => {
       title: 'Validaciones este mes',
       value: validacionesEsteMes.length,
       icon: Receipt,
-      color: 'from-cyan-500 to-blue-600',
-      bgColor: 'bg-cyan-50',
-      textColor: 'text-cyan-700',
+      color: 'linear-gradient(135deg, #06b6d4 0%, #1e40af 100%)',
+      bgColor: '#f0f9ff',
+      textColor: '#0369a1',
       change: '+12%',
       isPositive: true,
       subtitle: `${(validacionesEsteMes.length / new Date().getDate()).toFixed(1)} por día`
@@ -53,9 +151,9 @@ export const StatsCards: React.FC = () => {
       title: 'Beneficios activos',
       value: activeBeneficios.length,
       icon: Gift,
-      color: 'from-emerald-500 to-green-600',
-      bgColor: 'bg-emerald-50',
-      textColor: 'text-emerald-700',
+      color: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+      bgColor: '#f0fdf4',
+      textColor: '#059669',
       change: '0%',
       isPositive: null,
       subtitle: `${beneficios.length} total`
@@ -64,9 +162,9 @@ export const StatsCards: React.FC = () => {
       title: 'Asociaciones vinculadas',
       value: asociacionesVinculadas,
       icon: Users,
-      color: 'from-violet-500 to-purple-600',
-      bgColor: 'bg-violet-50',
-      textColor: 'text-violet-700',
+      color: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+      bgColor: '#faf5ff',
+      textColor: '#7c3aed',
       change: '+5%',
       isPositive: true,
       subtitle: 'Activas'
@@ -75,9 +173,9 @@ export const StatsCards: React.FC = () => {
       title: 'Última validación',
       value: tiempoUltimaValidacion,
       icon: Clock,
-      color: 'from-amber-500 to-orange-600',
-      bgColor: 'bg-amber-50',
-      textColor: 'text-amber-700',
+      color: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+      bgColor: '#fffbeb',
+      textColor: '#d97706',
       change: null,
       isPositive: null,
       subtitle: ultimaValidacion ? format(ultimaValidacion.fechaHora.toDate(), 'dd/MM HH:mm') : ''
@@ -85,7 +183,15 @@ export const StatsCards: React.FC = () => {
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div style={{
+      ...styles.grid,
+      '@media (min-width: 768px)': {
+        gridTemplateColumns: 'repeat(2, 1fr)'
+      },
+      '@media (min-width: 1024px)': {
+        gridTemplateColumns: 'repeat(4, 1fr)'
+      }
+    }}>
       {stats.map((stat, index) => (
         <motion.div
           key={index}
@@ -93,48 +199,70 @@ export const StatsCards: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: index * 0.1 }}
           whileHover={{ y: -4, transition: { duration: 0.2 } }}
+          style={styles.card}
           className="group"
         >
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-soft border border-slate-200/50 hover:shadow-soft-lg hover:border-slate-300/50 transition-all duration-300">
-            {/* Icon */}
-            <div className="flex items-center justify-between mb-4">
-              <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                <stat.icon className="w-6 h-6 text-white" />
+          {/* Icon */}
+          <div style={styles.cardHeader}>
+            <div style={{
+              ...styles.iconContainer,
+              background: stat.color
+            }}>
+              <stat.icon style={{ width: '1.5rem', height: '1.5rem', color: 'white' }} />
+            </div>
+            
+            {stat.change && (
+              <div style={{
+                ...styles.changeIndicator,
+                ...(stat.isPositive ? styles.changePositive : styles.changeNegative)
+              }}>
+                {stat.isPositive ? (
+                  <TrendingUp style={{ width: '0.75rem', height: '0.75rem' }} />
+                ) : (
+                  <TrendingDown style={{ width: '0.75rem', height: '0.75rem' }} />
+                )}
+                {stat.change}
               </div>
-              
-              {stat.change && (
-                <div className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold ${
-                  stat.isPositive 
-                    ? 'bg-emerald-100 text-emerald-700' 
-                    : 'bg-red-100 text-red-700'
-                }`}>
-                  {stat.isPositive ? (
-                    <TrendingUp className="w-3 h-3" />
-                  ) : (
-                    <TrendingDown className="w-3 h-3" />
-                  )}
-                  {stat.change}
-                </div>
-              )}
-            </div>
-
-            {/* Value */}
-            <div className="mb-2">
-              <h3 className="text-2xl lg:text-3xl font-black text-slate-900 mb-1">
-                {typeof stat.value === 'number' ? stat.value.toLocaleString() : stat.value}
-              </h3>
-              <p className="text-sm font-semibold text-slate-600">
-                {stat.title}
-              </p>
-            </div>
-
-            {/* Subtitle */}
-            {stat.subtitle && (
-              <p className="text-xs text-slate-500 font-medium">
-                {stat.subtitle}
-              </p>
             )}
           </div>
+
+          {/* Value */}
+          <div style={styles.valueSection}>
+            <h3 style={{
+              ...styles.value,
+              '@media (min-width: 1024px)': {
+                fontSize: '1.875rem'
+              }
+            }}>
+              {typeof stat.value === 'number' ? stat.value.toLocaleString() : stat.value}
+            </h3>
+            <p style={styles.title}>
+              {stat.title}
+            </p>
+          </div>
+
+          {/* Subtitle */}
+          {stat.subtitle && (
+            <p style={styles.subtitle}>
+              {stat.subtitle}
+            </p>
+          )}
+
+          <style jsx>{`
+            .group:hover .icon-container {
+              transform: scale(1.1);
+            }
+            @media (min-width: 768px) {
+              .grid-md {
+                grid-template-columns: repeat(2, 1fr);
+              }
+            }
+            @media (min-width: 1024px) {
+              .grid-lg {
+                grid-template-columns: repeat(4, 1fr);
+              }
+            }
+          `}</style>
         </motion.div>
       ))}
     </div>
