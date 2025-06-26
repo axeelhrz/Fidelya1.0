@@ -26,7 +26,7 @@
     
     <!-- Preload de recursos críticos optimizado para móvil -->
     <link rel="preload" href="./assets/phones/Hero.mp4" as="video" type="video/mp4">
-    <link rel="preload" href="./assets/logo.png" as="image" type="image/png">
+    <link rel="preload" href="./assets/logo.avif" as="image" type="image/avif">
     
     <!-- Fuentes Google optimizadas para móvil -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -145,7 +145,7 @@
                         </a>
                         
                         <div class="hero__download">
-                            <a href="https://play.google.com/store/apps/details?id=com.minoka.starflex&pli=1" class="download-btn" data-translate-aria="download-google" aria-label="Descargar en Google Play">
+                            <a href="https://play.google.com/store/apps/details?id=com.minoka.starflex&pli=1" class="download-btn download-btn--google" data-translate-aria="download-google" aria-label="Descargar en Google Play">
                                 <img class="download-btn__image image-optimized" data-translate-alt="download-google-alt" alt="Descargar en Google Play" loading="eager">
                             </a>
                             
@@ -190,35 +190,19 @@
         </div>
     </section>
 
-    <!-- Resto de las secciones optimizadas... -->
-    <!-- (El resto del HTML permanece igual pero con las optimizaciones aplicadas) -->
-
-    <!-- Sección Características optimizada para móvil -->
+    <!-- Sección Características COMPLETAMENTE REDISEÑADA Y OPTIMIZADA -->
     <section class="features" id="features">
         <div class="container">
             <div class="features__header">
                 <h2 class="features__title" data-translate="features-title">Características</h2>
                 <p class="features__subtitle" data-translate="features-subtitle">
-                    Aquí puedes ver lo que te ofrece StarFlex.
+                    Descubre todas las funcionalidades que StarFlex te ofrece para maximizar tus ganancias.
                 </p>
             </div>
 
             <div class="features__grid">
                 <!-- Feature 1: Horario -->
                 <div class="feature" data-feature="schedule">
-                    <div class="feature__content">
-                        <h3 class="feature__title" data-translate="feature-schedule-title">HORARIO</h3>
-                        <p class="feature__description" data-translate="feature-schedule-description">
-                            Elige los días y horarios que prefieras para tus bloques de entrega.
-                        </p>
-                        <ul class="feature__list">
-                            <li class="feature__list-item" data-translate="feature-schedule-item-1">Configuración personalizada por día</li>
-                            <li class="feature__list-item" data-translate="feature-schedule-item-2">Horarios flexibles de trabajo</li>
-                            <li class="feature__list-item" data-translate="feature-schedule-item-3">Optimización automática de turnos</li>
-                            <li class="feature__list-item" data-translate="feature-schedule-item-4">Sincronización con tu calendario</li>
-                        </ul>
-                    </div>
-
                     <div class="feature__phone">
                         <div class="phone">
                             <div class="phone__screen">
@@ -228,25 +212,24 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="feature__content">
+                        <h3 class="feature__title" data-translate="feature-schedule-title">HORARIO</h3>
+                        <p class="feature__description" data-translate="feature-schedule-description">
+                            Elige los días y horarios que prefieras para tus bloques de entrega. Configura tu disponibilidad de manera inteligente y deja que StarFlex encuentre los mejores bloques en tus horarios preferidos.
+                        </p>
+                        <ul class="feature__list">
+                            <li class="feature__list-item" data-translate="feature-schedule-item-1">Configuración personalizada por día de la semana</li>
+                            <li class="feature__list-item" data-translate="feature-schedule-item-2">Horarios flexibles adaptados a tu estilo de vida</li>
+                            <li class="feature__list-item" data-translate="feature-schedule-item-3">Optimización automática de turnos rentables</li>
+                            <li class="feature__list-item" data-translate="feature-schedule-item-4">Sincronización inteligente con tu calendario personal</li>
+                            <li class="feature__list-item" data-translate="feature-schedule-item-5">Alertas de disponibilidad en tiempo real</li>
+                        </ul>
+                    </div>
                 </div>
 
                 <!-- Feature 2: Estaciones -->
                 <div class="feature" data-feature="stations">
-                    <div class="feature__content">
-                        <h3 class="feature__title" data-translate="feature-stations-title">ESTACIONES</h3>
-                        <p class="feature__description" data-translate="feature-stations-description">
-                            Selecciona tus estaciones preferidas y precios para que nuestra app pueda 
-                            ofrecerte los bloques que se ajusten a tus preferencias.
-                        </p>
-                        <ul class="feature__list">
-                            <li class="feature__list-item" data-translate="feature-stations-item-1">Selección personalizada de estaciones favoritas</li>
-                            <li class="feature__list-item" data-translate="feature-stations-item-2">Configuración de precios mínimos por estación</li>
-                            <li class="feature__list-item" data-translate="feature-stations-item-3">Análisis de rentabilidad por ubicación</li>
-                            <li class="feature__list-item" data-translate="feature-stations-item-4">Notificaciones instantáneas de bloques disponibles</li>
-                            <li class="feature__list-item" data-translate="feature-stations-item-5">Mapa interactivo con todas las estaciones</li>
-                        </ul>
-                    </div>
-
                     <div class="feature__phone">
                         <div class="phone">
                             <div class="phone__screen">
@@ -256,22 +239,25 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="feature__content">
+                        <h3 class="feature__title" data-translate="feature-stations-title">ESTACIONES</h3>
+                        <p class="feature__description" data-translate="feature-stations-description">
+                            Selecciona tus estaciones preferidas y configura precios mínimos para que nuestra aplicación pueda ofrecerte automáticamente los bloques que se ajusten perfectamente a tus preferencias y ubicación.
+                        </p>
+                        <ul class="feature__list">
+                            <li class="feature__list-item" data-translate="feature-stations-item-1">Selección personalizada de estaciones favoritas</li>
+                            <li class="feature__list-item" data-translate="feature-stations-item-2">Configuración de precios mínimos por estación</li>
+                            <li class="feature__list-item" data-translate="feature-stations-item-3">Análisis detallado de rentabilidad por ubicación</li>
+                            <li class="feature__list-item" data-translate="feature-stations-item-4">Notificaciones instantáneas de bloques disponibles</li>
+                            <li class="feature__list-item" data-translate="feature-stations-item-5">Mapa interactivo con todas las estaciones cercanas</li>
+                            <li class="feature__list-item" data-translate="feature-stations-item-6">Filtros avanzados por distancia y tipo de entrega</li>
+                        </ul>
+                    </div>
                 </div>
 
                 <!-- Feature 3: Calendario -->
                 <div class="feature" data-feature="calendar">
-                    <div class="feature__content">
-                        <h3 class="feature__title" data-translate="feature-calendar-title">CALENDARIO</h3>
-                        <p class="feature__description" data-translate="feature-calendar-description">
-                            En el calendario podrás ver tus bloques aceptados y encontrar las opciones para identificarte desde cualquier ubicación, así como la posibilidad de saltarte la selfie y cancelar bloques, todo en un solo lugar para tu máxima comodidad.
-                        </p>
-                        <ul class="feature__list">
-                            <li class="feature__list-item" data-translate="feature-calendar-item-1">Identificación desde cualquier ubicación</li>
-                            <li class="feature__list-item" data-translate="feature-calendar-item-2">Opción de saltar selfie</li>
-                            <li class="feature__list-item" data-translate="feature-calendar-item-3">Cancelación rápida de bloques</li>
-                        </ul>
-                    </div>
-
                     <div class="feature__phone">
                         <div class="phone">
                             <div class="phone__screen">
@@ -281,23 +267,24 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="feature__content">
+                        <h3 class="feature__title" data-translate="feature-calendar-title">CALENDARIO</h3>
+                        <p class="feature__description" data-translate="feature-calendar-description">
+                            En el calendario podrás ver todos tus bloques aceptados y acceder a funciones avanzadas como identificación desde cualquier ubicación, opción de saltar la selfie y cancelación rápida de bloques, todo centralizado para tu máxima comodidad.
+                        </p>
+                        <ul class="feature__list">
+                            <li class="feature__list-item" data-translate="feature-calendar-item-1">Identificación automática desde cualquier ubicación</li>
+                            <li class="feature__list-item" data-translate="feature-calendar-item-2">Opción inteligente para saltar verificación selfie</li>
+                            <li class="feature__list-item" data-translate="feature-calendar-item-3">Cancelación rápida y segura de bloques</li>
+                            <li class="feature__list-item" data-translate="feature-calendar-item-4">Vista mensual y semanal de tus entregas</li>
+                            <li class="feature__list-item" data-translate="feature-calendar-item-5">Recordatorios automáticos de bloques próximos</li>
+                        </ul>
+                    </div>
                 </div>
 
                 <!-- Feature 4: Registro -->
                 <div class="feature" data-feature="log">
-                    <div class="feature__content">
-                        <h3 class="feature__title" data-translate="feature-log-title">REGISTRO</h3>
-                        <p class="feature__description" data-translate="feature-log-description">
-                            En el registro, podrá ver todos los bloques disponibles y el motivo detallado por el cual se ignoraron algunos. Esto le ayudará a ajustar sus filtros de preferencias según sea necesario para optimizar sus opciones.
-                        </p>
-                        <ul class="feature__list">
-                            <li class="feature__list-item" data-translate="feature-log-item-1">Historial completo de bloques</li>
-                            <li class="feature__list-item" data-translate="feature-log-item-2">Motivos detallados de rechazo</li>
-                            <li class="feature__list-item" data-translate="feature-log-item-3">Optimización de filtros</li>
-                            <li class="feature__list-item" data-translate="feature-log-item-4">Análisis de patrones</li>
-                        </ul>
-                    </div>
-
                     <div class="feature__phone">
                         <div class="phone">
                             <div class="phone__screen">
@@ -307,26 +294,24 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="feature__content">
+                        <h3 class="feature__title" data-translate="feature-log-title">REGISTRO</h3>
+                        <p class="feature__description" data-translate="feature-log-description">
+                            En el registro detallado podrás ver todos los bloques disponibles y el motivo específico por el cual algunos fueron ignorados. Esta información te ayudará a ajustar tus filtros y preferencias para optimizar continuamente tus opciones de entrega.
+                        </p>
+                        <ul class="feature__list">
+                            <li class="feature__list-item" data-translate="feature-log-item-1">Historial completo y detallado de todos los bloques</li>
+                            <li class="feature__list-item" data-translate="feature-log-item-2">Motivos específicos y detallados de rechazo automático</li>
+                            <li class="feature__list-item" data-translate="feature-log-item-3">Herramientas de optimización de filtros inteligentes</li>
+                            <li class="feature__list-item" data-translate="feature-log-item-4">Análisis avanzado de patrones y tendencias</li>
+                            <li class="feature__list-item" data-translate="feature-log-item-5">Estadísticas de rendimiento y ganancias</li>
+                        </ul>
+                    </div>
                 </div>
 
                 <!-- Feature 5: Notificaciones -->
                 <div class="feature" data-feature="notifications">
-                    <div class="feature__content">
-                        <h3 class="feature__title" data-translate="feature-notifications-title">NOTIFICACIONES</h3>
-                        <p class="feature__description" data-translate="feature-notifications-description">
-                            StarFlex te mantiene informado con múltiples tipos de notificaciones para que nunca te pierdas los mejores bloques disponibles. Configura tus alertas según tus preferencias.
-                        </p>
-                        <ul class="feature__list">
-                            <li class="feature__list-item" data-translate="feature-notifications-item-1">Notificaciones Push instantáneas</li>
-                            <li class="feature__list-item" data-translate="feature-notifications-item-2">Alertas por correo electrónico</li>
-                            <li class="feature__list-item" data-translate="feature-notifications-item-3">Llamadas telefónicas automáticas</li>
-                            <li class="feature__list-item" data-translate="feature-notifications-item-4">Mensajes SMS directos</li>
-                            <li class="feature__list-item" data-translate="feature-notifications-item-5">Alertas personalizables por tipo de bloque</li>
-                            <li class="feature__list-item" data-translate="feature-notifications-item-6">Notificaciones en tiempo real</li>
-                            <li class="feature__list-item" data-translate="feature-notifications-item-7">Filtros avanzados de notificación</li>
-                        </ul>
-                    </div>
-
                     <div class="feature__phone">
                         <div class="phone">
                             <div class="phone__screen">
@@ -336,22 +321,26 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="feature__content">
+                        <h3 class="feature__title" data-translate="feature-notifications-title">NOTIFICACIONES</h3>
+                        <p class="feature__description" data-translate="feature-notifications-description">
+                            StarFlex te mantiene siempre informado con un sistema completo de notificaciones múltiples para que nunca te pierdas los mejores bloques disponibles. Configura tus alertas según tus preferencias específicas y recibe notificaciones en tiempo real.
+                        </p>
+                        <ul class="feature__list">
+                            <li class="feature__list-item" data-translate="feature-notifications-item-1">Notificaciones Push instantáneas y personalizables</li>
+                            <li class="feature__list-item" data-translate="feature-notifications-item-2">Alertas automáticas por correo electrónico</li>
+                            <li class="feature__list-item" data-translate="feature-notifications-item-3">Llamadas telefónicas automáticas para bloques premium</li>
+                            <li class="feature__list-item" data-translate="feature-notifications-item-4">Mensajes SMS directos y urgentes</li>
+                            <li class="feature__list-item" data-translate="feature-notifications-item-5">Alertas personalizables por tipo y valor de bloque</li>
+                            <li class="feature__list-item" data-translate="feature-notifications-item-6">Sistema de notificaciones en tiempo real 24/7</li>
+                            <li class="feature__list-item" data-translate="feature-notifications-item-7">Filtros avanzados de notificación por prioridad</li>
+                        </ul>
+                    </div>
                 </div>
 
                 <!-- Feature 6: Sistema de Referidos -->
                 <div class="feature" data-feature="referrals">
-                    <div class="feature__content">
-                        <h3 class="feature__title" data-translate="feature-referrals-title">REFERIDOS</h3>
-                        <p class="feature__description" data-translate="feature-referrals-description">
-                            Invitá a otros usuarios a unirse a Starflex y obtené beneficios exclusivos por cada referido que se registre.
-                        </p>
-                        <ul class="feature__list">
-                            <li class="feature__list-item" data-translate="feature-referrals-item-1">Enlace único de referido personalizado</li>
-                            <li class="feature__list-item" data-translate="feature-referrals-item-2">Gana 1 semana gratis por cada referido</li>
-                            <li class="feature__list-item" data-translate="feature-referrals-item-3">Código QR para compartir fácilmente</li>
-                        </ul>
-                    </div>
-
                     <div class="feature__phone">
                         <div class="phone">
                             <div class="phone__screen">
@@ -360,6 +349,20 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
+
+                    <div class="feature__content">
+                        <h3 class="feature__title" data-translate="feature-referrals-title">REFERIDOS</h3>
+                        <p class="feature__description" data-translate="feature-referrals-description">
+                            Invita a otros conductores a unirse a la revolución StarFlex y obtén beneficios exclusivos por cada referido que se registre exitosamente. Comparte tu experiencia y gana recompensas mientras ayudas a otros conductores a maximizar sus ganancias.
+                        </p>
+                        <ul class="feature__list">
+                            <li class="feature__list-item" data-translate="feature-referrals-item-1">Enlace único de referido personalizado y rastreable</li>
+                            <li class="feature__list-item" data-translate="feature-referrals-item-2">Gana 1 semana completamente gratis por cada referido exitoso</li>
+                            <li class="feature__list-item" data-translate="feature-referrals-item-3">Código QR dinámico para compartir fácilmente</li>
+                            <li class="feature__list-item" data-translate="feature-referrals-item-4">Panel de seguimiento de referidos en tiempo real</li>
+                            <li class="feature__list-item" data-translate="feature-referrals-item-5">Bonificaciones adicionales por referidos activos</li>
+                        </ul>
                     </div>
                 </div>
             </div>
