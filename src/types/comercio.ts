@@ -13,6 +13,12 @@ export interface Comercio {
   imagenPrincipalUrl?: string;
   descripcion?: string;
   sitioWeb?: string;
+  // Nuevos campos para el perfil extendido
+  razonSocial?: string;
+  cuit?: string;
+  ubicacion?: string;
+  emailContacto?: string;
+  visible?: boolean;
   redesSociales?: {
     facebook?: string;
     instagram?: string;
@@ -89,6 +95,12 @@ export interface ComercioFormData {
   horario?: string;
   descripcion?: string;
   sitioWeb?: string;
+  // Nuevos campos extendidos
+  razonSocial?: string;
+  cuit?: string;
+  ubicacion?: string;
+  emailContacto?: string;
+  visible?: boolean;
   redesSociales?: {
     facebook?: string;
     instagram?: string;
@@ -150,6 +162,9 @@ export interface QRData {
 
 // Categorías predefinidas para comercios
 export const CATEGORIAS_COMERCIO = [
+  'Alimentación',
+  'Librería y Papelería',
+  'Farmacia y Salud',
   'Restaurantes y Gastronomía',
   'Retail y Moda',
   'Salud y Belleza',
@@ -219,3 +234,24 @@ export const TIPOS_BENEFICIO = {
 } as const;
 
 export type TipoBeneficio = keyof typeof TIPOS_BENEFICIO;
+
+// Estados de comercio
+export const ESTADOS_COMERCIO = {
+  activo: {
+    label: 'Activo',
+    color: '#10b981',
+    description: 'Comercio operativo y visible para socios'
+  },
+  inactivo: {
+    label: 'Inactivo',
+    color: '#ef4444',
+    description: 'Comercio temporalmente deshabilitado'
+  },
+  pendiente: {
+    label: 'Pendiente',
+    color: '#f59e0b',
+    description: 'Esperando verificación o aprobación'
+  }
+} as const;
+
+export type EstadoComercio = keyof typeof ESTADOS_COMERCIO;

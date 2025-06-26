@@ -4,11 +4,13 @@ export const comercioProfileSchema = z.object({
   nombre: z
     .string()
     .min(1, 'El nombre es requerido')
-    .min(2, 'El nombre debe tener al menos 2 caracteres'),
+    .min(2, 'El nombre debe tener al menos 2 caracteres')
+    .max(100, 'El nombre no puede exceder 100 caracteres'),
   nombreComercio: z
     .string()
     .min(1, 'El nombre del comercio es requerido')
-    .min(3, 'El nombre debe tener al menos 3 caracteres'),
+    .min(3, 'El nombre debe tener al menos 3 caracteres')
+    .max(100, 'El nombre no puede exceder 100 caracteres'),
   email: z
     .string()
     .min(1, 'El email es requerido')
@@ -18,6 +20,7 @@ export const comercioProfileSchema = z.object({
     .min(1, 'La categoría es requerida'),
   direccion: z
     .string()
+    .max(200, 'La dirección no puede exceder 200 caracteres')
     .optional(),
   telefono: z
     .string()
@@ -27,9 +30,11 @@ export const comercioProfileSchema = z.object({
     }),
   horario: z
     .string()
+    .max(100, 'El horario no puede exceder 100 caracteres')
     .optional(),
   descripcion: z
     .string()
+    .max(500, 'La descripción no puede exceder 500 caracteres')
     .optional(),
   sitioWeb: z
     .string()
@@ -37,10 +42,48 @@ export const comercioProfileSchema = z.object({
     .refine((val) => !val || val.startsWith('http'), {
       message: 'El sitio web debe comenzar con http:// o https://'
     }),
+  razonSocial: z
+    .string()
+    .max(150, 'La razón social no puede exceder 150 caracteres')
+    .optional(),
+  cuit: z
+    .string()
+    .optional()
+    .refine((val) => !val || /^\d{2}-\d{8}-\d{1}$/.test(val), {
+      message: 'El formato del CUIT debe ser XX-XXXXXXXX-X'
+    }),
+  ubicacion: z
+    .string()
+    .max(100, 'La ubicación no puede exceder 100 caracteres')
+    .optional(),
+  emailContacto: z
+    .string()
+    .email('Formato de email inválido')
+    .optional()
+    .or(z.literal('')),
+  visible: z
+    .boolean()
+    .optional()
+    .default(true),
   redesSociales: z.object({
-    facebook: z.string().optional(),
-    instagram: z.string().optional(),
-    twitter: z.string().optional(),
+    facebook: z
+      .string()
+      .optional()
+      .refine((val) => !val || val.startsWith('@') || val.includes('facebook.com'), {
+        message: 'Debe ser un usuario (@usuario) o URL de Facebook'
+      }),
+    instagram: z
+      .string()
+      .optional()
+      .refine((val) => !val || val.startsWith('@') || val.includes('instagram.com'), {
+        message: 'Debe ser un usuario (@usuario) o URL de Instagram'
+      }),
+    twitter: z
+      .string()
+      .optional()
+      .refine((val) => !val || val.startsWith('@') || val.includes('twitter.com'), {
+        message: 'Debe ser un usuario (@usuario) o URL de Twitter'
+      }),
   }).optional()
 });
 
@@ -89,6 +132,7 @@ export const beneficioSchema = z.object({
     .optional(),
   condiciones: z
     .string()
+    .max(300, 'Las condiciones no pueden exceder 300 caracteres')
     .optional()
 }).refine((data) => data.fechaFin > data.fechaInicio, {
   message: 'La fecha de fin debe ser posterior a la fecha de inicio',
@@ -103,5 +147,65 @@ export const beneficioSchema = z.object({
   path: ['valor']
 });
 
+// Schema para validación de imágenes
+export const imageUploadSchema = z.object({
+  file: z
+    .instanceof(File)
+    .refine((file) => file.size <= 5 * 1024 * 1024, {
+      message: 'El archivo debe ser menor a 5MB'
+    })
+    .refine((file) => ['image/jpeg', 'image/png', 'image/webp'].includes(file.type), {
+      message: 'Solo se permiten archivos JPG, PNG o WebP'
+    }),
+  type: z.enum(['logo', 'portada'])
+});
+
+// Schema para configuración de comercio
+export const comercioConfigSchema = z.object({
+  notificacionesEmail: z.boolean().default(true),
+  notificacionesWhatsApp: z.boolean().default(false),
+  autoValidacion: z.boolean().default(false),
+  visible: z.boolean().default(true),
+  horarioAtencion: z.object({
+    lunes: z.object({
+      activo: z.boolean(),
+      inicio: z.string().optional(),
+      fin: z.string().optional()
+    }).optional(),
+    martes: z.object({
+      activo: z.boolean(),
+      inicio: z.string().optional(),
+      fin: z.string().optional()
+    }).optional(),
+    miercoles: z.object({
+      activo: z.boolean(),
+      inicio: z.string().optional(),
+      fin: z.string().optional()
+    }).optional(),
+    jueves: z.object({
+      activo: z.boolean(),
+      inicio: z.string().optional(),
+      fin: z.string().optional()
+    }).optional(),
+    viernes: z.object({
+      activo: z.boolean(),
+      inicio: z.string().optional(),
+      fin: z.string().optional()
+    }).optional(),
+    sabado: z.object({
+      activo: z.boolean(),
+      inicio: z.string().optional(),
+      fin: z.string().optional()
+    }).optional(),
+    domingo: z.object({
+      activo: z.boolean(),
+      inicio: z.string().optional(),
+      fin: z.string().optional()
+    }).optional()
+  }).optional()
+});
+
 export type ComercioProfileFormData = z.infer<typeof comercioProfileSchema>;
 export type BeneficioFormData = z.infer<typeof beneficioSchema>;
+export type ImageUploadFormData = z.infer<typeof imageUploadSchema>;
+export type ComercioConfigFormData = z.infer<typeof comercioConfigSchema>;
