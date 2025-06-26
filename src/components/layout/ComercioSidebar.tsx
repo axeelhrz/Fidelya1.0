@@ -39,7 +39,6 @@ import {
   TrendingUp,
   Zap,
   Users,
-  Activity,
 } from '@mui/icons-material';
 import { useAuth } from '@/hooks/useAuth';
 import { useComercios } from '@/hooks/useComercios';
@@ -485,6 +484,7 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
                 
                 <Stack direction="row" alignItems="center" spacing={2}>
                   <Avatar
+                  <Avatar
                     sx={{
                       width: 40,
                       height: 40,
@@ -492,9 +492,8 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
                       color: 'white',
                     }}
                   >
-                    <Activity />
+                    <BarChart3 />
                   </Avatar>
-                  <Box sx={{ flex: 1 }}>
                     <Typography 
                       variant="body2" 
                       sx={{ 
