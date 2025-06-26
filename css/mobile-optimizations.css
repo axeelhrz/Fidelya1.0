@@ -19,12 +19,12 @@
 --mobile-button-height: clamp(48px, 12vw, 60px);
 --mobile-touch-target: 48px;
 
-/* Tamaños de teléfonos optimizados */
---phone-width-mobile: clamp(260px, 70vw, 320px);
---phone-height-mobile: clamp(520px, 140vw, 640px);
+/* Tamaños de teléfonos optimizados - MÁS COMPACTOS */
+--phone-width-mobile: clamp(200px, 55vw, 260px);
+--phone-height-mobile: clamp(400px, 110vw, 520px);
 
 /* Efectos reducidos para mejor rendimiento */
---mobile-transition: 0.2s ease;
+--mobile-transition: 0.4s ease;
 --mobile-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 --mobile-blur: blur(10px);
 }
@@ -93,6 +93,7 @@ order: 2;
 .hero__media {
 order: 1;
 margin-bottom: var(--space-xl);
+display: none; /* OCULTAR TELÉFONO EN MÓVIL */
 }
 
 .hero__title {
@@ -128,18 +129,192 @@ width: auto;
 min-width: clamp(160px, 40vw, 180px);
 }
 
-.hero__phone {
-width: var(--phone-width-mobile);
-height: var(--phone-height-mobile);
+/* VIDEO MÓVIL MÁS COMPACTO */
+.hero__mobile-video {
+max-width: 280px; /* MÁS PEQUEÑO */
+margin: var(--space-lg) auto 0; /* MENOS MARGEN */
+border-radius: 15px; /* MENOS REDONDEADO */
 }
 
-.hero__phone-container {
-transform: none;
-animation: none;
+.hero__mobile-video-player {
+border-radius: 15px;
 }
 }
 
-/* ===== CARACTERÍSTICAS MÓVILES OPTIMIZADAS ===== */
+/* ===== NAVBAR MÓVIL MEJORADO Y ESTÉTICO ===== */
+@media screen and (max-width: 1023px) {
+.nav {
+padding: 0 var(--mobile-container-padding);
+height: var(--navbar-height-mobile);
+}
+
+.nav__brand {
+z-index: calc(var(--navbar-z-index) + 2);
+}
+
+.nav__logo {
+width: 45px;
+height: 45px;
+border-radius: 10px;
+}
+
+.nav__toggle {
+width: 44px;
+height: 44px;
+border-radius: 12px;
+background: linear-gradient(135deg, 
+rgba(15, 20, 30, 0.95) 0%, 
+rgba(21, 25, 34, 0.95) 100%
+);
+backdrop-filter: blur(20px);
+-webkit-backdrop-filter: blur(20px);
+border: 1px solid rgba(255, 69, 105, 0.2);
+box-shadow: 
+0 6px 20px rgba(0, 0, 0, 0.3),
+0 0 15px rgba(255, 69, 105, 0.15);
+}
+
+.nav__toggle:hover {
+border-color: var(--starflex-crimson-bright);
+box-shadow: 
+0 8px 25px rgba(0, 0, 0, 0.4),
+0 0 25px rgba(255, 69, 105, 0.25);
+}
+
+.nav__toggle-line {
+width: 20px;
+height: 2px;
+background: var(--text-primary);
+border-radius: 1px;
+transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.nav__toggle-line:not(:last-child) {
+margin-bottom: 4px;
+}
+
+/* MENÚ MÓVIL MEJORADO Y CENTRADO */
+.nav__menu {
+background: linear-gradient(135deg, 
+rgba(10, 13, 20, 0.98) 0%, 
+rgba(21, 25, 34, 0.98) 50%, 
+rgba(30, 35, 48, 0.98) 100%
+);
+backdrop-filter: blur(25px);
+-webkit-backdrop-filter: blur(25px);
+border-right: 1px solid rgba(255, 69, 105, 0.1);
+}
+
+.nav__menu::before {
+background: 
+radial-gradient(ellipse at 30% 20%, rgba(255, 69, 105, 0.08) 0%, transparent 50%),
+radial-gradient(ellipse at 70% 80%, rgba(255, 69, 105, 0.06) 0%, transparent 50%);
+animation: mobile-menu-glow 10s ease-in-out infinite;
+}
+
+.nav__list {
+gap: var(--space-lg);
+max-width: 300px;
+}
+
+.nav__link {
+font-size: 1rem;
+padding: var(--space-md) var(--space-xl);
+background: linear-gradient(135deg, 
+rgba(21, 25, 34, 0.8) 0%, 
+rgba(30, 35, 48, 0.8) 100%
+);
+border: 1px solid rgba(255, 255, 255, 0.08);
+border-radius: 12px;
+backdrop-filter: blur(15px);
+-webkit-backdrop-filter: blur(15px);
+transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+position: relative;
+overflow: hidden;
+}
+
+.nav__link::before {
+background: linear-gradient(135deg, 
+rgba(255, 69, 105, 0.1) 0%, 
+rgba(255, 23, 68, 0.05) 100%
+);
+border-radius: 12px;
+}
+
+.nav__link:hover {
+background: linear-gradient(135deg, 
+rgba(21, 25, 34, 0.9) 0%, 
+rgba(30, 35, 48, 0.9) 100%
+);
+border-color: rgba(255, 69, 105, 0.3);
+transform: translateY(-2px) scale(1.02);
+box-shadow: 
+0 6px 20px rgba(0, 0, 0, 0.3),
+0 0 15px rgba(255, 69, 105, 0.2);
+}
+
+.nav__link:active {
+transform: translateY(0) scale(0.98);
+}
+}
+
+/* ===== SELECTOR DE IDIOMA FLOTANTE MÓVIL ===== */
+@media screen and (max-width: 1023px) {
+.language-switcher {
+top: 15px;
+right: 15px;
+z-index: calc(var(--navbar-z-index) + 1);
+}
+
+.language-switcher__btn {
+padding: var(--space-xs) var(--space-md);
+font-size: 0.8rem;
+min-width: 85px;
+border-radius: 20px;
+background: linear-gradient(135deg, 
+rgba(21, 25, 34, 0.95) 0%, 
+rgba(30, 35, 48, 0.95) 100%
+);
+backdrop-filter: blur(20px);
+-webkit-backdrop-filter: blur(20px);
+border: 1px solid rgba(255, 69, 105, 0.2);
+box-shadow: 
+0 4px 15px rgba(0, 0, 0, 0.3),
+0 0 10px rgba(255, 69, 105, 0.15);
+}
+
+.language-switcher__btn:hover {
+transform: translateY(-1px) scale(1.02);
+border-color: var(--starflex-crimson-bright);
+box-shadow: 
+0 6px 20px rgba(0, 0, 0, 0.4),
+0 0 15px rgba(255, 69, 105, 0.25);
+}
+
+.language-switcher__icon {
+width: 14px;
+height: 14px;
+}
+
+.language-switcher__arrow {
+width: 12px;
+height: 12px;
+}
+
+.language-switcher__dropdown {
+min-width: 140px;
+border-radius: 12px;
+padding: var(--space-xs);
+}
+
+.language-switcher__option {
+padding: var(--space-xs) var(--space-sm);
+border-radius: 10px;
+font-size: 0.8rem;
+}
+}
+
+/* ===== CARACTERÍSTICAS MÓVILES OPTIMIZADAS - SIN HOVER ===== */
 @media screen and (max-width: 1023px) {
 .features__grid {
 gap: var(--space-5xl);
@@ -195,10 +370,21 @@ margin-bottom: var(--space-md);
 padding: var(--space-sm) 0;
 }
 
+/* ELIMINAR HOVER EN MÓVIL */
 .feature__list-item:hover {
 transform: none;
 background: transparent;
 padding-left: 0;
+color: var(--text-secondary);
+}
+
+/* ELIMINAR HOVER EN TELÉFONOS */
+.phone:hover {
+transform: none;
+box-shadow: 
+0 20px 60px rgba(0, 0, 0, 0.4),
+0 8px 30px rgba(0, 0, 0, 0.3),
+0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 }
 
@@ -386,87 +572,13 @@ padding: var(--space-xs) var(--space-sm);
 }
 }
 
-/* ===== NAVEGACIÓN MÓVIL ESPECÍFICA ===== */
-@media screen and (max-width: 1023px) {
-.nav__cta {
-display: none;
-}
-
-.nav__toggle {
-display: flex;
-}
-
-.nav__menu {
-position: fixed;
-top: 0;
-left: -100%;
-width: 100vw;
-height: 100vh;
-height: 100dvh;
-background: linear-gradient(135deg, 
-rgba(10, 13, 20, 0.98) 0%, 
-rgba(21, 25, 34, 0.98) 50%, 
-rgba(30, 35, 48, 0.98) 100%
-);
-backdrop-filter: var(--mobile-blur);
--webkit-backdrop-filter: var(--mobile-blur);
-flex-direction: column;
-justify-content: center;
-align-items: center;
-transition: left 0.3s ease;
-transform: none;
-pointer-events: auto;
-z-index: calc(var(--navbar-z-index) + 3);
-padding: calc(var(--navbar-height-mobile) + 20px) var(--mobile-container-padding) 60px;
-overflow-y: auto;
--webkit-overflow-scrolling: touch;
-}
-
-.nav__menu.active {
-left: 0;
-}
-
-.nav__list {
-flex-direction: column;
-gap: var(--space-lg);
-background: transparent;
-border: none;
-padding: 0;
-box-shadow: none;
-animation: none;
-width: 100%;
-max-width: 320px;
-}
-
-.nav__link {
-font-size: var(--mobile-text-scale);
-padding: var(--space-md) var(--space-lg);
-text-align: center;
-border-radius: 12px;
-background: rgba(21, 25, 34, 0.6);
-border: 1px solid rgba(255, 255, 255, 0.1);
-width: 100%;
-backdrop-filter: var(--mobile-blur);
--webkit-backdrop-filter: var(--mobile-blur);
-transition: all var(--mobile-transition);
-min-height: var(--mobile-touch-target);
-}
-
-.nav__link:hover {
-background: rgba(21, 25, 34, 0.8);
-border-color: var(--border-accent);
-transform: translateY(-2px);
-box-shadow: var(--mobile-shadow);
-}
-}
-
 /* ===== OPTIMIZACIONES PARA PANTALLAS PEQUEÑAS ===== */
 @media screen and (max-width: 768px) {
 :root {
 --mobile-container-padding: clamp(0.875rem, 3vw, 1.5rem);
 --mobile-section-padding: clamp(2rem, 6vw, 4rem);
---phone-width-mobile: clamp(240px, 75vw, 300px);
---phone-height-mobile: clamp(480px, 150vw, 600px);
+--phone-width-mobile: clamp(180px, 50vw, 240px);
+--phone-height-mobile: clamp(360px, 100vw, 480px);
 }
 
 .hero__title {
@@ -483,14 +595,19 @@ font-size: clamp(2rem, 7vw, 2.8rem);
 .feature__title {
 font-size: clamp(1.8rem, 6vw, 2.2rem);
 }
+
+/* VIDEO MÓVIL AÚN MÁS COMPACTO */
+.hero__mobile-video {
+max-width: 240px;
+}
 }
 
 @media screen and (max-width: 480px) {
 :root {
 --mobile-container-padding: 1rem;
 --mobile-section-padding: clamp(1.5rem, 5vw, 3rem);
---phone-width-mobile: clamp(220px, 80vw, 280px);
---phone-height-mobile: clamp(440px, 160vw, 560px);
+--phone-width-mobile: clamp(160px, 45vw, 200px);
+--phone-height-mobile: clamp(320px, 90vw, 400px);
 }
 
 .hero__download {
@@ -509,14 +626,20 @@ gap: var(--space-lg);
 .contact__channel {
 padding: var(--space-lg) var(--space-md);
 }
+
+/* VIDEO MÓVIL ULTRA COMPACTO */
+.hero__mobile-video {
+max-width: 200px;
+margin: var(--space-md) auto 0;
+}
 }
 
 @media screen and (max-width: 360px) {
 :root {
 --mobile-container-padding: 0.875rem;
 --mobile-section-padding: clamp(1.25rem, 4vw, 2.5rem);
---phone-width-mobile: clamp(200px, 85vw, 260px);
---phone-height-mobile: clamp(400px, 170vw, 520px);
+--phone-width-mobile: clamp(140px, 40vw, 180px);
+--phone-height-mobile: clamp(280px, 80vw, 360px);
 }
 
 .nav__link {
@@ -527,6 +650,11 @@ padding: var(--space-sm) var(--space-md);
 .faq__question {
 padding: var(--space-md) var(--space-sm);
 font-size: 0.9rem;
+}
+
+/* VIDEO MÓVIL MÍNIMO */
+.hero__mobile-video {
+max-width: 180px;
 }
 }
 
@@ -546,8 +674,8 @@ right: max(20px, env(safe-area-inset-right, 20px));
 }
 
 .language-switcher {
-top: max(20px, calc(env(safe-area-inset-top, 0px) + 20px));
-right: max(20px, env(safe-area-inset-right, 20px));
+top: max(15px, calc(env(safe-area-inset-top, 0px) + 15px));
+right: max(15px, env(safe-area-inset-right, 15px));
 }
 }
 }
@@ -576,8 +704,8 @@ border-color: rgba(255, 255, 255, 0.06);
 *,
 *::before,
 *::after {
-animation-duration: 0.2s !important;
-transition-duration: 0.2s !important;
+animation-duration: 0.4s !important;
+transition-duration: 0.4s !important;
 }
 
 /* Optimizar transformaciones */
@@ -603,6 +731,16 @@ display: none;
 .contact__channel,
 .faq__item {
 box-shadow: var(--mobile-shadow) !important;
+}
+
+/* ELIMINAR HOVER EFFECTS EN MÓVIL */
+.phone:hover,
+.feature__phone:hover,
+.contact__channel:hover,
+.feature__list-item:hover {
+transform: none !important;
+box-shadow: inherit !important;
+background: inherit !important;
 }
 }
 
@@ -683,5 +821,21 @@ scroll-behavior: smooth;
 -moz-user-select: none;
 -ms-user-select: none;
 user-select: none;
+}
+
+/* ELIMINAR EFECTOS ROJIZOS DE FONDO EN MÓVIL */
+.hero::before,
+.hero::after,
+.hero .floating-orb-2,
+.hero .floating-orb-3,
+.features::before,
+.videos::before,
+.contact::before {
+opacity: 0.5 !important;
+}
+
+.contact__orb,
+.videos__orb {
+opacity: 0.1 !important;
 }
 }
