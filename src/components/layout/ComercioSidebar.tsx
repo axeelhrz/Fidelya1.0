@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useRouter, usePathname } from 'next/navigation';
 import {
   Box,
   Drawer,
@@ -45,8 +46,8 @@ import { useValidaciones } from '@/hooks/useValidaciones';
 interface ComercioSidebarProps {
   open: boolean;
   onToggle: () => void;
-  onMenuClick: (section: string) => void;
-  activeSection: string;
+  onMenuClick?: (section: string) => void;
+  activeSection?: string;
 }
 
 interface MenuItem {
@@ -57,6 +58,7 @@ interface MenuItem {
   color: string;
   gradient?: string;
   description?: string;
+  route?: string;
 }
 
 const SIDEBAR_WIDTH = 280;
@@ -69,6 +71,8 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
   activeSection
 }) => {
   const theme = useTheme();
+  const router = useRouter();
+  const pathname = usePathname();
   const { user } = useAuth();
   const { comercio } = useComercios();
   const { activeBeneficios } = useBeneficios();
@@ -89,14 +93,16 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
       color: '#6366f1',
       gradient: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
       description: 'Vista general',
+      route: '/dashboard/comercio',
     },
     {
-      id: 'estadisticas',
+      id: 'analytics',
       label: 'Analytics',
       icon: <BarChart />,
       color: '#06b6d4',
       gradient: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
       description: 'Métricas y reportes',
+      route: '/dashboard/comercio/analytics',
     },
     {
       id: 'perfil',
@@ -162,8 +168,23 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
     },
   ];
 
+  const handleMenuClick = (item: MenuItem) => {
+    if (item.route) {
+      router.push(item.route);
+    } else if (onMenuClick) {
+      onMenuClick(item.id);
+    }
+  };
+
+  const isActive = (item: MenuItem) => {
+    if (item.route) {
+      return pathname === item.route;
+    }
+    return activeSection === item.id;
+  };
+
   const renderMenuItem = (item: MenuItem, isBottom: boolean = false) => {
-    const isActive = activeSection === item.id;
+    const active = isActive(item);
 
     return (
       <motion.div
@@ -181,7 +202,7 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
             arrow
           >
             <ListItemButton
-              onClick={() => onMenuClick(item.id)}
+              onClick={() => handleMenuClick(item)}
               sx={{
                 minHeight: 56,
                 justifyContent: open ? 'initial' : 'center',
@@ -190,15 +211,15 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
                 borderRadius: 4,
                 position: 'relative',
                 overflow: 'hidden',
-                background: isActive ? item.gradient : 'transparent',
-                color: isActive ? 'white' : '#64748b',
-                border: isActive ? 'none' : '1px solid transparent',
+                background: active ? item.gradient : 'transparent',
+                color: active ? 'white' : '#64748b',
+                border: active ? 'none' : '1px solid transparent',
                 transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                 '&:hover': {
-                  background: isActive ? item.gradient : alpha(item.color, 0.08),
-                  color: isActive ? 'white' : item.color,
+                  background: active ? item.gradient : alpha(item.color, 0.08),
+                  color: active ? 'white' : item.color,
                   transform: 'translateX(4px)',
-                  boxShadow: isActive 
+                  boxShadow: active 
                     ? `0 8px 32px ${alpha(item.color, 0.4)}` 
                     : `0 4px 20px ${alpha(item.color, 0.15)}`,
                 },
@@ -209,17 +230,17 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
                   left: 0,
                   right: 0,
                   bottom: 0,
-                  background: isActive ? 'none' : `linear-gradient(135deg, ${alpha(item.color, 0.1)} 0%, transparent 100%)`,
+                  background: active ? 'none' : `linear-gradient(135deg, ${alpha(item.color, 0.1)} 0%, transparent 100%)`,
                   opacity: 0,
                   transition: 'opacity 0.3s ease',
                 },
                 '&:hover::before': {
-                  opacity: isActive ? 0 : 1,
+                  opacity: active ? 0 : 1,
                 },
               }}
             >
               {/* Glow effect for active item */}
-              {isActive && (
+              {active && (
                 <motion.div
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
@@ -254,14 +275,14 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
                       minWidth: 18,
                       height: 18,
                       fontWeight: 700,
-                      background: isActive ? 'rgba(255,255,255,0.9)' : '#ef4444',
-                      color: isActive ? item.color : 'white',
-                      border: isActive ? `2px solid ${alpha('#ffffff', 0.3)}` : 'none',
+                      background: active ? 'rgba(255,255,255,0.9)' : '#ef4444',
+                      color: active ? item.color : 'white',
+                      border: active ? `2px solid ${alpha('#ffffff', 0.3)}` : 'none',
                     }
                   }}
                 >
                   <motion.div
-                    animate={isActive ? { 
+                    animate={active ? { 
                       scale: [1, 1.1, 1],
                       rotate: [0, 5, -5, 0] 
                     } : {}}
@@ -290,7 +311,7 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
                         <Typography
                           variant="body2"
                           sx={{
-                            fontWeight: isActive ? 700 : 600,
+                            fontWeight: active ? 700 : 600,
                             fontSize: '0.9rem',
                             lineHeight: 1.2,
                           }}
@@ -302,7 +323,7 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
                         <Typography
                           variant="caption"
                           sx={{
-                            color: isActive ? alpha('#ffffff', 0.8) : alpha('#64748b', 0.7),
+                            color: active ? alpha('#ffffff', 0.8) : alpha('#64748b', 0.7),
                             fontSize: '0.75rem',
                             fontWeight: 500,
                             lineHeight: 1.1,
