@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Box,
   Drawer,
@@ -21,30 +21,25 @@ import {
   Badge,
   Tooltip,
   Paper,
+  Stack,
 } from '@mui/material';
 import {
   Dashboard,
+  BarChart3,
   Store,
   LocalOffer,
   QrCode,
   Receipt,
-  BarChart,
-  Settings,
   Notifications,
+  Settings,
   Help,
   Logout,
   ChevronLeft,
   ChevronRight,
-  ExpandMore,
   TrendingUp,
-  Assessment,
-  AccountCircle,
-  Business,
-  AttachMoney,
-  People,
-  History,
-  Campaign,
-  Analytics,
+  Zap,
+  Users,
+  Activity,
 } from '@mui/icons-material';
 import { useAuth } from '@/hooks/useAuth';
 import { useComercios } from '@/hooks/useComercios';
@@ -62,9 +57,10 @@ interface MenuItem {
   id: string;
   label: string;
   icon: React.ReactNode;
-  badge?: number;
-  children?: MenuItem[];
-  color?: string;
+  badge?: number | string;
+  color: string;
+  gradient?: string;
+  description?: string;
 }
 
 const SIDEBAR_WIDTH = 280;
@@ -81,7 +77,6 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
   const { comercio } = useComercios();
   const { activeBeneficios } = useBeneficios();
   const { validaciones, getStats } = useValidaciones();
-  const [expandedItems, setExpandedItems] = useState<string[]>(['analytics', 'beneficios']);
 
   const stats = getStats();
   const validacionesHoy = validaciones.filter(v => {
@@ -90,116 +85,66 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
     return validacionDate.toDateString() === today.toDateString();
   }).length;
 
-  const handleExpandClick = (itemId: string) => {
-    setExpandedItems(prev => 
-      prev.includes(itemId) 
-        ? prev.filter(id => id !== itemId)
-        : [...prev, itemId]
-    );
-  };
-
   const menuItems: MenuItem[] = [
     {
       id: 'resumen',
-      label: 'Resumen General',
+      label: 'Dashboard',
       icon: <Dashboard />,
-      color: '#06b6d4'
+      color: '#6366f1',
+      gradient: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+      description: 'Vista general',
     },
     {
-      id: 'analytics',
+      id: 'estadisticas',
       label: 'Analytics',
-      icon: <Analytics />,
-      color: '#8b5cf6',
-      children: [
-        {
-          id: 'estadisticas',
-          label: 'Estadísticas',
-          icon: <BarChart />,
-          color: '#06b6d4'
-        },
-        {
-          id: 'reportes',
-          label: 'Reportes',
-          icon: <Assessment />,
-          color: '#f59e0b'
-        },
-        {
-          id: 'tendencias',
-          label: 'Tendencias',
-          icon: <TrendingUp />,
-          color: '#10b981'
-        }
-      ]
+      icon: <BarChart3 />,
+      color: '#06b6d4',
+      gradient: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
+      description: 'Métricas y reportes',
     },
     {
       id: 'perfil',
-      label: 'Perfil del Comercio',
+      label: 'Mi Comercio',
       icon: <Store />,
-      color: '#10b981'
+      color: '#10b981',
+      gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+      description: 'Perfil y configuración',
     },
     {
       id: 'beneficios',
-      label: 'Gestión de Beneficios',
+      label: 'Beneficios',
       icon: <LocalOffer />,
       badge: activeBeneficios.length,
       color: '#f59e0b',
-      children: [
-        {
-          id: 'beneficios-activos',
-          label: 'Beneficios Activos',
-          icon: <LocalOffer />,
-          badge: activeBeneficios.length,
-          color: '#10b981'
-        },
-        {
-          id: 'crear-beneficio',
-          label: 'Crear Beneficio',
-          icon: <Campaign />,
-          color: '#8b5cf6'
-        }
-      ]
+      gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+      description: 'Gestionar ofertas',
     },
     {
-      id: 'validaciones',
-      label: 'Validaciones',
+      id: 'qr-validacion',
+      label: 'Validar QR',
       icon: <QrCode />,
-      badge: validacionesHoy,
       color: '#ec4899',
-      children: [
-        {
-          id: 'qr-validacion',
-          label: 'Validar QR',
-          icon: <QrCode />,
-          color: '#ec4899'
-        },
-        {
-          id: 'historial-validaciones',
-          label: 'Historial',
-          icon: <History />,
-          badge: stats.totalValidaciones,
-          color: '#06b6d4'
-        }
-      ]
+      gradient: 'linear-gradient(135deg, #ec4899 0%, #be185d 100%)',
+      description: 'Escanear códigos',
     },
     {
-      id: 'clientes',
-      label: 'Clientes',
-      icon: <People />,
-      color: '#06b6d4'
-    },
-    {
-      id: 'ingresos',
-      label: 'Ingresos',
-      icon: <AttachMoney />,
-      color: '#10b981'
+      id: 'historial-validaciones',
+      label: 'Validaciones',
+      icon: <Receipt />,
+      badge: validacionesHoy > 0 ? validacionesHoy : undefined,
+      color: '#8b5cf6',
+      gradient: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+      description: 'Historial completo',
     },
     {
       id: 'notificaciones',
       label: 'Notificaciones',
       icon: <Notifications />,
-      badge: 2,
-      color: '#ec4899'
-    }
+      badge: '2',
+      color: '#ef4444',
+      gradient: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+      description: 'Alertas y avisos',
+    },
   ];
 
   const bottomMenuItems: MenuItem[] = [
@@ -207,118 +152,179 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
       id: 'configuracion',
       label: 'Configuración',
       icon: <Settings />,
-      color: '#6b7280'
+      color: '#64748b',
+      gradient: 'linear-gradient(135deg, #64748b 0%, #475569 100%)',
+      description: 'Ajustes del sistema',
     },
     {
       id: 'ayuda',
-      label: 'Ayuda y Soporte',
+      label: 'Ayuda',
       icon: <Help />,
-      color: '#10b981'
+      color: '#06b6d4',
+      gradient: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
+      description: 'Soporte técnico',
     },
-    {
-      id: 'logout',
-      label: 'Cerrar Sesión',
-      icon: <Logout />,
-      color: '#ef4444'
-    }
   ];
 
-  const renderMenuItem = (item: MenuItem, level: number = 0) => {
+  const renderMenuItem = (item: MenuItem, isBottom: boolean = false) => {
     const isActive = activeSection === item.id;
-    const isExpanded = expandedItems.includes(item.id);
-    const hasChildren = item.children && item.children.length > 0;
 
     return (
-      <React.Fragment key={item.id}>
-        <ListItem disablePadding sx={{ display: 'block' }}>
-          <ListItemButton
-            onClick={() => {
-              if (hasChildren) {
-                handleExpandClick(item.id);
-              } else {
-                onMenuClick(item.id);
-              }
-            }}
-            sx={{
-              minHeight: 48,
-              justifyContent: open ? 'initial' : 'center',
-              px: 2.5,
-              py: 1.5,
-              mx: 1,
-              mb: 0.5,
-              borderRadius: 3,
-              ml: level > 0 ? 3 : 1,
-              mr: 1,
-              bgcolor: isActive ? alpha(item.color || '#06b6d4', 0.1) : 'transparent',
-              color: isActive ? (item.color || '#06b6d4') : '#64748b',
-              border: isActive ? `2px solid ${alpha(item.color || '#06b6d4', 0.2)}` : '2px solid transparent',
-              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-              '&:hover': {
-                bgcolor: alpha(item.color || '#06b6d4', 0.08),
-                color: item.color || '#06b6d4',
-                transform: 'translateX(4px)',
-                borderColor: alpha(item.color || '#06b6d4', 0.2),
-              },
-            }}
+      <motion.div
+        key={item.id}
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.3 }}
+        whileHover={{ scale: open ? 1.02 : 1.1 }}
+        whileTap={{ scale: 0.98 }}
+      >
+        <ListItem disablePadding sx={{ mb: 1 }}>
+          <Tooltip
+            title={!open ? item.label : ''}
+            placement="right"
+            arrow
           >
-            <ListItemIcon
+            <ListItemButton
+              onClick={() => onMenuClick(item.id)}
               sx={{
-                minWidth: 0,
-                mr: open ? 3 : 'auto',
-                justifyContent: 'center',
-                color: 'inherit',
-                transition: 'all 0.3s ease',
+                minHeight: 56,
+                justifyContent: open ? 'initial' : 'center',
+                px: open ? 3 : 2,
+                mx: 1,
+                borderRadius: 4,
+                position: 'relative',
+                overflow: 'hidden',
+                background: isActive ? item.gradient : 'transparent',
+                color: isActive ? 'white' : '#64748b',
+                border: isActive ? 'none' : '1px solid transparent',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                '&:hover': {
+                  background: isActive ? item.gradient : alpha(item.color, 0.08),
+                  color: isActive ? 'white' : item.color,
+                  transform: 'translateX(4px)',
+                  boxShadow: isActive 
+                    ? `0 8px 32px ${alpha(item.color, 0.4)}` 
+                    : `0 4px 20px ${alpha(item.color, 0.15)}`,
+                },
+                '&::before': {
+                  content: '""',
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  background: isActive ? 'none' : `linear-gradient(135deg, ${alpha(item.color, 0.1)} 0%, transparent 100%)`,
+                  opacity: 0,
+                  transition: 'opacity 0.3s ease',
+                },
+                '&:hover::before': {
+                  opacity: isActive ? 0 : 1,
+                },
               }}
             >
-              <Badge 
-                badgeContent={item.badge} 
-                color="error" 
-                invisible={!item.badge}
-                sx={{
-                  '& .MuiBadge-badge': {
-                    fontSize: '0.7rem',
-                    minWidth: 16,
-                    height: 16,
-                  }
-                }}
-              >
-                {item.icon}
-              </Badge>
-            </ListItemIcon>
-            <ListItemText 
-              primary={item.label} 
-              sx={{ 
-                opacity: open ? 1 : 0,
-                transition: 'opacity 0.3s ease',
-                '& .MuiListItemText-primary': {
-                  fontWeight: isActive ? 700 : 600,
-                  fontSize: level > 0 ? '0.85rem' : '0.9rem',
-                }
-              }} 
-            />
-            {hasChildren && open && (
-              <IconButton
-                size="small"
-                sx={{ 
-                  color: 'inherit',
-                  transition: 'transform 0.3s ease',
-                  transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
-                }}
-              >
-                <ExpandMore sx={{ fontSize: 18 }} />
-              </IconButton>
-            )}
-          </ListItemButton>
-        </ListItem>
+              {/* Glow effect for active item */}
+              {isActive && (
+                <motion.div
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  style={{
+                    position: 'absolute',
+                    inset: -2,
+                    background: item.gradient,
+                    borderRadius: 16,
+                    filter: 'blur(8px)',
+                    zIndex: -1,
+                  }}
+                />
+              )}
 
-        {hasChildren && (
-          <Collapse in={isExpanded && open} timeout="auto" unmountOnExit>
-            <List component="div" disablePadding>
-              {item.children?.map(child => renderMenuItem(child, level + 1))}
-            </List>
-          </Collapse>
-        )}
-      </React.Fragment>
+              <ListItemIcon
+                sx={{
+                  minWidth: 0,
+                  mr: open ? 3 : 'auto',
+                  justifyContent: 'center',
+                  color: 'inherit',
+                  position: 'relative',
+                  zIndex: 1,
+                }}
+              >
+                <Badge 
+                  badgeContent={item.badge} 
+                  color="error"
+                  invisible={!item.badge}
+                  sx={{
+                    '& .MuiBadge-badge': {
+                      fontSize: '0.7rem',
+                      minWidth: 18,
+                      height: 18,
+                      fontWeight: 700,
+                      background: isActive ? 'rgba(255,255,255,0.9)' : '#ef4444',
+                      color: isActive ? item.color : 'white',
+                      border: isActive ? `2px solid ${alpha('#ffffff', 0.3)}` : 'none',
+                    }
+                  }}
+                >
+                  <motion.div
+                    animate={isActive ? { 
+                      scale: [1, 1.1, 1],
+                      rotate: [0, 5, -5, 0] 
+                    } : {}}
+                    transition={{ 
+                      duration: 2, 
+                      repeat: Infinity, 
+                      repeatType: "reverse" 
+                    }}
+                  >
+                    {item.icon}
+                  </motion.div>
+                </Badge>
+              </ListItemIcon>
+
+              <AnimatePresence>
+                {open && (
+                  <motion.div
+                    initial={{ opacity: 0, width: 0 }}
+                    animate={{ opacity: 1, width: 'auto' }}
+                    exit={{ opacity: 0, width: 0 }}
+                    transition={{ duration: 0.3 }}
+                    style={{ overflow: 'hidden' }}
+                  >
+                    <ListItemText 
+                      primary={
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            fontWeight: isActive ? 700 : 600,
+                            fontSize: '0.9rem',
+                            lineHeight: 1.2,
+                          }}
+                        >
+                          {item.label}
+                        </Typography>
+                      }
+                      secondary={
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            color: isActive ? alpha('#ffffff', 0.8) : alpha('#64748b', 0.7),
+                            fontSize: '0.75rem',
+                            fontWeight: 500,
+                            lineHeight: 1.1,
+                            mt: 0.5,
+                            display: 'block',
+                          }}
+                        >
+                          {item.description}
+                        </Typography>
+                      }
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </ListItemButton>
+          </Tooltip>
+        </ListItem>
+      </motion.div>
     );
   };
 
@@ -328,189 +334,367 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        bgcolor: '#fafbfc',
         background: 'linear-gradient(180deg, #ffffff 0%, #fafbfc 100%)',
-        borderRight: '1px solid #f1f5f9',
         position: 'relative',
         overflow: 'hidden',
       }}
     >
-      {/* Background Pattern */}
+      {/* Animated background pattern */}
       <Box
         sx={{
           position: 'absolute',
           inset: 0,
-          opacity: 0.3,
-          backgroundImage: `radial-gradient(circle at 1px 1px, rgba(6, 182, 212, 0.1) 1px, transparent 0)`,
-          backgroundSize: '20px 20px'
+          opacity: 0.4,
+          background: `
+            radial-gradient(circle at 20% 20%, ${alpha('#6366f1', 0.1)} 0%, transparent 50%),
+            radial-gradient(circle at 80% 80%, ${alpha('#06b6d4', 0.1)} 0%, transparent 50%),
+            radial-gradient(circle at 1px 1px, ${alpha('#e2e8f0', 0.8)} 1px, transparent 0)
+          `,
+          backgroundSize: '400px 400px, 300px 300px, 20px 20px',
+          animation: 'float 20s ease-in-out infinite',
+          '@keyframes float': {
+            '0%, 100%': { transform: 'translate(0, 0) rotate(0deg)' },
+            '33%': { transform: 'translate(10px, -10px) rotate(1deg)' },
+            '66%': { transform: 'translate(-5px, 5px) rotate(-1deg)' },
+          },
         }}
       />
 
       {/* Header */}
-      <Box sx={{ p: 3, position: 'relative', zIndex: 1 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <Box sx={{ p: open ? 3 : 2, position: 'relative', zIndex: 1 }}>
+        <Stack direction="row" alignItems="center" justifyContent="space-between">
+          <AnimatePresence>
+            {open && (
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3 }}
+              >
+                <Stack direction="row" alignItems="center" spacing={2}>
+                  <motion.div
+                    whileHover={{ scale: 1.05, rotate: 5 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Avatar
+                      src={comercio?.logoUrl}
+                      sx={{
+                        width: 48,
+                        height: 48,
+                        background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                        border: '3px solid rgba(255,255,255,0.9)',
+                        boxShadow: '0 8px 32px rgba(99, 102, 241, 0.3)',
+                      }}
+                    >
+                      <Store sx={{ fontSize: 24 }} />
+                    </Avatar>
+                  </motion.div>
+                  <Box>
+                    <Typography 
+                      variant="h6" 
+                      sx={{ 
+                        fontWeight: 900, 
+                        color: '#0f172a', 
+                        fontSize: '1.1rem',
+                        lineHeight: 1.2,
+                      }}
+                    >
+                      {comercio?.nombreComercio || 'Mi Comercio'}
+                    </Typography>
+                    <Typography 
+                      variant="caption" 
+                      sx={{ 
+                        color: '#64748b', 
+                        fontWeight: 600,
+                        fontSize: '0.75rem',
+                      }}
+                    >
+                      Panel de Control
+                    </Typography>
+                  </Box>
+                </Stack>
+              </motion.div>
+            )}
+          </AnimatePresence>
+          
           <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5 }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
           >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Avatar
+            <Tooltip title={open ? 'Contraer' : 'Expandir'}>
+              <IconButton
+                onClick={onToggle}
                 sx={{
-                  width: open ? 48 : 40,
-                  height: open ? 48 : 40,
-                  background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
+                  background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                  color: 'white',
+                  width: 40,
+                  height: 40,
+                  boxShadow: '0 4px 20px rgba(99, 102, 241, 0.3)',
+                  '&:hover': {
+                    background: 'linear-gradient(135deg, #5b21b6 0%, #7c3aed 100%)',
+                    boxShadow: '0 6px 25px rgba(99, 102, 241, 0.4)',
+                  },
                   transition: 'all 0.3s ease',
                 }}
               >
-                <Store sx={{ fontSize: open ? 24 : 20 }} />
-              </Avatar>
-              {open && (
-                <Box>
-                  <Typography variant="h6" sx={{ fontWeight: 900, color: '#0f172a', fontSize: '1.1rem' }}>
-                    {comercio?.nombreComercio || 'Mi Comercio'}
-                  </Typography>
-                  <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>
-                    Panel de Control
-                  </Typography>
-                </Box>
-              )}
-            </Box>
+                {open ? <ChevronLeft /> : <ChevronRight />}
+              </IconButton>
+            </Tooltip>
           </motion.div>
-          
-          <Tooltip title={open ? 'Contraer sidebar' : 'Expandir sidebar'}>
-            <IconButton
-              onClick={onToggle}
-              sx={{
-                bgcolor: alpha('#06b6d4', 0.1),
-                color: '#06b6d4',
-                '&:hover': {
-                  bgcolor: alpha('#06b6d4', 0.2),
-                  transform: 'scale(1.1)',
-                },
-                transition: 'all 0.2s ease',
-              }}
-            >
-              {open ? <ChevronLeft /> : <ChevronRight />}
-            </IconButton>
-          </Tooltip>
-        </Box>
+        </Stack>
 
-        {/* User Profile */}
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
-            <Paper
-              elevation={0}
-              sx={{
-                mt: 3,
-                p: 3,
-                bgcolor: alpha('#06b6d4', 0.05),
-                border: `1px solid ${alpha('#06b6d4', 0.15)}`,
-                borderRadius: 4,
-                position: 'relative',
-                overflow: 'hidden',
-              }}
+        {/* Status Card */}
+        <AnimatePresence>
+          {open && (
+            <motion.div
+              initial={{ opacity: 0, y: 20, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -20, scale: 0.9 }}
+              transition={{ duration: 0.4, delay: 0.1 }}
             >
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Avatar
-                  src={comercio?.logoUrl}
+              <Paper
+                elevation={0}
+                sx={{
+                  mt: 3,
+                  p: 3,
+                  background: 'linear-gradient(135deg, #f8fafc 0%, #ffffff 100%)',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: 3,
+                  position: 'relative',
+                  overflow: 'hidden',
+                }}
+              >
+                {/* Animated background */}
+                <Box
                   sx={{
-                    width: 40,
-                    height: 40,
-                    bgcolor: alpha('#06b6d4', 0.2),
-                    color: '#06b6d4',
-                  }}
-                >
-                  <AccountCircle />
-                </Avatar>
-                <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Typography variant="body2" sx={{ fontWeight: 700, color: '#1e293b', fontSize: '0.9rem' }}>
-                    {comercio?.nombre || user?.email?.split('@')[0] || 'Usuario'}
-                  </Typography>
-                  <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 500 }}>
-                    {comercio?.categoria || 'Comercio'}
-                  </Typography>
-                </Box>
-                <Chip
-                  label={comercio?.estado === 'activo' ? 'Activo' : 'Inactivo'}
-                  size="small"
-                  sx={{
-                    bgcolor: comercio?.estado === 'activo' ? alpha('#10b981', 0.1) : alpha('#f59e0b', 0.1),
-                    color: comercio?.estado === 'activo' ? '#10b981' : '#f59e0b',
-                    fontWeight: 700,
-                    fontSize: '0.7rem',
+                    position: 'absolute',
+                    top: -50,
+                    right: -50,
+                    width: 100,
+                    height: 100,
+                    background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                    borderRadius: '50%',
+                    opacity: 0.1,
+                    animation: 'pulse 3s ease-in-out infinite',
+                    '@keyframes pulse': {
+                      '0%, 100%': { transform: 'scale(1)', opacity: 0.1 },
+                      '50%': { transform: 'scale(1.1)', opacity: 0.2 },
+                    },
                   }}
                 />
-              </Box>
-            </Paper>
-          </motion.div>
-        )}
+                
+                <Stack direction="row" alignItems="center" spacing={2}>
+                  <Avatar
+                    sx={{
+                      width: 40,
+                      height: 40,
+                      background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                      color: 'white',
+                    }}
+                  >
+                    <Activity />
+                  </Avatar>
+                  <Box sx={{ flex: 1 }}>
+                    <Typography 
+                      variant="body2" 
+                      sx={{ 
+                        fontWeight: 700, 
+                        color: '#1e293b', 
+                        fontSize: '0.9rem',
+                        mb: 0.5,
+                      }}
+                    >
+                      Estado: Activo
+                    </Typography>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <Chip
+                        icon={<TrendingUp sx={{ fontSize: 14 }} />}
+                        label={`${validacionesHoy} hoy`}
+                        size="small"
+                        sx={{
+                          bgcolor: alpha('#10b981', 0.1),
+                          color: '#059669',
+                          fontWeight: 700,
+                          fontSize: '0.7rem',
+                          height: 24,
+                          '& .MuiChip-icon': {
+                            fontSize: 14,
+                          }
+                        }}
+                      />
+                      <Box
+                        sx={{
+                          width: 8,
+                          height: 8,
+                          bgcolor: '#10b981',
+                          borderRadius: '50%',
+                          animation: 'blink 2s ease-in-out infinite',
+                          '@keyframes blink': {
+                            '0%, 100%': { opacity: 1 },
+                            '50%': { opacity: 0.3 },
+                          },
+                        }}
+                      />
+                    </Stack>
+                  </Box>
+                </Stack>
+              </Paper>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </Box>
 
-      <Divider sx={{ mx: 2, opacity: 0.5 }} />
+      <Divider sx={{ mx: 2, opacity: 0.3 }} />
 
       {/* Main Navigation */}
       <Box sx={{ flex: 1, overflow: 'auto', py: 2, position: 'relative', zIndex: 1 }}>
-        <List>
+        <List sx={{ px: 1 }}>
           {menuItems.map(item => renderMenuItem(item))}
         </List>
       </Box>
 
-      <Divider sx={{ mx: 2, opacity: 0.5 }} />
+      <Divider sx={{ mx: 2, opacity: 0.3 }} />
 
       {/* Bottom Navigation */}
       <Box sx={{ p: 2, position: 'relative', zIndex: 1 }}>
-        <List>
-          {bottomMenuItems.map(item => renderMenuItem(item))}
+        <List sx={{ px: 1 }}>
+          {bottomMenuItems.map(item => renderMenuItem(item, true))}
+          
+          {/* Logout Button */}
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <ListItem disablePadding sx={{ mt: 2 }}>
+              <Tooltip title={!open ? 'Cerrar Sesión' : ''} placement="right" arrow>
+                <ListItemButton
+                  onClick={() => {/* Handle logout */}}
+                  sx={{
+                    minHeight: 48,
+                    justifyContent: open ? 'initial' : 'center',
+                    px: open ? 3 : 2,
+                    mx: 1,
+                    borderRadius: 3,
+                    color: '#ef4444',
+                    border: '1px solid',
+                    borderColor: alpha('#ef4444', 0.2),
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      bgcolor: alpha('#ef4444', 0.1),
+                      borderColor: '#ef4444',
+                      transform: 'translateX(4px)',
+                    },
+                  }}
+                >
+                  <ListItemIcon
+                    sx={{
+                      minWidth: 0,
+                      mr: open ? 3 : 'auto',
+                      justifyContent: 'center',
+                      color: 'inherit',
+                    }}
+                  >
+                    <Logout />
+                  </ListItemIcon>
+                  <AnimatePresence>
+                    {open && (
+                      <motion.div
+                        initial={{ opacity: 0, width: 0 }}
+                        animate={{ opacity: 1, width: 'auto' }}
+                        exit={{ opacity: 0, width: 0 }}
+                        transition={{ duration: 0.3 }}
+                        style={{ overflow: 'hidden' }}
+                      >
+                        <ListItemText 
+                          primary={
+                            <Typography
+                              variant="body2"
+                              sx={{ fontWeight: 600, fontSize: '0.9rem' }}
+                            >
+                              Cerrar Sesión
+                            </Typography>
+                          }
+                        />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </ListItemButton>
+              </Tooltip>
+            </ListItem>
+          </motion.div>
         </List>
       </Box>
 
-      {/* Quick Stats */}
-      {open && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
-        >
-          <Box sx={{ p: 3, position: 'relative', zIndex: 1 }}>
-            <Paper
-              elevation={0}
-              sx={{
-                p: 3,
-                bgcolor: alpha('#10b981', 0.05),
-                border: `1px solid ${alpha('#10b981', 0.15)}`,
-                borderRadius: 4,
-              }}
-            >
-              <Typography variant="caption" sx={{ color: '#10b981', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-                Validaciones Hoy
-              </Typography>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
-                <Typography variant="h5" sx={{ fontWeight: 900, color: '#1e293b' }}>
-                  {validacionesHoy}
-                </Typography>
+      {/* Quick Stats Footer */}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+          >
+            <Box sx={{ p: 3, position: 'relative', zIndex: 1 }}>
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 3,
+                  background: 'linear-gradient(135deg, #f1f5f9 0%, #ffffff 100%)',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: 3,
+                  position: 'relative',
+                  overflow: 'hidden',
+                }}
+              >
                 <Box
                   sx={{
-                    width: 8,
-                    height: 8,
-                    bgcolor: '#10b981',
+                    position: 'absolute',
+                    top: -30,
+                    left: -30,
+                    width: 60,
+                    height: 60,
+                    background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
                     borderRadius: '50%',
-                    animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                    '@keyframes pulse': {
-                      '0%, 100%': { opacity: 1 },
-                      '50%': { opacity: 0.5 },
-                    },
+                    opacity: 0.1,
                   }}
                 />
-              </Box>
-            </Paper>
-          </Box>
-        </motion.div>
-      )}
+                
+                <Typography 
+                  variant="caption" 
+                  sx={{ 
+                    color: '#06b6d4', 
+                    fontWeight: 700, 
+                    textTransform: 'uppercase', 
+                    letterSpacing: '0.1em',
+                    fontSize: '0.7rem',
+                  }}
+                >
+                  Resumen Rápido
+                </Typography>
+                
+                <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mt: 2 }}>
+                  <Box>
+                    <Typography variant="h6" sx={{ fontWeight: 900, color: '#1e293b', lineHeight: 1 }}>
+                      {stats.totalValidaciones}
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 500 }}>
+                      Total validaciones
+                    </Typography>
+                  </Box>
+                  <Box sx={{ textAlign: 'right' }}>
+                    <Typography variant="h6" sx={{ fontWeight: 900, color: '#1e293b', lineHeight: 1 }}>
+                      {activeBeneficios.length}
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 500 }}>
+                      Beneficios activos
+                    </Typography>
+                  </Box>
+                </Stack>
+              </Paper>
+            </Box>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </Box>
   );
 
@@ -530,7 +714,8 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
           }),
           overflowX: 'hidden',
           border: 'none',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+          boxShadow: '0 0 40px rgba(0,0,0,0.1)',
+          backdropFilter: 'blur(10px)',
         },
       }}
     >

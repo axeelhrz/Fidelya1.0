@@ -1,420 +1,384 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Box,
   Container,
   Typography,
-  Grid,
-  Card,
-  CardContent,
   Avatar,
-  Chip,
-  Button,
-  Stack,
-  Paper,
-  Divider,
-  IconButton,
   alpha,
-  useTheme,
-  Tab,
-  Tabs,
 } from '@mui/material';
 import {
   Store,
-  TrendingUp,
-  QrCode,
-  Receipt,
-  BarChart,
-  Settings,
-  Notifications,
-  LocalOffer,
-  People,
-  AttachMoney,
-  CheckCircle,
-  Warning,
-  Refresh,
-  Download,
-  Share,
+  Security,
 } from '@mui/icons-material';
+import { useAuth } from '@/hooks/useAuth';
 import { useComercios } from '@/hooks/useComercios';
 import { useBeneficios } from '@/hooks/useBeneficios';
 import { useValidaciones } from '@/hooks/useValidaciones';
+
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { ComercioSidebar } from '@/components/layout/ComercioSidebar';
+import { ComercioStats } from '@/components/comercio/ComercioStats';
 import { ComercioProfile } from '@/components/comercio/ComercioProfile';
 import { BeneficiosManagement } from '@/components/comercio/BeneficiosManagement';
 import { QRManagement } from '@/components/comercio/QRManagement';
 import { ValidacionesHistory } from '@/components/comercio/ValidacionesHistory';
-import { ComercioStats } from '@/components/comercio/ComercioStats';
 import { ComercioNotifications } from '@/components/comercio/ComercioNotifications';
 
-interface TabPanelProps {
-  children?: React.ReactNode;
-  index: number;
-  value: number;
-}
-
-function TabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props;
-
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`comercio-tabpanel-${index}`}
-      aria-labelledby={`comercio-tab-${index}`}
-      {...other}
+const LoadingScreen: React.FC<{ message: string }> = ({ message }) => (
+  <Box 
+    sx={{ 
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
+    }}
+  >
+    <motion.div 
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.5 }}
     >
-      {value === index && (
-        <Box sx={{ py: 3 }}>
-          {children}
+      <Box sx={{ textAlign: 'center' }}>
+        <Box sx={{ position: 'relative', mb: 4 }}>
+          <Box
+            sx={{
+              width: 80,
+              height: 80,
+              border: '6px solid #e2e8f0',
+              borderRadius: '50%',
+              borderTopColor: '#06b6d4',
+              borderRightColor: '#0891b2',
+              animation: 'spin 1.5s linear infinite',
+              mx: 'auto',
+              '@keyframes spin': {
+                '0%': { transform: 'rotate(0deg)' },
+                '100%': { transform: 'rotate(360deg)' },
+              },
+            }}
+          />
         </Box>
-      )}
-    </div>
-  );
-}
+        <Typography variant="h4" sx={{ fontWeight: 900, color: '#0f172a', mb: 2 }}>
+          Cargando Panel de Control
+        </Typography>
+        <Typography variant="h6" sx={{ color: '#64748b', fontWeight: 500 }}>
+          {message}
+        </Typography>
+      </Box>
+    </motion.div>
+  </Box>
+);
+
+const AccessDeniedScreen: React.FC = () => (
+  <Box 
+    sx={{ 
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
+    }}
+  >
+    <Container maxWidth="sm">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+      >
+        <Box sx={{ textAlign: 'center' }}>
+          <Avatar
+            sx={{
+              width: 100,
+              height: 100,
+              bgcolor: alpha('#ef4444', 0.1),
+              color: '#ef4444',
+              mx: 'auto',
+              mb: 4,
+            }}
+          >
+            <Security sx={{ fontSize: 50 }} />
+          </Avatar>
+          
+          <Typography variant="h3" sx={{ fontWeight: 900, color: '#0f172a', mb: 2 }}>
+            Acceso Restringido
+          </Typography>
+          <Typography variant="h6" sx={{ color: '#64748b', mb: 4, maxWidth: 400, mx: 'auto' }}>
+            Necesitas permisos de comercio para acceder a este panel de control.
+          </Typography>
+        </Box>
+      </motion.div>
+    </Container>
+  </Box>
+);
+
+// Componente para cada sección del dashboard
+const ComercioSection: React.FC<{ 
+  section: string;
+}> = ({ section }) => {
+  
+  switch (section) {
+    case 'resumen':
+    case 'estadisticas':
+      return <ComercioStats />;
+
+    case 'perfil':
+      return <ComercioProfile />;
+
+    case 'beneficios':
+    case 'beneficios-activos':
+    case 'crear-beneficio':
+      return <BeneficiosManagement />;
+
+    case 'qr-validacion':
+      return <QRManagement />;
+
+    case 'validaciones':
+    case 'historial-validaciones':
+      return <ValidacionesHistory />;
+
+    case 'notificaciones':
+      return <ComercioNotifications />;
+
+    case 'reportes':
+      return (
+        <Container maxWidth="xl" sx={{ py: 4 }}>
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <Box sx={{ mb: 6 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, mb: 4 }}>
+                <Avatar
+                  sx={{
+                    width: 64,
+                    height: 64,
+                    borderRadius: 4,
+                    background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                    boxShadow: '0 12px 40px rgba(245, 158, 11, 0.3)',
+                  }}
+                >
+                  <Store sx={{ fontSize: 32 }} />
+                </Avatar>
+                <Box>
+                  <Typography variant="h3" sx={{ fontWeight: 900, color: '#0f172a', mb: 1 }}>
+                    Reportes Comerciales
+                  </Typography>
+                  <Typography variant="h6" sx={{ color: '#64748b', fontWeight: 600 }}>
+                    Análisis detallado de tu negocio
+                  </Typography>
+                </Box>
+              </Box>
+            </Box>
+          </motion.div>
+          <Box sx={{ textAlign: 'center', py: 8 }}>
+            <Typography variant="h4" sx={{ fontWeight: 700, color: '#1e293b', mb: 2 }}>
+              Reportes Avanzados
+            </Typography>
+            <Typography variant="body1" sx={{ color: '#64748b' }}>
+              Los reportes detallados estarán disponibles próximamente.
+            </Typography>
+          </Box>
+        </Container>
+      );
+
+    case 'tendencias':
+      return (
+        <Container maxWidth="xl" sx={{ py: 4 }}>
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <Box sx={{ mb: 6 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, mb: 4 }}>
+                <Avatar
+                  sx={{
+                    width: 64,
+                    height: 64,
+                    borderRadius: 4,
+                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                    boxShadow: '0 12px 40px rgba(16, 185, 129, 0.3)',
+                  }}
+                >
+                  <Store sx={{ fontSize: 32 }} />
+                </Avatar>
+                <Box>
+                  <Typography variant="h3" sx={{ fontWeight: 900, color: '#0f172a', mb: 1 }}>
+                    Análisis de Tendencias
+                  </Typography>
+                  <Typography variant="h6" sx={{ color: '#64748b', fontWeight: 600 }}>
+                    Patrones y predicciones de tu negocio
+                  </Typography>
+                </Box>
+              </Box>
+            </Box>
+          </motion.div>
+          <Box sx={{ textAlign: 'center', py: 8 }}>
+            <Typography variant="h4" sx={{ fontWeight: 700, color: '#1e293b', mb: 2 }}>
+              Análisis Predictivo
+            </Typography>
+            <Typography variant="body1" sx={{ color: '#64748b' }}>
+              El análisis de tendencias estará disponible próximamente.
+            </Typography>
+          </Box>
+        </Container>
+      );
+
+    case 'clientes':
+      return (
+        <Container maxWidth="xl" sx={{ py: 4 }}>
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <Box sx={{ mb: 6 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, mb: 4 }}>
+                <Avatar
+                  sx={{
+                    width: 64,
+                    height: 64,
+                    borderRadius: 4,
+                    background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
+                    boxShadow: '0 12px 40px rgba(6, 182, 212, 0.3)',
+                  }}
+                >
+                  <Store sx={{ fontSize: 32 }} />
+                </Avatar>
+                <Box>
+                  <Typography variant="h3" sx={{ fontWeight: 900, color: '#0f172a', mb: 1 }}>
+                    Gestión de Clientes
+                  </Typography>
+                  <Typography variant="h6" sx={{ color: '#64748b', fontWeight: 600 }}>
+                    Base de datos de tus clientes
+                  </Typography>
+                </Box>
+              </Box>
+            </Box>
+          </motion.div>
+          <Box sx={{ textAlign: 'center', py: 8 }}>
+            <Typography variant="h4" sx={{ fontWeight: 700, color: '#1e293b', mb: 2 }}>
+              Base de Clientes
+            </Typography>
+            <Typography variant="body1" sx={{ color: '#64748b' }}>
+              La gestión de clientes estará disponible próximamente.
+            </Typography>
+          </Box>
+        </Container>
+      );
+
+    case 'ingresos':
+      return (
+        <Container maxWidth="xl" sx={{ py: 4 }}>
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <Box sx={{ mb: 6 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, mb: 4 }}>
+                <Avatar
+                  sx={{
+                    width: 64,
+                    height: 64,
+                    borderRadius: 4,
+                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                    boxShadow: '0 12px 40px rgba(16, 185, 129, 0.3)',
+                  }}
+                >
+                  <Store sx={{ fontSize: 32 }} />
+                </Avatar>
+                <Box>
+                  <Typography variant="h3" sx={{ fontWeight: 900, color: '#0f172a', mb: 1 }}>
+                    Análisis de Ingresos
+                  </Typography>
+                  <Typography variant="h6" sx={{ color: '#64748b', fontWeight: 600 }}>
+                    Seguimiento financiero detallado
+                  </Typography>
+                </Box>
+              </Box>
+            </Box>
+          </motion.div>
+          <Box sx={{ textAlign: 'center', py: 8 }}>
+            <Typography variant="h4" sx={{ fontWeight: 700, color: '#1e293b', mb: 2 }}>
+              Dashboard Financiero
+            </Typography>
+            <Typography variant="body1" sx={{ color: '#64748b' }}>
+              El análisis de ingresos estará disponible próximamente.
+            </Typography>
+          </Box>
+        </Container>
+      );
+
+    case 'configuracion':
+    case 'ayuda':
+      return (
+        <Container maxWidth="xl" sx={{ py: 4 }}>
+          <Box sx={{ textAlign: 'center', py: 8 }}>
+            <Typography variant="h4" sx={{ fontWeight: 700, color: '#1e293b', mb: 2 }}>
+              {section === 'configuracion' ? 'Configuración del Comercio' : 'Ayuda y Soporte'}
+            </Typography>
+            <Typography variant="body1" sx={{ color: '#64748b' }}>
+              Esta funcionalidad estará disponible próximamente.
+            </Typography>
+          </Box>
+        </Container>
+      );
+
+    default:
+      return (
+        <Container maxWidth="xl" sx={{ py: 4 }}>
+          <Box sx={{ textAlign: 'center', py: 8 }}>
+            <Typography variant="h4" sx={{ fontWeight: 700, color: '#1e293b', mb: 2 }}>
+              Sección en Desarrollo
+            </Typography>
+            <Typography variant="body1" sx={{ color: '#64748b' }}>
+              Esta funcionalidad estará disponible próximamente.
+            </Typography>
+          </Box>
+        </Container>
+      );
+  }
+};
 
 export default function ComercioDashboard() {
-  const theme = useTheme();
-  const [activeTab, setActiveTab] = useState(0);
+  const { user, loading: authLoading } = useAuth();
   const { comercio, loading: comercioLoading } = useComercios();
-  const { beneficios, activeBeneficios } = useBeneficios();
-  const { validaciones, getStats } = useValidaciones();
+  const { loading: beneficiosLoading } = useBeneficios();
+  const { loading: validacionesLoading } = useValidaciones();
 
-  const [stats, setStats] = useState({
-    totalValidaciones: 0,
-    validacionesHoy: 0,
-    validacionesMes: 0,
-    beneficiosActivos: 0,
-    tasaConversion: 0,
-  });
+  const [activeSection, setActiveSection] = useState('resumen');
 
-  useEffect(() => {
-    const validacionStats = getStats();
-    setStats({
-      totalValidaciones: validacionStats.totalValidaciones,
-      validacionesHoy: validaciones.filter(v => {
-        const today = new Date();
-        const validacionDate = v.fechaHora.toDate();
-        return validacionDate.toDateString() === today.toDateString();
-      }).length,
-      validacionesMes: validaciones.filter(v => {
-        const now = new Date();
-        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        return v.fechaHora.toDate() >= startOfMonth;
-      }).length,
-      beneficiosActivos: activeBeneficios.length,
-      tasaConversion: validacionStats.totalValidaciones > 0 
-        ? (validacionStats.validacionesExitosas / validacionStats.totalValidaciones) * 100 
-        : 0,
-    });
-  }, [validaciones, activeBeneficios, getStats]);
+  const loading = authLoading || comercioLoading || beneficiosLoading || validacionesLoading;
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    setActiveTab(newValue);
-  };
+  // Redirect if not authenticated
+  if (!authLoading && !user) {
+    return <AccessDeniedScreen />;
+  }
 
-  const tabs = [
-    { label: 'Resumen', icon: <BarChart />, component: ComercioStats },
-    { label: 'Perfil', icon: <Store />, component: ComercioProfile },
-    { label: 'Beneficios', icon: <LocalOffer />, component: BeneficiosManagement },
-    { label: 'QR Validación', icon: <QrCode />, component: QRManagement },
-    { label: 'Validaciones', icon: <Receipt />, component: ValidacionesHistory },
-    { label: 'Notificaciones', icon: <Notifications />, component: ComercioNotifications },
-  ];
-
-  if (comercioLoading) {
-    return (
-      <Box sx={{ 
-        minHeight: '100vh', 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center',
-        bgcolor: '#fafbfc'
-      }}>
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-        >
-          <Avatar sx={{ width: 60, height: 60, bgcolor: '#06b6d4' }}>
-            <Store sx={{ fontSize: 30 }} />
-          </Avatar>
-        </motion.div>
-      </Box>
-    );
+  if (loading) {
+    return <LoadingScreen message="Preparando tu panel de control comercial..." />;
   }
 
   return (
-    <Box sx={{ 
-      minHeight: '100vh',
-      bgcolor: '#fafbfc',
-      background: 'linear-gradient(135deg, #fafbfc 0%, #f8fafc 100%)',
-    }}>
-      <Container maxWidth="xl" sx={{ py: 4 }}>
-        {/* Header */}
+    <DashboardLayout 
+      activeSection={activeSection} 
+      onSectionChange={setActiveSection}
+      sidebarComponent={ComercioSidebar}
+    >
+      <AnimatePresence mode="wait">
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <Paper
-            elevation={0}
-            sx={{
-              p: 4,
-              mb: 4,
-              background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
-              color: 'white',
-              borderRadius: 4,
-              position: 'relative',
-              overflow: 'hidden',
-            }}
-          >
-            {/* Background Pattern */}
-            <Box
-              sx={{
-                position: 'absolute',
-                inset: 0,
-                opacity: 0.1,
-                backgroundImage: `radial-gradient(circle at 1px 1px, white 1px, transparent 0)`,
-                backgroundSize: '20px 20px'
-              }}
-            />
-            
-            <Box sx={{ position: 'relative', zIndex: 1 }}>
-              <Grid container spacing={3} alignItems="center">
-                <Grid item xs={12} md={8}>
-                  <Stack direction="row" spacing={3} alignItems="center">
-                    <Avatar
-                      src={comercio?.logoUrl}
-                      sx={{
-                        width: 80,
-                        height: 80,
-                        bgcolor: alpha('#ffffff', 0.2),
-                        border: '3px solid rgba(255,255,255,0.3)',
-                      }}
-                    >
-                      <Store sx={{ fontSize: 40 }} />
-                    </Avatar>
-                    <Box>
-                      <Typography variant="h4" sx={{ fontWeight: 900, mb: 1 }}>
-                        {comercio?.nombreComercio || 'Mi Comercio'}
-                      </Typography>
-                      <Typography variant="h6" sx={{ opacity: 0.9, mb: 2 }}>
-                        {comercio?.categoria || 'Categoría no definida'}
-                      </Typography>
-                      <Stack direction="row" spacing={2}>
-                        <Chip
-                          label={comercio?.estado === 'activo' ? 'Activo' : 'Inactivo'}
-                          color={comercio?.estado === 'activo' ? 'success' : 'warning'}
-                          sx={{ 
-                            bgcolor: comercio?.estado === 'activo' ? '#10b981' : '#f59e0b',
-                            color: 'white',
-                            fontWeight: 600
-                          }}
-                        />
-                        <Chip
-                          label={`${comercio?.asociacionesVinculadas?.length || 0} Asociaciones`}
-                          sx={{ 
-                            bgcolor: alpha('#ffffff', 0.2),
-                            color: 'white',
-                            fontWeight: 600
-                          }}
-                        />
-                      </Stack>
-                    </Box>
-                  </Stack>
-                </Grid>
-                <Grid item xs={12} md={4}>
-                  <Stack spacing={2}>
-                    <Box sx={{ textAlign: 'right' }}>
-                      <Typography variant="h3" sx={{ fontWeight: 900 }}>
-                        {stats.validacionesHoy}
-                      </Typography>
-                      <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                        Validaciones hoy
-                      </Typography>
-                    </Box>
-                    <Box sx={{ textAlign: 'right' }}>
-                      <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                        {stats.beneficiosActivos}
-                      </Typography>
-                      <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                        Beneficios activos
-                      </Typography>
-                    </Box>
-                  </Stack>
-                </Grid>
-              </Grid>
-            </Box>
-          </Paper>
-        </motion.div>
-
-        {/* Quick Stats */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-        >
-          <Grid container spacing={3} sx={{ mb: 4 }}>
-            {[
-              {
-                title: 'Total Validaciones',
-                value: stats.totalValidaciones,
-                icon: <Receipt />,
-                color: '#06b6d4',
-                change: '+12%'
-              },
-              {
-                title: 'Validaciones del Mes',
-                value: stats.validacionesMes,
-                icon: <TrendingUp />,
-                color: '#10b981',
-                change: '+8%'
-              },
-              {
-                title: 'Tasa de Conversión',
-                value: `${stats.tasaConversion.toFixed(1)}%`,
-                icon: <CheckCircle />,
-                color: '#8b5cf6',
-                change: '+5%'
-              },
-              {
-                title: 'Beneficios Activos',
-                value: stats.beneficiosActivos,
-                icon: <LocalOffer />,
-                color: '#f59e0b',
-                change: '0%'
-              },
-            ].map((stat, index) => (
-              <Grid item xs={12} sm={6} md={3} key={index}>
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.3, delay: index * 0.1 }}
-                >
-                  <Card
-                    elevation={0}
-                    sx={{
-                      p: 3,
-                      height: '100%',
-                      background: 'white',
-                      border: '1px solid #f1f5f9',
-                      borderRadius: 3,
-                      transition: 'all 0.3s ease',
-                      '&:hover': {
-                        transform: 'translateY(-4px)',
-                        boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
-                        borderColor: stat.color,
-                      }
-                    }}
-                  >
-                    <Stack direction="row" spacing={2} alignItems="center">
-                      <Avatar
-                        sx={{
-                          bgcolor: alpha(stat.color, 0.1),
-                          color: stat.color,
-                          width: 56,
-                          height: 56,
-                        }}
-                      >
-                        {stat.icon}
-                      </Avatar>
-                      <Box sx={{ flex: 1 }}>
-                        <Typography variant="h4" sx={{ fontWeight: 900, color: '#1e293b' }}>
-                          {stat.value}
-                        </Typography>
-                        <Typography variant="body2" sx={{ color: '#64748b', mb: 1 }}>
-                          {stat.title}
-                        </Typography>
-                        <Chip
-                          label={stat.change}
-                          size="small"
-                          sx={{
-                            bgcolor: stat.change.startsWith('+') ? alpha('#10b981', 0.1) : alpha('#ef4444', 0.1),
-                            color: stat.change.startsWith('+') ? '#10b981' : '#ef4444',
-                            fontWeight: 600,
-                            fontSize: '0.7rem',
-                          }}
-                        />
-                      </Box>
-                    </Stack>
-                  </Card>
-                </motion.div>
-              </Grid>
-            ))}
-          </Grid>
-        </motion.div>
-
-        {/* Navigation Tabs */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
-          <Paper
-            elevation={0}
-            sx={{
-              mb: 3,
-              background: 'white',
-              border: '1px solid #f1f5f9',
-              borderRadius: 3,
-            }}
-          >
-            <Tabs
-              value={activeTab}
-              onChange={handleTabChange}
-              variant="scrollable"
-              scrollButtons="auto"
-              sx={{
-                '& .MuiTab-root': {
-                  minHeight: 72,
-                  textTransform: 'none',
-                  fontWeight: 600,
-                  fontSize: '0.9rem',
-                  color: '#64748b',
-                  '&.Mui-selected': {
-                    color: '#06b6d4',
-                  }
-                },
-                '& .MuiTabs-indicator': {
-                  backgroundColor: '#06b6d4',
-                  height: 3,
-                  borderRadius: '3px 3px 0 0',
-                }
-              }}
-            >
-              {tabs.map((tab, index) => (
-                <Tab
-                  key={index}
-                  label={tab.label}
-                  icon={tab.icon}
-                  iconPosition="start"
-                  sx={{
-                    '& .MuiTab-iconWrapper': {
-                      marginRight: 1,
-                      marginBottom: 0,
-                    }
-                  }}
-                />
-              ))}
-            </Tabs>
-          </Paper>
-        </motion.div>
-
-        {/* Tab Content */}
-        <motion.div
-          key={activeTab}
+          key={activeSection}
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -20 }}
           transition={{ duration: 0.3 }}
         >
-          {tabs.map((tab, index) => (
-            <TabPanel key={index} value={activeTab} index={index}>
-              <tab.component />
-            </TabPanel>
-          ))}
+          <ComercioSection section={activeSection} />
         </motion.div>
-      </Container>
-    </Box>
+      </AnimatePresence>
+    </DashboardLayout>
   );
 }
