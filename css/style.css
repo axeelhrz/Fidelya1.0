@@ -291,32 +291,64 @@ transform: translateZ(0) scale(1.001);
 filter: brightness(0.7) contrast(0.8) grayscale(1);
 }
 
-/* Soporte para WebP con optimización */
+/* ===== CONFIGURACIÓN DE IMÁGENES POR DATA-FEATURE - CORREGIDO ===== */
+
+/* Horario */
+.feature[data-feature="schedule"] .phone__app-image {
+background-image: url('../assets/phones/Horario.avif');
+}
+
+/* Estaciones */
+.feature[data-feature="stations"] .phone__app-image {
+background-image: url('../assets/phones/Estaciones.avif');
+}
+
+/* Calendario */
+.feature[data-feature="calendar"] .phone__app-image {
+background-image: url('../assets/phones/Calendario.avif');
+}
+
+/* Registro */
+.feature[data-feature="log"] .phone__app-image {
+background-image: url('../assets/phones/Registro.avif');
+}
+
+/* Notificaciones */
+.feature[data-feature="notifications"] .phone__app-image {
+background-image: url('../assets/phones/Notificaciones.avif');
+}
+
+/* Referidos */
+.feature[data-feature="referrals"] .phone__app-image {
+background-image: url('../assets/phones/Referidos.avif');
+}
+
+/* Soporte para WebP */
 .webp .hero__phone-app-image {
 background-image: url('../assets/phones/Hero.webp');
 }
 
-.webp .feature:nth-child(1) .phone__app-image {
+.webp .feature[data-feature="schedule"] .phone__app-image {
 background-image: url('../assets/phones/Horario.webp');
 }
 
-.webp .feature:nth-child(2) .phone__app-image {
+.webp .feature[data-feature="stations"] .phone__app-image {
 background-image: url('../assets/phones/Estaciones.webp');
 }
 
-.webp .feature:nth-child(3) .phone__app-image {
+.webp .feature[data-feature="calendar"] .phone__app-image {
 background-image: url('../assets/phones/Calendario.webp');
 }
 
-.webp .feature:nth-child(4) .phone__app-image {
+.webp .feature[data-feature="log"] .phone__app-image {
 background-image: url('../assets/phones/Registro.webp');
 }
 
-.webp .feature:nth-child(5) .phone__app-image {
+.webp .feature[data-feature="notifications"] .phone__app-image {
 background-image: url('../assets/phones/Notificaciones.webp');
 }
 
-.webp .feature:nth-child(6) .phone__app-image {
+.webp .feature[data-feature="referrals"] .phone__app-image {
 background-image: url('../assets/phones/Referidos.webp');
 }
 
@@ -325,52 +357,27 @@ background-image: url('../assets/phones/Referidos.webp');
 background-image: url('../assets/phones/Hero.avif');
 }
 
-.avif .feature:nth-child(1) .phone__app-image {
+.avif .feature[data-feature="schedule"] .phone__app-image {
 background-image: url('../assets/phones/Horario.avif');
 }
 
-.avif .feature:nth-child(2) .phone__app-image {
+.avif .feature[data-feature="stations"] .phone__app-image {
 background-image: url('../assets/phones/Estaciones.avif');
 }
 
-.avif .feature:nth-child(3) .phone__app-image {
+.avif .feature[data-feature="calendar"] .phone__app-image {
 background-image: url('../assets/phones/Calendario.avif');
 }
 
-.avif .feature:nth-child(4) .phone__app-image {
+.avif .feature[data-feature="log"] .phone__app-image {
 background-image: url('../assets/phones/Registro.avif');
 }
 
-.avif .feature:nth-child(5) .phone__app-image {
+.avif .feature[data-feature="notifications"] .phone__app-image {
 background-image: url('../assets/phones/Notificaciones.avif');
 }
 
-.avif .feature:nth-child(6) .phone__app-image {
-background-image: url('../assets/phones/Referidos.avif');
-}
-
-/* Fallbacks para navegadores sin soporte de formatos modernos */
-.feature:nth-child(1) .phone__app-image {
-background-image: url('../assets/phones/Horario.avif');
-}
-
-.feature:nth-child(2) .phone__app-image {
-background-image: url('../assets/phones/Estaciones.avif');
-}
-
-.feature:nth-child(3) .phone__app-image {
-background-image: url('../assets/phones/Calendario.avif');
-}
-
-.feature:nth-child(4) .phone__app-image {
-background-image: url('../assets/phones/Registro.avif');
-}
-
-.feature:nth-child(5) .phone__app-image {
-background-image: url('../assets/phones/Notificaciones.avif');
-}
-
-.feature:nth-child(6) .phone__app-image {
+.avif .feature[data-feature="referrals"] .phone__app-image {
 background-image: url('../assets/phones/Referidos.avif');
 }
 
@@ -1994,27 +2001,27 @@ rgba(255, 69, 105, 0.02) 100%
 );
 }
 
-.feature:nth-child(1) .phone {
+.feature[data-feature="schedule"] .phone {
 filter: drop-shadow(0 0 25px rgba(255, 69, 105, 0.12));
 }
 
-.feature:nth-child(2) .phone {
+.feature[data-feature="stations"] .phone {
 filter: drop-shadow(0 0 25px rgba(255, 23, 68, 0.12));
 }
 
-.feature:nth-child(3) .phone {
+.feature[data-feature="calendar"] .phone {
 filter: drop-shadow(0 0 25px rgba(255, 45, 107, 0.12));
 }
 
-.feature:nth-child(4) .phone {
+.feature[data-feature="log"] .phone {
 filter: drop-shadow(0 0 25px rgba(184, 0, 46, 0.12));
 }
 
-.feature:nth-child(5) .phone {
+.feature[data-feature="notifications"] .phone {
 filter: drop-shadow(0 0 25px rgba(255, 69, 105, 0.12));
 }
 
-.feature:nth-child(6) .phone {
+.feature[data-feature="referrals"] .phone {
 filter: drop-shadow(0 0 25px rgba(255, 45, 85, 0.15));
 }
 
@@ -2038,7 +2045,7 @@ animation: feature-ambient-glow 10s ease-in-out infinite;
 filter: blur(20px);
 }
 
-.feature:nth-child(6) .phone::before {
+.feature[data-feature="referrals"] .phone::before {
 background: radial-gradient(ellipse, 
 rgba(255, 45, 85, 0.1) 0%,
 rgba(255, 45, 85, 0.05) 40%,
