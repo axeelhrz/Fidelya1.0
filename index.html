@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     
     <!-- SEO Optimizado -->
     <title data-translate="page-title">StarFlex - Automatiza tus Bloques de Amazon Flex | Prueba Gratis</title>
@@ -24,61 +24,32 @@
     <link rel="apple-touch-icon" sizes="180x180" href="./assets/icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="./assets/icon.png">
     
-    <!-- Preload de recursos críticos - OPTIMIZADO PARA ELIMINAR DELAY -->
-    <link rel="preload" href="./assets/phones/Hero.avif" as="image" type="image/avif">
-    <link rel="preload" href="./assets/phones/Hero.webp" as="image" type="image/webp">
+    <!-- Preload de recursos críticos optimizado para móvil -->
     <link rel="preload" href="./assets/phones/Hero.jpg" as="image" type="image/jpeg">
-    <link rel="preload" href="./assets/Hero.mp4" as="video" type="video/mp4">
-    <link rel="preload" href="./assets/logo.avif" as="image" type="image/avif">
-    <link rel="preload" href="./assets/logo.webp" as="image" type="image/webp">
     <link rel="preload" href="./assets/logo.png" as="image" type="image/png">
     
-    <!-- Fuentes Google optimizadas -->
+    <!-- Fuentes Google optimizadas para móvil -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
-    <!-- CSS -->
+    <!-- CSS optimizado -->
     <link rel="stylesheet" href="css/style.css">
+    <!-- CSS móvil cargado condicionalmente -->
+    <link rel="stylesheet" href="css/mobile-optimizations.css" media="screen and (max-width: 1023px)">
     
-    <!-- Script para detección de formatos de imagen -->
-    <script>
-        // Detección temprana de soporte de formatos
-        (function() {
-            function supportsFormat(format, callback) {
-                const img = new Image();
-                img.onload = img.onerror = function() {
-                    callback(img.width > 0 && img.height > 0);
-                };
-                img.src = format;
-            }
-            
-            // Detectar AVIF
-            supportsFormat('data:image/avif;base64,AAAAIGZ0eXBhdmlmAAAAAGF2aWZtaWYxbWlhZk1BMUIAAADybWV0YQAAAAAAAAAoaGRscgAAAAAAAAAAcGljdAAAAAAAAAAAAAAAAGxpYmF2aWYAAAAADnBpdG0AAAAAAAEAAAAeaWxvYwAAAABEAAABAAEAAAABAAABGgAAAB0AAAAoaWluZgAAAAAAAQAAABppbmZlAgAAAAABAABhdjAxQ29sb3IAAAAAamlwcnAAAABLaXBjbwAAABRpc3BlAAAAAAAAAAIAAAACAAAAEHBpeGkAAAAAAwgICAAAAAxhdjFDgQ0MAAAAABNjb2xybmNseAACAAIAAYAAAAAXaXBtYQAAAAAAAAABAAEEAQKDBAAAACVtZGF0EgAKCBgABogQEAwgMg8f8D///8WfhwB8+ErK42A=', function(supported) {
-                if (supported) {
-                    document.documentElement.classList.add('avif');
-                } else {
-                    document.documentElement.classList.add('no-avif');
-                }
-            });
-            
-            // Detectar WebP
-            supportsFormat('data:image/webp;base64,UklGRjoAAABXRUJQVlA4IC4AAACyAgCdASoCAAIALmk0mk0iIiIiIgBoSygABc6WWgAA/veff/0PP8bA//LwYAAA', function(supported) {
-                if (supported) {
-                    document.documentElement.classList.add('webp');
-                } else {
-                    document.documentElement.classList.add('no-webp');
-                }
-            });
-        })();
-    </script>
+    <!-- Optimización para dispositivos móviles -->
+    <meta name="theme-color" content="#FF2D55">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="format-detection" content="telephone=no">
 </head>
 
 <body>
-    <!-- Canvas de fondo futurista -->
+    <!-- Canvas de fondo futurista optimizado -->
     <div class="bg-canvas"></div>
     
-    <!-- Botón de Cambio de Idioma Independiente - POSICIÓN AJUSTADA -->
+    <!-- Botón de Cambio de Idioma Independiente optimizado para móvil -->
     <div class="language-switcher" id="language-switcher">
         <button class="language-switcher__btn" id="language-switcher-btn" aria-label="Cambiar idioma">
             <div class="language-switcher__icon">
@@ -106,18 +77,15 @@
         </div>
     </div>
     
-    <!-- Header Futurista Flotante -->
+    <!-- Header optimizado para móvil -->
     <header class="header" id="header">
         <nav class="nav">
-            <!-- Lado izquierdo: Logo -->
-            <div class="nav__left">
-                <!-- Logo flotante limpio optimizado -->
-                <div class="nav__brand">
-                    <div class="nav__logo image-optimized" tabindex="0" role="button" aria-label="Starflex Logo"></div>
-                </div>
+            <!-- Logo optimizado -->
+            <div class="nav__brand">
+                <div class="nav__logo image-optimized" tabindex="0" role="button" aria-label="Starflex Logo"></div>
             </div>
             
-            <!-- Navegación centrada ultra futurista -->
+            <!-- Navegación optimizada para móvil -->
             <div class="nav__menu" id="nav-menu">
                 <ul class="nav__list">
                     <li><a href="#home" class="nav__link" data-translate="nav-home">Inicio</a></li>
@@ -128,12 +96,12 @@
                 </ul>
             </div>
             
-            <!-- Botón CTA flotante (lado derecho) -->
+            <!-- Botón CTA (oculto en móvil) -->
             <div class="nav__cta">
                 <a href="https://starflex.web.app/" class="btn btn--primary" data-translate="nav-cta">Comienza tu prueba gratuita</a>
             </div>
             
-            <!-- Toggle móvil flotante -->
+            <!-- Toggle móvil optimizado -->
             <div class="nav__toggle" id="nav-toggle">
                 <span class="nav__toggle-line"></span>
                 <span class="nav__toggle-line"></span>
@@ -142,12 +110,8 @@
         </nav>
     </header>
 
-    <!-- Hero Section con efectos de fondo -->
+    <!-- Hero Section optimizado para móvil -->
     <section class="hero" id="home">
-        <!-- Orbes flotantes adicionales -->
-        <div class="floating-orb-2"></div>
-        <div class="floating-orb-3"></div>
-
         <div class="container">
             <div class="hero__container">
                 <div class="hero__content">
@@ -196,14 +160,13 @@
                     </div>
                 </div>
 
-                <!-- iPhone Optimizado con Video - CARGA INMEDIATA SIN DELAY -->
+                <!-- iPhone optimizado para móvil -->
                 <div class="hero__media">
                     <div class="hero__phone-container">
                         <div class="hero__phone">
-                            <!-- Pantalla limpia con video -->
                             <div class="hero__phone-screen">
-                                <!-- Contenido de la app con video -->
                                 <div class="hero__phone-content">
+                                    <!-- Video deshabilitado en móvil para mejor rendimiento -->
                                     <video 
                                         class="hero__phone-video" 
                                         id="hero-video"
@@ -211,13 +174,14 @@
                                         muted 
                                         loop 
                                         playsinline
-                                        preload="auto"
+                                        preload="none"
                                         poster="./assets/phones/Hero.jpg"
+                                        style="display: none;"
                                     >
                                         <source src="./assets/phones/Hero.mp4" type="video/mp4">
-                                        <!-- Fallback para navegadores sin soporte de video -->
-                                        <div class="hero__phone-app-image image-optimized" role="img" aria-label="Interfaz principal de StarFlex" loading="eager"></div>
                                     </video>
+                                    <!-- Imagen de fallback siempre visible en móvil -->
+                                    <div class="hero__phone-app-image image-optimized" role="img" aria-label="Interfaz principal de StarFlex" loading="eager"></div>
                                 </div>
                             </div>
                         </div>
@@ -227,7 +191,10 @@
         </div>
     </section>
 
-    <!-- Sección Características con marcos optimizados -->
+    <!-- Resto de las secciones optimizadas... -->
+    <!-- (El resto del HTML permanece igual pero con las optimizaciones aplicadas) -->
+
+    <!-- Sección Características optimizada para móvil -->
     <section class="features" id="features">
         <div class="container">
             <div class="features__header">
@@ -255,7 +222,6 @@
 
                     <div class="feature__phone">
                         <div class="phone">
-                            <!-- Pantalla limpia optimizada -->
                             <div class="phone__screen">
                                 <div class="phone__content">
                                     <div class="phone__app-image image-optimized" role="img" aria-label="Pantalla de configuración de horarios en StarFlex" loading="lazy"></div>
@@ -373,7 +339,7 @@
                     </div>
                 </div>
 
-                <!-- Feature 6: Sistema de Referidos - ESTILO UNIFICADO -->
+                <!-- Feature 6: Sistema de Referidos -->
                 <div class="feature" data-feature="referrals">
                     <div class="feature__content">
                         <h3 class="feature__title" data-translate="feature-referrals-title">REFERIDOS</h3>
@@ -381,6 +347,7 @@
                             Invitá a otros usuarios a unirse a Starflex y obtené beneficios exclusivos por cada referido que se registre.
                         </p>
                         <ul class="feature__list">
+                            <li class="feature__list-item" data-translate
                             <li class="feature__list-item" data-translate="feature-referrals-item-1">Enlace único de referido personalizado</li>
                             <li class="feature__list-item" data-translate="feature-referrals-item-2">Gana 1 semana gratis por cada referido</li>
                             <li class="feature__list-item" data-translate="feature-referrals-item-3">Código QR para compartir fácilmente</li>
@@ -401,10 +368,9 @@
         </div>
     </section>
 
-    <!-- ===== SECCIÓN DE VIDEOS FUTURISTA ===== -->
+    <!-- Sección de Videos optimizada para móvil -->
     <section class="videos" id="videos">
         <div class="container">
-            <!-- Header de la sección -->
             <div class="videos__header">
                 <div class="videos__badge">
                     <span class="videos__badge-icon">▶</span>
@@ -422,17 +388,15 @@
                 </p>
             </div>
 
-            <!-- Video principal con efectos futuristas -->
             <div class="videos__main-container">
                 <div class="videos__main-wrapper">
-                    <!-- Efectos de fondo del video -->
                     <div class="videos__bg-effects">
                         <div class="videos__orb videos__orb--1"></div>
                         <div class="videos__orb videos__orb--2"></div>
                         <div class="videos__orb videos__orb--3"></div>
                         <div class="videos__grid-overlay"></div>
                     </div>
-                    <!-- Contenedor del video principal -->
+                    
                     <div class="videos__player-container">
                         <div class="videos__player-frame">
                             <video 
@@ -446,7 +410,6 @@
                                 <p data-translate="video-not-supported">Tu navegador no soporta videos HTML5. <a href="./assets/StarFlex.mp4">Descargar video</a>.</p>
                             </video>
                             
-                            <!-- Overlay de play personalizado -->
                             <div class="videos__play-overlay" id="play-overlay">
                                 <div class="videos__play-button">
                                     <div class="videos__play-icon">
@@ -462,7 +425,6 @@
                                 </div>
                             </div>
 
-                            <!-- Indicadores de progreso futuristas -->
                             <div class="videos__progress-indicators">
                                 <div class="videos__progress-bar">
                                     <div class="videos__progress-fill"></div>
@@ -474,7 +436,6 @@
                             </div>
                         </div>
 
-                        <!-- Información del video -->
                         <div class="videos__info">
                             <div class="videos__info-main">
                                 <h3 class="videos__info-title" data-translate="video-info-title">StarFlex Demo Completo</h3>
@@ -488,7 +449,6 @@
                 </div>
             </div>
 
-            <!-- CTA de la sección de videos -->
             <div class="videos__cta">
                 <div class="videos__cta-content">
                     <h3 class="videos__cta-title" data-translate="videos-cta-title">¿Listo para Transformar tus Ganancias?</h3>
@@ -509,7 +469,7 @@
         </div>
     </section>
 
-    <!-- Sección FAQ -->
+    <!-- Sección FAQ optimizada para móvil -->
     <section class="faq" id="faq">
         <div class="container">
             <div class="faq__header">
@@ -518,7 +478,6 @@
                     Encuentra respuestas claras a las dudas más comunes sobre StarFlex y descubre cómo transformar tu experiencia con Amazon Flex.
                 </p>
                 
-                <!-- Barra de búsqueda -->
                 <div class="faq__search-container">
                     <input 
                         type="text" 
@@ -611,7 +570,6 @@
                     </div>
                 </div>
 
-                <!-- Mensaje de no resultados -->
                 <div class="faq__no-results" id="faq-no-results">
                     <div class="faq__no-results-text" data-translate="faq-no-results">No se encontraron preguntas que coincidan con tu búsqueda</div>
                     <div class="faq__no-results-suggestion" data-translate="faq-no-results-suggestion">Intenta con términos diferentes o contacta nuestro soporte</div>
@@ -620,17 +578,15 @@
         </div>
     </section>
 
-    <!-- ===== SECCIÓN DE CONTACTO FUTURISTA ===== -->
+    <!-- Sección de Contacto completamente rediseñada para móvil -->
     <section class="contact" id="contact">
         <div class="container">
-            <!-- Efectos de fondo -->
             <div class="contact__bg-effects">
                 <div class="contact__orb contact__orb--1"></div>
                 <div class="contact__orb contact__orb--2"></div>
                 <div class="contact__orb contact__orb--3"></div>
             </div>
 
-            <!-- Header de contacto -->
             <div class="contact__header">
                 <div class="contact__badge">
                     <span data-translate="contact-badge">Conecta con el Futuro</span>
@@ -649,7 +605,7 @@
                 </p>
             </div>
 
-            <!-- Grid de canales de contacto -->
+            <!-- Grid de contactos completamente rediseñado para móvil -->
             <div class="contact__grid">
                 <!-- Canal de WhatsApp -->
                 <div class="contact__channel" data-channel="whatsapp">
@@ -659,13 +615,13 @@
                         </svg>
                     </div>
                     <div class="contact__channel-content">
-                        <h3 class="contact__channel-title" data-translate="contact-whatsapp-title">Canales de noticias de WhatsApp</h3>
-                        <p class="contact__channel-description" data-translate="contact-whatsapp-description">Únete a nuestro canal de WhatsApp para recibir las últimas actualizaciones y mejores bloques disponibles</p>
-                        <a href="https://www.whatsapp.com/channel/0029VaL0DdmIyPtQxdrlHm1d" target="_blank" rel="noopener noreferrer" class="contact__channel-btn">
-                            <span data-translate="contact-whatsapp-btn">Unirse al Canal</span>
-                            <div class="contact__channel-arrow">→</div>
-                        </a>
+                        <h3 class="contact__channel-title" data-translate="contact-whatsapp-title">WhatsApp</h3>
+                        <p class="contact__channel-description" data-translate="contact-whatsapp-description">Canal de noticias</p>
                     </div>
+                    <a href="https://www.whatsapp.com/channel/0029VaL0DdmIyPtQxdrlHm1d" target="_blank" rel="noopener noreferrer" class="contact__channel-btn">
+                        <span data-translate="contact-whatsapp-btn">Unirse</span>
+                        <div class="contact__channel-arrow">→</div>
+                    </a>
                 </div>
 
                 <!-- Instagram -->
@@ -677,12 +633,12 @@
                     </div>
                     <div class="contact__channel-content">
                         <h3 class="contact__channel-title" data-translate="contact-instagram-title">Instagram</h3>
-                        <p class="contact__channel-description" data-translate="contact-instagram-description">Síguenos para contenido visual, tips y actualizaciones diarias sobre los mejores bloques</p>
-                        <a href="https://www.instagram.com/starflexapp/" target="_blank" rel="noopener noreferrer" class="contact__channel-btn">
-                            <span data-translate="contact-instagram-btn">Seguir</span>
-                            <div class="contact__channel-arrow">→</div>
-                        </a>
+                        <p class="contact__channel-description" data-translate="contact-instagram-description">Contenido visual diario</p>
                     </div>
+                    <a href="https://www.instagram.com/starflexapp/" target="_blank" rel="noopener noreferrer" class="contact__channel-btn">
+                        <span data-translate="contact-instagram-btn">Seguir</span>
+                        <div class="contact__channel-arrow">→</div>
+                    </a>
                 </div>
 
                 <!-- Facebook -->
@@ -694,12 +650,12 @@
                     </div>
                     <div class="contact__channel-content">
                         <h3 class="contact__channel-title" data-translate="contact-facebook-title">Facebook</h3>
-                        <p class="contact__channel-description" data-translate="contact-facebook-description">Únete a nuestra comunidad en Facebook para interactuar con otros conductores y compartir experiencias</p>
-                        <a href="https://www.facebook.com/checkpoint/1501092823525282/?next=https%3A%2F%2Fwww.facebook.com%2Fpeople%2Fstarflexappcom%2F100088450157226%2F#" target="_blank" rel="noopener noreferrer" class="contact__channel-btn">
-                            <span data-translate="contact-facebook-btn">Seguir</span>
-                            <div class="contact__channel-arrow">→</div>
-                        </a>
+                        <p class="contact__channel-description" data-translate="contact-facebook-description">Comunidad de conductores</p>
                     </div>
+                    <a href="https://www.facebook.com/checkpoint/1501092823525282/?next=https%3A%2F%2Fwww.facebook.com%2Fpeople%2Fstarflexappcom%2F100088450157226%2F#" target="_blank" rel="noopener noreferrer" class="contact__channel-btn">
+                        <span data-translate="contact-facebook-btn">Seguir</span>
+                        <div class="contact__channel-arrow">→</div>
+                    </a>
                 </div>
 
                 <!-- TikTok -->
@@ -711,30 +667,29 @@
                     </div>
                     <div class="contact__channel-content">
                         <h3 class="contact__channel-title" data-translate="contact-tiktok-title">TikTok</h3>
-                        <p class="contact__channel-description" data-translate="contact-tiktok-description">Descubre contenido viral, tips rápidos y las últimas tendencias de Amazon Flex</p>
-                        <a href="https://www.tiktok.com/@starflexapp.com" target="_blank" rel="noopener noreferrer" class="contact__channel-btn">
-                            <span data-translate="contact-tiktok-btn">Seguir</span>
-                            <div class="contact__channel-arrow">→</div>
-                        </a>
+                        <p class="contact__channel-description" data-translate="contact-tiktok-description">Tips y tendencias</p>
                     </div>
+                    <a href="https://www.tiktok.com/@starflexapp.com" target="_blank" rel="noopener noreferrer" class="contact__channel-btn">
+                        <span data-translate="contact-tiktok-btn">Seguir</span>
+                        <div class="contact__channel-arrow">→</div>
+                    </a>
                 </div>
 
                 <!-- Canal de Telegram -->
                 <div class="contact__channel" data-channel="telegram">
                     <div class="contact__channel-icon">
                         <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                            <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216
-                         .325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+                            <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
                         </svg>
                     </div>
                     <div class="contact__channel-content">
-                        <h3 class="contact__channel-title" data-translate="contact-telegram-title">Canales de noticias de Telegram</h3>
-                        <p class="contact__channel-description" data-translate="contact-telegram-description">Recibe notificaciones instantáneas de los mejores bloques y actualizaciones importantes</p>
-                        <a href="https://t.me/starflexnews" target="_blank" rel="noopener noreferrer" class="contact__channel-btn">
-                            <span data-translate="contact-telegram-btn">Unirse al Canal</span>
-                            <div class="contact__channel-arrow">→</div>
-                        </a>
+                        <h3 class="contact__channel-title" data-translate="contact-telegram-title">Telegram</h3>
+                        <p class="contact__channel-description" data-translate="contact-telegram-description">Notificaciones instantáneas</p>
                     </div>
+                    <a href="https://t.me/starflexnews" target="_blank" rel="noopener noreferrer" class="contact__channel-btn">
+                        <span data-translate="contact-telegram-btn">Unirse</span>
+                        <div class="contact__channel-arrow">→</div>
+                    </a>
                 </div>
 
                 <!-- Soporte Email -->
@@ -745,17 +700,18 @@
                         </svg>
                     </div>
                     <div class="contact__channel-content">
-                        <h3 class="contact__channel-title" data-translate="contact-email-title">support@starflexapp.com</h3>
-                        <p class="contact__channel-description" data-translate="contact-email-description">Contacta directamente con nuestro equipo de soporte técnico especializado</p>
-                        <a href="mailto:support@starflexapp.com" class="contact__channel-btn">
-                            <span data-translate="contact-email-btn">Enviar Email</span>
-                            <div class="contact__channel-arrow">→</div>
-                        </a>
+                        <h3 class="contact__channel-title" data-translate="contact-email-title">Soporte</h3>
+                        <p class="contact__channel-description" data-translate="contact-email-description">Ayuda especializada</p>
                     </div>
+                    <a href="mailto:support@starflexapp.com" class="contact__channel-btn">
+                        <span data-translate="contact-email-btn">Contactar</span>
+                        <div class="contact__channel-arrow">→</div>
+                    </a>
                 </div>
             </div>
 
-            <!-- Footer de contacto -->
+            <!-- Footer optimizado para móvil -->
+            <div class="contact__footer">
                 <div class="contact__footer-content">
                     <div class="contact__footer-text">
                         <h3 data-translate="footer-legal">Política de Privacidad • Términos y Condiciones</h3>
@@ -772,10 +728,9 @@
         </div>
     </section>
 
-    <!-- ===== BOTÓN FLOTANTE FUTURISTA CON ÍCONO DE MENSAJE ===== -->
+    <!-- Botón flotante optimizado para móvil -->
     <div class="floating-widget" id="floating-widget">
         <div class="floating-widget__container">
-            <!-- Menú desplegable -->
             <div class="floating-widget__menu" id="floating-menu">
                 <!-- WhatsApp -->
                 <a href="https://www.whatsapp.com/channel/0029VaL0DdmIyPtQxdrlHm1d" 
@@ -814,7 +769,7 @@
         </div>
     </div>
 
-    <!-- JavaScript optimizado -->
+    <!-- JavaScript optimizado para móvil -->
     <script src="js/script.js"></script>
 </body>
 </html>

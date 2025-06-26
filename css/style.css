@@ -94,11 +94,37 @@
 --hamburger-size: 24px;
 --mobile-menu-width: 100vw;
 --mobile-menu-padding: 1.5rem;
---mobile-menu-safe-area: 30px; /* CORREGIDO: Aumentado para evitar cortes */
+--mobile-menu-safe-area: 30px;
 
 /* Variables para el selector de idioma - MEJORADO PARA RESPONSIVIDAD */
 --language-switcher-z-index: 1050;
 --language-switcher-safe-area: 20px;
+
+/* Variables móviles específicas con escalado fluido */
+--mobile-container-padding: clamp(1rem, 4vw, 2rem);
+--mobile-section-padding: clamp(2.5rem, 8vw, 5rem);
+--mobile-text-scale: clamp(0.875rem, 3.5vw, 1rem);
+--mobile-title-scale: clamp(1.8rem, 7vw, 3.5rem);
+--mobile-button-height: clamp(48px, 12vw, 60px);
+--mobile-touch-target: 48px;
+
+/* Ajustes de espaciado fluido para móvil */
+--mobile-gap-xs: clamp(0.5rem, 2vw, 1rem);
+--mobile-gap-sm: clamp(0.75rem, 3vw, 1.5rem);
+--mobile-gap-md: clamp(1rem, 4vw, 2rem);
+--mobile-gap-lg: clamp(1.5rem, 6vw, 3rem);
+--mobile-gap-xl: clamp(2rem, 8vw, 4rem);
+--mobile-gap-xxl: clamp(3rem, 10vw, 6rem);
+
+/* Variables específicas para animaciones móviles */
+--mobile-transition: 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+--mobile-transition-fast: 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+--mobile-transition-slow: 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+/* Variables para efectos visuales móviles */
+--mobile-blur: blur(15px);
+--mobile-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+--mobile-glow: 0 0 20px rgba(255, 69, 105, 0.3);
 }
 
 /* ===== RESET MEJORADO ===== */
@@ -111,7 +137,6 @@ box-sizing: border-box;
 html {
 scroll-behavior: smooth;
 font-size: 16px;
-/* CORRECCIÓN: Eliminar scroll lateral */
 overflow-x: hidden;
 }
 
@@ -120,7 +145,6 @@ font-family: var(--font-primary);
 background: var(--primary-bg);
 color: var(--text-primary);
 line-height: 1.5;
-/* CORRECCIÓN: Eliminar scroll lateral */
 overflow-x: hidden;
 -webkit-font-smoothing: antialiased;
 -moz-osx-font-smoothing: grayscale;
@@ -129,21 +153,17 @@ position: relative;
 
 /* ===== OPTIMIZACIÓN AVANZADA DE IMÁGENES DE CELULAR ===== */
 .image-optimized {
-/* CORRECCIÓN: Eliminar delay visual en carga inicial */
 opacity: 1;
 transition: none;
 position: relative;
 overflow: hidden;
-/* Optimización de renderizado para máxima calidad */
 image-rendering: -webkit-optimize-contrast;
 image-rendering: -moz-crisp-edges;
 image-rendering: crisp-edges;
 image-rendering: pixelated;
-/* Forzar aceleración por hardware */
 transform: translateZ(0);
 backface-visibility: hidden;
 will-change: transform;
-/* Optimización de composición */
 contain: layout style paint;
 }
 
@@ -198,55 +218,44 @@ position: absolute;
 top: 0;
 left: 0;
 z-index: 1;
-/* CORRECCIÓN: Eliminar transición para evitar delay */
 transition: none;
 background-size: cover;
 background-position: center;
 background-repeat: no-repeat;
 background-attachment: scroll;
-/* Optimización avanzada de renderizado */
 image-rendering: -webkit-optimize-contrast;
 image-rendering: -moz-crisp-edges;
 image-rendering: crisp-edges;
 image-rendering: high-quality;
-/* Filtros para máxima nitidez y calidad */
 filter: 
 brightness(1.02) 
 contrast(1.05) 
 saturate(1.08);
-/* Aceleración por hardware */
 transform: translateZ(0) scale(1.001);
 backface-visibility: hidden;
 will-change: transform, filter;
-/* Optimización de composición */
 contain: layout style paint;
-/* Suavizado de bordes */
 -webkit-font-smoothing: antialiased;
 -moz-osx-font-smoothing: grayscale;
-/* Optimización para pantallas de alta densidad */
 background-blend-mode: normal;
 isolation: isolate;
-/* CORRECCIÓN: Carga inmediata sin delay */
 opacity: 1;
 }
 
 /* Optimización específica para el hero */
 .hero__phone-app-image {
 border-radius: 45px;
-/* Filtros específicos para imagen principal */
 filter: 
 brightness(1.04) 
 contrast(1.12) 
 saturate(1.15)
 drop-shadow(0 0 1px rgba(0, 0, 0, 0.1));
-/* Fallback para navegadores sin soporte de formatos modernos */
 background-image: url('../assets/phones/Hero.jpg');
 }
 
 /* Optimización específica para características */
 .phone__app-image {
 border-radius: 40px;
-/* Filtros específicos para imágenes de características */
 filter: 
 brightness(1.02) 
 contrast(1.05) 
@@ -362,19 +371,15 @@ background-image: url('../assets/phones/Referidos.jpg');
 @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi), (min-resolution: 2dppx) {
 .hero__phone-app-image,
 .phone__app-image {
-/* Filtros más agresivos para pantallas Retina */
 filter: 
 brightness(1.02) 
 contrast(1.15) 
 saturate(1.18);
-/* Escalado perfecto para alta densidad */
 transform: translateZ(0) scale(1.0005);
-/* Optimización adicional */
 background-size: cover;
 background-position: center center;
 }
 
-/* Configuración específica para dispositivos de muy alta densidad */
 .hero__phone-app-image {
 filter: 
 brightness(1.03) 
@@ -388,12 +393,10 @@ drop-shadow(0 0 0.8px rgba(0, 0, 0, 0.12));
 @media (min-resolution: 3dppx) {
 .hero__phone-app-image,
 .phone__app-image {
-/* Filtros ultra-precisos para 4K+ */
 filter: 
 brightness(1.01) 
 contrast(1.2) 
 saturate(1.22);
-/* Escalado ultra-preciso */
 transform: translateZ(0) scale(1.0002);
 }
 }
@@ -699,9 +702,7 @@ transition: all var(--transition);
 cursor: pointer;
 animation: logo-gentle-float 6s ease-in-out infinite;
 filter: drop-shadow(0 8px 25px rgba(0, 0, 0, 0.3));
-/* Fallback para navegadores sin soporte de formatos modernos */
 background-image: url('../assets/logo.png');
-/* Optimización de renderizado para logo */
 image-rendering: -webkit-optimize-contrast;
 image-rendering: crisp-edges;
 transform: translateZ(0);
@@ -1028,370 +1029,6 @@ border-color: var(--starflex-crimson-bright);
 box-shadow: 
 0 10px 30px rgba(0, 0, 0, 0.5),
 0 0 30px var(--starflex-crimson-glow);
-}
-
-/* ===== MENÚ MÓVIL FULLSCREEN ULTRA OPTIMIZADO - CORREGIDO ===== */
-@media (max-width: 1024px) {
-.nav__menu {
-position: fixed;
-top: 0;
-left: -100%;
-width: var(--mobile-menu-width);
-height: 100vh;
-height: 100dvh; /* Soporte para viewport dinámico */
-background: linear-gradient(135deg, 
-rgba(10, 13, 20, 0.98) 0%, 
-rgba(21, 25, 34, 0.98) 50%, 
-rgba(30, 35, 48, 0.98) 100%
-);
-backdrop-filter: blur(30px);
--webkit-backdrop-filter: blur(30px);
-flex-direction: column;
-justify-content: center;
-align-items: center;
-transition: left 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-transform: none;
-pointer-events: auto;
-z-index: calc(var(--navbar-z-index) + 3);
-/* CORREGIDO: Padding superior aumentado para evitar cortes */
-padding: calc(var(--mobile-menu-safe-area) + var(--navbar-height-mobile)) var(--mobile-menu-padding) calc(var(--mobile-menu-safe-area) + 80px) var(--mobile-menu-padding);
-overflow-y: auto;
--webkit-overflow-scrolling: touch;
-/* CORREGIDO: Safe area mejorada para dispositivos con notch */
-padding-top: max(calc(var(--mobile-menu-safe-area) + var(--navbar-height-mobile)), calc(env(safe-area-inset-top, 20px) + var(--navbar-height-mobile)));
-padding-bottom: max(calc(var(--mobile-menu-safe-area) + 80px), calc(env(safe-area-inset-bottom, 0px) + 80px));
-padding-left: max(var(--mobile-menu-padding), env(safe-area-inset-left, var(--mobile-menu-padding)));
-padding-right: max(var(--mobile-menu-padding), env(safe-area-inset-right, var(--mobile-menu-padding)));
-}
-
-.nav__menu.active {
-left: 0;
-}
-
-.nav__menu::before {
-content: '';
-position: absolute;
-top: 0;
-left: 0;
-right: 0;
-bottom: 0;
-background: 
-radial-gradient(ellipse at 30% 20%, rgba(255, 69, 105, 0.1) 0%, transparent 50%),
-radial-gradient(ellipse at 70% 80%, rgba(255, 69, 105, 0.08) 0%, transparent 50%);
-z-index: -1;
-animation: mobile-menu-glow 8s ease-in-out infinite;
-}
-
-.nav__list {
-flex-direction: column;
-/* CORREGIDO: Gap optimizado para mejor distribución */
-gap: clamp(var(--space-lg), 4vw, var(--space-2xl));
-background: transparent;
-border: none;
-padding: 0;
-box-shadow: none;
-animation: none;
-width: 100%;
-max-width: min(350px, calc(100vw - 2 * var(--mobile-menu-padding)));
-/* CORREGIDO: Altura mínima para evitar cortes */
-min-height: auto;
-}
-
-.nav__list::before {
-display: none;
-}
-
-.nav__link {
-/* CORREGIDO: Tamaño de fuente responsive */
-font-size: clamp(1rem, 3vw, 1.2rem);
-/* CORREGIDO: Padding optimizado */
-padding: clamp(var(--space-sm), 2vw, var(--space-lg)) clamp(var(--space-lg), 4vw, var(--space-2xl));
-text-align: center;
-border-radius: 15px;
-background: rgba(21, 25, 34, 0.6);
-border: 1px solid rgba(255, 255, 255, 0.1);
-/* CORREGIDO: Ancho responsive */
-width: 100%;
-min-width: auto;
-backdrop-filter: blur(15px);
--webkit-backdrop-filter: blur(15px);
-transition: all var(--transition);
-position: relative;
-overflow: hidden;
-/* CORREGIDO: Altura mínima para touch targets */
-min-height: 48px;
-display: flex;
-align-items: center;
-justify-content: center;
-}
-
-.nav__link::before {
-background: linear-gradient(135deg, 
-var(--glass-bg-medium) 0%, 
-var(--glass-bg-strong) 100%
-);
-border-radius: 15px;
-}
-
-.nav__link:hover {
-background: rgba(21, 25, 34, 0.8);
-border-color: var(--border-accent);
-transform: translateY(-3px) scale(1.02);
-box-shadow: 
-0 8px 25px rgba(0, 0, 0, 0.3),
-0 0 20px rgba(255, 69, 105, 0.2);
-}
-
-.nav__link:active {
-transform: translateY(-1px) scale(0.98);
-}
-
-.nav__toggle {
-display: flex;
-z-index: calc(var(--navbar-z-index) + 4);
-}
-
-/* CORREGIDO: Ocultar el botón CTA en móvil cuando el menú está activo */
-.nav__menu.active ~ .nav__cta {
-opacity: 0;
-visibility: hidden;
-pointer-events: none;
-}
-
-/* Ocultar elementos desktop en móvil */
-.language-toggle {
-display: none;
-}
-}
-
-/* ===== RESPONSIVE BREAKPOINTS ESPECÍFICOS MEJORADOS ===== */
-@media (max-width: 768px) {
-:root {
---navbar-height: var(--navbar-height-mobile);
---mobile-menu-padding: 1.25rem;
---mobile-menu-safe-area: 25px; /* CORREGIDO: Aumentado para tablets */
-/* Ajustar filtros para móvil */
---phone-image-sharpness: 1.12;
---phone-image-contrast: 1.06;
---phone-image-brightness: 1.02;
---phone-image-saturation: 1.1;
-/* Ajustar espaciado del selector de idioma */
---language-switcher-safe-area: 15px;
-}
-
-.header {
-height: var(--navbar-height-mobile);
-}
-
-.nav {
-padding: 0 var(--space-lg);
-}
-
-.nav__logo {
-width: 50px;
-height: 50px;
-}
-
-.nav__toggle {
-width: 44px;
-height: 44px;
-}
-
-.nav__toggle-line {
-width: 20px;
-}
-
-.nav__link {
-/* CORREGIDO: Tamaño optimizado para tablets */
-font-size: clamp(0.95rem, 2.5vw, 1.1rem);
-padding: var(--space-md) var(--space-xl);
-min-height: 50px;
-}
-
-.btn--primary {
-padding: var(--space-sm) var(--space-lg);
-font-size: 0.8rem;
-}
-
-/* CORREGIDO: Menú móvil optimizado para tablets */
-.nav__menu {
-padding: calc(var(--mobile-menu-safe-area) + var(--navbar-height-mobile)) var(--mobile-menu-padding) calc(var(--mobile-menu-safe-area) + 60px) var(--mobile-menu-padding);
-}
-
-.nav__list {
-gap: var(--space-xl);
-max-width: min(320px, calc(100vw - 2 * var(--mobile-menu-padding)));
-}
-
-/* Optimización de imágenes para móvil */
-.hero__phone-app-image,
-.phone__app-image {
-filter: 
-brightness(1.02) 
-contrast(1.05) 
-saturate(1.08);
-}
-}
-
-@media (max-width: 480px) {
-:root {
---mobile-menu-padding: 1rem;
---mobile-menu-safe-area: 20px; /* CORREGIDO: Aumentado para móviles pequeños */
-/* Filtros más conservadores para pantallas pequeñas */
---phone-image-sharpness: 1.08;
---phone-image-contrast: 1.04;
---phone-image-brightness: 1.01;
---phone-image-saturation: 1.08;
-/* Ajustar espaciado del selector de idioma para pantallas muy pequeñas */
---language-switcher-safe-area: 10px;
-}
-
-.nav {
-padding: 0 var(--space-md);
-}
-
-.nav__logo {
-width: 45px;
-height: 45px;
-}
-
-.nav__toggle {
-width: 40px;
-height: 40px;
-}
-
-.nav__toggle-line {
-width: 18px;
-}
-
-.nav__link {
-/* CORREGIDO: Tamaño muy optimizado para móviles pequeños */
-font-size: clamp(0.9rem, 3.5vw, 1rem);
-padding: var(--space-sm) var(--space-lg);
-min-height: 46px;
-}
-
-.btn--primary {
-padding: var(--space-xs) var(--space-md);
-font-size: 0.75rem;
-}
-
-/* CORREGIDO: Menú móvil ultra optimizado */
-.nav__menu {
-padding: calc(var(--mobile-menu-safe-area) + var(--navbar-height-mobile)) var(--mobile-menu-padding) calc(var(--mobile-menu-safe-area) + 50px) var(--mobile-menu-padding);
-}
-
-.nav__list {
-gap: var(--space-lg);
-max-width: min(300px, calc(100vw - 2 * var(--mobile-menu-padding)));
-}
-}
-
-/* ===== MEJORAS ESPECÍFICAS PARA PANTALLAS MUY PEQUEÑAS ===== */
-@media (max-width: 360px) {
-:root {
---mobile-menu-padding: 0.875rem;
---mobile-menu-safe-area: 18px; /* CORREGIDO: Aumentado para pantallas muy pequeñas */
-}
-
-.nav__link {
-font-size: 0.875rem;
-padding: var(--space-xs) var(--space-md);
-min-height: 44px;
-}
-
-.nav__list {
-gap: var(--space-md);
-max-width: calc(100vw - 2 * var(--mobile-menu-padding));
-}
-}
-
-/* ===== MEJORAS PARA DISPOSITIVOS CON NOTCH ===== */
-@supports (padding: max(0px)) {
-@media (max-width: 1024px) {
-.nav__menu {
-/* CORREGIDO: Padding superior que considera tanto el navbar como el safe area */
-padding-top: max(calc(var(--mobile-menu-safe-area) + var(--navbar-height-mobile)), calc(env(safe-area-inset-top, 20px) + var(--navbar-height-mobile) + 10px));
-padding-bottom: max(calc(var(--mobile-menu-safe-area) + 80px), calc(env(safe-area-inset-bottom, 0px) + 80px));
-padding-left: max(var(--mobile-menu-padding), env(safe-area-inset-left, var(--mobile-menu-padding)));
-padding-right: max(var(--mobile-menu-padding), env(safe-area-inset-right, var(--mobile-menu-padding)));
-}
-}
-}
-
-/* ===== RESPONSIVE PARA EL SELECTOR DE IDIOMA ===== */
-@media (max-width: 768px) {
-.language-switcher {
-    top: var(--language-switcher-safe-area);
-    right: var(--language-switcher-safe-area);
-    z-index: calc(var(--navbar-z-index) + 5);
-}
-
-.language-switcher__btn {
-    padding: var(--space-sm) var(--space-md);
-    font-size: 0.8rem;
-        min-width: 100px;
-    border-radius: 20px;
-}
-
-.language-switcher__icon {
-    width: 18px;
-    height: 18px;
-}
-
-.language-switcher__arrow {
-    width: 14px;
-    height: 14px
-}
-
-.language-switcher__dropdown {
-    min-width: 160px;
-    top: calc(100% + 8px);
-}
-
-.language-switcher__option {
-    padding: var(--space-sm) var(--space-md);
-    font-size: 0.85rem;
-}
-}
-
-@media (max-width: 480px) {
-.language-switcher {
-    top: var(--language-switcher-safe-area);
-    right: var(--language-switcher-safe-area);
-    z-index: calc(var(--navbar-z-index) + 5);
-}
-
-.language-switcher__btn {
-    padding: var(--space-xs) var(--space-sm);
-    font-size: 0.75rem;
-    min-width: 85px;
-    border-radius: 18px;
-}
-
-.language-switcher__icon {
-    width: 16px;
-    height: 16px;
-}
-
-.language-switcher__arrow {
-    width: 12px;
-    height: 12px;
-}
-
-.language-switcher__dropdown {
-    min-width: 140px;
-    right: -10px;
-}
-
-.language-switcher__option {
-    padding: var(--space-xs) var(--space-sm);
-    font-size: 0.8rem;
-}
-
-.language-switcher__flag {
-    font-size: 1rem;
-}
 }
 
 /* ===== FONDO FUTURISTA AVANZADO ===== */
@@ -1857,12 +1494,11 @@ justify-content: flex-start;
 display: inline-block;
 transition: all var(--transition);
 position: relative;
-overflow: visible; /* Cambiado de hidden a visible para mostrar logos completos */
+overflow: visible;
 text-decoration: none;
 cursor: pointer;
 filter: drop-shadow(0 8px 25px rgba(0, 0, 0, 0.3));
 animation: download-float 6s ease-in-out infinite;
-/* REMOVIDO: border-radius para evitar cortar las esquinas de los logos */
 }
 
 .download-btn:hover {
@@ -1875,18 +1511,12 @@ height: 60px;
 width: auto;
 display: block;
 transition: all var(--transition);
-/* REMOVIDO: border-radius para mostrar los logos completos */
-/* REMOVIDO: box-shadow que podría interferir con la forma original */
-/* Optimización de imágenes con múltiples formatos */
 image-rendering: -webkit-optimize-contrast;
 image-rendering: crisp-edges;
 image-rendering: high-quality;
-/* Asegurar que la imagen mantenga su forma original */
 object-fit: contain;
 object-position: center;
-/* Filtros para mejorar calidad */
 filter: brightness(1.02) contrast(1.05) saturate(1.08);
-/* Aceleración por hardware */
 transform: translateZ(0);
 backface-visibility: hidden;
 }
@@ -1895,11 +1525,9 @@ backface-visibility: hidden;
 height: 60px;
 width: auto;
 min-width: 180px;
-/* REMOVIDO: border-radius para mostrar el logo completo */
 }
 
 .download-btn:hover .download-btn__image {
-/* Sombra sutil que no interfiera con la forma del logo */
 filter: drop-shadow(0 8px 25px rgba(0, 0, 0, 0.3)) brightness(1.05) contrast(1.08) saturate(1.1);
 }
 
@@ -1953,7 +1581,6 @@ box-shadow:
 0 0 0 1px rgba(255, 255, 255, 0.05);
 filter: drop-shadow(0 0 30px rgba(255, 69, 105, 0.15));
 background: #000000;
-/* Optimización para renderizado */
 will-change: transform;
 contain: layout style paint;
 }
@@ -2007,15 +1634,12 @@ left: 0;
 z-index: 2;
 object-fit: cover;
 object-position: center;
-/* CORRECCIÓN: Eliminar transición para carga inmediata */
 transition: none;
 filter: brightness(1.02) contrast(1.05) saturate(1.08);
-/* Optimización de renderizado */
 transform: translateZ(0);
 backface-visibility: hidden;
 image-rendering: -webkit-optimize-contrast;
 image-rendering: crisp-edges;
-/* CORRECCIÓN: Carga inmediata sin delay */
 opacity: 1;
 }
 
@@ -2063,43 +1687,6 @@ display: none !important;
 display: none !important;
 }
 
-/* ===== IMAGEN DEL HERO COMO FALLBACK OPTIMIZADA ===== */
-.hero__phone-app-image {
-width: 100%;
-height: 100%;
-border-radius: 45px;
-position: absolute;
-top: 0;
-left: 0;
-z-index: 1;
-/* CORRECCIÓN: Eliminar transición para carga inmediata */
-transition: none;
-background-size: cover;
-background-position: center;
-background-repeat: no-repeat;
-object-fit: cover;
-object-position: center;
-/* Filtros optimizados para máxima calidad */
-filter: 
-brightness(1.04) 
-contrast(1.12) 
-saturate(1.15)
-drop-shadow(0 0 1px rgba(0, 0, 0, 0.1));
-/* Fallback para navegadores sin soporte de formatos modernos */
-background-image: url('../assets/phones/Hero.jpg');
-/* Optimización de renderizado avanzada */
-image-rendering: -webkit-optimize-contrast;
-image-rendering: -moz-crisp-edges;
-image-rendering: crisp-edges;
-image-rendering: high-quality;
-transform: translateZ(0) scale(1.001);
-backface-visibility: hidden;
-will-change: transform, filter;
-contain: layout style paint;
-/* CORRECCIÓN: Carga inmediata sin delay */
-opacity: 1;
-}
-
 /* ===== ESTADOS DE CARGA PARA VIDEO ===== */
 .hero__phone-video.loading {
 opacity: 0.7;
@@ -2120,951 +1707,6 @@ display: none;
 display: block;
 z-index: 2;
 }
-
-/* ===== OPTIMIZACIONES MÓVILES ULTRA-DETALLADAS ===== */
-
-/* ===== HERO SECTION - OPTIMIZACIÓN MÓVIL EXCLUSIVA ===== */
-@media (max-width: 768px) {
-.hero {
-min-height: 100vh;
-min-height: 100dvh; /* Soporte para viewport dinámico */
-padding-top: calc(var(--navbar-height-mobile) + var(--space-lg));
-padding-bottom: var(--space-2xl);
-}
-
-.hero__container {
-grid-template-columns: 1fr;
-gap: var(--space-3xl);
-text-align: center;
-padding: 0 clamp(1rem, 4vw, 2rem);
-}
-
-.hero__content {
-order: 1;
-}
-
-.hero__media {
-order: 2;
-margin-top: var(--space-2xl);
-}
-
-.hero__title {
-font-size: clamp(2.2rem, 8vw, 4rem);
-line-height: 0.95;
-margin-bottom: var(--space-lg);
-text-align: center;
-}
-
-.hero__company-description {
-font-size: clamp(0.95rem, 3vw, 1.1rem);
-padding: clamp(1rem, 4vw, 1.5rem);
-margin-bottom: var(--space-lg);
-max-width: 100%;
-border-radius: 16px;
-}
-
-.hero__company-description-text {
-margin-left: clamp(0.75rem, 3vw, 1.25rem);
-}
-
-.hero__subtitle {
-font-size: clamp(1rem, 3.5vw, 1.2rem);
-margin-bottom: var(--space-xl);
-max-width: 100%;
-text-align: center;
-}
-
-.hero__cta-group {
-align-items: center;
-gap: var(--space-lg);
-}
-
-.btn--cta {
-min-width: clamp(180px, 50vw, 220px);
-padding: clamp(0.75rem, 3vw, 1rem) clamp(1rem, 5vw, 1.5rem);
-font-size: clamp(0.9rem, 3vw, 1rem);
-border-radius: 14px;
-}
-
-.hero__download {
-flex-direction: column;
-gap: var(--space-lg);
-align-items: center;
-justify-content: center;
-width: 100%;
-}
-
-.download-btn__image {
-height: clamp(45px, 12vw, 55px);
-width: auto;
-}
-
-.download-btn--app-store .download-btn__image {
-height: clamp(45px, 12vw, 55px);
-min-width: clamp(140px, 35vw, 170px);
-}
-
-.hero__phone {
-width: clamp(260px, 70vw, 320px);
-height: clamp(520px, 140vw, 640px);
-border-radius: clamp(35px, 8vw, 45px);
-}
-
-.hero__phone-screen,
-.hero__phone-content,
-.hero__phone-video,
-.hero__phone-app-image {
-border-radius: clamp(35px, 8vw, 45px);
-}
-
-.hero__phone-container {
-transform: none;
-}
-}
-
-@media (max-width: 480px) {
-.hero {
-padding-top: calc(var(--navbar-height-mobile) + var(--space-md));
-padding-bottom: var(--space-xl);
-}
-
-.hero__container {
-gap: var(--space-2xl);
-padding: 0 var(--space-lg);
-}
-
-.hero__title {
-font-size: clamp(1.8rem, 7vw, 3.2rem);
-line-height: 0.9;
-margin-bottom: var(--space-md);
-}
-
-.hero__company-description {
-font-size: clamp(0.85rem, 3.5vw, 1rem);
-padding: var(--space-md);
-margin-bottom: var(--space-md);
-border-radius: 12px;
-}
-
-.hero__company-description-text {
-margin-left: var(--space-md);
-}
-
-.hero__subtitle {
-font-size: clamp(0.9rem, 3.5vw, 1.1rem);
-margin-bottom: var(--space-lg);
-}
-
-.btn--cta {
-min-width: clamp(160px, 80vw, 200px);
-padding: var(--space-sm) var(--space-lg);
-font-size: clamp(0.8rem, 3.5vw, 0.9rem);
-border-radius: 12px;
-}
-
-.hero__phone {
-width: clamp(220px, 80vw, 280px);
-height: clamp(440px, 160vw, 560px);
-border-radius: clamp(30px, 7vw, 40px);
-}
-
-.hero__phone-screen,
-.hero__phone-content,
-.hero__phone-video,
-.hero__phone-app-image {
-border-radius: clamp(30px, 7vw, 40px);
-}
-
-.download-btn__image {
-height: clamp(40px, 10vw, 50px);
-}
-
-.download-btn--app-store .download-btn__image {
-height: clamp(40px, 10vw, 50px);
-min-width: clamp(120px, 30vw, 150px);
-}
-}
-
-/* ===== FEATURES SECTION - OPTIMIZACIÓN MÓVIL EXCLUSIVA ===== */
-@media (max-width: 768px) {
-.features {
-padding: var(--space-5xl) 0;
-}
-
-.features__header {
-margin-bottom: var(--space-4xl);
-padding: 0 var(--space-lg);
-}
-
-.features__title {
-font-size: clamp(2rem, 6vw, 3.5rem);
-margin-bottom: var(--space-lg);
-}
-
-.features__subtitle {
-font-size: clamp(1rem, 3.5vw, 1.2rem);
-max-width: 100%;
-}
-
-.features__grid {
-gap: var(--space-4xl);
-padding: 0 var(--space-lg);
-}
-
-.feature {
-grid-template-columns: 1fr;
-gap: var(--space-2xl);
-text-align: center;
-}
-
-.feature:nth-child(even) {
-direction: ltr;
-}
-
-.feature__content {
-padding: var(--space-lg);
-order: 2;
-}
-
-.feature__phone {
-order: 1;
-width: clamp(240px, 65vw, 300px);
-height: clamp(480px, 130vw, 600px);
-margin: 0 auto;
-transform: none;
-}
-
-.phone {
-border-radius: clamp(30px, 7vw, 40px);
-}
-
-.phone__screen,
-.phone__content,
-.phone__app-image {
-border-radius: clamp(30px, 7vw, 40px);
-}
-
-.feature__title {
-font-size: clamp(1.8rem, 5vw, 2.5rem);
-margin-bottom: var(--space-lg);
-}
-
-.feature__description {
-font-size: clamp(1rem, 3vw, 1.1rem);
-margin-bottom: var(--space-lg);
-}
-
-.feature__list-item {
-font-size: clamp(0.95rem, 3vw, 1rem);
-margin-bottom: var(--space-md);
-padding: var(--space-xs) 0;
-}
-}
-
-@media (max-width: 480px) {
-.features {
-padding: var(--space-4xl) 0;
-}
-
-.features__grid {
-gap: var(--space-3xl);
-padding: 0 var(--space-md);
-}
-
-.feature {
-gap: var(--space-xl);
-}
-
-.feature__content {
-padding: var(--space-md);
-}
-
-.feature__phone {
-width: clamp(200px, 75vw, 260px);
-height: clamp(400px, 150vw, 520px);
-}
-
-.phone {
-border-radius: clamp(25px, 6vw, 35px);
-}
-
-.phone__screen,
-.phone__content,
-.phone__app-image {
-border-radius: clamp(25px, 6vw, 35px);
-}
-
-.feature__title {
-font-size: clamp(1.5rem, 5vw, 2rem);
-margin-bottom: var(--space-md);
-}
-
-.feature__description {
-font-size: clamp(0.9rem, 3.5vw, 1rem);
-margin-bottom: var(--space-md);
-}
-
-.feature__list-item {
-font-size: clamp(0.85rem, 3.5vw, 0.95rem);
-margin-bottom: var(--space-sm);
-}
-}
-
-/* ===== VIDEOS SECTION - OPTIMIZACIÓN MÓVIL EXCLUSIVA ===== */
-@media (max-width: 768px) {
-.videos {
-padding: var(--space-5xl) 0;
-}
-
-.videos__header {
-margin-bottom: var(--space-4xl);
-padding: 0 var(--space-lg);
-}
-
-.videos__title {
-font-size: clamp(2rem, 6vw, 3.5rem);
-margin-bottom: var(--space-lg);
-}
-
-.videos__subtitle {
-font-size: clamp(1rem, 3.5vw, 1.2rem);
-max-width: 100%;
-}
-
-.videos__main-wrapper {
-padding: 0 var(--space-lg);
-}
-
-.videos__player-container {
-padding: var(--space-lg);
-border-radius: 20px;
-}
-
-.videos__player-frame {
-border-radius: 16px;
-margin-bottom: var(--space-lg);
-}
-
-.videos__player {
-border-radius: 14px;
-}
-
-.videos__play-overlay {
-border-radius: 14px;
-}
-
-.videos__play-button {
-width: clamp(80px, 20vw, 100px);
-height: clamp(80px, 20vw, 100px);
-}
-
-.videos__play-icon {
-width: clamp(28px, 7vw, 35px);
-height: clamp(28px, 7vw, 35px);
-}
-
-.videos__play-title {
-font-size: clamp(1.1rem, 4vw, 1.3rem);
-}
-
-.videos__play-subtitle {
-font-size: clamp(0.85rem, 3vw, 1rem);
-}
-
-.videos__info {
-grid-template-columns: 1fr;
-gap: var(--space-lg);
-text-align: center;
-}
-
-.videos__info-main h3 {
-font-size: clamp(1.5rem, 5vw, 2rem);
-margin-bottom: var(--space-sm);
-}
-
-.videos__info-description {
-font-size: clamp(0.95rem, 3vw, 1.1rem);
-}
-
-.videos__cta {
-padding: var(--space-2xl);
-border-radius: 20px;
-margin: 0 var(--space-lg);
-}
-
-.videos__cta-title {
-font-size: clamp(1.8rem, 5vw, 2.2rem);
-margin-bottom: var(--space-md);
-}
-
-.videos__cta-description {
-font-size: clamp(1rem, 3vw, 1.1rem);
-margin-bottom: var(--space-xl);
-max-width: 100%;
-}
-
-.videos__cta-buttons {
-flex-direction: column;
-gap: var(--space-lg);
-align-items: center;
-}
-
-.btn--cta-video {
-min-width: clamp(180px, 60vw, 220px);
-padding: var(--space-md) var(--space-xl);
-font-size: clamp(0.9rem, 3vw, 1rem);
-}
-
-.btn--secondary {
-padding: var(--space-md) var(--space-xl);
-font-size: clamp(0.85rem, 3vw, 0.95rem);
-min-width: clamp(160px, 55vw, 200px);
-}
-}
-
-@media (max-width: 480px) {
-.videos {
-padding: var(--space-4xl) 0;
-}
-
-.videos__main-wrapper {
-padding: 0 var(--space-md);
-}
-
-.videos__player-container {
-padding: var(--space-md);
-border-radius: 16px;
-}
-
-.videos__player-frame {
-border-radius: 12px;
-margin-bottom: var(--space-md);
-}
-
-.videos__player {
-border-radius: 10px;
-}
-
-.videos__play-overlay {
-border-radius: 10px;
-}
-
-.videos__play-button {
-width: clamp(70px, 18vw, 90px);
-height: clamp(70px, 18vw, 90px);
-}
-
-.videos__play-icon {
-width: clamp(24px, 6vw, 30px);
-height: clamp(24px, 6vw, 30px);
-}
-
-.videos__cta {
-padding: var(--space-xl);
-border-radius: 16px;
-margin: 0 var(--space-md);
-}
-
-.videos__cta-buttons {
-gap: var(--space-md);
-}
-
-.btn--cta-video {
-min-width: clamp(160px, 70vw, 200px);
-padding: var(--space-sm) var(--space-lg);
-font-size: clamp(0.8rem, 3.5vw, 0.9rem);
-}
-
-.btn--secondary {
-padding: var(--space-sm) var(--space-lg);
-font-size: clamp(0.75rem, 3.5vw, 0.85rem);
-min-width: clamp(140px, 65vw, 180px);
-}
-}
-
-/* ===== FAQ SECTION - OPTIMIZACIÓN MÓVIL EXCLUSIVA ===== */
-@media (max-width: 768px) {
-.faq {
-padding: var(--space-5xl) 0;
-}
-
-.faq__header {
-margin-bottom: var(--space-4xl);
-padding: 0 var(--space-lg);
-}
-
-.faq__title {
-font-size: clamp(2rem, 6vw, 3.5rem);
-margin-bottom: var(--space-lg);
-}
-
-.faq__subtitle {
-font-size: clamp(1rem, 3.5vw, 1.2rem);
-max-width: 100%;
-margin-bottom: var(--space-2xl);
-}
-
-.faq__search-container {
-max-width: 100%;
-margin: 0 auto var(--space-2xl);
-}
-
-.faq__search {
-padding: var(--space-md) var(--space-lg) var(--space-md) 45px;
-font-size: clamp(0.9rem, 3vw, 1rem);
-border-radius: 16px;
-}
-
-.faq__search-icon {
-left: 15px;
-width: 18px;
-height: 18px;
-}
-
-.faq__container {
-padding: 0 var(--space-lg);
-}
-
-.faq__item {
-border-radius: 16px;
-}
-
-.faq__question {
-padding: var(--space-lg);
-font-size: clamp(1rem, 3vw, 1.1rem);
-gap: var(--space-md);
-}
-
-.faq__question-text {
-line-height: 1.5;
-}
-
-.faq__icon {
-width: 28px;
-height: 28px;
-}
-
-.faq__answer.active {
-padding: 0 var(--space-lg) var(--space-lg);
-}
-
-.faq__answer-text {
-font-size: clamp(0.9rem, 3vw, 1rem);
-line-height: 1.6;
-}
-}
-
-@media (max-width: 480px) {
-.faq {
-padding: var(--space-4xl) 0;
-}
-
-.faq__container {
-padding: 0 var(--space-md);
-}
-
-.faq__search {
-padding: var(--space-sm) var(--space-md) var(--space-sm) 40px;
-font-size: clamp(0.85rem, 3.5vw, 0.95rem);
-border-radius: 14px;
-}
-
-.faq__search-icon {
-left: 12px;
-width: 16px;
-height: 16px;
-}
-
-.faq__item {
-border-radius: 14px;
-}
-
-.faq__question {
-padding: var(--space-md);
-font-size: clamp(0.9rem, 3.5vw, 1rem);
-gap: var(--space-sm);
-}
-
-.faq__icon {
-width: 24px;
-height: 24px;
-}
-
-.faq__answer.active {
-padding: 0 var(--space-md) var(--space-md);
-}
-
-.faq__answer-text {
-font-size: clamp(0.85rem, 3.5vw, 0.95rem);
-}
-}
-
-/* ===== CONTACT SECTION - OPTIMIZACIÓN MÓVIL EXCLUSIVA ===== */
-@media (max-width: 768px) {
-.contact {
-padding: var(--space-5xl) 0;
-}
-
-.contact__header {
-margin-bottom: var(--space-4xl);
-padding: 0 var(--space-lg);
-}
-
-.contact__title {
-font-size: clamp(2.2rem, 6vw, 3.5rem);
-margin-bottom: var(--space-lg);
-}
-
-.contact__subtitle {
-font-size: clamp(1rem, 3.5vw, 1.2rem);
-max-width: 100%;
-}
-
-.contact__grid {
-grid-template-columns: 1fr;
-gap: var(--space-lg);
-padding: 0 var(--space-lg);
-margin-bottom: var(--space-4xl);
-}
-
-.contact__channel {
-padding: var(--space-xl);
-border-radius: 16px;
-}
-
-.contact__channel-icon {
-width: clamp(60px, 15vw, 70px);
-height: clamp(60px, 15vw, 70px);
-border-radius: 16px;
-margin-bottom: var(--space-lg);
-}
-
-.contact__channel-icon svg {
-width: clamp(28px, 7vw, 32px);
-height: clamp(28px, 7vw, 32px);
-}
-
-.contact__channel-title {
-font-size: clamp(1.1rem, 3.5vw, 1.3rem);
-margin-bottom: var(--space-sm);
-}
-
-.contact__channel-description {
-font-size: clamp(0.9rem, 3vw, 1rem);
-margin-bottom: var(--space-lg);
-}
-
-.contact__channel-btn {
-padding: var(--space-sm) var(--space-lg);
-font-size: clamp(0.8rem, 3vw, 0.9rem);
-border-radius: 20px;
-}
-
-.contact__footer-content {
-flex-direction: column;
-gap: var(--space-xl);
-text-align: center;
-padding: 0 var(--space-lg);
-}
-
-.contact__footer-text h3 {
-font-size: clamp(1rem, 3vw, 1.1rem);
-}
-
-.contact__footer-text p {
-font-size: clamp(0.85rem, 3vw, 0.95rem);
-}
-
-.btn--footer {
-min-width: clamp(160px, 50vw, 180px);
-padding: var(--space-sm) var(--space-lg);
-font-size: clamp(0.85rem, 3vw, 0.95rem);
-border-radius: 20px;
-}
-}
-
-@media (max-width: 480px) {
-.contact {
-padding: var(--space-4xl) 0;
-}
-
-.contact__grid {
-padding: 0 var(--space-md);
-gap: var(--space-md);
-}
-
-.contact__channel {
-padding: var(--space-lg);
-border-radius: 14px;
-}
-
-.contact__channel-icon {
-width: clamp(50px, 12vw, 60px);
-height: clamp(50px, 12vw, 60px);
-border-radius: 14px;
-margin-bottom: var(--space-md);
-}
-
-.contact__channel-icon svg {
-width: clamp(24px, 6vw, 28px);
-height: clamp(24px, 6vw, 28px);
-}
-
-.contact__channel-title {
-font-size: clamp(1rem, 3.5vw, 1.2rem);
-}
-
-.contact__channel-description {
-font-size: clamp(0.85rem, 3.5vw, 0.95rem);
-margin-bottom: var(--space-md);
-}
-
-.contact__channel-btn {
-padding: var(--space-xs) var(--space-md);
-font-size: clamp(0.75rem, 3.5vw, 0.85rem);
-border-radius: 18px;
-}
-
-.contact__footer-content {
-padding: 0 var(--space-md);
-}
-
-.btn--footer {
-min-width: clamp(140px, 60vw, 160px);
-padding: var(--space-xs) var(--space-md);
-font-size: clamp(0.8rem, 3.5vw, 0.9rem);
-border-radius: 18px;
-}
-}
-
-/* ===== FLOATING WIDGET - OPTIMIZACIÓN MÓVIL EXCLUSIVA ===== */
-@media (max-width: 768px) {
-.floating-widget {
-bottom: clamp(20px, 5vw, 30px);
-right: clamp(20px, 5vw, 30px);
-}
-
-.floating-widget__main-btn {
-width: clamp(65px, 16vw, 75px);
-height: clamp(65px, 16vw, 75px);
-}
-
-.floating-widget__main-icon {
-width: clamp(30px, 8vw, 35px);
-height: clamp(30px, 8vw, 35px);
-}
-
-.floating-widget__menu-item {
-width: clamp(55px, 14vw, 65px);
-height: clamp(55px, 14vw, 65px);
-}
-
-.floating-widget__icon {
-width: clamp(26px, 7vw, 30px);
-height: clamp(26px, 7vw, 30px);
-}
-
-.floating-widget__tooltip {
-right: clamp(65px, 16vw, 75px);
-font-size: clamp(0.75rem, 3vw, 0.85rem);
-padding: var(--space-xs) var(--space-sm);
-border-radius: 10px;
-}
-}
-
-@media (max-width: 480px) {
-.floating-widget {
-bottom: clamp(15px, 4vw, 25px);
-right: clamp(15px, 4vw, 25px);
-}
-
-.floating-widget__main-btn {
-width: clamp(60px, 15vw, 70px);
-height: clamp(60px, 15vw, 70px);
-}
-
-.floating-widget__main-icon {
-width: clamp(28px, 7vw, 32px);
-height: clamp(28px, 7vw, 32px);
-}
-
-.floating-widget__menu-item {
-width: clamp(50px, 13vw, 60px);
-height: clamp(50px, 13vw, 60px);
-}
-
-.floating-widget__icon {
-width: clamp(22px, 6vw, 26px);
-height: clamp(22px, 6vw, 26px);
-}
-
-.floating-widget__tooltip {
-display: none; /* Ocultar tooltips en móviles muy pequeños */
-}
-}
-
-/* ===== MEJORAS ADICIONALES DE RESPONSIVIDAD ===== */
-
-/* Evitar solapamiento del selector de idioma con el botón CTA */
-@media (max-width: 1200px) {
-.language-switcher {
-    top: calc(var(--navbar-height) + 10px);
-    right: var(--language-switcher-safe-area);
-}
-}
-
-@media (max-width: 768px) {
-.language-switcher {
-    top: calc(var(--navbar-height-mobile) + 10px);
-    right: var(--language-switcher-safe-area);
-    z-index: calc(var(--navbar-z-index) + 5);
-}
-
-/* Asegurar que el CTA del navbar no se solape */
-.nav__cta {
-    margin-right: 120px; /* Espacio para el selector de idioma */
-}
-}
-
-@media (max-width: 480px) {
-.language-switcher {
-    top: calc(var(--navbar-height-mobile) + 5px);
-    right: var(--language-switcher-safe-area);
-    z-index: calc(var(--navbar-z-index) + 5);
-}
-
-.nav__cta {
-    margin-right: 100px; /* Espacio reducido para pantallas pequeñas */
-}
-
-/* En móviles muy pequeños, ocultar el CTA del navbar para evitar solapamiento */
-.nav__cta {
-    display: none;
-}
-}
-
-/* ===== OPTIMIZACIONES DE RENDIMIENTO ===== */
-.hero__phone,
-.hero__phone-container,
-.nav__logo,
-.nav__list,
-.btn--primary,
-.feature__phone,
-.contact__channel,
-.contact__channel-icon,
-.nav__toggle,
-.floating-widget,
-.floating-widget__main-icon,
-.language-switcher {
-will-change: transform;
-}
-
-.btn--cta,
-.btn--footer,
-.floating-widget__main-btn,
-.floating-widget__menu-item,
-.language-switcher__btn {
-will-change: transform, box-shadow;
-transform: translateZ(0);
-backface-visibility: hidden;
-}
-
-/* ===== ACCESIBILIDAD MEJORADA ===== */
-@media (prefers-reduced-motion: reduce) {
-*,
-*::before,
-*::after {
-animation-duration: 0.01ms !important;
-animation-iteration-count: 1 !important;
-transition-duration: 0.01ms !important;
-}
-
-.nav__logo,
-.nav__list,
-.btn--primary,
-.btn--cta::after,
-.hero__phone-container,
-.hero::before,
-.hero::after,
-.floating-orb-2,
-.floating-orb-3,
-.contact__channel,
-.contact__badge,
-.ambient-glow,
-.feature-ambient-glow,
-.nav__toggle,
-.floating-widget__main-btn,
-.floating-widget__menu-item,
-.floating-widget__main-icon,
-.language-switcher__btn {
-animation: none !important;
-}
-}
-
-/* ===== SELECCIÓN DE TEXTO ===== */
-::selection {
-background: var(--starflex-crimson);
-color: var(--text-primary);
-}
-
-::-moz-selection {
-background: var(--starflex-crimson);
-color: var(--text-primary);
-}
-
-/* ===== ESTADOS DE CARGA PARA IMÁGENES OPTIMIZADAS ===== */
-.hero__phone[data-loading="true"],
-.phone[data-loading="true"] {
-background: linear-gradient(90deg, 
-var(--secondary-bg) 25%, 
-var(--accent-bg) 50%, 
-var(--secondary-bg) 75%
-);
-background-size: 200% 100%;
-animation: loading-shimmer 2s infinite;
-}
-
-.hero__phone-app-image[data-loading="true"],
-.phone__app-image[data-loading="true"] {
-background: linear-gradient(90deg, 
-var(--secondary-bg) 25%, 
-var(--accent-bg) 50%, 
-var(--secondary-bg) 75%
-);
-background-size: 200% 100%;
-animation: loading-shimmer 2s infinite;
-}
-
-@keyframes loading-shimmer {
-0% {
-background-position: -200% 0;
-}
-100% {
-background-position: 200% 0;
-}
-}
-
-/* ===== CORRECCIÓN ESPECÍFICA PARA MODAL QR DE REFERIDOS ===== */
-/* Aplicar sombra rojiza a cualquier modal QR que aparezca */
-.modal,
-.qr-modal,
-[class*="modal"],
-[class*="qr"],
-.referral-modal,
-.popup,
-.overlay {
-box-shadow: 0 0 16px rgba(255, 45, 85, 0.6) !important;
-border: 1px solid rgba(255, 45, 85, 0.4) !important;
-}
-
-/* Asegurar que cualquier elemento con sombra amarilla sea reemplazado */
-*[style*="box-shadow"][style*="yellow"],
-*[style*="box-shadow"][style*="#ffff"],
-*[style*="box-shadow"][style*="rgb(255, 255, 0)"] {
-box-shadow: 0 0 16px rgba(255, 45, 85, 0.6) !important;
-}
-
-/* ===== RESTO DEL CSS ORIGINAL (CONTINÚA DESDE DONDE SE CORTÓ) ===== */
 
 /* ===== SECCIÓN CARACTERÍSTICAS CON IMÁGENES ULTRA-OPTIMIZADAS ===== */
 .features {
@@ -3209,7 +1851,6 @@ color: var(--text-secondary);
 padding: var(--space-sm) 0;
 transition: all var(--transition);
 line-height: 1.6;
-/* CORRECCIÓN: Alineación a la izquierda para todos los ítems */
 text-align: left;
 }
 
@@ -3229,37 +1870,6 @@ margin-top: 8px;
 color: var(--text-primary);
 transform: translateX(5px);
 }
-
-/* ===== CORRECCIÓN: ESTILOS UNIFICADOS PARA LA SECCIÓN REFERIDOS ===== */
-.feature[data-feature="referrals"] .feature__list-item {
-/* REMOVIDO: Estilos especiales que diferían del resto */
-display: flex;
-align-items: flex-start;
-gap: var(--space-md);
-margin-bottom: var(--space-lg);
-font-size: 1.1rem;
-color: var(--text-secondary);
-padding: var(--space-sm) 0;
-transition: all var(--transition);
-line-height: 1.6;
-text-align: left;
-/* REMOVIDO: background, border, border-radius para unificar con el resto */
-}
-
-.feature[data-feature="referrals"] .feature__list-item::before {
-/* MANTENER: El mismo estilo de bullet que el resto */
-content: '';
-width: 8px;
-height: 8px;
-background: var(--starflex-crimson-glow);
-border-radius: 50%;
-flex-shrink: 0;
-box-shadow: 0 0 10px var(--starflex-crimson-glow);
-animation: pulse-gentle 3s infinite;
-margin-top: 8px;
-}
-
-/* REMOVIDO: Estilos especiales para strong y br que diferían del resto */
 
 .feature__phone {
 position: relative;
@@ -3283,7 +1893,6 @@ box-shadow:
 0 8px 30px rgba(0, 0, 0, 0.3),
 0 0 0 1px rgba(255, 255, 255, 0.05);
 transition: all var(--transition);
-/* Optimización para renderizado */
 will-change: transform;
 contain: layout style paint;
 }
@@ -3308,7 +1917,6 @@ filter: drop-shadow(0 0 25px rgba(184, 0, 46, 0.12));
 filter: drop-shadow(0 0 25px rgba(255, 69, 105, 0.12));
 }
 
-/* CORRECCIÓN: Sombra rojiza para la sección de referidos */
 .feature:nth-child(6) .phone {
 filter: drop-shadow(0 0 25px rgba(255, 45, 85, 0.15));
 }
@@ -3333,7 +1941,6 @@ animation: feature-ambient-glow 10s ease-in-out infinite;
 filter: blur(20px);
 }
 
-/* CORRECCIÓN: Sombra rojiza para referidos */
 .feature:nth-child(6) .phone::before {
 background: radial-gradient(ellipse, 
 rgba(255, 45, 85, 0.1) 0%,
@@ -3358,81 +1965,6 @@ height: 100%;
 overflow: hidden;
 background: #000000;
 border-radius: 40px;
-}
-
-/* ===== IMÁGENES DE CARACTERÍSTICAS ULTRA-OPTIMIZADAS ===== */
-.phone__app-image {
-width: 100%;
-height: 100%;
-border-radius: 40px;
-position: absolute;
-top: 0;
-left: 0;
-z-index: 1;
-transition: all var(--transition);
-object-fit: cover;
-object-position: center;
-background-size: cover;
-background-position: center;
-background-repeat: no-repeat;
-background-attachment: scroll;
-/* Filtros ultra-optimizados para máxima nitidez */
-filter: 
-brightness(1.02) 
-contrast(1.05) 
-saturate(1.08)
-drop-shadow(0 0 0.5px rgba(0, 0, 0, 0.08));
-image-rendering: -webkit-optimize-contrast;
-image-rendering: -moz-crisp-edges;
-image-rendering: crisp-edges;
-image-rendering: high-quality;
-image-rendering: pixelated;
-transform: translateZ(0) scale(1.001);
-backface-visibility: hidden;
-will-change: transform, filter;
-contain: layout style paint;
-/* Suavizado de bordes */
--webkit-font-smoothing: antialiased;
--moz-osx-font-smoothing: grayscale;
-/* Optimización para pantallas de alta densidad */
-background-blend-mode: normal;
-isolation: isolate;
-}
-
-/* Estados de carga optimizados para características */
-.phone__app-image.loading {
-filter: brightness(0.9) contrast(0.95) blur(0.5px);
-transform: translateZ(0) scale(0.999);
-background: linear-gradient(90deg, 
-var(--secondary-bg) 25%, 
-var(--accent-bg) 50%, 
-var(--secondary-bg) 75%
-);
-background-size: 200% 100%;
-animation: image-loading-shimmer 1.5s infinite;
-}
-
-.phone__app-image.loaded {
-filter: 
-brightness(1.02) 
-contrast(1.05) 
-saturate(1.08)
-drop-shadow(0 0 0.5px rgba(0, 0, 0, 0.08));
-transform: translateZ(0) scale(1.001);
-}
-
-.phone__app-image.error {
-filter: brightness(0.7) contrast(0.8) grayscale(1);
-background: var(--accent-bg);
-display: flex;
-align-items: center;
-justify-content: center;
-color: var(--text-muted);
-font-size: 0.9rem;
-}
-
-.phone__app-image.error::before {
-content: '⚠️ Error cargando imagen';
 }
 
 /* ===== SECCIÓN DE VIDEOS FUTURISTA ===== */
@@ -4841,7 +3373,6 @@ z-index: 1;
 .floating-widget__main-btn:hover .floating-widget__main-icon {
 transform: scale(1.2);
 filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.6)) brightness(1.3) saturate(1.2);
-/* REMOVIDO: animation: floating-widget-icon-spin para eliminar la rotación */
 }
 
 .floating-widget__main-btn.active .floating-widget__main-icon {
@@ -5015,8 +3546,6 @@ transform: scale(1.05);
 filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5)) brightness(1.15) saturate(1.1);
 }
 }
-
-/* REMOVIDO: @keyframes floating-widget-icon-spin para eliminar la animación de girar */
 
 @keyframes floating-widget-icon-pulse {
 0%, 100% {
@@ -5424,6 +3953,255 @@ transform: translateY(-5px);
 }
 }
 
+/* ===== CORRECCIÓN ESPECÍFICA PARA MODAL QR DE REFERIDOS ===== */
+/* Aplicar sombra rojiza a cualquier modal QR que aparezca */
+.modal,
+.qr-modal,
+[class*="modal"],
+[class*="qr"],
+.referral-modal,
+.popup,
+.overlay {
+box-shadow: 0 0 16px rgba(255, 45, 85, 0.6) !important;
+border: 1px solid rgba(255, 45, 85, 0.4) !important;
+}
+
+/* Asegurar que cualquier elemento con sombra amarilla sea reemplazado */
+*[style*="box-shadow"][style*="yellow"],
+*[style*="box-shadow"][style*="#ffff"],
+*[style*="box-shadow"][style*="rgb(255, 255, 0)"] {
+box-shadow: 0 0 16px rgba(255, 45, 85, 0.6) !important;
+}
+
+/* ===== ESTADOS DE CARGA PARA IMÁGENES OPTIMIZADAS ===== */
+.hero__phone[data-loading="true"],
+.phone[data-loading="true"] {
+background: linear-gradient(90deg, 
+var(--secondary-bg) 25%, 
+var(--accent-bg) 50%, 
+var(--secondary-bg) 75%
+);
+background-size: 200% 100%;
+animation: loading-shimmer 2s infinite;
+}
+
+.hero__phone-app-image[data-loading="true"],
+.phone__app-image[data-loading="true"] {
+background: linear-gradient(90deg, 
+var(--secondary-bg) 25%, 
+var(--accent-bg) 50%, 
+var(--secondary-bg) 75%
+);
+background-size: 200% 100%;
+animation: loading-shimmer 2s infinite;
+}
+
+@keyframes loading-shimmer {
+0% {
+background-position: -200% 0;
+}
+100% {
+background-position: 200% 0;
+}
+}
+
+/* ===== OPTIMIZACIONES DE RENDIMIENTO ===== */
+.hero__phone,
+.hero__phone-container,
+.nav__logo,
+.nav__list,
+.btn--primary,
+.feature__phone,
+.contact__channel,
+.contact__channel-icon,
+.nav__toggle,
+.floating-widget,
+.floating-widget__main-icon,
+.language-switcher {
+will-change: transform;
+}
+
+.btn--cta,
+.btn--footer,
+.floating-widget__main-btn,
+.floating-widget__menu-item,
+.language-switcher__btn {
+will-change: transform, box-shadow;
+transform: translateZ(0);
+backface-visibility: hidden;
+}
+
+/* ===== ACCESIBILIDAD MEJORADA ===== */
+@media (prefers-reduced-motion: reduce) {
+*,
+*::before,
+*::after {
+animation-duration: 0.01ms !important;
+animation-iteration-count: 1 !important;
+transition-duration: 0.01ms !important;
+}
+
+.nav__logo,
+.nav__list,
+.btn--primary,
+.btn--cta::after,
+.hero__phone-container,
+.hero::before,
+.hero::after,
+.floating-orb-2,
+.floating-orb-3,
+.contact__channel,
+.contact__badge,
+.ambient-glow,
+.feature-ambient-glow,
+.nav__toggle,
+.floating-widget__main-btn,
+.floating-widget__menu-item,
+.floating-widget__main-icon,
+.language-switcher__btn {
+animation: none !important;
+}
+}
+
+/* ===== SELECCIÓN DE TEXTO ===== */
+::selection {
+background: var(--starflex-crimson);
+color: var(--text-primary);
+}
+
+::-moz-selection {
+background: var(--starflex-crimson);
+color: var(--text-primary);
+}
+
+/* ===== OPTIMIZACIONES MÓVILES INTEGRADAS ===== */
+/* Las optimizaciones móviles están incluidas en el archivo mobile-optimizations.css */
+/* que se carga automáticamente para dispositivos menores a 1024px */
+
+/* ===== MENÚ MÓVIL FULLSCREEN ULTRA OPTIMIZADO ===== */
+@media (max-width: 1024px) {
+.nav__menu {
+position: fixed;
+top: 0;
+left: -100%;
+width: var(--mobile-menu-width);
+height: 100vh;
+height: 100dvh;
+background: linear-gradient(135deg, 
+rgba(10, 13, 20, 0.98) 0%, 
+rgba(21, 25, 34, 0.98) 50%, 
+rgba(30, 35, 48, 0.98) 100%
+);
+backdrop-filter: blur(30px);
+-webkit-backdrop-filter: blur(30px);
+flex-direction: column;
+justify-content: center;
+align-items: center;
+transition: left 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+transform: none;
+pointer-events: auto;
+z-index: calc(var(--navbar-z-index) + 3);
+padding: calc(var(--mobile-menu-safe-area) + var(--navbar-height-mobile)) var(--mobile-menu-padding) calc(var(--mobile-menu-safe-area) + 80px) var(--mobile-menu-padding);
+overflow-y: auto;
+-webkit-overflow-scrolling: touch;
+padding-top: max(calc(var(--mobile-menu-safe-area) + var(--navbar-height-mobile)), calc(env(safe-area-inset-top, 20px) + var(--navbar-height-mobile)));
+padding-bottom: max(calc(var(--mobile-menu-safe-area) + 80px), calc(env(safe-area-inset-bottom, 0px) + 80px));
+padding-left: max(var(--mobile-menu-padding), env(safe-area-inset-left, var(--mobile-menu-padding)));
+padding-right: max(var(--mobile-menu-padding), env(safe-area-inset-right, var(--mobile-menu-padding)));
+}
+
+.nav__menu.active {
+left: 0;
+}
+
+.nav__menu::before {
+content: '';
+position: absolute;
+top: 0;
+left: 0;
+right: 0;
+bottom: 0;
+background: 
+radial-gradient(ellipse at 30% 20%, rgba(255, 69, 105, 0.1) 0%, transparent 50%),
+radial-gradient(ellipse at 70% 80%, rgba(255, 69, 105, 0.08) 0%, transparent 50%);
+z-index: -1;
+animation: mobile-menu-glow 8s ease-in-out infinite;
+}
+
+.nav__list {
+flex-direction: column;
+gap: clamp(var(--space-lg), 4vw, var(--space-2xl));
+background: transparent;
+border: none;
+padding: 0;
+box-shadow: none;
+animation: none;
+width: 100%;
+max-width: min(350px, calc(100vw - 2 * var(--mobile-menu-padding)));
+min-height: auto;
+}
+
+.nav__list::before {
+display: none;
+}
+
+.nav__link {
+font-size: clamp(1rem, 3vw, 1.2rem);
+padding: clamp(var(--space-sm), 2vw, var(--space-lg)) clamp(var(--space-lg), 4vw, var(--space-2xl));
+text-align: center;
+border-radius: 15px;
+background: rgba(21, 25, 34, 0.6);
+border: 1px solid rgba(255, 255, 255, 0.1);
+width: 100%;
+min-width: auto;
+backdrop-filter: blur(15px);
+-webkit-backdrop-filter: blur(15px);
+transition: all var(--transition);
+position: relative;
+overflow: hidden;
+min-height: 48px;
+display: flex;
+align-items: center;
+justify-content: center;
+}
+
+.nav__link::before {
+background: linear-gradient(135deg, 
+var(--glass-bg-medium) 0%, 
+var(--glass-bg-strong) 100%
+);
+border-radius: 15px;
+}
+
+.nav__link:hover {
+background: rgba(21, 25, 34, 0.8);
+border-color: var(--border-accent);
+transform: translateY(-3px) scale(1.02);
+box-shadow: 
+0 8px 25px rgba(0, 0, 0, 0.3),
+0 0 20px rgba(255, 69, 105, 0.2);
+}
+
+.nav__link:active {
+transform: translateY(-1px) scale(0.98);
+}
+
+.nav__toggle {
+display: flex;
+z-index: calc(var(--navbar-z-index) + 4);
+}
+
+.nav__menu.active ~ .nav__cta {
+opacity: 0;
+visibility: hidden;
+pointer-events: none;
+}
+
+.language-toggle {
+display: none;
+}
+}
+
 @keyframes mobile-menu-glow {
 0%, 100% {
 opacity: 0.8;
@@ -5435,58 +4213,239 @@ transform: scale(1.02);
 }
 }
 
-/* ===== RESPONSIVE OPTIMIZADO PARA MÓVIL ===== */
-@media (max-width: 1024px) {
+/* ===== RESPONSIVE BREAKPOINTS ESPECÍFICOS MEJORADOS ===== */
+@media (max-width: 768px) {
 :root {
 --navbar-height: var(--navbar-height-mobile);
+--mobile-menu-padding: 1.25rem;
+--mobile-menu-safe-area: 25px;
 }
 
-.hero {
-padding-top: calc(var(--navbar-height-mobile) + var(--space-lg));
+.header {
+height: var(--navbar-height-mobile);
 }
 
-.hero__container {
-grid-template-columns: 1fr;
-gap: var(--space-3xl);
-text-align: center;
+.nav {
+padding: 0 var(--space-lg);
 }
 
-.hero__phone-container {
-transform: none;
+.nav__logo {
+width: 50px;
+height: 50px;
 }
 
-.hero__phone {
-width: 300px;
-height: 600px;
+.nav__toggle {
+width: 44px;
+height: 44px;
 }
 
-.hero__download {
-justify-content: center;
+.nav__toggle-line {
+width: 20px;
 }
 
-.btn--cta {
-min-width: 200px;
+.nav__link {
+font-size: clamp(0.95rem, 2.5vw, 1.1rem);
 padding: var(--space-md) var(--space-xl);
-font-size: 0.95rem;
+min-height: 50px;
 }
 
-.feature {
-grid-template-columns: 1fr;
+.btn--primary {
+padding: var(--space-sm) var(--space-lg);
+font-size: 0.8rem;
+}
+
+.nav__menu {
+padding: calc(var(--mobile-menu-safe-area) + var(--navbar-height-mobile)) var(--mobile-menu-padding) calc(var(--mobile-menu-safe-area) + 60px) var(--mobile-menu-padding);
+}
+
+.nav__list {
 gap: var(--space-xl);
-text-align: center;
+max-width: min(320px, calc(100vw - 2 * var(--mobile-menu-padding)));
+}
 }
 
-.feature:nth-child(even) {
-direction: ltr;
+@media (max-width: 480px) {
+:root {
+--mobile-menu-padding: 1rem;
+--mobile-menu-safe-area: 20px;
 }
 
-.feature__phone {
-width: 280px;
-height: 560px;
+.nav {
+padding: 0 var(--space-md);
 }
 
-.contact__grid {
-grid-template-columns: repeat(2, 1fr);
-gap: var(--space-xl);
+.nav__logo {
+width: 45px;
+height: 45px;
+}
+
+.nav__toggle {
+width: 40px;
+height: 40px;
+}
+
+.nav__toggle-line {
+width: 18px;
+}
+
+.nav__link {
+font-size: clamp(0.9rem, 3.5vw, 1rem);
+padding: var(--space-sm) var(--space-lg);
+min-height: 46px;
+}
+
+.btn--primary {
+padding: var(--space-xs) var(--space-md);
+font-size: 0.75rem;
+}
+
+.nav__menu {
+padding: calc(var(--mobile-menu-safe-area) + var(--navbar-height-mobile)) var(--mobile-menu-padding) calc(var(--mobile-menu-safe-area) + 50px) var(--mobile-menu-padding);
+}
+
+.nav__list {
+gap: var(--space-lg);
+max-width: min(300px, calc(100vw - 2 * var(--mobile-menu-padding)));
+}
+}
+
+@media (max-width: 360px) {
+:root {
+--mobile-menu-padding: 0.875rem;
+--mobile-menu-safe-area: 18px;
+}
+
+.nav__link {
+font-size: 0.875rem;
+padding: var(--space-xs) var(--space-md);
+min-height: 44px;
+}
+
+.nav__list {
+gap: var(--space-md);
+max-width: calc(100vw - 2 * var(--mobile-menu-padding));
+}
+}
+
+/* ===== MEJORAS PARA DISPOSITIVOS CON NOTCH ===== */
+@supports (padding: max(0px)) {
+@media (max-width: 1024px) {
+.nav__menu {
+padding-top: max(calc(var(--mobile-menu-safe-area) + var(--navbar-height-mobile)), calc(env(safe-area-inset-top, 20px) + var(--navbar-height-mobile) + 10px));
+padding-bottom: max(calc(var(--mobile-menu-safe-area) + 80px), calc(env(safe-area-inset-bottom, 0px) + 80px));
+padding-left: max(var(--mobile-menu-padding), env(safe-area-inset-left, var(--mobile-menu-padding)));
+padding-right: max(var(--mobile-menu-padding), env(safe-area-inset-right, var(--mobile-menu-padding)));
+}
+}
+}
+
+/* ===== RESPONSIVE PARA EL SELECTOR DE IDIOMA ===== */
+@media (max-width: 768px) {
+.language-switcher {
+top: var(--language-switcher-safe-area);
+right: var(--language-switcher-safe-area);
+z-index: calc(var(--navbar-z-index) + 5);
+}
+
+.language-switcher__btn {
+padding: var(--space-sm) var(--space-md);
+font-size: 0.8rem;
+min-width: 100px;
+border-radius: 20px;
+}
+
+.language-switcher__icon {
+width: 18px;
+height: 18px;
+}
+
+.language-switcher__arrow {
+width: 14px;
+height: 14px;
+}
+
+.language-switcher__dropdown {
+min-width: 160px;
+top: calc(100% + 8px);
+}
+
+.language-switcher__option {
+padding: var(--space-sm) var(--space-md);
+font-size: 0.85rem;
+}
+}
+
+@media (max-width: 480px) {
+.language-switcher {
+top: var(--language-switcher-safe-area);
+right: var(--language-switcher-safe-area);
+z-index: calc(var(--navbar-z-index) + 5);
+}
+
+.language-switcher__btn {
+padding: var(--space-xs) var(--space-sm);
+font-size: 0.75rem;
+min-width: 85px;
+border-radius: 18px;
+}
+
+.language-switcher__icon {
+width: 16px;
+height: 16px;
+}
+
+.language-switcher__arrow {
+width: 12px;
+height: 12px;
+}
+
+.language-switcher__dropdown {
+min-width: 140px;
+right: -10px;
+}
+
+.language-switcher__option {
+padding: var(--space-xs) var(--space-sm);
+font-size: 0.8rem;
+}
+
+.language-switcher__flag {
+font-size: 1rem;
+}
+}
+
+/* Evitar solapamiento del selector de idioma con el botón CTA */
+@media (max-width: 1200px) {
+.language-switcher {
+top: calc(var(--navbar-height) + 10px);
+right: var(--language-switcher-safe-area);
+}
+}
+
+@media (max-width: 768px) {
+.language-switcher {
+top: calc(var(--navbar-height-mobile) + 10px);
+right: var(--language-switcher-safe-area);
+z-index: calc(var(--navbar-z-index) + 5);
+}
+
+.nav__cta {
+margin-right: 120px;
+}
+}
+
+@media (max-width: 480px) {
+.language-switcher {
+top: calc(var(--navbar-height-mobile) + 5px);
+right: var(--language-switcher-safe-area);
+z-index: calc(var(--navbar-z-index) + 5);
+}
+
+.nav__cta {
+margin-right: 100px;
+}
+
+.nav__cta {
+display: none;
 }
 }

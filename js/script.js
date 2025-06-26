@@ -1,11 +1,7 @@
-// ===== VARIABLES GLOBALES =====
+// ===== VARIABLES GLOBALES OPTIMIZADAS PARA MÓVIL =====
 let isMenuOpen = false;
 let currentFeature = 0;
 const features = document.querySelectorAll('.feature');
-// Variables para el sistema de partículas flotantes
-let particleSystems = [];
-let animationId = null;
-let isReducedMotion = false;
 // Variables para el sistema de idiomas
 let currentLanguage = 'es';
 const translations = {};
@@ -21,81 +17,64 @@ let ticking = false;
 let touchStartY = 0;
 let touchEndY = 0;
 let isNavbarVisible = true;
+// Variables para optimización móvil
+let isMobile = window.innerWidth <= 1023;
+let isReducedMotion = false;
+let performanceMode = false;
 
-// ===== CONFIGURACIÓN GLOBAL =====
+// ===== CONFIGURACIÓN GLOBAL OPTIMIZADA =====
 const CONFIG = {
-    // Configuración de animaciones
-    ANIMATION_DURATION: 300,
-    SCROLL_THRESHOLD: 100,
+    // Configuración de animaciones optimizada para móvil
+    ANIMATION_DURATION: isMobile ? 200 : 300,
+    SCROLL_THRESHOLD: isMobile ? 50 : 100,
     
-    // Configuración de imágenes optimizadas
+    // Configuración de imágenes optimizadas para móvil
     IMAGE_FORMATS: {
-        AVIF: 'image/avif',
         WEBP: 'image/webp',
         JPEG: 'image/jpeg',
         PNG: 'image/png'
     },
     
-    // Rutas de imágenes optimizadas
+    // Rutas de imágenes optimizadas para móvil (solo JPG para mejor compatibilidad)
     IMAGE_PATHS: {
         hero: {
-            avif: './assets/phones/Hero.avif',
-            webp: './assets/phones/Hero.webp',
-            jpg: './assets/phones/Hero.jpg'
+            jpg: './assets/phones/Hero.mp4'
         },
         logo: {
-            avif: './assets/logo.avif',
-            webp: './assets/logo.webp',
             png: './assets/logo.png'
         },
         phones: {
             horario: {
-                avif: './assets/phones/Horario.avif',
-                webp: './assets/phones/Horario.webp',
-                jpg: './assets/phones/Horario.jpg'
+                jpg: './assets/phones/Horario.avif'
             },
             estaciones: {
-                avif: './assets/phones/Estaciones.avif',
-                webp: './assets/phones/Estaciones.webp',
-                jpg: './assets/phones/Estaciones.jpg'
+                jpg: './assets/phones/Estaciones.avif'
             },
             calendario: {
-                avif: './assets/phones/Calendario.avif',
-                webp: './assets/phones/Calendario.webp',
-                jpg: './assets/phones/Calendario.jpg'
+                jpg: './assets/phones/Calendario.avif'
             },
             registro: {
-                avif: './assets/phones/Registro.avif',
-                webp: './assets/phones/Registro.webp',
-                jpg: './assets/phones/Registro.jpg'
+                jpg: './assets/phones/Registro.avif'
             },
             notificaciones: {
-                avif: './assets/phones/Notificaciones.avif',
-                webp: './assets/phones/Notificaciones.webp',
-                jpg: './assets/phones/Notificaciones.jpg'
+                jpg: './assets/phones/Notificaciones.avif'
             },
             referidos: {
-                avif: './assets/phones/Referidos.avif',
-                webp: './assets/phones/Referidos.webp',
-                jpg: './assets/phones/Referidos.jpg'
+                jpg: './assets/phones/Referidos.avif'
             }
         },
         downloads: {
             apple: {
-                avif: './assets/AppleStore.avif',
-                webp: './assets/AppleStore.webp',
-                png: './assets/AppleStore.png'
+                png: './assets/AppleStore.avif'
             },
             google: {
-                avif: './assets/GooglePlay.avif',
-                webp: './assets/GooglePlay.webp',
-                png: './assets/GooglePlay.png'
+                png: './assets/GooglePlay.avif'
             }
         }
     }
 };
 
-// ===== SISTEMA DE TRADUCCIONES =====
+// ===== SISTEMA DE TRADUCCIONES OPTIMIZADO =====
 const translationData = {
     es: {
         // Meta tags
@@ -165,7 +144,7 @@ const translationData = {
         'feature-notifications-item-5': 'Alertas personalizables por tipo de bloque',
         'feature-notifications-item-6': 'Notificaciones en tiempo real',
         'feature-notifications-item-7': 'Filtros avanzados de notificación',
-        // Feature 6: Referidos - CONTENIDO ACTUALIZADO
+        // Feature 6: Referidos
         'feature-referrals-title': 'REFERIDOS',
         'feature-referrals-description': 'Invitá a otros usuarios a unirse a Starflex y obtené beneficios exclusivos por cada referido que se registre.',
         'feature-referrals-item-1': 'Enlace único de referido personalizado',
@@ -207,24 +186,24 @@ const translationData = {
         'contact-title-main': 'MEJORES BLOQUES DE',
         'contact-title-highlight': 'AMAZON FLEX',
         'contact-subtitle': 'No olvides seguirnos en nuestras redes sociales ya que publicamos diariamente en nuestros canales la recopilación de los mejores bloques aceptados y así podrás estar al tanto de los horarios y ubicaciones más rentables.',
-        'contact-whatsapp-title': 'Canales de noticias de WhatsApp',
-        'contact-whatsapp-description': 'Únete a nuestro canal de WhatsApp para recibir las últimas actualizaciones y mejores bloques disponibles',
-        'contact-whatsapp-btn': 'Unirse al Canal',
+        'contact-whatsapp-title': 'WhatsApp',
+        'contact-whatsapp-description': 'Canal de noticias',
+        'contact-whatsapp-btn': 'Unirse',
         'contact-instagram-title': 'Instagram',
-        'contact-instagram-description': 'Síguenos para contenido visual, tips y actualizaciones diarias sobre los mejores bloques',
+        'contact-instagram-description': 'Contenido visual diario',
         'contact-instagram-btn': 'Seguir',
         'contact-facebook-title': 'Facebook',
-        'contact-facebook-description': 'Únete a nuestra comunidad en Facebook para interactuar con otros conductores y compartir experiencias',
+        'contact-facebook-description': 'Comunidad de conductores',
         'contact-facebook-btn': 'Seguir',
         'contact-tiktok-title': 'TikTok',
-        'contact-tiktok-description': 'Descubre contenido viral, tips rápidos y las últimas tendencias de Amazon Flex',
+        'contact-tiktok-description': 'Tips y tendencias',
         'contact-tiktok-btn': 'Seguir',
-        'contact-telegram-title': 'Canales de noticias de Telegram',
-        'contact-telegram-description': 'Recibe notificaciones instantáneas de los mejores bloques y actualizaciones importantes',
-        'contact-telegram-btn': 'Unirse al Canal',
-        'contact-email-title': 'support@starflexapp.com',
-        'contact-email-description': 'Contacta directamente con nuestro equipo de soporte técnico especializado',
-        'contact-email-btn': 'Enviar Email',
+        'contact-telegram-title': 'Telegram',
+        'contact-telegram-description': 'Notificaciones instantáneas',
+        'contact-telegram-btn': 'Unirse',
+        'contact-email-title': 'Soporte',
+        'contact-email-description': 'Ayuda especializada',
+        'contact-email-btn': 'Contactar',
         // Footer
         'footer-legal': 'Política de Privacidad • Términos y Condiciones',
         'footer-copyright': '© StarFlex • Todos los derechos reservados',
@@ -299,7 +278,7 @@ const translationData = {
         'feature-notifications-item-5': 'Customizable alerts by block type',
         'feature-notifications-item-6': 'Real-time notifications',
         'feature-notifications-item-7': 'Advanced notification filters',
-        // Feature 6: Referrals - CONTENIDO ACTUALIZADO
+        // Feature 6: Referrals
         'feature-referrals-title': 'REFERRALS',
         'feature-referrals-description': 'Invite other users to join Starflex and get exclusive benefits for each referral that registers.',
         'feature-referrals-item-1': 'Unique personalized referral link',
@@ -341,24 +320,24 @@ const translationData = {
         'contact-title-main': 'BEST BLOCKS OF',
         'contact-title-highlight': 'AMAZON FLEX',
         'contact-subtitle': 'Don\'t forget to follow us on our social networks as we publish daily on our channels the compilation of the best accepted blocks so you can stay up to date with the most profitable schedules and locations.',
-        'contact-whatsapp-title': 'WhatsApp news channels',
-        'contact-whatsapp-description': 'Join our WhatsApp channel to receive the latest updates and best available blocks',
-        'contact-whatsapp-btn': 'Join Channel',
+        'contact-whatsapp-title': 'WhatsApp',
+        'contact-whatsapp-description': 'News channel',
+        'contact-whatsapp-btn': 'Join',
         'contact-instagram-title': 'Instagram',
-        'contact-instagram-description': 'Follow us for visual content, tips and daily updates on the best blocks',
+        'contact-instagram-description': 'Daily visual content',
         'contact-instagram-btn': 'Follow',
         'contact-facebook-title': 'Facebook',
-        'contact-facebook-description': 'Join our Facebook community to interact with other drivers and share experiences',
+        'contact-facebook-description': 'Driver community',
         'contact-facebook-btn': 'Follow',
         'contact-tiktok-title': 'TikTok',
-        'contact-tiktok-description': 'Discover viral content, quick tips and the latest Amazon Flex trends',
+        'contact-tiktok-description': 'Tips and trends',
         'contact-tiktok-btn': 'Follow',
-        'contact-telegram-title': 'Telegram news channels',
-        'contact-telegram-description': 'Receive instant notifications of the best blocks and important updates',
-        'contact-telegram-btn': 'Join Channel',
-        'contact-email-title': 'support@starflexapp.com',
-        'contact-email-description': 'Contact directly with our specialized technical support team',
-        'contact-email-btn': 'Send Email',
+        'contact-telegram-title': 'Telegram',
+        'contact-telegram-description': 'Instant notifications',
+        'contact-telegram-btn': 'Join',
+        'contact-email-title': 'Support',
+        'contact-email-description': 'Specialized help',
+        'contact-email-btn': 'Contact',
         // Footer
         'footer-legal': 'Privacy Policy • Terms and Conditions',
         'footer-copyright': '© StarFlex • All rights reserved',
@@ -367,10 +346,27 @@ const translationData = {
     }
 };
 
-// ===== CLASE PARA OPTIMIZACIÓN DE IMÁGENES =====
-class ImageOptimizer {
+// ===== DETECCIÓN DE DISPOSITIVO Y CAPACIDADES =====
+function detectDeviceCapabilities() {
+    isMobile = window.innerWidth <= 1023;
+    isReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    
+    // Detectar dispositivos de baja potencia
+    const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    const isSlowConnection = connection && (connection.effectiveType === 'slow-2g' || connection.effectiveType === '2g');
+    const isLowEndDevice = navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 2;
+    
+    performanceMode = isMobile && (isSlowConnection || isLowEndDevice || isReducedMotion);
+    
+    if (performanceMode) {
+        document.body.classList.add('performance-mode');
+        console.log('Modo de rendimiento activado para dispositivo de baja potencia');
+    }
+}
+
+// ===== CLASE OPTIMIZADA PARA IMÁGENES MÓVILES =====
+class MobileImageOptimizer {
     constructor() {
-        this.supportedFormats = new Set();
         this.imageCache = new Map();
         this.lazyImages = new Set();
         this.intersectionObserver = null;
@@ -378,59 +374,13 @@ class ImageOptimizer {
     }
     
     async init() {
-        await this.detectFormatSupport();
         this.setupLazyLoading();
         this.preloadCriticalImages();
     }
     
-    // Detectar soporte de formatos de imagen
-    async detectFormatSupport() {
-        const formats = [
-            { type: 'avif', data: 'data:image/avif;base64,AAAAIGZ0eXBhdmlmAAAAAGF2aWZtaWYxbWlhZk1BMUIAAADybWV0YQAAAAAAAAAoaGRscgAAAAAAAAAAcGljdAAAAAAAAAAAAAAAAGxpYmF2aWYAAAAADnBpdG0AAAAAAAEAAAAeaWxvYwAAAABEAAABAAEAAAABAAABGgAAAB0AAAAoaWluZgAAAAAAAQAAABppbmZlAgAAAAABAABhdjAxQ29sb3IAAAAAamlwcnAAAABLaXBjbwAAABRpc3BlAAAAAAAAAAIAAAACAAAAEHBpeGkAAAAAAwgICAAAAAxhdjFDgQ0MAAAAABNjb2xybmNseAACAAIAAYAAAAAXaXBtYQAAAAAAAAABAAEEAQKDBAAAACVtZGF0EgAKCBgABogQEAwgMg8f8D///8WfhwB8+ErK42A=' },
-            { type: 'webp', data: 'data:image/webp;base64,UklGRjoAAABXRUJQVlA4IC4AAACyAgCdASoCAAIALmk0mk0iIiIiIgBoSygABc6WWgAA/veff/0PP8bA//LwYAAA' }
-        ];
-        
-        const promises = formats.map(format => 
-            this.canUseFormat(format.data).then(supported => {
-                if (supported) {
-                    this.supportedFormats.add(format.type);
-                }
-            })
-        );
-        
-        await Promise.all(promises);
-        
-        // Siempre agregar JPEG y PNG como fallbacks
-        this.supportedFormats.add('jpeg');
-        this.supportedFormats.add('png');
-        
-        console.log('Formatos soportados:', Array.from(this.supportedFormats));
-    }
-    
-    // Verificar si el navegador puede usar un formato específico
-    canUseFormat(dataUrl) {
-        return new Promise(resolve => {
-            const img = new Image();
-            img.onload = () => resolve(img.width > 0 && img.height > 0);
-            img.onerror = () => resolve(false);
-            img.src = dataUrl;
-        });
-    }
-    
-    // Obtener la mejor URL de imagen disponible
-    getBestImageUrl(imageConfig) {
-        if (this.supportedFormats.has('avif') && imageConfig.avif) {
-            return imageConfig.avif;
-        }
-        if (this.supportedFormats.has('webp') && imageConfig.webp) {
-            return imageConfig.webp;
-        }
-        return imageConfig.jpg || imageConfig.png;
-    }
-    
-    // Configurar lazy loading con Intersection Observer
+    // Configurar lazy loading optimizado para móvil
     setupLazyLoading() {
-        if ('IntersectionObserver' in window) {
+        if ('IntersectionObserver' in window && !performanceMode) {
             this.intersectionObserver = new IntersectionObserver(
                 (entries) => {
                     entries.forEach(entry => {
@@ -441,14 +391,14 @@ class ImageOptimizer {
                     });
                 },
                 {
-                    rootMargin: '50px 0px',
+                    rootMargin: isMobile ? '25px 0px' : '50px 0px',
                     threshold: 0.01
                 }
             );
         }
     }
     
-    // Cargar imagen optimizada
+    // Cargar imagen optimizada para móvil
     async loadImage(element) {
         const imageKey = element.dataset.imageKey;
         const imageConfig = this.getImageConfig(imageKey);
@@ -458,27 +408,24 @@ class ImageOptimizer {
             return;
         }
         
-        const bestUrl = this.getBestImageUrl(imageConfig);
+        // En móvil, usar siempre JPG para mejor compatibilidad
+        const imageUrl = imageConfig.jpg || imageConfig.png;
         
         try {
-            // Mostrar estado de carga
             element.classList.add('loading');
             
             // Precargar la imagen
-            await this.preloadImage(bestUrl);
+            await this.preloadImage(imageUrl);
             
             // Aplicar la imagen
             if (element.tagName === 'IMG') {
-                element.src = bestUrl;
+                element.src = imageUrl;
             } else {
-                element.style.backgroundImage = `url('${bestUrl}')`;
+                element.style.backgroundImage = `url('${imageUrl}')`;
             }
             
-            // Remover estado de carga
             element.classList.remove('loading');
             element.classList.add('loaded');
-            
-            console.log(`Imagen cargada: ${imageKey} -> ${bestUrl}`);
             
         } catch (error) {
             console.error(`Error cargando imagen ${imageKey}:`, error);
@@ -517,21 +464,21 @@ class ImageOptimizer {
         return config;
     }
     
-    // Precargar imágenes críticas
+    // Precargar imágenes críticas solo en desktop
     async preloadCriticalImages() {
+        if (isMobile || performanceMode) return;
+        
         const criticalImages = [
             'hero',
-            'logo',
-            'phones.horario'
+            'logo'
         ];
         
         const preloadPromises = criticalImages.map(async (key) => {
             const config = this.getImageConfig(key);
             if (config) {
-                const url = this.getBestImageUrl(config);
+                const url = config.jpg || config.png;
                 try {
                     await this.preloadImage(url);
-                    console.log(`Imagen crítica precargada: ${key} -> ${url}`);
                 } catch (error) {
                     console.warn(`Error precargando imagen crítica ${key}:`, error);
                 }
@@ -546,25 +493,25 @@ class ImageOptimizer {
         element.dataset.imageKey = imageKey;
         this.lazyImages.add(element);
         
-        if (this.intersectionObserver) {
+        if (this.intersectionObserver && !performanceMode) {
             this.intersectionObserver.observe(element);
         } else {
-            // Fallback para navegadores sin Intersection Observer
+            // Cargar inmediatamente en modo de rendimiento
             this.loadImage(element);
         }
     }
     
-    // Cargar imagen inmediatamente (para imágenes críticas)
+    // Cargar imagen inmediatamente
     loadImageImmediately(element, imageKey) {
         element.dataset.imageKey = imageKey;
         this.loadImage(element);
     }
 }
 
-// ===== INICIALIZACIÓN GLOBAL =====
+// ===== INICIALIZACIÓN GLOBAL OPTIMIZADA =====
 let imageOptimizer;
 
-// ===== FUNCIONES DE TRADUCCIÓN =====
+// ===== FUNCIONES DE TRADUCCIÓN OPTIMIZADAS =====
 function initializeLanguageSystem() {
     const savedLanguage = localStorage.getItem('starflex-language');
     const browserLanguage = navigator.language.slice(0, 2);
@@ -610,10 +557,13 @@ function switchLanguage(newLanguage) {
     
     document.documentElement.lang = newLanguage;
     
-    document.body.style.opacity = '0.95';
-    setTimeout(() => {
-        document.body.style.opacity = '1';
-    }, 150);
+    // Animación más suave en móvil
+    if (!isMobile) {
+        document.body.style.opacity = '0.95';
+        setTimeout(() => {
+            document.body.style.opacity = '1';
+        }, 150);
+    }
 }
 
 function applyTranslations() {
@@ -624,45 +574,48 @@ function applyTranslations() {
         return;
     }
     
-    document.querySelectorAll('[data-translate]').forEach(element => {
-        const key = element.getAttribute('data-translate');
-        const translation = currentTranslations[key];
-        
-        if (translation) {
-            if (element.tagName === 'INPUT' && element.type === 'text') {
-                element.placeholder = translation;
-            } else if (element.tagName === 'META') {
-                element.content = translation;
-            } else if (element.tagName === 'TITLE') {
-                element.textContent = translation;
-            } else {
-                element.innerHTML = translation;
+    // Optimización: usar requestAnimationFrame para evitar bloqueos
+    requestAnimationFrame(() => {
+        document.querySelectorAll('[data-translate]').forEach(element => {
+            const key = element.getAttribute('data-translate');
+            const translation = currentTranslations[key];
+            
+            if (translation) {
+                if (element.tagName === 'INPUT' && element.type === 'text') {
+                    element.placeholder = translation;
+                } else if (element.tagName === 'META') {
+                    element.content = translation;
+                } else if (element.tagName === 'TITLE') {
+                    element.textContent = translation;
+                } else {
+                    element.innerHTML = translation;
+                }
             }
-        }
-    });
-    
-    document.querySelectorAll('[data-translate-placeholder]').forEach(element => {
-        const key = element.getAttribute('data-translate-placeholder');
-        const translation = currentTranslations[key];
-        if (translation) {
-            element.placeholder = translation;
-        }
-    });
-    
-    document.querySelectorAll('[data-translate-aria]').forEach(element => {
-        const key = element.getAttribute('data-translate-aria');
-        const translation = currentTranslations[key];
-        if (translation) {
-            element.setAttribute('aria-label', translation);
-        }
-    });
-    
-    document.querySelectorAll('[data-translate-alt]').forEach(element => {
-        const key = element.getAttribute('data-translate-alt');
-        const translation = currentTranslations[key];
-        if (translation) {
-            element.alt = translation;
-        }
+        });
+        
+        document.querySelectorAll('[data-translate-placeholder]').forEach(element => {
+            const key = element.getAttribute('data-translate-placeholder');
+            const translation = currentTranslations[key];
+            if (translation) {
+                element.placeholder = translation;
+            }
+        });
+        
+        document.querySelectorAll('[data-translate-aria]').forEach(element => {
+            const key = element.getAttribute('data-translate-aria');
+            const translation = currentTranslations[key];
+            if (translation) {
+                element.setAttribute('aria-label', translation);
+            }
+        });
+        
+        document.querySelectorAll('[data-translate-alt]').forEach(element => {
+            const key = element.getAttribute('data-translate-alt');
+            const translation = currentTranslations[key];
+            if (translation) {
+                element.alt = translation;
+            }
+        });
     });
 }
 
@@ -677,11 +630,10 @@ function updateLanguageButtons() {
         }
     });
     
-    // Actualizar el selector de idioma independiente
     updateLanguageSwitcher();
 }
 
-// ===== FUNCIONES DEL SELECTOR DE IDIOMA INDEPENDIENTE =====
+// ===== FUNCIONES DEL SELECTOR DE IDIOMA OPTIMIZADAS =====
 function initializeLanguageSwitcher() {
     const languageSwitcherBtn = document.getElementById('language-switcher-btn');
     const languageSwitcherDropdown = document.getElementById('language-switcher-dropdown');
@@ -690,14 +642,14 @@ function initializeLanguageSwitcher() {
     
     if (!languageSwitcherBtn || !languageSwitcherDropdown || !languageSwitcher) return;
     
-    // Toggle del dropdown
+    // Toggle del dropdown optimizado para móvil
     languageSwitcherBtn.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
         toggleLanguageSwitcher();
     });
     
-    // Opciones de idioma
+    // Opciones de idioma con mejor feedback táctil
     languageOptions.forEach(option => {
         option.addEventListener('click', (e) => {
             e.preventDefault();
@@ -707,6 +659,16 @@ function initializeLanguageSwitcher() {
                 closeLanguageSwitcher();
             }
         });
+        
+        // Mejor feedback táctil en móvil
+        if (isMobile) {
+            option.addEventListener('touchstart', () => {
+                option.style.transform = 'scale(0.98)';
+            });
+            option.addEventListener('touchend', () => {
+                option.style.transform = '';
+            });
+        }
     });
     
     // Cerrar al hacer click fuera
@@ -723,7 +685,6 @@ function initializeLanguageSwitcher() {
         }
     });
     
-    // Inicializar estado
     updateLanguageSwitcher();
 }
 
@@ -745,13 +706,15 @@ function openLanguageSwitcher() {
     languageSwitcher.classList.add('active');
     languageSwitcherBtn.setAttribute('aria-expanded', 'true');
     
-    // Focus en la primera opción
-    setTimeout(() => {
-        const firstOption = languageSwitcher.querySelector('.language-switcher__option');
-        if (firstOption) {
-            firstOption.focus();
-        }
-    }, 100);
+    // Focus optimizado para móvil
+    if (!isMobile) {
+        setTimeout(() => {
+            const firstOption = languageSwitcher.querySelector('.language-switcher__option');
+            if (firstOption) {
+                firstOption.focus();
+            }
+        }, 100);
+    }
 }
 
 function closeLanguageSwitcher() {
@@ -769,12 +732,10 @@ function updateLanguageSwitcher() {
     const languageSwitcherText = document.getElementById('language-switcher-text');
     const languageOptions = document.querySelectorAll('.language-switcher__option');
     
-    // Actualizar texto del botón
     if (languageSwitcherText) {
         languageSwitcherText.textContent = currentLanguage.toUpperCase();
     }
     
-    // Actualizar opciones activas
     languageOptions.forEach(option => {
         const optionLang = option.getAttribute('data-lang');
         if (optionLang === currentLanguage) {
@@ -785,7 +746,7 @@ function updateLanguageSwitcher() {
     });
 }
 
-// ===== FUNCIONES DEL BOTÓN FLOTANTE (ACTUALIZADO CON ÍCONO DE MENSAJE) =====
+// ===== FUNCIONES DEL BOTÓN FLOTANTE OPTIMIZADAS =====
 function initializeFloatingWidget() {
     const floatingMainBtn = document.getElementById('floating-main-btn');
     const floatingMenu = document.getElementById('floating-menu');
@@ -795,6 +756,16 @@ function initializeFloatingWidget() {
     floatingMainBtn.addEventListener('click', () => {
         toggleFloatingMenu();
     });
+    
+    // Mejor manejo táctil en móvil
+    if (isMobile) {
+        floatingMainBtn.addEventListener('touchstart', () => {
+            floatingMainBtn.style.transform = 'scale(0.95)';
+        });
+        floatingMainBtn.addEventListener('touchend', () => {
+            floatingMainBtn.style.transform = '';
+        });
+    }
     
     document.addEventListener('click', (e) => {
         const floatingWidget = document.getElementById('floating-widget');
@@ -829,12 +800,13 @@ function openFloatingMenu() {
     floatingMenu.classList.add('active');
     floatingMainBtn.setAttribute('aria-expanded', 'true');
     
+    // Animación optimizada para móvil
     const menuItems = floatingMenu.querySelectorAll('.floating-widget__menu-item');
     menuItems.forEach((item, index) => {
         setTimeout(() => {
             item.style.transform = 'translateY(0) scale(1)';
             item.style.opacity = '1';
-        }, index * 100);
+        }, index * (isMobile ? 50 : 100));
     });
 }
 
@@ -856,332 +828,27 @@ function closeFloatingMenu() {
     });
 }
 
-// ===== DETECCIÓN DE PREFERENCIAS DE MOVIMIENTO =====
-function checkReducedMotion() {
-    isReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    
-    if (isReducedMotion) {
-        document.body.classList.add('reduced-motion');
-        particleSystems.forEach(system => system.destroy());
-        particleSystems = [];
-        if (animationId) {
-            cancelAnimationFrame(animationId);
-        }
-    }
-}
-
-// ===== SISTEMA DE PARTÍCULAS FLOTANTES DELICADAS =====
-class ParticleSystem {
-    constructor(container, options = {}) {
-        this.container = container;
-        this.canvas = null;
-        this.ctx = null;
-        this.particles = [];
-        this.animationId = null;
-        
-        this.config = {
-            particleCount: options.particleCount || 15,
-            particleSize: options.particleSize || 2,
-            particleSpeed: options.particleSpeed || 0.5,
-            particleColor: options.particleColor || 'rgba(255, 69, 105, 0.3)',
-            connectionDistance: options.connectionDistance || 100,
-            connectionOpacity: options.connectionOpacity || 0.1,
-            ...options
-        };
-        
-        this.init();
-    }
-    
-    init() {
-        if (isReducedMotion) return;
-        
-        this.createCanvas();
-        this.createParticles();
-        this.animate();
-        this.setupResize();
-    }
-    
-    createCanvas() {
-        this.canvas = document.createElement('canvas');
-        this.canvas.className = 'particles-canvas';
-        this.ctx = this.canvas.getContext('2d');
-        
-        let particlesContainer = this.container.querySelector('.particles-container');
-        if (!particlesContainer) {
-            particlesContainer = document.createElement('div');
-            particlesContainer.className = 'particles-container';
-            this.container.appendChild(particlesContainer);
-        }
-        
-        particlesContainer.appendChild(this.canvas);
-        this.resizeCanvas();
-    }
-    
-    resizeCanvas() {
-        if (!this.canvas || !this.container) return;
-        
-        const rect = this.container.getBoundingClientRect();
-        this.canvas.width = rect.width;
-        this.canvas.height = rect.height;
-    }
-    
-    createParticles() {
-        this.particles = [];
-        for (let i = 0; i < this.config.particleCount; i++) {
-            this.particles.push({
-                x: Math.random() * this.canvas.width,
-                y: Math.random() * this.canvas.height,
-                vx: (Math.random() - 0.5) * this.config.particleSpeed,
-                vy: (Math.random() - 0.5) * this.config.particleSpeed,
-                size: Math.random() * this.config.particleSize + 1,
-                opacity: Math.random() * 0.5 + 0.2
-            });
-        }
-    }
-    
-    animate() {
-        if (isReducedMotion) return;
-        
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        
-        this.particles.forEach(particle => {
-            particle.x += particle.vx;
-            particle.y += particle.vy;
-            
-            if (particle.x < 0 || particle.x > this.canvas.width) particle.vx *= -1;
-            if (particle.y < 0 || particle.y > this.canvas.height) particle.vy *= -1;
-            
-            particle.x = Math.max(0, Math.min(this.canvas.width, particle.x));
-            particle.y = Math.max(0, Math.min(this.canvas.height, particle.y));
-            
-            this.ctx.beginPath();
-            this.ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
-            this.ctx.fillStyle = this.config.particleColor.replace('0.3', particle.opacity.toString());
-            this.ctx.fill();
-        });
-        
-        this.drawConnections();
-        this.animationId = requestAnimationFrame(() => this.animate());
-    }
-    
-    drawConnections() {
-        for (let i = 0; i < this.particles.length; i++) {
-            for (let j = i + 1; j < this.particles.length; j++) {
-                const dx = this.particles[i].x - this.particles[j].x;
-                const dy = this.particles[i].y - this.particles[j].y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-                
-                if (distance < this.config.connectionDistance) {
-                    const opacity = (1 - distance / this.config.connectionDistance) * this.config.connectionOpacity;
-                    this.ctx.beginPath();
-                    this.ctx.moveTo(this.particles[i].x, this.particles[i].y);
-                    this.ctx.lineTo(this.particles[j].x, this.particles[j].y);
-                    this.ctx.strokeStyle = `rgba(255, 69, 105, ${opacity})`;
-                    this.ctx.lineWidth = 1;
-                    this.ctx.stroke();
-                }
-            }
-        }
-    }
-    
-    setupResize() {
-        const resizeObserver = new ResizeObserver(() => {
-            this.resizeCanvas();
-            this.createParticles();
-        });
-        resizeObserver.observe(this.container);
-    }
-    
-    destroy() {
-        if (this.animationId) {
-            cancelAnimationFrame(this.animationId);
-        }
-        if (this.canvas && this.canvas.parentNode) {
-            this.canvas.parentNode.removeChild(this.canvas);
-        }
-    }
-}
-
-// ===== INICIALIZACIÓN DE SISTEMAS DE PARTÍCULAS =====
-function initializeParticleSystems() {
-    if (isReducedMotion) return;
-    
-    const heroPhone = document.querySelector('.hero__phone');
-    if (heroPhone) {
-        const heroParticleSystem = new ParticleSystem(heroPhone, {
-            particleCount: 12,
-            particleSize: 1.5,
-            particleSpeed: 0.3,
-            particleColor: 'rgba(255, 69, 105, 0.25)',
-            connectionDistance: 80,
-            connectionOpacity: 0.08
-        });
-        particleSystems.push(heroParticleSystem);
-    }
-    
-    const featurePhones = document.querySelectorAll('.feature__phone .phone');
-    featurePhones.forEach((phone, index) => {
-        const colors = [
-            'rgba(255, 69, 105, 0.2)',
-            'rgba(255, 23, 68, 0.2)',
-            'rgba(255, 45, 107, 0.2)',
-            'rgba(184, 0, 46, 0.2)',
-            'rgba(255, 69, 105, 0.2)',
-            'rgba(255, 45, 85, 0.25)' // CORRECCIÓN: Color rojizo para referidos
-        ];
-        
-        const particleSystem = new ParticleSystem(phone, {
-            particleCount: 8,
-            particleSize: 1,
-            particleSpeed: 0.2,
-            particleColor: colors[index % colors.length],
-            connectionDistance: 60,
-            connectionOpacity: 0.06
-        });
-        particleSystems.push(particleSystem);
-    });
-}
-
-// ===== INICIALIZACIÓN DEL VIDEO HERO - CARGA INMEDIATA =====
-function initializeHeroVideo() {
-    const heroVideo = document.getElementById('hero-video');
-    const heroFallbackImage = document.querySelector('.hero__phone-app-image');
-    
-    if (!heroVideo) return;
-    
-    // CORRECCIÓN: Configurar el video para carga inmediata
-    heroVideo.muted = true;
-    heroVideo.autoplay = true;
-    heroVideo.loop = true;
-    heroVideo.playsInline = true;
-    heroVideo.preload = 'auto'; // CORRECCIÓN: Cambiar a 'auto' para carga inmediata
-    
-    // CORRECCIÓN: Eliminar delay visual - cargar inmediatamente
-    heroVideo.style.opacity = '1';
-    heroVideo.style.transition = 'none';
-    
-    // Manejar eventos del video
-    heroVideo.addEventListener('loadstart', () => {
-        console.log('Hero video: Iniciando carga');
-    });
-    
-    heroVideo.addEventListener('loadeddata', () => {
-        heroVideo.classList.remove('loading');
-        heroVideo.classList.add('loaded');
-        console.log('Hero video: Datos cargados');
-    });
-    
-    heroVideo.addEventListener('canplay', () => {
-        heroVideo.classList.remove('loading');
-        heroVideo.classList.add('loaded');
-        console.log('Hero video: Listo para reproducir');
-        
-        // Intentar reproducir el video inmediatamente
-        const playPromise = heroVideo.play();
-        if (playPromise !== undefined) {
-            playPromise.catch(error => {
-                console.warn('Hero video: Error al reproducir automáticamente:', error);
-                showVideoFallback();
-            });
-        }
-    });
-    
-    heroVideo.addEventListener('error', (e) => {
-        console.error('Hero video: Error de carga:', e);
-        heroVideo.classList.remove('loading');
-        heroVideo.classList.add('error');
-        showVideoFallback();
-    });
-    
-    heroVideo.addEventListener('stalled', () => {
-        console.warn('Hero video: Reproducción interrumpida');
-    });
-    
-    heroVideo.addEventListener('waiting', () => {
-        console.log('Hero video: Esperando datos');
-    });
-    
-    heroVideo.addEventListener('playing', () => {
-        console.log('Hero video: Reproduciendo');
-        heroVideo.classList.remove('loading');
-        heroVideo.classList.add('loaded');
-    });
-    
-    // Función para mostrar imagen de fallback
-    function showVideoFallback() {
-        if (heroFallbackImage) {
-            heroFallbackImage.style.display = 'block';
-            heroFallbackImage.style.zIndex = '2';
-            console.log('Hero video: Mostrando imagen de fallback');
-        }
-    }
-    
-    // CORRECCIÓN: Cargar el video inmediatamente sin delay
-    heroVideo.load();
-    
-    // Manejar visibilidad de la página para pausar/reanudar video
-    document.addEventListener('visibilitychange', () => {
-        if (document.hidden) {
-            heroVideo.pause();
-        } else if (heroVideo.paused && !heroVideo.ended) {
-            const playPromise = heroVideo.play();
-            if (playPromise !== undefined) {
-                playPromise.catch(error => {
-                    console.warn('Hero video: Error al reanudar:', error);
-                });
-            }
-        }
-    });
-    
-    // Manejar intersección para optimizar rendimiento
-    if ('IntersectionObserver' in window) {
-        const videoObserver = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    if (heroVideo.paused && !heroVideo.ended) {
-                        const playPromise = heroVideo.play();
-                        if (playPromise !== undefined) {
-                            playPromise.catch(error => {
-                                console.warn('Hero video: Error al reproducir en intersección:', error);
-                            });
-                        }
-                    }
-                } else {
-                    heroVideo.pause();
-                }
-            });
-        }, {
-            threshold: 0.5
-        });
-        
-        videoObserver.observe(heroVideo);
-    }
-}
-
-// ===== NAVEGACIÓN RESPONSIVE MEJORADA =====
+// ===== NAVEGACIÓN RESPONSIVE ULTRA-OPTIMIZADA =====
 function initializeNavigation() {
     const navToggle = document.getElementById('nav-toggle');
     const navMenu = document.getElementById('nav-menu');
     const navLinks = document.querySelectorAll('.nav__link');
     const header = document.getElementById('header');
     
-    // ===== FUNCIONALIDAD DEL LOGO COMO ENLACE =====
+    // Funcionalidad del logo como enlace
     const navLogo = document.querySelector('.nav__logo');
     if (navLogo) {
         navLogo.addEventListener('click', (e) => {
             e.preventDefault();
             
-            // Cerrar menú móvil si está abierto
             if (isMenuOpen) {
                 closeMobileMenu();
             }
             
-            // Scroll suave a la sección home (actualizado)
             const homeSection = document.querySelector('#home');
             if (homeSection) {
                 smoothScrollToSection(homeSection);
                 
-                // Actualizar enlace activo
                 const homeLink = document.querySelector('.nav__link[href="#home"]');
                 if (homeLink) {
                     updateActiveNavLink(homeLink);
@@ -1189,7 +856,6 @@ function initializeNavigation() {
             }
         });
         
-        // Agregar cursor pointer y accesibilidad
         navLogo.style.cursor = 'pointer';
         navLogo.setAttribute('tabindex', '0');
         navLogo.setAttribute('role', 'button');
@@ -1202,15 +868,35 @@ function initializeNavigation() {
                 navLogo.click();
             }
         });
+
+        // Mejor feedback táctil en móvil
+        if (isMobile) {
+            navLogo.addEventListener('touchstart', () => {
+                navLogo.style.transform = 'scale(0.95)';
+            });
+            navLogo.addEventListener('touchend', () => {
+                navLogo.style.transform = '';
+            });
+        }
     }
     
-    // Toggle del menú móvil con animaciones mejoradas
+    // Toggle del menú móvil optimizado
     if (navToggle && navMenu) {
         navToggle.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
             toggleMobileMenu();
         });
+
+        // Mejor feedback táctil para el botón hamburguesa
+        if (isMobile) {
+            navToggle.addEventListener('touchstart', () => {
+                navToggle.style.transform = 'scale(0.95)';
+            });
+            navToggle.addEventListener('touchend', () => {
+                navToggle.style.transform = '';
+            });
+        }
     }
     
     // Cerrar menú al hacer click en un enlace
@@ -1220,7 +906,6 @@ function initializeNavigation() {
                 closeMobileMenu();
             }
             
-            // Navegación suave mejorada
             e.preventDefault();
             const targetId = link.getAttribute('href');
             const targetSection = document.querySelector(targetId);
@@ -1230,6 +915,16 @@ function initializeNavigation() {
                 updateActiveNavLink(link);
             }
         });
+
+        // Mejor feedback táctil para enlaces en móvil
+        if (isMobile) {
+            link.addEventListener('touchstart', () => {
+                link.style.transform = 'scale(0.98)';
+            });
+            link.addEventListener('touchend', () => {
+                link.style.transform = '';
+            });
+        }
     });
     
     // Cerrar menú con click fuera
@@ -1239,10 +934,10 @@ function initializeNavigation() {
         }
     });
     
-    // Soporte para gestos táctiles
+    // Soporte para gestos táctiles optimizado
     initializeTouchGestures();
     
-    // Mejorar accesibilidad del teclado
+    // Navegación por teclado optimizada
     initializeKeyboardNavigation();
 }
 
@@ -1263,7 +958,7 @@ function openMobileMenu() {
     
     isMenuOpen = true;
     
-    // Animaciones de apertura
+    // Animaciones optimizadas para móvil
     navToggle.classList.add('active');
     navMenu.classList.add('active');
     body.classList.add('no-scroll');
@@ -1272,25 +967,27 @@ function openMobileMenu() {
     navToggle.setAttribute('aria-expanded', 'true');
     navMenu.setAttribute('aria-hidden', 'false');
     
-    // Animar enlaces del menú
+    // Animar enlaces del menú con mejor rendimiento
     const navLinks = navMenu.querySelectorAll('.nav__link');
     navLinks.forEach((link, index) => {
         link.style.opacity = '0';
         link.style.transform = 'translateY(20px)';
         setTimeout(() => {
-            link.style.transition = 'all 0.3s ease';
+            link.style.transition = `all ${isMobile ? '0.2s' : '0.3s'} ease`;
             link.style.opacity = '1';
             link.style.transform = 'translateY(0)';
-        }, index * 100 + 200);
+        }, index * (isMobile ? 50 : 100) + (isMobile ? 100 : 200));
     });
     
-    // Focus en el primer enlace para accesibilidad
-    setTimeout(() => {
-        const firstLink = navMenu.querySelector('.nav__link');
-        if (firstLink) {
-            firstLink.focus();
-        }
-    }, 300);
+    // Focus optimizado para móvil
+    if (!isMobile) {
+        setTimeout(() => {
+            const firstLink = navMenu.querySelector('.nav__link');
+            if (firstLink) {
+                firstLink.focus();
+            }
+        }, 300);
+    }
 }
 
 function closeMobileMenu() {
@@ -1302,7 +999,7 @@ function closeMobileMenu() {
     
     isMenuOpen = false;
     
-    // Animaciones de cierre
+    // Animaciones de cierre optimizadas
     navToggle.classList.remove('active');
     navMenu.classList.remove('active');
     body.classList.remove('no-scroll');
@@ -1320,46 +1017,25 @@ function closeMobileMenu() {
     });
     
     // Devolver focus al botón toggle
-    navToggle.focus();
+    if (!isMobile) {
+        navToggle.focus();
+    }
 }
 
 function smoothScrollToSection(targetSection) {
-    const headerHeight = window.innerWidth <= 768 ? 70 : 80;
+    const headerHeight = isMobile ? 70 : 80;
     const targetPosition = targetSection.offsetTop - headerHeight;
     
-    // Usar scroll suave nativo si está disponible
-    if ('scrollBehavior' in document.documentElement.style) {
+    // Scroll optimizado para móvil
+    if ('scrollBehavior' in document.documentElement.style && !performanceMode) {
         window.scrollTo({
             top: targetPosition,
             behavior: 'smooth'
         });
     } else {
-        // Fallback para navegadores antiguos
-        animateScrollTo(targetPosition, 800);
+        // Fallback más rápido para dispositivos de baja potencia
+        window.scrollTo(0, targetPosition);
     }
-}
-
-function animateScrollTo(targetPosition, duration) {
-    const startPosition = window.pageYOffset;
-    const distance = targetPosition - startPosition;
-    let startTime = null;
-    
-    function animation(currentTime) {
-        if (startTime === null) startTime = currentTime;
-        const timeElapsed = currentTime - startTime;
-        const run = easeInOutQuad(timeElapsed, startPosition, distance, duration);
-        window.scrollTo(0, run);
-        if (timeElapsed < duration) requestAnimationFrame(animation);
-    }
-    
-    function easeInOutQuad(t, b, c, d) {
-        t /= d / 2;
-        if (t < 1) return c / 2 * t * t + b;
-        t--;
-        return -c / 2 * (t * (t - 2) - 1) + b;
-    }
-    
-    requestAnimationFrame(animation);
 }
 
 function updateActiveNavLink(activeLink) {
@@ -1371,10 +1047,10 @@ function updateActiveNavLink(activeLink) {
     activeLink.setAttribute('aria-current', 'page');
 }
 
-// ===== GESTOS TÁCTILES PARA MÓVIL =====
+// ===== GESTOS TÁCTILES OPTIMIZADOS PARA MÓVIL =====
 function initializeTouchGestures() {
     const navMenu = document.getElementById('nav-menu');
-    if (!navMenu) return;
+    if (!navMenu || !isMobile) return;
     
     let startY = 0;
     let currentY = 0;
@@ -1406,8 +1082,8 @@ function initializeTouchGestures() {
         navMenu.style.transition = '';
         const deltaY = currentY - startY;
         
-        // Si se deslizó más de 100px hacia arriba, cerrar el menú
-        if (deltaY < -100) {
+        // Si se deslizó más de 80px hacia arriba, cerrar el menú
+        if (deltaY < -80) {
             closeMobileMenu();
         } else {
             // Restaurar posición original
@@ -1417,7 +1093,7 @@ function initializeTouchGestures() {
     }, { passive: true });
 }
 
-// ===== NAVEGACIÓN POR TECLADO MEJORADA =====
+// ===== NAVEGACIÓN POR TECLADO OPTIMIZADA =====
 function initializeKeyboardNavigation() {
     const navMenu = document.getElementById('nav-menu');
     const navToggle = document.getElementById('nav-toggle');
@@ -1432,8 +1108,8 @@ function initializeKeyboardNavigation() {
             return;
         }
         
-        // Tab trap cuando el menú está abierto
-        if (e.key === 'Tab' && isMenuOpen) {
+        // Tab trap cuando el menú está abierto (solo en desktop)
+        if (e.key === 'Tab' && isMenuOpen && !isMobile) {
             handleTabTrap(e);
         }
         
@@ -1468,9 +1144,9 @@ function handleTabTrap(e) {
     }
 }
 
-// ===== EFECTOS DE SCROLL OPTIMIZADOS (SIN CAMBIOS EN HEADER) =====
+// ===== EFECTOS DE SCROLL OPTIMIZADOS =====
 function initializeScrollEffects() {
-    // Scroll listener optimizado con throttling para navegación activa
+    // Scroll listener optimizado con throttling
     window.addEventListener('scroll', throttle(() => {
         if (!ticking) {
             requestAnimationFrame(() => {
@@ -1480,17 +1156,15 @@ function initializeScrollEffects() {
             });
             ticking = true;
         }
-    }, 16), { passive: true });
+    }, isMobile ? 32 : 16), { passive: true });
 }
 
 function handleScrollDirection() {
     const currentScrollY = window.scrollY;
     
-    if (currentScrollY > lastScrollY && currentScrollY > 100) {
-        // Scrolling hacia abajo
+    if (currentScrollY > lastScrollY && currentScrollY > (isMobile ? 50 : 100)) {
         isScrollingDown = true;
     } else {
-        // Scrolling hacia arriba
         isScrollingDown = false;
     }
     
@@ -1499,7 +1173,7 @@ function handleScrollDirection() {
 
 function updateActiveNavOnScroll() {
     const sections = document.querySelectorAll('section[id]');
-    const scrollY = window.scrollY + 100;
+    const scrollY = window.scrollY + (isMobile ? 80 : 100);
     
     sections.forEach(section => {
         const sectionTop = section.offsetTop;
@@ -1515,7 +1189,7 @@ function updateActiveNavOnScroll() {
     });
 }
 
-// ===== REPRODUCTOR DE VIDEO =====
+// ===== REPRODUCTOR DE VIDEO OPTIMIZADO =====
 function initializeVideoPlayer() {
     const video = document.getElementById('main-video');
     const playOverlay = document.getElementById('play-overlay');
@@ -1528,7 +1202,7 @@ function initializeVideoPlayer() {
     if (!video || !playOverlay) return;
     
     video.controls = false;
-    video.preload = 'metadata';
+    video.preload = isMobile ? 'none' : 'metadata';
     
     video.addEventListener('loadedmetadata', () => {
         if (durationDisplay) {
@@ -1545,6 +1219,16 @@ function initializeVideoPlayer() {
             }
         }
     });
+    
+    // Mejor manejo táctil en móvil
+    if (isMobile) {
+        playOverlay.addEventListener('touchstart', () => {
+            playOverlay.style.transform = 'scale(0.98)';
+        });
+        playOverlay.addEventListener('touchend', () => {
+            playOverlay.style.transform = '';
+        });
+    }
     
     video.addEventListener('click', () => {
         if (!video.paused) {
@@ -1615,7 +1299,7 @@ function showVideoError() {
     }
 }
 
-// ===== FAQ =====
+// ===== FAQ OPTIMIZADO =====
 function initializeFAQ() {
     const faqItems = document.querySelectorAll('.faq__item');
     const searchInput = document.getElementById('faq-search');
@@ -1629,6 +1313,7 @@ function initializeFAQ() {
             question.addEventListener('click', () => {
                 const isActive = item.classList.contains('active');
                 
+                // Cerrar otros items
                 faqItems.forEach(otherItem => {
                     if (otherItem !== item) {
                         otherItem.classList.remove('active');
@@ -1649,6 +1334,16 @@ function initializeFAQ() {
                     question.setAttribute('aria-expanded', 'true');
                 }
             });
+
+            // Mejor feedback táctil en móvil
+            if (isMobile) {
+                question.addEventListener('touchstart', () => {
+                    question.style.transform = 'scale(0.98)';
+                });
+                question.addEventListener('touchend', () => {
+                    question.style.transform = '';
+                });
+            }
         }
     });
     
@@ -1688,29 +1383,17 @@ function initializeFAQ() {
                     noResults.classList.remove('show');
                 }
             }
-        }, 300));
+        }, isMobile ? 500 : 300));
     }
 }
 
-// ===== ANIMACIONES =====
-function initializeAnimations() {
-    const animatedElements = document.querySelectorAll('[data-animate]');
-    
-    animatedElements.forEach(element => {
-        const animationType = element.getAttribute('data-animate');
-        const delay = element.getAttribute('data-delay') || 0;
-        
-        setTimeout(() => {
-            element.classList.add(`animate-${animationType}`);
-        }, delay);
-    });
-}
-
-// ===== INTERSECTION OBSERVER =====
+// ===== INTERSECTION OBSERVER OPTIMIZADO =====
 function initializeIntersectionObserver() {
+    if (performanceMode) return; // Deshabilitar en modo de rendimiento
+    
     const observerOptions = {
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
+        threshold: isMobile ? 0.05 : 0.1,
+        rootMargin: isMobile ? '0px 0px -25px 0px' : '0px 0px -50px 0px'
     };
     
     const observer = new IntersectionObserver((entries) => {
@@ -1731,10 +1414,12 @@ function initializeIntersectionObserver() {
 }
 
 function animateFeature(feature) {
+    if (performanceMode) return;
+    
     const phone = feature.querySelector('.feature__phone');
     const content = feature.querySelector('.feature__content');
     
-    if (phone) {
+    if (phone && !isMobile) {
         setTimeout(() => {
             phone.style.transform = 'perspective(1000px) rotateY(1deg) rotateX(0deg) scale(1.02)';
         }, 300);
@@ -1749,33 +1434,32 @@ function animateFeature(feature) {
             setTimeout(() => {
                 item.style.opacity = '1';
                 item.style.transform = 'translateX(0)';
-            }, 200 + (index * 100));
+            }, 200 + (index * (isMobile ? 50 : 100)));
         });
     }
 }
 
-// ===== CONFIGURACIÓN DE LAZY LOADING PARA IMÁGENES =====
+// ===== CONFIGURACIÓN DE LAZY LOADING OPTIMIZADA =====
 function setupImageLazyLoading() {
-    // Esperar a que el optimizador esté listo
     const waitForOptimizer = () => {
-        if (!imageOptimizer || !imageOptimizer.supportedFormats.size) {
+        if (!imageOptimizer) {
             setTimeout(waitForOptimizer, 100);
             return;
         }
         
-        // Configurar logo del navbar (crítico - cargar inmediatamente)
+        // Logo del navbar (crítico - cargar inmediatamente)
         const navLogo = document.querySelector('.nav__logo');
         if (navLogo) {
             imageOptimizer.loadImageImmediately(navLogo, 'logo');
         }
         
-        // Configurar imagen del hero como fallback (crítica - cargar inmediatamente)
+        // Imagen del hero (crítica - cargar inmediatamente)
         const heroImage = document.querySelector('.hero__phone-app-image');
         if (heroImage) {
             imageOptimizer.loadImageImmediately(heroImage, 'hero');
         }
         
-        // Configurar imágenes de características (lazy loading)
+        // Imágenes de características (lazy loading)
         const featureImages = document.querySelectorAll('.phone__app-image');
         featureImages.forEach((img, index) => {
             const imageKeys = [
@@ -1788,11 +1472,16 @@ function setupImageLazyLoading() {
             ];
             
             if (imageKeys[index]) {
-                imageOptimizer.observeImage(img, imageKeys[index]);
+                if (isMobile || performanceMode) {
+                    // Cargar inmediatamente en móvil para evitar problemas
+                    imageOptimizer.loadImageImmediately(img, imageKeys[index]);
+                } else {
+                    imageOptimizer.observeImage(img, imageKeys[index]);
+                }
             }
         });
         
-        // Configurar botones de descarga
+        // Botones de descarga
         const appleBtn = document.querySelector('.download-btn--app-store .download-btn__image');
         const googleBtn = document.querySelector('.download-btn:not(.download-btn--app-store) .download-btn__image');
         
@@ -1807,64 +1496,61 @@ function setupImageLazyLoading() {
     waitForOptimizer();
 }
 
-// ===== CORRECCIÓN ESPECÍFICA PARA MODAL QR DE REFERIDOS =====
-function applyQRModalCorrection() {
-    // Función para aplicar sombra rojiza a modales QR
-    function applyRedShadowToQRModals() {
-        // Buscar elementos que podrían ser modales QR
-        const potentialQRModals = document.querySelectorAll([
-            '.modal',
-            '.qr-modal',
-            '[class*="modal"]',
-            '[class*="qr"]',
-            '.referral-modal',
-            '.popup',
-            '.overlay',
-            '[style*="box-shadow"]'
-        ].join(', '));
-        
-        potentialQRModals.forEach(modal => {
-            // Verificar si tiene sombra amarilla y reemplazarla
-            const computedStyle = window.getComputedStyle(modal);
-            const boxShadow = computedStyle.boxShadow;
-            
-            if (boxShadow && (boxShadow.includes('yellow') || boxShadow.includes('255, 255, 0'))) {
-                modal.style.boxShadow = '0 0 16px rgba(255, 45, 85, 0.6)';
-                modal.style.border = '1px solid rgba(255, 45, 85, 0.4)';
-            }
-        });
+// ===== CORRECCIÓN DEL VIDEO HERO PARA MÓVIL =====
+function initializeHeroVideoFallback() {
+    const heroVideo = document.getElementById('hero-video');
+    const heroFallbackImage = document.querySelector('.hero__phone-app-image');
+    
+    if (!heroVideo || !heroFallbackImage) return;
+    
+    // En móvil, usar siempre imagen estática
+    if (isMobile) {
+        heroVideo.style.display = 'none';
+        heroFallbackImage.style.display = 'block';
+        heroFallbackImage.style.zIndex = '2';
+        console.log('Video deshabilitado en móvil, usando imagen estática');
+        return;
     }
     
-    // Aplicar corrección inmediatamente
-    applyRedShadowToQRModals();
+    // En desktop, intentar cargar video
+    heroVideo.muted = true;
+    heroVideo.autoplay = true;
+    heroVideo.loop = true;
+    heroVideo.playsInline = true;
+    heroVideo.preload = 'auto';
     
-    // Observar cambios en el DOM para aplicar corrección a nuevos modales
-    const observer = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
-            if (mutation.type === 'childList') {
-                mutation.addedNodes.forEach((node) => {
-                    if (node.nodeType === Node.ELEMENT_NODE) {
-                        // Verificar si el nuevo elemento es un modal QR
-                        if (node.classList.contains('modal') || 
-                            node.classList.contains('qr-modal') ||
-                            node.className.includes('modal') ||
-                            node.className.includes('qr')) {
-                            node.style.boxShadow = '0 0 16px rgba(255, 45, 85, 0.6)';
-                            node.style.border = '1px solid rgba(255, 45, 85, 0.4)';
-                        }
-                    }
-                });
-            }
-        });
+    heroVideo.addEventListener('loadeddata', () => {
+        heroVideo.classList.remove('loading');
+        heroVideo.classList.add('loaded');
+        console.log('Video del hero cargado correctamente');
     });
     
-    observer.observe(document.body, {
-        childList: true,
-        subtree: true
+    heroVideo.addEventListener('error', (e) => {
+        console.error('Error cargando video del hero:', e);
+        showVideoFallback();
     });
+    
+    heroVideo.addEventListener('stalled', () => {
+        console.warn('Video del hero interrumpido, mostrando fallback');
+        showVideoFallback();
+    });
+    
+    function showVideoFallback() {
+        heroVideo.style.display = 'none';
+        heroFallbackImage.style.display = 'block';
+        heroFallbackImage.style.zIndex = '2';
+        console.log('Mostrando imagen de fallback para el video del hero');
+    }
+    
+    // Timeout para fallback si el video no carga en 3 segundos
+    setTimeout(() => {
+        if (heroVideo.readyState < 2) {
+            showVideoFallback();
+        }
+    }, 3000);
 }
 
-// ===== UTILIDADES =====
+// ===== UTILIDADES OPTIMIZADAS =====
 function debounce(func, wait) {
     let timeout;
     return function executedFunction(...args) {
@@ -1891,52 +1577,76 @@ function throttle(func, limit) {
 }
 
 // ===== OPTIMIZACIONES DE RENDIMIENTO =====
-function initializeLazyLoading() {
-    const images = document.querySelectorAll('img[data-src]');
-    const imageObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                const img = entry.target;
-                img.src = img.dataset.src;
-                img.classList.remove('lazy');
-                imageObserver.unobserve(img);
-            }
-        });
-    });
+function initializePerformanceOptimizations() {
+    // Precargar recursos críticos solo en desktop
+    if (!isMobile && !performanceMode) {
+        if ('requestIdleCallback' in window) {
+            requestIdleCallback(() => {
+                preloadCriticalResources();
+            });
+        } else {
+            setTimeout(preloadCriticalResources, 2000);
+        }
+    }
     
-    images.forEach(img => imageObserver.observe(img));
+    // Optimizar will-change para móvil
+    if (isMobile) {
+        const elementsToOptimize = document.querySelectorAll('.hero__phone, .feature__phone, .nav__logo, .floating-widget__main-btn');
+        elementsToOptimize.forEach(element => {
+            element.style.willChange = 'transform';
+        });
+    }
+    
+    // Limpiar listeners en resize
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+            handleResize();
+        }, isMobile ? 500 : 250);
+    });
 }
 
 function preloadCriticalResources() {
     const criticalResources = [
-        './assets/phones/Hero.mp4', // CORRECCIÓN: Precargar video del hero
         './assets/phones/Hero.jpg',
         './assets/phones/Horario.jpg',
-        './assets/phones/Estaciones.jpg',
         './assets/logo.png'
     ];
     
     criticalResources.forEach(src => {
-        if (src.endsWith('.mp4')) {
-            // Precargar video
-            const link = document.createElement('link');
-            link.rel = 'preload';
-            link.as = 'video';
-            link.href = src;
-            link.type = 'video/mp4';
-            document.head.appendChild(link);
-        } else {
-            // Precargar imagen
-            const link = document.createElement('link');
-            link.rel = 'preload';
-            link.as = 'image';
-            link.href = src;
-            document.head.appendChild(link);
-        }
+        const link = document.createElement('link');
+        link.rel = 'preload';
+        link.as = 'image';
+        link.href = src;
+        document.head.appendChild(link);
     });
 }
 
-// ===== ACCESIBILIDAD =====
+function handleResize() {
+    const newIsMobile = window.innerWidth <= 1023;
+    
+    // Actualizar estado móvil
+    if (newIsMobile !== isMobile) {
+        isMobile = newIsMobile;
+        detectDeviceCapabilities();
+    }
+    
+    // Cerrar menús abiertos
+    if (isMenuOpen && !isMobile) {
+        closeMobileMenu();
+    }
+    
+    if (isFloatingMenuOpen) {
+        closeFloatingMenu();
+    }
+    
+    if (isLanguageSwitcherOpen) {
+        closeLanguageSwitcher();
+    }
+}
+
+// ===== ACCESIBILIDAD OPTIMIZADA =====
 function initializeAccessibility() {
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
@@ -1952,10 +1662,7 @@ function initializeAccessibility() {
         }
     });
     
-    // Mejorar navegación por teclado
-    const focusableElements = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
-    
-    // Indicadores visuales de focus mejorados
+    // Indicadores visuales de focus mejorados para móvil
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Tab') {
             document.body.classList.add('keyboard-navigation');
@@ -1965,69 +1672,22 @@ function initializeAccessibility() {
     document.addEventListener('mousedown', () => {
         document.body.classList.remove('keyboard-navigation');
     });
-}
-
-// ===== OPTIMIZACIONES DE RENDIMIENTO ADICIONALES =====
-function initializePerformanceOptimizations() {
-    // Precargar recursos críticos
-    if ('requestIdleCallback' in window) {
-        requestIdleCallback(() => {
-            preloadCriticalResources();
+    
+    // Mejorar accesibilidad táctil
+    if (isMobile) {
+        document.addEventListener('touchstart', () => {
+            document.body.classList.add('touch-navigation');
         });
-    } else {
-        setTimeout(preloadCriticalResources, 2000);
     }
-    
-    // Optimizar imágenes de fondo
-    const phoneImages = document.querySelectorAll('.phone__app-image, .hero__phone-app-image');
-    phoneImages.forEach(img => {
-        img.style.willChange = 'transform';
-    });
-    
-    // Optimizar video del hero
-    const heroVideo = document.getElementById('hero-video');
-    if (heroVideo) {
-        heroVideo.style.willChange = 'transform';
-    }
-    
-    // Limpiar listeners en resize
-    let resizeTimeout;
-    window.addEventListener('resize', () => {
-        clearTimeout(resizeTimeout);
-        resizeTimeout = setTimeout(() => {
-            handleResize();
-        }, 250);
-    });
 }
 
-function handleResize() {
-    // Cerrar menú móvil si se cambia a desktop
-    if (isMenuOpen && window.innerWidth > 1024) {
-        closeMobileMenu();
-    }
-    
-    // Cerrar menú flotante en resize
-    if (isFloatingMenuOpen) {
-        closeFloatingMenu();
-    }
-    
-    // Cerrar selector de idioma en resize
-    if (isLanguageSwitcherOpen) {
-        closeLanguageSwitcher();
-    }
-    
-    // Redimensionar canvas de partículas
-    particleSystems.forEach(system => {
-        if (system.resizeCanvas) {
-            system.resizeCanvas();
-        }
-    });
-}
-
-// ===== INICIALIZACIÓN PRINCIPAL =====
+// ===== INICIALIZACIÓN PRINCIPAL OPTIMIZADA =====
 document.addEventListener('DOMContentLoaded', () => {
+    // Detectar capacidades del dispositivo primero
+    detectDeviceCapabilities();
+    
     // Inicializar optimizador de imágenes
-    imageOptimizer = new ImageOptimizer();
+    imageOptimizer = new MobileImageOptimizer();
     
     // Inicializar sistema de idiomas
     initializeLanguageSystem();
@@ -2040,37 +1700,43 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeScrollEffects();
     initializeVideoPlayer();
     initializeFAQ();
-    initializeAnimations();
-    initializeIntersectionObserver();
     
-    // CORRECCIÓN: Inicializar video del hero con carga inmediata
-    initializeHeroVideo();
+    // Inicializar video del hero con fallback
+    initializeHeroVideoFallback();
     
     // Inicializar funcionalidades adicionales
-    initializeParticleSystems();
-    initializeLazyLoading();
-    preloadCriticalResources();
     initializeAccessibility();
     initializeFloatingWidget();
     
     // Configurar lazy loading para imágenes
     setupImageLazyLoading();
     
-    // CORRECCIÓN: Aplicar corrección para modal QR de referidos
-    applyQRModalCorrection();
-    
-    // Detectar cambios en preferencias de movimiento
-    checkReducedMotion();
-    const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    motionQuery.addListener(checkReducedMotion);
+    // Inicializar intersection observer solo si no es modo de rendimiento
+    if (!performanceMode) {
+        initializeIntersectionObserver();
+    }
     
     // Optimizaciones adicionales
     initializePerformanceOptimizations();
+    
+    console.log(`StarFlex inicializado - Móvil: ${isMobile}, Modo rendimiento: ${performanceMode}`);
 });
 
-// ===== MANEJO DE ERRORES =====
+// ===== MANEJO DE ERRORES OPTIMIZADO =====
 window.addEventListener('error', (e) => {
     console.error('Error en la aplicación:', e.error);
+    
+    // En móvil, intentar recuperación automática
+    if (isMobile && e.error && e.error.message.includes('video')) {
+        console.log('Error de video detectado, forzando fallback de imagen');
+        const heroVideo = document.getElementById('hero-video');
+        const heroImage = document.querySelector('.hero__phone-app-image');
+        if (heroVideo && heroImage) {
+            heroVideo.style.display = 'none';
+            heroImage.style.display = 'block';
+            heroImage.style.zIndex = '2';
+        }
+    }
 });
 
 window.addEventListener('unhandledrejection', (e) => {
@@ -2079,15 +1745,14 @@ window.addEventListener('unhandledrejection', (e) => {
 
 // ===== LIMPIEZA AL SALIR =====
 window.addEventListener('beforeunload', () => {
-    particleSystems.forEach(system => system.destroy());
-    particleSystems = [];
-    if (animationId) {
-        cancelAnimationFrame(animationId);
+    // Limpiar recursos si es necesario
+    if (imageOptimizer && imageOptimizer.intersectionObserver) {
+        imageOptimizer.intersectionObserver.disconnect();
     }
 });
 
-// ===== SOPORTE PARA PWA =====
-if ('serviceWorker' in navigator) {
+// ===== SOPORTE PARA PWA OPTIMIZADO =====
+if ('serviceWorker' in navigator && !isMobile) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js')
             .then(registration => {
