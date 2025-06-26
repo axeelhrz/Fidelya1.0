@@ -22,6 +22,15 @@ export const RecentValidations: React.FC = () => {
   const { beneficios } = useBeneficios();
   const router = useRouter();
 
+  const [isDesktop, setIsDesktop] = React.useState(false);
+
+  React.useEffect(() => {
+    const checkDesktop = () => setIsDesktop(window.innerWidth >= 1024);
+    checkDesktop();
+    window.addEventListener('resize', checkDesktop);
+    return () => window.removeEventListener('resize', checkDesktop);
+  }, []);
+
   // Get recent validations (last 5)
   const recentValidations = validaciones
     .sort((a, b) => b.fechaHora.toDate().getTime() - a.fechaHora.toDate().getTime())
@@ -171,28 +180,28 @@ export const RecentValidations: React.FC = () => {
       {recentValidations.length > 0 ? (
         <div>
           {/* Table Header - Desktop only */}
-          <div style={{
-            display: 'none',
-            gridTemplateColumns: '2fr 2fr 2fr 1.5fr 1fr',
-            gap: '16px',
-            padding: '12px 16px',
-            backgroundColor: '#f8fafc',
-            borderRadius: '8px',
-            marginBottom: '16px',
-            fontSize: '12px',
-            fontWeight: 600,
-            color: '#64748b',
-            textTransform: 'uppercase',
-            letterSpacing: '0.5px'
-          }}
-          className="desktop-header"
-          >
-            <div>Fecha y hora</div>
-            <div>Socio</div>
-            <div>Beneficio</div>
-            <div>Asociación</div>
-            <div>Resultado</div>
-          </div>
+          {isDesktop && (
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: '2fr 2fr 2fr 1.5fr 1fr',
+              gap: '16px',
+              padding: '12px 16px',
+              backgroundColor: '#f8fafc',
+              borderRadius: '8px',
+              marginBottom: '16px',
+              fontSize: '12px',
+              fontWeight: 600,
+              color: '#64748b',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px'
+            }}>
+              <div>Fecha y hora</div>
+              <div>Socio</div>
+              <div>Beneficio</div>
+              <div>Asociación</div>
+              <div>Resultado</div>
+            </div>
+          )}
 
           {/* Table Rows */}
           <div style={{
@@ -211,151 +220,149 @@ export const RecentValidations: React.FC = () => {
                   transition={{ duration: 0.3, delay: index * 0.1 }}
                 >
                   {/* Desktop Layout */}
-                  <div style={{
-                    display: 'none',
-                    gridTemplateColumns: '2fr 2fr 2fr 1.5fr 1fr',
-                    gap: '16px',
-                    alignItems: 'center',
-                    padding: '16px',
-                    borderRadius: '8px',
-                    backgroundColor: '#f8fafc',
-                    border: '1px solid #e2e8f0',
-                    transition: 'all 0.2s ease'
-                  }}
-                  className="desktop-row"
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = '#cbd5e1';
-                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = '#e2e8f0';
-                    e.currentTarget.style.boxShadow = 'none';
-                  }}
-                  >
-                    <div>
-                      <p style={{ fontWeight: 600, color: '#1e293b', fontSize: '14px' }}>
-                        {format(validacion.fechaHora.toDate(), 'dd/MM/yyyy')}
-                      </p>
-                      <p style={{ fontSize: '12px', color: '#64748b' }}>
-                        {format(validacion.fechaHora.toDate(), 'HH:mm')}
-                      </p>
-                    </div>
-                    
-                    <div>
-                      <p style={{ fontWeight: 600, color: '#1e293b', fontSize: '14px' }}>
-                        {validacion.socioId.substring(0, 8)}...
-                      </p>
-                      <p style={{ fontSize: '12px', color: '#64748b' }}>ID del socio</p>
-                    </div>
-                    
-                    <div>
-                      <p style={{ 
-                        fontWeight: 600, 
-                        color: '#1e293b', 
-                        fontSize: '14px',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap'
-                      }}>
-                        {getBeneficioTitle(validacion.beneficioId)}
-                      </p>
-                      {validacion.montoTransaccion && (
-                        <p style={{ fontSize: '12px', color: '#64748b' }}>
-                          ${validacion.montoTransaccion.toFixed(2)}
-                        </p>
-                      )}
-                    </div>
-                    
-                    <div>
-                      <p style={{ 
-                        fontSize: '12px', 
-                        color: '#64748b',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap'
-                      }}>
-                        {validacion.asociacionId.substring(0, 12)}...
-                      </p>
-                    </div>
-                    
-                    <div>
-                      <div style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        padding: '4px 8px',
-                        borderRadius: '6px',
-                        fontSize: '12px',
-                        fontWeight: 500,
-                        ...getResultColor(validacion.resultado)
-                      }}>
-                        <ResultIcon style={{ width: '12px', height: '12px' }} />
-                        <span>{getResultText(validacion.resultado)}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Mobile Layout */}
-                  <div style={{
-                    display: 'block',
-                    padding: '16px',
-                    borderRadius: '8px',
-                    backgroundColor: '#f8fafc',
-                    border: '1px solid #e2e8f0'
-                  }}
-                  className="mobile-row"
-                  >
+                  {isDesktop ? (
                     <div style={{
-                      display: 'flex',
-                      alignItems: 'flex-start',
-                      justifyContent: 'space-between',
-                      marginBottom: '12px'
-                    }}>
+                      display: 'grid',
+                      gridTemplateColumns: '2fr 2fr 2fr 1.5fr 1fr',
+                      gap: '16px',
+                      alignItems: 'center',
+                      padding: '16px',
+                      borderRadius: '8px',
+                      backgroundColor: '#f8fafc',
+                      border: '1px solid #e2e8f0',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = '#cbd5e1';
+                      e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = '#e2e8f0';
+                      e.currentTarget.style.boxShadow = 'none';
+                    }}
+                    >
                       <div>
                         <p style={{ fontWeight: 600, color: '#1e293b', fontSize: '14px' }}>
-                          {format(validacion.fechaHora.toDate(), 'dd/MM/yyyy HH:mm')}
+                          {format(validacion.fechaHora.toDate(), 'dd/MM/yyyy')}
                         </p>
                         <p style={{ fontSize: '12px', color: '#64748b' }}>
-                          Socio: {validacion.socioId.substring(0, 8)}...
+                          {format(validacion.fechaHora.toDate(), 'HH:mm')}
                         </p>
                       </div>
-                      <div style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        padding: '4px 8px',
-                        borderRadius: '6px',
-                        fontSize: '12px',
-                        fontWeight: 500,
-                        ...getResultColor(validacion.resultado)
-                      }}>
-                        <ResultIcon style={{ width: '12px', height: '12px' }} />
-                        {getResultText(validacion.resultado)}
+                      
+                      <div>
+                        <p style={{ fontWeight: 600, color: '#1e293b', fontSize: '14px' }}>
+                          {validacion.socioId.substring(0, 8)}...
+                        </p>
+                        <p style={{ fontSize: '12px', color: '#64748b' }}>ID del socio</p>
+                      </div>
+                      
+                      <div>
+                        <p style={{ 
+                          fontWeight: 600, 
+                          color: '#1e293b', 
+                          fontSize: '14px',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap'
+                        }}>
+                          {getBeneficioTitle(validacion.beneficioId)}
+                        </p>
+                        {validacion.montoTransaccion && (
+                          <p style={{ fontSize: '12px', color: '#64748b' }}>
+                            ${validacion.montoTransaccion.toFixed(2)}
+                          </p>
+                        )}
+                      </div>
+                      
+                      <div>
+                        <p style={{ 
+                          fontSize: '12px', 
+                          color: '#64748b',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap'
+                        }}>
+                          {validacion.asociacionId.substring(0, 12)}...
+                        </p>
+                      </div>
+                      
+                      <div>
+                        <div style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          padding: '4px 8px',
+                          borderRadius: '6px',
+                          fontSize: '12px',
+                          fontWeight: 500,
+                          ...getResultColor(validacion.resultado)
+                        }}>
+                          <ResultIcon style={{ width: '12px', height: '12px' }} />
+                          <span>{getResultText(validacion.resultado)}</span>
+                        </div>
                       </div>
                     </div>
-                    
+                  ) : (
+                    /* Mobile Layout */
                     <div style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '4px'
+                      padding: '16px',
+                      borderRadius: '8px',
+                      backgroundColor: '#f8fafc',
+                      border: '1px solid #e2e8f0'
                     }}>
-                      <p style={{ 
-                        fontWeight: 500, 
-                        color: '#1e293b',
-                        fontSize: '14px'
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        justifyContent: 'space-between',
+                        marginBottom: '12px'
                       }}>
-                        {getBeneficioTitle(validacion.beneficioId)}
-                      </p>
-                      <p style={{ fontSize: '12px', color: '#64748b' }}>
-                        Asociación: {validacion.asociacionId.substring(0, 15)}...
-                      </p>
-                      {validacion.montoTransaccion && (
-                        <p style={{ fontSize: '12px', fontWeight: 600, color: '#475569' }}>
-                          Monto: ${validacion.montoTransaccion.toFixed(2)}
+                        <div>
+                          <p style={{ fontWeight: 600, color: '#1e293b', fontSize: '14px' }}>
+                            {format(validacion.fechaHora.toDate(), 'dd/MM/yyyy HH:mm')}
+                          </p>
+                          <p style={{ fontSize: '12px', color: '#64748b' }}>
+                            Socio: {validacion.socioId.substring(0, 8)}...
+                          </p>
+                        </div>
+                        <div style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          padding: '4px 8px',
+                          borderRadius: '6px',
+                          fontSize: '12px',
+                          fontWeight: 500,
+                          ...getResultColor(validacion.resultado)
+                        }}>
+                          <ResultIcon style={{ width: '12px', height: '12px' }} />
+                          {getResultText(validacion.resultado)}
+                        </div>
+                      </div>
+                      
+                      <div style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '4px'
+                      }}>
+                        <p style={{ 
+                          fontWeight: 500, 
+                          color: '#1e293b',
+                          fontSize: '14px'
+                        }}>
+                          {getBeneficioTitle(validacion.beneficioId)}
                         </p>
-                      )}
+                        <p style={{ fontSize: '12px', color: '#64748b' }}>
+                          Asociación: {validacion.asociacionId.substring(0, 15)}...
+                        </p>
+                        {validacion.montoTransaccion && (
+                          <p style={{ fontSize: '12px', fontWeight: 600, color: '#475569' }}>
+                            Monto: ${validacion.montoTransaccion.toFixed(2)}
+                          </p>
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </motion.div>
               );
             })}
@@ -421,20 +428,6 @@ export const RecentValidations: React.FC = () => {
           </button>
         </div>
       )}
-
-      <style jsx>{`
-        @media (min-width: 1024px) {
-          .desktop-header {
-            display: grid !important;
-          }
-          .desktop-row {
-            display: grid !important;
-          }
-          .mobile-row {
-            display: none !important;
-          }
-        }
-      `}</style>
     </motion.div>
   );
 };
