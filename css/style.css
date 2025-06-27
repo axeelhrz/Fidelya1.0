@@ -326,6 +326,7 @@ pointer-events: none;
 padding: 0;
 transition: all var(--transition-slow);
 will-change: transform;
+overflow: visible;
 }
 
 /* ===== NAVBAR FUTURISTA ULTRA RESPONSIVE - SIN CONTENEDORES ===== */
@@ -338,7 +339,7 @@ align-items: center;
 position: relative;
 pointer-events: none;
 width: 100%;
-overflow: hidden;
+overflow: visible;
 }
 
 /* ===== LOGO FLOTANTE OPTIMIZADO ===== */
@@ -521,6 +522,8 @@ display: flex;
 flex-direction: column;
 align-items: flex-end;
 gap: var(--space-md);
+padding: var(--space-md);
+margin: var(--space-md);
 }
 
 /* ===== TOGGLE MÓVIL HAMBURGUESA ===== */
