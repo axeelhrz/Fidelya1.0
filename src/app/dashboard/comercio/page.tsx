@@ -33,7 +33,8 @@ const LoadingScreen: React.FC<{ message: string }> = ({ message }) => (
       minHeight: '100vh',
       display: 'flex',
       alignItems: 'center',
-      justifyContent: 'center'
+      justifyContent: 'center',
+      background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)'
     }}
   >
     <motion.div 
@@ -45,9 +46,9 @@ const LoadingScreen: React.FC<{ message: string }> = ({ message }) => (
         <Box sx={{ position: 'relative', mb: 4 }}>
           <Box
             sx={{
-              width: 80,
-              height: 80,
-              border: '6px solid #e2e8f0',
+              width: 100,
+              height: 100,
+              border: '8px solid #e2e8f0',
               borderRadius: '50%',
               borderTopColor: '#06b6d4',
               borderRightColor: '#0891b2',
@@ -60,7 +61,15 @@ const LoadingScreen: React.FC<{ message: string }> = ({ message }) => (
             }}
           />
         </Box>
-        <Typography variant="h4" sx={{ fontWeight: 900, color: '#0f172a', mb: 2 }}>
+        <Typography variant="h3" sx={{ 
+          fontWeight: 900, 
+          color: '#0f172a', 
+          mb: 2,
+          background: 'linear-gradient(135deg, #0f172a 0%, #06b6d4 100%)',
+          backgroundClip: 'text',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+        }}>
           Cargando Panel de Control
         </Typography>
         <Typography variant="h6" sx={{ color: '#64748b', fontWeight: 500 }}>
@@ -77,7 +86,8 @@ const AccessDeniedScreen: React.FC = () => (
       minHeight: '100vh',
       display: 'flex',
       alignItems: 'center',
-      justifyContent: 'center'
+      justifyContent: 'center',
+      background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)'
     }}
   >
     <Container maxWidth="sm">
@@ -89,18 +99,28 @@ const AccessDeniedScreen: React.FC = () => (
         <Box sx={{ textAlign: 'center' }}>
           <Avatar
             sx={{
-              width: 100,
-              height: 100,
+              width: 120,
+              height: 120,
               bgcolor: alpha('#ef4444', 0.1),
               color: '#ef4444',
               mx: 'auto',
               mb: 4,
+              border: '4px solid',
+              borderColor: alpha('#ef4444', 0.2),
             }}
           >
-            <Security sx={{ fontSize: 50 }} />
+            <Security sx={{ fontSize: 60 }} />
           </Avatar>
           
-          <Typography variant="h3" sx={{ fontWeight: 900, color: '#0f172a', mb: 2 }}>
+          <Typography variant="h3" sx={{ 
+            fontWeight: 900, 
+            color: '#0f172a', 
+            mb: 2,
+            background: 'linear-gradient(135deg, #0f172a 0%, #ef4444 100%)',
+            backgroundClip: 'text',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+          }}>
             Acceso Restringido
           </Typography>
           <Typography variant="h6" sx={{ color: '#64748b', mb: 4, maxWidth: 400, mx: 'auto' }}>
@@ -122,42 +142,96 @@ const ComercioSection: React.FC<{
     case 'estadisticas':
     default:
       return (
-        <Container maxWidth="xl" sx={{ py: 4 }}>
-          <DashboardHeader />
-          
-          {/* Stats Cards */}
-          <Box sx={{ mb: 6 }}>
-            <StatsCards />
-          </Box>
+        <Box sx={{ 
+          minHeight: '100vh',
+          background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+          pb: 8
+        }}>
+          <Container maxWidth="xl" sx={{ py: 4 }}>
+            <DashboardHeader />
+            
+            {/* Stats Cards Section */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              <Box sx={{ mb: 8 }}>
+                <StatsCards />
+              </Box>
+            </motion.div>
 
-          {/* Main Content Grid */}
-          <Box
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: {
-                xs: '1fr',
-                lg: '2fr 1fr'
-              },
+            {/* Main Content - Professional Layout */}
+            <Box sx={{ 
+              display: 'flex',
+              flexDirection: { xs: 'column', lg: 'row' },
               gap: 6,
-              mb: 6
-            }}
-          >
-            {/* Left Column - Charts */}
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <ValidationsChart />
-              <TopBenefits />
+              mb: 8
+            }}>
+              {/* Primary Content Column */}
+              <Box sx={{ 
+                flex: { lg: '2 1 0%' },
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 6
+              }}>
+                {/* Charts Section */}
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.6, delay: 0.3 }}
+                >
+                  <ValidationsChart />
+                </motion.div>
+
+                {/* Top Benefits Section */}
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.6, delay: 0.4 }}
+                >
+                  <TopBenefits />
+                </motion.div>
+              </Box>
+
+              {/* Secondary Content Column */}
+              <Box sx={{ 
+                flex: { lg: '1 1 0%' },
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 6,
+                minWidth: { lg: '320px' }
+              }}>
+                {/* Alerts Section */}
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.6, delay: 0.3 }}
+                >
+                  <Alerts />
+                </motion.div>
+
+                {/* Quick Actions Section */}
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.6, delay: 0.4 }}
+                >
+                  <QuickActions />
+                </motion.div>
+              </Box>
             </Box>
 
-            {/* Right Column - Alerts & Quick Actions */}
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <Alerts />
-              <QuickActions />
-            </Box>
-          </Box>
-
-          {/* Recent Validations */}
-          <RecentValidations />
-        </Container>
+            {/* Recent Validations - Full Width */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.5 }}
+            >
+              <RecentValidations />
+            </motion.div>
+          </Container>
+        </Box>
       );
   }
 };
@@ -193,7 +267,12 @@ export default function ComercioDashboard() {
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -20 }}
-          transition={{ duration: 0.3 }}
+          transition={{ 
+            duration: 0.4,
+            type: "spring",
+            stiffness: 100,
+            damping: 15
+          }}
         >
           <ComercioSection section={activeSection} />
         </motion.div>
