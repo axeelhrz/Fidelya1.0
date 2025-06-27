@@ -32,8 +32,6 @@ import {
   QrCode,
   Receipt,
   Notifications,
-  Settings,
-  Help,
   Logout,
   ChevronLeft,
   ChevronRight,
@@ -332,7 +330,7 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
                   <motion.div
                     animate={active ? { 
                       rotate: [0, 5, -5, 0],
-                      scale: [1, 1.05, 1],
+                      scale: [1, 1.1, 1],
                     } : {}}
                     transition={{ 
                       duration: 2, 
@@ -453,7 +451,7 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
                 >
                   <motion.div
                     animate={active ? { 
-                      scale: [1, 1.1, 1],
+                      scale: [1, 1.05, 1],
                     } : {}}
                     transition={{ 
                       duration: 2, 
@@ -630,6 +628,8 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
                         color: '#64748b', 
                         fontWeight: 600,
                         fontSize: '0.75rem',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em',
                       }}
                     >
                       Panel de Control
@@ -697,9 +697,9 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
         <AnimatePresence>
           {open && (
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
+              initial={{ opacity: 0, y: 20, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -20, scale: 0.9 }}
               transition={{ duration: 0.4, delay: 0.1 }}
             >
               <Paper
@@ -727,7 +727,7 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
                   }}
                 />
                 
-                <Stack direction="row" alignItems="center" spacing={2}>
+                <Stack direction="row" alignItems="center" spacing={3}>
                   <Avatar
                     sx={{
                       width: 44,
@@ -890,137 +890,6 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
           {menuItems.map(item => 
             open ? renderExpandedMenuItem(item) : renderCollapsedMenuItem(item)
           )}
-        </List>
-      </Box>
-
-      <Divider sx={{ mx: open ? 3 : 1.5, opacity: 0.3 }} />
-
-      {/* Settings and Help Section */}
-      <Box sx={{ p: open ? 2 : 1.5, position: 'relative', zIndex: 1 }}>
-        <List sx={{ display: 'flex', flexDirection: 'column', gap: open ? 0 : 0.5 }}>
-          {/* Settings */}
-          <motion.div
-            whileHover={{ scale: open ? 1.01 : 1.05 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            <ListItem disablePadding sx={{ mb: open ? 0.5 : 1 }}>
-              <Tooltip title={!open ? 'Configuración' : ''} placement="right" arrow>
-                <ListItemButton
-                  onClick={() => onMenuClick?.('configuracion')}
-                  sx={{
-                    minHeight: open ? 44 : 56,
-                    justifyContent: open ? 'initial' : 'center',
-                    px: open ? 3 : 2,
-                    borderRadius: 3,
-                    color: '#64748b',
-                    border: '1px solid transparent',
-                    transition: 'all 0.3s ease',
-                    '&:hover': {
-                      bgcolor: alpha('#64748b', 0.08),
-                      color: '#64748b',
-                      transform: open ? 'translateX(4px)' : 'translateY(-2px)',
-                      boxShadow: `0 4px 15px ${alpha('#64748b', 0.15)}`,
-                    },
-                  }}
-                >
-                  <ListItemIcon
-                    sx={{
-                      minWidth: 0,
-                      mr: open ? 3 : 'auto',
-                      justifyContent: 'center',
-                      color: 'inherit',
-                    }}
-                  >
-                    <Settings sx={{ fontSize: open ? 20 : 24 }} />
-                  </ListItemIcon>
-                  <AnimatePresence>
-                    {open && (
-                      <motion.div
-                        initial={{ opacity: 0, width: 0 }}
-                        animate={{ opacity: 1, width: 'auto' }}
-                        exit={{ opacity: 0, width: 0 }}
-                        transition={{ duration: 0.3 }}
-                        style={{ overflow: 'hidden' }}
-                      >
-                        <ListItemText 
-                          primary={
-                            <Typography
-                              variant="body2"
-                              sx={{ fontWeight: 600, fontSize: '0.85rem' }}
-                            >
-                              Configuración
-                            </Typography>
-                          }
-                        />
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </ListItemButton>
-              </Tooltip>
-            </ListItem>
-          </motion.div>
-
-          {/* Help */}
-          <motion.div
-            whileHover={{ scale: open ? 1.01 : 1.05 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            <ListItem disablePadding sx={{ mb: open ? 1 : 1.5 }}>
-              <Tooltip title={!open ? 'Ayuda' : ''} placement="right" arrow>
-                <ListItemButton
-                  onClick={() => onMenuClick?.('ayuda')}
-                  sx={{
-                    minHeight: open ? 44 : 56,
-                    justifyContent: open ? 'initial' : 'center',
-                    px: open ? 3 : 2,
-                    borderRadius: 3,
-                    color: '#06b6d4',
-                    border: '1px solid transparent',
-                    transition: 'all 0.3s ease',
-                    '&:hover': {
-                      bgcolor: alpha('#06b6d4', 0.08),
-                      color: '#06b6d4',
-                      transform: open ? 'translateX(4px)' : 'translateY(-2px)',
-                      boxShadow: `0 4px 15px ${alpha('#06b6d4', 0.15)}`,
-                    },
-                  }}
-                >
-                  <ListItemIcon
-                    sx={{
-                      minWidth: 0,
-                      mr: open ? 3 : 'auto',
-                      justifyContent: 'center',
-                      color: 'inherit',
-                    }}
-                  >
-                    <Help sx={{ fontSize: open ? 20 : 24 }} />
-                  </ListItemIcon>
-                  <AnimatePresence>
-                    {open && (
-                      <motion.div
-                        initial={{ opacity: 0, width: 0 }}
-                        animate={{ opacity: 1, width: 'auto' }}
-                        exit={{ opacity: 0, width: 0 }}
-                        transition={{ duration: 0.3 }}
-                        style={{ overflow: 'hidden' }}
-                      >
-                        <ListItemText 
-                          primary={
-                            <Typography
-                              variant="body2"
-                              sx={{ fontWeight: 600, fontSize: '0.85rem' }}
-                            >
-                              Ayuda
-                            </Typography>
-                          }
-                        />
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </ListItemButton>
-              </Tooltip>
-            </ListItem>
-          </motion.div>
         </List>
       </Box>
 
