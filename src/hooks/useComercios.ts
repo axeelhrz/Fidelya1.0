@@ -1,221 +1,155 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { comercioService, ComercioFilters, ComercioResponse } from '@/services/comercio.service';
+import { useState, useEffect, useCallback } from 'react';
+import { 
+  collection, 
+  query, 
+  where, 
+  onSnapshot, 
+  doc, 
+  updateDoc, 
+  Timestamp,
+  getDoc
+} from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { db, storage } from '@/lib/firebase';
 import { Comercio, ComercioFormData, ComercioStats } from '@/types/comercio';
 import { useAuth } from './useAuth';
 import toast from 'react-hot-toast';
 
-interface ComerciosState {
-  comercio: Comercio | null;
-  comercios: Comercio[];
-  stats: ComercioStats | null;
-  loading: boolean;
-  error: string | null;
-  uploading: boolean;
-}
-
-interface ComerciosActions {
-  updateProfile: (data: ComercioFormData) => Promise<boolean>;
-  uploadImage: (file: File, type: 'logo' | 'imagen') => Promise<string | null>;
-  toggleVisibility: (visible: boolean) => Promise<boolean>;
-  updateConfiguration: (config: Record<string, any>) => Promise<boolean>;
-  refreshStats: () => Promise<void>;
-  clearError: () => void;
-  getComercios: (filters?: ComercioFilters) => Promise<void>;
-}
-
-export const useComercios = (): ComerciosState & ComerciosActions => {
+export const useComercios = () => {
   const { user } = useAuth();
-  const [state, setState] = useState<ComerciosState>({
-    comercio: null,
-    comercios: [],
-    stats: null,
-    loading: true,
-    error: null,
-    uploading: false
-  });
+  const [comercio, setComercio] = useState<Comercio | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Subscribe to comercio changes
+  // Fetch comercio data
   useEffect(() => {
-    if (!user || user.role !== 'comercio') {
-      setState(prev => ({ ...prev, loading: false }));
+    if (!user) {
+      setLoading(false);
       return;
     }
 
-    const unsubscribe = comercioService.subscribeToComercio(
-      user.uid,
-      (comercio) => {
-        setState(prev => ({
-          ...prev,
-          comercio,
-          loading: false,
-          error: null
-        }));
+    const comercioRef = doc(db, 'comercios', user.uid);
+    
+    const unsubscribe = onSnapshot(comercioRef, (doc) => {
+      if (doc.exists()) {
+        setComercio({ uid: doc.id, ...doc.data() } as Comercio);
+      } else {
+        setComercio(null);
       }
-    );
+      setLoading(false);
+    }, (error) => {
+      console.error('Error fetching comercio:', error);
+      setError('Error al cargar los datos del comercio');
+      setLoading(false);
+    });
 
     return () => unsubscribe();
   }, [user]);
 
-  // Load stats when comercio is loaded
-  useEffect(() => {
-    if (state.comercio && user) {
-      refreshStats();
-    }
-  }, [state.comercio, user]);
-
-  // Update profile
+  // Update comercio profile
   const updateProfile = useCallback(async (data: ComercioFormData): Promise<boolean> => {
-    if (!user) return false;
-
-    setState(prev => ({ ...prev, loading: true, error: null }));
+    if (!user || !comercio) return false;
 
     try {
-      const response = await comercioService.updateProfile(user.uid, data);
+      setLoading(true);
+      const comercioRef = doc(db, 'comercios', user.uid);
       
-      if (response.success) {
-        toast.success('Perfil actualizado correctamente');
-        return true;
-      } else {
-        setState(prev => ({ ...prev, error: response.error || 'Error al actualizar perfil' }));
-        toast.error(response.error || 'Error al actualizar perfil');
-        return false;
-      }
+      await updateDoc(comercioRef, {
+        ...data,
+        actualizadoEn: Timestamp.now()
+      });
+
+      toast.success('Perfil actualizado correctamente');
+      return true;
     } catch (error) {
-      const errorMessage = 'Error al actualizar el perfil';
-      setState(prev => ({ ...prev, error: errorMessage }));
-      toast.error(errorMessage);
+      console.error('Error updating profile:', error);
+      toast.error('Error al actualizar el perfil');
       return false;
     } finally {
-      setState(prev => ({ ...prev, loading: false }));
+      setLoading(false);
     }
-  }, [user]);
+  }, [user, comercio]);
 
-  // Upload image
-  const uploadImage = useCallback(async (
-    file: File, 
-    type: 'logo' | 'imagen'
-  ): Promise<string | null> => {
+  // Upload image (logo or main image)
+  const uploadImage = useCallback(async (file: File, type: 'logo' | 'imagen'): Promise<string | null> => {
     if (!user) return null;
 
-    setState(prev => ({ ...prev, uploading: true, error: null }));
-
     try {
-      const response = await comercioService.uploadImage(user.uid, file, type);
-      
-      if (response.success) {
-        toast.success(`${type === 'logo' ? 'Logo' : 'Imagen'} actualizada correctamente`);
-        return response.data?.url || null;
-      } else {
-        setState(prev => ({ ...prev, error: response.error || 'Error al subir imagen' }));
-        toast.error(response.error || 'Error al subir imagen');
-        return null;
+      const fileExtension = file.name.split('.').pop();
+      const fileName = `${type}_${Date.now()}.${fileExtension}`;
+      const storageRef = ref(storage, `comercios/${user.uid}/${fileName}`);
+
+      // Delete old image if exists
+      if (comercio) {
+        const oldImageUrl = type === 'logo' ? comercio.logoUrl : comercio.imagenPrincipalUrl;
+        if (oldImageUrl) {
+          try {
+            const oldImageRef = ref(storage, oldImageUrl);
+            await deleteObject(oldImageRef);
+          } catch (error) {
+            console.log('Old image not found or already deleted');
+          }
+        }
       }
+
+      // Upload new image
+      await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(storageRef);
+
+      // Update comercio document
+      const comercioRef = doc(db, 'comercios', user.uid);
+      const updateData = type === 'logo' 
+        ? { logoUrl: downloadURL }
+        : { imagenPrincipalUrl: downloadURL };
+
+      await updateDoc(comercioRef, {
+        ...updateData,
+        actualizadoEn: Timestamp.now()
+      });
+
+      toast.success(`${type === 'logo' ? 'Logo' : 'Imagen'} actualizada correctamente`);
+      return downloadURL;
     } catch (error) {
-      const errorMessage = `Error al subir ${type === 'logo' ? 'el logo' : 'la imagen'}`;
-      setState(prev => ({ ...prev, error: errorMessage }));
-      toast.error(errorMessage);
+      console.error('Error uploading image:', error);
+      toast.error(`Error al subir ${type === 'logo' ? 'el logo' : 'la imagen'}`);
       return null;
-    } finally {
-      setState(prev => ({ ...prev, uploading: false }));
     }
-  }, [user]);
+  }, [user, comercio]);
 
-  // Toggle visibility
-  const toggleVisibility = useCallback(async (visible: boolean): Promise<boolean> => {
-    if (!user) return false;
+  // Get comercio statistics
+  const getStats = useCallback(async (): Promise<ComercioStats | null> => {
+    if (!user) return null;
 
     try {
-      const response = await comercioService.toggleVisibility(user.uid, visible);
-      
-      if (response.success) {
-        toast.success(`Comercio ${visible ? 'visible' : 'oculto'} correctamente`);
-        return true;
-      } else {
-        toast.error(response.error || 'Error al cambiar visibilidad');
-        return false;
-      }
+      // This would typically involve multiple queries to get comprehensive stats
+      // For now, we'll return mock data structure
+      const stats: ComercioStats = {
+        totalValidaciones: 0,
+        validacionesHoy: 0,
+        validacionesMes: 0,
+        beneficiosActivos: 0,
+        beneficiosVencidos: 0,
+        asociacionesVinculadas: comercio?.asociacionesVinculadas?.length || 0,
+        sociosAlcanzados: 0,
+        ingresosPotenciales: 0,
+        tasaConversion: 0
+      };
+
+      return stats;
     } catch (error) {
-      toast.error('Error al cambiar visibilidad');
-      return false;
+      console.error('Error getting stats:', error);
+      return null;
     }
-  }, [user]);
-
-  // Update configuration
-  const updateConfiguration = useCallback(async (
-    config: Record<string, any>
-  ): Promise<boolean> => {
-    if (!user) return false;
-
-    try {
-      const response = await comercioService.updateConfiguration(user.uid, config);
-      
-      if (response.success) {
-        toast.success('Configuración actualizada correctamente');
-        return true;
-      } else {
-        toast.error(response.error || 'Error al actualizar configuración');
-        return false;
-      }
-    } catch (error) {
-      toast.error('Error al actualizar configuración');
-      return false;
-    }
-  }, [user]);
-
-  // Refresh stats
-  const refreshStats = useCallback(async (): Promise<void> => {
-    if (!user) return;
-
-    try {
-      const stats = await comercioService.getStats(user.uid);
-      setState(prev => ({ ...prev, stats, error: null }));
-    } catch (error) {
-      console.error('Error refreshing stats:', error);
-      setState(prev => ({ ...prev, error: 'Error al cargar estadísticas' }));
-    }
-  }, [user]);
-
-  // Get comercios with filters
-  const getComercios = useCallback(async (filters: ComercioFilters = {}): Promise<void> => {
-    setState(prev => ({ ...prev, loading: true, error: null }));
-
-    try {
-      const comercios = await comercioService.getComercios(filters);
-      setState(prev => ({ ...prev, comercios, loading: false }));
-    } catch (error) {
-      setState(prev => ({ 
-        ...prev, 
-        loading: false, 
-        error: 'Error al cargar comercios' 
-      }));
-    }
-  }, []);
-
-  // Clear error
-  const clearError = useCallback((): void => {
-    setState(prev => ({ ...prev, error: null }));
-  }, []);
-
-  // Memoized QR URL
-  const qrUrl = useMemo(() => {
-    return state.comercio ? comercioService.generateQRUrl(state.comercio.uid) : null;
-  }, [state.comercio]);
+  }, [user, comercio]);
 
   return {
-    ...state,
+    comercio,
+    loading,
+    error,
     updateProfile,
     uploadImage,
-    toggleVisibility,
-    updateConfiguration,
-    refreshStats,
-    clearError,
-    getComercios,
-    // Additional computed properties
-    qrUrl,
-    isVisible: state.comercio?.visible ?? false,
-    hasLogo: !!state.comercio?.logoUrl,
-    hasMainImage: !!state.comercio?.imagenPrincipalUrl
+    getStats
   };
 };

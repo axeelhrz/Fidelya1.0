@@ -17,8 +17,9 @@ import {
   Timestamp,
   serverTimestamp
 } from 'firebase/firestore';
-import { auth, db, COLLECTIONS, handleFirebaseError } from '@/lib/firebase';
+import { auth, db } from '@/lib/firebase';
 import { UserData } from '@/types/auth';
+// TODO: Import COLLECTIONS and handleFirebaseError from their correct modules or define them if missing
 
 export interface LoginCredentials {
   email: string;
