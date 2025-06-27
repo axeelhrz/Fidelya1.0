@@ -58,7 +58,7 @@
             <!-- Navegación optimizada para móvil -->
             <div class="nav__menu" id="nav-menu">
                 <!-- Botón de cerrar para móvil (solo visible en móvil) -->
-                <div class="nav__close" id="nav-close">
+                <div class="nav__close" id="nav-close" role="button" tabindex="0" aria-label="Cerrar menú de navegación">
                     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                         <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
                     </svg>
@@ -68,48 +68,48 @@
                 <div class="nav__language-mobile">
                     <div class="nav__language-title" data-translate="nav-language-title">Idioma</div>
                     <div class="nav__language-options">
-                        <button class="nav__language-option" data-lang="es">
-                            <span class="nav__language-flag">🇪🇸</span>
+                        <button class="nav__language-option" data-lang="es" aria-label="Cambiar idioma a Español">
+                            <span class="nav__language-flag" role="img" aria-label="Bandera de España">🇪🇸</span>
                             <span class="nav__language-name">Español</span>
                         </button>
-                        <button class="nav__language-option" data-lang="en">
-                            <span class="nav__language-flag">🇺🇸</span>
+                        <button class="nav__language-option" data-lang="en" aria-label="Cambiar idioma a Inglés">
+                            <span class="nav__language-flag" role="img" aria-label="Bandera de Estados Unidos">🇺🇸</span>
                             <span class="nav__language-name">English</span>
                         </button>
                     </div>
                 </div>
 
-                <ul class="nav__list">
-                    <li><a href="#home" class="nav__link" data-translate="nav-home">Inicio</a></li>
-                    <li><a href="#features" class="nav__link" data-translate="nav-features">Características</a></li>
-                    <li><a href="#videos" class="nav__link" data-translate="nav-videos">Videos</a></li>
-                    <li><a href="#faq" class="nav__link" data-translate="nav-faq">FAQ</a></li>
-                    <li><a href="#contact" class="nav__link" data-translate="nav-contact">Contacto</a></li>
+                <ul class="nav__list" role="navigation" aria-label="Navegación principal">
+                    <li><a href="#home" class="nav__link" data-translate="nav-home" role="menuitem">Inicio</a></li>
+                    <li><a href="#features" class="nav__link" data-translate="nav-features" role="menuitem">Características</a></li>
+                    <li><a href="#videos" class="nav__link" data-translate="nav-videos" role="menuitem">Videos</a></li>
+                    <li><a href="#faq" class="nav__link" data-translate="nav-faq" role="menuitem">FAQ</a></li>
+                    <li><a href="#contact" class="nav__link" data-translate="nav-contact" role="menuitem">Contacto</a></li>
                 </ul>
 
                 <!-- CTA móvil (solo visible en móvil) -->
                 <div class="nav__cta-mobile">
-                    <a href="https://starflex.web.app/" class="btn btn--primary btn--mobile" data-translate="nav-cta">Comienza tu prueba gratuita</a>
+                    <a href="https://starflex.web.app/" class="btn btn--primary btn--mobile" data-translate="nav-cta" aria-label="Comenzar prueba gratuita de StarFlex">Comienza tu prueba gratuita</a>
                 </div>
             </div>
             
             <!-- Botón CTA (oculto en móvil) -->
             <div class="nav__cta">
-                <a href="https://starflex.web.app/" class="btn btn--primary" data-translate="nav-cta">Comienza tu prueba gratuita</a>
+                <a href="https://starflex.web.app/" class="btn btn--primary" data-translate="nav-cta" aria-label="Comenzar prueba gratuita de StarFlex">Comienza tu prueba gratuita</a>
             </div>
             
             <!-- Toggle móvil optimizado -->
-            <div class="nav__toggle" id="nav-toggle">
-                <span class="nav__toggle-line"></span>
-                <span class="nav__toggle-line"></span>
-                <span class="nav__toggle-line"></span>
+            <div class="nav__toggle" id="nav-toggle" role="button" tabindex="0" aria-label="Abrir menú de navegación" aria-expanded="false" aria-controls="nav-menu">
+                <span class="nav__toggle-line" aria-hidden="true"></span>
+                <span class="nav__toggle-line" aria-hidden="true"></span>
+                <span class="nav__toggle-line" aria-hidden="true"></span>
             </div>
         </nav>
     </header>
 
     <!-- Selector de Idioma Flotante -->
     <div class="language-switcher" id="language-switcher">
-        <div class="language-switcher__btn" id="language-switcher-btn" aria-label="Cambiar idioma">
+        <div class="language-switcher__btn" id="language-switcher-btn" aria-label="Cambiar idioma" role="button" tabindex="0" aria-expanded="false" aria-haspopup="true">
             <div class="language-switcher__icon">
                 <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                     <path d="M12.87 15.07l-2.54-2.51.03-.03c1.74-1.94 2.98-4.17 3.71-6.53H17V4h-7V2H8v2H1v1.99h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"/>
@@ -123,13 +123,13 @@
             </div>
         </div>
         
-        <div class="language-switcher__dropdown" id="language-switcher-dropdown">
-            <button class="language-switcher__option" data-lang="es">
-                <span class="language-switcher__flag">🇪🇸</span>
+        <div class="language-switcher__dropdown" id="language-switcher-dropdown" role="menu" aria-labelledby="language-switcher-btn">
+            <button class="language-switcher__option" data-lang="es" role="menuitem" aria-label="Cambiar idioma a Español">
+                <span class="language-switcher__flag" role="img" aria-label="Bandera de España">🇪🇸</span>
                 <span class="language-switcher__name">Español</span>
             </button>
-            <button class="language-switcher__option" data-lang="en">
-                <span class="language-switcher__flag">🇺🇸</span>
+            <button class="language-switcher__option" data-lang="en" role="menuitem" aria-label="Cambiar idioma a Inglés">
+                <span class="language-switcher__flag" role="img" aria-label="Bandera de Estados Unidos">🇺🇸</span>
                 <span class="language-switcher__name">English</span>
             </button>
         </div>
@@ -162,7 +162,7 @@
                 
                 <!-- GRUPO CTA COMPLETAMENTE LIBRE - SIN RESTRICCIONES -->
                 <div class="hero__cta-group">
-                    <a href="https://starflex.web.app/" class="btn btn--primary btn--cta">
+                    <a href="https://starflex.web.app/" class="btn btn--primary btn--cta" aria-label="Comenzar prueba gratuita de 3 días">
                         <div class="hero__cta-main">
                             <span data-translate="hero-cta-main">PRUEBA <strong>GRATUITA</strong></span>
                             <small data-translate="hero-cta-trial">3 DÍAS GRATIS</small>
@@ -170,11 +170,11 @@
                     </a>
                     
                     <div class="hero__download">
-                        <a href="https://play.google.com/store/apps/details?id=com.minoka.starflex&pli=1" class="download-btn download-btn--google" data-translate-aria="download-google" aria-label="Descargar en Google Play">
+                        <a href="https://play.google.com/store/apps/details?id=com.minoka.starflex&pli=1" class="download-btn download-btn--google" data-translate-aria="download-google" aria-label="Descargar en Google Play" target="_blank" rel="noopener noreferrer">
                             <img class="download-btn__image image-optimized" data-translate-alt="download-google-alt" alt="Descargar en Google Play" loading="eager">
                         </a>
                         
-                        <a href="https://starflex.web.app/" class="download-btn download-btn--app-store" data-translate-aria="download-apple" aria-label="Descargar en App Store">
+                        <a href="https://starflex.web.app/" class="download-btn download-btn--app-store" data-translate-aria="download-apple" aria-label="Descargar en App Store" target="_blank" rel="noopener noreferrer">
                             <img class="download-btn__image image-optimized" data-translate-alt="download-apple-alt" alt="Descargar en App Store" loading="eager">
                         </a>
                     </div>
@@ -193,6 +193,7 @@
                             loop 
                             playsinline
                             preload="auto"
+                            aria-label="Video demostrativo de StarFlex en dispositivo móvil"
                         >
                             <source src="./assets/phones/Hero.mp4" type="video/mp4">
                         </video>
@@ -215,6 +216,7 @@
                                     loop 
                                     playsinline
                                     preload="auto"
+                                    aria-label="Video demostrativo de StarFlex"
                                 >
                                     <source src="./assets/phones/Hero.mp4" type="video/mp4">
                                 </video>
@@ -440,6 +442,7 @@
                             preload="metadata"
                             playsinline
                             poster="./assets/video-poster.webp"
+                            aria-label="Video demostrativo completo de StarFlex"
                         >
                             <source src="./assets/StarFlex.mp4" type="video/mp4">
                             <p data-translate="video-not-supported">Tu navegador no soporta videos HTML5. <a href="./assets/StarFlex.mp4">Descargar video</a>.</p>
@@ -448,7 +451,7 @@
                         <div class="videos__play-overlay" id="play-overlay">
                             <div class="videos__play-button">
                                 <div class="videos__play-icon">
-                                    <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                                         <path d="M8 5v14l11-7z"/>
                                     </svg>
                                 </div>
@@ -491,11 +494,11 @@
                     Únete a más de 15,000 conductores que ya están maximizando sus ingresos con StarFlex
                 </p>
                 <div class="videos__cta-buttons">
-                    <a href="https://starflex.web.app/" class="btn btn--primary btn--cta-video">
+                    <a href="https://starflex.web.app/" class="btn btn--primary btn--cta-video" aria-label="Comenzar ahora con StarFlex">
                         <span data-translate="videos-cta-start">COMENZAR AHORA</span>
                         <small data-translate="videos-cta-trial">3 días gratis</small>
                     </a>
-                    <a href="#videos" class="btn btn--secondary btn--demo">
+                    <a href="#videos" class="btn btn--secondary btn--demo" aria-label="Ver demo personalizada">
                         <span data-translate="videos-cta-demo">VER DEMO PERSONALIZADA</span>
                     </a>
                 </div>
@@ -519,8 +522,9 @@
                     data-translate-placeholder="faq-search-placeholder"
                     placeholder="Buscar pregunta..."
                     autocomplete="off"
+                    aria-label="Buscar en preguntas frecuentes"
                 >
-                <div class="faq__search-icon"></div>
+                <div class="faq__search-icon" aria-hidden="true"></div>
             </div>
         </div>
 
@@ -528,11 +532,11 @@
             <div class="faq__list" id="faq-list">
                 <!-- FAQ 1: Beneficios -->
                 <div class="faq__item">
-                    <button class="faq__question" aria-expanded="false">
+                    <button class="faq__question" aria-expanded="false" aria-controls="faq-answer-1">
                         <span class="faq__question-text" data-translate="faq-1-question">¿Cuáles son los principales beneficios de utilizar StarFlex?</span>
-                        <div class="faq__icon"></div>
+                        <div class="faq__icon" aria-hidden="true"></div>
                     </button>
-                    <div class="faq__answer">
+                    <div class="faq__answer" id="faq-answer-1">
                         <div class="faq__answer-content">
                             <p class="faq__answer-text" data-translate="faq-1-answer">
                                 StarFlex está diseñado para <span class="faq__answer-highlight">eliminar la conducción distraída</span> mediante automatización inteligente. Te permite concentrarte completamente en la conducción segura mientras nuestro sistema trabaja para
@@ -544,11 +548,11 @@
 
                 <!-- FAQ 2: CAPTCHA -->
                 <div class="faq__item">
-                    <button class="faq__question" aria-expanded="false">
+                    <button class="faq__question" aria-expanded="false" aria-controls="faq-answer-2">
                         <span class="faq__question-text" data-translate="faq-2-question">¿StarFlex puede resolver automáticamente los CAPTCHA?</span>
-                        <div class="faq__icon"></div>
+                        <div class="faq__icon" aria-hidden="true"></div>
                     </button>
-                    <div class="faq__answer">
+                    <div class="faq__answer" id="faq-answer-2">
                         <div class="faq__answer-content">
                             <p class="faq__answer-text" data-translate="faq-2-answer">
                                 Sí, StarFlex incluye <span class="faq__answer-highlight">tecnología avanzada para resolver CAPTCHA automáticamente</span>. Nuestro sistema utiliza algoritmos inteligentes que pueden interpretar y resolver diferentes tipos de verificaciones, permitiendo una navegación fluida sin interrupciones manuales. Esto optimiza tu tiempo y hace que tu experiencia diaria sea más eficiente.
@@ -559,11 +563,11 @@
 
                 <!-- FAQ 3: Seguridad -->
                 <div class="faq__item">
-                    <button class="faq__question" aria-expanded="false">
+                    <button class="faq__question" aria-expanded="false" aria-controls="faq-answer-3">
                         <span class="faq__question-text" data-translate="faq-3-question">¿Es seguro usar StarFlex? ¿Amazon puede detectarlo?</span>
-                        <div class="faq__icon"></div>
+                        <div class="faq__icon" aria-hidden="true"></div>
                     </button>
-                    <div class="faq__answer">
+                    <div class="faq__answer" id="faq-answer-3">
                         <div class="faq__answer-content">
                             <p class="faq__answer-text" data-translate="faq-3-answer">
                                 StarFlex utiliza <span class="faq__answer-highlight">tecnología avanzada de simulación humana</span> que incluye patrones de comportamiento naturales, tiempos de respuesta variables y gestos táctiles realistas. Nuestro enfoque se centra en ayudar a los conductores a brindar un mejor servicio a Amazon y sus clientes, asegurando entregas eficientes y de alta calidad.
@@ -574,11 +578,11 @@
 
                 <!-- FAQ 4: Compatibilidad -->
                 <div class="faq__item">
-                    <button class="faq__question" aria-expanded="false">
+                    <button class="faq__question" aria-expanded="false" aria-controls="faq-answer-4">
                         <span class="faq__question-text" data-translate="faq-4-question">¿StarFlex funciona en iPhone y Android?</span>
-                        <div class="faq__icon"></div>
+                        <div class="faq__icon" aria-hidden="true"></div>
                     </button>
-                    <div class="faq__answer">
+                    <div class="faq__answer" id="faq-answer-4">
                         <div class="faq__answer-content">
                             <p class="faq__answer-text" data-translate="faq-4-answer">
                                 Sí, StarFlex está disponible para <span class="faq__answer-highlight">iOS (iPhone 8+) y Android (8.0+)</span>. Hemos desarrollado aplicaciones nativas optimizadas para cada plataforma, garantizando el mejor rendimiento y una experiencia de usuario superior. Ambas versiones incluyen todas las funcionalidades y reciben actualizaciones automáticas.
@@ -589,11 +593,11 @@
 
                 <!-- FAQ 5: Requisitos -->
                 <div class="faq__item">
-                    <button class="faq__question" aria-expanded="false">
+                    <button class="faq__question" aria-expanded="false" aria-controls="faq-answer-5">
                         <span class="faq__question-text" data-translate="faq-5-question">¿Qué necesito para empezar a usar StarFlex?</span>
-                        <div class="faq__icon"></div>
+                        <div class="faq__icon" aria-hidden="true"></div>
                     </button>
-                    <div class="faq__answer">
+                    <div class="faq__answer" id="faq-answer-5">
                         <div class="faq__answer-content">
                             <p class="faq__answer-text" data-translate="faq-5-answer">
                                 Solo necesitas una <span class="faq__answer-highlight">cuenta activa de Amazon Flex y un dispositivo compatible</span>. Después de descargar la aplicación, el proceso de configuración toma menos de 5 minutos. Nuestro sistema de configuración guiada te ayudará a optimizar tu experiencia desde el primer día.
@@ -649,7 +653,7 @@
                     <h3 class="contact__channel-title" data-translate="contact-whatsapp-title">WhatsApp</h3>
                     <p class="contact__channel-description" data-translate="contact-whatsapp-description">Canal de noticias</p>
                 </div>
-                <a href="https://www.whatsapp.com/channel/0029VaL0DdmIyPtQxdrlHm1d" target="_blank" rel="noopener noreferrer" class="contact__channel-btn">
+                <a href="https://www.whatsapp.com/channel/0029VaL0DdmIyPtQxdrlHm1d" target="_blank" rel="noopener noreferrer" class="contact__channel-btn" aria-label="Unirse al canal de WhatsApp de StarFlex">
                     <span data-translate="contact-whatsapp-btn">Unirse</span>
                     <div class="contact__channel-arrow">→</div>
                 </a>
@@ -666,7 +670,7 @@
                     <h3 class="contact__channel-title" data-translate="contact-instagram-title">Instagram</h3>
                     <p class="contact__channel-description" data-translate="contact-instagram-description">Contenido visual diario</p>
                 </div>
-                <a href="https://www.instagram.com/starflexapp/" target="_blank" rel="noopener noreferrer" class="contact__channel-btn">
+                <a href="https://www.instagram.com/starflexapp/" target="_blank" rel="noopener noreferrer" class="contact__channel-btn" aria-label="Seguir a StarFlex en Instagram">
                     <span data-translate="contact-instagram-btn">Seguir</span>
                     <div class="contact__channel-arrow">→</div>
                 </a>
@@ -683,7 +687,7 @@
                     <h3 class="contact__channel-title" data-translate="contact-facebook-title">Facebook</h3>
                     <p class="contact__channel-description" data-translate="contact-facebook-description">Comunidad de conductores</p>
                 </div>
-                <a href="https://www.facebook.com/checkpoint/1501092823525282/?next=https%3A%2F%2Fwww.facebook.com%2Fpeople%2Fstarflexappcom%2F100088450157226%2F#" target="_blank" rel="noopener noreferrer" class="contact__channel-btn">
+                <a href="https://www.facebook.com/checkpoint/1501092823525282/?next=https%3A%2F%2Fwww.facebook.com%2Fpeople%2Fstarflexappcom%2F100088450157226%2F#" target="_blank" rel="noopener noreferrer" class="contact__channel-btn" aria-label="Seguir a StarFlex en Facebook">
                     <span data-translate="contact-facebook-btn">Seguir</span>
                     <div class="contact__channel-arrow">→</div>
                 </a>
@@ -700,7 +704,7 @@
                     <h3 class="contact__channel-title" data-translate="contact-tiktok-title">TikTok</h3>
                     <p class="contact__channel-description" data-translate="contact-tiktok-description">Tips y tendencias</p>
                 </div>
-                <a href="https://www.tiktok.com/@starflexapp.com" target="_blank" rel="noopener noreferrer" class="contact__channel-btn">
+                <a href="https://www.tiktok.com/@starflexapp.com" target="_blank" rel="noopener noreferrer" class="contact__channel-btn" aria-label="Seguir a StarFlex en TikTok">
                     <span data-translate="contact-tiktok-btn">Seguir</span>
                     <div class="contact__channel-arrow">→</div>
                 </a>
@@ -717,7 +721,7 @@
                     <h3 class="contact__channel-title" data-translate="contact-telegram-title">Telegram</h3>
                     <p class="contact__channel-description" data-translate="contact-telegram-description">Notificaciones instantáneas</p>
                 </div>
-                <a href="https://t.me/starflexnews" target="_blank" rel="noopener noreferrer" class="contact__channel-btn">
+                <a href="https://t.me/starflexnews" target="_blank" rel="noopener noreferrer" class="contact__channel-btn" aria-label="Unirse al canal de Telegram de StarFlex">
                     <span data-translate="contact-telegram-btn">Unirse</span>
                     <div class="contact__channel-arrow">→</div>
                 </a>
@@ -734,7 +738,7 @@
                     <h3 class="contact__channel-title" data-translate="contact-email-title">Soporte</h3>
                     <p class="contact__channel-description" data-translate="contact-email-description">Ayuda especializada</p>
                 </div>
-                <a href="mailto:support@starflexapp.com" class="contact__channel-btn">
+                <a href="mailto:support@starflexapp.com" class="contact__channel-btn" aria-label="Contactar soporte de StarFlex por email">
                     <span data-translate="contact-email-btn">Contactar</span>
                     <div class="contact__channel-arrow">→</div>
                 </a>
@@ -749,7 +753,7 @@
                     <p data-translate="footer-copyright">© StarFlex • Todos los derechos reservados</p>
                 </div>
                 <div class="contact__footer-cta">
-                    <a href="https://starflex.web.app/" class="btn btn--primary btn--footer">
+                    <a href="https://starflex.web.app/" class="btn btn--primary btn--footer" aria-label="Comenzar ahora con StarFlex - 3 días gratis">
                         <span data-translate="footer-cta-main">COMENZAR AHORA</span>
                         <small data-translate="footer-cta-trial">3 días gratis</small>
                     </a>
@@ -767,7 +771,7 @@
                    target="_blank" 
                    rel="noopener noreferrer" 
                    class="floating-widget__menu-item floating-widget__whatsapp"
-                   aria-label="Canal de WhatsApp">
+                   aria-label="Canal de WhatsApp de StarFlex">
                     <svg class="floating-widget__icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                         <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.488"/>
                     </svg>
@@ -779,7 +783,7 @@
                    target="_blank" 
                    rel="noopener noreferrer" 
                    class="floating-widget__menu-item floating-widget__telegram"
-                   aria-label="Canal de Telegram">
+                   aria-label="Canal de Telegram de StarFlex">
                     <svg class="floating-widget__icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                         <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
                     </svg>
