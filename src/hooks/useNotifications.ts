@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { toast } from 'react-hot-toast';
-import {
-  Notification,
+import type {
+  Notification as NotificationType,
   NotificationFormData,
   NotificationFilters,
   NotificationStats,
@@ -22,8 +22,8 @@ import {
 } from '@/utils/firestore/notifications';
 
 export const useNotifications = () => {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [allNotifications, setAllNotifications] = useState<Notification[]>([]);
+  const [notifications, setNotifications] = useState<NotificationType[]>([]);
+  const [allNotifications, setAllNotifications] = useState<NotificationType[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<NotificationStats>({
     total: 0,
@@ -45,7 +45,7 @@ export const useNotifications = () => {
   const playNotificationSound = useCallback(() => {
     try {
       // Crear un contexto de audio
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
       
       // Crear un oscilador para generar el sonido
       const oscillator = audioContext.createOscillator();
@@ -67,7 +67,7 @@ export const useNotifications = () => {
       oscillator.start(audioContext.currentTime);
       oscillator.stop(audioContext.currentTime + 0.2);
       
-    } catch (error) {
+    } catch {
       // Fallback: intentar reproducir un archivo de audio si existe
       try {
         const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT');
@@ -82,7 +82,7 @@ export const useNotifications = () => {
   }, []);
 
   // Función para mostrar notificación del navegador
-  const showBrowserNotification = useCallback((notification: Notification) => {
+  const showBrowserNotification = useCallback((notification: NotificationType) => {
     if ('Notification' in window && Notification.permission === 'granted') {
       const browserNotification = new Notification(notification.title, {
         body: notification.message,
