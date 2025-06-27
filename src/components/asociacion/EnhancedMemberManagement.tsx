@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Box,
@@ -36,6 +36,12 @@ import {
   ButtonGroup,
   Fab,
   Zoom,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Alert,
+  CircularProgress,
 } from '@mui/material';
 import { SelectChangeEvent } from '@mui/material/Select';
 import {
@@ -59,8 +65,21 @@ import {
   Refresh,
   PersonAdd,
   Print,
+  DeleteForever,
+  Warning,
+  CheckCircle,
+  Cancel,
 } from '@mui/icons-material';
 import { Socio } from '@/types/socio';
+import { 
+  collection, 
+  doc, 
+  deleteDoc, 
+  updateDoc, 
+  Timestamp 
+} from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import toast from 'react-hot-toast';
 
 interface EnhancedMemberManagementProps {
   socios: Socio[];
@@ -69,6 +88,7 @@ interface EnhancedMemberManagementProps {
   onDelete: (socio: Socio) => void;
   onAdd: () => void;
   onBulkAction?: (action: string, selectedIds: string[]) => void;
+  onRefresh?: () => void;
 }
 
 interface TableColumn {
@@ -134,18 +154,22 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
   onEdit,
   onDelete,
   onAdd,
-  onBulkAction
+  onBulkAction,
+  onRefresh
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'activo' | 'vencido'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'activo' | 'vencido' | 'inactivo'>('all');
   const [sortBy, setSortBy] = useState<string>('creadoEn');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(ITEMS_PER_PAGE_OPTIONS[0]);
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
-  const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [bulkMenuAnchor, setBulkMenuAnchor] = useState<null | HTMLElement>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [memberToDelete, setMemberToDelete] = useState<Socio | null>(null);
+  const [deleteType, setDeleteType] = useState<'soft' | 'permanent'>('soft');
+  const [deleting, setDeleting] = useState(false);
 
   // Deterministic engagement score based on UID or email (for demo purposes)
   const getEngagementScore = (socio: Socio) => {
@@ -165,17 +189,33 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
     return { label: 'Bajo', color: '#ef4444' };
   };
 
-  const filtered = socios.filter(socio => {
-    const matchesSearch = 
-      socio.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      socio.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      socio.dni?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      socio.telefono?.includes(searchTerm);
+  const filtered = useMemo(() => {
+    return socios.filter(socio => {
+      const matchesSearch = 
+        socio.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        socio.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        socio.dni?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        socio.telefono?.includes(searchTerm);
 
-    const matchesStatus = statusFilter === 'all' || socio.estado === statusFilter;
+      const matchesStatus = statusFilter === 'all' || socio.estado === statusFilter;
 
-    return matchesSearch && matchesStatus;
-  });
+      return matchesSearch && matchesStatus;
+    }).sort((a, b) => {
+      let aValue: any = a[sortBy as keyof Socio];
+      let bValue: any = b[sortBy as keyof Socio];
+
+      if (sortBy === 'creadoEn') {
+        aValue = aValue?.toDate?.() || aValue;
+        bValue = bValue?.toDate?.() || bValue;
+      }
+
+      if (sortOrder === 'asc') {
+        return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+      } else {
+        return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
+      }
+    });
+  }, [socios, searchTerm, statusFilter, sortBy, sortOrder]);
 
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -212,6 +252,48 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
       setSelectedMembers([]);
     }
     setBulkMenuAnchor(null);
+  };
+
+  const handleDeleteClick = (socio: Socio, type: 'soft' | 'permanent' = 'soft') => {
+    setMemberToDelete(socio);
+    setDeleteType(type);
+    setDeleteDialogOpen(true);
+    setAnchorEl(null);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!memberToDelete) return;
+
+    setDeleting(true);
+    try {
+      if (deleteType === 'permanent') {
+        // Eliminación permanente de Firebase
+        await deleteDoc(doc(db, 'socios', memberToDelete.uid));
+        toast.success('Miembro eliminado permanentemente');
+      } else {
+        // Eliminación suave (cambiar estado a inactivo)
+        await updateDoc(doc(db, 'socios', memberToDelete.uid), {
+          estado: 'inactivo',
+          actualizadoEn: Timestamp.now()
+        });
+        toast.success('Miembro marcado como inactivo');
+      }
+      
+      // Llamar al callback de eliminación si existe
+      onDelete(memberToDelete);
+      
+      // Refrescar datos si la función está disponible
+      if (onRefresh) {
+        onRefresh();
+      }
+    } catch (error) {
+      console.error('Error al eliminar miembro:', error);
+      toast.error('Error al eliminar el miembro');
+    } finally {
+      setDeleting(false);
+      setDeleteDialogOpen(false);
+      setMemberToDelete(null);
+    }
   };
 
   const getStatusChip = (estado: string) => {
@@ -302,7 +384,7 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
           <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { sm: 'center' }, justifyContent: 'space-between', gap: 3, mb: 4 }}>
             <Box>
               <Typography variant="h5" sx={{ fontWeight: 800, color: '#0f172a', mb: 0.5, fontSize: '1.5rem' }}>
-                Gestión Avanzada de Miembros
+                Gestión de Miembros
               </Typography>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                 <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500 }}>
@@ -324,24 +406,9 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
             
             <Stack direction="row" spacing={2}>
               <ButtonGroup variant="outlined" size="small">
-                <Tooltip title="Vista de tabla">
-                  <IconButton
-                    onClick={() => setViewMode('table')}
-                    sx={{
-                      bgcolor: viewMode === 'table' ? alpha('#6366f1', 0.1) : 'transparent',
-                      color: viewMode === 'table' ? '#6366f1' : '#64748b',
-                      borderColor: '#e2e8f0',
-                      '&:hover': {
-                        bgcolor: alpha('#6366f1', 0.05),
-                        borderColor: '#6366f1',
-                      }
-                    }}
-                  >
-                    <ViewColumn />
-                  </IconButton>
-                </Tooltip>
                 <Tooltip title="Actualizar datos">
                   <IconButton
+                    onClick={onRefresh}
                     sx={{
                       color: '#64748b',
                       borderColor: '#e2e8f0',
@@ -420,7 +487,8 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
             <FormControl sx={{ minWidth: 200 }}>
               <InputLabel>Estado</InputLabel>
               <Select
-                onChange={(e: SelectChangeEvent) => setStatusFilter(e.target.value as 'all' | 'activo' | 'vencido')}
+                value={statusFilter}
+                onChange={(e: SelectChangeEvent) => setStatusFilter(e.target.value as 'all' | 'activo' | 'vencido' | 'inactivo')}
                 label="Estado"
                 startAdornment={<FilterList sx={{ color: '#94a3b8', mr: 1 }} />}
                 sx={{
@@ -444,6 +512,7 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
                 <MenuItem value="all">Todos los estados</MenuItem>
                 <MenuItem value="activo">Activos</MenuItem>
                 <MenuItem value="vencido">Vencidos</MenuItem>
+                <MenuItem value="inactivo">Inactivos</MenuItem>
               </Select>
             </FormControl>
 
@@ -780,7 +849,7 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
                             </Tooltip>
                             <Tooltip title="Eliminar">
                               <IconButton
-                                onClick={() => onDelete(socio)}
+                                onClick={() => handleDeleteClick(socio, 'soft')}
                                 size="small"
                                 sx={{
                                   color: '#94a3b8',
@@ -796,7 +865,10 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
                             </Tooltip>
                             <Tooltip title="Más opciones">
                               <IconButton
-                                onClick={(e) => setAnchorEl(e.currentTarget)}
+                                onClick={(e) => {
+                                  setAnchorEl(e.currentTarget);
+                                  setMemberToDelete(socio);
+                                }}
                                 size="small"
                                 sx={{
                                   color: '#94a3b8',
@@ -855,6 +927,123 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
         )}
       </Card>
 
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => !deleting && setDeleteDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 4,
+            boxShadow: '0 20px 60px rgba(0,0,0,0.1)',
+          }
+        }}
+      >
+        <DialogTitle sx={{ pb: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Avatar
+              sx={{
+                bgcolor: deleteType === 'permanent' ? alpha('#ef4444', 0.1) : alpha('#f59e0b', 0.1),
+                color: deleteType === 'permanent' ? '#ef4444' : '#f59e0b',
+              }}
+            >
+              {deleteType === 'permanent' ? <DeleteForever /> : <Archive />}
+            </Avatar>
+            <Box>
+              <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b' }}>
+                {deleteType === 'permanent' ? 'Eliminar Permanentemente' : 'Desactivar Miembro'}
+              </Typography>
+              <Typography variant="body2" sx={{ color: '#64748b' }}>
+                {memberToDelete?.nombre}
+              </Typography>
+            </Box>
+          </Box>
+        </DialogTitle>
+        
+        <DialogContent sx={{ pb: 3 }}>
+          <Alert 
+            severity={deleteType === 'permanent' ? 'error' : 'warning'} 
+            sx={{ mb: 3, borderRadius: 3 }}
+          >
+            {deleteType === 'permanent' 
+              ? 'Esta acción eliminará permanentemente al miembro de Firebase. No se puede deshacer.'
+              : 'Esta acción marcará al miembro como inactivo. Podrás reactivarlo más tarde.'
+            }
+          </Alert>
+          
+          <Typography variant="body1" sx={{ color: '#475569', mb: 2 }}>
+            ¿Estás seguro de que deseas {deleteType === 'permanent' ? 'eliminar permanentemente' : 'desactivar'} a este miembro?
+          </Typography>
+          
+          {deleteType === 'soft' && (
+            <Box sx={{ mt: 3, p: 3, bgcolor: '#f8fafc', borderRadius: 3, border: '1px solid #e2e8f0' }}>
+              <Typography variant="body2" sx={{ color: '#64748b', mb: 2 }}>
+                <strong>Opciones de eliminación:</strong>
+              </Typography>
+              <Stack spacing={1}>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<Archive />}
+                  onClick={() => setDeleteType('soft')}
+                  sx={{
+                    justifyContent: 'flex-start',
+                    textTransform: 'none',
+                    bgcolor: deleteType === 'soft' ? alpha('#f59e0b', 0.1) : 'transparent',
+                    borderColor: deleteType === 'soft' ? '#f59e0b' : '#e2e8f0',
+                    color: deleteType === 'soft' ? '#f59e0b' : '#64748b',
+                  }}
+                >
+                  Desactivar (recomendado)
+                </Button>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<DeleteForever />}
+                  onClick={() => setDeleteType('permanent')}
+                  sx={{
+                    justifyContent: 'flex-start',
+                    textTransform: 'none',
+                    bgcolor: deleteType === 'permanent' ? alpha('#ef4444', 0.1) : 'transparent',
+                    borderColor: deleteType === 'permanent' ? '#ef4444' : '#e2e8f0',
+                    color: deleteType === 'permanent' ? '#ef4444' : '#64748b',
+                  }}
+                >
+                  Eliminar permanentemente
+                </Button>
+              </Stack>
+            </Box>
+          )}
+        </DialogContent>
+        
+        <DialogActions sx={{ p: 3, pt: 0 }}>
+          <Button
+            onClick={() => setDeleteDialogOpen(false)}
+            disabled={deleting}
+            sx={{ textTransform: 'none', fontWeight: 600 }}
+          >
+            Cancelar
+          </Button>
+          <Button
+            onClick={handleConfirmDelete}
+            disabled={deleting}
+            variant="contained"
+            startIcon={deleting ? <CircularProgress size={16} /> : (deleteType === 'permanent' ? <DeleteForever /> : <Archive />)}
+            sx={{
+              textTransform: 'none',
+              fontWeight: 700,
+              bgcolor: deleteType === 'permanent' ? '#ef4444' : '#f59e0b',
+              '&:hover': {
+                bgcolor: deleteType === 'permanent' ? '#dc2626' : '#d97706',
+              }
+            }}
+          >
+            {deleting ? 'Procesando...' : (deleteType === 'permanent' ? 'Eliminar Permanentemente' : 'Desactivar')}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       {/* Context Menus */}
       <Menu
         anchorEl={anchorEl}
@@ -869,6 +1058,15 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
           }
         }}
       >
+        <MenuItem onClick={() => {
+          if (memberToDelete) onEdit(memberToDelete);
+          setAnchorEl(null);
+        }}>
+          <ListItemIcon>
+            <Edit fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Editar Miembro</ListItemText>
+        </MenuItem>
         <MenuItem onClick={() => setAnchorEl(null)}>
           <ListItemIcon>
             <Email fontSize="small" />
@@ -881,18 +1079,22 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
           </ListItemIcon>
           <ListItemText>Marcar Favorito</ListItemText>
         </MenuItem>
-        <MenuItem onClick={() => setAnchorEl(null)}>
+        <Divider />
+        <MenuItem onClick={() => {
+          if (memberToDelete) handleDeleteClick(memberToDelete, 'soft');
+        }}>
           <ListItemIcon>
             <Archive fontSize="small" />
           </ListItemIcon>
-          <ListItemText>Archivar</ListItemText>
+          <ListItemText>Desactivar</ListItemText>
         </MenuItem>
-        <Divider />
-        <MenuItem onClick={() => setAnchorEl(null)} sx={{ color: '#ef4444' }}>
+        <MenuItem onClick={() => {
+          if (memberToDelete) handleDeleteClick(memberToDelete, 'permanent');
+        }} sx={{ color: '#ef4444' }}>
           <ListItemIcon>
-            <Delete fontSize="small" sx={{ color: '#ef4444' }} />
+            <DeleteForever fontSize="small" sx={{ color: '#ef4444' }} />
           </ListItemIcon>
-          <ListItemText>Eliminar</ListItemText>
+          <ListItemText>Eliminar Permanentemente</ListItemText>
         </MenuItem>
       </Menu>
 
@@ -913,7 +1115,7 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
           <ListItemIcon>
             <Archive fontSize="small" />
           </ListItemIcon>
-          <ListItemText>Archivar Seleccionados</ListItemText>
+          <ListItemText>Desactivar Seleccionados</ListItemText>
         </MenuItem>
         <MenuItem onClick={() => handleBulkAction('activate')}>
           <ListItemIcon>
@@ -930,7 +1132,7 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
         <Divider />
         <MenuItem onClick={() => handleBulkAction('delete')} sx={{ color: '#ef4444' }}>
           <ListItemIcon>
-            <Delete fontSize="small" sx={{ color: '#ef4444' }} />
+            <DeleteForever fontSize="small" sx={{ color: '#ef4444' }} />
           </ListItemIcon>
           <ListItemText>Eliminar Seleccionados</ListItemText>
         </MenuItem>

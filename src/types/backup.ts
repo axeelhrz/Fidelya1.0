@@ -4,7 +4,7 @@ import { Socio } from './socio';
 export interface BackupMetadata {
   id: string;
   name: string;
-  description?: string;
+  description?: string | null;
   createdAt: Timestamp;
   createdBy: string;
   asociacionId: string;

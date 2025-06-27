@@ -38,6 +38,29 @@ const storage = {
   getMetadata: async () => ({ size: 1024, timeCreated: new Date().toISOString() })
 };
 
+// Helper function to clean undefined values from objects
+const cleanUndefinedValues = (obj: any): any => {
+  if (obj === null || obj === undefined) {
+    return null;
+  }
+  
+  if (Array.isArray(obj)) {
+    return obj.map(cleanUndefinedValues);
+  }
+  
+  if (typeof obj === 'object') {
+    const cleaned: any = {};
+    for (const [key, value] of Object.entries(obj)) {
+      if (value !== undefined) {
+        cleaned[key] = cleanUndefinedValues(value);
+      }
+    }
+    return cleaned;
+  }
+  
+  return obj;
+};
+
 export const useBackup = () => {
   const { user } = useAuth();
   const { socios } = useSocios();
@@ -133,6 +156,13 @@ export const useBackup = () => {
       return null;
     }
 
+    // Validate required fields
+    if (!name || name.trim().length === 0) {
+      setError('El nombre del respaldo es requerido');
+      toast.error('El nombre del respaldo es requerido');
+      return null;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -144,26 +174,28 @@ export const useBackup = () => {
         message: 'Recopilando información de miembros'
       });
 
+      // Create backup metadata with proper null handling
+      const backupMetadata: Omit<BackupMetadata, 'id'> = {
+        name: name.trim(),
+        description: description && description.trim() ? description.trim() : null,
+        createdAt: Timestamp.now(),
+        createdBy: user.uid,
+        asociacionId: user.uid,
+        type,
+        status: 'creating',
+        size: 0,
+        recordCount: socios.length,
+        version: '1.0.0',
+        checksum: '',
+        tags: [],
+        isEncrypted: config.encryptionEnabled,
+        compressionType: config.compressionEnabled ? 'gzip' : 'none',
+        storageLocation: '',
+        verificationStatus: 'pending'
+      };
+
       const backupData: BackupData = {
-        metadata: {
-          id: '',
-          name,
-          description,
-          createdAt: Timestamp.now(),
-          createdBy: user.uid,
-          asociacionId: user.uid,
-          type,
-          status: 'creating',
-          size: 0,
-          recordCount: socios.length,
-          version: '1.0.0',
-          checksum: '',
-          tags: [],
-          isEncrypted: config.encryptionEnabled,
-          compressionType: config.compressionEnabled ? 'gzip' : 'none',
-          storageLocation: '',
-          verificationStatus: 'pending'
-        },
+        metadata: { ...backupMetadata, id: '' },
         socios: socios,
         settings: config.includeSettings ? { config } : undefined,
         customData: config.includeCustomData ? {} : undefined
@@ -180,7 +212,7 @@ export const useBackup = () => {
 
       const dataString = JSON.stringify(backupData);
       const checksum = await generateChecksum(dataString);
-      backupData.metadata.checksum = checksum;
+      backupMetadata.checksum = checksum;
 
       await new Promise(resolve => setTimeout(resolve, 300));
 
@@ -195,7 +227,7 @@ export const useBackup = () => {
         ? await compressData(dataString, 'gzip')
         : new Blob([dataString], { type: 'application/json' });
 
-      backupData.metadata.size = compressedData.size;
+      backupMetadata.size = compressedData.size;
 
       await new Promise(resolve => setTimeout(resolve, 400));
 
@@ -213,7 +245,7 @@ export const useBackup = () => {
       await storage.uploadBytes(storageRef, compressedData);
       const downloadURL = await storage.getDownloadURL(storageRef);
       
-      backupData.metadata.storageLocation = downloadURL;
+      backupMetadata.storageLocation = downloadURL;
 
       await new Promise(resolve => setTimeout(resolve, 300));
 
@@ -224,8 +256,13 @@ export const useBackup = () => {
         message: 'Registrando información del respaldo'
       });
 
-      backupData.metadata.status = 'completed';
-      const docRef = await addDoc(collection(db, 'backups'), backupData.metadata);
+      // Clean the metadata object to remove any undefined values
+      const cleanedMetadata = cleanUndefinedValues({
+        ...backupMetadata,
+        status: 'completed'
+      });
+
+      const docRef = await addDoc(collection(db, 'backups'), cleanedMetadata);
       
       await new Promise(resolve => setTimeout(resolve, 200));
 
@@ -243,12 +280,22 @@ export const useBackup = () => {
 
     } catch (error) {
       console.error('Error creating backup:', error);
-      setError(error instanceof Error ? error.message : 'Error al crear el respaldo');
-      toast.error('Error al crear el respaldo');
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido al crear el respaldo';
+      setError(errorMessage);
+      toast.error(`Error al crear el respaldo: ${errorMessage}`);
+      
+      // Update progress to show error
+      setProgress({
+        step: 'Error',
+        progress: 0,
+        message: errorMessage
+      });
+      
       return null;
     } finally {
       setLoading(false);
-      setProgress(null);
+      // Clear progress after a delay to show completion/error state
+      setTimeout(() => setProgress(null), 2000);
     }
   }, [user, socios, config, generateChecksum, compressData]);
 
@@ -327,12 +374,13 @@ export const useBackup = () => {
 
     } catch (error) {
       console.error('Error restoring backup:', error);
-      setError(error instanceof Error ? error.message : 'Error al restaurar el respaldo');
-      toast.error('Error al restaurar el respaldo');
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido al restaurar el respaldo';
+      setError(errorMessage);
+      toast.error(`Error al restaurar el respaldo: ${errorMessage}`);
       return false;
     } finally {
       setLoading(false);
-      setProgress(null);
+      setTimeout(() => setProgress(null), 2000);
     }
   }, [user, backups, createBackup]);
 
