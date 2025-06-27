@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Box,
@@ -636,10 +636,10 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
 
   const stats = getStats();
 
-  // Calculate metrics from validaciones
-  useEffect(() => {
+  // Memoize the calculation function to prevent unnecessary recalculations
+  const calculateMetrics = useCallback(() => {
     if (!user || validacionesLoading || beneficiosLoading) {
-      return;
+      return null;
     }
 
     try {
@@ -707,28 +707,38 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
           metadata: { validacionId: v.id },
         }));
 
-      setComercioMetrics({
+      return {
         totalValidaciones: stats.totalValidaciones,
         validacionesHoy,
         validacionesSemana,
         validacionesMes,
         beneficiosActivos: activeBeneficios.length,
-        beneficiosCanjeados: stats.totalValidaciones, // Assuming each validation is a benefit redemption
+        beneficiosCanjeados: stats.totalValidaciones,
         crecimientoSemanal: Math.round(crecimientoSemanal * 100) / 100,
         crecimientoMensual: Math.round(crecimientoMensual * 100) / 100,
         recentActivities,
         systemHealth,
         lastActivity,
         avgValidacionesDiarias: Math.round(avgValidacionesDiarias * 100) / 100,
-      });
-
-      setLoading(false);
+      };
     } catch (err) {
       console.error('Error calculating comercio metrics:', err);
-      setError('Error al cargar las métricas del comercio');
-      setLoading(false);
+      throw new Error('Error al cargar las métricas del comercio');
     }
   }, [user, validaciones, activeBeneficios, stats, validacionesLoading, beneficiosLoading]);
+
+  // Calculate metrics from validaciones with proper dependencies
+  useEffect(() => {
+    const metrics = calculateMetrics();
+    
+    if (metrics) {
+      setComercioMetrics(metrics);
+      setLoading(false);
+      setError(null);
+    } else if (!validacionesLoading && !beneficiosLoading) {
+      setLoading(false);
+    }
+  }, [calculateMetrics, validacionesLoading, beneficiosLoading]);
 
   const kpiMetrics = useMemo(() => [
     {
