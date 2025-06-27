@@ -1,7 +1,7 @@
-/* ===== OPTIMIZACIONES MÓVILES PARA STARFLEX ===== */
+/* ===== OPTIMIZACIONES MÓVILES ULTRA FLUIDAS PARA STARFLEX ===== */
 /* Este archivo se carga automáticamente en dispositivos menores a 1024px */
 
-/* ===== VARIABLES MÓVILES ESPECÍFICAS ===== */
+/* ===== VARIABLES MÓVILES ESPECÍFICAS ULTRA OPTIMIZADAS ===== */
 @media screen and (max-width: 1023px) {
 :root {
 /* Escalado fluido para móvil */
@@ -23,19 +23,25 @@
 --phone-width-mobile: clamp(200px, 55vw, 260px);
 --phone-height-mobile: clamp(400px, 110vw, 520px);
 
-/* Efectos reducidos para mejor rendimiento */
---mobile-transition: 0.4s ease;
+/* Efectos reducidos para mejor rendimiento - ULTRA RÁPIDOS */
+--mobile-transition: 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+--mobile-transition-fast: 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 --mobile-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 --mobile-blur: blur(10px);
 
-/* Variables específicas para navbar móvil mejorado - POSICIONAMIENTO MÁS ARRIBA */
+/* Variables específicas para navbar móvil ultra optimizado */
 --navbar-mobile-padding-top: max(env(safe-area-inset-top, 15px), 15px);
 --navbar-mobile-padding-horizontal: max(env(safe-area-inset-left, 20px), 20px);
 --navbar-mobile-content-start: calc(var(--navbar-mobile-padding-top) + 40px);
+
+/* Variables para animaciones ultra fluidas */
+--mobile-menu-transition: 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+--mobile-element-transition: 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+--mobile-button-transition: 0.2s cubic-bezier(0.23, 1, 0.32, 1);
 }
 }
 
-/* ===== CORRECCIONES GENERALES MÓVILES ===== */
+/* ===== CORRECCIONES GENERALES MÓVILES ULTRA OPTIMIZADAS ===== */
 @media screen and (max-width: 1023px) {
 /* Contenedor principal */
 .container {
@@ -146,7 +152,7 @@ border-radius: 15px;
 }
 }
 
-/* ===== NAVBAR MÓVIL COMPLETAMENTE REDISEÑADO - SIN SCROLL Y MÁS ARRIBA ===== */
+/* ===== NAVBAR MÓVIL ULTRA FLUIDO - SIN SCROLL Y SOLO CIERRE POR BOTÓN ===== */
 @media screen and (max-width: 1023px) {
 .nav {
 padding: 0 var(--mobile-container-padding);
@@ -161,6 +167,7 @@ z-index: calc(var(--navbar-z-index) + 2);
 width: 45px;
 height: 45px;
 border-radius: 10px;
+transition: var(--mobile-button-transition);
 }
 
 .nav__toggle {
@@ -177,13 +184,16 @@ border: 1px solid rgba(255, 69, 105, 0.2);
 box-shadow: 
 0 6px 20px rgba(0, 0, 0, 0.3),
 0 0 15px rgba(255, 69, 105, 0.15);
+transition: var(--mobile-button-transition);
 }
 
-.nav__toggle:hover {
+.nav__toggle:hover,
+.nav__toggle:active {
 border-color: var(--starflex-crimson-bright);
 box-shadow: 
 0 8px 25px rgba(0, 0, 0, 0.4),
 0 0 25px rgba(255, 69, 105, 0.25);
+transform: scale(1.05);
 }
 
 .nav__toggle-line {
@@ -191,14 +201,14 @@ width: 20px;
 height: 2px;
 background: var(--text-primary);
 border-radius: 1px;
-transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+transition: var(--mobile-element-transition);
 }
 
 .nav__toggle-line:not(:last-child) {
 margin-bottom: 4px;
 }
 
-/* ===== MENÚ MÓVIL REDISEÑADO - SIN SCROLL, MÁS ARRIBA Y CENTRADO ===== */
+/* ===== MENÚ MÓVIL ULTRA FLUIDO - SIN SCROLL, CENTRADO PERFECTO ===== */
 .nav__menu {
 position: fixed;
 top: 0;
@@ -215,12 +225,13 @@ backdrop-filter: blur(25px);
 -webkit-backdrop-filter: blur(25px);
 display: flex;
 flex-direction: column;
-justify-content: center; /* CENTRADO VERTICAL */
-align-items: center; /* CENTRADO HORIZONTAL */
-transition: left 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+justify-content: center; /* CENTRADO VERTICAL PERFECTO */
+align-items: center; /* CENTRADO HORIZONTAL PERFECTO */
+transition: left var(--mobile-menu-transition);
 z-index: calc(var(--navbar-z-index) + 3);
 padding: var(--navbar-mobile-padding-top) var(--navbar-mobile-padding-horizontal) 40px var(--navbar-mobile-padding-horizontal);
-overflow: hidden; /* SIN SCROLL */
+overflow: hidden; /* SIN SCROLL NUNCA */
+gap: var(--space-lg); /* ESPACIADO PERFECTO ENTRE ELEMENTOS */
 }
 
 .nav__menu.active {
@@ -238,10 +249,10 @@ background:
 radial-gradient(ellipse at 30% 20%, rgba(255, 69, 105, 0.08) 0%, transparent 50%),
 radial-gradient(ellipse at 70% 80%, rgba(255, 69, 105, 0.06) 0%, transparent 50%);
 z-index: -1;
-animation: mobile-menu-glow 10s ease-in-out infinite;
+animation: mobile-menu-glow 8s ease-in-out infinite;
 }
 
-/* ===== BOTÓN DE CERRAR MÓVIL - POSICIÓN FIJA ARRIBA ===== */
+/* ===== BOTÓN DE CERRAR MÓVIL ULTRA OPTIMIZADO ===== */
 .nav__close {
 position: absolute;
 top: var(--navbar-mobile-padding-top);
@@ -260,13 +271,15 @@ backdrop-filter: blur(20px);
 border: 1px solid rgba(255, 69, 105, 0.2);
 border-radius: 12px;
 cursor: pointer;
-transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+transition: var(--mobile-button-transition);
 box-shadow: 
 0 6px 20px rgba(0, 0, 0, 0.3),
 0 0 15px rgba(255, 69, 105, 0.15);
+z-index: 1000;
 }
 
-.nav__close:hover {
+.nav__close:hover,
+.nav__close:active {
 border-color: var(--starflex-crimson-bright);
 box-shadow: 
 0 8px 25px rgba(0, 0, 0, 0.4),
@@ -278,24 +291,59 @@ transform: scale(1.05);
 width: 24px;
 height: 24px;
 color: var(--text-primary);
-transition: all 0.4s ease;
+transition: var(--mobile-element-transition);
 }
 
-.nav__close:hover svg {
+.nav__close:hover svg,
+.nav__close:active svg {
 color: var(--starflex-crimson-bright);
 transform: rotate(90deg);
 }
 
-/* ===== SELECTOR DE IDIOMA MÓVIL - CENTRADO Y MÁS ARRIBA ===== */
+/* ===== SELECTOR DE IDIOMA MÓVIL ULTRA COMPACTO ===== */
 .nav__language-mobile {
 width: 100%;
-max-width: 320px;
-margin-bottom: var(--space-2xl);
+max-width: 300px;
+padding: var(--space-lg);
+background: linear-gradient(135deg, 
+rgba(255, 45, 85, 0.08) 0%,
+rgba(21, 25, 34, 0.95) 20%,
+rgba(30, 35, 48, 0.98) 100%
+);
+backdrop-filter: blur(25px);
+-webkit-backdrop-filter: blur(25px);
+border: 1px solid rgba(255, 45, 85, 0.2);
+border-radius: 18px;
+box-shadow: 
+0 10px 30px rgba(0, 0, 0, 0.3),
+0 0 20px rgba(255, 45, 85, 0.1);
+position: relative;
+overflow: hidden;
 order: 1; /* PRIMER ELEMENTO */
 }
 
+.nav__language-mobile::before {
+content: '';
+position: absolute;
+top: 0;
+left: -100%;
+width: 100%;
+height: 100%;
+background: linear-gradient(90deg, 
+transparent, 
+rgba(255, 45, 85, 0.1), 
+transparent
+);
+transition: left 1.5s ease;
+border-radius: 18px;
+}
+
+.nav__language-mobile:hover::before {
+left: 100%;
+}
+
 .nav__language-title {
-font-size: 0.9rem;
+font-size: 0.85rem;
 font-weight: 600;
 color: var(--starflex-crimson-bright);
 margin-bottom: var(--space-sm);
@@ -315,65 +363,65 @@ flex: 1;
 display: flex;
 align-items: center;
 justify-content: center;
-gap: var(--space-sm);
+gap: var(--space-xs);
 padding: var(--space-sm) var(--space-md);
 background: transparent;
 border: 1px solid rgba(255, 69, 105, 0.2);
-border-radius: 25px;
+border-radius: 22px;
 color: var(--text-secondary);
 font-family: var(--font-primary);
-font-size: 0.85rem;
+font-size: 0.8rem;
 font-weight: 500;
 cursor: pointer;
-transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-min-height: 44px;
+transition: var(--mobile-element-transition);
+min-height: 40px;
 backdrop-filter: blur(10px);
 -webkit-backdrop-filter: blur(10px);
 }
 
-.nav__language-option:hover {
+.nav__language-option:hover,
+.nav__language-option:active {
 background: rgba(255, 69, 105, 0.1);
 border-color: rgba(255, 69, 105, 0.4);
 color: var(--text-primary);
-transform: translateY(-2px);
-box-shadow: 0 4px 15px rgba(255, 69, 105, 0.2);
+transform: translateY(-1px) scale(1.02);
+box-shadow: 0 4px 12px rgba(255, 69, 105, 0.2);
 }
 
 .nav__language-option.active {
 background: rgba(255, 69, 105, 0.15);
 border-color: rgba(255, 69, 105, 0.5);
 color: var(--starflex-crimson-bright);
-box-shadow: 0 0 20px rgba(255, 69, 105, 0.3);
+box-shadow: 0 0 15px rgba(255, 69, 105, 0.3);
 }
 
 .nav__language-flag {
-font-size: 1.1rem;
+font-size: 1rem;
 }
 
 .nav__language-name {
 font-weight: 600;
 }
 
-/* ===== LISTA DE NAVEGACIÓN MÓVIL - CENTRADA ===== */
+/* ===== LISTA DE NAVEGACIÓN MÓVIL ULTRA FLUIDA ===== */
 .nav__list {
 display: flex;
 flex-direction: column;
-gap: var(--space-md);
+gap: var(--space-sm);
 width: 100%;
-max-width: 320px;
-margin-bottom: var(--space-xl);
+max-width: 300px;
 order: 2; /* SEGUNDO ELEMENTO */
 }
 
 .nav__link {
-font-size: 1rem;
-padding: var(--space-md) var(--space-xl);
+font-size: 0.95rem;
+padding: var(--space-sm) var(--space-xl);
 background: transparent;
 border: 1px solid rgba(255, 255, 255, 0.1);
-border-radius: 25px;
+border-radius: 22px;
 backdrop-filter: blur(10px);
 -webkit-backdrop-filter: blur(10px);
-transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+transition: var(--mobile-element-transition);
 position: relative;
 overflow: hidden;
 text-align: center;
@@ -381,6 +429,7 @@ font-weight: 600;
 text-transform: uppercase;
 letter-spacing: 0.5px;
 color: var(--text-secondary);
+min-height: 44px;
 }
 
 .nav__link::before {
@@ -395,45 +444,43 @@ transparent,
 rgba(255, 69, 105, 0.1), 
 transparent
 );
-transition: left 0.8s ease;
+transition: left 0.6s ease;
 }
 
-.nav__link:hover {
+.nav__link:hover,
+.nav__link:active {
 background: rgba(255, 69, 105, 0.1);
 border-color: rgba(255, 69, 105, 0.3);
-transform: translateY(-2px) scale(1.02);
-box-shadow: 0 4px 15px rgba(255, 69, 105, 0.2);
+transform: translateY(-1px) scale(1.02);
+box-shadow: 0 4px 12px rgba(255, 69, 105, 0.2);
 color: var(--starflex-crimson-bright);
 }
 
-.nav__link:hover::before {
+.nav__link:hover::before,
+.nav__link:active::before {
 left: 100%;
-}
-
-.nav__link:active {
-transform: translateY(0) scale(0.98);
 }
 
 .nav__link.active {
 background: rgba(255, 69, 105, 0.15);
 border-color: rgba(255, 69, 105, 0.4);
 color: var(--starflex-crimson-bright);
-box-shadow: 0 0 20px rgba(255, 69, 105, 0.3);
+box-shadow: 0 0 15px rgba(255, 69, 105, 0.3);
 }
 
-/* ===== CTA MÓVIL - CENTRADO ===== */
+/* ===== CTA MÓVIL ULTRA OPTIMIZADO ===== */
 .nav__cta-mobile {
 width: 100%;
-max-width: 320px;
+max-width: 300px;
 order: 3; /* TERCER ELEMENTO */
 }
 
 .btn--mobile {
 width: 100%;
 padding: var(--space-md) var(--space-xl);
-font-size: 1rem;
+font-size: 0.95rem;
 font-weight: 700;
-border-radius: 25px;
+border-radius: 22px;
 background: linear-gradient(135deg, 
 var(--starflex-crimson) 0%, 
 var(--starflex-crimson-bright) 100%
@@ -444,11 +491,12 @@ box-shadow:
 border: 2px solid rgba(255, 69, 105, 0.4);
 color: #ffffff;
 text-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
-transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+transition: var(--mobile-element-transition);
 text-transform: uppercase;
 letter-spacing: 1px;
 position: relative;
 overflow: hidden;
+min-height: 48px;
 }
 
 .btn--mobile::before {
@@ -463,17 +511,19 @@ transparent,
 rgba(255, 255, 255, 0.2), 
 transparent
 );
-transition: left 1s ease;
+transition: left 0.8s ease;
 }
 
-.btn--mobile:hover {
+.btn--mobile:hover,
+.btn--mobile:active {
 transform: translateY(-2px) scale(1.02);
 box-shadow: 
 0 12px 35px rgba(255, 69, 105, 0.5),
 0 0 30px rgba(255, 69, 105, 0.4);
 }
 
-.btn--mobile:hover::before {
+.btn--mobile:hover::before,
+.btn--mobile:active::before {
 left: 100%;
 }
 
@@ -775,11 +825,11 @@ max-width: 240px;
 .nav__language-mobile,
 .nav__list,
 .nav__cta-mobile {
-max-width: 300px;
+max-width: 280px;
 }
 
 .nav__link {
-font-size: 0.95rem;
+font-size: 0.9rem;
 padding: var(--space-sm) var(--space-lg);
 }
 }
@@ -820,12 +870,12 @@ margin: var(--space-md) auto 0;
 .nav__language-mobile,
 .nav__list,
 .nav__cta-mobile {
-max-width: 280px;
+max-width: 260px;
 }
 
 .nav__language-option {
 padding: var(--space-xs) var(--space-sm);
-font-size: 0.8rem;
+font-size: 0.75rem;
 }
 
 .nav__language-name {
@@ -833,7 +883,7 @@ display: none; /* Solo mostrar banderas en pantallas muy pequeñas */
 }
 
 .nav__link {
-font-size: 0.9rem;
+font-size: 0.85rem;
 padding: var(--space-sm) var(--space-md);
 }
 }
@@ -848,7 +898,7 @@ padding: var(--space-sm) var(--space-md);
 }
 
 .nav__link {
-font-size: 0.85rem;
+font-size: 0.8rem;
 padding: var(--space-xs) var(--space-md);
 }
 
@@ -866,7 +916,7 @@ max-width: 180px;
 .nav__language-mobile,
 .nav__list,
 .nav__cta-mobile {
-max-width: 260px;
+max-width: 240px;
 }
 
 .nav__close {
@@ -925,48 +975,74 @@ border-color: rgba(255, 69, 105, 0.2);
 }
 }
 
-/* ===== OPTIMIZACIONES DE RENDIMIENTO MÓVIL ===== */
+/* ===== OPTIMIZACIONES DE RENDIMIENTO MÓVIL ULTRA ===== */
 @media screen and (max-width: 1023px) {
-/* Reducir animaciones en móvil */
+/* Reducir animaciones en móvil para máxima fluidez */
 *,
 *::before,
 *::after {
-transition-duration: 0.4s !important;
+transition-duration: 0.3s !important;
+animation-duration: 0.3s !important;
 }
 
-/* Optimizar transformaciones */
+/* Optimizar transformaciones para GPU */
+.nav__menu,
+.nav__toggle,
+.nav__close,
+.nav__link,
+.nav__language-option,
+.btn--mobile,
 .hero__phone,
 .feature__phone,
 .nav__logo,
 .floating-widget__main-btn {
-will-change: auto;
+will-change: transform;
 transform: translateZ(0);
+backface-visibility: hidden;
 }
 
 /* Reducir efectos visuales costosos */
 .nav__list::before,
 .btn--primary::before,
-.btn--cta::before {
+.btn--cta::before,
+.nav__language-mobile::before,
+.nav__link::before {
 display: none;
 }
 
-/* Simplificar sombras */
+/* Simplificar sombras para mejor rendimiento */
 .nav__list,
 .btn--primary,
 .btn--cta,
 .contact__channel,
-.faq__item {
+.faq__item,
+.nav__toggle,
+.nav__close,
+.nav__language-mobile {
 box-shadow: var(--mobile-shadow) !important;
 }
 
-/* ELIMINAR HOVER EFFECTS EN MÓVIL */
+/* ELIMINAR TODOS LOS HOVER EFFECTS EN MÓVIL */
 .phone:hover,
 .feature__phone:hover,
 .contact__channel:hover,
-.feature__list-item:hover {
+.feature__list-item:hover,
+.nav__list:hover::before,
+.btn--primary:hover::before,
+.btn--cta:hover::before {
 transform: none !important;
 box-shadow: inherit !important;
 background: inherit !important;
+left: -100% !important;
+}
+
+/* Optimizar el menú móvil para máximo rendimiento */
+.nav__menu {
+contain: layout style paint;
+}
+
+.nav__menu.active {
+contain: none;
 }
 }
 
@@ -977,7 +1053,8 @@ border-width: 2px;
 }
 
 .btn--primary,
-.btn--cta {
+.btn--cta,
+.btn--mobile {
 border-width: 3px;
 }
 
@@ -993,12 +1070,13 @@ border-width: 2px;
 border-width: 2px;
 }
 
-.nav__close {
+.nav__close,
+.nav__toggle {
 border-width: 2px;
 }
 }
 
-/* ===== REDUCCIÓN DE MOVIMIENTO ===== */
+/* ===== REDUCCIÓN DE MOVIMIENTO PARA ACCESIBILIDAD ===== */
 @media screen and (max-width: 1023px) and (prefers-reduced-motion: reduce) {
 *,
 *::before,
@@ -1015,12 +1093,16 @@ transition: left 0.1s ease !important;
 transition: all 0.1s ease !important;
 }
 
-.nav__close {
+.nav__close,
+.nav__toggle,
+.nav__link,
+.nav__language-option,
+.btn--mobile {
 transition: all 0.1s ease !important;
 }
 }
 
-/* ===== CORRECCIONES FINALES MÓVILES ===== */
+/* ===== CORRECCIONES FINALES MÓVILES ULTRA OPTIMIZADAS ===== */
 @media screen and (max-width: 1023px) {
 /* Prevenir zoom en inputs */
 input[type="text"],
@@ -1030,36 +1112,41 @@ textarea {
 font-size: 16px !important;
 }
 
-/* Mejorar área de toque */
+/* Mejorar área de toque para máxima usabilidad */
 button,
 a,
 .nav__link,
 .faq__question,
 .contact__channel-btn,
 .nav__language-option,
-.nav__close {
+.nav__close,
+.nav__toggle {
 min-height: 44px;
 min-width: 44px;
 }
 
-/* Optimizar scroll */
+/* Optimizar scroll para máxima fluidez */
 body {
 -webkit-overflow-scrolling: touch;
 scroll-behavior: smooth;
+overscroll-behavior: contain;
 }
 
 /* Prevenir selección accidental */
 .hero__phone,
 .feature__phone,
 .nav__logo,
-.floating-widget {
+.floating-widget,
+.nav__toggle,
+.nav__close {
 -webkit-user-select: none;
 -moz-user-select: none;
 -ms-user-select: none;
 user-select: none;
+-webkit-touch-callout: none;
 }
 
-/* ELIMINAR EFECTOS ROJIZOS DE FONDO EN MÓVIL */
+/* ELIMINAR EFECTOS ROJIZOS DE FONDO EN MÓVIL PARA MEJOR RENDIMIENTO */
 .hero::before,
 .hero::after,
 .hero .floating-orb-2,
@@ -1067,16 +1154,45 @@ user-select: none;
 .features::before,
 .videos::before,
 .contact::before {
-opacity: 0.5 !important;
+opacity: 0.3 !important;
 }
 
 .contact__orb,
 .videos__orb {
-opacity: 0.1 !important;
+opacity: 0.05 !important;
+}
+
+/* Optimizar el menú móvil para evitar cualquier scroll */
+.nav__menu {
+max-height: 100vh;
+max-height: 100dvh;
+}
+
+/* Asegurar que el contenido del menú nunca exceda la altura */
+.nav__language-mobile {
+flex-shrink: 0;
+}
+
+.nav__list {
+flex-shrink: 0;
+}
+
+.nav__cta-mobile {
+flex-shrink: 0;
+}
+
+/* Optimizar touch events para máxima responsividad */
+.nav__toggle,
+.nav__close,
+.nav__link,
+.nav__language-option,
+.btn--mobile {
+touch-action: manipulation;
+-webkit-tap-highlight-color: transparent;
 }
 }
 
-/* ===== ANIMACIÓN PARA EL MENÚ MÓVIL ===== */
+/* ===== ANIMACIÓN ULTRA FLUIDA PARA EL MENÚ MÓVIL ===== */
 @keyframes mobile-menu-glow {
 0%, 100% {
 opacity: 0.8;
@@ -1084,6 +1200,117 @@ transform: scale(1);
 }
 50% {
 opacity: 1;
-transform: scale(1.02);
+transform: scale(1.01);
+}
+}
+
+/* ===== CORRECCIONES ESPECÍFICAS PARA EVITAR SCROLL EN EL MENÚ ===== */
+@media screen and (max-width: 1023px) {
+/* Asegurar que el menú nunca tenga scroll */
+.nav__menu {
+overflow: hidden !important;
+-webkit-overflow-scrolling: auto !important;
+}
+
+/* Ajustar el espaciado para que todo quepa sin scroll */
+.nav__menu {
+gap: clamp(var(--space-sm), 3vh, var(--space-lg));
+}
+
+/* Hacer los elementos más compactos en pantallas muy pequeñas */
+@media screen and (max-height: 700px) {
+.nav__language-mobile {
+padding: var(--space-md);
+}
+
+.nav__list {
+gap: var(--space-xs);
+}
+
+.nav__link {
+padding: var(--space-xs) var(--space-lg);
+min-height: 40px;
+}
+
+.btn--mobile {
+padding: var(--space-sm) var(--space-lg);
+min-height: 44px;
+}
+
+.nav__language-option {
+min-height: 36px;
+padding: var(--space-xs) var(--space-sm);
+}
+}
+
+/* Para pantallas muy pequeñas en altura */
+@media screen and (max-height: 600px) {
+.nav__menu {
+gap: var(--space-xs);
+}
+
+.nav__language-mobile {
+padding: var(--space-sm);
+margin-bottom: var(--space-sm);
+}
+
+.nav__language-title {
+margin-bottom: var(--space-xs);
+font-size: 0.8rem;
+}
+
+.nav__list {
+gap: 2px;
+}
+
+.nav__link {
+padding: var(--space-xs) var(--space-md);
+min-height: 36px;
+font-size: 0.8rem;
+}
+
+.btn--mobile {
+padding: var(--space-xs) var(--space-md);
+min-height: 40px;
+font-size: 0.85rem;
+}
+
+.nav__language-option {
+min-height: 32px;
+padding: 2px var(--space-xs);
+font-size: 0.7rem;
+}
+
+.nav__language-flag {
+font-size: 0.9rem;
+}
+}
+}
+
+/* ===== CORRECCIÓN FINAL PARA MÁXIMA FLUIDEZ ===== */
+@media screen and (max-width: 1023px) {
+/* Usar hardware acceleration para máxima fluidez */
+.nav__menu,
+.nav__menu *,
+.nav__toggle,
+.nav__close {
+transform: translateZ(0);
+will-change: transform;
+}
+
+/* Optimizar las transiciones para 60fps */
+.nav__menu {
+transition: left 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.nav__link,
+.nav__language-option,
+.btn--mobile {
+transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.nav__toggle,
+.nav__close {
+transition: all 0.2s cubic-bezier(0.23, 1, 0.32, 1);
 }
 }
