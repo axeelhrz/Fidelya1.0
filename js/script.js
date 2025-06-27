@@ -14,8 +14,6 @@ let lastScrollY = 0;
 let isScrollingDown = false;
 let ticking = false;
 // Variables para el navbar responsive
-let touchStartY = 0;
-let touchEndY = 0;
 let isNavbarVisible = true;
 // Variables para optimización móvil
 let isMobile = window.innerWidth <= 1023;
@@ -24,8 +22,8 @@ let performanceMode = false;
 
 // ===== CONFIGURACIÓN GLOBAL OPTIMIZADA =====
 const CONFIG = {
-    // Configuración de animaciones optimizada para móvil - RALENTIZADA
-    ANIMATION_DURATION: isMobile ? 400 : 600,
+    // Configuración de animaciones optimizada para móvil - MÁS RÁPIDA Y FLUIDA
+    ANIMATION_DURATION: isMobile ? 300 : 600,
     SCROLL_THRESHOLD: isMobile ? 50 : 100,
     
     // Configuración de imágenes optimizadas para móvil
@@ -876,13 +874,13 @@ function openFloatingMenu() {
     floatingMenu.classList.add('active');
     floatingMainBtn.setAttribute('aria-expanded', 'true');
     
-    // Animación optimizada para móvil - RALENTIZADA
+    // Animación optimizada para móvil - MÁS RÁPIDA
     const menuItems = floatingMenu.querySelectorAll('.floating-widget__menu-item');
     menuItems.forEach((item, index) => {
         setTimeout(() => {
             item.style.transform = 'translateY(0) scale(1)';
             item.style.opacity = '1';
-        }, index * (isMobile ? 100 : 150));
+        }, index * (isMobile ? 80 : 120));
     });
 }
 
@@ -904,7 +902,7 @@ function closeFloatingMenu() {
     });
 }
 
-// ===== NAVEGACIÓN RESPONSIVE ULTRA-OPTIMIZADA CON NUEVO DISEÑO MÓVIL =====
+// ===== NAVEGACIÓN RESPONSIVE ULTRA-OPTIMIZADA - SIN GESTOS DE DESLIZAMIENTO =====
 function initializeNavigation() {
     const navToggle = document.getElementById('nav-toggle');
     const navMenu = document.getElementById('nav-menu');
@@ -976,7 +974,7 @@ function initializeNavigation() {
         }
     }
     
-    // Botón de cerrar móvil
+    // Botón de cerrar móvil - SOLO ESTE MÉTODO DE CIERRE
     if (navClose) {
         navClose.addEventListener('click', (e) => {
             e.preventDefault();
@@ -1023,15 +1021,14 @@ function initializeNavigation() {
         }
     });
     
-    // Cerrar menú con click fuera
-    document.addEventListener('click', (e) => {
-        if (isMenuOpen && navMenu && !navMenu.contains(e.target) && !navToggle.contains(e.target)) {
-            closeMobileMenu();
-        }
-    });
-    
-    // Soporte para gestos táctiles optimizado
-    initializeTouchGestures();
+    // Cerrar menú con click fuera - SOLO EN DESKTOP
+    if (!isMobile) {
+        document.addEventListener('click', (e) => {
+            if (isMenuOpen && navMenu && !navMenu.contains(e.target) && !navToggle.contains(e.target)) {
+                closeMobileMenu();
+            }
+        });
+    }
     
     // Navegación por teclado optimizada
     initializeKeyboardNavigation();
@@ -1054,7 +1051,7 @@ function openMobileMenu() {
     
     isMenuOpen = true;
     
-    // Animaciones optimizadas para móvil - RALENTIZADAS
+    // Animaciones ultra optimizadas para móvil - MÁS RÁPIDAS Y FLUIDAS
     navToggle.classList.add('active');
     navMenu.classList.add('active');
     body.classList.add('no-scroll');
@@ -1063,42 +1060,42 @@ function openMobileMenu() {
     navToggle.setAttribute('aria-expanded', 'true');
     navMenu.setAttribute('aria-hidden', 'false');
     
-    // Animar elementos del menú con mejor rendimiento - RALENTIZADO
+    // Animar elementos del menú con mejor rendimiento - MÁS RÁPIDO
     const navLanguageMobile = navMenu.querySelector('.nav__language-mobile');
     const navLinks = navMenu.querySelectorAll('.nav__link');
     const navCtaMobile = navMenu.querySelector('.nav__cta-mobile');
     
-    // Animar selector de idioma móvil
+    // Animar selector de idioma móvil - MÁS RÁPIDO
     if (navLanguageMobile) {
         navLanguageMobile.style.opacity = '0';
-        navLanguageMobile.style.transform = 'translateY(20px)';
+        navLanguageMobile.style.transform = 'translateY(15px)';
         setTimeout(() => {
-            navLanguageMobile.style.transition = `all ${isMobile ? '0.4s' : '0.6s'} ease`;
+            navLanguageMobile.style.transition = `all ${isMobile ? '0.3s' : '0.5s'} ease`;
             navLanguageMobile.style.opacity = '1';
             navLanguageMobile.style.transform = 'translateY(0)';
-        }, isMobile ? 100 : 150);
+        }, isMobile ? 50 : 100);
     }
     
-    // Animar enlaces del menú
+    // Animar enlaces del menú - MÁS RÁPIDO
     navLinks.forEach((link, index) => {
         link.style.opacity = '0';
-        link.style.transform = 'translateY(20px)';
+        link.style.transform = 'translateY(15px)';
         setTimeout(() => {
-            link.style.transition = `all ${isMobile ? '0.4s' : '0.6s'} ease`;
+            link.style.transition = `all ${isMobile ? '0.3s' : '0.5s'} ease`;
             link.style.opacity = '1';
             link.style.transform = 'translateY(0)';
-        }, (index + 1) * (isMobile ? 100 : 150) + (isMobile ? 200 : 300));
+        }, (index + 1) * (isMobile ? 60 : 100) + (isMobile ? 100 : 200));
     });
     
-    // Animar CTA móvil
+    // Animar CTA móvil - MÁS RÁPIDO
     if (navCtaMobile) {
         navCtaMobile.style.opacity = '0';
-        navCtaMobile.style.transform = 'translateY(20px)';
+        navCtaMobile.style.transform = 'translateY(15px)';
         setTimeout(() => {
-            navCtaMobile.style.transition = `all ${isMobile ? '0.4s' : '0.6s'} ease`;
+            navCtaMobile.style.transition = `all ${isMobile ? '0.3s' : '0.5s'} ease`;
             navCtaMobile.style.opacity = '1';
             navCtaMobile.style.transform = 'translateY(0)';
-        }, (navLinks.length + 2) * (isMobile ? 100 : 150) + (isMobile ? 200 : 300));
+        }, (navLinks.length + 2) * (isMobile ? 60 : 100) + (isMobile ? 100 : 200));
     }
     
     // Focus optimizado para móvil
@@ -1108,7 +1105,7 @@ function openMobileMenu() {
             if (firstLink) {
                 firstLink.focus();
             }
-        }, 600);
+        }, 400);
     }
 }
 
@@ -1121,7 +1118,7 @@ function closeMobileMenu() {
     
     isMenuOpen = false;
     
-    // Animaciones de cierre optimizadas
+    // Animaciones de cierre ultra optimizadas - MÁS RÁPIDAS
     navToggle.classList.remove('active');
     navMenu.classList.remove('active');
     body.classList.remove('no-scroll');
@@ -1130,7 +1127,7 @@ function closeMobileMenu() {
     navToggle.setAttribute('aria-expanded', 'false');
     navMenu.setAttribute('aria-hidden', 'true');
     
-    // Resetear estilos de los elementos del menú
+    // Resetear estilos de los elementos del menú - MÁS RÁPIDO
     const elementsToReset = navMenu.querySelectorAll('.nav__language-mobile, .nav__link, .nav__cta-mobile');
     elementsToReset.forEach(element => {
         element.style.transition = '';
@@ -1167,52 +1164,6 @@ function updateActiveNavLink(activeLink) {
     });
     activeLink.classList.add('active');
     activeLink.setAttribute('aria-current', 'page');
-}
-
-// ===== GESTOS TÁCTILES OPTIMIZADOS PARA MÓVIL =====
-function initializeTouchGestures() {
-    const navMenu = document.getElementById('nav-menu');
-    if (!navMenu || !isMobile) return;
-    
-    let startY = 0;
-    let currentY = 0;
-    let isDragging = false;
-    
-    navMenu.addEventListener('touchstart', (e) => {
-        if (!isMenuOpen) return;
-        startY = e.touches[0].clientY;
-        isDragging = true;
-        navMenu.style.transition = 'none';
-    }, { passive: true });
-    
-    navMenu.addEventListener('touchmove', (e) => {
-        if (!isDragging || !isMenuOpen) return;
-        currentY = e.touches[0].clientY;
-        const deltaY = currentY - startY;
-        
-        // Solo permitir deslizar hacia la izquierda para cerrar
-        if (deltaY < 0) {
-            const translateX = Math.abs(deltaY);
-            navMenu.style.transform = `translateX(-${translateX}px)`;
-            navMenu.style.opacity = Math.max(0.3, 1 - (translateX / 200));
-        }
-    }, { passive: true });
-    
-    navMenu.addEventListener('touchend', () => {
-        if (!isDragging || !isMenuOpen) return;
-        isDragging = false;
-        navMenu.style.transition = '';
-        const deltaY = currentY - startY;
-        
-        // Si se deslizó más de 80px hacia arriba, cerrar el menú
-        if (deltaY < -80) {
-            closeMobileMenu();
-        } else {
-            // Restaurar posición original
-            navMenu.style.transform = '';
-            navMenu.style.opacity = '';
-        }
-    }, { passive: true });
 }
 
 // ===== NAVEGACIÓN POR TECLADO OPTIMIZADA =====
@@ -1268,7 +1219,7 @@ function handleTabTrap(e) {
 
 // ===== EFECTOS DE SCROLL OPTIMIZADOS =====
 function initializeScrollEffects() {
-    // Scroll listener optimizado con throttling - RALENTIZADO
+    // Scroll listener optimizado con throttling - MÁS RÁPIDO
     window.addEventListener('scroll', throttle(() => {
         if (!ticking) {
             requestAnimationFrame(() => {
@@ -1278,7 +1229,7 @@ function initializeScrollEffects() {
             });
             ticking = true;
         }
-    }, isMobile ? 64 : 32), { passive: true });
+    }, isMobile ? 32 : 16), { passive: true });
 }
 
 function handleScrollDirection() {
@@ -1505,7 +1456,7 @@ function initializeFAQ() {
                     noResults.classList.remove('show');
                 }
             }
-        }, isMobile ? 800 : 600));
+        }, isMobile ? 600 : 400));
     }
 }
 
@@ -1557,7 +1508,7 @@ function animateFeature(feature) {
             setTimeout(() => {
                 item.style.opacity = '1';
                 item.style.transform = 'translateX(0)';
-            }, 400 + (index * (isMobile ? 100 : 200)));
+            }, 400 + (index * (isMobile ? 80 : 150)));
         });
     }
 }
@@ -1749,7 +1700,7 @@ function initializePerformanceOptimizations() {
         clearTimeout(resizeTimeout);
         resizeTimeout = setTimeout(() => {
             handleResize();
-        }, isMobile ? 800 : 400);
+        }, isMobile ? 600 : 300);
     });
 }
 
@@ -1911,4 +1862,3 @@ if ('serviceWorker' in navigator && !isMobile) {
             });
     });
 }
-    
