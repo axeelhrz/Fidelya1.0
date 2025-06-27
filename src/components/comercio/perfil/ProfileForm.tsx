@@ -41,42 +41,21 @@ import {
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useComercios } from '@/hooks/useComercios';
-import { ComercioProfileFormData } from '@/lib/validations/comercio';
+import { comercioProfileSchema } from '@/lib/validations/comercio';
 import { CATEGORIAS_COMERCIO } from '@/types/comercio';
 import { ImageUploader } from './ImageUploader';
 import { QRSection } from './QRSection';
-
-interface ExtendedComercioProfileFormData extends ComercioProfileFormData {
-  razonSocial?: string;
-  cuit?: string;
-  ubicacion?: string;
-  emailContacto?: string;
-  visible: boolean;
-}
-
 import { z } from 'zod';
 
-const extendedComercioProfileSchema = z.object({
-  nombre: z.string(),
-  nombreComercio: z.string(),
-  email: z.string(),
-  categoria: z.string(),
-  direccion: z.string().optional(),
-  telefono: z.string().optional(),
-  horario: z.string().optional(),
-  descripcion: z.string().optional(),
-  sitioWeb: z.string().optional(),
-  redesSociales: z.object({
-    facebook: z.string().optional(),
-    instagram: z.string().optional(),
-    twitter: z.string().optional(),
-  }).optional(),
+// Use the original schema and extend it properly
+const extendedComercioProfileSchema = comercioProfileSchema.extend({
   razonSocial: z.string().optional(),
   cuit: z.string().optional(),
   ubicacion: z.string().optional(),
   emailContacto: z.string().optional(),
-  visible: z.boolean().default(true),
 });
+
+type ExtendedComercioProfileFormData = z.infer<typeof extendedComercioProfileSchema>;
 
 export const ProfileForm: React.FC = () => {
   const { comercio, loading, updateProfile } = useComercios();
@@ -89,7 +68,6 @@ export const ProfileForm: React.FC = () => {
     handleSubmit,
     formState: { errors, isSubmitting, isDirty },
     reset,
-    watch
   } = useForm<ExtendedComercioProfileFormData>({
     resolver: zodResolver(extendedComercioProfileSchema),
     defaultValues: {
@@ -116,8 +94,6 @@ export const ProfileForm: React.FC = () => {
   });
 
   // Watch for changes
-  const watchedFields = watch();
-  
   useEffect(() => {
     setHasChanges(isDirty);
   }, [isDirty]);
@@ -139,7 +115,7 @@ export const ProfileForm: React.FC = () => {
         cuit: '',
         ubicacion: comercio.direccion || '',
         emailContacto: comercio.email || '',
-        visible: true,
+        visible: comercio.visible ?? true,
         redesSociales: {
           facebook: comercio.redesSociales?.facebook || '',
           instagram: comercio.redesSociales?.instagram || '',
@@ -161,6 +137,7 @@ export const ProfileForm: React.FC = () => {
       descripcion: data.descripcion,
       sitioWeb: data.sitioWeb,
       redesSociales: data.redesSociales,
+      visible: data.visible,
     });
     
     if (success) {
@@ -185,7 +162,7 @@ export const ProfileForm: React.FC = () => {
         cuit: '',
         ubicacion: comercio.direccion || '',
         emailContacto: comercio.email || '',
-        visible: true,
+        visible: comercio.visible ?? true,
         redesSociales: {
           facebook: comercio.redesSociales?.facebook || '',
           instagram: comercio.redesSociales?.instagram || '',
@@ -515,7 +492,7 @@ export const ProfileForm: React.FC = () => {
                                 control={
                                   <Switch
                                     {...field}
-                                    checked={field.value}
+                                    checked={field.value ?? true}
                                     disabled={!isEditing}
                                     sx={{
                                       '& .MuiSwitch-switchBase.Mui-checked': {
