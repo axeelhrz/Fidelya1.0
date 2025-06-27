@@ -6025,3 +6025,134 @@ padding-left: clamp(1.25rem, 4vw, 2rem);
 padding-right: clamp(1.25rem, 4vw, 2rem);
 }
 }
+/* ===== CORRECCIÓN PARA BOTONES DE LA SECCIÓN VIDEOS ===== */
+
+/* Asegurar que los botones de CTA de videos funcionen correctamente */
+.videos__cta-buttons {
+display: flex;
+gap: var(--space-xl);
+justify-content: center;
+align-items: center;
+flex-wrap: wrap;
+}
+
+.videos__cta-buttons .btn {
+/* Asegurar que los botones tengan el z-index correcto */
+position: relative;
+z-index: 10;
+/* Asegurar que sean clickeables */
+pointer-events: auto;
+/* Asegurar que tengan cursor pointer */
+cursor: pointer;
+}
+
+/* Corrección específica para el botón secundario */
+.btn--secondary {
+background: transparent;
+border: 2px solid var(--starflex-red);
+color: var(--starflex-red);
+padding: var(--space-lg) var(--space-2xl);
+font-size: 1rem;
+font-weight: 600;
+border-radius: 16px;
+transition: all var(--transition);
+text-transform: uppercase;
+letter-spacing: 0.5px;
+text-decoration: none; /* Asegurar que no tenga decoración de texto */
+display: inline-flex; /* Asegurar que sea clickeable */
+align-items: center;
+justify-content: center;
+min-height: 48px; /* Área de toque mínima */
+}
+
+.btn--secondary:hover {
+background: var(--starflex-red);
+color: white;
+transform: translateY(-2px);
+box-shadow: 
+    var(--shadow-lg),
+    0 0 25px rgba(255, 69, 105, 0.4);
+}
+
+/* Corrección para el contenedor de CTA de videos */
+.videos__cta {
+text-align: center;
+background: var(--glass-bg);
+backdrop-filter: blur(25px);
+border: 1px solid var(--border-subtle);
+border-radius: 30px;
+padding: var(--space-4xl);
+position: relative;
+overflow: hidden;
+opacity: 0;
+transform: translateY(30px);
+animation: fadeInUp 1s ease-out 1s forwards;
+width: 100%;
+/* Asegurar que el contenedor no bloquee los clics */
+pointer-events: auto;
+}
+
+.videos__cta-content {
+position: relative;
+z-index: 2;
+/* Asegurar que el contenido sea clickeable */
+pointer-events: auto;
+}
+
+/* Corrección específica para móvil */
+@media screen and (max-width: 1023px) {
+.videos__cta-buttons {
+    flex-direction: column;
+    gap: var(--space-lg);
+}
+
+.btn--cta-video,
+.btn--secondary {
+    width: 100%;
+    max-width: 280px;
+    padding: var(--space-md) var(--space-lg);
+    /* Asegurar área de toque adecuada en móvil */
+    min-height: 48px;
+    /* Asegurar que sean clickeables en móvil */
+    touch-action: manipulation;
+}
+
+/* Corrección específica para el botón demo en móvil */
+.btn--demo {
+    /* Asegurar que el botón demo funcione en móvil */
+    -webkit-tap-highlight-color: rgba(255, 69, 105, 0.2);
+}
+}
+
+/* Asegurar que los efectos de antes no interfieran */
+.videos__cta::before {
+content: '';
+position: absolute;
+top: 0;
+left: -100%;
+width: 100%;
+height: 100%;
+background: linear-gradient(90deg, 
+    transparent, 
+    rgba(184, 0, 46, 0.05), 
+    transparent
+);
+animation: cta-shimmer 8s infinite;
+/* Asegurar que no bloquee los clics */
+pointer-events: none;
+z-index: 1;
+}
+
+/* Corrección para asegurar que los enlaces funcionen */
+.videos__cta-buttons a {
+/* Asegurar que los enlaces sean clickeables */
+pointer-events: auto;
+position: relative;
+z-index: 10;
+}
+
+/* Corrección adicional para el botón que va a #videos */
+a[href="#videos"] {
+/* Asegurar que el enlace interno funcione */
+scroll-behavior: smooth;
+}
