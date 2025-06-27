@@ -25,7 +25,6 @@ import {
   CircularProgress,
   Alert,
   Tooltip,
-  Divider,
   LinearProgress,
   Badge,
 } from '@mui/material';
@@ -62,25 +61,16 @@ import {
   Analytics,
   AutoGraph,
   Insights,
+  Delete,
+  Share,
 } from '@mui/icons-material';
-import {
-  collection,
-  query,
-  where,
-  onSnapshot,
-  orderBy,
-  limit,
-  Timestamp,
-  addDoc,
-  updateDoc,
-  doc,
-  getDocs,
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { Timestamp } from 'firebase/firestore';
 import { useAuth } from '@/hooks/useAuth';
 import { useSocios } from '@/hooks/useSocios';
+import { reportsService, ReportData } from '@/services/reports.service';
 import { format, subDays, startOfDay, endOfDay, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
 import { es } from 'date-fns/locale';
+import toast from 'react-hot-toast';
 
 interface ReportsSectionProps {
   loading?: boolean;
@@ -101,18 +91,6 @@ interface ReportTemplate {
   popularity: number;
   isNew?: boolean;
   isPremium?: boolean;
-}
-
-interface GeneratedReport {
-  id: string;
-  templateId: string;
-  title: string;
-  generatedAt: Timestamp;
-  status: 'generating' | 'completed' | 'failed';
-  downloadUrl?: string;
-  fileSize?: string;
-  parameters: Record<string, any>;
-  userId: string;
 }
 
 interface ReportCardProps {
@@ -151,7 +129,11 @@ const ReportCard: React.FC<ReportCardProps> = ({
       initial={{ opacity: 0, scale: 0.95, y: 20 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       transition={{ duration: 0.5, delay }}
-      style={{ flex: '1 1 0', minWidth: '320px' }}
+      style={{ 
+        flex: '1 1 auto',
+        minWidth: '320px',
+        maxWidth: '400px'
+      }}
     >
       <Card
         elevation={0}
@@ -163,6 +145,8 @@ const ReportCard: React.FC<ReportCardProps> = ({
           position: 'relative',
           overflow: 'hidden',
           height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
           '&:hover': {
             borderColor: alpha(template.color, 0.3),
             transform: 'translateY(-4px)',
@@ -226,7 +210,7 @@ const ReportCard: React.FC<ReportCardProps> = ({
           </Box>
         )}
 
-        <CardContent sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <CardContent sx={{ p: 3, flex: 1, display: 'flex', flexDirection: 'column' }}>
           <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2.5, mb: 2.5 }}>
             <Avatar
               className="report-icon"
@@ -238,12 +222,13 @@ const ReportCard: React.FC<ReportCardProps> = ({
                 borderRadius: 3,
                 transition: 'all 0.3s ease',
                 boxShadow: `0 4px 15px ${alpha(template.color, 0.2)}`,
+                flexShrink: 0,
               }}
             >
               {template.icon}
             </Avatar>
             <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1, flexWrap: 'wrap' }}>
                 <Typography 
                   variant="h6" 
                   sx={{ 
@@ -251,6 +236,8 @@ const ReportCard: React.FC<ReportCardProps> = ({
                     color: '#0f172a', 
                     fontSize: '1rem',
                     lineHeight: 1.2,
+                    flex: '1 1 auto',
+                    minWidth: 0,
                   }}
                 >
                   {template.title}
@@ -265,6 +252,7 @@ const ReportCard: React.FC<ReportCardProps> = ({
                     fontWeight: 600,
                     fontSize: '0.65rem',
                     height: 18,
+                    flexShrink: 0,
                   }}
                 />
               </Box>
@@ -281,7 +269,12 @@ const ReportCard: React.FC<ReportCardProps> = ({
               </Typography>
               
               {/* Metrics */}
-              <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
+              <Box sx={{ 
+                display: 'flex', 
+                flexWrap: 'wrap',
+                gap: 2, 
+                mb: 2 
+              }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                   <Schedule sx={{ fontSize: 14, color: '#94a3b8' }} />
                   <Typography variant="caption" sx={{ color: '#94a3b8', fontWeight: 500 }}>
@@ -294,7 +287,7 @@ const ReportCard: React.FC<ReportCardProps> = ({
                     {template.dataPoints.toLocaleString()} datos
                   </Typography>
                 </Box>
-              </Stack>
+              </Box>
 
               {/* Status */}
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -304,6 +297,7 @@ const ReportCard: React.FC<ReportCardProps> = ({
                     height: 8,
                     borderRadius: '50%',
                     bgcolor: getStatusColor(),
+                    flexShrink: 0,
                   }}
                 />
                 <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 500 }}>
@@ -337,7 +331,11 @@ const ReportCard: React.FC<ReportCardProps> = ({
 
           {/* Actions */}
           <Box sx={{ mt: 'auto' }}>
-            <Stack direction="row" spacing={1}>
+            <Box sx={{ 
+              display: 'flex', 
+              gap: 1,
+              flexWrap: 'wrap'
+            }}>
               <Button
                 onClick={() => onPreview(template.id)}
                 size="small"
@@ -347,7 +345,8 @@ const ReportCard: React.FC<ReportCardProps> = ({
                   textTransform: 'none',
                   fontWeight: 600,
                   color: '#64748b',
-                  flex: 1,
+                  flex: '1 1 auto',
+                  minWidth: 'fit-content',
                   '&:hover': {
                     color: template.color,
                     bgcolor: alpha(template.color, 0.05),
@@ -366,7 +365,8 @@ const ReportCard: React.FC<ReportCardProps> = ({
                   textTransform: 'none',
                   fontWeight: 600,
                   background: template.gradient,
-                  flex: 1,
+                  flex: '1 1 auto',
+                  minWidth: 'fit-content',
                   '&:hover': {
                     background: template.gradient,
                     filter: 'brightness(0.9)',
@@ -379,7 +379,7 @@ const ReportCard: React.FC<ReportCardProps> = ({
               >
                 {isGenerating ? 'Generando' : 'Generar'}
               </Button>
-            </Stack>
+            </Box>
           </Box>
         </CardContent>
       </Card>
@@ -401,7 +401,11 @@ const MetricCard: React.FC<{
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      style={{ flex: '1 1 0', minWidth: '250px' }}
+      style={{ 
+        flex: '1 1 auto',
+        minWidth: '250px',
+        maxWidth: '300px'
+      }}
     >
       <Card
         elevation={0}
@@ -508,9 +512,15 @@ const ReportPreviewDialog: React.FC<{
             <Typography variant="h6" sx={{ mb: 3, fontWeight: 700 }}>
               Vista Previa - Gráfico
             </Typography>
-            <Box sx={{ height: 200, display: 'flex', alignItems: 'end', gap: 2 }}>
+            <Box sx={{ 
+              height: 200, 
+              display: 'flex', 
+              alignItems: 'end', 
+              gap: 2,
+              flexWrap: 'wrap'
+            }}>
               {mockData.chart.map((item, index) => (
-                <Box key={index} sx={{ flex: 1, textAlign: 'center' }}>
+                <Box key={index} sx={{ flex: '1 1 auto', textAlign: 'center', minWidth: '60px' }}>
                   <Box
                     sx={{
                       height: `${(item.value / 200) * 100}%`,
@@ -537,24 +547,34 @@ const ReportPreviewDialog: React.FC<{
             </Typography>
             <Box sx={{ border: '1px solid #e2e8f0', borderRadius: 2, overflow: 'hidden' }}>
               <Box sx={{ bgcolor: '#f8fafc', p: 2, borderBottom: '1px solid #e2e8f0' }}>
-                <Stack direction="row" spacing={2}>
-                  <Typography variant="body2" sx={{ fontWeight: 700, flex: 1 }}>Nombre</Typography>
-                  <Typography variant="body2" sx={{ fontWeight: 700, flex: 1 }}>Estado</Typography>
-                  <Typography variant="body2" sx={{ fontWeight: 700, flex: 1 }}>Fecha</Typography>
-                </Stack>
+                <Box sx={{ 
+                  display: 'flex', 
+                  gap: 2,
+                  flexWrap: 'wrap'
+                }}>
+                  <Typography variant="body2" sx={{ fontWeight: 700, flex: '1 1 auto', minWidth: '100px' }}>Nombre</Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 700, flex: '1 1 auto', minWidth: '80px' }}>Estado</Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 700, flex: '1 1 auto', minWidth: '100px' }}>Fecha</Typography>
+                </Box>
               </Box>
               {mockData.table.map((row, index) => (
                 <Box key={index} sx={{ p: 2, borderBottom: index < mockData.table.length - 1 ? '1px solid #e2e8f0' : 'none' }}>
-                  <Stack direction="row" spacing={2}>
-                    <Typography variant="body2" sx={{ flex: 1 }}>{row.nombre}</Typography>
-                    <Chip 
-                      label={row.estado} 
-                      size="small" 
-                      color={row.estado === 'Activo' ? 'success' : 'error'}
-                      sx={{ flex: 1 }}
-                    />
-                    <Typography variant="body2" sx={{ flex: 1, color: '#64748b' }}>{row.fecha}</Typography>
-                  </Stack>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    gap: 2,
+                    flexWrap: 'wrap',
+                    alignItems: 'center'
+                  }}>
+                    <Typography variant="body2" sx={{ flex: '1 1 auto', minWidth: '100px' }}>{row.nombre}</Typography>
+                    <Box sx={{ flex: '1 1 auto', minWidth: '80px' }}>
+                      <Chip 
+                        label={row.estado} 
+                        size="small" 
+                        color={row.estado === 'Activo' ? 'success' : 'error'}
+                      />
+                    </Box>
+                    <Typography variant="body2" sx={{ flex: '1 1 auto', minWidth: '100px', color: '#64748b' }}>{row.fecha}</Typography>
+                  </Box>
                 </Box>
               ))}
             </Box>
@@ -570,8 +590,7 @@ const ReportPreviewDialog: React.FC<{
             <Box sx={{ 
               display: 'flex', 
               flexWrap: 'wrap', 
-              gap: 2,
-              '& > *': { minWidth: '200px', flex: '1 1 0' }
+              gap: 2
             }}>
               <MetricCard
                 title="Total Miembros"
@@ -620,9 +639,11 @@ const ReportPreviewDialog: React.FC<{
         alignItems: 'center', 
         justifyContent: 'space-between',
         pb: 2,
-        borderBottom: '1px solid #e2e8f0'
+        borderBottom: '1px solid #e2e8f0',
+        flexWrap: 'wrap',
+        gap: 2
       }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: '1 1 auto', minWidth: 0 }}>
           <Avatar
             sx={{
               width: 40,
@@ -630,11 +651,12 @@ const ReportPreviewDialog: React.FC<{
               bgcolor: alpha(template.color, 0.1),
               color: template.color,
               borderRadius: 2,
+              flexShrink: 0,
             }}
           >
             {template.icon}
           </Avatar>
-          <Box>
+          <Box sx={{ minWidth: 0, flex: 1 }}>
             <Typography variant="h6" sx={{ fontWeight: 700 }}>
               {template.title}
             </Typography>
@@ -643,7 +665,7 @@ const ReportPreviewDialog: React.FC<{
             </Typography>
           </Box>
         </Box>
-        <IconButton onClick={onClose}>
+        <IconButton onClick={onClose} sx={{ flexShrink: 0 }}>
           <Close />
         </IconButton>
       </DialogTitle>
@@ -685,7 +707,7 @@ export const ReportsSection: React.FC<ReportsSectionProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [dateRange, setDateRange] = useState('last30days');
   const [categoryFilter, setCategoryFilter] = useState('all');
-  const [generatedReports, setGeneratedReports] = useState<GeneratedReport[]>([]);
+  const [generatedReports, setGeneratedReports] = useState<ReportData[]>([]);
   const [generatingReports, setGeneratingReports] = useState<Set<string>>(new Set());
   const [previewDialog, setPreviewDialog] = useState<{ open: boolean; template: ReportTemplate | null }>({
     open: false,
@@ -829,20 +851,7 @@ export const ReportsSection: React.FC<ReportsSectionProps> = ({
       return;
     }
 
-    const reportsRef = collection(db, 'reports');
-    const reportsQuery = query(
-      reportsRef,
-      where('userId', '==', user.uid),
-      orderBy('generatedAt', 'desc'),
-      limit(50)
-    );
-
-    const unsubscribe = onSnapshot(reportsQuery, (snapshot) => {
-      const reports = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as GeneratedReport[];
-
+    const unsubscribe = reportsService.subscribeToUserReports(user.uid, (reports) => {
       setGeneratedReports(reports);
       setLoading(false);
     });
@@ -855,43 +864,76 @@ export const ReportsSection: React.FC<ReportsSectionProps> = ({
     return reportTemplates.filter(template => template.category === categoryFilter);
   }, [reportTemplates, categoryFilter]);
 
+  const getDateRangeTimestamps = (range: string) => {
+    const now = new Date();
+    let startDate: Date;
+    let endDate = now;
+
+    switch (range) {
+      case 'last7days':
+        startDate = subDays(now, 7);
+        break;
+      case 'last30days':
+        startDate = subDays(now, 30);
+        break;
+      case 'last3months':
+        startDate = subDays(now, 90);
+        break;
+      case 'last6months':
+        startDate = subDays(now, 180);
+        break;
+      case 'lastyear':
+        startDate = subDays(now, 365);
+        break;
+      default:
+        startDate = new Date(2020, 0, 1); // Default to a very old date
+    }
+
+    return {
+      startDate: Timestamp.fromDate(startOfDay(startDate)),
+      endDate: Timestamp.fromDate(endOfDay(endDate))
+    };
+  };
+
   const handleGenerateReport = async (templateId: string) => {
-    if (!user) return;
+    if (!user) {
+      toast.error('Usuario no autenticado');
+      return;
+    }
 
     try {
       setGeneratingReports(prev => new Set([...prev, templateId]));
 
-      // Add report generation request to Firebase
-      const reportsRef = collection(db, 'reports');
-      await addDoc(reportsRef, {
+      const { startDate, endDate } = getDateRangeTimestamps(dateRange);
+
+      const reportId = await reportsService.generateReport(
         templateId,
-        title: reportTemplates.find(t => t.id === templateId)?.title || 'Reporte',
-        generatedAt: Timestamp.now(),
-        status: 'generating',
-        parameters: {
+        user.uid,
+        user.uid, // Using user.uid as asociacionId for now
+        {
           dateRange,
           categoryFilter,
-        },
-        userId: user.uid,
-      });
+          startDate,
+          endDate,
+          includeCharts: true,
+          format: 'pdf'
+        }
+      );
 
-      // Simulate report generation
+      toast.success('Reporte generado exitosamente');
+      
+      // Remove from generating set after a delay to show completion
       setTimeout(() => {
         setGeneratingReports(prev => {
           const newSet = new Set(prev);
           newSet.delete(templateId);
           return newSet;
         });
-        
-        // Mock download
-        const link = document.createElement('a');
-        link.href = '#';
-        link.download = `${templateId}-${format(new Date(), 'yyyy-MM-dd')}.pdf`;
-        link.click();
       }, 3000);
 
-    } catch (err) {
-      console.error('Error generating report:', err);
+    } catch (error) {
+      console.error('Error generating report:', error);
+      toast.error('Error al generar el reporte');
       setGeneratingReports(prev => {
         const newSet = new Set(prev);
         newSet.delete(templateId);
@@ -903,6 +945,16 @@ export const ReportsSection: React.FC<ReportsSectionProps> = ({
   const handlePreviewReport = (templateId: string) => {
     const template = reportTemplates.find(t => t.id === templateId);
     setPreviewDialog({ open: true, template: template || null });
+  };
+
+  const handleDeleteReport = async (reportId: string) => {
+    try {
+      await reportsService.deleteReport(reportId);
+      toast.success('Reporte eliminado exitosamente');
+    } catch (error) {
+      console.error('Error deleting report:', error);
+      toast.error('Error al eliminar el reporte');
+    }
   };
 
   const summaryMetrics = useMemo(() => [
@@ -971,7 +1023,7 @@ export const ReportsSection: React.FC<ReportsSectionProps> = ({
             flexWrap: 'wrap',
             gap: 3
           }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, flex: '1 1 auto', minWidth: 0 }}>
               <Avatar
                 sx={{
                   width: 64,
@@ -979,11 +1031,12 @@ export const ReportsSection: React.FC<ReportsSectionProps> = ({
                   borderRadius: 4,
                   background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
                   boxShadow: '0 12px 40px rgba(245, 158, 11, 0.3)',
+                  flexShrink: 0,
                 }}
               >
                 <Assessment sx={{ fontSize: 32 }} />
               </Avatar>
-              <Box>
+              <Box sx={{ minWidth: 0, flex: 1 }}>
                 <Typography
                   variant="h3"
                   sx={{
@@ -1013,7 +1066,12 @@ export const ReportsSection: React.FC<ReportsSectionProps> = ({
               </Box>
             </Box>
             
-            <Stack direction="row" spacing={2}>
+            <Box sx={{ 
+              display: 'flex', 
+              gap: 2,
+              flexShrink: 0,
+              flexWrap: 'wrap'
+            }}>
               <IconButton
                 onClick={() => window.location.reload()}
                 sx={{
@@ -1049,7 +1107,7 @@ export const ReportsSection: React.FC<ReportsSectionProps> = ({
               >
                 Exportar Todo
               </Button>
-            </Stack>
+            </Box>
           </Box>
           
           {/* Filters */}
@@ -1073,13 +1131,19 @@ export const ReportsSection: React.FC<ReportsSectionProps> = ({
               }
             }}
           >
-            <Stack 
-              direction={{ xs: 'column', md: 'row' }} 
-              spacing={3} 
-              alignItems="center"
-              justifyContent="space-between"
-            >
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ flex: 1 }}>
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: 3
+            }}>
+              <Box sx={{ 
+                display: 'flex', 
+                gap: 2,
+                flex: '1 1 auto',
+                flexWrap: 'wrap'
+              }}>
                 <FormControl sx={{ minWidth: 200 }}>
                   <InputLabel>Categoría</InputLabel>
                   <Select
@@ -1112,8 +1176,8 @@ export const ReportsSection: React.FC<ReportsSectionProps> = ({
                     ))}
                   </Select>
                 </FormControl>
-              </Stack>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              </Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexShrink: 0 }}>
                 <Box
                   sx={{
                     width: 12,
@@ -1131,7 +1195,7 @@ export const ReportsSection: React.FC<ReportsSectionProps> = ({
                   {filteredTemplates.length} reportes disponibles
                 </Typography>
               </Box>
-            </Stack>
+            </Box>
           </Paper>
         </Box>
       </motion.div>
@@ -1142,9 +1206,7 @@ export const ReportsSection: React.FC<ReportsSectionProps> = ({
         flexWrap: 'wrap', 
         gap: 3, 
         mb: 6,
-        '& > *': {
-          minWidth: { xs: '100%', sm: 'calc(50% - 12px)', lg: 'calc(25% - 18px)' }
-        }
+        justifyContent: 'center'
       }}>
         {summaryMetrics.map((metric, index) => (
           <MetricCard key={index} {...metric} />
@@ -1156,12 +1218,17 @@ export const ReportsSection: React.FC<ReportsSectionProps> = ({
         display: 'flex', 
         flexWrap: 'wrap', 
         gap: 4,
-        alignItems: 'stretch'
+        alignItems: 'stretch',
+        justifyContent: 'center'
       }}>
         {loading || propLoading ? (
           // Loading skeleton
           Array.from({ length: 8 }).map((_, index) => (
-            <Box key={index} style={{ flex: '1 1 0', minWidth: '320px' }}>
+            <Box key={index} style={{ 
+              flex: '1 1 auto',
+              minWidth: '320px',
+              maxWidth: '400px'
+            }}>
               <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 4, height: '100%' }}>
                 <CardContent sx={{ p: 3 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2.5, mb: 2.5 }}>
@@ -1299,8 +1366,14 @@ export const ReportsSection: React.FC<ReportsSectionProps> = ({
                     }}
                   >
                     <CardContent sx={{ p: 3 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                      <Box sx={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'space-between',
+                        flexWrap: 'wrap',
+                        gap: 2
+                      }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: '1 1 auto', minWidth: 0 }}>
                           <Avatar
                             sx={{
                               width: 36,
@@ -1312,13 +1385,14 @@ export const ReportsSection: React.FC<ReportsSectionProps> = ({
                                      report.status === 'generating' ? '#f59e0b' : 
                                      '#ef4444',
                               borderRadius: 2,
+                              flexShrink: 0,
                             }}
                           >
                             {report.status === 'completed' ? <CheckCircle sx={{ fontSize: 20 }} /> :
                              report.status === 'generating' ? <CircularProgress size={16} /> :
                              <Warning sx={{ fontSize: 20 }} />}
                           </Avatar>
-                          <Box>
+                          <Box sx={{ minWidth: 0, flex: 1 }}>
                             <Typography variant="body1" sx={{ fontWeight: 600, color: '#1e293b' }}>
                               {report.title}
                             </Typography>
@@ -1328,7 +1402,7 @@ export const ReportsSection: React.FC<ReportsSectionProps> = ({
                             </Typography>
                           </Box>
                         </Box>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
                           <Chip
                             label={report.status === 'completed' ? 'Completado' : 
                                    report.status === 'generating' ? 'Generando' : 'Error'}
@@ -1338,17 +1412,31 @@ export const ReportsSection: React.FC<ReportsSectionProps> = ({
                             sx={{ fontWeight: 600 }}
                           />
                           {report.status === 'completed' && (
-                            <IconButton
-                              size="small"
-                              sx={{
-                                color: '#f59e0b',
-                                '&:hover': {
-                                  bgcolor: alpha('#f59e0b', 0.1),
-                                }
-                              }}
-                            >
-                              <Download sx={{ fontSize: 18 }} />
-                            </IconButton>
+                            <>
+                              <IconButton
+                                size="small"
+                                sx={{
+                                  color: '#f59e0b',
+                                  '&:hover': {
+                                                    bgcolor: alpha('#f59e0b', 0.1),
+                                  }
+                                }}
+                              >
+                                <Download sx={{ fontSize: 18 }} />
+                              </IconButton>
+                              <IconButton
+                                size="small"
+                                onClick={() => handleDeleteReport(report.id!)}
+                                sx={{
+                                  color: '#ef4444',
+                                  '&:hover': {
+                                    bgcolor: alpha('#ef4444', 0.1),
+                                  }
+                                }}
+                              >
+                                <Delete sx={{ fontSize: 18 }} />
+                              </IconButton>
+                            </>
                           )}
                         </Box>
                       </Box>
@@ -1371,3 +1459,4 @@ export const ReportsSection: React.FC<ReportsSectionProps> = ({
     </Box>
   );
 };
+
