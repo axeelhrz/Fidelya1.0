@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import {
   Box,
@@ -343,7 +343,7 @@ const BackupCard: React.FC<BackupCardProps> = ({
                 fontWeight: 600,
                 borderColor: '#6366f1',
                 color: '#6366f1',
-                '&:hover': {                 borderColor: '#4f46e5', bgcolor: alpha('#6366f1', 0.05) },
+                '&:hover': { borderColor: '#4f46e5', bgcolor: alpha('#6366f1', 0.05) },
               }}
             >
               Descargar
@@ -365,7 +365,7 @@ const CreateBackupDialog: React.FC<CreateBackupDialogProps> = ({
   const [description, setDescription] = useState('');
   const [nameError, setNameError] = useState('');
 
-  const validateName = (value: string) => {
+  const validateName = useCallback((value: string) => {
     if (!value.trim()) {
       setNameError('El nombre del respaldo es requerido');
       return false;
@@ -376,17 +376,17 @@ const CreateBackupDialog: React.FC<CreateBackupDialogProps> = ({
     }
     setNameError('');
     return true;
-  };
+  }, []);
 
-  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setName(value);
     if (nameError) {
       validateName(value);
     }
-  };
+  }, [nameError, validateName]);
 
-  const handleSubmit = () => {
+  const handleSubmit = useCallback(() => {
     if (validateName(name)) {
       // Pass description only if it has content, otherwise pass undefined
       const trimmedDescription = description.trim();
@@ -395,14 +395,14 @@ const CreateBackupDialog: React.FC<CreateBackupDialogProps> = ({
       setDescription('');
       setNameError('');
     }
-  };
+  }, [name, description, validateName, onConfirm]);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setName('');
     setDescription('');
     setNameError('');
     onClose();
-  };
+  }, [onClose]);
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
@@ -480,7 +480,7 @@ const RestoreDialog: React.FC<RestoreDialogProps> = ({
   const [overwriteExisting, setOverwriteExisting] = useState(false);
   const [createBackupBefore, setCreateBackupBefore] = useState(true);
 
-  const handleSubmit = () => {
+  const handleSubmit = useCallback(() => {
     if (backup) {
       const options: RestoreOptions = {
         backupId: backup.id,
@@ -491,7 +491,7 @@ const RestoreDialog: React.FC<RestoreDialogProps> = ({
       };
       onConfirm(options);
     }
-  };
+  }, [backup, restoreType, overwriteExisting, createBackupBefore, onConfirm]);
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
@@ -603,10 +603,13 @@ export const BackupManagementSection: React.FC<BackupManagementSectionProps> = (
   const [configDialogOpen, setConfigDialogOpen] = useState(false);
   const [selectedBackup, setSelectedBackup] = useState<BackupMetadata | null>(null);
 
-  const stats = useMemo(() => getBackupStats(), [getBackupStats]);
+  // Memoize stats with stable dependencies
+  const stats = useMemo(() => {
+    return getBackupStats();
+  }, [backups]); // Only depend on backups array, not the function
 
   const filteredBackups = useMemo(() => {
-    let filtered = backups;
+    let filtered = [...backups]; // Create a new array to avoid mutations
 
     // Apply filter
     if (filter !== 'all') {
@@ -623,20 +626,21 @@ export const BackupManagementSection: React.FC<BackupManagementSectionProps> = (
 
     // Apply search
     if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase();
       filtered = filtered.filter(backup =>
-        backup.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        backup.description?.toLowerCase().includes(searchTerm.toLowerCase())
+        backup.name.toLowerCase().includes(searchLower) ||
+        backup.description?.toLowerCase().includes(searchLower)
       );
     }
 
     // Apply sort
     filtered.sort((a, b) => {
-      let aValue: string | number | Date = a[sortField as keyof BackupMetadata] as unknown as string | number | Date;
-      let bValue: string | number | Date = b[sortField as keyof BackupMetadata] as unknown as string | number | Date;
+      let aValue: any = a[sortField as keyof BackupMetadata];
+      let bValue: any = b[sortField as keyof BackupMetadata];
 
       if (sortField === 'createdAt') {
-        aValue = (aValue instanceof Date) ? aValue.getTime() : aValue;
-        bValue = (bValue instanceof Date) ? bValue.getTime() : bValue;
+        aValue = aValue?.toMillis?.() || 0;
+        bValue = bValue?.toMillis?.() || 0;
       }
 
       if (sortOrder === 'asc') {
@@ -649,34 +653,34 @@ export const BackupManagementSection: React.FC<BackupManagementSectionProps> = (
     return filtered;
   }, [backups, filter, searchTerm, sortField, sortOrder]);
 
-  const handleCreateBackup = async (name: string, description?: string) => {
+  const handleCreateBackup = useCallback(async (name: string, description?: string) => {
     const result = await createBackup(name, description, 'manual');
     if (result) {
       setCreateDialogOpen(false);
     }
-  };
+  }, [createBackup]);
 
-  const handleRestoreBackup = async (options: RestoreOptions) => {
+  const handleRestoreBackup = useCallback(async (options: RestoreOptions) => {
     const result = await restoreBackup(options);
     if (result) {
       setRestoreDialogOpen(false);
       setSelectedBackup(null);
     }
-  };
+  }, [restoreBackup]);
 
-  const handleDeleteBackup = async (backup: BackupMetadata) => {
+  const handleDeleteBackup = useCallback(async (backup: BackupMetadata) => {
     if (window.confirm(`¿Estás seguro de que quieres eliminar el respaldo "${backup.name}"?`)) {
       await deleteBackup(backup.id);
     }
-  };
+  }, [deleteBackup]);
 
-  const formatFileSize = (bytes: number) => {
+  const formatFileSize = useCallback((bytes: number) => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
+  }, []);
 
   if (externalLoading || loading) {
     return (
@@ -959,7 +963,10 @@ export const BackupManagementSection: React.FC<BackupManagementSectionProps> = (
                   </Avatar>
                   <Box>
                     <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b' }}>
-                      {stats.lastBackup ? formatDistanceToNow(stats.lastBackup.toDate(), { locale: es }) : 'Nunca'}
+                      {stats.lastBackup && stats.lastBackup.toDate ? 
+                        formatDistanceToNow(stats.lastBackup.toDate(), { locale: es }) : 
+                        'Nunca'
+                      }
                     </Typography>
                     <Typography variant="caption" sx={{ color: '#64748b' }}>
                       Último Respaldo
@@ -1251,9 +1258,9 @@ const BackupConfigDialog: React.FC<BackupConfigDialogProps> = ({
     setLocalConfig(config);
   }, [config]);
 
-  const handleSave = () => {
+  const handleSave = useCallback(() => {
     onSave(localConfig);
-  };
+  }, [localConfig, onSave]);
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
@@ -1477,4 +1484,3 @@ const BackupConfigDialog: React.FC<BackupConfigDialogProps> = ({
     </Dialog>
   );
 };
-
