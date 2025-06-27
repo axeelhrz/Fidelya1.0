@@ -628,7 +628,7 @@ box-shadow:
 /* ===== SELECTOR DE IDIOMA FLOTANTE ===== */
 .language-switcher {
 position: fixed;
-top: 20px;
+top: 100px;
 right: 20px;
 z-index: var(--language-switcher-z-index);
 pointer-events: auto;
