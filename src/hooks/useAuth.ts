@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { auth, isFirebaseInitialized, waitForFirebase } from '@/lib/firebase';
 import { authService, LoginCredentials, RegisterData, AuthResponse } from '@/services/auth.service';
 import { UserData } from '@/types/auth';
 
@@ -12,6 +12,7 @@ interface AuthState {
   loading: boolean;
   error: string | null;
   isAuthenticated: boolean;
+  isFirebaseReady: boolean;
 }
 
 interface AuthActions {
@@ -30,54 +31,90 @@ export const useAuth = (): AuthState & AuthActions => {
     firebaseUser: null,
     loading: true,
     error: null,
-    isAuthenticated: false
+    isAuthenticated: false,
+    isFirebaseReady: isFirebaseInitialized
   });
 
-  // Initialize auth state listener
+  // Wait for Firebase initialization
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      try {
-        if (firebaseUser) {
-          // User is signed in
-          const userData = await authService.getUserData(firebaseUser.uid);
-          
-          setState(prev => ({
-            ...prev,
-            user: userData,
-            firebaseUser,
-            loading: false,
-            isAuthenticated: !!userData,
-            error: null
-          }));
-        } else {
-          // User is signed out
-          setState(prev => ({
-            ...prev,
-            user: null,
-            firebaseUser: null,
-            loading: false,
-            isAuthenticated: false,
-            error: null
-          }));
+    const initializeAuth = async () => {
+      if (!isFirebaseInitialized) {
+        const isReady = await waitForFirebase();
+        setState(prev => ({ 
+          ...prev, 
+          isFirebaseReady: isReady,
+          loading: !isReady,
+          error: !isReady ? 'Firebase no está configurado correctamente' : null
+        }));
+        
+        if (!isReady) {
+          return;
         }
-      } catch (error) {
-        console.error('Error in auth state change:', error);
-        setState(prev => ({
-          ...prev,
-          user: null,
-          firebaseUser: null,
+      }
+
+      // Initialize auth state listener only if Firebase is ready
+      if (isFirebaseInitialized && auth) {
+        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+          try {
+            if (firebaseUser) {
+              // User is signed in
+              const userData = await authService.getUserData(firebaseUser.uid);
+              
+              setState(prev => ({
+                ...prev,
+                user: userData,
+                firebaseUser,
+                loading: false,
+                isAuthenticated: !!userData,
+                error: null
+              }));
+            } else {
+              // User is signed out
+              setState(prev => ({
+                ...prev,
+                user: null,
+                firebaseUser: null,
+                loading: false,
+                isAuthenticated: false,
+                error: null
+              }));
+            }
+          } catch (error) {
+            console.error('Error in auth state change:', error);
+            setState(prev => ({
+              ...prev,
+              user: null,
+              firebaseUser: null,
+              loading: false,
+              isAuthenticated: false,
+              error: 'Error al cargar los datos del usuario'
+            }));
+          }
+        });
+
+        return () => unsubscribe();
+      } else {
+        // Firebase not initialized, set loading to false
+        setState(prev => ({ 
+          ...prev, 
           loading: false,
-          isAuthenticated: false,
-          error: 'Error al cargar los datos del usuario'
+          error: 'Firebase no está disponible'
         }));
       }
-    });
+    };
 
-    return () => unsubscribe();
+    initializeAuth();
   }, []);
 
   // Sign in
   const signIn = useCallback(async (credentials: LoginCredentials): Promise<AuthResponse> => {
+    if (!isFirebaseInitialized) {
+      return {
+        success: false,
+        error: 'Firebase no está configurado correctamente'
+      };
+    }
+
     setState(prev => ({ ...prev, loading: true, error: null }));
     
     const response = await authService.signIn(credentials);
@@ -95,6 +132,13 @@ export const useAuth = (): AuthState & AuthActions => {
 
   // Register
   const register = useCallback(async (data: RegisterData): Promise<AuthResponse> => {
+    if (!isFirebaseInitialized) {
+      return {
+        success: false,
+        error: 'Firebase no está configurado correctamente'
+      };
+    }
+
     setState(prev => ({ ...prev, loading: true, error: null }));
     
     const response = await authService.register(data);
@@ -112,6 +156,11 @@ export const useAuth = (): AuthState & AuthActions => {
 
   // Sign out
   const signOut = useCallback(async (): Promise<void> => {
+    if (!isFirebaseInitialized) {
+      console.warn('Cannot sign out: Firebase not initialized');
+      return;
+    }
+
     setState(prev => ({ ...prev, loading: true, error: null }));
     
     try {
@@ -128,6 +177,13 @@ export const useAuth = (): AuthState & AuthActions => {
 
   // Reset password
   const resetPassword = useCallback(async (email: string): Promise<AuthResponse> => {
+    if (!isFirebaseInitialized) {
+      return {
+        success: false,
+        error: 'Firebase no está configurado correctamente'
+      };
+    }
+
     setState(prev => ({ ...prev, error: null }));
     
     const response = await authService.resetPassword(email);
@@ -144,6 +200,13 @@ export const useAuth = (): AuthState & AuthActions => {
 
   // Update password
   const updatePassword = useCallback(async (newPassword: string): Promise<AuthResponse> => {
+    if (!isFirebaseInitialized) {
+      return {
+        success: false,
+        error: 'Firebase no está configurado correctamente'
+      };
+    }
+
     setState(prev => ({ ...prev, error: null }));
     
     const response = await authService.updateUserPassword(newPassword);
@@ -165,17 +228,19 @@ export const useAuth = (): AuthState & AuthActions => {
 
   // Refresh user data
   const refreshUser = useCallback(async (): Promise<void> => {
-    if (state.firebaseUser) {
-      try {
-        const userData = await authService.getUserData(state.firebaseUser.uid);
-        setState(prev => ({
-          ...prev,
-          user: userData,
-          isAuthenticated: !!userData
-        }));
-      } catch (error) {
-        console.error('Error refreshing user:', error);
-      }
+    if (!isFirebaseInitialized || !state.firebaseUser) {
+      return;
+    }
+
+    try {
+      const userData = await authService.getUserData(state.firebaseUser.uid);
+      setState(prev => ({
+        ...prev,
+        user: userData,
+        isAuthenticated: !!userData
+      }));
+    } catch (error) {
+      console.error('Error refreshing user:', error);
     }
   }, [state.firebaseUser]);
 

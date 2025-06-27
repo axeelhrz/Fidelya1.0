@@ -15,7 +15,7 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 };
 
-// Validate configuration
+// Validate configuration with better error handling
 const validateConfig = () => {
   const requiredKeys = [
     'NEXT_PUBLIC_FIREBASE_API_KEY',
@@ -29,19 +29,42 @@ const validateConfig = () => {
   const missingKeys = requiredKeys.filter(key => !process.env[key]);
   
   if (missingKeys.length > 0) {
+    console.error('🔥 Firebase Configuration Error:', {
+      missing: missingKeys,
+      available: Object.keys(process.env).filter(key => key.startsWith('NEXT_PUBLIC_FIREBASE_'))
+    });
+    
+    // In development, provide helpful guidance
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔧 To fix this, ensure your .env.local file contains:');
+      missingKeys.forEach(key => {
+        console.log(`${key}=your_firebase_${key.toLowerCase().replace('next_public_firebase_', '')}`);
+      });
+    }
+    
     throw new Error(`Missing Firebase configuration: ${missingKeys.join(', ')}`);
+  }
+
+  // Validate that values are not empty
+  const emptyKeys = requiredKeys.filter(key => process.env[key] === '');
+  if (emptyKeys.length > 0) {
+    throw new Error(`Empty Firebase configuration values: ${emptyKeys.join(', ')}`);
   }
 };
 
-// Initialize Firebase
+// Initialize Firebase with error handling
 let app: FirebaseApp;
 let auth: Auth;
 let db: Firestore;
 let storage: FirebaseStorage;
 let analytics: Analytics | null = null;
+let isFirebaseInitialized = false;
 
 try {
-  validateConfig();
+  // Only validate in browser environment to avoid SSR issues
+  if (typeof window !== 'undefined') {
+    validateConfig();
+  }
   
   // Initialize Firebase app (avoid duplicate initialization)
   if (!getApps().length) {
@@ -57,7 +80,11 @@ try {
 
   // Initialize Analytics only in browser environment
   if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID) {
-    analytics = getAnalytics(app);
+    try {
+      analytics = getAnalytics(app);
+    } catch (error) {
+      console.warn('⚠️ Analytics initialization failed:', error);
+    }
   }
 
   // Connect to emulators in development
@@ -66,9 +93,16 @@ try {
     
     if (useEmulators) {
       try {
-        connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
-        connectFirestoreEmulator(db, 'localhost', 8080);
-        connectStorageEmulator(storage, 'localhost', 9199);
+        // Check if emulators are already connected
+        if (!(auth as any)._delegate?.config?.emulator) {
+          connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
+        }
+        if (!(db as any)._delegate?._databaseId?.projectId?.includes('demo-')) {
+          connectFirestoreEmulator(db, 'localhost', 8080);
+        }
+        if (!(storage as any)._delegate?._host?.includes('localhost')) {
+          connectStorageEmulator(storage, 'localhost', 9199);
+        }
         console.log('🔧 Connected to Firebase Emulators');
       } catch (error) {
         console.warn('⚠️ Could not connect to Firebase Emulators:', error);
@@ -76,14 +110,22 @@ try {
     }
   }
 
+  isFirebaseInitialized = true;
   console.log('🔥 Firebase initialized successfully');
 } catch (error) {
   console.error('❌ Firebase initialization failed:', error);
-  throw error;
+  
+  // In development, provide mock services to prevent app crash
+  if (process.env.NODE_ENV === 'development') {
+    console.warn('🔧 Running in development mode without Firebase. Some features will be disabled.');
+    isFirebaseInitialized = false;
+  } else {
+    throw error;
+  }
 }
 
-// Export Firebase services
-export { app, auth, db, storage, analytics };
+// Export Firebase services with fallbacks
+export { app, auth, db, storage, analytics, isFirebaseInitialized };
 
 // Export Firebase types for convenience
 export type { 
@@ -121,9 +163,19 @@ export const STORAGE_PATHS = {
   TEMP: 'temp'
 } as const;
 
-// Error handling utility
+// Enhanced error handling utility
 export const handleFirebaseError = (error: any): string => {
   console.error('Firebase Error:', error);
+  
+  // Handle network errors
+  if (error?.message?.includes('network')) {
+    return 'Error de conexión. Verifica tu conexión a internet.';
+  }
+  
+  // Handle quota exceeded
+  if (error?.code === 'resource-exhausted') {
+    return 'Límite de uso excedido. Intenta más tarde.';
+  }
   
   if (error?.code) {
     switch (error.code) {
@@ -134,9 +186,15 @@ export const handleFirebaseError = (error: any): string => {
       case 'auth/email-already-in-use':
         return 'El email ya está en uso';
       case 'auth/weak-password':
-        return 'La contraseña es muy débil';
+        return 'La contraseña es muy débil (mínimo 6 caracteres)';
       case 'auth/invalid-email':
         return 'Email inválido';
+      case 'auth/user-disabled':
+        return 'Esta cuenta ha sido deshabilitada';
+      case 'auth/too-many-requests':
+        return 'Demasiados intentos fallidos. Intenta más tarde.';
+      case 'auth/network-request-failed':
+        return 'Error de conexión. Verifica tu internet.';
       case 'permission-denied':
         return 'No tienes permisos para realizar esta acción';
       case 'not-found':
@@ -154,11 +212,17 @@ export const handleFirebaseError = (error: any): string => {
       case 'internal':
         return 'Error interno del servidor';
       case 'unavailable':
-        return 'Servicio no disponible';
+        return 'Servicio no disponible temporalmente';
       case 'data-loss':
-        return 'Pérdida de datos';
+        return 'Pérdida de datos detectada';
       case 'unauthenticated':
-        return 'No autenticado';
+        return 'Sesión expirada. Inicia sesión nuevamente.';
+      case 'cancelled':
+        return 'Operación cancelada';
+      case 'invalid-argument':
+        return 'Datos inválidos proporcionados';
+      case 'deadline-exceeded':
+        return 'Tiempo de espera agotado';
       default:
         return error.message || 'Error desconocido';
     }
@@ -169,6 +233,10 @@ export const handleFirebaseError = (error: any): string => {
 
 // Connection status utility
 export const checkFirebaseConnection = async (): Promise<boolean> => {
+  if (!isFirebaseInitialized) {
+    return false;
+  }
+  
   try {
     const { enableNetwork, disableNetwork } = await import('firebase/firestore');
     await disableNetwork(db);
@@ -178,4 +246,32 @@ export const checkFirebaseConnection = async (): Promise<boolean> => {
     console.error('Firebase connection check failed:', error);
     return false;
   }
+};
+
+// Utility to check if Firebase is ready
+export const waitForFirebase = (): Promise<boolean> => {
+  return new Promise((resolve) => {
+    if (isFirebaseInitialized) {
+      resolve(true);
+      return;
+    }
+    
+    // Wait a bit for initialization
+    setTimeout(() => {
+      resolve(isFirebaseInitialized);
+    }, 1000);
+  });
+};
+
+// Development utilities
+export const getFirebaseConfig = () => {
+  if (process.env.NODE_ENV === 'development') {
+    return {
+      projectId: firebaseConfig.projectId,
+      authDomain: firebaseConfig.authDomain,
+      isInitialized: isFirebaseInitialized,
+      environment: process.env.NODE_ENV
+    };
+  }
+  return { isInitialized: isFirebaseInitialized };
 };
