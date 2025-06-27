@@ -343,7 +343,7 @@ const BackupCard: React.FC<BackupCardProps> = ({
                 fontWeight: 600,
                 borderColor: '#6366f1',
                 color: '#6366f1',
-                '&:hover': { borderColor: '#4f46e5', bgcolor: alpha('#6366f1', 0.05) },
+                '&:hover': {                 borderColor: '#4f46e5', bgcolor: alpha('#6366f1', 0.05) },
               }}
             >
               Descargar
@@ -363,17 +363,49 @@ const CreateBackupDialog: React.FC<CreateBackupDialogProps> = ({
 }) => {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [nameError, setNameError] = useState('');
 
-  const handleSubmit = () => {
-    if (name.trim()) {
-      onConfirm(name.trim(), description.trim() || undefined);
-      setName('');
-      setDescription('');
+  const validateName = (value: string) => {
+    if (!value.trim()) {
+      setNameError('El nombre del respaldo es requerido');
+      return false;
+    }
+    if (value.trim().length < 3) {
+      setNameError('El nombre debe tener al menos 3 caracteres');
+      return false;
+    }
+    setNameError('');
+    return true;
+  };
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setName(value);
+    if (nameError) {
+      validateName(value);
     }
   };
 
+  const handleSubmit = () => {
+    if (validateName(name)) {
+      // Pass description only if it has content, otherwise pass undefined
+      const trimmedDescription = description.trim();
+      onConfirm(name.trim(), trimmedDescription || undefined);
+      setName('');
+      setDescription('');
+      setNameError('');
+    }
+  };
+
+  const handleClose = () => {
+    setName('');
+    setDescription('');
+    setNameError('');
+    onClose();
+  };
+
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
       <DialogTitle>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <Avatar sx={{ bgcolor: alpha('#10b981', 0.1), color: '#10b981' }}>
@@ -395,10 +427,13 @@ const CreateBackupDialog: React.FC<CreateBackupDialogProps> = ({
           <TextField
             label="Nombre del respaldo"
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            onChange={handleNameChange}
+            onBlur={() => validateName(name)}
             fullWidth
             required
-            placeholder="Ej: Respaldo mensual enero 2024"
+            error={!!nameError}
+            helperText={nameError || 'Ej: Respaldo mensual enero 2024'}
+            placeholder="Ingresa un nombre descriptivo"
           />
           <TextField
             label="Descripción (opcional)"
@@ -408,18 +443,19 @@ const CreateBackupDialog: React.FC<CreateBackupDialogProps> = ({
             multiline
             rows={3}
             placeholder="Describe el propósito de este respaldo..."
+            helperText="Información adicional sobre este respaldo"
           />
         </Stack>
       </DialogContent>
       
       <DialogActions sx={{ p: 3 }}>
-        <Button onClick={onClose} disabled={loading}>
+        <Button onClick={handleClose} disabled={loading}>
           Cancelar
         </Button>
         <Button
           onClick={handleSubmit}
           variant="contained"
-          disabled={!name.trim() || loading}
+          disabled={!name.trim() || !!nameError || loading}
           startIcon={loading ? <CircularProgress size={20} /> : <Backup />}
           sx={{
             bgcolor: '#10b981',
@@ -548,6 +584,7 @@ export const BackupManagementSection: React.FC<BackupManagementSectionProps> = (
     config,
     loading,
     progress,
+    error,
     createBackup,
     restoreBackup,
     deleteBackup,
@@ -793,15 +830,22 @@ export const BackupManagementSection: React.FC<BackupManagementSectionProps> = (
               <Paper
                 elevation={0}
                 sx={{
-                  bgcolor: alpha('#f59e0b', 0.05),
-                  border: `1px solid ${alpha('#f59e0b', 0.15)}`,
+                  bgcolor: progress.step === 'Error' ? alpha('#ef4444', 0.05) : alpha('#f59e0b', 0.05),
+                  border: `1px solid ${progress.step === 'Error' ? alpha('#ef4444', 0.15) : alpha('#f59e0b', 0.15)}`,
                   borderRadius: 4,
                   p: 3,
                   mb: 4,
                 }}
               >
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-                  <Typography variant="body2" sx={{ color: '#f59e0b', fontWeight: 600 }}>
+                  <Typography variant="body2" sx={{ 
+                    color: progress.step === 'Error' ? '#ef4444' : '#f59e0b', 
+                    fontWeight: 600,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1
+                  }}>
+                    {progress.step === 'Error' && <ErrorIcon sx={{ fontSize: 16 }} />}
                     {progress.step}
                   </Typography>
                   <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 600 }}>
@@ -814,9 +858,9 @@ export const BackupManagementSection: React.FC<BackupManagementSectionProps> = (
                   sx={{ 
                     borderRadius: 2, 
                     height: 8,
-                    bgcolor: alpha('#f59e0b', 0.1),
+                    bgcolor: progress.step === 'Error' ? alpha('#ef4444', 0.1) : alpha('#f59e0b', 0.1),
                     '& .MuiLinearProgress-bar': {
-                      bgcolor: '#f59e0b',
+                      bgcolor: progress.step === 'Error' ? '#ef4444' : '#f59e0b',
                       borderRadius: 2,
                     }
                   }} 
@@ -825,6 +869,21 @@ export const BackupManagementSection: React.FC<BackupManagementSectionProps> = (
                   {progress.message}
                 </Typography>
               </Paper>
+            </motion.div>
+          )}
+
+          {/* Error Alert */}
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+            >
+              <Alert severity="error" sx={{ mb: 4, borderRadius: 3 }}>
+                <Typography variant="body2">
+                  <strong>Error:</strong> {error}
+                </Typography>
+              </Alert>
             </motion.div>
           )}
 
@@ -1418,3 +1477,4 @@ const BackupConfigDialog: React.FC<BackupConfigDialogProps> = ({
     </Dialog>
   );
 };
+
