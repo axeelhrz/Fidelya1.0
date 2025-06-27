@@ -5784,3 +5784,244 @@ margin-bottom: var(--space-md);
 gap: var(--space-sm); /* Gap mínimo en pantallas muy pequeñas */
 }
 }
+/* ===== AJUSTES DE ESPACIADO PARA DISPOSITIVOS MÓVILES ===== */
+@media screen and (max-width: 1023px) {
+
+/* Aumentar padding del menú móvil */
+.nav__menu {
+position: fixed;
+top: 0;
+left: -100%;
+width: 100vw;
+height: 100vh;
+height: 100dvh;
+background: linear-gradient(135deg, 
+    rgba(10, 13, 20, 0.98) 0%, 
+    rgba(21, 25, 34, 0.98) 50%, 
+    rgba(30, 35, 48, 0.98) 100%
+);
+backdrop-filter: blur(25px);
+-webkit-backdrop-filter: blur(25px);
+display: flex;
+flex-direction: column;
+justify-content: flex-start;
+align-items: center;
+transition: left 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+z-index: calc(var(--navbar-z-index) + 3);
+padding: var(--navbar-mobile-padding-top) clamp(2rem, 6vw, 3rem) 40px clamp(2rem, 6vw, 3rem); /* Aumentado el padding horizontal */
+overflow: hidden;
+}
+
+/* Ajustar botón de cerrar con más margen */
+.nav__close {
+position: absolute;
+top: var(--navbar-mobile-padding-top);
+right: clamp(2rem, 6vw, 3rem); /* Aumentado el margen derecho */
+width: 44px;
+height: 44px;
+display: flex;
+align-items: center;
+justify-content: center;
+background: linear-gradient(135deg, 
+    rgba(15, 20, 30, 0.95) 0%, 
+    rgba(21, 25, 34, 0.95) 100%
+);
+backdrop-filter: blur(20px);
+-webkit-backdrop-filter: blur(20px);
+border: 1px solid rgba(255, 69, 105, 0.2);
+border-radius: 12px;
+cursor: pointer;
+transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+box-shadow: 
+    0 6px 20px rgba(0, 0, 0, 0.3),
+    0 0 15px rgba(255, 69, 105, 0.15);
+}
+
+/* Selector de idioma con más espaciado interno */
+.nav__language-mobile {
+width: 100%;
+max-width: min(320px, calc(100vw - 4rem)); /* Reducir ancho máximo para más margen */
+margin-top: max(calc(env(safe-area-inset-top, 20px) + 60px), 80px);
+margin-bottom: var(--space-xl);
+padding: clamp(1.25rem, 4vw, 1.5rem); /* Aumentado el padding interno */
+background: linear-gradient(135deg, 
+    rgba(255, 45, 85, 0.08) 0%,
+    rgba(21, 25, 34, 0.95) 20%,
+    rgba(30, 35, 48, 0.98) 100%
+);
+backdrop-filter: blur(25px);
+-webkit-backdrop-filter: blur(25px);
+border: 1px solid rgba(255, 45, 85, 0.2);
+border-radius: 20px;
+box-shadow: 
+    0 15px 40px rgba(0, 0, 0, 0.4),
+    0 0 25px rgba(255, 45, 85, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+position: relative;
+overflow: hidden;
+order: 1;
+}
+
+/* CTA móvil con más espaciado */
+.nav__cta-mobile {
+width: 100%;
+max-width: min(320px, calc(100vw - 4rem)); /* Reducir ancho máximo para más margen */
+order: 2;
+margin-bottom: var(--space-xl);
+}
+
+/* Lista de navegación con más espaciado */
+.nav__list {
+flex-direction: column;
+gap: clamp(var(--space-md), 3vw, var(--space-lg));
+background: transparent !important;
+border: none !important;
+padding: 0 clamp(1rem, 3vw, 1.5rem) !important; /* Añadir padding horizontal */
+box-shadow: none !important;
+backdrop-filter: none !important;
+-webkit-backdrop-filter: none !important;
+width: 100%;
+max-width: min(350px, calc(100vw - 4rem)); /* Reducir ancho máximo para más margen */
+min-height: auto;
+overflow: hidden;
+position: static;
+bottom: auto;
+left: auto;
+transform: none;
+order: 3;
+margin-top: 0;
+}
+
+/* Enlaces con más padding interno */
+.nav__link {
+font-size: 1rem;
+padding: clamp(1rem, 3vw, 1.25rem) clamp(1.5rem, 4vw, 2rem); /* Aumentado el padding */
+background: transparent;
+border: 1px solid rgba(255, 255, 255, 0.1);
+border-radius: 25px;
+backdrop-filter: blur(10px);
+-webkit-backdrop-filter: blur(10px);
+transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+position: relative;
+overflow: hidden;
+text-align: center;
+font-weight: 600;
+text-transform: uppercase;
+letter-spacing: 0.5px;
+color: var(--text-secondary);
+margin: 0 clamp(0.5rem, 2vw, 1rem); /* Añadir margen horizontal a cada enlace */
+}
+
+}
+
+/* ===== AJUSTES PARA SECCIONES PRINCIPALES EN MÓVIL ===== */
+@media screen and (max-width: 1023px) {
+
+/* Hero section con más padding */
+.hero {
+padding: calc(var(--navbar-height-mobile) + var(--space-xl)) clamp(2rem, 6vw, 3rem) var(--mobile-section-padding); /* Aumentado padding horizontal */
+}
+
+/* Features section con más padding */
+.features {
+padding: var(--section-padding-y) clamp(2rem, 6vw, 3rem); /* Aumentado padding horizontal */
+}
+
+/* Videos section con más padding */
+.videos {
+padding: var(--section-padding-y) clamp(2rem, 6vw, 3rem); /* Aumentado padding horizontal */
+}
+
+/* FAQ section con más padding */
+.faq {
+padding: var(--section-padding-y) clamp(2rem, 6vw, 3rem); /* Aumentado padding horizontal */
+}
+
+/* Contact section con más padding */
+.contact {
+padding: var(--section-padding-y) clamp(2rem, 6vw, 3rem); /* Aumentado padding horizontal */
+}
+
+/* Contenido del hero con más espaciado */
+.hero__container {
+padding: 0 clamp(1rem, 3vw, 1.5rem); /* Añadir padding interno */
+}
+
+/* Botones de descarga con más espaciado */
+.hero__download {
+padding: 0 clamp(1rem, 3vw, 1.5rem); /* Añadir padding horizontal */
+}
+
+/* Grid de contacto con más espaciado */
+.contact__grid {
+padding: 0 clamp(1rem, 3vw, 1.5rem); /* Añadir padding horizontal */
+}
+
+/* Canales de contacto con más padding interno */
+.contact__channel {
+padding: clamp(1.5rem, 4vw, 2rem) clamp(1.25rem, 3vw, 1.5rem); /* Aumentado padding */
+margin: 0 clamp(0.5rem, 2vw, 1rem); /* Añadir margen horizontal */
+}
+
+/* FAQ items con más padding */
+.faq__question {
+padding: clamp(1rem, 3vw, 1.25rem) clamp(1.25rem, 4vw, 1.5rem); /* Aumentado padding */
+}
+
+.faq__answer.active {
+padding: 0 clamp(1.25rem, 4vw, 1.5rem) clamp(1rem, 3vw, 1.25rem); /* Aumentado padding */
+}
+
+/* Contenedor de búsqueda FAQ con más margen */
+.faq__search-container {
+padding: 0 clamp(1rem, 3vw, 1.5rem); /* Añadir padding horizontal */
+}
+
+}
+
+/* ===== AJUSTES ESPECÍFICOS PARA PANTALLAS PEQUEÑAS ===== */
+@media screen and (max-width: 768px) {
+.nav__menu {
+padding: var(--navbar-mobile-padding-top) clamp(1.5rem, 5vw, 2.5rem) 40px clamp(1.5rem, 5vw, 2.5rem);
+}
+
+.nav__close {
+right: clamp(1.5rem, 5vw, 2.5rem);
+}
+
+.nav__language-mobile,
+.nav__cta-mobile,
+.nav__list {
+max-width: min(300px, calc(100vw - 3rem));
+}
+
+.nav__link {
+margin: 0 clamp(0.25rem, 1.5vw, 0.75rem);
+}
+}
+
+@media screen and (max-width: 480px) {
+.nav__menu {
+padding: var(--navbar-mobile-padding-top) clamp(1.25rem, 4vw, 2rem) 40px clamp(1.25rem, 4vw, 2rem);
+}
+
+.nav__close {
+right: clamp(1.25rem, 4vw, 2rem);
+}
+
+.nav__language-mobile,
+.nav__cta-mobile,
+.nav__list {
+max-width: min(280px, calc(100vw - 2.5rem));
+}
+
+/* Secciones principales con menos padding en pantallas muy pequeñas */
+.hero,
+.features,
+.videos,
+.faq,
+.contact {
+padding-left: clamp(1.25rem, 4vw, 2rem);
+padding-right: clamp(1.25rem, 4vw, 2rem);
+}
+}
