@@ -1,4 +1,4 @@
-/* ===== VARIABLES FUTURISTAS OPTIMIZADAS ===== */
+/* ===== VARIABLES FUTURISTAS OPTIMIZADAS - SIN RESTRICCIONES ===== */
 :root {
 /* Colores principales */
 --primary-bg: #0a0d14;
@@ -62,7 +62,7 @@
 --font-primary: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
 --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 
-/* Espaciado */
+/* Espaciado fluido - SIN RESTRICCIONES */
 --space-xs: 0.375rem;
 --space-sm: 0.5rem;
 --space-md: 0.75rem;
@@ -73,6 +73,10 @@
 --space-4xl: 2.5rem;
 --space-5xl: 3rem;
 --space-6xl: 4rem;
+
+/* Padding fluido para secciones - SIN CONTENEDORES */
+--section-padding-x: clamp(1rem, 5vw, 8rem);
+--section-padding-y: clamp(3rem, 8vh, 8rem);
 
 /* Transiciones suaves */
 --transition: 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
@@ -108,7 +112,7 @@
 --phone-border-radius: clamp(30px, 6vw, 40px);
 }
 
-/* ===== RESET MEJORADO Y CORRECCIÓN DE SCROLL HORIZONTAL ===== */
+/* ===== RESET MEJORADO Y ELIMINACIÓN DE SCROLL HORIZONTAL ===== */
 *, *::before, *::after {
 margin: 0;
 padding: 0;
@@ -120,7 +124,6 @@ scroll-behavior: smooth;
 font-size: 16px;
 overflow-x: hidden;
 width: 100%;
-max-width: 100%;
 }
 
 body {
@@ -133,23 +136,10 @@ overflow-x: hidden;
 -moz-osx-font-smoothing: grayscale;
 position: relative;
 width: 100%;
-max-width: 100%;
 }
 
-/* ===== CORRECCIÓN GLOBAL PARA PREVENIR SCROLL HORIZONTAL ===== */
-.container,
-.hero__container,
-.features__grid,
-.videos__main-container,
-.faq__container,
-.contact__grid,
-.nav,
-.nav__menu,
-.nav__list {
-width: 100%;
-max-width: 100%;
-overflow-x: hidden;
-}
+/* ===== ELIMINACIÓN COMPLETA DE CONTENEDORES RESTRICTIVOS ===== */
+/* Todas las secciones ahora usan padding fluido en lugar de contenedores */
 
 /* ===== CLASES DE UTILIDAD PARA MOSTRAR/OCULTAR EN MÓVIL/DESKTOP ===== */
 .mobile-only {
@@ -338,19 +328,16 @@ transition: all var(--transition-slow);
 will-change: transform;
 }
 
-/* ===== NAVBAR FUTURISTA ULTRA RESPONSIVE ===== */
+/* ===== NAVBAR FUTURISTA ULTRA RESPONSIVE - SIN CONTENEDORES ===== */
 .nav {
-max-width: 1400px;
-margin: 0 auto;
 height: 100%;
-padding: 0 var(--space-xl);
+padding: 0 var(--section-padding-x);
 display: flex;
 justify-content: space-between;
 align-items: center;
 position: relative;
 pointer-events: none;
 width: 100%;
-max-width: 100%;
 overflow: hidden;
 }
 
@@ -398,7 +385,6 @@ transform: translate(-50%, -50%);
 pointer-events: auto;
 transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 width: auto;
-max-width: calc(100vw - 200px);
 overflow: hidden;
 }
 
@@ -420,7 +406,6 @@ box-shadow:
 0 0 0 1px rgba(255, 69, 105, 0.1),
 inset 0 1px 0 rgba(255, 255, 255, 0.08);
 width: auto;
-max-width: 100%;
 white-space: nowrap;
 }
 
@@ -1117,7 +1102,7 @@ opacity: 0.4;
 animation: grid-drift 180s linear infinite;
 }
 
-/* ===== HERO SECTION MEJORADO CON VIDEO COMPACTO ===== */
+/* ===== HERO SECTION MEJORADO - SIN CONTENEDORES ===== */
 .hero {
 min-height: 100vh;
 display: flex;
@@ -1127,9 +1112,8 @@ z-index: 2;
 background: 
 linear-gradient(135deg, var(--primary-bg) 0%, var(--secondary-bg) 100%);
 overflow: hidden;
-padding-top: calc(var(--navbar-height) + var(--space-xl));
+padding: calc(var(--navbar-height) + var(--space-xl)) var(--section-padding-x) var(--section-padding-y);
 width: 100%;
-max-width: 100%;
 }
 
 .hero::before {
@@ -1188,32 +1172,19 @@ animation: floating-orb-3 18s ease-in-out infinite;
 z-index: 1;
 }
 
-.container {
-max-width: 1400px;
-margin: 0 auto;
-padding: 0 var(--space-xl);
-position: relative;
-z-index: 3;
-width: 100%;
-max-width: 100%;
-overflow: hidden;
-}
-
 .hero__container {
 display: grid;
 grid-template-columns: 1.2fr 1fr;
 gap: var(--space-5xl);
 align-items: center;
 width: 100%;
-max-width: 100%;
-overflow: hidden;
+position: relative;
+z-index: 3;
 }
 
 .hero__content {
 animation: fadeInUp 1s ease-out;
 width: 100%;
-max-width: 100%;
-overflow: hidden;
 }
 
 /* ===== BOTONES DE ETIQUETAS NO CLICKEABLES ===== */
@@ -1511,8 +1482,6 @@ margin-bottom: var(--space-lg);
 align-items: center;
 justify-content: flex-start;
 width: 100%;
-max-width: 100%;
-overflow: hidden;
 }
 
 .download-btn {
@@ -1630,8 +1599,6 @@ align-items: center;
 position: relative;
 animation: fadeInRight 1s ease-out 0.3s both;
 width: 100%;
-max-width: 100%;
-overflow: hidden;
 }
 
 .hero__phone-container {
@@ -1734,15 +1701,14 @@ filter: brightness(1.02) contrast(1.05) saturate(1.08);
 display: none;
 }
 
-/* ===== SECCIÓN CARACTERÍSTICAS OPTIMIZADA ===== */
+/* ===== SECCIÓN CARACTERÍSTICAS OPTIMIZADA - SIN CONTENEDORES ===== */
 .features {
-padding: var(--space-6xl) 0;
+padding: var(--section-padding-y) var(--section-padding-x);
 position: relative;
 background: 
 linear-gradient(180deg, var(--primary-bg) 0%, var(--secondary-bg) 50%, var(--primary-bg) 100%);
 overflow: hidden;
 width: 100%;
-max-width: 100%;
 }
 
 .features::before {
@@ -1813,8 +1779,6 @@ gap: var(--space-6xl);
 position: relative;
 z-index: 3;
 width: 100%;
-max-width: 100%;
-overflow: hidden;
 }
 
 /* ===== CARACTERÍSTICAS INDIVIDUALES ===== */
@@ -1827,8 +1791,6 @@ opacity: 0;
 transform: translateY(50px);
 position: relative;
 width: 100%;
-max-width: 100%;
-overflow: hidden;
 }
 
 .feature.in-view {
@@ -1848,8 +1810,6 @@ direction: ltr;
 padding: 0;
 position: relative;
 width: 100%;
-max-width: 100%;
-overflow: hidden;
 }
 
 .feature__title {
@@ -2036,15 +1996,14 @@ background: #000000;
 border-radius: var(--phone-border-radius);
 }
 
-/* ===== SECCIÓN DE VIDEOS FUTURISTA ===== */
+/* ===== SECCIÓN DE VIDEOS FUTURISTA - SIN CONTENEDORES ===== */
 .videos {
-padding: var(--space-6xl) 0;
+padding: var(--section-padding-y) var(--section-padding-x);
 position: relative;
 background: 
 linear-gradient(180deg, var(--primary-bg) 0%, var(--secondary-bg) 50%, var(--primary-bg) 100%);
 overflow: hidden;
 width: 100%;
-max-width: 100%;
 }
 
 .videos::before {
@@ -2147,8 +2106,6 @@ margin-bottom: var(--space-6xl);
 position: relative;
 z-index: 3;
 width: 100%;
-max-width: 100%;
-overflow: hidden;
 }
 
 .videos__main-wrapper {
@@ -2235,7 +2192,6 @@ var(--shadow-2xl),
 inset 0 1px 0 rgba(255, 255, 255, 0.08);
 overflow: hidden;
 width: 100%;
-max-width: 100%;
 }
 
 .videos__player-container::before {
@@ -2487,7 +2443,6 @@ opacity: 0;
 transform: translateY(30px);
 animation: fadeInUp 1s ease-out 1s forwards;
 width: 100%;
-max-width: 100%;
 }
 
 .videos__cta::before {
@@ -2583,14 +2538,13 @@ text-transform: uppercase;
 letter-spacing: 1.5px;
 }
 
-/* ===== FAQ SECTION COMPACTA ===== */
+/* ===== FAQ SECTION COMPACTA - SIN CONTENEDORES ===== */
 .faq {
-padding: var(--space-6xl) 0;
+padding: var(--section-padding-y) var(--section-padding-x);
 position: relative;
 background: linear-gradient(180deg, var(--secondary-bg) 0%, var(--primary-bg) 100%);
 overflow: hidden;
 width: 100%;
-max-width: 100%;
 }
 
 .faq::before {
@@ -2690,7 +2644,6 @@ background: var(--starflex-crimson-glow);
 .faq__container {
 max-width: 1000px;
 margin: 0 auto;
-padding: 0 var(--space-xl);
 position: relative;
 z-index: 2;
 width: 100%;
@@ -2854,14 +2807,13 @@ font-size: 1rem;
 color: var(--text-secondary);
 }
 
-/* ===== SECCIÓN DE CONTACTO OPTIMIZADA ===== */
+/* ===== SECCIÓN DE CONTACTO OPTIMIZADA - SIN CONTENEDORES ===== */
 .contact {
-padding: var(--space-6xl) 0;
+padding: var(--section-padding-y) var(--section-padding-x);
 position: relative;
 background: linear-gradient(180deg, var(--primary-bg) 0%, var(--secondary-bg) 100%);
 overflow: hidden;
 width: 100%;
-max-width: 100%;
 }
 
 .contact::before {
@@ -3227,7 +3179,6 @@ align-items: center;
 gap: var(--space-2xl);
 max-width: 1200px;
 margin: 0 auto;
-padding: 0 var(--space-xl);
 width: 100%;
 overflow: hidden;
 }
@@ -4049,6 +4000,54 @@ box-shadow:
     0 10px 30px rgba(255, 45, 85, 0.5),
     0 0 20px rgba(255, 45, 85, 0.4) !important;
 }
+
+/* ===== RESPONSIVE PARA HERO ===== */
+.hero__container {
+grid-template-columns: 1fr;
+gap: var(--space-3xl);
+text-align: center;
+}
+
+.hero__content {
+order: 2;
+}
+
+.hero__media {
+order: 1;
+display: none;
+}
+
+/* ===== RESPONSIVE PARA CARACTERÍSTICAS ===== */
+.feature {
+grid-template-columns: 1fr;
+gap: var(--space-2xl);
+text-align: center;
+}
+
+.feature:nth-child(even) {
+direction: ltr;
+}
+
+.feature__phone {
+order: 1;
+margin: 0 auto;
+}
+
+.feature__content {
+order: 2;
+}
+
+/* ===== RESPONSIVE PARA CONTACTO ===== */
+.contact__grid {
+grid-template-columns: 1fr;
+gap: var(--space-xl);
+}
+
+.contact__footer-content {
+flex-direction: column;
+gap: var(--space-xl);
+text-align: center;
+}
 }
 
 @keyframes mobile-menu-glow {
@@ -4100,61 +4099,5 @@ display: none;
 
 .language-switcher {
 display: none;
-}
-
-/* CORRECCIONES ADICIONALES PARA MÓVIL */
-.container {
-width: 100%;
-max-width: 100%;
-overflow-x: hidden;
-}
-
-.hero__container {
-width: 100%;
-max-width: 100%;
-overflow-x: hidden;
-}
-
-.hero__download {
-width: 100%;
-max-width: 100%;
-overflow-x: hidden;
-flex-wrap: wrap;
-}
-
-.features__grid {
-width: 100%;
-max-width: 100%;
-overflow-x: hidden;
-}
-
-.feature {
-width: 100%;
-max-width: 100%;
-overflow-x: hidden;
-}
-
-.videos__main-container {
-width: 100%;
-max-width: 100%;
-overflow-x: hidden;
-}
-
-.faq__container {
-width: 100%;
-max-width: 100%;
-overflow-x: hidden;
-}
-
-.contact__grid {
-width: 100%;
-max-width: 100%;
-overflow-x: hidden;
-}
-
-.contact__footer-content {
-width: 100%;
-max-width: 100%;
-overflow-x: hidden;
 }
 }
