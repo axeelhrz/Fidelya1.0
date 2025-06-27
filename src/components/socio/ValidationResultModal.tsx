@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { CheckCircle, XCircle, Clock, AlertTriangle, Store, Gift, User } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, AlertTriangle, Gift, User } from 'lucide-react';
 import { ValidacionResponse } from '@/types/validacion';
 import { Dialog, DialogContent } from '@/components/ui/Dialog';
 import { Button } from '@/components/ui/Button';

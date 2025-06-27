@@ -61,18 +61,13 @@ import {
   Restore,
   Star,
   Sort,
-  ViewColumn,
   Refresh,
   PersonAdd,
   Print,
   DeleteForever,
-  Warning,
-  CheckCircle,
-  Cancel,
 } from '@mui/icons-material';
 import { Socio } from '@/types/socio';
 import { 
-  collection, 
   doc, 
   deleteDoc, 
   updateDoc, 
@@ -201,17 +196,37 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
 
       return matchesSearch && matchesStatus;
     }).sort((a, b) => {
-      let aValue: any = a[sortBy as keyof Socio];
-      let bValue: any = b[sortBy as keyof Socio];
+      let aValue: string | number | Date | undefined = a[sortBy as keyof Socio] as string | number | Date | undefined;
+      let bValue: string | number | Date | undefined = b[sortBy as keyof Socio] as string | number | Date | undefined;
 
       if (sortBy === 'creadoEn') {
-        aValue = aValue?.toDate?.() || aValue;
-        bValue = bValue?.toDate?.() || bValue;
+        if (
+          aValue &&
+          typeof aValue === 'object' &&
+          'toDate' in aValue &&
+          typeof (aValue as { toDate: () => Date }).toDate === 'function'
+        ) {
+          aValue = (aValue as { toDate: () => Date }).toDate();
+        }
+        if (
+          bValue &&
+          typeof bValue === 'object' &&
+          'toDate' in bValue &&
+          typeof (bValue as { toDate: () => Date }).toDate === 'function'
+        ) {
+          bValue = (bValue as { toDate: () => Date }).toDate();
+        }
       }
 
       if (sortOrder === 'asc') {
+        if (aValue === undefined && bValue === undefined) return 0;
+        if (aValue === undefined) return 1;
+        if (bValue === undefined) return -1;
         return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
       } else {
+        if (aValue === undefined && bValue === undefined) return 0;
+        if (aValue === undefined) return 1;
+        if (bValue === undefined) return -1;
         return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
       }
     });
@@ -1005,9 +1020,9 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
                   sx={{
                     justifyContent: 'flex-start',
                     textTransform: 'none',
-                    bgcolor: deleteType === 'permanent' ? alpha('#ef4444', 0.1) : 'transparent',
-                    borderColor: deleteType === 'permanent' ? '#ef4444' : '#e2e8f0',
-                    color: deleteType === 'permanent' ? '#ef4444' : '#64748b',
+                    bgcolor: (deleteType as string) === 'permanent' ? alpha('#ef4444', 0.1) : 'transparent',
+                    borderColor: (deleteType as string) === 'permanent' ? '#ef4444' : '#e2e8f0',
+                    color: deleteType as string === 'permanent' ? '#ef4444' : '#64748b',
                   }}
                 >
                   Eliminar permanentemente

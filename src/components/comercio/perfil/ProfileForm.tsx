@@ -41,26 +41,41 @@ import {
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useComercios } from '@/hooks/useComercios';
-import { comercioProfileSchema, ComercioProfileFormData } from '@/lib/validations/comercio';
+import { ComercioProfileFormData } from '@/lib/validations/comercio';
 import { CATEGORIAS_COMERCIO } from '@/types/comercio';
 import { ImageUploader } from './ImageUploader';
 import { QRSection } from './QRSection';
-import toast from 'react-hot-toast';
 
 interface ExtendedComercioProfileFormData extends ComercioProfileFormData {
   razonSocial?: string;
   cuit?: string;
   ubicacion?: string;
   emailContacto?: string;
-  visible?: boolean;
+  visible: boolean;
 }
 
-const extendedComercioProfileSchema = comercioProfileSchema.extend({
-  razonSocial: comercioProfileSchema.shape.nombreComercio.optional(),
-  cuit: comercioProfileSchema.shape.telefono.optional(),
-  ubicacion: comercioProfileSchema.shape.direccion.optional(),
-  emailContacto: comercioProfileSchema.shape.email.optional(),
-  visible: comercioProfileSchema.shape.email.optional().transform(() => true),
+import { z } from 'zod';
+
+const extendedComercioProfileSchema = z.object({
+  nombre: z.string(),
+  nombreComercio: z.string(),
+  email: z.string(),
+  categoria: z.string(),
+  direccion: z.string().optional(),
+  telefono: z.string().optional(),
+  horario: z.string().optional(),
+  descripcion: z.string().optional(),
+  sitioWeb: z.string().optional(),
+  redesSociales: z.object({
+    facebook: z.string().optional(),
+    instagram: z.string().optional(),
+    twitter: z.string().optional(),
+  }).optional(),
+  razonSocial: z.string().optional(),
+  cuit: z.string().optional(),
+  ubicacion: z.string().optional(),
+  emailContacto: z.string().optional(),
+  visible: z.boolean().default(true),
 });
 
 export const ProfileForm: React.FC = () => {
@@ -74,8 +89,7 @@ export const ProfileForm: React.FC = () => {
     handleSubmit,
     formState: { errors, isSubmitting, isDirty },
     reset,
-    watch,
-    setValue
+    watch
   } = useForm<ExtendedComercioProfileFormData>({
     resolver: zodResolver(extendedComercioProfileSchema),
     defaultValues: {

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   Box,
   Typography,
@@ -15,7 +15,6 @@ import {
   IconButton,
   Button,
   Chip,
-  Divider,
   CircularProgress,
   Alert,
 } from '@mui/material';
@@ -25,12 +24,8 @@ import {
   Group,
   PersonAdd,
   Analytics,
-  Star,
   Timeline,
-  BarChart,
-  PieChart,
   CalendarToday,
-  Assessment,
   Warning,
   CheckCircle,
   Info,
@@ -42,11 +37,7 @@ import {
   Speed,
   People,
   AccountBalance,
-  Schedule,
   ErrorOutline,
-  AutoGraph,
-  DataUsage,
-  Campaign,
 } from '@mui/icons-material';
 import {
   collection,
@@ -56,15 +47,12 @@ import {
   orderBy,
   limit,
   Timestamp,
-  getDocs,
-  doc,
-  getDoc
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/hooks/useAuth';
 import { useSocios } from '@/hooks/useSocios';
 import { useNotifications } from '@/hooks/useNotifications';
-import { format, subDays, startOfDay, endOfDay } from 'date-fns';
+import { format, subDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 interface OverviewDashboardProps {
@@ -78,7 +66,7 @@ interface ActivityLog {
   title: string;
   description: string;
   timestamp: Timestamp;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   userId?: string;
   userName?: string;
 }
@@ -699,23 +687,20 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
 
     const createSampleActivity = async () => {
       try {
-        const activitiesRef = collection(db, 'activities');
-        const sampleActivity = {
-          type: 'system_alert',
-          title: 'Sistema iniciado',
-          description: 'El sistema de gestión ha sido iniciado correctamente',
-          timestamp: Timestamp.now(),
-          asociacionId: user.uid,
-          userId: user.uid,
-          userName: user.email?.split('@')[0] || 'Sistema',
-          metadata: {
-            source: 'system',
-            level: 'info'
-          }
-        };
-
         // This would normally be done server-side
-        // await addDoc(activitiesRef, sampleActivity);
+        // await addDoc(activitiesRef, {
+        //   type: 'system_alert',
+        //   title: 'Sistema iniciado',
+        //   description: 'El sistema de gestión ha sido iniciado correctamente',
+        //   timestamp: Timestamp.now(),
+        //   asociacionId: user.uid,
+        //   userId: user.uid,
+        //   userName: user.email?.split('@')[0] || 'Sistema',
+        //   metadata: {
+        //     source: 'system',
+        //     level: 'info'
+        //   }
+        // });
       } catch (err) {
         console.error('Error creating sample activity:', err);
       }

@@ -10,8 +10,6 @@ import {
   Avatar,
   Chip,
   alpha,
-  Slide,
-  Fade,
 } from '@mui/material';
 import {
   Close,
@@ -94,6 +92,13 @@ export const RealTimeNotifications: React.FC<RealTimeNotificationsProps> = ({
     setVisibleNotifications(unreadNotifications);
   }, [notifications, dismissedIds, maxVisible]);
 
+  const handleDismiss = React.useCallback((id: string) => {
+    setDismissedIds(prev => new Set([...prev, id]));
+    if (onNotificationDismiss) {
+      onNotificationDismiss(id);
+    }
+  }, [onNotificationDismiss]);
+
   // Auto-dismiss notifications after 10 seconds for non-urgent ones
   useEffect(() => {
     const timers: NodeJS.Timeout[] = [];
@@ -110,14 +115,7 @@ export const RealTimeNotifications: React.FC<RealTimeNotificationsProps> = ({
     return () => {
       timers.forEach(timer => clearTimeout(timer));
     };
-  }, [visibleNotifications]);
-
-  const handleDismiss = (id: string) => {
-    setDismissedIds(prev => new Set([...prev, id]));
-    if (onNotificationDismiss) {
-      onNotificationDismiss(id);
-    }
-  };
+  }, [visibleNotifications, handleDismiss]);
 
   const handleClick = (notification: Notification) => {
     handleDismiss(notification.id);

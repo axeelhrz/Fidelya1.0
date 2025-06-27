@@ -18,7 +18,6 @@ import {
   IconButton,
   Avatar,
   alpha,
-  Divider,
   Switch,
   FormControlLabel,
   Accordion,
@@ -37,14 +36,11 @@ import {
   Warning,
   Error,
   Campaign,
-  Schedule,
   Link,
   Preview,
   ExpandMore,
-  Save,
   Refresh,
 } from '@mui/icons-material';
-import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { es } from 'date-fns/locale';
@@ -195,16 +191,19 @@ export const CreateNotificationDialog: React.FC<CreateNotificationDialogProps> =
     }
   }, [open]);
 
-  const handleInputChange = (
-    field: keyof NotificationFormData,
-    value: string | string[] | Date | undefined
-  ) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
-    }
-  };
+  const handleInputChange = React.useCallback(
+    (
+      field: keyof NotificationFormData,
+      value: string | string[] | Date | undefined
+    ) => {
+      setFormData(prev => ({ ...prev, [field]: value }));
+      // Clear error when user starts typing
+      if (errors[field]) {
+        setErrors(prev => ({ ...prev, [field]: '' }));
+      }
+    },
+    [errors]
+  );
 
   const handleAddTag = () => {
     if (tagInput.trim() && !formData.tags?.includes(tagInput.trim())) {
@@ -223,18 +222,18 @@ export const CreateNotificationDialog: React.FC<CreateNotificationDialogProps> =
     }));
   };
 
-  const handleExpirationChange = () => {
+  const handleExpirationChange = React.useCallback(() => {
     if (expirationDate && expirationTime) {
       const dateTime = new Date(`${expirationDate}T${expirationTime}`);
       handleInputChange('expiresAt', dateTime);
     }
-  };
+  }, [expirationDate, expirationTime, handleInputChange]);
 
   useEffect(() => {
     if (hasExpiration) {
       handleExpirationChange();
     }
-  }, [expirationDate, expirationTime, hasExpiration]);
+  }, [expirationDate, expirationTime, hasExpiration, handleExpirationChange]);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};

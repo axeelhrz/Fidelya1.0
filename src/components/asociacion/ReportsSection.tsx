@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   Box,
   Typography,
@@ -9,7 +9,6 @@ import {
   CardContent,
   alpha,
   Avatar,
-  Stack,
   Chip,
   Button,
   IconButton,
@@ -23,10 +22,7 @@ import {
   DialogContent,
   DialogActions,
   CircularProgress,
-  Alert,
-  Tooltip,
   LinearProgress,
-  Badge,
 } from '@mui/material';
 import {
   Assessment,
@@ -36,7 +32,6 @@ import {
   Refresh,
   FilterList,
   CalendarToday,
-  BarChart,
   Timeline,
   Group,
   Star,
@@ -45,30 +40,24 @@ import {
   AttachMoney,
   Speed,
   DataUsage,
-  TableChart,
   Visibility,
   GetApp,
   Close,
   Schedule,
   CheckCircle,
   Warning,
-  Info,
-  PictureAsPdf,
   TableView,
   InsertChart,
   Description,
   CloudDownload,
   Analytics,
-  AutoGraph,
-  Insights,
   Delete,
-  Share,
 } from '@mui/icons-material';
 import { Timestamp } from 'firebase/firestore';
 import { useAuth } from '@/hooks/useAuth';
 import { useSocios } from '@/hooks/useSocios';
 import { reportsService, ReportData } from '@/services/reports.service';
-import { format, subDays, startOfDay, endOfDay, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
+import { format, subDays, startOfDay, endOfDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 import toast from 'react-hot-toast';
 
@@ -704,7 +693,6 @@ export const ReportsSection: React.FC<ReportsSectionProps> = ({
   const { user } = useAuth();
   const { stats } = useSocios();
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [dateRange, setDateRange] = useState('last30days');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [generatedReports, setGeneratedReports] = useState<ReportData[]>([]);
@@ -867,7 +855,7 @@ export const ReportsSection: React.FC<ReportsSectionProps> = ({
   const getDateRangeTimestamps = (range: string) => {
     const now = new Date();
     let startDate: Date;
-    let endDate = now;
+    const endDate = now;
 
     switch (range) {
       case 'last7days':
@@ -906,7 +894,7 @@ export const ReportsSection: React.FC<ReportsSectionProps> = ({
 
       const { startDate, endDate } = getDateRangeTimestamps(dateRange);
 
-      const reportId = await reportsService.generateReport(
+      await reportsService.generateReport(
         templateId,
         user.uid,
         user.uid, // Using user.uid as asociacionId for now
@@ -995,16 +983,6 @@ export const ReportsSection: React.FC<ReportsSectionProps> = ({
       loading: propLoading
     }
   ], [reportTemplates.length, generatedReports.length, stats.total, propLoading]);
-
-  if (error) {
-    return (
-      <Box sx={{ p: 4 }}>
-        <Alert severity="error" sx={{ mb: 4 }}>
-          {error}
-        </Alert>
-      </Box>
-    );
-  }
 
   return (
     <Box sx={{ p: 4, maxWidth: '100%', overflow: 'hidden' }}>

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   Box,
   Typography,
@@ -22,9 +22,7 @@ import {
   ListItemText,
   Switch,
   FormControlLabel,
-  Alert,
   Tooltip,
-  Divider,
   Badge,
   Dialog,
   DialogTitle,
@@ -42,7 +40,6 @@ import {
   Info,
   Star,
   Speed,
-  Timeline,
   SmartToy,
   Memory,
   Refresh,
@@ -53,40 +50,20 @@ import {
   AttachMoney,
   DataUsage,
   AutoAwesome,
-  Recommend,
   Close,
-  PlayArrow,
-  Pause,
-  Settings,
-  CloudSync,
-  Analytics,
-  Insights,
-  BubbleChart,
   TrendingFlat,
   ErrorOutline,
   NotificationsActive,
-  Campaign,
-  PersonAdd,
-  Email,
 } from '@mui/icons-material';
 import {
   collection,
-  query,
-  where,
-  onSnapshot,
-  orderBy,
-  limit,
   Timestamp,
   addDoc,
-  updateDoc,
-  doc,
-  getDocs,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/hooks/useAuth';
 import { useSocios } from '@/hooks/useSocios';
-import { format, subDays, startOfDay, endOfDay, differenceInDays } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { format, subDays } from 'date-fns';
 
 interface InsightsIAProps {
   loading?: boolean;
@@ -105,7 +82,7 @@ interface AIInsight {
   gradient: string;
   createdAt: Timestamp;
   status: 'new' | 'viewed' | 'applied' | 'dismissed';
-  data: Record<string, any>;
+  data: Record<string, string | number | boolean | null | undefined>;
   actionable: boolean;
   estimatedValue?: number;
   timeframe?: string;
@@ -136,7 +113,6 @@ const InsightCard: React.FC<InsightCardProps> = ({
   delay,
   onViewDetails,
   onApply,
-  onDismiss,
   isProcessing = false
 }) => {
   const getImpactColor = () => {
@@ -171,15 +147,6 @@ const InsightCard: React.FC<InsightCardProps> = ({
     }
   };
 
-  const getStatusColor = () => {
-    switch (insight.status) {
-      case 'new': return '#6366f1';
-      case 'viewed': return '#94a3b8';
-      case 'applied': return '#10b981';
-      case 'dismissed': return '#ef4444';
-      default: return '#6b7280';
-    }
-  };
 
   return (
     <motion.div
@@ -807,9 +774,8 @@ export const InsightsIA: React.FC<InsightsIAProps> = ({
   loading: propLoading = false
 }) => {
   const { user } = useAuth();
-  const { stats, socios } = useSocios();
+  const { stats } = useSocios();
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [aiInsights, setAiInsights] = useState<AIInsight[]>([]);
   const [aiModel, setAiModel] = useState<AIModel | null>(null);
   const [autoRefresh, setAutoRefresh] = useState(true);
@@ -1131,16 +1097,6 @@ export const InsightsIA: React.FC<InsightsIAProps> = ({
     aiInsights.filter(insight => insight.impact === 'critical' || insight.impact === 'high').slice(0, 3),
     [aiInsights]
   );
-
-  if (error) {
-    return (
-      <Box sx={{ p: 4 }}>
-        <Alert severity="error" sx={{ mb: 4 }}>
-          {error}
-        </Alert>
-      </Box>
-    );
-  }
 
   return (
     <Box sx={{ p: 4, maxWidth: '100%', overflow: 'hidden' }}>
@@ -1542,7 +1498,7 @@ export const InsightsIA: React.FC<InsightsIAProps> = ({
                     </Box>
                   ) : (
                     <List dense>
-                      {priorityInsights.map((insight, index) => (
+                      {priorityInsights.map((insight) => (
                         <ListItem key={insight.id} sx={{ px: 0, py: 1 }}>
                           <ListItemIcon>
                             <Avatar
@@ -1554,7 +1510,9 @@ export const InsightsIA: React.FC<InsightsIAProps> = ({
                                 borderRadius: 2,
                               }}
                             >
-                              {React.cloneElement(insight.icon as React.ReactElement, { sx: { fontSize: 16 } })}
+                              {React.isValidElement(insight.icon) && (insight.icon as React.ReactElement).type
+                                ? React.cloneElement(insight.icon as React.ReactElement<unknown>)
+                                : insight.icon}
                             </Avatar>
                           </ListItemIcon>
                           <ListItemText

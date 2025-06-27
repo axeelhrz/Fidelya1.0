@@ -101,18 +101,19 @@ export const TopBenefits: React.FC<TopBenefitsProps> = ({ data }) => {
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.3, delay: index * 0.05 }}
-                      component={TableRow}
-                      sx={{
-                        '&:hover': {
-                          bgcolor: alpha('#10b981', 0.02),
-                        },
-                        ...(index < 3 && {
-                          bgcolor: alpha('#f59e0b', 0.03),
-                        }),
-                      }}
                     >
-                      <TableCell>
-                        <Stack direction="row" alignItems="center" spacing={1}>
+                      <TableRow
+                        sx={{
+                          '&:hover': {
+                            bgcolor: alpha('#10b981', 0.02),
+                          },
+                          ...(index < 3 && {
+                            bgcolor: alpha('#f59e0b', 0.03),
+                          }),
+                        }}
+                      >
+                        <TableCell>
+                          <Stack direction="row" alignItems="center" spacing={1}>
                           <Box
                             sx={{
                               width: 28,
@@ -185,25 +186,26 @@ export const TopBenefits: React.FC<TopBenefitsProps> = ({ data }) => {
                       </TableCell>
                       
                       <TableCell align="center">
-                        <Chip
-                          icon={benefit.estado === 'activo' ? 
-                            <CheckCircle sx={{ fontSize: 14 }} /> : 
-                            <Cancel sx={{ fontSize: 14 }} />
-                          }
-                          label={benefit.estado === 'activo' ? 'Activo' : 'Inactivo'}
-                          size="small"
-                          sx={{
-                            bgcolor: benefit.estado === 'activo' ? 
-                              alpha('#10b981', 0.1) : 
-                              alpha('#ef4444', 0.1),
-                            color: benefit.estado === 'activo' ? '#059669' : '#dc2626',
-                            fontWeight: 600,
-                            '& .MuiChip-icon': {
-                              fontSize: 14,
+                          <Chip
+                            icon={benefit.estado === 'activo' ? 
+                              <CheckCircle sx={{ fontSize: 14 }} /> : 
+                              <Cancel sx={{ fontSize: 14 }} />
                             }
-                          }}
-                        />
-                      </TableCell>
+                            label={benefit.estado === 'activo' ? 'Activo' : 'Inactivo'}
+                            size="small"
+                            sx={{
+                              bgcolor: benefit.estado === 'activo' ? 
+                                alpha('#10b981', 0.1) : 
+                                alpha('#ef4444', 0.1),
+                              color: benefit.estado === 'activo' ? '#059669' : '#dc2626',
+                              fontWeight: 600,
+                              '& .MuiChip-icon': {
+                                fontSize: 14,
+                              }
+                            }}
+                          />
+                        </TableCell>
+                      </TableRow>
                     </motion.tr>
                   ))}
                 </TableBody>
@@ -238,7 +240,7 @@ export const TopBenefits: React.FC<TopBenefitsProps> = ({ data }) => {
                 🏆 Beneficio Estrella
               </Typography>
               <Typography variant="caption" sx={{ color: '#065f46' }}>
-                "{data[0]?.nombre}" es tu beneficio más popular con {data[0]?.usos} usos. 
+                &quot;{data[0]?.nombre}&quot; es tu beneficio más popular con {data[0]?.usos} usos. 
                 ¡Considera crear ofertas similares para maximizar el engagement!
               </Typography>
             </Box>

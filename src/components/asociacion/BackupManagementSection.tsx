@@ -147,7 +147,9 @@ const BackupCard: React.FC<BackupCardProps> = ({
   };
 
   // Safe date formatting function
-  const formatCreatedDate = (createdAt: any) => {
+  const formatCreatedDate = (
+    createdAt: Date | { toDate: () => Date } | number | string | undefined | null
+  ) => {
     try {
       if (!createdAt) return 'Fecha desconocida';
       
@@ -157,8 +159,12 @@ const BackupCard: React.FC<BackupCardProps> = ({
       }
       
       // If it's a Firestore Timestamp with toDate method
-      if (createdAt && typeof createdAt.toDate === 'function') {
-        return formatDistanceToNow(createdAt.toDate(), { addSuffix: true, locale: es });
+      if (
+        createdAt &&
+        typeof createdAt === 'object' &&
+        typeof (createdAt as { toDate?: () => Date }).toDate === 'function'
+      ) {
+        return formatDistanceToNow((createdAt as { toDate: () => Date }).toDate(), { addSuffix: true, locale: es });
       }
       
       // If it's a timestamp number
@@ -638,7 +644,7 @@ export const BackupManagementSection: React.FC<BackupManagementSectionProps> = (
   // Memoize stats with stable dependencies
   const stats = useMemo(() => {
     return getBackupStats();
-  }, [backups]); // Only depend on backups array, not the function
+  }, [getBackupStats]); // Only depend on getBackupStats
 
   const filteredBackups = useMemo(() => {
     let filtered = [...backups]; // Create a new array to avoid mutations
@@ -667,18 +673,34 @@ export const BackupManagementSection: React.FC<BackupManagementSectionProps> = (
 
     // Apply sort
     filtered.sort((a, b) => {
-      let aValue: any = a[sortField as keyof BackupMetadata];
-      let bValue: any = b[sortField as keyof BackupMetadata];
+      let aValue: unknown = a[sortField as keyof BackupMetadata];
+      let bValue: unknown = b[sortField as keyof BackupMetadata];
 
       if (sortField === 'createdAt') {
-        aValue = aValue?.toMillis?.() || 0;
-        bValue = bValue?.toMillis?.() || 0;
+        type BackupDateType = Date | { toMillis: () => number } | number | string | undefined | null;
+        const getMillis = (val: BackupDateType): number => {
+          if (val && typeof (val as { toMillis?: () => number }).toMillis === 'function') {
+            return (val as { toMillis: () => number }).toMillis();
+          }
+          if (val instanceof Date) {
+            return val.getTime();
+          }
+          if (typeof val === 'number') {
+            return val;
+          }
+          if (typeof val === 'string') {
+            return new Date(val).getTime();
+          }
+          return 0;
+        };
+        aValue = getMillis(aValue as BackupDateType);
+        bValue = getMillis(bValue as BackupDateType);
       }
 
       if (sortOrder === 'asc') {
-        return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+        return (aValue as number | string) < (bValue as number | string) ? -1 : (aValue as number | string) > (bValue as number | string) ? 1 : 0;
       } else {
-        return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
+        return (aValue as number | string) > (bValue as number | string) ? -1 : (aValue as number | string) < (bValue as number | string) ? 1 : 0;
       }
     });
 

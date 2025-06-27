@@ -29,6 +29,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from 'recharts';
+import type { TooltipProps } from 'recharts';
 
 interface ValidationsOverTimeProps {
   data: Array<{
@@ -50,8 +51,7 @@ export const ValidationsOverTime: React.FC<ValidationsOverTimeProps> = ({ data }
       setChartType(newType);
     }
   };
-
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
     if (active && payload && payload.length) {
       return (
         <Box
@@ -67,7 +67,7 @@ export const ValidationsOverTime: React.FC<ValidationsOverTimeProps> = ({ data }
           <Typography variant="body2" sx={{ fontWeight: 600, color: '#1e293b', mb: 1 }}>
             {label}
           </Typography>
-          {payload.map((entry: any, index: number) => (
+          {Array.isArray(payload) && payload.map((entry, index) => (
             <Stack key={index} direction="row" justifyContent="space-between" alignItems="center">
               <Stack direction="row" alignItems="center" spacing={1}>
                 <Box

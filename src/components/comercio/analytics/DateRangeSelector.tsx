@@ -16,7 +16,7 @@ import {
   CalendarToday,
   Close,
 } from '@mui/icons-material';
-import { DateRangePicker } from 'react-date-range';
+import { DateRangePicker, RangeKeyDict } from 'react-date-range';
 import { format, subDays, isValid } from 'date-fns';
 import { es } from 'date-fns/locale';
 import 'react-date-range/dist/styles.css';
@@ -195,11 +195,19 @@ export const DateRangeSelector: React.FC<DateRangeSelectorProps> = ({
           <Box sx={{ p: 2 }}>
             <DateRangePicker
               ranges={tempRange}
-              onChange={(ranges: any) => setTempRange([ranges.selection])}
+              onChange={(ranges: RangeKeyDict) => {
+                const { startDate, endDate, key } = ranges.selection;
+                setTempRange([
+                  {
+                    startDate: startDate ?? new Date(),
+                    endDate: endDate ?? new Date(),
+                    key: key ?? 'selection',
+                  },
+                ]);
+              }}
               locale={es}
               months={2}
               direction="horizontal"
-              showSelectionPreview={true}
               moveRangeOnFirstSelection={false}
               editableDateInputs={true}
               rangeColors={['#06b6d4']}

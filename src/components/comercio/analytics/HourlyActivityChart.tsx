@@ -31,40 +31,42 @@ interface HourlyActivityChartProps {
   }>;
 }
 
-export const HourlyActivityChart: React.FC<HourlyActivityChartProps> = ({ data }) => {
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <Box
-          sx={{
-            bgcolor: 'white',
-            border: '1px solid #f1f5f9',
-            borderRadius: 2,
-            p: 2,
-            boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-            minWidth: 150,
-          }}
-        >
-          <Typography variant="body2" sx={{ fontWeight: 600, color: '#1e293b', mb: 1 }}>
-            {label}
-          </Typography>
-          <Stack direction="row" justifyContent="space-between" alignItems="center">
-            <Typography variant="caption" sx={{ color: '#64748b' }}>
-              Validaciones:
-            </Typography>
-            <Typography variant="caption" sx={{ fontWeight: 600, color: '#1e293b' }}>
-              {payload[0].value}
-            </Typography>
-          </Stack>
-        </Box>
-      );
-    }
-    return null;
-  };
+import type { TooltipProps } from 'recharts';
 
+const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
+  if (active && payload && payload.length) {
+    return (
+      <Box
+        sx={{
+          bgcolor: 'white',
+          border: '1px solid #f1f5f9',
+          borderRadius: 2,
+          p: 2,
+          boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+          minWidth: 150,
+        }}
+      >
+        <Typography variant="body2" sx={{ fontWeight: 600, color: '#1e293b', mb: 1 }}>
+          {label}
+        </Typography>
+        <Stack direction="row" justifyContent="space-between" alignItems="center">
+          <Typography variant="caption" sx={{ color: '#64748b' }}>
+            Validaciones:
+          </Typography>
+          <Typography variant="caption" sx={{ fontWeight: 600, color: '#1e293b' }}>
+            {payload[0].value}
+          </Typography>
+        </Stack>
+      </Box>
+    );
+  }
+  return null;
+};
+
+const HourlyActivityChart: React.FC<HourlyActivityChartProps> = ({ data }) => {
   // Find peak hours
-  const maxValue = Math.max(...data.map(d => d.total));
-  const peakHours = data.filter(d => d.total === maxValue);
+  const maxValue = Math.max(...data.map((d) => d.total));
+  const peakHours = data.filter((d) => d.total === maxValue);
 
   return (
     <motion.div
@@ -156,3 +158,5 @@ export const HourlyActivityChart: React.FC<HourlyActivityChartProps> = ({ data }
     </motion.div>
   );
 };
+
+export default HourlyActivityChart;

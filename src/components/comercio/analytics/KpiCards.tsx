@@ -10,11 +10,9 @@ import {
   TrendingUp,
   Analytics,
   Speed,
-  Timeline,
   AttachMoney,
   Group,
   Star,
-  Assessment,
 } from '@mui/icons-material';
 import UnifiedMetricsCard from '@/components/ui/UnifiedMetricsCard';
 

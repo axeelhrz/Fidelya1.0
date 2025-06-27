@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   Box,
   Typography,
@@ -15,7 +15,6 @@ import {
   Button,
   IconButton,
   Paper,
-  Divider,
   CircularProgress,
   Alert,
   Select,
@@ -38,17 +37,7 @@ import {
   CalendarToday,
   Download,
   Refresh,
-  FilterList,
-  Insights,
   Timeline,
-  Assessment,
-  DataUsage,
-  AutoGraph,
-  AccountBalance,
-  PersonAdd,
-  Warning,
-  CheckCircle,
-  ErrorOutline,
 } from '@mui/icons-material';
 import {
   collection,
@@ -56,17 +45,12 @@ import {
   where,
   onSnapshot,
   orderBy,
-  limit,
   Timestamp,
-  startAfter,
-  getDocs,
-  doc,
-  getDoc
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/hooks/useAuth';
 import { useSocios } from '@/hooks/useSocios';
-import { format, subDays, startOfDay, endOfDay, eachDayOfInterval, getHours, startOfMonth, endOfMonth } from 'date-fns';
+import { format, subDays, startOfDay, endOfDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 interface AdvancedAnalyticsProps {
@@ -297,14 +281,39 @@ const MetricCard: React.FC<MetricCardProps> = ({
 const ChartCard: React.FC<{
   title: string;
   subtitle?: string;
-  data: any[];
+  data: (
+    | { level: string; count: number; percentage: number }
+    | { name: string; value: number; color: string; percentage: number }
+    | { month: string; members: number; growth: number }
+    | { date: string; registrations: number; activations: number; expirations: number }
+  )[];
   color: string;
   type: 'bar' | 'line' | 'pie' | 'timeline';
   icon: React.ReactNode;
   loading?: boolean;
   onExport?: () => void;
 }> = ({ title, subtitle, data, color, type, icon, loading = false, onExport }) => {
-  const maxValue = Math.max(...data.map(d => d.value || d.members || d.count || 0));
+  // Determine max value based on chart type and data shape
+  type ChartDataType =
+    | { level: string; count: number; percentage: number }
+    | { name: string; value: number; color: string; percentage: number }
+    | { month: string; members: number; growth: number }
+    | { date: string; registrations: number; activations: number; expirations: number };
+
+  const maxValue = useMemo(() => {
+    switch (type) {
+      case 'bar':
+        return Math.max(...data.map((d: ChartDataType) => 'count' in d ? d.count : 0));
+      case 'pie':
+        return Math.max(...data.map((d: ChartDataType) => 'value' in d ? d.value : 0));
+      case 'line':
+        return Math.max(...data.map((d: ChartDataType) => 'members' in d ? d.members : 0));
+      case 'timeline':
+        return Math.max(...data.map((d: ChartDataType) => 'registrations' in d ? d.registrations : 0));
+      default:
+        return 0;
+    }
+  }, [data, type]);
 
   const renderChart = () => {
     if (loading) {
@@ -324,15 +333,35 @@ const ChartCard: React.FC<{
                 <Box key={index}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
                     <Typography variant="body2" sx={{ fontWeight: 600, color: '#475569', fontSize: '0.9rem' }}>
-                      {item.level || item.name || item.category}
+                      {'level' in item
+                        ? item.level
+                        : 'name' in item
+                        ? item.name
+                        : 'month' in item
+                        ? item.month
+                        : 'date' in item
+                        ? item.date
+                        : ''}
                     </Typography>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <Typography variant="body2" sx={{ fontWeight: 700, color: '#1e293b', fontSize: '0.9rem' }}>
-                        {item.count || item.value}
+                        {'count' in item
+                          ? item.count
+                          : 'value' in item
+                          ? item.value
+                          : 'members' in item
+                          ? item.members
+                          : 'registrations' in item
+                          ? item.registrations
+                          : ''}
                       </Typography>
-                      {item.percentage && (
+                      {'percentage' in item && typeof item.percentage === 'number' && (
                         <Chip
-                          label={`${item.percentage}%`}
+                          label={
+                            'percentage' in item && typeof item.percentage === 'number'
+                              ? `${item.percentage}%`
+                              : ''
+                          }
                           size="small"
                           sx={{
                             bgcolor: alpha(color, 0.1),
@@ -347,7 +376,17 @@ const ChartCard: React.FC<{
                   </Box>
                   <LinearProgress
                     variant="determinate"
-                    value={((item.count || item.value) / maxValue) * 100}
+                    value={
+                      'count' in item
+                        ? (item.count / maxValue) * 100
+                        : 'value' in item
+                        ? (item.value / maxValue) * 100
+                        : 'members' in item
+                        ? (item.members / maxValue) * 100
+                        : 'registrations' in item
+                        ? (item.registrations / maxValue) * 100
+                        : 0
+                    }
                     sx={{
                       height: 8,
                       borderRadius: 4,
@@ -376,24 +415,36 @@ const ChartCard: React.FC<{
                         width: 12,
                         height: 12,
                         borderRadius: '50%',
-                        bgcolor: item.color || color,
-                        boxShadow: `0 2px 8px ${alpha(item.color || color, 0.3)}`,
+                        bgcolor: 'color' in item ? item.color : color,
+                        boxShadow: `0 2px 8px ${alpha('color' in item ? item.color : color, 0.3)}`,
                       }}
                     />
                     <Typography variant="body2" sx={{ fontWeight: 600, color: '#475569', fontSize: '0.9rem' }}>
-                      {item.name}
+                      {'name' in item ? item.name : 'level' in item ? item.level : 'month' in item ? item.month : 'date' in item ? item.date : ''}
                     </Typography>
                   </Box>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                     <Typography variant="body2" sx={{ fontWeight: 700, color: '#1e293b', fontSize: '0.9rem' }}>
-                      {item.value}
+                      {'value' in item
+                        ? item.value
+                        : 'count' in item
+                        ? item.count
+                        : 'members' in item
+                        ? item.members
+                        : 'registrations' in item
+                        ? item.registrations
+                        : ''}
                     </Typography>
                     <Chip
-                      label={`${item.percentage}%`}
+                      label={
+                        'percentage' in item && typeof item.percentage === 'number'
+                          ? `${item.percentage}%`
+                          : ''
+                      }
                       size="small"
                       sx={{
-                        bgcolor: alpha(item.color || color, 0.1),
-                        color: item.color || color,
+                        bgcolor: alpha('color' in item && item.color ? item.color : color, 0.1),
+                        color: 'color' in item && item.color ? item.color : color,
                         fontWeight: 700,
                         fontSize: '0.7rem',
                         height: 20,
@@ -412,13 +463,23 @@ const ChartCard: React.FC<{
             {data.map((item, index) => (
               <Tooltip
                 key={index}
-                title={`${item.month}: ${item.members} miembros (${item.growth > 0 ? '+' : ''}${item.growth}%)`}
+                title={
+                  'month' in item && 'members' in item && 'growth' in item
+                    ? `${item.month}: ${item.members} miembros (${item.growth > 0 ? '+' : ''}${item.growth}%)`
+                    : ''
+                }
                 arrow
               >
                 <Box
                   sx={{
                     flex: 1,
-                    height: `${((item.members || item.value) / maxValue) * 100}%`,
+                    height: `${(
+                      'members' in item
+                        ? item.members
+                        : 'value' in item
+                        ? item.value
+                        : 0
+                    ) / maxValue * 100}%`,
                     bgcolor: alpha(color, 0.7),
                     borderRadius: '4px 4px 0 0',
                     minHeight: 8,
@@ -444,7 +505,15 @@ const ChartCard: React.FC<{
                       whiteSpace: 'nowrap',
                     }}
                   >
-                    {item.month || item.date}
+                    {'month' in item
+                      ? item.month
+                      : 'date' in item
+                      ? item.date
+                      : 'name' in item
+                      ? item.name
+                      : 'level' in item
+                      ? item.level
+                      : ''}
                   </Typography>
                 </Box>
               </Tooltip>
@@ -460,22 +529,34 @@ const ChartCard: React.FC<{
                 <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
                   <Box sx={{ minWidth: 60 }}>
                     <Typography variant="caption" sx={{ color: '#94a3b8', fontWeight: 600, fontSize: '0.75rem' }}>
-                      {item.date}
+                      {'date' in item
+                        ? item.date
+                        : 'month' in item
+                        ? item.month
+                        : 'name' in item
+                        ? item.name
+                        : 'level' in item
+                        ? item.level
+                        : ''}
                     </Typography>
                   </Box>
                   <Box sx={{ flex: 1 }}>
                     <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
-                      <Chip
-                        label={`+${item.registrations}`}
-                        size="small"
-                        sx={{ bgcolor: alpha('#10b981', 0.1), color: '#10b981', fontSize: '0.7rem', height: 20 }}
-                      />
-                      <Chip
-                        label={`${item.activations}`}
-                        size="small"
-                        sx={{ bgcolor: alpha('#6366f1', 0.1), color: '#6366f1', fontSize: '0.7rem', height: 20 }}
-                      />
-                      {item.expirations > 0 && (
+                      {('registrations' in item) && (
+                        <Chip
+                          label={`+${item.registrations}`}
+                          size="small"
+                          sx={{ bgcolor: alpha('#10b981', 0.1), color: '#10b981', fontSize: '0.7rem', height: 20 }}
+                        />
+                      )}
+                      {('activations' in item) && (
+                        <Chip
+                          label={`${item.activations}`}
+                          size="small"
+                          sx={{ bgcolor: alpha('#6366f1', 0.1), color: '#6366f1', fontSize: '0.7rem', height: 20 }}
+                        />
+                      )}
+                      {('expirations' in item) && item.expirations > 0 && (
                         <Chip
                           label={`-${item.expirations}`}
                           size="small"
@@ -485,7 +566,17 @@ const ChartCard: React.FC<{
                     </Box>
                     <LinearProgress
                       variant="determinate"
-                      value={(item.registrations / Math.max(...data.map(d => d.registrations))) * 100}
+                      value={
+                        'registrations' in item
+                          ? (item.registrations /
+                              Math.max(
+                                ...data
+                                  .filter((d): d is { date: string; registrations: number; activations: number; expirations: number } => 'registrations' in d)
+                                  .map(d => d.registrations)
+                              )
+                            ) * 100
+                          : 0
+                      }
                       sx={{
                         height: 4,
                         borderRadius: 2,
@@ -591,7 +682,7 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
   loading: propLoading = false
 }) => {
   const { user } = useAuth();
-  const { stats, socios } = useSocios();
+  const { stats } = useSocios();
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData>({
     totalMembers: 0,
     activeMembers: 0,
@@ -639,7 +730,13 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
         );
 
         const unsubscribe = onSnapshot(activitiesQuery, (snapshot) => {
-          const activities = snapshot.docs.map(doc => ({
+          interface Activity {
+            id: string;
+            type?: string;
+            timestamp?: Timestamp;
+            [key: string]: unknown;
+          }
+          const activities: Activity[] = snapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
           }));
@@ -660,11 +757,6 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
           // Generate monthly trends
           const monthlyTrends = Array.from({ length: 6 }, (_, i) => {
             const date = subDays(endDate, (5 - i) * 30);
-            const monthActivities = activities.filter(a => {
-              const activityDate = a.timestamp.toDate();
-              return activityDate >= startOfMonth(date) && activityDate <= endOfMonth(date);
-            });
-            
             return {
               month: format(date, 'MMM', { locale: es }),
               members: Math.floor(stats.total * (0.8 + Math.random() * 0.4)), // Mock data
@@ -723,6 +815,7 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
           const activityTimeline = Array.from({ length: 7 }, (_, i) => {
             const date = subDays(endDate, 6 - i);
             const dayActivities = activities.filter(a => {
+              if (!a.timestamp) return false;
               const activityDate = a.timestamp.toDate();
               return activityDate >= startOfDay(date) && activityDate <= endOfDay(date);
             });

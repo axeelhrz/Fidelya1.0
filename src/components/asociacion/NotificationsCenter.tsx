@@ -34,7 +34,6 @@ import {
   Refresh,
   Settings,
   TrendingUp,
-  Schedule,
   NotificationsActive,
   VolumeUp,
   VolumeOff,
@@ -79,18 +78,15 @@ export const NotificationsCenter: React.FC<NotificationsCenterProps> = ({
   const [bulkMenuAnchor, setBulkMenuAnchor] = useState<null | HTMLElement>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
-  const [autoRefresh, setAutoRefresh] = useState(true);
 
   // Auto-refresh stats every 30 seconds
   useEffect(() => {
-    if (!autoRefresh) return;
-    
     const interval = setInterval(() => {
       refreshStats();
     }, 30000);
 
     return () => clearInterval(interval);
-  }, [autoRefresh, refreshStats]);
+  }, [refreshStats]);
 
   // Clear new notification count when user interacts
   useEffect(() => {
@@ -167,7 +163,7 @@ export const NotificationsCenter: React.FC<NotificationsCenterProps> = ({
     try {
       await refreshStats();
       toast.success('Notificaciones actualizadas');
-    } catch (error) {
+    } catch {
       toast.error('Error al actualizar');
     } finally {
       setActionLoading(false);

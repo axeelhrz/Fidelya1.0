@@ -10,19 +10,15 @@ import {
   Button,
   Avatar,
   Stack,
-  IconButton,
   Paper,
   alpha,
   LinearProgress,
-  Tooltip,
 } from '@mui/material';
 import {
   PhotoCamera,
   Store,
-  Delete,
   CloudUpload,
   Image as ImageIcon,
-  CheckCircle,
 } from '@mui/icons-material';
 import { useComercios } from '@/hooks/useComercios';
 import toast from 'react-hot-toast';
@@ -72,7 +68,7 @@ export const ImageUploader: React.FC = () => {
         setUploading(null);
         setUploadProgress(0);
       }, 1000);
-    } catch (error) {
+    } catch {
       clearInterval(progressInterval);
       setUploading(null);
       setUploadProgress(0);
