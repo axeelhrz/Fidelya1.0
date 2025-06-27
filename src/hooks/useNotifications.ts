@@ -33,6 +33,7 @@ export const useNotifications = () => {
     byType: { info: 0, success: 0, warning: 0, error: 0, announcement: 0 },
     byPriority: { low: 0, medium: 0, high: 0, urgent: 0 },
     byCategory: { system: 0, membership: 0, payment: 0, event: 0, general: 0 },
+    recentActivity: { today: 0, thisWeek: 0, thisMonth: 0 },
   });
   const [filters, setFilters] = useState<NotificationFilters>({});
   const [error, setError] = useState<string | null>(null);
@@ -40,37 +41,83 @@ export const useNotifications = () => {
   const [newNotificationCount, setNewNotificationCount] = useState(0);
   const previousNotificationIds = useRef<Set<string>>(new Set());
 
-  // Función para reproducir sonido de notificación
+  // Función para reproducir sonido de notificación usando Web Audio API
   const playNotificationSound = useCallback(() => {
     try {
-      const audio = new Audio('/sounds/notification.mp3');
-      audio.volume = 0.3;
-      audio.play().catch(() => {
-        // Silently fail if audio can't be played
-      });
+      // Crear un contexto de audio
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      
+      // Crear un oscilador para generar el sonido
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      // Conectar los nodos
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      // Configurar el sonido
+      oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+      oscillator.frequency.setValueAtTime(600, audioContext.currentTime + 0.1);
+      
+      // Configurar el volumen
+      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+      
+      // Reproducir el sonido
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.2);
+      
     } catch (error) {
-      // Silently fail if audio is not available
+      // Fallback: intentar reproducir un archivo de audio si existe
+      try {
+        const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT');
+        audio.volume = 0.3;
+        audio.play().catch(() => {
+          // Silently fail if audio can't be played
+        });
+      } catch {
+        // Silently fail if audio is not available
+      }
     }
   }, []);
 
   // Función para mostrar notificación del navegador
   const showBrowserNotification = useCallback((notification: Notification) => {
     if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification(notification.title, {
+      const browserNotification = new Notification(notification.title, {
         body: notification.message,
-        icon: '/icons/notification-icon.png',
-        badge: '/icons/badge-icon.png',
+        icon: '/favicon.ico',
+        badge: '/favicon.ico',
         tag: notification.id,
         requireInteraction: notification.priority === 'urgent',
+        silent: false,
       });
+
+      // Auto-close after 5 seconds for non-urgent notifications
+      if (notification.priority !== 'urgent') {
+        setTimeout(() => {
+          browserNotification.close();
+        }, 5000);
+      }
+
+      // Handle click on notification
+      browserNotification.onclick = () => {
+        window.focus();
+        if (notification.actionUrl) {
+          window.location.href = notification.actionUrl;
+        }
+        browserNotification.close();
+      };
     }
   }, []);
 
   // Solicitar permisos de notificación
   const requestNotificationPermission = useCallback(async () => {
     if ('Notification' in window && Notification.permission === 'default') {
-      await Notification.requestPermission();
+      const permission = await Notification.requestPermission();
+      return permission === 'granted';
     }
+    return Notification.permission === 'granted';
   }, []);
 
   // Suscribirse a notificaciones en tiempo real
@@ -178,6 +225,11 @@ export const useNotifications = () => {
 
   // Calcular estadísticas
   useEffect(() => {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const thisWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
     const newStats: NotificationStats = {
       total: allNotifications.length,
       unread: allNotifications.filter(n => n.status === 'unread').length,
@@ -202,6 +254,11 @@ export const useNotifications = () => {
         payment: allNotifications.filter(n => n.category === 'payment').length,
         event: allNotifications.filter(n => n.category === 'event').length,
         general: allNotifications.filter(n => n.category === 'general').length,
+      },
+      recentActivity: {
+        today: allNotifications.filter(n => new Date(n.createdAt) >= today).length,
+        thisWeek: allNotifications.filter(n => new Date(n.createdAt) >= thisWeek).length,
+        thisMonth: allNotifications.filter(n => new Date(n.createdAt) >= thisMonth).length,
       }
     };
     setStats(newStats);

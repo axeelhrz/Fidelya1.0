@@ -17,6 +17,8 @@
     "@mui/icons-material": "^7.1.2",
     "@mui/material": "^7.1.2",
     "@mui/system": "^7.1.1",
+    "@mui/x-date-pickers": "^8.6.0",
+    "@mui/x-date-pickers-pro": "^8.6.0",
     "@next/font": "^14.2.15",
     "@types/qrcode": "^1.5.5",
     "class-variance-authority": "^0.7.1",
