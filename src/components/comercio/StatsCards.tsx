@@ -1,216 +1,23 @@
 'use client';
 
 import React from 'react';
-import { motion } from 'framer-motion';
+import { Box, Grid } from '@mui/material';
 import {
-  Box,
-  Typography,
-  Card,
-  CardContent,
-  alpha,
-  Avatar,
-  LinearProgress,
-  IconButton,
-} from '@mui/material';
-import {
-  TrendingUp,
-  TrendingDown,
   Receipt,
   CardGiftcard,
   Group,
   AccessTime,
-  ArrowForward,
+  TrendingUp,
+  CheckCircle,
+  Schedule,
+  Analytics,
 } from '@mui/icons-material';
 import { useBeneficios } from '@/hooks/useBeneficios';
 import { useValidaciones } from '@/hooks/useValidaciones';
 import { useComercios } from '@/hooks/useComercios';
 import { format, subDays, startOfMonth } from 'date-fns';
 import { useRouter } from 'next/navigation';
-
-interface KPICardProps {
-  title: string;
-  value: string | number;
-  change: number;
-  icon: React.ReactNode;
-  color: string;
-  delay: number;
-  subtitle?: string;
-  trend?: 'up' | 'down' | 'neutral';
-  onClick?: () => void;
-}
-
-const KPICard: React.FC<KPICardProps> = ({
-  title,
-  value,
-  change,
-  icon,
-  color,
-  delay,
-  subtitle,
-  trend = 'neutral',
-  onClick
-}) => {
-  return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95, y: 20 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      transition={{
-        duration: 0.6,
-        delay,
-        type: "spring",
-        stiffness: 100,
-        damping: 15
-      }}
-    >
-      <Card
-        elevation={0}
-        onClick={onClick}
-        sx={{
-          position: 'relative',
-          overflow: 'hidden',
-          border: '1px solid #f1f5f9',
-          borderRadius: 6,
-          background: 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
-          transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
-          cursor: onClick ? 'pointer' : 'default',
-          '&:hover': {
-            borderColor: alpha(color, 0.3),
-            transform: onClick ? 'translateY(-8px)' : 'translateY(-4px)',
-            boxShadow: `0 25px 80px -15px ${alpha(color, 0.25)}`,
-            '& .kpi-icon': {
-              transform: 'scale(1.15) rotate(5deg)',
-              bgcolor: alpha(color, 0.2),
-            },
-            '& .kpi-glow': {
-              opacity: 0.8,
-            }
-          },
-        }}
-      >
-        {/* Glow effect */}
-        <Box
-          className="kpi-glow"
-          sx={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            height: '4px',
-            background: `linear-gradient(90deg, ${color}, ${alpha(color, 0.6)}, ${color})`,
-            opacity: 0.4,
-            transition: 'opacity 0.3s ease',
-          }}
-        />
-        <CardContent sx={{ p: 4 }}>
-          <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 3 }}>
-            <Avatar
-              className="kpi-icon"
-              sx={{
-                width: 64,
-                height: 64,
-                bgcolor: alpha(color, 0.12),
-                color: color,
-                borderRadius: 5,
-                transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                boxShadow: `0 8px 32px ${alpha(color, 0.2)}`,
-              }}
-            >
-              {icon}
-            </Avatar>
-            {/* Trend indicator */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              {trend === 'up' && <TrendingUp sx={{ fontSize: 20, color: '#10b981' }} />}
-              {trend === 'down' && <TrendingDown sx={{ fontSize: 20, color: '#ef4444' }} />}
-              <Typography
-                variant="body2"
-                sx={{
-                  fontWeight: 700,
-                  color: trend === 'up' ? '#10b981' : trend === 'down' ? '#ef4444' : '#6b7280',
-                  fontSize: '0.9rem'
-                }}
-              >
-                {change > 0 ? '+' : ''}{change}%
-              </Typography>
-            </Box>
-          </Box>
-          <Box>
-            <Typography
-              variant="overline"
-              sx={{
-                color: '#94a3b8',
-                fontWeight: 800,
-                fontSize: '0.75rem',
-                letterSpacing: '0.15em',
-                textTransform: 'uppercase',
-                mb: 1,
-                display: 'block'
-              }}
-            >
-              {title}
-            </Typography>
-            <Typography
-              variant="h3"
-              sx={{
-                fontWeight: 900,
-                color: '#0f172a',
-                fontSize: '2.8rem',
-                letterSpacing: '-0.03em',
-                lineHeight: 0.9,
-                mb: subtitle ? 1 : 0,
-              }}
-            >
-              {value}
-            </Typography>
-            {subtitle && (
-              <Typography
-                variant="body2"
-                sx={{
-                  color: '#64748b',
-                  fontWeight: 600,
-                  fontSize: '0.9rem'
-                }}
-              >
-                {subtitle}
-              </Typography>
-            )}
-          </Box>
-          {/* Progress indicator */}
-          <Box sx={{ mt: 3 }}>
-            <LinearProgress
-              variant="determinate"
-              value={Math.abs(change) > 100 ? 100 : Math.abs(change)}
-              sx={{
-                height: 4,
-                borderRadius: 2,
-                bgcolor: alpha(color, 0.1),
-                '& .MuiLinearProgress-bar': {
-                  bgcolor: color,
-                  borderRadius: 2,
-                }
-              }}
-            />
-          </Box>
-          {onClick && (
-            <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
-              <IconButton
-                size="small"
-                sx={{
-                  color: color,
-                  bgcolor: alpha(color, 0.1),
-                  '&:hover': {
-                    bgcolor: alpha(color, 0.2),
-                  }
-                }}
-              >
-                <ArrowForward sx={{ fontSize: 16 }} />
-              </IconButton>
-            </Box>
-          )}
-        </CardContent>
-      </Card>
-    </motion.div>
-  );
-};
+import UnifiedMetricsCard from '@/components/ui/UnifiedMetricsCard';
 
 export const StatsCards: React.FC = () => {
   const { activeBeneficios, beneficios } = useBeneficios();
@@ -225,6 +32,11 @@ export const StatsCards: React.FC = () => {
     v.fechaHora.toDate() >= startOfThisMonth
   );
 
+  const validacionesExitosas = validacionesEsteMes.filter(v => v.resultado === 'valido');
+  const tasaExito = validacionesEsteMes.length > 0 
+    ? (validacionesExitosas.length / validacionesEsteMes.length) * 100 
+    : 0;
+
   const ultimaValidacion = validaciones.length > 0 
     ? validaciones.sort((a, b) => b.fechaHora.toDate().getTime() - a.fechaHora.toDate().getTime())[0]
     : null;
@@ -235,78 +47,154 @@ export const StatsCards: React.FC = () => {
 
   const asociacionesVinculadas = comercio?.asociacionesVinculadas?.length || 0;
 
+  // Calculate growth rates (mock calculations for demo)
+  const validacionesAyer = validaciones.filter(v => {
+    const fecha = v.fechaHora.toDate();
+    const ayer = subDays(now, 1);
+    return fecha.toDateString() === ayer.toDateString();
+  }).length;
+
+  const validacionesHoy = validaciones.filter(v => {
+    const fecha = v.fechaHora.toDate();
+    return fecha.toDateString() === now.toDateString();
+  }).length;
+
+  const cambioValidaciones = validacionesAyer > 0 
+    ? ((validacionesHoy - validacionesAyer) / validacionesAyer) * 100 
+    : validacionesHoy > 0 ? 100 : 0;
+
   const kpiMetrics = [
     {
-      title: 'Validaciones este mes',
-      value: validacionesEsteMes.length.toLocaleString(),
-      change: 12.5,
-      icon: <Receipt sx={{ fontSize: 32 }} />,
+      title: 'Validaciones del Mes',
+      value: validacionesEsteMes.length,
+      change: Math.round(cambioValidaciones),
+      icon: <Receipt sx={{ fontSize: 28 }} />,
       color: '#06b6d4',
+      gradient: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
       delay: 0,
       subtitle: `${(validacionesEsteMes.length / new Date().getDate()).toFixed(1)} por día`,
-      trend: 'up' as const,
-      onClick: () => router.push('/dashboard/comercio/validaciones')
+      description: 'Total de validaciones realizadas este mes',
+      trend: cambioValidaciones > 0 ? 'up' as const : cambioValidaciones < 0 ? 'down' as const : 'neutral' as const,
+      onClick: () => router.push('/dashboard/comercio/validaciones'),
+      progressValue: Math.min((validacionesEsteMes.length / 100) * 100, 100),
     },
     {
-      title: 'Beneficios activos',
-      value: activeBeneficios.length.toLocaleString(),
-      change: 0,
-      icon: <CardGiftcard sx={{ fontSize: 32 }} />,
+      title: 'Tasa de Éxito',
+      value: `${tasaExito.toFixed(1)}%`,
+      change: tasaExito > 80 ? 15 : tasaExito > 60 ? 5 : -10,
+      icon: <CheckCircle sx={{ fontSize: 28 }} />,
       color: '#10b981',
+      gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
       delay: 0.1,
-      subtitle: `${beneficios.length} total`,
-      trend: 'neutral' as const,
-      onClick: () => router.push('/dashboard/comercio/beneficios')
+      subtitle: `${validacionesExitosas.length} exitosas`,
+      description: 'Porcentaje de validaciones exitosas',
+      trend: tasaExito > 80 ? 'up' as const : tasaExito < 60 ? 'down' as const : 'neutral' as const,
+      onClick: () => router.push('/dashboard/comercio/analytics'),
+      progressValue: tasaExito,
     },
     {
-      title: 'Asociaciones vinculadas',
-      value: asociacionesVinculadas.toLocaleString(),
-      change: 5.2,
-      icon: <Group sx={{ fontSize: 32 }} />,
-      color: '#8b5cf6',
-      delay: 0.2,
-      subtitle: 'Activas',
-      trend: 'up' as const,
-      onClick: () => router.push('/dashboard/comercio/perfil')
-    },
-    {
-      title: 'Última validación',
-      value: tiempoUltimaValidacion,
+      title: 'Beneficios Activos',
+      value: activeBeneficios.length,
       change: 0,
-      icon: <AccessTime sx={{ fontSize: 32 }} />,
-      color: '#f59e0b',
-      delay: 0.3,
-      subtitle: ultimaValidacion ? format(ultimaValidacion.fechaHora.toDate(), 'dd/MM HH:mm') : '',
+      icon: <CardGiftcard sx={{ fontSize: 28 }} />,
+      color: '#8b5cf6',
+      gradient: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+      delay: 0.2,
+      subtitle: `${beneficios.length} total`,
+      description: 'Beneficios disponibles para validación',
       trend: 'neutral' as const,
-    }
+      onClick: () => router.push('/dashboard/comercio/beneficios'),
+      badge: activeBeneficios.length > 5 ? 'Activo' : undefined,
+      progressValue: beneficios.length > 0 ? (activeBeneficios.length / beneficios.length) * 100 : 0,
+    },
+    {
+      title: 'Asociaciones Vinculadas',
+      value: asociacionesVinculadas,
+      change: 5.2,
+      icon: <Group sx={{ fontSize: 28 }} />,
+      color: '#f59e0b',
+      gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+      delay: 0.3,
+      subtitle: 'Activas',
+      description: 'Asociaciones que pueden usar tus beneficios',
+      trend: 'up' as const,
+      onClick: () => router.push('/dashboard/comercio/perfil'),
+      progressValue: Math.min(asociacionesVinculadas * 20, 100),
+    },
   ];
 
   return (
-    <Box
-      sx={{
-        display: 'grid',
-        gridTemplateColumns: {
-          xs: '1fr',
-          sm: 'repeat(2, 1fr)',
-          lg: 'repeat(4, 1fr)'
-        },
-        gap: 4
-      }}
-    >
-      {kpiMetrics.map((metric, index) => (
-        <KPICard
-          key={index}
-          title={metric.title}
-          value={metric.value}
-          change={metric.change}
-          icon={metric.icon}
-          color={metric.color}
-          delay={metric.delay}
-          subtitle={metric.subtitle}
-          trend={metric.trend}
-          onClick={metric.onClick}
-        />
-      ))}
+    <Box sx={{ width: '100%' }}>
+      <Grid container spacing={3}>
+        {kpiMetrics.map((metric, index) => (
+          <Grid item xs={12} sm={6} lg={3} key={index}>
+            <UnifiedMetricsCard
+              {...metric}
+              size="medium"
+              variant="detailed"
+              showProgress={true}
+            />
+          </Grid>
+        ))}
+      </Grid>
+
+      {/* Additional metrics row for more detailed view */}
+      <Box sx={{ mt: 4 }}>
+        <Grid container spacing={3}>
+          <Grid item xs={12} sm={6} md={4}>
+            <UnifiedMetricsCard
+              title="Última Validación"
+              value={tiempoUltimaValidacion}
+              change={0}
+              icon={<AccessTime sx={{ fontSize: 24 }} />}
+              color="#64748b"
+              gradient="linear-gradient(135deg, #64748b 0%, #475569 100%)"
+              delay={0.4}
+              subtitle={ultimaValidacion ? format(ultimaValidacion.fechaHora.toDate(), 'dd/MM HH:mm') : ''}
+              description="Tiempo transcurrido desde la última validación"
+              trend="neutral"
+              size="small"
+              variant="compact"
+              showProgress={false}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} md={4}>
+            <UnifiedMetricsCard
+              title="Promedio Diario"
+              value={(validacionesEsteMes.length / new Date().getDate()).toFixed(1)}
+              change={12}
+              icon={<TrendingUp sx={{ fontSize: 24 }} />}
+              color="#ec4899"
+              gradient="linear-gradient(135deg, #ec4899 0%, #db2777 100%)"
+              delay={0.5}
+              subtitle="validaciones/día"
+              description="Promedio de validaciones por día este mes"
+              trend="up"
+              size="small"
+              variant="compact"
+              progressValue={Math.min((validacionesEsteMes.length / new Date().getDate()) * 10, 100)}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} md={4}>
+            <UnifiedMetricsCard
+              title="Rendimiento"
+              value={`${Math.min(tasaExito + (asociacionesVinculadas * 5), 100).toFixed(0)}%`}
+              change={8}
+              icon={<Analytics sx={{ fontSize: 24 }} />}
+              color="#06b6d4"
+              gradient="linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)"
+              delay={0.6}
+              subtitle="índice general"
+              description="Índice de rendimiento basado en múltiples métricas"
+              trend="up"
+              size="small"
+              variant="compact"
+              onClick={() => router.push('/dashboard/comercio/analytics')}
+              progressValue={Math.min(tasaExito + (asociacionesVinculadas * 5), 100)}
+            />
+          </Grid>
+        </Grid>
+      </Box>
     </Box>
   );
 };
