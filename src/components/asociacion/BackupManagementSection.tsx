@@ -146,6 +146,38 @@ const BackupCard: React.FC<BackupCardProps> = ({
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
+  // Safe date formatting function
+  const formatCreatedDate = (createdAt: any) => {
+    try {
+      if (!createdAt) return 'Fecha desconocida';
+      
+      // If it's already a Date object
+      if (createdAt instanceof Date) {
+        return formatDistanceToNow(createdAt, { addSuffix: true, locale: es });
+      }
+      
+      // If it's a Firestore Timestamp with toDate method
+      if (createdAt && typeof createdAt.toDate === 'function') {
+        return formatDistanceToNow(createdAt.toDate(), { addSuffix: true, locale: es });
+      }
+      
+      // If it's a timestamp number
+      if (typeof createdAt === 'number') {
+        return formatDistanceToNow(new Date(createdAt), { addSuffix: true, locale: es });
+      }
+      
+      // If it's a string date
+      if (typeof createdAt === 'string') {
+        return formatDistanceToNow(new Date(createdAt), { addSuffix: true, locale: es });
+      }
+      
+      return 'Fecha desconocida';
+    } catch (error) {
+      console.error('Error formatting date:', error, createdAt);
+      return 'Fecha inválida';
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -251,7 +283,7 @@ const BackupCard: React.FC<BackupCardProps> = ({
                 Registros
               </Typography>
               <Typography variant="h6" sx={{ fontWeight: 700, color: '#10b981' }}>
-                {backup.recordCount.toLocaleString()}
+                {backup.recordCount?.toLocaleString() || '0'}
               </Typography>
             </Paper>
             <Paper 
@@ -266,7 +298,7 @@ const BackupCard: React.FC<BackupCardProps> = ({
                 Tamaño
               </Typography>
               <Typography variant="h6" sx={{ fontWeight: 700, color: '#6366f1' }}>
-                {formatFileSize(backup.size)}
+                {formatFileSize(backup.size || 0)}
               </Typography>
             </Paper>
           </Box>
@@ -279,7 +311,7 @@ const BackupCard: React.FC<BackupCardProps> = ({
                   Creado:
                 </Typography>
                 <Typography variant="caption" sx={{ color: '#1e293b', fontWeight: 700 }}>
-                  {formatDistanceToNow(backup.createdAt.toDate(), { addSuffix: true, locale: es })}
+                  {formatCreatedDate(backup.createdAt)}
                 </Typography>
               </Box>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -287,7 +319,7 @@ const BackupCard: React.FC<BackupCardProps> = ({
                   Versión:
                 </Typography>
                 <Typography variant="caption" sx={{ color: '#1e293b', fontWeight: 700 }}>
-                  {backup.version}
+                  {backup.version || 'N/A'}
                 </Typography>
               </Box>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -295,7 +327,7 @@ const BackupCard: React.FC<BackupCardProps> = ({
                   Verificación:
                 </Typography>
                 <Chip
-                  label={backup.verificationStatus}
+                  label={backup.verificationStatus || 'pending'}
                   size="small"
                   sx={{
                     bgcolor: backup.verificationStatus === 'verified' ? alpha('#10b981', 0.1) : alpha('#f59e0b', 0.1),
@@ -505,7 +537,7 @@ const RestoreDialog: React.FC<RestoreDialogProps> = ({
               Restaurar Respaldo
             </Typography>
             <Typography variant="body2" sx={{ color: '#64748b' }}>
-              {backup?.name} - {backup?.recordCount.toLocaleString()} registros
+              {backup?.name} - {backup?.recordCount?.toLocaleString() || '0'} registros
             </Typography>
           </Box>
         </Box>

@@ -20,9 +20,14 @@ export interface Notification {
   metadata?: {
     senderId?: string;
     senderName?: string;
+    senderRole?: string;
     recipientCount?: number;
+    recipientIds?: string[];
     tags?: string[];
     attachments?: string[];
+    relatedEntityId?: string;
+    relatedEntityType?: string;
+    customData?: Record<string, any>;
   };
 }
 
@@ -36,6 +41,12 @@ export interface NotificationFormData {
   actionUrl?: string;
   actionLabel?: string;
   tags?: string[];
+  recipientIds?: string[];
+  metadata?: {
+    relatedEntityId?: string;
+    relatedEntityType?: string;
+    customData?: Record<string, any>;
+  };
 }
 
 export interface NotificationFilters {
@@ -48,6 +59,9 @@ export interface NotificationFilters {
     end: Date;
   };
   search?: string;
+  senderId?: string;
+  recipientId?: string;
+  tags?: string[];
 }
 
 export interface NotificationStats {
@@ -58,4 +72,59 @@ export interface NotificationStats {
   byType: Record<NotificationType, number>;
   byPriority: Record<NotificationPriority, number>;
   byCategory: Record<NotificationCategory, number>;
+  recentActivity: {
+    today: number;
+    thisWeek: number;
+    thisMonth: number;
+  };
+  averageResponseTime?: number;
+  mostActiveHour?: number;
+  topSenders?: Array<{
+    senderId: string;
+    senderName: string;
+    count: number;
+  }>;
+}
+
+export interface NotificationTemplate {
+  id: string;
+  name: string;
+  title: string;
+  message: string;
+  type: NotificationType;
+  priority: NotificationPriority;
+  category: NotificationCategory;
+  variables?: string[];
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface NotificationSettings {
+  userId: string;
+  emailNotifications: boolean;
+  pushNotifications: boolean;
+  smsNotifications: boolean;
+  categories: Record<NotificationCategory, boolean>;
+  priorities: Record<NotificationPriority, boolean>;
+  quietHours: {
+    enabled: boolean;
+    start: string; // HH:mm format
+    end: string; // HH:mm format
+  };
+  frequency: 'immediate' | 'hourly' | 'daily' | 'weekly';
+  updatedAt: Date;
+}
+
+export interface NotificationDelivery {
+  id: string;
+  notificationId: string;
+  recipientId: string;
+  channel: 'app' | 'email' | 'sms' | 'push';
+  status: 'pending' | 'sent' | 'delivered' | 'failed' | 'bounced';
+  sentAt?: Date;
+  deliveredAt?: Date;
+  failureReason?: string;
+  retryCount: number;
+  metadata?: Record<string, any>;
 }
