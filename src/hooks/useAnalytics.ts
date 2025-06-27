@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from './useAuth';
 import { useValidaciones } from './useValidaciones';
 import { useBeneficios } from './useBeneficios';
@@ -66,30 +66,37 @@ export interface AnalyticsData {
 
 const CHART_COLORS = ['#06b6d4', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#ec4899'];
 
+// Default analytics data to prevent undefined errors
+const DEFAULT_ANALYTICS_DATA: AnalyticsData = {
+  totalValidaciones: 0,
+  promedioDiario: 0,
+  asociacionesActivas: 0,
+  beneficioMasUsado: null,
+  tasaExito: 0,
+  crecimientoMensual: 0,
+  eficienciaOperativa: 0,
+  ingresosTotales: 0,
+  sociosAlcanzados: 0,
+  dailyValidations: [],
+  byAssociation: [],
+  hourlyActivity: [],
+  topDays: [],
+  topBenefits: [],
+};
+
 export const useAnalytics = (dateRange: DateRange) => {
   const { user } = useAuth();
   const { validaciones } = useValidaciones();
   const { beneficios } = useBeneficios();
-  const [analyticsData, setAnalyticsData] = useState<AnalyticsData>({
-    totalValidaciones: 0,
-    promedioDiario: 0,
-    asociacionesActivas: 0,
-    beneficioMasUsado: null,
-    tasaExito: 0,
-    crecimientoMensual: 0,
-    eficienciaOperativa: 0,
-    ingresosTotales: 0,
-    sociosAlcanzados: 0,
-    dailyValidations: [],
-    byAssociation: [],
-    hourlyActivity: [],
-    topDays: [],
-    topBenefits: [],
-  });
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsData>(DEFAULT_ANALYTICS_DATA);
   const [loading, setLoading] = useState(true);
+
+  // Memoize date range to prevent unnecessary recalculations
+  const memoizedDateRange = useMemo(() => dateRange, [dateRange.startDate, dateRange.endDate]);
 
   const processAnalyticsData = useCallback(() => {
     if (!user || !validaciones.length) {
+      setAnalyticsData(DEFAULT_ANALYTICS_DATA);
       setLoading(false);
       return;
     }
@@ -100,12 +107,12 @@ export const useAnalytics = (dateRange: DateRange) => {
       // Filter validaciones by date range
       const filteredValidaciones = validaciones.filter(v => {
         const vDate = v.fechaHora.toDate();
-        return vDate >= startOfDay(dateRange.startDate) && vDate <= endOfDay(dateRange.endDate);
+        return vDate >= startOfDay(memoizedDateRange.startDate) && vDate <= endOfDay(memoizedDateRange.endDate);
       });
 
       // Calculate KPIs
       const totalValidaciones = filteredValidaciones.length;
-      const daysDiff = Math.max(1, Math.ceil((dateRange.endDate.getTime() - dateRange.startDate.getTime()) / (1000 * 60 * 60 * 24)));
+      const daysDiff = Math.max(1, Math.ceil((memoizedDateRange.endDate.getTime() - memoizedDateRange.startDate.getTime()) / (1000 * 60 * 60 * 24)));
       const promedioDiario = totalValidaciones / daysDiff;
 
       // Get unique associations
@@ -123,13 +130,13 @@ export const useAnalytics = (dateRange: DateRange) => {
         usos: beneficioMasUsadoId[1]
       } : null;
 
-      // Calculate success rate
-      const validacionesExitosas = filteredValidations.filter(v => v.resultado === 'valido').length;
+      // Calculate success rate - FIXED: filteredValidaciones instead of filteredValidations
+      const validacionesExitosas = filteredValidaciones.filter(v => v.resultado === 'valido').length;
       const tasaExito = totalValidaciones > 0 ? (validacionesExitosas / totalValidaciones) * 100 : 0;
 
       // Calculate monthly growth
-      const previousMonthStart = subMonths(dateRange.startDate, 1);
-      const previousMonthEnd = subMonths(dateRange.endDate, 1);
+      const previousMonthStart = subMonths(memoizedDateRange.startDate, 1);
+      const previousMonthEnd = subMonths(memoizedDateRange.endDate, 1);
       const previousMonthValidaciones = validaciones.filter(v => {
         const vDate = v.fechaHora.toDate();
         return vDate >= startOfDay(previousMonthStart) && vDate <= endOfDay(previousMonthEnd);
@@ -149,7 +156,7 @@ export const useAnalytics = (dateRange: DateRange) => {
       const sociosAlcanzados = new Set(filteredValidaciones.map(v => v.socioId)).size;
 
       // Daily validations chart data
-      const allDays = eachDayOfInterval({ start: dateRange.startDate, end: dateRange.endDate });
+      const allDays = eachDayOfInterval({ start: memoizedDateRange.startDate, end: memoizedDateRange.endDate });
       const dailyValidations = allDays.map(day => {
         const dayStart = startOfDay(day);
         const dayEnd = endOfDay(day);
@@ -180,7 +187,7 @@ export const useAnalytics = (dateRange: DateRange) => {
         .map(([asociacionId, count], index) => ({
           name: `Asociación ${asociacionId.substring(0, 8)}...`,
           value: count,
-          percentage: (count / totalValidaciones) * 100,
+          percentage: totalValidaciones > 0 ? (count / totalValidaciones) * 100 : 0,
           color: CHART_COLORS[index % CHART_COLORS.length],
         }))
         .sort((a, b) => b.value - a.value)
@@ -216,9 +223,9 @@ export const useAnalytics = (dateRange: DateRange) => {
           return {
             id: beneficioId,
             nombre: beneficio?.titulo || 'Beneficio Desconocido',
-            asociacion: beneficio?.asociacionesVinculadas[0] || 'N/A',
+            asociacion: beneficio?.asociacionesVinculadas?.[0] || 'N/A',
             usos,
-            estado: beneficio?.estado || 'inactivo' as const,
+            estado: (beneficio?.estado || 'inactivo') as 'activo' | 'inactivo',
           };
         })
         .sort((a, b) => b.usos - a.usos)
@@ -243,10 +250,11 @@ export const useAnalytics = (dateRange: DateRange) => {
 
     } catch (error) {
       console.error('Error processing analytics data:', error);
+      setAnalyticsData(DEFAULT_ANALYTICS_DATA);
     } finally {
       setLoading(false);
     }
-  }, [user, validaciones, beneficios, dateRange]);
+  }, [user, validaciones, beneficios, memoizedDateRange]);
 
   useEffect(() => {
     processAnalyticsData();
