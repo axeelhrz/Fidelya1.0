@@ -9,10 +9,8 @@ import {
   Avatar,
   Card,
   CardContent,
-  Grid,
   Paper,
   Stack,
-  Chip,
   Button,
   IconButton,
   alpha,
@@ -23,16 +21,8 @@ import {
   Assessment,
   AutoGraph,
   BarChart,
-  PieChart,
-  Timeline,
-  DateRange,
-  FilterList,
   Download,
   Refresh,
-  Visibility,
-  Schedule,
-  People,
-  MonetizationOn,
 } from '@mui/icons-material';
 import { ValidationsChart } from './ValidationsChart';
 import { TopBenefits } from './TopBenefits';
@@ -178,42 +168,38 @@ export const ComercioAnalytics: React.FC<ComercioAnalyticsProps> = ({ section })
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
         >
-          <Grid container spacing={4}>
-            <Grid item xs={12}>
-              <Card
-                elevation={0}
-                sx={{
-                  border: '1px solid #f1f5f9',
-                  borderRadius: 4,
-                  background: 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
-                }}
-              >
-                <CardContent sx={{ p: 4 }}>
-                  <Box sx={{ textAlign: 'center', py: 8 }}>
-                    <Avatar
-                      sx={{
-                        width: 80,
-                        height: 80,
-                        bgcolor: alpha('#ec4899', 0.1),
-                        color: '#ec4899',
-                        mx: 'auto',
-                        mb: 3,
-                      }}
-                    >
-                      <AutoGraph sx={{ fontSize: 40 }} />
-                    </Avatar>
-                    <Typography variant="h4" sx={{ fontWeight: 700, color: '#1e293b', mb: 2 }}>
-                      Insights IA en Desarrollo
-                    </Typography>
-                    <Typography variant="body1" sx={{ color: '#64748b', maxWidth: 500, mx: 'auto' }}>
-                      Nuestro sistema de análisis inteligente estará disponible próximamente. 
-                      Proporcionará recomendaciones personalizadas y predicciones basadas en tus datos.
-                    </Typography>
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-              </Grid>
+          <Card
+            elevation={0}
+            sx={{
+              border: '1px solid #f1f5f9',
+              borderRadius: 4,
+              background: 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
+            }}
+          >
+            <CardContent sx={{ p: 4 }}>
+              <Box sx={{ textAlign: 'center', py: 8 }}>
+                <Avatar
+                  sx={{
+                    width: 80,
+                    height: 80,
+                    bgcolor: alpha('#ec4899', 0.1),
+                    color: '#ec4899',
+                    mx: 'auto',
+                    mb: 3,
+                  }}
+                >
+                  <AutoGraph sx={{ fontSize: 40 }} />
+                </Avatar>
+                <Typography variant="h4" sx={{ fontWeight: 700, color: '#1e293b', mb: 2 }}>
+                  Insights IA en Desarrollo
+                </Typography>
+                <Typography variant="body1" sx={{ color: '#64748b', maxWidth: 500, mx: 'auto' }}>
+                  Nuestro sistema de análisis inteligente estará disponible próximamente.
+                  Proporcionará recomendaciones personalizadas y predicciones basadas en tus datos.
+                </Typography>
+              </Box>
+            </CardContent>
+          </Card>
         </motion.div>
       ) : section === 'reports' ? (
         // Reports Section
@@ -222,15 +208,22 @@ export const ComercioAnalytics: React.FC<ComercioAnalyticsProps> = ({ section })
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
         >
-          <Grid container spacing={4}>
-            <Grid item xs={12} md={6}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {/* Reports Cards */}
+            <Box sx={{ 
+              display: 'flex', 
+              flexWrap: 'wrap', 
+              gap: 4,
+              '& > *': {
+                flex: { xs: '1 1 100%', md: '1 1 calc(50% - 16px)' }
+              }
+            }}>
               <Card
                 elevation={0}
                 sx={{
                   border: '1px solid #f1f5f9',
                   borderRadius: 4,
                   background: 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
-                  height: '100%',
                 }}
               >
                 <CardContent sx={{ p: 4 }}>
@@ -290,16 +283,13 @@ export const ComercioAnalytics: React.FC<ComercioAnalyticsProps> = ({ section })
                   </Stack>
                 </CardContent>
               </Card>
-            </Grid>
 
-            <Grid item xs={12} md={6}>
               <Card
                 elevation={0}
                 sx={{
                   border: '1px solid #f1f5f9',
                   borderRadius: 4,
                   background: 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
-                  height: '100%',
                 }}
               >
                 <CardContent sx={{ p: 4 }}>
@@ -359,43 +349,42 @@ export const ComercioAnalytics: React.FC<ComercioAnalyticsProps> = ({ section })
                   </Stack>
                 </CardContent>
               </Card>
-            </Grid>
+            </Box>
 
-            <Grid item xs={12}>
-              <Card
-                elevation={0}
-                sx={{
-                  border: '1px solid #f1f5f9',
-                  borderRadius: 4,
-                  background: 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
-                }}
-              >
-                <CardContent sx={{ p: 4 }}>
-                  <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', mb: 3 }}>
-                    Reportes Programados
+            {/* Scheduled Reports */}
+            <Card
+              elevation={0}
+              sx={{
+                border: '1px solid #f1f5f9',
+                borderRadius: 4,
+                background: 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
+              }}
+            >
+              <CardContent sx={{ p: 4 }}>
+                <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', mb: 3 }}>
+                  Reportes Programados
+                </Typography>
+                <Box sx={{ textAlign: 'center', py: 4 }}>
+                  <Typography variant="body1" sx={{ color: '#64748b' }}>
+                    Configura reportes automáticos para recibir análisis periódicos por email.
                   </Typography>
-                  <Box sx={{ textAlign: 'center', py: 4 }}>
-                    <Typography variant="body1" sx={{ color: '#64748b' }}>
-                      Configura reportes automáticos para recibir análisis periódicos por email.
-                    </Typography>
-                    <Button
-                      variant="contained"
-                      sx={{
-                        mt: 2,
+                  <Button
+                    variant="contained"
+                    sx={{
+                      mt: 2,
+                      background: config.gradient,
+                      '&:hover': {
                         background: config.gradient,
-                        '&:hover': {
-                          background: config.gradient,
-                          transform: 'translateY(-2px)',
-                        },
-                      }}
-                    >
-                      Configurar Reportes
-                    </Button>
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-          </Grid>
+                        transform: 'translateY(-2px)',
+                      },
+                    }}
+                  >
+                    Configurar Reportes
+                  </Button>
+                </Box>
+              </CardContent>
+            </Card>
+          </Box>
         </motion.div>
       ) : (
         // Default Analytics Section
@@ -404,39 +393,57 @@ export const ComercioAnalytics: React.FC<ComercioAnalyticsProps> = ({ section })
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
         >
-          <Grid container spacing={4}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {/* KPI Cards */}
-            <Grid item xs={12}>
-              <KpiCards />
-            </Grid>
+            <KpiCards />
 
             {/* Charts Row 1 */}
-            <Grid item xs={12} lg={8}>
-              <ValidationsOverTime dateRange={dateRange} />
-            </Grid>
-            <Grid item xs={12} lg={4}>
-              <TopDaysList />
-            </Grid>
+            <Box sx={{ 
+              display: 'flex', 
+              flexWrap: 'wrap', 
+              gap: 4,
+              alignItems: 'stretch'
+            }}>
+              <Box sx={{ flex: { xs: '1 1 100%', lg: '2 1 0' }, minWidth: '400px' }}>
+                <ValidationsOverTime dateRange={dateRange} />
+              </Box>
+              <Box sx={{ flex: { xs: '1 1 100%', lg: '1 1 0' }, minWidth: '320px' }}>
+                <TopDaysList />
+              </Box>
+            </Box>
 
             {/* Charts Row 2 */}
-            <Grid item xs={12} md={6}>
+            <Box sx={{ 
+              display: 'flex', 
+              flexWrap: 'wrap', 
+              gap: 4,
+              alignItems: 'stretch',
+              '& > *': {
+                flex: { xs: '1 1 100%', md: '1 1 calc(50% - 16px)' },
+                minWidth: '320px'
+              }
+            }}>
               <HourlyActivityChart />
-            </Grid>
-            <Grid item xs={12} md={6}>
               <ByAssociationChart />
-            </Grid>
+            </Box>
 
             {/* Charts Row 3 */}
-            <Grid item xs={12} lg={8}>
-              <ValidationsChart />
-            </Grid>
-            <Grid item xs={12} lg={4}>
-              <TopBenefits />
-            </Grid>
-          </Grid>
+            <Box sx={{ 
+              display: 'flex', 
+              flexWrap: 'wrap', 
+              gap: 4,
+              alignItems: 'stretch'
+            }}>
+              <Box sx={{ flex: { xs: '1 1 100%', lg: '2 1 0' }, minWidth: '400px' }}>
+                <ValidationsChart />
+              </Box>
+              <Box sx={{ flex: { xs: '1 1 100%', lg: '1 1 0' }, minWidth: '320px' }}>
+                <TopBenefits />
+              </Box>
+            </Box>
+          </Box>
         </motion.div>
       )}
     </Container>
   );
 };
-
