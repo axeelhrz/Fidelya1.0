@@ -19,13 +19,11 @@ import { useValidaciones } from '@/hooks/useValidaciones';
 
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { ComercioSidebar } from '@/components/layout/ComercioSidebar';
-import { DashboardHeader } from '@/components/comercio/DashboardHeader';
-import { StatsCards } from '@/components/comercio/StatsCards';
-import { ValidationsChart } from '@/components/comercio/ValidationsChart';
-import { TopBenefits } from '@/components/comercio/TopBenefits';
-import { Alerts } from '@/components/comercio/Alerts';
-import { RecentValidations } from '@/components/comercio/RecentValidations';
-import { QuickActions } from '@/components/comercio/QuickActions';
+import { ComercioOverviewDashboard } from '@/components/comercio/ComercioOverviewDashboard';
+import { ComercioAnalytics } from '@/components/comercio/ComercioAnalytics';
+import { ComercioOperaciones } from '@/components/comercio/ComercioOperaciones';
+import { ComercioProfile } from '@/components/comercio/ComercioProfile';
+import { ComercioNotifications } from '@/components/comercio/ComercioNotifications';
 
 const LoadingScreen: React.FC<{ message: string }> = ({ message }) => (
   <Box 
@@ -50,8 +48,8 @@ const LoadingScreen: React.FC<{ message: string }> = ({ message }) => (
               height: 100,
               border: '8px solid #e2e8f0',
               borderRadius: '50%',
-              borderTopColor: '#06b6d4',
-              borderRightColor: '#0891b2',
+              borderTopColor: '#6366f1',
+              borderRightColor: '#8b5cf6',
               animation: 'spin 1.5s linear infinite',
               mx: 'auto',
               '@keyframes spin': {
@@ -65,12 +63,12 @@ const LoadingScreen: React.FC<{ message: string }> = ({ message }) => (
           fontWeight: 900, 
           color: '#0f172a', 
           mb: 2,
-          background: 'linear-gradient(135deg, #0f172a 0%, #06b6d4 100%)',
+          background: 'linear-gradient(135deg, #0f172a 0%, #6366f1 100%)',
           backgroundClip: 'text',
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
         }}>
-          Cargando Panel de Control
+          Cargando Panel Comercial
         </Typography>
         <Typography variant="h6" sx={{ color: '#64748b', fontWeight: 500 }}>
           {message}
@@ -139,100 +137,27 @@ const ComercioSection: React.FC<{
   
   switch (section) {
     case 'resumen':
-    case 'estadisticas':
+    case 'overview':
     default:
-      return (
-        <Box sx={{ 
-          minHeight: '100vh',
-          background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
-          pb: 8
-        }}>
-          <Container maxWidth="xl" sx={{ py: 4 }}>
-            <DashboardHeader />
-            
-            {/* Stats Cards Section */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-            >
-              <Box sx={{ mb: 8 }}>
-                <StatsCards />
-              </Box>
-            </motion.div>
+      return <ComercioOverviewDashboard />;
 
-            {/* Main Content - Professional Layout */}
-            <Box sx={{ 
-              display: 'flex',
-              flexDirection: { xs: 'column', lg: 'row' },
-              gap: 6,
-              mb: 8
-            }}>
-              {/* Primary Content Column */}
-              <Box sx={{ 
-                flex: { lg: '2 1 0%' },
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 6
-              }}>
-                {/* Charts Section */}
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.6, delay: 0.3 }}
-                >
-                  <ValidationsChart />
-                </motion.div>
+    case 'analytics':
+    case 'metrics':
+    case 'reports':
+    case 'insights':
+      return <ComercioAnalytics section={section} />;
 
-                {/* Top Benefits Section */}
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.6, delay: 0.4 }}
-                >
-                  <TopBenefits />
-                </motion.div>
-              </Box>
+    case 'perfil':
+      return <ComercioProfile />;
 
-              {/* Secondary Content Column */}
-              <Box sx={{ 
-                flex: { lg: '1 1 0%' },
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 6,
-                minWidth: { lg: '320px' }
-              }}>
-                {/* Alerts Section */}
-                <motion.div
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.6, delay: 0.3 }}
-                >
-                  <Alerts />
-                </motion.div>
+    case 'operaciones':
+    case 'beneficios':
+    case 'qr-validacion':
+    case 'historial-validaciones':
+      return <ComercioOperaciones section={section} />;
 
-                {/* Quick Actions Section */}
-                <motion.div
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.6, delay: 0.4 }}
-                >
-                  <QuickActions />
-                </motion.div>
-              </Box>
-            </Box>
-
-            {/* Recent Validations - Full Width */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.5 }}
-            >
-              <RecentValidations />
-            </motion.div>
-          </Container>
-        </Box>
-      );
+    case 'notificaciones':
+      return <ComercioNotifications />;
   }
 };
 
@@ -252,7 +177,7 @@ export default function ComercioDashboard() {
   }
 
   if (loading) {
-    return <LoadingScreen message="Preparando tu panel de control comercial..." />;
+    return <LoadingScreen message="Preparando tu centro de control comercial..." />;
   }
 
   return (

@@ -34,7 +34,7 @@ export interface UnifiedMetricProps {
   trend?: 'up' | 'down' | 'neutral';
   onClick?: () => void;
   loading?: boolean;
-  size?: 'small' | 'medium' | 'large';
+  size?: 'small' | 'medium' | 'large' | 'xl';
   variant?: 'default' | 'compact' | 'detailed';
   showProgress?: boolean;
   progressValue?: number;
@@ -54,35 +54,50 @@ const UnifiedMetricsCard: React.FC<UnifiedMetricProps> = ({
   trend = 'neutral',
   onClick,
   loading = false,
-  size = 'medium',
-  variant = 'default',
+  size = 'large',
+  variant = 'detailed',
   showProgress = true,
   progressValue,
   badge,
   description,
 }) => {
-  // Size configurations
+  // Tamaños más grandes y generosos
   const sizeConfig = {
     small: {
-      cardHeight: '140px',
-      iconSize: 40,
-      titleFontSize: '0.65rem',
-      valueFontSize: '1.8rem',
-      padding: 2,
+      cardHeight: '180px',
+      iconSize: 48,
+      titleFontSize: '0.75rem',
+      valueFontSize: '2rem',
+      padding: 3,
+      subtitleFontSize: '0.85rem',
+      descriptionFontSize: '0.75rem',
     },
     medium: {
-      cardHeight: '180px',
-      iconSize: 56,
-      titleFontSize: '0.7rem',
-      valueFontSize: '2.2rem',
-      padding: 3,
+      cardHeight: '220px',
+      iconSize: 64,
+      titleFontSize: '0.8rem',
+      valueFontSize: '2.5rem',
+      padding: 3.5,
+      subtitleFontSize: '0.9rem',
+      descriptionFontSize: '0.8rem',
     },
     large: {
-      cardHeight: '220px',
+      cardHeight: '260px',
       iconSize: 72,
-      titleFontSize: '0.75rem',
-      valueFontSize: '2.8rem',
+      titleFontSize: '0.85rem',
+      valueFontSize: '3rem',
       padding: 4,
+      subtitleFontSize: '0.95rem',
+      descriptionFontSize: '0.85rem',
+    },
+    xl: {
+      cardHeight: '300px',
+      iconSize: 88,
+      titleFontSize: '0.9rem',
+      valueFontSize: '3.5rem',
+      padding: 5,
+      subtitleFontSize: '1rem',
+      descriptionFontSize: '0.9rem',
     },
   };
 
@@ -93,11 +108,11 @@ const UnifiedMetricsCard: React.FC<UnifiedMetricProps> = ({
   const getTrendIcon = () => {
     switch (trend) {
       case 'up':
-        return <TrendingUp sx={{ fontSize: 16 }} />;
+        return <TrendingUp sx={{ fontSize: 18 }} />;
       case 'down':
-        return <TrendingDown sx={{ fontSize: 16 }} />;
+        return <TrendingDown sx={{ fontSize: 18 }} />;
       default:
-        return <Remove sx={{ fontSize: 16 }} />;
+        return <Remove sx={{ fontSize: 18 }} />;
     }
   };
 
@@ -117,6 +132,10 @@ const UnifiedMetricsCard: React.FC<UnifiedMetricProps> = ({
     if (typeof val === 'number') {
       return val.toLocaleString();
     }
+    // Truncar texto largo pero mostrar más caracteres
+    if (typeof val === 'string' && val.length > 25) {
+      return `${val.substring(0, 22)}...`;
+    }
     return val;
   };
 
@@ -132,7 +151,7 @@ const UnifiedMetricsCard: React.FC<UnifiedMetricProps> = ({
         damping: 15
       }}
       whileHover={{ 
-        y: onClick ? -6 : -3,
+        y: onClick ? -8 : -4,
         transition: { duration: 0.2 }
       }}
       style={{ height: '100%' }}
@@ -144,7 +163,7 @@ const UnifiedMetricsCard: React.FC<UnifiedMetricProps> = ({
           position: 'relative',
           overflow: 'hidden',
           border: '1px solid #f1f5f9',
-          borderRadius: 4,
+          borderRadius: 5,
           background: 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
           transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
           cursor: onClick ? 'pointer' : 'default',
@@ -152,24 +171,26 @@ const UnifiedMetricsCard: React.FC<UnifiedMetricProps> = ({
           display: 'flex',
           flexDirection: 'column',
           '&:hover': {
-            borderColor: alpha(color, 0.3),
-            boxShadow: `0 20px 60px -15px ${alpha(color, 0.25)}`,
+            borderColor: alpha(color, 0.4),
+            boxShadow: `0 25px 80px -20px ${alpha(color, 0.3)}`,
             '& .metric-icon': {
-              transform: 'scale(1.1) rotate(5deg)',
+              transform: 'scale(1.15) rotate(8deg)',
               background: finalGradient,
               color: 'white',
+              boxShadow: `0 12px 32px ${alpha(color, 0.4)}`,
             },
             '& .metric-glow': {
               opacity: 1,
+              height: '4px',
             },
             '& .metric-action': {
               opacity: 1,
-              transform: 'scale(1)',
+              transform: 'scale(1.1)',
             }
           },
         }}
       >
-        {/* Top glow effect */}
+        {/* Top glow effect más prominente */}
         <Box
           className="metric-glow"
           sx={{
@@ -179,18 +200,18 @@ const UnifiedMetricsCard: React.FC<UnifiedMetricProps> = ({
             right: 0,
             height: '3px',
             background: finalGradient,
-            opacity: 0.6,
-            transition: 'opacity 0.3s ease',
+            opacity: 0.7,
+            transition: 'all 0.3s ease',
           }}
         />
 
-        {/* Badge */}
+        {/* Badge más visible */}
         {badge && (
           <Box
             sx={{
               position: 'absolute',
-              top: 12,
-              right: 12,
+              top: 16,
+              right: 16,
               zIndex: 2,
             }}
           >
@@ -198,11 +219,15 @@ const UnifiedMetricsCard: React.FC<UnifiedMetricProps> = ({
               label={badge}
               size="small"
               sx={{
-                bgcolor: alpha(color, 0.1),
+                bgcolor: alpha(color, 0.15),
                 color: color,
-                fontWeight: 700,
-                fontSize: '0.7rem',
-                height: 20,
+                fontWeight: 800,
+                fontSize: '0.75rem',
+                height: 24,
+                px: 1,
+                '& .MuiChip-label': {
+                  px: 1.5,
+                }
               }}
             />
           </Box>
@@ -217,33 +242,48 @@ const UnifiedMetricsCard: React.FC<UnifiedMetricProps> = ({
             position: 'relative',
           }}
         >
-          {/* Header Section */}
-          <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 2 }}>
+          {/* Header Section con más espacio */}
+          <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 3 }}>
             <Avatar
               className="metric-icon"
               sx={{
                 width: config.iconSize,
                 height: config.iconSize,
-                bgcolor: alpha(color, 0.1),
+                bgcolor: alpha(color, 0.12),
                 color: color,
-                borderRadius: 3,
+                borderRadius: 4,
                 transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                boxShadow: `0 6px 20px ${alpha(color, 0.2)}`,
+                boxShadow: `0 8px 24px ${alpha(color, 0.25)}`,
+                border: `2px solid ${alpha(color, 0.1)}`,
               }}
             >
-              {loading ? <CircularProgress size={config.iconSize * 0.4} sx={{ color: 'inherit' }} /> : icon}
+              {loading ? (
+                <CircularProgress size={config.iconSize * 0.4} sx={{ color: 'inherit' }} />
+              ) : (
+                React.cloneElement(icon as React.ReactElement, {
+                  sx: { fontSize: config.iconSize * 0.5 }
+                })
+              )}
             </Avatar>
             
-            {/* Trend indicator */}
+            {/* Trend indicator más grande */}
             {change !== 0 && (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: 1,
+                bgcolor: alpha(getTrendColor(), 0.1),
+                px: 1.5,
+                py: 0.5,
+                borderRadius: 2,
+              }}>
                 {getTrendIcon()}
                 <Typography
                   variant="body2"
                   sx={{
-                    fontWeight: 700,
+                    fontWeight: 800,
                     color: getTrendColor(),
-                    fontSize: '0.8rem'
+                    fontSize: '0.9rem'
                   }}
                 >
                   {change > 0 ? '+' : ''}{change}%
@@ -252,47 +292,50 @@ const UnifiedMetricsCard: React.FC<UnifiedMetricProps> = ({
             )}
           </Box>
           
-          {/* Content Section */}
+          {/* Content Section con más espacio */}
           <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
             <Box>
               <Typography
                 variant="overline"
                 sx={{
                   color: '#94a3b8',
-                  fontWeight: 700,
+                  fontWeight: 800,
                   fontSize: config.titleFontSize,
-                  letterSpacing: '0.1em',
+                  letterSpacing: '0.15em',
                   textTransform: 'uppercase',
-                  mb: 1,
+                  mb: 1.5,
                   display: 'block',
-                  lineHeight: 1.2,
+                  lineHeight: 1.3,
                 }}
               >
                 {title}
               </Typography>
               
               <Typography
-                variant="h4"
+                variant="h3"
                 sx={{
                   fontWeight: 900,
                   color: '#0f172a',
                   fontSize: config.valueFontSize,
-                  letterSpacing: '-0.02em',
+                  letterSpacing: '-0.025em',
                   lineHeight: 0.9,
-                  mb: subtitle || description ? 1 : 0,
+                  mb: subtitle || description ? 1.5 : 0,
+                  wordBreak: 'break-word',
                 }}
+                title={typeof value === 'string' ? value : undefined}
               >
                 {formatValue(value)}
               </Typography>
               
               {subtitle && (
                 <Typography
-                  variant="body2"
+                  variant="body1"
                   sx={{
                     color: '#64748b',
                     fontWeight: 600,
-                    fontSize: '0.8rem',
-                    mb: description ? 0.5 : 0,
+                    fontSize: config.subtitleFontSize,
+                    mb: description ? 1 : 0,
+                    lineHeight: 1.4,
                   }}
                 >
                   {subtitle}
@@ -301,11 +344,12 @@ const UnifiedMetricsCard: React.FC<UnifiedMetricProps> = ({
 
               {description && variant === 'detailed' && (
                 <Typography
-                  variant="caption"
+                  variant="body2"
                   sx={{
                     color: '#94a3b8',
-                    fontSize: '0.7rem',
-                    lineHeight: 1.3,
+                    fontSize: config.descriptionFontSize,
+                    lineHeight: 1.4,
+                    fontWeight: 500,
                   }}
                 >
                   {description}
@@ -313,46 +357,63 @@ const UnifiedMetricsCard: React.FC<UnifiedMetricProps> = ({
               )}
             </Box>
             
-            {/* Footer Section */}
-            <Box sx={{ mt: 'auto' }}>
-              {/* Progress indicator */}
+            {/* Footer Section con más espacio */}
+            <Box sx={{ mt: 'auto', pt: 2 }}>
+              {/* Progress indicator más grueso */}
               {showProgress && (
-                <Box sx={{ mb: onClick ? 2 : 0 }}>
+                <Box sx={{ mb: onClick ? 2.5 : 0 }}>
                   <LinearProgress
                     variant="determinate"
                     value={loading ? 0 : calculatedProgressValue}
                     sx={{
-                      height: 3,
-                      borderRadius: 2,
-                      bgcolor: alpha(color, 0.1),
+                      height: 6,
+                      borderRadius: 3,
+                      bgcolor: alpha(color, 0.12),
                       '& .MuiLinearProgress-bar': {
                         bgcolor: color,
-                        borderRadius: 2,
+                        borderRadius: 3,
+                        background: finalGradient,
                       }
                     }}
                   />
+                  {/* Mostrar valor del progreso */}
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      color: '#94a3b8',
+                      fontSize: '0.7rem',
+                      fontWeight: 600,
+                      mt: 0.5,
+                      display: 'block',
+                    }}
+                  >
+                    {calculatedProgressValue.toFixed(0)}% completado
+                  </Typography>
                 </Box>
               )}
               
-              {/* Action button */}
+              {/* Action button más grande */}
               {onClick && (
                 <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
                   <IconButton
                     className="metric-action"
-                    size="small"
+                    size="medium"
                     sx={{
                       color: color,
-                      bgcolor: alpha(color, 0.1),
-                      opacity: 0.7,
-                      transform: 'scale(0.9)',
-                      transition: 'all 0.2s ease',
+                      bgcolor: alpha(color, 0.12),
+                      opacity: 0.8,
+                      transform: 'scale(0.95)',
+                      transition: 'all 0.3s ease',
+                      width: 44,
+                      height: 44,
                       '&:hover': {
                         bgcolor: alpha(color, 0.2),
-                        transform: 'scale(1.1)',
+                        transform: 'scale(1.15)',
+                        boxShadow: `0 8px 24px ${alpha(color, 0.3)}`,
                       },
                     }}
                   >
-                    <ArrowForward sx={{ fontSize: 16 }} />
+                    <ArrowForward sx={{ fontSize: 20 }} />
                   </IconButton>
                 </Box>
               )}
