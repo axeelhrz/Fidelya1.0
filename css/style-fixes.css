@@ -1,0 +1,360 @@
+/* ===== CORRECCIONES CRÍTICAS PARA PROBLEMAS DE CARGA ===== */
+
+/* Simplificar variables CSS para mejor compatibilidad */
+:root {
+    /* Variables básicas y compatibles */
+    --primary-bg: #0a0d14;
+    --secondary-bg: #151922;
+    --text-primary: #ffffff;
+    --text-secondary: #e2e8f0;
+    --starflex-red: #FF2D55;
+    --starflex-red-bright: #ff4569;
+    
+    /* Simplificar transiciones */
+    --transition: 0.3s ease;
+    --transition-fast: 0.2s ease;
+    
+    /* Simplificar sombras */
+    --shadow-simple: 0 4px 12px rgba(0, 0, 0, 0.15);
+    --shadow-medium: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+/* ===== CORRECCIÓN DE IMÁGENES CON FALLBACKS MEJORADOS ===== */
+.nav__logo {
+    background-image: url('../assets/logo.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    width: 55px;
+    height: 55px;
+    border-radius: 12px;
+    transition: var(--transition);
+}
+
+/* Fallbacks para imágenes de descarga */
+.download-btn--google .download-btn__image {
+    background-image: url('../assets/GooglePlay.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    height: 60px;
+    width: auto;
+    min-width: 180px;
+    max-width: 200px;
+}
+
+.download-btn--app-store .download-btn__image {
+    background-image: url('../assets/AppleStore.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    height: 60px;
+    width: auto;
+    min-width: 180px;
+    max-width: 200px;
+}
+
+/* ===== SIMPLIFICAR IMÁGENES DE CARACTERÍSTICAS ===== */
+.hero__phone-app-image,
+.phone__app-image {
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    border-radius: 30px;
+    /* Remover filtros complejos que pueden causar problemas */
+    filter: none;
+    transform: none;
+}
+
+/* Configuración simplificada por característica */
+.feature[data-feature="schedule"] .phone__app-image {
+    background-image: url('../assets/phones/Horario.png');
+}
+
+.feature[data-feature="stations"] .phone__app-image {
+    background-image: url('../assets/phones/Estaciones.png');
+}
+
+.feature[data-feature="calendar"] .phone__app-image {
+    background-image: url('../assets/phones/Calendario.png');
+}
+
+.feature[data-feature="log"] .phone__app-image {
+    background-image: url('../assets/phones/Registro.png');
+}
+
+.feature[data-feature="notifications"] .phone__app-image {
+    background-image: url('../assets/phones/Notificaciones.png');
+}
+
+.feature[data-feature="referrals"] .phone__app-image {
+    background-image: url('../assets/phones/Referidos.png');
+}
+
+.hero__phone-app-image {
+    background-image: url('../assets/phones/Hero.png');
+}
+
+/* ===== SIMPLIFICAR EFECTOS VISUALES COSTOSOS ===== */
+.hero::before,
+.hero::after,
+.features::before,
+.videos::before,
+.contact::before {
+    display: none; /* Remover efectos de fondo complejos */
+}
+
+/* Simplificar animaciones */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ===== CORRECCIONES PARA NAVEGACIÓN MÓVIL ===== */
+.nav__menu {
+    background: rgba(10, 13, 20, 0.95);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.nav__list {
+    background: rgba(15, 20, 30, 0.8);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 25px;
+    padding: 12px 24px;
+}
+
+/* ===== CORRECCIONES PARA BOTONES ===== */
+.btn--primary {
+    background: linear-gradient(135deg, #b8002e 0%, #ff4569 100%);
+    color: white;
+    box-shadow: var(--shadow-medium);
+    border: 2px solid rgba(255, 69, 105, 0.4);
+    transition: var(--transition);
+}
+
+.btn--primary:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: var(--shadow-medium);
+}
+
+/* ===== CORRECCIONES PARA SCROLL HORIZONTAL ===== */
+html, body {
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100%;
+}
+
+.container,
+.hero__container,
+.features__grid,
+.videos__main-container,
+.faq__container,
+.contact__grid {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+/* ===== CORRECCIONES PARA MÓVIL ===== */
+@media (max-width: 1023px) {
+    /* Simplificar para móvil */
+    .hero__phone-container,
+    .feature__phone {
+        transform: none;
+        filter: none;
+    }
+    
+    .phone::before,
+    .hero__phone::before {
+        display: none;
+    }
+    
+    /* Simplificar navegación móvil */
+    .nav__menu {
+        background: rgba(10, 13, 20, 0.98);
+        backdrop-filter: blur(5px);
+    }
+    
+    .nav__list {
+        background: transparent;
+        border: none;
+        padding: 0;
+        box-shadow: none;
+    }
+    
+    .nav__link {
+        background: rgba(21, 25, 34, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        margin-bottom: 8px;
+        padding: 12px 16px;
+        transition: var(--transition);
+    }
+    
+    .nav__link:hover {
+        background: rgba(21, 25, 34, 0.9);
+        border-color: var(--starflex-red);
+        transform: none;
+    }
+}
+
+/* ===== MODO DE COMPATIBILIDAD PARA NAVEGADORES ANTIGUOS ===== */
+@supports not (backdrop-filter: blur(10px)) {
+    .nav__menu,
+    .nav__list,
+    .language-switcher__btn,
+    .floating-widget__main-btn {
+        background: rgba(10, 13, 20, 0.95);
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+    }
+}
+
+/* ===== CORRECCIONES PARA RENDIMIENTO ===== */
+.hero__phone,
+.feature__phone,
+.nav__logo,
+.floating-widget__main-btn {
+    will-change: auto;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+
+/* Remover animaciones complejas en dispositivos de baja potencia */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* ===== CORRECCIONES PARA VIDEOS ===== */
+.hero__phone-video,
+.hero__mobile-video-player,
+.videos__player {
+    object-fit: cover;
+    border-radius: 20px;
+    background: #000;
+}
+
+/* Fallback para cuando el video no carga */
+.hero__phone-video:not([src]) {
+    display: none;
+}
+
+.hero__phone-video:not([src]) + .hero__phone-app-image {
+    display: block;
+    z-index: 2;
+}
+
+/* ===== CORRECCIONES PARA FAQ ===== */
+.faq__item {
+    background: rgba(21, 25, 34, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    margin-bottom: 16px;
+    transition: var(--transition);
+}
+
+.faq__question {
+    padding: 16px;
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    font-size: 1rem;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.faq__answer {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.faq__answer.active {
+    max-height: 300px;
+    padding: 0 16px 16px;
+}
+
+/* ===== CORRECCIONES PARA CONTACTO ===== */
+.contact__channel {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 24px;
+    text-align: center;
+    transition: var(--transition);
+}
+
+.contact__channel:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-4px);
+}
+
+.contact__channel-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+    transition: var(--transition);
+}
+
+.contact__channel-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    color: var(--text-primary);
+    text-decoration: none;
+    padding: 8px 16px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.contact__channel-btn:hover {
+    background: var(--starflex-red);
+    border-color: var(--starflex-red);
+    color: white;
+}
