@@ -9,41 +9,25 @@
 --glass-bg-medium: rgba(255, 255, 255, 0.08);
 --glass-bg-strong: rgba(255, 255, 255, 0.12);
 
-/* Colores de marca Starflex - ACTUALIZADOS A TONOS ROJIZOS */
+/* Colores de marca Starflex */
 --starflex-red: #FF2D55;
 --starflex-red-dark: #cc1744;
 --starflex-red-bright: #ff4569;
 --starflex-orange: #ff6b35;
 --starflex-orange-bright: #ff7a47;
 --starflex-crimson: #b8002e;
---starflex-purple: #8b5cf6;
 --starflex-crimson-glow: #ff1744;
-
-/* Colores rojizos optimizados */
 --starflex-crimson-light: #d4003a;
 --starflex-crimson-dark: #9c0025;
 --starflex-crimson-bright: #ff4569;
 
-/* Nuevos colores futuristas para el celular */
---neon-green: #39ff14;
---neon-pink: #ff073a;
---neon-yellow: #ffff00;
---electric-red: #ff4569;
---cyber-purple: #9d00ff;
---hologram-red: #ff1744;
-
-/* Variables neón unificadas y mejoradas */
+/* Efectos neón unificados */
 --neon-primary: #FF2D55;
 --neon-primary-bright: #ff4569;
 --neon-primary-glow: #ff1744;
---neon-crimson: #b8002e;
---neon-crimson-bright: #d4003a;
-
-/* Efectos de brillo neón unificados */
 --neon-glow-soft: 0 0 15px rgba(255, 45, 85, 0.4);
 --neon-glow-medium: 0 0 25px rgba(255, 45, 85, 0.6);
 --neon-glow-strong: 0 0 35px rgba(255, 45, 85, 0.8);
---neon-glow-ultra: 0 0 45px rgba(255, 45, 85, 1);
 
 /* Sombras neón unificadas */
 --neon-shadow-base: 0 8px 25px rgba(255, 45, 85, 0.3);
@@ -65,23 +49,14 @@
 --glow-medium: 0 0 30px rgba(255, 69, 105, 0.3);
 --glow-strong: 0 0 40px rgba(255, 69, 105, 0.4);
 
-/* Efectos neón rojizos simplificados */
---neon-crimson-old: 0 0 25px rgba(184, 0, 46, 0.6);
---neon-crimson-strong-old: 0 0 45px rgba(184, 0, 46, 0.8);
---neon-crimson-ultra-old: 0 0 65px rgba(255, 23, 68, 0.9);
---neon-crimson-pulse: 0 0 35px rgba(255, 69, 105, 0.7);
-
 /* Sombras optimizadas */
 --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.15);
 --shadow-md: 0 8px 25px rgba(0, 0, 0, 0.2);
 --shadow-lg: 0 15px 35px rgba(0, 0, 0, 0.25);
 --shadow-xl: 0 25px 50px rgba(0, 0, 0, 0.3);
 --shadow-2xl: 0 35px 70px rgba(0, 0, 0, 0.4);
-
-/* Sombras rojizas simplificadas - CORREGIDA PARA MODAL QR */
 --shadow-crimson: 0 15px 40px rgba(255, 45, 85, 0.4);
 --shadow-crimson-hover: 0 25px 60px rgba(255, 45, 85, 0.6);
---shadow-crimson-ultra: 0 30px 80px rgba(255, 45, 85, 0.5);
 
 /* Tipografía */
 --font-primary: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -99,20 +74,15 @@
 --space-5xl: 3rem;
 --space-6xl: 4rem;
 
-/* Transiciones suaves - RALENTIZADAS */
+/* Transiciones suaves */
 --transition: 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 --transition-fast: 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 --transition-slow: 1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 
-/* Transiciones neón unificadas */
---neon-transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
---neon-transition-fast: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-
-/* Variables específicas para navbar responsive - MEJORADAS */
+/* Variables específicas para navbar responsive */
 --navbar-height: 80px;
 --navbar-height-mobile: 70px;
 --navbar-z-index: 1000;
---menu-overlay-z-index: 999;
 --hamburger-size: 24px;
 --mobile-menu-width: 100vw;
 --mobile-menu-padding: 1.5rem;
@@ -129,24 +99,6 @@
 --mobile-title-scale: clamp(1.8rem, 7vw, 3.5rem);
 --mobile-button-height: clamp(48px, 12vw, 60px);
 --mobile-touch-target: 48px;
-
-/* Ajustes de espaciado fluido para móvil */
---mobile-gap-xs: clamp(0.5rem, 2vw, 1rem);
---mobile-gap-sm: clamp(0.75rem, 3vw, 1.5rem);
---mobile-gap-md: clamp(1rem, 4vw, 2rem);
---mobile-gap-lg: clamp(1.5rem, 6vw, 3rem);
---mobile-gap-xl: clamp(2rem, 8vw, 4rem);
---mobile-gap-xxl: clamp(3rem, 10vw, 6rem);
-
-/* Variables específicas para animaciones móviles - RALENTIZADAS */
---mobile-transition: 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
---mobile-transition-fast: 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
---mobile-transition-slow: 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-
-/* Variables para efectos visuales móviles */
---mobile-blur: blur(15px);
---mobile-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
---mobile-glow: 0 0 20px rgba(255, 69, 105, 0.3);
 
 /* Variables específicas para tamaños de imágenes optimizadas */
 --phone-width-desktop: 280px;
@@ -166,7 +118,7 @@ box-sizing: border-box;
 html {
 scroll-behavior: smooth;
 font-size: 16px;
-overflow-x: hidden; /* PREVENIR SCROLL HORIZONTAL */
+overflow-x: hidden;
 width: 100%;
 max-width: 100%;
 }
@@ -176,7 +128,7 @@ font-family: var(--font-primary);
 background: var(--primary-bg);
 color: var(--text-primary);
 line-height: 1.5;
-overflow-x: hidden; /* PREVENIR SCROLL HORIZONTAL */
+overflow-x: hidden;
 -webkit-font-smoothing: antialiased;
 -moz-osx-font-smoothing: grayscale;
 position: relative;
@@ -218,16 +170,14 @@ display: none;
 }
 }
 
-/* ===== OPTIMIZACIÓN AVANZADA DE IMÁGENES DE CELULAR - SIN HOVER ===== */
+/* ===== OPTIMIZACIÓN DE IMÁGENES ===== */
 .image-optimized {
 opacity: 1;
 transition: none;
 position: relative;
 overflow: hidden;
 image-rendering: -webkit-optimize-contrast;
-image-rendering: -moz-crisp-edges;
 image-rendering: crisp-edges;
-image-rendering: pixelated;
 transform: translateZ(0);
 backface-visibility: hidden;
 will-change: transform;
@@ -276,7 +226,7 @@ font-size: 0.9rem;
 content: '⚠️ Error cargando imagen';
 }
 
-/* ===== OPTIMIZACIÓN ESPECÍFICA PARA IMÁGENES DE CELULAR - SIN HOVER ===== */
+/* ===== OPTIMIZACIÓN ESPECÍFICA PARA IMÁGENES DE CELULAR ===== */
 .hero__phone-app-image,
 .phone__app-image {
 width: 100%;
@@ -290,14 +240,8 @@ background-size: cover;
 background-position: center;
 background-repeat: no-repeat;
 background-attachment: scroll;
-image-rendering: -webkit-optimize-contrast;
-image-rendering: -moz-crisp-edges;
-image-rendering: crisp-edges;
 image-rendering: high-quality;
-filter: 
-brightness(1.02) 
-contrast(1.05) 
-saturate(1.08);
+filter: brightness(1.02) contrast(1.05) saturate(1.08);
 transform: translateZ(0) scale(1.001);
 backface-visibility: hidden;
 will-change: transform, filter;
@@ -312,22 +256,14 @@ opacity: 1;
 /* Optimización específica para el hero */
 .hero__phone-app-image {
 border-radius: var(--phone-border-radius);
-filter: 
-brightness(1.04) 
-contrast(1.12) 
-saturate(1.15)
-drop-shadow(0 0 1px rgba(0, 0, 0, 0.1));
+filter: brightness(1.04) contrast(1.12) saturate(1.15) drop-shadow(0 0 1px rgba(0, 0, 0, 0.1));
 background-image: url('../assets/phones/Hero.avif');
 }
 
 /* Optimización específica para características */
 .phone__app-image {
 border-radius: var(--phone-border-radius);
-filter: 
-brightness(1.02) 
-contrast(1.05) 
-saturate(1.08)
-drop-shadow(0 0 0.5px rgba(0, 0, 0, 0.08));
+filter: brightness(1.02) contrast(1.05) saturate(1.08) drop-shadow(0 0 0.5px rgba(0, 0, 0, 0.08));
 }
 
 /* Estados de carga optimizados */
@@ -339,10 +275,7 @@ transform: translateZ(0) scale(0.999);
 
 .hero__phone-app-image.loaded,
 .phone__app-image.loaded {
-filter: 
-brightness(1.04) 
-contrast(1.12) 
-saturate(1.15);
+filter: brightness(1.04) contrast(1.12) saturate(1.15);
 transform: translateZ(0) scale(1.001);
 }
 
@@ -357,128 +290,29 @@ display: block;
 z-index: 2;
 }
 
-/* ===== CONFIGURACIÓN DE IMÁGENES POR DATA-FEATURE - CORREGIDO ===== */
-
-/* Horario */
+/* ===== CONFIGURACIÓN DE IMÁGENES POR DATA-FEATURE ===== */
 .feature[data-feature="schedule"] .phone__app-image {
 background-image: url('../assets/phones/Horario.avif');
 }
 
-/* Estaciones */
 .feature[data-feature="stations"] .phone__app-image {
 background-image: url('../assets/phones/Estaciones.avif');
 }
 
-/* Calendario */
 .feature[data-feature="calendar"] .phone__app-image {
 background-image: url('../assets/phones/Calendario.avif');
 }
 
-/* Registro */
 .feature[data-feature="log"] .phone__app-image {
 background-image: url('../assets/phones/Registro.avif');
 }
 
-/* Notificaciones */
 .feature[data-feature="notifications"] .phone__app-image {
 background-image: url('../assets/phones/Notificaciones.avif');
 }
 
-/* Referidos */
 .feature[data-feature="referrals"] .phone__app-image {
 background-image: url('../assets/phones/Referidos.avif');
-}
-
-/* Soporte para WebP */
-.webp .hero__phone-app-image {
-background-image: url('../assets/phones/Hero.webp');
-}
-
-.webp .feature[data-feature="schedule"] .phone__app-image {
-background-image: url('../assets/phones/Horario.webp');
-}
-
-.webp .feature[data-feature="stations"] .phone__app-image {
-background-image: url('../assets/phones/Estaciones.webp');
-}
-
-.webp .feature[data-feature="calendar"] .phone__app-image {
-background-image: url('../assets/phones/Calendario.webp');
-}
-
-.webp .feature[data-feature="log"] .phone__app-image {
-background-image: url('../assets/phones/Registro.webp');
-}
-
-.webp .feature[data-feature="notifications"] .phone__app-image {
-background-image: url('../assets/phones/Notificaciones.webp');
-}
-
-.webp .feature[data-feature="referrals"] .phone__app-image {
-background-image: url('../assets/phones/Referidos.webp');
-}
-
-/* Soporte para AVIF con máxima calidad */
-.avif .hero__phone-app-image {
-background-image: url('../assets/phones/Hero.avif');
-}
-
-.avif .feature[data-feature="schedule"] .phone__app-image {
-background-image: url('../assets/phones/Horario.avif');
-}
-
-.avif .feature[data-feature="stations"] .phone__app-image {
-background-image: url('../assets/phones/Estaciones.avif');
-}
-
-.avif .feature[data-feature="calendar"] .phone__app-image {
-background-image: url('../assets/phones/Calendario.avif');
-}
-
-.avif .feature[data-feature="log"] .phone__app-image {
-background-image: url('../assets/phones/Registro.avif');
-}
-
-.avif .feature[data-feature="notifications"] .phone__app-image {
-background-image: url('../assets/phones/Notificaciones.avif');
-}
-
-.avif .feature[data-feature="referrals"] .phone__app-image {
-background-image: url('../assets/phones/Referidos.avif');
-}
-
-/* ===== OPTIMIZACIÓN PARA PANTALLAS DE ALTA DENSIDAD ===== */
-@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi), (min-resolution: 2dppx) {
-.hero__phone-app-image,
-.phone__app-image {
-filter: 
-brightness(1.02) 
-contrast(1.15) 
-saturate(1.18);
-transform: translateZ(0) scale(1.0005);
-background-size: cover;
-background-position: center center;
-}
-
-.hero__phone-app-image {
-filter: 
-brightness(1.03) 
-contrast(1.18) 
-saturate(1.2)
-drop-shadow(0 0 0.8px rgba(0, 0, 0, 0.12));
-}
-}
-
-/* ===== OPTIMIZACIÓN PARA PANTALLAS 4K Y SUPERIORES ===== */
-@media (min-resolution: 3dppx) {
-.hero__phone-app-image,
-.phone__app-image {
-filter: 
-brightness(1.01) 
-contrast(1.2) 
-saturate(1.22);
-transform: translateZ(0) scale(1.0002);
-}
 }
 
 /* ===== PREVENCIÓN DE SCROLL CUANDO EL MENÚ ESTÁ ABIERTO ===== */
@@ -504,7 +338,7 @@ transition: all var(--transition-slow);
 will-change: transform;
 }
 
-/* ===== NAVBAR FUTURISTA ULTRA RESPONSIVE - MEJORADO ===== */
+/* ===== NAVBAR FUTURISTA ULTRA RESPONSIVE ===== */
 .nav {
 max-width: 1400px;
 margin: 0 auto;
@@ -517,10 +351,10 @@ position: relative;
 pointer-events: none;
 width: 100%;
 max-width: 100%;
-overflow: hidden; /* PREVENIR SCROLL HORIZONTAL */
+overflow: hidden;
 }
 
-/* ===== LOGO FLOTANTE OPTIMIZADO CON SOPORTE MULTI-FORMATO ===== */
+/* ===== LOGO FLOTANTE OPTIMIZADO ===== */
 .nav__brand {
 pointer-events: auto;
 z-index: calc(var(--navbar-z-index) + 1);
@@ -544,21 +378,6 @@ transform: translateZ(0);
 backface-visibility: hidden;
 }
 
-/* Soporte para WebP */
-.webp .nav__logo {
-background-image: url('../assets/logo.webp');
-}
-
-/* Soporte para AVIF */
-.avif .nav__logo {
-background-image: url('../assets/logo.avif');
-}
-
-/* Fallback para PNG */
-.nav__logo {
-background-image: url('../assets/logo.png');
-}
-
 .nav__logo:hover {
 transform: translateY(-3px) scale(1.05);
 filter: drop-shadow(0 12px 35px rgba(0, 0, 0, 0.4));
@@ -570,7 +389,7 @@ outline-offset: 3px;
 border-radius: 15px;
 }
 
-/* ===== NAVEGACIÓN CENTRADA DESKTOP - MEJORADA ===== */
+/* ===== NAVEGACIÓN CENTRADA DESKTOP ===== */
 .nav__menu {
 position: absolute;
 left: 50%;
@@ -579,8 +398,8 @@ transform: translate(-50%, -50%);
 pointer-events: auto;
 transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 width: auto;
-max-width: calc(100vw - 200px); /* LIMITAR ANCHO MÁXIMO */
-overflow: hidden; /* PREVENIR SCROLL HORIZONTAL */
+max-width: calc(100vw - 200px);
+overflow: hidden;
 }
 
 .nav__list {
@@ -602,7 +421,7 @@ box-shadow:
 inset 0 1px 0 rgba(255, 255, 255, 0.08);
 width: auto;
 max-width: 100%;
-white-space: nowrap; /* PREVENIR WRAP */
+white-space: nowrap;
 }
 
 .nav__list::before {
@@ -640,7 +459,7 @@ font-family: var(--font-mono);
 overflow: hidden;
 z-index: 1;
 white-space: nowrap;
-flex-shrink: 0; /* PREVENIR SHRINK */
+flex-shrink: 0;
 }
 
 .nav__link::before {
@@ -709,7 +528,7 @@ outline-offset: 3px;
 border-radius: 28px;
 }
 
-/* ===== BOTÓN CTA FLOTANTE OPTIMIZADO - SIN SELECTOR DE IDIOMA ===== */
+/* ===== BOTÓN CTA FLOTANTE OPTIMIZADO ===== */
 .nav__cta {
 pointer-events: auto;
 z-index: calc(var(--navbar-z-index) + 1);
@@ -719,7 +538,7 @@ align-items: flex-end;
 gap: var(--space-md);
 }
 
-/* ===== TOGGLE MÓVIL HAMBURGUESA MEJORADO ===== */
+/* ===== TOGGLE MÓVIL HAMBURGUESA ===== */
 .nav__toggle {
 display: none;
 flex-direction: column;
@@ -878,7 +697,7 @@ transform: translateY(-2px) scale(1.02);
 border-color: var(--starflex-crimson-bright);
 box-shadow: 
     var(--shadow-lg),
-    var(--neon-crimson-old),
+    var(--glow-medium),
     inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
@@ -1060,21 +879,15 @@ text-transform: uppercase;
 letter-spacing: 0.5px;
 }
 
-/* ===== BOTONES PRIMARIOS CON EFECTOS NEÓN MEJORADOS ===== */
+/* ===== BOTONES PRIMARIOS CON EFECTOS NEÓN ===== */
 .btn--primary,
 .btn--cta,
-.hero__cta-main .btn--primary,
-.hero__cta-main .btn--cta,
-.nav__cta .btn--primary,
-.nav__cta .btn--cta,
-.nav__cta-mobile .btn--primary,
-.nav__cta-mobile .btn--cta,
-.videos__cta-buttons .btn--cta-video,
+.btn--cta-video,
 .btn--footer {
 position: relative;
 overflow: hidden;
 background: linear-gradient(135deg, 
-    var(--neon-crimson) 0%, 
+    var(--starflex-crimson) 0%, 
     var(--neon-primary) 50%, 
     var(--neon-primary-bright) 100%
 ) !important;
@@ -1092,7 +905,7 @@ text-shadow:
     0 0 10px rgba(255, 255, 255, 0.8),
     0 0 20px rgba(255, 45, 85, 0.6) !important;
 
-transition: var(--neon-transition) !important;
+transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
 
 font-weight: 700 !important;
 text-transform: uppercase !important;
@@ -1106,13 +919,7 @@ backface-visibility: hidden !important;
 /* ===== EFECTO DE BRILLO INTERNO ANIMADO ===== */
 .btn--primary::before,
 .btn--cta::before,
-.hero__cta-main .btn--primary::before,
-.hero__cta-main .btn--cta::before,
-.nav__cta .btn--primary::before,
-.nav__cta .btn--cta::before,
-.nav__cta-mobile .btn--primary::before,
-.nav__cta-mobile .btn--cta::before,
-.videos__cta-buttons .btn--cta-video::before,
+.btn--cta-video::before,
 .btn--footer::before {
 content: '' !important;
 position: absolute !important;
@@ -1133,13 +940,7 @@ border-radius: inherit !important;
 /* ===== ANILLO EXTERIOR NEÓN ===== */
 .btn--primary::after,
 .btn--cta::after,
-.hero__cta-main .btn--primary::after,
-.hero__cta-main .btn--cta::after,
-.nav__cta .btn--primary::after,
-.nav__cta .btn--cta::after,
-.nav__cta-mobile .btn--primary::after,
-.nav__cta-mobile .btn--cta::after,
-.videos__cta-buttons .btn--cta-video::after,
+.btn--cta-video::after,
 .btn--footer::after {
 content: '' !important;
 position: absolute !important;
@@ -1163,13 +964,7 @@ filter: blur(2px) !important;
 /* ===== ESTADOS HOVER MEJORADOS ===== */
 .btn--primary:hover,
 .btn--cta:hover,
-.hero__cta-main .btn--primary:hover,
-.hero__cta-main .btn--cta:hover,
-.nav__cta .btn--primary:hover,
-.nav__cta .btn--cta:hover,
-.nav__cta-mobile .btn--primary:hover,
-.nav__cta-mobile .btn--cta:hover,
-.videos__cta-buttons .btn--cta-video:hover,
+.btn--cta-video:hover,
 .btn--footer:hover {
 transform: translateY(-4px) scale(1.05) translateZ(0) !important;
 
@@ -1190,26 +985,14 @@ text-shadow:
 /* Activar efectos en hover */
 .btn--primary:hover::before,
 .btn--cta:hover::before,
-.hero__cta-main .btn--primary:hover::before,
-.hero__cta-main .btn--cta:hover::before,
-.nav__cta .btn--primary:hover::before,
-.nav__cta .btn--cta:hover::before,
-.nav__cta-mobile .btn--primary:hover::before,
-.nav__cta-mobile .btn--cta:hover::before,
-.videos__cta-buttons .btn--cta-video:hover::before,
+.btn--cta-video:hover::before,
 .btn--footer:hover::before {
 left: 100% !important;
 }
 
 .btn--primary:hover::after,
 .btn--cta:hover::after,
-.hero__cta-main .btn--primary:hover::after,
-.hero__cta-main .btn--cta:hover::after,
-.nav__cta .btn--primary:hover::after,
-.nav__cta .btn--cta:hover::after,
-.nav__cta-mobile .btn--primary:hover::after,
-.nav__cta-mobile .btn--cta:hover::after,
-.videos__cta-buttons .btn--cta-video:hover::after,
+.btn--cta-video:hover::after,
 .btn--footer:hover::after {
 opacity: 1 !important;
 }
@@ -1217,32 +1000,20 @@ opacity: 1 !important;
 /* ===== ESTADOS ACTIVOS/PRESIONADOS ===== */
 .btn--primary:active,
 .btn--cta:active,
-.hero__cta-main .btn--primary:active,
-.hero__cta-main .btn--cta:active,
-.nav__cta .btn--primary:active,
-.nav__cta .btn--cta:active,
-.nav__cta-mobile .btn--primary:active,
-.nav__cta-mobile .btn--cta:active,
-.videos__cta-buttons .btn--cta-video:active,
+.btn--cta-video:active,
 .btn--footer:active {
 transform: translateY(-2px) scale(1.02) translateZ(0) !important;
 
 box-shadow: 
     var(--neon-shadow-active),
-    var(--neon-glow-ultra),
+    var(--neon-glow-strong),
     inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
 }
 
 /* ===== ESTADOS FOCUS PARA ACCESIBILIDAD ===== */
 .btn--primary:focus,
 .btn--cta:focus,
-.hero__cta-main .btn--primary:focus,
-.hero__cta-main .btn--cta:focus,
-.nav__cta .btn--primary:focus,
-.nav__cta .btn--cta:focus,
-.nav__cta-mobile .btn--primary:focus,
-.nav__cta-mobile .btn--cta:focus,
-.videos__cta-buttons .btn--cta-video:focus,
+.btn--cta-video:focus,
 .btn--footer:focus {
 outline: 3px solid rgba(255, 45, 85, 0.5) !important;
 outline-offset: 3px !important;
@@ -1252,13 +1023,7 @@ border-radius: inherit !important;
 /* ===== CORRECCIÓN ESPECÍFICA PARA TEXTO INTERNO ===== */
 .btn--primary span,
 .btn--cta span,
-.hero__cta-main .btn--primary span,
-.hero__cta-main .btn--cta span,
-.nav__cta .btn--primary span,
-.nav__cta .btn--cta span,
-.nav__cta-mobile .btn--primary span,
-.nav__cta-mobile .btn--cta span,
-.videos__cta-buttons .btn--cta-video span,
+.btn--cta-video span,
 .btn--footer span {
 position: relative !important;
 z-index: 2 !important;
@@ -1276,13 +1041,7 @@ letter-spacing: 1px !important;
 
 .btn--primary small,
 .btn--cta small,
-.hero__cta-main .btn--primary small,
-.hero__cta-main .btn--cta small,
-.nav__cta .btn--primary small,
-.nav__cta .btn--cta small,
-.nav__cta-mobile .btn--primary small,
-.nav__cta-mobile .btn--cta small,
-.videos__cta-buttons .btn--cta-video small,
+.btn--cta-video small,
 .btn--footer small {
 position: relative !important;
 z-index: 2 !important;
@@ -1437,7 +1196,7 @@ position: relative;
 z-index: 3;
 width: 100%;
 max-width: 100%;
-overflow: hidden; /* PREVENIR SCROLL HORIZONTAL */
+overflow: hidden;
 }
 
 .hero__container {
@@ -1447,14 +1206,14 @@ gap: var(--space-5xl);
 align-items: center;
 width: 100%;
 max-width: 100%;
-overflow: hidden; /* PREVENIR SCROLL HORIZONTAL */
+overflow: hidden;
 }
 
 .hero__content {
 animation: fadeInUp 1s ease-out;
 width: 100%;
 max-width: 100%;
-overflow: hidden; /* PREVENIR SCROLL HORIZONTAL */
+overflow: hidden;
 }
 
 /* ===== BOTONES DE ETIQUETAS NO CLICKEABLES ===== */
@@ -1540,7 +1299,7 @@ background-clip: text;
 position: relative;
 margin-bottom: var(--space-sm);
 font-weight: 900;
-text-shadow: var(--neon-crimson-old);
+text-shadow: var(--glow-medium);
 filter: drop-shadow(0 0 20px rgba(255, 69, 105, 0.4));
 }
 
@@ -1677,7 +1436,7 @@ var(--starflex-crimson-bright) 100%
 );
 box-shadow: 
 var(--shadow-crimson),
-var(--neon-crimson-old),
+var(--glow-medium),
 inset 0 1px 0 rgba(255, 255, 255, 0.15);
 border: 2px solid rgba(255, 69, 105, 0.4);
 color: #ffffff;
@@ -1708,8 +1467,7 @@ z-index: 1;
 transform: translateY(-4px) scale(1.05);
 box-shadow: 
 var(--shadow-crimson-hover),
-var(--neon-crimson-strong-old),
-var(--neon-crimson-ultra-old),
+var(--glow-strong),
 inset 0 1px 0 rgba(255, 255, 255, 0.25);
 border-color: rgba(255, 69, 105, 0.7);
 text-shadow: 0 0 20px rgba(255, 255, 255, 0.9);
@@ -1745,7 +1503,7 @@ position: relative;
 z-index: 2;
 }
 
-/* ===== BOTONES DE DESCARGA OPTIMIZADOS Y CORREGIDOS ===== */
+/* ===== BOTONES DE DESCARGA OPTIMIZADOS ===== */
 .hero__download {
 display: flex;
 gap: var(--space-xl);
@@ -1754,7 +1512,7 @@ align-items: center;
 justify-content: flex-start;
 width: 100%;
 max-width: 100%;
-overflow: hidden; /* PREVENIR SCROLL HORIZONTAL */
+overflow: hidden;
 }
 
 .download-btn {
@@ -1765,7 +1523,7 @@ overflow: visible;
 text-decoration: none;
 cursor: pointer;
 filter: drop-shadow(0 8px 25px rgba(0, 0, 0, 0.3));
-flex-shrink: 0; /* PREVENIR SHRINK */
+flex-shrink: 0;
 }
 
 .download-btn:hover {
@@ -1773,7 +1531,6 @@ transform: translateY(-5px) scale(1.05);
 filter: drop-shadow(0 15px 35px rgba(0, 0, 0, 0.4)) brightness(1.1);
 }
 
-/* ===== CORRECCIÓN ESPECÍFICA PARA BOTONES DE DESCARGA ===== */
 .download-btn__image {
 height: 60px;
 width: auto;
@@ -1787,30 +1544,14 @@ object-position: center;
 filter: brightness(1.02) contrast(1.05) saturate(1.08);
 transform: translateZ(0);
 backface-visibility: hidden;
-max-width: 200px; /* LIMITAR ANCHO MÁXIMO */
+max-width: 200px;
 }
 
-/* CORRECCIÓN ESPECÍFICA PARA GOOGLEPLAY - MISMO TAMAÑO QUE APPSTORE */
 .download-btn--google .download-btn__image {
-height: 60px;
-width: auto;
-min-width: 180px; /* Mismo ancho mínimo que AppStore */
-max-width: 200px; /* LIMITAR ANCHO MÁXIMO */
-}
-
-.download-btn--app-store .download-btn__image {
 height: 60px;
 width: auto;
 min-width: 180px;
-max-width: 200px; /* LIMITAR ANCHO MÁXIMO */
-}
-
-.download-btn:hover .download-btn__image {
-filter: drop-shadow(0 8px 25px rgba(0, 0, 0, 0.3)) brightness(1.05) contrast(1.08) saturate(1.1);
-}
-
-/* ===== CONFIGURACIÓN DE IMÁGENES DE DESCARGA ===== */
-.download-btn--google .download-btn__image {
+max-width: 200px;
 background-image: url('../assets/GooglePlay.avif');
 background-size: contain;
 background-repeat: no-repeat;
@@ -1818,28 +1559,18 @@ background-position: center;
 }
 
 .download-btn--app-store .download-btn__image {
+height: 60px;
+width: auto;
+min-width: 180px;
+max-width: 200px;
 background-image: url('../assets/AppleStore.avif');
 background-size: contain;
 background-repeat: no-repeat;
 background-position: center;
 }
 
-/* Soporte para WebP */
-.webp .download-btn--google .download-btn__image {
-background-image: url('../assets/GooglePlay.webp');
-}
-
-.webp .download-btn--app-store .download-btn__image {
-background-image: url('../assets/AppleStore.webp');
-}
-
-/* Fallbacks para PNG */
-.download-btn--google .download-btn__image {
-background-image: url('../assets/GooglePlay.png');
-}
-
-.download-btn--app-store .download-btn__image {
-background-image: url('../assets/AppleStore.png');
+.download-btn:hover .download-btn__image {
+filter: drop-shadow(0 8px 25px rgba(0, 0, 0, 0.3)) brightness(1.05) contrast(1.08) saturate(1.1);
 }
 
 .hero__trust {
@@ -1864,7 +1595,7 @@ box-shadow: var(--glow-subtle);
 animation: pulse-gentle 4s infinite;
 }
 
-/* ===== VIDEO MÓVIL DEBAJO DEL TEXTO DE CONFIANZA - COMPACTO ===== */
+/* ===== VIDEO MÓVIL DEBAJO DEL TEXTO DE CONFIANZA ===== */
 .hero__mobile-video {
 width: 100%;
 max-width: 320px;
@@ -1891,47 +1622,7 @@ filter: brightness(1.02) contrast(1.05) saturate(1.08);
 display: none !important;
 }
 
-.hero__mobile-video-player::-webkit-media-controls-panel {
-display: none !important;
-}
-
-.hero__mobile-video-player::-webkit-media-controls-play-button {
-display: none !important;
-}
-
-.hero__mobile-video-player::-webkit-media-controls-start-playback-button {
-display: none !important;
-}
-
-.hero__mobile-video-player::-webkit-media-controls-timeline {
-display: none !important;
-}
-
-.hero__mobile-video-player::-webkit-media-controls-current-time-display {
-display: none !important;
-}
-
-.hero__mobile-video-player::-webkit-media-controls-time-remaining-display {
-display: none !important;
-}
-
-.hero__mobile-video-player::-webkit-media-controls-mute-button {
-display: none !important;
-}
-
-.hero__mobile-video-player::-webkit-media-controls-volume-slider {
-display: none !important;
-}
-
-.hero__mobile-video-player::-webkit-media-controls-fullscreen-button {
-display: none !important;
-}
-
-.hero__mobile-video-player::-webkit-media-controls-toggle-closed-captions-button {
-display: none !important;
-}
-
-/* ===== TELÉFONO HERO OPTIMIZADO CON VIDEO COMPACTO ===== */
+/* ===== TELÉFONO HERO OPTIMIZADO CON VIDEO ===== */
 .hero__media {
 display: flex;
 justify-content: center;
@@ -1940,7 +1631,7 @@ position: relative;
 animation: fadeInRight 1s ease-out 0.3s both;
 width: 100%;
 max-width: 100%;
-overflow: hidden; /* PREVENIR SCROLL HORIZONTAL */
+overflow: hidden;
 }
 
 .hero__phone-container {
@@ -2003,7 +1694,7 @@ background: #000000;
 border-radius: var(--phone-border-radius);
 }
 
-/* ===== VIDEO DEL HERO OPTIMIZADO - COMPACTO ===== */
+/* ===== VIDEO DEL HERO OPTIMIZADO ===== */
 .hero__phone-video {
 width: 100%;
 height: 100%;
@@ -2028,47 +1719,7 @@ display: block;
 display: none !important;
 }
 
-.hero__phone-video::-webkit-media-controls-panel {
-display: none !important;
-}
-
-.hero__phone-video::-webkit-media-controls-play-button {
-display: none !important;
-}
-
-.hero__phone-video::-webkit-media-controls-start-playback-button {
-display: none !important;
-}
-
-.hero__phone-video::-webkit-media-controls-timeline {
-display: none !important;
-}
-
-.hero__phone-video::-webkit-media-controls-current-time-display {
-display: none !important;
-}
-
-.hero__phone-video::-webkit-media-controls-time-remaining-display {
-display: none !important;
-}
-
-.hero__phone-video::-webkit-media-controls-mute-button {
-display: none !important;
-}
-
-.hero__phone-video::-webkit-media-controls-volume-slider {
-display: none !important;
-}
-
-.hero__phone-video::-webkit-media-controls-fullscreen-button {
-display: none !important;
-}
-
-.hero__phone-video::-webkit-media-controls-toggle-closed-captions-button {
-display: none !important;
-}
-
-/* ===== ESTADOS DE CARGA PARA VIDEO ===== */
+/* Estados de carga para video */
 .hero__phone-video.loading {
 opacity: 0.7;
 filter: brightness(0.8) contrast(0.9);
@@ -2083,13 +1734,7 @@ filter: brightness(1.02) contrast(1.05) saturate(1.08);
 display: none;
 }
 
-/* Mostrar imagen de fallback cuando el video falla */
-.hero__phone-video.error + .hero__phone-app-image {
-display: block;
-z-index: 2;
-}
-
-/* ===== SECCIÓN CARACTERÍSTICAS COMPLETAMENTE REDISEÑADA SIN HOVER ===== */
+/* ===== SECCIÓN CARACTERÍSTICAS OPTIMIZADA ===== */
 .features {
 padding: var(--space-6xl) 0;
 position: relative;
@@ -2169,10 +1814,10 @@ position: relative;
 z-index: 3;
 width: 100%;
 max-width: 100%;
-overflow: hidden; /* PREVENIR SCROLL HORIZONTAL */
+overflow: hidden;
 }
 
-/* ===== CARACTERÍSTICAS INDIVIDUALES SIN HOVER ===== */
+/* ===== CARACTERÍSTICAS INDIVIDUALES ===== */
 .feature {
 display: grid;
 grid-template-columns: 1fr 1fr;
@@ -2183,7 +1828,7 @@ transform: translateY(50px);
 position: relative;
 width: 100%;
 max-width: 100%;
-overflow: hidden; /* PREVENIR SCROLL HORIZONTAL */
+overflow: hidden;
 }
 
 .feature.in-view {
@@ -2204,7 +1849,7 @@ padding: 0;
 position: relative;
 width: 100%;
 max-width: 100%;
-overflow: hidden; /* PREVENIR SCROLL HORIZONTAL */
+overflow: hidden;
 }
 
 .feature__title {
@@ -2264,7 +1909,7 @@ animation: pulse-gentle 4s infinite;
 margin-top: 8px;
 }
 
-/* ===== TELÉFONOS DE CARACTERÍSTICAS OPTIMIZADOS - SIN HOVER ===== */
+/* ===== TELÉFONOS DE CARACTERÍSTICAS OPTIMIZADOS ===== */
 .feature__phone {
 position: relative;
 width: var(--phone-width-desktop);
@@ -2275,7 +1920,6 @@ transition: none;
 filter: drop-shadow(0 10px 30px rgba(255, 69, 105, 0.15));
 }
 
-/* Efecto de brillo sutil en las imágenes - SIN HOVER */
 .feature__phone::before {
 content: '';
 position: absolute;
@@ -2296,7 +1940,6 @@ opacity: 0;
 transition: opacity var(--transition);
 }
 
-/* Activar brillo al hacer scroll */
 .feature.in-view .feature__phone::before {
 opacity: 1;
 }
@@ -2393,14 +2036,6 @@ background: #000000;
 border-radius: var(--phone-border-radius);
 }
 
-/* Optimización de las imágenes para mejor rendimiento */
-.phone__app-image {
-background-size: cover;
-background-position: center;
-background-repeat: no-repeat;
-filter: brightness(1.02) contrast(1.05) saturate(1.1);
-}
-
 /* ===== SECCIÓN DE VIDEOS FUTURISTA ===== */
 .videos {
 padding: var(--space-6xl) 0;
@@ -2476,7 +2111,7 @@ var(--starflex-crimson-glow) 70%,
 background-clip: text;
 position: relative;
 font-weight: 900;
-text-shadow: var(--neon-crimson-old);
+text-shadow: var(--glow-medium);
 filter: drop-shadow(0 0 20px rgba(184, 0, 46, 0.4));
 }
 
@@ -2513,7 +2148,7 @@ position: relative;
 z-index: 3;
 width: 100%;
 max-width: 100%;
-overflow: hidden; /* PREVENIR SCROLL HORIZONTAL */
+overflow: hidden;
 }
 
 .videos__main-wrapper {
@@ -2524,7 +2159,7 @@ opacity: 0;
 transform: translateY(50px);
 animation: slideInUp 1s ease-out 0.4s forwards;
 width: 100%;
-overflow: hidden; /* PREVENIR SCROLL HORIZONTAL */
+overflow: hidden;
 }
 
 .videos__bg-effects {
@@ -2646,46 +2281,6 @@ outline: none;
 display: none !important;
 }
 
-.videos__player::-webkit-media-controls-panel {
-display: none !important;
-}
-
-.videos__player::-webkit-media-controls-play-button {
-display: none !important;
-}
-
-.videos__player::-webkit-media-controls-start-playback-button {
-display: none !important;
-}
-
-.videos__player::-webkit-media-controls-timeline {
-display: none !important;
-}
-
-.videos__player::-webkit-media-controls-current-time-display {
-display: none !important;
-}
-
-.videos__player::-webkit-media-controls-time-remaining-display {
-display: none !important;
-}
-
-.videos__player::-webkit-media-controls-mute-button {
-display: none !important;
-}
-
-.videos__player::-webkit-media-controls-volume-slider {
-display: none !important;
-}
-
-.videos__player::-webkit-media-controls-fullscreen-button {
-display: none !important;
-}
-
-.videos__player::-webkit-media-controls-toggle-closed-captions-button {
-display: none !important;
-}
-
 .videos__player:hover {
 transform: scale(1.02);
 }
@@ -2740,7 +2335,7 @@ var(--starflex-crimson-bright) 100%
 border-radius: 50%;
 box-shadow: 
 var(--shadow-crimson),
-var(--neon-crimson-old),
+var(--glow-medium),
 inset 0 2px 0 rgba(255, 255, 255, 0.2);
 transition: all var(--transition);
 }
@@ -2749,8 +2344,7 @@ transition: all var(--transition);
 transform: scale(1.1);
 box-shadow: 
 var(--shadow-crimson-hover),
-var(--neon-crimson-strong-old),
-var(--neon-crimson-ultra-old),
+var(--glow-strong),
 inset 0 2px 0 rgba(255, 255, 255, 0.3);
 }
 
@@ -2963,7 +2557,7 @@ var(--starflex-crimson-bright) 100%
 );
 box-shadow: 
 var(--shadow-crimson),
-var(--neon-crimson-old);
+var(--glow-medium);
 border: 2px solid rgba(255, 69, 105, 0.4);
 color: #ffffff;
 text-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
@@ -2973,7 +2567,7 @@ text-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
 transform: translateY(-4px) scale(1.05);
 box-shadow: 
 var(--shadow-crimson-hover),
-var(--neon-crimson-strong-old);
+var(--glow-strong);
 }
 
 .btn--cta-video span {
@@ -3100,7 +2694,7 @@ padding: 0 var(--space-xl);
 position: relative;
 z-index: 2;
 width: 100%;
-overflow: hidden; /* PREVENIR SCROLL HORIZONTAL */
+overflow: hidden;
 }
 
 .faq__list {
@@ -3431,7 +3025,7 @@ margin: 0 auto var(--space-5xl);
 position: relative;
 z-index: 3;
 width: 100%;
-overflow: hidden; /* PREVENIR SCROLL HORIZONTAL */
+overflow: hidden;
 }
 
 .contact__channel {
@@ -3547,7 +3141,7 @@ background: linear-gradient(135deg, var(--starflex-crimson) 0%, var(--starflex-c
 
 .contact__channel[data-channel="email"]:hover {
 border-color: var(--border-crimson);
-box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2), var(--neon-crimson-old);
+box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2), var(--glow-medium);
 }
 
 .contact__channel-content {
@@ -3635,7 +3229,7 @@ max-width: 1200px;
 margin: 0 auto;
 padding: 0 var(--space-xl);
 width: 100%;
-overflow: hidden; /* PREVENIR SCROLL HORIZONTAL */
+overflow: hidden;
 }
 
 .contact__footer-text h3 {
@@ -3677,7 +3271,7 @@ transition: all var(--transition);
 transform: translateY(-4px);
 box-shadow: 
 0 15px 40px rgba(184, 0, 46, 0.4),
-var(--neon-crimson-old),
+var(--glow-medium),
 inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
@@ -3706,13 +3300,11 @@ gap: var(--space-md);
 pointer-events: none;
 }
 
-/* ===== CONTENEDOR PRINCIPAL DEL WIDGET ===== */
 .floating-widget__container {
 position: relative;
 pointer-events: auto;
 }
 
-/* ===== BOTÓN PRINCIPAL FLOTANTE CON ÍCONO DE MENSAJE ===== */
 .floating-widget__main-btn {
 width: 80px;
 height: 80px;
@@ -3733,12 +3325,11 @@ position: relative;
 transition: all var(--transition);
 box-shadow: 
 var(--shadow-crimson),
-var(--neon-crimson-old),
+var(--glow-medium),
 inset 0 2px 0 rgba(255, 255, 255, 0.15);
 overflow: hidden;
 }
 
-/* ===== ANILLO EXTERIOR ANIMADO - RALENTIZADO ===== */
 .floating-widget__main-btn::before {
 content: '';
 position: absolute;
@@ -3762,8 +3353,7 @@ transition: opacity 0.8s ease;
 transform: scale(1.15);
 box-shadow: 
 var(--shadow-crimson-hover),
-var(--neon-crimson-strong-old),
-var(--neon-crimson-ultra-old),
+var(--glow-strong),
 inset 0 2px 0 rgba(255, 255, 255, 0.25);
 }
 
@@ -3775,7 +3365,6 @@ opacity: 1;
 transform: scale(1.1);
 }
 
-/* ===== ÍCONO DE MENSAJE ===== */
 .floating-widget__main-icon {
 width: 40px;
 height: 40px;
@@ -3795,7 +3384,6 @@ transform: scale(0.9);
 filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.4)) brightness(1.1);
 }
 
-/* ===== MENÚ DESPLEGABLE ===== */
 .floating-widget__menu {
 position: absolute;
 bottom: 90px;
@@ -3817,7 +3405,6 @@ transform: translateY(0) scale(1);
 pointer-events: auto;
 }
 
-/* ===== BOTONES DEL MENÚ ===== */
 .floating-widget__menu-item {
 width: 65px;
 height: 65px;
@@ -3836,7 +3423,6 @@ box-shadow:
 inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
-/* ===== EFECTO SHIMMER RALENTIZADO ===== */
 .floating-widget__menu-item::before {
 content: '';
 position: absolute;
@@ -3864,7 +3450,6 @@ box-shadow:
 inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
-/* ===== WHATSAPP ===== */
 .floating-widget__whatsapp {
 background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
 }
@@ -3876,7 +3461,6 @@ box-shadow:
 inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
-/* ===== TELEGRAM ===== */
 .floating-widget__telegram {
 background: linear-gradient(135deg, #0088cc 0%, #229ed9 100%);
 }
@@ -3888,7 +3472,6 @@ box-shadow:
 inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
-/* ===== ICONOS DE LOS BOTONES ===== */
 .floating-widget__icon {
 width: 32px;
 height: 32px;
@@ -3901,7 +3484,6 @@ filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 transform: scale(1.1);
 }
 
-/* ===== TOOLTIPS MEJORADOS ===== */
 .floating-widget__tooltip {
 position: absolute;
 right: 75px;
@@ -3945,32 +3527,7 @@ visibility: visible;
 transform: translateY(-50%) translateX(-8px);
 }
 
-/* ===== ANIMACIÓN NEÓN PULSANTE SUAVE ===== */
-@keyframes neon-pulse-soft {
-0%, 100% {
-box-shadow: 
-    var(--neon-shadow-base),
-    var(--neon-glow-soft),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
-}
-50% {
-box-shadow: 
-    var(--neon-shadow-hover),
-    var(--neon-glow-medium),
-    var(--neon-glow-strong),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3);
-}
-}
-
-/* Aplicar animación pulsante suave a botones principales */
-.btn--cta,
-.hero__cta-main .btn--cta,
-.videos__cta-buttons .btn--cta-video,
-.btn--footer {
-animation: neon-pulse-soft 4s ease-in-out infinite !important;
-}
-
-/* ===== ANIMACIONES OPTIMIZADAS - RALENTIZADAS ===== */
+/* ===== ANIMACIONES OPTIMIZADAS ===== */
 @keyframes ambient-glow {
 0%, 100% {
 opacity: 0.6;
@@ -4238,7 +3795,6 @@ transform: translateY(0);
 }
 }
 
-/* ===== ANIMACIONES DE CARGA DE IMÁGENES ===== */
 @keyframes image-loading-shimmer {
 0% {
 background-position: -200% 0;
@@ -4254,38 +3810,6 @@ transform: translate(-50%, -50%) rotate(0deg);
 }
 100% {
 transform: translate(-50%, -50%) rotate(360deg);
-}
-}
-
-/* ===== ESTADOS DE CARGA PARA IMÁGENES OPTIMIZADAS ===== */
-.hero__phone[data-loading="true"],
-.phone[data-loading="true"] {
-background: linear-gradient(90deg, 
-var(--secondary-bg) 25%, 
-var(--accent-bg) 50%, 
-var(--secondary-bg) 75%
-);
-background-size: 200% 100%;
-animation: loading-shimmer 3s infinite;
-}
-
-.hero__phone-app-image[data-loading="true"],
-.phone__app-image[data-loading="true"] {
-background: linear-gradient(90deg, 
-var(--secondary-bg) 25%, 
-var(--accent-bg) 50%, 
-var(--secondary-bg) 75%
-);
-background-size: 200% 100%;
-animation: loading-shimmer 3s infinite;
-}
-
-@keyframes loading-shimmer {
-0% {
-background-position: -200% 0;
-}
-100% {
-background-position: 200% 0;
 }
 }
 
@@ -4345,10 +3869,8 @@ transition-duration: 0.01ms !important;
 animation: none !important;
 }
 
-/* Desactivar animaciones neón en modo reducido */
 .btn--cta,
-.hero__cta-main .btn--cta,
-.videos__cta-buttons .btn--cta-video,
+.btn--cta-video,
 .btn--footer {
 animation: none !important;
 }
@@ -4365,7 +3887,7 @@ background: var(--starflex-crimson);
 color: var(--text-primary);
 }
 
-/* ===== RESPONSIVE BREAKPOINTS ESPECÍFICOS MEJORADOS ===== */
+/* ===== RESPONSIVE BREAKPOINTS ESPECÍFICOS ===== */
 @media (max-width: 1024px) {
 .nav__toggle {
 display: flex;
@@ -4403,8 +3925,8 @@ padding-top: max(calc(var(--mobile-menu-safe-area) + var(--navbar-height-mobile)
 padding-bottom: max(calc(var(--mobile-menu-safe-area) + 80px), calc(env(safe-area-inset-bottom, 0px) + 80px));
 padding-left: max(var(--mobile-menu-padding), env(safe-area-inset-left, var(--mobile-menu-padding)));
 padding-right: max(var(--mobile-menu-padding), env(safe-area-inset-right, var(--mobile-menu-padding)));
-max-width: 100vw; /* LIMITAR ANCHO MÁXIMO */
-overflow-x: hidden; /* PREVENIR SCROLL HORIZONTAL */
+max-width: 100vw;
+overflow-x: hidden;
 }
 
 .nav__menu.active {
@@ -4436,7 +3958,7 @@ animation: none;
 width: 100%;
 max-width: min(350px, calc(100vw - 2 * var(--mobile-menu-padding)));
 min-height: auto;
-overflow: hidden; /* PREVENIR SCROLL HORIZONTAL */
+overflow: hidden;
 }
 
 .nav__list::before {
@@ -4461,7 +3983,7 @@ min-height: 48px;
 display: flex;
 align-items: center;
 justify-content: center;
-white-space: nowrap; /* PREVENIR WRAP */
+white-space: nowrap;
 }
 
 .nav__link::before {
@@ -4488,13 +4010,7 @@ transform: translateY(-1px) scale(0.98);
 /* Optimizaciones para móvil en efectos neón */
 .btn--primary,
 .btn--cta,
-.hero__cta-main .btn--primary,
-.hero__cta-main .btn--cta,
-.nav__cta .btn--primary,
-.nav__cta .btn--cta,
-.nav__cta-mobile .btn--primary,
-.nav__cta-mobile .btn--cta,
-.videos__cta-buttons .btn--cta-video,
+.btn--cta-video,
 .btn--footer {
 box-shadow: 
     0 4px 15px rgba(255, 45, 85, 0.4),
@@ -4504,13 +4020,7 @@ box-shadow:
 
 .btn--primary:hover,
 .btn--cta:hover,
-.hero__cta-main .btn--primary:hover,
-.hero__cta-main .btn--cta:hover,
-.nav__cta .btn--primary:hover,
-.nav__cta .btn--cta:hover,
-.nav__cta-mobile .btn--primary:hover,
-.nav__cta-mobile .btn--cta:hover,
-.videos__cta-buttons .btn--cta-video:hover,
+.btn--cta-video:hover,
 .btn--footer:hover {
 transform: translateY(-2px) scale(1.02) translateZ(0) !important;
 
@@ -4522,8 +4032,7 @@ box-shadow:
 
 /* Simplificar animaciones en móvil */
 .btn--cta,
-.hero__cta-main .btn--cta,
-.videos__cta-buttons .btn--cta-video,
+.btn--cta-video,
 .btn--footer {
 animation: none !important;
 }
@@ -4553,7 +4062,7 @@ transform: scale(1.02);
 }
 }
 
-/* ELEMENTOS ESPECÍFICOS PARA MÓVIL - OCULTOS EN DESKTOP */
+/* ELEMENTOS ESPECÍFICOS PARA MÓVIL */
 .nav__close,
 .nav__language-mobile,
 .nav__cta-mobile {
@@ -4597,55 +4106,55 @@ display: none;
 .container {
 width: 100%;
 max-width: 100%;
-overflow-x: hidden; /* PREVENIR SCROLL HORIZONTAL */
+overflow-x: hidden;
 }
 
 .hero__container {
 width: 100%;
 max-width: 100%;
-overflow-x: hidden; /* PREVENIR SCROLL HORIZONTAL */
+overflow-x: hidden;
 }
 
 .hero__download {
 width: 100%;
 max-width: 100%;
-overflow-x: hidden; /* PREVENIR SCROLL HORIZONTAL */
-flex-wrap: wrap; /* PERMITIR WRAP EN MÓVIL */
+overflow-x: hidden;
+flex-wrap: wrap;
 }
 
 .features__grid {
 width: 100%;
 max-width: 100%;
-overflow-x: hidden; /* PREVENIR SCROLL HORIZONTAL */
+overflow-x: hidden;
 }
 
 .feature {
 width: 100%;
 max-width: 100%;
-overflow-x: hidden; /* PREVENIR SCROLL HORIZONTAL */
+overflow-x: hidden;
 }
 
 .videos__main-container {
 width: 100%;
 max-width: 100%;
-overflow-x: hidden; /* PREVENIR SCROLL HORIZONTAL */
+overflow-x: hidden;
 }
 
 .faq__container {
 width: 100%;
 max-width: 100%;
-overflow-x: hidden; /* PREVENIR SCROLL HORIZONTAL */
+overflow-x: hidden;
 }
 
 .contact__grid {
 width: 100%;
 max-width: 100%;
-overflow-x: hidden; /* PREVENIR SCROLL HORIZONTAL */
+overflow-x: hidden;
 }
 
 .contact__footer-content {
 width: 100%;
 max-width: 100%;
-overflow-x: hidden; /* PREVENIR SCROLL HORIZONTAL */
+overflow-x: hidden;
 }
 }

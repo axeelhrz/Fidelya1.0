@@ -1,125 +1,234 @@
-/* ===== CORRECCIÓN COMPLETA DE EFECTOS NEÓN PARA BOTÓN PRUEBA GRATIS ===== */
+/* ===== CORRECCIONES PARA EFECTOS NEÓN SIN LIMITACIONES ===== */
 
-/* Variables neón optimizadas y unificadas */
-:root {
-    /* Colores neón principales */
-    --neon-primary: #FF2D55;
-    --neon-primary-bright: #ff4569;
-    --neon-primary-glow: #ff1744;
-    --neon-crimson: #b8002e;
-    --neon-crimson-bright: #d4003a;
-    
-    /* Efectos de brillo unificados */
-    --neon-glow-soft: 0 0 15px rgba(255, 45, 85, 0.4);
-    --neon-glow-medium: 0 0 25px rgba(255, 45, 85, 0.6);
-    --neon-glow-strong: 0 0 35px rgba(255, 45, 85, 0.8);
-    --neon-glow-ultra: 0 0 45px rgba(255, 45, 85, 1);
-    
-    /* Sombras neón unificadas */
-    --neon-shadow-base: 0 8px 25px rgba(255, 45, 85, 0.3);
-    --neon-shadow-hover: 0 15px 40px rgba(255, 45, 85, 0.5);
-    --neon-shadow-active: 0 20px 50px rgba(255, 45, 85, 0.7);
-    
-    /* Transiciones suaves */
-    --neon-transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    --neon-transition-fast: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+/* Permitir que los efectos neón se extiendan más allá de los contenedores */
+.hero__content,
+.hero__container,
+.hero__cta-group,
+.container {
+    overflow: visible !important;
 }
 
-/* ===== RESETEAR ESTILOS CONFLICTIVOS ===== */
-.btn--primary,
-.btn--cta,
-.hero__cta-main .btn--primary,
-.hero__cta-main .btn--cta,
-.nav__cta .btn--primary,
-.nav__cta .btn--cta,
-.nav__cta-mobile .btn--primary,
-.nav__cta-mobile .btn--cta,
-.videos__cta-buttons .btn--cta-video,
-.btn--footer {
-    /* Resetear estilos previos */
-    background: none !important;
-    box-shadow: none !important;
-    border: none !important;
-    filter: none !important;
-    transform: none !important;
-    
-    /* Aplicar nuevos estilos neón unificados */
-    position: relative;
-    overflow: hidden;
-    background: linear-gradient(135deg, 
-        var(--neon-crimson) 0%, 
-        var(--neon-primary) 50%, 
-        var(--neon-primary-bright) 100%
-    ) !important;
-    
-    border: 2px solid rgba(255, 45, 85, 0.5) !important;
-    
-    box-shadow: 
-        var(--neon-shadow-base),
-        var(--neon-glow-soft),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
-    
-    color: #ffffff !important;
-    
-    text-shadow: 
-        0 0 10px rgba(255, 255, 255, 0.8),
-        0 0 20px rgba(255, 45, 85, 0.6) !important;
-    
-    transition: var(--neon-transition) !important;
-    
-    font-weight: 700 !important;
-    text-transform: uppercase !important;
-    letter-spacing: 1px !important;
-    
-    will-change: transform, box-shadow !important;
-    transform: translateZ(0) !important;
-    backface-visibility: hidden !important;
+/* Asegurar que el botón CTA tenga espacio suficiente para el efecto neón */
+.hero__cta-group {
+    padding: 20px !important;
+    margin: 20px -20px !important;
 }
 
-/* ===== EFECTO DE BRILLO INTERNO ANIMADO ===== */
-.btn--primary::before,
-.btn--cta::before,
-.hero__cta-main .btn--primary::before,
-.hero__cta-main .btn--cta::before,
-.nav__cta .btn--primary::before,
-.nav__cta .btn--cta::before,
-.nav__cta-mobile .btn--primary::before,
-.nav__cta-mobile .btn--cta::before,
-.videos__cta-buttons .btn--cta-video::before,
-.btn--footer::before {
+/* Mejorar el efecto neón del botón principal */
+.btn--cta {
+    position: relative !important;
+    z-index: 10 !important;
+    margin: 15px !important;
+}
+
+/* Efecto neón extendido que no se corta */
+.btn--cta::after {
     content: '' !important;
     position: absolute !important;
-    top: 0 !important;
-    left: -100% !important;
-    width: 100% !important;
-    height: 100% !important;
-    background: linear-gradient(90deg, 
-        transparent, 
-        rgba(255, 255, 255, 0.4), 
-        transparent
+    top: -8px !important;
+    left: -8px !important;
+    right: -8px !important;
+    bottom: -8px !important;
+    background: linear-gradient(45deg, 
+        var(--neon-primary-glow), 
+        var(--neon-primary-bright), 
+        var(--neon-primary-glow),
+        var(--neon-primary-bright)
     ) !important;
-    transition: left 1.2s ease !important;
-    z-index: 1 !important;
-    border-radius: inherit !important;
+    border-radius: 24px !important;
+    z-index: -1 !important;
+    opacity: 0 !important;
+    transition: opacity 0.4s ease !important;
+    filter: blur(4px) !important;
+    animation: neon-pulse 3s ease-in-out infinite !important;
 }
 
-/* ===== ANILLO EXTERIOR NEÓN ===== */
+/* Activar el efecto neón en hover */
+.btn--cta:hover::after {
+    opacity: 0.8 !important;
+}
+
+/* Anillo neón adicional para mayor impacto */
+.btn--cta::before {
+    content: '' !important;
+    position: absolute !important;
+    top: -12px !important;
+    left: -12px !important;
+    right: -12px !important;
+    bottom: -12px !important;
+    background: linear-gradient(45deg, 
+        transparent,
+        var(--neon-primary-glow),
+        transparent,
+        var(--neon-primary-bright),
+        transparent
+    ) !important;
+    border-radius: 28px !important;
+    z-index: -2 !important;
+    opacity: 0 !important;
+    transition: opacity 0.6s ease !important;
+    filter: blur(8px) !important;
+    animation: neon-outer-pulse 4s ease-in-out infinite !important;
+}
+
+/* Activar el anillo neón externo en hover */
+.btn--cta:hover::before {
+    opacity: 0.6 !important;
+}
+
+/* Mejorar la sombra neón del botón */
+.btn--cta {
+    box-shadow: 
+        0 0 20px rgba(255, 45, 85, 0.4),
+        0 0 40px rgba(255, 45, 85, 0.3),
+        0 0 60px rgba(255, 45, 85, 0.2),
+        0 8px 25px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+}
+
+.btn--cta:hover {
+    box-shadow: 
+        0 0 30px rgba(255, 45, 85, 0.6),
+        0 0 60px rgba(255, 45, 85, 0.4),
+        0 0 90px rgba(255, 45, 85, 0.3),
+        0 15px 40px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+}
+
+/* Animaciones para los efectos neón */
+@keyframes neon-pulse {
+    0%, 100% {
+        opacity: 0.3;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.8;
+        transform: scale(1.05);
+    }
+}
+
+@keyframes neon-outer-pulse {
+    0%, 100% {
+        opacity: 0.1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.6;
+        transform: scale(1.1);
+    }
+}
+
+/* Correcciones específicas para móvil */
+@media (max-width: 1023px) {
+    .hero__cta-group {
+        padding: 15px !important;
+        margin: 15px -15px !important;
+    }
+    
+    .btn--cta {
+        margin: 10px !important;
+    }
+    
+    .btn--cta::after {
+        top: -6px !important;
+        left: -6px !important;
+        right: -6px !important;
+        bottom: -6px !important;
+        filter: blur(3px) !important;
+    }
+    
+    .btn--cta::before {
+        top: -10px !important;
+        left: -10px !important;
+        right: -10px !important;
+        bottom: -10px !important;
+        filter: blur(6px) !important;
+    }
+}
+
+/* Asegurar que otros contenedores no interfieran */
+.hero {
+    overflow: visible !important;
+}
+
+.hero::before,
+.hero::after {
+    z-index: 1 !important;
+}
+
+/* Mantener el botón por encima de otros elementos */
+.btn--cta {
+    z-index: 100 !important;
+    position: relative !important;
+}
+
+/* Efecto de respiración sutil para el botón */
+.btn--cta {
+    animation: button-breathe 6s ease-in-out infinite !important;
+}
+
+@keyframes button-breathe {
+    0%, 100% {
+        transform: translateY(-4px) scale(1);
+    }
+    50% {
+        transform: translateY(-6px) scale(1.02);
+    }
+}
+
+.btn--cta:hover {
+    animation: none !important;
+}
+
+/* Corrección para el texto del botón */
+.btn--cta .hero__cta-main {
+    position: relative !important;
+    z-index: 2 !important;
+}
+
+/* Efecto de partículas neón (opcional) */
+.btn--cta:hover {
+    position: relative !important;
+}
+
+.btn--cta:hover::after {
+    background: linear-gradient(45deg, 
+        var(--neon-primary-glow), 
+        var(--neon-primary-bright), 
+        var(--neon-primary-glow),
+        var(--neon-primary-bright),
+        var(--neon-primary-glow)
+    ) !important;
+    animation: neon-rotate 2s linear infinite !important;
+}
+
+@keyframes neon-rotate {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* Asegurar que el efecto funcione en todos los botones principales */
+.btn--primary,
+.btn--cta-video,
+.btn--footer {
+    position: relative !important;
+    z-index: 10 !important;
+    margin: 10px !important;
+}
+
 .btn--primary::after,
-.btn--cta::after,
-.hero__cta-main .btn--primary::after,
-.hero__cta-main .btn--cta::after,
-.nav__cta .btn--primary::after,
-.nav__cta .btn--cta::after,
-.nav__cta-mobile .btn--primary::after,
-.nav__cta-mobile .btn--cta::after,
-.videos__cta-buttons .btn--cta-video::after,
+.btn--cta-video::after,
 .btn--footer::after {
     content: '' !important;
     position: absolute !important;
-    top: -3px !important;
-    left: -3px !important;
-    right: -3px !important;
-    bottom: -3px !important;
+    top: -6px !important;
+    left: -6px !important;
+    right: -6px !important;
+    bottom: -6px !important;
     background: linear-gradient(45deg, 
         var(--neon-primary-glow), 
         var(--neon-primary-bright), 
@@ -130,348 +239,35 @@
     z-index: -1 !important;
     opacity: 0 !important;
     transition: opacity 0.4s ease !important;
-    filter: blur(2px) !important;
-}
-
-/* ===== ESTADOS HOVER MEJORADOS ===== */
-.btn--primary:hover,
-.btn--cta:hover,
-.hero__cta-main .btn--primary:hover,
-.hero__cta-main .btn--cta:hover,
-.nav__cta .btn--primary:hover,
-.nav__cta .btn--cta:hover,
-.nav__cta-mobile .btn--primary:hover,
-.nav__cta-mobile .btn--cta:hover,
-.videos__cta-buttons .btn--cta-video:hover,
-.btn--footer:hover {
-    transform: translateY(-4px) scale(1.05) translateZ(0) !important;
-    
-    border: 2px solid rgba(255, 45, 85, 0.8) !important;
-    
-    box-shadow: 
-        var(--neon-shadow-hover),
-        var(--neon-glow-medium),
-        var(--neon-glow-strong),
-        inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
-    
-    text-shadow: 
-        0 0 15px rgba(255, 255, 255, 1),
-        0 0 25px rgba(255, 45, 85, 0.8),
-        0 0 35px rgba(255, 45, 85, 0.6) !important;
-}
-
-/* Activar efectos en hover */
-.btn--primary:hover::before,
-.btn--cta:hover::before,
-.hero__cta-main .btn--primary:hover::before,
-.hero__cta-main .btn--cta:hover::before,
-.nav__cta .btn--primary:hover::before,
-.nav__cta .btn--cta:hover::before,
-.nav__cta-mobile .btn--primary:hover::before,
-.nav__cta-mobile .btn--cta:hover::before,
-.videos__cta-buttons .btn--cta-video:hover::before,
-.btn--footer:hover::before {
-    left: 100% !important;
+    filter: blur(3px) !important;
 }
 
 .btn--primary:hover::after,
-.btn--cta:hover::after,
-.hero__cta-main .btn--primary:hover::after,
-.hero__cta-main .btn--cta:hover::after,
-.nav__cta .btn--primary:hover::after,
-.nav__cta .btn--cta:hover::after,
-.nav__cta-mobile .btn--primary:hover::after,
-.nav__cta-mobile .btn--cta:hover::after,
-.videos__cta-buttons .btn--cta-video:hover::after,
+.btn--cta-video:hover::after,
 .btn--footer:hover::after {
-    opacity: 1 !important;
+    opacity: 0.7 !important;
 }
 
-/* ===== ESTADOS ACTIVOS/PRESIONADOS ===== */
-.btn--primary:active,
-.btn--cta:active,
-.hero__cta-main .btn--primary:active,
-.hero__cta-main .btn--cta:active,
-.nav__cta .btn--primary:active,
-.nav__cta .btn--cta:active,
-.nav__cta-mobile .btn--primary:active,
-.nav__cta-mobile .btn--cta:active,
-.videos__cta-buttons .btn--cta-video:active,
-.btn--footer:active {
-    transform: translateY(-2px) scale(1.02) translateZ(0) !important;
-    
-    box-shadow: 
-        var(--neon-shadow-active),
-        var(--neon-glow-ultra),
-        inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+/* Corrección final para asegurar visibilidad completa */
+body {
+    overflow-x: visible !important;
 }
 
-/* ===== ESTADOS FOCUS PARA ACCESIBILIDAD ===== */
-.btn--primary:focus,
-.btn--cta:focus,
-.hero__cta-main .btn--primary:focus,
-.hero__cta-main .btn--cta:focus,
-.nav__cta .btn--primary:focus,
-.nav__cta .btn--cta:focus,
-.nav__cta-mobile .btn--primary:focus,
-.nav__cta-mobile .btn--cta:focus,
-.videos__cta-buttons .btn--cta-video:focus,
-.btn--footer:focus {
-    outline: 3px solid rgba(255, 45, 85, 0.5) !important;
-    outline-offset: 3px !important;
-    border-radius: inherit !important;
+html {
+    overflow-x: visible !important;
 }
 
-/* ===== CORRECCIÓN ESPECÍFICA PARA TEXTO INTERNO ===== */
-.btn--primary span,
-.btn--cta span,
-.hero__cta-main .btn--primary span,
-.hero__cta-main .btn--cta span,
-.nav__cta .btn--primary span,
-.nav__cta .btn--cta span,
-.nav__cta-mobile .btn--primary span,
-.nav__cta-mobile .btn--cta span,
-.videos__cta-buttons .btn--cta-video span,
-.btn--footer span {
-    position: relative !important;
-    z-index: 2 !important;
-    background: linear-gradient(135deg, 
-        #ffffff 0%, 
-        #ffebee 50%, 
-        #ffffff 100%
-    ) !important;
-    -webkit-background-clip: text !important;
-    -webkit-text-fill-color: transparent !important;
-    background-clip: text !important;
-    font-weight: 800 !important;
-    letter-spacing: 1px !important;
+/* Solo mantener overflow hidden en el eje X para prevenir scroll horizontal */
+body, html {
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
 }
 
-.btn--primary small,
-.btn--cta small,
-.hero__cta-main .btn--primary small,
-.hero__cta-main .btn--cta small,
-.nav__cta .btn--primary small,
-.nav__cta .btn--cta small,
-.nav__cta-mobile .btn--primary small,
-.nav__cta-mobile .btn--cta small,
-.videos__cta-buttons .btn--cta-video small,
-.btn--footer small {
-    position: relative !important;
-    z-index: 2 !important;
-    color: rgba(255, 255, 255, 0.95) !important;
-    font-family: 'JetBrains Mono', monospace !important;
-    text-transform: uppercase !important;
-    letter-spacing: 2px !important;
-    font-weight: 600 !important;
-    text-shadow: 0 0 10px rgba(255, 45, 85, 0.7) !important;
-}
-
-/* ===== CORRECCIÓN PARA BOTÓN FLOTANTE (MANTENER CONSISTENCIA) ===== */
-.floating-widget__main-btn {
-    background: linear-gradient(135deg, 
-        var(--neon-crimson) 0%, 
-        var(--neon-primary) 50%, 
-        var(--neon-primary-bright) 100%
-    ) !important;
-    
-    box-shadow: 
-        var(--neon-shadow-base),
-        var(--neon-glow-soft),
-        inset 0 2px 0 rgba(255, 255, 255, 0.15) !important;
-    
-    border: 2px solid rgba(255, 45, 85, 0.5) !important;
-    transition: var(--neon-transition) !important;
-}
-
-.floating-widget__main-btn:hover {
-    transform: scale(1.15) translateZ(0) !important;
-    
-    box-shadow: 
-        var(--neon-shadow-hover),
-        var(--neon-glow-medium),
-        var(--neon-glow-strong),
-        inset 0 2px 0 rgba(255, 255, 255, 0.25) !important;
-    
-    border: 2px solid rgba(255, 45, 85, 0.8) !important;
-}
-
-.floating-widget__main-btn::before {
-    opacity: 1 !important;
-}
-
-.floating-widget__main-btn .floating-widget__main-icon {
-    transform: scale(1.2) !important;
-    filter: 
-        drop-shadow(0 4px 12px rgba(0, 0, 0, 0.6)) 
-        drop-shadow(0 0 20px rgba(255, 255, 255, 0.8)) !important;
-}
-
-/* ===== ANIMACIÓN NEÓN PULSANTE SUAVE ===== */
-@keyframes neon-pulse-soft {
-    0%, 100% {
-        box-shadow: 
-            var(--neon-shadow-base),
-            var(--neon-glow-soft),
-            inset 0 1px 0 rgba(255, 255, 255, 0.2);
-    }
-    50% {
-        box-shadow: 
-            var(--neon-shadow-hover),
-            var(--neon-glow-medium),
-            var(--neon-glow-strong),
-            inset 0 1px 0 rgba(255, 255, 255, 0.3);
-    }
-}
-
-/* Aplicar animación pulsante suave a botones principales */
-.btn--cta,
-.hero__cta-main .btn--cta,
-.videos__cta-buttons .btn--cta-video,
-.btn--footer {
-    animation: neon-pulse-soft 4s ease-in-out infinite !important;
-}
-
-/* ===== OPTIMIZACIONES PARA MÓVIL ===== */
-@media (max-width: 1023px) {
-    /* Reducir intensidad de efectos en móvil para mejor rendimiento */
-    .btn--primary,
-    .btn--cta,
-    .hero__cta-main .btn--primary,
-    .hero__cta-main .btn--cta,
-    .nav__cta .btn--primary,
-    .nav__cta .btn--cta,
-    .nav__cta-mobile .btn--primary,
-    .nav__cta-mobile .btn--cta,
-    .videos__cta-buttons .btn--cta-video,
-    .btn--footer {
-        box-shadow: 
-            0 4px 15px rgba(255, 45, 85, 0.4),
-            0 0 15px rgba(255, 45, 85, 0.3),
-            inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
-    }
-    
-    .btn--primary:hover,
-    .btn--cta:hover,
-    .hero__cta-main .btn--primary:hover,
-    .hero__cta-main .btn--cta:hover,
-    .nav__cta .btn--primary:hover,
-    .nav__cta .btn--cta:hover,
-    .nav__cta-mobile .btn--primary:hover,
-    .nav__cta-mobile .btn--cta:hover,
-    .videos__cta-buttons .btn--cta-video:hover,
-    .btn--footer:hover {
-        transform: translateY(-2px) scale(1.02) translateZ(0) !important;
-        
-        box-shadow: 
-            0 8px 25px rgba(255, 45, 85, 0.5),
-            0 0 20px rgba(255, 45, 85, 0.4),
-            inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
-    }
-    
-    /* Simplificar animaciones en móvil */
-    .btn--cta,
-    .hero__cta-main .btn--cta,
-    .videos__cta-buttons .btn--cta-video,
-    .btn--footer {
-        animation: none !important;
-    }
-    
-    /* Simplificar efectos del botón flotante en móvil */
-    .floating-widget__main-btn {
-        box-shadow: 
-            0 6px 20px rgba(255, 45, 85, 0.4),
-            0 0 15px rgba(255, 45, 85, 0.3) !important;
-    }
-    
-    .floating-widget__main-btn:hover {
-        box-shadow: 
-            0 10px 30px rgba(255, 45, 85, 0.5),
-            0 0 20px rgba(255, 45, 85, 0.4) !important;
-    }
-}
-
-/* ===== MODO REDUCIDO PARA DISPOSITIVOS DE BAJA POTENCIA ===== */
-@media (prefers-reduced-motion: reduce) {
-    .btn--primary::before,
-    .btn--cta::before,
-    .hero__cta-main .btn--primary::before,
-    .hero__cta-main .btn--cta::before,
-    .nav__cta .btn--primary::before,
-    .nav__cta .btn--cta::before,
-    .nav__cta-mobile .btn--primary::before,
-    .nav__cta-mobile .btn--cta::before,
-    .videos__cta-buttons .btn--cta-video::before,
-    .btn--footer::before {
-        animation: none !important;
-        transition: none !important;
-    }
-    
-    .btn--cta,
-    .hero__cta-main .btn--cta,
-    .videos__cta-buttons .btn--cta-video,
-    .btn--footer {
-        animation: none !important;
-    }
-    
-    .floating-widget__main-btn::before {
-        animation: none !important;
-    }
-}
-
-/* ===== CORRECCIÓN PARA COMPATIBILIDAD CON NAVEGADORES ANTIGUOS ===== */
-@supports not (backdrop-filter: blur(10px)) {
-    .btn--primary,
-    .btn--cta,
-    .hero__cta-main .btn--primary,
-    .hero__cta-main .btn--cta,
-    .nav__cta .btn--primary,
-    .nav__cta .btn--cta,
-    .nav__cta-mobile .btn--primary,
-    .nav__cta-mobile .btn--cta,
-    .videos__cta-buttons .btn--cta-video,
-    .btn--footer {
-        background: linear-gradient(135deg, #b8002e 0%, #ff4569 100%) !important;
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3) !important;
-    }
-}
-
-/* ===== ASEGURAR PRIORIDAD MÁXIMA ===== */
-.btn--primary,
-.btn--cta,
-.hero__cta-main .btn,
-.nav__cta .btn,
-.nav__cta-mobile .btn,
-.videos__cta-buttons .btn,
-.btn--footer {
-    /* Forzar aplicación de estilos */
-    background-image: linear-gradient(135deg, 
-        var(--neon-crimson) 0%, 
-        var(--neon-primary) 50%, 
-        var(--neon-primary-bright) 100%
-    ) !important;
-    background-color: var(--neon-primary) !important;
-}
-
-/* ===== CORRECCIÓN FINAL PARA ASEGURAR EFECTOS NEÓN ===== */
-.btn[class*="primary"],
-.btn[class*="cta"],
-a[class*="btn--primary"],
-a[class*="btn--cta"],
-button[class*="btn--primary"],
-button[class*="btn--cta"] {
-    background: linear-gradient(135deg, 
-        var(--neon-crimson) 0%, 
-        var(--neon-primary) 50%, 
-        var(--neon-primary-bright) 100%
-    ) !important;
-    
-    box-shadow: 
-        var(--neon-shadow-base),
-        var(--neon-glow-soft),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
-    
-    border: 2px solid rgba(255, 45, 85, 0.5) !important;
-    color: #ffffff !important;
-    transition: var(--neon-transition) !important;
+/* Pero permitir que los efectos neón se muestren verticalmente */
+.hero,
+.hero__content,
+.hero__container,
+.hero__cta-group {
+    overflow-x: hidden !important;
+    overflow-y: visible !important;
 }
