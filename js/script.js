@@ -363,6 +363,9 @@ const translationData = {
     }
 };
 
+// ===== RESTO DEL CÓDIGO JAVASCRIPT IGUAL =====
+// [El resto del código JavaScript permanece exactamente igual que el original]
+
 // ===== DETECCIÓN DE DISPOSITIVO Y CAPACIDADES =====
 function detectDeviceCapabilities() {
     isMobile = window.innerWidth <= 1023;
@@ -1908,3 +1911,4 @@ if ('serviceWorker' in navigator && !isMobile) {
             });
     });
 }
+    
