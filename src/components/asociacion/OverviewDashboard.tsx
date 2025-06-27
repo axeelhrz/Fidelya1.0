@@ -14,7 +14,6 @@ import {
   Paper,
   IconButton,
   Button,
-  Grid,
   Chip,
   Divider,
   CircularProgress,
@@ -49,12 +48,12 @@ import {
   DataUsage,
   Campaign,
 } from '@mui/icons-material';
-import { 
-  collection, 
-  query, 
-  where, 
-  onSnapshot, 
-  orderBy, 
+import {
+  collection,
+  query,
+  where,
+  onSnapshot,
+  orderBy,
   limit,
   Timestamp,
   getDocs,
@@ -136,6 +135,7 @@ const KPICard: React.FC<KPICardProps> = ({
         stiffness: 100,
         damping: 15
       }}
+      style={{ flex: '1 1 0', minWidth: '280px' }}
     >
       <Card
         elevation={0}
@@ -332,6 +332,7 @@ const ActivityCard: React.FC<{
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.6, delay: 0.3 }}
+      style={{ flex: '2 1 0', minWidth: '400px' }}
     >
       <Card
         elevation={0}
@@ -486,6 +487,7 @@ const SystemHealthCard: React.FC<{
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay: 0.4 }}
+      style={{ flex: '1 1 0', minWidth: '320px' }}
     >
       <Card
         elevation={0}
@@ -641,8 +643,8 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
           })) as ActivityLog[];
 
           // Calculate growth rate (mock calculation based on recent activity)
-          const recentMemberAdditions = activities.filter(a => 
-            a.type === 'member_added' && 
+          const recentMemberAdditions = activities.filter(a =>
+            a.type === 'member_added' &&
             a.timestamp.toDate() > subDays(new Date(), 30)
           ).length;
           const growthRate = (recentMemberAdditions / Math.max(stats.total, 1)) * 100;
@@ -796,7 +798,14 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
         transition={{ duration: 0.6 }}
       >
         <Box sx={{ mb: 6 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 4 }}>
+          <Box sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'space-between', 
+            mb: 4,
+            flexWrap: 'wrap',
+            gap: 3
+          }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
               <Avatar
                 sx={{
@@ -901,24 +910,32 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
               }
             }}
           >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-              <Box
-                sx={{
-                  width: 12,
-                  height: 12,
-                  bgcolor: '#10b981',
-                  borderRadius: '50%',
-                  animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                  '@keyframes pulse': {
-                    '0%, 100%': { opacity: 1, transform: 'scale(1)' },
-                    '50%': { opacity: 0.5, transform: 'scale(1.1)' },
-                  },
-                }}
-              />
-              <Typography variant="body1" sx={{ color: '#047857', fontWeight: 700, fontSize: '1.1rem' }}>
-                <Box component="span" sx={{ fontWeight: 900 }}>Sistema operativo</Box> - Todos los servicios funcionando correctamente
-              </Typography>
-              <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 3,
+              flexWrap: 'wrap',
+              justifyContent: 'space-between'
+            }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                <Box
+                  sx={{
+                    width: 12,
+                    height: 12,
+                    bgcolor: '#10b981',
+                    borderRadius: '50%',
+                    animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    '@keyframes pulse': {
+                      '0%, 100%': { opacity: 1, transform: 'scale(1)' },
+                      '50%': { opacity: 0.5, transform: 'scale(1.1)' },
+                    },
+                  }}
+                />
+                <Typography variant="body1" sx={{ color: '#047857', fontWeight: 700, fontSize: '1.1rem' }}>
+                  <Box component="span" sx={{ fontWeight: 900 }}>Sistema operativo</Box> - Todos los servicios funcionando correctamente
+                </Typography>
+              </Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                 <CalendarToday sx={{ fontSize: 18, color: '#059669' }} />
                 <Typography variant="body2" sx={{ color: '#059669', fontWeight: 700 }}>
                   {format(new Date(), 'EEEE, dd MMMM yyyy', { locale: es })}
@@ -930,33 +947,40 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
       </motion.div>
 
       {/* KPI Cards */}
-      <Grid container spacing={3} sx={{ mb: 6 }}>
+      <Box sx={{ 
+        display: 'flex', 
+        flexWrap: 'wrap', 
+        gap: 3, 
+        mb: 6,
+        '& > *': {
+          minWidth: { xs: '100%', sm: 'calc(50% - 12px)', lg: 'calc(25% - 18px)' }
+        }
+      }}>
         {kpiMetrics.map((metric, index) => (
-          <Grid item xs={12} sm={6} lg={3} key={index}>
-            <KPICard {...metric} />
-          </Grid>
+          <KPICard key={index} {...metric} />
         ))}
-      </Grid>
+      </Box>
 
       {/* Secondary Cards */}
-      <Grid container spacing={4}>
-        <Grid item xs={12} lg={8}>
-          <ActivityCard
-            activities={systemMetrics.recentActivities}
-            loading={loading}
-            onViewAll={() => onNavigate('notifications')}
-          />
-        </Grid>
-        <Grid item xs={12} lg={4}>
-          <SystemHealthCard
-            health={systemMetrics.systemHealth}
-            lastBackup={systemMetrics.lastBackup}
-            storageUsed={systemMetrics.storageUsed}
-            storageLimit={systemMetrics.storageLimit}
-            loading={loading}
-          />
-        </Grid>
-      </Grid>
+      <Box sx={{ 
+        display: 'flex', 
+        flexWrap: 'wrap', 
+        gap: 4,
+        alignItems: 'stretch'
+      }}>
+        <ActivityCard
+          activities={systemMetrics.recentActivities}
+          loading={loading}
+          onViewAll={() => onNavigate('notifications')}
+        />
+        <SystemHealthCard
+          health={systemMetrics.systemHealth}
+          lastBackup={systemMetrics.lastBackup}
+          storageUsed={systemMetrics.storageUsed}
+          storageLimit={systemMetrics.storageLimit}
+          loading={loading}
+        />
+      </Box>
     </Box>
   );
 };
