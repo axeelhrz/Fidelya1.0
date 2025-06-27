@@ -17,17 +17,17 @@ import {
   Close,
 } from '@mui/icons-material';
 import { DateRangePicker } from 'react-date-range';
-import { format, subDays } from 'date-fns';
+import { format, subDays, isValid } from 'date-fns';
 import { es } from 'date-fns/locale';
 import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css';
 
 interface DateRangeSelectorProps {
   dateRange: {
-    startDate: Date;
-    endDate: Date;
+    start: Date;
+    end: Date;
   };
-  onDateRangeChange: (range: { startDate: Date; endDate: Date }) => void;
+  onDateRangeChange: (range: { start: Date; end: Date }) => void;
 }
 
 export const DateRangeSelector: React.FC<DateRangeSelectorProps> = ({
@@ -37,8 +37,8 @@ export const DateRangeSelector: React.FC<DateRangeSelectorProps> = ({
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
   const [tempRange, setTempRange] = useState([
     {
-      startDate: dateRange.startDate,
-      endDate: dateRange.endDate,
+      startDate: dateRange.start,
+      endDate: dateRange.end,
       key: 'selection',
     },
   ]);
@@ -52,8 +52,8 @@ export const DateRangeSelector: React.FC<DateRangeSelectorProps> = ({
     // Reset temp range to current range
     setTempRange([
       {
-        startDate: dateRange.startDate,
-        endDate: dateRange.endDate,
+        startDate: dateRange.start,
+        endDate: dateRange.end,
         key: 'selection',
       },
     ]);
@@ -61,8 +61,8 @@ export const DateRangeSelector: React.FC<DateRangeSelectorProps> = ({
 
   const handleApply = () => {
     onDateRangeChange({
-      startDate: tempRange[0].startDate,
-      endDate: tempRange[0].endDate,
+      start: tempRange[0].startDate,
+      end: tempRange[0].endDate,
     });
     setAnchorEl(null);
   };
@@ -70,16 +70,26 @@ export const DateRangeSelector: React.FC<DateRangeSelectorProps> = ({
   const handlePresetClick = (days: number) => {
     const endDate = new Date();
     const startDate = subDays(endDate, days);
-    onDateRangeChange({ startDate, endDate });
+    onDateRangeChange({ start: startDate, end: endDate });
     setAnchorEl(null);
   };
 
   const open = Boolean(anchorEl);
 
   const formatDateRange = () => {
-    const start = format(dateRange.startDate, 'dd MMM', { locale: es });
-    const end = format(dateRange.endDate, 'dd MMM', { locale: es });
-    return `${start} - ${end}`;
+    try {
+      // Validar que las fechas sean válidas
+      if (!isValid(dateRange.start) || !isValid(dateRange.end)) {
+        return 'Seleccionar fechas';
+      }
+      
+      const start = format(dateRange.start, 'dd MMM', { locale: es });
+      const end = format(dateRange.end, 'dd MMM', { locale: es });
+      return `${start} - ${end}`;
+    } catch (error) {
+      console.error('Error formatting date range:', error);
+      return 'Seleccionar fechas';
+    }
   };
 
   const presets = [
