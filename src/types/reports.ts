@@ -26,7 +26,7 @@ export interface ReportParameters {
   endDate?: Timestamp;
   includeCharts?: boolean;
   format?: 'pdf' | 'excel' | 'csv';
-  filters?: Record<string, any>;
+  filters?: Record<string, unknown>;
   groupBy?: string;
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
@@ -44,7 +44,7 @@ export interface ReportData {
   parameters: ReportParameters;
   userId: string;
   asociacionId: string;
-  data?: any;
+  data?: Record<string, unknown>;
   progress?: number;
   errorMessage?: string;
   expiresAt?: Timestamp;

@@ -27,7 +27,7 @@ export interface Notification {
     attachments?: string[];
     relatedEntityId?: string;
     relatedEntityType?: string;
-    customData?: Record<string, any>;
+    customData?: Record<string, unknown>;
   };
   read: boolean;
 }
@@ -46,7 +46,7 @@ export interface NotificationFormData {
   metadata?: {
     relatedEntityId?: string;
     relatedEntityType?: string;
-    customData?: Record<string, any>;
+    customData?: Record<string, unknown>;
   };
 }
 
@@ -127,5 +127,5 @@ export interface NotificationDelivery {
   deliveredAt?: Date;
   failureReason?: string;
   retryCount: number;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }

@@ -10,7 +10,8 @@ import {
   updateDoc, 
   doc, 
   Timestamp,
-  orderBy
+  orderBy,
+  UpdateData
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Beneficio, BeneficioFormData, BeneficioUso } from '@/types/beneficio';
@@ -126,7 +127,7 @@ export const useBeneficios = () => {
       // Separar las fechas del resto de los datos
       const { fechaInicio, fechaFin, ...otherData } = data;
       
-      const updateData: Record<string, unknown> = {
+      const updateData: UpdateData<Beneficio> = {
         ...otherData,
         actualizadoEn: Timestamp.now()
       };

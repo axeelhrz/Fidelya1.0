@@ -11,12 +11,13 @@ import {
   getDocs,
   onSnapshot,
   Timestamp,
-  writeBatch,
   getDoc
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { Socio } from '@/types/socio';
+import { Validacion } from '@/types/validacion';
+import { Notification } from '@/types/notification';
 
 export interface ReportData {
   id?: string;
@@ -37,7 +38,7 @@ export interface ReportData {
   };
   userId: string;
   asociacionId: string;
-  data?: any;
+  data?: unknown;
   progress?: number;
   errorMessage?: string;
 }
@@ -81,6 +82,112 @@ export interface AnalyticsMetrics {
     socios: number;
     validaciones: number;
   }>;
+}
+
+// Specific interfaces for each report type data
+export interface MemberReportData {
+  socios: (Socio & { id: string })[];
+  validaciones: (Validacion & { id: string })[];
+  totalSocios: number;
+  sociosActivos: number;
+  sociosVencidos: number;
+  totalValidaciones: number;
+  validacionesExitosas: number;
+}
+
+export interface GrowthReportData {
+  socios: (Socio & { id: string; creadoEn: Date })[];
+  monthlyGrowth: Record<string, number>;
+  totalGrowth: number;
+  averageMonthlyGrowth: number;
+}
+
+export interface ActivityReportData {
+  validaciones: (Validacion & { id: string; fechaHora: Date })[];
+  dailyActivity: Array<{
+    fecha: string;
+    validaciones: number;
+    exitosas: number;
+    fallidas: number;
+    sociosUnicos: number;
+  }>;
+  totalValidaciones: number;
+  promedioValidacionesDiarias: number;
+}
+
+export interface RetentionReportData {
+  socios: (Socio & { id: string; creadoEn: Date })[];
+  totalSocios: number;
+  sociosActivos: number;
+  sociosVencidos: number;
+  tasaRetencion: number;
+  tasaAbandonoMensual: number;
+}
+
+export interface FinancialReportData {
+  socios: (Socio & { id: string })[];
+  sociosActivos: number;
+  cuotaMensual: number;
+  ingresosMensuales: number;
+  ingresosAnuales: number;
+  proyeccionTrimestral: number;
+}
+
+export interface DemographicReportData {
+  socios: (Socio & { id: string })[];
+  totalSocios: number;
+  distribucionEstado: {
+    activos: number;
+    vencidos: number;
+    inactivos: number;
+  };
+}
+
+export interface EngagementReportData {
+  validaciones: (Validacion & { id: string })[];
+  sociosConActividad: number;
+  promedioValidacionesPorSocio: number;
+  totalValidaciones: number;
+}
+
+export interface CommunicationReportData {
+  notifications: (Notification & { id: string })[];
+  totalNotificaciones: number;
+  notificacionesEnviadas: number;
+}
+
+// Union type for all report data types
+export type ReportDataUnion = 
+  | MemberReportData
+  | GrowthReportData
+  | ActivityReportData
+  | RetentionReportData
+  | FinancialReportData
+  | DemographicReportData
+  | EngagementReportData
+  | CommunicationReportData;
+
+export interface ChartData {
+  type: 'line' | 'bar' | 'pie' | 'doughnut';
+  data: unknown[];
+  options: {
+    responsive: boolean;
+    plugins: {
+      title: {
+        display: boolean;
+        text: string;
+      };
+    };
+  };
+}
+
+export interface ReportContent {
+  template: ReportTemplate | null;
+  data: ReportDataUnion;
+  parameters: ReportData['parameters'];
+  generatedAt: string;
+  summary: string;
+  charts: ChartData | null;
 }
 
 class ReportsService {
@@ -127,7 +234,7 @@ class ReportsService {
     templateId: string,
     asociacionId: string,
     parameters: ReportData['parameters']
-  ) {
+  ): Promise<void> {
     try {
       const reportRef = doc(db, this.reportsCollection, reportId);
       
@@ -175,7 +282,7 @@ class ReportsService {
     templateId: string,
     asociacionId: string,
     parameters: ReportData['parameters']
-  ): Promise<any> {
+  ): Promise<ReportDataUnion> {
     const startDate = parameters.startDate?.toDate() || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
     const endDate = parameters.endDate?.toDate() || new Date();
 
@@ -210,14 +317,17 @@ class ReportsService {
   }
 
   // Fetch member data
-  private async fetchMemberData(asociacionId: string, startDate: Date, endDate: Date) {
+  private async fetchMemberData(asociacionId: string, startDate: Date, endDate: Date): Promise<MemberReportData> {
     const sociosQuery = query(
       collection(db, 'socios'),
       where('asociacionId', '==', asociacionId)
     );
     
     const sociosSnapshot = await getDocs(sociosQuery);
-    const socios = sociosSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const socios = sociosSnapshot.docs.map(doc => ({ 
+      id: doc.id, 
+      ...doc.data() 
+    })) as (Socio & { id: string })[];
 
     const validacionesQuery = query(
       collection(db, 'validaciones'),
@@ -227,21 +337,24 @@ class ReportsService {
     );
 
     const validacionesSnapshot = await getDocs(validacionesQuery);
-    const validaciones = validacionesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const validaciones = validacionesSnapshot.docs.map(doc => ({ 
+      id: doc.id, 
+      ...doc.data() 
+    })) as (Validacion & { id: string })[];
 
     return {
       socios,
       validaciones,
       totalSocios: socios.length,
-      sociosActivos: socios.filter((s: any) => s.estado === 'activo').length,
-      sociosVencidos: socios.filter((s: any) => s.estado === 'vencido').length,
+      sociosActivos: socios.filter(s => s.estado === 'activo').length,
+      sociosVencidos: socios.filter(s => s.estado === 'vencido').length,
       totalValidaciones: validaciones.length,
-      validacionesExitosas: validaciones.filter((v: any) => v.resultado === 'valido').length
+      validacionesExitosas: validaciones.filter(v => v.resultado === 'habilitado').length
     };
   }
 
   // Fetch growth data
-  private async fetchGrowthData(asociacionId: string, startDate: Date, endDate: Date) {
+  private async fetchGrowthData(asociacionId: string, startDate: Date, endDate: Date): Promise<GrowthReportData> {
     const sociosQuery = query(
       collection(db, 'socios'),
       where('asociacionId', '==', asociacionId),
@@ -249,31 +362,38 @@ class ReportsService {
     );
 
     const sociosSnapshot = await getDocs(sociosQuery);
-    const socios = sociosSnapshot.docs.map(doc => ({ 
-      id: doc.id, 
-      ...doc.data(),
-      creadoEn: doc.data().creadoEn?.toDate()
-    }));
+    const socios = sociosSnapshot.docs.map(doc => {
+      const data = doc.data() as Socio;
+      return {
+        id: doc.id,
+        ...data,
+        creadoEn: data.creadoEn?.toDate() || new Date()
+      };
+    });
 
     // Group by month
     const monthlyGrowth: Record<string, number> = {};
-    socios.forEach((socio: any) => {
+    socios.forEach(socio => {
       if (socio.creadoEn >= startDate && socio.creadoEn <= endDate) {
         const monthKey = format(socio.creadoEn, 'yyyy-MM');
         monthlyGrowth[monthKey] = (monthlyGrowth[monthKey] || 0) + 1;
       }
     });
 
+    const growthValues = Object.values(monthlyGrowth);
+    const totalGrowth = growthValues.reduce((a, b) => a + b, 0);
+    const averageMonthlyGrowth = growthValues.length > 0 ? totalGrowth / growthValues.length : 0;
+
     return {
       socios,
       monthlyGrowth,
-      totalGrowth: Object.values(monthlyGrowth).reduce((a, b) => a + b, 0),
-      averageMonthlyGrowth: Object.values(monthlyGrowth).reduce((a, b) => a + b, 0) / Object.keys(monthlyGrowth).length
+      totalGrowth,
+      averageMonthlyGrowth
     };
   }
 
   // Fetch activity data
-  private async fetchActivityData(asociacionId: string, startDate: Date, endDate: Date) {
+  private async fetchActivityData(asociacionId: string, startDate: Date, endDate: Date): Promise<ActivityReportData> {
     const validacionesQuery = query(
       collection(db, 'validaciones'),
       where('asociacionId', '==', asociacionId),
@@ -283,15 +403,25 @@ class ReportsService {
     );
 
     const validacionesSnapshot = await getDocs(validacionesQuery);
-    const validaciones = validacionesSnapshot.docs.map(doc => ({ 
-      id: doc.id, 
-      ...doc.data(),
-      fechaHora: doc.data().fechaHora?.toDate()
-    }));
+    const validaciones = validacionesSnapshot.docs.map(doc => {
+      const data = doc.data() as Validacion;
+      return {
+        id: doc.id,
+        ...data,
+        fechaHora: data.fechaHora?.toDate() || new Date()
+      };
+    });
 
     // Group by day
-    const dailyActivity: Record<string, any> = {};
-    validaciones.forEach((validacion: any) => {
+    const dailyActivity: Record<string, {
+      fecha: string;
+      validaciones: number;
+      exitosas: number;
+      fallidas: number;
+      socios: Set<string>;
+    }> = {};
+
+    validaciones.forEach(validacion => {
       const dayKey = format(validacion.fechaHora, 'yyyy-MM-dd');
       if (!dailyActivity[dayKey]) {
         dailyActivity[dayKey] = {
@@ -303,7 +433,7 @@ class ReportsService {
         };
       }
       dailyActivity[dayKey].validaciones++;
-      if (validacion.resultado === 'valido') {
+      if (validacion.resultado === 'habilitado') {
         dailyActivity[dayKey].exitosas++;
       } else {
         dailyActivity[dayKey].fallidas++;
@@ -312,37 +442,46 @@ class ReportsService {
     });
 
     // Convert sets to counts
-    Object.values(dailyActivity).forEach((day: any) => {
-      day.sociosUnicos = day.socios.size;
-      delete day.socios;
-    });
+    const dailyActivityArray = Object.values(dailyActivity).map(day => ({
+      fecha: day.fecha,
+      validaciones: day.validaciones,
+      exitosas: day.exitosas,
+      fallidas: day.fallidas,
+      sociosUnicos: day.socios.size
+    }));
+
+    const totalDays = Object.keys(dailyActivity).length;
+    const promedioValidacionesDiarias = totalDays > 0 ? validaciones.length / totalDays : 0;
 
     return {
       validaciones,
-      dailyActivity: Object.values(dailyActivity),
+      dailyActivity: dailyActivityArray,
       totalValidaciones: validaciones.length,
-      promedioValidacionesDiarias: validaciones.length / Object.keys(dailyActivity).length
+      promedioValidacionesDiarias
     };
   }
 
   // Fetch retention data
-  private async fetchRetentionData(asociacionId: string, startDate: Date, endDate: Date) {
+  private async fetchRetentionData(asociacionId: string, startDate: Date, endDate: Date): Promise<RetentionReportData> {
     const sociosQuery = query(
       collection(db, 'socios'),
       where('asociacionId', '==', asociacionId)
     );
 
     const sociosSnapshot = await getDocs(sociosQuery);
-    const socios = sociosSnapshot.docs.map(doc => ({ 
-      id: doc.id, 
-      ...doc.data(),
-      creadoEn: doc.data().creadoEn?.toDate()
-    }));
+    const socios = sociosSnapshot.docs.map(doc => {
+      const data = doc.data() as Socio;
+      return {
+        id: doc.id,
+        ...data,
+        creadoEn: data.creadoEn?.toDate() || new Date()
+      };
+    });
 
     // Calculate retention metrics
     const totalSocios = socios.length;
-    const sociosActivos = socios.filter((s: any) => s.estado === 'activo').length;
-    const sociosVencidos = socios.filter((s: any) => s.estado === 'vencido').length;
+    const sociosActivos = socios.filter(s => s.estado === 'activo').length;
+    const sociosVencidos = socios.filter(s => s.estado === 'vencido').length;
     const tasaRetencion = totalSocios > 0 ? (sociosActivos / totalSocios) * 100 : 0;
 
     return {
@@ -356,18 +495,21 @@ class ReportsService {
   }
 
   // Fetch financial data
-  private async fetchFinancialData(asociacionId: string, startDate: Date, endDate: Date) {
+  private async fetchFinancialData(asociacionId: string, startDate: Date, endDate: Date): Promise<FinancialReportData> {
     const sociosQuery = query(
       collection(db, 'socios'),
       where('asociacionId', '==', asociacionId)
     );
 
     const sociosSnapshot = await getDocs(sociosQuery);
-    const socios = sociosSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const socios = sociosSnapshot.docs.map(doc => ({ 
+      id: doc.id, 
+      ...doc.data() 
+    })) as (Socio & { id: string })[];
 
     // Calculate financial metrics (assuming monthly fee of $50)
     const cuotaMensual = 50;
-    const sociosActivos = socios.filter((s: any) => s.estado === 'activo').length;
+    const sociosActivos = socios.filter(s => s.estado === 'activo').length;
     const ingresosMensuales = sociosActivos * cuotaMensual;
     const ingresosAnuales = ingresosMensuales * 12;
 
@@ -382,20 +524,23 @@ class ReportsService {
   }
 
   // Fetch demographic data
-  private async fetchDemographicData(asociacionId: string) {
+  private async fetchDemographicData(asociacionId: string): Promise<DemographicReportData> {
     const sociosQuery = query(
       collection(db, 'socios'),
       where('asociacionId', '==', asociacionId)
     );
 
     const sociosSnapshot = await getDocs(sociosQuery);
-    const socios = sociosSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const socios = sociosSnapshot.docs.map(doc => ({ 
+      id: doc.id, 
+      ...doc.data() 
+    })) as (Socio & { id: string })[];
 
     // Basic demographic analysis
     const distribucionEstado = {
-      activos: socios.filter((s: any) => s.estado === 'activo').length,
-      vencidos: socios.filter((s: any) => s.estado === 'vencido').length,
-      inactivos: socios.filter((s: any) => s.estado === 'inactivo').length
+      activos: socios.filter(s => s.estado === 'activo').length,
+      vencidos: socios.filter(s => s.estado === 'vencido').length,
+      inactivos: socios.filter(s => s.estado === 'inactivo').length
     };
 
     return {
@@ -406,7 +551,7 @@ class ReportsService {
   }
 
   // Fetch engagement data
-  private async fetchEngagementData(asociacionId: string, startDate: Date, endDate: Date) {
+  private async fetchEngagementData(asociacionId: string, startDate: Date, endDate: Date): Promise<EngagementReportData> {
     const validacionesQuery = query(
       collection(db, 'validaciones'),
       where('asociacionId', '==', asociacionId),
@@ -415,10 +560,13 @@ class ReportsService {
     );
 
     const validacionesSnapshot = await getDocs(validacionesQuery);
-    const validaciones = validacionesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const validaciones = validacionesSnapshot.docs.map(doc => ({ 
+      id: doc.id, 
+      ...doc.data() 
+    })) as (Validacion & { id: string })[];
 
     // Calculate engagement metrics
-    const sociosConActividad = new Set(validaciones.map((v: any) => v.socioId)).size;
+    const sociosConActividad = new Set(validaciones.map(v => v.socioId)).size;
     const promedioValidacionesPorSocio = sociosConActividad > 0 ? validaciones.length / sociosConActividad : 0;
 
     return {
@@ -430,7 +578,7 @@ class ReportsService {
   }
 
   // Fetch communication data
-  private async fetchCommunicationData(asociacionId: string, startDate: Date, endDate: Date) {
+  private async fetchCommunicationData(asociacionId: string, startDate: Date, endDate: Date): Promise<CommunicationReportData> {
     const notificationsQuery = query(
       collection(db, 'notifications'),
       where('asociacionId', '==', asociacionId),
@@ -439,17 +587,24 @@ class ReportsService {
     );
 
     const notificationsSnapshot = await getDocs(notificationsQuery);
-    const notifications = notificationsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const notifications = notificationsSnapshot.docs.map(doc => ({ 
+      id: doc.id, 
+      ...doc.data() 
+    })) as (Notification & { id: string })[];
 
     return {
       notifications,
       totalNotificaciones: notifications.length,
-      notificacionesEnviadas: notifications.filter((n: any) => n.estado === 'enviada').length
+      notificacionesEnviadas: notifications.filter(n => n.status === 'read').length
     };
   }
 
   // Generate report content based on template and data
-  private async generateReportContent(templateId: string, data: any, parameters: ReportData['parameters']) {
+  private async generateReportContent(
+    templateId: string, 
+    data: ReportDataUnion, 
+    parameters: ReportData['parameters']
+  ): Promise<ReportContent> {
     const template = await this.getTemplate(templateId);
     
     return {
@@ -463,13 +618,47 @@ class ReportsService {
   }
 
   // Generate summary based on template
-  private generateSummary(templateId: string, data: any): string {
+  private generateSummary(templateId: string, data: ReportDataUnion): string {
     switch (templateId) {
-      case 'member-summary':
-        return `Resumen de ${data.totalSocios} miembros: ${data.sociosActivos} activos, ${data.sociosVencidos} vencidos. Total de ${data.totalValidaciones} validaciones con ${data.validacionesExitosas} exitosas.`;
+      case 'member-summary': {
+        const memberData = data as MemberReportData;
+        return `Resumen de ${memberData.totalSocios} miembros: ${memberData.sociosActivos} activos, ${memberData.sociosVencidos} vencidos. Total de ${memberData.totalValidaciones} validaciones con ${memberData.validacionesExitosas} exitosas.`;
+      }
       
-      case 'growth-analysis':
-        return `Análisis de crecimiento: ${data.totalGrowth} nuevos miembros en el período, con un promedio mensual de ${Math.round(data.averageMonthlyGrowth)} miembros.`;
+      case 'growth-analysis': {
+        const growthData = data as GrowthReportData;
+        return `Análisis de crecimiento: ${growthData.totalGrowth} nuevos miembros en el período, con un promedio mensual de ${Math.round(growthData.averageMonthlyGrowth)} miembros.`;
+      }
+      
+      case 'activity-timeline': {
+        const activityData = data as ActivityReportData;
+        return `Análisis de actividad: ${activityData.totalValidaciones} validaciones totales con un promedio de ${Math.round(activityData.promedioValidacionesDiarias)} validaciones diarias.`;
+      }
+      
+      case 'retention-analysis': {
+        const retentionData = data as RetentionReportData;
+        return `Análisis de retención: Tasa de retención del ${retentionData.tasaRetencion.toFixed(1)}% con ${retentionData.sociosActivos} socios activos de ${retentionData.totalSocios} totales.`;
+      }
+      
+      case 'financial-overview': {
+        const financialData = data as FinancialReportData;
+        return `Resumen financiero: ${financialData.sociosActivos} socios activos generan $${financialData.ingresosMensuales} mensuales y $${financialData.ingresosAnuales} anuales.`;
+      }
+      
+      case 'demographic-analysis': {
+        const demographicData = data as DemographicReportData;
+        return `Análisis demográfico: ${demographicData.totalSocios} socios totales distribuidos en ${demographicData.distribucionEstado.activos} activos, ${demographicData.distribucionEstado.vencidos} vencidos y ${demographicData.distribucionEstado.inactivos} inactivos.`;
+      }
+      
+      case 'engagement-metrics': {
+        const engagementData = data as EngagementReportData;
+        return `Métricas de engagement: ${engagementData.sociosConActividad} socios con actividad, promedio de ${engagementData.promedioValidacionesPorSocio.toFixed(1)} validaciones por socio.`;
+      }
+      
+      case 'communication-report': {
+        const communicationData = data as CommunicationReportData;
+        return `Reporte de comunicación: ${communicationData.totalNotificaciones} notificaciones totales, ${communicationData.notificacionesEnviadas} enviadas exitosamente.`;
+      }
       
       default:
         return 'Reporte generado exitosamente.';
@@ -477,32 +666,71 @@ class ReportsService {
   }
 
   // Generate chart data
-  private generateChartData(templateId: string, data: any) {
-    // Return chart-ready data structure
-    return {
-      type: 'line',
-      data: data.dailyActivity || data.monthlyGrowth || [],
-      options: {
-        responsive: true,
-        plugins: {
-          title: {
-            display: true,
-            text: `Gráfico - ${templateId}`
+  private generateChartData(templateId: string, data: ReportDataUnion): ChartData {
+    switch (templateId) {
+      case 'growth-analysis': {
+        const growthData = data as GrowthReportData;
+        return {
+          type: 'line',
+          data: Object.entries(growthData.monthlyGrowth).map(([month, count]) => ({
+            x: month,
+            y: count
+          })),
+          options: {
+            responsive: true,
+            plugins: {
+              title: {
+                display: true,
+                text: 'Crecimiento Mensual de Socios'
+              }
+            }
           }
-        }
+        };
       }
-    };
+      
+      case 'activity-timeline': {
+        const activityData = data as ActivityReportData;
+        return {
+          type: 'bar',
+          data: activityData.dailyActivity,
+          options: {
+            responsive: true,
+            plugins: {
+              title: {
+                display: true,
+                text: 'Actividad Diaria de Validaciones'
+              }
+            }
+          }
+        };
+      }
+      
+      default:
+        return {
+          type: 'line',
+          data: [],
+          options: {
+            responsive: true,
+            plugins: {
+              title: {
+                display: true,
+                text: `Gráfico - ${templateId}`
+              }
+            }
+          }
+        };
+    }
   }
 
   // Simulate file upload and return URL
-  private async uploadReportFile(content: any, templateId: string): Promise<string> {
+  private async uploadReportFile(content: ReportContent, templateId: string): Promise<string> {
     // In a real implementation, this would upload to Firebase Storage
     // For now, return a mock URL
     return `https://storage.googleapis.com/reports/${templateId}-${Date.now()}.pdf`;
   }
 
   // Calculate file size
-  private calculateFileSize(content: any): string {
+  private calculateFileSize(content: ReportContent): string {
     const sizeInBytes = JSON.stringify(content).length;
     const sizeInKB = Math.round(sizeInBytes / 1024);
     return sizeInKB > 1024 ? `${Math.round(sizeInKB / 1024)}MB` : `${sizeInKB}KB`;
@@ -530,13 +758,13 @@ class ReportsService {
   }
 
   // Get user reports
-  async getUserReports(userId: string, limit?: number): Promise<ReportData[]> {
+  async getUserReports(userId: string, limitCount?: number): Promise<ReportData[]> {
     try {
       const reportsQuery = query(
         collection(db, this.reportsCollection),
         where('userId', '==', userId),
         orderBy('generatedAt', 'desc'),
-        ...(limit ? [limit] : [])
+        ...(limitCount ? [limit(limitCount)] : [])
       );
 
       const snapshot = await getDocs(reportsQuery);
@@ -548,7 +776,7 @@ class ReportsService {
   }
 
   // Subscribe to user reports
-  subscribeToUserReports(userId: string, callback: (reports: ReportData[]) => void) {
+  subscribeToUserReports(userId: string, callback: (reports: ReportData[]) => void): () => void {
     const reportsQuery = query(
       collection(db, this.reportsCollection),
       where('userId', '==', userId),
@@ -587,7 +815,11 @@ class ReportsService {
       crecimientoMensual: 0, // Calculate based on historical data
       ingresosTotales: memberData.sociosActivos * 50, // Assuming $50 monthly fee
       beneficiosMasUsados: [],
-      actividadPorDia: activityData.dailyActivity,
+      actividadPorDia: activityData.dailyActivity.map(day => ({
+        fecha: day.fecha,
+        validaciones: day.validaciones,
+        socios: day.sociosUnicos
+      })),
       distribucionPorAsociacion: []
     };
   }

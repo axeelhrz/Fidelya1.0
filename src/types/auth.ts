@@ -1,4 +1,3 @@
-import { Timestamp } from 'firebase/firestore';
 
 export interface UserData {
   uid: string;
@@ -18,7 +17,7 @@ export interface UserData {
     idioma: string;
   };
   // Role-specific metadata
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   asociacionId?: string; // For socios and asociaciones
 }
 

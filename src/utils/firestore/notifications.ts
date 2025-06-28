@@ -5,7 +5,6 @@ import {
   updateDoc,
   deleteDoc,
   getDocs,
-  getDoc,
   query,
   where,
   orderBy,
@@ -22,26 +21,49 @@ import { Notification, NotificationFormData, NotificationFilters } from '@/types
 const COLLECTION_NAME = 'notifications';
 
 // Convertir Firestore timestamp a Date
-const convertTimestamp = (timestamp: any): Date => {
+const convertTimestamp = (
+  timestamp: Timestamp | { seconds: number } | Date | string | number | null | undefined
+): Date => {
   if (timestamp instanceof Timestamp) {
     return timestamp.toDate();
   }
-  if (timestamp?.seconds) {
-    return new Date(timestamp.seconds * 1000);
+  if (
+    typeof timestamp === 'object' &&
+    timestamp !== null &&
+    'seconds' in timestamp &&
+    typeof (timestamp as Record<string, unknown>).seconds === 'number'
+  ) {
+    return new Date((timestamp as { seconds: number }).seconds * 1000);
   }
-  return new Date(timestamp);
+  if (timestamp === null || timestamp === undefined) {
+    return new Date(0);
+  }
+  if (typeof timestamp === 'string' || typeof timestamp === 'number' || timestamp instanceof Date) {
+    return new Date(timestamp);
+  }
+  // fallback for unexpected types
+  return new Date(0);
 };
 
 // Convertir documento de Firestore a Notification
-const convertFirestoreDoc = (doc: any): Notification => {
-  const data = doc.data();
+import { DocumentSnapshot } from 'firebase/firestore';
+
+const convertFirestoreDoc = (doc: DocumentSnapshot): Notification => {
+  const data = doc.data() || {};
   return {
     id: doc.id,
-    ...data,
+    title: data.title || '',
+    message: data.message || '',
+    type: data.type || '',
+    priority: data.priority || '',
+    category: data.category || '',
+    status: data.status || '',
+    metadata: data.metadata || {},
     createdAt: convertTimestamp(data.createdAt),
     updatedAt: convertTimestamp(data.updatedAt),
     readAt: data.readAt ? convertTimestamp(data.readAt) : undefined,
     expiresAt: data.expiresAt ? convertTimestamp(data.expiresAt) : undefined,
+    read: data.status === 'read' || !!data.readAt,
   };
 };
 
