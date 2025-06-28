@@ -14,27 +14,49 @@ import {
   User,
   Shield,
   ChevronDown,
+  FileText,
+  Calendar,
+  Activity,
+  AlertTriangle,
+  TrendingUp,
+  Clock,
+  Star
 } from 'lucide-react';
-import { Patient } from '@/types/dashboard';
+import { ExtendedPatient, PatientDocument, PatientTimelineEvent } from '@/types/clinical';
+import { PatientCard } from '@/components/clinical/PatientCard';
+import { PatientForm } from '@/components/clinical/patients/PatientForm';
+import { PatientTimeline } from '@/components/clinical/patients/PatientTimeline';
+import { PatientDocuments } from '@/components/clinical/patients/PatientDocuments';
+import { ClinicalCard } from '@/components/clinical/ClinicalCard';
+import { usePatients } from '@/hooks/useClinicalData';
 
 export default function PatientsPage() {
-  const [patients, setPatients] = useState<Patient[]>([]);
-  const [filteredPatients, setFilteredPatients] = useState<Patient[]>([]);
+  const [patients, setPatients] = useState<ExtendedPatient[]>([]);
+  const [filteredPatients, setFilteredPatients] = useState<ExtendedPatient[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilters, setSelectedFilters] = useState({
     status: 'all',
     riskLevel: 'all',
     therapist: 'all',
-    ageGroup: 'all'
+    ageGroup: 'all',
+    tags: 'all'
   });
   const [selectedPatients, setSelectedPatients] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
-  const [sortBy, setSortBy] = useState<'name' | 'lastSession' | 'riskLevel' | 'totalSessions'>('name');
+  const [sortBy, setSortBy] = useState<'name' | 'lastSession' | 'riskLevel' | 'totalSessions' | 'createdAt'>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  
+  // Modal states
+  const [showPatientForm, setShowPatientForm] = useState(false);
+  const [selectedPatient, setSelectedPatient] = useState<ExtendedPatient | null>(null);
+  const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
+  const [showPatientDetails, setShowPatientDetails] = useState(false);
+  const [detailsTab, setDetailsTab] = useState<'overview' | 'timeline' | 'documents'>('overview');
 
   // Mock data para desarrollo
   useEffect(() => {
-    const mockPatients: Patient[] = [
+    const mockPatients: ExtendedPatient[] = [
       {
         id: '1',
         firstName: 'María',
@@ -43,23 +65,93 @@ export default function PatientsPage() {
         phone: '+34 612 345 678',
         dateOfBirth: new Date('1985-03-15'),
         gender: 'female',
-        address: 'Calle Mayor 123, Madrid',
+        pronouns: 'ella/la',
+        identification: {
+          type: 'dni',
+          number: '12345678A',
+          expiryDate: new Date('2030-03-15')
+        },
+        address: {
+          street: 'Calle Mayor 123, 2º A',
+          city: 'Madrid',
+          state: 'Madrid',
+          zipCode: '28001',
+          country: 'España'
+        },
         emergencyContact: {
           name: 'Juan González',
           phone: '+34 612 345 679',
-          relationship: 'Esposo'
+          relationship: 'esposo',
+          email: 'juan.gonzalez@email.com'
+        },
+        insurance: {
+          provider: 'Sanitas',
+          policyNumber: 'SAN123456789',
+          groupNumber: 'GRP001',
+          copay: 15
+        },
+        medicalInfo: {
+          allergies: ['Polen', 'Frutos secos'],
+          currentMedications: [
+            {
+              name: 'Sertralina',
+              dosage: '50mg',
+              frequency: '1 vez al día',
+              prescribedBy: 'Dr. Pérez',
+              startDate: new Date('2024-01-15'),
+              notes: 'Tomar por la mañana con el desayuno'
+            }
+          ],
+          medicalHistory: ['Episodio depresivo mayor (2023)', 'Trastorno de ansiedad generalizada'],
+          previousTherapy: true,
+          previousTherapyDetails: 'Terapia cognitivo-conductual durante 6 meses en 2023'
         },
         assignedTherapist: 'Dr. Ana Martín',
         status: 'active',
-        tags: ['adulto', 'ansiedad'],
+        tags: ['adulto', 'ansiedad', 'depresión', 'medicación'],
+        riskLevel: 'medium',
+        assessmentScores: {
+          phq9: 8,
+          gad7: 12,
+          custom: {}
+        },
+        referralSource: {
+          type: 'doctor',
+          details: 'Derivado por médico de cabecera',
+          referrerName: 'Dr. Pérez',
+          referrerContact: 'dr.perez@centrosalud.es'
+        },
+        consentForms: [
+          {
+            id: 'consent1',
+            type: 'Consentimiento Informado',
+            signedDate: new Date('2024-01-10'),
+            documentUrl: '/documents/consent1.pdf',
+            version: '1.0'
+          }
+        ],
+        privacySettings: {
+          allowSMS: true,
+          allowEmail: true,
+          allowCalls: true,
+          shareWithFamily: false
+        },
         createdAt: new Date('2024-01-15'),
+        updatedAt: new Date('2024-03-10'),
         lastSession: new Date('2024-03-10'),
         totalSessions: 12,
-        diagnosis: ['Trastorno de Ansiedad Generalizada'],
-        riskLevel: 'medium',
-        phq9Score: 8,
-        gad7Score: 12,
-        notes: 'Paciente con buena evolución, colaborativa en el tratamiento.'
+        adherenceRate: 85,
+        satisfactionScore: 4.5,
+        feedback: [
+          {
+            id: 'feedback1',
+            date: new Date('2024-03-01'),
+            type: 'session',
+            rating: 5,
+            comment: 'Muy satisfecha con el progreso',
+            sentiment: 'positive'
+          }
+        ]
       },
       {
         id: '2',
@@ -69,23 +161,61 @@ export default function PatientsPage() {
         phone: '+34 623 456 789',
         dateOfBirth: new Date('1992-07-22'),
         gender: 'male',
-        address: 'Avenida de la Paz 45, Barcelona',
+        pronouns: 'él/lo',
+        identification: {
+          type: 'dni',
+          number: '87654321B'
+        },
+        address: {
+          street: 'Avenida de la Paz 45',
+          city: 'Barcelona',
+          state: 'Barcelona',
+          zipCode: '08001',
+          country: 'España'
+        },
         emergencyContact: {
           name: 'Carmen Rodríguez',
           phone: '+34 623 456 790',
-          relationship: 'Madre'
+          relationship: 'madre'
+        },
+        insurance: {
+          provider: 'Adeslas',
+          policyNumber: 'ADE987654321',
+          copay: 20
+        },
+        medicalInfo: {
+          allergies: [],
+          currentMedications: [],
+          medicalHistory: ['Episodio depresivo mayor'],
+          previousTherapy: false,
+          previousTherapyDetails: ''
         },
         assignedTherapist: 'Dr. Luis Fernández',
         status: 'active',
-        tags: ['adulto', 'depresión'],
+        tags: ['adulto', 'depresión', 'primera-vez'],
+        riskLevel: 'high',
+        assessmentScores: {
+          phq9: 15,
+          gad7: 6,
+          custom: {}
+        },
+        referralSource: {
+          type: 'online',
+          details: 'Búsqueda en Google'
+        },
+        consentForms: [],
+        privacySettings: {
+          allowSMS: true,
+          allowEmail: true,
+          allowCalls: false,
+          shareWithFamily: true
+        },
         createdAt: new Date('2024-02-01'),
+        updatedAt: new Date('2024-03-08'),
         lastSession: new Date('2024-03-08'),
         totalSessions: 8,
-        diagnosis: ['Episodio Depresivo Mayor'],
-        riskLevel: 'high',
-        phq9Score: 15,
-        gad7Score: 6,
-        notes: 'Requiere seguimiento estrecho. Ideación suicida pasiva.'
+        adherenceRate: 75,
+        feedback: []
       },
       {
         id: '3',
@@ -95,23 +225,80 @@ export default function PatientsPage() {
         phone: '+34 634 567 890',
         dateOfBirth: new Date('2005-11-08'),
         gender: 'female',
-        address: 'Plaza del Sol 12, Valencia',
+        pronouns: 'ella/la',
+        identification: {
+          type: 'dni',
+          number: '11223344C'
+        },
+        address: {
+          street: 'Plaza del Sol 12',
+          city: 'Valencia',
+          state: 'Valencia',
+          zipCode: '46001',
+          country: 'España'
+        },
         emergencyContact: {
           name: 'Pedro López',
           phone: '+34 634 567 891',
-          relationship: 'Padre'
+          relationship: 'padre',
+          email: 'pedro.lopez@email.com'
+        },
+        insurance: {
+          provider: 'DKV',
+          policyNumber: 'DKV555666777',
+          copay: 10
+        },
+        medicalInfo: {
+          allergies: ['Lactosa'],
+          currentMedications: [],
+          medicalHistory: ['Anorexia nerviosa'],
+          previousTherapy: true,
+          previousTherapyDetails: 'Terapia familiar durante 1 año'
         },
         assignedTherapist: 'Dra. Isabel Moreno',
         status: 'active',
-        tags: ['adolescente', 'trastorno-alimentario'],
+        tags: ['adolescente', 'trastorno-alimentario', 'familia'],
+        riskLevel: 'critical',
+        assessmentScores: {
+          phq9: 18,
+          gad7: 14,
+          custom: {}
+        },
+        referralSource: {
+          type: 'family',
+          details: 'Recomendación familiar'
+        },
+        consentForms: [
+          {
+            id: 'consent2',
+            type: 'Consentimiento Parental',
+            signedDate: new Date('2024-01-20'),
+            documentUrl: '/documents/consent2.pdf',
+            version: '1.0'
+          }
+        ],
+        privacySettings: {
+          allowSMS: false,
+          allowEmail: true,
+          allowCalls: true,
+          shareWithFamily: true
+        },
         createdAt: new Date('2024-01-20'),
+        updatedAt: new Date('2024-03-12'),
         lastSession: new Date('2024-03-12'),
         totalSessions: 15,
-        diagnosis: ['Anorexia Nerviosa'],
-        riskLevel: 'critical',
-        phq9Score: 18,
-        gad7Score: 14,
-        notes: 'Paciente adolescente con trastorno alimentario. Coordinación con familia.'
+        adherenceRate: 90,
+        satisfactionScore: 4.8,
+        feedback: [
+          {
+            id: 'feedback2',
+            date: new Date('2024-03-05'),
+            type: 'general',
+            rating: 5,
+            comment: 'Me siento mucho mejor',
+            sentiment: 'positive'
+          }
+        ]
       }
     ];
     setPatients(mockPatients);
@@ -125,7 +312,8 @@ export default function PatientsPage() {
         patient.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
         patient.lastName.toLowerCase().includes(searchQuery.toLowerCase()) ||
         patient.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        patient.phone.includes(searchQuery);
+        patient.phone.includes(searchQuery) ||
+        patient.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
 
       const matchesStatus = selectedFilters.status === 'all' || patient.status === selectedFilters.status;
       const matchesRisk = selectedFilters.riskLevel === 'all' || patient.riskLevel === selectedFilters.riskLevel;
@@ -137,7 +325,10 @@ export default function PatientsPage() {
         (selectedFilters.ageGroup === 'adolescent' && age >= 12 && age < 18) ||
         (selectedFilters.ageGroup === 'adult' && age >= 18);
 
-      return matchesSearch && matchesStatus && matchesRisk && matchesTherapist && matchesAge;
+      const matchesTags = selectedFilters.tags === 'all' || 
+        patient.tags.some(tag => tag.includes(selectedFilters.tags));
+
+      return matchesSearch && matchesStatus && matchesRisk && matchesTherapist && matchesAge && matchesTags;
     });
 
     // Ordenar
@@ -161,6 +352,10 @@ export default function PatientsPage() {
           aValue = a.totalSessions;
           bValue = b.totalSessions;
           break;
+        case 'createdAt':
+          aValue = a.createdAt.getTime();
+          bValue = b.createdAt.getTime();
+          break;
         default:
           aValue = a.firstName;
           bValue = b.firstName;
@@ -176,43 +371,59 @@ export default function PatientsPage() {
     setFilteredPatients(filtered);
   }, [patients, searchQuery, selectedFilters, sortBy, sortOrder]);
 
-  const getRiskColor = (level: string) => {
-    switch (level) {
-      case 'low': return '#10B981';
-      case 'medium': return '#F59E0B';
-      case 'high': return '#EF4444';
-      case 'critical': return '#7C2D12';
-      default: return '#6B7280';
+  // Handlers
+  const handleCreatePatient = () => {
+    setSelectedPatient(null);
+    setFormMode('create');
+    setShowPatientForm(true);
+  };
+
+  const handleEditPatient = (patient: ExtendedPatient) => {
+    setSelectedPatient(patient);
+    setFormMode('edit');
+    setShowPatientForm(true);
+  };
+
+  const handleViewPatient = (patient: ExtendedPatient) => {
+    setSelectedPatient(patient);
+    setDetailsTab('overview');
+    setShowPatientDetails(true);
+  };
+
+  const handleSavePatient = async (patientData: Partial<ExtendedPatient>) => {
+    try {
+      if (formMode === 'create') {
+        // Create new patient
+        const newPatient: ExtendedPatient = {
+          ...patientData,
+          id: `patient-${Date.now()}`,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          totalSessions: 0,
+          adherenceRate: 0,
+          feedback: []
+        } as ExtendedPatient;
+        
+        setPatients(prev => [...prev, newPatient]);
+      } else if (selectedPatient) {
+        // Update existing patient
+        setPatients(prev => prev.map(p => 
+          p.id === selectedPatient.id 
+            ? { ...p, ...patientData, updatedAt: new Date() }
+            : p
+        ));
+      }
+      setShowPatientForm(false);
+    } catch (error) {
+      console.error('Error saving patient:', error);
     }
   };
 
-  const getRiskBgColor = (level: string) => {
-    switch (level) {
-      case 'low': return '#ECFDF5';
-      case 'medium': return '#FFFBEB';
-      case 'high': return '#FEF2F2';
-      case 'critical': return '#FEF2F2';
-      default: return '#F9FAFB';
+  const handleDeletePatient = (patientId: string) => {
+    if (window.confirm('¿Estás seguro de que quieres eliminar este paciente?')) {
+      setPatients(prev => prev.filter(p => p.id !== patientId));
+      setSelectedPatients(prev => prev.filter(id => id !== patientId));
     }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active': return '#10B981';
-      case 'inactive': return '#6B7280';
-      case 'discharged': return '#2563EB';
-      default: return '#6B7280';
-    }
-  };
-
-  const calculateAge = (dateOfBirth: Date) => {
-    const today = new Date();
-    const age = today.getFullYear() - dateOfBirth.getFullYear();
-    const monthDiff = today.getMonth() - dateOfBirth.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dateOfBirth.getDate())) {
-      return age - 1;
-    }
-    return age;
   };
 
   const handleSelectPatient = (patientId: string) => {
@@ -237,6 +448,19 @@ export default function PatientsPage() {
 
   const handleAnonymize = () => {
     console.log('Anonimizando pacientes seleccionados:', selectedPatients);
+  };
+
+  // Calculate metrics
+  const metrics = {
+    total: patients.length,
+    active: patients.filter(p => p.status === 'active').length,
+    highRisk: patients.filter(p => p.riskLevel === 'high' || p.riskLevel === 'critical').length,
+    averageAdherence: patients.reduce((sum, p) => sum + p.adherenceRate, 0) / patients.length,
+    newThisMonth: patients.filter(p => {
+      const now = new Date();
+      const monthAgo = new Date(now.getFullYear(), now.getMonth(), 1);
+      return p.createdAt >= monthAgo;
+    }).length
   };
 
   return (
@@ -276,7 +500,7 @@ export default function PatientsPage() {
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              onClick={() => console.log('Nuevo paciente')}
+              onClick={handleCreatePatient}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -298,7 +522,57 @@ export default function PatientsPage() {
           </div>
         </div>
 
-        {/* Barra de herramientas */}
+        {/* Metrics */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gap: '1rem',
+          marginBottom: '2rem'
+        }}>
+          <ClinicalCard
+            title="Total Pacientes"
+            value={metrics.total}
+            icon={Users}
+            iconColor="#2563EB"
+            trend={{ value: 12, isPositive: true }}
+            size="small"
+          />
+          
+          <ClinicalCard
+            title="Pacientes Activos"
+            value={metrics.active}
+            icon={Activity}
+            iconColor="#10B981"
+            size="small"
+          />
+          
+          <ClinicalCard
+            title="Alto Riesgo"
+            value={metrics.highRisk}
+            icon={AlertTriangle}
+            iconColor="#EF4444"
+            size="small"
+          />
+          
+          <ClinicalCard
+            title="Adherencia Promedio"
+            value={`${Math.round(metrics.averageAdherence)}%`}
+            icon={TrendingUp}
+            iconColor="#7C3AED"
+            trend={{ value: 5, isPositive: true }}
+            size="small"
+          />
+          
+          <ClinicalCard
+            title="Nuevos Este Mes"
+            value={metrics.newThisMonth}
+            icon={Star}
+            iconColor="#F59E0B"
+            size="small"
+          />
+        </div>
+
+        {/* Toolbar */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
@@ -308,7 +582,7 @@ export default function PatientsPage() {
           borderRadius: '1rem',
           border: '1px solid #E5E7EB'
         }}>
-          {/* Búsqueda */}
+          {/* Search */}
           <div style={{ position: 'relative', flex: 1, maxWidth: '400px' }}>
             <Search size={18} style={{
               position: 'absolute',
@@ -334,7 +608,48 @@ export default function PatientsPage() {
             />
           </div>
 
-          {/* Filtros */}
+          {/* View Mode Toggle */}
+          <div style={{
+            display: 'flex',
+            backgroundColor: '#F3F4F6',
+            borderRadius: '0.5rem',
+            padding: '0.25rem'
+          }}>
+            <button
+              onClick={() => setViewMode('grid')}
+              style={{
+                padding: '0.5rem 1rem',
+                borderRadius: '0.25rem',
+                border: 'none',
+                backgroundColor: viewMode === 'grid' ? 'white' : 'transparent',
+                color: viewMode === 'grid' ? '#1F2937' : '#6B7280',
+                fontSize: '0.875rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontFamily: 'Inter, sans-serif'
+              }}
+            >
+              Grid
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              style={{
+                padding: '0.5rem 1rem',
+                borderRadius: '0.25rem',
+                border: 'none',
+                backgroundColor: viewMode === 'list' ? 'white' : 'transparent',
+                color: viewMode === 'list' ? '#1F2937' : '#6B7280',
+                fontSize: '0.875rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontFamily: 'Inter, sans-serif'
+              }}
+            >
+              Lista
+            </button>
+          </div>
+
+          {/* Filters */}
           <motion.button
             onClick={() => setShowFilters(!showFilters)}
             whileHover={{ scale: 1.02 }}
@@ -359,7 +674,7 @@ export default function PatientsPage() {
             }} />
           </motion.button>
 
-          {/* Acciones en lote */}
+          {/* Bulk Actions */}
           {selectedPatients.length > 0 && (
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <motion.button
@@ -407,7 +722,7 @@ export default function PatientsPage() {
           )}
         </div>
 
-        {/* Panel de filtros */}
+        {/* Filters Panel */}
         <AnimatePresence>
           {showFilters && (
             <motion.div
@@ -454,6 +769,7 @@ export default function PatientsPage() {
                     <option value="all">Todos</option>
                     <option value="active">Activo</option>
                     <option value="inactive">Inactivo</option>
+                    <option value="on-hold">En pausa</option>
                     <option value="discharged">Alta</option>
                   </select>
                 </div>
@@ -518,367 +834,342 @@ export default function PatientsPage() {
                     <option value="adult">Adultos (18+)</option>
                   </select>
                 </div>
+
+                <div>
+                  <label style={{
+                    display: 'block',
+                    fontSize: '0.875rem',
+                    fontWeight: 600,
+                    color: '#374151',
+                    marginBottom: '0.5rem',
+                    fontFamily: 'Inter, sans-serif'
+                  }}>
+                    Terapeuta
+                  </label>
+                  <select
+                    value={selectedFilters.therapist}
+                    onChange={(e) => setSelectedFilters(prev => ({ ...prev, therapist: e.target.value }))}
+                    style={{
+                      width: '100%',
+                      padding: '0.5rem',
+                      border: '1px solid #E5E7EB',
+                      borderRadius: '0.5rem',
+                      fontSize: '0.875rem',
+                      fontFamily: 'Inter, sans-serif'
+                    }}
+                  >
+                    <option value="all">Todos</option>
+                    <option value="Dr. Ana Martín">Dr. Ana Martín</option>
+                    <option value="Dr. Luis Fernández">Dr. Luis Fernández</option>
+                    <option value="Dra. Isabel Moreno">Dra. Isabel Moreno</option>
+                  </select>
+                </div>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
       </motion.div>
 
-      {/* Tabla de pacientes */}
+      {/* Patients Grid/List */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        style={{
-          backgroundColor: 'white',
-          borderRadius: '1rem',
-          border: '1px solid #E5E7EB',
-          overflow: 'hidden'
-        }}
       >
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ backgroundColor: '#F9FAFB' }}>
-                <th style={{ padding: '1rem', textAlign: 'left', borderBottom: '1px solid #E5E7EB' }}>
-                  <input
-                    type="checkbox"
-                    checked={selectedPatients.length === filteredPatients.length && filteredPatients.length > 0}
-                    onChange={handleSelectAll}
-                    style={{ cursor: 'pointer' }}
-                  />
-                </th>
-                <th 
-                  onClick={() => {
-                    if (sortBy === 'name') {
-                      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-                    } else {
-                      setSortBy('name');
-                      setSortOrder('asc');
-                    }
-                  }}
-                  style={{
-                    padding: '1rem',
-                    textAlign: 'left',
-                    fontSize: '0.875rem',
-                    fontWeight: 600,
-                    color: '#374151',
-                    borderBottom: '1px solid #E5E7EB',
-                    fontFamily: 'Inter, sans-serif',
-                    cursor: 'pointer',
-                    userSelect: 'none'
-                  }}
-                >
-                  Paciente {sortBy === 'name' && (sortOrder === 'asc' ? '↑' : '↓')}
-                </th>
-                <th style={{
-                  padding: '1rem',
-                  textAlign: 'left',
-                  fontSize: '0.875rem',
-                  fontWeight: 600,
-                  color: '#374151',
-                  borderBottom: '1px solid #E5E7EB',
-                  fontFamily: 'Inter, sans-serif'
-                }}>
-                  Contacto
-                </th>
-                <th style={{
-                  padding: '1rem',
-                  textAlign: 'left',
-                  fontSize: '0.875rem',
-                  fontWeight: 600,
-                  color: '#374151',
-                  borderBottom: '1px solid #E5E7EB',
-                  fontFamily: 'Inter, sans-serif'
-                }}>
-                  Terapeuta
-                </th>
-                <th style={{
-                  padding: '1rem',
-                  textAlign: 'left',
-                  fontSize: '0.875rem',
-                  fontWeight: 600,
-                  color: '#374151',
-                  borderBottom: '1px solid #E5E7EB',
-                  fontFamily: 'Inter, sans-serif'
-                }}>
-                  Estado
-                </th>
-                <th 
-                  onClick={() => {
-                    if (sortBy === 'riskLevel') {
-                      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-                    } else {
-                      setSortBy('riskLevel');
-                      setSortOrder('asc');
-                    }
-                  }}
-                  style={{
-                    padding: '1rem',
-                    textAlign: 'left',
-                    fontSize: '0.875rem',
-                    fontWeight: 600,
-                    color: '#374151',
-                    borderBottom: '1px solid #E5E7EB',
-                    fontFamily: 'Inter, sans-serif',
-                    cursor: 'pointer',
-                    userSelect: 'none'
-                  }}
-                >
-                  Riesgo {sortBy === 'riskLevel' && (sortOrder === 'asc' ? '↑' : '↓')}
-                </th>
-                <th 
-                  onClick={() => {
-                    if (sortBy === 'totalSessions') {
-                      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-                    } else {
-                      setSortBy('totalSessions');
-                      setSortOrder('asc');
-                    }
-                  }}
-                  style={{
-                    padding: '1rem',
-                    textAlign: 'left',
-                    fontSize: '0.875rem',
-                    fontWeight: 600,
-                    color: '#374151',
-                    borderBottom: '1px solid #E5E7EB',
-                    fontFamily: 'Inter, sans-serif',
-                    cursor: 'pointer',
-                    userSelect: 'none'
-                  }}
-                >
-                  Sesiones {sortBy === 'totalSessions' && (sortOrder === 'asc' ? '↑' : '↓')}
-                </th>
-                <th style={{
-                  padding: '1rem',
-                  textAlign: 'left',
-                  fontSize: '0.875rem',
-                  fontWeight: 600,
-                  color: '#374151',
-                  borderBottom: '1px solid #E5E7EB',
-                  fontFamily: 'Inter, sans-serif'
-                }}>
-                  Última Sesión
-                </th>
-                <th style={{
-                  padding: '1rem',
-                  textAlign: 'center',
-                  fontSize: '0.875rem',
-                  fontWeight: 600,
-                  color: '#374151',
-                  borderBottom: '1px solid #E5E7EB',
-                  fontFamily: 'Inter, sans-serif'
-                }}>
-                  Acciones
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredPatients.map((patient, index) => (
-                <motion.tr
-                  key={patient.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  style={{
-                    borderBottom: '1px solid #F3F4F6',
-                    backgroundColor: selectedPatients.includes(patient.id) ? '#EFF6FF' : 'transparent'
-                  }}
-                >
-                  <td style={{ padding: '1rem' }}>
-                    <input
-                      type="checkbox"
-                      checked={selectedPatients.includes(patient.id)}
-                      onChange={() => handleSelectPatient(patient.id)}
-                      style={{ cursor: 'pointer' }}
-                    />
-                  </td>
-                  <td style={{ padding: '1rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                      <div style={{
-                        width: '40px',
-                        height: '40px',
-                        borderRadius: '50%',
-                        backgroundColor: '#EFF6FF',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                      }}>
-                        <User size={18} color="#2563EB" />
-                      </div>
-                      <div>
-                        <div style={{
-                          fontSize: '0.875rem',
-                          fontWeight: 600,
-                          color: '#1F2937',
-                          fontFamily: 'Inter, sans-serif'
-                        }}>
-                          {patient.firstName} {patient.lastName}
-                        </div>
-                        <div style={{
-                          fontSize: '0.75rem',
-                          color: '#6B7280',
-                          fontFamily: 'Inter, sans-serif'
-                        }}>
-                          {calculateAge(patient.dateOfBirth)} años • {patient.gender === 'male' ? 'M' : 'F'}
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                  <td style={{ padding: '1rem' }}>
-                    <div>
-                      <div style={{
-                        fontSize: '0.875rem',
-                        color: '#1F2937',
-                        marginBottom: '0.25rem',
-                        fontFamily: 'Inter, sans-serif'
-                      }}>
-                        {patient.email}
-                      </div>
-                      <div style={{
-                        fontSize: '0.75rem',
-                        color: '#6B7280',
-                        fontFamily: 'Inter, sans-serif'
-                      }}>
-                        {patient.phone}
-                      </div>
-                    </div>
-                  </td>
-                  <td style={{ padding: '1rem' }}>
-                    <div style={{
-                      fontSize: '0.875rem',
-                      color: '#1F2937',
-                      fontFamily: 'Inter, sans-serif'
-                    }}>
-                      {patient.assignedTherapist}
-                    </div>
-                  </td>
-                  <td style={{ padding: '1rem' }}>
-                    <span style={{
-                      padding: '0.25rem 0.75rem',
-                      borderRadius: '1rem',
-                      fontSize: '0.75rem',
-                      fontWeight: 600,
-                      backgroundColor: patient.status === 'active' ? '#ECFDF5' : 
-                                     patient.status === 'inactive' ? '#F3F4F6' : '#EFF6FF',
-                      color: getStatusColor(patient.status),
-                      fontFamily: 'Inter, sans-serif'
-                    }}>
-                      {patient.status === 'active' ? 'Activo' : 
-                       patient.status === 'inactive' ? 'Inactivo' : 'Alta'}
-                    </span>
-                  </td>
-                  <td style={{ padding: '1rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <div style={{
-                        width: '8px',
-                        height: '8px',
-                        borderRadius: '50%',
-                        backgroundColor: getRiskColor(patient.riskLevel)
-                      }} />
-                      <span style={{
-                        padding: '0.25rem 0.75rem',
-                        borderRadius: '1rem',
-                        fontSize: '0.75rem',
-                        fontWeight: 600,
-                        backgroundColor: getRiskBgColor(patient.riskLevel),
-                        color: getRiskColor(patient.riskLevel),
-                        fontFamily: 'Inter, sans-serif'
-                      }}>
-                        {patient.riskLevel === 'low' ? 'Bajo' :
-                         patient.riskLevel === 'medium' ? 'Medio' :
-                         patient.riskLevel === 'high' ? 'Alto' : 'Crítico'}
-                      </span>
-                    </div>
-                  </td>
-                  <td style={{ padding: '1rem' }}>
-                    <div style={{
-                      fontSize: '0.875rem',
-                      fontWeight: 600,
-                      color: '#1F2937',
-                      fontFamily: 'Inter, sans-serif'
-                    }}>
-                      {patient.totalSessions}
-                    </div>
-                  </td>
-                  <td style={{ padding: '1rem' }}>
-                    <div style={{
-                      fontSize: '0.875rem',
-                      color: '#1F2937',
-                      fontFamily: 'Inter, sans-serif'
-                    }}>
-                      {patient.lastSession ? patient.lastSession.toLocaleDateString('es-ES') : 'N/A'}
-                    </div>
-                  </td>
-                  <td style={{ padding: '1rem', textAlign: 'center' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-                      <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                        onClick={() => console.log('Ver paciente', patient.id)}
-                        style={{
-                          padding: '0.5rem',
-                          borderRadius: '0.5rem',
-                          border: 'none',
-                          backgroundColor: '#EFF6FF',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        <Eye size={16} color="#2563EB" />
-                      </motion.button>
-                      <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                        onClick={() => console.log('Editar paciente', patient.id)}
-                        style={{
-                          padding: '0.5rem',
-                          borderRadius: '0.5rem',
-                          border: 'none',
-                          backgroundColor: '#FFFBEB',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        <Edit size={16} color="#F59E0B" />
-                      </motion.button>
-                      <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                        onClick={() => console.log('Eliminar paciente', patient.id)}
-                        style={{
-                          padding: '0.5rem',
-                          borderRadius: '0.5rem',
-                          border: 'none',
-                          backgroundColor: '#FEF2F2',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        <Trash2 size={16} color="#EF4444" />
-                      </motion.button>
-                    </div>
-                  </td>
-                </motion.tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {filteredPatients.length === 0 && (
+        {filteredPatients.length === 0 ? (
           <div style={{
-            padding: '3rem',
             textAlign: 'center',
-            color: '#6B7280'
+            padding: '4rem 2rem',
+            backgroundColor: 'white',
+            borderRadius: '1rem',
+            border: '1px solid #E5E7EB'
           }}>
             <Users size={48} color="#D1D5DB" style={{ marginBottom: '1rem' }} />
+            <h3 style={{
+              fontSize: '1.25rem',
+              fontWeight: 600,
+              color: '#374151',
+              marginBottom: '0.5rem',
+              fontFamily: 'Space Grotesk, sans-serif'
+            }}>
+              No se encontraron pacientes
+            </h3>
             <p style={{
               fontSize: '1rem',
+              color: '#6B7280',
+              marginBottom: '2rem',
               fontFamily: 'Inter, sans-serif'
             }}>
-              No se encontraron pacientes con los filtros aplicados
+              {searchQuery || Object.values(selectedFilters).some(f => f !== 'all') 
+                ? 'Intenta ajustar los filtros de búsqueda'
+                : 'Comienza agregando tu primer paciente'
+              }
             </p>
+            {!searchQuery && Object.values(selectedFilters).every(f => f === 'all') && (
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={handleCreatePatient}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '0.75rem 1.5rem',
+                  backgroundColor: '#2563EB',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '0.75rem',
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  fontFamily: 'Inter, sans-serif'
+                }}
+              >
+                <Plus size={18} />
+                Crear Primer Paciente
+              </motion.button>
+            )}
+          </div>
+        ) : (
+          <div style={{
+            display: viewMode === 'grid' ? 'grid' : 'flex',
+            gridTemplateColumns: viewMode === 'grid' ? 'repeat(auto-fill, minmax(400px, 1fr))' : undefined,
+            flexDirection: viewMode === 'list' ? 'column' : undefined,
+            gap: '1.5rem'
+          }}>
+            {/* Select All Checkbox for List View */}
+            {viewMode === 'list' && (
+              <div style={{
+                padding: '1rem 1.5rem',
+                backgroundColor: 'white',
+                borderRadius: '1rem',
+                border: '1px solid #E5E7EB',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '1rem'
+              }}>
+                <input
+                  type="checkbox"
+                  checked={selectedPatients.length === filteredPatients.length && filteredPatients.length > 0}
+                  onChange={handleSelectAll}
+                  style={{ cursor: 'pointer' }}
+                />
+                <span style={{
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  color: '#374151',
+                  fontFamily: 'Inter, sans-serif'
+                }}>
+                  Seleccionar todos los pacientes ({filteredPatients.length})
+                </span>
+              </div>
+            )}
+
+            {filteredPatients.map((patient, index) => (
+              <PatientCard
+                key={patient.id}
+                patient={patient}
+                onClick={() => handleViewPatient(patient)}
+                showDetails={viewMode === 'list'}
+                isSelected={selectedPatients.includes(patient.id)}
+                onSelect={(selected) => {
+                  if (selected) {
+                    setSelectedPatients(prev => [...prev, patient.id]);
+                  } else {
+                    setSelectedPatients(prev => prev.filter(id => id !== patient.id));
+                  }
+                }}
+              />
+            ))}
           </div>
         )}
       </motion.div>
+
+      {/* Patient Form Modal */}
+      <AnimatePresence>
+        {showPatientForm && (
+          <PatientForm
+            patient={selectedPatient}
+            onSave={handleSavePatient}
+            onCancel={() => setShowPatientForm(false)}
+            mode={formMode}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Patient Details Modal */}
+      <AnimatePresence>
+        {showPatientDetails && selectedPatient && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
+              zIndex: 9999,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '1rem'
+            }}
+            onClick={() => setShowPatientDetails(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                width: '100%',
+                maxWidth: '1200px',
+                maxHeight: '90vh',
+                backgroundColor: 'white',
+                borderRadius: '1rem',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+                overflow: 'hidden',
+                display: 'flex',
+                flexDirection: 'column'
+              }}
+            >
+              {/* Modal Header */}
+              <div style={{
+                padding: '1.5rem',
+                borderBottom: '1px solid #E5E7EB',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between'
+              }}>
+                <div>
+                  <h2 style={{
+                    fontSize: '1.5rem',
+                    fontWeight: 700,
+                    color: '#1F2937',
+                    margin: 0,
+                    fontFamily: 'Space Grotesk, sans-serif'
+                  }}>
+                    {selectedPatient.firstName} {selectedPatient.lastName}
+                  </h2>
+                  <p style={{
+                    fontSize: '0.875rem',
+                    color: '#6B7280',
+                    margin: '0.25rem 0 0 0',
+                    fontFamily: 'Inter, sans-serif'
+                  }}>
+                    {selectedPatient.email} • {selectedPatient.phone}
+                  </p>
+                </div>
+
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => handleEditPatient(selectedPatient)}
+                    style={{
+                      padding: '0.5rem',
+                      backgroundColor: '#FFFBEB',
+                      border: '1px solid #FDE68A',
+                      borderRadius: '0.5rem',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <Edit size={16} color="#F59E0B" />
+                  </motion.button>
+                  
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setShowPatientDetails(false)}
+                    style={{
+                      padding: '0.5rem',
+                      backgroundColor: '#F3F4F6',
+                      border: '1px solid #E5E7EB',
+                      borderRadius: '0.5rem',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <X size={16} color="#6B7280" />
+                  </motion.button>
+                </div>
+              </div>
+
+              {/* Tab Navigation */}
+              <div style={{
+                display: 'flex',
+                borderBottom: '1px solid #E5E7EB',
+                backgroundColor: '#F9FAFB'
+              }}>
+                {[
+                  { key: 'overview', label: 'Resumen', icon: User },
+                  { key: 'timeline', label: 'Timeline', icon: Clock },
+                  { key: 'documents', label: 'Documentos', icon: FileText }
+                ].map(({ key, label, icon: Icon }) => (
+                  <motion.button
+                    key={key}
+                    whileHover={{ backgroundColor: '#F3F4F6' }}
+                    onClick={() => setDetailsTab(key as any)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      padding: '1rem 1.5rem',
+                      backgroundColor: detailsTab === key ? 'white' : 'transparent',
+                      color: detailsTab === key ? '#2563EB' : '#6B7280',
+                      border: 'none',
+                      borderBottom: detailsTab === key ? '2px solid #2563EB' : '2px solid transparent',
+                      fontSize: '0.875rem',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      fontFamily: 'Inter, sans-serif'
+                    }}
+                  >
+                    <Icon size={16} />
+                    {label}
+                  </motion.button>
+                ))}
+              </div>
+
+              {/* Tab Content */}
+              <div style={{ flex: 1, overflow: 'auto' }}>
+                {detailsTab === 'overview' && (
+                  <div style={{ padding: '2rem' }}>
+                    <PatientCard
+                      patient={selectedPatient}
+                      showDetails={true}
+                    />
+                  </div>
+                )}
+                
+                {detailsTab === 'timeline' && (
+                  <PatientTimeline
+                    patient={selectedPatient}
+                    appointments={[]} // TODO: Get real appointments
+                    notes={[]} // TODO: Get real notes
+                    assessments={[]} // TODO: Get real assessments
+                  />
+                )}
+                
+                {detailsTab === 'documents' && (
+                  <PatientDocuments
+                    patient={selectedPatient}
+                    documents={[]} // TODO: Get real documents
+                    onUpload={async () => {}} // TODO: Implement
+                    onDelete={async () => {}} // TODO: Implement
+                    onDownload={() => {}} // TODO: Implement
+                    onView={() => {}} // TODO: Implement
+                    onUpdateTags={async () => {}} // TODO: Implement
+                    onToggleConfidential={async () => {}} // TODO: Implement
+                  />
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
