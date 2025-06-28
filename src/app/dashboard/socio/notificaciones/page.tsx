@@ -19,7 +19,8 @@ const mockNotifications = [
     createdAt: new Date(),
     updatedAt: new Date(),
     actionUrl: '/dashboard/socio/beneficios',
-    actionLabel: 'Ver Beneficio'
+    actionLabel: 'Ver Beneficio',
+    read: false
   },
   {
     id: '2',
@@ -32,7 +33,8 @@ const mockNotifications = [
     createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
     updatedAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
     actionUrl: '/dashboard/socio/perfil',
-    actionLabel: 'Renovar Ahora'
+    actionLabel: 'Renovar Ahora',
+    read: false
   },
   {
     id: '3',
@@ -43,7 +45,8 @@ const mockNotifications = [
     status: 'read' as const,
     category: 'general' as const,
     createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000),
-    updatedAt: new Date(Date.now() - 24 * 60 * 60 * 1000)
+    updatedAt: new Date(Date.now() - 24 * 60 * 60 * 1000),
+    read: true
   },
   {
     id: '4',
@@ -54,7 +57,8 @@ const mockNotifications = [
     status: 'read' as const,
     category: 'event' as const,
     createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-    updatedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
+    updatedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+    read: true
   }
 ];
 

@@ -9,7 +9,6 @@ import {
   Avatar,
   Card,
   CardContent,
-  Grid,
   Button,
   Stack,
   alpha,
@@ -34,19 +33,17 @@ import {
   MarkEmailRead,
   Delete,
   Search,
-  FilterList,
   Refresh,
   Info,
   Warning,
   CheckCircle,
   Error,
-  Schedule,
   Star,
-  StarBorder,
 } from '@mui/icons-material';
 import { useNotifications } from '@/hooks/useNotifications';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -71,7 +68,7 @@ function TabPanel(props: TabPanelProps) {
 }
 
 export const ComercioNotifications: React.FC = () => {
-  const { notifications, stats, markAsRead, deleteNotification, loading } = useNotifications();
+  const { notifications, stats, markAsRead, deleteNotification } = useNotifications();
   const [tabValue, setTabValue] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedNotifications, setSelectedNotifications] = useState<string[]>([]);
@@ -101,17 +98,6 @@ export const ComercioNotifications: React.FC = () => {
     }
   };
 
-  const getNotificationColor = (type: string, priority: string) => {
-    if (priority === 'high') return '#ef4444';
-    
-    switch (type) {
-      case 'system': return '#6366f1';
-      case 'validation': return '#10b981';
-      case 'benefit': return '#f59e0b';
-      case 'alert': return '#f59e0b';
-      default: return '#64748b';
-    }
-  };
 
   const filteredNotifications = notifications.filter(notification => {
     const matchesSearch = notification.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -148,6 +134,43 @@ export const ComercioNotifications: React.FC = () => {
     selectedNotifications.forEach(id => deleteNotification(id));
     setSelectedNotifications([]);
   };
+
+  const StatCard = ({ icon, value, label, color }: { 
+    icon: React.ReactNode; 
+    value: number; 
+    label: string; 
+    color: string; 
+  }) => (
+    <Paper
+      elevation={0}
+      sx={{
+        p: 3,
+        border: '1px solid #f1f5f9',
+        borderRadius: 3,
+        background: 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
+        textAlign: 'center',
+      }}
+    >
+      <Avatar
+        sx={{
+          width: 48,
+          height: 48,
+          bgcolor: alpha(color, 0.1),
+          color: color,
+          mx: 'auto',
+          mb: 2,
+        }}
+      >
+        {icon}
+      </Avatar>
+      <Typography variant="h4" sx={{ fontWeight: 900, color: '#1e293b', mb: 1 }}>
+        {value}
+      </Typography>
+      <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 600 }}>
+        {label}
+      </Typography>
+    </Paper>
+  );
 
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
@@ -230,135 +253,48 @@ export const ComercioNotifications: React.FC = () => {
             </Stack>
           </Box>
 
-          {/* Stats Cards */}
-          <Grid container spacing={3} sx={{ mb: 4 }}>
-            <Grid item xs={12} sm={6} md={3}>
-              <Paper
-                elevation={0}
-                sx={{
-                  p: 3,
-                  border: '1px solid #f1f5f9',
-                  borderRadius: 3,
-                  background: 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
-                  textAlign: 'center',
-                }}
-              >
-                <Avatar
-                  sx={{
-                    width: 48,
-                    height: 48,
-                    bgcolor: alpha('#6366f1', 0.1),
-                    color: '#6366f1',
-                    mx: 'auto',
-                    mb: 2,
-                  }}
-                >
-                  <NotificationsActive />
-                </Avatar>
-                <Typography variant="h4" sx={{ fontWeight: 900, color: '#1e293b', mb: 1 }}>
-                  {stats.total}
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 600 }}>
-                  Total
-                </Typography>
-              </Paper>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <Paper
-                elevation={0}
-                sx={{
-                  p: 3,
-                  border: '1px solid #f1f5f9',
-                  borderRadius: 3,
-                  background: 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
-                  textAlign: 'center',
-                }}
-              >
-                <Avatar
-                  sx={{
-                    width: 48,
-                    height: 48,
-                    bgcolor: alpha('#f59e0b', 0.1),
-                    color: '#f59e0b',
-                    mx: 'auto',
-                    mb: 2,
-                  }}
-                >
-                  <Badge badgeContent={stats.unread} color="error">
-                    <MarkEmailRead />
-                  </Badge>
-                </Avatar>
-                <Typography variant="h4" sx={{ fontWeight: 900, color: '#1e293b', mb: 1 }}>
-                  {stats.unread}
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 600 }}>
-                  Sin leer
-                </Typography>
-              </Paper>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <Paper
-                elevation={0}
-                sx={{
-                  p: 3,
-                  border: '1px solid #f1f5f9',
-                  borderRadius: 3,
-                  background: 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
-                  textAlign: 'center',
-                }}
-              >
-                <Avatar
-                  sx={{
-                    width: 48,
-                    height: 48,
-                    bgcolor: alpha('#ef4444', 0.1),
-                    color: '#ef4444',
-                    mx: 'auto',
-                    mb: 2,
-                  }}
-                >
-                  <Warning />
-                </Avatar>
-                <Typography variant="h4" sx={{ fontWeight: 900, color: '#1e293b', mb: 1 }}>
-                  {notifications.filter(n => n.priority === 'high').length}
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 600 }}>
-                  Importantes
-                </Typography>
-              </Paper>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <Paper
-                elevation={0}
-                sx={{
-                  p: 3,
-                  border: '1px solid #f1f5f9',
-                  borderRadius: 3,
-                  background: 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
-                  textAlign: 'center',
-                }}
-              >
-                <Avatar
-                  sx={{
-                    width: 48,
-                    height: 48,
-                    bgcolor: alpha('#10b981', 0.1),
-                    color: '#10b981',
-                    mx: 'auto',
-                    mb: 2,
-                  }}
-                >
-                  <CheckCircle />
-                </Avatar>
-                <Typography variant="h4" sx={{ fontWeight: 900, color: '#1e293b', mb: 1 }}>
-                  {stats.read}
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 600 }}>
-                  Leídas
-                </Typography>
-              </Paper>
-            </Grid>
-          </Grid>
+          {/* Stats Cards - Using CSS Grid instead of Material-UI Grid */}
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: {
+                xs: '1fr',
+                sm: 'repeat(2, 1fr)',
+                md: 'repeat(4, 1fr)',
+              },
+              gap: 3,
+              mb: 4,
+            }}
+          >
+            <StatCard
+              icon={<NotificationsActive />}
+              value={stats.total}
+              label="Total"
+              color="#6366f1"
+            />
+            <StatCard
+              icon={
+                <Badge badgeContent={stats.unread} color="error">
+                  <MarkEmailRead />
+                </Badge>
+              }
+              value={stats.unread}
+              label="Sin leer"
+              color="#f59e0b"
+            />
+            <StatCard
+              icon={<Warning />}
+              value={notifications.filter(n => n.priority === 'high').length}
+              label="Importantes"
+              color="#ef4444"
+            />
+            <StatCard
+              icon={<CheckCircle />}
+              value={stats.read}
+              label="Leídas"
+              color="#10b981"
+            />
+          </Box>
         </Box>
       </motion.div>
 
@@ -528,7 +464,7 @@ export const ComercioNotifications: React.FC = () => {
                                     fontWeight: 500,
                                   }}
                                 >
-                                  {format(notification.createdAt.toDate(), 'dd/MM HH:mm', { locale: es })}
+                                  {format(notification.createdAt, 'dd/MM HH:mm', { locale: es })}
                                 </Typography>
                               </Box>
                             }

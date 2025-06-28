@@ -84,7 +84,8 @@ const mockNotifications = [
     status: 'unread' as const,
     category: 'membership' as const,
     createdAt: new Date(),
-    updatedAt: new Date()
+    updatedAt: new Date(),
+    read: false
   },
   {
     id: '2',
@@ -95,7 +96,8 @@ const mockNotifications = [
     status: 'unread' as const,
     category: 'payment' as const,
     createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    updatedAt: new Date(Date.now() - 2 * 60 * 60 * 1000)
+    updatedAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
+    read: false
   }
 ];
 
