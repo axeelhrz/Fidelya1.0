@@ -7,7 +7,6 @@ import {
   Card,
   CardContent,
   Typography,
-  Grid,
   Stack,
   Chip,
   Table,
@@ -16,7 +15,6 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Paper,
   Avatar,
   alpha,
   TextField,
@@ -35,16 +33,11 @@ import {
   Cancel,
   Warning,
   Search,
-  FilterList,
   Download,
   Refresh,
   TrendingUp,
-  TrendingDown,
-  People,
-  AttachMoney,
 } from '@mui/icons-material';
 import { useValidaciones } from '@/hooks/useValidaciones';
-import { Validacion } from '@/types/comercio';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -216,7 +209,18 @@ export const ValidacionesHistory: React.FC = () => {
       </Stack>
 
       {/* Stats Cards */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: {
+            xs: '1fr',
+            sm: 'repeat(2, 1fr)',
+            md: 'repeat(4, 1fr)',
+          },
+          gap: 3,
+          mb: 4,
+        }}
+      >
         {[
           {
             title: 'Total Validaciones',
@@ -247,61 +251,60 @@ export const ValidacionesHistory: React.FC = () => {
             change: '+2%',
           },
         ].map((stat, index) => (
-          <Grid item xs={12} sm={6} md={3} key={index}>
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.3, delay: index * 0.1 }}
+          <motion.div
+            key={index}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3, delay: index * 0.1 }}
+          >
+            <Card
+              elevation={0}
+              sx={{
+                p: 3,
+                background: 'white',
+                border: '1px solid #f1f5f9',
+                borderRadius: 3,
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 8px 30px rgba(0,0,0,0.1)',
+                }
+              }}
             >
-              <Card
-                elevation={0}
-                sx={{
-                  p: 3,
-                  background: 'white',
-                  border: '1px solid #f1f5f9',
-                  borderRadius: 3,
-                  transition: 'all 0.3s ease',
-                  '&:hover': {
-                    transform: 'translateY(-2px)',
-                    boxShadow: '0 8px 30px rgba(0,0,0,0.1)',
-                  }
-                }}
-              >
-                <Stack direction="row" spacing={2} alignItems="center">
-                  <Avatar
+              <Stack direction="row" spacing={2} alignItems="center">
+                <Avatar
+                  sx={{
+                    bgcolor: alpha(stat.color, 0.1),
+                    color: stat.color,
+                    width: 48,
+                    height: 48,
+                  }}
+                >
+                  {stat.icon}
+                </Avatar>
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="h4" sx={{ fontWeight: 900, color: '#1e293b' }}>
+                    {stat.value}
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: '#64748b', mb: 1 }}>
+                    {stat.title}
+                  </Typography>
+                  <Chip
+                    label={stat.change}
+                    size="small"
                     sx={{
-                      bgcolor: alpha(stat.color, 0.1),
-                      color: stat.color,
-                      width: 48,
-                      height: 48,
+                      bgcolor: stat.change.startsWith('+') ? alpha('#10b981', 0.1) : alpha('#ef4444', 0.1),
+                      color: stat.change.startsWith('+') ? '#10b981' : '#ef4444',
+                      fontWeight: 600,
+                      fontSize: '0.7rem',
                     }}
-                  >
-                    {stat.icon}
-                  </Avatar>
-                  <Box sx={{ flex: 1 }}>
-                    <Typography variant="h4" sx={{ fontWeight: 900, color: '#1e293b' }}>
-                      {stat.value}
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: '#64748b', mb: 1 }}>
-                      {stat.title}
-                    </Typography>
-                    <Chip
-                      label={stat.change}
-                      size="small"
-                      sx={{
-                        bgcolor: stat.change.startsWith('+') ? alpha('#10b981', 0.1) : alpha('#ef4444', 0.1),
-                        color: stat.change.startsWith('+') ? '#10b981' : '#ef4444',
-                        fontWeight: 600,
-                        fontSize: '0.7rem',
-                      }}
-                    />
-                  </Box>
-                </Stack>
-              </Card>
-            </motion.div>
-          </Grid>
+                  />
+                </Box>
+              </Stack>
+            </Card>
+          </motion.div>
         ))}
-      </Grid>
+      </Box>
 
       {/* Filters */}
       <Card
@@ -314,92 +317,99 @@ export const ValidacionesHistory: React.FC = () => {
         }}
       >
         <CardContent sx={{ p: 3 }}>
-          <Grid container spacing={3} alignItems="center">
-            <Grid item xs={12} md={4}>
-              <TextField
-                fullWidth
-                placeholder="Buscar por ID de validación, socio o beneficio..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Search sx={{ color: '#94a3b8' }} />
-                    </InputAdornment>
-                  ),
-                }}
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: {
+                xs: '1fr',
+                md: '2fr 1fr 1fr auto',
+              },
+              gap: 3,
+              alignItems: 'center',
+            }}
+          >
+            <TextField
+              fullWidth
+              placeholder="Buscar por ID de validación, socio o beneficio..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Search sx={{ color: '#94a3b8' }} />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 2,
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#06b6d4',
+                  }
+                }
+              }}
+            />
+            
+            <FormControl fullWidth>
+              <InputLabel>Resultado</InputLabel>
+              <Select
+                value={resultadoFilter}
+                label="Resultado"
+                onChange={(e) => setResultadoFilter(e.target.value)}
                 sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: 2,
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#06b6d4',
-                    }
+                  borderRadius: 2,
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#06b6d4',
                   }
                 }}
-              />
-            </Grid>
-            <Grid item xs={12} md={3}>
-              <FormControl fullWidth>
-                <InputLabel>Resultado</InputLabel>
-                <Select
-                  value={resultadoFilter}
-                  label="Resultado"
-                  onChange={(e) => setResultadoFilter(e.target.value)}
-                  sx={{
-                    borderRadius: 2,
-                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                      borderColor: '#06b6d4',
-                    }
-                  }}
-                >
-                  <MenuItem value="all">Todos los resultados</MenuItem>
-                  {Object.entries(RESULTADO_LABELS).map(([key, label]) => (
-                    <MenuItem key={key} value={key}>
-                      <Stack direction="row" spacing={1} alignItems="center">
-                        <Avatar
-                          sx={{
-                            bgcolor: alpha(RESULTADO_COLORS[key as keyof typeof RESULTADO_COLORS], 0.1),
-                            color: RESULTADO_COLORS[key as keyof typeof RESULTADO_COLORS],
-                            width: 24,
-                            height: 24,
-                          }}
-                        >
-                          {getResultadoIcon(key)}
-                        </Avatar>
-                        <Typography>{label}</Typography>
-                      </Stack>
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} md={3}>
-              <FormControl fullWidth>
-                <InputLabel>Período</InputLabel>
-                <Select
-                  value={fechaFilter}
-                  label="Período"
-                  onChange={(e) => setFechaFilter(e.target.value)}
-                  sx={{
-                    borderRadius: 2,
-                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                      borderColor: '#06b6d4',
-                    }
-                  }}
-                >
-                  <MenuItem value="all">Todos los períodos</MenuItem>
-                  <MenuItem value="today">Hoy</MenuItem>
-                  <MenuItem value="week">Última semana</MenuItem>
-                  <MenuItem value="month">Último mes</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} md={2}>
-              <Typography variant="body2" sx={{ color: '#64748b', textAlign: 'center' }}>
+              >
+                <MenuItem value="all">Todos los resultados</MenuItem>
+                {Object.entries(RESULTADO_LABELS).map(([key, label]) => (
+                  <MenuItem key={key} value={key}>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <Avatar
+                        sx={{
+                          bgcolor: alpha(RESULTADO_COLORS[key as keyof typeof RESULTADO_COLORS], 0.1),
+                          color: RESULTADO_COLORS[key as keyof typeof RESULTADO_COLORS],
+                          width: 24,
+                          height: 24,
+                        }}
+                      >
+                        {getResultadoIcon(key)}
+                      </Avatar>
+                      <Typography>{label}</Typography>
+                    </Stack>
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            
+            <FormControl fullWidth>
+              <InputLabel>Período</InputLabel>
+              <Select
+                value={fechaFilter}
+                label="Período"
+                onChange={(e) => setFechaFilter(e.target.value)}
+                sx={{
+                  borderRadius: 2,
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#06b6d4',
+                  }
+                }}
+              >
+                <MenuItem value="all">Todos los períodos</MenuItem>
+                <MenuItem value="today">Hoy</MenuItem>
+                <MenuItem value="week">Última semana</MenuItem>
+                <MenuItem value="month">Último mes</MenuItem>
+              </Select>
+            </FormControl>
+            
+            <Box sx={{ textAlign: 'center', minWidth: 'fit-content' }}>
+              <Typography variant="body2" sx={{ color: '#64748b' }}>
                 {filteredValidaciones.length} resultado{filteredValidaciones.length !== 1 ? 's' : ''}
               </Typography>
-            </Grid>
-          </Grid>
+            </Box>
+          </Box>
         </CardContent>
       </Card>
 
