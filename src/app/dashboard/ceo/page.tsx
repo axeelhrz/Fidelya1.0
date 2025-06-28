@@ -423,33 +423,34 @@ export default function CEODashboard() {
     }
   };
 
-  // Header mejorado
+  // Header compacto mejorado
   const renderHeader = () => (
     <motion.div
-      initial={{ opacity: 0, y: 30 }}
+      initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.8 }}
+      transition={{ duration: 0.6 }}
       style={{
-        background: 'linear-gradient(135deg, #1E40AF 0%, #3B82F6 50%, #06B6D4 100%)',
-        borderRadius: '2rem',
-        padding: '3rem',
-        color: 'white',
+        background: 'rgba(255, 255, 255, 0.95)',
+        backdropFilter: 'blur(20px)',
+        borderRadius: '1.5rem',
+        padding: '1.5rem 2rem',
+        border: '1px solid rgba(229, 231, 235, 0.3)',
+        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+        marginBottom: '1.5rem',
         position: 'relative',
-        overflow: 'hidden',
-        marginBottom: '2rem'
+        overflow: 'hidden'
       }}
     >
-      {/* Efectos de fondo animados */}
+      {/* Efecto de fondo sutil */}
       <div
         style={{
           position: 'absolute',
-          top: '-100px',
-          right: '-100px',
-          width: '300px',
-          height: '300px',
-          background: 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%)',
-          borderRadius: '50%',
-          animation: 'float 6s ease-in-out infinite'
+          top: '-50px',
+          right: '-50px',
+          width: '150px',
+          height: '150px',
+          background: 'radial-gradient(circle, rgba(102, 126, 234, 0.08) 0%, transparent 70%)',
+          borderRadius: '50%'
         }}
       />
       
@@ -458,161 +459,182 @@ export default function CEODashboard() {
         alignItems: 'center', 
         justifyContent: 'space-between',
         flexWrap: 'wrap',
-        gap: '2rem'
+        gap: '1.5rem',
+        position: 'relative',
+        zIndex: 1
       }}>
-        <div style={{ flex: '1', minWidth: '300px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1.5rem' }}>
-            <motion.div
-              animate={{ rotate: [0, 360] }}
-              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-              style={{ marginRight: '1rem' }}
-            >
-              <Sparkles size={32} color="rgba(255, 255, 255, 0.9)" />
-            </motion.div>
-            <div>
-              <h1 style={{ 
-                fontSize: '3rem', 
-                fontWeight: 700,
-                fontFamily: 'Space Grotesk, sans-serif',
-                margin: 0,
-                lineHeight: 1.1
-              }}>
-                Dashboard Ejecutivo
-              </h1>
-              <p style={{ 
-                fontSize: '1.25rem',
-                opacity: 0.9,
-                fontWeight: 400,
-                margin: '0.5rem 0 0 0'
-              }}>
-                Bienvenido, {user?.name || 'Dr. Mendoza'}
-              </p>
-            </div>
-          </div>
+        {/* Información principal */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <motion.div
+            animate={{ rotate: [0, 360] }}
+            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+            style={{
+              padding: '0.75rem',
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              borderRadius: '1rem',
+              boxShadow: '0 4px 16px rgba(102, 126, 234, 0.3)'
+            }}
+          >
+            <Sparkles size={24} color="white" />
+          </motion.div>
           
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '2rem',
-            flexWrap: 'wrap',
-            marginBottom: '2rem'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Clock size={18} />
-              <span style={{ fontSize: '1rem' }}>
-                {currentTime.toLocaleTimeString('es-ES', { 
-                  hour: '2-digit', 
-                  minute: '2-digit'
-                })}
-              </span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Calendar size={18} />
-              <span style={{ fontSize: '1rem' }}>
-                {currentTime.toLocaleDateString('es-ES', { 
-                  weekday: 'long',
-                  day: 'numeric',
-                  month: 'long'
-                })}
-              </span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Shield size={18} />
-              <span style={{ fontSize: '1rem' }}>Sistema seguro</span>
-            </div>
-          </div>
-
-          {/* Acciones rápidas */}
-          <div style={{ 
-            display: 'flex', 
-            gap: '1rem',
-            flexWrap: 'wrap'
-          }}>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={handleExportReport}
-              style={{
-                backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                backdropFilter: 'blur(10px)',
-                border: '1px solid rgba(255, 255, 255, 0.3)',
-                borderRadius: '1rem',
-                padding: '1rem 1.5rem',
-                color: 'white',
-                fontSize: '0.875rem',
-                fontWeight: 600,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                transition: 'all 0.3s ease'
-              }}
-            >
-              <Download size={16} />
-              Exportar Reporte
-            </motion.button>
-
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={handleRefresh}
-              disabled={isRefreshing}
-              style={{
-                backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                backdropFilter: 'blur(10px)',
-                border: '1px solid rgba(255, 255, 255, 0.3)',
-                borderRadius: '1rem',
-                padding: '1rem 1.5rem',
-                color: 'white',
-                fontSize: '0.875rem',
-                fontWeight: 600,
-                cursor: isRefreshing ? 'not-allowed' : 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                transition: 'all 0.3s ease',
-                opacity: isRefreshing ? 0.7 : 1
-              }}
-            >
-              <motion.div
-                animate={isRefreshing ? { rotate: 360 } : {}}
-                transition={{ duration: 1, repeat: isRefreshing ? Infinity : 0 }}
-              >
-                <RefreshCw size={16} />
-              </motion.div>
-              {isRefreshing ? 'Actualizando...' : 'Actualizar'}
-            </motion.button>
+          <div>
+            <h1 style={{ 
+              fontSize: '1.75rem', 
+              fontWeight: 700,
+              fontFamily: 'Space Grotesk, sans-serif',
+              margin: 0,
+              lineHeight: 1.2,
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text'
+            }}>
+              Dashboard Ejecutivo
+            </h1>
+            <p style={{ 
+              fontSize: '1rem',
+              color: '#6B7280',
+              fontWeight: 500,
+              margin: '0.25rem 0 0 0'
+            }}>
+              Bienvenido, {user?.name || 'Dr. Carlos Mendoza'}
+            </p>
           </div>
         </div>
         
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '0.875rem', opacity: 0.8, marginBottom: '1rem' }}>
-            Última actualización: {currentTime.toLocaleTimeString('es-ES', { 
-              hour: '2-digit', 
-              minute: '2-digit' 
-            })}
+        {/* Información de tiempo y estado */}
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: '1.5rem',
+          flexWrap: 'wrap'
+        }}>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '1rem',
+            padding: '0.75rem 1rem',
+            background: 'rgba(102, 126, 234, 0.1)',
+            borderRadius: '1rem',
+            border: '1px solid rgba(102, 126, 234, 0.2)'
+          }}>
+            <Clock size={16} color="#667eea" />
+            <span style={{ 
+              fontSize: '0.875rem', 
+              fontWeight: 600, 
+              color: '#667eea' 
+            }}>
+              {currentTime.toLocaleTimeString('es-ES', { 
+                hour: '2-digit', 
+                minute: '2-digit'
+              })}
+            </span>
+            <Calendar size={16} color="#667eea" />
+            <span style={{ 
+              fontSize: '0.875rem', 
+              fontWeight: 600, 
+              color: '#667eea' 
+            }}>
+              {currentTime.toLocaleDateString('es-ES', { 
+                weekday: 'long',
+                day: 'numeric',
+                month: 'long'
+              })}
+            </span>
           </div>
           
-          {/* Filtros de tiempo */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Shield size={16} color="#10B981" />
+            <span style={{ 
+              fontSize: '0.875rem', 
+              fontWeight: 600, 
+              color: '#10B981' 
+            }}>
+              Sistema seguro
+            </span>
+          </div>
+        </div>
+
+        {/* Acciones rápidas */}
+        <div style={{ 
+          display: 'flex', 
+          gap: '1rem',
+          flexWrap: 'wrap'
+        }}>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleExportReport}
+            style={{
+              backgroundColor: 'rgba(102, 126, 234, 0.1)',
+              border: '1px solid rgba(102, 126, 234, 0.3)',
+              borderRadius: '0.75rem',
+              padding: '0.75rem 1rem',
+              color: '#667eea',
+              fontSize: '0.875rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              transition: 'all 0.3s ease'
+            }}
+          >
+            <Download size={16} />
+            Exportar Reporte
+          </motion.button>
+
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            style={{
+              backgroundColor: 'rgba(16, 185, 129, 0.1)',
+              border: '1px solid rgba(16, 185, 129, 0.3)',
+              borderRadius: '0.75rem',
+              padding: '0.75rem 1rem',
+              color: '#10B981',
+              fontSize: '0.875rem',
+              fontWeight: 600,
+              cursor: isRefreshing ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              transition: 'all 0.3s ease',
+              opacity: isRefreshing ? 0.7 : 1
+            }}
+          >
+            <motion.div
+              animate={isRefreshing ? { rotate: 360 } : {}}
+              transition={{ duration: 1, repeat: isRefreshing ? Infinity : 0 }}
+            >
+              <RefreshCw size={16} />
+            </motion.div>
+            {isRefreshing ? 'Actualizando...' : 'Actualizar'}
+          </motion.button>
+
+          {/* Filtros de tiempo compactos */}
           <select
             value={selectedTimeframe}
             onChange={(e) => setSelectedTimeframe(e.target.value)}
             style={{
               padding: '0.75rem 1rem',
               borderRadius: '0.75rem',
-              border: '1px solid rgba(255, 255, 255, 0.3)',
-              background: 'rgba(255, 255, 255, 0.2)',
-              backdropFilter: 'blur(10px)',
-              color: 'white',
+              border: '1px solid rgba(229, 231, 235, 0.4)',
+              background: 'rgba(255, 255, 255, 0.9)',
+              color: '#1C1E21',
               fontSize: '0.875rem',
+              fontWeight: 600,
               outline: 'none',
               cursor: 'pointer'
             }}
           >
-            <option value="day" style={{ color: '#1C1E21' }}>Hoy</option>
-            <option value="week" style={{ color: '#1C1E21' }}>Esta semana</option>
-            <option value="month" style={{ color: '#1C1E21' }}>Este mes</option>
-            <option value="quarter" style={{ color: '#1C1E21' }}>Trimestre</option>
+            <option value="day">Hoy</option>
+            <option value="week">Esta semana</option>
+            <option value="month">Este mes</option>
+            <option value="quarter">Trimestre</option>
           </select>
         </div>
       </div>
