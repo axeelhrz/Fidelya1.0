@@ -2,14 +2,19 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Building2, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { Building2, CheckCircle, XCircle, Clock, AlertTriangle } from 'lucide-react';
+import { useSocioProfile } from '@/hooks/useSocioProfile';
+import { LoadingSkeleton } from '@/components/ui/LoadingSkeleton';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 interface Asociacion {
   id: string;
   nombre: string;
-  estado: 'activo' | 'vencido' | 'pendiente';
+  estado: 'activo' | 'vencido' | 'pendiente' | 'inactivo';
   fechaVencimiento?: Date;
   logo?: string;
+  descripcion?: string;
 }
 
 interface AsociacionesListProps {
@@ -17,7 +22,7 @@ interface AsociacionesListProps {
 }
 
 export const AsociacionesList: React.FC<AsociacionesListProps> = ({ 
-  asociaciones = [
+  asociaciones: asociacionesProp = [
     {
       id: '1',
       nombre: 'Asociación de Comerciantes Centro',
@@ -32,6 +37,9 @@ export const AsociacionesList: React.FC<AsociacionesListProps> = ({
     }
   ]
 }) => {
+  const { asociaciones, loading } = useSocioProfile();
+  const asociacionesToShow = asociaciones && asociaciones.length > 0 ? asociaciones : asociacionesProp;
+
   const getStatusIcon = (estado: Asociacion['estado']) => {
     switch (estado) {
       case 'activo':
@@ -40,6 +48,8 @@ export const AsociacionesList: React.FC<AsociacionesListProps> = ({
         return <XCircle size={16} className="text-red-500" />;
       case 'pendiente':
         return <Clock size={16} className="text-yellow-500" />;
+      case 'inactivo':
+        return <AlertTriangle size={16} className="text-gray-500" />;
     }
   };
 
@@ -51,6 +61,8 @@ export const AsociacionesList: React.FC<AsociacionesListProps> = ({
         return 'bg-red-100 text-red-800 border-red-200';
       case 'pendiente':
         return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'inactivo':
+        return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
@@ -62,8 +74,35 @@ export const AsociacionesList: React.FC<AsociacionesListProps> = ({
         return 'Vencido';
       case 'pendiente':
         return 'Pendiente';
+      case 'inactivo':
+        return 'Inactivo';
     }
   };
+
+  const getStatusDescription = (estado: Asociacion['estado'], fechaVencimiento?: Date) => {
+    switch (estado) {
+      case 'activo':
+        if (fechaVencimiento) {
+          return `Vence: ${format(fechaVencimiento, 'dd/MM/yyyy', { locale: es })}`;
+        }
+        return 'Membresía activa';
+      case 'vencido':
+        if (fechaVencimiento) {
+          return `Venció: ${format(fechaVencimiento, 'dd/MM/yyyy', { locale: es })}`;
+        }
+        return 'Membresía vencida';
+      case 'pendiente':
+        return 'Activación pendiente';
+      case 'inactivo':
+        return 'Membresía inactiva';
+      default:
+        return '';
+    }
+  };
+
+  if (loading) {
+    return <LoadingSkeleton className="h-64" />;
+  }
 
   return (
     <motion.div
@@ -83,7 +122,7 @@ export const AsociacionesList: React.FC<AsociacionesListProps> = ({
       </div>
 
       <div className="space-y-4">
-        {asociaciones.map((asociacion, index) => (
+        {asociacionesToShow.map((asociacion, index) => (
           <motion.div
             key={asociacion.id}
             initial={{ opacity: 0, x: -20 }}
@@ -93,13 +132,24 @@ export const AsociacionesList: React.FC<AsociacionesListProps> = ({
           >
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center">
-                <Building2 size={20} className="text-gray-600" />
+                {asociacion.logo ? (
+                  <img 
+                    src={asociacion.logo} 
+                    alt={asociacion.nombre}
+                    className="w-8 h-8 object-contain"
+                  />
+                ) : (
+                  <Building2 size={20} className="text-gray-600" />
+                )}
               </div>
               <div>
                 <h4 className="font-medium text-gray-900 text-sm">{asociacion.nombre}</h4>
-                {asociacion.fechaVencimiento && (
-                  <p className="text-xs text-gray-500">
-                    Vence: {asociacion.fechaVencimiento.toLocaleDateString()}
+                <p className="text-xs text-gray-500">
+                  {getStatusDescription(asociacion.estado, asociacion.fechaVencimiento)}
+                </p>
+                {asociacion.descripcion && (
+                  <p className="text-xs text-gray-400 mt-1 line-clamp-1">
+                    {asociacion.descripcion}
                   </p>
                 )}
               </div>
@@ -115,10 +165,33 @@ export const AsociacionesList: React.FC<AsociacionesListProps> = ({
         ))}
       </div>
 
-      {asociaciones.length === 0 && (
+      {asociacionesToShow.length === 0 && (
         <div className="text-center py-8">
           <Building2 size={48} className="text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-500">No tienes asociaciones registradas</p>
+          <h4 className="font-medium text-gray-900 mb-2">No tienes asociaciones</h4>
+          <p className="text-gray-500 text-sm">
+            Contacta con tu administrador para obtener acceso a una asociación.
+          </p>
+        </div>
+      )}
+
+      {/* Resumen de estado */}
+      {asociacionesToShow.length > 0 && (
+        <div className="mt-6 pt-4 border-t border-gray-200">
+          <div className="grid grid-cols-2 gap-4 text-center">
+            <div>
+              <div className="text-lg font-bold text-green-600">
+                {asociacionesToShow.filter(a => a.estado === 'activo').length}
+              </div>
+              <div className="text-xs text-gray-500">Activas</div>
+            </div>
+            <div>
+              <div className="text-lg font-bold text-red-600">
+                {asociacionesToShow.filter(a => a.estado === 'vencido').length}
+              </div>
+              <div className="text-xs text-gray-500">Vencidas</div>
+            </div>
+          </div>
         </div>
       )}
     </motion.div>
