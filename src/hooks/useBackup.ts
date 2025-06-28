@@ -39,7 +39,7 @@ const storage = {
 };
 
 // Helper function to clean undefined values from objects
-const cleanUndefinedValues = (obj: any): any => {
+const cleanUndefinedValues = (obj: unknown): unknown => {
   if (obj === null || obj === undefined) {
     return null;
   }
@@ -49,8 +49,8 @@ const cleanUndefinedValues = (obj: any): any => {
   }
   
   if (typeof obj === 'object') {
-    const cleaned: any = {};
-    for (const [key, value] of Object.entries(obj)) {
+    const cleaned: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
       if (value !== undefined) {
         cleaned[key] = cleanUndefinedValues(value);
       }

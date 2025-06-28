@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Bell, Filter, Search, MoreVertical } from 'lucide-react';
+import { Bell, Search } from 'lucide-react';
 import { Notification } from '@/types/notification';
 import { NotificationItem } from './NotificationItem';
 import { Input } from '@/components/ui/Input';
@@ -95,10 +95,10 @@ export const NotificationsList: React.FC<NotificationsListProps> = ({
           </div>
 
           <div className="flex gap-2">
-            {['all', 'unread', 'read'].map((filterOption) => (
+            {(['all', 'unread', 'read'] as Array<'all' | 'unread' | 'read'>).map((filterOption) => (
               <button
                 key={filterOption}
-                onClick={() => setFilter(filterOption as any)}
+                onClick={() => setFilter(filterOption)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   filter === filterOption
                     ? 'bg-indigo-100 text-indigo-700 border border-indigo-200'
@@ -136,4 +136,22 @@ export const NotificationsList: React.FC<NotificationsListProps> = ({
             </motion.div>
           ))
         ) : (
-          <div className="
+          <div className="bg-white rounded-xl p-8 border border-gray-200 text-center">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Bell size={24} className="text-gray-400" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              {searchTerm || filter !== 'all' ? 'No se encontraron notificaciones' : 'No hay notificaciones'}
+            </h3>
+            <p className="text-gray-500">
+              {searchTerm || filter !== 'all' 
+                ? 'Intenta ajustar los filtros de búsqueda'
+                : 'Cuando recibas notificaciones aparecerán aquí'
+              }
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};

@@ -13,7 +13,6 @@ import {
   IconButton,
   Chip,
   CircularProgress,
-  Stack,
 } from '@mui/material';
 import {
   TrendingUp,
@@ -261,7 +260,6 @@ const UnifiedMetricsCard: React.FC<UnifiedMetricProps> = ({
                 <CircularProgress size={config.iconSize * 0.4} sx={{ color: 'inherit' }} />
               ) : (
                 React.cloneElement(icon as React.ReactElement, {
-                  sx: { fontSize: config.iconSize * 0.5 }
                 })
               )}
             </Avatar>

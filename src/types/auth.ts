@@ -19,6 +19,7 @@ export interface UserData {
   };
   // Role-specific metadata
   metadata?: Record<string, any>;
+  asociacionId?: string; // For socios and asociaciones
 }
 
 export interface AuthContextType {

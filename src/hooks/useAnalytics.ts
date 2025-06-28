@@ -92,7 +92,7 @@ export const useAnalytics = (dateRange: DateRange) => {
   const [loading, setLoading] = useState(true);
 
   // Memoize date range to prevent unnecessary recalculations
-  const memoizedDateRange = useMemo(() => dateRange, [dateRange.startDate, dateRange.endDate]);
+  const memoizedDateRange = useMemo(() => dateRange, [dateRange]);
 
   const processAnalyticsData = useCallback(() => {
     if (!user || !validaciones.length) {
@@ -220,10 +220,21 @@ export const useAnalytics = (dateRange: DateRange) => {
       const topBenefits = Object.entries(beneficioUsos)
         .map(([beneficioId, usos]) => {
           const beneficio = beneficios.find(b => b.id === beneficioId);
+          // Ensure asociacion is always a string (e.g., association name or ID)
+          let asociacionNombre = 'N/A';
+          if (beneficio?.asociacionesVinculadas && beneficio.asociacionesVinculadas.length > 0) {
+            const asociacion = beneficio.asociacionesVinculadas[0];
+            // If asociacion is an object, use its 'nombre' or 'id', otherwise use as string
+            if (typeof asociacion === 'string') {
+              asociacionNombre = asociacion;
+            } else if (typeof asociacion === 'object' && asociacion !== null) {
+              asociacionNombre = asociacion.nombre || asociacion.id || 'N/A';
+            }
+          }
           return {
             id: beneficioId,
             nombre: beneficio?.titulo || 'Beneficio Desconocido',
-            asociacion: beneficio?.asociacionesVinculadas?.[0] || 'N/A',
+            asociacion: asociacionNombre,
             usos,
             estado: (beneficio?.estado || 'inactivo') as 'activo' | 'inactivo',
           };
