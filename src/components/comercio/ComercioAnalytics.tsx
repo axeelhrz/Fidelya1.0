@@ -32,6 +32,7 @@ import { ByAssociationChart } from './analytics/ByAssociationChart';
 import { KpiCards } from './analytics/KpiCards';
 import { TopDaysList } from './analytics/TopDaysList';
 import { DateRangeSelector } from './analytics/DateRangeSelector';
+import { useAnalytics } from '@/hooks/useAnalytics';
 
 interface ComercioAnalyticsProps {
   section: string;
@@ -41,6 +42,12 @@ export const ComercioAnalytics: React.FC<ComercioAnalyticsProps> = ({ section })
   const [dateRange, setDateRange] = useState<{ start: Date; end: Date }>({
     start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
     end: new Date(),
+  });
+
+  // Use analytics hook to get processed data
+  const { analyticsData, loading } = useAnalytics({
+    startDate: dateRange.start,
+    endDate: dateRange.end,
   });
 
   const getSectionConfig = () => {
@@ -395,7 +402,22 @@ export const ComercioAnalytics: React.FC<ComercioAnalyticsProps> = ({ section })
         >
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {/* KPI Cards */}
-            <KpiCards />
+            <KpiCards
+              data={{
+                totalValidaciones: analyticsData.totalValidaciones,
+                promedioDiario: analyticsData.promedioDiario,
+                asociacionesActivas: analyticsData.asociacionesActivas,
+                tasaExito: analyticsData.tasaExito,
+                totalBeneficios: analyticsData.topBenefits.length,
+                usuariosUnicos: analyticsData.sociosAlcanzados || 0,
+                crecimientoMensual: analyticsData.crecimientoMensual,
+                eficienciaOperativa: analyticsData.eficienciaOperativa,
+                beneficioMasUsado: analyticsData.beneficioMasUsado,
+                ingresosTotales: analyticsData.ingresosTotales,
+                sociosAlcanzados: analyticsData.sociosAlcanzados,
+              }}
+              loading={loading}
+            />
 
             {/* Charts Row 1 */}
             <Box sx={{ 
@@ -405,10 +427,10 @@ export const ComercioAnalytics: React.FC<ComercioAnalyticsProps> = ({ section })
               alignItems: 'stretch'
             }}>
               <Box sx={{ flex: { xs: '1 1 100%', lg: '2 1 0' }, minWidth: '400px' }}>
-                <ValidationsOverTime dateRange={dateRange} />
+                <ValidationsOverTime data={analyticsData.dailyValidations} />
               </Box>
               <Box sx={{ flex: { xs: '1 1 100%', lg: '1 1 0' }, minWidth: '320px' }}>
-                <TopDaysList />
+                <TopDaysList data={analyticsData.topDays} />
               </Box>
             </Box>
 
@@ -423,8 +445,8 @@ export const ComercioAnalytics: React.FC<ComercioAnalyticsProps> = ({ section })
                 minWidth: '320px'
               }
             }}>
-              <HourlyActivityChart />
-              <ByAssociationChart />
+              <HourlyActivityChart data={analyticsData.hourlyActivity} />
+              <ByAssociationChart data={analyticsData.byAssociation} />
             </Box>
 
             {/* Charts Row 3 */}
