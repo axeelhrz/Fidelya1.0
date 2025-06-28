@@ -158,9 +158,6 @@ const DashboardSection: React.FC<{
     case 'overview':
       return (
         <OverviewDashboard
-          socios={socios}
-          stats={stats}
-          loading={loading}
           onNavigate={onNavigate}
           onAddMember={onAddSocio}
         />
@@ -199,15 +196,13 @@ const DashboardSection: React.FC<{
               </Box>
             </Box>
           </motion.div>
-          <AdvancedAnalytics socios={socios} stats={stats} loading={loading} />
+          <AdvancedAnalytics loading={loading} />
         </Container>
       );
 
     case 'reports':
       return (
         <ReportsSection
-          socios={socios}
-          stats={stats}
           loading={loading}
         />
       );
@@ -215,8 +210,6 @@ const DashboardSection: React.FC<{
     case 'insights':
       return (
         <InsightsIA
-          socios={socios}
-          stats={stats}
           loading={loading}
         />
       );
