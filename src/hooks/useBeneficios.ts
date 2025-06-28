@@ -123,17 +123,20 @@ export const useBeneficios = () => {
       setLoading(true);
       const beneficioRef = doc(db, 'beneficios', id);
       
-      const updateData: any = {
-        ...data,
+      // Separar las fechas del resto de los datos
+      const { fechaInicio, fechaFin, ...otherData } = data;
+      
+      const updateData: Record<string, unknown> = {
+        ...otherData,
         actualizadoEn: Timestamp.now()
       };
 
-      // Convert dates if present
-      if (data.fechaInicio) {
-        updateData.fechaInicio = Timestamp.fromDate(data.fechaInicio);
+      // Agregar fechas convertidas si están presentes
+      if (fechaInicio) {
+        updateData.fechaInicio = Timestamp.fromDate(fechaInicio);
       }
-      if (data.fechaFin) {
-        updateData.fechaFin = Timestamp.fromDate(data.fechaFin);
+      if (fechaFin) {
+        updateData.fechaFin = Timestamp.fromDate(fechaFin);
       }
 
       await updateDoc(beneficioRef, updateData);
