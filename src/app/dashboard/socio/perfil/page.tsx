@@ -1,7 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import styled from '@emotion/styled';
+import { css } from '@emotion/react';
 import { 
   User, 
   Edit3, 
@@ -98,6 +100,702 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import toast from 'react-hot-toast';
 
+// Styled Components con CSS-in-JS moderno
+const PageContainer = styled(motion.div)`
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+`;
+
+const HeaderSection = styled(motion.div)`
+  margin-bottom: 3rem;
+  position: relative;
+  overflow: hidden;
+`;
+
+const HeaderContent = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 2rem;
+  
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+`;
+
+const HeaderTitle = styled.div`
+  h1 {
+    font-size: 3rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, #1e293b 0%, #6366f1 60%, #8b5cf6 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.02em;
+    
+    @media (max-width: 768px) {
+      font-size: 2.5rem;
+    }
+  }
+  
+  p {
+    font-size: 1.25rem;
+    color: #64748b;
+    font-weight: 600;
+  }
+`;
+
+const HeaderActions = styled.div`
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+`;
+
+const MainGrid = styled.div`
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 2rem;
+  
+  @media (max-width: 1200px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+const MainColumn = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+`;
+
+const SideColumn = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+`;
+
+const ProfileCard = styled(motion.div)`
+  background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
+  border-radius: 2rem;
+  box-shadow: 0 20px 60px -15px rgba(0, 0, 0, 0.1);
+  border: 1px solid #f1f5f9;
+  overflow: hidden;
+  position: relative;
+  
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 25px 80px -20px rgba(0, 0, 0, 0.15);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+`;
+
+const ProfileHeader = styled.div`
+  height: 10rem;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(45deg, rgba(255, 255, 255, 0.1) 0%, transparent 100%);
+  }
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    width: 8rem;
+    height: 8rem;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+  }
+`;
+
+const ProfileHeaderActions = styled.div`
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  display: flex;
+  gap: 0.75rem;
+`;
+
+const ProfileContent = styled.div`
+  padding: 2rem;
+`;
+
+const ProfileAvatarSection = styled.div`
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-top: -5rem;
+  margin-bottom: 2rem;
+`;
+
+const AvatarContainer = styled.div`
+  position: relative;
+`;
+
+const StatusBadge = styled.div<{ status: string }>`
+  position: absolute;
+  bottom: -0.25rem;
+  left: 1rem;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  border: 4px solid white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  
+  ${({ status }) => {
+    switch (status) {
+      case 'activo':
+        return css`background: linear-gradient(135deg, #10b981, #059669);`;
+      case 'vencido':
+        return css`background: linear-gradient(135deg, #f59e0b, #d97706);`;
+      case 'inactivo':
+        return css`background: linear-gradient(135deg, #ef4444, #dc2626);`;
+      default:
+        return css`background: linear-gradient(135deg, #6b7280, #4b5563);`;
+    }
+  }}
+`;
+
+const LevelBadge = styled.div<{ level: string }>`
+  position: absolute;
+  top: -0.5rem;
+  right: -0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 1rem;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  
+  ${({ level }) => {
+    switch (level) {
+      case 'Bronze':
+        return css`background: linear-gradient(135deg, #cd7f32, #b8860b);`;
+      case 'Silver':
+        return css`background: linear-gradient(135deg, #c0c0c0, #a8a8a8);`;
+      case 'Gold':
+        return css`background: linear-gradient(135deg, #ffd700, #ffb347);`;
+      case 'Platinum':
+        return css`background: linear-gradient(135deg, #e5e4e2, #d3d3d3);`;
+      case 'Diamond':
+        return css`background: linear-gradient(135deg, #b9f2ff, #87ceeb);`;
+      default:
+        return css`background: linear-gradient(135deg, #6b7280, #4b5563);`;
+    }
+  }}
+`;
+
+const UserInfo = styled.div`
+  margin-bottom: 2rem;
+  
+  h2 {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+  }
+  
+  .status-container {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+  }
+  
+  .status-text {
+    font-size: 1.125rem;
+    color: #64748b;
+    font-weight: 600;
+  }
+`;
+
+const StatusChip = styled.span<{ status: string }>`
+  padding: 0.5rem 1rem;
+  border-radius: 1rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  border: 2px solid;
+  
+  ${({ status }) => {
+    switch (status) {
+      case 'activo':
+        return css`
+          background: #dcfce7;
+          color: #166534;
+          border-color: #bbf7d0;
+        `;
+      case 'vencido':
+        return css`
+          background: #fef3c7;
+          color: #92400e;
+          border-color: #fde68a;
+        `;
+      case 'inactivo':
+        return css`
+          background: #fee2e2;
+          color: #991b1b;
+          border-color: #fecaca;
+        `;
+      default:
+        return css`
+          background: #f1f5f9;
+          color: #475569;
+          border-color: #e2e8f0;
+        `;
+    }
+  }}
+`;
+
+const LevelProgress = styled.div`
+  margin-bottom: 1.5rem;
+  
+  .progress-bar {
+    background: #f1f5f9;
+    border-radius: 1rem;
+    height: 0.75rem;
+    margin-bottom: 0.5rem;
+    overflow: hidden;
+    position: relative;
+  }
+  
+  .progress-fill {
+    height: 100%;
+    border-radius: 1rem;
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+      animation: shimmer 2s infinite;
+    }
+  }
+  
+  .progress-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.875rem;
+    color: #64748b;
+    font-weight: 600;
+  }
+  
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+`;
+
+const InfoGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+`;
+
+const InfoCard = styled(motion.div)`
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 1.5rem;
+  border: 1px solid #e2e8f0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  
+  &:hover {
+    background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  }
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  
+  &:hover::before {
+    opacity: 1;
+  }
+`;
+
+const InfoIcon = styled.div<{ color: string }>`
+  width: 3rem;
+  height: 3rem;
+  border-radius: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: ${({ color }) => `linear-gradient(135deg, ${color}20, ${color}10)`};
+  color: ${({ color }) => color};
+  flex-shrink: 0;
+`;
+
+const InfoContent = styled.div`
+  flex: 1;
+  min-width: 0;
+  
+  .label {
+    font-size: 0.875rem;
+    color: #64748b;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+  }
+  
+  .value {
+    font-size: 1rem;
+    color: #1e293b;
+    font-weight: 700;
+    word-break: break-word;
+  }
+`;
+
+const InfoAction = styled.button`
+  padding: 0.5rem;
+  border: none;
+  background: none;
+  color: #94a3b8;
+  cursor: pointer;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    color: #64748b;
+    background: #f1f5f9;
+    transform: scale(1.1);
+  }
+`;
+
+const StatsCard = styled(motion.div)`
+  background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
+  border-radius: 2rem;
+  box-shadow: 0 20px 60px -15px rgba(0, 0, 0, 0.1);
+  border: 1px solid #f1f5f9;
+  padding: 2rem;
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899);
+  }
+`;
+
+const StatsHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+  
+  .title-section {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  
+  .icon-container {
+    width: 3rem;
+    height: 3rem;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    border-radius: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+  }
+  
+  .title-content h3 {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #1e293b;
+    margin-bottom: 0.25rem;
+  }
+  
+  .title-content p {
+    color: #64748b;
+    font-weight: 600;
+  }
+  
+  .actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+`;
+
+const MetricsGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+`;
+
+const AdditionalMetrics = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 2px solid #f1f5f9;
+`;
+
+const MetricCard = styled.div<{ color: string }>`
+  text-align: center;
+  padding: 1.5rem;
+  background: ${({ color }) => `linear-gradient(135deg, ${color}10, ${color}05)`};
+  border-radius: 1.5rem;
+  border: 2px solid ${({ color }) => `${color}20`};
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px ${({ color }) => `${color}30`};
+    border-color: ${({ color }) => `${color}40`};
+  }
+  
+  .icon-container {
+    width: 3rem;
+    height: 3rem;
+    background: ${({ color }) => color};
+    border-radius: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+    color: white;
+  }
+  
+  .value {
+    font-size: 1.75rem;
+    font-weight: 900;
+    color: ${({ color }) => color};
+    margin-bottom: 0.5rem;
+  }
+  
+  .label {
+    font-size: 0.875rem;
+    color: #64748b;
+    font-weight: 600;
+  }
+`;
+
+const SideCard = styled(motion.div)`
+  background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
+  border-radius: 2rem;
+  box-shadow: 0 20px 60px -15px rgba(0, 0, 0, 0.1);
+  border: 1px solid #f1f5f9;
+  padding: 1.5rem;
+  position: relative;
+  overflow: hidden;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 25px 80px -20px rgba(0, 0, 0, 0.15);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+`;
+
+const SideCardHeader = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  
+  .icon-container {
+    width: 2.5rem;
+    height: 2.5rem;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    border-radius: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+  }
+  
+  .title-content h3 {
+    font-size: 1.125rem;
+    font-weight: 800;
+    color: #1e293b;
+    margin-bottom: 0.125rem;
+  }
+  
+  .title-content p {
+    font-size: 0.875rem;
+    color: #64748b;
+    font-weight: 600;
+  }
+`;
+
+const QuickActions = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+`;
+
+const QuickActionButton = styled(motion.button)`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  color: #475569;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 100%;
+  text-align: left;
+  
+  &:hover {
+    background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+    transform: translateX(4px);
+    border-color: #cbd5e1;
+    color: #334155;
+  }
+  
+  .icon {
+    color: #6366f1;
+  }
+  
+  .text {
+    flex: 1;
+  }
+  
+  .arrow {
+    color: #94a3b8;
+    transition: transform 0.2s ease;
+  }
+  
+  &:hover .arrow {
+    transform: translateX(4px);
+  }
+`;
+
+const TipsCard = styled(motion.div)`
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  border: 2px solid #93c5fd;
+  border-radius: 2rem;
+  padding: 1.5rem;
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #3b82f6, #6366f1, #8b5cf6);
+  }
+  
+  h3 {
+    font-size: 1.125rem;
+    font-weight: 800;
+    color: #1e40af;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+`;
+
+const TipsList = styled.ul`
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+`;
+
+const TipItem = styled.li`
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  font-size: 0.875rem;
+  color: #1e40af;
+  line-height: 1.5;
+  
+  .icon-container {
+    width: 1.5rem;
+    height: 1.5rem;
+    background: #3b82f6;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 0.125rem;
+    color: white;
+  }
+  
+  .text {
+    font-weight: 600;
+  }
+`;
+
+// Animation variants
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.6,
+      ease: [0.4, 0, 0.2, 1]
+    }
+  }
+};
+
 interface ProfileFormData {
   nombre: string;
   telefono: string;
@@ -135,7 +833,6 @@ export default function SocioPerfilPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState<'general' | 'notificaciones' | 'privacidad' | 'avanzado'>('general');
-  const [showAdvancedStats, setShowAdvancedStats] = useState(false);
 
   // Datos del perfil con fallbacks mejorados
   const profileData = {
@@ -213,7 +910,7 @@ export default function SocioPerfilPage() {
   });
 
   // Update form data when socio data changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (socio) {
       setFormData({
         nombre: socio.nombre || '',
@@ -287,16 +984,6 @@ export default function SocioPerfilPage() {
   };
 
   // Utility functions
-  const getStatusColor = (estado: string) => {
-    switch (estado) {
-      case 'activo': return 'bg-green-500';
-      case 'vencido': return 'bg-yellow-500';
-      case 'inactivo': return 'bg-red-500';
-      case 'pendiente': return 'bg-blue-500';
-      default: return 'bg-gray-500';
-    }
-  };
-
   const getStatusText = (estado: string) => {
     switch (estado) {
       case 'activo': return 'Socio Activo';
@@ -307,45 +994,14 @@ export default function SocioPerfilPage() {
     }
   };
 
-  const getStatusIcon = (estado: string) => {
-    switch (estado) {
-      case 'activo': return <CheckCircle size={16} className="text-green-500" />;
-      case 'vencido': return <XCircle size={16} className="text-red-500" />;
-      case 'pendiente': return <Clock size={16} className="text-blue-500" />;
-      case 'inactivo': return <AlertTriangle size={16} className="text-gray-500" />;
-      default: return <AlertCircle size={16} className="text-gray-500" />;
-    }
-  };
-
-  const getStatusColorClass = (estado: string) => {
-    switch (estado) {
-      case 'activo': return 'bg-green-100 text-green-800 border-green-200';
-      case 'vencido': return 'bg-red-100 text-red-800 border-red-200';
-      case 'pendiente': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'inactivo': return 'bg-gray-100 text-gray-800 border-gray-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
-
-  const getNivelColor = (nivel: string) => {
-    switch (nivel) {
-      case 'Bronze': return '#cd7f32';
-      case 'Silver': return '#c0c0c0';
-      case 'Gold': return '#ffd700';
-      case 'Platinum': return '#e5e4e2';
-      case 'Diamond': return '#b9f2ff';
-      default: return '#6b7280';
-    }
-  };
-
   const getNivelIcon = (nivel: string) => {
     switch (nivel) {
-      case 'Bronze': return <Award size={20} />;
-      case 'Silver': return <Star size={20} />;
-      case 'Gold': return <Crown size={20} />;
-      case 'Platinum': return <Zap size={20} />;
-      case 'Diamond': return <Sparkles size={20} />;
-      default: return <Award size={20} />;
+      case 'Bronze': return <Award size={16} />;
+      case 'Silver': return <Star size={16} />;
+      case 'Gold': return <Crown size={16} />;
+      case 'Platinum': return <Zap size={16} />;
+      case 'Diamond': return <Sparkles size={16} />;
+      default: return <Award size={16} />;
     }
   };
 
@@ -355,9 +1011,9 @@ export default function SocioPerfilPage() {
         activeSection="perfil"
         sidebarComponent={SocioSidebar}
       >
-        <div className="p-6 max-w-7xl mx-auto">
+        <PageContainer>
           <LoadingSkeleton className="h-96" />
-        </div>
+        </PageContainer>
       </DashboardLayout>
     );
   }
@@ -367,21 +1023,19 @@ export default function SocioPerfilPage() {
       activeSection="perfil"
       sidebarComponent={SocioSidebar}
     >
-      <div className="p-6 max-w-7xl mx-auto">
+      <PageContainer
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
         {/* Header mejorado */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-4xl font-bold text-gray-900 mb-2">Mi Perfil</h1>
-              <p className="text-lg text-gray-600">
-                Gestiona tu información personal y configuración de cuenta
-              </p>
-            </div>
-            <div className="flex gap-3">
+        <HeaderSection variants={itemVariants}>
+          <HeaderContent>
+            <HeaderTitle>
+              <h1>Mi Perfil</h1>
+              <p>Gestiona tu información personal y configuración de cuenta</p>
+            </HeaderTitle>
+            <HeaderActions>
               <Button
                 variant="outline"
                 size="sm"
@@ -407,32 +1061,17 @@ export default function SocioPerfilPage() {
               >
                 Actualizar
               </Button>
-            </div>
-          </div>
-        </motion.div>
+            </HeaderActions>
+          </HeaderContent>
+        </HeaderSection>
 
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+        <MainGrid>
           {/* Columna Principal */}
-          <div className="xl:col-span-2 space-y-8">
+          <MainColumn>
             {/* Tarjeta de Perfil Principal Mejorada */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-3xl shadow-lg border border-gray-200 overflow-hidden"
-            >
-              {/* Header con gradiente mejorado */}
-              <div className="h-40 bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-500 relative">
-                <div className="absolute inset-0 bg-black/10"></div>
-                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
-                
-                {/* Patrón decorativo */}
-                <div className="absolute inset-0 opacity-20">
-                  <div className="absolute top-4 left-4 w-32 h-32 border border-white/30 rounded-full"></div>
-                  <div className="absolute top-8 right-8 w-24 h-24 border border-white/20 rounded-full"></div>
-                  <div className="absolute bottom-4 left-1/2 w-16 h-16 border border-white/25 rounded-full"></div>
-                </div>
-
-                <div className="absolute top-6 right-6 flex gap-3">
+            <ProfileCard variants={itemVariants}>
+              <ProfileHeader>
+                <ProfileHeaderActions>
                   <Button
                     variant="outline"
                     size="sm"
@@ -451,178 +1090,176 @@ export default function SocioPerfilPage() {
                   >
                     Configuración
                   </Button>
-                </div>
-              </div>
+                </ProfileHeaderActions>
+              </ProfileHeader>
 
-              <div className="px-8 pb-8">
-                {/* Avatar y información básica mejorada */}
-                <div className="flex items-start justify-between -mt-20 mb-8">
-                  <div className="relative">
+              <ProfileContent>
+                <ProfileAvatarSection>
+                  <AvatarContainer>
                     <ProfileImageUploader
                       currentImage={profileData.avatar}
                       onImageUpload={handleImageUpload}
                       uploading={uploadingImage}
                     />
 
-                    {/* Indicador de estado mejorado */}
-                    <div className={`absolute -bottom-1 left-4 w-8 h-8 ${getStatusColor(profileData.estado)} rounded-full border-4 border-white flex items-center justify-center shadow-lg`}>
-                      <CheckCircle size={16} className="text-white" />
-                    </div>
+                    <StatusBadge status={profileData.estado}>
+                      <CheckCircle size={12} className="text-white" />
+                    </StatusBadge>
 
-                    {/* Badge de nivel */}
-                    <div 
-                      className="absolute -top-2 -right-2 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg flex items-center gap-1"
-                      style={{ 
-                        background: `linear-gradient(135deg, ${getNivelColor(profileData.nivel.nivel)}, ${getNivelColor(profileData.nivel.nivel)}dd)` 
-                      }}
-                    >
+                    <LevelBadge level={profileData.nivel.nivel}>
                       {getNivelIcon(profileData.nivel.nivel)}
                       {profileData.nivel.nivel}
-                    </div>
-                  </div>
+                    </LevelBadge>
+                  </AvatarContainer>
 
                   <Button
                     variant="outline"
                     leftIcon={<Edit3 size={16} />}
                     onClick={() => setEditModalOpen(true)}
-                    className="mt-6"
                   >
                     Editar Perfil
                   </Button>
-                </div>
+                </ProfileAvatarSection>
 
-                {/* Información del usuario mejorada */}
-                <div className="space-y-6">
-                  <div>
-                    <h2 className="text-3xl font-bold text-gray-900 mb-2">{profileData.nombre}</h2>
-                    <div className="flex items-center gap-3 mb-4">
-                      <span className="text-lg text-gray-600">{getStatusText(profileData.estado)}</span>
-                      <span className={`px-3 py-1 rounded-full text-sm font-bold border ${getStatusColorClass(profileData.estado)}`}>
-                        {profileData.estado.toUpperCase()}
-                      </span>
-                    </div>
+                <UserInfo>
+                  <h2>{profileData.nombre}</h2>
+                  <div className="status-container">
+                    <span className="status-text">{getStatusText(profileData.estado)}</span>
+                    <StatusChip status={profileData.estado}>
+                      {profileData.estado.toUpperCase()}
+                    </StatusChip>
+                  </div>
 
-                    {/* Barra de progreso de nivel */}
-                    <div className="bg-gray-100 rounded-full h-3 mb-2 overflow-hidden">
+                  <LevelProgress>
+                    <div className="progress-bar">
                       <div 
-                        className="h-full rounded-full transition-all duration-500"
+                        className="progress-fill"
                         style={{ 
                           width: `${(profileData.nivel.puntos / (profileData.nivel.puntos + profileData.nivel.puntosParaProximoNivel)) * 100}%`,
-                          background: `linear-gradient(90deg, ${getNivelColor(profileData.nivel.nivel)}, ${getNivelColor(profileData.nivel.proximoNivel)})`
+                          background: `linear-gradient(90deg, #6366f1, #8b5cf6)`
                         }}
-                      ></div>
+                      />
                     </div>
-                    <div className="flex justify-between text-sm text-gray-600">
+                    <div className="progress-labels">
                       <span>{profileData.nivel.puntos} puntos</span>
                       <span>{profileData.nivel.puntosParaProximoNivel} para {profileData.nivel.proximoNivel}</span>
                     </div>
-                  </div>
+                  </LevelProgress>
+                </UserInfo>
 
-                  {/* Grid de información mejorado */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors">
-                      <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                        <Mail size={20} className="text-blue-600" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm text-gray-500 font-medium">Email</p>
-                        <p className="text-gray-900 font-semibold">{profileData.email}</p>
-                      </div>
-                      <button
-                        onClick={handleCopyUserId}
-                        className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
-                      >
-                        {copied ? <Check size={16} /> : <Copy size={16} />}
-                      </button>
-                    </div>
+                <InfoGrid>
+                  <InfoCard
+                    whileHover={{ y: -2 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <InfoIcon color="#3b82f6">
+                      <Mail size={20} />
+                    </InfoIcon>
+                    <InfoContent>
+                      <div className="label">Email</div>
+                      <div className="value">{profileData.email}</div>
+                    </InfoContent>
+                    <InfoAction onClick={handleCopyUserId}>
+                      {copied ? <Check size={16} /> : <Copy size={16} />}
+                    </InfoAction>
+                  </InfoCard>
 
-                    {profileData.telefono && (
-                      <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors">
-                        <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                          <Phone size={20} className="text-green-600" />
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-500 font-medium">Teléfono</p>
-                          <p className="text-gray-900 font-semibold">{profileData.telefono}</p>
-                        </div>
-                      </div>
-                    )}
+                  {profileData.telefono && (
+                    <InfoCard
+                      whileHover={{ y: -2 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <InfoIcon color="#10b981">
+                        <Phone size={20} />
+                      </InfoIcon>
+                      <InfoContent>
+                        <div className="label">Teléfono</div>
+                        <div className="value">{profileData.telefono}</div>
+                      </InfoContent>
+                    </InfoCard>
+                  )}
 
-                    {profileData.dni && (
-                      <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors">
-                        <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
-                          <IdCard size={20} className="text-purple-600" />
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-500 font-medium">DNI</p>
-                          <p className="text-gray-900 font-semibold">{profileData.dni}</p>
-                        </div>
-                      </div>
-                    )}
+                  {profileData.dni && (
+                    <InfoCard
+                      whileHover={{ y: -2 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <InfoIcon color="#8b5cf6">
+                        <IdCard size={20} />
+                      </InfoIcon>
+                      <InfoContent>
+                        <div className="label">DNI</div>
+                        <div className="value">{profileData.dni}</div>
+                      </InfoContent>
+                    </InfoCard>
+                  )}
 
-                    {profileData.direccion && (
-                      <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors">
-                        <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
-                          <Home size={20} className="text-orange-600" />
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-500 font-medium">Dirección</p>
-                          <p className="text-gray-900 font-semibold">{profileData.direccion}</p>
-                        </div>
-                      </div>
-                    )}
+                  {profileData.direccion && (
+                    <InfoCard
+                      whileHover={{ y: -2 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <InfoIcon color="#f59e0b">
+                        <Home size={20} />
+                      </InfoIcon>
+                      <InfoContent>
+                        <div className="label">Dirección</div>
+                        <div className="value">{profileData.direccion}</div>
+                      </InfoContent>
+                    </InfoCard>
+                  )}
 
-                    {profileData.fechaNacimiento && (
-                      <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors">
-                        <div className="w-12 h-12 bg-pink-100 rounded-xl flex items-center justify-center">
-                          <Cake size={20} className="text-pink-600" />
+                  {profileData.fechaNacimiento && (
+                    <InfoCard
+                      whileHover={{ y: -2 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <InfoIcon color="#ec4899">
+                        <Cake size={20} />
+                      </InfoIcon>
+                      <InfoContent>
+                        <div className="label">Fecha de Nacimiento</div>
+                        <div className="value">
+                          {format(profileData.fechaNacimiento, 'dd MMMM yyyy', { locale: es })}
                         </div>
-                        <div>
-                          <p className="text-sm text-gray-500 font-medium">Fecha de Nacimiento</p>
-                          <p className="text-gray-900 font-semibold">
-                            {format(profileData.fechaNacimiento, 'dd MMMM yyyy', { locale: es })}
-                          </p>
-                        </div>
-                      </div>
-                    )}
+                      </InfoContent>
+                    </InfoCard>
+                  )}
 
-                    <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors md:col-span-2">
-                      <div className="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center">
-                        <Calendar size={20} className="text-indigo-600" />
+                  <InfoCard
+                    whileHover={{ y: -2 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <InfoIcon color="#6366f1">
+                      <Calendar size={20} />
+                    </InfoIcon>
+                    <InfoContent>
+                      <div className="label">Miembro desde</div>
+                      <div className="value">
+                        {format(profileData.creadoEn, 'dd MMMM yyyy', { locale: es })} 
+                        <span style={{ color: '#64748b', marginLeft: '0.5rem' }}>
+                          ({enhancedStats.tiempoComoSocio} días)
+                        </span>
                       </div>
-                      <div>
-                        <p className="text-sm text-gray-500 font-medium">Miembro desde</p>
-                        <p className="text-gray-900 font-semibold">
-                          {format(profileData.creadoEn, 'dd MMMM yyyy', { locale: es })} 
-                          <span className="text-gray-500 ml-2">
-                            ({enhancedStats.tiempoComoSocio} días)
-                          </span>
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
+                    </InfoContent>
+                  </InfoCard>
+                </InfoGrid>
+              </ProfileContent>
+            </ProfileCard>
 
             {/* Estadísticas Detalladas Mejoradas */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="bg-white rounded-3xl shadow-lg border border-gray-200 p-8"
-            >
-              <div className="flex items-center justify-between mb-8">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                    <BarChart3 size={24} className="text-blue-600" />
+            <StatsCard variants={itemVariants}>
+              <StatsHeader>
+                <div className="title-section">
+                  <div className="icon-container">
+                    <BarChart3 size={24} />
                   </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-gray-900">Estadísticas de Actividad</h3>
-                    <p className="text-gray-500">Tu rendimiento como socio</p>
+                  <div className="title-content">
+                    <h3>Estadísticas de Actividad</h3>
+                    <p>Tu rendimiento como socio</p>
                   </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="actions">
                   <Button
                     variant="outline"
                     size="sm"
@@ -640,10 +1277,9 @@ export default function SocioPerfilPage() {
                     Estadísticas Avanzadas
                   </Button>
                 </div>
-              </div>
+              </StatsHeader>
 
-              {/* Grid de métricas mejorado */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              <MetricsGrid>
                 <UnifiedMetricsCard
                   title="Beneficios Usados"
                   value={enhancedStats.beneficiosUsados}
@@ -695,43 +1331,37 @@ export default function SocioPerfilPage() {
                   showProgress={true}
                   progressValue={90}
                 />
-              </div>
+              </MetricsGrid>
 
-              {/* Métricas adicionales */}
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mt-8 pt-8 border-t border-gray-200">
-                <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl">
-                  <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center mx-auto mb-3">
-                    <Building2 size={24} className="text-white" />
+              <AdditionalMetrics>
+                <MetricCard color="#3b82f6">
+                  <div className="icon-container">
+                    <Building2 size={24} />
                   </div>
-                  <div className="text-2xl font-bold text-blue-600">{enhancedStats.comerciosVisitados}</div>
-                  <div className="text-sm text-gray-600">Comercios Visitados</div>
-                </div>
+                  <div className="value">{enhancedStats.comerciosVisitados}</div>
+                  <div className="label">Comercios Visitados</div>
+                </MetricCard>
 
-                <div className="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-2xl">
-                  <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center mx-auto mb-3">
-                    <CheckCircle size={24} className="text-white" />
+                <MetricCard color="#10b981">
+                  <div className="icon-container">
+                    <CheckCircle size={24} />
                   </div>
-                  <div className="text-2xl font-bold text-green-600">{enhancedStats.validacionesExitosas}%</div>
-                  <div className="text-sm text-gray-600">Validaciones Exitosas</div>
-                </div>
+                  <div className="value">{enhancedStats.validacionesExitosas}%</div>
+                  <div className="label">Validaciones Exitosas</div>
+                </MetricCard>
 
-                <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl">
-                  <div className="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center mx-auto mb-3">
-                    <Heart size={24} className="text-white" />
+                <MetricCard color="#8b5cf6">
+                  <div className="icon-container">
+                    <Heart size={24} />
                   </div>
-                  <div className="text-2xl font-bold text-purple-600">{enhancedStats.beneficiosFavoritos}</div>
-                  <div className="text-sm text-gray-600">Categorías Favoritas</div>
-                </div>
-              </div>
-            </motion.div>
+                  <div className="value">{enhancedStats.beneficiosFavoritos}</div>
+                  <div className="label">Categorías Favoritas</div>
+                </MetricCard>
+              </AdditionalMetrics>
+            </StatsCard>
 
             {/* Actividad Reciente */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="bg-white rounded-3xl shadow-lg border border-gray-200 p-8"
-            >
+            <motion.div variants={itemVariants}>
               <ActivityTimeline
                 activities={activity.slice(0, 5)}
                 loading={loading}
@@ -739,48 +1369,58 @@ export default function SocioPerfilPage() {
                 hasMore={activity.length > 5}
               />
             </motion.div>
-          </div>
+          </MainColumn>
 
           {/* Columna Lateral Mejorada */}
-          <div className="space-y-8">
+          <SideColumn>
             {/* Mis Asociaciones Mejoradas */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="bg-white rounded-3xl shadow-lg border border-gray-200 p-6"
-            >
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center">
-                  <Building2 size={20} className="text-indigo-600" />
+            <SideCard variants={itemVariants}>
+              <SideCardHeader>
+                <div className="icon-container">
+                  <Building2 size={20} />
                 </div>
-                <div>
-                  <h3 className="font-bold text-gray-900">Mis Asociaciones</h3>
-                  <p className="text-sm text-gray-500">Estado de membresías</p>
+                <div className="title-content">
+                  <h3>Mis Asociaciones</h3>
+                  <p>Estado de membresías</p>
                 </div>
-              </div>
+              </SideCardHeader>
 
-              <div className="space-y-4">
+              <div style={{ marginBottom: '1.5rem' }}>
                 {asociaciones?.length > 0 ? asociaciones.map((asociacion, index) => (
                   <motion.div
                     key={asociacion.id}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.4 + index * 0.1 }}
-                    className="p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors"
+                    style={{
+                      padding: '1rem',
+                      background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+                      borderRadius: '1rem',
+                      border: '1px solid #e2e8f0',
+                      marginBottom: '1rem'
+                    }}
                   >
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-white rounded-lg shadow-sm flex items-center justify-center">
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <div style={{
+                          width: '2.5rem',
+                          height: '2.5rem',
+                          background: 'white',
+                          borderRadius: '0.5rem',
+                          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}>
                           {asociacion.logo ? (
-                            <img src={asociacion.logo} alt={asociacion.nombre} className="w-8 h-8 object-cover rounded" />
+                            <img src={asociacion.logo} alt={asociacion.nombre} style={{ width: '2rem', height: '2rem', objectFit: 'cover', borderRadius: '0.25rem' }} />
                           ) : (
-                            <Building2 size={16} className="text-gray-600" />
+                            <Building2 size={16} style={{ color: '#64748b' }} />
                           )}
                         </div>
                         <div>
-                          <h4 className="font-semibold text-gray-900 text-sm">{asociacion.nombre}</h4>
-                          <p className="text-xs text-gray-500">
+                          <h4 style={{ fontWeight: 700, color: '#1e293b', fontSize: '0.875rem', marginBottom: '0.25rem' }}>{asociacion.nombre}</h4>
+                          <p style={{ fontSize: '0.75rem', color: '#64748b' }}>
                             {asociacion.estado === 'activo' 
                               ? `Vence: ${format(asociacion.fechaVencimiento.toDate(), 'dd/MM/yyyy', { locale: es })}`
                               : `Venció: ${format(asociacion.fechaVencimiento.toDate(), 'dd/MM/yyyy', { locale: es })}`
@@ -790,164 +1430,158 @@ export default function SocioPerfilPage() {
                       </div>
                     </div>
                     
-                    <div className="flex items-center justify-between">
-                      <p className="text-xs text-gray-400 line-clamp-2">{asociacion.descripcion}</p>
-                      <div className="flex items-center gap-2">
-                        {getStatusIcon(asociacion.estado)}
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColorClass(asociacion.estado)}`}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                      <p style={{ fontSize: '0.75rem', color: '#94a3b8', flex: 1, marginRight: '1rem' }}>{asociacion.descripcion}</p>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        {asociacion.estado === 'activo' ? <CheckCircle size={14} style={{ color: '#10b981' }} /> : <XCircle size={14} style={{ color: '#ef4444' }} />}
+                        <StatusChip status={asociacion.estado}>
                           {asociacion.estado === 'activo' ? 'Activo' : 'Vencido'}
-                        </span>
+                        </StatusChip>
                       </div>
                     </div>
 
-                    {/* Información adicional de la asociación */}
-                    <div className="mt-3 pt-3 border-t border-gray-200">
-                      <div className="grid grid-cols-3 gap-2 text-center">
+                    <div style={{ paddingTop: '0.75rem', borderTop: '1px solid #e2e8f0' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem', textAlign: 'center' }}>
                         <div>
-                          <div className="text-sm font-bold text-indigo-600">{asociacion.beneficiosIncluidos}</div>
-                          <div className="text-xs text-gray-500">Beneficios</div>
+                          <div style={{ fontSize: '0.875rem', fontWeight: 800, color: '#6366f1' }}>{asociacion.beneficiosIncluidos}</div>
+                          <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Beneficios</div>
                         </div>
                         <div>
-                          <div className="text-sm font-bold text-green-600">{asociacion.descuentoMaximo}%</div>
-                          <div className="text-xs text-gray-500">Desc. Máx.</div>
+                          <div style={{ fontSize: '0.875rem', fontWeight: 800, color: '#10b981' }}>{asociacion.descuentoMaximo}%</div>
+                          <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Desc. Máx.</div>
                         </div>
                         <div>
-                          <div className="text-sm font-bold text-purple-600">{asociacion.comerciosAfiliados}</div>
-                          <div className="text-xs text-gray-500">Comercios</div>
+                          <div style={{ fontSize: '0.875rem', fontWeight: 800, color: '#8b5cf6' }}>{asociacion.comerciosAfiliados}</div>
+                          <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Comercios</div>
                         </div>
                       </div>
                     </div>
                   </motion.div>
                 )) : (
-                  <div className="text-center py-8">
-                    <Building2 size={48} className="text-gray-300 mx-auto mb-4" />
-                    <p className="text-gray-500">No hay asociaciones disponibles</p>
+                  <div style={{ textAlign: 'center', padding: '2rem' }}>
+                    <Building2 size={48} style={{ color: '#cbd5e1', margin: '0 auto 1rem' }} />
+                    <p style={{ color: '#64748b' }}>No hay asociaciones disponibles</p>
                   </div>
                 )}
               </div>
 
-              {/* Resumen mejorado */}
-              <div className="mt-6 pt-4 border-t border-gray-200">
-                <div className="grid grid-cols-2 gap-4 text-center">
+              <div style={{ paddingTop: '1rem', borderTop: '1px solid #e2e8f0' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem', textAlign: 'center' }}>
                   <div>
-                    <div className="text-2xl font-bold text-green-600">
+                    <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#10b981' }}>
                       {asociaciones?.filter(a => a.estado === 'activo').length || 0}
                     </div>
-                    <div className="text-xs text-gray-500">Activas</div>
+                    <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Activas</div>
                   </div>
                   <div>
-                    <div className="text-2xl font-bold text-red-600">
+                    <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#ef4444' }}>
                       {asociaciones?.filter(a => a.estado === 'vencido').length || 0}
                     </div>
-                    <div className="text-xs text-gray-500">Vencidas</div>
+                    <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Vencidas</div>
                   </div>
                 </div>
               </div>
-            </motion.div>
+            </SideCard>
 
             {/* Acciones Rápidas */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="bg-white rounded-3xl shadow-lg border border-gray-200 p-6"
-            >
-              <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <Zap size={20} className="text-yellow-500" />
-                Acciones Rápidas
-              </h3>
+            {/* Acciones Rápidas */}
+            <SideCard variants={itemVariants}>
+              <SideCardHeader>
+                <div className="icon-container">
+                  <Zap size={20} />
+                </div>
+                <div className="title-content">
+                  <h3>Acciones Rápidas</h3>
+                  <p>Funciones principales</p>
+                </div>
+              </SideCardHeader>
               
-              <div className="space-y-3">
-                <Button
-                  variant="outline"
-                  fullWidth
-                  leftIcon={<QrCode size={16} />}
+              <QuickActions>
+                <QuickActionButton
+                  whileHover={{ x: 4 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={() => setQrModalOpen(true)}
-                  className="justify-start"
                 >
-                  Ver mi código QR
-                </Button>
+                  <QrCode size={20} className="icon" />
+                  <span className="text">Ver mi código QR</span>
+                  <ChevronRight size={16} className="arrow" />
+                </QuickActionButton>
                 
-                <Button
-                  variant="outline"
-                  fullWidth
-                  leftIcon={<Download size={16} />}
+                <QuickActionButton
+                  whileHover={{ x: 4 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={handleExportData}
-                  className="justify-start"
                 >
-                  Exportar mis datos
-                </Button>
+                  <Download size={20} className="icon" />
+                  <span className="text">Exportar mis datos</span>
+                  <ChevronRight size={16} className="arrow" />
+                </QuickActionButton>
                 
-                <Button
-                  variant="outline"
-                  fullWidth
-                  leftIcon={<Share2 size={16} />}
-                  className="justify-start"
+                <QuickActionButton
+                  whileHover={{ x: 4 }}
+                  whileTap={{ scale: 0.98 }}
                 >
-                  Compartir perfil
-                </Button>
+                  <Share2 size={20} className="icon" />
+                  <span className="text">Compartir perfil</span>
+                  <ChevronRight size={16} className="arrow" />
+                </QuickActionButton>
                 
-                <Button
-                  variant="outline"
-                  fullWidth
-                  leftIcon={<Settings size={16} />}
+                <QuickActionButton
+                  whileHover={{ x: 4 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={() => setConfigModalOpen(true)}
-                  className="justify-start"
                 >
-                  Configuración avanzada
-                </Button>
+                  <Settings size={20} className="icon" />
+                  <span className="text">Configuración avanzada</span>
+                  <ChevronRight size={16} className="arrow" />
+                </QuickActionButton>
                 
-                <Button
-                  variant="outline"
-                  fullWidth
-                  leftIcon={<HelpCircle size={16} />}
-                  className="justify-start"
+                <QuickActionButton
+                  whileHover={{ x: 4 }}
+                  whileTap={{ scale: 0.98 }}
                 >
-                  Centro de ayuda
-                </Button>
-              </div>
-            </motion.div>
+                  <HelpCircle size={20} className="icon" />
+                  <span className="text">Centro de ayuda</span>
+                  <ChevronRight size={16} className="arrow" />
+                </QuickActionButton>
+              </QuickActions>
+            </SideCard>
 
             {/* Consejos y Tips Mejorados */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-              className="bg-gradient-to-br from-blue-50 to-indigo-100 border border-blue-200 rounded-3xl p-6"
-            >
-              <h3 className="font-bold text-blue-900 mb-4 flex items-center gap-2">
-                <Sparkles size={20} className="text-blue-600" />
+            <TipsCard variants={itemVariants}>
+              <h3>
+                <Sparkles size={20} />
                 Consejos para tu perfil
               </h3>
-              <ul className="text-sm text-blue-800 space-y-3">
-                <li className="flex items-start gap-3">
-                  <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <CheckCircle size={12} className="text-white" />
+              <TipsList>
+                <TipItem>
+                  <div className="icon-container">
+                    <CheckCircle size={12} />
                   </div>
-                  <span>Mantén tu información actualizada para recibir beneficios personalizados</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Phone size={12} className="text-white" />
+                  <span className="text">Mantén tu información actualizada para recibir beneficios personalizados</span>
+                </TipItem>
+                <TipItem>
+                  <div className="icon-container">
+                    <Phone size={12} />
                   </div>
-                  <span>Verifica que tu teléfono esté correcto para notificaciones importantes</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Camera size={12} className="text-white" />
+                  <span className="text">Verifica que tu teléfono esté correcto para notificaciones importantes</span>
+                </TipItem>
+                <TipItem>
+                  <div className="icon-container">
+                    <Camera size={12} />
                   </div>
-                  <span>Agrega una foto de perfil para personalizar tu experiencia</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <TrendingUp size={12} className="text-white" />
+                  <span className="text">Agrega una foto de perfil para personalizar tu experiencia</span>
+                </TipItem>
+                <TipItem>
+                  <div className="icon-container">
+                    <TrendingUp size={12} />
                   </div>
-                  <span>Usa más beneficios para subir de nivel y obtener mejores descuentos</span>
-                </li>
-              </ul>
-            </motion.div>
-          </div>
-        </div>
+                  <span className="text">Usa más beneficios para subir de nivel y obtener mejores descuentos</span>
+                </TipItem>
+              </TipsList>
+            </TipsCard>
+          </SideColumn>
+        </MainGrid>
 
         {/* Modal de Edición de Perfil Mejorado */}
         <Dialog open={editModalOpen} onClose={() => setEditModalOpen(false)}>
@@ -1184,7 +1818,6 @@ export default function SocioPerfilPage() {
 
                       <label className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                         <div className="flex items-center gap-3">
-                
                           <Phone size={16} className="text-gray-600" />
                           <div>
                             <span className="text-sm font-medium text-gray-700">Notificaciones SMS</span>
@@ -1737,7 +2370,7 @@ export default function SocioPerfilPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      </div>
+      </PageContainer>
     </DashboardLayout>
   );
 }
