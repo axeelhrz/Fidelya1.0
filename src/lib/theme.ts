@@ -1,283 +1,468 @@
-import { createTheme } from '@mui/material/styles';
+'use client';
 
-// Design tokens
-export const tokens = {
-  colors: {
-    // Primary palette
-    primary: {
-      50: '#f0f4ff',
-      100: '#e0e7ff',
-      200: '#c7d2fe',
-      300: '#a5b4fc',
-      400: '#818cf8',
-      500: '#6366f1',
-      600: '#4f46e5',
-      700: '#4338ca',
-      800: '#3730a3',
-      900: '#312e81',
-    },
-    // Neutral palette
-    neutral: {
-      0: '#ffffff',
-      50: '#fafbfc',
-      100: '#f4f6f8',
-      200: '#e4e7eb',
-      300: '#d1d5db',
-      400: '#9ca3af',
-      500: '#6b7280',
-      600: '#4b5563',
-      700: '#374151',
-      800: '#1f2937',
-      900: '#111827',
-      950: '#0a0e1a',
-    },
-    // Semantic colors
-    success: {
-      50: '#ecfdf5',
-      100: '#d1fae5',
-      200: '#a7f3d0',
-      300: '#6ee7b7',
-      400: '#34d399',
-      500: '#10b981',
-      600: '#059669',
-      700: '#047857',
-      800: '#065f46',
-      900: '#064e3b',
-    },
-    warning: {
-      50: '#fffbeb',
-      100: '#fef3c7',
-      200: '#fde68a',
-      300: '#fcd34d',
-      400: '#fbbf24',
-      500: '#f59e0b',
-      600: '#d97706',
-      700: '#b45309',
-      800: '#92400e',
-      900: '#78350f',
-    },
-    error: {
-      50: '#fef2f2',
-      100: '#fee2e2',
-      200: '#fecaca',
-      300: '#fca5a5',
-      400: '#f87171',
-      500: '#ef4444',
-      600: '#dc2626',
-      700: '#b91c1c',
-      800: '#991b1b',
-      900: '#7f1d1d',
-    },
-    // Gradient colors
-    gradients: {
-      primary: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-      success: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-      warning: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-      error: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-      purple: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
-      pink: 'linear-gradient(135deg, #ec4899 0%, #be185d 100%)',
-      ocean: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
-      sunset: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
-    }
-  },
-  typography: {
-    fontFamily: {
-      sans: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      mono: '"JetBrains Mono", "Fira Code", Consolas, monospace',
-    },
-    fontSize: {
-      xs: '0.75rem',
-      sm: '0.875rem',
-      base: '1rem',
-      lg: '1.125rem',
-      xl: '1.25rem',
-      '2xl': '1.5rem',
-      '3xl': '1.875rem',
-      '4xl': '2.25rem',
-      '5xl': '3rem',
-      '6xl': '3.75rem',
-    },
-    fontWeight: {
-      light: 300,
-      normal: 400,
-      medium: 500,
-      semibold: 600,
-      bold: 700,
-      extrabold: 800,
-      black: 900,
-    },
-    lineHeight: {
-      tight: 1.25,
-      snug: 1.375,
-      normal: 1.5,
-      relaxed: 1.625,
-      loose: 2,
-    },
-    letterSpacing: {
-      tighter: '-0.05em',
-      tight: '-0.025em',
-      normal: '0em',
-      wide: '0.025em',
-      wider: '0.05em',
-      widest: '0.1em',
-    }
-  },
-  spacing: {
-    0: '0px',
-    1: '0.25rem',
-    2: '0.5rem',
-    3: '0.75rem',
-    4: '1rem',
-    5: '1.25rem',
-    6: '1.5rem',
-    8: '2rem',
-    10: '2.5rem',
-    12: '3rem',
-    16: '4rem',
-    20: '5rem',
-    24: '6rem',
-    32: '8rem',
-    40: '10rem',
-    48: '12rem',
-    56: '14rem',
-    64: '16rem',
-  },
-  borderRadius: {
-    none: '0px',
-    sm: '0.125rem',
-    base: '0.25rem',
-    md: '0.375rem',
-    lg: '0.5rem',
-    xl: '0.75rem',
-    '2xl': '1rem',
-    '3xl': '1.5rem',
-    full: '9999px',
-  },
-  shadows: {
-    sm: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-    base: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
-    md: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-    lg: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-    xl: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-    '2xl': '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-    glow: '0 0 20px rgba(99, 102, 241, 0.3)',
-    glowLg: '0 0 40px rgba(99, 102, 241, 0.4)',
-  },
-  transitions: {
-    fast: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
-    base: '300ms cubic-bezier(0.4, 0, 0.2, 1)',
-    slow: '500ms cubic-bezier(0.4, 0, 0.2, 1)',
-    spring: '300ms cubic-bezier(0.34, 1.56, 0.64, 1)',
-  },
-  breakpoints: {
-    sm: '640px',
-    md: '768px',
-    lg: '1024px',
-    xl: '1280px',
-    '2xl': '1536px',
-  }
+import { createTheme, ThemeOptions } from '@mui/material/styles';
+
+// Paleta de colores profesional clínica según especificaciones
+const colors = {
+  primary: '#2463EB',
+  secondary: '#EFF3FB',
+  background: '#F9FAFB',
+  textPrimary: '#1C1E21',
+  textSecondary: '#6B7280',
+  success: '#10B981',
+  warning: '#F59E0B',
+  error: '#EF4444',
+  border: '#E5E7EB',
+  surface: '#FFFFFF',
+  surfaceElevated: '#EFF3FB',
 };
 
-// Create MUI theme with our design tokens
-export const muiTheme = createTheme({
+// Configuración de tipografías
+const typography = {
+  fontFamily: {
+    primary: '"Inter", "Helvetica", "Arial", sans-serif',
+    heading: '"Space Grotesk", "Inter", sans-serif',
+  },
+  weights: {
+    regular: 400,
+    medium: 500,
+    semibold: 600,
+    bold: 700,
+  },
+};
+
+// Breakpoints personalizados
+const breakpoints = {
+  xs: 0,
+  sm: 640,
+  md: 768,
+  lg: 1024,
+  xl: 1280,
+  xxl: 1536,
+};
+
+// Configuración del tema MUI
+const themeOptions: ThemeOptions = {
   palette: {
+    mode: 'light', // Forzar modo claro
     primary: {
-      main: tokens.colors.primary[500],
-      light: tokens.colors.primary[400],
-      dark: tokens.colors.primary[600],
+      main: colors.primary,
+      light: '#60A5FA',
+      dark: '#1D4ED8',
+      contrastText: '#FFFFFF',
     },
     secondary: {
-      main: tokens.colors.neutral[600],
-      light: tokens.colors.neutral[400],
-      dark: tokens.colors.neutral[800],
-    },
-    success: {
-      main: tokens.colors.success[500],
-      light: tokens.colors.success[400],
-      dark: tokens.colors.success[600],
-    },
-    warning: {
-      main: tokens.colors.warning[500],
-      light: tokens.colors.warning[400],
-      dark: tokens.colors.warning[600],
-    },
-    error: {
-      main: tokens.colors.error[500],
-      light: tokens.colors.error[400],
-      dark: tokens.colors.error[600],
+      main: colors.textSecondary,
+      light: '#9CA3AF',
+      dark: '#4B5563',
+      contrastText: colors.textPrimary,
     },
     background: {
-      default: tokens.colors.neutral[50],
-      paper: tokens.colors.neutral[0],
+      default: colors.background,
+      paper: colors.surface,
     },
     text: {
-      primary: tokens.colors.neutral[900],
-      secondary: tokens.colors.neutral[600],
+      primary: colors.textPrimary,
+      secondary: colors.textSecondary,
     },
+    success: {
+      main: colors.success,
+      light: '#34D399',
+      dark: '#059669',
+      contrastText: '#FFFFFF',
+    },
+    warning: {
+      main: colors.warning,
+      light: '#FBBF24',
+      dark: '#D97706',
+      contrastText: '#FFFFFF',
+    },
+    error: {
+      main: colors.error,
+      light: '#F87171',
+      dark: '#DC2626',
+      contrastText: '#FFFFFF',
+    },
+    divider: colors.border,
   },
+  
+  breakpoints: {
+    values: breakpoints,
+  },
+  
   typography: {
-    fontFamily: tokens.typography.fontFamily.sans,
+    fontFamily: typography.fontFamily.primary,
     h1: {
-      fontSize: tokens.typography.fontSize['5xl'],
-      fontWeight: tokens.typography.fontWeight.black,
-      lineHeight: tokens.typography.lineHeight.tight,
-      letterSpacing: tokens.typography.letterSpacing.tight,
+      fontFamily: typography.fontFamily.heading,
+      fontSize: '2.5rem',
+      fontWeight: typography.weights.bold,
+      lineHeight: 1.2,
+      letterSpacing: '-0.02em',
+      color: colors.textPrimary,
     },
     h2: {
-      fontSize: tokens.typography.fontSize['4xl'],
-      fontWeight: tokens.typography.fontWeight.extrabold,
-      lineHeight: tokens.typography.lineHeight.tight,
-      letterSpacing: tokens.typography.letterSpacing.tight,
+      fontFamily: typography.fontFamily.heading,
+      fontSize: '2rem',
+      fontWeight: typography.weights.semibold,
+      lineHeight: 1.3,
+      letterSpacing: '-0.01em',
+      color: colors.textPrimary,
     },
     h3: {
-      fontSize: tokens.typography.fontSize['3xl'],
-      fontWeight: tokens.typography.fontWeight.bold,
-      lineHeight: tokens.typography.lineHeight.snug,
+      fontFamily: typography.fontFamily.heading,
+      fontSize: '1.75rem',
+      fontWeight: typography.weights.semibold,
+      lineHeight: 1.3,
+      color: colors.textPrimary,
     },
     h4: {
-      fontSize: tokens.typography.fontSize['2xl'],
-      fontWeight: tokens.typography.fontWeight.bold,
-      lineHeight: tokens.typography.lineHeight.snug,
+      fontFamily: typography.fontFamily.heading,
+      fontSize: '1.5rem',
+      fontWeight: typography.weights.medium,
+      lineHeight: 1.4,
+      color: colors.textPrimary,
     },
     h5: {
-      fontSize: tokens.typography.fontSize.xl,
-      fontWeight: tokens.typography.fontWeight.semibold,
-      lineHeight: tokens.typography.lineHeight.snug,
+      fontFamily: typography.fontFamily.heading,
+      fontSize: '1.25rem',
+      fontWeight: typography.weights.medium,
+      lineHeight: 1.4,
+      color: colors.textPrimary,
     },
     h6: {
-      fontSize: tokens.typography.fontSize.lg,
-      fontWeight: tokens.typography.fontWeight.semibold,
-      lineHeight: tokens.typography.lineHeight.normal,
+      fontFamily: typography.fontFamily.heading,
+      fontSize: '1.125rem',
+      fontWeight: typography.weights.medium,
+      lineHeight: 1.4,
+      color: colors.textPrimary,
     },
     body1: {
-      fontSize: tokens.typography.fontSize.base,
-      lineHeight: tokens.typography.lineHeight.relaxed,
+      fontFamily: typography.fontFamily.primary,
+      fontSize: '1rem',
+      fontWeight: typography.weights.regular,
+      lineHeight: 1.6,
+      color: colors.textPrimary,
     },
     body2: {
-      fontSize: tokens.typography.fontSize.sm,
-      lineHeight: tokens.typography.lineHeight.normal,
+      fontFamily: typography.fontFamily.primary,
+      fontSize: '0.875rem',
+      fontWeight: typography.weights.regular,
+      lineHeight: 1.6,
+      color: colors.textSecondary,
+    },
+    caption: {
+      fontFamily: typography.fontFamily.primary,
+      fontSize: '0.75rem',
+      fontWeight: typography.weights.regular,
+      lineHeight: 1.5,
+      color: colors.textSecondary,
+    },
+    button: {
+      fontFamily: typography.fontFamily.heading,
+      fontSize: '0.875rem',
+      fontWeight: typography.weights.semibold,
+      textTransform: 'none',
+      letterSpacing: '0.025em',
     },
   },
+  
   shape: {
-    borderRadius: 12,
+    borderRadius: 16, // 2xl según especificaciones
   },
+  
+  spacing: 8, // Base de 8px
+  
+  shadows: [
+    'none',
+    '0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05)', // card
+    '0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.06)', // elevated
+    '0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.06)', // floating
+    '0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04)', // modal
+    '0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+    '0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+    '0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+    '0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+    '0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+    '0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+    '0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+    '0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+    '0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+    '0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+    '0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+    '0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+    '0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+    '0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+    '0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+    '0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+    '0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+    '0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+    '0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+    '0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+  ],
+  
   components: {
+    // Configuración de componentes MUI
     MuiCssBaseline: {
       styleOverrides: {
-        '*': {
-          boxSizing: 'border-box',
-        },
-        html: {
-          scrollBehavior: 'smooth',
-        },
         body: {
-          fontFamily: tokens.typography.fontFamily.sans,
-          WebkitFontSmoothing: 'antialiased',
-          MozOsxFontSmoothing: 'grayscale',
+          fontFamily: typography.fontFamily.primary,
+          backgroundColor: colors.background,
+          color: colors.textPrimary,
+          lineHeight: 1.6,
+          '-webkit-font-smoothing': 'antialiased',
+          '-moz-osx-font-smoothing': 'grayscale',
+        },
+      },
+    },
+    
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: '1rem', // 16px
+          padding: '0.875rem 2rem',
+          fontSize: '0.875rem',
+          fontWeight: typography.weights.semibold,
+          fontFamily: typography.fontFamily.heading,
+          textTransform: 'none',
+          letterSpacing: '0.025em',
+          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          '&:hover': {
+            transform: 'translateY(-2px)',
+            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1)',
+          },
+        },
+        contained: {
+          backgroundColor: colors.primary,
+          color: '#FFFFFF',
+          boxShadow: '0 4px 6px -1px rgba(36, 99, 235, 0.25)',
+          '&:hover': {
+            backgroundColor: '#1D4ED8',
+            boxShadow: '0 10px 15px -3px rgba(36, 99, 235, 0.4)',
+          },
+        },
+        outlined: {
+          borderColor: colors.border,
+          color: colors.textPrimary,
+          backgroundColor: 'transparent',
+          '&:hover': {
+            backgroundColor: colors.surfaceElevated,
+            borderColor: colors.primary,
+          },
+        },
+        text: {
+          color: colors.primary,
+          '&:hover': {
+            backgroundColor: `${colors.primary}08`,
+          },
+        },
+      },
+    },
+    
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          backgroundColor: colors.surface,
+          borderRadius: '1.5rem', // 24px
+          border: `1px solid ${colors.border}`,
+          boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05)',
+          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          '&:hover': {
+            transform: 'translateY(-4px)',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+          },
+        },
+      },
+    },
+    
+    MuiCardContent: {
+      styleOverrides: {
+        root: {
+          padding: '2rem 1.5rem',
+          '&:last-child': {
+            paddingBottom: '2rem',
+          },
+        },
+      },
+    },
+    
+    MuiTextField: {
+      styleOverrides: {
+        root: {
+          '& .MuiOutlinedInput-root': {
+            borderRadius: '0.875rem', // 14px
+            backgroundColor: colors.surface,
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            '& fieldset': {
+              borderColor: colors.border,
+            },
+            '&:hover fieldset': {
+              borderColor: colors.textSecondary,
+            },
+            '&.Mui-focused fieldset': {
+              borderColor: colors.primary,
+              boxShadow: `0 0 0 3px ${colors.primary}20`,
+            },
+          },
+          '& .MuiInputLabel-root': {
+            color: colors.textSecondary,
+            fontFamily: typography.fontFamily.primary,
+            '&.Mui-focused': {
+              color: colors.primary,
+            },
+          },
+        },
+      },
+    },
+    
+    MuiChip: {
+      styleOverrides: {
+        root: {
+          borderRadius: '0.75rem',
+          fontFamily: typography.fontFamily.primary,
+          fontWeight: typography.weights.medium,
+          fontSize: '0.75rem',
+        },
+        filled: {
+          backgroundColor: colors.surfaceElevated,
+          color: colors.textPrimary,
+          '&:hover': {
+            backgroundColor: colors.border,
+          },
+        },
+      },
+    },
+    
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          backgroundColor: colors.surface,
+          borderRadius: '1rem',
+          border: `1px solid ${colors.border}`,
+        },
+        elevation1: {
+          boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05)',
+        },
+        elevation2: {
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.06)',
+        },
+        elevation3: {
+          boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.06)',
+        },
+      },
+    },
+    
+    MuiAppBar: {
+      styleOverrides: {
+        root: {
+          backgroundColor: `${colors.surface}F5`, // 96% opacity
+          backdropFilter: 'blur(20px)',
+          borderBottom: `1px solid ${colors.border}`,
+          boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.05)',
+          color: colors.textPrimary,
+        },
+      },
+    },
+    
+    MuiTabs: {
+      styleOverrides: {
+        root: {
+          backgroundColor: colors.surfaceElevated,
+          borderRadius: '1rem',
+          padding: '0.5rem',
+          minHeight: 'auto',
+        },
+        indicator: {
+          display: 'none',
+        },
+      },
+    },
+    
+    MuiTab: {
+      styleOverrides: {
+        root: {
+          borderRadius: '0.75rem',
+          margin: '0 0.25rem',
+          minHeight: 'auto',
+          padding: '0.75rem 1.5rem',
+          fontFamily: typography.fontFamily.heading,
+          fontWeight: typography.weights.medium,
+          fontSize: '0.875rem',
+          textTransform: 'none',
+          color: colors.textSecondary,
+          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          '&.Mui-selected': {
+            backgroundColor: colors.surface,
+            color: colors.primary,
+            boxShadow: '0 2px 4px 0 rgba(0, 0, 0, 0.05)',
+          },
+          '&:hover': {
+            backgroundColor: colors.surface,
+            color: colors.textPrimary,
+          },
+        },
+      },
+    },
+    
+    MuiTooltip: {
+      styleOverrides: {
+        tooltip: {
+          backgroundColor: colors.textPrimary,
+          color: colors.surface,
+          fontSize: '0.75rem',
+          fontFamily: typography.fontFamily.primary,
+          borderRadius: '0.5rem',
+          padding: '0.5rem 0.75rem',
+          boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1)',
+        },
+        arrow: {
+          color: colors.textPrimary,
         },
       },
     },
   },
-});
+};
 
-export default tokens;
+// Crear el tema
+export const theme = createTheme(themeOptions);
+
+// Extensiones del tema para uso personalizado (solo valores serializables)
+export const customTheme = {
+  colors,
+  typography,
+  breakpoints,
+  spacing: {
+    xs: '0.5rem',
+    sm: '1rem',
+    md: '1.5rem',
+    lg: '2rem',
+    xl: '3rem',
+    xxl: '4rem',
+  },
+  borderRadius: {
+    sm: '0.5rem',
+    md: '0.75rem',
+    lg: '1rem',
+    xl: '1.5rem',
+    xxl: '2rem',
+  },
+  shadows: {
+    card: '0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05)',
+    elevated: '0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.06)',
+    floating: '0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+    glow: `0 0 0 1px ${colors.primary}20, 0 4px 6px -1px ${colors.primary}25`,
+  },
+  gradients: {
+    primary: `linear-gradient(135deg, ${colors.primary} 0%, #1D4ED8 100%)`,
+    success: `linear-gradient(135deg, ${colors.success} 0%, #059669 100%)`,
+    warning: `linear-gradient(135deg, ${colors.warning} 0%, #D97706 100%)`,
+    error: `linear-gradient(135deg, ${colors.error} 0%, #DC2626 100%)`,
+    surface: `linear-gradient(135deg, ${colors.surface} 0%, ${colors.surfaceElevated} 100%)`,
+  },
+  animations: {
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    transitionSlow: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+    bounce: 'cubic-bezier(0.68, -0.55, 0.265, 1.55)',
+  },
+};
+
+export default theme;
