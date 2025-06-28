@@ -29,6 +29,7 @@ export interface Notification {
     relatedEntityType?: string;
     customData?: Record<string, any>;
   };
+  read: boolean;
 }
 
 export interface NotificationFormData {

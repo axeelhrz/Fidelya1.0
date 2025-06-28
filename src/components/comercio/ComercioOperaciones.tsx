@@ -44,6 +44,13 @@ export const ComercioOperaciones: React.FC<ComercioOperacionesProps> = ({ sectio
   const { validaciones, getStats } = useValidaciones();
   const stats = getStats();
 
+  // Calculate today's validations
+  const getValidacionesHoy = () => {
+    const now = new Date();
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    return validaciones.filter(v => v.fechaHora.toDate() >= startOfDay).length;
+  };
+
   const getSectionConfig = () => {
     switch (section) {
       case 'beneficios':
@@ -171,7 +178,7 @@ export const ComercioOperaciones: React.FC<ComercioOperacionesProps> = ({ sectio
               <TrendingUp />
             </Avatar>
             <Typography variant="h4" sx={{ fontWeight: 900, color: '#1e293b', mb: 1 }}>
-              {stats.validacionesHoy}
+              {getValidacionesHoy()}
             </Typography>
             <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 600 }}>
               Validaciones Hoy

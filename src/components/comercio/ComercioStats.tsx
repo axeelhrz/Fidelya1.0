@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   Box,
@@ -11,7 +11,6 @@ import {
   Stack,
   Avatar,
   alpha,
-  Paper,
   LinearProgress,
   Divider,
   IconButton,
@@ -19,25 +18,17 @@ import {
   Button,
 } from '@mui/material';
 import {
-  TrendingUp,
-  TrendingDown,
   Receipt,
   LocalOffer,
-  People,
   AttachMoney,
   CheckCircle,
-  Schedule,
-  Star,
   Refresh,
   Download,
   BarChart,
   PieChart,
   ShowChart,
-  CalendarToday,
 } from '@mui/icons-material';
 import {
-  LineChart,
-  Line,
   AreaChart,
   Area,
   BarChart as RechartsBarChart,
@@ -49,9 +40,7 @@ import {
   CartesianGrid,
   Tooltip as RechartsTooltip,
   ResponsiveContainer,
-  Legend,
 } from 'recharts';
-import { useComercios } from '@/hooks/useComercios';
 import { useBeneficios } from '@/hooks/useBeneficios';
 import { useValidaciones } from '@/hooks/useValidaciones';
 import { format, subDays, startOfDay, endOfDay } from 'date-fns';
@@ -60,7 +49,6 @@ import { es } from 'date-fns/locale';
 const CHART_COLORS = ['#06b6d4', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#ec4899'];
 
 export const ComercioStats: React.FC = () => {
-  const { comercio } = useComercios();
   const { beneficios, activeBeneficios } = useBeneficios();
   const { validaciones, getStats } = useValidaciones();
   const [selectedPeriod, setSelectedPeriod] = useState<'7d' | '30d' | '90d'>('30d');

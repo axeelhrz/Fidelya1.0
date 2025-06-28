@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   Box,
   Typography,
@@ -15,7 +15,6 @@ import {
   IconButton,
   Button,
   Chip,
-  Divider,
   CircularProgress,
   Alert,
   Container,
@@ -27,53 +26,27 @@ import {
   LocalOffer,
   QrCode,
   Receipt,
-  Analytics,
-  Star,
   Timeline,
-  BarChart,
-  PieChart,
   CalendarToday,
-  Assessment,
   Warning,
   CheckCircle,
   Info,
   ArrowForward,
   Refresh,
   NotificationsActive,
-  CloudUpload,
-  Security,
   Speed,
-  People,
-  AccountBalance,
-  Schedule,
   ErrorOutline,
-  AutoGraph,
-  DataUsage,
   Campaign,
-  ShoppingCart,
-  Visibility,
-  MonetizationOn,
-  PersonAdd,
 } from '@mui/icons-material';
 import {
-  collection,
-  query,
-  where,
-  onSnapshot,
-  orderBy,
-  limit,
   Timestamp,
-  getDocs,
-  doc,
-  getDoc
 } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import { useAuth } from '@/hooks/useAuth';
 import { useComercios } from '@/hooks/useComercios';
 import { useBeneficios } from '@/hooks/useBeneficios';
 import { useValidaciones } from '@/hooks/useValidaciones';
 import { useNotifications } from '@/hooks/useNotifications';
-import { format, subDays, startOfDay, endOfDay } from 'date-fns';
+import { format, subDays, startOfDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 interface ComercioOverviewDashboardProps {
@@ -86,7 +59,7 @@ interface ActivityLog {
   title: string;
   description: string;
   timestamp: Timestamp;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   userId?: string;
   userName?: string;
 }
