@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import {
   Box,
@@ -9,13 +9,11 @@ import {
   Avatar,
   Card,
   CardContent,
-  Grid,
   Button,
   Stack,
   alpha,
   IconButton,
   Paper,
-  Chip,
   List,
   ListItem,
   ListItemText,
@@ -27,17 +25,9 @@ import {
   QrCode,
   Receipt,
   Add,
-  Edit,
-  Delete,
-  Visibility,
-  Share,
-  Download,
   Refresh,
   CheckCircle,
-  Schedule,
   TrendingUp,
-  Warning,
-  Info,
 } from '@mui/icons-material';
 import { BeneficiosManagement } from './BeneficiosManagement';
 import { QRManagement } from './QRManagement';
@@ -50,8 +40,8 @@ interface ComercioOperacionesProps {
 }
 
 export const ComercioOperaciones: React.FC<ComercioOperacionesProps> = ({ section }) => {
-  const { activeBeneficios, loading: beneficiosLoading } = useBeneficios();
-  const { validaciones, getStats, loading: validacionesLoading } = useValidaciones();
+  const { activeBeneficios } = useBeneficios();
+  const { validaciones, getStats } = useValidaciones();
   const stats = getStats();
 
   const getSectionConfig = () => {
@@ -94,123 +84,142 @@ export const ComercioOperaciones: React.FC<ComercioOperacionesProps> = ({ sectio
   const config = getSectionConfig();
 
   const renderOperationsOverview = () => (
-    <Grid container spacing={4}>
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 4,
+      }}
+    >
       {/* Quick Stats */}
-      <Grid item xs={12}>
-        <Paper
-          elevation={0}
+      <Paper
+        elevation={0}
+        sx={{
+          p: 4,
+          border: '1px solid #f1f5f9',
+          borderRadius: 4,
+          background: 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
+        }}
+      >
+        <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', mb: 3 }}>
+          Resumen Operativo
+        </Typography>
+        <Box
           sx={{
-            p: 4,
-            border: '1px solid #f1f5f9',
-            borderRadius: 4,
-            background: 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
+            display: 'grid',
+            gridTemplateColumns: {
+              xs: '1fr',
+              sm: 'repeat(2, 1fr)',
+              md: 'repeat(4, 1fr)',
+            },
+            gap: 3,
           }}
         >
-          <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', mb: 3 }}>
-            Resumen Operativo
-          </Typography>
-          <Grid container spacing={3}>
-            <Grid item xs={12} sm={6} md={3}>
-              <Box sx={{ textAlign: 'center' }}>
-                <Avatar
-                  sx={{
-                    width: 56,
-                    height: 56,
-                    bgcolor: alpha('#f59e0b', 0.1),
-                    color: '#f59e0b',
-                    mx: 'auto',
-                    mb: 2,
-                  }}
-                >
-                  <LocalOffer />
-                </Avatar>
-                <Typography variant="h4" sx={{ fontWeight: 900, color: '#1e293b', mb: 1 }}>
-                  {activeBeneficios.length}
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 600 }}>
-                  Beneficios Activos
-                </Typography>
-              </Box>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <Box sx={{ textAlign: 'center' }}>
-                <Avatar
-                  sx={{
-                    width: 56,
-                    height: 56,
-                    bgcolor: alpha('#10b981', 0.1),
-                    color: '#10b981',
-                    mx: 'auto',
-                    mb: 2,
-                  }}
-                >
-                  <Receipt />
-                </Avatar>
-                <Typography variant="h4" sx={{ fontWeight: 900, color: '#1e293b', mb: 1 }}>
-                  {stats.totalValidaciones}
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 600 }}>
-                  Total Validaciones
-                </Typography>
-              </Box>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <Box sx={{ textAlign: 'center' }}>
-                <Avatar
-                  sx={{
-                    width: 56,
-                    height: 56,
-                    bgcolor: alpha('#6366f1', 0.1),
-                    color: '#6366f1',
-                    mx: 'auto',
-                    mb: 2,
-                  }}
-                >
-                  <TrendingUp />
-                </Avatar>
-                <Typography variant="h4" sx={{ fontWeight: 900, color: '#1e293b', mb: 1 }}>
-                  {stats.validacionesHoy}
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 600 }}>
-                  Validaciones Hoy
-                </Typography>
-              </Box>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <Box sx={{ textAlign: 'center' }}>
-                <Avatar
-                  sx={{
-                    width: 56,
-                    height: 56,
-                    bgcolor: alpha('#ec4899', 0.1),
-                    color: '#ec4899',
-                    mx: 'auto',
-                    mb: 2,
-                  }}
-                >
-                  <QrCode />
-                </Avatar>
-                <Typography variant="h4" sx={{ fontWeight: 900, color: '#1e293b', mb: 1 }}>
-                  1
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 600 }}>
-                  Código QR Activo
-                </Typography>
-              </Box>
-            </Grid>
-          </Grid>
-        </Paper>
-      </Grid>
+          <Box sx={{ textAlign: 'center' }}>
+            <Avatar
+              sx={{
+                width: 56,
+                height: 56,
+                bgcolor: alpha('#f59e0b', 0.1),
+                color: '#f59e0b',
+                mx: 'auto',
+                mb: 2,
+              }}
+            >
+              <LocalOffer />
+            </Avatar>
+            <Typography variant="h4" sx={{ fontWeight: 900, color: '#1e293b', mb: 1 }}>
+              {activeBeneficios.length}
+            </Typography>
+            <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 600 }}>
+              Beneficios Activos
+            </Typography>
+          </Box>
 
-      {/* Quick Actions */}
-      <Grid item xs={12} md={6}>
+          <Box sx={{ textAlign: 'center' }}>
+            <Avatar
+              sx={{
+                width: 56,
+                height: 56,
+                bgcolor: alpha('#10b981', 0.1),
+                color: '#10b981',
+                mx: 'auto',
+                mb: 2,
+              }}
+            >
+              <Receipt />
+            </Avatar>
+            <Typography variant="h4" sx={{ fontWeight: 900, color: '#1e293b', mb: 1 }}>
+              {stats.totalValidaciones}
+            </Typography>
+            <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 600 }}>
+              Total Validaciones
+            </Typography>
+          </Box>
+
+          <Box sx={{ textAlign: 'center' }}>
+            <Avatar
+              sx={{
+                width: 56,
+                height: 56,
+                bgcolor: alpha('#6366f1', 0.1),
+                color: '#6366f1',
+                mx: 'auto',
+                mb: 2,
+              }}
+            >
+              <TrendingUp />
+            </Avatar>
+            <Typography variant="h4" sx={{ fontWeight: 900, color: '#1e293b', mb: 1 }}>
+              {stats.validacionesHoy}
+            </Typography>
+            <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 600 }}>
+              Validaciones Hoy
+            </Typography>
+          </Box>
+
+          <Box sx={{ textAlign: 'center' }}>
+            <Avatar
+              sx={{
+                width: 56,
+                height: 56,
+                bgcolor: alpha('#ec4899', 0.1),
+                color: '#ec4899',
+                mx: 'auto',
+                mb: 2,
+              }}
+            >
+              <QrCode />
+            </Avatar>
+            <Typography variant="h4" sx={{ fontWeight: 900, color: '#1e293b', mb: 1 }}>
+              1
+            </Typography>
+            <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 600 }}>
+              Código QR Activo
+            </Typography>
+          </Box>
+        </Box>
+      </Paper>
+
+      {/* Quick Actions and Recent Activity */}
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: {
+            xs: '1fr',
+            md: 'repeat(2, 1fr)',
+          },
+          gap: 4,
+        }}
+      >
+        {/* Quick Actions */}
         <Card
           elevation={0}
           sx={{
             border: '1px solid #f1f5f9',
             borderRadius: 4,
             background: 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
-            height: '100%',
+            height: 'fit-content',
           }}
         >
           <CardContent sx={{ p: 4 }}>
@@ -269,17 +278,15 @@ export const ComercioOperaciones: React.FC<ComercioOperacionesProps> = ({ sectio
             </Stack>
           </CardContent>
         </Card>
-      </Grid>
 
-      {/* Recent Activity */}
-      <Grid item xs={12} md={6}>
+        {/* Recent Activity */}
         <Card
           elevation={0}
           sx={{
             border: '1px solid #f1f5f9',
             borderRadius: 4,
             background: 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
-            height: '100%',
+            height: 'fit-content',
           }}
         >
           <CardContent sx={{ p: 4 }}>
@@ -332,66 +339,69 @@ export const ComercioOperaciones: React.FC<ComercioOperacionesProps> = ({ sectio
             </List>
           </CardContent>
         </Card>
-      </Grid>
+      </Box>
 
       {/* System Status */}
-      <Grid item xs={12}>
-        <Paper
-          elevation={0}
+      <Paper
+        elevation={0}
+        sx={{
+          p: 4,
+          border: '1px solid #f1f5f9',
+          borderRadius: 4,
+          background: 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
+        }}
+      >
+        <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', mb: 3 }}>
+          Estado del Sistema
+        </Typography>
+        <Box
           sx={{
-            p: 4,
-            border: '1px solid #f1f5f9',
-            borderRadius: 4,
-            background: 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
+            display: 'grid',
+            gridTemplateColumns: {
+              xs: '1fr',
+              sm: 'repeat(3, 1fr)',
+            },
+            gap: 3,
           }}
         >
-          <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', mb: 3 }}>
-            Estado del Sistema
-          </Typography>
-          <Grid container spacing={3}>
-            <Grid item xs={12} sm={4}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <CheckCircle sx={{ color: '#10b981', fontSize: 24 }} />
-                <Box>
-                  <Typography variant="body2" sx={{ fontWeight: 600, color: '#1e293b' }}>
-                    Sistema de Validación
-                  </Typography>
-                  <Typography variant="caption" sx={{ color: '#10b981' }}>
-                    Operativo
-                  </Typography>
-                </Box>
-              </Box>
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <CheckCircle sx={{ color: '#10b981', fontSize: 24 }} />
-                <Box>
-                  <Typography variant="body2" sx={{ fontWeight: 600, color: '#1e293b' }}>
-                    Gestión de Beneficios
-                  </Typography>
-                  <Typography variant="caption" sx={{ color: '#10b981' }}>
-                    Operativo
-                  </Typography>
-                </Box>
-              </Box>
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <CheckCircle sx={{ color: '#10b981', fontSize: 24 }} />
-                <Box>
-                  <Typography variant="body2" sx={{ fontWeight: 600, color: '#1e293b' }}>
-                    Sincronización
-                  </Typography>
-                  <Typography variant="caption" sx={{ color: '#10b981' }}>
-                    Actualizado
-                  </Typography>
-                </Box>
-              </Box>
-            </Grid>
-          </Grid>
-        </Paper>
-      </Grid>
-    </Grid>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <CheckCircle sx={{ color: '#10b981', fontSize: 24 }} />
+            <Box>
+              <Typography variant="body2" sx={{ fontWeight: 600, color: '#1e293b' }}>
+                Sistema de Validación
+              </Typography>
+              <Typography variant="caption" sx={{ color: '#10b981' }}>
+                Operativo
+              </Typography>
+            </Box>
+          </Box>
+
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <CheckCircle sx={{ color: '#10b981', fontSize: 24 }} />
+            <Box>
+              <Typography variant="body2" sx={{ fontWeight: 600, color: '#1e293b' }}>
+                Gestión de Beneficios
+              </Typography>
+              <Typography variant="caption" sx={{ color: '#10b981' }}>
+                Operativo
+              </Typography>
+            </Box>
+          </Box>
+
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <CheckCircle sx={{ color: '#10b981', fontSize: 24 }} />
+            <Box>
+              <Typography variant="body2" sx={{ fontWeight: 600, color: '#1e293b' }}>
+                Sincronización
+              </Typography>
+              <Typography variant="caption" sx={{ color: '#10b981' }}>
+                Actualizado
+              </Typography>
+            </Box>
+          </Box>
+        </Box>
+      </Paper>
+    </Box>
   );
 
   return (
