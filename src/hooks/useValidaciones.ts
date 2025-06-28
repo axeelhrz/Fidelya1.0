@@ -6,8 +6,6 @@ import {
   query, 
   where, 
   onSnapshot, 
-  addDoc, 
-  Timestamp,
   orderBy,
   limit,
   startAfter,
@@ -93,7 +91,7 @@ export const useValidaciones = () => {
         unsubscribe.then(unsub => unsub?.());
       }
     };
-  }, [user]);
+  }, [user, fetchValidaciones]);
 
   // Load more validaciones
   const loadMore = useCallback(() => {
@@ -106,14 +104,9 @@ export const useValidaciones = () => {
   const getStats = useCallback((): ValidacionStats => {
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
     const validacionesMes = validaciones.filter(v => 
       v.fechaHora.toDate() >= startOfMonth
-    );
-
-    const validacionesHoy = validaciones.filter(v => 
-      v.fechaHora.toDate() >= startOfDay
     );
 
     const validacionesExitosas = validaciones.filter(v => v.resultado === 'valido');

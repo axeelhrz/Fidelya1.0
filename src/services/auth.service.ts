@@ -7,14 +7,12 @@ import {
   updateProfile,
   User,
   UserCredential,
-  AuthError
 } from 'firebase/auth';
 import {
   doc,
   setDoc,
   getDoc,
   updateDoc,
-  Timestamp,
   serverTimestamp
 } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
@@ -32,7 +30,7 @@ export interface RegisterData {
   password: string;
   nombre: string;
   role: 'comercio' | 'socio' | 'asociacion';
-  additionalData?: Record<string, any>;
+  additionalData?: Record<string, unknown>;
 }
 
 export interface AuthResponse {
@@ -74,10 +72,10 @@ class AuthService {
         success: true,
         user: userData
       };
-    } catch (error: any) {
+    } catch (error) {
       return {
         success: false,
-        error: handleFirebaseError(error)
+        error: handleFirebaseError(error as Error)
       };
     }
   }
@@ -139,10 +137,10 @@ class AuthService {
         success: true,
         user: fullUserData
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
-        error: handleFirebaseError(error)
+        error: handleFirebaseError(error as Error)
       };
     }
   }
@@ -168,10 +166,10 @@ class AuthService {
       return {
         success: true
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
-        error: handleFirebaseError(error)
+        error: handleFirebaseError(error as Error)
       };
     }
   }
@@ -190,10 +188,10 @@ class AuthService {
       return {
         success: true
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
-        error: handleFirebaseError(error)
+        error: handleFirebaseError(error as Error)
       };
     }
   }
@@ -248,10 +246,10 @@ class AuthService {
       return {
         success: true
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
-        error: handleFirebaseError(error)
+        error: handleFirebaseError(error as Error)
       };
     }
   }
@@ -276,14 +274,14 @@ class AuthService {
   private async createRoleDocument(
     uid: string, 
     role: string, 
-    data: Record<string, any>
+    data: Record<string, unknown>
   ): Promise<void> {
     try {
       const collection = role === 'comercio' ? COLLECTIONS.COMERCIOS :
                         role === 'socio' ? COLLECTIONS.SOCIOS :
                         COLLECTIONS.ASOCIACIONES;
 
-      const roleData = {
+      const roleData: Record<string, unknown> = {
         ...data,
         estado: 'activo',
         creadoEn: serverTimestamp(),

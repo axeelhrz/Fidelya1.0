@@ -99,13 +99,25 @@ export function handleFirebaseError(error: AuthError | FirestoreError | Error): 
 /**
  * Checks if an error is a Firebase Auth error
  */
-export function isAuthError(error: any): error is AuthError {
-  return error && typeof error.code === 'string' && error.code.startsWith('auth/');
+export function isAuthError(error: unknown): error is AuthError {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    typeof (error as { code: unknown }).code === 'string' &&
+    (error as { code: string }).code.startsWith('auth/')
+  );
 }
 
 /**
  * Checks if an error is a Firestore error
  */
-export function isFirestoreError(error: any): error is FirestoreError {
-  return error && typeof error.code === 'string' && error.code.startsWith('firestore/');
+export function isFirestoreError(error: unknown): error is FirestoreError {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    typeof (error as { code: unknown }).code === 'string' &&
+    (error as { code: string }).code.startsWith('firestore/')
+  );
 }

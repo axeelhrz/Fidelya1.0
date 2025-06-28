@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from './useAuth';
 import { reportsService, ReportData, AnalyticsMetrics } from '@/services/reports.service';
 import { Timestamp } from 'firebase/firestore';
-import { subDays, startOfDay, endOfDay } from 'date-fns';
+import { subDays } from 'date-fns';
 import toast from 'react-hot-toast';
 
 export interface UseReportsOptions {

@@ -366,7 +366,14 @@ export const useNotifications = () => {
   const refreshStats = useCallback(async () => {
     try {
       const newStats = await getNotificationStats();
-      setStats(newStats);
+      setStats({
+        ...newStats,
+        recentActivity: {
+          today: 0,
+          thisWeek: 0,
+          thisMonth: 0,
+        },
+      });
     } catch (error) {
       console.error('Error refreshing stats:', error);
     }
