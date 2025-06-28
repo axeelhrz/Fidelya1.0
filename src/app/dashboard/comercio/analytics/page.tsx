@@ -6,7 +6,6 @@ import {
   Box,
   Container,
   Typography,
-  Grid,
   Stack,
   Avatar,
   alpha,
@@ -26,7 +25,7 @@ import { ComercioSidebar } from '@/components/layout/ComercioSidebar';
 import { KpiCards } from '@/components/comercio/analytics/KpiCards';
 import { ValidationsOverTime } from '@/components/comercio/analytics/ValidationsOverTime';
 import { ByAssociationChart } from '@/components/comercio/analytics/ByAssociationChart';
-import { HourlyActivityChart } from '@/components/comercio/analytics/HourlyActivityChart';
+import HourlyActivityChart from '@/components/comercio/analytics/HourlyActivityChart';
 import { TopDaysList } from '@/components/comercio/analytics/TopDaysList';
 import { TopBenefits } from '@/components/comercio/analytics/TopBenefits';
 import { DateRangeSelector } from '@/components/comercio/analytics/DateRangeSelector';
@@ -148,11 +147,14 @@ export default function ComercioAnalytics() {
 
   // Date range state (default: last 30 days)
   const [dateRange, setDateRange] = useState({
-    startDate: subDays(new Date(), 30),
-    endDate: new Date(),
+    start: subDays(new Date(), 30),
+    end: new Date(),
   });
 
-  const { analyticsData, loading: analyticsLoading } = useAnalytics(dateRange);
+  const { analyticsData, loading: analyticsLoading } = useAnalytics({
+    startDate: dateRange.start,
+    endDate: dateRange.end,
+  });
 
   const loading = authLoading || comercioLoading || beneficiosLoading || validacionesLoading || analyticsLoading;
 
@@ -225,14 +227,37 @@ export default function ComercioAnalytics() {
           transition={{ duration: 0.5, delay: 0.1 }}
         >
           <Box sx={{ mb: 6 }}>
-            <KpiCards data={analyticsData} />
+            <KpiCards
+              data={{
+                ...analyticsData,
+                totalBeneficios: analyticsData.totalBeneficios ?? 0,
+                usuariosUnicos: analyticsData.usuariosUnicos ?? 0,
+              }}
+            />
           </Box>
         </motion.div>
 
-        {/* Main Charts Grid */}
-        <Grid container spacing={4} sx={{ mb: 6 }}>
-          {/* Validations Over Time */}
-          <Grid item xs={12} lg={8}>
+        {/* Main Charts Layout */}
+        <Box 
+          sx={{ 
+            display: 'grid',
+            gridTemplateColumns: {
+              xs: '1fr',
+              lg: '2fr 1fr'
+            },
+            gap: 4,
+            mb: 6
+          }}
+        >
+          {/* Left Column - Large Charts */}
+          <Box 
+            sx={{ 
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 4
+            }}
+          >
+            {/* Validations Over Time */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -240,21 +265,8 @@ export default function ComercioAnalytics() {
             >
               <ValidationsOverTime data={analyticsData.dailyValidations} />
             </motion.div>
-          </Grid>
 
-          {/* By Association Chart */}
-          <Grid item xs={12} lg={4}>
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-            >
-              <ByAssociationChart data={analyticsData.byAssociation} />
-            </motion.div>
-          </Grid>
-
-          {/* Hourly Activity */}
-          <Grid item xs={12} lg={8}>
+            {/* Hourly Activity */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -262,10 +274,26 @@ export default function ComercioAnalytics() {
             >
               <HourlyActivityChart data={analyticsData.hourlyActivity} />
             </motion.div>
-          </Grid>
+          </Box>
 
-          {/* Top Days */}
-          <Grid item xs={12} lg={4}>
+          {/* Right Column - Smaller Charts */}
+          <Box 
+            sx={{ 
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 4
+            }}
+          >
+            {/* By Association Chart */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+            >
+              <ByAssociationChart data={analyticsData.byAssociation} />
+            </motion.div>
+
+            {/* Top Days */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -273,19 +301,17 @@ export default function ComercioAnalytics() {
             >
               <TopDaysList data={analyticsData.topDays} />
             </motion.div>
-          </Grid>
+          </Box>
+        </Box>
 
-          {/* Top Benefits */}
-          <Grid item xs={12}>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.6 }}
-            >
-              <TopBenefits data={analyticsData.topBenefits} />
-            </motion.div>
-          </Grid>
-        </Grid>
+        {/* Full Width Bottom Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.6 }}
+        >
+          <TopBenefits data={analyticsData.topBenefits} />
+        </motion.div>
       </Container>
     </DashboardLayout>
   );
