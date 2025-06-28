@@ -17,12 +17,12 @@ import {
   CalendarToday,
   Refresh,
   Add,
-  Analytics,
 } from '@mui/icons-material';
 import { useComercios } from '@/hooks/useComercios';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 export const DashboardHeader: React.FC = () => {
   const { comercio } = useComercios();
@@ -49,16 +49,19 @@ export const DashboardHeader: React.FC = () => {
                 boxShadow: '0 12px 40px rgba(6, 182, 212, 0.3)',
               }}
             >
-              {comercio?.logoUrl ? (
-                <img
+              {comercio && comercio.logoUrl ? (
+                <Image
                   src={comercio.logoUrl}
                   alt={`Logo de ${comercio.nombreComercio}`}
+                  width={64}
+                  height={64}
                   style={{
                     width: '100%',
                     height: '100%',
                     objectFit: 'cover',
                     borderRadius: '16px'
                   }}
+                  unoptimized={process.env.NODE_ENV === 'development'}
                 />
               ) : (
                 <Store sx={{ fontSize: 32 }} />

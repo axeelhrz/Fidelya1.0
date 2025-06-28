@@ -7,7 +7,6 @@ import {
   Card,
   CardContent,
   Typography,
-  Grid,
   Stack,
   Avatar,
   alpha,
@@ -115,7 +114,6 @@ export const ComercioStats: React.FC = () => {
     return {
       periodValidaciones: periodValidaciones.length,
       validacionesExitosas: validacionesExitosas.length,
-
       tasaExito: periodValidaciones.length > 0 ? (validacionesExitosas.length / periodValidaciones.length) * 100 : 0,
       totalIngresos,
       totalDescuentos,
@@ -245,7 +243,18 @@ export const ComercioStats: React.FC = () => {
       </Stack>
 
       {/* Key Metrics Cards */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: {
+            xs: '1fr',
+            sm: 'repeat(2, 1fr)',
+            md: 'repeat(4, 1fr)',
+          },
+          gap: 3,
+          mb: 4,
+        }}
+      >
         {[
           {
             title: 'Validaciones del Período',
@@ -280,307 +289,208 @@ export const ComercioStats: React.FC = () => {
             subtitle: `${beneficios.length} total`,
           },
         ].map((metric, index) => (
-          <Grid item xs={12} sm={6} md={3} key={index}>
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.3, delay: index * 0.1 }}
+          <motion.div
+            key={index}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3, delay: index * 0.1 }}
+          >
+            <Card
+              elevation={0}
+              sx={{
+                p: 3,
+                background: 'white',
+                border: '1px solid #f1f5f9',
+                borderRadius: 3,
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  transform: 'translateY(-4px)',
+                  boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
+                  borderColor: metric.color,
+                }
+              }}
             >
-              <Card
-                elevation={0}
-                sx={{
-                  p: 3,
-                  background: 'white',
-                  border: '1px solid #f1f5f9',
-                  borderRadius: 3,
-                  transition: 'all 0.3s ease',
-                  '&:hover': {
-                    transform: 'translateY(-4px)',
-                    boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
-                    borderColor: metric.color,
-                  }
-                }}
-              >
-                <Stack direction="row" spacing={2} alignItems="flex-start">
-                  <Avatar
-                    sx={{
-                      bgcolor: alpha(metric.color, 0.1),
-                      color: metric.color,
-                      width: 56,
-                      height: 56,
-                    }}
-                  >
-                    {metric.icon}
-                  </Avatar>
-                  <Box sx={{ flex: 1 }}>
-                    <Typography variant="h4" sx={{ fontWeight: 900, color: '#1e293b', mb: 0.5 }}>
-                      {metric.value}
+              <Stack direction="row" spacing={2} alignItems="flex-start">
+                <Avatar
+                  sx={{
+                    bgcolor: alpha(metric.color, 0.1),
+                    color: metric.color,
+                    width: 56,
+                    height: 56,
+                  }}
+                >
+                  {metric.icon}
+                </Avatar>
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="h4" sx={{ fontWeight: 900, color: '#1e293b', mb: 0.5 }}>
+                    {metric.value}
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: '#64748b', mb: 1 }}>
+                    {metric.title}
+                  </Typography>
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <Typography variant="caption" sx={{ 
+                      color: metric.change.startsWith('+') ? '#10b981' : '#ef4444',
+                      fontWeight: 600,
+                      bgcolor: alpha(metric.change.startsWith('+') ? '#10b981' : '#ef4444', 0.1),
+                      px: 1,
+                      py: 0.25,
+                      borderRadius: 1,
+                    }}>
+                      {metric.change}
                     </Typography>
-                    <Typography variant="body2" sx={{ color: '#64748b', mb: 1 }}>
-                      {metric.title}
-                    </Typography>
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <Typography variant="caption" sx={{ 
-                        color: metric.change.startsWith('+') ? '#10b981' : '#ef4444',
-                        fontWeight: 600,
-                        bgcolor: alpha(metric.change.startsWith('+') ? '#10b981' : '#ef4444', 0.1),
-                        px: 1,
-                        py: 0.25,
-                        borderRadius: 1,
-                      }}>
-                        {metric.change}
-                      </Typography>
-                    </Stack>
-                    <Typography variant="caption" sx={{ color: '#94a3b8', mt: 1, display: 'block' }}>
-                      {metric.subtitle}
-                    </Typography>
-                  </Box>
-                </Stack>
-              </Card>
-            </motion.div>
-          </Grid>
+                  </Stack>
+                  <Typography variant="caption" sx={{ color: '#94a3b8', mt: 1, display: 'block' }}>
+                    {metric.subtitle}
+                  </Typography>
+                </Box>
+              </Stack>
+            </Card>
+          </motion.div>
         ))}
-      </Grid>
+      </Box>
 
       {/* Charts Section */}
-      <Grid container spacing={4}>
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: {
+            xs: '1fr',
+            lg: '2fr 1fr',
+          },
+          gap: 4,
+          mb: 4,
+        }}
+      >
         {/* Validations Trend Chart */}
-        <Grid item xs={12} lg={8}>
-          <Card
-            elevation={0}
-            sx={{
-              background: 'white',
-              border: '1px solid #f1f5f9',
-              borderRadius: 3,
-            }}
-          >
-            <CardContent sx={{ p: 4 }}>
-              <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
-                <Box>
-                  <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', mb: 1 }}>
-                    Tendencia de Validaciones
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: '#64748b' }}>
-                    Validaciones diarias en los últimos {selectedPeriod === '7d' ? '7 días' : selectedPeriod === '30d' ? '30 días' : '90 días'}
-                  </Typography>
-                </Box>
-                <Avatar
-                  sx={{
-                    bgcolor: alpha('#06b6d4', 0.1),
-                    color: '#06b6d4',
-                    width: 40,
-                    height: 40,
-                  }}
-                >
-                  <ShowChart />
-                </Avatar>
-              </Stack>
-
-              <Box sx={{ height: 300 }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={computedStats.dailyValidations}>
-                    <defs>
-                      <linearGradient id="validacionesGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor="#06b6d4" stopOpacity={0}/>
-                      </linearGradient>
-                      <linearGradient id="exitosasGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                    <XAxis 
-                      dataKey="date" 
-                      stroke="#94a3b8"
-                      fontSize={12}
-                    />
-                    <YAxis stroke="#94a3b8" fontSize={12} />
-                    <RechartsTooltip
-                      contentStyle={{
-                        backgroundColor: 'white',
-                        border: '1px solid #f1f5f9',
-                        borderRadius: '8px',
-                        boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-                      }}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="validaciones"
-                      stroke="#06b6d4"
-                      strokeWidth={2}
-                      fill="url(#validacionesGradient)"
-                      name="Total Validaciones"
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="exitosas"
-                      stroke="#10b981"
-                      strokeWidth={2}
-                      fill="url(#exitosasGradient)"
-                      name="Validaciones Exitosas"
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
+        <Card
+          elevation={0}
+          sx={{
+            background: 'white',
+            border: '1px solid #f1f5f9',
+            borderRadius: 3,
+          }}
+        >
+          <CardContent sx={{ p: 4 }}>
+            <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
+              <Box>
+                <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', mb: 1 }}>
+                  Tendencia de Validaciones
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#64748b' }}>
+                  Validaciones diarias en los últimos {selectedPeriod === '7d' ? '7 días' : selectedPeriod === '30d' ? '30 días' : '90 días'}
+                </Typography>
               </Box>
-            </CardContent>
-          </Card>
-        </Grid>
+              <Avatar
+                sx={{
+                  bgcolor: alpha('#06b6d4', 0.1),
+                  color: '#06b6d4',
+                  width: 40,
+                  height: 40,
+                }}
+              >
+                <ShowChart />
+              </Avatar>
+            </Stack>
+
+            <Box sx={{ height: 300 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={computedStats.dailyValidations}>
+                  <defs>
+                    <linearGradient id="validacionesGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#06b6d4" stopOpacity={0}/>
+                    </linearGradient>
+                    <linearGradient id="exitosasGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                  <XAxis 
+                    dataKey="date" 
+                    stroke="#94a3b8"
+                    fontSize={12}
+                  />
+                  <YAxis stroke="#94a3b8" fontSize={12} />
+                  <RechartsTooltip
+                    contentStyle={{
+                      backgroundColor: 'white',
+                      border: '1px solid #f1f5f9',
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+                    }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="validaciones"
+                    stroke="#06b6d4"
+                    strokeWidth={2}
+                    fill="url(#validacionesGradient)"
+                    name="Total Validaciones"
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="exitosas"
+                    stroke="#10b981"
+                    strokeWidth={2}
+                    fill="url(#exitosasGradient)"
+                    name="Validaciones Exitosas"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </Box>
+          </CardContent>
+        </Card>
 
         {/* Benefits Usage Chart */}
-        <Grid item xs={12} lg={4}>
-          <Card
-            elevation={0}
-            sx={{
-              background: 'white',
-              border: '1px solid #f1f5f9',
-              borderRadius: 3,
-            }}
-          >
-            <CardContent sx={{ p: 4 }}>
-              <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
-                <Box>
-                  <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', mb: 1 }}>
-                    Beneficios Más Usados
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: '#64748b' }}>
-                    Top 5 beneficios por uso
-                  </Typography>
-                </Box>
-                <Avatar
-                  sx={{
-                    bgcolor: alpha('#8b5cf6', 0.1),
-                    color: '#8b5cf6',
-                    width: 40,
-                    height: 40,
-                  }}
-                >
-                  <PieChart />
-                </Avatar>
-              </Stack>
+        <Card
+          elevation={0}
+          sx={{
+            background: 'white',
+            border: '1px solid #f1f5f9',
+            borderRadius: 3,
+          }}
+        >
+          <CardContent sx={{ p: 4 }}>
+            <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
+              <Box>
+                <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', mb: 1 }}>
+                  Beneficios Más Usados
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#64748b' }}>
+                  Top 5 beneficios por uso
+                </Typography>
+              </Box>
+              <Avatar
+                sx={{
+                  bgcolor: alpha('#8b5cf6', 0.1),
+                  color: '#8b5cf6',
+                  width: 40,
+                  height: 40,
+                }}
+              >
+                <PieChart />
+              </Avatar>
+            </Stack>
 
-              {computedStats.benefitsUsage.length > 0 ? (
-                <Box sx={{ height: 250 }}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <RechartsPieChart>
-                      <Pie
-                        data={computedStats.benefitsUsage}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={40}
-                        outerRadius={80}
-                        paddingAngle={5}
-                        dataKey="usos"
-                      >
-                        {computedStats.benefitsUsage.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <RechartsTooltip
-                        contentStyle={{
-                          backgroundColor: 'white',
-                          border: '1px solid #f1f5f9',
-                          borderRadius: '8px',
-                          boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-                        }}
-                      />
-                    </RechartsPieChart>
-                  </ResponsiveContainer>
-                </Box>
-              ) : (
-                <Box sx={{ textAlign: 'center', py: 4 }}>
-                  <Avatar
-                    sx={{
-                      width: 60,
-                      height: 60,
-                      bgcolor: alpha('#94a3b8', 0.1),
-                      color: '#94a3b8',
-                      mx: 'auto',
-                      mb: 2,
-                    }}
-                  >
-                    <LocalOffer sx={{ fontSize: 30 }} />
-                  </Avatar>
-                  <Typography variant="body2" sx={{ color: '#64748b' }}>
-                    No hay datos de uso de beneficios
-                  </Typography>
-                </Box>
-              )}
-
-              {/* Benefits Legend */}
-              {computedStats.benefitsUsage.length > 0 && (
-                <Box sx={{ mt: 3 }}>
-                  <Divider sx={{ mb: 2 }} />
-                  <Stack spacing={1}>
-                    {computedStats.benefitsUsage.slice(0, 3).map((benefit, index) => (
-                      <Stack key={index} direction="row" justifyContent="space-between" alignItems="center">
-                        <Stack direction="row" spacing={1} alignItems="center">
-                          <Box
-                            sx={{
-                              width: 12,
-                              height: 12,
-                              borderRadius: '50%',
-                              bgcolor: benefit.color,
-                            }}
-                          />
-                          <Typography variant="caption" sx={{ color: '#64748b' }}>
-                            {benefit.name}
-                          </Typography>
-                        </Stack>
-                        <Typography variant="caption" sx={{ fontWeight: 600, color: '#1e293b' }}>
-                          {benefit.usos}
-                        </Typography>
-                      </Stack>
-                    ))}
-                  </Stack>
-                </Box>
-              )}
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {/* Revenue Chart */}
-        <Grid item xs={12} lg={6}>
-          <Card
-            elevation={0}
-            sx={{
-              background: 'white',
-              border: '1px solid #f1f5f9',
-              borderRadius: 3,
-            }}
-          >
-            <CardContent sx={{ p: 4 }}>
-              <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
-                <Box>
-                  <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', mb: 1 }}>
-                    Ingresos Diarios
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: '#64748b' }}>
-                    Ingresos generados por validaciones
-                  </Typography>
-                </Box>
-                <Avatar
-                  sx={{
-                    bgcolor: alpha('#10b981', 0.1),
-                    color: '#10b981',
-                    width: 40,
-                    height: 40,
-                  }}
-                >
-                  <AttachMoney />
-                </Avatar>
-              </Stack>
-
+            {computedStats.benefitsUsage.length > 0 ? (
               <Box sx={{ height: 250 }}>
                 <ResponsiveContainer width="100%" height="100%">
-                  <RechartsBarChart data={computedStats.dailyValidations}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                    <XAxis 
-                      dataKey="date" 
-                      stroke="#94a3b8"
-                      fontSize={12}
-                    />
-                    <YAxis stroke="#94a3b8" fontSize={12} />
+                  <RechartsPieChart>
+                    <Pie
+                      data={computedStats.benefitsUsage}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={40}
+                      outerRadius={80}
+                      paddingAngle={5}
+                      dataKey="usos"
+                    >
+                      {computedStats.benefitsUsage.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
                     <RechartsTooltip
                       contentStyle={{
                         backgroundColor: 'white',
@@ -588,119 +498,231 @@ export const ComercioStats: React.FC = () => {
                         borderRadius: '8px',
                         boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
                       }}
-                      formatter={(value: number) => [`$${value.toFixed(2)}`, 'Ingresos']}
                     />
-                    <Bar
-                      dataKey="ingresos"
-                      fill="#10b981"
-                      radius={[4, 4, 0, 0]}
-                    />
-                  </RechartsBarChart>
+                  </RechartsPieChart>
                 </ResponsiveContainer>
               </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {/* Performance Summary */}
-        <Grid item xs={12} lg={6}>
-          <Card
-            elevation={0}
-            sx={{
-              background: 'white',
-              border: '1px solid #f1f5f9',
-              borderRadius: 3,
-            }}
-          >
-            <CardContent sx={{ p: 4 }}>
-              <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
-                <Box>
-                  <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', mb: 1 }}>
-                    Resumen de Rendimiento
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: '#64748b' }}>
-                    Métricas clave del período
-                  </Typography>
-                </Box>
+            ) : (
+              <Box sx={{ textAlign: 'center', py: 4 }}>
                 <Avatar
                   sx={{
-                    bgcolor: alpha('#f59e0b', 0.1),
-                    color: '#f59e0b',
-                    width: 40,
-                    height: 40,
+                    width: 60,
+                    height: 60,
+                    bgcolor: alpha('#94a3b8', 0.1),
+                    color: '#94a3b8',
+                    mx: 'auto',
+                    mb: 2,
                   }}
                 >
-                  <BarChart />
+                  <LocalOffer sx={{ fontSize: 30 }} />
                 </Avatar>
-              </Stack>
+                <Typography variant="body2" sx={{ color: '#64748b' }}>
+                  No hay datos de uso de beneficios
+                </Typography>
+              </Box>
+            )}
 
-              <Stack spacing={3}>
-                {[
-                  {
-                    label: 'Tasa de Conversión',
-                    value: computedStats.tasaExito,
-                    max: 100,
-                    color: '#10b981',
-                    suffix: '%',
-                  },
-                  {
-                    label: 'Uso de Beneficios',
-                    value: (computedStats.benefitsUsage.reduce((sum, b) => sum + b.usos, 0) / (beneficios.length || 1)) * 10,
-                    max: 100,
-                    color: '#06b6d4',
-                    suffix: '%',
-                  },
-                  {
-                    label: 'Actividad Diaria',
-                    value: (computedStats.promedioValidacionesDiarias / 10) * 100,
-                    max: 100,
-                    color: '#8b5cf6',
-                    suffix: '%',
-                  },
-                  {
-                    label: 'Eficiencia Operativa',
-                    value: Math.min((computedStats.validacionesExitosas / Math.max(computedStats.periodValidaciones, 1)) * 100, 100),
-                    max: 100,
-                    color: '#f59e0b',
-                    suffix: '%',
-                  },
-                ].map((metric, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.3, delay: index * 0.1 }}
-                  >
-                    <Box>
-                      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
-                        <Typography variant="body2" sx={{ fontWeight: 600, color: '#374151' }}>
-                          {metric.label}
-                        </Typography>
-                        <Typography variant="body2" sx={{ fontWeight: 700, color: metric.color }}>
-                          {metric.value.toFixed(1)}{metric.suffix}
+            {/* Benefits Legend */}
+            {computedStats.benefitsUsage.length > 0 && (
+              <Box sx={{ mt: 3 }}>
+                <Divider sx={{ mb: 2 }} />
+                <Stack spacing={1}>
+                  {computedStats.benefitsUsage.slice(0, 3).map((benefit, index) => (
+                    <Stack key={index} direction="row" justifyContent="space-between" alignItems="center">
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <Box
+                          sx={{
+                            width: 12,
+                            height: 12,
+                            borderRadius: '50%',
+                            bgcolor: benefit.color,
+                          }}
+                        />
+                        <Typography variant="caption" sx={{ color: '#64748b' }}>
+                          {benefit.name}
                         </Typography>
                       </Stack>
-                      <LinearProgress
-                        variant="determinate"
-                        value={Math.min(metric.value, metric.max)}
-                        sx={{
-                          height: 8,
+                      <Typography variant="caption" sx={{ fontWeight: 600, color: '#1e293b' }}>
+                        {benefit.usos}
+                      </Typography>
+                    </Stack>
+                  ))}
+                </Stack>
+              </Box>
+            )}
+          </CardContent>
+        </Card>
+      </Box>
+
+      {/* Bottom Charts Section */}
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: {
+            xs: '1fr',
+            lg: 'repeat(2, 1fr)',
+          },
+          gap: 4,
+        }}
+      >
+        {/* Revenue Chart */}
+        <Card
+          elevation={0}
+          sx={{
+            background: 'white',
+            border: '1px solid #f1f5f9',
+            borderRadius: 3,
+          }}
+        >
+          <CardContent sx={{ p: 4 }}>
+            <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
+              <Box>
+                <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', mb: 1 }}>
+                  Ingresos Diarios
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#64748b' }}>
+                  Ingresos generados por validaciones
+                </Typography>
+              </Box>
+              <Avatar
+                sx={{
+                  bgcolor: alpha('#10b981', 0.1),
+                  color: '#10b981',
+                  width: 40,
+                  height: 40,
+                }}
+              >
+                <AttachMoney />
+              </Avatar>
+            </Stack>
+
+            <Box sx={{ height: 250 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <RechartsBarChart data={computedStats.dailyValidations}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                  <XAxis 
+                    dataKey="date" 
+                    stroke="#94a3b8"
+                    fontSize={12}
+                  />
+                  <YAxis stroke="#94a3b8" fontSize={12} />
+                  <RechartsTooltip
+                    contentStyle={{
+                      backgroundColor: 'white',
+                      border: '1px solid #f1f5f9',
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+                    }}
+                    formatter={(value: number) => [`$${value.toFixed(2)}`, 'Ingresos']}
+                  />
+                  <Bar
+                    dataKey="ingresos"
+                    fill="#10b981"
+                    radius={[4, 4, 0, 0]}
+                  />
+                </RechartsBarChart>
+              </ResponsiveContainer>
+            </Box>
+          </CardContent>
+        </Card>
+
+        {/* Performance Summary */}
+        <Card
+          elevation={0}
+          sx={{
+            background: 'white',
+            border: '1px solid #f1f5f9',
+            borderRadius: 3,
+          }}
+        >
+          <CardContent sx={{ p: 4 }}>
+            <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
+              <Box>
+                <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', mb: 1 }}>
+                  Resumen de Rendimiento
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#64748b' }}>
+                  Métricas clave del período
+                </Typography>
+              </Box>
+              <Avatar
+                sx={{
+                  bgcolor: alpha('#f59e0b', 0.1),
+                  color: '#f59e0b',
+                  width: 40,
+                  height: 40,
+                }}
+              >
+                <BarChart />
+              </Avatar>
+            </Stack>
+
+            <Stack spacing={3}>
+              {[
+                {
+                  label: 'Tasa de Conversión',
+                  value: computedStats.tasaExito,
+                  max: 100,
+                  color: '#10b981',
+                  suffix: '%',
+                },
+                {
+                  label: 'Uso de Beneficios',
+                  value: (computedStats.benefitsUsage.reduce((sum, b) => sum + b.usos, 0) / (beneficios.length || 1)) * 10,
+                  max: 100,
+                  color: '#06b6d4',
+                  suffix: '%',
+                },
+                {
+                  label: 'Actividad Diaria',
+                  value: (computedStats.promedioValidacionesDiarias / 10) * 100,
+                  max: 100,
+                  color: '#8b5cf6',
+                  suffix: '%',
+                },
+                {
+                  label: 'Eficiencia Operativa',
+                  value: Math.min((computedStats.validacionesExitosas / Math.max(computedStats.periodValidaciones, 1)) * 100, 100),
+                  max: 100,
+                  color: '#f59e0b',
+                  suffix: '%',
+                },
+              ].map((metric, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3, delay: index * 0.1 }}
+                >
+                  <Box>
+                    <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
+                      <Typography variant="body2" sx={{ fontWeight: 600, color: '#374151' }}>
+                        {metric.label}
+                      </Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 700, color: metric.color }}>
+                        {metric.value.toFixed(1)}{metric.suffix}
+                      </Typography>
+                    </Stack>
+                    <LinearProgress
+                      variant="determinate"
+                      value={Math.min(metric.value, metric.max)}
+                      sx={{
+                        height: 8,
+                        borderRadius: 4,
+                        bgcolor: alpha(metric.color, 0.1),
+                        '& .MuiLinearProgress-bar': {
+                          bgcolor: metric.color,
                           borderRadius: 4,
-                          bgcolor: alpha(metric.color, 0.1),
-                          '& .MuiLinearProgress-bar': {
-                            bgcolor: metric.color,
-                            borderRadius: 4,
-                          }
-                        }}
-                      />
-                    </Box>
-                  </motion.div>
-                ))}
-              </Stack>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+                        }
+                      }}
+                    />
+                  </Box>
+                </motion.div>
+              ))}
+            </Stack>
+          </CardContent>
+        </Card>
+      </Box>
     </motion.div>
   );
 };

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   Box,
@@ -36,7 +36,6 @@ export const QRManagement: React.FC = () => {
   const { comercio } = useComercios();
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
   const [loading, setLoading] = useState(false);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const qrUrl = comercio ? `${window.location.origin}/validar-beneficio?comercio=${comercio.uid}` : '';
 
