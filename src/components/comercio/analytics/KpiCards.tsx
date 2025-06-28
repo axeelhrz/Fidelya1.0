@@ -30,6 +30,8 @@ interface AnalyticsData {
   eficienciaOperativa: number;
   ingresosTotales?: number;
   sociosAlcanzados?: number;
+  totalBeneficios: number;
+  usuariosUnicos: number;
 }
 
 interface KpiCardsProps {
@@ -49,6 +51,8 @@ export const KpiCards: React.FC<KpiCardsProps> = ({ data, loading = false }) => 
     eficienciaOperativa: data?.eficienciaOperativa || 0,
     ingresosTotales: data?.ingresosTotales || 0,
     sociosAlcanzados: data?.sociosAlcanzados || 0,
+    totalBeneficios: data?.totalBeneficios || 0,
+    usuariosUnicos: data?.usuariosUnicos || 0,
   };
 
   const kpiData = [
