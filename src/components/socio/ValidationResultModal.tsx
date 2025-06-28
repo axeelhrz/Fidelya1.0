@@ -13,19 +13,7 @@ import {
   User,
   Store,
   Calendar,
-  Tag,
-  Award,
-  Star,
-  Crown,
-  Sparkles,
-  TrendingUp,
-  DollarSign,
-  Percent,
-  X,
-  ExternalLink,
   Share2,
-  Download,
-  Heart
 } from 'lucide-react';
 import { ValidacionResponse } from '@/types/validacion';
 import { Dialog, DialogContent } from '@/components/ui/Dialog';
@@ -437,9 +425,11 @@ export const ValidationResultModal: React.FC<ValidationResultModalProps> = ({
   };
 
   const config = getResultConfig();
+  if (!config) return null;
   const IconComponent = config.icon;
 
-  const getDiscountText = (beneficio: any) => {
+  const getDiscountText = (beneficio: ValidacionResponse['beneficio']) => {
+    if (!beneficio) return 'DESCUENTO';
     switch (beneficio.tipo) {
       case 'porcentaje':
         return `${beneficio.descuento}%`;
@@ -452,7 +442,8 @@ export const ValidationResultModal: React.FC<ValidationResultModalProps> = ({
     }
   };
 
-  const getDiscountLabel = (beneficio: any) => {
+  const getDiscountLabel = (beneficio: ValidacionResponse['beneficio']) => {
+    if (!beneficio) return 'Beneficio';
     switch (beneficio.tipo) {
       case 'porcentaje':
         return 'Descuento';
@@ -579,7 +570,7 @@ export const ValidationResultModal: React.FC<ValidationResultModalProps> = ({
                         <div className="label">Válido hasta</div>
                         <div className="value">
                           {result.beneficio.fechaFin 
-                            ? format(result.beneficio.fechaFin.toDate(), 'dd/MM/yyyy', { locale: es })
+                            ? format(result.beneficio.fechaFin, 'dd/MM/yyyy', { locale: es })
                             : 'Sin límite'
                           }
                         </div>
@@ -626,11 +617,11 @@ export const ValidationResultModal: React.FC<ValidationResultModalProps> = ({
                 >
                   <Button
                     onClick={onClose}
-                    className={config.buttonColor}
+                    className={config?.buttonColor}
                     fullWidth
                     size="lg"
                   >
-                    {config.buttonText}
+                    {config?.buttonText}
                   </Button>
                   
                   {result.resultado === 'habilitado' && (

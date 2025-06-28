@@ -11,7 +11,6 @@ import {
   Eye, 
   CheckCircle, 
   MapPin,
-  Clock,
   Zap,
   Heart,
   Share2,
@@ -334,14 +333,21 @@ export const BenefitsCard: React.FC<BenefitsCardProps> = ({
     return colors[index];
   };
 
-  const isEndingSoon = (fechaFin: any) => {
-    if (!fechaFin || !fechaFin.toDate) return false;
-    const vencimiento = fechaFin.toDate();
+  const isEndingSoon = (fechaFin: Date | { toDate: () => Date } | undefined) => {
+    if (!fechaFin) return false;
+    let vencimiento: Date;
+    if (fechaFin instanceof Date) {
+      vencimiento = fechaFin;
+    } else if (typeof fechaFin.toDate === 'function') {
+      vencimiento = fechaFin.toDate();
+    } else {
+      return false;
+    }
     const en7Dias = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     return vencimiento <= en7Dias;
   };
 
-  const isNew = (fechaCreacion: any) => {
+  const isNew = (fechaCreacion: { toDate: () => Date } | undefined) => {
     if (!fechaCreacion || !fechaCreacion.toDate) return false;
     const creacion = fechaCreacion.toDate();
     const hace7Dias = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);

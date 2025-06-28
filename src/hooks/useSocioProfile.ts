@@ -5,7 +5,7 @@ import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/constants';
 import { useAuth } from './useAuth';
-import { socioService, SocioProfileData } from '@/services/socio.service';
+import { socioService } from '@/services/socio.service';
 import { 
   Socio, 
   SocioStats, 
@@ -75,8 +75,8 @@ export const useSocioProfile = (): UseSocioProfileReturn => {
             setSocio(socioData);
             
             // Update last access
-            await socioService.updateLastAccess(user.uid);
-          } else {
+          //            await socioService.updateLastAccess(user.uid);
+                    } else {
             setSocio(null);
             setError('Perfil de socio no encontrado');
           }

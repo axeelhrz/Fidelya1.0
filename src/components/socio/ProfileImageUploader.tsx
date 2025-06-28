@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
+import Image from 'next/image';
 import { 
   Camera, 
   Upload, 
@@ -12,8 +13,6 @@ import {
   Image as ImageIcon,
   Trash2,
   RotateCcw,
-  Crop,
-  Palette
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/Dialog';
@@ -119,10 +118,14 @@ export const ProfileImageUploader: React.FC<ProfileImageUploaderProps> = ({
           <div className="w-32 h-32 bg-white rounded-3xl shadow-xl flex items-center justify-center border-4 border-white">
             <div className="w-28 h-28 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center relative overflow-hidden">
               {currentImage ? (
-                <img 
-                  src={currentImage} 
-                  alt="Avatar" 
+                <Image
+                  src={currentImage}
+                  alt="Avatar"
                   className="w-full h-full object-cover"
+                  fill
+                  sizes="112px"
+                  style={{ objectFit: 'cover' }}
+                  priority
                 />
               ) : (
                 <User size={40} className="text-white" />
@@ -168,10 +171,14 @@ export const ProfileImageUploader: React.FC<ProfileImageUploaderProps> = ({
             {(previewImage || currentImage) && (
               <div className="text-center">
                 <div className="w-32 h-32 mx-auto bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center relative overflow-hidden">
-                  <img 
-                    src={previewImage || currentImage} 
-                    alt="Preview" 
+                  <Image
+                    src={previewImage || currentImage || ''}
+                    alt="Preview"
                     className="w-full h-full object-cover"
+                    fill
+                    sizes="128px"
+                    style={{ objectFit: 'cover' }}
+                    priority
                   />
                 </div>
                 <p className="text-sm text-gray-500 mt-3">

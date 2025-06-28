@@ -15,11 +15,10 @@ import {
   Flashlight,
   FlashlightOff,
   RotateCcw,
-  Settings,
   Info
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/Dialog';
+import { Dialog, DialogContent } from '@/components/ui/Dialog';
 
 interface QRScannerButtonProps {
   onScan: (qrData: string) => void;
@@ -389,8 +388,8 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
       if (track && 'torch' in track.getCapabilities()) {
         try {
           await track.applyConstraints({
-            advanced: [{ torch: !flashEnabled } as any]
-          });
+            advanced: [{ torch: !flashEnabled }]
+          } as unknown as MediaTrackConstraints);
           setFlashEnabled(!flashEnabled);
         } catch (err) {
           console.error('Error toggling flash:', err);

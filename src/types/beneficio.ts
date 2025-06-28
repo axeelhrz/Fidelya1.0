@@ -45,6 +45,11 @@ export interface BeneficioUso {
   validacionId?: string;
   notas?: string;
   detalles?: string;
+  destacado?: boolean;
+  validadoPor?: string; // Usuario que validó el uso
+  creadoEn: Timestamp;
+  actualizadoEn: Timestamp;
+
 }
 
 export interface BeneficioStats {

@@ -36,20 +36,21 @@ export interface ValidacionRequest {
 }
 
 export interface ValidacionResponse {
-  resultado: 'habilitado' | 'no_habilitado' | 'vencido' | 'suspendido';
+  resultado: string;
   motivo?: string;
   beneficio?: {
     id: string;
     titulo: string;
     descuento: number;
     tipo: string;
+    comercioNombre: string;
+    descripcion?: string;
+    fechaFin?: Date;
   };
   socio: {
     nombre: string;
     estado: string;
-    asociacion: string;
-  };
-  validacionId: string;
+  }
 }
 
 export interface QRData {

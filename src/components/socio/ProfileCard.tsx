@@ -11,7 +11,6 @@ import {
   MapPin, 
   CreditCard,
   Settings,
-  Camera,
   Save,
   X
 } from 'lucide-react';
@@ -61,7 +60,7 @@ export const ProfileCard: React.FC = () => {
         direccion: formData.direccion || undefined
       });
       setEditModalOpen(false);
-    } catch (error) {
+    } catch {
       // Error is handled by the hook
     }
   };
@@ -204,7 +203,13 @@ export const ProfileCard: React.FC = () => {
                   <Calendar size={16} className="text-gray-600" />
                 </div>
                 <span className="text-gray-900">
-                  Miembro desde {format(socio.creadoEn.toDate ? socio.creadoEn.toDate() : new Date(socio.creadoEn), 'MMMM yyyy', { locale: es })}
+                  Miembro desde {format(
+                    typeof socio.creadoEn?.toDate === 'function'
+                      ? socio.creadoEn.toDate()
+                      : new Date(socio.creadoEn as unknown as string | number | Date),
+                    'MMMM yyyy',
+                    { locale: es }
+                  )}
                 </span>
               </div>
             </div>

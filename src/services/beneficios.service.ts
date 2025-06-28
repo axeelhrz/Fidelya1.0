@@ -118,7 +118,9 @@ export class BeneficiosService {
 
       return {
         id: docRef.id,
-        ...usoData
+        ...usoData,
+        creadoEn: Timestamp.now(),
+        actualizadoEn: Timestamp.now()
       };
     } catch (error) {
       console.error('Error usando beneficio:', error);

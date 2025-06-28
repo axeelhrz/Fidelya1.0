@@ -3,6 +3,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Building2, CheckCircle, XCircle, Clock, AlertTriangle } from 'lucide-react';
+import Image from 'next/image';
 import { useSocioProfile } from '@/hooks/useSocioProfile';
 import { LoadingSkeleton } from '@/components/ui/LoadingSkeleton';
 import { format } from 'date-fns';
@@ -11,7 +12,7 @@ import { es } from 'date-fns/locale';
 interface Asociacion {
   id: string;
   nombre: string;
-  estado: 'activo' | 'vencido' | 'pendiente' | 'inactivo';
+  estado: 'activo' | 'vencido' | 'pendiente' | 'inactivo' | 'suspendido';
   fechaVencimiento?: Date;
   logo?: string;
   descripcion?: string;
@@ -19,6 +20,10 @@ interface Asociacion {
 
 interface AsociacionesListProps {
   asociaciones?: Asociacion[];
+}
+
+function isTimestamp(obj: unknown): obj is { toDate: () => Date } {
+  return !!obj && typeof obj === 'object' && typeof (obj as { toDate?: unknown }).toDate === 'function';
 }
 
 export const AsociacionesList: React.FC<AsociacionesListProps> = ({ 
@@ -50,6 +55,10 @@ export const AsociacionesList: React.FC<AsociacionesListProps> = ({
         return <Clock size={16} className="text-yellow-500" />;
       case 'inactivo':
         return <AlertTriangle size={16} className="text-gray-500" />;
+      case 'suspendido':
+        return <AlertTriangle size={16} className="text-orange-500" />;
+      default:
+        return null;
     }
   };
 
@@ -63,6 +72,10 @@ export const AsociacionesList: React.FC<AsociacionesListProps> = ({
         return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       case 'inactivo':
         return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'suspendido':
+        return 'bg-orange-100 text-orange-800 border-orange-200';
+      default:
+        return '';
     }
   };
 
@@ -76,6 +89,10 @@ export const AsociacionesList: React.FC<AsociacionesListProps> = ({
         return 'Pendiente';
       case 'inactivo':
         return 'Inactivo';
+      case 'suspendido':
+        return 'Suspendido';
+      default:
+        return '';
     }
   };
 
@@ -95,6 +112,8 @@ export const AsociacionesList: React.FC<AsociacionesListProps> = ({
         return 'Activación pendiente';
       case 'inactivo':
         return 'Membresía inactiva';
+      case 'suspendido':
+        return 'Membresía suspendida';
       default:
         return '';
     }
@@ -133,9 +152,11 @@ export const AsociacionesList: React.FC<AsociacionesListProps> = ({
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center">
                 {asociacion.logo ? (
-                  <img 
-                    src={asociacion.logo} 
+                  <Image
+                    src={asociacion.logo}
                     alt={asociacion.nombre}
+                    width={32}
+                    height={32}
                     className="w-8 h-8 object-contain"
                   />
                 ) : (
@@ -143,9 +164,14 @@ export const AsociacionesList: React.FC<AsociacionesListProps> = ({
                 )}
               </div>
               <div>
-                <h4 className="font-medium text-gray-900 text-sm">{asociacion.nombre}</h4>
+                <div className="font-medium text-gray-900">{asociacion.nombre}</div>
                 <p className="text-xs text-gray-500">
-                  {getStatusDescription(asociacion.estado, asociacion.fechaVencimiento)}
+                  {getStatusDescription(
+                    asociacion.estado,
+                    asociacion.fechaVencimiento && isTimestamp(asociacion.fechaVencimiento)
+                      ? asociacion.fechaVencimiento.toDate()
+                      : asociacion.fechaVencimiento
+                  )}
                 </p>
                 {asociacion.descripcion && (
                   <p className="text-xs text-gray-400 mt-1 line-clamp-1">
