@@ -294,4 +294,635 @@ export function useAppointments() {
   }, [centerId, setLoading, clearError, handleError]);
 
   // Crear nueva cita
-  const createAppointment = useCallback(async (appointmentData: Omit<Appointment, 'id' | 'createdAt'
+// ... existing code ...
+
+  // Crear nueva cita
+  const createAppointment = useCallback(async (appointmentData: Omit<Appointment, 'id' | 'createdAt' | 'updatedAt'>): Promise<string | null> => {
+    if (!centerId) return null;
+    
+    setLoading(true);
+    clearError();
+    
+    try {
+      const appointmentsRef = collection(db, 'centers', centerId, 'appointments');
+      const now = new Date();
+      
+      const newAppointment = {
+        ...appointmentData,
+        centerId,
+        createdAt: Timestamp.fromDate(now),
+        updatedAt: Timestamp.fromDate(now),
+        date: Timestamp.fromDate(appointmentData.date)
+      };
+      
+      const docRef = await addDoc(appointmentsRef, newAppointment);
+      await fetchAppointments(); // Refrescar lista
+      
+      return docRef.id;
+    } catch (error) {
+      handleError(error, 'crear cita');
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }, [centerId, setLoading, clearError, handleError, fetchAppointments]);
+
+  // Actualizar cita
+  const updateAppointment = useCallback(async (appointmentId: string, updates: Partial<Appointment>): Promise<boolean> => {
+    if (!centerId) return false;
+    
+    setLoading(true);
+    clearError();
+    
+    try {
+      const appointmentRef = doc(db, 'centers', centerId, 'appointments', appointmentId);
+      
+      const updateData = {
+        ...updates,
+        updatedAt: Timestamp.fromDate(new Date())
+      };
+      
+      // Convertir fechas a Timestamp si existen
+      if (updates.date) {
+        updateData.date = Timestamp.fromDate(updates.date);
+      }
+      if (updates.checkIn) {
+        updateData.checkIn = Timestamp.fromDate(updates.checkIn);
+      }
+      if (updates.checkOut) {
+        updateData.checkOut = Timestamp.fromDate(updates.checkOut);
+      }
+      
+      await updateDoc(appointmentRef, updateData);
+      await fetchAppointments(); // Refrescar lista
+      
+      return true;
+    } catch (error) {
+      handleError(error, 'actualizar cita');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [centerId, setLoading, clearError, handleError, fetchAppointments]);
+
+  // Check-in de cita
+  const checkInAppointment = useCallback(async (appointmentId: string): Promise<boolean> => {
+    return updateAppointment(appointmentId, {
+      status: 'checked-in',
+      checkIn: new Date()
+    });
+  }, [updateAppointment]);
+
+  // Check-out de cita
+  const checkOutAppointment = useCallback(async (appointmentId: string): Promise<boolean> => {
+    return updateAppointment(appointmentId, {
+      status: 'completed',
+      checkOut: new Date()
+    });
+  }, [updateAppointment]);
+
+  // Cancelar cita
+  const cancelAppointment = useCallback(async (appointmentId: string, reason?: string): Promise<boolean> => {
+    return updateAppointment(appointmentId, {
+      status: 'cancelled',
+      notes: reason ? `Cancelada: ${reason}` : 'Cancelada'
+    });
+  }, [updateAppointment]);
+
+  return {
+    appointments,
+    loading,
+    error,
+    clearError,
+    fetchAppointments,
+    createAppointment,
+    updateAppointment,
+    checkInAppointment,
+    checkOutAppointment,
+    cancelAppointment
+  };
+}
+
+// ============================================================================
+// HOOK PARA GESTIÓN DE NOTAS CLÍNICAS
+// ============================================================================
+
+export function useClinicalNotes() {
+  const [notes, setNotes] = useState<ClinicalNote[]>([]);
+  const { loading, error, clearError, handleError, setLoading, centerId } = useClinicalData();
+
+  // Obtener notas de un paciente
+  const fetchPatientNotes = useCallback(async (patientId: string) => {
+    if (!centerId || !patientId) return;
+    
+    setLoading(true);
+    clearError();
+    
+    try {
+      const notesRef = collection(db, 'centers', centerId, 'patients', patientId, 'notes');
+      const q = query(notesRef, orderBy('date', 'desc'));
+      const snapshot = await getDocs(q);
+      
+      const notesData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        date: doc.data().date?.toDate(),
+        createdAt: doc.data().createdAt?.toDate(),
+        updatedAt: doc.data().updatedAt?.toDate(),
+        lockedAt: doc.data().lockedAt?.toDate()
+      })) as ClinicalNote[];
+      
+      setNotes(notesData);
+    } catch (error) {
+      handleError(error, 'obtener notas clínicas');
+    } finally {
+      setLoading(false);
+    }
+  }, [centerId, setLoading, clearError, handleError]);
+
+  // Crear nueva nota
+  const createNote = useCallback(async (patientId: string, noteData: Omit<ClinicalNote, 'id' | 'patientId' | 'centerId' | 'createdAt' | 'updatedAt'>): Promise<string | null> => {
+    if (!centerId || !patientId) return null;
+    
+    setLoading(true);
+    clearError();
+    
+    try {
+      const notesRef = collection(db, 'centers', centerId, 'patients', patientId, 'notes');
+      const now = new Date();
+      
+      const newNote = {
+        ...noteData,
+        patientId,
+        centerId,
+        createdAt: Timestamp.fromDate(now),
+        updatedAt: Timestamp.fromDate(now),
+        date: Timestamp.fromDate(noteData.date),
+        version: 1,
+        previousVersions: []
+      };
+      
+      const docRef = await addDoc(notesRef, newNote);
+      await fetchPatientNotes(patientId); // Refrescar lista
+      
+      return docRef.id;
+    } catch (error) {
+      handleError(error, 'crear nota clínica');
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }, [centerId, setLoading, clearError, handleError, fetchPatientNotes]);
+
+  // Actualizar nota (solo si no está bloqueada)
+  const updateNote = useCallback(async (patientId: string, noteId: string, updates: Partial<ClinicalNote>): Promise<boolean> => {
+    if (!centerId || !patientId) return false;
+    
+    setLoading(true);
+    clearError();
+    
+    try {
+      const noteRef = doc(db, 'centers', centerId, 'patients', patientId, 'notes', noteId);
+      const noteSnapshot = await getDoc(noteRef);
+      
+      if (!noteSnapshot.exists()) {
+        throw new Error('Nota no encontrada');
+      }
+      
+      const currentNote = noteSnapshot.data() as ClinicalNote;
+      
+      // Verificar si la nota está bloqueada
+      if (currentNote.status === 'locked') {
+        throw new Error('No se puede editar una nota bloqueada');
+      }
+      
+      const updateData = {
+        ...updates,
+        updatedAt: Timestamp.fromDate(new Date()),
+        version: (currentNote.version || 1) + 1,
+        previousVersions: [...(currentNote.previousVersions || []), noteId]
+      };
+      
+      // Convertir fechas a Timestamp si existen
+      if (updates.date) {
+        updateData.date = Timestamp.fromDate(updates.date);
+      }
+      if (updates.lockedAt) {
+        updateData.lockedAt = Timestamp.fromDate(updates.lockedAt);
+      }
+      
+      await updateDoc(noteRef, updateData);
+      await fetchPatientNotes(patientId); // Refrescar lista
+      
+      return true;
+    } catch (error) {
+      handleError(error, 'actualizar nota clínica');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [centerId, setLoading, clearError, handleError, fetchPatientNotes]);
+
+  // Firmar nota
+  const signNote = useCallback(async (patientId: string, noteId: string, signature: any): Promise<boolean> => {
+    return updateNote(patientId, noteId, {
+      status: 'signed',
+      signature
+    });
+  }, [updateNote]);
+
+  // Bloquear nota
+  const lockNote = useCallback(async (patientId: string, noteId: string, lockedBy: string): Promise<boolean> => {
+    return updateNote(patientId, noteId, {
+      status: 'locked',
+      lockedAt: new Date(),
+      lockedBy
+    });
+  }, [updateNote]);
+
+  return {
+    notes,
+    loading,
+    error,
+    clearError,
+    fetchPatientNotes,
+    createNote,
+    updateNote,
+    signNote,
+    lockNote
+  };
+}
+
+// ============================================================================
+// HOOK PARA GESTIÓN DE PLANES DE TRATAMIENTO
+// ============================================================================
+
+export function useTreatmentPlans() {
+  const [plans, setPlans] = useState<TreatmentPlan[]>([]);
+  const { loading, error, clearError, handleError, setLoading, centerId } = useClinicalData();
+
+  // Obtener planes de un paciente
+  const fetchPatientPlans = useCallback(async (patientId: string) => {
+    if (!centerId || !patientId) return;
+    
+    setLoading(true);
+    clearError();
+    
+    try {
+      const plansRef = collection(db, 'centers', centerId, 'patients', patientId, 'treatmentPlans');
+      const q = query(plansRef, orderBy('startDate', 'desc'));
+      const snapshot = await getDocs(q);
+      
+      const plansData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        startDate: doc.data().startDate?.toDate(),
+        endDate: doc.data().endDate?.toDate(),
+        lastReviewDate: doc.data().lastReviewDate?.toDate(),
+        nextReviewDate: doc.data().nextReviewDate?.toDate(),
+        createdAt: doc.data().createdAt?.toDate(),
+        updatedAt: doc.data().updatedAt?.toDate()
+      })) as TreatmentPlan[];
+      
+      setPlans(plansData);
+    } catch (error) {
+      handleError(error, 'obtener planes de tratamiento');
+    } finally {
+      setLoading(false);
+    }
+  }, [centerId, setLoading, clearError, handleError]);
+
+  // Crear nuevo plan
+  const createPlan = useCallback(async (patientId: string, planData: Omit<TreatmentPlan, 'id' | 'patientId' | 'centerId' | 'createdAt' | 'updatedAt'>): Promise<string | null> => {
+    if (!centerId || !patientId) return null;
+    
+    setLoading(true);
+    clearError();
+    
+    try {
+      const plansRef = collection(db, 'centers', centerId, 'patients', patientId, 'treatmentPlans');
+      const now = new Date();
+      
+      const newPlan = {
+        ...planData,
+        patientId,
+        centerId,
+        createdAt: Timestamp.fromDate(now),
+        updatedAt: Timestamp.fromDate(now),
+        startDate: Timestamp.fromDate(planData.startDate),
+        endDate: planData.endDate ? Timestamp.fromDate(planData.endDate) : null,
+        nextReviewDate: Timestamp.fromDate(planData.nextReviewDate),
+        lastReviewDate: planData.lastReviewDate ? Timestamp.fromDate(planData.lastReviewDate) : null,
+        history: []
+      };
+      
+      const docRef = await addDoc(plansRef, newPlan);
+      await fetchPatientPlans(patientId); // Refrescar lista
+      
+      return docRef.id;
+    } catch (error) {
+      handleError(error, 'crear plan de tratamiento');
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }, [centerId, setLoading, clearError, handleError, fetchPatientPlans]);
+
+  // Actualizar plan
+  const updatePlan = useCallback(async (patientId: string, planId: string, updates: Partial<TreatmentPlan>): Promise<boolean> => {
+    if (!centerId || !patientId) return false;
+    
+    setLoading(true);
+    clearError();
+    
+    try {
+      const planRef = doc(db, 'centers', centerId, 'patients', patientId, 'treatmentPlans', planId);
+      
+      const updateData = {
+        ...updates,
+        updatedAt: Timestamp.fromDate(new Date())
+      };
+      
+      // Convertir fechas a Timestamp si existen
+      if (updates.startDate) {
+        updateData.startDate = Timestamp.fromDate(updates.startDate);
+      }
+      if (updates.endDate) {
+        updateData.endDate = Timestamp.fromDate(updates.endDate);
+      }
+      if (updates.lastReviewDate) {
+        updateData.lastReviewDate = Timestamp.fromDate(updates.lastReviewDate);
+      }
+      if (updates.nextReviewDate) {
+        updateData.nextReviewDate = Timestamp.fromDate(updates.nextReviewDate);
+      }
+      
+      await updateDoc(planRef, updateData);
+      await fetchPatientPlans(patientId); // Refrescar lista
+      
+      return true;
+    } catch (error) {
+      handleError(error, 'actualizar plan de tratamiento');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [centerId, setLoading, clearError, handleError, fetchPatientPlans]);
+
+  return {
+    plans,
+    loading,
+    error,
+    clearError,
+    fetchPatientPlans,
+    createPlan,
+    updatePlan
+  };
+}
+
+// ============================================================================
+// HOOK PARA GESTIÓN DE EVALUACIONES PSICOMÉTRICAS
+// ============================================================================
+
+export function useAssessments() {
+  const [assessments, setAssessments] = useState<PsychometricAssessment[]>([]);
+  const { loading, error, clearError, handleError, setLoading, centerId } = useClinicalData();
+
+  // Obtener evaluaciones de un paciente
+  const fetchPatientAssessments = useCallback(async (patientId: string) => {
+    if (!centerId || !patientId) return;
+    
+    setLoading(true);
+    clearError();
+    
+    try {
+      const assessmentsRef = collection(db, 'centers', centerId, 'patients', patientId, 'assessments');
+      const q = query(assessmentsRef, orderBy('date', 'desc'));
+      const snapshot = await getDocs(q);
+      
+      const assessmentsData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        date: doc.data().date?.toDate(),
+        nextAssessmentDate: doc.data().nextAssessmentDate?.toDate(),
+        createdAt: doc.data().createdAt?.toDate(),
+        updatedAt: doc.data().updatedAt?.toDate()
+      })) as PsychometricAssessment[];
+      
+      setAssessments(assessmentsData);
+    } catch (error) {
+      handleError(error, 'obtener evaluaciones psicométricas');
+    } finally {
+      setLoading(false);
+    }
+  }, [centerId, setLoading, clearError, handleError]);
+
+  // Crear nueva evaluación
+  const createAssessment = useCallback(async (patientId: string, assessmentData: Omit<PsychometricAssessment, 'id' | 'patientId' | 'centerId' | 'createdAt' | 'updatedAt'>): Promise<string | null> => {
+    if (!centerId || !patientId) return null;
+    
+    setLoading(true);
+    clearError();
+    
+    try {
+      const assessmentsRef = collection(db, 'centers', centerId, 'patients', patientId, 'assessments');
+      const now = new Date();
+      
+      const newAssessment = {
+        ...assessmentData,
+        patientId,
+        centerId,
+        createdAt: Timestamp.fromDate(now),
+        updatedAt: Timestamp.fromDate(now),
+        date: Timestamp.fromDate(assessmentData.date),
+        nextAssessmentDate: assessmentData.nextAssessmentDate ? Timestamp.fromDate(assessmentData.nextAssessmentDate) : null
+      };
+      
+      const docRef = await addDoc(assessmentsRef, newAssessment);
+      await fetchPatientAssessments(patientId); // Refrescar lista
+      
+      return docRef.id;
+    } catch (error) {
+      handleError(error, 'crear evaluación psicométrica');
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }, [centerId, setLoading, clearError, handleError, fetchPatientAssessments]);
+
+  return {
+    assessments,
+    loading,
+    error,
+    clearError,
+    fetchPatientAssessments,
+    createAssessment
+  };
+}
+
+// ============================================================================
+// HOOK PARA BÚSQUEDA GLOBAL
+// ============================================================================
+
+export function useGlobalSearch() {
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchHistory, setSearchHistory] = useState<string[]>([]);
+  const { loading, error, clearError, handleError, setLoading, centerId } = useClinicalData();
+
+  // Búsqueda global
+  const globalSearch = useCallback(async (query: string, type: 'all' | 'patients' | 'appointments' | 'notes' = 'all') => {
+    if (!centerId || !query.trim()) {
+      setSearchResults([]);
+      return;
+    }
+    
+    setLoading(true);
+    clearError();
+    
+    try {
+      const results: any[] = [];
+      const searchTerm = query.toLowerCase();
+      
+      // Buscar en pacientes
+      if (type === 'all' || type === 'patients') {
+        const patientsRef = collection(db, 'centers', centerId, 'patients');
+        const patientsSnapshot = await getDocs(patientsRef);
+        
+        patientsSnapshot.docs.forEach(doc => {
+          const data = doc.data();
+          if (
+            data.firstName?.toLowerCase().includes(searchTerm) ||
+            data.lastName?.toLowerCase().includes(searchTerm) ||
+            data.email?.toLowerCase().includes(searchTerm) ||
+            data.phone?.includes(query)
+          ) {
+            results.push({
+              id: doc.id,
+              type: 'patient',
+              title: `${data.firstName} ${data.lastName}`,
+              subtitle: data.email,
+              description: `Paciente • ${data.assignedTherapist}`,
+              url: `/dashboard/patients/${doc.id}`,
+              data: { ...data, id: doc.id }
+            });
+          }
+        });
+      }
+      
+      // Buscar en citas
+      if (type === 'all' || type === 'appointments') {
+        const appointmentsRef = collection(db, 'centers', centerId, 'appointments');
+        const appointmentsSnapshot = await getDocs(appointmentsRef);
+        
+        appointmentsSnapshot.docs.forEach(doc => {
+          const data = doc.data();
+          if (
+            data.notes?.toLowerCase().includes(searchTerm) ||
+            data.patientId?.includes(query)
+          ) {
+            results.push({
+              id: doc.id,
+              type: 'appointment',
+              title: `Cita ${data.date?.toDate().toLocaleDateString()}`,
+              subtitle: data.type,
+              description: `Cita • ${data.status}`,
+              url: `/dashboard/appointments/${doc.id}`,
+              data: { ...data, id: doc.id }
+            });
+          }
+        });
+      }
+      
+      setSearchResults(results);
+      
+      // Agregar a historial
+      setSearchHistory(prev => {
+        const newHistory = [query, ...prev.filter(item => item !== query)].slice(0, 10);
+        return newHistory;
+      });
+      
+    } catch (error) {
+      handleError(error, 'realizar búsqueda');
+    } finally {
+      setLoading(false);
+    }
+  }, [centerId, setLoading, clearError, handleError]);
+
+  return {
+    searchResults,
+    searchHistory,
+    loading,
+    error,
+    clearError,
+    globalSearch
+  };
+}
+
+// ============================================================================
+// HOOK PARA MÉTRICAS DEL DASHBOARD
+// ============================================================================
+
+export function useDashboardMetrics() {
+  const [metrics, setMetrics] = useState<any>({});
+  const { loading, error, clearError, handleError, setLoading, centerId } = useClinicalData();
+
+  const fetchMetrics = useCallback(async () => {
+    if (!centerId) return;
+    
+    setLoading(true);
+    clearError();
+    
+    try {
+      // Obtener métricas de pacientes
+      const patientsRef = collection(db, 'centers', centerId, 'patients');
+      const patientsSnapshot = await getDocs(patientsRef);
+      const totalPatients = patientsSnapshot.size;
+      const activePatients = patientsSnapshot.docs.filter(doc => doc.data().status === 'active').length;
+      
+      // Obtener métricas de citas
+      const appointmentsRef = collection(db, 'centers', centerId, 'appointments');
+      const appointmentsSnapshot = await getDocs(appointmentsRef);
+      const totalAppointments = appointmentsSnapshot.size;
+      const completedAppointments = appointmentsSnapshot.docs.filter(doc => doc.data().status === 'completed').length;
+      
+      // Calcular métricas
+      const metricsData = {
+        patients: {
+          total: totalPatients,
+          active: activePatients,
+          inactive: totalPatients - activePatients,
+          newThisMonth: 0 // TODO: Calcular basado en fechas
+        },
+        appointments: {
+          total: totalAppointments,
+          completed: completedAppointments,
+          scheduled: appointmentsSnapshot.docs.filter(doc => doc.data().status === 'scheduled').length,
+          cancelled: appointmentsSnapshot.docs.filter(doc => doc.data().status === 'cancelled').length
+        },
+        clinical: {
+          averageSessionsPerPatient: totalAppointments / Math.max(totalPatients, 1),
+          completionRate: (completedAppointments / Math.max(totalAppointments, 1)) * 100,
+          noShowRate: (appointmentsSnapshot.docs.filter(doc => doc.data().status === 'no-show').length / Math.max(totalAppointments, 1)) * 100
+        }
+      };
+      
+      setMetrics(metricsData);
+    } catch (error) {
+      handleError(error, 'obtener métricas del dashboard');
+    } finally {
+      setLoading(false);
+    }
+  }, [centerId, setLoading, clearError, handleError]);
+
+  useEffect(() => {
+    fetchMetrics();
+  }, [fetchMetrics]);
+
+  return {
+    metrics,
+    loading,
+    error,
+    clearError,
+    fetchMetrics
+  };
+}
