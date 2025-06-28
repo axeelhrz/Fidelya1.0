@@ -148,7 +148,23 @@ export const useSocioProfile = (): UseSocioProfileReturn => {
     setUpdating(true);
     try {
       // Validate data
-      const validationErrors = socioService.validateProfileData(data);
+      let fechaNacimiento: Date | undefined = undefined;
+      if (data.fechaNacimiento) {
+        if (data.fechaNacimiento instanceof Date) {
+          fechaNacimiento = data.fechaNacimiento;
+        } else if (
+          typeof data.fechaNacimiento === 'object' &&
+          data.fechaNacimiento !== null &&
+          typeof (data.fechaNacimiento as { toDate?: () => Date }).toDate === 'function'
+        ) {
+          fechaNacimiento = (data.fechaNacimiento as { toDate: () => Date }).toDate();
+        }
+      }
+      const dataForValidation = {
+        ...data,
+        fechaNacimiento,
+      };
+      const validationErrors = socioService.validateProfileData(dataForValidation);
       if (validationErrors.length > 0) {
         throw new Error(validationErrors.join(', '));
       }

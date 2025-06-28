@@ -220,7 +220,11 @@ const DashboardSection: React.FC<{
         <Container maxWidth="xl" sx={{ py: 4 }}>
           <DataExportSection
             socios={socios}
-            stats={stats}
+            stats={Object.fromEntries(
+              Object.entries(stats).filter(
+                ([, value]) => typeof value === 'number' || typeof value === 'undefined'
+              )
+            ) as Stats}
             loading={loading}
           />
         </Container>
@@ -628,7 +632,11 @@ export default function AsociacionDashboard() {
           <DashboardSection
             section={activeSection}
             socios={socios}
-            stats={stats}
+            stats={Object.fromEntries(
+              Object.entries(stats).filter(
+                ([, value]) => typeof value === 'number' || typeof value === 'undefined'
+              )
+            ) as Stats}
             loading={loading}
             onAddSocio={handleAddSocio}
             onEditSocio={handleEditSocio}

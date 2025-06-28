@@ -50,7 +50,9 @@ export interface ValidacionResponse {
   socio: {
     nombre: string;
     estado: string;
+    asociacion: string;
   }
+  validacionId?: string;
 }
 
 export interface QRData {

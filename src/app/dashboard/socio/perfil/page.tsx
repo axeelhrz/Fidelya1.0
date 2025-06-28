@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import styled from '@emotion/styled';
 import { css } from '@emotion/react';
 import { 
@@ -10,8 +10,6 @@ import {
   Mail, 
   Phone, 
   Calendar, 
-  MapPin, 
-  CreditCard,
   Settings,
   Save,
   X,
@@ -19,56 +17,33 @@ import {
   Building2,
   CheckCircle,
   XCircle,
-  Clock,
-  AlertTriangle,
   TrendingUp,
   Award,
   Target,
   Activity,
   Bell,
   Shield,
-  Eye,
-  EyeOff,
   Palette,
   Camera,
-  Upload,
   Download,
   Star,
-  Gift,
   Zap,
   Heart,
   Crown,
   Sparkles,
-  Lock,
-  Unlock,
   Globe,
-  Smartphone,
-  Monitor,
   Sun,
   Moon,
   Laptop,
   ChevronRight,
-  Info,
   HelpCircle,
-  ExternalLink,
   Copy,
   Check,
   QrCode,
   Share2,
-  BookOpen,
-  MessageCircle,
-  ThumbsUp,
-  Bookmark,
-  Filter,
-  Search,
-  MoreVertical,
-  Plus,
-  Minus,
   RotateCcw,
   Archive,
   Trash2,
-  Flag,
-  AlertCircle,
   Cake,
   Home,
   IdCard,
@@ -77,13 +52,10 @@ import {
   Clock3,
   Shield as ShieldIcon,
   Database,
-  FileText,
   BarChart3,
-  Users,
-  MapPin as LocationIcon,
-  Wifi,
   Smartphone as DeviceIcon
 } from 'lucide-react';
+import Image from 'next/image';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { SocioSidebar } from '@/components/layout/SocioSidebar';
 import { Button } from '@/components/ui/Button';
@@ -784,17 +756,6 @@ const containerVariants = {
   }
 };
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.6,
-      ease: [0.4, 0, 0.2, 1]
-    }
-  }
-};
 
 interface ProfileFormData {
   nombre: string;
@@ -819,7 +780,6 @@ export default function SocioPerfilPage() {
     uploadProfileImage,
     refreshData,
     exportData,
-    logActivity
   } = useSocioProfile();
 
   // Modal states
@@ -940,7 +900,7 @@ export default function SocioPerfilPage() {
         fechaNacimiento: formData.fechaNacimiento
       });
       setEditModalOpen(false);
-    } catch (error) {
+    } catch {
       // Error is handled by the hook
     }
   };
@@ -949,7 +909,7 @@ export default function SocioPerfilPage() {
     try {
       await updateConfiguration(configuracion);
       setConfigModalOpen(false);
-    } catch (error) {
+    } catch {
       // Error is handled by the hook
     }
   };
@@ -974,7 +934,7 @@ export default function SocioPerfilPage() {
   const handleExportData = async () => {
     try {
       await exportData();
-    } catch (error) {
+    } catch {
       // Error is handled by the hook
     }
   };
@@ -1029,7 +989,7 @@ export default function SocioPerfilPage() {
         animate="visible"
       >
         {/* Header mejorado */}
-        <HeaderSection variants={itemVariants}>
+        <HeaderSection >
           <HeaderContent>
             <HeaderTitle>
               <h1>Mi Perfil</h1>
@@ -1069,7 +1029,7 @@ export default function SocioPerfilPage() {
           {/* Columna Principal */}
           <MainColumn>
             {/* Tarjeta de Perfil Principal Mejorada */}
-            <ProfileCard variants={itemVariants}>
+            <ProfileCard>
               <ProfileHeader>
                 <ProfileHeaderActions>
                   <Button
@@ -1097,7 +1057,6 @@ export default function SocioPerfilPage() {
                 <ProfileAvatarSection>
                   <AvatarContainer>
                     <ProfileImageUploader
-                      currentImage={profileData.avatar}
                       onImageUpload={handleImageUpload}
                       uploading={uploadingImage}
                     />
@@ -1248,7 +1207,7 @@ export default function SocioPerfilPage() {
             </ProfileCard>
 
             {/* Estadísticas Detalladas Mejoradas */}
-            <StatsCard variants={itemVariants}>
+            <StatsCard>
               <StatsHeader>
                 <div className="title-section">
                   <div className="icon-container">
@@ -1361,7 +1320,7 @@ export default function SocioPerfilPage() {
             </StatsCard>
 
             {/* Actividad Reciente */}
-            <motion.div variants={itemVariants}>
+            <motion.div>
               <ActivityTimeline
                 activities={activity.slice(0, 5)}
                 loading={loading}
@@ -1374,7 +1333,7 @@ export default function SocioPerfilPage() {
           {/* Columna Lateral Mejorada */}
           <SideColumn>
             {/* Mis Asociaciones Mejoradas */}
-            <SideCard variants={itemVariants}>
+            <SideCard>
               <SideCardHeader>
                 <div className="icon-container">
                   <Building2 size={20} />
@@ -1412,11 +1371,24 @@ export default function SocioPerfilPage() {
                           alignItems: 'center',
                           justifyContent: 'center'
                         }}>
-                          {asociacion.logo ? (
-                            <img src={asociacion.logo} alt={asociacion.nombre} style={{ width: '2rem', height: '2rem', objectFit: 'cover', borderRadius: '0.25rem' }} />
+                            <Image
+                              src={asociacion.logo || ''}
+                              alt={asociacion.nombre}
+                              width={32}
+                              height={32}
+                              style={{ objectFit: 'cover', borderRadius: '0.25rem' }}
+                              unoptimized
+                            />
+                            <Image
+                              src={asociacion.logo || ''}
+                              alt={asociacion.nombre}
+                              width={32}
+                              height={32}
+                              style={{ objectFit: 'cover', borderRadius: '0.25rem' }}
+                              unoptimized
+                            />
                           ) : (
                             <Building2 size={16} style={{ color: '#64748b' }} />
-                          )}
                         </div>
                         <div>
                           <h4 style={{ fontWeight: 700, color: '#1e293b', fontSize: '0.875rem', marginBottom: '0.25rem' }}>{asociacion.nombre}</h4>
@@ -1485,7 +1457,7 @@ export default function SocioPerfilPage() {
 
             {/* Acciones Rápidas */}
             {/* Acciones Rápidas */}
-            <SideCard variants={itemVariants}>
+            <SideCard>
               <SideCardHeader>
                 <div className="icon-container">
                   <Zap size={20} />
@@ -1548,7 +1520,7 @@ export default function SocioPerfilPage() {
             </SideCard>
 
             {/* Consejos y Tips Mejorados */}
-            <TipsCard variants={itemVariants}>
+            <TipsCard>
               <h3>
                 <Sparkles size={20} />
                 Consejos para tu perfil
@@ -1683,7 +1655,7 @@ export default function SocioPerfilPage() {
                 ].map((tab) => (
                   <button
                     key={tab.id}
-                    onClick={() => setActiveTab(tab.id as any)}
+                    onClick={() => setActiveTab(tab.id as 'general' | 'notificaciones' | 'privacidad' | 'avanzado')}
                     className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                       activeTab === tab.id
                         ? 'bg-white text-indigo-600 shadow-sm'
@@ -1932,7 +1904,7 @@ export default function SocioPerfilPage() {
                           ].map((tema) => (
                             <button
                               key={tema.value}
-                              onClick={() => setConfiguracion(prev => ({ ...prev, tema: tema.value as any }))}
+                              onClick={() => setConfiguracion(prev => ({ ...prev, tema: tema.value as 'light' | 'dark' | 'auto' }))}
                               className={`flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all ${
                                 configuracion.tema === tema.value
                                   ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
@@ -2202,7 +2174,7 @@ export default function SocioPerfilPage() {
                     URL.revokeObjectURL(url);
                     
                     toast.success('Historial de actividad exportado');
-                  } catch (error) {
+                  } catch {
                     toast.error('Error al exportar el historial');
                   }
                 }}
@@ -2360,7 +2332,7 @@ export default function SocioPerfilPage() {
                     URL.revokeObjectURL(url);
                     
                     toast.success('Estadísticas exportadas');
-                  } catch (error) {
+                  } catch {
                     toast.error('Error al exportar las estadísticas');
                   }
                 }}

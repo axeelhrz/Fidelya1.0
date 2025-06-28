@@ -109,7 +109,11 @@ export const EnhancedSocioDialog: React.FC<EnhancedSocioDialogProps> = ({
         reset({
           nombre: socio.nombre,
           email: socio.email,
-          estado: socio.estado === 'inactivo' ? 'activo' : socio.estado,
+          estado: socio.estado === 'inactivo'
+            ? 'activo'
+            : (socio.estado === 'activo' || socio.estado === 'vencido'
+                ? socio.estado
+                : 'activo'),
           telefono: socio.telefono || '',
           dni: socio.dni || ''
         });

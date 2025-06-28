@@ -9,7 +9,6 @@ import {
   User,
   Settings,
   Building2,
-  Calendar,
   Filter,
   Search,
   ChevronDown,
@@ -18,7 +17,6 @@ import {
   MapPin,
   TrendingUp,
   Award,
-  Sparkles
 } from 'lucide-react';
 import { SocioActivity } from '@/types/socio';
 import { Button } from '@/components/ui/Button';

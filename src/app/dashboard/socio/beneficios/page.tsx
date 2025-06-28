@@ -35,14 +35,14 @@ import {
   Scissors,
   Dumbbell,
   GraduationCap,
-  Stethoscope
+  Stethoscope,
+  X
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { SocioSidebar } from '@/components/layout/SocioSidebar';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/Dialog';
-import { useAuth } from '@/hooks/useAuth';
 import { Beneficio, BeneficioUso } from '@/types/beneficio';
 import { Timestamp } from 'firebase/firestore';
 import { format } from 'date-fns';
@@ -608,17 +608,7 @@ const containerVariants = {
   }
 };
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.6,
-      ease: [0.4, 0, 0.2, 1]
-    }
-  }
-};
+
 
 // Mock data mejorado
 const mockBeneficios: Beneficio[] = [
@@ -688,6 +678,8 @@ const mockBeneficiosUsados: BeneficioUso[] = [
     beneficioId: '1',
     socioId: 'socio1',
     comercioId: 'comercio1',
+    asociacionId: 'asociacion1',
+    estado: 'usado',
     fechaUso: Timestamp.fromDate(new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)),
     montoDescuento: 450,
     detalles: 'Compra de ropa por $1500',
@@ -700,6 +692,8 @@ const mockBeneficiosUsados: BeneficioUso[] = [
     beneficioId: '2',
     socioId: 'socio1',
     comercioId: 'comercio2',
+    asociacionId: 'asociacion1',
+    estado: 'usado',
     fechaUso: Timestamp.fromDate(new Date(Date.now() - 10 * 24 * 60 * 60 * 1000)),
     montoDescuento: 0,
     detalles: 'Café americano gratis',
@@ -716,7 +710,6 @@ interface FilterState {
 }
 
 export default function SocioBeneficiosPage() {
-  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<'disponibles' | 'usados'>('disponibles');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedBenefit, setSelectedBenefit] = useState<Beneficio | null>(null);
@@ -785,13 +778,13 @@ export default function SocioBeneficiosPage() {
 
   const categorias = Array.from(new Set(beneficiosDisponibles.map(b => b.categoria)));
 
-  const handleUseBenefit = async (beneficioId: string) => {
+  const handleUseBenefit = async () => {
     setLoading(true);
     try {
       // Simular uso del beneficio
       await new Promise(resolve => setTimeout(resolve, 1000));
       toast.success('¡Beneficio usado exitosamente!');
-    } catch (error) {
+    } catch {
       toast.error('Error al usar el beneficio');
     } finally {
       setLoading(false);
@@ -859,7 +852,7 @@ export default function SocioBeneficiosPage() {
         animate="visible"
       >
         {/* Header */}
-        <HeaderSection variants={itemVariants}>
+        <HeaderSection>
           <HeaderContent>
             <HeaderTitle>
               <h1>Mis Beneficios</h1>
@@ -869,7 +862,6 @@ export default function SocioBeneficiosPage() {
               <Button
                 variant="outline"
                 size="sm"
-                leftIcon={<Search size={16} />}
               >
                 Buscar Comercios
               </Button>
@@ -881,7 +873,6 @@ export default function SocioBeneficiosPage() {
                 Favoritos
               </Button>
               <Button
-                variant="gradient"
                 size="sm"
                 leftIcon={<Sparkles size={16} />}
               >
@@ -892,7 +883,7 @@ export default function SocioBeneficiosPage() {
         </HeaderSection>
 
         {/* Stats Cards */}
-        <StatsContainer variants={itemVariants}>
+        <StatsContainer>
           <StatCard
             color="#10b981"
             gradient="linear-gradient(135deg, #10b981, #059669)"
@@ -971,7 +962,7 @@ export default function SocioBeneficiosPage() {
         </StatsContainer>
 
         {/* Filter Section */}
-        <FilterSection variants={itemVariants}>
+        <FilterSection>
           <FilterHeader>
             <div className="title-section">
               <div className="icon-container">
@@ -1007,7 +998,6 @@ export default function SocioBeneficiosPage() {
                 placeholder="Buscar por nombre, comercio o descripción..."
                 value={filters.search}
                 onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
-                leftIcon={<Search size={16} />}
               />
             </div>
 
@@ -1095,7 +1085,6 @@ export default function SocioBeneficiosPage() {
                     key={beneficio.id}
                     view={viewMode}
                     featured={beneficio.destacado}
-                    variants={itemVariants}
                     whileHover={{ y: -8 }}
                     transition={{ delay: index * 0.1 }}
                   >
@@ -1159,7 +1148,7 @@ export default function SocioBeneficiosPage() {
                         <Button
                           size="sm"
                           leftIcon={<Zap size={16} />}
-                          onClick={() => handleUseBenefit(beneficio.id)}
+                          onClick={handleUseBenefit}
                           loading={loading}
                         >
                           Usar Ahora
@@ -1199,7 +1188,6 @@ export default function SocioBeneficiosPage() {
                 ))
               ) : (
                 <EmptyState
-                  variants={itemVariants}
                   style={{ gridColumn: '1 / -1' }}
                 >
                   <div className="icon">
@@ -1232,7 +1220,6 @@ export default function SocioBeneficiosPage() {
                   <BenefitCard
                     key={uso.id}
                     view={viewMode}
-                    variants={itemVariants}
                     transition={{ delay: index * 0.1 }}
                   >
                     <BenefitHeader view={viewMode}>
@@ -1287,7 +1274,6 @@ export default function SocioBeneficiosPage() {
                 ))
               ) : (
                 <EmptyState
-                  variants={itemVariants}
                   style={{ gridColumn: '1 / -1' }}
                 >
                   <div className="icon">
@@ -1298,7 +1284,6 @@ export default function SocioBeneficiosPage() {
                     Cuando uses un beneficio, aparecerá aquí con los detalles del ahorro
                   </div>
                   <Button
-                    variant="gradient"
                     onClick={() => setActiveTab('disponibles')}
                   >
                     Explorar Beneficios
@@ -1397,7 +1382,7 @@ export default function SocioBeneficiosPage() {
                   </Button>
                   <Button
                     onClick={() => {
-                      handleUseBenefit(selectedBenefit.id);
+                      handleUseBenefit();
                       setDetailModalOpen(false);
                     }}
                     loading={loading}

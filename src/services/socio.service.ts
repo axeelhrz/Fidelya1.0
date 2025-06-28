@@ -2,8 +2,7 @@ import {
   doc,
   getDoc,
   updateDoc,
-  setDoc,
-  Timestamp,
+  Timestamp as FirestoreTimestamp,
   collection,
   query,
   where,
@@ -11,17 +10,14 @@ import {
   orderBy,
   limit,
   addDoc,
-  startAfter,
-  QueryDocumentSnapshot,
-  DocumentData
 } from 'firebase/firestore';
+const Timestamp = FirestoreTimestamp;
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { db, storage } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/constants';
 import { handleFirebaseError } from '@/lib/firebase-errors';
 import { 
   Socio, 
-  SocioProfile, 
   SocioConfiguration, 
   SocioActivity, 
   SocioStats, 
@@ -56,6 +52,9 @@ class SocioService {
           uid: socioSnap.id,
           ...data,
           creadoEn: data.creadoEn || Timestamp.now(),
+          fechaNacimiento: data.fechaNacimiento instanceof Timestamp
+            ? data.fechaNacimiento.toDate()
+            : data.fechaNacimiento,
           configuracion: this.getDefaultConfiguration(data.configuracion),
           nivel: this.getDefaultLevel(data.nivel),
         } as Socio;
@@ -79,14 +78,20 @@ class SocioService {
       const socioRef = doc(db, COLLECTIONS.SOCIOS, socioId);
       
       // Preparar datos para actualización
-      const updateData: any = {
+      const updateData: Partial<UpdateSocioProfileData> & { actualizadoEn: FirestoreTimestamp } = {
         ...profileData,
         actualizadoEn: Timestamp.now()
       };
 
-      // Convertir fecha de nacimiento si existe
       if (profileData.fechaNacimiento) {
-        updateData.fechaNacimiento = Timestamp.fromDate(profileData.fechaNacimiento);
+        // Store as Firestore Timestamp
+        const fechaNacimientoDate =
+          profileData.fechaNacimiento instanceof Date
+            ? profileData.fechaNacimiento
+            : (profileData.fechaNacimiento && profileData.fechaNacimiento instanceof Timestamp
+                ? profileData.fechaNacimiento.toDate()
+                : new Date(profileData.fechaNacimiento as string | number | Date));
+        updateData.fechaNacimiento = FirestoreTimestamp.fromDate(fechaNacimientoDate);
       }
 
       await updateDoc(socioRef, updateData);
@@ -97,7 +102,7 @@ class SocioService {
         titulo: 'Perfil actualizado',
         descripcion: 'Información del perfil modificada',
         metadata: {
-          camposActualizados: Object.keys(profileData)
+          camposActualizados: Object.keys(profileData).join(', ')
         }
       });
     } catch (error) {
@@ -207,7 +212,7 @@ class SocioService {
         titulo: 'Configuración actualizada',
         descripcion: 'Preferencias de cuenta modificadas',
         metadata: {
-          configuracionActualizada: Object.keys(configuration)
+          configuracionActualizada: Object.keys(configuration).join(', ')
         }
       });
     } catch (error) {
@@ -233,7 +238,7 @@ class SocioService {
       const validaciones = validacionesSnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
-      }));
+      })) as Array<{ id: string; estado?: string; montoDescuento?: number; fecha?: FirestoreTimestamp | Date | undefined; comercioId?: string; categoria?: string; comercioNombre?: string; }>;
 
       // Calcular estadísticas básicas
       const totalValidaciones = validaciones.length;
@@ -248,13 +253,21 @@ class SocioService {
       inicioMes.setHours(0, 0, 0, 0);
       
       const validacionesEsteMes = validaciones.filter(validacion => {
-        const fecha = validacion.fecha?.toDate();
+        const fecha = validacion.fecha
+          ? (validacion.fecha instanceof Timestamp
+              ? validacion.fecha.toDate()
+              : validacion.fecha)
+          : undefined;
         return fecha && fecha >= inicioMes;
       }).length;
 
       const ahorroEsteMes = validaciones
         .filter(validacion => {
-          const fecha = validacion.fecha?.toDate();
+          const fecha = validacion.fecha
+            ? (validacion.fecha instanceof Timestamp
+                ? validacion.fecha.toDate()
+                : validacion.fecha)
+            : undefined;
           return fecha && fecha >= inicioMes;
         })
         .reduce((total, validacion) => total + (validacion.montoDescuento || 0), 0);
@@ -282,7 +295,13 @@ class SocioService {
       });
 
       // Comercios más visitados
-      const comerciosVisitas: { [comercioId: string]: any } = {};
+      type ComercioVisita = {
+        id: string;
+        nombre: string;
+        visitas: number;
+        ultimaVisita: FirestoreTimestamp | Date | undefined;
+      };
+      const comerciosVisitas: { [comercioId: string]: ComercioVisita } = {};
       validaciones.forEach(validacion => {
         if (validacion.comercioId) {
           if (!comerciosVisitas[validacion.comercioId]) {
@@ -294,15 +313,36 @@ class SocioService {
             };
           }
           comerciosVisitas[validacion.comercioId].visitas++;
-          if (validacion.fecha > comerciosVisitas[validacion.comercioId].ultimaVisita) {
+          if (
+            validacion.fecha &&
+            comerciosVisitas[validacion.comercioId].ultimaVisita &&
+            validacion.fecha !== undefined &&
+            comerciosVisitas[validacion.comercioId].ultimaVisita !== undefined &&
+            validacion.fecha != null &&
+            comerciosVisitas[validacion.comercioId].ultimaVisita != null &&
+            (validacion.fecha ?? 0) > (comerciosVisitas[validacion.comercioId].ultimaVisita ?? 0)
+          ) {
             comerciosVisitas[validacion.comercioId].ultimaVisita = validacion.fecha;
           }
         }
       });
 
       const comerciosMasVisitados = Object.values(comerciosVisitas)
-        .sort((a: any, b: any) => b.visitas - a.visitas)
-        .slice(0, 5);
+        .sort((a: ComercioVisita, b: ComercioVisita) => b.visitas - a.visitas)
+        .slice(0, 5)
+        .map((comercio) => ({
+          ...comercio,
+          ultimaVisita: (() => {
+            if (comercio.ultimaVisita instanceof Timestamp) {
+              return comercio.ultimaVisita;
+            }
+            if (comercio.ultimaVisita instanceof Date) {
+              return Timestamp.fromDate(comercio.ultimaVisita);
+            }
+            // Si es undefined, usar Timestamp.now() o un valor por defecto
+            return Timestamp.now();
+          })()
+        }));
 
       // Actividad por mes (últimos 12 meses)
       const actividadPorMes: { [mes: string]: number } = {};
@@ -314,7 +354,12 @@ class SocioService {
       }
 
       validaciones.forEach(validacion => {
-        const fecha = validacion.fecha?.toDate();
+        let fecha: Date | undefined;
+        if (validacion.fecha instanceof Timestamp) {
+          fecha = validacion.fecha.toDate();
+        } else if (validacion.fecha instanceof Date) {
+          fecha = validacion.fecha;
+        }
         if (fecha) {
           const mesKey = fecha.toISOString().slice(0, 7);
           if (actividadPorMes.hasOwnProperty(mesKey)) {
@@ -398,7 +443,7 @@ class SocioService {
           nombre: asociacionData.nombre || 'Asociación',
           descripcion: asociacionData.descripcion,
           logo: asociacionData.logo,
-          estado: socio.estado,
+          estado: socio.estado === 'inactivo' ? 'suspendido' : socio.estado,
           fechaInicio: socio.creadoEn,
           fechaVencimiento: Timestamp.fromDate(fechaVencimiento),
           tipo: asociacionData.tipoMembresia || 'anual',
@@ -543,7 +588,7 @@ class SocioService {
   /**
    * Obtiene la configuración por defecto para un socio
    */
-  private getDefaultConfiguration(existing?: Partial<SocioConfiguration>): SocioConfiguration {
+  public getDefaultConfiguration(existing?: Partial<SocioConfiguration>): SocioConfiguration {
     return {
       // Notificaciones
       notificaciones: true,
@@ -642,19 +687,24 @@ class SocioService {
   /**
    * Calcula la racha de días consecutivos con actividad
    */
-  private calculateStreak(validaciones: any[]): number {
+  private calculateStreak(validaciones: { fecha?: FirestoreTimestamp | Date }[]): number {
     if (validaciones.length === 0) return 0;
 
     const fechas = validaciones
-      .map(v => v.fecha?.toDate())
+      .map(v => {
+        if (!v.fecha) return undefined;
+        if (v.fecha instanceof Timestamp) {
+          return v.fecha.toDate();
+        }
+        return v.fecha;
+      })
       .filter(fecha => fecha)
-      .map(fecha => fecha.toDateString())
+      .map(fecha => fecha!.toDateString())
       .sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
 
     const fechasUnicas = [...new Set(fechas)];
     
     let racha = 0;
-    const hoy = new Date().toDateString();
     let fechaActual = new Date();
 
     for (const fecha of fechasUnicas) {

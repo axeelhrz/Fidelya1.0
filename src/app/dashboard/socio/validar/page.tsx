@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import styled from '@emotion/styled';
 import { css } from '@emotion/react';
 import { 
@@ -10,28 +10,15 @@ import {
   Shield, 
   CheckCircle, 
   Info,
-  Camera,
-  Scan,
   Target,
   Award,
   Clock,
-  MapPin,
-  Store,
-  User,
   History,
   TrendingUp,
-  Sparkles,
-  Star,
-  Gift,
   AlertCircle,
   RefreshCw,
   Smartphone,
-  Wifi,
-  Lock,
   Eye,
-  Heart,
-  Crown,
-  Flame
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { SocioSidebar } from '@/components/layout/SocioSidebar';
@@ -40,7 +27,6 @@ import { ValidationResultModal } from '@/components/socio/ValidationResultModal'
 import { ValidacionesService } from '@/services/validaciones.service';
 import { ValidacionResponse } from '@/types/validacion';
 import { useAuth } from '@/hooks/useAuth';
-import { useValidaciones } from '@/hooks/useValidaciones';
 import { Button } from '@/components/ui/Button';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -563,25 +549,23 @@ const containerVariants = {
   }
 };
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.6,
-      ease: [0.4, 0, 0.2, 1]
-    }
-  }
-};
 
 // Mock data para validaciones recientes
-const mockRecentValidations = [
+type ValidationStatus = 'success' | 'error' | 'warning';
+
+const mockRecentValidations: Array<{
+  id: string;
+  comercio: string;
+  beneficio: string;
+  status: ValidationStatus;
+  timestamp: Date;
+  ahorro: number;
+}> = [
   {
     id: '1',
     comercio: 'Café Central',
     beneficio: 'Café gratis',
-    status: 'success' as const,
+    status: 'success',
     timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 horas atrás
     ahorro: 0
   },
@@ -589,7 +573,7 @@ const mockRecentValidations = [
     id: '2',
     comercio: 'Fashion Store',
     beneficio: '30% descuento',
-    status: 'success' as const,
+    status: 'success',
     timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 día atrás
     ahorro: 450
   },
@@ -597,7 +581,7 @@ const mockRecentValidations = [
     id: '3',
     comercio: 'Restaurante Gourmet',
     beneficio: '20% descuento',
-    status: 'error' as const,
+    status: 'error',
     timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 días atrás
     ahorro: 0
   }
@@ -605,7 +589,6 @@ const mockRecentValidations = [
 
 export default function SocioValidarPage() {
   const { user } = useAuth();
-  const { validaciones, stats, loading } = useValidaciones();
   const [validationResult, setValidationResult] = useState<ValidacionResponse | null>(null);
   const [validationModalOpen, setValidationModalOpen] = useState(false);
   const [scannerLoading, setScannerLoading] = useState(false);
@@ -664,7 +647,7 @@ export default function SocioValidarPage() {
           animate="visible"
         >
           {/* Header */}
-          <HeaderSection variants={itemVariants}>
+          <HeaderSection>
             <HeaderTitle>
               <h1>Validar Beneficio</h1>
               <p>
@@ -676,7 +659,7 @@ export default function SocioValidarPage() {
           {/* Main Content */}
           <MainContent>
             {/* Scanner Card */}
-            <ScannerCard variants={itemVariants}>
+            <ScannerCard>
               <ScannerIcon
                 animate={{ 
                   scale: [1, 1.05, 1],
@@ -718,7 +701,7 @@ export default function SocioValidarPage() {
             </ScannerCard>
 
             {/* Stats Card */}
-            <StatsCard variants={itemVariants}>
+            <StatsCard>
               <StatsHeader>
                 <div className="icon-container">
                   <TrendingUp size={20} />
@@ -810,7 +793,6 @@ export default function SocioValidarPage() {
             <FeatureCard
               color="#10b981"
               gradient="linear-gradient(135deg, #10b981, #059669)"
-              variants={itemVariants}
               whileHover={{ y: -8 }}
             >
               <FeatureIcon color="#10b981" gradient="linear-gradient(135deg, #10b981, #059669)">
@@ -825,7 +807,6 @@ export default function SocioValidarPage() {
             <FeatureCard
               color="#6366f1"
               gradient="linear-gradient(135deg, #6366f1, #8b5cf6)"
-              variants={itemVariants}
               whileHover={{ y: -8 }}
             >
               <FeatureIcon color="#6366f1" gradient="linear-gradient(135deg, #6366f1, #8b5cf6)">
@@ -840,7 +821,6 @@ export default function SocioValidarPage() {
             <FeatureCard
               color="#f59e0b"
               gradient="linear-gradient(135deg, #f59e0b, #d97706)"
-              variants={itemVariants}
               whileHover={{ y: -8 }}
             >
               <FeatureIcon color="#f59e0b" gradient="linear-gradient(135deg, #f59e0b, #d97706)">
@@ -854,7 +834,7 @@ export default function SocioValidarPage() {
           </FeaturesGrid>
 
           {/* Instructions */}
-          <InstructionsCard variants={itemVariants}>
+          <InstructionsCard>
             <InstructionsHeader>
               <div className="icon-container">
                 <Info size={20} />
@@ -905,7 +885,7 @@ export default function SocioValidarPage() {
           </InstructionsCard>
 
           {/* Recent Validations */}
-          <RecentValidationsCard variants={itemVariants}>
+          <RecentValidationsCard>
             <StatsHeader>
               <div className="icon-container">
                 <History size={20} />
@@ -976,7 +956,6 @@ export default function SocioValidarPage() {
                   Cuando valides un beneficio, aparecerá aquí tu historial
                 </p>
                 <Button
-                  variant="gradient"
                   leftIcon={<QrCode size={16} />}
                   onClick={() => document.querySelector('button')?.click()}
                 >

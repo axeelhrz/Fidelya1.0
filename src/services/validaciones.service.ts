@@ -135,7 +135,16 @@ export class ValidacionesService {
           id: beneficio.id,
           titulo: beneficio.titulo,
           descuento: beneficio.descuento,
-          tipo: beneficio.tipo
+          tipo: beneficio.tipo,
+          comercioNombre: beneficio.comercioNombre,
+          descripcion: beneficio.descripcion,
+          fechaFin: beneficio.fechaFin
+            ? (beneficio.fechaFin instanceof Date
+                ? beneficio.fechaFin
+                : (typeof beneficio.fechaFin.toDate === 'function'
+                    ? beneficio.fechaFin.toDate()
+                    : undefined))
+            : undefined
         } : undefined,
         socio: {
           nombre: socioData.nombre,

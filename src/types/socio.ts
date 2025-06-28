@@ -44,7 +44,7 @@ export interface SocioActivity {
     montoDescuento?: number;
     categoria?: string;
     ubicacion?: string;
-    [key: string]: any;
+    [key: string]: string | number | boolean | undefined;
   };
 }
 
@@ -114,6 +114,8 @@ export interface Socio {
     ciudad: string;
     provincia: string;
   };
+  asociacion: string;
+
 }
 
 export interface SocioFormData {
@@ -162,7 +164,7 @@ export interface SocioStats {
     ahorroTotal: number;
   }>;
   
-  [key: string]: number | undefined | any;
+  [key: string]: number | undefined | string | boolean | object | unknown[];
 }
 
 export interface SocioAsociacion {
@@ -185,9 +187,10 @@ export interface UpdateSocioProfileData {
   telefono?: string;
   dni?: string;
   direccion?: string;
-  fechaNacimiento?: Date;
+  fechaNacimiento?: Date | Timestamp;
   avatar?: string;
   configuracion?: Partial<SocioConfiguration>;
+
 }
 
 export interface SocioActivityFilter {
