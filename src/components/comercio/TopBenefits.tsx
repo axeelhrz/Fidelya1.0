@@ -6,6 +6,9 @@ import { useBeneficios } from '@/hooks/useBeneficios';
 import { useValidaciones } from '@/hooks/useValidaciones';
 import { Gift, TrendingUp, Award, Star } from 'lucide-react';
 
+// Extend or declare the Beneficio type to include asociacionesVinculadas
+
+
 export const TopBenefits: React.FC = () => {
   const { beneficios } = useBeneficios();
   const { validaciones } = useValidaciones();
@@ -16,7 +19,8 @@ export const TopBenefits: React.FC = () => {
     return {
       ...beneficio,
       usos,
-      porcentaje: 0 // Will be calculated after sorting
+      porcentaje: 0, // Will be calculated after sorting
+      asociacionesVinculadas: beneficio.asociacionesVinculadas ?? [] // Ensure property exists
     };
   }).sort((a, b) => b.usos - a.usos).slice(0, 5);
 
@@ -191,7 +195,7 @@ export const TopBenefits: React.FC = () => {
                     color: '#64748b',
                     marginBottom: '8px'
                   }}>
-                    {benefit.asociacionesVinculadas.length} asociación{benefit.asociacionesVinculadas.length !== 1 ? 'es' : ''}
+                    {(benefit.asociacionesVinculadas?.length ?? 0)} asociación{(benefit.asociacionesVinculadas?.length ?? 0) !== 1 ? 'es' : ''}
                   </p>
 
                   {/* Progress Bar */}

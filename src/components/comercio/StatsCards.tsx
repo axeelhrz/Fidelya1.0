@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { Box, Grid } from '@mui/material';
 import {
   Receipt,
   CardGiftcard,
@@ -127,157 +126,155 @@ export const StatsCards: React.FC = () => {
     },
   ];
 
+  const secondaryMetrics = [
+    {
+      title: "Última Validación",
+      value: tiempoUltimaValidacion,
+      change: 0,
+      icon: <AccessTime />,
+      color: "#64748b",
+      gradient: "linear-gradient(135deg, #64748b 0%, #475569 100%)",
+      delay: 0.4,
+      subtitle: ultimaValidacion ? `${format(ultimaValidacion.fechaHora.toDate(), 'dd/MM/yyyy HH:mm')}` : 'No hay validaciones',
+      description: "Tiempo transcurrido desde la última validación procesada en el sistema",
+      trend: "neutral" as const,
+      size: "medium" as const,
+      variant: "detailed" as const,
+      showProgress: false,
+    },
+    {
+      title: "Promedio Diario",
+      value: (validacionesEsteMes.length / new Date().getDate()).toFixed(1),
+      change: 12,
+      icon: <TrendingUp />,
+      color: "#ec4899",
+      gradient: "linear-gradient(135deg, #ec4899 0%, #db2777 100%)",
+      delay: 0.5,
+      subtitle: "validaciones por día este mes",
+      description: "Media de validaciones procesadas diariamente durante el mes actual",
+      trend: "up" as const,
+      size: "medium" as const,
+      variant: "detailed" as const,
+      progressValue: Math.min((validacionesEsteMes.length / new Date().getDate()) * 10, 100),
+    },
+    {
+      title: "Índice de Rendimiento",
+      value: `${Math.min(tasaExito + (asociacionesVinculadas * 5), 100).toFixed(0)}%`,
+      change: 8,
+      icon: <Analytics />,
+      color: "#06b6d4",
+      gradient: "linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)",
+      delay: 0.6,
+      subtitle: "índice general de rendimiento",
+      description: "Índice calculado basado en tasa de éxito, asociaciones y actividad general",
+      trend: "up" as const,
+      size: "medium" as const,
+      variant: "detailed" as const,
+      onClick: () => router.push('/dashboard/comercio/analytics'),
+      progressValue: Math.min(tasaExito + (asociacionesVinculadas * 5), 100),
+      badge: "Calculado",
+    },
+  ];
+
+  const additionalMetrics = [
+    {
+      title: "Eficiencia Operativa",
+      value: `${Math.min((tasaExito * 0.7) + (asociacionesVinculadas * 10), 100).toFixed(0)}%`,
+      change: 6,
+      icon: <Speed />,
+      color: "#10b981",
+      gradient: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+      delay: 0.7,
+      subtitle: "eficiencia del sistema",
+      description: "Medida de la eficiencia operativa general del comercio",
+      trend: "up" as const,
+      size: "medium" as const,
+      variant: "detailed" as const,
+      progressValue: Math.min((tasaExito * 0.7) + (asociacionesVinculadas * 10), 100),
+    },
+    {
+      title: "Actividad Reciente",
+      value: validacionesHoy,
+      change: validacionesHoy > validacionesAyer ? 25 : -15,
+      icon: <Timeline />,
+      color: "#8b5cf6",
+      gradient: "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)",
+      delay: 0.8,
+      subtitle: "validaciones hoy",
+      description: "Número de validaciones procesadas en el día actual",
+      trend: validacionesHoy > validacionesAyer ? 'up' as const : validacionesHoy < validacionesAyer ? 'down' as const : 'neutral' as const,
+      size: "medium" as const,
+      variant: "detailed" as const,
+      progressValue: Math.min(validacionesHoy * 20, 100),
+    },
+    {
+      title: "Tiempo Promedio",
+      value: "2.3 min",
+      change: -8,
+      icon: <Schedule />,
+      color: "#f59e0b",
+      gradient: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
+      delay: 0.9,
+      subtitle: "por validación",
+      description: "Tiempo promedio que toma procesar cada validación",
+      trend: "down" as const,
+      size: "medium" as const,
+      variant: "detailed" as const,
+      progressValue: 75,
+      badge: "Optimizado",
+    },
+    {
+      title: "Estado General",
+      value: "Excelente",
+      change: 0,
+      icon: <CheckCircle />,
+      color: "#10b981",
+      gradient: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+      delay: 1.0,
+      subtitle: "sistema operativo",
+      description: "Estado general del sistema basado en todas las métricas",
+      trend: "neutral" as const,
+      size: "medium" as const,
+      variant: "detailed" as const,
+      showProgress: false,
+      badge: "Activo",
+    },
+  ];
+
   return (
-    <Box sx={{ width: '100%' }}>
-      {/* Métricas principales más grandes */}
-      <Grid container spacing={4}>
+    <div className="w-full space-y-8">
+      {/* Métricas principales */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {kpiMetrics.map((metric, index) => (
-          <Grid item xs={12} sm={6} lg={3} key={index}>
+          <div key={index}>
             <UnifiedMetricsCard
               {...metric}
-              size="large" // Tamaño grande por defecto
+              size="large"
               variant="detailed"
               showProgress={true}
             />
-          </Grid>
+          </div>
         ))}
-      </Grid>
+      </div>
 
-      {/* Métricas secundarias también más grandes */}
-      <Box sx={{ mt: 5 }}>
-        <Grid container spacing={4}>
-          <Grid item xs={12} sm={6} md={4}>
-            <UnifiedMetricsCard
-              title="Última Validación"
-              value={tiempoUltimaValidacion}
-              change={0}
-              icon={<AccessTime />}
-              color="#64748b"
-              gradient="linear-gradient(135deg, #64748b 0%, #475569 100%)"
-              delay={0.4}
-              subtitle={ultimaValidacion ? `${format(ultimaValidacion.fechaHora.toDate(), 'dd/MM/yyyy HH:mm')}` : 'No hay validaciones'}
-              description="Tiempo transcurrido desde la última validación procesada en el sistema"
-              trend="neutral"
-              size="medium" // Tamaño medio para secundarias
-              variant="detailed"
-              showProgress={false}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={4}>
-            <UnifiedMetricsCard
-              title="Promedio Diario"
-              value={(validacionesEsteMes.length / new Date().getDate()).toFixed(1)}
-              change={12}
-              icon={<TrendingUp />}
-              color="#ec4899"
-              gradient="linear-gradient(135deg, #ec4899 0%, #db2777 100%)"
-              delay={0.5}
-              subtitle="validaciones por día este mes"
-              description="Media de validaciones procesadas diariamente durante el mes actual"
-              trend="up"
-              size="medium"
-              variant="detailed"
-              progressValue={Math.min((validacionesEsteMes.length / new Date().getDate()) * 10, 100)}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={4}>
-            <UnifiedMetricsCard
-              title="Índice de Rendimiento"
-              value={`${Math.min(tasaExito + (asociacionesVinculadas * 5), 100).toFixed(0)}%`}
-              change={8}
-              icon={<Analytics />}
-              color="#06b6d4"
-              gradient="linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)"
-              delay={0.6}
-              subtitle="índice general de rendimiento"
-              description="Índice calculado basado en tasa de éxito, asociaciones y actividad general"
-              trend="up"
-              size="medium"
-              variant="detailed"
-              onClick={() => router.push('/dashboard/comercio/analytics')}
-              progressValue={Math.min(tasaExito + (asociacionesVinculadas * 5), 100)}
-              badge="Calculado"
-            />
-          </Grid>
-        </Grid>
-      </Box>
+      {/* Métricas secundarias */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+        {secondaryMetrics.map((metric, index) => (
+          <div key={index}>
+            <UnifiedMetricsCard {...metric} />
+          </div>
+        ))}
+      </div>
 
-      {/* Métricas adicionales para información completa */}
-      <Box sx={{ mt: 5 }}>
-        <Grid container spacing={4}>
-          <Grid item xs={12} sm={6} md={3}>
-            <UnifiedMetricsCard
-              title="Eficiencia Operativa"
-              value={`${Math.min((tasaExito * 0.7) + (asociacionesVinculadas * 10), 100).toFixed(0)}%`}
-              change={6}
-              icon={<Speed />}
-              color="#10b981"
-              gradient="linear-gradient(135deg, #10b981 0%, #059669 100%)"
-              delay={0.7}
-              subtitle="eficiencia del sistema"
-              description="Medida de la eficiencia operativa general del comercio"
-              trend="up"
-              size="medium"
-              variant="detailed"
-              progressValue={Math.min((tasaExito * 0.7) + (asociacionesVinculadas * 10), 100)}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <UnifiedMetricsCard
-              title="Actividad Reciente"
-              value={validacionesHoy}
-              change={validacionesHoy > validacionesAyer ? 25 : -15}
-              icon={<Timeline />}
-              color="#8b5cf6"
-              gradient="linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)"
-              delay={0.8}
-              subtitle="validaciones hoy"
-              description="Número de validaciones procesadas en el día actual"
-              trend={validacionesHoy > validacionesAyer ? 'up' : validacionesHoy < validacionesAyer ? 'down' : 'neutral'}
-              size="medium"
-              variant="detailed"
-              progressValue={Math.min(validacionesHoy * 20, 100)}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <UnifiedMetricsCard
-              title="Tiempo Promedio"
-              value="2.3 min"
-              change={-8}
-              icon={<Schedule />}
-              color="#f59e0b"
-              gradient="linear-gradient(135deg, #f59e0b 0%, #d97706 100%)"
-              delay={0.9}
-              subtitle="por validación"
-              description="Tiempo promedio que toma procesar cada validación"
-              trend="down"
-              size="medium"
-              variant="detailed"
-              progressValue={75}
-              badge="Optimizado"
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <UnifiedMetricsCard
-              title="Estado General"
-              value="Excelente"
-              change={0}
-              icon={<CheckCircle />}
-              color="#10b981"
-              gradient="linear-gradient(135deg, #10b981 0%, #059669 100%)"
-              delay={1.0}
-              subtitle="sistema operativo"
-              description="Estado general del sistema basado en todas las métricas"
-              trend="neutral"
-              size="medium"
-              variant="detailed"
-              showProgress={false}
-              badge="Activo"
-            />
-          </Grid>
-        </Grid>
-      </Box>
-    </Box>
+      {/* Métricas adicionales */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+        {additionalMetrics.map((metric, index) => (
+          <div key={index}>
+            <UnifiedMetricsCard {...metric} />
+          </div>
+        ))}
+      </div>
+    </div>
   );
 };
 
