@@ -31,8 +31,6 @@ import {
   FormControl,
   InputLabel,
   Select,
-  Checkbox,
-  FormControlLabel,
 } from '@mui/material';
 import {
   Add,
@@ -48,26 +46,118 @@ import {
   AttachMoney,
   Percent,
   CardGiftcard,
-  LocalShipping,
-  Star,
 } from '@mui/icons-material';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useBeneficios } from '@/hooks/useBeneficios';
-import { beneficioSchema, BeneficioFormData } from '@/lib/validations/comercio';
-import { Beneficio, TIPOS_BENEFICIO, TipoBeneficio } from '@/types/comercio';
+import { Beneficio, BeneficioFormData } from '@/types/beneficio';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { z } from 'zod';
 
-const DIAS_SEMANA = [
-  { value: 'lunes', label: 'Lunes' },
-  { value: 'martes', label: 'Martes' },
-  { value: 'miercoles', label: 'Miércoles' },
-  { value: 'jueves', label: 'Jueves' },
-  { value: 'viernes', label: 'Viernes' },
-  { value: 'sabado', label: 'Sábado' },
-  { value: 'domingo', label: 'Domingo' },
+
+
+// Schema for form validation
+const beneficioSchema = z.object({
+  titulo: z
+    .string()
+    .min(1, 'El título es requerido')
+    .min(3, 'El título debe tener al menos 3 caracteres')
+    .max(100, 'El título no puede exceder 100 caracteres'),
+  descripcion: z
+    .string()
+    .min(1, 'La descripción es requerida')
+    .min(10, 'La descripción debe tener al menos 10 caracteres')
+    .max(500, 'La descripción no puede exceder 500 caracteres'),
+  tipo: z.enum(['porcentaje', 'monto_fijo', 'producto_gratis']),
+  descuento: z
+    .number()
+    .min(0, 'El descuento debe ser mayor a 0'),
+  fechaInicio: z
+    .date()
+    .refine((date) => date >= new Date(), {
+      message: 'La fecha de inicio debe ser hoy o posterior'
+    }),
+  fechaFin: z
+    .date(),
+  limitePorSocio: z
+    .number()
+    .min(1, 'El límite por socio debe ser mayor a 0')
+    .optional(),
+  limiteTotal: z
+    .number()
+    .min(1, 'El límite total debe ser mayor a 0')
+    .optional(),
+  condiciones: z
+    .string()
+    .max(300, 'Las condiciones no pueden exceder 300 caracteres')
+    .optional(),
+  categoria: z
+    .string()
+    .min(1, 'La categoría es requerida'),
+  tags: z
+    .array(z.string())
+    .optional()
+}).refine((data) => data.fechaFin > data.fechaInicio, {
+  message: 'La fecha de fin debe ser posterior a la fecha de inicio',
+  path: ['fechaFin']
+}).refine((data) => {
+  if (data.tipo === 'porcentaje' && data.descuento > 100) {
+    return false;
+  }
+  return true;
+}, {
+  message: 'El porcentaje no puede ser mayor a 100%',
+  path: ['descuento']
+});
+
+// Tipos de beneficios con sus configuraciones
+const TIPOS_BENEFICIO = {
+  porcentaje: {
+    label: 'Descuento por Porcentaje',
+    icon: 'Percent',
+    color: '#10b981',
+    requiresValue: true,
+    valueLabel: 'Porcentaje (%)',
+    maxValue: 100
+  },
+  monto_fijo: {
+    label: 'Descuento Fijo',
+    icon: 'DollarSign',
+    color: '#6366f1',
+    requiresValue: true,
+    valueLabel: 'Monto ($)',
+    maxValue: null
+  },
+  producto_gratis: {
+    label: 'Producto Gratis',
+    icon: 'Gift',
+    color: '#f59e0b',
+    requiresValue: false,
+    valueLabel: null,
+    maxValue: null
+  }
+} as const;
+
+const CATEGORIAS = [
+  'Alimentación',
+  'Librería y Papelería',
+  'Farmacia y Salud',
+  'Restaurantes y Gastronomía',
+  'Retail y Moda',
+  'Salud y Belleza',
+  'Deportes y Fitness',
+  'Tecnología',
+  'Hogar y Decoración',
+  'Automotriz',
+  'Educación',
+  'Entretenimiento',
+  'Servicios Profesionales',
+  'Turismo y Viajes',
+  'Otros'
 ];
+
+type TipoBeneficio = keyof typeof TIPOS_BENEFICIO;
 
 export const BeneficiosManagement: React.FC = () => {
   const { beneficios, loading, createBeneficio, updateBeneficio, deleteBeneficio, toggleBeneficioStatus } = useBeneficios();
@@ -88,35 +178,16 @@ export const BeneficiosManagement: React.FC = () => {
     defaultValues: {
       titulo: '',
       descripcion: '',
-      tipo: 'descuento_porcentaje',
-      valor: 0,
-      asociacionesVinculadas: [],
+      tipo: 'porcentaje',
+      descuento: 0,
       fechaInicio: new Date(),
       fechaFin: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
-      diasValidez: [],
-      mediosPagoHabilitados: [],
+      categoria: '',
+      tags: [],
     }
   });
 
   const selectedTipo = watch('tipo');
-
-  // Map API tipo to form tipo
-  const mapTipoFromApi = (
-    tipo: "porcentaje" | "monto_fijo" | "producto_gratis"
-  ): TipoBeneficio => {
-    switch (tipo) {
-      case 'porcentaje':
-        return 'descuento_porcentaje';
-      case 'monto_fijo':
-        return 'descuento_fijo';
-      case 'producto_gratis':
-        // You may want to store the original form tipo somewhere if needed
-        // Default to 'regalo' for producto_gratis, or adjust as needed
-        return 'regalo';
-      default:
-        return 'descuento_porcentaje';
-    }
-  };
 
   const handleOpenDialog = (beneficio?: Beneficio) => {
     if (beneficio) {
@@ -124,30 +195,27 @@ export const BeneficiosManagement: React.FC = () => {
       reset({
         titulo: beneficio.titulo,
         descripcion: beneficio.descripcion,
-        tipo: mapTipoFromApi(beneficio.tipo as any),
-        valor: beneficio.valor,
-        asociacionesVinculadas: beneficio.asociacionesVinculadas,
+        tipo: beneficio.tipo,
+        descuento: beneficio.descuento,
         fechaInicio: beneficio.fechaInicio.toDate(),
         fechaFin: beneficio.fechaFin.toDate(),
-        diasValidez: beneficio.diasValidez || [],
-        horariosValidez: beneficio.horariosValidez,
-        mediosPagoHabilitados: beneficio.mediosPagoHabilitados || [],
         limitePorSocio: beneficio.limitePorSocio,
         limiteTotal: beneficio.limiteTotal,
         condiciones: beneficio.condiciones,
+        categoria: beneficio.categoria,
+        tags: beneficio.tags || [],
       });
     } else {
       setEditingBeneficio(null);
       reset({
         titulo: '',
         descripcion: '',
-        tipo: 'descuento_porcentaje',
-        valor: 0,
-        asociacionesVinculadas: [],
+        tipo: 'porcentaje',
+        descuento: 0,
         fechaInicio: new Date(),
         fechaFin: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-        diasValidez: [],
-        mediosPagoHabilitados: [],
+        categoria: '',
+        tags: [],
       });
     }
     setDialogOpen(true);
@@ -159,37 +227,13 @@ export const BeneficiosManagement: React.FC = () => {
     reset();
   };
 
-  // Map form tipo to API tipo
-  const mapTipoToApi = (
-    tipo: string
-  ): "porcentaje" | "monto_fijo" | "producto_gratis" => {
-    switch (tipo) {
-      case 'descuento_porcentaje':
-        return 'porcentaje';
-      case 'descuento_fijo':
-        return 'monto_fijo';
-      case 'regalo':
-      case '2x1':
-      case 'envio_gratis':
-      case 'puntos':
-        return 'producto_gratis';
-      default:
-        return 'porcentaje'; // fallback, adjust as needed
-    }
-  };
-
   const onSubmit = async (data: BeneficioFormData) => {
     let success = false;
 
-    const mappedData: Partial<BeneficioFormData> = {
-      ...data,
-      tipo: mapTipoToApi(data.tipo),
-    };
-
     if (editingBeneficio) {
-      success = await updateBeneficio(editingBeneficio.id, mappedData);
+      success = await updateBeneficio(editingBeneficio.id, data);
     } else {
-      success = await createBeneficio(mappedData);
+      success = await createBeneficio(data);
     }
 
     if (success) {
@@ -246,15 +290,27 @@ export const BeneficiosManagement: React.FC = () => {
 
   const getTipoIcon = (tipo: TipoBeneficio) => {
     switch (tipo) {
-      case 'descuento_porcentaje': return <Percent />;
-      case 'descuento_fijo': return <AttachMoney />;
-      case '2x1': return <CardGiftcard />;
-      case 'envio_gratis': return <LocalShipping />;
-      case 'regalo': return <CardGiftcard />;
-      case 'puntos': return <Star />;
+      case 'porcentaje': return <Percent />;
+      case 'monto_fijo': return <AttachMoney />;
+      case 'producto_gratis': return <CardGiftcard />;
       default: return <LocalOffer />;
     }
   };
+
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+        >
+          <Avatar sx={{ width: 60, height: 60, bgcolor: '#06b6d4' }}>
+            <LocalOffer sx={{ fontSize: 30 }} />
+          </Avatar>
+        </motion.div>
+      </Box>
+    );
+  }
 
   const statsData = [
     {
@@ -286,21 +342,6 @@ export const BeneficiosManagement: React.FC = () => {
       color: '#8b5cf6',
     },
   ];
-
-  if (loading) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-        >
-          <Avatar sx={{ width: 60, height: 60, bgcolor: '#06b6d4' }}>
-            <LocalOffer sx={{ fontSize: 30 }} />
-          </Avatar>
-        </motion.div>
-      </Box>
-    );
-  }
 
   return (
     <motion.div
@@ -408,7 +449,7 @@ export const BeneficiosManagement: React.FC = () => {
                 <TableRow sx={{ bgcolor: '#fafbfc' }}>
                   <TableCell sx={{ fontWeight: 600, color: '#374151' }}>Beneficio</TableCell>
                   <TableCell sx={{ fontWeight: 600, color: '#374151' }}>Tipo</TableCell>
-                  <TableCell sx={{ fontWeight: 600, color: '#374151' }}>Valor</TableCell>
+                  <TableCell sx={{ fontWeight: 600, color: '#374151' }}>Descuento</TableCell>
                   <TableCell sx={{ fontWeight: 600, color: '#374151' }}>Vigencia</TableCell>
                   <TableCell sx={{ fontWeight: 600, color: '#374151' }}>Usos</TableCell>
                   <TableCell sx={{ fontWeight: 600, color: '#374151' }}>Estado</TableCell>
@@ -468,10 +509,9 @@ export const BeneficiosManagement: React.FC = () => {
                       </TableCell>
                       <TableCell>
                         <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                          {beneficio.tipo === 'descuento_porcentaje' && `${beneficio.valor}%`}
-                          {beneficio.tipo === 'descuento_fijo' && `$${beneficio.valor}`}
-                          {beneficio.tipo === 'puntos' && `${beneficio.valor} pts`}
-                          {!['descuento_porcentaje', 'descuento_fijo', 'puntos'].includes(beneficio.tipo) && 'N/A'}
+                          {beneficio.tipo === 'porcentaje' && `${beneficio.descuento}%`}
+                          {beneficio.tipo === 'monto_fijo' && `$${beneficio.descuento}`}
+                          {beneficio.tipo === 'producto_gratis' && 'Gratis'}
                         </Typography>
                       </TableCell>
                       <TableCell>
@@ -701,12 +741,12 @@ export const BeneficiosManagement: React.FC = () => {
                 {TIPOS_BENEFICIO[selectedTipo].requiresValue && (
                   <Box sx={{ flex: '1 1 250px', minWidth: '250px' }}>
                     <TextField
-                      {...register('valor', { valueAsNumber: true })}
+                      {...register('descuento', { valueAsNumber: true })}
                       label={TIPOS_BENEFICIO[selectedTipo].valueLabel}
                       type="number"
                       fullWidth
-                      error={!!errors.valor}
-                      helperText={errors.valor?.message}
+                      error={!!errors.descuento}
+                      helperText={errors.descuento?.message}
                       inputProps={{
                         min: 0,
                         max: TIPOS_BENEFICIO[selectedTipo].maxValue || undefined,
@@ -723,6 +763,38 @@ export const BeneficiosManagement: React.FC = () => {
                   </Box>
                 )}
               </Box>
+
+              <FormControl fullWidth>
+                <InputLabel>Categoría</InputLabel>
+                <Controller
+                  name="categoria"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      {...field}
+                      label="Categoría"
+                      error={!!errors.categoria}
+                      sx={{
+                        borderRadius: 2,
+                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                          borderColor: '#06b6d4',
+                        }
+                      }}
+                    >
+                      {CATEGORIAS.map((categoria) => (
+                        <MenuItem key={categoria} value={categoria}>
+                          {categoria}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  )}
+                />
+                {errors.categoria && (
+                  <Typography variant="caption" color="error" sx={{ mt: 1, ml: 2 }}>
+                    {errors.categoria.message}
+                  </Typography>
+                )}
+              </FormControl>
 
               {/* Validity Period */}
               <Box>
@@ -745,6 +817,8 @@ export const BeneficiosManagement: React.FC = () => {
                         InputLabelProps={{ shrink: true }}
                         value={field.value ? format(field.value, 'yyyy-MM-dd') : ''}
                         onChange={(e) => field.onChange(new Date(e.target.value))}
+                        error={!!errors.fechaInicio}
+                        helperText={errors.fechaInicio?.message}
                         sx={{
                           '& .MuiOutlinedInput-root': {
                             borderRadius: 2,
@@ -771,6 +845,8 @@ export const BeneficiosManagement: React.FC = () => {
                         InputLabelProps={{ shrink: true }}
                         value={field.value ? format(field.value, 'yyyy-MM-dd') : ''}
                         onChange={(e) => field.onChange(new Date(e.target.value))}
+                        error={!!errors.fechaFin}
+                        helperText={errors.fechaFin?.message}
                         sx={{
                           '& .MuiOutlinedInput-root': {
                             borderRadius: 2,
@@ -792,46 +868,6 @@ export const BeneficiosManagement: React.FC = () => {
                 </Typography>
               </Box>
 
-              <Box>
-                <Typography variant="subtitle2" sx={{ mb: 1, color: '#64748b' }}>
-                  Días de la semana válidos
-                </Typography>
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                  {DIAS_SEMANA.map((dia) => (
-                    <Controller
-                      key={dia.value}
-                      name="diasValidez"
-                      control={control}
-                      render={({ field }) => (
-                        <FormControlLabel
-                          control={
-                            <Checkbox
-                              checked={field.value?.includes(dia.value) || false}
-                              onChange={(e) => {
-                                const currentValues = field.value || [];
-                                if (e.target.checked) {
-                                  field.onChange([...currentValues, dia.value]);
-                                } else {
-                                  field.onChange(currentValues.filter(v => v !== dia.value));
-                                }
-                              }}
-                              sx={{
-                                color: '#06b6d4',
-                                '&.Mui-checked': {
-                                  color: '#06b6d4',
-                                }
-                              }}
-                            />
-                          }
-                          label={dia.label}
-                          sx={{ mr: 2, mb: 1 }}
-                        />
-                      )}
-                    />
-                  ))}
-                </Box>
-              </Box>
-
               <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
                 <Box sx={{ flex: '1 1 250px', minWidth: '250px' }}>
                   <TextField
@@ -841,6 +877,7 @@ export const BeneficiosManagement: React.FC = () => {
                     fullWidth
                     helperText="Máximo de usos por socio (opcional)"
                     inputProps={{ min: 1 }}
+                    error={!!errors.limitePorSocio}
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: 2,
@@ -860,6 +897,7 @@ export const BeneficiosManagement: React.FC = () => {
                     fullWidth
                     helperText="Máximo de usos totales (opcional)"
                     inputProps={{ min: 1 }}
+                    error={!!errors.limiteTotal}
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: 2,
@@ -879,6 +917,8 @@ export const BeneficiosManagement: React.FC = () => {
                 multiline
                 rows={3}
                 placeholder="Especifica las condiciones de uso del beneficio..."
+                error={!!errors.condiciones}
+                helperText={errors.condiciones?.message}
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     borderRadius: 2,
