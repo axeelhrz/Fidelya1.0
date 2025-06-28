@@ -6,8 +6,6 @@ import Link from 'next/link';
 const HomePage = () => {
   return (
     <>
-      {/* Font links moved to _document.tsx */}
-
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap');
         
@@ -34,24 +32,24 @@ const HomePage = () => {
       <div 
         style={{
           minHeight: '100vh',
-          background: 'linear-gradient(135deg, #0f172a 0%, #581c87 50%, #0f172a 100%)',
+          background: 'linear-gradient(135deg, #fefefe 0%, #f8fafb 50%, #ffffff 100%)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: '1rem',
+          padding: '2rem 1rem',
           position: 'relative',
           overflow: 'hidden'
         }}
       >
-        {/* Efectos de fondo */}
+        {/* Efectos de fondo sutiles con celeste */}
         <div
           style={{
             position: 'absolute',
-            top: '20%',
-            left: '10%',
-            width: '300px',
-            height: '300px',
-            background: 'radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 70%)',
+            top: '15%',
+            left: '8%',
+            width: '180px',
+            height: '180px',
+            background: 'radial-gradient(circle, rgba(14, 165, 233, 0.04) 0%, transparent 70%)',
             borderRadius: '50%',
             filter: 'blur(40px)',
             pointerEvents: 'none'
@@ -61,10 +59,10 @@ const HomePage = () => {
           style={{
             position: 'absolute',
             bottom: '20%',
-            right: '10%',
-            width: '400px',
-            height: '400px',
-            background: 'radial-gradient(circle, rgba(139, 92, 246, 0.1) 0%, transparent 70%)',
+            right: '8%',
+            width: '220px',
+            height: '220px',
+            background: 'radial-gradient(circle, rgba(56, 189, 248, 0.03) 0%, transparent 70%)',
             borderRadius: '50%',
             filter: 'blur(40px)',
             pointerEvents: 'none'
@@ -74,40 +72,47 @@ const HomePage = () => {
         <div 
           style={{
             textAlign: 'center',
-            maxWidth: '1000px',
+            maxWidth: '900px',
             margin: '0 auto',
             position: 'relative',
-            zIndex: 1
+            zIndex: 1,
+            padding: '0 1rem'
           }}
         >
-          {/* Logo/Title */}
-          <h1 
-            className="jakarta"
-            style={{
-              fontSize: 'clamp(3rem, 8vw, 8rem)',
-              fontWeight: 900,
-              marginBottom: '1.5rem',
-              letterSpacing: '-0.04em',
-              lineHeight: 0.85,
-              background: 'linear-gradient(135deg, #ffffff 0%, #a5b4fc 50%, #c084fc 100%)',
-              backgroundClip: 'text',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              textShadow: '0 0 40px rgba(165, 180, 252, 0.5)'
-            }}
-          >
-            Fidelya
-          </h1>
+          {/* Logo/Title con espacio suficiente */}
+          <div style={{ marginBottom: '2.5rem', paddingTop: '1rem' }}>
+            <h1 
+              className="jakarta"
+              style={{
+                fontSize: 'clamp(4rem, 12vw, 10rem)',
+                fontWeight: 900,
+                marginBottom: '0',
+                letterSpacing: '-0.05em',
+                lineHeight: 1.1,
+                background: 'linear-gradient(135deg, #1e293b 0%, #0ea5e9 50%, #38bdf8 100%)',
+                backgroundClip: 'text',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                textShadow: '0 2px 30px rgba(14, 165, 233, 0.1)',
+                paddingBottom: '0.5rem'
+              }}
+            >
+              Fidelya
+            </h1>
+          </div>
 
           {/* Subtitle */}
           <h2 
             className="jakarta"
             style={{
-              fontSize: 'clamp(1.5rem, 4vw, 3rem)',
+              fontSize: 'clamp(1.6rem, 4.5vw, 2.8rem)',
               fontWeight: 600,
-              color: 'rgba(255, 255, 255, 0.9)',
-              marginBottom: '1rem',
-              letterSpacing: '-0.01em'
+              color: '#334155',
+              marginBottom: '2rem',
+              letterSpacing: '-0.02em',
+              lineHeight: 1.3,
+              maxWidth: '700px',
+              margin: '0 auto 2rem auto'
             }}
           >
             El futuro de los programas de fidelidad
@@ -117,11 +122,11 @@ const HomePage = () => {
           <p 
             className="inter"
             style={{
-              fontSize: 'clamp(1.1rem, 2.5vw, 1.3rem)',
-              color: 'rgba(255, 255, 255, 0.7)',
+              fontSize: 'clamp(1.15rem, 2.8vw, 1.3rem)',
+              color: '#64748b',
               maxWidth: '600px',
-              margin: '0 auto 3rem auto',
-              lineHeight: 1.6,
+              margin: '0 auto 4rem auto',
+              lineHeight: 1.7,
               fontWeight: 400
             }}
           >
@@ -134,10 +139,11 @@ const HomePage = () => {
             style={{
               display: 'flex',
               flexDirection: 'row',
-              gap: '1rem',
+              gap: '1.5rem',
               justifyContent: 'center',
               alignItems: 'center',
-              flexWrap: 'wrap'
+              flexWrap: 'wrap',
+              marginTop: '3rem'
             }}
           >
             <Link
@@ -147,31 +153,31 @@ const HomePage = () => {
                 display: 'inline-flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                padding: '1rem 2rem',
+                padding: '1.2rem 3rem',
                 fontSize: '1.1rem',
                 fontWeight: 700,
                 color: 'white',
                 textDecoration: 'none',
-                borderRadius: '50px',
+                borderRadius: '16px',
                 border: 'none',
                 cursor: 'pointer',
-                minWidth: '200px',
-                background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-                boxShadow: '0 8px 32px rgba(99, 102, 241, 0.4)',
+                minWidth: '220px',
+                background: 'linear-gradient(135deg, #0ea5e9 0%, #38bdf8 100%)',
+                boxShadow: '0 6px 25px rgba(14, 165, 233, 0.25)',
                 transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'scale(1.05)';
-                e.currentTarget.style.boxShadow = '0 12px 40px rgba(99, 102, 241, 0.6)';
+                e.currentTarget.style.transform = 'translateY(-3px)';
+                e.currentTarget.style.boxShadow = '0 10px 35px rgba(14, 165, 233, 0.35)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'scale(1)';
-                e.currentTarget.style.boxShadow = '0 8px 32px rgba(99, 102, 241, 0.4)';
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 6px 25px rgba(14, 165, 233, 0.25)';
               }}
             >
               Comenzar Gratis
               <svg 
-                style={{ marginLeft: '0.5rem', width: '1.25rem', height: '1.25rem' }}
+                style={{ marginLeft: '0.7rem', width: '1.3rem', height: '1.3rem' }}
                 fill="none" 
                 stroke="currentColor" 
                 viewBox="0 0 24 24"
@@ -179,7 +185,7 @@ const HomePage = () => {
                 <path 
                   strokeLinecap="round" 
                   strokeLinejoin="round" 
-                  strokeWidth={2} 
+                  strokeWidth={2.5} 
                   d="M17 8l4 4m0 0l-4 4m4-4H3" 
                 />
               </svg>
@@ -192,29 +198,32 @@ const HomePage = () => {
                 display: 'inline-flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                padding: '1rem 2rem',
+                padding: '1.2rem 3rem',
                 fontSize: '1.1rem',
                 fontWeight: 600,
-                color: 'rgba(255, 255, 255, 0.9)',
+                color: '#475569',
                 textDecoration: 'none',
-                borderRadius: '50px',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
+                borderRadius: '16px',
+                border: '2px solid #e2e8f0',
                 cursor: 'pointer',
-                minWidth: '200px',
-                background: 'rgba(255, 255, 255, 0.05)',
-                backdropFilter: 'blur(10px)',
-                WebkitBackdropFilter: 'blur(10px)',
+                minWidth: '220px',
+                background: '#ffffff',
+                boxShadow: '0 3px 15px rgba(0, 0, 0, 0.04)',
                 transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'scale(1.05)';
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.4)';
+                e.currentTarget.style.transform = 'translateY(-3px)';
+                e.currentTarget.style.background = '#f8fafc';
+                e.currentTarget.style.borderColor = '#0ea5e9';
+                e.currentTarget.style.color = '#0ea5e9';
+                e.currentTarget.style.boxShadow = '0 6px 20px rgba(14, 165, 233, 0.1)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'scale(1)';
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.background = '#ffffff';
+                e.currentTarget.style.borderColor = '#e2e8f0';
+                e.currentTarget.style.color = '#475569';
+                e.currentTarget.style.boxShadow = '0 3px 15px rgba(0, 0, 0, 0.04)';
               }}
             >
               Ya tengo cuenta
