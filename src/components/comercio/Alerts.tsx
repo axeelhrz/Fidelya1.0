@@ -11,13 +11,12 @@ import {
   User, 
   ArrowRight,
   CheckCircle,
-  XCircle
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export const Alerts: React.FC = () => {
   const { comercio } = useComercios();
-  const { beneficios, expiredBeneficios } = useBeneficios();
+  const { expiredBeneficios } = useBeneficios();
   const router = useRouter();
 
   // Check for various alert conditions

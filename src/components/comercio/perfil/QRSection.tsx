@@ -48,7 +48,7 @@ export const QRSection: React.FC = () => {
       setCopied(true);
       toast.success('URL copiada al portapapeles');
       setTimeout(() => setCopied(false), 2000);
-    } catch (error) {
+    } catch{
       toast.error('Error al copiar la URL');
     }
   };
@@ -71,7 +71,7 @@ export const QRSection: React.FC = () => {
           text: 'Escanea este QR para validar beneficios en Fidelitá',
           url: qrUrl,
         });
-      } catch (error) {
+      } catch {
         handleCopyUrl();
       }
     } else {

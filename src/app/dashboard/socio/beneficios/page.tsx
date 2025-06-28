@@ -7,6 +7,7 @@ import { SocioSidebar } from '@/components/layout/SocioSidebar';
 import { BenefitsTabs } from '@/components/socio/BenefitsTabs';
 import { BenefitsCard } from '@/components/socio/BenefitsCard';
 import { Gift } from 'lucide-react';
+import { Timestamp } from 'firebase/firestore';
 
 // Mock data
 const mockBeneficios = [
@@ -20,13 +21,13 @@ const mockBeneficios = [
     comercioNombre: 'Tienda Fashion',
     comercioLogo: '',
     asociacionesDisponibles: ['asociacion1'],
-    fechaInicio: { toDate: () => new Date() } as any,
-    fechaFin: { toDate: () => new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) } as any,
+    fechaInicio: Timestamp.fromDate(new Date()),
+    fechaFin: Timestamp.fromDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)),
     estado: 'activo' as const,
     usosActuales: 5,
     categoria: 'Retail',
-    creadoEn: { toDate: () => new Date() } as any,
-    actualizadoEn: { toDate: () => new Date() } as any
+    creadoEn: Timestamp.fromDate(new Date()),
+    actualizadoEn: Timestamp.fromDate(new Date())
   },
   {
     id: '2',
@@ -38,13 +39,13 @@ const mockBeneficios = [
     comercioNombre: 'Café Central',
     comercioLogo: '',
     asociacionesDisponibles: ['asociacion1'],
-    fechaInicio: { toDate: () => new Date() } as any,
-    fechaFin: { toDate: () => new Date(Date.now() + 15 * 24 * 60 * 60 * 1000) } as any,
+    fechaInicio: Timestamp.fromDate(new Date()),
+    fechaFin: Timestamp.fromDate(new Date(Date.now() + 15 * 24 * 60 * 60 * 1000)),
     estado: 'activo' as const,
     usosActuales: 12,
     categoria: 'Restaurantes',
-    creadoEn: { toDate: () => new Date() } as any,
-    actualizadoEn: { toDate: () => new Date() } as any
+    creadoEn: Timestamp.fromDate(new Date()),
+    actualizadoEn: Timestamp.fromDate(new Date())
   }
 ];
 

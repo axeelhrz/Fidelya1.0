@@ -14,45 +14,63 @@ import { NotificationsList } from '@/components/socio/NotificationsList';
 import { useAuth } from '@/hooks/useAuth';
 import { ValidacionesService } from '@/services/validaciones.service';
 import { ValidacionResponse } from '@/types/validacion';
+import { Beneficio } from '@/types/beneficio';
 import { Gift, TrendingUp, Zap, Bell } from 'lucide-react';
+import { Timestamp } from 'firebase/firestore';
 
-// Datos mock para desarrollo
-const mockBeneficios = [
+// Función helper para crear timestamps mock que sean compatibles con Firebase
+function createMockTimestamp(date: Date): Timestamp {
+  const millis = date.getTime();
+  const seconds = Math.floor(millis / 1000);
+  const nanoseconds = (millis % 1000) * 1e6;
+  
+  return {
+    seconds,
+    nanoseconds,
+    toDate: () => date,
+    toMillis: () => millis,
+    valueOf: () => millis.toString(),
+    isEqual: (other: Timestamp) => other && other.toMillis && other.toMillis() === millis,
+    toJSON: () => ({ seconds, nanoseconds }),
+  } as Timestamp;
+}
+
+const mockBeneficios: Beneficio[] = [
   {
     id: '1',
     titulo: '20% de descuento en toda la tienda',
     descripcion: 'Válido en todos los productos excepto ofertas especiales',
     descuento: 20,
-    tipo: 'porcentaje' as const,
+    tipo: 'porcentaje',
     comercioId: 'comercio1',
     comercioNombre: 'Tienda Fashion',
     comercioLogo: '',
     asociacionesDisponibles: ['asociacion1'],
-    fechaInicio: { toDate: () => new Date() } as any,
-    fechaFin: { toDate: () => new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) } as any,
-    estado: 'activo' as const,
+    fechaInicio: createMockTimestamp(new Date()),
+    fechaFin: createMockTimestamp(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)),
+    estado: 'activo',
     usosActuales: 5,
     categoria: 'Retail',
-    creadoEn: { toDate: () => new Date() } as any,
-    actualizadoEn: { toDate: () => new Date() } as any
+    creadoEn: createMockTimestamp(new Date()),
+    actualizadoEn: createMockTimestamp(new Date())
   },
   {
     id: '2',
     titulo: 'Café gratis con cualquier compra',
     descripcion: 'Un café americano gratis al comprar cualquier producto de panadería',
     descuento: 0,
-    tipo: 'producto_gratis' as const,
+    tipo: 'producto_gratis',
     comercioId: 'comercio2',
     comercioNombre: 'Café Central',
     comercioLogo: '',
     asociacionesDisponibles: ['asociacion1'],
-    fechaInicio: { toDate: () => new Date() } as any,
-    fechaFin: { toDate: () => new Date(Date.now() + 15 * 24 * 60 * 60 * 1000) } as any,
-    estado: 'activo' as const,
+    fechaInicio: createMockTimestamp(new Date()),
+    fechaFin: createMockTimestamp(new Date(Date.now() + 15 * 24 * 60 * 60 * 1000)),
+    estado: 'activo',
     usosActuales: 12,
     categoria: 'Restaurantes',
-    creadoEn: { toDate: () => new Date() } as any,
-    actualizadoEn: { toDate: () => new Date() } as any
+    creadoEn: createMockTimestamp(new Date()),
+    actualizadoEn: createMockTimestamp(new Date())
   }
 ];
 

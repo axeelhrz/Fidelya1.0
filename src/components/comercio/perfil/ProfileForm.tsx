@@ -39,23 +39,11 @@ import {
   Category,
 } from '@mui/icons-material';
 import { useForm, Controller } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { useComercios } from '@/hooks/useComercios';
-import { comercioProfileSchema } from '@/lib/validations/comercio';
+import { ComercioProfileFormData } from '@/lib/validations/comercio';
 import { CATEGORIAS_COMERCIO } from '@/types/comercio';
 import { ImageUploader } from './ImageUploader';
 import { QRSection } from './QRSection';
-import { z } from 'zod';
-
-// Use the original schema and extend it properly
-const extendedComercioProfileSchema = comercioProfileSchema.extend({
-  razonSocial: z.string().optional(),
-  cuit: z.string().optional(),
-  ubicacion: z.string().optional(),
-  emailContacto: z.string().optional(),
-});
-
-type ExtendedComercioProfileFormData = z.infer<typeof extendedComercioProfileSchema>;
 
 export const ProfileForm: React.FC = () => {
   const { comercio, loading, updateProfile } = useComercios();
@@ -68,8 +56,7 @@ export const ProfileForm: React.FC = () => {
     handleSubmit,
     formState: { errors, isSubmitting, isDirty },
     reset,
-  } = useForm<ExtendedComercioProfileFormData>({
-    resolver: zodResolver(extendedComercioProfileSchema),
+  } = useForm<ComercioProfileFormData>({
     defaultValues: {
       nombre: '',
       nombreComercio: '',
@@ -111,10 +98,10 @@ export const ProfileForm: React.FC = () => {
         horario: comercio.horario || '',
         descripcion: comercio.descripcion || '',
         sitioWeb: comercio.sitioWeb || '',
-        razonSocial: comercio.nombreComercio || '',
-        cuit: '',
-        ubicacion: comercio.direccion || '',
-        emailContacto: comercio.email || '',
+        razonSocial: comercio.razonSocial || comercio.nombreComercio || '',
+        cuit: comercio.cuit || '',
+        ubicacion: comercio.ubicacion || comercio.direccion || '',
+        emailContacto: comercio.emailContacto || comercio.email || '',
         visible: comercio.visible ?? true,
         redesSociales: {
           facebook: comercio.redesSociales?.facebook || '',
@@ -125,7 +112,7 @@ export const ProfileForm: React.FC = () => {
     }
   }, [comercio, reset]);
 
-  const onSubmit = async (data: ExtendedComercioProfileFormData) => {
+  const onSubmit = async (data: ComercioProfileFormData) => {
     const success = await updateProfile({
       nombre: data.nombre,
       nombreComercio: data.nombreComercio,
@@ -136,8 +123,12 @@ export const ProfileForm: React.FC = () => {
       horario: data.horario,
       descripcion: data.descripcion,
       sitioWeb: data.sitioWeb,
-      redesSociales: data.redesSociales,
+      razonSocial: data.razonSocial,
+      cuit: data.cuit,
+      ubicacion: data.ubicacion,
+      emailContacto: data.emailContacto,
       visible: data.visible,
+      redesSociales: data.redesSociales,
     });
     
     if (success) {
@@ -158,10 +149,10 @@ export const ProfileForm: React.FC = () => {
         horario: comercio.horario || '',
         descripcion: comercio.descripcion || '',
         sitioWeb: comercio.sitioWeb || '',
-        razonSocial: comercio.nombreComercio || '',
-        cuit: '',
-        ubicacion: comercio.direccion || '',
-        emailContacto: comercio.email || '',
+        razonSocial: comercio.razonSocial || comercio.nombreComercio || '',
+        cuit: comercio.cuit || '',
+        ubicacion: comercio.ubicacion || comercio.direccion || '',
+        emailContacto: comercio.emailContacto || comercio.email || '',
         visible: comercio.visible ?? true,
         redesSociales: {
           facebook: comercio.redesSociales?.facebook || '',
@@ -398,6 +389,8 @@ export const ProfileForm: React.FC = () => {
                           label="Razón Social"
                           fullWidth
                           disabled={!isEditing}
+                          error={!!errors.razonSocial}
+                          helperText={errors.razonSocial?.message}
                           InputProps={{
                             startAdornment: <Business sx={{ color: '#94a3b8', mr: 1 }} />,
                           }}
@@ -420,6 +413,8 @@ export const ProfileForm: React.FC = () => {
                           fullWidth
                           disabled={!isEditing}
                           placeholder="12-34567890-1"
+                          error={!!errors.cuit}
+                          helperText={errors.cuit?.message}
                           InputProps={{
                             startAdornment: <Description sx={{ color: '#94a3b8', mr: 1 }} />,
                           }}
@@ -574,6 +569,8 @@ export const ProfileForm: React.FC = () => {
                           fullWidth
                           disabled={!isEditing}
                           placeholder="contacto@micomercio.com"
+                          error={!!errors.emailContacto}
+                          helperText={errors.emailContacto?.message}
                           InputProps={{
                             startAdornment: <Email sx={{ color: '#94a3b8', mr: 1 }} />,
                           }}
@@ -622,6 +619,8 @@ export const ProfileForm: React.FC = () => {
                           fullWidth
                           disabled={!isEditing}
                           placeholder="Lunes a Viernes - 9 a 18 hs"
+                          error={!!errors.horario}
+                          helperText={errors.horario?.message}
                           InputProps={{
                             startAdornment: <Schedule sx={{ color: '#94a3b8', mr: 1 }} />,
                           }}
@@ -643,6 +642,8 @@ export const ProfileForm: React.FC = () => {
                       label="Dirección Física"
                       fullWidth
                       disabled={!isEditing}
+                      error={!!errors.direccion}
+                      helperText={errors.direccion?.message}
                       InputProps={{
                         startAdornment: <LocationOn sx={{ color: '#94a3b8', mr: 1 }} />,
                       }}
@@ -663,6 +664,8 @@ export const ProfileForm: React.FC = () => {
                       fullWidth
                       disabled={!isEditing}
                       placeholder="Montevideo, Montevideo"
+                      error={!!errors.ubicacion}
+                      helperText={errors.ubicacion?.message}
                       InputProps={{
                         startAdornment: <LocationOn sx={{ color: '#94a3b8', mr: 1 }} />,
                       }}
@@ -707,6 +710,7 @@ export const ProfileForm: React.FC = () => {
                     disabled={!isEditing}
                     placeholder="Describe tu comercio, productos o servicios que ofreces a los socios de Fidelitá..."
                     helperText="Máximo 500 caracteres. Esta descripción será visible para los socios."
+                    error={!!errors.descripcion}
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: 3,
@@ -769,6 +773,8 @@ export const ProfileForm: React.FC = () => {
                           fullWidth
                           disabled={!isEditing}
                           placeholder="@micomercio"
+                          error={!!errors.redesSociales?.facebook}
+                          helperText={errors.redesSociales?.facebook?.message}
                           sx={{
                             '& .MuiOutlinedInput-root': {
                               borderRadius: 3,
@@ -788,6 +794,8 @@ export const ProfileForm: React.FC = () => {
                           fullWidth
                           disabled={!isEditing}
                           placeholder="@micomercio"
+                          error={!!errors.redesSociales?.instagram}
+                          helperText={errors.redesSociales?.instagram?.message}
                           sx={{
                             '& .MuiOutlinedInput-root': {
                               borderRadius: 3,
@@ -807,6 +815,8 @@ export const ProfileForm: React.FC = () => {
                           fullWidth
                           disabled={!isEditing}
                           placeholder="@micomercio"
+                          error={!!errors.redesSociales?.twitter}
+                          helperText={errors.redesSociales?.twitter?.message}
                           sx={{
                             '& .MuiOutlinedInput-root': {
                               borderRadius: 3,
