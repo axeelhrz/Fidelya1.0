@@ -26,7 +26,7 @@ import {
 } from '@mui/icons-material';
 import { ValidationsChart } from './ValidationsChart';
 import { TopBenefits } from './TopBenefits';
-import { HourlyActivityChart } from './analytics/HourlyActivityChart';
+import HourlyActivityChart from './analytics/HourlyActivityChart';
 import { ValidationsOverTime } from './analytics/ValidationsOverTime';
 import { ByAssociationChart } from './analytics/ByAssociationChart';
 import { KpiCards } from './analytics/KpiCards';

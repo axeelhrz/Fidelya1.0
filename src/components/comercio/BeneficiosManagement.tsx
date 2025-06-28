@@ -159,6 +159,9 @@ const CATEGORIAS = [
 
 type TipoBeneficio = keyof typeof TIPOS_BENEFICIO;
 
+// Create a motion-enabled TableRow component
+const MotionTableRow = motion(TableRow);
+
 export const BeneficiosManagement: React.FC = () => {
   const { beneficios, loading, createBeneficio, updateBeneficio, deleteBeneficio, toggleBeneficioStatus } = useBeneficios();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -459,13 +462,12 @@ export const BeneficiosManagement: React.FC = () => {
               <TableBody>
                 <AnimatePresence>
                   {beneficios.map((beneficio, index) => (
-                    <motion.tr
+                    <MotionTableRow
                       key={beneficio.id}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -20 }}
                       transition={{ duration: 0.3, delay: index * 0.05 }}
-                      component={TableRow}
                       sx={{
                         '&:hover': {
                           bgcolor: alpha('#06b6d4', 0.05),
@@ -553,7 +555,7 @@ export const BeneficiosManagement: React.FC = () => {
                           <MoreVert />
                         </IconButton>
                       </TableCell>
-                    </motion.tr>
+                    </MotionTableRow>
                   ))}
                 </AnimatePresence>
               </TableBody>
