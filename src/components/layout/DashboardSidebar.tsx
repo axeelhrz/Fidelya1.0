@@ -28,7 +28,6 @@ import {
   Group,
   Analytics,
   Upload,
-  Notifications,
   Logout,
   ChevronLeft,
   ChevronRight,
@@ -45,7 +44,6 @@ import {
   DataUsage,
   PeopleAlt,
   Campaign,
-  FiberManualRecord,
 } from '@mui/icons-material';
 import { useAuth } from '@/hooks/useAuth';
 import { useSocios } from '@/hooks/useSocios';
@@ -245,7 +243,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
           }
           placement="right"
           arrow
-          componentsProps={{
+          slotProps={{
             tooltip: {
               sx: {
                 bgcolor: 'rgba(15, 23, 42, 0.95)',
@@ -332,7 +330,6 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                     }}
                   >
                     {React.cloneElement(item.icon as React.ReactElement, {
-                      sx: { fontSize: 26 }
                     })}
                   </motion.div>
                 </Badge>
@@ -453,7 +450,6 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                     }}
                   >
                     {React.cloneElement(item.icon as React.ReactElement, {
-                      sx: { fontSize: level === 0 ? 24 : 20 }
                     })}
                   </motion.div>
                 </Badge>
