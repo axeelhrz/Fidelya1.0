@@ -84,6 +84,17 @@ export interface AnalyticsMetrics {
   }>;
 }
 
+// Helper types for processed data
+export interface ProcessedSocio extends Omit<Socio, 'creadoEn'> {
+  id: string;
+  creadoEn: Date;
+}
+
+export interface ProcessedValidacion extends Omit<Validacion, 'fechaHora'> {
+  id: string;
+  fechaHora: Date;
+}
+
 // Specific interfaces for each report type data
 export interface MemberReportData {
   socios: (Socio & { id: string })[];
@@ -96,14 +107,14 @@ export interface MemberReportData {
 }
 
 export interface GrowthReportData {
-  socios: (Socio & { id: string; creadoEn: Date })[];
+  socios: ProcessedSocio[];
   monthlyGrowth: Record<string, number>;
   totalGrowth: number;
   averageMonthlyGrowth: number;
 }
 
 export interface ActivityReportData {
-  validaciones: (Validacion & { id: string; fechaHora: Date })[];
+  validaciones: ProcessedValidacion[];
   dailyActivity: Array<{
     fecha: string;
     validaciones: number;
@@ -116,7 +127,7 @@ export interface ActivityReportData {
 }
 
 export interface RetentionReportData {
-  socios: (Socio & { id: string; creadoEn: Date })[];
+  socios: ProcessedSocio[];
   totalSocios: number;
   sociosActivos: number;
   sociosVencidos: number;
@@ -193,7 +204,6 @@ export interface ReportContent {
 class ReportsService {
   private reportsCollection = 'reports';
   private templatesCollection = 'reportTemplates';
-  private analyticsCollection = 'analytics';
 
   // Generate real report with Firebase data
   async generateReport(
@@ -297,10 +307,10 @@ class ReportsService {
         return await this.fetchActivityData(asociacionId, startDate, endDate);
       
       case 'retention-analysis':
-        return await this.fetchRetentionData(asociacionId, startDate, endDate);
+        return await this.fetchRetentionData(asociacionId);
       
       case 'financial-overview':
-        return await this.fetchFinancialData(asociacionId, startDate, endDate);
+        return await this.fetchFinancialData(asociacionId);
       
       case 'demographic-analysis':
         return await this.fetchDemographicData(asociacionId);
@@ -362,12 +372,18 @@ class ReportsService {
     );
 
     const sociosSnapshot = await getDocs(sociosQuery);
-    const socios = sociosSnapshot.docs.map(doc => {
+    const socios: ProcessedSocio[] = sociosSnapshot.docs.map(doc => {
       const data = doc.data() as Socio;
+      const creadoEnDate = (data.creadoEn && typeof data.creadoEn.toDate === 'function')
+        ? data.creadoEn.toDate()
+        : data.creadoEn instanceof Date
+          ? data.creadoEn
+          : new Date();
+      
       return {
-        id: doc.id,
         ...data,
-        creadoEn: data.creadoEn?.toDate() || new Date()
+        id: doc.id,
+        creadoEn: creadoEnDate
       };
     });
 
@@ -403,12 +419,18 @@ class ReportsService {
     );
 
     const validacionesSnapshot = await getDocs(validacionesQuery);
-    const validaciones = validacionesSnapshot.docs.map(doc => {
+    const validaciones: ProcessedValidacion[] = validacionesSnapshot.docs.map(doc => {
       const data = doc.data() as Validacion;
+      const fechaHoraDate = (data.fechaHora && typeof data.fechaHora.toDate === 'function')
+        ? data.fechaHora.toDate()
+        : data.fechaHora instanceof Date
+          ? data.fechaHora
+          : new Date();
+      
       return {
-        id: doc.id,
         ...data,
-        fechaHora: data.fechaHora?.toDate() || new Date()
+        id: doc.id,
+        fechaHora: fechaHoraDate
       };
     });
 
@@ -462,19 +484,25 @@ class ReportsService {
   }
 
   // Fetch retention data
-  private async fetchRetentionData(asociacionId: string, startDate: Date, endDate: Date): Promise<RetentionReportData> {
+  private async fetchRetentionData(asociacionId: string): Promise<RetentionReportData> {
     const sociosQuery = query(
       collection(db, 'socios'),
       where('asociacionId', '==', asociacionId)
     );
 
     const sociosSnapshot = await getDocs(sociosQuery);
-    const socios = sociosSnapshot.docs.map(doc => {
+    const socios: ProcessedSocio[] = sociosSnapshot.docs.map(doc => {
       const data = doc.data() as Socio;
+      const creadoEnDate = (data.creadoEn && typeof data.creadoEn.toDate === 'function')
+        ? data.creadoEn.toDate()
+        : data.creadoEn instanceof Date
+          ? data.creadoEn
+          : new Date();
+      
       return {
-        id: doc.id,
         ...data,
-        creadoEn: data.creadoEn?.toDate() || new Date()
+        id: doc.id,
+        creadoEn: creadoEnDate
       };
     });
 
@@ -495,7 +523,7 @@ class ReportsService {
   }
 
   // Fetch financial data
-  private async fetchFinancialData(asociacionId: string, startDate: Date, endDate: Date): Promise<FinancialReportData> {
+  private async fetchFinancialData(asociacionId: string): Promise<FinancialReportData> {
     const sociosQuery = query(
       collection(db, 'socios'),
       where('asociacionId', '==', asociacionId)
@@ -723,15 +751,15 @@ class ReportsService {
   }
 
   // Simulate file upload and return URL
-  private async uploadReportFile(content: ReportContent, templateId: string): Promise<string> {
+  private async uploadReportFile(reportContent: ReportContent, templateId: string): Promise<string> {
     // In a real implementation, this would upload to Firebase Storage
     // For now, return a mock URL
     return `https://storage.googleapis.com/reports/${templateId}-${Date.now()}.pdf`;
   }
 
   // Calculate file size
-  private calculateFileSize(content: ReportContent): string {
-    const sizeInBytes = JSON.stringify(content).length;
+  private calculateFileSize(reportContent: ReportContent): string {
+    const sizeInBytes = JSON.stringify(reportContent).length;
     const sizeInKB = Math.round(sizeInBytes / 1024);
     return sizeInKB > 1024 ? `${Math.round(sizeInKB / 1024)}MB` : `${sizeInKB}KB`;
   }
