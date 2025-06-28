@@ -1,66 +1,39 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import styled from '@emotion/styled';
 import { css } from '@emotion/react';
 import { 
   Bell,
   BellRing,
-  Search,
   Filter,
   MoreVertical,
   Check,
   CheckCheck,
-  Archive,
   Trash2,
   Settings,
   RefreshCw,
-  Eye,
-  EyeOff,
-  Star,
   Clock,
   Calendar,
-  Tag,
   AlertCircle,
   Info,
   CheckCircle,
   XCircle,
-  Zap,
   Gift,
-  TrendingUp,
-  Users,
   Megaphone,
-  Heart,
-  Crown,
-  Sparkles,
-  Target,
-  Award,
-  MapPin,
-  Store,
   CreditCard,
-  Percent,
-  DollarSign,
-  Volume2,
-  VolumeX,
-  Bookmark,
-  Share2,
   ExternalLink,
-  ChevronDown,
-  ChevronRight,
   Flame,
-  MessageCircle
+  MessageCircle,
+  Smartphone
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { SocioSidebar } from '@/components/layout/SocioSidebar';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/Dialog';
-import { useNotifications } from '@/hooks/useNotifications';
-import { useAuth } from '@/hooks/useAuth';
 import { Notification } from '@/types/notification';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
 import toast from 'react-hot-toast';
 
 // Styled Components
@@ -636,17 +609,6 @@ const containerVariants = {
   }
 };
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.6,
-      ease: [0.4, 0, 0.2, 1]
-    }
-  }
-};
 
 // Mock data mejorado
 const mockNotifications: Notification[] = [
@@ -738,9 +700,7 @@ interface FilterState {
 }
 
 export default function SocioNotificacionesPage() {
-  const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>(mockNotifications);
-  const [loading, setLoading] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   
   const [filters, setFilters] = useState<FilterState>({
@@ -784,7 +744,6 @@ export default function SocioNotificacionesPage() {
   });
 
   const categories = Array.from(new Set(notifications.map(n => n.category).filter(Boolean)));
-  const priorities = Array.from(new Set(notifications.map(n => n.priority)));
 
   const handleMarkAsRead = (id: string) => {
     setNotifications(prev => 
@@ -855,7 +814,7 @@ export default function SocioNotificacionesPage() {
         animate="visible"
       >
         {/* Header */}
-        <HeaderSection variants={itemVariants}>
+        <HeaderSection>
           <HeaderContent>
             <HeaderTitle>
               <h1>Notificaciones</h1>
@@ -880,7 +839,6 @@ export default function SocioNotificacionesPage() {
               </Button>
               {stats.unread > 0 && (
                 <Button
-                  variant="gradient"
                   size="sm"
                   leftIcon={<CheckCheck size={16} />}
                   onClick={handleMarkAllAsRead}
@@ -893,7 +851,7 @@ export default function SocioNotificacionesPage() {
         </HeaderSection>
 
         {/* Stats Cards */}
-        <StatsContainer variants={itemVariants}>
+        <StatsContainer>
           <StatCard
             color="#6366f1"
             gradient="linear-gradient(135deg, #6366f1, #8b5cf6)"
@@ -956,7 +914,7 @@ export default function SocioNotificacionesPage() {
         </StatsContainer>
 
         {/* Filter Section */}
-        <FilterSection variants={itemVariants}>
+        <FilterSection>
           <FilterHeader>
             <div className="title-section">
               <div className="icon-container">
@@ -978,7 +936,6 @@ export default function SocioNotificacionesPage() {
                 placeholder="Buscar por título o contenido..."
                 value={filters.search}
                 onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
-                leftIcon={<Search size={16} />}
               />
             </div>
 
@@ -1058,7 +1015,7 @@ export default function SocioNotificacionesPage() {
         </FilterSection>
 
         {/* Notifications List */}
-        <NotificationsContainer variants={itemVariants}>
+        <NotificationsContainer>
           <AnimatePresence>
             {filteredNotifications.length > 0 ? (
               filteredNotifications.map((notification, index) => (
@@ -1067,7 +1024,6 @@ export default function SocioNotificacionesPage() {
                   type={notification.type}
                   priority={notification.priority}
                   unread={notification.status === 'unread'}
-                  variants={itemVariants}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
@@ -1175,7 +1131,6 @@ export default function SocioNotificacionesPage() {
               ))
             ) : (
               <EmptyState
-                variants={itemVariants}
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
               >
