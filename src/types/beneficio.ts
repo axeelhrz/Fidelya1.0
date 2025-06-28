@@ -29,6 +29,8 @@ export interface Beneficio {
     fechaCreacion: Timestamp;
     fechaActualizacion: Timestamp;
   }[];
+  destacado?: boolean;
+
 }
 
 export interface BeneficioUso {
@@ -42,6 +44,7 @@ export interface BeneficioUso {
   estado: 'usado' | 'pendiente' | 'cancelado';
   validacionId?: string;
   notas?: string;
+  detalles?: string;
 }
 
 export interface BeneficioStats {

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import styled from '@emotion/styled';
 import { css } from '@emotion/react';
@@ -10,27 +10,18 @@ import {
   TrendingUp, 
   Search, 
   Filter, 
-  Star,
   Clock,
   MapPin,
-  Tag,
   Zap,
   Heart,
   Eye,
   Share2,
-  Bookmark,
   Calendar,
   Store,
-  Percent,
   DollarSign,
-  Award,
-  Target,
   Sparkles,
   CheckCircle,
-  XCircle,
   AlertCircle,
-  Info,
-  ChevronDown,
   SlidersHorizontal,
   Grid3X3,
   List,
@@ -38,7 +29,6 @@ import {
   Flame,
   Crown,
   ShoppingBag,
-  Coffee,
   Utensils,
   Car,
   Gamepad2,
@@ -52,8 +42,6 @@ import { SocioSidebar } from '@/components/layout/SocioSidebar';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/Dialog';
-import { LoadingSkeleton } from '@/components/ui/LoadingSkeleton';
-import { useBeneficios } from '@/hooks/useBeneficios';
 import { useAuth } from '@/hooks/useAuth';
 import { Beneficio, BeneficioUso } from '@/types/beneficio';
 import { Timestamp } from 'firebase/firestore';
