@@ -423,25 +423,24 @@ export default function CEODashboard() {
     }
   };
 
-  // Header compacto mejorado
+  // Header compacto con fondo celestito
   const renderHeader = () => (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
       style={{
-        background: 'rgba(255, 255, 255, 0.95)',
-        backdropFilter: 'blur(20px)',
+        background: 'linear-gradient(135deg, #E0F2FE 0%, #BAE6FD 50%, #7DD3FC 100%)',
         borderRadius: '1.5rem',
         padding: '1.5rem 2rem',
-        border: '1px solid rgba(229, 231, 235, 0.3)',
-        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+        border: '1px solid rgba(14, 165, 233, 0.2)',
+        boxShadow: '0 8px 32px rgba(14, 165, 233, 0.15)',
         marginBottom: '1.5rem',
         position: 'relative',
         overflow: 'hidden'
       }}
     >
-      {/* Efecto de fondo sutil */}
+      {/* Efectos de fondo celestito */}
       <div
         style={{
           position: 'absolute',
@@ -449,7 +448,19 @@ export default function CEODashboard() {
           right: '-50px',
           width: '150px',
           height: '150px',
-          background: 'radial-gradient(circle, rgba(102, 126, 234, 0.08) 0%, transparent 70%)',
+          background: 'radial-gradient(circle, rgba(14, 165, 233, 0.15) 0%, transparent 70%)',
+          borderRadius: '50%'
+        }}
+      />
+      
+      <div
+        style={{
+          position: 'absolute',
+          bottom: '-30px',
+          left: '-30px',
+          width: '100px',
+          height: '100px',
+          background: 'radial-gradient(circle, rgba(56, 189, 248, 0.1) 0%, transparent 70%)',
           borderRadius: '50%'
         }}
       />
@@ -470,9 +481,10 @@ export default function CEODashboard() {
             transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
             style={{
               padding: '0.75rem',
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              background: 'linear-gradient(135deg, #0EA5E9 0%, #0284C7 100%)',
               borderRadius: '1rem',
-              boxShadow: '0 4px 16px rgba(102, 126, 234, 0.3)'
+              boxShadow: '0 8px 24px rgba(14, 165, 233, 0.4)',
+              border: '2px solid rgba(255, 255, 255, 0.3)'
             }}
           >
             <Sparkles size={24} color="white" />
@@ -485,17 +497,15 @@ export default function CEODashboard() {
               fontFamily: 'Space Grotesk, sans-serif',
               margin: 0,
               lineHeight: 1.2,
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text'
+              color: '#0C4A6E',
+              textShadow: '0 2px 4px rgba(14, 165, 233, 0.1)'
             }}>
               Dashboard Ejecutivo
             </h1>
             <p style={{ 
               fontSize: '1rem',
-              color: '#6B7280',
-              fontWeight: 500,
+              color: '#0369A1',
+              fontWeight: 600,
               margin: '0.25rem 0 0 0'
             }}>
               Bienvenido, {user?.name || 'Dr. Carlos Mendoza'}
@@ -515,26 +525,28 @@ export default function CEODashboard() {
             alignItems: 'center', 
             gap: '1rem',
             padding: '0.75rem 1rem',
-            background: 'rgba(102, 126, 234, 0.1)',
+            background: 'rgba(255, 255, 255, 0.7)',
+            backdropFilter: 'blur(10px)',
             borderRadius: '1rem',
-            border: '1px solid rgba(102, 126, 234, 0.2)'
+            border: '1px solid rgba(14, 165, 233, 0.2)',
+            boxShadow: '0 4px 16px rgba(14, 165, 233, 0.1)'
           }}>
-            <Clock size={16} color="#667eea" />
+            <Clock size={16} color="#0EA5E9" />
             <span style={{ 
               fontSize: '0.875rem', 
               fontWeight: 600, 
-              color: '#667eea' 
+              color: '#0C4A6E' 
             }}>
               {currentTime.toLocaleTimeString('es-ES', { 
                 hour: '2-digit', 
                 minute: '2-digit'
               })}
             </span>
-            <Calendar size={16} color="#667eea" />
+            <Calendar size={16} color="#0EA5E9" />
             <span style={{ 
               fontSize: '0.875rem', 
               fontWeight: 600, 
-              color: '#667eea' 
+              color: '#0C4A6E' 
             }}>
               {currentTime.toLocaleDateString('es-ES', { 
                 weekday: 'long',
@@ -544,12 +556,21 @@ export default function CEODashboard() {
             </span>
           </div>
           
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '0.5rem',
+            padding: '0.75rem 1rem',
+            background: 'rgba(255, 255, 255, 0.7)',
+            backdropFilter: 'blur(10px)',
+            borderRadius: '1rem',
+            border: '1px solid rgba(16, 185, 129, 0.2)'
+          }}>
             <Shield size={16} color="#10B981" />
             <span style={{ 
               fontSize: '0.875rem', 
               fontWeight: 600, 
-              color: '#10B981' 
+              color: '#065F46' 
             }}>
               Sistema seguro
             </span>
@@ -567,18 +588,19 @@ export default function CEODashboard() {
             whileTap={{ scale: 0.95 }}
             onClick={handleExportReport}
             style={{
-              backgroundColor: 'rgba(102, 126, 234, 0.1)',
-              border: '1px solid rgba(102, 126, 234, 0.3)',
+              backgroundColor: 'rgba(255, 255, 255, 0.8)',
+              border: '1px solid rgba(14, 165, 233, 0.3)',
               borderRadius: '0.75rem',
               padding: '0.75rem 1rem',
-              color: '#667eea',
+              color: '#0C4A6E',
               fontSize: '0.875rem',
               fontWeight: 600,
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               gap: '0.5rem',
-              transition: 'all 0.3s ease'
+              transition: 'all 0.3s ease',
+              boxShadow: '0 4px 16px rgba(14, 165, 233, 0.1)'
             }}
           >
             <Download size={16} />
@@ -591,11 +613,11 @@ export default function CEODashboard() {
             onClick={handleRefresh}
             disabled={isRefreshing}
             style={{
-              backgroundColor: 'rgba(16, 185, 129, 0.1)',
+              backgroundColor: 'rgba(255, 255, 255, 0.8)',
               border: '1px solid rgba(16, 185, 129, 0.3)',
               borderRadius: '0.75rem',
               padding: '0.75rem 1rem',
-              color: '#10B981',
+              color: '#065F46',
               fontSize: '0.875rem',
               fontWeight: 600,
               cursor: isRefreshing ? 'not-allowed' : 'pointer',
@@ -603,7 +625,8 @@ export default function CEODashboard() {
               alignItems: 'center',
               gap: '0.5rem',
               transition: 'all 0.3s ease',
-              opacity: isRefreshing ? 0.7 : 1
+              opacity: isRefreshing ? 0.7 : 1,
+              boxShadow: '0 4px 16px rgba(16, 185, 129, 0.1)'
             }}
           >
             <motion.div
@@ -622,13 +645,14 @@ export default function CEODashboard() {
             style={{
               padding: '0.75rem 1rem',
               borderRadius: '0.75rem',
-              border: '1px solid rgba(229, 231, 235, 0.4)',
-              background: 'rgba(255, 255, 255, 0.9)',
-              color: '#1C1E21',
+              border: '1px solid rgba(14, 165, 233, 0.3)',
+              background: 'rgba(255, 255, 255, 0.8)',
+              color: '#0C4A6E',
               fontSize: '0.875rem',
               fontWeight: 600,
               outline: 'none',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              boxShadow: '0 4px 16px rgba(14, 165, 233, 0.1)'
             }}
           >
             <option value="day">Hoy</option>
