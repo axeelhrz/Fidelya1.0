@@ -34,6 +34,7 @@ import {
   BarChart as RechartsBarChart,
   Bar,
   PieChart as RechartsPieChart,
+  Pie,
   Cell,
   XAxis,
   YAxis,
@@ -114,6 +115,7 @@ export const ComercioStats: React.FC = () => {
     return {
       periodValidaciones: periodValidaciones.length,
       validacionesExitosas: validacionesExitosas.length,
+
       tasaExito: periodValidaciones.length > 0 ? (validacionesExitosas.length / periodValidaciones.length) * 100 : 0,
       totalIngresos,
       totalDescuentos,
@@ -461,7 +463,7 @@ export const ComercioStats: React.FC = () => {
                 <Box sx={{ height: 250 }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <RechartsPieChart>
-                      <RechartsPieChart
+                      <Pie
                         data={computedStats.benefitsUsage}
                         cx="50%"
                         cy="50%"
@@ -473,7 +475,7 @@ export const ComercioStats: React.FC = () => {
                         {computedStats.benefitsUsage.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
-                      </RechartsPieChart>
+                      </Pie>
                       <RechartsTooltip
                         contentStyle={{
                           backgroundColor: 'white',
