@@ -8,13 +8,12 @@ import {
   onSnapshot, 
   addDoc, 
   updateDoc, 
-  deleteDoc,
   doc, 
   Timestamp,
   orderBy
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { Beneficio, BeneficioFormData } from '@/types/beneficio';
+import { Beneficio, BeneficioFormData, BeneficioUso } from '@/types/beneficio';
 import { BeneficiosService } from '@/services/beneficios.service';
 import { useAuth } from './useAuth';
 import toast from 'react-hot-toast';
@@ -22,7 +21,7 @@ import toast from 'react-hot-toast';
 export const useBeneficios = () => {
   const { user } = useAuth();
   const [beneficios, setBeneficios] = useState<Beneficio[]>([]);
-  const [beneficiosUsados, setBeneficiosUsados] = useState<any[]>([]);
+  const [beneficiosUsados, setBeneficiosUsados] = useState<BeneficioUso[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
