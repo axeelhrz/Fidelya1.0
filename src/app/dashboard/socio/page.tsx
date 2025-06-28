@@ -16,26 +16,9 @@ import { useAuth } from '@/hooks/useAuth';
 import { useBeneficios } from '@/hooks/useBeneficios';
 import { ValidacionesService } from '@/services/validaciones.service';
 import { ValidacionResponse } from '@/types/validacion';
-import { Beneficio } from '@/types/beneficio';
-import { Gift, TrendingUp, Zap, Bell } from 'lucide-react';
-import { Timestamp } from 'firebase/firestore';
+import { Gift, Zap } from 'lucide-react';
 
 // Función helper para crear timestamps mock que sean compatibles con Firebase
-function createMockTimestamp(date: Date): Timestamp {
-  const millis = date.getTime();
-  const seconds = Math.floor(millis / 1000);
-  const nanoseconds = (millis % 1000) * 1e6;
-  
-  return {
-    seconds,
-    nanoseconds,
-    toDate: () => date,
-    toMillis: () => millis,
-    valueOf: () => millis.toString(),
-    isEqual: (other: Timestamp) => other && other.toMillis && other.toMillis() === millis,
-    toJSON: () => ({ seconds, nanoseconds }),
-  } as Timestamp;
-}
 
 const mockNotifications = [
   {
