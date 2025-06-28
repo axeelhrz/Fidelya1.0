@@ -21,6 +21,8 @@ export interface AnalyticsData {
     nombre: string;
     usos: number;
   } | null;
+  totalBeneficios?: number;
+  usuariosUnicos?: number;
   
   // Additional KPI Data for KpiCards
   tasaExito: number;
