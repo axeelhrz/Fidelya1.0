@@ -8,7 +8,6 @@ import {
   CardContent,
   Typography,
   Button,
-  Grid,
   Stack,
   Chip,
   IconButton,
@@ -18,7 +17,6 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Paper,
   Avatar,
   alpha,
   Menu,
@@ -35,8 +33,6 @@ import {
   Select,
   Checkbox,
   FormControlLabel,
-  DatePicker,
-  TimePicker,
 } from '@mui/material';
 import {
   Add,
@@ -54,9 +50,6 @@ import {
   CardGiftcard,
   LocalShipping,
   Star,
-  CalendarToday,
-  AccessTime,
-  Group,
 } from '@mui/icons-material';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -76,15 +69,6 @@ const DIAS_SEMANA = [
   { value: 'domingo', label: 'Domingo' },
 ];
 
-const MEDIOS_PAGO = [
-  'Efectivo',
-  'Tarjeta de Débito',
-  'Tarjeta de Crédito',
-  'Transferencia',
-  'Mercado Pago',
-  'Todos los medios'
-];
-
 export const BeneficiosManagement: React.FC = () => {
   const { beneficios, loading, createBeneficio, updateBeneficio, deleteBeneficio, toggleBeneficioStatus } = useBeneficios();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -99,7 +83,6 @@ export const BeneficiosManagement: React.FC = () => {
     formState: { errors, isSubmitting },
     reset,
     watch,
-    setValue
   } = useForm<BeneficioFormData>({
     resolver: zodResolver(beneficioSchema),
     defaultValues: {
@@ -117,13 +100,31 @@ export const BeneficiosManagement: React.FC = () => {
 
   const selectedTipo = watch('tipo');
 
+  // Map API tipo to form tipo
+  const mapTipoFromApi = (
+    tipo: "porcentaje" | "monto_fijo" | "producto_gratis"
+  ): TipoBeneficio => {
+    switch (tipo) {
+      case 'porcentaje':
+        return 'descuento_porcentaje';
+      case 'monto_fijo':
+        return 'descuento_fijo';
+      case 'producto_gratis':
+        // You may want to store the original form tipo somewhere if needed
+        // Default to 'regalo' for producto_gratis, or adjust as needed
+        return 'regalo';
+      default:
+        return 'descuento_porcentaje';
+    }
+  };
+
   const handleOpenDialog = (beneficio?: Beneficio) => {
     if (beneficio) {
       setEditingBeneficio(beneficio);
       reset({
         titulo: beneficio.titulo,
         descripcion: beneficio.descripcion,
-        tipo: beneficio.tipo,
+        tipo: mapTipoFromApi(beneficio.tipo as any),
         valor: beneficio.valor,
         asociacionesVinculadas: beneficio.asociacionesVinculadas,
         fechaInicio: beneficio.fechaInicio.toDate(),
@@ -158,13 +159,37 @@ export const BeneficiosManagement: React.FC = () => {
     reset();
   };
 
+  // Map form tipo to API tipo
+  const mapTipoToApi = (
+    tipo: string
+  ): "porcentaje" | "monto_fijo" | "producto_gratis" => {
+    switch (tipo) {
+      case 'descuento_porcentaje':
+        return 'porcentaje';
+      case 'descuento_fijo':
+        return 'monto_fijo';
+      case 'regalo':
+      case '2x1':
+      case 'envio_gratis':
+      case 'puntos':
+        return 'producto_gratis';
+      default:
+        return 'porcentaje'; // fallback, adjust as needed
+    }
+  };
+
   const onSubmit = async (data: BeneficioFormData) => {
     let success = false;
-    
+
+    const mappedData: Partial<BeneficioFormData> = {
+      ...data,
+      tipo: mapTipoToApi(data.tipo),
+    };
+
     if (editingBeneficio) {
-      success = await updateBeneficio(editingBeneficio.id, data);
+      success = await updateBeneficio(editingBeneficio.id, mappedData);
     } else {
-      success = await createBeneficio(data);
+      success = await createBeneficio(mappedData);
     }
 
     if (success) {
@@ -231,6 +256,37 @@ export const BeneficiosManagement: React.FC = () => {
     }
   };
 
+  const statsData = [
+    {
+      title: 'Total Beneficios',
+      value: beneficios.length,
+      icon: <LocalOffer />,
+      color: '#06b6d4',
+    },
+    {
+      title: 'Beneficios Activos',
+      value: beneficios.filter(b => b.estado === 'activo').length,
+      icon: <TrendingUp />,
+      color: '#10b981',
+    },
+    {
+      title: 'Próximos a Vencer',
+      value: beneficios.filter(b => {
+        const now = new Date();
+        const weekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+        return b.fechaFin.toDate() <= weekFromNow && b.fechaFin.toDate() > now;
+      }).length,
+      icon: <Schedule />,
+      color: '#f59e0b',
+    },
+    {
+      title: 'Total Usos',
+      value: beneficios.reduce((sum, b) => sum + b.usosActuales, 0),
+      icon: <People />,
+      color: '#8b5cf6',
+    },
+  ];
+
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
@@ -279,82 +335,62 @@ export const BeneficiosManagement: React.FC = () => {
       </Stack>
 
       {/* Stats Cards */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        {[
-          {
-            title: 'Total Beneficios',
-            value: beneficios.length,
-            icon: <LocalOffer />,
-            color: '#06b6d4',
-          },
-          {
-            title: 'Beneficios Activos',
-            value: beneficios.filter(b => b.estado === 'activo').length,
-            icon: <TrendingUp />,
-            color: '#10b981',
-          },
-          {
-            title: 'Próximos a Vencer',
-            value: beneficios.filter(b => {
-              const now = new Date();
-              const weekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-              return b.fechaFin.toDate() <= weekFromNow && b.fechaFin.toDate() > now;
-            }).length,
-            icon: <Schedule />,
-            color: '#f59e0b',
-          },
-          {
-            title: 'Total Usos',
-            value: beneficios.reduce((sum, b) => sum + b.usosActuales, 0),
-            icon: <People />,
-            color: '#8b5cf6',
-          },
-        ].map((stat, index) => (
-          <Grid item xs={12} sm={6} md={3} key={index}>
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.3, delay: index * 0.1 }}
+      <Box sx={{ 
+        display: 'flex', 
+        flexWrap: 'wrap', 
+        gap: 3, 
+        mb: 4,
+        '& > *': {
+          flex: '1 1 250px',
+          minWidth: '250px'
+        }
+      }}>
+        {statsData.map((stat, index) => (
+          <motion.div
+            key={index}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3, delay: index * 0.1 }}
+            style={{ flex: '1 1 250px', minWidth: '250px' }}
+          >
+            <Card
+              elevation={0}
+              sx={{
+                p: 3,
+                background: 'white',
+                border: '1px solid #f1f5f9',
+                borderRadius: 3,
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 8px 30px rgba(0,0,0,0.1)',
+                }
+              }}
             >
-              <Card
-                elevation={0}
-                sx={{
-                  p: 3,
-                  background: 'white',
-                  border: '1px solid #f1f5f9',
-                  borderRadius: 3,
-                  transition: 'all 0.3s ease',
-                  '&:hover': {
-                    transform: 'translateY(-2px)',
-                    boxShadow: '0 8px 30px rgba(0,0,0,0.1)',
-                  }
-                }}
-              >
-                <Stack direction="row" spacing={2} alignItems="center">
-                  <Avatar
-                    sx={{
-                      bgcolor: alpha(stat.color, 0.1),
-                      color: stat.color,
-                      width: 48,
-                      height: 48,
-                    }}
-                  >
-                    {stat.icon}
-                  </Avatar>
-                  <Box>
-                    <Typography variant="h4" sx={{ fontWeight: 900, color: '#1e293b' }}>
-                      {stat.value}
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: '#64748b' }}>
-                      {stat.title}
-                    </Typography>
-                  </Box>
-                </Stack>
-              </Card>
-            </motion.div>
-          </Grid>
+              <Stack direction="row" spacing={2} alignItems="center">
+                <Avatar
+                  sx={{
+                    bgcolor: alpha(stat.color, 0.1),
+                    color: stat.color,
+                    width: 48,
+                    height: 48,
+                  }}
+                >
+                  {stat.icon}
+                </Avatar>
+                <Box>
+                  <Typography variant="h4" sx={{ fontWeight: 900, color: '#1e293b' }}>
+                    {stat.value}
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: '#64748b' }}>
+                    {stat.title}
+                  </Typography>
+                </Box>
+              </Stack>
+            </Card>
+          </motion.div>
         ))}
-      </Grid>
+      </Box>
 
       {/* Benefits Table */}
       <Card
@@ -579,188 +615,188 @@ export const BeneficiosManagement: React.FC = () => {
         
         <form onSubmit={handleSubmit(onSubmit)}>
           <DialogContent sx={{ p: 4 }}>
-            <Grid container spacing={3}>
+            <Stack spacing={3}>
               {/* Basic Information */}
-              <Grid item xs={12}>
+              <Box>
                 <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: '#374151' }}>
                   Información Básica
                 </Typography>
-              </Grid>
+              </Box>
 
-              <Grid item xs={12}>
-                <TextField
-                  {...register('titulo')}
-                  label="Título del Beneficio"
-                  fullWidth
-                  error={!!errors.titulo}
-                  helperText={errors.titulo?.message}
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: 2,
-                      '&.Mui-focused fieldset': {
-                        borderColor: '#06b6d4',
-                      }
+              <TextField
+                {...register('titulo')}
+                label="Título del Beneficio"
+                fullWidth
+                error={!!errors.titulo}
+                helperText={errors.titulo?.message}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#06b6d4',
                     }
-                  }}
-                />
-              </Grid>
+                  }
+                }}
+              />
 
-              <Grid item xs={12}>
-                <TextField
-                  {...register('descripcion')}
-                  label="Descripción"
-                  fullWidth
-                  multiline
-                  rows={3}
-                  error={!!errors.descripcion}
-                  helperText={errors.descripcion?.message}
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: 2,
-                      '&.Mui-focused fieldset': {
-                        borderColor: '#06b6d4',
-                      }
+              <TextField
+                {...register('descripcion')}
+                label="Descripción"
+                fullWidth
+                multiline
+                rows={3}
+                error={!!errors.descripcion}
+                helperText={errors.descripcion?.message}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#06b6d4',
                     }
-                  }}
-                />
-              </Grid>
+                  }
+                }}
+              />
 
-              <Grid item xs={12} sm={6}>
-                <FormControl fullWidth>
-                  <InputLabel>Tipo de Beneficio</InputLabel>
-                  <Controller
-                    name="tipo"
-                    control={control}
-                    render={({ field }) => (
-                      <Select
-                        {...field}
-                        label="Tipo de Beneficio"
-                        sx={{
+              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                <Box sx={{ flex: '1 1 250px', minWidth: '250px' }}>
+                  <FormControl fullWidth>
+                    <InputLabel>Tipo de Beneficio</InputLabel>
+                    <Controller
+                      name="tipo"
+                      control={control}
+                      render={({ field }) => (
+                        <Select
+                          {...field}
+                          label="Tipo de Beneficio"
+                          sx={{
+                            borderRadius: 2,
+                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                              borderColor: '#06b6d4',
+                            }
+                          }}
+                        >
+                          {Object.entries(TIPOS_BENEFICIO).map(([key, config]) => (
+                            <MenuItem key={key} value={key}>
+                              <Stack direction="row" spacing={2} alignItems="center">
+                                <Avatar
+                                  sx={{
+                                    bgcolor: alpha(config.color, 0.1),
+                                    color: config.color,
+                                    width: 32,
+                                    height: 32,
+                                  }}
+                                >
+                                  {getTipoIcon(key as TipoBeneficio)}
+                                </Avatar>
+                                <Typography>{config.label}</Typography>
+                              </Stack>
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      )}
+                    />
+                  </FormControl>
+                </Box>
+
+                {TIPOS_BENEFICIO[selectedTipo].requiresValue && (
+                  <Box sx={{ flex: '1 1 250px', minWidth: '250px' }}>
+                    <TextField
+                      {...register('valor', { valueAsNumber: true })}
+                      label={TIPOS_BENEFICIO[selectedTipo].valueLabel}
+                      type="number"
+                      fullWidth
+                      error={!!errors.valor}
+                      helperText={errors.valor?.message}
+                      inputProps={{
+                        min: 0,
+                        max: TIPOS_BENEFICIO[selectedTipo].maxValue || undefined,
+                      }}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
                           borderRadius: 2,
-                          '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                          '&.Mui-focused fieldset': {
                             borderColor: '#06b6d4',
                           }
-                        }}
-                      >
-                        {Object.entries(TIPOS_BENEFICIO).map(([key, config]) => (
-                          <MenuItem key={key} value={key}>
-                            <Stack direction="row" spacing={2} alignItems="center">
-                              <Avatar
-                                sx={{
-                                  bgcolor: alpha(config.color, 0.1),
-                                  color: config.color,
-                                  width: 32,
-                                  height: 32,
-                                }}
-                              >
-                                {getTipoIcon(key as TipoBeneficio)}
-                              </Avatar>
-                              <Typography>{config.label}</Typography>
-                            </Stack>
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    )}
-                  />
-                </FormControl>
-              </Grid>
-
-              {TIPOS_BENEFICIO[selectedTipo].requiresValue && (
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    {...register('valor', { valueAsNumber: true })}
-                    label={TIPOS_BENEFICIO[selectedTipo].valueLabel}
-                    type="number"
-                    fullWidth
-                    error={!!errors.valor}
-                    helperText={errors.valor?.message}
-                    inputProps={{
-                      min: 0,
-                      max: TIPOS_BENEFICIO[selectedTipo].maxValue || undefined,
-                    }}
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: 2,
-                        '&.Mui-focused fieldset': {
-                          borderColor: '#06b6d4',
                         }
-                      }
-                    }}
-                  />
-                </Grid>
-              )}
+                      }}
+                    />
+                  </Box>
+                )}
+              </Box>
 
               {/* Validity Period */}
-              <Grid item xs={12}>
+              <Box>
                 <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: '#374151' }}>
                   Período de Validez
                 </Typography>
-              </Grid>
+              </Box>
 
-              <Grid item xs={12} sm={6}>
-                <Controller
-                  name="fechaInicio"
-                  control={control}
-                  render={({ field }) => (
-                    <TextField
-                      {...field}
-                      label="Fecha de Inicio"
-                      type="date"
-                      fullWidth
-                      InputLabelProps={{ shrink: true }}
-                      value={field.value ? format(field.value, 'yyyy-MM-dd') : ''}
-                      onChange={(e) => field.onChange(new Date(e.target.value))}
-                      sx={{
-                        '& .MuiOutlinedInput-root': {
-                          borderRadius: 2,
-                          '&.Mui-focused fieldset': {
-                            borderColor: '#06b6d4',
+              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                <Box sx={{ flex: '1 1 250px', minWidth: '250px' }}>
+                  <Controller
+                    name="fechaInicio"
+                    control={control}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        label="Fecha de Inicio"
+                        type="date"
+                        fullWidth
+                        InputLabelProps={{ shrink: true }}
+                        value={field.value ? format(field.value, 'yyyy-MM-dd') : ''}
+                        onChange={(e) => field.onChange(new Date(e.target.value))}
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            borderRadius: 2,
+                            '&.Mui-focused fieldset': {
+                              borderColor: '#06b6d4',
+                            }
                           }
-                        }
-                      }}
-                    />
-                  )}
-                />
-              </Grid>
+                        }}
+                      />
+                    )}
+                  />
+                </Box>
 
-              <Grid item xs={12} sm={6}>
-                <Controller
-                  name="fechaFin"
-                  control={control}
-                  render={({ field }) => (
-                    <TextField
-                      {...field}
-                      label="Fecha de Fin"
-                      type="date"
-                      fullWidth
-                      InputLabelProps={{ shrink: true }}
-                      value={field.value ? format(field.value, 'yyyy-MM-dd') : ''}
-                      onChange={(e) => field.onChange(new Date(e.target.value))}
-                      sx={{
-                        '& .MuiOutlinedInput-root': {
-                          borderRadius: 2,
-                          '&.Mui-focused fieldset': {
-                            borderColor: '#06b6d4',
+                <Box sx={{ flex: '1 1 250px', minWidth: '250px' }}>
+                  <Controller
+                    name="fechaFin"
+                    control={control}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        label="Fecha de Fin"
+                        type="date"
+                        fullWidth
+                        InputLabelProps={{ shrink: true }}
+                        value={field.value ? format(field.value, 'yyyy-MM-dd') : ''}
+                        onChange={(e) => field.onChange(new Date(e.target.value))}
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            borderRadius: 2,
+                            '&.Mui-focused fieldset': {
+                              borderColor: '#06b6d4',
+                            }
                           }
-                        }
-                      }}
-                    />
-                  )}
-                />
-              </Grid>
+                        }}
+                      />
+                    )}
+                  />
+                </Box>
+              </Box>
 
               {/* Advanced Settings */}
-              <Grid item xs={12}>
+              <Box>
                 <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: '#374151' }}>
                   Configuración Avanzada
                 </Typography>
-              </Grid>
+              </Box>
 
-              <Grid item xs={12}>
+              <Box>
                 <Typography variant="subtitle2" sx={{ mb: 1, color: '#64748b' }}>
                   Días de la semana válidos
                 </Typography>
-                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                   {DIAS_SEMANA.map((dia) => (
                     <Controller
                       key={dia.value}
@@ -793,66 +829,66 @@ export const BeneficiosManagement: React.FC = () => {
                       )}
                     />
                   ))}
-                </Stack>
-              </Grid>
+                </Box>
+              </Box>
 
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  {...register('limitePorSocio', { valueAsNumber: true })}
-                  label="Límite por Socio"
-                  type="number"
-                  fullWidth
-                  helperText="Máximo de usos por socio (opcional)"
-                  inputProps={{ min: 1 }}
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: 2,
-                      '&.Mui-focused fieldset': {
-                        borderColor: '#06b6d4',
+              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                <Box sx={{ flex: '1 1 250px', minWidth: '250px' }}>
+                  <TextField
+                    {...register('limitePorSocio', { valueAsNumber: true })}
+                    label="Límite por Socio"
+                    type="number"
+                    fullWidth
+                    helperText="Máximo de usos por socio (opcional)"
+                    inputProps={{ min: 1 }}
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: 2,
+                        '&.Mui-focused fieldset': {
+                          borderColor: '#06b6d4',
+                        }
                       }
-                    }
-                  }}
-                />
-              </Grid>
+                    }}
+                  />
+                </Box>
 
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  {...register('limiteTotal', { valueAsNumber: true })}
-                  label="Límite Total"
-                  type="number"
-                  fullWidth
-                  helperText="Máximo de usos totales (opcional)"
-                  inputProps={{ min: 1 }}
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: 2,
-                      '&.Mui-focused fieldset': {
-                        borderColor: '#06b6d4',
+                <Box sx={{ flex: '1 1 250px', minWidth: '250px' }}>
+                  <TextField
+                    {...register('limiteTotal', { valueAsNumber: true })}
+                    label="Límite Total"
+                    type="number"
+                    fullWidth
+                    helperText="Máximo de usos totales (opcional)"
+                    inputProps={{ min: 1 }}
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: 2,
+                        '&.Mui-focused fieldset': {
+                          borderColor: '#06b6d4',
+                        }
                       }
-                    }
-                  }}
-                />
-              </Grid>
+                    }}
+                  />
+                </Box>
+              </Box>
 
-              <Grid item xs={12}>
-                <TextField
-                  {...register('condiciones')}
-                  label="Términos y Condiciones"
-                  fullWidth
-                  multiline
-                  rows={3}
-                  placeholder="Especifica las condiciones de uso del beneficio..."
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: 2,
-                      '&.Mui-focused fieldset': {
-                        borderColor: '#06b6d4',
-                      }
+              <TextField
+                {...register('condiciones')}
+                label="Términos y Condiciones"
+                fullWidth
+                multiline
+                rows={3}
+                placeholder="Especifica las condiciones de uso del beneficio..."
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#06b6d4',
                     }
-                  }}
-                />
-              </Grid>
-            </Grid>
+                  }
+                }}
+              />
+            </Stack>
           </DialogContent>
 
           <DialogActions sx={{ p: 3, pt: 0 }}>
