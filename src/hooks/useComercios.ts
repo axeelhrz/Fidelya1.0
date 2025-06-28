@@ -2,14 +2,10 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { 
-  collection, 
-  query, 
-  where, 
   onSnapshot, 
   doc, 
   updateDoc, 
   Timestamp,
-  getDoc
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { db, storage } from '@/lib/firebase';
@@ -88,7 +84,7 @@ export const useComercios = () => {
           try {
             const oldImageRef = ref(storage, oldImageUrl);
             await deleteObject(oldImageRef);
-          } catch (error) {
+          } catch {
             console.log('Old image not found or already deleted');
           }
         }
