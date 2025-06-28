@@ -248,7 +248,7 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
           }
           placement="right"
           arrow
-          componentsProps={{
+          slotProps={{
             tooltip: {
               sx: {
                 bgcolor: 'rgba(15, 23, 42, 0.95)',
@@ -334,8 +334,9 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
                       repeatType: "reverse" 
                     }}
                   >
-                    {React.cloneElement(item.icon as React.ReactElement, {
-                    })}
+                    <Box sx={{ fontSize: 26, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      {item.icon}
+                    </Box>
                   </motion.div>
                 </Badge>
               </ListItemIcon>
@@ -454,8 +455,9 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
                       repeatType: "reverse" 
                     }}
                   >
-                    {React.cloneElement(item.icon as React.ReactElement, {
-                    })}
+                    <Box sx={{ fontSize: level === 0 ? 24 : 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      {item.icon}
+                    </Box>
                   </motion.div>
                 </Badge>
               </ListItemIcon>
