@@ -333,12 +333,14 @@ export const ValidacionesHistory: React.FC = () => {
               placeholder="Buscar por ID de validación, socio o beneficio..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Search sx={{ color: '#94a3b8' }} />
-                  </InputAdornment>
-                ),
+              slotProps={{
+                input: {
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Search sx={{ color: '#94a3b8' }} />
+                    </InputAdornment>
+                  ),
+                }
               }}
               sx={{
                 '& .MuiOutlinedInput-root': {
@@ -438,65 +440,68 @@ export const ValidacionesHistory: React.FC = () => {
               <TableBody>
                 <AnimatePresence>
                   {paginatedValidaciones.map((validacion, index) => (
-                    <motion.tr
+                    <motion.div
                       key={validacion.id}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -20 }}
                       transition={{ duration: 0.3, delay: index * 0.05 }}
-                      component={TableRow}
-                      sx={{
-                        '&:hover': {
-                          bgcolor: alpha('#06b6d4', 0.05),
-                        }
-                      }}
+                      style={{ display: 'contents' }}
                     >
-                      <TableCell>
-                        <Box>
-                          <Typography variant="body2" sx={{ fontWeight: 600, color: '#1e293b' }}>
-                            {format(validacion.fechaHora.toDate(), 'dd/MM/yyyy', { locale: es })}
+                      <TableRow
+                        sx={{
+                          '&:hover': {
+                            bgcolor: alpha('#06b6d4', 0.05),
+                          }
+                        }}
+                      >
+                        <TableCell>
+                          <Box>
+                            <Typography variant="body2" sx={{ fontWeight: 600, color: '#1e293b' }}>
+                              {format(validacion.fechaHora.toDate(), 'dd/MM/yyyy', { locale: es })}
+                            </Typography>
+                            <Typography variant="caption" sx={{ color: '#64748b' }}>
+                              {format(validacion.fechaHora.toDate(), 'HH:mm', { locale: es })}
+                            </Typography>
+                          </Box>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2" sx={{ fontFamily: 'monospace', color: '#64748b' }}>
+                            {validacion.socioId.substring(0, 8)}...
                           </Typography>
-                          <Typography variant="caption" sx={{ color: '#64748b' }}>
-                            {format(validacion.fechaHora.toDate(), 'HH:mm', { locale: es })}
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2" sx={{ fontFamily: 'monospace', color: '#64748b' }}>
+                            {validacion.beneficioId.substring(0, 8)}...
                           </Typography>
-                        </Box>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2" sx={{ fontFamily: 'monospace', color: '#64748b' }}>
-                          {validacion.socioId.substring(0, 8)}...
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2" sx={{ fontFamily: 'monospace', color: '#64748b' }}>
-                          {validacion.beneficioId.substring(0, 8)}...
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          icon={getResultadoIcon(validacion.resultado)}
-                          label={RESULTADO_LABELS[validacion.resultado as keyof typeof RESULTADO_LABELS]}
-                          size="small"
-                          sx={{
-                            bgcolor: alpha(RESULTADO_COLORS[validacion.resultado as keyof typeof RESULTADO_COLORS], 0.1),
-                            color: RESULTADO_COLORS[validacion.resultado as keyof typeof RESULTADO_COLORS],
-                            fontWeight: 600,
-                            '& .MuiChip-icon': {
-                              fontSize: 16,
-                            }
-                          }}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                          {validacion.montoTransaccion ? `$${validacion.montoTransaccion.toFixed(2)}` : '-'}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2" sx={{ fontWeight: 600, color: '#10b981' }}>
-                          {validacion.descuentoAplicado ? `$${validacion.descuentoAplicado.toFixed(2)}` : '-'}
-                        </Typography>
-                      </TableCell>
-                    </motion.tr>
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            icon={getResultadoIcon(validacion.resultado)}
+                            label={RESULTADO_LABELS[validacion.resultado as keyof typeof RESULTADO_LABELS]}
+                            size="small"
+                            sx={{
+                              bgcolor: alpha(RESULTADO_COLORS[validacion.resultado as keyof typeof RESULTADO_COLORS], 0.1),
+                              color: RESULTADO_COLORS[validacion.resultado as keyof typeof RESULTADO_COLORS],
+                              fontWeight: 600,
+                              '& .MuiChip-icon': {
+                                fontSize: 16,
+                              }
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                            {validacion.montoTransaccion ? `$${validacion.montoTransaccion.toFixed(2)}` : '-'}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2" sx={{ fontWeight: 600, color: '#10b981' }}>
+                            {validacion.descuentoAplicado ? `$${validacion.descuentoAplicado.toFixed(2)}` : '-'}
+                          </Typography>
+                        </TableCell>
+                      </TableRow>
+                    </motion.div>
                   ))}
                 </AnimatePresence>
               </TableBody>

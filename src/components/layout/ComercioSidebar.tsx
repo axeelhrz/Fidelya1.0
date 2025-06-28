@@ -31,7 +31,6 @@ import {
   LocalOffer,
   QrCode,
   Receipt,
-  Notifications,
   Logout,
   ChevronLeft,
   ChevronRight,
@@ -39,11 +38,8 @@ import {
   TrendingUp,
   Assessment,
   AutoGraph,
-  History,
   Campaign,
   AccountCircle,
-  Business,
-  FiberManualRecord,
 } from '@mui/icons-material';
 import { useAuth } from '@/hooks/useAuth';
 import { useComercios } from '@/hooks/useComercios';
@@ -339,7 +335,6 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
                     }}
                   >
                     {React.cloneElement(item.icon as React.ReactElement, {
-                      sx: { fontSize: 26 }
                     })}
                   </motion.div>
                 </Badge>
@@ -460,7 +455,6 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
                     }}
                   >
                     {React.cloneElement(item.icon as React.ReactElement, {
-                      sx: { fontSize: level === 0 ? 24 : 20 }
                     })}
                   </motion.div>
                 </Badge>

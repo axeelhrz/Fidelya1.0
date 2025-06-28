@@ -16,6 +16,7 @@ import {
 import { format, subDays, startOfDay, endOfDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { BarChart3, Calendar, TrendingUp } from 'lucide-react';
+import type { TooltipProps } from 'recharts';
 
 export const ValidationsChart: React.FC = () => {
   const { validaciones } = useValidaciones();
@@ -55,8 +56,7 @@ export const ValidationsChart: React.FC = () => {
   const totalValidaciones = chartData.reduce((sum, day) => sum + day.total, 0);
   const totalExitosas = chartData.reduce((sum, day) => sum + day.exitosas, 0);
   const tasaExito = totalValidaciones > 0 ? (totalExitosas / totalValidaciones) * 100 : 0;
-
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
     if (active && payload && payload.length) {
       return (
         <div style={{
@@ -67,7 +67,7 @@ export const ValidationsChart: React.FC = () => {
           boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
         }}>
           <p style={{ fontWeight: 600, color: '#1e293b', marginBottom: '8px' }}>{label}</p>
-          {payload.map((entry: any, index: number) => (
+          {payload.map((entry: NonNullable<TooltipProps<number, string>['payload']>[number], index: number) => (
             <p key={index} style={{ fontSize: '14px', color: entry.color, marginBottom: '4px' }}>
               <span style={{ fontWeight: 500 }}>{entry.name}:</span> {entry.value}
             </p>
