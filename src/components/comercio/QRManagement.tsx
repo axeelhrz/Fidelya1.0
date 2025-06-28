@@ -8,7 +8,7 @@ import {
   CardContent,
   Typography,
   Button,
-  Grid,
+  Grid2 as Grid,
   Stack,
   Paper,
   Avatar,
@@ -240,7 +240,7 @@ export const QRManagement: React.FC = () => {
     >
       <Grid container spacing={4}>
         {/* QR Code Display */}
-        <Grid item xs={12} md={6}>
+        <Grid xs={12} md={6}>
           <Card
             elevation={0}
             sx={{
@@ -386,7 +386,7 @@ export const QRManagement: React.FC = () => {
         </Grid>
 
         {/* Instructions and Info */}
-        <Grid item xs={12} md={6}>
+        <Grid xs={12} md={6}>
           <Stack spacing={3}>
             {/* Commerce Info */}
             <Card
