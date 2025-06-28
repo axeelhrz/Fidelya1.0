@@ -14,7 +14,6 @@ import {
   Plus
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
 import { useRouter } from 'next/navigation';
 
 export const RecentValidations: React.FC = () => {

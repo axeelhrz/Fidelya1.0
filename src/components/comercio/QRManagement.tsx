@@ -8,7 +8,6 @@ import {
   CardContent,
   Typography,
   Button,
-  Grid2 as Grid,
   Stack,
   Paper,
   Avatar,
@@ -31,6 +30,7 @@ import {
 import { useComercios } from '@/hooks/useComercios';
 import QRCodeLib from 'qrcode';
 import toast from 'react-hot-toast';
+import Image from 'next/image';
 
 export const QRManagement: React.FC = () => {
   const { comercio } = useComercios();
@@ -39,13 +39,7 @@ export const QRManagement: React.FC = () => {
 
   const qrUrl = comercio ? `${window.location.origin}/validar-beneficio?comercio=${comercio.uid}` : '';
 
-  React.useEffect(() => {
-    if (comercio) {
-      generateQR();
-    }
-  }, [comercio]);
-
-  const generateQR = async () => {
+  const generateQR = React.useCallback(async () => {
     if (!comercio) return;
 
     try {
@@ -74,7 +68,13 @@ export const QRManagement: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [comercio]);
+
+  React.useEffect(() => {
+    if (comercio) {
+      generateQR();
+    }
+  }, [comercio, generateQR]);
 
   const downloadQR = async (format: 'png' | 'pdf') => {
     if (!qrDataUrl || !comercio) return;
@@ -238,9 +238,16 @@ export const QRManagement: React.FC = () => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <Grid container spacing={4}>
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: { xs: 'column', md: 'row' },
+          gap: 4,
+          width: '100%',
+        }}
+      >
         {/* QR Code Display */}
-        <Grid xs={12} md={6}>
+        <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 50%' } }}>
           <Card
             elevation={0}
             sx={{
@@ -300,14 +307,18 @@ export const QRManagement: React.FC = () => {
                         display: 'inline-block',
                       }}
                     >
-                      <img
+                      <Image
                         src={qrDataUrl}
                         alt="QR Code"
+                        width={250}
+                        height={250}
                         style={{
                           width: 250,
                           height: 250,
                           display: 'block',
                         }}
+                        unoptimized
+                        priority
                       />
                     </Paper>
                   </motion.div>
@@ -383,10 +394,10 @@ export const QRManagement: React.FC = () => {
               </Stack>
             </CardContent>
           </Card>
-        </Grid>
+        </Box>
 
         {/* Instructions and Info */}
-        <Grid xs={12} md={6}>
+        <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 50%' } }}>
           <Stack spacing={3}>
             {/* Commerce Info */}
             <Card
@@ -588,8 +599,8 @@ export const QRManagement: React.FC = () => {
               </CardContent>
             </Card>
           </Stack>
-        </Grid>
-      </Grid>
+        </Box>
+      </Box>
     </motion.div>
   );
 };
