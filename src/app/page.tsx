@@ -19,14 +19,14 @@ const HomePage = () => {
         // Hacer parpadear el cursor por un momento y luego ocultarlo
         setTimeout(() => {
           setShowCursor(false);
-        }, 1000);
+        }, 1500);
       }
-    }, 150); // Velocidad de escritura
+    }, 300); // Velocidad más lenta
 
     // Efecto de parpadeo del cursor
     const cursorInterval = setInterval(() => {
       setShowCursor(prev => !prev);
-    }, 500);
+    }, 600);
 
     return () => {
       clearInterval(typingInterval);
@@ -37,7 +37,7 @@ const HomePage = () => {
   return (
     <>
       <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap');
         
         * {
           margin: 0;
@@ -50,8 +50,8 @@ const HomePage = () => {
           font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
         }
         
-        .jakarta {
-          font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+        .poppins {
+          font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
         }
         
         .inter {
@@ -59,7 +59,7 @@ const HomePage = () => {
         }
 
         .typewriter-cursor {
-          animation: blink 1s infinite;
+          animation: blink 1.2s infinite;
         }
 
         @keyframes blink {
@@ -121,20 +121,20 @@ const HomePage = () => {
           {/* Logo/Title con efecto typewriter */}
           <div style={{ marginBottom: '2.5rem', paddingTop: '1rem' }}>
             <h1 
-              className="jakarta"
+              className="poppins"
               style={{
-                fontSize: 'clamp(4.5rem, 14vw, 12rem)',
-                fontWeight: 900,
+                fontSize: 'clamp(3rem, 8vw, 6rem)',
+                fontWeight: 800,
                 marginBottom: '0',
-                letterSpacing: '-0.08em',
-                lineHeight: 0.9,
+                letterSpacing: '-0.06em',
+                lineHeight: 0.95,
                 background: 'linear-gradient(135deg, #1e293b 0%, #0ea5e9 50%, #38bdf8 100%)',
                 backgroundClip: 'text',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 textShadow: '0 2px 30px rgba(14, 165, 233, 0.1)',
                 paddingBottom: '0.3rem',
-                minHeight: 'clamp(4rem, 12vw, 10rem)',
+                minHeight: 'clamp(2.8rem, 7.5vw, 5.5rem)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center'
@@ -149,7 +149,7 @@ const HomePage = () => {
                     backgroundClip: 'text',
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
-                    marginLeft: '0.1em'
+                    marginLeft: '0.05em'
                   }}
                 >
                   |
@@ -163,17 +163,17 @@ const HomePage = () => {
             style={{
               opacity: displayText === fullText ? 1 : 0,
               transform: displayText === fullText ? 'translateY(0)' : 'translateY(20px)',
-              transition: 'all 0.8s ease-out 0.5s'
+              transition: 'all 0.8s ease-out 0.8s'
             }}
           >
             <h2 
-              className="jakarta"
+              className="poppins"
               style={{
-                fontSize: 'clamp(1.6rem, 4.5vw, 2.8rem)',
+                fontSize: 'clamp(1.4rem, 4vw, 2.4rem)',
                 fontWeight: 600,
                 color: '#334155',
                 marginBottom: '2rem',
-                letterSpacing: '-0.02em',
+                letterSpacing: '-0.01em',
                 lineHeight: 1.3,
                 maxWidth: '700px',
                 margin: '0 auto 2rem auto'
@@ -186,7 +186,7 @@ const HomePage = () => {
             <p 
               className="inter"
               style={{
-                fontSize: 'clamp(1.15rem, 2.8vw, 1.3rem)',
+                fontSize: 'clamp(1.1rem, 2.5vw, 1.25rem)',
                 color: '#64748b',
                 maxWidth: '600px',
                 margin: '0 auto 4rem auto',
@@ -212,14 +212,14 @@ const HomePage = () => {
             >
               <Link
                 href="/auth/register"
-                className="jakarta"
+                className="poppins"
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   padding: '1.2rem 3rem',
                   fontSize: '1.1rem',
-                  fontWeight: 700,
+                  fontWeight: 600,
                   color: 'white',
                   textDecoration: 'none',
                   borderRadius: '16px',
