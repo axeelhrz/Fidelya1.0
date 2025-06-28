@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Store, Percent, Calendar, Tag, Eye, Clock, CheckCircle } from 'lucide-react';
+import { Store, Calendar, Tag, Eye, CheckCircle } from 'lucide-react';
 import { Beneficio, BeneficioUso } from '@/types/beneficio';
 import { Button } from '@/components/ui/Button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/Dialog';

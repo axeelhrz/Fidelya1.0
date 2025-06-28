@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   User,
@@ -12,7 +12,8 @@ import {
   ChevronRight,
   Home,
   Settings,
-  HelpCircle
+  HelpCircle,
+  LucideIcon
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
@@ -27,15 +28,13 @@ interface SocioSidebarProps {
 interface MenuItem {
   id: string;
   label: string;
-  icon: React.ReactNode;
+  icon: LucideIcon;
   badge?: number;
   color: string;
   gradient: string;
   description?: string;
 }
 
-const SIDEBAR_WIDTH = 280;
-const SIDEBAR_COLLAPSED_WIDTH = 80;
 
 export const SocioSidebar: React.FC<SocioSidebarProps> = ({
   open,
@@ -49,7 +48,7 @@ export const SocioSidebar: React.FC<SocioSidebarProps> = ({
     {
       id: 'dashboard',
       label: 'Inicio',
-      icon: <Home size={20} />,
+      icon: Home,
       color: '#6366f1',
       gradient: 'from-indigo-500 to-purple-600',
       description: 'Panel principal'
@@ -57,7 +56,7 @@ export const SocioSidebar: React.FC<SocioSidebarProps> = ({
     {
       id: 'perfil',
       label: 'Mi Perfil',
-      icon: <User size={20} />,
+      icon: User,
       color: '#10b981',
       gradient: 'from-emerald-500 to-teal-600',
       description: 'Información personal'
@@ -65,7 +64,7 @@ export const SocioSidebar: React.FC<SocioSidebarProps> = ({
     {
       id: 'beneficios',
       label: 'Beneficios',
-      icon: <Gift size={20} />,
+      icon: Gift,
       color: '#f59e0b',
       gradient: 'from-amber-500 to-orange-600',
       description: 'Descuentos disponibles'
@@ -73,7 +72,7 @@ export const SocioSidebar: React.FC<SocioSidebarProps> = ({
     {
       id: 'validar',
       label: 'Validar Beneficio',
-      icon: <QrCode size={20} />,
+      icon: QrCode,
       color: '#8b5cf6',
       gradient: 'from-violet-500 to-purple-600',
       description: 'Escanear QR'
@@ -81,7 +80,7 @@ export const SocioSidebar: React.FC<SocioSidebarProps> = ({
     {
       id: 'notificaciones',
       label: 'Notificaciones',
-      icon: <Bell size={20} />,
+      icon: Bell,
       badge: 3,
       color: '#ef4444',
       gradient: 'from-red-500 to-pink-600',
@@ -91,6 +90,7 @@ export const SocioSidebar: React.FC<SocioSidebarProps> = ({
 
   const renderMenuItem = (item: MenuItem) => {
     const isActive = activeSection === item.id;
+    const IconComponent = item.icon;
 
     if (!open) {
       return (
@@ -110,7 +110,7 @@ export const SocioSidebar: React.FC<SocioSidebarProps> = ({
                 : 'bg-white hover:bg-gray-50 text-gray-600 hover:text-gray-900 border border-gray-200'
             )}
           >
-            {item.icon}
+            <IconComponent size={20} />
             {item.badge && (
               <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium">
                 {item.badge}
@@ -151,9 +151,10 @@ export const SocioSidebar: React.FC<SocioSidebarProps> = ({
             'flex items-center justify-center w-8 h-8 rounded-lg transition-colors',
             isActive ? 'bg-white/20' : 'bg-gray-100 group-hover:bg-gray-200'
           )}>
-            {React.cloneElement(item.icon as React.ReactElement, {
-              className: cn(isActive ? 'text-white' : 'text-gray-600 group-hover:text-gray-900')
-            })}
+            <IconComponent 
+              size={20}
+              className={cn(isActive ? 'text-white' : 'text-gray-600 group-hover:text-gray-900')}
+            />
           </div>
           
           <div className="flex-1 text-left">
