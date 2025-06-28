@@ -66,7 +66,21 @@ import {
   Archive,
   Trash2,
   Flag,
-  AlertCircle
+  AlertCircle,
+  Cake,
+  Home,
+  IdCard,
+  Languages,
+  DollarSign,
+  Clock3,
+  Shield as ShieldIcon,
+  Database,
+  FileText,
+  BarChart3,
+  Users,
+  MapPin as LocationIcon,
+  Wifi,
+  Smartphone as DeviceIcon
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { SocioSidebar } from '@/components/layout/SocioSidebar';
@@ -75,8 +89,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Input } from '@/components/ui/Input';
 import { LoadingSkeleton } from '@/components/ui/LoadingSkeleton';
 import UnifiedMetricsCard from '@/components/ui/UnifiedMetricsCard';
+import { ProfileImageUploader } from '@/components/socio/ProfileImageUploader';
+import { ActivityTimeline } from '@/components/socio/ActivityTimeline';
 import { useSocioProfile } from '@/hooks/useSocioProfile';
 import { useAuth } from '@/hooks/useAuth';
+import { SocioConfiguration } from '@/types/socio';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import toast from 'react-hot-toast';
@@ -86,146 +103,134 @@ interface ProfileFormData {
   telefono: string;
   dni: string;
   direccion: string;
-}
-
-interface ConfiguracionData {
-  notificaciones: boolean;
-  notificacionesPush: boolean;
-  notificacionesEmail: boolean;
-  notificacionesSMS: boolean;
-  tema: 'light' | 'dark' | 'auto';
-  perfilPublico: boolean;
-  mostrarEstadisticas: boolean;
-  mostrarActividad: boolean;
-  compartirDatos: boolean;
-  idioma: 'es' | 'en';
-  moneda: 'ARS' | 'USD' | 'EUR';
-  timezone: string;
-}
-
-interface ActivityItem {
-  id: string;
-  tipo: 'beneficio' | 'validacion' | 'registro' | 'actualizacion';
-  titulo: string;
-  descripcion: string;
-  fecha: Date;
-  icono: React.ReactNode;
-  color: string;
-  valor?: number;
-  comercio?: string;
+  fechaNacimiento?: Date;
 }
 
 export default function SocioPerfilPage() {
   const { user } = useAuth();
-  const { socio, stats, asociaciones, loading, updating, updateProfile, refreshData } = useSocioProfile();
+  const { 
+    socio, 
+    stats, 
+    asociaciones, 
+    activity,
+    loading, 
+    updating, 
+    uploadingImage,
+    updateProfile, 
+    updateConfiguration,
+    uploadProfileImage,
+    refreshData,
+    exportData,
+    logActivity
+  } = useSocioProfile();
+
+  // Modal states
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [configModalOpen, setConfigModalOpen] = useState(false);
-  const [avatarModalOpen, setAvatarModalOpen] = useState(false);
   const [qrModalOpen, setQrModalOpen] = useState(false);
   const [activityModalOpen, setActivityModalOpen] = useState(false);
+  const [statsModalOpen, setStatsModalOpen] = useState(false);
+  
+  // UI states
   const [refreshing, setRefreshing] = useState(false);
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState<'general' | 'notificaciones' | 'privacidad' | 'avanzado'>('general');
+  const [showAdvancedStats, setShowAdvancedStats] = useState(false);
 
-  // Datos del perfil con fallbacks
+  // Datos del perfil con fallbacks mejorados
   const profileData = {
     nombre: socio?.nombre || user?.nombre || 'Usuario',
     email: socio?.email || user?.email || '',
     telefono: socio?.telefono || '',
     dni: socio?.dni || '',
     direccion: socio?.direccion || '',
+    fechaNacimiento: socio?.fechaNacimiento?.toDate(),
     estado: socio?.estado || 'activo',
-    creadoEn: socio?.creadoEn || new Date(),
-    ultimoAcceso: new Date(),
+    creadoEn: socio?.creadoEn?.toDate() || new Date(),
+    ultimoAcceso: socio?.ultimoAcceso?.toDate() || new Date(),
     avatar: socio?.avatar || null,
-    nivel: 'Gold',
-    puntos: 1250,
-    proximoNivel: 'Platinum',
-    puntosParaProximoNivel: 750
-  };
-
-  // Estadísticas mejoradas
-  const enhancedStats = {
-    beneficiosUsados: stats?.beneficiosUsados || 24,
-    ahorroTotal: stats?.ahorroTotal || 15750,
-    beneficiosEsteMes: stats?.beneficiosEsteMes || 8,
-    asociacionesActivas: asociaciones?.filter(a => a.estado === 'activo').length || 2,
-    racha: 12,
-    nivel: 'Gold',
-    puntosAcumulados: 1250,
-    beneficiosFavoritos: 5,
-    comerciosVisitados: 18,
-    descuentoPromedio: 25,
-    ahorroEsteMes: 2340,
-    validacionesExitosas: 96,
-    tiempoComoSocio: Math.floor((new Date().getTime() - profileData.creadoEn.getTime()) / (1000 * 60 * 60 * 24))
-  };
-
-  // Configuración con valores por defecto
-  const [configuracion, setConfiguracion] = useState<ConfiguracionData>({
-    notificaciones: true,
-    notificacionesPush: true,
-    notificacionesEmail: true,
-    notificacionesSMS: false,
-    tema: 'light',
-    perfilPublico: false,
-    mostrarEstadisticas: true,
-    mostrarActividad: true,
-    compartirDatos: false,
-    idioma: 'es',
-    moneda: 'ARS',
-    timezone: 'America/Argentina/Buenos_Aires'
-  });
-
-  // Actividad reciente simulada
-  const [actividadReciente] = useState<ActivityItem[]>([
-    {
-      id: '1',
-      tipo: 'beneficio',
-      titulo: 'Descuento aplicado',
-      descripcion: 'Restaurante El Buen Sabor - 20% de descuento',
-      fecha: new Date(Date.now() - 2 * 60 * 60 * 1000),
-      icono: <Gift size={16} />,
-      color: '#10b981',
-      valor: 450,
-      comercio: 'Restaurante El Buen Sabor'
-    },
-    {
-      id: '2',
-      tipo: 'validacion',
-      titulo: 'QR escaneado',
-      descripción: 'Validación exitosa en Farmacia Central',
-      fecha: new Date(Date.now() - 5 * 60 * 60 * 1000),
-      icono: <QrCode size={16} />,
-      color: '#6366f1',
-      comercio: 'Farmacia Central'
-    },
-    {
-      id: '3',
-      tipo: 'beneficio',
-      titulo: 'Nuevo beneficio disponible',
-      descripcion: 'Supermercado Fresco - 15% en productos orgánicos',
-      fecha: new Date(Date.now() - 24 * 60 * 60 * 1000),
-      icono: <Sparkles size={16} />,
-      color: '#f59e0b'
-    },
-    {
-      id: '4',
-      tipo: 'actualizacion',
-      titulo: 'Perfil actualizado',
-      descripcion: 'Información de contacto modificada',
-      fecha: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-      icono: <User size={16} />,
-      color: '#8b5cf6'
+    avatarThumbnail: socio?.avatarThumbnail || null,
+    nivel: socio?.nivel || {
+      nivel: 'Bronze',
+      puntos: 0,
+      puntosParaProximoNivel: 1000,
+      proximoNivel: 'Silver',
+      beneficiosDesbloqueados: [],
+      descuentoAdicional: 0
     }
-  ]);
+  };
+
+  // Estadísticas mejoradas con datos reales
+  const enhancedStats = {
+    beneficiosUsados: stats?.beneficiosUsados || 0,
+    ahorroTotal: stats?.ahorroTotal || 0,
+    beneficiosEsteMes: stats?.beneficiosEsteMes || 0,
+    asociacionesActivas: stats?.asociacionesActivas || 0,
+    racha: stats?.racha || 0,
+    comerciosVisitados: stats?.comerciosVisitados || 0,
+    validacionesExitosas: stats?.validacionesExitosas || 0,
+    descuentoPromedio: stats?.descuentoPromedio || 0,
+    ahorroEsteMes: stats?.ahorroEsteMes || 0,
+    beneficiosFavoritos: stats?.beneficiosFavoritos || 0,
+    tiempoComoSocio: stats?.tiempoComoSocio || 0,
+    actividadPorMes: stats?.actividadPorMes || {},
+    beneficiosPorCategoria: stats?.beneficiosPorCategoria || {},
+    comerciosMasVisitados: stats?.comerciosMasVisitados || []
+  };
+
+  // Configuración con valores del socio o por defecto
+  const [configuracion, setConfiguracion] = useState<SocioConfiguration>({
+    // Notificaciones
+    notificaciones: socio?.configuracion?.notificaciones ?? true,
+    notificacionesPush: socio?.configuracion?.notificacionesPush ?? true,
+    notificacionesEmail: socio?.configuracion?.notificacionesEmail ?? true,
+    notificacionesSMS: socio?.configuracion?.notificacionesSMS ?? false,
+    
+    // Apariencia
+    tema: socio?.configuracion?.tema ?? 'light',
+    idioma: socio?.configuracion?.idioma ?? 'es',
+    moneda: socio?.configuracion?.moneda ?? 'ARS',
+    timezone: socio?.configuracion?.timezone ?? 'America/Argentina/Buenos_Aires',
+    
+    // Privacidad
+    perfilPublico: socio?.configuracion?.perfilPublico ?? false,
+    mostrarEstadisticas: socio?.configuracion?.mostrarEstadisticas ?? true,
+    mostrarActividad: socio?.configuracion?.mostrarActividad ?? true,
+    compartirDatos: socio?.configuracion?.compartirDatos ?? false,
+    
+    // Preferencias
+    beneficiosFavoritos: socio?.configuracion?.beneficiosFavoritos ?? [],
+    comerciosFavoritos: socio?.configuracion?.comerciosFavoritos ?? [],
+    categoriasFavoritas: socio?.configuracion?.categoriasFavoritas ?? []
+  });
 
   const [formData, setFormData] = useState<ProfileFormData>({
     nombre: profileData.nombre,
     telefono: profileData.telefono,
     dni: profileData.dni,
-    direccion: profileData.direccion
+    direccion: profileData.direccion,
+    fechaNacimiento: profileData.fechaNacimiento
   });
+
+  // Update form data when socio data changes
+  React.useEffect(() => {
+    if (socio) {
+      setFormData({
+        nombre: socio.nombre || '',
+        telefono: socio.telefono || '',
+        dni: socio.dni || '',
+        direccion: socio.direccion || '',
+        fechaNacimiento: socio.fechaNacimiento?.toDate()
+      });
+      
+      if (socio.configuracion) {
+        setConfiguracion(prev => ({
+          ...prev,
+          ...socio.configuracion
+        }));
+      }
+    }
+  }, [socio]);
 
   // Handlers
   const handleSaveProfile = async () => {
@@ -234,7 +239,8 @@ export default function SocioPerfilPage() {
         nombre: formData.nombre,
         telefono: formData.telefono || undefined,
         dni: formData.dni || undefined,
-        direccion: formData.direccion || undefined
+        direccion: formData.direccion || undefined,
+        fechaNacimiento: formData.fechaNacimiento
       });
       setEditModalOpen(false);
     } catch (error) {
@@ -243,15 +249,11 @@ export default function SocioPerfilPage() {
   };
 
   const handleSaveConfig = async () => {
-    setRefreshing(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await updateConfiguration(configuracion);
       setConfigModalOpen(false);
-      toast.success('Configuración guardada exitosamente');
     } catch (error) {
-      toast.error('Error al guardar la configuración');
-    } finally {
-      setRefreshing(false);
+      // Error is handled by the hook
     }
   };
 
@@ -272,21 +274,16 @@ export default function SocioPerfilPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleExportData = () => {
-    const data = {
-      perfil: profileData,
-      estadisticas: enhancedStats,
-      asociaciones: asociaciones,
-      configuracion: configuracion
-    };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `perfil-socio-${format(new Date(), 'yyyy-MM-dd')}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success('Datos exportados exitosamente');
+  const handleExportData = async () => {
+    try {
+      await exportData();
+    } catch (error) {
+      // Error is handled by the hook
+    }
+  };
+
+  const handleImageUpload = async (file: File): Promise<string> => {
+    return await uploadProfileImage(file);
   };
 
   // Utility functions
@@ -295,6 +292,7 @@ export default function SocioPerfilPage() {
       case 'activo': return 'bg-green-500';
       case 'vencido': return 'bg-yellow-500';
       case 'inactivo': return 'bg-red-500';
+      case 'pendiente': return 'bg-blue-500';
       default: return 'bg-gray-500';
     }
   };
@@ -304,6 +302,7 @@ export default function SocioPerfilPage() {
       case 'activo': return 'Socio Activo';
       case 'vencido': return 'Membresía Vencida';
       case 'inactivo': return 'Socio Inactivo';
+      case 'pendiente': return 'Pendiente de Activación';
       default: return 'Estado Desconocido';
     }
   };
@@ -312,8 +311,9 @@ export default function SocioPerfilPage() {
     switch (estado) {
       case 'activo': return <CheckCircle size={16} className="text-green-500" />;
       case 'vencido': return <XCircle size={16} className="text-red-500" />;
-      case 'pendiente': return <Clock size={16} className="text-yellow-500" />;
+      case 'pendiente': return <Clock size={16} className="text-blue-500" />;
       case 'inactivo': return <AlertTriangle size={16} className="text-gray-500" />;
+      default: return <AlertCircle size={16} className="text-gray-500" />;
     }
   };
 
@@ -321,8 +321,9 @@ export default function SocioPerfilPage() {
     switch (estado) {
       case 'activo': return 'bg-green-100 text-green-800 border-green-200';
       case 'vencido': return 'bg-red-100 text-red-800 border-red-200';
-      case 'pendiente': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'pendiente': return 'bg-blue-100 text-blue-800 border-blue-200';
       case 'inactivo': return 'bg-gray-100 text-gray-800 border-gray-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
@@ -457,32 +458,11 @@ export default function SocioPerfilPage() {
                 {/* Avatar y información básica mejorada */}
                 <div className="flex items-start justify-between -mt-20 mb-8">
                   <div className="relative">
-                    <motion.div
-                      whileHover={{ scale: 1.05 }}
-                      className="relative"
-                    >
-                      <div className="w-32 h-32 bg-white rounded-3xl shadow-xl flex items-center justify-center border-4 border-white">
-                        <div className="w-28 h-28 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center relative overflow-hidden">
-                          {profileData.avatar ? (
-                            <img 
-                              src={profileData.avatar} 
-                              alt="Avatar" 
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <User size={40} className="text-white" />
-                          )}
-                        </div>
-                      </div>
-                      
-                      {/* Botón de cámara */}
-                      <button
-                        onClick={() => setAvatarModalOpen(true)}
-                        className="absolute -bottom-2 -right-2 w-10 h-10 bg-indigo-500 hover:bg-indigo-600 rounded-full flex items-center justify-center text-white shadow-lg transition-all duration-200 hover:scale-110"
-                      >
-                        <Camera size={16} />
-                      </button>
-                    </motion.div>
+                    <ProfileImageUploader
+                      currentImage={profileData.avatar}
+                      onImageUpload={handleImageUpload}
+                      uploading={uploadingImage}
+                    />
 
                     {/* Indicador de estado mejorado */}
                     <div className={`absolute -bottom-1 left-4 w-8 h-8 ${getStatusColor(profileData.estado)} rounded-full border-4 border-white flex items-center justify-center shadow-lg`}>
@@ -490,9 +470,14 @@ export default function SocioPerfilPage() {
                     </div>
 
                     {/* Badge de nivel */}
-                    <div className="absolute -top-2 -right-2 bg-gradient-to-r from-yellow-400 to-yellow-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg flex items-center gap-1">
-                      {getNivelIcon(profileData.nivel)}
-                      {profileData.nivel}
+                    <div 
+                      className="absolute -top-2 -right-2 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg flex items-center gap-1"
+                      style={{ 
+                        background: `linear-gradient(135deg, ${getNivelColor(profileData.nivel.nivel)}, ${getNivelColor(profileData.nivel.nivel)}dd)` 
+                      }}
+                    >
+                      {getNivelIcon(profileData.nivel.nivel)}
+                      {profileData.nivel.nivel}
                     </div>
                   </div>
 
@@ -520,13 +505,16 @@ export default function SocioPerfilPage() {
                     {/* Barra de progreso de nivel */}
                     <div className="bg-gray-100 rounded-full h-3 mb-2 overflow-hidden">
                       <div 
-                        className="h-full bg-gradient-to-r from-yellow-400 to-yellow-600 rounded-full transition-all duration-500"
-                        style={{ width: `${(profileData.puntos / (profileData.puntos + profileData.puntosParaProximoNivel)) * 100}%` }}
+                        className="h-full rounded-full transition-all duration-500"
+                        style={{ 
+                          width: `${(profileData.nivel.puntos / (profileData.nivel.puntos + profileData.nivel.puntosParaProximoNivel)) * 100}%`,
+                          background: `linear-gradient(90deg, ${getNivelColor(profileData.nivel.nivel)}, ${getNivelColor(profileData.nivel.proximoNivel)})`
+                        }}
                       ></div>
                     </div>
                     <div className="flex justify-between text-sm text-gray-600">
-                      <span>{profileData.puntos} puntos</span>
-                      <span>{profileData.puntosParaProximoNivel} para {profileData.proximoNivel}</span>
+                      <span>{profileData.nivel.puntos} puntos</span>
+                      <span>{profileData.nivel.puntosParaProximoNivel} para {profileData.nivel.proximoNivel}</span>
                     </div>
                   </div>
 
@@ -563,7 +551,7 @@ export default function SocioPerfilPage() {
                     {profileData.dni && (
                       <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors">
                         <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
-                          <CreditCard size={20} className="text-purple-600" />
+                          <IdCard size={20} className="text-purple-600" />
                         </div>
                         <div>
                           <p className="text-sm text-gray-500 font-medium">DNI</p>
@@ -575,11 +563,25 @@ export default function SocioPerfilPage() {
                     {profileData.direccion && (
                       <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors">
                         <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
-                          <MapPin size={20} className="text-orange-600" />
+                          <Home size={20} className="text-orange-600" />
                         </div>
                         <div>
                           <p className="text-sm text-gray-500 font-medium">Dirección</p>
                           <p className="text-gray-900 font-semibold">{profileData.direccion}</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {profileData.fechaNacimiento && (
+                      <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors">
+                        <div className="w-12 h-12 bg-pink-100 rounded-xl flex items-center justify-center">
+                          <Cake size={20} className="text-pink-600" />
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500 font-medium">Fecha de Nacimiento</p>
+                          <p className="text-gray-900 font-semibold">
+                            {format(profileData.fechaNacimiento, 'dd MMMM yyyy', { locale: es })}
+                          </p>
                         </div>
                       </div>
                     )}
@@ -613,21 +615,31 @@ export default function SocioPerfilPage() {
               <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                    <TrendingUp size={24} className="text-blue-600" />
+                    <BarChart3 size={24} className="text-blue-600" />
                   </div>
                   <div>
                     <h3 className="text-xl font-bold text-gray-900">Estadísticas de Actividad</h3>
                     <p className="text-gray-500">Tu rendimiento como socio</p>
                   </div>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  leftIcon={<Activity size={16} />}
-                  onClick={() => setActivityModalOpen(true)}
-                >
-                  Ver Actividad
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    leftIcon={<Activity size={16} />}
+                    onClick={() => setActivityModalOpen(true)}
+                  >
+                    Ver Actividad
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    leftIcon={<BarChart3 size={16} />}
+                    onClick={() => setStatsModalOpen(true)}
+                  >
+                    Estadísticas Avanzadas
+                  </Button>
+                </div>
               </div>
 
               {/* Grid de métricas mejorado */}
@@ -708,7 +720,7 @@ export default function SocioPerfilPage() {
                     <Heart size={24} className="text-white" />
                   </div>
                   <div className="text-2xl font-bold text-purple-600">{enhancedStats.beneficiosFavoritos}</div>
-                  <div className="text-sm text-gray-600">Beneficios Favoritos</div>
+                  <div className="text-sm text-gray-600">Categorías Favoritas</div>
                 </div>
               </div>
             </motion.div>
@@ -720,64 +732,12 @@ export default function SocioPerfilPage() {
               transition={{ delay: 0.2 }}
               className="bg-white rounded-3xl shadow-lg border border-gray-200 p-8"
             >
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
-                    <Clock size={24} className="text-purple-600" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-gray-900">Actividad Reciente</h3>
-                    <p className="text-gray-500">Últimas acciones realizadas</p>
-                  </div>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  leftIcon={<ExternalLink size={16} />}
-                  onClick={() => setActivityModalOpen(true)}
-                >
-                  Ver Todo
-                </Button>
-              </div>
-
-              <div className="space-y-4">
-                {actividadReciente.slice(0, 4).map((item, index) => (
-                  <motion.div
-                    key={item.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.3 + index * 0.1 }}
-                    className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors"
-                  >
-                    <div 
-                      className="w-12 h-12 rounded-xl flex items-center justify-center text-white"
-                      style={{ backgroundColor: item.color }}
-                    >
-                      {item.icono}
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-gray-900">{item.titulo}</h4>
-                      <p className="text-sm text-gray-600">{item.descripcion}</p>
-                      {item.comercio && (
-                        <p className="text-xs text-gray-500 mt-1">{item.comercio}</p>
-                      )}
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm text-gray-500">
-                        {format(item.fecha, 'HH:mm', { locale: es })}
-                      </p>
-                      <p className="text-xs text-gray-400">
-                        {format(item.fecha, 'dd/MM', { locale: es })}
-                      </p>
-                      {item.valor && (
-                        <p className="text-sm font-bold text-green-600">
-                          +${item.valor}
-                        </p>
-                      )}
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
+              <ActivityTimeline
+                activities={activity.slice(0, 5)}
+                loading={loading}
+                onLoadMore={() => setActivityModalOpen(true)}
+                hasMore={activity.length > 5}
+              />
             </motion.div>
           </div>
 
@@ -812,14 +772,18 @@ export default function SocioPerfilPage() {
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-white rounded-lg shadow-sm flex items-center justify-center">
-                          <Building2 size={16} className="text-gray-600" />
+                          {asociacion.logo ? (
+                            <img src={asociacion.logo} alt={asociacion.nombre} className="w-8 h-8 object-cover rounded" />
+                          ) : (
+                            <Building2 size={16} className="text-gray-600" />
+                          )}
                         </div>
                         <div>
                           <h4 className="font-semibold text-gray-900 text-sm">{asociacion.nombre}</h4>
                           <p className="text-xs text-gray-500">
                             {asociacion.estado === 'activo' 
-                              ? `Vence: ${format(new Date(asociacion.fechaVencimiento), 'dd/MM/yyyy', { locale: es })}`
-                              : `Venció: ${format(new Date(asociacion.fechaVencimiento), 'dd/MM/yyyy', { locale: es })}`
+                              ? `Vence: ${format(asociacion.fechaVencimiento.toDate(), 'dd/MM/yyyy', { locale: es })}`
+                              : `Venció: ${format(asociacion.fechaVencimiento.toDate(), 'dd/MM/yyyy', { locale: es })}`
                             }
                           </p>
                         </div>
@@ -833,6 +797,24 @@ export default function SocioPerfilPage() {
                         <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColorClass(asociacion.estado)}`}>
                           {asociacion.estado === 'activo' ? 'Activo' : 'Vencido'}
                         </span>
+                      </div>
+                    </div>
+
+                    {/* Información adicional de la asociación */}
+                    <div className="mt-3 pt-3 border-t border-gray-200">
+                      <div className="grid grid-cols-3 gap-2 text-center">
+                        <div>
+                          <div className="text-sm font-bold text-indigo-600">{asociacion.beneficiosIncluidos}</div>
+                          <div className="text-xs text-gray-500">Beneficios</div>
+                        </div>
+                        <div>
+                          <div className="text-sm font-bold text-green-600">{asociacion.descuentoMaximo}%</div>
+                          <div className="text-xs text-gray-500">Desc. Máx.</div>
+                        </div>
+                        <div>
+                          <div className="text-sm font-bold text-purple-600">{asociacion.comerciosAfiliados}</div>
+                          <div className="text-xs text-gray-500">Comercios</div>
+                        </div>
                       </div>
                     </div>
                   </motion.div>
@@ -908,6 +890,16 @@ export default function SocioPerfilPage() {
                 <Button
                   variant="outline"
                   fullWidth
+                  leftIcon={<Settings size={16} />}
+                  onClick={() => setConfigModalOpen(true)}
+                  className="justify-start"
+                >
+                  Configuración avanzada
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  fullWidth
                   leftIcon={<HelpCircle size={16} />}
                   className="justify-start"
                 >
@@ -942,9 +934,9 @@ export default function SocioPerfilPage() {
                 </li>
                 <li className="flex items-start gap-3">
                   <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <MessageCircle size={12} className="text-white" />
+                    <Camera size={12} className="text-white" />
                   </div>
-                  <span>Contacta a tu asociación si tienes problemas con tu membresía</span>
+                  <span>Agrega una foto de perfil para personalizar tu experiencia</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -990,7 +982,7 @@ export default function SocioPerfilPage() {
                 value={formData.dni}
                 onChange={(e) => setFormData(prev => ({ ...prev, dni: e.target.value }))}
                 placeholder="Tu número de documento"
-                icon={<CreditCard size={16} />}
+                icon={<IdCard size={16} />}
               />
 
               <Input
@@ -998,8 +990,23 @@ export default function SocioPerfilPage() {
                 value={formData.direccion}
                 onChange={(e) => setFormData(prev => ({ ...prev, direccion: e.target.value }))}
                 placeholder="Tu dirección"
-                icon={<MapPin size={16} />}
+                icon={<Home size={16} />}
               />
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Fecha de Nacimiento
+                </label>
+                <input
+                  type="date"
+                  value={formData.fechaNacimiento ? format(formData.fechaNacimiento, 'yyyy-MM-dd') : ''}
+                  onChange={(e) => setFormData(prev => ({ 
+                    ...prev, 
+                    fechaNacimiento: e.target.value ? new Date(e.target.value) : undefined 
+                  }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
             </div>
 
             <DialogFooter>
@@ -1067,7 +1074,10 @@ export default function SocioPerfilPage() {
                     </h4>
                     <div className="space-y-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Idioma</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          <Languages size={16} className="inline mr-2" />
+                          Idioma
+                        </label>
                         <select
                           value={configuracion.idioma}
                           onChange={(e) => setConfiguracion(prev => ({ ...prev, idioma: e.target.value as 'es' | 'en' }))}
@@ -1079,7 +1089,10 @@ export default function SocioPerfilPage() {
                       </div>
                       
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Moneda</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          <DollarSign size={16} className="inline mr-2" />
+                          Moneda
+                        </label>
                         <select
                           value={configuracion.moneda}
                           onChange={(e) => setConfiguracion(prev => ({ ...prev, moneda: e.target.value as 'ARS' | 'USD' | 'EUR' }))}
@@ -1088,6 +1101,23 @@ export default function SocioPerfilPage() {
                           <option value="ARS">Peso Argentino (ARS)</option>
                           <option value="USD">Dólar Estadounidense (USD)</option>
                           <option value="EUR">Euro (EUR)</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          <Clock3 size={16} className="inline mr-2" />
+                          Zona Horaria
+                        </label>
+                        <select
+                          value={configuracion.timezone}
+                          onChange={(e) => setConfiguracion(prev => ({ ...prev, timezone: e.target.value }))}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        >
+                          <option value="America/Argentina/Buenos_Aires">Buenos Aires (GMT-3)</option>
+                          <option value="America/New_York">Nueva York (GMT-5)</option>
+                          <option value="Europe/Madrid">Madrid (GMT+1)</option>
+                          <option value="Asia/Tokyo">Tokio (GMT+9)</option>
                         </select>
                       </div>
                     </div>
@@ -1122,7 +1152,7 @@ export default function SocioPerfilPage() {
 
                       <label className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                         <div className="flex items-center gap-3">
-                          <Smartphone size={16} className="text-gray-600" />
+                          <DeviceIcon size={16} className="text-gray-600" />
                           <div>
                             <span className="text-sm font-medium text-gray-700">Notificaciones push</span>
                             <p className="text-xs text-gray-500">Notificaciones en el dispositivo</p>
@@ -1154,6 +1184,7 @@ export default function SocioPerfilPage() {
 
                       <label className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                         <div className="flex items-center gap-3">
+                
                           <Phone size={16} className="text-gray-600" />
                           <div>
                             <span className="text-sm font-medium text-gray-700">Notificaciones SMS</span>
@@ -1177,7 +1208,7 @@ export default function SocioPerfilPage() {
                 <div className="space-y-6">
                   <div>
                     <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                      <Shield size={16} />
+                      <ShieldIcon size={16} />
                       Configuración de Privacidad
                     </h4>
                     <div className="space-y-4">
@@ -1199,7 +1230,7 @@ export default function SocioPerfilPage() {
 
                       <label className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                         <div className="flex items-center gap-3">
-                          <TrendingUp size={16} className="text-gray-600" />
+                          <BarChart3 size={16} className="text-gray-600" />
                           <div>
                             <span className="text-sm font-medium text-gray-700">Mostrar estadísticas</span>
                             <p className="text-xs text-gray-500">Mostrar tus estadísticas públicamente</p>
@@ -1282,23 +1313,39 @@ export default function SocioPerfilPage() {
                         </div>
                       </div>
 
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Zona horaria</label>
-                        <select
-                          value={configuracion.timezone}
-                          onChange={(e) => setConfiguracion(prev => ({ ...prev, timezone: e.target.value }))}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                        >
-                          <option value="America/Argentina/Buenos_Aires">Buenos Aires (GMT-3)</option>
-                          <option value="America/New_York">Nueva York (GMT-5)</option>
-                          <option value="Europe/Madrid">Madrid (GMT+1)</option>
-                          <option value="Asia/Tokyo">Tokio (GMT+9)</option>
-                        </select>
+                      {/* Información del dispositivo */}
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <h5 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+                          <DeviceIcon size={16} />
+                          Información del dispositivo
+                        </h5>
+                        <div className="space-y-2 text-sm text-gray-600">
+                          <div className="flex justify-between">
+                            <span>Último acceso:</span>
+                            <span>{format(profileData.ultimoAcceso, 'dd/MM/yyyy HH:mm', { locale: es })}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Dispositivos conectados:</span>
+                            <span>{socio?.dispositivosConectados?.length || 1}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Ubicación actual:</span>
+                            <span>
+                              {socio?.ubicacionActual ? 
+                                `${socio.ubicacionActual.ciudad}, ${socio.ubicacionActual.provincia}` : 
+                                'No disponible'
+                              }
+                            </span>
+                          </div>
+                        </div>
                       </div>
 
                       {/* Acciones de cuenta */}
                       <div className="pt-4 border-t border-gray-200">
-                        <h5 className="font-medium text-gray-900 mb-3">Acciones de cuenta</h5>
+                        <h5 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+                          <Database size={16} />
+                          Gestión de datos
+                        </h5>
                         <div className="space-y-3">
                           <Button
                             variant="outline"
@@ -1315,6 +1362,26 @@ export default function SocioPerfilPage() {
                             fullWidth
                             leftIcon={<RotateCcw size={16} />}
                             className="justify-start"
+                            onClick={() => {
+                              setConfiguracion({
+                                notificaciones: true,
+                                notificacionesPush: true,
+                                notificacionesEmail: true,
+                                notificacionesSMS: false,
+                                tema: 'light',
+                                idioma: 'es',
+                                moneda: 'ARS',
+                                timezone: 'America/Argentina/Buenos_Aires',
+                                perfilPublico: false,
+                                mostrarEstadisticas: true,
+                                mostrarActividad: true,
+                                compartirDatos: false,
+                                beneficiosFavoritos: [],
+                                comerciosFavoritos: [],
+                                categoriasFavoritas: []
+                              });
+                              toast.success('Configuración restablecida');
+                            }}
                           >
                             Restablecer configuración
                           </Button>
@@ -1354,100 +1421,10 @@ export default function SocioPerfilPage() {
               </Button>
               <Button 
                 onClick={handleSaveConfig}
-                loading={refreshing}
+                loading={updating}
                 leftIcon={<Save size={16} />}
               >
                 Guardar Configuración
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Modal de Avatar */}
-        <Dialog open={avatarModalOpen} onClose={() => setAvatarModalOpen(false)}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-3">
-                <Camera size={24} className="text-indigo-600" />
-                Cambiar Avatar
-              </DialogTitle>
-            </DialogHeader>
-
-            <div className="space-y-6">
-              {/* Vista previa del avatar actual */}
-              <div className="text-center">
-                <div className="w-32 h-32 mx-auto bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center relative overflow-hidden">
-                  {profileData.avatar ? (
-                    <img 
-                      src={profileData.avatar} 
-                      alt="Avatar" 
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <User size={48} className="text-white" />
-                  )}
-                </div>
-                <p className="text-sm text-gray-500 mt-3">Avatar actual</p>
-              </div>
-
-              {/* Opciones de avatar */}
-              <div className="space-y-4">
-                <Button
-                  variant="outline"
-                  fullWidth
-                  leftIcon={<Upload size={16} />}
-                  className="justify-start"
-                >
-                  Subir nueva imagen
-                </Button>
-                
-                <Button
-                  variant="outline"
-                  fullWidth
-                  leftIcon={<Camera size={16} />}
-                  className="justify-start"
-                >
-                  Tomar foto
-                </Button>
-                
-                <Button
-                  variant="outline"
-                  fullWidth
-                  leftIcon={<User size={16} />}
-                  className="justify-start"
-                >
-                  Usar avatar por defecto
-                </Button>
-              </div>
-
-              {/* Avatares predefinidos */}
-              <div>
-                <p className="text-sm font-medium text-gray-700 mb-3">Avatares predefinidos</p>
-                <div className="grid grid-cols-4 gap-3">
-                  {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                    <button
-                      key={i}
-                      className="w-16 h-16 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-xl flex items-center justify-center text-white hover:scale-105 transition-transform"
-                    >
-                      <User size={24} />
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setAvatarModalOpen(false)}
-                leftIcon={<X size={16} />}
-              >
-                Cancelar
-              </Button>
-              <Button 
-                leftIcon={<Save size={16} />}
-              >
-                Guardar Avatar
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -1489,6 +1466,28 @@ export default function SocioPerfilPage() {
                     {copied ? <Check size={16} /> : <Copy size={16} />}
                   </button>
                 </div>
+
+                {/* Información adicional */}
+                <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <div className="font-medium text-blue-900">Nivel</div>
+                      <div className="text-blue-700">{profileData.nivel.nivel}</div>
+                    </div>
+                    <div>
+                      <div className="font-medium text-blue-900">Puntos</div>
+                      <div className="text-blue-700">{profileData.nivel.puntos}</div>
+                    </div>
+                    <div>
+                      <div className="font-medium text-blue-900">Estado</div>
+                      <div className="text-blue-700">{getStatusText(profileData.estado)}</div>
+                    </div>
+                    <div>
+                      <div className="font-medium text-blue-900">Asociaciones</div>
+                      <div className="text-blue-700">{asociaciones.length}</div>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* Acciones */}
@@ -1525,93 +1524,19 @@ export default function SocioPerfilPage() {
 
         {/* Modal de Actividad Completa */}
         <Dialog open={activityModalOpen} onClose={() => setActivityModalOpen(false)}>
-          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-3">
                 <Activity size={24} className="text-indigo-600" />
-                Historial de Actividad
+                Historial de Actividad Completo
               </DialogTitle>
             </DialogHeader>
 
-            <div className="space-y-6">
-              {/* Filtros */}
-              <div className="flex gap-3">
-                <div className="flex-1">
-                  <Input
-                    placeholder="Buscar actividad..."
-                    icon={<Search size={16} />}
-                  />
-                </div>
-                <Button
-                  variant="outline"
-                  leftIcon={<Filter size={16} />}
-                >
-                  Filtros
-                </Button>
-              </div>
-
-              {/* Lista de actividad completa */}
-              <div className="space-y-4">
-                {actividadReciente.map((item, index) => (
-                  <motion.div
-                    key={item.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className="flex items-start gap-4 p-6 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors"
-                  >
-                    <div 
-                      className="w-12 h-12 rounded-xl flex items-center justify-center text-white flex-shrink-0"
-                      style={{ backgroundColor: item.color }}
-                    >
-                      {item.icono}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between mb-2">
-                        <h4 className="font-semibold text-gray-900">{item.titulo}</h4>
-                        <div className="text-right">
-                          <p className="text-sm text-gray-500">
-                            {format(item.fecha, 'dd/MM/yyyy HH:mm', { locale: es })}
-                          </p>
-                          {item.valor && (
-                            <p className="text-sm font-bold text-green-600">
-                              +${item.valor}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                      <p className="text-gray-600 mb-2">{item.descripcion}</p>
-                      {item.comercio && (
-                        <div className="flex items-center gap-2">
-                          <Building2 size={14} className="text-gray-400" />
-                          <span className="text-sm text-gray-500">{item.comercio}</span>
-                        </div>
-                      )}
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      leftIcon={<MoreVertical size={16} />}
-                    />
-                  </motion.div>
-                ))}
-              </div>
-
-              {/* Paginación */}
-              <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-                <p className="text-sm text-gray-500">
-                  Mostrando {actividadReciente.length} de {actividadReciente.length} actividades
-                </p>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" disabled>
-                    Anterior
-                  </Button>
-                  <Button variant="outline" size="sm" disabled>
-                    Siguiente
-                  </Button>
-                </div>
-              </div>
-            </div>
+            <ActivityTimeline
+              activities={activity}
+              loading={loading}
+              hasMore={false}
+            />
 
             <DialogFooter>
               <Button
@@ -1623,8 +1548,191 @@ export default function SocioPerfilPage() {
               </Button>
               <Button
                 leftIcon={<Download size={16} />}
+                onClick={async () => {
+                  try {
+                    const activityData = {
+                      actividades: activity,
+                      fechaExportacion: new Date().toISOString(),
+                      socio: profileData.nombre
+                    };
+                    
+                    const blob = new Blob([JSON.stringify(activityData, null, 2)], { 
+                      type: 'application/json' 
+                    });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `actividad-socio-${format(new Date(), 'yyyy-MM-dd')}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    
+                    toast.success('Historial de actividad exportado');
+                  } catch (error) {
+                    toast.error('Error al exportar el historial');
+                  }
+                }}
               >
                 Exportar Historial
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Modal de Estadísticas Avanzadas */}
+        <Dialog open={statsModalOpen} onClose={() => setStatsModalOpen(false)}>
+          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-3">
+                <BarChart3 size={24} className="text-indigo-600" />
+                Estadísticas Avanzadas
+              </DialogTitle>
+            </DialogHeader>
+
+            <div className="space-y-8">
+              {/* Resumen de estadísticas */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl">
+                  <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                    <TrendingUp size={24} className="text-white" />
+                  </div>
+                  <div className="text-2xl font-bold text-blue-600">${enhancedStats.ahorroTotal.toLocaleString()}</div>
+                  <div className="text-sm text-gray-600">Ahorro Total</div>
+                </div>
+
+                <div className="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-2xl">
+                  <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                    <Award size={24} className="text-white" />
+                  </div>
+                  <div className="text-2xl font-bold text-green-600">{enhancedStats.beneficiosUsados}</div>
+                  <div className="text-sm text-gray-600">Beneficios Usados</div>
+                </div>
+
+                <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl">
+                  <div className="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                    <Building2 size={24} className="text-white" />
+                  </div>
+                  <div className="text-2xl font-bold text-purple-600">{enhancedStats.comerciosVisitados}</div>
+                  <div className="text-sm text-gray-600">Comercios Visitados</div>
+                </div>
+
+                <div className="text-center p-4 bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-2xl">
+                  <div className="w-12 h-12 bg-yellow-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                    <Zap size={24} className="text-white" />
+                  </div>
+                  <div className="text-2xl font-bold text-yellow-600">{enhancedStats.racha}</div>
+                  <div className="text-sm text-gray-600">Días de Racha</div>
+                </div>
+              </div>
+
+              {/* Comercios más visitados */}
+              {enhancedStats.comerciosMasVisitados.length > 0 && (
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <Building2 size={20} />
+                    Comercios Más Visitados
+                  </h4>
+                  <div className="space-y-3">
+                    {enhancedStats.comerciosMasVisitados.map((comercio, index) => (
+                      <div key={comercio.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center">
+                            <span className="text-sm font-bold text-indigo-600">{index + 1}</span>
+                          </div>
+                          <div>
+                            <h5 className="font-medium text-gray-900">{comercio.nombre}</h5>
+                            <p className="text-sm text-gray-500">
+                              Última visita: {format(comercio.ultimaVisita.toDate(), 'dd/MM/yyyy', { locale: es })}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-lg font-bold text-indigo-600">{comercio.visitas}</div>
+                          <div className="text-sm text-gray-500">visitas</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Beneficios por categoría */}
+              {Object.keys(enhancedStats.beneficiosPorCategoria).length > 0 && (
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <Award size={20} />
+                    Beneficios por Categoría
+                  </h4>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {Object.entries(enhancedStats.beneficiosPorCategoria).map(([categoria, cantidad]) => (
+                      <div key={categoria} className="p-4 bg-gray-50 rounded-lg">
+                        <div className="text-lg font-bold text-gray-900">{cantidad}</div>
+                        <div className="text-sm text-gray-600">{categoria}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Actividad por mes */}
+              {Object.keys(enhancedStats.actividadPorMes).length > 0 && (
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <Calendar size={20} />
+                    Actividad por Mes (Últimos 12 meses)
+                  </h4>
+                  <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
+                    {Object.entries(enhancedStats.actividadPorMes).map(([mes, actividad]) => (
+                      <div key={mes} className="text-center p-3 bg-gray-50 rounded-lg">
+                        <div className="text-lg font-bold text-indigo-600">{actividad}</div>
+                        <div className="text-xs text-gray-500">
+                          {format(new Date(mes + '-01'), 'MMM yyyy', { locale: es })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setStatsModalOpen(false)}
+                leftIcon={<X size={16} />}
+              >
+                Cerrar
+              </Button>
+              <Button
+                leftIcon={<Download size={16} />}
+                onClick={async () => {
+                  try {
+                    const statsData = {
+                      estadisticas: enhancedStats,
+                      fechaExportacion: new Date().toISOString(),
+                      socio: profileData.nombre
+                    };
+                    
+                    const blob = new Blob([JSON.stringify(statsData, null, 2)], { 
+                      type: 'application/json' 
+                    });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `estadisticas-socio-${format(new Date(), 'yyyy-MM-dd')}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    
+                    toast.success('Estadísticas exportadas');
+                  } catch (error) {
+                    toast.error('Error al exportar las estadísticas');
+                  }
+                }}
+              >
+                Exportar Estadísticas
               </Button>
             </DialogFooter>
           </DialogContent>

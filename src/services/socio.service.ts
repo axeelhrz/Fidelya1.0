@@ -2,18 +2,35 @@ import {
   doc,
   getDoc,
   updateDoc,
+  setDoc,
   Timestamp,
   collection,
   query,
   where,
   getDocs,
   orderBy,
-  limit
+  limit,
+  addDoc,
+  startAfter,
+  QueryDocumentSnapshot,
+  DocumentData
 } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { db, storage } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/constants';
 import { handleFirebaseError } from '@/lib/firebase-errors';
-import { Socio } from '@/types/socio';
+import { 
+  Socio, 
+  SocioProfile, 
+  SocioConfiguration, 
+  SocioActivity, 
+  SocioStats, 
+  SocioAsociacion,
+  SocioLevel,
+  UpdateSocioProfileData,
+  SocioActivityFilter,
+  SocioDataExport
+} from '@/types/socio';
 
 export interface SocioProfileData {
   nombre: string;
@@ -21,31 +38,12 @@ export interface SocioProfileData {
   dni?: string;
   direccion?: string;
   fechaNacimiento?: Date;
-  configuracion?: {
-    notificaciones: boolean;
-    tema: 'light' | 'dark' | 'auto';
-    privacidad: {
-      perfilPublico: boolean;
-      mostrarEstadisticas: boolean;
-    };
-  };
-}
-
-export interface SocioStats {
-  beneficiosUsados: number;
-  ahorroTotal: number;
-  beneficiosEsteMes: number;
-  asociacionesActivas: number;
-  ultimaActividad?: Date;
-  beneficioMasUsado?: {
-    nombre: string;
-    usos: number;
-  };
+  configuracion?: Partial<SocioConfiguration>;
 }
 
 class SocioService {
   /**
-   * Obtiene los datos del perfil de un socio
+   * Obtiene los datos completos del perfil de un socio
    */
   async getSocioProfile(socioId: string): Promise<Socio | null> {
     try {
@@ -58,6 +56,8 @@ class SocioService {
           uid: socioSnap.id,
           ...data,
           creadoEn: data.creadoEn || Timestamp.now(),
+          configuracion: this.getDefaultConfiguration(data.configuracion),
+          nivel: this.getDefaultLevel(data.nivel),
         } as Socio;
       }
       
@@ -69,18 +69,36 @@ class SocioService {
   }
 
   /**
-   * Actualiza el perfil de un socio
+   * Actualiza el perfil de un socio con validación completa
    */
   async updateSocioProfile(
     socioId: string, 
-    profileData: Partial<SocioProfileData>
+    profileData: UpdateSocioProfileData
   ): Promise<void> {
     try {
       const socioRef = doc(db, COLLECTIONS.SOCIOS, socioId);
       
-      await updateDoc(socioRef, {
+      // Preparar datos para actualización
+      const updateData: any = {
         ...profileData,
         actualizadoEn: Timestamp.now()
+      };
+
+      // Convertir fecha de nacimiento si existe
+      if (profileData.fechaNacimiento) {
+        updateData.fechaNacimiento = Timestamp.fromDate(profileData.fechaNacimiento);
+      }
+
+      await updateDoc(socioRef, updateData);
+
+      // Registrar actividad
+      await this.logActivity(socioId, {
+        tipo: 'actualizacion',
+        titulo: 'Perfil actualizado',
+        descripcion: 'Información del perfil modificada',
+        metadata: {
+          camposActualizados: Object.keys(profileData)
+        }
       });
     } catch (error) {
       console.error('Error updating socio profile:', error);
@@ -89,81 +107,274 @@ class SocioService {
   }
 
   /**
-   * Obtiene las estadísticas de un socio
+   * Sube y actualiza la imagen de perfil del socio
+   */
+  async uploadProfileImage(socioId: string, file: File): Promise<string> {
+    try {
+      // Validar archivo
+      if (!file.type.startsWith('image/')) {
+        throw new Error('El archivo debe ser una imagen');
+      }
+
+      if (file.size > 5 * 1024 * 1024) { // 5MB
+        throw new Error('La imagen no puede superar los 5MB');
+      }
+
+      // Eliminar imagen anterior si existe
+      const currentSocio = await this.getSocioProfile(socioId);
+      if (currentSocio?.avatar) {
+        try {
+          await this.deleteProfileImage(currentSocio.avatar);
+        } catch (error) {
+          console.warn('Error deleting previous avatar:', error);
+        }
+      }
+
+      // Generar rutas para las imágenes
+      const timestamp = Date.now();
+      const extension = file.name.split('.').pop() || 'jpg';
+      const avatarPath = `socios/${socioId}/avatar_${timestamp}.${extension}`;
+      const thumbnailPath = `socios/${socioId}/avatar_thumbnail_${timestamp}.${extension}`;
+
+      // Comprimir y subir imagen principal
+      const compressedFile = await this.compressImage(file, 0.8, 800);
+      const avatarRef = ref(storage, avatarPath);
+      await uploadBytes(avatarRef, compressedFile);
+      const avatarURL = await getDownloadURL(avatarRef);
+
+      // Crear y subir thumbnail
+      const thumbnailFile = await this.compressImage(file, 0.7, 200);
+      const thumbnailRef = ref(storage, thumbnailPath);
+      await uploadBytes(thumbnailRef, thumbnailFile);
+      const thumbnailURL = await getDownloadURL(thumbnailRef);
+
+      // Actualizar perfil con las nuevas URLs
+      await this.updateSocioProfile(socioId, {
+        avatar: avatarURL
+      });
+
+      // Actualizar también el thumbnail en el documento
+      const socioRef = doc(db, COLLECTIONS.SOCIOS, socioId);
+      await updateDoc(socioRef, {
+        avatarThumbnail: thumbnailURL
+      });
+
+      // Registrar actividad
+      await this.logActivity(socioId, {
+        tipo: 'actualizacion',
+        titulo: 'Imagen de perfil actualizada',
+        descripcion: 'Nueva imagen de perfil subida'
+      });
+
+      return avatarURL;
+    } catch (error) {
+      console.error('Error uploading profile image:', error);
+      throw new Error(handleFirebaseError(error as Error));
+    }
+  }
+
+  /**
+   * Elimina la imagen de perfil del socio
+   */
+  async deleteProfileImage(imageUrl: string): Promise<void> {
+    try {
+      const imageRef = ref(storage, imageUrl);
+      await deleteObject(imageRef);
+    } catch (error) {
+      console.error('Error deleting profile image:', error);
+      // No lanzar error para operaciones de eliminación
+    }
+  }
+
+  /**
+   * Actualiza la configuración del socio
+   */
+  async updateSocioConfiguration(
+    socioId: string, 
+    configuration: Partial<SocioConfiguration>
+  ): Promise<void> {
+    try {
+      const socioRef = doc(db, COLLECTIONS.SOCIOS, socioId);
+      
+      await updateDoc(socioRef, {
+        configuracion: configuration,
+        actualizadoEn: Timestamp.now()
+      });
+
+      // Registrar actividad
+      await this.logActivity(socioId, {
+        tipo: 'configuracion',
+        titulo: 'Configuración actualizada',
+        descripcion: 'Preferencias de cuenta modificadas',
+        metadata: {
+          configuracionActualizada: Object.keys(configuration)
+        }
+      });
+    } catch (error) {
+      console.error('Error updating socio configuration:', error);
+      throw new Error(handleFirebaseError(error as Error));
+    }
+  }
+
+  /**
+   * Obtiene las estadísticas completas de un socio
    */
   async getSocioStats(socioId: string): Promise<SocioStats> {
     try {
-      // Obtener beneficios usados
-      const beneficiosUsadosRef = collection(db, 'beneficioUsos');
-      const beneficiosQuery = query(
-        beneficiosUsadosRef,
+      // Obtener validaciones del socio
+      const validacionesRef = collection(db, COLLECTIONS.VALIDACIONES);
+      const validacionesQuery = query(
+        validacionesRef,
         where('socioId', '==', socioId),
-        orderBy('fechaUso', 'desc')
+        orderBy('fecha', 'desc')
       );
       
-      const beneficiosSnapshot = await getDocs(beneficiosQuery);
-      const beneficiosUsados = beneficiosSnapshot.docs.map(doc => ({
+      const validacionesSnapshot = await getDocs(validacionesQuery);
+      const validaciones = validacionesSnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       }));
 
-      // Calcular estadísticas
-      const totalBeneficios = beneficiosUsados.length;
-      const ahorroTotal = beneficiosUsados.reduce((total, beneficio) => 
-        total + (beneficio.montoDescuento || 0), 0
+      // Calcular estadísticas básicas
+      const totalValidaciones = validaciones.length;
+      const validacionesExitosas = validaciones.filter(v => v.estado === 'exitosa').length;
+      const ahorroTotal = validaciones.reduce((total, validacion) => 
+        total + (validacion.montoDescuento || 0), 0
       );
 
-      // Beneficios de este mes
+      // Validaciones de este mes
       const inicioMes = new Date();
       inicioMes.setDate(1);
       inicioMes.setHours(0, 0, 0, 0);
       
-      const beneficiosEsteMes = beneficiosUsados.filter(beneficio => {
-        const fechaUso = beneficio.fechaUso?.toDate();
-        return fechaUso && fechaUso >= inicioMes;
+      const validacionesEsteMes = validaciones.filter(validacion => {
+        const fecha = validacion.fecha?.toDate();
+        return fecha && fecha >= inicioMes;
       }).length;
 
-      // Obtener asociaciones del socio
+      const ahorroEsteMes = validaciones
+        .filter(validacion => {
+          const fecha = validacion.fecha?.toDate();
+          return fecha && fecha >= inicioMes;
+        })
+        .reduce((total, validacion) => total + (validacion.montoDescuento || 0), 0);
+
+      // Obtener información del socio para calcular tiempo como socio
       const socio = await this.getSocioProfile(socioId);
-      const asociacionesActivas = socio?.asociacionId ? 1 : 0;
+      const tiempoComoSocio = socio ? 
+        Math.floor((new Date().getTime() - socio.creadoEn.toDate().getTime()) / (1000 * 60 * 60 * 24)) : 0;
 
-      // Última actividad
-      const ultimaActividad = beneficiosUsados.length > 0 
-        ? beneficiosUsados[0].fechaUso?.toDate() 
-        : undefined;
+      // Calcular racha (días consecutivos con actividad)
+      const racha = this.calculateStreak(validaciones);
 
-      // Beneficio más usado (simulado por ahora)
-      const beneficioMasUsado = beneficiosUsados.length > 0 
-        ? {
-            nombre: 'Descuento en Restaurante',
-            usos: Math.floor(totalBeneficios * 0.3)
+      // Comercios únicos visitados
+      const comerciosUnicos = new Set(validaciones.map(v => v.comercioId)).size;
+
+      // Descuento promedio
+      const descuentoPromedio = totalValidaciones > 0 ? 
+        Math.round(ahorroTotal / totalValidaciones) : 0;
+
+      // Estadísticas por categoría
+      const beneficiosPorCategoria: { [categoria: string]: number } = {};
+      validaciones.forEach(validacion => {
+        const categoria = validacion.categoria || 'Sin categoría';
+        beneficiosPorCategoria[categoria] = (beneficiosPorCategoria[categoria] || 0) + 1;
+      });
+
+      // Comercios más visitados
+      const comerciosVisitas: { [comercioId: string]: any } = {};
+      validaciones.forEach(validacion => {
+        if (validacion.comercioId) {
+          if (!comerciosVisitas[validacion.comercioId]) {
+            comerciosVisitas[validacion.comercioId] = {
+              id: validacion.comercioId,
+              nombre: validacion.comercioNombre || 'Comercio',
+              visitas: 0,
+              ultimaVisita: validacion.fecha
+            };
           }
-        : undefined;
+          comerciosVisitas[validacion.comercioId].visitas++;
+          if (validacion.fecha > comerciosVisitas[validacion.comercioId].ultimaVisita) {
+            comerciosVisitas[validacion.comercioId].ultimaVisita = validacion.fecha;
+          }
+        }
+      });
+
+      const comerciosMasVisitados = Object.values(comerciosVisitas)
+        .sort((a: any, b: any) => b.visitas - a.visitas)
+        .slice(0, 5);
+
+      // Actividad por mes (últimos 12 meses)
+      const actividadPorMes: { [mes: string]: number } = {};
+      const ahora = new Date();
+      for (let i = 11; i >= 0; i--) {
+        const fecha = new Date(ahora.getFullYear(), ahora.getMonth() - i, 1);
+        const mesKey = fecha.toISOString().slice(0, 7); // YYYY-MM
+        actividadPorMes[mesKey] = 0;
+      }
+
+      validaciones.forEach(validacion => {
+        const fecha = validacion.fecha?.toDate();
+        if (fecha) {
+          const mesKey = fecha.toISOString().slice(0, 7);
+          if (actividadPorMes.hasOwnProperty(mesKey)) {
+            actividadPorMes[mesKey]++;
+          }
+        }
+      });
 
       return {
-        beneficiosUsados: totalBeneficios,
+        total: 0, // Para compatibilidad
+        activos: 0, // Para compatibilidad
+        vencidos: 0, // Para compatibilidad
+        inactivos: 0, // Para compatibilidad
+        
+        // Estadísticas del perfil individual
+        beneficiosUsados: totalValidaciones,
         ahorroTotal,
-        beneficiosEsteMes,
-        asociacionesActivas,
-        ultimaActividad,
-        beneficioMasUsado
+        beneficiosEsteMes: validacionesEsteMes,
+        asociacionesActivas: socio?.asociacionId ? 1 : 0,
+        racha,
+        comerciosVisitados: comerciosUnicos,
+        validacionesExitosas: Math.round((validacionesExitosas / totalValidaciones) * 100) || 0,
+        descuentoPromedio,
+        ahorroEsteMes,
+        beneficiosFavoritos: Object.keys(beneficiosPorCategoria).length,
+        tiempoComoSocio,
+        
+        // Estadísticas avanzadas
+        actividadPorMes,
+        beneficiosPorCategoria,
+        comerciosMasVisitados,
+        beneficiosMasUsados: [] // Se puede implementar más adelante
       };
     } catch (error) {
       console.error('Error getting socio stats:', error);
       // Retornar estadísticas por defecto en caso de error
       return {
+        total: 0,
+        activos: 0,
+        vencidos: 0,
+        inactivos: 0,
         beneficiosUsados: 0,
         ahorroTotal: 0,
         beneficiosEsteMes: 0,
-        asociacionesActivas: 0
+        asociacionesActivas: 0,
+        racha: 0,
+        comerciosVisitados: 0,
+        validacionesExitosas: 0,
+        descuentoPromedio: 0,
+        ahorroEsteMes: 0,
+        beneficiosFavoritos: 0,
+        tiempoComoSocio: 0
       };
     }
   }
 
   /**
-   * Obtiene las asociaciones de un socio
+   * Obtiene las asociaciones de un socio con información detallada
    */
-  async getSocioAsociaciones(socioId: string) {
+  async getSocioAsociaciones(socioId: string): Promise<SocioAsociacion[]> {
     try {
       const socio = await this.getSocioProfile(socioId);
       if (!socio?.asociacionId) {
@@ -175,12 +386,25 @@ class SocioService {
       
       if (asociacionSnap.exists()) {
         const asociacionData = asociacionSnap.data();
+        
+        // Calcular fecha de vencimiento basada en el tipo de membresía
+        const fechaVencimiento = this.calculateExpirationDate(
+          socio.creadoEn.toDate(),
+          asociacionData.tipoMembresia || 'anual'
+        );
+
         return [{
           id: asociacionSnap.id,
           nombre: asociacionData.nombre || 'Asociación',
+          descripcion: asociacionData.descripcion,
+          logo: asociacionData.logo,
           estado: socio.estado,
-          fechaVencimiento: asociacionData.fechaVencimiento?.toDate(),
-          logo: asociacionData.logo
+          fechaInicio: socio.creadoEn,
+          fechaVencimiento: Timestamp.fromDate(fechaVencimiento),
+          tipo: asociacionData.tipoMembresia || 'anual',
+          beneficiosIncluidos: asociacionData.beneficiosIncluidos || 0,
+          descuentoMaximo: asociacionData.descuentoMaximo || 0,
+          comerciosAfiliados: asociacionData.comerciosAfiliados || 0
         }];
       }
 
@@ -188,6 +412,86 @@ class SocioService {
     } catch (error) {
       console.error('Error getting socio asociaciones:', error);
       return [];
+    }
+  }
+
+  /**
+   * Obtiene la actividad reciente del socio
+   */
+  async getSocioActivity(
+    socioId: string, 
+    filter: SocioActivityFilter = {}
+  ): Promise<SocioActivity[]> {
+    try {
+      const activitiesRef = collection(db, COLLECTIONS.ACTIVITIES);
+      let activityQuery = query(
+        activitiesRef,
+        where('socioId', '==', socioId),
+        orderBy('fecha', 'desc')
+      );
+
+      if (filter.limit) {
+        activityQuery = query(activityQuery, limit(filter.limit));
+      }
+
+      const activitiesSnapshot = await getDocs(activityQuery);
+      return activitiesSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as SocioActivity[];
+    } catch (error) {
+      console.error('Error getting socio activity:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Registra una nueva actividad del socio
+   */
+  async logActivity(
+    socioId: string, 
+    activity: Omit<SocioActivity, 'id' | 'fecha'>
+  ): Promise<void> {
+    try {
+      const activitiesRef = collection(db, COLLECTIONS.ACTIVITIES);
+      await addDoc(activitiesRef, {
+        ...activity,
+        socioId,
+        fecha: Timestamp.now()
+      });
+    } catch (error) {
+      console.error('Error logging activity:', error);
+      // No lanzar error para logging de actividad
+    }
+  }
+
+  /**
+   * Exporta todos los datos del socio
+   */
+  async exportSocioData(socioId: string): Promise<SocioDataExport> {
+    try {
+      const [socio, estadisticas, asociaciones, actividad] = await Promise.all([
+        this.getSocioProfile(socioId),
+        this.getSocioStats(socioId),
+        this.getSocioAsociaciones(socioId),
+        this.getSocioActivity(socioId, { limit: 1000 })
+      ]);
+
+      if (!socio) {
+        throw new Error('Socio no encontrado');
+      }
+
+      return {
+        perfil: socio,
+        estadisticas,
+        asociaciones,
+        actividad,
+        configuracion: socio.configuracion || this.getDefaultConfiguration(),
+        fechaExportacion: Timestamp.now()
+      };
+    } catch (error) {
+      console.error('Error exporting socio data:', error);
+      throw new Error(handleFirebaseError(error as Error));
     }
   }
 
@@ -209,7 +513,188 @@ class SocioService {
       errors.push('El DNI debe tener al menos 7 caracteres');
     }
 
+    if (data.fechaNacimiento) {
+      const edad = new Date().getFullYear() - data.fechaNacimiento.getFullYear();
+      if (edad < 16 || edad > 120) {
+        errors.push('La fecha de nacimiento no es válida');
+      }
+    }
+
     return errors;
+  }
+
+  /**
+   * Actualiza el último acceso del socio
+   */
+  async updateLastAccess(socioId: string): Promise<void> {
+    try {
+      const socioRef = doc(db, COLLECTIONS.SOCIOS, socioId);
+      await updateDoc(socioRef, {
+        ultimoAcceso: Timestamp.now()
+      });
+    } catch (error) {
+      console.error('Error updating last access:', error);
+      // No lanzar error para actualización de último acceso
+    }
+  }
+
+  // Métodos privados auxiliares
+
+  /**
+   * Obtiene la configuración por defecto para un socio
+   */
+  private getDefaultConfiguration(existing?: Partial<SocioConfiguration>): SocioConfiguration {
+    return {
+      // Notificaciones
+      notificaciones: true,
+      notificacionesPush: true,
+      notificacionesEmail: true,
+      notificacionesSMS: false,
+      
+      // Apariencia
+      tema: 'light',
+      idioma: 'es',
+      moneda: 'ARS',
+      timezone: 'America/Argentina/Buenos_Aires',
+      
+      // Privacidad
+      perfilPublico: false,
+      mostrarEstadisticas: true,
+      mostrarActividad: true,
+      compartirDatos: false,
+      
+      // Preferencias
+      beneficiosFavoritos: [],
+      comerciosFavoritos: [],
+      categoriasFavoritas: [],
+      
+      ...existing
+    };
+  }
+
+  /**
+   * Obtiene el nivel por defecto para un socio
+   */
+  private getDefaultLevel(existing?: Partial<SocioLevel>): SocioLevel {
+    return {
+      nivel: 'Bronze',
+      puntos: 0,
+      puntosParaProximoNivel: 1000,
+      proximoNivel: 'Silver',
+      beneficiosDesbloqueados: [],
+      descuentoAdicional: 0,
+      ...existing
+    };
+  }
+
+  /**
+   * Comprime una imagen
+   */
+  private async compressImage(file: File, quality: number, maxSize: number): Promise<File> {
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+
+      img.onload = () => {
+        // Calcular nuevas dimensiones manteniendo aspecto
+        let { width, height } = img;
+        
+        if (width > height) {
+          if (width > maxSize) {
+            height = (height * maxSize) / width;
+            width = maxSize;
+          }
+        } else {
+          if (height > maxSize) {
+            width = (width * maxSize) / height;
+            height = maxSize;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        // Dibujar y comprimir
+        ctx?.drawImage(img, 0, 0, width, height);
+        
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              const compressedFile = new File([blob], file.name, {
+                type: file.type,
+                lastModified: Date.now(),
+              });
+              resolve(compressedFile);
+            } else {
+              resolve(file);
+            }
+          },
+          file.type,
+          quality
+        );
+      };
+
+      img.src = URL.createObjectURL(file);
+    });
+  }
+
+  /**
+   * Calcula la racha de días consecutivos con actividad
+   */
+  private calculateStreak(validaciones: any[]): number {
+    if (validaciones.length === 0) return 0;
+
+    const fechas = validaciones
+      .map(v => v.fecha?.toDate())
+      .filter(fecha => fecha)
+      .map(fecha => fecha.toDateString())
+      .sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+
+    const fechasUnicas = [...new Set(fechas)];
+    
+    let racha = 0;
+    const hoy = new Date().toDateString();
+    let fechaActual = new Date();
+
+    for (const fecha of fechasUnicas) {
+      const fechaValidacion = new Date(fecha);
+      const diferenciaDias = Math.floor(
+        (fechaActual.getTime() - fechaValidacion.getTime()) / (1000 * 60 * 60 * 24)
+      );
+
+      if (diferenciaDias <= 1) {
+        racha++;
+        fechaActual = fechaValidacion;
+      } else {
+        break;
+      }
+    }
+
+    return racha;
+  }
+
+  /**
+   * Calcula la fecha de vencimiento basada en el tipo de membresía
+   */
+  private calculateExpirationDate(fechaInicio: Date, tipo: string): Date {
+    const fecha = new Date(fechaInicio);
+    
+    switch (tipo) {
+      case 'mensual':
+        fecha.setMonth(fecha.getMonth() + 1);
+        break;
+      case 'anual':
+        fecha.setFullYear(fecha.getFullYear() + 1);
+        break;
+      case 'vitalicia':
+        fecha.setFullYear(fecha.getFullYear() + 100); // Fecha muy lejana
+        break;
+      default:
+        fecha.setFullYear(fecha.getFullYear() + 1);
+    }
+    
+    return fecha;
   }
 }
 
