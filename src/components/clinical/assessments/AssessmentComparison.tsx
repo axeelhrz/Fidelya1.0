@@ -359,3 +359,585 @@ export function AssessmentComparison({
                 <span style={{
                   fontSize: '0.875rem',
                   fontWeight: 600,
+                  color: '#15803D',
+                  fontFamily: 'Inter, sans-serif'
+                }}>
+                  Mejoras
+                </span>
+              </div>
+              <div style={{
+                fontSize: '2rem',
+                fontWeight: 700,
+                color: '#16A34A',
+                fontFamily: 'Space Grotesk, sans-serif'
+              }}>
+                {overallStats.improvements}
+              </div>
+              <div style={{
+                fontSize: '0.75rem',
+                color: '#166534',
+                fontFamily: 'Inter, sans-serif'
+              }}>
+                {overallStats.improvementRate}% de las evaluaciones
+              </div>
+            </div>
+
+            <div style={{
+              padding: '1.5rem',
+              backgroundColor: '#FEF2F2',
+              borderRadius: '0.75rem',
+              border: '1px solid #FECACA'
+            }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                marginBottom: '0.5rem'
+              }}>
+                <TrendingDown size={20} color="#DC2626" />
+                <span style={{
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  color: '#991B1B',
+                  fontFamily: 'Inter, sans-serif'
+                }}>
+                  Deterioros
+                </span>
+              </div>
+              <div style={{
+                fontSize: '2rem',
+                fontWeight: 700,
+                color: '#DC2626',
+                fontFamily: 'Space Grotesk, sans-serif'
+              }}>
+                {overallStats.deteriorations}
+              </div>
+              <div style={{
+                fontSize: '0.75rem',
+                color: '#991B1B',
+                fontFamily: 'Inter, sans-serif'
+              }}>
+                {100 - overallStats.improvementRate}% de las evaluaciones
+              </div>
+            </div>
+
+            <div style={{
+              padding: '1.5rem',
+              backgroundColor: '#EFF6FF',
+              borderRadius: '0.75rem',
+              border: '1px solid #DBEAFE'
+            }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                marginBottom: '0.5rem'
+              }}>
+                <BarChart3 size={20} color="#2563EB" />
+                <span style={{
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  color: '#1E40AF',
+                  fontFamily: 'Inter, sans-serif'
+                }}>
+                  Cambio Promedio
+                </span>
+              </div>
+              <div style={{
+                fontSize: '2rem',
+                fontWeight: 700,
+                color: '#2563EB',
+                fontFamily: 'Space Grotesk, sans-serif'
+              }}>
+                {overallStats.avgChange}%
+              </div>
+              <div style={{
+                fontSize: '0.75rem',
+                color: '#1E3A8A',
+                fontFamily: 'Inter, sans-serif'
+              }}>
+                En {overallStats.avgTimespan} días promedio
+              </div>
+            </div>
+
+            <div style={{
+              padding: '1.5rem',
+              backgroundColor: '#F0F9FF',
+              borderRadius: '0.75rem',
+              border: '1px solid #E0F2FE'
+            }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                marginBottom: '0.5rem'
+              }}>
+                <Calendar size={20} color="#0369A1" />
+                <span style={{
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  color: '#0C4A6E',
+                  fontFamily: 'Inter, sans-serif'
+                }}>
+                  Evaluaciones
+                </span>
+              </div>
+              <div style={{
+                fontSize: '2rem',
+                fontWeight: 700,
+                color: '#0369A1',
+                fontFamily: 'Space Grotesk, sans-serif'
+              }}>
+                {filteredComparisons.length}
+              </div>
+              <div style={{
+                fontSize: '0.75rem',
+                color: '#0C4A6E',
+                fontFamily: 'Inter, sans-serif'
+              }}>
+                Tests comparables
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Comparisons List */}
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '1.5rem'
+        }}>
+          {filteredComparisons.map((comparison, index) => {
+            const baselineInterpretation = getScoreInterpretation(comparison.baseline.score, comparison.testName);
+            const latestInterpretation = getScoreInterpretation(comparison.latest.score, comparison.testName);
+
+            return (
+              <motion.div
+                key={comparison.testName}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                style={{
+                  padding: '2rem',
+                  backgroundColor: 'white',
+                  borderRadius: '1rem',
+                  border: '1px solid #E5E7EB',
+                  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)'
+                }}
+              >
+                {/* Test Header */}
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  marginBottom: '2rem'
+                }}>
+                  <div>
+                    <h4 style={{
+                      fontSize: '1.25rem',
+                      fontWeight: 600,
+                      color: '#1F2937',
+                      margin: 0,
+                      fontFamily: 'Space Grotesk, sans-serif'
+                    }}>
+                      {comparison.testName}
+                    </h4>
+                    <p style={{
+                      fontSize: '0.875rem',
+                      color: '#6B7280',
+                      margin: '0.25rem 0 0 0',
+                      fontFamily: 'Inter, sans-serif'
+                    }}>
+                      {comparison.sessions} evaluaciones • {comparison.timespan} días de seguimiento
+                    </p>
+                  </div>
+
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.75rem',
+                    padding: '0.75rem 1rem',
+                    backgroundColor: comparison.isImprovement ? '#F0FDF4' : '#FEF2F2',
+                    borderRadius: '0.75rem',
+                    border: `1px solid ${comparison.isImprovement ? '#BBF7D0' : '#FECACA'}`
+                  }}>
+                    {comparison.isImprovement ? (
+                      <TrendingUp size={20} color="#16A34A" />
+                    ) : (
+                      <TrendingDown size={20} color="#DC2626" />
+                    )}
+                    <div>
+                      <div style={{
+                        fontSize: '1.25rem',
+                        fontWeight: 700,
+                        color: comparison.isImprovement ? '#16A34A' : '#DC2626',
+                        fontFamily: 'Space Grotesk, sans-serif'
+                      }}>
+                        {comparison.percentChange}%
+                      </div>
+                      <div style={{
+                        fontSize: '0.75rem',
+                        color: comparison.isImprovement ? '#15803D' : '#991B1B',
+                        fontFamily: 'Inter, sans-serif'
+                      }}>
+                        {comparison.isImprovement ? 'Mejora' : 'Deterioro'}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Score Comparison */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr auto 1fr',
+                  gap: '2rem',
+                  alignItems: 'center'
+                }}>
+                  {/* Baseline Score */}
+                  <div style={{
+                    padding: '1.5rem',
+                    backgroundColor: '#F9FAFB',
+                    borderRadius: '0.75rem',
+                    border: '1px solid #E5E7EB',
+                    textAlign: 'center'
+                  }}>
+                    <div style={{
+                      fontSize: '0.875rem',
+                      fontWeight: 600,
+                      color: '#374151',
+                      marginBottom: '0.5rem',
+                      fontFamily: 'Inter, sans-serif'
+                    }}>
+                      Evaluación Inicial
+                    </div>
+                    <div style={{
+                      fontSize: '0.75rem',
+                      color: '#6B7280',
+                      marginBottom: '1rem',
+                      fontFamily: 'Inter, sans-serif'
+                    }}>
+                      {comparison.baseline.date.toLocaleDateString('es-ES')}
+                    </div>
+                    <div style={{
+                      fontSize: '3rem',
+                      fontWeight: 700,
+                      color: baselineInterpretation.color,
+                      marginBottom: '0.5rem',
+                      fontFamily: 'Space Grotesk, sans-serif'
+                    }}>
+                      {comparison.baseline.score}
+                    </div>
+                    <div style={{
+                      fontSize: '0.875rem',
+                      fontWeight: 600,
+                      color: baselineInterpretation.color,
+                      marginBottom: '0.5rem',
+                      fontFamily: 'Inter, sans-serif'
+                    }}>
+                      {baselineInterpretation.label}
+                    </div>
+                    {comparison.baseline.percentile && (
+                      <div style={{
+                        fontSize: '0.75rem',
+                        color: '#6B7280',
+                        fontFamily: 'Inter, sans-serif'
+                      }}>
+                        Percentil {comparison.baseline.percentile}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Arrow */}
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '0.5rem'
+                  }}>
+                    <ArrowRight size={24} color="#6B7280" />
+                    <div style={{
+                      fontSize: '0.75rem',
+                      color: '#6B7280',
+                      textAlign: 'center',
+                      fontFamily: 'Inter, sans-serif'
+                    }}>
+                      {comparison.change} puntos
+                    </div>
+                  </div>
+
+                  {/* Latest Score */}
+                  <div style={{
+                    padding: '1.5rem',
+                    backgroundColor: comparison.isImprovement ? '#F0FDF4' : '#FEF2F2',
+                    borderRadius: '0.75rem',
+                    border: `1px solid ${comparison.isImprovement ? '#BBF7D0' : '#FECACA'}`,
+                    textAlign: 'center'
+                  }}>
+                    <div style={{
+                      fontSize: '0.875rem',
+                      fontWeight: 600,
+                      color: '#374151',
+                      marginBottom: '0.5rem',
+                      fontFamily: 'Inter, sans-serif'
+                    }}>
+                      Evaluación Actual
+                    </div>
+                    <div style={{
+                      fontSize: '0.75rem',
+                      color: '#6B7280',
+                      marginBottom: '1rem',
+                      fontFamily: 'Inter, sans-serif'
+                    }}>
+                      {comparison.latest.date.toLocaleDateString('es-ES')}
+                    </div>
+                    <div style={{
+                      fontSize: '3rem',
+                      fontWeight: 700,
+                      color: latestInterpretation.color,
+                      marginBottom: '0.5rem',
+                      fontFamily: 'Space Grotesk, sans-serif'
+                    }}>
+                      {comparison.latest.score}
+                    </div>
+                    <div style={{
+                      fontSize: '0.875rem',
+                      fontWeight: 600,
+                      color: latestInterpretation.color,
+                      marginBottom: '0.5rem',
+                      fontFamily: 'Inter, sans-serif'
+                    }}>
+                      {latestInterpretation.label}
+                    </div>
+                    {comparison.latest.percentile && (
+                      <div style={{
+                        fontSize: '0.75rem',
+                        color: '#6B7280',
+                        fontFamily: 'Inter, sans-serif'
+                      }}>
+                        Percentil {comparison.latest.percentile}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Progress Bar */}
+                <div style={{
+                  marginTop: '2rem',
+                  padding: '1rem',
+                  backgroundColor: '#F9FAFB',
+                  borderRadius: '0.5rem'
+                }}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: '0.5rem'
+                  }}>
+                    <span style={{
+                      fontSize: '0.875rem',
+                      fontWeight: 600,
+                      color: '#374151',
+                      fontFamily: 'Inter, sans-serif'
+                    }}>
+                      Progreso del Tratamiento
+                    </span>
+                    <span style={{
+                      fontSize: '0.875rem',
+                      fontWeight: 600,
+                      color: comparison.isImprovement ? '#16A34A' : '#DC2626',
+                      fontFamily: 'Inter, sans-serif'
+                    }}>
+                      {comparison.isImprovement ? '+' : '-'}{comparison.percentChange}%
+                    </span>
+                  </div>
+                  
+                  <div style={{
+                    width: '100%',
+                    height: '8px',
+                    backgroundColor: '#E5E7EB',
+                    borderRadius: '4px',
+                    overflow: 'hidden',
+                    position: 'relative'
+                  }}>
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${Math.min(comparison.percentChange, 100)}%` }}
+                      transition={{ duration: 1, delay: index * 0.2 }}
+                      style={{
+                        height: '100%',
+                        backgroundColor: comparison.isImprovement ? '#16A34A' : '#DC2626',
+                        borderRadius: '4px'
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {/* Clinical Interpretation */}
+                <div style={{
+                  marginTop: '1.5rem',
+                  padding: '1rem',
+                  backgroundColor: '#EFF6FF',
+                  borderRadius: '0.5rem',
+                  border: '1px solid #DBEAFE'
+                }}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    marginBottom: '0.5rem'
+                  }}>
+                    <Target size={16} color="#2563EB" />
+                    <span style={{
+                      fontSize: '0.875rem',
+                      fontWeight: 600,
+                      color: '#1E40AF',
+                      fontFamily: 'Inter, sans-serif'
+                    }}>
+                      Interpretación Clínica
+                    </span>
+                  </div>
+                  <p style={{
+                    fontSize: '0.875rem',
+                    color: '#1E3A8A',
+                    margin: 0,
+                    lineHeight: '1.5',
+                    fontFamily: 'Inter, sans-serif'
+                  }}>
+                    {comparison.isImprovement ? (
+                      `El paciente muestra una mejora significativa del ${comparison.percentChange}% en ${comparison.testName.toLowerCase()}. 
+                       La puntuación ha disminuido de ${comparison.baseline.score} (${baselineInterpretation.label.toLowerCase()}) 
+                       a ${comparison.latest.score} (${latestInterpretation.label.toLowerCase()}) durante ${comparison.timespan} días de tratamiento.`
+                    ) : (
+                      `Se observa un deterioro del ${comparison.percentChange}% en ${comparison.testName.toLowerCase()}. 
+                       La puntuación ha aumentado de ${comparison.baseline.score} (${baselineInterpretation.label.toLowerCase()}) 
+                       a ${comparison.latest.score} (${latestInterpretation.label.toLowerCase()}). Se recomienda revisar el plan de tratamiento.`
+                    )}
+                  </p>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+
+        {/* No Data Message */}
+        {filteredComparisons.length === 0 && (
+          <div style={{
+            padding: '3rem',
+            backgroundColor: '#F9FAFB',
+            borderRadius: '0.75rem',
+            border: '1px dashed #E5E7EB',
+            textAlign: 'center'
+          }}>
+            <BarChart3 size={48} color="#9CA3AF" style={{ margin: '0 auto 1rem' }} />
+            <h3 style={{
+              fontSize: '1.25rem',
+              fontWeight: 600,
+              color: '#374151',
+              margin: '0 0 0.5rem 0',
+              fontFamily: 'Space Grotesk, sans-serif'
+            }}>
+              No hay datos suficientes para comparar
+            </h3>
+            <p style={{
+              fontSize: '0.875rem',
+              color: '#6B7280',
+              margin: 0,
+              fontFamily: 'Inter, sans-serif'
+            }}>
+              Se necesitan al menos 2 evaluaciones completadas del mismo test para realizar comparaciones.
+            </p>
+          </div>
+        )}
+
+        {/* Clinical Recommendations */}
+        {overallStats && overallStats.improvements > 0 && (
+          <div style={{
+            marginTop: '2rem',
+            padding: '1.5rem',
+            backgroundColor: '#F0FDF4',
+            borderRadius: '0.75rem',
+            border: '1px solid #BBF7D0'
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              marginBottom: '1rem'
+            }}>
+              <Award size={20} color="#16A34A" />
+              <h4 style={{
+                fontSize: '1.125rem',
+                fontWeight: 600,
+                color: '#15803D',
+                margin: 0,
+                fontFamily: 'Space Grotesk, sans-serif'
+              }}>
+                Recomendaciones Clínicas
+              </h4>
+            </div>
+            
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.75rem'
+            }}>
+              {overallStats.improvementRate >= 75 && (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  fontSize: '0.875rem',
+                  color: '#166534',
+                  fontFamily: 'Inter, sans-serif'
+                }}>
+                  <CheckCircle size={16} color="#16A34A" />
+                  <span>Excelente progreso terapéutico. Considerar espaciar las sesiones o avanzar a objetivos más complejos.</span>
+                </div>
+              )}
+              
+              {overallStats.improvementRate >= 50 && overallStats.improvementRate < 75 && (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  fontSize: '0.875rem',
+                  color: '#166534',
+                  fontFamily: 'Inter, sans-serif'
+                }}>
+                  <Target size={16} color="#16A34A" />
+                  <span>Progreso satisfactorio. Mantener el enfoque terapéutico actual y monitorear evolución.</span>
+                </div>
+              )}
+              
+              {overallStats.improvementRate < 50 && (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  fontSize: '0.875rem',
+                  color: '#991B1B',
+                  fontFamily: 'Inter, sans-serif'
+                }}>
+                  <AlertTriangle size={16} color="#DC2626" />
+                  <span>Progreso limitado. Revisar plan de tratamiento y considerar ajustes en la intervención.</span>
+                </div>
+              )}
+              
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                fontSize: '0.875rem',
+                color: '#166534',
+                fontFamily: 'Inter, sans-serif'
+              }}>
+                <Calendar size={16} color="#16A34A" />
+                <span>Próxima evaluación recomendada en 4-6 semanas para monitorear continuidad del progreso.</span>
+              </div>
+            </div>
+          </div>
+        )}
+      </motion.div>
+    </motion.div>
+  );
+}
