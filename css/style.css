@@ -4373,3 +4373,35 @@ color: var(--text-primary);
     position: relative !important;
     z-index: 5 !important;
 }
+
+a.btn,
+a.btn--primary,
+a.btn--cta,
+a.btn--cta-video,
+a.btn--secondary,
+a.btn--demo,
+a.btn--footer {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    display: inline-flex !important;
+    text-decoration: none !important;
+    position: relative !important;
+    z-index: 10 !important;
+}
+
+.hero__cta-group,
+.hero__cta-group .btn,
+.hero__cta-group a {
+    pointer-events: auto !important;
+    position: relative !important;
+    z-index: 5 !important;
+}
+
+.download-btn,
+.download-btn--google,
+.download-btn--app-store {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    position: relative !important;
+    z-index: 5 !important;
+}
