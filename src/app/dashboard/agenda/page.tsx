@@ -1,14 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Calendar,
   Plus,
-  Filter,
-  Download,
-  Settings,
-  AlertTriangle,
   TrendingUp,
   Clock,
   Users,
@@ -18,7 +14,7 @@ import { CalendarView } from '@/components/clinical/agenda/CalendarView';
 import { AppointmentModal } from '@/components/clinical/agenda/AppointmentModal';
 import { ClinicalCard } from '@/components/clinical/ClinicalCard';
 import { useAppointments, usePatients } from '@/hooks/useClinicalData';
-import { Appointment, ExtendedPatient, ConsultingRoom } from '@/types/clinical';
+import { Appointment, ConsultingRoom } from '@/types/clinical';
 
 export default function AgendaPage() {
   const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('week');
@@ -26,18 +22,15 @@ export default function AgendaPage() {
   const [showAppointmentModal, setShowAppointmentModal] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [modalMode, setModalMode] = useState<'create' | 'edit' | 'view'>('create');
-  const [showFilters, setShowFilters] = useState(false);
 
   // Hooks para datos
   const { 
     appointments, 
     loading: appointmentsLoading, 
-    error: appointmentsError,
     createAppointment,
     updateAppointment,
     checkInAppointment,
     checkOutAppointment,
-    cancelAppointment
   } = useAppointments();
 
   const { 
@@ -119,7 +112,7 @@ export default function AgendaPage() {
     setShowAppointmentModal(true);
   };
 
-  const handleCreateAppointment = (date: Date, roomId: string) => {
+  const handleCreateAppointment = () => {
     setSelectedAppointment(null);
     setModalMode('create');
     setShowAppointmentModal(true);
@@ -139,7 +132,7 @@ export default function AgendaPage() {
   const handleSaveAppointment = async (appointmentData: Partial<Appointment>) => {
     try {
       if (modalMode === 'create') {
-        await createAppointment(appointmentData as any);
+        await createAppointment(appointmentData as Appointment);
       } else if (selectedAppointment) {
         await updateAppointment(selectedAppointment.id, appointmentData);
       }
@@ -283,7 +276,7 @@ export default function AgendaPage() {
       <AppointmentModal
         isOpen={showAppointmentModal}
         onClose={() => setShowAppointmentModal(false)}
-        appointment={selectedAppointment}
+        appointment={selectedAppointment ?? undefined}
         patients={patients}
         rooms={rooms}
         therapists={therapists}
@@ -298,7 +291,7 @@ export default function AgendaPage() {
       <motion.button
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
-        onClick={() => handleCreateAppointment(new Date(), rooms[0]?.id || '')}
+        onClick={handleCreateAppointment}
         style={{
           position: 'fixed',
           bottom: '2rem',

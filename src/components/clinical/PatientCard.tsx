@@ -4,8 +4,6 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { 
   User, 
-  Calendar, 
-  AlertTriangle, 
   Phone, 
   Mail,
   MapPin,

@@ -11,9 +11,7 @@ import {
   CheckCircle, 
   AlertCircle, 
   XCircle,
-  Phone,
   Edit,
-  Trash2
 } from 'lucide-react';
 import { Appointment } from '@/types/clinical';
 

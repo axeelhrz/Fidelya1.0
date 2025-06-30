@@ -8,8 +8,6 @@ import {
   Calendar, 
   FileText, 
   Activity, 
-  Clock,
-  Star,
   History,
   X,
   Command
@@ -235,7 +233,7 @@ export function GlobalSearch({ isOpen, onClose, onNavigate }: GlobalSearchProps)
               }}>
                 <Search size={24} color="#D1D5DB" style={{ margin: '0 auto 0.5rem' }} />
                 <div style={{ fontSize: '0.875rem', fontFamily: 'Inter, sans-serif' }}>
-                  No se encontraron resultados para "{query}"
+                  No se encontraron resultados para &quot;{query}&quot;
                 </div>
               </div>
             )}

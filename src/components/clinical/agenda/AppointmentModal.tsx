@@ -4,8 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X,
-  Calendar,
-  Clock,
   User,
   MapPin,
   Video,
@@ -13,13 +11,18 @@ import {
   Mail,
   Save,
   Trash2,
-  Copy,
   Bell,
   AlertTriangle,
   CheckCircle,
-  Edit
 } from 'lucide-react';
 import { Appointment, ExtendedPatient, ConsultingRoom } from '@/types/clinical';
+
+interface Therapist {
+  id: string;
+  firstName: string;
+  lastName: string;
+  // Add other relevant fields if needed
+}
 
 interface AppointmentModalProps {
   isOpen: boolean;
@@ -27,7 +30,7 @@ interface AppointmentModalProps {
   appointment?: Appointment;
   patients: ExtendedPatient[];
   rooms: ConsultingRoom[];
-  therapists: any[]; // Define proper therapist type
+  therapists: Therapist[];
   onSave: (appointmentData: Partial<Appointment>) => void;
   onDelete?: (appointmentId: string) => void;
   onCheckIn?: (appointmentId: string) => void;
@@ -586,7 +589,7 @@ export function AppointmentModal({
                   {canEdit ? (
                     <select
                       value={formData.type || 'individual'}
-                      onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value as any }))}
+                      onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value as Appointment['type'] }))}
                       style={{
                         width: '100%',
                         padding: '0.75rem',
@@ -640,7 +643,7 @@ export function AppointmentModal({
                     {canEdit ? (
                       <select
                         value={formData.status || 'scheduled'}
-                        onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as any }))}
+                        onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as Appointment['status'] }))}
                         style={{
                           width: '100%',
                           padding: '0.75rem',

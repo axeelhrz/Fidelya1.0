@@ -1,14 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FileText,
   Plus,
   Search,
-  Filter,
-  Download,
-  Upload,
   BarChart3,
   TrendingUp,
   TrendingDown,
@@ -21,14 +18,16 @@ import {
   Eye,
   Edit,
   Trash2,
-  Copy,
-  RefreshCw,
   Target,
   Brain,
   Activity,
-  Heart
+  Heart,
+  X
 } from 'lucide-react';
-import { Assessment, AssessmentTemplate, Patient, AssessmentResult } from '@/types/clinical';
+
+// Add the correct import for Patient type
+import type { Patient } from '../../../types/patient'; // Adjust the path as needed
+import type { Assessment, AssessmentTemplate } from '../../../types/assessment'; // Adjust the path as needed
 
 interface AssessmentManagerProps {
   patient: Patient;
@@ -43,7 +42,6 @@ interface AssessmentManagerProps {
 export function AssessmentManager({
   patient,
   assessments,
-  templates,
   onCreateAssessment,
   onViewAssessment,
   onEditAssessment,
@@ -53,8 +51,6 @@ export function AssessmentManager({
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedTimeframe, setSelectedTimeframe] = useState<string>('all');
   const [showTemplateModal, setShowTemplateModal] = useState(false);
-  const [showComparisonModal, setShowComparisonModal] = useState(false);
-  const [selectedAssessments, setSelectedAssessments] = useState<string[]>([]);
 
   const assessmentCategories = [
     { id: 'anxiety', label: 'Ansiedad', color: '#F59E0B', icon: AlertTriangle },
@@ -246,7 +242,6 @@ export function AssessmentManager({
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => setShowComparisonModal(true)}
             disabled={assessments.length < 2}
             style={{
               display: 'flex',
@@ -266,7 +261,6 @@ export function AssessmentManager({
             <BarChart3 size={16} />
             Comparar Resultados
           </motion.button>
-
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}

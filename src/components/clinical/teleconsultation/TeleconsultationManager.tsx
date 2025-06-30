@@ -1,14 +1,12 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   Video,
   VideoOff,
   Mic,
   MicOff,
-  Phone,
-  PhoneOff,
   Calendar,
   Clock,
   User,
@@ -19,16 +17,10 @@ import {
   Camera,
   CameraOff,
   MessageSquare,
-  Share2,
   Download,
-  Upload,
   FileText,
-  AlertTriangle,
   CheckCircle,
   Copy,
-  ExternalLink,
-  Shield,
-  Lock
 } from 'lucide-react';
 import { TeleconsultationSession, Patient, Appointment } from '@/types/clinical';
 

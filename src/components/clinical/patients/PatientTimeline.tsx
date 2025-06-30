@@ -6,18 +6,12 @@ import {
   Calendar,
   FileText,
   Activity,
-  TrendingUp,
-  TrendingDown,
   AlertTriangle,
-  CheckCircle,
   Clock,
   User,
-  Heart,
   Brain,
   Pill,
-  Target,
   Eye,
-  Filter,
   Download
 } from 'lucide-react';
 import { ExtendedPatient, PatientTimelineEvent, Appointment, ClinicalNote, PsychometricAssessment } from '@/types/clinical';
@@ -35,9 +29,9 @@ export function PatientTimeline({
   appointments, 
   notes, 
   assessments, 
-  onEventClick 
 }: PatientTimelineProps) {
-  const [selectedFilter, setSelectedFilter] = useState<'all' | 'sessions' | 'notes' | 'assessments' | 'medications'>('all');
+  type FilterKey = 'all' | 'sessions' | 'notes' | 'assessments' | 'medications';
+  const [selectedFilter, setSelectedFilter] = useState<FilterKey>('all');
   const [showDetails, setShowDetails] = useState<string | null>(null);
 
   // Combine all events into timeline
@@ -528,8 +522,7 @@ export function PatientTimeline({
             <motion.button
               key={key}
               whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => setSelectedFilter(key as any)}
+              onClick={() => setSelectedFilter(key as FilterKey)}
               style={{
                 display: 'flex',
                 alignItems: 'center',

@@ -7,22 +7,16 @@ import {
   User,
   Calendar,
   FileText,
-  Activity,
-  Clock,
   Star,
   History,
   TrendingUp,
   AlertTriangle,
-  CheckCircle,
   Target,
   Brain,
-  Heart,
   Shield,
-  Zap,
   Command,
   ArrowRight,
   X,
-  Filter,
   Bookmark,
   BookmarkPlus
 } from 'lucide-react';
@@ -34,13 +28,21 @@ interface SearchResult {
   title: string;
   subtitle?: string;
   description?: string;
-  icon: React.ComponentType<any>;
+  icon: React.ElementType;
   color: string;
   url: string;
   relevance: number;
   lastAccessed?: Date;
   isFavorite?: boolean;
-  metadata?: Record<string, any>;
+  metadata?: {
+    riskLevel?: string;
+    activePatient?: boolean;
+    status?: string;
+    isVirtual?: boolean;
+    isConfidential?: boolean;
+    requiresSignature?: boolean;
+    [key: string]: unknown;
+  };
 }
 
 interface GlobalSearchCommandProps {
@@ -63,8 +65,6 @@ export function GlobalSearchCommand({
   patients,
   appointments,
   documents,
-  treatmentPlans,
-  assessments,
   recentItems,
   favorites,
   onNavigate,
@@ -118,7 +118,7 @@ export function GlobalSearchCommand({
       isFavorite: favorites.some(f => f.id === appointment.id),
       metadata: {
         status: appointment.status,
-        isVirtual: appointment.type === 'virtual'
+        isVirtual: appointment.type === 'virtual' as Appointment['type']
       }
     })),
     ...documents.map(document => ({
@@ -531,7 +531,7 @@ export function GlobalSearchCommand({
             fontSize: '0.875rem',
             fontFamily: 'Inter, sans-serif'
           }}>
-            No se encontraron resultados para "{query}"
+            No se encontraron resultados para &quot;{query}&quot;
           </div>
         </div>
       ) : (
@@ -553,7 +553,7 @@ export function GlobalSearchCommand({
                 flexDirection: 'column',
                 gap: '0.25rem'
               }}>
-                {recentItems.slice(0, 5).map((item, index) => {
+                {recentItems.slice(0, 5).map((item) => {
                   const Icon = item.icon;
                   return (
                     <motion.div

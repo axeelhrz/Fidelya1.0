@@ -6,7 +6,6 @@ import {
   FileText,
   Save,
   Lock,
-  Unlock,
   Mic,
   MicOff,
   Eye,
@@ -21,13 +20,10 @@ import {
   Target,
   Activity,
   PenTool,
-  Download,
-  Upload,
-  Trash2,
-  Copy,
   Search
 } from 'lucide-react';
-import { ClinicalNote, NoteTemplate, Patient, AIValidation } from '@/types/clinical';
+import { ClinicalNote, NoteTemplate, AIValidation } from '@/types/clinical';
+import type { Patient } from '../../../types/patient';
 
 interface NotesEditorProps {
   patient: Patient;
@@ -44,7 +40,6 @@ export function NotesEditor({
   onSave,
   onCancel,
   mode,
-  templates
 }: NotesEditorProps) {
   const [noteData, setNoteData] = useState<Partial<ClinicalNote>>({
     patientId: patient.id,
@@ -68,20 +63,27 @@ export function NotesEditor({
     updatedAt: new Date()
   });
 
-  const [selectedTemplate, setSelectedTemplate] = useState<NoteTemplate | null>(null);
+  // Define a local type for UI templates
+  type UITemplate = {
+    id: string;
+    name: string;
+    description: string;
+    fields: string[];
+  };
+  const [selectedTemplate, setSelectedTemplate] = useState<UITemplate | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [aiValidation, setAiValidation] = useState<AIValidation | null>(null);
   const [isValidating, setIsValidating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showSignatureModal, setShowSignatureModal] = useState(false);
   const [signatureData, setSignatureData] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
   const [showIcdSearch, setShowIcdSearch] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  // Ref for MediaRecorder instance
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
 
-  const noteTemplates = [
+  const noteTemplates: UITemplate[] = [
     {
       id: 'soap',
       name: 'SOAP',
@@ -131,7 +133,7 @@ export function NotesEditor({
     setSelectedTemplate(template || null);
     setNoteData(prev => ({
       ...prev,
-      templateType: templateId,
+      templateType: templateId as ClinicalNote['templateType'],
       content: template?.fields.reduce((acc, field) => ({
         ...acc,
         [field]: prev.content?.[field as keyof typeof prev.content] || ''
@@ -200,7 +202,7 @@ export function NotesEditor({
         confidence: 0.92,
         suggestions: [
           {
-            type: 'improvement',
+            type: 'intervention',
             message: 'Considere agregar más detalles sobre la respuesta del paciente a la intervención.',
             field: 'assessment'
           },
@@ -232,7 +234,18 @@ export function NotesEditor({
       signed: true,
       signedAt: new Date(),
       signedBy: 'current-user-id', // Se obtendría del contexto de autenticación
-      signature: signatureData,
+      signature: {
+        id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2),
+        therapistId: 'current-user-id', // Se obtendría del contexto de autenticación
+        timestamp: new Date(),
+        ipAddress: '0.0.0.0', // Reemplazar por la IP real si está disponible
+        value: signatureData,
+        method: 'password', // O el método real usado
+        device: 'browser', // O el dispositivo real si está disponible
+        userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
+        signatureData: signatureData,
+        isValid: true
+      },
       locked: true
     }));
     
@@ -252,10 +265,10 @@ export function NotesEditor({
   };
 
   const addIcdCode = (code: { code: string; description: string }) => {
-    if (!noteData.icdCodes?.some(icd => icd.code === code.code)) {
+    if (!noteData.icdCodes?.includes(code.code)) {
       setNoteData(prev => ({
         ...prev,
-        icdCodes: [...(prev.icdCodes || []), code]
+        icdCodes: [...(prev.icdCodes || []), code.code]
       }));
     }
     setShowIcdSearch(false);
@@ -265,7 +278,7 @@ export function NotesEditor({
   const removeIcdCode = (codeToRemove: string) => {
     setNoteData(prev => ({
       ...prev,
-      icdCodes: prev.icdCodes?.filter(icd => icd.code !== codeToRemove) || []
+      icdCodes: prev.icdCodes?.filter(icd => icd !== codeToRemove) || []
     }));
   };
 
@@ -339,7 +352,7 @@ export function NotesEditor({
                 ref={field === 'freeText' ? textareaRef : undefined}
                 value={noteData.content?.[field as keyof typeof noteData.content] || ''}
                 onChange={(e) => handleContentChange(field, e.target.value)}
-                disabled={mode === 'view' || noteData.locked}
+                disabled={mode === 'view' || noteData.locked === true}
                 style={{
                   width: '100%',
                   minHeight: field === 'freeText' ? '300px' : '120px',
@@ -629,40 +642,43 @@ export function NotesEditor({
               </div>
 
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                {noteData.icdCodes?.map((icd, index) => (
-                  <div key={index} style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    padding: '0.5rem 0.75rem',
-                    backgroundColor: '#F0F9FF',
-                    color: '#0C4A6E',
-                    borderRadius: '0.5rem',
-                    border: '1px solid #E0F2FE',
-                    fontSize: '0.75rem',
-                    fontFamily: 'Inter, sans-serif'
-                  }}>
-                    <span style={{ fontWeight: 600 }}>{icd.code}</span>
-                    <span>{icd.description}</span>
-                    {mode !== 'view' && !noteData.locked && (
-                      <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                        onClick={() => removeIcdCode(icd.code)}
-                        style={{
-                          background: 'none',
-                          border: 'none',
-                          cursor: 'pointer',
-                          padding: 0,
-                          display: 'flex',
-                          alignItems: 'center'
-                        }}
-                      >
-                        <X size={12} />
-                      </motion.button>
-                    )}
-                  </div>
-                ))}
+                {noteData.icdCodes?.map((icd, index) => {
+                  const codeObj = icdCodes.find(c => c.code === icd);
+                  return (
+                    <div key={index} style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      padding: '0.5rem 0.75rem',
+                      backgroundColor: '#F0F9FF',
+                      color: '#0C4A6E',
+                      borderRadius: '0.5rem',
+                      border: '1px solid #E0F2FE',
+                      fontSize: '0.75rem',
+                      fontFamily: 'Inter, sans-serif'
+                    }}>
+                      <span style={{ fontWeight: 600 }}>{icd}</span>
+                      <span>{codeObj?.description || ''}</span>
+                      {mode !== 'view' && !noteData.locked && (
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={() => removeIcdCode(icd)}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            padding: 0,
+                            display: 'flex',
+                            alignItems: 'center'
+                          }}
+                        >
+                          <X size={12} />
+                        </motion.button>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
@@ -804,9 +820,6 @@ export function NotesEditor({
                     }}>
                       {suggestion.message}
                     </div>
-                  </div>
-                ))}
-
                 {aiValidation.suggestedIcdCodes && aiValidation.suggestedIcdCodes.length > 0 && (
                   <div>
                     <div style={{
@@ -823,7 +836,7 @@ export function NotesEditor({
                         key={index}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        onClick={() => addIcdCode(code)}
+                        onClick={() => addIcdCode({ code: code.code, description: code.description })}
                         style={{
                           display: 'block',
                           width: '100%',
@@ -844,6 +857,9 @@ export function NotesEditor({
                           Confianza: {Math.round(code.confidence * 100)}%
                         </div>
                       </motion.button>
+                    ))}
+                  </div>
+                )}
                     ))}
                   </div>
                 )}

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   BarChart3,
   TrendingUp,
@@ -12,13 +12,25 @@ import {
   AlertTriangle,
   CheckCircle,
   Download,
-  RefreshCw,
   ArrowRight,
   X,
-  Filter,
-  Eye
 } from 'lucide-react';
-import { Assessment, Patient } from '@/types/clinical';
+// TODO: Replace the following import with the correct path where Assessment and Patient are exported
+// import { Assessment, Patient } from '@/types/clinical';
+
+// Temporary type definitions (replace with your actual types)
+type Assessment = {
+  testName: string;
+  date: string | Date;
+  score: number;
+  status: string;
+  percentile?: number;
+};
+
+type Patient = {
+  firstName: string;
+  lastName: string;
+};
 
 interface AssessmentComparisonProps {
   patient: Patient;
@@ -42,7 +54,6 @@ export function AssessmentComparison({
   assessments,
   onClose
 }: AssessmentComparisonProps) {
-  const [selectedTests, setSelectedTests] = useState<string[]>([]);
   const [comparisonType, setComparisonType] = useState<'pre-post' | 'timeline' | 'percentile'>('pre-post');
   const [timeframe, setTimeframe] = useState<'all' | '3months' | '6months' | '1year'>('all');
 
@@ -110,13 +121,8 @@ export function AssessmentComparison({
       filtered = filtered.filter(comp => new Date(comp.latest.date) >= cutoffDate);
     }
 
-    if (selectedTests.length > 0) {
-      filtered = filtered.filter(comp => selectedTests.includes(comp.testName));
-    }
-
     return filtered;
-  }, [comparisonData, timeframe, selectedTests]);
-
+  }, [comparisonData, timeframe]);
   const overallStats = useMemo(() => {
     if (filteredComparisons.length === 0) return null;
 
@@ -286,7 +292,7 @@ export function AssessmentComparison({
             </label>
             <select
               value={comparisonType}
-              onChange={(e) => setComparisonType(e.target.value as any)}
+              onChange={(e) => setComparisonType(e.target.value as 'pre-post' | 'timeline' | 'percentile')}
               style={{
                 padding: '0.5rem',
                 border: '1px solid #E5E7EB',
@@ -316,7 +322,7 @@ export function AssessmentComparison({
             </label>
             <select
               value={timeframe}
-              onChange={(e) => setTimeframe(e.target.value as any)}
+              onChange={(e) => setTimeframe(e.target.value as 'all' | '3months' | '6months' | '1year')}
               style={{
                 padding: '0.5rem',
                 border: '1px solid #E5E7EB',
@@ -616,7 +622,7 @@ export function AssessmentComparison({
                       marginBottom: '1rem',
                       fontFamily: 'Inter, sans-serif'
                     }}>
-                      {comparison.baseline.date.toLocaleDateString('es-ES')}
+                      {new Date(comparison.baseline.date).toLocaleDateString('es-ES')}
                     </div>
                     <div style={{
                       fontSize: '3rem',
@@ -688,7 +694,7 @@ export function AssessmentComparison({
                       marginBottom: '1rem',
                       fontFamily: 'Inter, sans-serif'
                     }}>
-                      {comparison.latest.date.toLocaleDateString('es-ES')}
+                      {new Date(comparison.latest.date).toLocaleDateString('es-ES')}
                     </div>
                     <div style={{
                       fontSize: '3rem',

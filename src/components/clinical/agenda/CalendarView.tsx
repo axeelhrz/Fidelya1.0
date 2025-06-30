@@ -1,24 +1,17 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useCallback } from 'react';
+import { motion } from 'framer-motion';
 import {
   ChevronLeft,
   ChevronRight,
-  Calendar,
-  Clock,
   Plus,
-  Filter,
   AlertTriangle,
-  Users,
   MapPin,
   Video,
-  Coffee,
-  Plane,
   AlertCircle
 } from 'lucide-react';
 import { Appointment, ConsultingRoom, TherapistSchedule } from '@/types/clinical';
-import { AppointmentCard } from '../AppointmentCard';
 
 interface CalendarViewProps {
   appointments: Appointment[];
@@ -37,19 +30,15 @@ interface CalendarViewProps {
 export function CalendarView({
   appointments,
   rooms,
-  therapistSchedules,
   onAppointmentClick,
   onAppointmentMove,
   onCreateAppointment,
-  onUpdateAppointment,
   viewMode,
   selectedDate,
   onDateChange,
   onViewModeChange
 }: CalendarViewProps) {
   const [draggedAppointment, setDraggedAppointment] = useState<Appointment | null>(null);
-  const [hoveredSlot, setHoveredSlot] = useState<{ date: Date; roomId: string } | null>(null);
-  const [showConflicts, setShowConflicts] = useState(true);
   const [selectedTherapist, setSelectedTherapist] = useState<string>('all');
 
   // Generate time slots (30-minute intervals from 8:00 to 20:00)
@@ -132,25 +121,6 @@ export function CalendarView({
   };
 
   // Get appointments for a specific date and time slot
-  const getAppointmentsForSlot = (date: Date, timeSlot: string, roomId?: string) => {
-    const [hours, minutes] = timeSlot.split(':').map(Number);
-    const slotStart = new Date(date);
-    slotStart.setHours(hours, minutes, 0, 0);
-    const slotEnd = new Date(slotStart);
-    slotEnd.setMinutes(slotEnd.getMinutes() + 30);
-
-    return appointments.filter(appointment => {
-      const appointmentStart = new Date(appointment.date);
-      const appointmentEnd = new Date(appointmentStart);
-      appointmentEnd.setMinutes(appointmentEnd.getMinutes() + appointment.duration);
-
-      const dateMatches = appointmentStart.toDateString() === date.toDateString();
-      const timeOverlaps = appointmentStart < slotEnd && appointmentEnd > slotStart;
-      const roomMatches = !roomId || appointment.roomId === roomId;
-
-      return dateMatches && timeOverlaps && roomMatches;
-    });
-  };
 
   // Check for conflicts
   const getConflicts = () => {
@@ -165,7 +135,7 @@ export function CalendarView({
       therapistAppointments.get(appointment.therapistId)!.push(appointment);
     });
 
-    therapistAppointments.forEach((therapistAppts, therapistId) => {
+    therapistAppointments.forEach((therapistAppts) => {
       for (let i = 0; i < therapistAppts.length; i++) {
         for (let j = i + 1; j < therapistAppts.length; j++) {
           const apt1 = therapistAppts[i];
@@ -198,7 +168,7 @@ export function CalendarView({
       }
     });
 
-    roomAppointments.forEach((roomAppts, roomId) => {
+    roomAppointments.forEach((roomAppts) => {
       for (let i = 0; i < roomAppts.length; i++) {
         for (let j = i + 1; j < roomAppts.length; j++) {
           const apt1 = roomAppts[i];
@@ -300,7 +270,7 @@ export function CalendarView({
             Agenda
           </h1>
           
-          {conflicts.length > 0 && showConflicts && (
+          {conflicts.length > 0 && (
             <div style={{
               display: 'flex',
               alignItems: 'center',
@@ -679,7 +649,7 @@ interface WeekDayViewProps {
   onDrop: (e: React.DragEvent, date: Date, timeSlot: string, roomId: string) => void;
   onSlotClick: (date: Date, timeSlot: string, roomId: string) => void;
   draggedAppointment: Appointment | null;
-  conflicts: any[];
+  conflicts: { type: string; appointments: Appointment[]; severity: 'warning' | 'error' }[];
   viewMode: 'day' | 'week';
 }
 
@@ -694,8 +664,6 @@ function WeekDayView({
   onDrop,
   onSlotClick,
   draggedAppointment,
-  conflicts,
-  viewMode
 }: WeekDayViewProps) {
   const getAppointmentsForSlot = (date: Date, timeSlot: string, roomId: string) => {
     const [hours, minutes] = timeSlot.split(':').map(Number);
@@ -828,7 +796,7 @@ function WeekDayView({
 
       {/* Time slots and appointments */}
       <div style={{ flex: 1, overflow: 'auto' }}>
-        {timeSlots.map((timeSlot, timeIndex) => (
+        {timeSlots.map((timeSlot) => (
           <div
             key={timeSlot}
             style={{

@@ -11,8 +11,6 @@ import {
   Calendar,
   CheckCircle,
   AlertTriangle,
-  TrendingUp,
-  TrendingDown,
   Clock,
   User,
   FileText,
@@ -20,13 +18,8 @@ import {
   Award,
   BarChart3,
   Lightbulb,
-  Flag,
-  ArrowRight,
   X,
-  Copy,
   Download,
-  Upload,
-  RefreshCw
 } from 'lucide-react';
 import { TreatmentPlan, TreatmentGoal, Patient, TreatmentTask, AdherenceMetrics } from '@/types/clinical';
 

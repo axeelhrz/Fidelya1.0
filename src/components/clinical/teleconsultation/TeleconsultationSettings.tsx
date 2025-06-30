@@ -3,29 +3,58 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import {
-  Settings,
   Video,
   Mic,
-  Monitor,
   Wifi,
   Shield,
-  Clock,
   Bell,
-  Mail,
-  Phone,
   Calendar,
-  Link,
-  Download,
-  Upload,
   Save,
-  RefreshCw,
-  CheckCircle,
-  AlertTriangle,
   Info
 } from 'lucide-react';
 
+interface TeleconsultationSettingsState {
+  // Platform Settings
+  platform: string;
+  autoGenerateLinks: boolean;
+  linkExpirationHours: number;
+  waitingRoomEnabled: boolean;
+
+  // Audio/Video Settings
+  defaultVideoEnabled: boolean;
+  defaultAudioEnabled: boolean;
+  recordingEnabled: boolean;
+  autoRecording: boolean;
+  recordingQuality: string;
+
+  // Security Settings
+  passwordProtected: boolean;
+  encryptionEnabled: boolean;
+  participantAuthentication: boolean;
+  screenSharingRestricted: boolean;
+
+  // Notification Settings
+  reminderEmails: boolean;
+  reminderSMS: boolean;
+  reminderHoursBefore: number;
+  followUpEmails: boolean;
+
+  // Integration Settings
+  calendarSync: boolean;
+  calendarProvider: string;
+  automaticScheduling: boolean;
+  bufferTimeBefore: number;
+  bufferTimeAfter: number;
+
+  // Quality Settings
+  bandwidthOptimization: boolean;
+  adaptiveQuality: boolean;
+  connectionTesting: boolean;
+  fallbackOptions: boolean;
+}
+
 interface TeleconsultationSettingsProps {
-  onSave: (settings: any) => void;
+  onSave: (settings: TeleconsultationSettingsState) => void;
   onCancel: () => void;
 }
 

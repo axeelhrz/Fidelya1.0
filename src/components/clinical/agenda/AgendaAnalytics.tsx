@@ -4,14 +4,10 @@ import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
   TrendingUp,
-  TrendingDown,
-  Calendar,
-  Clock,
   Users,
   AlertTriangle,
   Activity,
   BarChart3,
-  PieChart,
   Target
 } from 'lucide-react';
 import { Appointment, ConsultingRoom } from '@/types/clinical';
@@ -23,8 +19,10 @@ interface AgendaAnalyticsProps {
   dateRange: { start: Date; end: Date };
 }
 
+type MetricKey = 'occupancy' | 'revenue' | 'efficiency' | 'trends';
+
 export function AgendaAnalytics({ appointments, rooms, dateRange }: AgendaAnalyticsProps) {
-  const [selectedMetric, setSelectedMetric] = useState<'occupancy' | 'revenue' | 'efficiency' | 'trends'>('occupancy');
+  const [selectedMetric, setSelectedMetric] = useState<MetricKey>('occupancy');
 
   // Calculate analytics
   const analytics = useMemo(() => {
@@ -269,9 +267,7 @@ export function AgendaAnalytics({ appointments, rooms, dateRange }: AgendaAnalyt
         ].map(({ key, label, icon: Icon }) => (
           <motion.button
             key={key}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => setSelectedMetric(key as any)}
+            onClick={() => setSelectedMetric(key as MetricKey)}
             style={{
               display: 'flex',
               alignItems: 'center',

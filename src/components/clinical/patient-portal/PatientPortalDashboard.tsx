@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Calendar,
@@ -8,35 +8,23 @@ import {
   CreditCard,
   FileText,
   Target,
-  Award,
   TrendingUp,
   Bell,
-  Settings,
   User,
-  Heart,
-  Brain,
   Activity,
   CheckCircle,
-  AlertTriangle,
-  Star,
-  Gift,
   Download,
-  Upload,
-  MessageSquare,
   Video,
-  Phone,
-  Mail,
-  Shield,
-  Eye,
-  EyeOff
+  X,
 } from 'lucide-react';
-import { Patient, Appointment, TreatmentTask, PatientPortalData } from '@/types/clinical';
+// Import the required types from your types file
+import type { Patient, PatientPortalData, Appointment, Task } from '@/types/clinical';
 
 interface PatientPortalDashboardProps {
   patient: Patient;
   portalData: PatientPortalData;
   onUpdateProfile: (data: Partial<Patient>) => void;
-  onScheduleAppointment: (appointmentData: any) => void;
+  onScheduleAppointment: (appointmentData: Appointment) => void;
   onCompleteTask: (taskId: string) => void;
   onMakePayment: (amount: number, description: string) => void;
 }
@@ -44,10 +32,7 @@ interface PatientPortalDashboardProps {
 export function PatientPortalDashboard({
   patient,
   portalData,
-  onUpdateProfile,
-  onScheduleAppointment,
   onCompleteTask,
-  onMakePayment
 }: PatientPortalDashboardProps) {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [showNotifications, setShowNotifications] = useState(false);
@@ -77,12 +62,11 @@ export function PatientPortalDashboard({
   ];
 
   const upcomingAppointments = portalData.upcomingAppointments?.slice(0, 3) || [];
-  const pendingTasks = portalData.tasks?.filter(task => !task.completed).slice(0, 4) || [];
-  const recentDocuments = portalData.documents?.slice(0, 3) || [];
+  const pendingTasks = portalData.tasks?.filter((task: Task) => !task.completed).slice(0, 4) || [];
 
   const calculateAdherenceRate = () => {
     if (!portalData.tasks || portalData.tasks.length === 0) return 0;
-    const completed = portalData.tasks.filter(task => task.completed).length;
+    const completed = portalData.tasks.filter((task: Task) => task.completed).length;
     return Math.round((completed / portalData.tasks.length) * 100);
   };
 
@@ -346,7 +330,7 @@ export function PatientPortalDashboard({
 
           {upcomingAppointments.length > 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              {upcomingAppointments.map((appointment, index) => (
+              {upcomingAppointments.map((appointment: Appointment, index: number) => (
                 <div key={index} style={{
                   padding: '0.75rem',
                   backgroundColor: '#F9FAFB',
@@ -365,14 +349,14 @@ export function PatientPortalDashboard({
                       color: '#374151',
                       fontFamily: 'Inter, sans-serif'
                     }}>
-                      {appointment.type === 'virtual' ? 'Teleconsulta' : 'Presencial'}
+                      {(appointment.type as string) === 'virtual' ? 'Teleconsulta' : 'Presencial'}
                     </span>
                     <span style={{
                       fontSize: '0.75rem',
                       color: '#6B7280',
                       fontFamily: 'Inter, sans-serif'
                     }}>
-                      {appointment.dateTime.toLocaleDateString('es-ES')}
+                      {appointment.date.toLocaleDateString('es-ES')}
                     </span>
                   </div>
                   <div style={{
@@ -380,7 +364,7 @@ export function PatientPortalDashboard({
                     color: '#6B7280',
                     fontFamily: 'Inter, sans-serif'
                   }}>
-                    {appointment.dateTime.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })} • {appointment.duration} min
+                    {appointment.date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })} • {appointment.duration} min
                   </div>
                 </div>
               ))}
@@ -446,7 +430,7 @@ export function PatientPortalDashboard({
 
           {pendingTasks.length > 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              {pendingTasks.map((task, index) => (
+              {pendingTasks.map((task: Task, index: number) => (
                 <div key={index} style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -727,7 +711,7 @@ export function PatientPortalDashboard({
         </h4>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          {upcomingAppointments.map((appointment, index) => (
+          {upcomingAppointments.map((appointment: Appointment, index: number) => (
             <motion.div
               key={index}
               whileHover={{ scale: 1.02 }}
@@ -749,7 +733,7 @@ export function PatientPortalDashboard({
                   alignItems: 'center',
                   gap: '0.75rem'
                 }}>
-                  {appointment.type === 'virtual' ? (
+                  {(appointment.type as string) === 'virtual' ? (
                     <Video size={20} color="#6366F1" />
                   ) : (
                     <User size={20} color="#10B981" />
@@ -761,7 +745,7 @@ export function PatientPortalDashboard({
                       color: '#1F2937',
                       fontFamily: 'Space Grotesk, sans-serif'
                     }}>
-                      {appointment.type === 'virtual' ? 'Teleconsulta' : 'Cita Presencial'}
+                      {(appointment.type as string) === 'virtual' ? 'Teleconsulta' : 'Cita Presencial'}
                     </div>
                     <div style={{
                       fontSize: '0.875rem',
@@ -775,14 +759,14 @@ export function PatientPortalDashboard({
 
                 <div style={{
                   padding: '0.5rem 0.75rem',
-                  backgroundColor: appointment.type === 'virtual' ? '#EEF2FF' : '#F0FDF4',
+                  backgroundColor: (appointment.type as string) === 'virtual' ? '#EEF2FF' : '#F0FDF4',
                   borderRadius: '0.5rem',
-                  border: `1px solid ${appointment.type === 'virtual' ? '#C7D2FE' : '#BBF7D0'}`
+                  border: `1px solid ${(appointment.type as string) === 'virtual' ? '#C7D2FE' : '#BBF7D0'}`
                 }}>
                   <span style={{
                     fontSize: '0.75rem',
                     fontWeight: 600,
-                    color: appointment.type === 'virtual' ? '#4338CA' : '#15803D',
+                    color: (appointment.type as string) === 'virtual' ? '#4338CA' : '#15803D',
                     fontFamily: 'Inter, sans-serif'
                   }}>
                     {appointment.status === 'confirmed' ? 'Confirmada' : 'Pendiente'}
@@ -805,7 +789,7 @@ export function PatientPortalDashboard({
                   fontFamily: 'Inter, sans-serif'
                 }}>
                   <Calendar size={14} />
-                  <span>{appointment.dateTime.toLocaleDateString('es-ES')}</span>
+                  <span>{appointment.date.toLocaleDateString('es-ES')}</span>
                 </div>
 
                 <div style={{
@@ -817,7 +801,7 @@ export function PatientPortalDashboard({
                   fontFamily: 'Inter, sans-serif'
                 }}>
                   <Clock size={14} />
-                  <span>{appointment.dateTime.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</span>
+                  <span>{appointment.date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</span>
                 </div>
 
                 <div style={{
@@ -837,7 +821,7 @@ export function PatientPortalDashboard({
                 display: 'flex',
                 gap: '0.75rem'
               }}>
-                {appointment.type === 'virtual' && (
+                {(appointment.type as string) === 'virtual' && (
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
@@ -960,7 +944,7 @@ export function PatientPortalDashboard({
           margin: '0.5rem 0 0 0',
           fontFamily: 'Inter, sans-serif'
         }}>
-          Has completado {portalData.tasks?.filter(t => t.completed).length || 0} de {portalData.tasks?.length || 0} tareas asignadas
+          Has completado {portalData.tasks?.filter((t: Task) => t.completed).length || 0} de {portalData.tasks?.length || 0} tareas asignadas
         </p>
       </div>
 
@@ -970,7 +954,7 @@ export function PatientPortalDashboard({
         flexDirection: 'column',
         gap: '1rem'
       }}>
-        {portalData.tasks?.map((task, index) => (
+        {portalData.tasks?.map((task: Task, index: number) => (
           <motion.div
             key={task.id}
             initial={{ opacity: 0, y: 20 }}
@@ -1312,7 +1296,7 @@ export function PatientPortalDashboard({
         </h4>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          {portalData.payments?.history?.map((payment, index) => (
+          {portalData.payments?.history?.map((payment: { amount: number; description: string; date: Date; method: string }, index: number) => (
             <div key={index} style={{
               display: 'flex',
               alignItems: 'center',
@@ -1470,7 +1454,7 @@ export function PatientPortalDashboard({
                 }}
               >
                 <Bell size={20} color="#6B7280" />
-                {portalData.notifications?.filter(n => !n.read).length > 0 && (
+                {portalData.notifications?.filter((n: { read: boolean }) => !n.read).length > 0 && (
                   <div style={{
                     position: 'absolute',
                     top: '0.25rem',
@@ -1520,7 +1504,7 @@ export function PatientPortalDashboard({
                       maxHeight: '300px',
                       overflowY: 'auto'
                     }}>
-                      {portalData.notifications?.slice(0, 5).map((notification, index) => (
+                      {portalData.notifications?.slice(0, 5).map((notification: { title: string; message: string; timestamp: Date; read: boolean }, index: number) => (
                         <div key={index} style={{
                           padding: '1rem',
                           borderBottom: index < 4 ? '1px solid #F3F4F6' : 'none',

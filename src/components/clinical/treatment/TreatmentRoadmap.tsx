@@ -1,18 +1,14 @@
 'use client';
 
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   Target,
   CheckCircle,
   Clock,
   Flag,
-  TrendingUp,
   Calendar,
   Award,
-  AlertTriangle,
-  ArrowRight,
-  BarChart3,
   Activity,
   User,
   Lightbulb

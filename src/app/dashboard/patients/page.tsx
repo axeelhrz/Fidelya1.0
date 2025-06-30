@@ -8,27 +8,24 @@ import {
   Filter,
   Download,
   Plus,
-  Eye,
   Edit,
-  Trash2,
   User,
   Shield,
   ChevronDown,
   FileText,
-  Calendar,
   Activity,
   AlertTriangle,
   TrendingUp,
   Clock,
-  Star
+  Star,
+  X
 } from 'lucide-react';
-import { ExtendedPatient, PatientDocument, PatientTimelineEvent } from '@/types/clinical';
+import { ExtendedPatient } from '@/types/clinical';
 import { PatientCard } from '@/components/clinical/PatientCard';
 import { PatientForm } from '@/components/clinical/patients/PatientForm';
 import { PatientTimeline } from '@/components/clinical/patients/PatientTimeline';
 import { PatientDocuments } from '@/components/clinical/patients/PatientDocuments';
 import { ClinicalCard } from '@/components/clinical/ClinicalCard';
-import { usePatients } from '@/hooks/useClinicalData';
 
 export default function PatientsPage() {
   const [patients, setPatients] = useState<ExtendedPatient[]>([]);
@@ -43,9 +40,9 @@ export default function PatientsPage() {
   });
   const [selectedPatients, setSelectedPatients] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
-  const [sortBy, setSortBy] = useState<'name' | 'lastSession' | 'riskLevel' | 'totalSessions' | 'createdAt'>('name');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [sortOrder] = useState<'asc' | 'desc'>('asc');
+  const [sortBy] = useState<'name' | 'lastSession' | 'riskLevel' | 'totalSessions' | 'createdAt'>('name');
   
   // Modal states
   const [showPatientForm, setShowPatientForm] = useState(false);
@@ -419,20 +416,7 @@ export default function PatientsPage() {
     }
   };
 
-  const handleDeletePatient = (patientId: string) => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar este paciente?')) {
-      setPatients(prev => prev.filter(p => p.id !== patientId));
-      setSelectedPatients(prev => prev.filter(id => id !== patientId));
-    }
-  };
 
-  const handleSelectPatient = (patientId: string) => {
-    setSelectedPatients(prev => 
-      prev.includes(patientId) 
-        ? prev.filter(id => id !== patientId)
-        : [...prev, patientId]
-    );
-  };
 
   const handleSelectAll = () => {
     if (selectedPatients.length === filteredPatients.length) {
@@ -965,7 +949,7 @@ export default function PatientsPage() {
               </div>
             )}
 
-            {filteredPatients.map((patient, index) => (
+            {filteredPatients.map((patient) => (
               <PatientCard
                 key={patient.id}
                 patient={patient}
@@ -989,7 +973,7 @@ export default function PatientsPage() {
       <AnimatePresence>
         {showPatientForm && (
           <PatientForm
-            patient={selectedPatient}
+            patient={selectedPatient ?? undefined}
             onSave={handleSavePatient}
             onCancel={() => setShowPatientForm(false)}
             mode={formMode}
@@ -1111,7 +1095,7 @@ export default function PatientsPage() {
                   <motion.button
                     key={key}
                     whileHover={{ backgroundColor: '#F3F4F6' }}
-                    onClick={() => setDetailsTab(key as any)}
+                    onClick={() => setDetailsTab(key as 'overview' | 'timeline' | 'documents')}
                     style={{
                       display: 'flex',
                       alignItems: 'center',

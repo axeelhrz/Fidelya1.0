@@ -1,34 +1,25 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import {
   Users,
   Calendar,
   CheckSquare,
   AlertTriangle,
-  TrendingUp,
   Star,
   Clock,
-  FileText,
   Video,
-  Award,
   Target,
-  Brain,
   Eye,
   Plus,
   Search,
-  Filter,
   Download,
-  Upload,
   BarChart3,
   Activity,
-  Shield,
   BookOpen,
-  Lightbulb,
-  Zap
 } from 'lucide-react';
-import { SupervisionSession, Therapist, Competency, SupervisionMetrics } from '@/types/clinical';
+import { SupervisionSession, Competency, Therapist, SupervisionMetrics } from '@/types/clinical';
 
 interface SupervisionManagerProps {
   therapists: Therapist[];
@@ -45,17 +36,11 @@ export function SupervisionManager({
   sessions,
   competencies,
   metrics,
-  onCreateSession,
-  onUpdateSession,
-  onDeleteSession
 }: SupervisionManagerProps) {
   const [activeTab, setActiveTab] = useState('overview');
   const [selectedTherapist, setSelectedTherapist] = useState<string | null>(null);
-  const [showSessionModal, setShowSessionModal] = useState(false);
-  const [showCompetencyModal, setShowCompetencyModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
-  const [currentSession, setCurrentSession] = useState<SupervisionSession | null>(null);
 
   const tabs = [
     { id: 'overview', label: 'Resumen', icon: Activity },
@@ -537,7 +522,7 @@ export function SupervisionManager({
                 <div style={{
                   width: '40px',
                   height: '40px',
-                  backgroundColor: session.type === 'individual' ? '#10B981' : '#6366F1',
+                  backgroundColor: session.type === ('individual' as string) ? '#10B981' : '#6366F1',
                   borderRadius: '50%',
                   display: 'flex',
                   alignItems: 'center',
@@ -794,7 +779,7 @@ export function SupervisionManager({
                     marginBottom: '0.25rem',
                     fontFamily: 'Space Grotesk, sans-serif'
                   }}>
-                    Supervisión {session.type === 'individual' ? 'Individual' : session.type === 'group' ? 'Grupal' : 'Virtual'}
+                    Supervisión {session.type === "Individual" ? "Individual" : session.type === "Group" ? "Grupal" : "Virtual"}
                   </div>
                   <div style={{
                     fontSize: '0.875rem',

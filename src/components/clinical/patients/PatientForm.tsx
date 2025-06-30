@@ -7,22 +7,17 @@ import {
   Mail,
   Phone,
   MapPin,
-  Calendar,
   Heart,
   Shield,
   AlertTriangle,
   Save,
   X,
-  Upload,
   FileText,
-  Camera,
-  Mic,
   Plus,
   Trash2,
   Eye,
-  EyeOff
 } from 'lucide-react';
-import { ExtendedPatient, PatientDocument } from '@/types/clinical';
+import { ExtendedPatient } from '@/types/clinical';
 
 interface PatientFormProps {
   patient?: ExtendedPatient;
@@ -116,7 +111,6 @@ export function PatientForm({
     notes: ''
   });
   const [newTag, setNewTag] = useState('');
-  const [showSensitiveData, setShowSensitiveData] = useState(false);
 
   const steps = [
     { id: 'basic', title: 'Información Básica', icon: User },
@@ -414,7 +408,7 @@ export function PatientForm({
                 </label>
                 <select
                   value={formData.gender || 'prefer-not-to-say'}
-                  onChange={(e) => setFormData(prev => ({ ...prev, gender: e.target.value as any }))}
+                  onChange={(e) => setFormData(prev => ({ ...prev, gender: e.target.value as 'male' | 'female' | 'other' | 'prefer-not-to-say' }))}
                   style={{
                     width: '100%',
                     padding: '0.75rem',
@@ -481,7 +475,7 @@ export function PatientForm({
                   value={formData.identification?.type || 'dni'}
                   onChange={(e) => setFormData(prev => ({
                     ...prev,
-                    identification: { ...prev.identification!, type: e.target.value as any }
+                    identification: { ...prev.identification!, type: e.target.value as 'dni' | 'nie' | 'passport' }
                   }))}
                   style={{
                     width: '100%',
@@ -1526,7 +1520,7 @@ export function PatientForm({
                 value={formData.referralSource?.type || 'self'}
                 onChange={(e) => setFormData(prev => ({
                   ...prev,
-                  referralSource: { ...prev.referralSource!, type: e.target.value as any }
+                  referralSource: { ...prev.referralSource!, type: e.target.value as 'self' | 'family' | 'friend' | 'doctor' | 'insurance' | 'online' | 'advertisement' | 'other' }
                 }))}
                 style={{
                   width: '100%',
@@ -1540,16 +1534,16 @@ export function PatientForm({
                 }}
               >
                 <option value="self">Búsqueda propia</option>
-                <option value="referral">Referencia de otro profesional</option>
-                <option value="friend">Recomendación de amigo/familiar</option>
+                <option value="family">Recomendación de familiar</option>
+                <option value="friend">Recomendación de amigo</option>
+                <option value="doctor">Referencia de otro profesional</option>
                 <option value="insurance">A través del seguro médico</option>
                 <option value="online">Búsqueda online</option>
-                <option value="social-media">Redes sociales</option>
                 <option value="advertisement">Publicidad</option>
                 <option value="other">Otro</option>
               </select>
 
-              {(formData.referralSource?.type === 'referral' || formData.referralSource?.type === 'other') && (
+              {(formData.referralSource?.type === 'doctor' || formData.referralSource?.type === 'other') && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                   <input
                     type="text"
@@ -1626,7 +1620,7 @@ export function PatientForm({
                       name="riskLevel"
                       value={risk.value}
                       checked={formData.riskLevel === risk.value}
-                      onChange={(e) => setFormData(prev => ({ ...prev, riskLevel: e.target.value as any }))}
+                      onChange={(e) => setFormData(prev => ({ ...prev, riskLevel: e.target.value as 'low' | 'medium' | 'high' }))}
                       style={{ display: 'none' }}
                     />
                     <div style={{

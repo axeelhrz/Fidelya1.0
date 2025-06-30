@@ -1,25 +1,20 @@
 'use client';
 
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   Target,
   TrendingUp,
   TrendingDown,
   Award,
   AlertTriangle,
-  CheckCircle,
-  Star,
   Brain,
   Heart,
-  Users,
   FileText,
   Shield,
   MessageSquare,
-  Eye,
   Plus,
   Edit,
-  Trash2
 } from 'lucide-react';
 import { Therapist, Competency, CompetencyCategory } from '@/types/clinical';
 
@@ -35,11 +30,8 @@ export function CompetencyRadar({
   therapist,
   competencies,
   categories,
-  onUpdateCompetency,
-  onAddCompetency
 }: CompetencyRadarProps) {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [showAddModal, setShowAddModal] = useState(false);
   const [editingCompetency, setEditingCompetency] = useState<Competency | null>(null);
 
   const competencyIcons = {
@@ -73,7 +65,7 @@ export function CompetencyRadar({
     return Math.round(total / competencies.length);
   };
 
-  const getCompetencyTrend = (competency: Competency) => {
+  const getCompetencyTrend = () => {
     // Simulated trend calculation based on historical data
     const trend = Math.random() > 0.5 ? 
       { direction: 'up', value: Math.floor(Math.random() * 10) + 1 } :

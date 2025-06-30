@@ -1,38 +1,57 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   FileText,
   Upload,
   Download,
   Search,
-  Filter,
   Plus,
   Eye,
   Edit,
-  Trash2,
   Share,
   Lock,
-  Unlock,
   QrCode,
   Scan,
-  Printer,
-  Mail,
   Calendar,
   User,
   Shield,
-  AlertTriangle,
   CheckCircle,
   Clock,
-  Star,
-  Tag,
   Folder,
-  Image,
-  Video,
-  Mic
+  Target,
+  Scale,
 } from 'lucide-react';
-import { Document, DocumentTemplate, FormField } from '@/types/clinical';
+// Update the import to match the actual export from '@/types/clinical'
+import { DocumentTemplate } from '@/types/clinical';
+// If the type is named differently, e.g., ClinicalDocument, import it as follows:
+// import { ClinicalDocument as Document, DocumentTemplate } from '@/types/clinical';
+
+// Or, if you need to define a local Document type as a workaround, you can do so here:
+// type Document = { /* define the shape here as a temporary fix */ };
+
+// Temporary fix: define Document type with patientName property if not imported
+type Document = {
+  id: string;
+  title: string;
+  type: string;
+  status: string;
+  content: string;
+  fileUrl?: string;
+  fileSize?: number;
+  mimeType?: string;
+  tags: string[];
+  isConfidential: boolean;
+  requiresSignature: boolean;
+  centerId: string;
+  createdBy: string;
+  patientId: string | null;
+  patientName?: string | null;
+  createdAt?: Date;
+  updatedAt?: Date;
+  qrCode?: string;
+};
 
 interface DocumentManagerProps {
   documents: Document[];
@@ -46,10 +65,7 @@ interface DocumentManagerProps {
 
 export function DocumentManager({
   documents,
-  templates,
   onCreateDocument,
-  onUpdateDocument,
-  onDeleteDocument,
   onGeneratePDF,
   onScanDocument
 }: DocumentManagerProps) {
@@ -57,9 +73,6 @@ export function DocumentManager({
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
-  const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
-  const [showTemplateModal, setShowTemplateModal] = useState(false);
-  const [showFormBuilder, setShowFormBuilder] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -277,7 +290,6 @@ export function DocumentManager({
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => setShowTemplateModal(true)}
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -314,11 +326,9 @@ export function DocumentManager({
             <motion.div
               key={document.id}
               whileHover={{ scale: 1.02 }}
-              onClick={() => setSelectedDocument(document)}
               style={{
                 padding: '1.5rem',
                 backgroundColor: 'white',
-                borderRadius: '1rem',
                 border: '1px solid #E5E7EB',
                 boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
                 cursor: 'pointer',

@@ -11,15 +11,9 @@ import {
   Download,
   Eye,
   Trash2,
-  Plus,
   Search,
-  Filter,
-  Tag,
   Lock,
   Unlock,
-  Calendar,
-  User,
-  AlertTriangle
 } from 'lucide-react';
 import { PatientDocument, ExtendedPatient } from '@/types/clinical';
 
@@ -41,7 +35,6 @@ export function PatientDocuments({
   onDelete,
   onDownload,
   onView,
-  onUpdateTags,
   onToggleConfidential
 }: PatientDocumentsProps) {
   const [selectedType, setSelectedType] = useState<string>('all');
@@ -146,19 +139,7 @@ export function PatientDocuments({
     }
   };
 
-  const addTag = (documentId: string, newTag: string) => {
-    const document = documents.find(d => d.id === documentId);
-    if (document && !document.tags.includes(newTag)) {
-      onUpdateTags(documentId, [...document.tags, newTag]);
-    }
-  };
 
-  const removeTag = (documentId: string, tagToRemove: string) => {
-    const document = documents.find(d => d.id === documentId);
-    if (document) {
-      onUpdateTags(documentId, document.tags.filter(tag => tag !== tagToRemove));
-    }
-  };
 
   return (
     <div style={{ padding: '2rem', backgroundColor: '#F9FAFB', minHeight: '100vh' }}>
@@ -694,7 +675,7 @@ export function PatientDocuments({
                     </label>
                     <select
                       value={uploadMetadata.type || 'other'}
-                      onChange={(e) => setUploadMetadata(prev => ({ ...prev, type: e.target.value as any }))}
+                      onChange={(e) => setUploadMetadata(prev => ({ ...prev, type: e.target.value as PatientDocument['type'] }))}
                       style={{
                         width: '100%',
                         padding: '0.75rem',
