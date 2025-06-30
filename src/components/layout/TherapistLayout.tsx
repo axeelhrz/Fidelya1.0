@@ -14,7 +14,6 @@ import {
   Settings,
   User,
   Bell,
-  Search,
   Menu,
   X,
   ChevronRight,
@@ -27,7 +26,6 @@ import {
   Video,
   BarChart3,
   Target,
-  Award,
   Phone
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';

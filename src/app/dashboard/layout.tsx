@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import AdminLayout from '@/components/layout/AdminLayout';
+import TherapistLayout from '@/components/layout/TherapistLayout';
 
 export default function DashboardLayout({
   children,
@@ -13,22 +14,24 @@ export default function DashboardLayout({
   const { user, loading } = useAuth();
   const router = useRouter();
 
-  // Consolidar todos los efectos en un solo useEffect para evitar problemas de orden de hooks
   useEffect(() => {
-    // Redirigir al login si no hay usuario autenticado
     if (!loading && !user) {
       router.push('/login');
       return;
     }
 
-    // Redirigir según el rol si está en la ruta incorrecta
     if (user && typeof window !== 'undefined') {
       const currentPath = window.location.pathname;
       
+      // Redirecciones basadas en roles
       if (user.role === 'therapist' && currentPath.includes('/ceo')) {
-        router.push('/dashboard/sessions');
-      } else if (user.role === 'admin' && currentPath.includes('/sessions') && !currentPath.includes('/ceo')) {
+        router.push('/dashboard/therapist');
+      } else if (user.role === 'ceo' && currentPath.includes('/therapist')) {
         router.push('/dashboard/ceo');
+      } else if (user.role === 'patient' && !currentPath.includes('/patient')) {
+        router.push('/dashboard/patient');
+      } else if (user.role === 'receptionist' && !currentPath.includes('/reception')) {
+        router.push('/dashboard/reception');
       }
     }
   }, [user, loading, router]);
@@ -77,9 +80,23 @@ export default function DashboardLayout({
     return null;
   }
 
-  return (
-    <AdminLayout>
-      {children}
-    </AdminLayout>
-  );
+  // Seleccionar layout según el rol del usuario
+  const LayoutComponent = () => {
+    switch (user.role) {
+      case 'ceo':
+        return <AdminLayout>{children}</AdminLayout>;
+      case 'therapist':
+        return <TherapistLayout>{children}</TherapistLayout>;
+      case 'patient':
+        // TODO: Crear PatientLayout
+        return <div>Patient Layout - En desarrollo</div>;
+      case 'receptionist':
+        // TODO: Crear ReceptionistLayout
+        return <div>Receptionist Layout - En desarrollo</div>;
+      default:
+        return <AdminLayout>{children}</AdminLayout>;
+    }
+  };
+
+  return <LayoutComponent />;
 }
