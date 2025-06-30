@@ -16,6 +16,7 @@ import {
   Menu,
   X,
   Home,
+  Clock,
   Download
 } from 'lucide-react';
 
@@ -108,10 +109,8 @@ export default function PatientLayout({ children }: PatientLayoutProps) {
               position: 'fixed',
               inset: 0,
               backgroundColor: 'rgba(0, 0, 0, 0.5)',
-              zIndex: 40,
-              display: 'block'
+              zIndex: 40
             }}
-            className="lg:hidden"
           />
         )}
       </AnimatePresence>
@@ -120,10 +119,10 @@ export default function PatientLayout({ children }: PatientLayoutProps) {
       <motion.aside
         initial={false}
         animate={{
-          x: sidebarOpen ? 0 : '-100%'
+          x: sidebarOpen ? 0 : window.innerWidth >= 1024 ? 0 : '-100%'
         }}
         style={{
-          position: 'fixed',
+          position: window.innerWidth >= 1024 ? 'static' : 'fixed',
           top: 0,
           left: 0,
           bottom: 0,
@@ -133,9 +132,8 @@ export default function PatientLayout({ children }: PatientLayoutProps) {
           zIndex: 50,
           display: 'flex',
           flexDirection: 'column',
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+          boxShadow: window.innerWidth >= 1024 ? 'none' : '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
         }}
-        className="lg:translate-x-0 lg:static lg:inset-0"
       >
         {/* Header */}
         <div style={{
@@ -162,20 +160,21 @@ export default function PatientLayout({ children }: PatientLayoutProps) {
               </p>
             </div>
             
-            <button
-              onClick={() => setSidebarOpen(false)}
-              style={{
-                padding: '0.5rem',
-                borderRadius: '0.5rem',
-                border: 'none',
-                backgroundColor: 'transparent',
-                cursor: 'pointer',
-                color: '#64748B'
-              }}
-              className="lg:hidden"
-            >
-              <X size={20} />
-            </button>
+            {window.innerWidth < 1024 && (
+              <button
+                onClick={() => setSidebarOpen(false)}
+                style={{
+                  padding: '0.5rem',
+                  borderRadius: '0.5rem',
+                  border: 'none',
+                  backgroundColor: 'transparent',
+                  cursor: 'pointer',
+                  color: '#64748B'
+                }}
+              >
+                <X size={20} />
+              </button>
+            )}
           </div>
         </div>
 
@@ -319,10 +318,8 @@ export default function PatientLayout({ children }: PatientLayoutProps) {
         flex: 1,
         display: 'flex',
         flexDirection: 'column',
-        marginLeft: '280px'
-      }}
-      className="lg:ml-0"
-      >
+        marginLeft: window.innerWidth >= 1024 ? '0' : '0'
+      }}>
         {/* Top Bar */}
         <header style={{
           backgroundColor: 'white',
@@ -336,20 +333,21 @@ export default function PatientLayout({ children }: PatientLayoutProps) {
           zIndex: 30
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <button
-              onClick={() => setSidebarOpen(true)}
-              style={{
-                padding: '0.5rem',
-                borderRadius: '0.5rem',
-                border: '1px solid #E2E8F0',
-                backgroundColor: 'white',
-                cursor: 'pointer',
-                color: '#64748B'
-              }}
-              className="lg:hidden"
-            >
-              <Menu size={20} />
-            </button>
+            {window.innerWidth < 1024 && (
+              <button
+                onClick={() => setSidebarOpen(true)}
+                style={{
+                  padding: '0.5rem',
+                  borderRadius: '0.5rem',
+                  border: '1px solid #E2E8F0',
+                  backgroundColor: 'white',
+                  cursor: 'pointer',
+                  color: '#64748B'
+                }}
+              >
+                <Menu size={20} />
+              </button>
+            )}
             
             <div>
               <h2 style={{
@@ -426,35 +424,6 @@ export default function PatientLayout({ children }: PatientLayoutProps) {
           {children}
         </main>
       </div>
-
-      {/* Responsive Styles */}
-      <style jsx>{`
-        @media (max-width: 1024px) {
-          .lg\\:hidden {
-            display: block !important;
-          }
-          .lg\\:translate-x-0 {
-            transform: translateX(-100%) !important;
-          }
-          .lg\\:static {
-            position: fixed !important;
-          }
-          .lg\\:ml-0 {
-            margin-left: 0 !important;
-          }
-        }
-        @media (min-width: 1024px) {
-          .lg\\:hidden {
-            display: none !important;
-          }
-          .lg\\:translate-x-0 {
-            transform: translateX(0) !important;
-          }
-          .lg\\:static {
-            position: static !important;
-          }
-        }
-      `}</style>
     </div>
   );
 }
