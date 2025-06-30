@@ -7,25 +7,26 @@ import { useAuth } from '@/contexts/AuthContext';
 import {
   User,
   Calendar,
+  Users,
+  Phone,
   FileText,
-  Heart,
-  Bell,
-  CreditCard,
   Settings,
   LogOut,
   Menu,
   X,
   Home,
-  Download,
-  Shield,
-  ChevronRight
+  UserCheck,
+  CalendarCheck,
+  MessageSquare,
+  ChevronRight,
+  Shield
 } from 'lucide-react';
 
-interface PatientLayoutProps {
+interface ReceptionistLayoutProps {
   children: React.ReactNode;
 }
 
-export default function PatientLayout({ children }: PatientLayoutProps) {
+export default function ReceptionistLayout({ children }: ReceptionistLayoutProps) {
   const { user, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
@@ -45,75 +46,70 @@ export default function PatientLayout({ children }: PatientLayoutProps) {
   const navigationItems = [
     {
       name: 'Inicio',
-      href: '/dashboard/patient',
+      href: '/dashboard/reception',
       icon: Home,
-      description: 'Vista general',
+      description: 'Panel principal',
       color: '#3B82F6',
       bgColor: '#EFF6FF'
     },
     {
-      name: 'Mi Perfil',
-      href: '/dashboard/patient/profile',
-      icon: User,
-      description: 'Información personal',
-      color: '#8B5CF6',
-      bgColor: '#F3E8FF'
-    },
-    {
-      name: 'Mis Citas',
-      href: '/dashboard/patient/appointments',
-      icon: Calendar,
-      description: 'Sesiones programadas',
+      name: 'Pacientes',
+      href: '/dashboard/reception/patients',
+      icon: Users,
+      description: 'Gestión de pacientes',
       color: '#10B981',
       bgColor: '#ECFDF5'
     },
     {
-      name: 'Mi Plan',
-      href: '/dashboard/patient/treatment',
-      icon: FileText,
-      description: 'Plan de tratamiento',
+      name: 'Citas',
+      href: '/dashboard/reception/appointments',
+      icon: Calendar,
+      description: 'Programar citas',
       color: '#F59E0B',
       bgColor: '#FFFBEB'
     },
     {
-      name: 'Estado Emocional',
-      href: '/dashboard/patient/emotions',
-      icon: Heart,
-      description: 'Registro diario',
+      name: 'Calendario',
+      href: '/dashboard/reception/calendar',
+      icon: CalendarCheck,
+      description: 'Vista de calendario',
+      color: '#8B5CF6',
+      bgColor: '#F3E8FF'
+    },
+    {
+      name: 'Check-in',
+      href: '/dashboard/reception/checkin',
+      icon: UserCheck,
+      description: 'Registro de llegadas',
+      color: '#06B6D4',
+      bgColor: '#ECFEFF'
+    },
+    {
+      name: 'Comunicaciones',
+      href: '/dashboard/reception/communications',
+      icon: MessageSquare,
+      description: 'Mensajes y avisos',
       color: '#EF4444',
       bgColor: '#FEF2F2'
     },
     {
       name: 'Documentos',
-      href: '/dashboard/patient/documents',
-      icon: Download,
-      description: 'Archivos y recibos',
-      color: '#06B6D4',
-      bgColor: '#ECFEFF'
-    },
-    {
-      name: 'Pagos',
-      href: '/dashboard/patient/payments',
-      icon: CreditCard,
-      description: 'Facturación',
+      href: '/dashboard/reception/documents',
+      icon: FileText,
+      description: 'Formularios y docs',
       color: '#84CC16',
       bgColor: '#F0FDF4'
-    },
-    {
-      name: 'Notificaciones',
-      href: '/dashboard/patient/notifications',
-      icon: Bell,
-      description: 'Alertas y avisos',
-      color: '#F97316',
-      bgColor: '#FFF7ED'
     }
   ];
 
   const handleLogout = async () => {
     try {
+      console.log('🔄 Iniciando logout desde ReceptionistLayout...');
       await logout();
     } catch (error) {
-      console.error('Error during logout:', error);
+      console.error('❌ Error durante logout:', error);
+      // Fallback: redirigir directamente al login
+      window.location.href = '/login';
     }
   };
 
@@ -182,12 +178,12 @@ export default function PatientLayout({ children }: PatientLayoutProps) {
                   width: '32px',
                   height: '32px',
                   borderRadius: '0.5rem',
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center'
                 }}>
-                  <Heart size={18} color="white" />
+                  <Phone size={18} color="white" />
                 </div>
                 <h1 style={{
                   fontSize: '1.25rem',
@@ -196,7 +192,7 @@ export default function PatientLayout({ children }: PatientLayoutProps) {
                   margin: 0,
                   fontFamily: 'Space Grotesk, sans-serif'
                 }}>
-                  Mi Portal
+                  Recepción
                 </h1>
               </div>
               <p style={{
@@ -205,7 +201,7 @@ export default function PatientLayout({ children }: PatientLayoutProps) {
                 margin: 0,
                 fontWeight: 500
               }}>
-                Portal del Paciente
+                Panel de Recepcionista
               </p>
             </div>
             
@@ -247,7 +243,7 @@ export default function PatientLayout({ children }: PatientLayoutProps) {
               width: '48px',
               height: '48px',
               borderRadius: '50%',
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -279,7 +275,7 @@ export default function PatientLayout({ children }: PatientLayoutProps) {
                   margin: 0,
                   fontWeight: 500
                 }}>
-                  Paciente Activo
+                  {user?.receptionistInfo?.department || 'Recepcionista'}
                 </p>
               </div>
             </div>
@@ -339,7 +335,7 @@ export default function PatientLayout({ children }: PatientLayoutProps) {
                   {/* Active indicator */}
                   {isActive && (
                     <motion.div
-                      layoutId="activeIndicator"
+                      layoutId="activeIndicatorReception"
                       style={{
                         position: 'absolute',
                         left: 0,
@@ -408,7 +404,7 @@ export default function PatientLayout({ children }: PatientLayoutProps) {
         }}>
           <div style={{ marginBottom: '0.75rem' }}>
             <motion.button
-              onClick={() => handleNavigation('/dashboard/patient/settings')}
+              onClick={() => handleNavigation('/dashboard/reception/settings')}
               whileHover={{ backgroundColor: '#F1F5F9', x: 2 }}
               whileTap={{ scale: 0.98 }}
               style={{
@@ -483,7 +479,9 @@ export default function PatientLayout({ children }: PatientLayoutProps) {
                 fontWeight: 600,
                 color: '#065F46'
               }}>
-                Sesión Segura
+                Turno: {user?.receptionistInfo?.workShift === 'full-time' ? 'Completo' : 
+                        user?.receptionistInfo?.workShift === 'morning' ? 'Mañana' :
+                        user?.receptionistInfo?.workShift === 'afternoon' ? 'Tarde' : 'Noche'}
               </span>
             </div>
             <p style={{
@@ -491,7 +489,7 @@ export default function PatientLayout({ children }: PatientLayoutProps) {
               color: '#047857',
               margin: '0.25rem 0 0 0'
             }}>
-              Datos protegidos con cifrado
+              Sesión activa y segura
             </p>
           </div>
         </div>
@@ -545,7 +543,7 @@ export default function PatientLayout({ children }: PatientLayoutProps) {
                 margin: 0,
                 fontFamily: 'Space Grotesk, sans-serif'
               }}>
-                Bienvenido, {user?.firstName} 👋
+                Bienvenida, {user?.firstName} 👋
               </h2>
               <p style={{
                 fontSize: '0.875rem',
@@ -564,36 +562,29 @@ export default function PatientLayout({ children }: PatientLayoutProps) {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => handleNavigation('/dashboard/patient/notifications')}
-              style={{
-                position: 'relative',
-                padding: '0.75rem',
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              padding: '0.5rem 1rem',
+              backgroundColor: '#ECFDF5',
+              borderRadius: '2rem',
+              border: '1px solid #D1FAE5'
+            }}>
+              <div style={{
+                width: '8px',
+                height: '8px',
                 borderRadius: '50%',
-                border: '1px solid #E2E8F0',
-                backgroundColor: 'white',
-                cursor: 'pointer',
-                color: '#64748B',
-                boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
-              }}
-            >
-              <Bell size={18} />
-              <motion.div
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ duration: 2, repeat: Infinity }}
-                style={{
-                  position: 'absolute',
-                  top: '0.5rem',
-                  right: '0.5rem',
-                  width: '8px',
-                  height: '8px',
-                  borderRadius: '50%',
-                  backgroundColor: '#EF4444'
-                }}
-              />
-            </motion.button>
+                backgroundColor: '#10B981'
+              }} />
+              <span style={{
+                fontSize: '0.875rem',
+                fontWeight: 600,
+                color: '#065F46'
+              }}>
+                En línea
+              </span>
+            </div>
 
             <div style={{
               display: 'flex',
@@ -608,7 +599,7 @@ export default function PatientLayout({ children }: PatientLayoutProps) {
                 width: '32px',
                 height: '32px',
                 borderRadius: '50%',
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center'

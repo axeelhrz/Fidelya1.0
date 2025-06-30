@@ -6,6 +6,7 @@ import { useEffect } from 'react';
 import AdminLayout from '@/components/layout/AdminLayout';
 import TherapistLayout from '@/components/layout/TherapistLayout';
 import PatientLayout from '@/components/layout/PatientLayout';
+import ReceptionistLayout from '@/components/layout/ReceptionistLayout';
 
 export default function DashboardLayout({
   children,
@@ -91,8 +92,7 @@ export default function DashboardLayout({
       case 'patient':
         return <PatientLayout>{children}</PatientLayout>;
       case 'receptionist':
-        // TODO: Crear ReceptionistLayout
-        return <div>Receptionist Layout - En desarrollo</div>;
+        return <ReceptionistLayout>{children}</ReceptionistLayout>;
       default:
         return <AdminLayout>{children}</AdminLayout>;
     }

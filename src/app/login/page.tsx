@@ -15,7 +15,6 @@ import {
   Crown,
   Stethoscope,
   Heart,
-  UserCheck
 } from 'lucide-react';
 
 export default function LoginPage() {
@@ -89,15 +88,6 @@ export default function LoginPage() {
       password: 'patient123',
       description: 'Portal del paciente'
     },
-    {
-      role: 'Recepcionista',
-      icon: UserCheck,
-      color: '#F59E0B',
-      bgColor: '#FFFBEB',
-      email: 'reception',
-      password: 'reception123',
-      description: 'Gestión de citas y recepción'
-    }
   ];
 
   const handleDemoLogin = (demoEmail: string, demoPassword: string) => {
