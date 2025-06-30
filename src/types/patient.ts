@@ -79,3 +79,38 @@ export interface PatientFormData {
   preferences: Patient['preferences'];
   notes?: string;
 }
+
+import type { Assessment } from './assessment';
+export interface Note {
+  id: string;
+  patientId: string;
+  authorId: string;
+  content: string;
+  createdAt: Date;
+  updatedAt?: Date;
+}
+
+export interface Task {
+  id: string;
+  title: string;
+  description?: string;
+  dueDate?: Date;
+  completed: boolean;
+  assignedTo?: string;
+}
+
+export interface Appointment {
+  id: string;
+  patientId: string;
+  therapistId: string;
+  date: Date;
+  type: string;
+  status: 'scheduled' | 'completed' | 'cancelled';
+  notes?: string;
+}
+export interface PatientPortalData {
+  appointments: Appointment[];
+  tasks: Task[];
+  assessments: Assessment[];
+  notes: Note[];
+}

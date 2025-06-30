@@ -31,7 +31,6 @@ export function CompetencyRadar({
   competencies,
   categories,
   onUpdateCompetency,
-  onAddCompetency,
 }: CompetencyRadarProps) {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);

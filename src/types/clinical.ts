@@ -318,6 +318,7 @@ export interface PatientTimelineEvent {
   description: string;
   relatedId?: string; // ID of related session, assessment, etc.
   createdBy: string;
+  data?: unknown;
 }
 
 export type TimelineEventType = 'session' | 'assessment' | 'medication-change' | 'diagnosis-update' | 'referral' | 'discharge' | 'incident' | 'note';
@@ -364,7 +365,7 @@ export interface ClinicalNote {
   previousVersions: string | null; // ID of the previous version if this is an update
   lockedAt?: Date;
   lockedBy?: string;
-
+  date: Date; // Date of the session or note creation
 }
 
 export type NoteTemplateType = 'soap' | 'dap' | 'birp' | 'girp' | 'free-form' | 'intake' | 'discharge';
@@ -1176,6 +1177,21 @@ export interface Competency {
   behavioralIndicators: string[];
   proficiencyLevels: ProficiencyLevel[];
   isCore: boolean;
+  category: CompetencyCategory;
+  categoryId: string;
+  score: number; // 0-100
+  lastEvaluated: Date;
+  notes?: string;
+}
+
+export interface CompetencyCategory {
+  id: string;
+  name: string;
+  description: string;
+  color?: string;
+  icon?: string;
+  order: number;
+  isActive: boolean;
 }
 
 export interface ProficiencyLevel {
@@ -1593,12 +1609,4 @@ export interface PaginatedResponse<T> {
   pageSize: number;
   hasNext: boolean;
   hasPrevious: boolean;
-}
-
-export interface SearchResponse {
-  results: SearchResult[];
-  total: number;
-  query: string;
-  searchTime: number;
-  suggestions: string[];
 }
