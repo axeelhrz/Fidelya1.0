@@ -1,0 +1,154 @@
+/* ===== CORRECCIÓN ESPECÍFICA PARA ELIMINAR BORDES DE CELULARES EN MÓVILES ===== */
+
+/* Aplicar solo en dispositivos móviles */
+@media screen and (max-width: 1023px) {
+    
+    /* ===== ELIMINAR TODOS LOS BORDES Y EFECTOS DE GLOW ===== */
+    .hero__phone,
+    .phone {
+        border: none !important;
+        box-shadow: none !important;
+        outline: none !important;
+        filter: none !important;
+        background: transparent !important;
+    }
+    
+    /* ===== ELIMINAR BORDES DE LAS PANTALLAS ===== */
+    .hero__phone-screen,
+    .phone__screen {
+        border: none !important;
+        outline: none !important;
+        box-shadow: none !important;
+    }
+    
+    /* ===== ELIMINAR EFECTOS ::before QUE CREAN BORDES ===== */
+    .hero__phone::before,
+    .phone::before,
+    .feature__phone::before {
+        display: none !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+    }
+    
+    /* ===== ELIMINAR GRADIENTES DE FONDO QUE PUEDEN CREAR BORDES ===== */
+    .phone {
+        background: #000000 !important;
+        background-image: none !important;
+        background-gradient: none !important;
+    }
+    
+    /* ===== ASEGURAR QUE LAS IMÁGENES OCUPEN TODO EL ESPACIO ===== */
+    .hero__phone-app-image,
+    .phone__app-image {
+        border: none !important;
+        outline: none !important;
+        box-shadow: none !important;
+        border-radius: var(--phone-border-radius) !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
+        background-size: cover !important;
+        background-position: center !important;
+    }
+    
+    /* ===== ELIMINAR TRANSFORMACIONES QUE PUEDEN CAUSAR BORDES ===== */
+    .hero__phone-container,
+    .feature__phone {
+        transform: none !important;
+        perspective: none !important;
+    }
+    
+    /* ===== ELIMINAR FILTROS ESPECÍFICOS POR FEATURE ===== */
+    .feature[data-feature="schedule"] .phone,
+    .feature[data-feature="stations"] .phone,
+    .feature[data-feature="calendar"] .phone,
+    .feature[data-feature="log"] .phone,
+    .feature[data-feature="notifications"] .phone,
+    .feature[data-feature="referrals"] .phone {
+        filter: none !important;
+        box-shadow: none !important;
+        border: none !important;
+    }
+    
+    /* ===== ELIMINAR CUALQUIER BORDE RESIDUAL ===== */
+    .hero__phone *,
+    .phone *,
+    .hero__phone-content,
+    .phone__content {
+        border: none !important;
+        outline: none !important;
+        box-shadow: none !important;
+    }
+    
+    /* ===== ASEGURAR CONTENEDORES LIMPIOS ===== */
+    .hero__phone-content,
+    .phone__content {
+        overflow: hidden !important;
+        border-radius: var(--phone-border-radius) !important;
+        background: transparent !important;
+    }
+    
+    /* ===== ELIMINAR ANIMACIONES QUE PUEDEN CREAR EFECTOS DE BORDE ===== */
+    .hero__phone,
+    .phone,
+    .hero__phone::before,
+    .phone::before,
+    .feature__phone::before {
+        animation: none !important;
+        transition: none !important;
+    }
+    
+    /* ===== CORRECCIÓN ESPECÍFICA PARA WEBKIT/SAFARI ===== */
+    .hero__phone,
+    .phone {
+        -webkit-appearance: none !important;
+        -webkit-border-radius: var(--phone-border-radius) !important;
+        -webkit-background-clip: padding-box !important;
+        background-clip: padding-box !important;
+    }
+    
+    /* ===== ELIMINAR CUALQUIER SOMBRA INTERNA ===== */
+    .hero__phone,
+    .phone,
+    .hero__phone-screen,
+    .phone__screen {
+        box-shadow: none !important;
+        -webkit-box-shadow: none !important;
+        -moz-box-shadow: none !important;
+    }
+}
+
+/* ===== CORRECCIONES ESPECÍFICAS PARA PANTALLAS MUY PEQUEÑAS ===== */
+@media screen and (max-width: 480px) {
+    .hero__phone,
+    .phone {
+        border: none !important;
+        box-shadow: none !important;
+        filter: none !important;
+        outline: none !important;
+    }
+    
+    .hero__phone-app-image,
+    .phone__app-image {
+        border: none !important;
+        border-radius: var(--phone-border-radius) !important;
+    }
+}
+
+@media screen and (max-width: 360px) {
+    .hero__phone,
+    .phone {
+        border: none !important;
+        box-shadow: none !important;
+        filter: none !important;
+        outline: none !important;
+    }
+    
+    .hero__phone-app-image,
+    .phone__app-image {
+        border: none !important;
+        border-radius: var(--phone-border-radius) !important;
+    }
+}
