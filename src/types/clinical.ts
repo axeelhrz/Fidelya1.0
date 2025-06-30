@@ -572,6 +572,28 @@ export interface TreatmentPlanHistory {
   changes: Record<string, unknown>; // JSON object with specific changes
 }
 
+// ============================================================================
+// GENERAL TASK INTERFACE
+// ============================================================================
+
+// General Task interface for common use across different contexts
+export interface Task {
+  id: string;
+  title: string;
+  description: string;
+  type: TaskType;
+  priority: 'high' | 'medium' | 'low';
+  status: TaskStatus;
+  dueDate?: Date;
+  completedDate?: Date;
+  assignedTo?: string;
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+  tags?: string[];
+  notes?: string;
+}
+
 export interface PatientTask {
   id: string;
   patientId: string;
@@ -592,8 +614,8 @@ export interface PatientTask {
   updatedAt: Date;
 }
 
-export type TaskType = 'homework' | 'exercise' | 'reading' | 'practice' | 'reflection' | 'monitoring' | 'behavioral-experiment';
-export type TaskStatus = 'assigned' | 'in-progress' | 'completed' | 'overdue' | 'skipped';
+export type TaskType = 'homework' | 'exercise' | 'reading' | 'practice' | 'reflection' | 'monitoring' | 'behavioral-experiment' | 'administrative' | 'clinical' | 'assessment' | 'follow-up';
+export type TaskStatus = 'assigned' | 'in-progress' | 'completed' | 'overdue' | 'skipped' | 'cancelled';
 
 export interface TaskResource {
   id: string;
