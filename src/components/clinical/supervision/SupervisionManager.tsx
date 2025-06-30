@@ -42,6 +42,7 @@ export function SupervisionManager({
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [showSessionModal, setShowSessionModal] = useState(false);
+  const [currentSession, setCurrentSession] = useState<SupervisionSession | null>(null);
 
   const tabs = [
     { id: 'overview', label: 'Resumen', icon: Activity },
@@ -49,15 +50,6 @@ export function SupervisionManager({
     { id: 'competencies', label: 'Competencias', icon: CheckSquare },
     { id: 'analytics', label: 'Análisis', icon: BarChart3 },
     { id: 'resources', label: 'Recursos', icon: BookOpen }
-  ];
-
-  const competencyCategories = [
-    { id: 'therapeutic', label: 'Habilidades Terapéuticas', color: '#10B981' },
-    { id: 'assessment', label: 'Evaluación', color: '#6366F1' },
-    { id: 'intervention', label: 'Intervención', color: '#F59E0B' },
-    { id: 'ethics', label: 'Ética Profesional', color: '#EF4444' },
-    { id: 'communication', label: 'Comunicación', color: '#8B5CF6' },
-    { id: 'documentation', label: 'Documentación', color: '#06B6D4' }
   ];
 
   const riskLevels = [
@@ -70,7 +62,7 @@ export function SupervisionManager({
     const matchesSearch = searchTerm === '' || 
       session.therapistName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       session.supervisorName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      session.notes.toLowerCase().includes(searchTerm.toLowerCase());
+      (session.notes && session.notes.toLowerCase().includes(searchTerm.toLowerCase()));
     
     const matchesFilter = filterStatus === 'all' || session.status === filterStatus;
     const matchesTherapist = !selectedTherapist || session.therapistId === selectedTherapist;
@@ -89,6 +81,55 @@ export function SupervisionManager({
   const getTherapistRiskLevel = (therapistId: string) => {
     const score = getTherapistCompetencyScore(therapistId);
     return riskLevels.find(level => score >= level.threshold) || riskLevels[2];
+  };
+
+  const getSessionTypeLabel = (type: string) => {
+    switch (type) {
+      case 'individual':
+        return 'Individual';
+      case 'group':
+        return 'Grupal';
+      case 'virtual':
+        return 'Virtual';
+      default:
+        return 'Individual';
+    }
+  };
+
+  const getSessionTypeColor = (type: string) => {
+    switch (type) {
+      case 'individual':
+        return '#10B981';
+      case 'group':
+        return '#6366F1';
+      case 'virtual':
+        return '#F59E0B';
+      default:
+        return '#10B981';
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return 'Completada';
+      case 'scheduled':
+        return 'Programada';
+      case 'cancelled':
+        return 'Cancelada';
+      default:
+        return 'Programada';
+    }
+  };
+
+  const handleCreateSession = () => {
+    setCurrentSession(null);
+    setShowSessionModal(true);
+  };
+
+  const handleViewSession = (session: SupervisionSession) => {
+    setCurrentSession(session);
+    setShowSessionModal(true);
   };
 
   const renderOverview = () => (
@@ -306,7 +347,7 @@ export function SupervisionManager({
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => setShowSessionModal(true)}
+            onClick={handleCreateSession}
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -523,13 +564,13 @@ export function SupervisionManager({
                 <div style={{
                   width: '40px',
                   height: '40px',
-                  backgroundColor: session.type === ('individual' as string) ? '#10B981' : '#6366F1',
+                  backgroundColor: getSessionTypeColor(session.type),
                   borderRadius: '50%',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center'
                 }}>
-                  {session.type === "individual" ? (
+                  {(session.type === 'individual' as string || session.type === 'group' as string) ? (
                     <Users size={16} color="white" />
                   ) : (
                     <Video size={16} color="white" />
@@ -572,17 +613,14 @@ export function SupervisionManager({
                     fontFamily: 'Inter, sans-serif',
                     textTransform: 'uppercase'
                   }}>
-                    {session.status === 'completed' ? 'Completada' : 'Programada'}
+                    {getStatusLabel(session.status)}
                   </span>
                 </div>
 
                 <motion.button
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
-                  onClick={() => {
-                    setCurrentSession(session);
-                    setShowSessionModal(true);
-                  }}
+                  onClick={() => handleViewSession(session)}
                   style={{
                     padding: '0.5rem',
                     backgroundColor: '#EEF2FF',
@@ -698,10 +736,7 @@ export function SupervisionManager({
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => {
-              setCurrentSession(null);
-              setShowSessionModal(true);
-            }}
+            onClick={handleCreateSession}
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -757,15 +792,15 @@ export function SupervisionManager({
                 <div style={{
                   width: '48px',
                   height: '48px',
-                  backgroundColor: session.type === 'individual' ? '#10B981' : session.type === 'group' ? '#6366F1' : '#F59E0B',
+                  backgroundColor: getSessionTypeColor(session.type),
                   borderRadius: '50%',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center'
                 }}>
-                  {session.type === 'individual' ? (
+                  {(session.type === 'individual' as string) ? (
                     <Users size={20} color="white" />
-                  ) : session.type === 'group' ? (
+                  ) : (session.type === 'group' as string) ? (
                     <Users size={20} color="white" />
                   ) : (
                     <Video size={20} color="white" />
@@ -780,7 +815,7 @@ export function SupervisionManager({
                     marginBottom: '0.25rem',
                     fontFamily: 'Space Grotesk, sans-serif'
                   }}>
-                    Supervisión {session.type === "Individual" ? "Individual" : session.type === "Group" ? "Grupal" : "Virtual"}
+                    Supervisión {getSessionTypeLabel(session.type)}
                   </div>
                   <div style={{
                     fontSize: '0.875rem',
@@ -810,17 +845,14 @@ export function SupervisionManager({
                     fontFamily: 'Inter, sans-serif',
                     textTransform: 'uppercase'
                   }}>
-                    {session.status === 'completed' ? 'Completada' : session.status === 'scheduled' ? 'Programada' : 'Cancelada'}
+                    {getStatusLabel(session.status)}
                   </span>
                 </div>
 
                 <motion.button
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
-                  onClick={() => {
-                    setCurrentSession(session);
-                    setShowSessionModal(true);
-                  }}
+                  onClick={() => handleViewSession(session)}
                   style={{
                     padding: '0.5rem',
                     backgroundColor: '#EEF2FF',
@@ -938,7 +970,7 @@ export function SupervisionManager({
                         backgroundColor: '#6366F1',
                         borderRadius: '50%'
                       }} />
-                      <span>{item}</span>
+                      <span>{typeof item === 'string' ? item : (item?.toString ? item.toString() : JSON.stringify(item))}</span>
                     </div>
                   ))}
                 </div>
