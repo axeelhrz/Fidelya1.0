@@ -592,6 +592,7 @@ export interface Task {
   updatedAt: Date;
   tags?: string[];
   notes?: string;
+  completed?: boolean; // For backward compatibility
 }
 
 export interface PatientTask {
@@ -612,6 +613,9 @@ export interface PatientTask {
   rating?: number; // 1-5
   createdAt: Date;
   updatedAt: Date;
+  completed?: boolean; // For backward compatibility
+  estimatedDuration?: number; // minutes
+  completedAt?: Date; // For backward compatibility
 }
 
 export type TaskType = 'homework' | 'exercise' | 'reading' | 'practice' | 'reflection' | 'monitoring' | 'behavioral-experiment' | 'administrative' | 'clinical' | 'assessment' | 'follow-up';
@@ -866,7 +870,8 @@ export interface PatientPortalModule {
 export interface PatientPortalData {
   patient: Patient;
   upcomingAppointments: PatientAppointmentView[];
-  pendingTasks: PatientPortalTask[];
+  tasks: PatientPortalTask[]; // Added missing tasks property
+  pendingTasks?: PatientPortalTask[]; // Optional for backward compatibility
   recentCommunications: PatientCommunication[];
   progressSummary: {
     completedTasks: number;
@@ -877,6 +882,32 @@ export interface PatientPortalData {
   };
   resources: PatientResource[];
   notifications: PatientCommunication[];
+  moodLogs?: MoodLog[]; // Optional mood logs for tracking
+  payments?: {
+    totalPaid: number;
+    pendingAmount: number;
+    invoiceCount: number;
+    history: PaymentHistory[];
+  };
+}
+
+// Additional interfaces for PatientPortalData
+export interface MoodLog {
+  id: string;
+  patientId: string;
+  date: Date;
+  mood: number; // 1-10 scale
+  notes?: string;
+  createdAt: Date;
+}
+
+export interface PaymentHistory {
+  id: string;
+  amount: number;
+  description: string;
+  date: Date;
+  method: string;
+  status: 'completed' | 'pending' | 'failed';
 }
 
 export interface PatientAccount {
@@ -964,6 +995,7 @@ export interface PatientAppointmentView {
   canReschedule: boolean;
   canCancel: boolean;
   notes?: string;
+  duration?: number; // minutes
 }
 
 export interface PatientPayment {
@@ -996,6 +1028,11 @@ export interface PatientPortalTask {
   completionData?: Record<string, unknown>;
   feedback?: string;
   points?: number; // gamification
+  priority?: 'high' | 'medium' | 'low';
+  estimatedDuration?: number; // minutes
+  completedAt?: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface PatientResource {
@@ -1027,6 +1064,10 @@ export interface PatientCommunication {
   requiresResponse: boolean;
   response?: string;
   responseAt?: Date;
+  read?: boolean; // For backward compatibility
+  timestamp?: Date; // For backward compatibility
+  title?: string; // For backward compatibility
+  message?: string; // For backward compatibility
 }
 
 // ============================================================================

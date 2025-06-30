@@ -13,7 +13,6 @@ import {
   User,
   Activity,
   CheckCircle,
-  Download,
   Video,
   X,
 } from 'lucide-react';
@@ -23,7 +22,6 @@ import type {
   PatientPortalTask,
   PatientAppointmentView,
   PatientCommunication,
-  PatientPayment
 } from '@/types/clinical';
 
 interface PatientPortalDashboardProps {
@@ -45,12 +43,6 @@ interface Achievement {
   progress?: number;
 }
 
-interface MoodLog {
-  id: string;
-  date: Date;
-  mood: number;
-  notes?: string;
-}
 
 export function PatientPortalDashboard({
   patient,
