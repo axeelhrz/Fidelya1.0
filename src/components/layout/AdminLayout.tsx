@@ -36,7 +36,9 @@ import {
   BarChart2,
   Layers,
   Headphones,
-  Wifi
+  Wifi,
+  Settings,
+  Power
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { format } from 'date-fns';
@@ -68,6 +70,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<'online' | 'offline' | 'syncing'>('online');
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const pathname = usePathname();
 
   // Actualizar tiempo cada segundo
@@ -291,9 +294,37 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     );
   });
 
-  const handleLogout = () => {
-    logout();
-    setIsUserMenuOpen(false);
+  const handleLogout = async () => {
+    if (isLoggingOut) return;
+    
+    try {
+      setIsLoggingOut(true);
+      console.log('🔄 AdminLayout: Iniciando logout...');
+      
+      // Cerrar el menú inmediatamente
+      setIsUserMenuOpen(false);
+      
+      // Mostrar confirmación al usuario
+      const confirmLogout = window.confirm('¿Estás seguro de que quieres cerrar sesión?');
+      
+      if (!confirmLogout) {
+        setIsLoggingOut(false);
+        return;
+      }
+      
+      // Llamar a la función logout del contexto
+      await logout();
+      
+      console.log('✅ AdminLayout: Logout completado');
+    } catch (error) {
+      console.error('❌ AdminLayout: Error al cerrar sesión:', error);
+      
+      // En caso de error, forzar redirección
+      alert('Error al cerrar sesión. Redirigiendo...');
+      window.location.href = '/login';
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
 
   const getConnectionIcon = () => {
@@ -1239,7 +1270,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         display: 'flex',
         flexDirection: 'column'
       }}>
-        {/* Topbar completamente integrado y mejorado */}
+        {/* Topbar completamente integrado y mejorado con logout */}
         <motion.header
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -1352,7 +1383,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             </motion.div>
           </div>
 
-          {/* Controles de usuario mejorados */}
+          {/* Controles de usuario mejorados con logout directo */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
             {/* Notificaciones mejoradas */}
             <motion.button
@@ -1393,12 +1424,51 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               />
             </motion.button>
 
+            {/* Botón de logout directo */}
+            <motion.button
+              onClick={handleLogout}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              disabled={isLoggingOut}
+              style={{
+                padding: '0.625rem',
+                backgroundColor: isLoggingOut ? 'rgba(239, 68, 68, 0.1)' : 'rgba(249, 250, 251, 0.9)',
+                borderRadius: '0.625rem',
+                border: `1px solid ${isLoggingOut ? 'rgba(239, 68, 68, 0.3)' : 'rgba(229, 231, 235, 0.5)'}`,
+                cursor: isLoggingOut ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backdropFilter: 'blur(8px)',
+                transition: 'all 0.2s ease',
+                opacity: isLoggingOut ? 0.7 : 1
+              }}
+              title="Cerrar sesión"
+            >
+              {isLoggingOut ? (
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                  style={{
+                    width: '16px',
+                    height: '16px',
+                    border: '2px solid rgba(239, 68, 68, 0.3)',
+                    borderTop: '2px solid #EF4444',
+                    borderRadius: '50%'
+                  }}
+                />
+              ) : (
+                <Power size={16} color="#EF4444" />
+              )}
+            </motion.button>
+
             {/* Avatar de usuario con menú completamente mejorado */}
             <div style={{ position: 'relative' }}>
               <motion.button
-                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                onClick={() => !isLoggingOut && setIsUserMenuOpen(!isUserMenuOpen)}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
+                disabled={isLoggingOut}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -1407,9 +1477,10 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                   backgroundColor: 'rgba(249, 250, 251, 0.9)',
                   borderRadius: '0.625rem',
                   border: '1px solid rgba(229, 231, 235, 0.5)',
-                  cursor: 'pointer',
+                  cursor: isLoggingOut ? 'not-allowed' : 'pointer',
                   transition: 'all 0.2s ease',
-                  backdropFilter: 'blur(8px)'
+                  backdropFilter: 'blur(8px)',
+                  opacity: isLoggingOut ? 0.7 : 1
                 }}
               >
                 <div style={{
@@ -1454,7 +1525,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
               {/* Menú de usuario completamente rediseñado */}
               <AnimatePresence>
-                {isUserMenuOpen && (
+                {isUserMenuOpen && !isLoggingOut && (
                   <motion.div
                     initial={{ opacity: 0, y: -10, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -1472,7 +1543,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                       boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
                       zIndex: 50,
                       overflow: 'hidden',
-                      minWidth: '220px'
+                      minWidth: '240px'
                     }}
                   >
                     <div style={{
@@ -1511,6 +1582,40 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                       </div>
                     </div>
                     
+                    {/* Configuración */}
+                    <motion.button
+                      whileHover={{ 
+                        backgroundColor: 'rgba(37, 99, 235, 0.04)',
+                        x: 2
+                      }}
+                      whileTap={{ scale: 0.98 }}
+                      style={{
+                        width: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.625rem',
+                        padding: '0.75rem 1rem',
+                        border: 'none',
+                        background: 'transparent',
+                        cursor: 'pointer',
+                        fontSize: '0.8125rem',
+                        color: '#374151',
+                        fontFamily: 'Inter, sans-serif',
+                        fontWeight: 500,
+                        transition: 'all 0.2s ease'
+                      }}
+                    >
+                      <Settings size={14} />
+                      Configuración
+                    </motion.button>
+
+                    <div style={{
+                      height: '1px',
+                      background: 'linear-gradient(90deg, transparent, rgba(229, 231, 235, 0.5), transparent)',
+                      margin: '0.25rem 1rem'
+                    }} />
+                    
+                    {/* Cerrar sesión */}
                     <motion.button
                       onClick={handleLogout}
                       whileHover={{ 
@@ -1576,7 +1681,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
       {/* Overlay para cerrar menú de usuario */}
       <AnimatePresence>
-        {isUserMenuOpen && (
+        {isUserMenuOpen && !isLoggingOut && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -1588,6 +1693,71 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             }}
             onClick={() => setIsUserMenuOpen(false)}
           />
+        )}
+      </AnimatePresence>
+
+      {/* Indicador de logout global */}
+      <AnimatePresence>
+        {isLoggingOut && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+              backdropFilter: 'blur(8px)',
+              zIndex: 9999,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              style={{
+                background: 'white',
+                borderRadius: '1rem',
+                padding: '2rem',
+                textAlign: 'center',
+                boxShadow: '0 25px 50px rgba(0, 0, 0, 0.25)',
+                maxWidth: '320px',
+                margin: '1rem'
+              }}
+            >
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  border: '4px solid #E5E7EB',
+                  borderTop: '4px solid #EF4444',
+                  borderRadius: '50%',
+                  margin: '0 auto 1rem'
+                }}
+              />
+              <h3 style={{
+                fontSize: '1.125rem',
+                fontWeight: 600,
+                color: '#1F2937',
+                margin: '0 0 0.5rem 0',
+                fontFamily: 'Inter, sans-serif'
+              }}>
+                Cerrando Sesión
+              </h3>
+              <p style={{
+                fontSize: '0.875rem',
+                color: '#6B7280',
+                margin: 0,
+                fontFamily: 'Inter, sans-serif'
+              }}>
+                Guardando datos y cerrando sesión de forma segura...
+              </p>
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
 
@@ -1665,6 +1835,15 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         /* Transiciones suaves globales */
         * {
           transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Efectos de hover para botones */
+        button:hover {
+          transform: translateY(-1px);
+        }
+
+        button:active {
+          transform: translateY(0);
         }
       `}</style>
     </div>
