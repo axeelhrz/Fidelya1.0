@@ -8,8 +8,6 @@ import {
   Video,
   MapPin,
   User,
-  Phone,
-  Mail,
   CheckCircle,
   XCircle,
   RotateCcw,
@@ -123,9 +121,7 @@ export function PatientAppointments() {
     }
   };
 
-  const isUpcoming = (date: Date) => {
-    return date > new Date();
-  };
+
 
   return (
     <div style={{
@@ -625,7 +621,7 @@ export function PatientAppointments() {
                       fontStyle: 'italic',
                       fontFamily: 'Inter, sans-serif'
                     }}>
-                      "{appointment.notes}"
+                      &quot;{appointment.notes}&quot;
                     </p>
                   </div>
                 )}
