@@ -146,6 +146,29 @@ export interface PatientsModule {
   timeline: PatientTimelineEvent[];
 }
 
+// Main Patient interface (simplified version for common use)
+export interface Patient {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  dateOfBirth: Date;
+  gender: 'male' | 'female' | 'other' | 'prefer-not-to-say';
+  pronouns?: string;
+  assignedTherapist: string;
+  status: PatientStatus;
+  tags: string[];
+  riskLevel: RiskLevel;
+  createdAt: Date;
+  updatedAt: Date;
+  lastSession?: Date;
+  totalSessions: number;
+}
+
+// Patient type enum for categorization
+export type PatientType = 'individual' | 'family' | 'couple' | 'group' | 'child' | 'adolescent' | 'adult' | 'elderly';
+
 export interface ExtendedPatient {
   // Datos básicos (ya existentes)
   id: string;
@@ -817,6 +840,23 @@ export interface PatientPortalModule {
   communications: PatientCommunication[];
 }
 
+// Patient Portal Data interface for dashboard/overview
+export interface PatientPortalData {
+  patient: Patient;
+  upcomingAppointments: PatientAppointmentView[];
+  pendingTasks: PatientPortalTask[];
+  recentCommunications: PatientCommunication[];
+  progressSummary: {
+    completedTasks: number;
+    totalTasks: number;
+    adherenceRate: number;
+    lastSessionDate?: Date;
+    nextAppointmentDate?: Date;
+  };
+  resources: PatientResource[];
+  notifications: PatientCommunication[];
+}
+
 export interface PatientAccount {
   id: string;
   patientId: string;
@@ -926,9 +966,9 @@ export interface PatientPortalTask {
   patientId: string;
   title: string;
   description: string;
-  type: string;
+  type: TaskType;
   dueDate?: Date;
-  status: string;
+  status: TaskStatus;
   instructions: string;
   resources: TaskResource[];
   completionData?: Record<string, unknown>;
