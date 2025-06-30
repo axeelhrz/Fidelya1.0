@@ -56,6 +56,7 @@ export interface Appointment {
   roomId: string;
   centerId: string;
   date: Date;
+  dateTime: Date; // Added for compatibility with TeleconsultationManager
   startTime: string;
   endTime: string;
   duration: number;
@@ -770,8 +771,33 @@ export interface ScoreInterpretation {
 
 export interface TeleconsultationModule {
   virtualAppointments: VirtualAppointment[];
+  sessions: TeleconsultationSession[];
   meetingRooms: VirtualMeetingRoom[];
   recordings: SessionRecording[];
+}
+
+// Main TeleconsultationSession interface for the TeleconsultationManager component
+export interface TeleconsultationSession {
+  id: string;
+  appointmentId: string;
+  patientId: string;
+  therapistId?: string;
+  startTime: Date;
+  endTime?: Date;
+  platform: 'zoom' | 'teams' | 'meet' | 'custom';
+  meetingId: string;
+  meetingLink?: string;
+  passcode?: string;
+  status?: 'waiting' | 'connecting' | 'active' | 'ended';
+  recordingEnabled?: boolean;
+  quality?: 'excellent' | 'good' | 'poor' | 'disconnected';
+  duration?: number;
+  notes?: string;
+  participants?: MeetingParticipant[];
+  technicalIssues?: TechnicalIssue[];
+  qualityMetrics?: CallQualityMetrics;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface VirtualAppointment {

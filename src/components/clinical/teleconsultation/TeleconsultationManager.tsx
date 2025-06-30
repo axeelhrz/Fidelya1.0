@@ -21,6 +21,7 @@ import {
   FileText,
   CheckCircle,
   Copy,
+  Link,
 } from 'lucide-react';
 import { TeleconsultationSession, Patient, Appointment } from '@/types/clinical';
 
@@ -37,10 +38,9 @@ export function TeleconsultationManager({
   patient,
   onSessionStart,
   onSessionEnd,
-  onTechnicalIssue
 }: TeleconsultationManagerProps) {
   const [sessionStatus, setSessionStatus] = useState<'waiting' | 'connecting' | 'active' | 'ended'>('waiting');
-  const [connectionQuality, setConnectionQuality] = useState<'excellent' | 'good' | 'poor' | 'disconnected'>('excellent');
+  const [connectionQuality] = useState<'excellent' | 'good' | 'poor' | 'disconnected'>('excellent');
   const [isVideoEnabled, setIsVideoEnabled] = useState(true);
   const [isAudioEnabled, setIsAudioEnabled] = useState(true);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
@@ -53,7 +53,6 @@ export function TeleconsultationManager({
   }>>([]);
   const [newMessage, setNewMessage] = useState('');
   const [sessionDuration, setSessionDuration] = useState(0);
-  const [showTechnicalSupport, setShowTechnicalSupport] = useState(false);
   const [recordingStatus, setRecordingStatus] = useState<'off' | 'recording' | 'paused'>('off');
   const [sessionLink, setSessionLink] = useState('');
 
@@ -74,7 +73,7 @@ export function TeleconsultationManager({
     // Generate session link
     const link = `https://meet.centro-psicologico.com/session/${sessionData.id}?pwd=${sessionData.passcode}`;
     setSessionLink(link);
-  }, []);
+  }, [sessionData.id, sessionData.passcode]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -404,7 +403,6 @@ export function TeleconsultationManager({
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            onClick={() => setShowTechnicalSupport(true)}
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -423,7 +421,6 @@ export function TeleconsultationManager({
             <Settings size={16} />
             Configuración
           </motion.button>
-
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
