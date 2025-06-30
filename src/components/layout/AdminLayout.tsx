@@ -11,15 +11,12 @@ import {
   FileText,
   AlertTriangle,
   TrendingUp,
-  Settings,
   Brain,
   DollarSign,
   Heart,
   Target,
   MessageSquare,
-  Shield,
   Database,
-  Zap,
   Menu,
   X,
   ChevronRight,
@@ -34,6 +31,12 @@ import {
   ChevronDown,
   Sparkles,
   Clock,
+  Shield,
+  Stethoscope,
+  BarChart2,
+  Layers,
+  Headphones,
+  Wifi
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { format } from 'date-fns';
@@ -51,6 +54,8 @@ interface NavigationItem {
   badge?: number;
   children?: NavigationItem[];
   description?: string;
+  isNew?: boolean;
+  isPro?: boolean;
 }
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
@@ -62,6 +67,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<'online' | 'offline' | 'syncing'>('online');
   const pathname = usePathname();
 
   // Actualizar tiempo cada segundo
@@ -70,6 +76,21 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       setCurrentTime(new Date());
     }, 1000);
     return () => clearInterval(timer);
+  }, []);
+
+  // Simular estado de conexión
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const statuses: ('online' | 'offline' | 'syncing')[] = ['online', 'syncing'];
+      const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
+      setConnectionStatus(randomStatus);
+      
+      if (randomStatus === 'syncing') {
+        setTimeout(() => setConnectionStatus('online'), 2000);
+      }
+    }, 30000);
+    
+    return () => clearInterval(interval);
   }, []);
 
   // Responsive behavior
@@ -168,7 +189,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           label: 'Análisis con IA',
           icon: Brain,
           href: '/dashboard/sessions/ai',
-          description: 'Insights inteligentes'
+          description: 'Insights inteligentes',
+          isNew: true
         }
       ]
     },
@@ -200,66 +222,45 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       label: 'Alertas Clínicas',
       icon: AlertTriangle,
       href: '/dashboard/alerts',
-      badge: 5,
+      badge: 3,
       description: 'Notificaciones importantes'
     },
     {
       id: 'metrics',
-      label: 'Métricas Clínicas',
-      icon: TrendingUp,
+      label: 'Métricas Avanzadas',
+      icon: BarChart2,
       href: '/dashboard/metrics',
-      description: 'KPIs y análisis'
+      description: 'KPIs y análisis profundo',
+      isPro: true
     },
     {
       id: 'integrations',
       label: 'Integraciones',
-      icon: Zap,
+      icon: Layers,
       href: '/dashboard/integrations',
       description: 'Conectar servicios',
       children: [
         {
           id: 'whatsapp',
-          label: 'WhatsApp',
+          label: 'WhatsApp Business',
           icon: MessageSquare,
           href: '/dashboard/integrations/whatsapp',
           description: 'Mensajería automática'
         },
         {
           id: 'sheets',
-          label: 'Google Sheets',
+          label: 'Google Workspace',
           icon: Database,
           href: '/dashboard/integrations/sheets',
           description: 'Sincronización de datos'
-        }
-      ]
-    },
-    {
-      id: 'settings',
-      label: 'Configuración',
-      icon: Settings,
-      href: '/dashboard/settings',
-      description: 'Ajustes del sistema',
-      children: [
-        {
-          id: 'general',
-          label: 'General',
-          icon: Settings,
-          href: '/dashboard/settings',
-          description: 'Configuración básica'
         },
         {
-          id: 'users',
-          label: 'Usuarios y Roles',
-          icon: Shield,
-          href: '/dashboard/settings/users',
-          description: 'Gestión de accesos'
-        },
-        {
-          id: 'compliance',
-          label: 'Cumplimiento',
-          icon: Shield,
-          href: '/dashboard/settings/compliance',
-          description: 'Normativas y políticas'
+          id: 'telehealth',
+          label: 'Telemedicina',
+          icon: Headphones,
+          href: '/dashboard/integrations/telehealth',
+          description: 'Consultas virtuales',
+          isNew: true
         }
       ]
     }
@@ -295,6 +296,22 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     setIsUserMenuOpen(false);
   };
 
+  const getConnectionIcon = () => {
+    switch (connectionStatus) {
+      case 'online': return <Wifi size={12} color="#10B981" />;
+      case 'syncing': return <Wifi size={12} color="#F59E0B" />;
+      case 'offline': return <Wifi size={12} color="#EF4444" />;
+    }
+  };
+
+  const getConnectionColor = () => {
+    switch (connectionStatus) {
+      case 'online': return '#10B981';
+      case 'syncing': return '#F59E0B';
+      case 'offline': return '#EF4444';
+    }
+  };
+
   const renderNavigationItem = (item: NavigationItem, level = 0) => {
     const hasChildren = item.children && item.children.length > 0;
     const isExpanded = expandedItems.includes(item.id);
@@ -302,15 +319,15 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     const isHovered = hoveredItem === item.id;
 
     return (
-      <div key={item.id} style={{ marginBottom: '0.25rem' }}>
+      <div key={item.id} style={{ marginBottom: '0.125rem' }}>
         <motion.div
           onMouseEnter={() => setHoveredItem(item.id)}
           onMouseLeave={() => setHoveredItem(null)}
-          whileHover={{ x: level === 0 ? 4 : 2 }}
-          transition={{ duration: 0.2 }}
+          whileHover={{ x: level === 0 ? 3 : 2 }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
           style={{
             position: 'relative',
-            borderRadius: '1rem',
+            borderRadius: '0.875rem',
             overflow: 'hidden'
           }}
         >
@@ -321,30 +338,34 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 display: 'flex',
                 alignItems: 'center',
                 padding: isCollapsed && level === 0 
-                  ? '1rem 0.75rem' 
+                  ? '0.875rem 0.75rem' 
                   : level === 0 
-                    ? '1rem 1.25rem' 
-                    : '0.75rem 1.25rem 0.75rem 2.5rem',
+                    ? '0.875rem 1rem' 
+                    : '0.625rem 1rem 0.625rem 2.25rem',
                 cursor: 'pointer',
-                borderRadius: '1rem',
-                margin: isCollapsed && level === 0 ? '0 0.5rem' : '0 0.75rem',
+                borderRadius: '0.875rem',
+                margin: isCollapsed && level === 0 ? '0 0.5rem' : '0 0.625rem',
                 backgroundColor: active 
-                  ? 'rgba(37, 99, 235, 0.1)' 
+                  ? 'rgba(37, 99, 235, 0.08)' 
                   : isHovered 
-                    ? 'rgba(249, 250, 251, 0.8)' 
+                    ? 'rgba(249, 250, 251, 0.9)' 
                     : 'transparent',
-                border: active ? '1px solid rgba(37, 99, 235, 0.2)' : '1px solid transparent',
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                border: active 
+                  ? '1px solid rgba(37, 99, 235, 0.15)' 
+                  : isHovered 
+                    ? '1px solid rgba(229, 231, 235, 0.4)' 
+                    : '1px solid transparent',
+                transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
                 backdropFilter: active || isHovered ? 'blur(8px)' : 'none',
                 boxShadow: active 
-                  ? '0 4px 12px rgba(37, 99, 235, 0.15)' 
+                  ? '0 2px 8px rgba(37, 99, 235, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.1)' 
                   : isHovered 
-                    ? '0 2px 8px rgba(0, 0, 0, 0.05)' 
+                    ? '0 1px 3px rgba(0, 0, 0, 0.04)' 
                     : 'none',
                 justifyContent: isCollapsed && level === 0 ? 'center' : 'flex-start'
               }}
             >
-              {/* Indicador activo */}
+              {/* Indicador activo mejorado */}
               {active && (
                 <motion.div
                   layoutId="activeIndicator"
@@ -353,12 +374,13 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                     left: 0,
                     top: '50%',
                     transform: 'translateY(-50%)',
-                    width: '4px',
-                    height: '60%',
-                    backgroundColor: '#2563EB',
-                    borderRadius: '0 4px 4px 0'
+                    width: '3px',
+                    height: '70%',
+                    background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)',
+                    borderRadius: '0 2px 2px 0',
+                    boxShadow: '0 0 8px rgba(37, 99, 235, 0.4)'
                   }}
-                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
                 />
               )}
 
@@ -370,15 +392,18 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               }}>
                 <div style={{
                   padding: '0.5rem',
-                  borderRadius: '0.75rem',
+                  borderRadius: '0.625rem',
                   backgroundColor: active 
-                    ? 'rgba(37, 99, 235, 0.15)' 
-                    : 'rgba(107, 114, 128, 0.1)',
+                    ? 'rgba(37, 99, 235, 0.12)' 
+                    : isHovered 
+                      ? 'rgba(107, 114, 128, 0.08)'
+                      : 'rgba(107, 114, 128, 0.05)',
                   marginRight: isCollapsed && level === 0 ? '0' : '0.75rem',
-                  transition: 'all 0.3s ease'
+                  transition: 'all 0.25s ease',
+                  border: active ? '1px solid rgba(37, 99, 235, 0.1)' : '1px solid transparent'
                 }}>
                   <item.icon 
-                    size={18} 
+                    size={16} 
                     color={active ? '#2563EB' : '#6B7280'} 
                   />
                 </div>
@@ -387,99 +412,158 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                   <>
                     <div style={{ flex: 1 }}>
                       <div style={{
-                        fontSize: '0.875rem',
+                        fontSize: '0.8125rem',
                         fontWeight: active ? 600 : 500,
                         color: active ? '#2563EB' : '#374151',
                         fontFamily: 'Inter, sans-serif',
-                        lineHeight: 1.2
+                        lineHeight: 1.2,
+                        letterSpacing: '-0.01em'
                       }}>
                         {item.label}
                       </div>
                       {item.description && level === 0 && (
                         <div style={{
-                          fontSize: '0.75rem',
+                          fontSize: '0.6875rem',
                           color: '#9CA3AF',
                           marginTop: '0.125rem',
-                          fontFamily: 'Inter, sans-serif'
+                          fontFamily: 'Inter, sans-serif',
+                          lineHeight: 1.3
                         }}>
                           {item.description}
                         </div>
                       )}
                     </div>
 
-                    {item.badge && (
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        style={{
-                          backgroundColor: '#EF4444',
-                          color: 'white',
-                          borderRadius: '50%',
-                          width: '20px',
-                          height: '20px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: '0.75rem',
-                          fontWeight: 600,
-                          marginRight: '0.5rem',
-                          boxShadow: '0 2px 4px rgba(239, 68, 68, 0.3)'
-                        }}
-                      >
-                        {item.badge > 99 ? '99+' : item.badge}
-                      </motion.div>
-                    )}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                      {/* Badges mejorados */}
+                      {item.isNew && (
+                        <motion.div
+                          initial={{ scale: 0, rotate: -10 }}
+                          animate={{ scale: 1, rotate: 0 }}
+                          style={{
+                            background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+                            color: 'white',
+                            borderRadius: '0.375rem',
+                            padding: '0.125rem 0.375rem',
+                            fontSize: '0.625rem',
+                            fontWeight: 600,
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.025em',
+                            boxShadow: '0 1px 3px rgba(16, 185, 129, 0.3)'
+                          }}
+                        >
+                          Nuevo
+                        </motion.div>
+                      )}
 
-                    <motion.div
-                      animate={{ rotate: isExpanded ? 90 : 0 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <ChevronRight size={16} color="#9CA3AF" />
-                    </motion.div>
+                      {item.isPro && (
+                        <motion.div
+                          initial={{ scale: 0, rotate: 10 }}
+                          animate={{ scale: 1, rotate: 0 }}
+                          style={{
+                            background: 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)',
+                            color: 'white',
+                            borderRadius: '0.375rem',
+                            padding: '0.125rem 0.375rem',
+                            fontSize: '0.625rem',
+                            fontWeight: 600,
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.025em',
+                            boxShadow: '0 1px 3px rgba(139, 92, 246, 0.3)'
+                          }}
+                        >
+                          Pro
+                        </motion.div>
+                      )}
+
+                      {item.badge && (
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          whileHover={{ scale: 1.1 }}
+                          style={{
+                            background: 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)',
+                            color: 'white',
+                            borderRadius: '50%',
+                            width: '18px',
+                            height: '18px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '0.6875rem',
+                            fontWeight: 700,
+                            boxShadow: '0 2px 4px rgba(239, 68, 68, 0.3)',
+                            border: '1px solid rgba(255, 255, 255, 0.2)'
+                          }}
+                        >
+                          {item.badge > 99 ? '99+' : item.badge}
+                        </motion.div>
+                      )}
+
+                      <motion.div
+                        animate={{ rotate: isExpanded ? 90 : 0 }}
+                        transition={{ duration: 0.2, ease: "easeOut" }}
+                      >
+                        <ChevronRight size={14} color="#9CA3AF" />
+                      </motion.div>
+                    </div>
                   </>
                 )}
 
-                {/* Tooltip para modo colapsado */}
+                {/* Tooltip mejorado para modo colapsado */}
                 {isCollapsed && level === 0 && isHovered && (
                   <motion.div
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -10 }}
+                    initial={{ opacity: 0, x: -10, scale: 0.9 }}
+                    animate={{ opacity: 1, x: 0, scale: 1 }}
+                    exit={{ opacity: 0, x: -10, scale: 0.9 }}
+                    transition={{ duration: 0.2, ease: "easeOut" }}
                     style={{
                       position: 'absolute',
                       left: '100%',
                       top: '50%',
                       transform: 'translateY(-50%)',
-                      marginLeft: '0.5rem',
-                      background: 'rgba(0, 0, 0, 0.9)',
+                      marginLeft: '0.75rem',
+                      background: 'rgba(0, 0, 0, 0.92)',
+                      backdropFilter: 'blur(12px)',
                       color: 'white',
-                      padding: '0.75rem 1rem',
+                      padding: '0.875rem 1rem',
                       borderRadius: '0.75rem',
-                      fontSize: '0.875rem',
+                      fontSize: '0.8125rem',
                       whiteSpace: 'nowrap',
                       zIndex: 1000,
                       pointerEvents: 'none',
-                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)'
+                      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      maxWidth: '280px'
                     }}
                   >
-                    <div style={{ fontWeight: 600, marginBottom: '0.25rem' }}>
+                    <div style={{ 
+                      fontWeight: 600, 
+                      marginBottom: '0.25rem',
+                      color: '#FFFFFF'
+                    }}>
                       {item.label}
                     </div>
                     {item.description && (
-                      <div style={{ fontSize: '0.75rem', opacity: 0.8 }}>
+                      <div style={{ 
+                        fontSize: '0.75rem', 
+                        opacity: 0.85,
+                        lineHeight: 1.4,
+                        color: '#E5E7EB'
+                      }}>
                         {item.description}
                       </div>
                     )}
                     <div style={{
                       position: 'absolute',
-                      left: '-4px',
+                      left: '-6px',
                       top: '50%',
                       transform: 'translateY(-50%)',
                       width: 0,
                       height: 0,
-                      borderTop: '4px solid transparent',
-                      borderBottom: '4px solid transparent',
-                      borderRight: '4px solid rgba(0, 0, 0, 0.9)'
+                      borderTop: '6px solid transparent',
+                      borderBottom: '6px solid transparent',
+                      borderRight: '6px solid rgba(0, 0, 0, 0.92)'
                     }} />
                   </motion.div>
                 )}
@@ -498,29 +582,33 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 display: 'flex',
                 alignItems: 'center',
                 padding: isCollapsed && level === 0 
-                  ? '1rem 0.75rem' 
+                  ? '0.875rem 0.75rem' 
                   : level === 0 
-                    ? '1rem 1.25rem' 
-                    : '0.75rem 1.25rem 0.75rem 2.5rem',
-                borderRadius: '1rem',
-                margin: isCollapsed && level === 0 ? '0 0.5rem' : '0 0.75rem',
+                    ? '0.875rem 1rem' 
+                    : '0.625rem 1rem 0.625rem 2.25rem',
+                borderRadius: '0.875rem',
+                margin: isCollapsed && level === 0 ? '0 0.5rem' : '0 0.625rem',
                 backgroundColor: active 
-                  ? 'rgba(37, 99, 235, 0.1)' 
+                  ? 'rgba(37, 99, 235, 0.08)' 
                   : isHovered 
-                    ? 'rgba(249, 250, 251, 0.8)' 
+                    ? 'rgba(249, 250, 251, 0.9)' 
                     : 'transparent',
-                border: active ? '1px solid rgba(37, 99, 235, 0.2)' : '1px solid transparent',
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                border: active 
+                  ? '1px solid rgba(37, 99, 235, 0.15)' 
+                  : isHovered 
+                    ? '1px solid rgba(229, 231, 235, 0.4)' 
+                    : '1px solid transparent',
+                transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
                 backdropFilter: active || isHovered ? 'blur(8px)' : 'none',
                 boxShadow: active 
-                  ? '0 4px 12px rgba(37, 99, 235, 0.15)' 
+                  ? '0 2px 8px rgba(37, 99, 235, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.1)' 
                   : isHovered 
-                    ? '0 2px 8px rgba(0, 0, 0, 0.05)' 
+                    ? '0 1px 3px rgba(0, 0, 0, 0.04)' 
                     : 'none',
                 position: 'relative',
                 justifyContent: isCollapsed && level === 0 ? 'center' : 'flex-start'
               }}>
-                {/* Indicador activo */}
+                {/* Indicador activo mejorado */}
                 {active && (
                   <motion.div
                     layoutId="activeIndicator"
@@ -529,26 +617,30 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                       left: 0,
                       top: '50%',
                       transform: 'translateY(-50%)',
-                      width: '4px',
-                      height: '60%',
-                      backgroundColor: '#2563EB',
-                      borderRadius: '0 4px 4px 0'
+                      width: '3px',
+                      height: '70%',
+                      background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)',
+                      borderRadius: '0 2px 2px 0',
+                      boxShadow: '0 0 8px rgba(37, 99, 235, 0.4)'
                     }}
-                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
                   />
                 )}
 
                 <div style={{
                   padding: '0.5rem',
-                  borderRadius: '0.75rem',
+                  borderRadius: '0.625rem',
                   backgroundColor: active 
-                    ? 'rgba(37, 99, 235, 0.15)' 
-                    : 'rgba(107, 114, 128, 0.1)',
+                    ? 'rgba(37, 99, 235, 0.12)' 
+                    : isHovered 
+                      ? 'rgba(107, 114, 128, 0.08)'
+                      : 'rgba(107, 114, 128, 0.05)',
                   marginRight: isCollapsed && level === 0 ? '0' : '0.75rem',
-                  transition: 'all 0.3s ease'
+                  transition: 'all 0.25s ease',
+                  border: active ? '1px solid rgba(37, 99, 235, 0.1)' : '1px solid transparent'
                 }}>
                   <item.icon 
-                    size={18} 
+                    size={16} 
                     color={active ? '#2563EB' : '#6B7280'} 
                   />
                 </div>
@@ -557,89 +649,149 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                   <>
                     <div style={{ flex: 1 }}>
                       <div style={{
-                        fontSize: '0.875rem',
+                        fontSize: '0.8125rem',
                         fontWeight: active ? 600 : 500,
                         color: active ? '#2563EB' : '#374151',
                         fontFamily: 'Inter, sans-serif',
-                        lineHeight: 1.2
+                        lineHeight: 1.2,
+                        letterSpacing: '-0.01em'
                       }}>
                         {item.label}
                       </div>
                       {item.description && level === 0 && (
                         <div style={{
-                          fontSize: '0.75rem',
+                          fontSize: '0.6875rem',
                           color: '#9CA3AF',
                           marginTop: '0.125rem',
-                          fontFamily: 'Inter, sans-serif'
+                          fontFamily: 'Inter, sans-serif',
+                          lineHeight: 1.3
                         }}>
                           {item.description}
                         </div>
                       )}
                     </div>
 
-                    {item.badge && (
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        style={{
-                          backgroundColor: '#EF4444',
-                          color: 'white',
-                          borderRadius: '50%',
-                          width: '20px',
-                          height: '20px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: '0.75rem',
-                          fontWeight: 600,
-                          boxShadow: '0 2px 4px rgba(239, 68, 68, 0.3)'
-                        }}
-                      >
-                        {item.badge > 99 ? '99+' : item.badge}
-                      </motion.div>
-                    )}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                      {/* Badges mejorados */}
+                      {item.isNew && (
+                        <motion.div
+                          initial={{ scale: 0, rotate: -10 }}
+                          animate={{ scale: 1, rotate: 0 }}
+                          style={{
+                            background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+                            color: 'white',
+                            borderRadius: '0.375rem',
+                            padding: '0.125rem 0.375rem',
+                            fontSize: '0.625rem',
+                            fontWeight: 600,
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.025em',
+                            boxShadow: '0 1px 3px rgba(16, 185, 129, 0.3)'
+                          }}
+                        >
+                          Nuevo
+                        </motion.div>
+                      )}
 
-                    {/* Tooltip para modo colapsado */}
+                      {item.isPro && (
+                        <motion.div
+                          initial={{ scale: 0, rotate: 10 }}
+                          animate={{ scale: 1, rotate: 0 }}
+                          style={{
+                            background: 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)',
+                            color: 'white',
+                            borderRadius: '0.375rem',
+                            padding: '0.125rem 0.375rem',
+                            fontSize: '0.625rem',
+                            fontWeight: 600,
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.025em',
+                            boxShadow: '0 1px 3px rgba(139, 92, 246, 0.3)'
+                          }}
+                        >
+                          Pro
+                        </motion.div>
+                      )}
+
+                      {item.badge && (
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          whileHover={{ scale: 1.1 }}
+                          style={{
+                            background: 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)',
+                            color: 'white',
+                            borderRadius: '50%',
+                            width: '18px',
+                            height: '18px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '0.6875rem',
+                            fontWeight: 700,
+                            boxShadow: '0 2px 4px rgba(239, 68, 68, 0.3)',
+                            border: '1px solid rgba(255, 255, 255, 0.2)'
+                          }}
+                        >
+                          {item.badge > 99 ? '99+' : item.badge}
+                        </motion.div>
+                      )}
+                    </div>
+
+                    {/* Tooltip mejorado para modo colapsado */}
                     {isCollapsed && level === 0 && isHovered && (
                       <motion.div
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -10 }}
+                        initial={{ opacity: 0, x: -10, scale: 0.9 }}
+                        animate={{ opacity: 1, x: 0, scale: 1 }}
+                        exit={{ opacity: 0, x: -10, scale: 0.9 }}
+                        transition={{ duration: 0.2, ease: "easeOut" }}
                         style={{
                           position: 'absolute',
                           left: '100%',
                           top: '50%',
                           transform: 'translateY(-50%)',
-                          marginLeft: '0.5rem',
-                          background: 'rgba(0, 0, 0, 0.9)',
+                          marginLeft: '0.75rem',
+                          background: 'rgba(0, 0, 0, 0.92)',
+                          backdropFilter: 'blur(12px)',
                           color: 'white',
-                          padding: '0.75rem 1rem',
+                          padding: '0.875rem 1rem',
                           borderRadius: '0.75rem',
-                          fontSize: '0.875rem',
+                          fontSize: '0.8125rem',
                           whiteSpace: 'nowrap',
                           zIndex: 1000,
                           pointerEvents: 'none',
-                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)'
+                          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+                          border: '1px solid rgba(255, 255, 255, 0.1)',
+                          maxWidth: '280px'
                         }}
                       >
-                        <div style={{ fontWeight: 600, marginBottom: '0.25rem' }}>
+                        <div style={{ 
+                          fontWeight: 600, 
+                          marginBottom: '0.25rem',
+                          color: '#FFFFFF'
+                        }}>
                           {item.label}
                         </div>
                         {item.description && (
-                          <div style={{ fontSize: '0.75rem', opacity: 0.8 }}>
+                          <div style={{ 
+                            fontSize: '0.75rem', 
+                            opacity: 0.85,
+                            lineHeight: 1.4,
+                            color: '#E5E7EB'
+                          }}>
                             {item.description}
                           </div>
                         )}
                         <div style={{
                           position: 'absolute',
-                          left: '-4px',
+                          left: '-6px',
                           top: '50%',
                           transform: 'translateY(-50%)',
                           width: 0,
                           height: 0,
-                          borderTop: '4px solid transparent',
-                          borderBottom: '4px solid transparent',
-                          borderRight: '4px solid rgba(0, 0, 0, 0.9)'
+                          borderTop: '6px solid transparent',
+                          borderBottom: '6px solid transparent',
+                          borderRight: '6px solid rgba(0, 0, 0, 0.92)'
                         }} />
                       </motion.div>
                     )}
@@ -650,7 +802,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           )}
         </motion.div>
 
-        {/* Submenús - solo se muestran si no está colapsado */}
+        {/* Submenús mejorados */}
         <AnimatePresence>
           {hasChildren && isExpanded && !isCollapsed && (
             <motion.div
@@ -658,21 +810,22 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ 
-                duration: 0.3,
+                duration: 0.25,
                 ease: [0.4, 0, 0.2, 1]
               }}
               style={{ 
                 overflow: 'hidden',
                 marginTop: '0.25rem',
-                marginBottom: '0.5rem'
+                marginBottom: '0.375rem'
               }}
             >
               <div style={{
-                background: 'rgba(249, 250, 251, 0.3)',
+                background: 'linear-gradient(135deg, rgba(249, 250, 251, 0.4) 0%, rgba(243, 244, 246, 0.3) 100%)',
                 borderRadius: '0.75rem',
-                margin: '0 0.75rem',
-                padding: '0.5rem 0',
-                border: '1px solid rgba(229, 231, 235, 0.3)'
+                margin: '0 0.625rem',
+                padding: '0.375rem 0',
+                border: '1px solid rgba(229, 231, 235, 0.2)',
+                backdropFilter: 'blur(8px)'
               }}>
                 {item.children?.map(child => renderNavigationItem(child, level + 1))}
               </div>
@@ -683,60 +836,88 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     );
   };
 
-  const sidebarWidth = isCollapsed ? '80px' : '320px';
+  const sidebarWidth = isCollapsed ? '72px' : '300px';
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#F9FAFB' }}>
-      {/* Sidebar mejorado */}
+      {/* Sidebar completamente mejorado */}
       <motion.aside
-        initial={{ x: -320 }}
+        initial={{ x: -300 }}
         animate={{ 
-          x: isSidebarOpen ? 0 : -320,
+          x: isSidebarOpen ? 0 : -300,
           width: sidebarWidth
         }}
         transition={{ 
-          duration: 0.4, 
+          duration: 0.35, 
           ease: [0.4, 0, 0.2, 1]
         }}
         style={{
           width: sidebarWidth,
-          backgroundColor: 'rgba(255, 255, 255, 0.95)',
-          backdropFilter: 'blur(20px)',
-          borderRight: '1px solid rgba(229, 231, 235, 0.6)',
+          background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.95) 100%)',
+          backdropFilter: 'blur(24px)',
+          borderRight: '1px solid rgba(229, 231, 235, 0.4)',
           position: 'fixed',
           height: '100vh',
           zIndex: 40,
           display: 'flex',
           flexDirection: 'column',
-          boxShadow: '4px 0 24px rgba(0, 0, 0, 0.06)'
+          boxShadow: '8px 0 32px rgba(0, 0, 0, 0.04), 4px 0 16px rgba(0, 0, 0, 0.02)'
         }}
       >
-        {/* Header del sidebar mejorado */}
+        {/* Header del sidebar completamente rediseñado */}
         <div style={{
-          padding: isCollapsed ? '1.5rem 1rem' : '1.5rem 1.25rem',
-          borderBottom: '1px solid rgba(229, 231, 235, 0.6)',
-          background: 'linear-gradient(135deg, rgba(37, 99, 235, 0.05) 0%, rgba(59, 130, 246, 0.05) 100%)'
+          padding: isCollapsed ? '1.25rem 0.875rem' : '1.25rem 1rem',
+          borderBottom: '1px solid rgba(229, 231, 235, 0.4)',
+          background: 'linear-gradient(135deg, rgba(37, 99, 235, 0.03) 0%, rgba(59, 130, 246, 0.02) 100%)',
+          position: 'relative'
         }}>
+          {/* Efecto de brillo sutil en el header */}
+          <motion.div
+            animate={{ 
+              x: [-100, 300],
+              opacity: [0, 0.3, 0]
+            }}
+            transition={{ 
+              duration: 4,
+              repeat: Infinity,
+              repeatDelay: 8
+            }}
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent)',
+              transform: 'skewX(-20deg)',
+              pointerEvents: 'none'
+            }}
+          />
+          
           <div style={{ 
             display: 'flex', 
             alignItems: 'center', 
             gap: isCollapsed ? '0' : '0.75rem',
-            justifyContent: isCollapsed ? 'center' : 'flex-start'
+            justifyContent: isCollapsed ? 'center' : 'flex-start',
+            position: 'relative',
+            zIndex: 1
           }}>
             <motion.div 
-              whileHover={{ scale: 1.05, rotate: 5 }}
+              whileHover={{ scale: 1.05, rotate: 3 }}
+              whileTap={{ scale: 0.95 }}
               style={{
-                width: '40px',
-                height: '40px',
+                width: '36px',
+                height: '36px',
                 background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)',
-                borderRadius: '12px',
+                borderRadius: '10px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                boxShadow: '0 4px 12px rgba(37, 99, 235, 0.3)'
+                boxShadow: '0 4px 12px rgba(37, 99, 235, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
+                border: '1px solid rgba(255, 255, 255, 0.1)'
               }}
             >
-              <Activity size={20} color="white" />
+              <Stethoscope size={18} color="white" />
             </motion.div>
             
             {!isCollapsed && (
@@ -746,34 +927,60 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 transition={{ delay: 0.1 }}
               >
                 <h2 style={{
-                  fontSize: '1.125rem',
+                  fontSize: '1rem',
                   fontWeight: 700,
                   color: '#1F2937',
                   margin: 0,
-                  fontFamily: 'Space Grotesk, sans-serif'
+                  fontFamily: 'Space Grotesk, sans-serif',
+                  letterSpacing: '-0.02em'
                 }}>
                   Centro Psicológico
                 </h2>
-                <p style={{
-                  fontSize: '0.75rem',
-                  color: '#6B7280',
-                  margin: 0,
-                  fontFamily: 'Inter, sans-serif'
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '0.375rem',
+                  marginTop: '0.125rem'
                 }}>
-                  Panel Administrativo
-                </p>
+                  <p style={{
+                    fontSize: '0.6875rem',
+                    color: '#6B7280',
+                    margin: 0,
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 500
+                  }}>
+                    Panel Profesional
+                  </p>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.25rem'
+                  }}>
+                    {getConnectionIcon()}
+                    <span style={{
+                      fontSize: '0.625rem',
+                      color: getConnectionColor(),
+                      fontWeight: 600,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.025em'
+                    }}>
+                      {connectionStatus === 'online' ? 'En línea' : 
+                       connectionStatus === 'syncing' ? 'Sincronizando' : 'Sin conexión'}
+                    </span>
+                  </div>
+                </div>
               </motion.div>
             )}
           </div>
         </div>
 
-        {/* Barra de búsqueda */}
+        {/* Barra de búsqueda mejorada */}
         {!isCollapsed && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            style={{ padding: '1rem 1.25rem' }}
+            transition={{ delay: 0.15 }}
+            style={{ padding: '0.875rem 1rem' }}
           >
             <div style={{
               position: 'relative',
@@ -781,7 +988,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               alignItems: 'center'
             }}>
               <Search 
-                size={16} 
+                size={14} 
                 color="#9CA3AF" 
                 style={{
                   position: 'absolute',
@@ -791,106 +998,125 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               />
               <input
                 type="text"
-                placeholder="Buscar..."
+                placeholder="Buscar funciones..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 style={{
                   width: '100%',
-                  padding: '0.75rem 0.75rem 0.75rem 2.5rem',
-                  borderRadius: '0.75rem',
-                  border: '1px solid rgba(229, 231, 235, 0.6)',
-                  background: 'rgba(249, 250, 251, 0.8)',
-                  fontSize: '0.875rem',
+                  padding: '0.625rem 0.75rem 0.625rem 2.25rem',
+                  borderRadius: '0.625rem',
+                  border: '1px solid rgba(229, 231, 235, 0.5)',
+                  background: 'rgba(249, 250, 251, 0.7)',
+                  fontSize: '0.8125rem',
                   outline: 'none',
                   transition: 'all 0.2s ease',
-                  fontFamily: 'Inter, sans-serif'
+                  fontFamily: 'Inter, sans-serif',
+                  backdropFilter: 'blur(8px)'
                 }}
                 onFocus={(e) => {
                   e.target.style.borderColor = '#2563EB';
-                  e.target.style.boxShadow = '0 0 0 3px rgba(37, 99, 235, 0.1)';
+                  e.target.style.boxShadow = '0 0 0 3px rgba(37, 99, 235, 0.08)';
+                  e.target.style.background = 'rgba(255, 255, 255, 0.9)';
                 }}
                 onBlur={(e) => {
-                  e.target.style.borderColor = 'rgba(229, 231, 235, 0.6)';
+                  e.target.style.borderColor = 'rgba(229, 231, 235, 0.5)';
                   e.target.style.boxShadow = 'none';
+                  e.target.style.background = 'rgba(249, 250, 251, 0.7)';
                 }}
               />
             </div>
           </motion.div>
         )}
 
-        {/* Navegación con scroll mejorado */}
+        {/* Navegación con scroll ultra mejorado */}
         <nav style={{ 
           flex: 1,
           overflowY: 'auto',
           overflowX: 'hidden',
-          padding: '0.5rem 0 1rem 0',
+          padding: '0.25rem 0 1rem 0',
           scrollbarWidth: 'thin',
-          scrollbarColor: 'rgba(156, 163, 175, 0.3) transparent'
+          scrollbarColor: 'rgba(156, 163, 175, 0.2) transparent'
         }}>
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.3, staggerChildren: 0.05 }}
+            transition={{ delay: 0.2, staggerChildren: 0.03 }}
           >
             {filteredItems.map((item, index) => (
               <motion.div
                 key={item.id}
-                initial={{ opacity: 0, x: -20 }}
+                initial={{ opacity: 0, x: -15 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.1 * index }}
+                transition={{ delay: 0.05 * index, ease: "easeOut" }}
               >
                 {renderNavigationItem(item)}
               </motion.div>
             ))}
           </motion.div>
 
-          {/* Mensaje cuando no hay resultados de búsqueda */}
+          {/* Mensaje cuando no hay resultados de búsqueda mejorado */}
           {searchQuery && filteredItems.length === 0 && (
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
               style={{
                 textAlign: 'center',
                 padding: '2rem 1rem',
                 color: '#9CA3AF'
               }}
             >
-              <Search size={32} color="#D1D5DB" style={{ marginBottom: '0.5rem' }} />
+              <motion.div
+                animate={{ rotate: [0, 10, -10, 0] }}
+                transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+              >
+                <Search size={28} color="#D1D5DB" style={{ marginBottom: '0.75rem' }} />
+              </motion.div>
               <p style={{ 
-                fontSize: '0.875rem',
-                fontFamily: 'Inter, sans-serif'
+                fontSize: '0.8125rem',
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 500,
+                margin: 0
               }}>
                 No se encontraron resultados
+              </p>
+              <p style={{ 
+                fontSize: '0.6875rem',
+                fontFamily: 'Inter, sans-serif',
+                color: '#D1D5DB',
+                margin: '0.25rem 0 0 0'
+              }}>
+                Intenta con otros términos
               </p>
             </motion.div>
           )}
         </nav>
 
-        {/* Footer del sidebar mejorado */}
+        {/* Footer del sidebar completamente rediseñado */}
         <div style={{
-          padding: isCollapsed ? '1rem' : '1.25rem',
-          borderTop: '1px solid rgba(229, 231, 235, 0.6)',
-          background: 'rgba(249, 250, 251, 0.5)'
+          padding: isCollapsed ? '0.875rem' : '1rem',
+          borderTop: '1px solid rgba(229, 231, 235, 0.4)',
+          background: 'linear-gradient(135deg, rgba(249, 250, 251, 0.6) 0%, rgba(243, 244, 246, 0.4) 100%)',
+          backdropFilter: 'blur(12px)'
         }}>
           {!isCollapsed ? (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
+              transition={{ delay: 0.3 }}
               style={{
-                padding: '1rem',
-                background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(37, 99, 235, 0.05) 100%)',
-                borderRadius: '1rem',
-                border: '1px solid rgba(139, 92, 246, 0.1)',
+                padding: '0.875rem',
+                background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.04) 0%, rgba(37, 99, 235, 0.03) 100%)',
+                borderRadius: '0.875rem',
+                border: '1px solid rgba(139, 92, 246, 0.08)',
                 position: 'relative',
                 overflow: 'hidden'
               }}
             >
-              {/* Efecto de brillo animado */}
+              {/* Efecto de partículas sutiles */}
               <motion.div
                 animate={{ 
-                  x: [-100, 300],
-                  opacity: [0, 0.5, 0]
+                  x: [-50, 250],
+                  opacity: [0, 0.4, 0]
                 }}
                 transition={{ 
                   duration: 3,
@@ -903,49 +1129,65 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                   left: 0,
                   right: 0,
                   bottom: 0,
-                  background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)',
-                  transform: 'skewX(-20deg)'
+                  background: 'linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.1), transparent)',
+                  transform: 'skewX(-15deg)'
                 }}
               />
               
               <div style={{ 
                 display: 'flex', 
                 alignItems: 'center', 
-                gap: '0.75rem', 
-                marginBottom: '0.75rem',
+                gap: '0.625rem', 
+                marginBottom: '0.625rem',
                 position: 'relative',
                 zIndex: 1
               }}>
                 <motion.div
                   animate={{ 
-                    scale: [1, 1.1, 1],
-                    rotate: [0, 5, -5, 0]
+                    scale: [1, 1.08, 1],
+                    rotate: [0, 3, -3, 0]
                   }}
                   transition={{ 
-                    duration: 2,
+                    duration: 2.5,
                     repeat: Infinity,
-                    repeatDelay: 3
+                    repeatDelay: 4
+                  }}
+                  style={{
+                    padding: '0.375rem',
+                    background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(37, 99, 235, 0.08) 100%)',
+                    borderRadius: '0.5rem',
+                    border: '1px solid rgba(139, 92, 246, 0.1)'
                   }}
                 >
-                  <Brain size={20} color="#8B5CF6" />
+                  <Brain size={16} color="#8B5CF6" />
                 </motion.div>
-                <span style={{
-                  fontSize: '0.875rem',
-                  fontWeight: 600,
-                  color: '#8B5CF6',
-                  fontFamily: 'Inter, sans-serif'
-                }}>
-                  IA Activa
-                </span>
-                <motion.div
-                  animate={{ opacity: [0.5, 1, 0.5] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                >
-                  <Sparkles size={14} color="#8B5CF6" />
-                </motion.div>
+                <div>
+                  <span style={{
+                    fontSize: '0.8125rem',
+                    fontWeight: 600,
+                    color: '#8B5CF6',
+                    fontFamily: 'Inter, sans-serif'
+                  }}>
+                    IA Profesional
+                  </span>
+                  <motion.div
+                    animate={{ opacity: [0.6, 1, 0.6] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', marginTop: '0.125rem' }}
+                  >
+                    <Sparkles size={12} color="#8B5CF6" />
+                    <span style={{
+                      fontSize: '0.6875rem',
+                      color: '#6B7280',
+                      fontFamily: 'Inter, sans-serif'
+                    }}>
+                      Activa 24/7
+                    </span>
+                  </motion.div>
+                </div>
               </div>
               <p style={{
-                fontSize: '0.75rem',
+                fontSize: '0.6875rem',
                 color: '#6B7280',
                 margin: 0,
                 lineHeight: 1.4,
@@ -953,21 +1195,36 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 position: 'relative',
                 zIndex: 1
               }}>
-                Asistente inteligente monitoreando tu centro 24/7
+                Asistente inteligente optimizando tu centro psicológico
               </p>
             </motion.div>
           ) : (
             <motion.div
-              whileHover={{ scale: 1.1 }}
+              whileHover={{ scale: 1.08 }}
+              whileTap={{ scale: 0.95 }}
               style={{
                 display: 'flex',
                 justifyContent: 'center',
-                padding: '0.75rem',
-                borderRadius: '0.75rem',
-                background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(37, 99, 235, 0.1) 100%)'
+                padding: '0.625rem',
+                borderRadius: '0.625rem',
+                background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(37, 99, 235, 0.06) 100%)',
+                border: '1px solid rgba(139, 92, 246, 0.1)',
+                cursor: 'pointer'
               }}
             >
-              <Brain size={20} color="#8B5CF6" />
+              <motion.div
+                animate={{ 
+                  scale: [1, 1.1, 1],
+                  rotate: [0, 5, -5, 0]
+                }}
+                transition={{ 
+                  duration: 2,
+                  repeat: Infinity,
+                  repeatDelay: 3
+                }}
+              >
+                <Brain size={18} color="#8B5CF6" />
+              </motion.div>
             </motion.div>
           )}
         </div>
@@ -977,113 +1234,117 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       <div style={{
         flex: 1,
         marginLeft: isSidebarOpen ? sidebarWidth : '0',
-        transition: 'margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+        transition: 'margin-left 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
         minHeight: '100vh',
         display: 'flex',
         flexDirection: 'column'
       }}>
-        {/* Topbar integrado */}
+        {/* Topbar completamente integrado y mejorado */}
         <motion.header
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
+          transition={{ delay: 0.15 }}
           style={{
             position: 'sticky',
             top: 0,
             zIndex: 30,
-            background: 'rgba(255, 255, 255, 0.8)',
-            backdropFilter: 'blur(12px)',
-            borderBottom: '1px solid rgba(229, 231, 235, 0.6)',
-            padding: '1rem 2rem',
+            background: 'rgba(255, 255, 255, 0.85)',
+            backdropFilter: 'blur(16px)',
+            borderBottom: '1px solid rgba(229, 231, 235, 0.4)',
+            padding: '0.875rem 1.5rem',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)'
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.03), 0 1px 2px rgba(0, 0, 0, 0.02)'
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            {/* Toggle button para sidebar */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
+            {/* Toggle button para sidebar mejorado */}
             <motion.button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               style={{
-                padding: '0.75rem',
-                backgroundColor: 'rgba(249, 250, 251, 0.8)',
-                borderRadius: '0.75rem',
-                border: '1px solid rgba(229, 231, 235, 0.6)',
+                padding: '0.625rem',
+                backgroundColor: 'rgba(249, 250, 251, 0.9)',
+                borderRadius: '0.625rem',
+                border: '1px solid rgba(229, 231, 235, 0.5)',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                transition: 'all 0.2s ease'
+                transition: 'all 0.2s ease',
+                backdropFilter: 'blur(8px)'
               }}
             >
-              {isSidebarOpen ? <X size={18} color="#6B7280" /> : <Menu size={18} color="#6B7280" />}
+              {isSidebarOpen ? <X size={16} color="#6B7280" /> : <Menu size={16} color="#6B7280" />}
             </motion.button>
 
-            {/* Toggle collapse button */}
+            {/* Toggle collapse button mejorado */}
             {isSidebarOpen && (
               <motion.button
                 onClick={() => setIsCollapsed(!isCollapsed)}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 style={{
-                  padding: '0.75rem',
-                  backgroundColor: 'rgba(249, 250, 251, 0.8)',
-                  borderRadius: '0.75rem',
-                  border: '1px solid rgba(229, 231, 235, 0.6)',
+                  padding: '0.625rem',
+                  backgroundColor: 'rgba(249, 250, 251, 0.9)',
+                  borderRadius: '0.625rem',
+                  border: '1px solid rgba(229, 231, 235, 0.5)',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  transition: 'all 0.2s ease'
+                  transition: 'all 0.2s ease',
+                  backdropFilter: 'blur(8px)'
                 }}
                 title={isCollapsed ? 'Expandir sidebar' : 'Contraer sidebar'}
               >
-                {isCollapsed ? <Maximize2 size={18} color="#6B7280" /> : <Minimize2 size={18} color="#6B7280" />}
+                {isCollapsed ? <Maximize2 size={16} color="#6B7280" /> : <Minimize2 size={16} color="#6B7280" />}
               </motion.button>
             )}
 
-            {/* Información de fecha y hora */}
+            {/* Información de fecha y hora mejorada */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 }}
+              transition={{ delay: 0.25 }}
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '1rem',
-                padding: '0.75rem 1rem',
-                background: 'rgba(249, 250, 251, 0.6)',
-                backdropFilter: 'blur(8px)',
-                borderRadius: '0.75rem',
-                border: '1px solid rgba(229, 231, 235, 0.4)'
+                gap: '0.875rem',
+                padding: '0.625rem 0.875rem',
+                background: 'rgba(249, 250, 251, 0.7)',
+                backdropFilter: 'blur(12px)',
+                borderRadius: '0.625rem',
+                border: '1px solid rgba(229, 231, 235, 0.3)'
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Clock size={16} color="#6B7280" />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                <Clock size={14} color="#6B7280" />
                 <span style={{
-                  fontSize: '0.875rem',
+                  fontSize: '0.8125rem',
                   color: '#374151',
                   fontFamily: 'Inter, sans-serif',
-                  fontWeight: 500
+                  fontWeight: 500,
+                  letterSpacing: '-0.01em'
                 }}>
                   {format(currentTime, 'HH:mm:ss', { locale: es })}
                 </span>
               </div>
               <div style={{
                 width: '1px',
-                height: '16px',
-                backgroundColor: 'rgba(229, 231, 235, 0.6)'
+                height: '14px',
+                backgroundColor: 'rgba(229, 231, 235, 0.5)'
               }} />
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Calendar size={16} color="#6B7280" />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                <Calendar size={14} color="#6B7280" />
                 <span style={{
-                  fontSize: '0.875rem',
+                  fontSize: '0.8125rem',
                   color: '#374151',
                   fontFamily: 'Inter, sans-serif',
-                  fontWeight: 500
+                  fontWeight: 500,
+                  letterSpacing: '-0.01em'
                 }}>
                   {format(currentTime, 'EEEE, d MMMM', { locale: es })}
                 </span>
@@ -1091,156 +1352,189 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             </motion.div>
           </div>
 
-          {/* Controles de usuario */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            {/* Notificaciones */}
+          {/* Controles de usuario mejorados */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
+            {/* Notificaciones mejoradas */}
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               style={{
                 position: 'relative',
-                padding: '0.75rem',
-                backgroundColor: 'rgba(249, 250, 251, 0.8)',
-                borderRadius: '0.75rem',
-                border: '1px solid rgba(229, 231, 235, 0.6)',
+                padding: '0.625rem',
+                backgroundColor: 'rgba(249, 250, 251, 0.9)',
+                borderRadius: '0.625rem',
+                border: '1px solid rgba(229, 231, 235, 0.5)',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center'
+                justifyContent: 'center',
+                backdropFilter: 'blur(8px)',
+                transition: 'all 0.2s ease'
               }}
             >
-              <Bell size={18} color="#6B7280" />
+              <Bell size={16} color="#6B7280" />
               <motion.div
-                animate={{ scale: [1, 1.2, 1] }}
+                animate={{ 
+                  scale: [1, 1.2, 1],
+                  opacity: [0.8, 1, 0.8]
+                }}
                 transition={{ duration: 2, repeat: Infinity }}
                 style={{
                   position: 'absolute',
-                  top: '4px',
-                  right: '4px',
+                  top: '3px',
+                  right: '3px',
                   width: '8px',
                   height: '8px',
-                  backgroundColor: '#EF4444',
-                  borderRadius: '50%'
+                  background: 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)',
+                  borderRadius: '50%',
+                  border: '1px solid rgba(255, 255, 255, 0.8)',
+                  boxShadow: '0 1px 3px rgba(239, 68, 68, 0.3)'
                 }}
               />
             </motion.button>
 
-            {/* Avatar de usuario con menú */}
+            {/* Avatar de usuario con menú completamente mejorado */}
             <div style={{ position: 'relative' }}>
               <motion.button
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                whileHover={{ scale: 1.05 }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '0.75rem',
-                  padding: '0.5rem 1rem',
-                  backgroundColor: 'rgba(249, 250, 251, 0.8)',
-                  borderRadius: '0.75rem',
-                  border: '1px solid rgba(229, 231, 235, 0.6)',
+                  gap: '0.625rem',
+                  padding: '0.5rem 0.875rem',
+                  backgroundColor: 'rgba(249, 250, 251, 0.9)',
+                  borderRadius: '0.625rem',
+                  border: '1px solid rgba(229, 231, 235, 0.5)',
                   cursor: 'pointer',
-                  transition: 'all 0.2s ease'
+                  transition: 'all 0.2s ease',
+                  backdropFilter: 'blur(8px)'
                 }}
               >
                 <div style={{
-                  width: '32px',
-                  height: '32px',
-                  backgroundColor: '#2563EB',
+                  width: '28px',
+                  height: '28px',
+                  background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)',
                   borderRadius: '50%',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center'
+                  justifyContent: 'center',
+                  boxShadow: '0 2px 8px rgba(37, 99, 235, 0.25)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)'
                 }}>
-                  <User size={16} color="white" />
+                  <User size={14} color="white" />
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                   <span style={{
-                    fontSize: '0.875rem',
+                    fontSize: '0.8125rem',
                     fontWeight: 600,
                     color: '#1F2937',
-                    fontFamily: 'Inter, sans-serif'
+                    fontFamily: 'Inter, sans-serif',
+                    letterSpacing: '-0.01em'
                   }}>
                     {user?.name || 'Dr. Mendoza'}
                   </span>
                   <span style={{
-                    fontSize: '0.75rem',
+                    fontSize: '0.6875rem',
                     color: '#6B7280',
-                    fontFamily: 'Inter, sans-serif'
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 500
                   }}>
                     {user?.role === 'admin' ? 'CEO' : 'Terapeuta'}
                   </span>
                 </div>
                 <motion.div
                   animate={{ rotate: isUserMenuOpen ? 180 : 0 }}
-                  transition={{ duration: 0.2 }}
+                  transition={{ duration: 0.2, ease: "easeOut" }}
                 >
-                  <ChevronDown size={16} color="#9CA3AF" />
+                  <ChevronDown size={14} color="#9CA3AF" />
                 </motion.div>
               </motion.button>
 
-              {/* Menú de usuario */}
+              {/* Menú de usuario completamente rediseñado */}
               <AnimatePresence>
                 {isUserMenuOpen && (
                   <motion.div
                     initial={{ opacity: 0, y: -10, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                    transition={{ duration: 0.2 }}
+                    transition={{ duration: 0.2, ease: "easeOut" }}
                     style={{
                       position: 'absolute',
                       top: '100%',
                       right: 0,
                       marginTop: '0.5rem',
-                      background: 'rgba(255, 255, 255, 0.95)',
-                      backdropFilter: 'blur(20px)',
-                      border: '1px solid rgba(229, 231, 235, 0.6)',
-                      borderRadius: '1rem',
-                      boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
+                      background: 'rgba(255, 255, 255, 0.98)',
+                      backdropFilter: 'blur(24px)',
+                      border: '1px solid rgba(229, 231, 235, 0.4)',
+                      borderRadius: '0.875rem',
+                      boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
                       zIndex: 50,
                       overflow: 'hidden',
-                      minWidth: '200px'
+                      minWidth: '220px'
                     }}
                   >
                     <div style={{
                       padding: '1rem',
-                      borderBottom: '1px solid rgba(229, 231, 235, 0.3)'
+                      borderBottom: '1px solid rgba(229, 231, 235, 0.2)',
+                      background: 'linear-gradient(135deg, rgba(37, 99, 235, 0.02) 0%, rgba(59, 130, 246, 0.01) 100%)'
                     }}>
                       <div style={{
-                        fontSize: '0.875rem',
+                        fontSize: '0.8125rem',
                         fontWeight: 600,
                         color: '#1F2937',
-                        fontFamily: 'Inter, sans-serif'
+                        fontFamily: 'Inter, sans-serif',
+                        marginBottom: '0.125rem'
                       }}>
                         {user?.name || 'Dr. Mendoza'}
                       </div>
                       <div style={{
-                        fontSize: '0.75rem',
+                        fontSize: '0.6875rem',
                         color: '#6B7280',
                         fontFamily: 'Inter, sans-serif'
                       }}>
                         {user?.email || 'admin@centro.com'}
                       </div>
+                      <div style={{
+                        fontSize: '0.6875rem',
+                        color: '#8B5CF6',
+                        fontFamily: 'Inter, sans-serif',
+                        fontWeight: 600,
+                        marginTop: '0.25rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.25rem'
+                      }}>
+                        <Shield size={12} />
+                        {user?.role === 'admin' ? 'Administrador CEO' : 'Terapeuta Profesional'}
+                      </div>
                     </div>
                     
                     <motion.button
                       onClick={handleLogout}
-                      whileHover={{ backgroundColor: 'rgba(239, 68, 68, 0.05)' }}
+                      whileHover={{ 
+                        backgroundColor: 'rgba(239, 68, 68, 0.04)',
+                        x: 2
+                      }}
+                      whileTap={{ scale: 0.98 }}
                       style={{
                         width: '100%',
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '0.75rem',
+                        gap: '0.625rem',
                         padding: '0.75rem 1rem',
                         border: 'none',
                         background: 'transparent',
                         cursor: 'pointer',
-                        fontSize: '0.875rem',
+                        fontSize: '0.8125rem',
                         color: '#EF4444',
                         fontFamily: 'Inter, sans-serif',
+                        fontWeight: 500,
                         transition: 'all 0.2s ease'
                       }}
                     >
-                      <LogOut size={16} />
+                      <LogOut size={14} />
                       Cerrar sesión
                     </motion.button>
                   </motion.div>
@@ -1259,17 +1553,18 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         </main>
       </div>
 
-      {/* Overlay para móvil */}
+      {/* Overlay para móvil mejorado */}
       <AnimatePresence>
         {isSidebarOpen && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
             style={{
               position: 'fixed',
               inset: 0,
-              backgroundColor: 'rgba(0, 0, 0, 0.3)',
+              backgroundColor: 'rgba(0, 0, 0, 0.25)',
               backdropFilter: 'blur(4px)',
               zIndex: 30,
               display: window.innerWidth < 1024 ? 'block' : 'none'
@@ -1296,11 +1591,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         )}
       </AnimatePresence>
 
-      {/* Estilos CSS adicionales */}
+      {/* Estilos CSS mejorados */}
       <style jsx>{`
-        /* Scrollbar personalizado */
+        /* Scrollbar ultra profesional */
         nav::-webkit-scrollbar {
-          width: 6px;
+          width: 4px;
         }
         
         nav::-webkit-scrollbar-track {
@@ -1308,25 +1603,68 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         }
         
         nav::-webkit-scrollbar-thumb {
-          background: rgba(156, 163, 175, 0.3);
-          border-radius: 3px;
+          background: rgba(156, 163, 175, 0.2);
+          border-radius: 2px;
+          transition: all 0.3s ease;
         }
         
         nav::-webkit-scrollbar-thumb:hover {
-          background: rgba(156, 163, 175, 0.5);
+          background: rgba(37, 99, 235, 0.3);
         }
 
-        /* Animaciones adicionales */
+        /* Animaciones profesionales */
         @keyframes shimmer {
           0% { transform: translateX(-100%); }
           100% { transform: translateX(100%); }
         }
 
-        /* Responsive adjustments */
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-2px); }
+        }
+
+        @keyframes pulse-glow {
+          0%, 100% { 
+            box-shadow: 0 0 5px rgba(37, 99, 235, 0.3);
+          }
+          50% { 
+            box-shadow: 0 0 20px rgba(37, 99, 235, 0.5);
+          }
+        }
+
+        /* Responsive profesional */
         @media (max-width: 1024px) {
           .sidebar-overlay {
             display: block !important;
           }
+        }
+
+        @media (max-width: 768px) {
+          nav {
+            padding: 0.25rem 0 0.75rem 0;
+          }
+        }
+
+        /* Estados de focus mejorados */
+        button:focus-visible {
+          outline: 2px solid rgba(37, 99, 235, 0.5);
+          outline-offset: 2px;
+        }
+
+        input:focus-visible {
+          outline: none;
+        }
+
+        /* Efectos de glassmorphism */
+        .glass-effect {
+          background: rgba(255, 255, 255, 0.1);
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Transiciones suaves globales */
+        * {
+          transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
         }
       `}</style>
     </div>
