@@ -615,7 +615,11 @@ export default function Topbar({ onSearch, onCenterChange }: TopbarProps) {
                   margin: 0,
                   fontFamily: 'Space Grotesk, sans-serif'
                 }}>
-                  {user?.role === 'admin' ? 'CEO' : 'Terapeuta'}
+                  {user?.role === undefined
+                    ? 'Terapeuta'
+                    : user.role === 'ceo'
+                      ? 'CEO'
+                      : 'Terapeuta'}
                 </div>
               </div>
               <motion.div
@@ -721,7 +725,7 @@ export default function Topbar({ onSearch, onCenterChange }: TopbarProps) {
                             fontWeight: 600,
                             fontFamily: 'Space Grotesk, sans-serif'
                           }}>
-                            {user?.role === 'admin' ? 'CEO & Fundador' : 'Terapeuta Profesional'}
+                            {user?.role === 'ceo' ? 'CEO & Fundador' : 'Terapeuta Profesional'}
                           </span>
                         </div>
                       </div>
