@@ -1512,7 +1512,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                     fontFamily: 'Inter, sans-serif',
                     fontWeight: 500
                   }}>
-                    {user?.role === 'admin' ? 'CEO' : 'Terapeuta'}
+                    {user?.role && user.role.toString() === 'admin' ? 'CEO' : 'Terapeuta'}
                   </span>
                 </div>
                 <motion.div
@@ -1578,7 +1578,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                         gap: '0.25rem'
                       }}>
                         <Shield size={12} />
-                        {user?.role === 'admin' ? 'Administrador CEO' : 'Terapeuta Profesional'}
+                        {user?.role?.toString() === 'admin' ? 'Administrador CEO' : 'Terapeuta Profesional'}
                       </div>
                     </div>
                     

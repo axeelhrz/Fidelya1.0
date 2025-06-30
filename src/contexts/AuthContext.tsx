@@ -2,13 +2,56 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { UserRole, User, ROLE_PERMISSIONS } from '@/types/user';
+import { User, ROLE_PERMISSIONS } from '@/types/user';
+
+interface RegisterUserData {
+  email: string;
+  role: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  register: (userData: RegisterUserData) => Promise<boolean>;
+  logout: () => Promise<void>;
+  dateOfBirth?: string;
+  gender?: string;
+  therapistData?: {
+    specialties?: string[];
+    license?: string;
+    experience?: number;
+    education?: string[];
+  };
+  patientData?: {
+    emergencyContact: {
+      name: string;
+      relationship: string;
+      phone: string;
+      email: string;
+    };
+    medicalHistory?: {
+      allergies: string[];
+      medications: string[];
+      previousDiagnoses: string[];
+      familyHistory: string[];
+    };
+    insuranceInfo?: {
+      provider?: string;
+      policyNumber?: string;
+      groupNumber?: string;
+      validUntil?: string;
+      [key: string]: unknown;
+    };
+  };
+  receptionistData?: {
+    department?: string;
+    workShift?: string;
+  };
+}
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
-  register: (userData: any) => Promise<boolean>;
+  register: (userData: RegisterUserData) => Promise<boolean>;
   logout: () => Promise<void>;
   hasPermission: (permission: string, category?: string) => boolean;
   canAccessRoute: (route: string) => boolean;
@@ -144,29 +187,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             assignedTherapist: 'therapist1'
           }
         };
-      } else if (email === 'reception' && password === 'reception123') {
-        userData = {
-          id: 'reception1',
-          email: 'reception@centropsicologico.com',
-          role: 'receptionist',
-          centerId: 'center1',
-          name: 'Laura Martínez',
-          firstName: 'Laura',
-          lastName: 'Martínez',
-          phone: '+1234567894',
-          status: 'active',
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          lastLogin: new Date(),
-          receptionistInfo: {
-            department: 'Recepción Principal',
-            permissions: ['schedule_appointments', 'manage_patients', 'view_calendar'],
-            workShift: 'full-time'
-          }
-        };
-      } else {
-        return false;
+  } else if (email === 'reception' && password === 'reception123') {
+    userData = {
+      id: 'reception1',
+      email: 'reception@centropsicologico.com',
+      role: 'receptionist',
+      centerId: 'center1',
+      name: 'Laura Martínez',
+      firstName: 'Laura',
+      lastName: 'Martínez',
+      phone: '+1234567894',
+      status: 'active',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      lastLogin: new Date(),
+      receptionistInfo: {
+        department: 'Recepción Principal',
+        permissions: ['schedule_appointments', 'manage_patients', 'view_calendar'],
+        workShift: 'full-time'
       }
+    };
+  } else {
+    return false;
+  }
       
       setUser(userData);
       localStorage.setItem('user', JSON.stringify(userData));
@@ -181,7 +224,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const register = async (userData: any): Promise<boolean> => {
+  const register = async (userData: RegisterUserData): Promise<boolean> => {
     try {
       await new Promise(resolve => setTimeout(resolve, 2000));
       
@@ -189,7 +232,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const newUser: User = {
         id: `user_${Date.now()}`,
         email: userData.email,
-        role: userData.role,
+        role: userData.role as User['role'],
         centerId: 'center1',
         name: `${userData.firstName} ${userData.lastName}`,
         firstName: userData.firstName,
@@ -200,7 +243,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         updatedAt: new Date(),
         lastLogin: new Date(),
         dateOfBirth: userData.dateOfBirth ? new Date(userData.dateOfBirth) : undefined,
-        gender: userData.gender
+        gender: (userData.gender === 'male' ||
+                 userData.gender === 'female' ||
+                 userData.gender === 'other' ||
+                 userData.gender === 'prefer-not-to-say')
+                ? userData.gender
+                : undefined
       };
 
       // Agregar información específica del rol
@@ -230,13 +278,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             previousDiagnoses: [],
             familyHistory: []
           },
-          insuranceInfo: userData.patientData.insuranceInfo
+          insuranceInfo: userData.patientData.insuranceInfo &&
+            typeof userData.patientData.insuranceInfo.provider === 'string' &&
+            typeof userData.patientData.insuranceInfo.policyNumber === 'string'
+            ? {
+                provider: userData.patientData.insuranceInfo.provider,
+                policyNumber: userData.patientData.insuranceInfo.policyNumber,
+                groupNumber: userData.patientData.insuranceInfo.groupNumber
+              }
+            : undefined
         };
       } else if (userData.role === 'receptionist' && userData.receptionistData) {
         newUser.receptionistInfo = {
           department: userData.receptionistData.department || 'Recepción',
           permissions: ['schedule_appointments', 'manage_patients'],
-          workShift: userData.receptionistData.workShift || 'full-time'
+          workShift: ['full-time', 'morning', 'afternoon', 'night'].includes(userData.receptionistData.workShift as string)
+            ? userData.receptionistData.workShift as 'full-time' | 'morning' | 'afternoon' | 'night'
+            : 'full-time'
         };
       }
 
