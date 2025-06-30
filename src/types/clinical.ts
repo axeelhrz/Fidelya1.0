@@ -515,6 +515,10 @@ export interface TreatmentPlan {
   createdAt: Date;
   updatedAt: Date;
   history: TreatmentPlanHistory[];
+  reviewDate: Date;
+  progressNotes: unknown[]; // Replace 'unknown' with a specific type if available
+  title: string; // Added for compatibility with SupervisionManager
+  tasks?: TreatmentTask[]; // Optional for backward compatibility
 }
 
 export type TreatmentPlanStatus = 'active' | 'completed' | 'on-hold' | 'discontinued' | 'transferred';
@@ -534,6 +538,10 @@ export interface TreatmentGoal {
   barriers: string[];
   createdAt: Date;
   updatedAt: Date;
+  milestones: TreatmentMilestone[];
+  category?: string; // Add this line to allow 'category'
+  measurable?: string;
+
 }
 
 export type GoalType = 'behavioral' | 'cognitive' | 'emotional' | 'social' | 'functional' | 'symptom-reduction';
@@ -572,6 +580,7 @@ export interface TreatmentMilestone {
   achievedDate?: Date;
   status: 'pending' | 'achieved' | 'overdue';
   criteria: string[];
+  completed: boolean;
 }
 
 export interface TreatmentPlanHistory {
@@ -581,6 +590,143 @@ export interface TreatmentPlanHistory {
   description: string;
   changedBy: string;
   changes: Record<string, unknown>; // JSON object with specific changes
+}
+
+// ============================================================================
+// TREATMENT TASK INTERFACE (NEW)
+// ============================================================================
+
+export interface TreatmentTask {
+  id: string;
+  patientId: string;
+  planId: string;
+  goalId?: string;
+  therapistId: string;
+  title: string;
+  description: string;
+  type: TreatmentTaskType;
+  category: TreatmentTaskCategory;
+  priority: 'high' | 'medium' | 'low';
+  status: TreatmentTaskStatus;
+  assignedDate: Date;
+  dueDate?: Date;
+  completedDate?: Date;
+  estimatedDuration?: number; // minutes
+  actualDuration?: number; // minutes
+  instructions: string;
+  resources: TaskResource[];
+  prerequisites: string[]; // IDs of tasks that must be completed first
+  adherenceMetrics: AdherenceMetrics;
+  feedback?: TaskFeedback;
+  reminders: TaskReminder[];
+  tags: string[];
+  isRecurring: boolean;
+  recurrencePattern?: RecurrencePattern;
+  createdAt: Date;
+  updatedAt: Date;
+  completed?: boolean; // For backward compatibility
+}
+
+export type TreatmentTaskType = 'homework' | 'exercise' | 'reading' | 'practice' | 'reflection' | 'monitoring' | 'behavioral-experiment' | 'skill-building' | 'exposure' | 'mindfulness' | 'journaling' | 'assessment';
+
+export type TreatmentTaskCategory = 'cognitive' | 'behavioral' | 'emotional' | 'social' | 'physical' | 'spiritual' | 'educational' | 'therapeutic';
+
+export type TreatmentTaskStatus = 'assigned' | 'in-progress' | 'completed' | 'overdue' | 'skipped' | 'cancelled' | 'partially-completed';
+
+export interface TaskFeedback {
+  patientRating: number; // 1-5
+  patientComments?: string;
+  therapistRating?: number; // 1-5
+  therapistComments?: string;
+  difficulty: 'very-easy' | 'easy' | 'moderate' | 'difficult' | 'very-difficult';
+  helpfulness: number; // 1-5
+  completionQuality: 'poor' | 'fair' | 'good' | 'excellent';
+  submittedAt: Date;
+}
+
+export interface TaskReminder {
+  id: string;
+  type: 'initial' | 'follow-up' | 'overdue';
+  scheduledDate: Date;
+  sentDate?: Date;
+  method: 'email' | 'sms' | 'push' | 'in-app';
+  status: 'scheduled' | 'sent' | 'delivered' | 'failed' | 'cancelled';
+  message: string;
+}
+
+export interface RecurrencePattern {
+  frequency: 'daily' | 'weekly' | 'biweekly' | 'monthly';
+  interval: number; // every X days/weeks/months
+  daysOfWeek?: number[]; // 0-6 for weekly patterns
+  endDate?: Date;
+  maxOccurrences?: number;
+}
+
+// ============================================================================
+// ADHERENCE METRICS INTERFACE (NEW)
+// ============================================================================
+
+export interface AdherenceMetrics {
+  taskId: string;
+  patientId: string;
+  planId: string;
+  totalTasks: number; // total number of tasks assigned
+  completedTasks: number; // number of tasks completed
+  overdueTasks: number; // number of tasks overdue
+  weeklyProgress: { week: number; completed: number; total: number }[];  
+  goalProgress: { goalId: string; progress: number; milestones: number; totalMilestones: number }[];
+
+  // Completion metrics
+  completionRate: number; // 0-100
+  onTimeCompletionRate: number; // 0-100
+  qualityScore: number; // 0-100 based on therapist/patient feedback
+  
+  // Engagement metrics
+  timeSpent: number; // total minutes spent on task
+  averageSessionDuration: number; // average minutes per session
+  sessionsCount: number; // number of times task was worked on
+  
+  // Behavioral metrics
+  procrastinationScore: number; // 0-100, higher = more procrastination
+  consistencyScore: number; // 0-100, based on regular completion patterns
+  motivationLevel: number; // 1-5, self-reported or inferred
+  
+  // Progress tracking
+  progressMilestones: ProgressMilestone[];
+  improvementTrend: 'improving' | 'stable' | 'declining' | 'variable';
+  
+  // Barriers and facilitators
+  reportedBarriers: string[];
+  identifiedFacilitators: string[];
+  
+  // Temporal data
+  firstAttemptDate?: Date;
+  lastActivityDate?: Date;
+  averageResponseTime: number; // hours from assignment to first attempt
+  
+  // Comparative metrics
+  peerComparisonPercentile?: number; // compared to similar patients
+  personalBestScore?: number; // patient's best performance on similar tasks
+  
+  // Predictive indicators
+  riskOfNonCompletion: number; // 0-100, AI-predicted risk
+  recommendedInterventions: string[];
+  
+  // Metadata
+  calculatedAt: Date;
+  dataPoints: number; // number of data points used in calculation
+  confidenceLevel: number; // 0-100, confidence in the metrics
+}
+
+export interface ProgressMilestone {
+  id: string;
+  name: string;
+  description: string;
+  targetValue: number;
+  currentValue: number;
+  achievedDate?: Date;
+  isAchieved: boolean;
+  weight: number; // importance weight for overall progress calculation
 }
 
 // ============================================================================

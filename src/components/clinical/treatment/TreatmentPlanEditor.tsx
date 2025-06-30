@@ -59,7 +59,7 @@ export function TreatmentPlanEditor({
   const [currentGoal, setCurrentGoal] = useState<Partial<TreatmentGoal>>({});
   const [currentTask, setCurrentTask] = useState<Partial<TreatmentTask>>({});
   const [isSaving, setIsSaving] = useState(false);
-  const [adherenceMetrics, setAdherenceMetrics] = useState<AdherenceMetrics | null>(null);
+  const [adherenceMetrics, setAdherenceMetrics] = useState<Partial<AdherenceMetrics> | null>(null);
 
   const goalCategories = [
     { id: 'behavioral', label: 'Conductual', color: '#10B981', icon: Activity },
@@ -78,14 +78,7 @@ export function TreatmentPlanEditor({
     { id: 'reflection', label: 'Reflexión/Diario', icon: Edit }
   ];
 
-  useEffect(() => {
-    if (plan) {
-      setPlanData(plan);
-      calculateAdherenceMetrics(plan);
-    }
-  }, [plan]);
-
-  const calculateAdherenceMetrics = (planData: TreatmentPlan) => {
+  const calculateAdherenceMetrics = React.useCallback((planData: TreatmentPlan) => {
     const totalTasks = planData.tasks?.length || 0;
     const completedTasks = planData.tasks?.filter(task => task.completed).length || 0;
     const overdueTasks = planData.tasks?.filter(task => 
@@ -94,20 +87,28 @@ export function TreatmentPlanEditor({
 
     const adherenceRate = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
     
-    const metrics: AdherenceMetrics = {
-      adherenceRate,
+    // Remove the type annotation or use Partial<AdherenceMetrics> if you don't want to fill all fields
+    const metrics = {
       totalTasks,
       completedTasks,
       overdueTasks,
-      weeklyProgress: calculateWeeklyProgress(planData.tasks || []),
-      goalProgress: calculateGoalProgress(planData.goals || [])
+      weeklyProgress: calculateWeeklyProgress(),
+      goalProgress: calculateGoalProgress(planData.goals || []),
+      adherenceRate
     };
 
     setAdherenceMetrics(metrics);
     setPlanData(prev => ({ ...prev, adherenceRate }));
-  };
+  }, []);
 
-  const calculateWeeklyProgress = (tasks: TreatmentTask[]) => {
+  useEffect(() => {
+    if (plan) {
+      setPlanData(plan);
+      calculateAdherenceMetrics(plan);
+    }
+  }, [plan, calculateAdherenceMetrics]);
+
+  const calculateWeeklyProgress = () => {
     // Simulación de progreso semanal
     return [
       { week: 1, completed: 3, total: 5 },
@@ -139,7 +140,7 @@ export function TreatmentPlanEditor({
       achievable: '',
       relevant: '',
       timeBound: '',
-      status: 'active'
+      status: 'in-progress'
     });
     setShowGoalModal(true);
   };
@@ -312,15 +313,15 @@ export function TreatmentPlanEditor({
                 borderRadius: '0.5rem',
                 border: '1px solid #E5E7EB'
               }}>
-                <BarChart3 size={20} color={getAdherenceColor(adherenceMetrics.adherenceRate)} />
+                <BarChart3 size={20} color={getAdherenceColor(planData.adherenceRate ?? 0)} />
                 <div>
                   <div style={{
                     fontSize: '1.25rem',
                     fontWeight: 700,
-                    color: getAdherenceColor(adherenceMetrics.adherenceRate),
+                    color: getAdherenceColor(planData.adherenceRate ?? 0),
                     fontFamily: 'Space Grotesk, sans-serif'
                   }}>
-                    {Math.round(adherenceMetrics.adherenceRate)}%
+                    {Math.round(planData.adherenceRate ?? 0)}%
                   </div>
                   <div style={{
                     fontSize: '0.75rem',
@@ -985,10 +986,10 @@ export function TreatmentPlanEditor({
                       <span style={{
                         fontSize: '1.5rem',
                         fontWeight: 700,
-                        color: getAdherenceColor(adherenceMetrics.adherenceRate),
+                        color: getAdherenceColor(planData.adherenceRate ?? 0),
                         fontFamily: 'Space Grotesk, sans-serif'
                       }}>
-                        {Math.round(adherenceMetrics.adherenceRate)}%
+                        {Math.round(adherenceMetrics.adherenceRate ?? 0)}%
                       </span>
                     </div>
                     <div style={{
@@ -1004,7 +1005,7 @@ export function TreatmentPlanEditor({
                         transition={{ duration: 1, ease: 'easeOut' }}
                         style={{
                           height: '100%',
-                          backgroundColor: getAdherenceColor(adherenceMetrics.adherenceRate),
+                          backgroundColor: getAdherenceColor(adherenceMetrics.adherenceRate ?? 0),
                           borderRadius: '4px'
                         }}
                       />
@@ -1083,7 +1084,7 @@ export function TreatmentPlanEditor({
                       Progreso Semanal
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                      {adherenceMetrics.weeklyProgress.map((week, index) => {
+                      {adherenceMetrics.weeklyProgress && adherenceMetrics.weeklyProgress.map((week, index) => {
                         const percentage = (week.completed / week.total) * 100;
                         return (
                           <div key={index}>
@@ -1220,7 +1221,7 @@ export function TreatmentPlanEditor({
               </h4>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                {adherenceMetrics && adherenceMetrics.adherenceRate < 70 && (
+                {adherenceMetrics && (adherenceMetrics.adherenceRate ?? 0) < 70 && (
                   <div style={{
                     padding: '0.75rem',
                     backgroundColor: '#FEF3C7',
@@ -1255,7 +1256,7 @@ export function TreatmentPlanEditor({
                   </div>
                 )}
 
-                {adherenceMetrics && adherenceMetrics.adherenceRate >= 85 && (
+                {adherenceMetrics && (adherenceMetrics.adherenceRate ?? 0) >= 85 && (
                   <div style={{
                     padding: '0.75rem',
                     backgroundColor: '#F0FDF4',
@@ -1542,7 +1543,7 @@ export function TreatmentPlanEditor({
                     </label>
                     <select
                       value={currentGoal.category || 'behavioral'}
-                      onChange={(e) => setCurrentGoal(prev => ({ ...prev, category: e.target.value as any }))}
+                      onChange={(e) => setCurrentGoal(prev => ({ ...prev, category: e.target.value as TreatmentGoal['category'] }))}
                       style={{
                         width: '100%',
                         padding: '0.75rem',
@@ -1737,7 +1738,7 @@ export function TreatmentPlanEditor({
                     </label>
                     <select
                       value={currentGoal.priority || 'medium'}
-                      onChange={(e) => setCurrentGoal(prev => ({ ...prev, priority: e.target.value as any }))}
+                      onChange={(e) => setCurrentGoal(prev => ({ ...prev, priority: e.target.value as 'low' | 'medium' | 'high' }))}
                       style={{
                         width: '100%',
                         padding: '0.75rem',
@@ -1982,7 +1983,7 @@ export function TreatmentPlanEditor({
                     </label>
                     <select
                       value={currentTask.type || 'homework'}
-                      onChange={(e) => setCurrentTask(prev => ({ ...prev, type: e.target.value as any }))}
+                      onChange={(e) => setCurrentTask(prev => ({ ...prev, type: e.target.value as TreatmentTask['type'] }))}
                       style={{
                         width: '100%',
                         padding: '0.75rem',
@@ -2014,7 +2015,7 @@ export function TreatmentPlanEditor({
                     </label>
                     <select
                       value={currentTask.priority || 'medium'}
-                      onChange={(e) => setCurrentTask(prev => ({ ...prev, priority: e.target.value as any }))}
+                      onChange={(e) => setCurrentTask(prev => ({ ...prev, priority: e.target.value as 'low' | 'medium' | 'high' }))}
                       style={{
                         width: '100%',
                         padding: '0.75rem',
