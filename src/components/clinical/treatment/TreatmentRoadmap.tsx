@@ -75,8 +75,9 @@ export function TreatmentRoadmap({ plan, onGoalClick }: TreatmentRoadmapProps) {
   };
 
   const getGoalStatusColor = (goal: TreatmentGoal) => {
-    if (goal.status === 'completed') return '#10B981';
-    if (goal.status === 'paused') return '#F59E0B';
+    if (goal.status === 'achieved') return '#10B981';
+    if (goal.status === 'modified') return '#F59E0B';
+    if (goal.status === 'discontinued') return '#EF4444';
     if (goal.targetDate && new Date(goal.targetDate) < new Date()) return '#EF4444';
     return '#6366F1';
   };
