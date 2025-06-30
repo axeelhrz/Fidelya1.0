@@ -30,9 +30,11 @@ export function CompetencyRadar({
   therapist,
   competencies,
   categories,
+  onUpdateCompetency,
+  onAddCompetency,
 }: CompetencyRadarProps) {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [editingCompetency, setEditingCompetency] = useState<Competency | null>(null);
+  const [showAddModal, setShowAddModal] = useState(false);
 
   const competencyIcons = {
     therapeutic: Heart,
@@ -107,7 +109,7 @@ export function CompetencyRadar({
               margin: 0,
               fontFamily: 'Inter, sans-serif'
             }}>
-              {therapist.firstName} {therapist.lastName} • {therapist.specialization}
+              {therapist.firstName} {therapist.lastName} • {therapist.specialties?.[0] || 'Especialista'}
             </p>
           </div>
 
@@ -316,7 +318,7 @@ export function CompetencyRadar({
                 .filter(c => c.categoryId === selectedCategory)
                 .map((competency) => {
                   const level = getCompetencyLevel(competency.score);
-                  const trend = getCompetencyTrend(competency);
+                  const trend = getCompetencyTrend();
 
                   return (
                     <motion.div
@@ -395,7 +397,7 @@ export function CompetencyRadar({
                           <motion.button
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
-                            onClick={() => setEditingCompetency(competency)}
+                            onClick={() => onUpdateCompetency(competency.id, competency.score)}
                             style={{
                               padding: '0.25rem',
                               backgroundColor: '#EEF2FF',
