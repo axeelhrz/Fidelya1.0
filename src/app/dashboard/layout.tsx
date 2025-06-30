@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import AdminLayout from '@/components/layout/AdminLayout';
 import TherapistLayout from '@/components/layout/TherapistLayout';
+import PatientLayout from '@/components/layout/PatientLayout';
 
 export default function DashboardLayout({
   children,
@@ -88,8 +89,7 @@ export default function DashboardLayout({
       case 'therapist':
         return <TherapistLayout>{children}</TherapistLayout>;
       case 'patient':
-        // TODO: Crear PatientLayout
-        return <div>Patient Layout - En desarrollo</div>;
+        return <PatientLayout>{children}</PatientLayout>;
       case 'receptionist':
         // TODO: Crear ReceptionistLayout
         return <div>Receptionist Layout - En desarrollo</div>;

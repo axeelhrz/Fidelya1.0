@@ -11,17 +11,31 @@ import {
   Edit,
   Save,
   X,
-  Shield,
   Heart,
   AlertTriangle,
-  Users
 } from 'lucide-react';
 import { usePatientData } from '@/hooks/usePatientData';
+
+type EditedPatientData = {
+  phone: string;
+  emergencyContact: {
+    name: string;
+    relationship: string;
+    phone: string;
+  };
+  address: {
+    street: string;
+    city: string;
+    state?: string;
+    zipCode: string;
+    country: string;
+  };
+};
 
 export function PatientProfile() {
   const { data, loading } = usePatientData();
   const [isEditing, setIsEditing] = useState(false);
-  const [editedData, setEditedData] = useState<any>(null);
+  const [editedData, setEditedData] = useState<EditedPatientData | null>(null);
 
   if (loading || !data) {
     return (
@@ -64,8 +78,18 @@ export function PatientProfile() {
   const handleEdit = () => {
     setEditedData({
       phone: patient.phone,
-      emergencyContact: { ...patient.emergencyContact },
-      address: { ...patient.address }
+      emergencyContact: {
+        name: patient.emergencyContact?.name ?? '',
+        relationship: patient.emergencyContact?.relationship ?? '',
+        phone: patient.emergencyContact?.phone ?? ''
+      },
+      address: {
+        street: patient.address?.street ?? '',
+        city: patient.address?.city ?? '',
+        state: patient.address?.state,
+        zipCode: patient.address?.zipCode ?? '',
+        country: patient.address?.country ?? ''
+      }
     });
     setIsEditing(true);
   };
@@ -333,7 +357,17 @@ export function PatientProfile() {
                 <input
                   type="tel"
                   value={editedData?.phone || ''}
-                  onChange={(e) => setEditedData(prev => ({ ...prev, phone: e.target.value }))}
+                  onChange={(e) =>
+                    setEditedData(prev =>
+                      prev
+                        ? { ...prev, phone: e.target.value }
+                        : {
+                            phone: e.target.value,
+                            emergencyContact: { name: '', relationship: '', phone: '' },
+                            address: { street: '', city: '', zipCode: '', country: '' }
+                          }
+                    )
+                  }
                   style={{
                     width: '100%',
                     padding: '0.75rem',
@@ -422,10 +456,25 @@ export function PatientProfile() {
                     type="text"
                     placeholder="Calle y número"
                     value={editedData?.address?.street || ''}
-                    onChange={(e) => setEditedData(prev => ({
-                      ...prev,
-                      address: { ...prev.address, street: e.target.value }
-                    }))}
+                    onChange={(e) =>
+                      setEditedData(prev =>
+                        prev
+                          ? {
+                              ...prev,
+                              address: { ...prev.address, street: e.target.value }
+                            }
+                          : {
+                              phone: '',
+                              emergencyContact: { name: '', relationship: '', phone: '' },
+                              address: {
+                                street: e.target.value,
+                                city: '',
+                                zipCode: '',
+                                country: ''
+                              }
+                            }
+                      )
+                    }
                     style={{
                       padding: '0.75rem',
                       border: '1px solid #D1D5DB',
@@ -439,10 +488,26 @@ export function PatientProfile() {
                       type="text"
                       placeholder="Ciudad"
                       value={editedData?.address?.city || ''}
-                      onChange={(e) => setEditedData(prev => ({
-                        ...prev,
-                        address: { ...prev.address, city: e.target.value }
-                      }))}
+                      onChange={(e) =>
+                        setEditedData((prev) =>
+                          prev
+                            ? {
+                                ...prev,
+                                address: { ...prev.address, city: e.target.value }
+                              }
+                            : {
+                                phone: '',
+                                emergencyContact: { name: '', relationship: '', phone: '' },
+                                address: {
+                                  street: '',
+                                  city: e.target.value,
+                                  state: '',
+                                  zipCode: '',
+                                  country: ''
+                                }
+                              }
+                        )
+                      }
                       style={{
                         padding: '0.75rem',
                         border: '1px solid #D1D5DB',
@@ -455,10 +520,25 @@ export function PatientProfile() {
                       type="text"
                       placeholder="Código Postal"
                       value={editedData?.address?.zipCode || ''}
-                      onChange={(e) => setEditedData(prev => ({
-                        ...prev,
-                        address: { ...prev.address, zipCode: e.target.value }
-                      }))}
+                      onChange={(e) =>
+                        setEditedData((prev) =>
+                          prev
+                            ? {
+                                ...prev,
+                                address: { ...prev.address, zipCode: e.target.value }
+                              }
+                            : {
+                                phone: '',
+                                emergencyContact: { name: '', relationship: '', phone: '' },
+                                address: {
+                                  street: '',
+                                  city: '',
+                                  zipCode: e.target.value,
+                                  country: ''
+                                }
+                              }
+                        )
+                      }
                       style={{
                         padding: '0.75rem',
                         border: '1px solid #D1D5DB',
@@ -471,10 +551,26 @@ export function PatientProfile() {
                       type="text"
                       placeholder="País"
                       value={editedData?.address?.country || ''}
-                      onChange={(e) => setEditedData(prev => ({
-                        ...prev,
-                        address: { ...prev.address, country: e.target.value }
-                      }))}
+                      onChange={(e) =>
+                        setEditedData((prev) =>
+                          prev
+                            ? {
+                                ...prev,
+                                address: { ...prev.address, country: e.target.value }
+                              }
+                            : {
+                                phone: '',
+                                emergencyContact: { name: '', relationship: '', phone: '' },
+                                address: {
+                                  street: '',
+                                  city: '',
+                                  state: '',
+                                  zipCode: '',
+                                  country: e.target.value
+                                }
+                              }
+                        )
+                      }
                       style={{
                         padding: '0.75rem',
                         border: '1px solid #D1D5DB',
@@ -553,10 +649,32 @@ export function PatientProfile() {
                     <input
                       type="text"
                       value={editedData?.emergencyContact?.name || ''}
-                      onChange={(e) => setEditedData(prev => ({
-                        ...prev,
-                        emergencyContact: { ...prev.emergencyContact, name: e.target.value }
-                      }))}
+                      onChange={(e) =>
+                        setEditedData((prev) =>
+                          prev
+                            ? {
+                                ...prev,
+                                emergencyContact: {
+                                  ...prev.emergencyContact,
+                                  name: e.target.value,
+                                },
+                              }
+                            : {
+                                phone: '',
+                                emergencyContact: {
+                                  name: e.target.value,
+                                  relationship: '',
+                                  phone: '',
+                                },
+                                address: {
+                                  street: '',
+                                  city: '',
+                                  zipCode: '',
+                                  country: '',
+                                },
+                              }
+                        )
+                      }
                       style={{
                         width: '100%',
                         padding: '0.5rem',
@@ -592,10 +710,32 @@ export function PatientProfile() {
                     <input
                       type="text"
                       value={editedData?.emergencyContact?.relationship || ''}
-                      onChange={(e) => setEditedData(prev => ({
-                        ...prev,
-                        emergencyContact: { ...prev.emergencyContact, relationship: e.target.value }
-                      }))}
+                      onChange={(e) =>
+                        setEditedData((prev) =>
+                          prev
+                            ? {
+                                ...prev,
+                                emergencyContact: {
+                                  ...prev.emergencyContact,
+                                  relationship: e.target.value,
+                                },
+                              }
+                            : {
+                                phone: '',
+                                emergencyContact: {
+                                  name: '',
+                                  relationship: e.target.value,
+                                  phone: '',
+                                },
+                                address: {
+                                  street: '',
+                                  city: '',
+                                  zipCode: '',
+                                  country: '',
+                                },
+                              }
+                        )
+                      }
                       style={{
                         width: '100%',
                         padding: '0.5rem',
@@ -631,10 +771,32 @@ export function PatientProfile() {
                     <input
                       type="tel"
                       value={editedData?.emergencyContact?.phone || ''}
-                      onChange={(e) => setEditedData(prev => ({
-                        ...prev,
-                        emergencyContact: { ...prev.emergencyContact, phone: e.target.value }
-                      }))}
+                      onChange={(e) =>
+                        setEditedData((prev) =>
+                          prev
+                            ? {
+                                ...prev,
+                                emergencyContact: {
+                                  ...prev.emergencyContact,
+                                  phone: e.target.value,
+                                },
+                              }
+                            : {
+                                phone: '',
+                                emergencyContact: {
+                                  name: '',
+                                  relationship: '',
+                                  phone: e.target.value,
+                                },
+                                address: {
+                                  street: '',
+                                  city: '',
+                                  zipCode: '',
+                                  country: '',
+                                },
+                              }
+                        )
+                      }
                       style={{
                         width: '100%',
                         padding: '0.5rem',
