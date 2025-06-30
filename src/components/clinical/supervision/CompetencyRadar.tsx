@@ -31,6 +31,7 @@ export function CompetencyRadar({
   competencies,
   categories,
   onUpdateCompetency,
+  onAddCompetency,
 }: CompetencyRadarProps) {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
@@ -71,6 +72,21 @@ export function CompetencyRadar({
       { direction: 'up', value: Math.floor(Math.random() * 10) + 1 } :
       { direction: 'down', value: Math.floor(Math.random() * 5) + 1 };
     return trend;
+  };
+
+  const handleAddCompetency = () => {
+    // For now, we'll call the onAddCompetency prop with sample data
+    // In a real implementation, this would open a modal or form
+    const newCompetency = {
+      name: 'Nueva Competencia',
+      description: 'Descripción de la nueva competencia',
+      categoryId: selectedCategory || categories[0]?.id || '',
+      score: 0,
+      targetScore: 80,
+      lastEvaluated: new Date(),
+      notes: ''
+    };
+    onAddCompetency(newCompetency);
   };
 
   const renderRadarChart = () => {
@@ -286,7 +302,7 @@ export function CompetencyRadar({
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => setShowAddModal(true)}
+                onClick={handleAddCompetency}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
