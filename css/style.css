@@ -80,6 +80,14 @@
 --section-padding-x: clamp(1rem, 5vw, 8rem);
 --section-padding-y: clamp(3rem, 8vh, 8rem);
 
+/* NUEVAS VARIABLES PARA RESTRICCIONES DE ANCHO MÁXIMO */
+--max-content-width: 1400px;
+--max-hero-width: 1600px;
+--max-features-width: 1500px;
+--max-videos-width: 1200px;
+--max-faq-width: 1000px;
+--max-contact-width: 1200px;
+
 /* Transiciones unificadas */
 --transition: 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 --transition-fast: 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
@@ -154,6 +162,54 @@ min-height: 100vh;
 min-height: 100dvh;
 margin: 0;
 padding: 0;
+}
+
+/* ===== CONTENEDORES CON RESTRICCIONES DE ANCHO MÁXIMO ===== */
+.hero__container,
+.features__header,
+.features__grid,
+.videos__header,
+.videos__main-container,
+.videos__cta,
+.faq__header,
+.faq__container,
+.contact__header,
+.contact__grid,
+.contact__footer-content {
+max-width: var(--max-content-width);
+margin-left: auto;
+margin-right: auto;
+width: 100%;
+}
+
+/* Restricciones específicas por sección */
+.hero__container {
+max-width: var(--max-hero-width);
+}
+
+.features__header,
+.features__grid {
+max-width: var(--max-features-width);
+}
+
+.videos__header,
+.videos__main-container,
+.videos__cta {
+max-width: var(--max-videos-width);
+}
+
+.faq__header,
+.faq__container {
+max-width: var(--max-faq-width);
+}
+
+.contact__header,
+.contact__grid {
+max-width: var(--max-contact-width);
+}
+
+.contact__footer-content {
+max-width: var(--max-content-width);
 }
 
 /* ===== CLASES DE UTILIDAD PARA MOSTRAR/OCULTAR ===== */
@@ -327,6 +383,8 @@ position: relative;
 pointer-events: none;
 width: 100%;
 overflow: visible;
+max-width: var(--max-content-width);
+margin: 0 auto;
 }
 
 /* ===== LOGO FLOTANTE OPTIMIZADO - SIN HOVER ===== */
@@ -3164,8 +3222,7 @@ backdrop-filter: blur(10px);
 border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.contact__channel:nth-child(1)
-{ animation-delay: 0.1s; }
+.contact__channel:nth-child(1) { animation-delay: 0.1s; }
 .contact__channel:nth-child(2) { animation-delay: 0.2s; }
 .contact__channel:nth-child(3) { animation-delay: 0.3s; }
 .contact__channel:nth-child(4) { animation-delay: 0.4s; }
@@ -4405,3 +4462,4 @@ a.btn--footer {
     position: relative !important;
     z-index: 5 !important;
 }
+
