@@ -75,17 +75,29 @@ export function CompetencyRadar({
   };
 
   const handleAddCompetency = () => {
-    // For now, we'll call the onAddCompetency prop with sample data
-    // In a real implementation, this would open a modal or form
-    const newCompetency = {
+    // Find the selected category or use the first available category
+    const targetCategoryId = selectedCategory || categories[0]?.id || '';
+    const targetCategory = categories.find(cat => cat.id === targetCategoryId);
+    
+    if (!targetCategory) {
+      console.error('No category available for new competency');
+      return;
+    }
+
+    // Create a new competency object that matches the Competency interface
+    const newCompetency: Omit<Competency, 'id' | 'createdAt' | 'updatedAt'> = {
       name: 'Nueva Competencia',
       description: 'Descripción de la nueva competencia',
-      categoryId: selectedCategory || categories[0]?.id || '',
+      categoryId: targetCategoryId,
       score: 0,
-      targetScore: 80,
+      behavioralIndicators: [],
+      proficiencyLevels: [],
+      isCore: false,
+      category: targetCategory,
       lastEvaluated: new Date(),
       notes: ''
     };
+    
     onAddCompetency(newCompetency);
   };
 
