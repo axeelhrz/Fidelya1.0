@@ -41,6 +41,7 @@ export function SupervisionManager({
   const [selectedTherapist, setSelectedTherapist] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [showSessionModal, setShowSessionModal] = useState(false);
 
   const tabs = [
     { id: 'overview', label: 'Resumen', icon: Activity },
@@ -528,7 +529,7 @@ export function SupervisionManager({
                   alignItems: 'center',
                   justifyContent: 'center'
                 }}>
-                  {session.type === 'individual' ? (
+                  {session.type === "individual" ? (
                     <Users size={16} color="white" />
                   ) : (
                     <Video size={16} color="white" />

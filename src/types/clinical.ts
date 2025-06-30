@@ -37,12 +37,14 @@ export interface Therapist {
   email: string;
   phone: string;
   specialties: string[];
+  specialization?: string; // Added for compatibility with SupervisionManager
   licenseNumber: string;
   licenseState?: string;
   licenseExpiry?: Date;
   photoUrl?: string;
   isActive: boolean;
   centers: string[];
+  activePatients?: number; // Added for compatibility with SupervisionManager
   createdAt: Date;
   updatedAt: Date;
 }
@@ -1089,10 +1091,40 @@ export interface SupervisionModule {
   videos: SupervisionVideo[];
 }
 
+// Supervision Metrics interface for dashboard and analytics
+export interface SupervisionMetrics {
+  activeTherapists: number;
+  newTherapistsThisMonth: number;
+  totalSessions: number;
+  sessionsThisMonth: number;
+  averageCompetencyScore: number;
+  competencyTrend: number; // percentage change from previous period
+  riskAlerts: number;
+  completedEvaluations: number;
+  pendingEvaluations: number;
+  averageSessionDuration: number;
+  supervisionCoverage: number; // percentage of therapists with recent supervision
+  competencyDistribution: {
+    excellent: number; // 90-100%
+    good: number; // 80-89%
+    satisfactory: number; // 70-79%
+    needsImprovement: number; // <70%
+  };
+  monthlyTrends: {
+    month: string;
+    sessions: number;
+    averageScore: number;
+    newTherapists: number;
+  }[];
+}
+
 export interface SupervisionSession {
   id: string;
   superviseeId: string;
+  therapistId: string; // Added for compatibility
   supervisorId: string;
+  therapistName: string; // Added for compatibility
+  supervisorName: string; // Added for compatibility
   centerId: string;
   date: Date;
   duration: number;
@@ -1102,8 +1134,9 @@ export interface SupervisionSession {
   agenda: SupervisionAgendaItem[];
   notes: string;
   competenciesDiscussed: string[];
+  competenciesReviewed?: string[]; // Added for compatibility
   casesReviewed: CaseReview[];
-  actionItems: ActionItem[];
+  actionItems: ActionItem[] | string[]; // Allow both formats for compatibility
   nextSessionDate?: Date;
   rating?: SupervisionRating;
   createdAt: Date;
@@ -1180,6 +1213,7 @@ export interface Competency {
   category: CompetencyCategory;
   categoryId: string;
   score: number; // 0-100
+  therapistId?: string; // Added for compatibility with SupervisionManager
   lastEvaluated: Date;
   notes?: string;
 }
