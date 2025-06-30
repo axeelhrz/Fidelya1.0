@@ -122,6 +122,7 @@ export default function PatientsPage() {
           {
             id: 'consent1',
             type: 'Consentimiento Informado',
+            signed: true,
             signedDate: new Date('2024-01-10'),
             documentUrl: '/documents/consent1.pdf',
             version: '1.0'
@@ -269,6 +270,7 @@ export default function PatientsPage() {
           {
             id: 'consent2',
             type: 'Consentimiento Parental',
+            signed: true,
             signedDate: new Date('2024-01-20'),
             documentUrl: '/documents/consent2.pdf',
             version: '1.0'

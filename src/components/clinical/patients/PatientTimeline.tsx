@@ -67,7 +67,7 @@ export function PatientTimeline({
         title: `Nota Clínica - ${note.templateType.toUpperCase()}`,
         description: note.content.subjective?.substring(0, 100) + '...' || 'Nota clínica registrada',
         relatedId: note.id,
-        createdBy: note.therapistId,
+        createdBy: note.therapistId ?? '',
         data: note
       });
     });
@@ -335,7 +335,7 @@ export function PatientTimeline({
                         fontFamily: 'Inter, sans-serif'
                       }}
                     >
-                      {code}
+                      {typeof code === 'string' ? code : code.code}
                     </span>
                   ))}
                 </div>

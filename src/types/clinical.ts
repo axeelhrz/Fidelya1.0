@@ -278,6 +278,7 @@ export interface ReferralSource {
 export interface ConsentForm {
   id: string;
   type: string;
+  signed: boolean;
   signedDate: Date;
   documentUrl: string;
   version: string;
@@ -358,6 +359,12 @@ export interface ClinicalNote {
   locked: boolean;
   createdAt: Date;
   updatedAt: Date;
+  status: NoteStatus;
+  version: number;
+  previousVersions: string | null; // ID of the previous version if this is an update
+  lockedAt?: Date;
+  lockedBy?: string;
+
 }
 
 export type NoteTemplateType = 'soap' | 'dap' | 'birp' | 'girp' | 'free-form' | 'intake' | 'discharge';
