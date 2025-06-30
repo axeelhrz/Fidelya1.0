@@ -2,21 +2,16 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-
-interface User {
-  id: string;
-  email: string;
-  role: 'admin' | 'therapist';
-  centerId: string;
-  name: string;
-  avatar?: string;
-}
+import { UserRole, User, ROLE_PERMISSIONS } from '@/types/user';
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
+  register: (userData: any) => Promise<boolean>;
   logout: () => Promise<void>;
+  hasPermission: (permission: string, category?: string) => boolean;
+  canAccessRoute: (route: string) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -27,7 +22,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
-    // Verificar si hay un usuario guardado en localStorage
     const checkAuth = () => {
       try {
         const savedUser = localStorage.getItem('user');
@@ -41,7 +35,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } catch (error) {
         console.error('Error parsing saved user:', error);
         localStorage.removeItem('user');
-        // Eliminar cookie corrupta con múltiples métodos
         clearAllCookies();
       } finally {
         setLoading(false);
@@ -51,9 +44,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     checkAuth();
   }, []);
 
-  // Función para limpiar todas las cookies relacionadas
   const clearAllCookies = () => {
-    // Múltiples formas de eliminar la cookie para asegurar que se borre
     const cookieFormats = [
       'user=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT',
       'user=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=Lax',
@@ -72,32 +63,192 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      // Simular delay de autenticación
       await new Promise(resolve => setTimeout(resolve, 1500));
       
-      // Validar credenciales
+      // Simulación de diferentes usuarios según credenciales
+      let userData: User;
+      
       if (email === 'admin' && password === 'admin123') {
-        const userData: User = {
+        userData = {
           id: 'admin1',
           email: 'admin@centropsicologico.com',
-          role: 'admin',
+          role: 'ceo',
           centerId: 'center1',
-          name: 'Dr. Carlos Mendoza'
+          name: 'Dr. Carlos Mendoza',
+          firstName: 'Carlos',
+          lastName: 'Mendoza',
+          phone: '+1234567890',
+          status: 'active',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          lastLogin: new Date()
         };
-        
-        setUser(userData);
-        localStorage.setItem('user', JSON.stringify(userData));
-        
-        // Establecer cookie para el middleware
-        document.cookie = `user=${JSON.stringify(userData)}; path=/; max-age=86400; SameSite=Lax`;
-        
-        // La redirección se maneja en el componente de login
-        return true;
+      } else if (email === 'therapist' && password === 'therapist123') {
+        userData = {
+          id: 'therapist1',
+          email: 'therapist@centropsicologico.com',
+          role: 'therapist',
+          centerId: 'center1',
+          name: 'Dra. Ana García',
+          firstName: 'Ana',
+          lastName: 'García',
+          phone: '+1234567891',
+          status: 'active',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          lastLogin: new Date(),
+          therapistInfo: {
+            specialties: ['Ansiedad', 'Depresión', 'Terapia Cognitiva'],
+            license: 'PSY-12345',
+            experience: 8,
+            education: ['Psicología Clínica - Universidad Nacional'],
+            certifications: ['Terapia Cognitivo-Conductual'],
+            schedule: {
+              monday: { start: '09:00', end: '17:00', available: true },
+              tuesday: { start: '09:00', end: '17:00', available: true },
+              wednesday: { start: '09:00', end: '17:00', available: true },
+              thursday: { start: '09:00', end: '17:00', available: true },
+              friday: { start: '09:00', end: '15:00', available: true },
+              saturday: { start: '00:00', end: '00:00', available: false },
+              sunday: { start: '00:00', end: '00:00', available: false }
+            }
+          }
+        };
+      } else if (email === 'patient' && password === 'patient123') {
+        userData = {
+          id: 'patient1',
+          email: 'patient@email.com',
+          role: 'patient',
+          centerId: 'center1',
+          name: 'Juan Pérez',
+          firstName: 'Juan',
+          lastName: 'Pérez',
+          phone: '+1234567892',
+          status: 'active',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          lastLogin: new Date(),
+          patientInfo: {
+            emergencyContact: {
+              name: 'María Pérez',
+              relationship: 'Esposa',
+              phone: '+1234567893',
+              email: 'maria@email.com'
+            },
+            medicalHistory: {
+              allergies: [],
+              medications: [],
+              previousDiagnoses: [],
+              familyHistory: []
+            },
+            assignedTherapist: 'therapist1'
+          }
+        };
+      } else if (email === 'reception' && password === 'reception123') {
+        userData = {
+          id: 'reception1',
+          email: 'reception@centropsicologico.com',
+          role: 'receptionist',
+          centerId: 'center1',
+          name: 'Laura Martínez',
+          firstName: 'Laura',
+          lastName: 'Martínez',
+          phone: '+1234567894',
+          status: 'active',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          lastLogin: new Date(),
+          receptionistInfo: {
+            department: 'Recepción Principal',
+            permissions: ['schedule_appointments', 'manage_patients', 'view_calendar'],
+            workShift: 'full-time'
+          }
+        };
+      } else {
+        return false;
       }
       
-      return false;
+      setUser(userData);
+      localStorage.setItem('user', JSON.stringify(userData));
+      
+      // Establecer cookie para el middleware
+      document.cookie = `user=${JSON.stringify(userData)}; path=/; max-age=86400; SameSite=Lax`;
+      
+      return true;
     } catch (error) {
       console.error('Login error:', error);
+      return false;
+    }
+  };
+
+  const register = async (userData: any): Promise<boolean> => {
+    try {
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Simular registro exitoso
+      const newUser: User = {
+        id: `user_${Date.now()}`,
+        email: userData.email,
+        role: userData.role,
+        centerId: 'center1',
+        name: `${userData.firstName} ${userData.lastName}`,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        phone: userData.phone,
+        status: 'active',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        lastLogin: new Date(),
+        dateOfBirth: userData.dateOfBirth ? new Date(userData.dateOfBirth) : undefined,
+        gender: userData.gender
+      };
+
+      // Agregar información específica del rol
+      if (userData.role === 'therapist' && userData.therapistData) {
+        newUser.therapistInfo = {
+          specialties: userData.therapistData.specialties || [],
+          license: userData.therapistData.license || '',
+          experience: userData.therapistData.experience || 0,
+          education: userData.therapistData.education || [],
+          certifications: [],
+          schedule: {
+            monday: { start: '09:00', end: '17:00', available: true },
+            tuesday: { start: '09:00', end: '17:00', available: true },
+            wednesday: { start: '09:00', end: '17:00', available: true },
+            thursday: { start: '09:00', end: '17:00', available: true },
+            friday: { start: '09:00', end: '17:00', available: true },
+            saturday: { start: '00:00', end: '00:00', available: false },
+            sunday: { start: '00:00', end: '00:00', available: false }
+          }
+        };
+      } else if (userData.role === 'patient' && userData.patientData) {
+        newUser.patientInfo = {
+          emergencyContact: userData.patientData.emergencyContact,
+          medicalHistory: userData.patientData.medicalHistory || {
+            allergies: [],
+            medications: [],
+            previousDiagnoses: [],
+            familyHistory: []
+          },
+          insuranceInfo: userData.patientData.insuranceInfo
+        };
+      } else if (userData.role === 'receptionist' && userData.receptionistData) {
+        newUser.receptionistInfo = {
+          department: userData.receptionistData.department || 'Recepción',
+          permissions: ['schedule_appointments', 'manage_patients'],
+          workShift: userData.receptionistData.workShift || 'full-time'
+        };
+      }
+
+      setUser(newUser);
+      localStorage.setItem('user', JSON.stringify(newUser));
+      
+      // Establecer cookie para el middleware
+      document.cookie = `user=${JSON.stringify(newUser)}; path=/; max-age=86400; SameSite=Lax`;
+      
+      return true;
+    } catch (error) {
+      console.error('Register error:', error);
       return false;
     }
   };
@@ -106,29 +257,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       console.log('🔄 Iniciando proceso de logout...');
       
-      // 1. Limpiar el estado del usuario inmediatamente
       setUser(null);
-      console.log('✅ Estado de usuario limpiado');
-      
-      // 2. Limpiar localStorage
       localStorage.removeItem('user');
-      console.log('✅ LocalStorage limpiado');
-      
-      // 3. Limpiar todas las cookies de forma agresiva
       clearAllCookies();
-      console.log('✅ Cookies eliminadas');
       
-      // 4. Verificar que las cookies se eliminaron
-      const remainingCookies = document.cookie;
-      console.log('🍪 Cookies restantes:', remainingCookies);
-      
-      // 5. Forzar recarga de la página para limpiar cualquier estado residual
       console.log('🔄 Redirigiendo a login...');
-      
-      // Usar replace en lugar de push para evitar que el usuario pueda volver atrás
       await router.replace('/login');
       
-      // 6. Como medida adicional, recargar la página después de un breve delay
       setTimeout(() => {
         window.location.href = '/login';
       }, 100);
@@ -136,13 +271,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('✅ Logout completado');
     } catch (error) {
       console.error('❌ Error durante logout:', error);
-      // En caso de error, forzar redirección directa
       window.location.href = '/login';
     }
   };
 
+  const hasPermission = (permission: string, category: string = 'dashboard'): boolean => {
+    if (!user) return false;
+    
+    const rolePermissions = ROLE_PERMISSIONS[user.role];
+    if (!rolePermissions) return false;
+    
+    const categoryPermissions = rolePermissions.permissions[category as keyof typeof rolePermissions.permissions];
+    if (!categoryPermissions) return false;
+    
+    return categoryPermissions.includes(permission) || categoryPermissions.includes('full_access');
+  };
+
+  const canAccessRoute = (route: string): boolean => {
+    if (!user) return false;
+    
+    const rolePermissions = ROLE_PERMISSIONS[user.role];
+    if (!rolePermissions) return false;
+    
+    return rolePermissions.allowedRoutes.some(allowedRoute => 
+      route.startsWith(allowedRoute)
+    );
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      loading, 
+      login, 
+      register, 
+      logout, 
+      hasPermission, 
+      canAccessRoute 
+    }}>
       {children}
     </AuthContext.Provider>
   );
