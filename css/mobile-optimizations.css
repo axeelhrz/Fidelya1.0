@@ -1323,3 +1323,847 @@ transition: all 0.2s cubic-bezier(0.23, 1, 0.32, 1);
 .nav__toggle-line {
     transition: all var(--transition-fast); /* Era var(--transition) */
 }
+/* ===== OPTIMIZACIONES MÓVILES ULTRA FLUIDAS PARA STARFLEX ===== */
+/* Dispositivos móviles hasta 1023px */
+
+@media screen and (max-width: 1023px) {
+
+/* ===== VARIABLES MÓVILES ESPECÍFICAS ===== */
+:root {
+    /* Escalado optimizado para móvil */
+    --mobile-scale: 0.85;
+    --mobile-container-padding: 1rem;
+    --mobile-section-padding: 2rem 1rem;
+    --mobile-text-scale: 0.9;
+    --mobile-title-scale: 0.8;
+    --mobile-button-height: 48px;
+    --mobile-touch-target: 44px;
+    
+    /* Dimensiones de teléfono optimizadas - SIN MARCOS */
+    --phone-width-mobile: 240px;
+    --phone-height-mobile: 480px;
+    --phone-border-radius: 20px;
+    
+    /* Transiciones más rápidas para móvil */
+    --transition-mobile: 0.2s ease;
+    
+    /* Navbar móvil */
+    --navbar-height-mobile: 60px;
+    --navbar-content-start: 0px;
+}
+
+/* ===== CORRECCIONES GENERALES MÓVILES ===== */
+.container {
+    padding: 0 var(--mobile-container-padding);
+    max-width: 100%;
+}
+
+section {
+    padding: var(--mobile-section-padding);
+}
+
+h1, h2, h3 {
+    transform: scale(var(--mobile-title-scale));
+    transform-origin: left center;
+}
+
+p, span, div {
+    font-size: calc(1rem * var(--mobile-text-scale));
+}
+
+.btn {
+    min-height: var(--mobile-button-height);
+    padding: 0.75rem 1.5rem;
+}
+
+/* ===== HERO MÓVIL - SIN CONTENEDORES FEOS ===== */
+.hero {
+    min-height: 100vh;
+    padding: var(--navbar-height-mobile) 1rem 2rem;
+}
+
+.hero__container {
+    max-width: 100%;
+    padding: 0;
+    margin: 0;
+}
+
+.hero__content {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+/* OCULTAR EL TELÉFONO DE ESCRITORIO EN MÓVIL */
+.hero__media.desktop-only {
+    display: none !important;
+}
+
+/* VIDEO MÓVIL - COMPLETAMENTE LIMPIO SIN MARCOS */
+.hero__mobile-video {
+    width: 100%;
+    max-width: 320px;
+    margin: 1.5rem auto 0;
+    border-radius: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+    overflow: visible !important;
+}
+
+.hero__mobile-video-player {
+    width: 100%;
+    height: auto;
+    border-radius: 20px;
+    border: none !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    background: transparent !important;
+    object-fit: cover;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+
+/* ===== NAVBAR MÓVIL ULTRA FLUIDO - SIN SCROLL Y SOLO CIERRE POR BOTÓN ===== */
+.header {
+    height: var(--navbar-height-mobile);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+}
+
+.nav {
+    height: var(--navbar-height-mobile);
+    padding: 0 1rem;
+}
+
+.nav__brand {
+    flex-shrink: 0;
+}
+
+.nav__logo {
+    width: 120px;
+    height: 32px;
+}
+
+.nav__toggle {
+    display: flex;
+    width: 40px;
+    height: 40px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    z-index: 1001;
+    position: relative;
+}
+
+.nav__toggle span {
+    width: 24px;
+    height: 2px;
+    background: var(--text-primary);
+    transition: var(--transition-mobile);
+    transform-origin: center;
+}
+
+.nav__toggle span:nth-child(1) {
+    transform: translateY(-6px);
+}
+
+.nav__toggle span:nth-child(3) {
+    transform: translateY(6px);
+}
+
+.nav__toggle.active span:nth-child(1) {
+    transform: rotate(45deg);
+}
+
+.nav__toggle.active span:nth-child(2) {
+    opacity: 0;
+}
+
+.nav__toggle.active span:nth-child(3) {
+    transform: rotate(-45deg);
+}
+
+/* MENÚ MÓVIL COMPLETAMENTE REDISEÑADO - SIN SCROLL */
+.nav__menu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    background: 
+        radial-gradient(circle at 30% 20%, rgba(255, 45, 85, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 70% 80%, rgba(255, 45, 85, 0.1) 0%, transparent 50%),
+        linear-gradient(135deg, rgba(0, 0, 0, 0.95) 0%, rgba(20, 20, 30, 0.98) 100%);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+    max-height: 100vh;
+    max-height: 100dvh;
+}
+
+.nav__menu.show {
+    transform: translateX(0);
+}
+
+.nav__close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: var(--transition-mobile);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.nav__close:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+}
+
+.nav__close svg {
+    width: 20px;
+    height: 20px;
+    color: var(--text-primary);
+}
+
+/* SELECTOR DE IDIOMA MÓVIL COMPACTO */
+.nav__language-mobile {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 25px;
+    padding: 0.5rem 1rem;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.nav__language-current {
+    color: var(--text-primary);
+    font-weight: 500;
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.nav__language-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 15px;
+    margin-top: 0.5rem;
+    overflow: hidden;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: var(--transition-mobile);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+}
+
+.nav__language-dropdown.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.nav__language-option {
+    padding: 0.75rem 1rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: var(--transition-mobile);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.nav__language-option:last-child {
+    border-bottom: none;
+}
+
+.nav__language-option:hover,
+.nav__language-option.active {
+    background: rgba(255, 45, 85, 0.2);
+    color: var(--text-primary);
+}
+
+/* LISTA DE NAVEGACIÓN CENTRADA */
+.nav__list {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    margin: 2rem 0;
+    list-style: none;
+    padding: 0;
+}
+
+.nav__link {
+    color: var(--text-primary);
+    text-decoration: none;
+    font-size: 1.5rem;
+    font-weight: 500;
+    padding: 1rem 2rem;
+    border-radius: 15px;
+    transition: var(--transition-mobile);
+    position: relative;
+    text-align: center;
+    min-width: 200px;
+}
+
+.nav__link:hover,
+.nav__link.active {
+    background: rgba(255, 45, 85, 0.2);
+    color: var(--neon-primary);
+    text-shadow: 0 0 10px var(--neon-primary-glow);
+    transform: scale(1.05);
+}
+
+/* CTA MÓVIL */
+.nav__cta {
+    background: linear-gradient(135deg, var(--starflex-red) 0%, var(--starflex-crimson) 100%);
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: 25px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1.1rem;
+    box-shadow: 
+        0 0 20px rgba(255, 45, 85, 0.4),
+        0 10px 30px rgba(0, 0, 0, 0.3);
+    transition: var(--transition-mobile);
+    margin-top: 1rem;
+    text-align: center;
+    min-width: 250px;
+}
+
+.nav__cta:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 
+        0 0 30px rgba(255, 45, 85, 0.6),
+        0 15px 40px rgba(0, 0, 0, 0.4);
+}
+
+/* ===== CARACTERÍSTICAS MÓVILES - SIN MARCOS FEOS ===== */
+.features {
+    padding: 3rem 1rem;
+}
+
+.features__container {
+    max-width: 100%;
+    padding: 0;
+}
+
+.feature {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 4rem;
+    gap: 2rem;
+}
+
+.feature:nth-child(even) {
+    flex-direction: column;
+}
+
+/* TELÉFONOS DE CARACTERÍSTICAS - COMPLETAMENTE LIMPIOS */
+.feature__phone {
+    width: 100%;
+    max-width: 280px;
+    margin: 0 auto;
+    order: 1;
+}
+
+.phone {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 9/19.5;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.phone__screen {
+    width: 100%;
+    height: 100%;
+    border-radius: 25px;
+    overflow: hidden;
+    position: relative;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+}
+
+.phone__content {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* IMÁGENES DE APPS - SIN MARCOS NEGROS */
+.phone__app-image {
+    width: 100% !important;
+    height: 100% !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    border-radius: 25px !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    border: none !important;
+    box-shadow: none !important;
+    filter: brightness(1.02) contrast(1.05) saturate(1.08) !important;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+
+.feature__content {
+    order: 2;
+    text-align: center;
+    max-width: 100%;
+    padding: 0 1rem;
+}
+
+.feature__title {
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+}
+
+.feature__description {
+    font-size: 1rem;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+    color: var(--text-secondary);
+}
+
+.feature__list {
+    text-align: left;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.feature__list-item {
+    font-size: 0.9rem;
+    margin-bottom: 0.75rem;
+    padding-left: 1.5rem;
+    position: relative;
+}
+
+.feature__list-item::before {
+    content: '✓';
+    position: absolute;
+    left: 0;
+    color: var(--starflex-red);
+    font-weight: bold;
+}
+
+/* Eliminar efectos hover en móvil */
+.feature:hover .phone {
+    transform: none;
+}
+
+.feature:hover .phone__app-image {
+    transform: translateZ(0);
+}
+
+/* ===== VIDEOS MÓVILES ===== */
+.videos {
+    padding: 3rem 1rem;
+}
+
+.videos__container {
+    max-width: 100%;
+    padding: 0;
+}
+
+.videos__player-container {
+    max-width: 100%;
+    margin: 2rem auto;
+}
+
+.videos__player-frame {
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+/* ===== FAQ MÓVILES ===== */
+.faq {
+    padding: 3rem 1rem;
+}
+
+.faq__container {
+    max-width: 100%;
+    padding: 0;
+}
+
+.faq__search {
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto 2rem;
+}
+
+.faq__search input {
+    width: 100%;
+    padding: 1rem;
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    font-size: 1rem;
+}
+
+.faq__item {
+    margin-bottom: 1rem;
+    border-radius: 15px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.faq__question {
+    width: 100%;
+    padding: 1.5rem;
+    text-align: left;
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    font-size: 1.1rem;
+    cursor: pointer;
+}
+
+/* ===== CONTACTO MÓVIL ===== */
+.contact {
+    padding: 3rem 1rem;
+}
+
+.contact__container {
+    max-width: 100%;
+    padding: 0;
+}
+
+.contact__grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+.contact__channel {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 15px;
+    padding: 1.5rem;
+    text-align: center;
+}
+
+.contact__channel-icon {
+    width: 50px;
+    height: 50px;
+    margin: 0 auto 1rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+.contact__channel-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+}
+
+.contact__channel-description {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+    line-height: 1.5;
+}
+
+.contact__channel-btn {
+    background: var(--starflex-red);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 25px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: var(--transition-mobile);
+}
+
+.contact__channel-btn:hover {
+    background: var(--starflex-crimson);
+    transform: translateY(-2px);
+}
+
+/* ===== WIDGET FLOTANTE MÓVIL ===== */
+.floating-widget {
+    bottom: 2rem;
+    right: 1rem;
+    width: 60px;
+    height: 60px;
+}
+
+.floating-widget__button {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: var(--starflex-red);
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    box-shadow: 0 5px 20px rgba(255, 45, 85, 0.4);
+    transition: var(--transition-mobile);
+}
+
+.floating-widget__button:hover {
+    transform: scale(1.1);
+    box-shadow: 0 8px 25px rgba(255, 45, 85, 0.6);
+}
+
+/* ===== OPTIMIZACIONES PARA PANTALLAS PEQUEÑAS ===== */
+@media screen and (max-width: 768px) {
+    .container {
+        padding: 0 0.75rem;
+    }
+    
+    :root {
+        --phone-width-mobile: 220px;
+        --phone-height-mobile: 440px;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .container {
+        padding: 0 0.5rem;
+    }
+    
+    :root {
+        --phone-width-mobile: 200px;
+        --phone-height-mobile: 400px;
+        --navbar-content-start: 0px;
+    }
+}
+
+@media screen and (max-width: 360px) {
+    .container {
+        padding: 0 0.25rem;
+    }
+    
+    :root {
+        --phone-width-mobile: 180px;
+        --phone-height-mobile: 360px;
+    }
+}
+
+/* ===== SOPORTE PARA DISPOSITIVOS CON NOTCH ===== */
+@supports (padding: max(0px)) {
+    .nav {
+        padding-left: max(1rem, env(safe-area-inset-left));
+        padding-right: max(1rem, env(safe-area-inset-right));
+    }
+    
+    .nav__menu {
+        padding-top: max(1rem, env(safe-area-inset-top));
+        padding-bottom: max(1rem, env(safe-area-inset-bottom));
+    }
+}
+
+/* ===== MODO OSCURO MÓVIL ===== */
+@media (prefers-color-scheme: dark) {
+    .nav__link {
+        color: var(--text-primary);
+    }
+    
+    .contact__channel-description {
+        color: var(--text-secondary);
+    }
+    
+    .nav__language-option {
+        color: var(--text-secondary);
+    }
+}
+
+/* ===== OPTIMIZACIONES DE RENDIMIENTO MÓVIL ===== */
+/* Reducir animaciones en móvil para mayor fluidez */
+* {
+    animation-duration: 0.2s !important;
+    transition-duration: 0.2s !important;
+}
+
+/* Optimizar transformaciones para GPU */
+.phone,
+.phone__screen,
+.phone__app-image,
+.hero__mobile-video-player,
+.nav__menu,
+.nav__link {
+    transform: translateZ(0);
+    will-change: transform;
+}
+
+/* Reducir efectos visuales pesados */
+.hero::before,
+.features::before,
+.videos::before,
+.contact::before {
+    display: none;
+}
+
+/* ===== ACCESIBILIDAD MÓVIL ===== */
+@media (prefers-contrast: high) {
+    .nav__link,
+    .contact__channel-title {
+        color: white;
+    }
+    
+    .nav__menu {
+        background: black;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation: none !important;
+        transition: none !important;
+    }
+}
+
+/* ===== CORRECCIONES FINALES MÓVILES ===== */
+/* Prevenir zoom en inputs */
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+textarea {
+    font-size: 16px !important;
+}
+
+/* Mejorar área de toque para máxima usabilidad */
+button,
+a,
+.nav__link,
+.faq__question,
+.contact__channel-btn,
+.nav__language-option,
+.nav__close,
+.nav__toggle {
+    min-height: 44px;
+    min-width: 44px;
+}
+
+/* Optimizar scroll para máxima fluidez */
+body {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+    overscroll-behavior: contain;
+}
+
+/* Prevenir selección accidental */
+.hero__phone,
+.feature__phone,
+.nav__logo,
+.floating-widget,
+.nav__toggle,
+.nav__close {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+}
+
+/* ELIMINAR EFECTOS ROJIZOS DE FONDO EN MÓVIL PARA MEJOR RENDIMIENTO */
+.hero::before,
+.hero::after,
+.hero .floating-orb-2,
+.hero .floating-orb-3,
+.features::before,
+.videos::before,
+.contact::before {
+    opacity: 0.3 !important;
+}
+
+.contact__orb,
+.videos__orb {
+    opacity: 0.05 !important;
+}
+
+/* Optimizar el menú móvil para evitar cualquier scroll */
+.nav__menu {
+    max-height: 100vh;
+    max-height: 100dvh;
+}
+
+/* Asegurar que el contenido del menú nunca exceda la altura */
+.nav__list {
+    max-height: calc(100vh - 200px);
+    max-height: calc(100dvh - 200px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* ===== ANIMACIÓN DE RESPLANDOR MÓVIL ===== */
+@keyframes mobile-glow {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+}
+
+.nav__menu {
+    animation: mobile-glow 3s ease-in-out infinite;
+}
+
+/* ===== PREVENIR SCROLL EN MENÚ MÓVIL ===== */
+body.menu-open {
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+}
+
+/* Ajustar espaciado para prevenir scroll */
+.nav__list {
+    gap: 1rem;
+    padding: 1rem 0;
+}
+
+.nav__link {
+    padding: 0.75rem 1.5rem;
+    font-size: 1.3rem;
+}
+
+/* ===== ACELERACIÓN DE HARDWARE ===== */
+.hero__mobile-video-player,
+.phone__app-image,
+.nav__menu,
+.nav__toggle {
+    transform: translateZ(0);
+    will-change: transform;
+    backface-visibility: hidden;
+}
+
+}
