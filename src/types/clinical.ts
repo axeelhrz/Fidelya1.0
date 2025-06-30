@@ -312,22 +312,29 @@ export interface ClinicalNote {
   id: string;
   patientId: string;
   sessionId?: string;
-  therapistId: string;
-  centerId: string;
-  date: Date;
-  templateType: NoteTemplateType;
-  content: NoteContent;
-  status: NoteStatus;
+  therapistId?: string;
+  templateType: string;
+  content: {
+    subjective?: string;
+    objective?: string;
+    assessment?: string;
+    plan?: string;
+    freeText?: string;
+    [key: string]: unknown;
+  };
+  icdCodes: { code: string; description: string; confidence?: number }[];
+  riskAssessment: {
+    level: 'low' | 'medium' | 'high';
+    factors: string[];
+    interventions: string[];
+  };
+  signed: boolean;
+  signedAt?: Date;
+  signedBy?: string;
   signature?: ElectronicSignature;
-  lockedAt?: Date;
-  lockedBy?: string;
-  aiValidation?: AIValidation;
-  icdCodes: string[];
-  dsmCodes: string[];
+  locked: boolean;
   createdAt: Date;
   updatedAt: Date;
-  version: number;
-  previousVersions: string[];
 }
 
 export type NoteTemplateType = 'soap' | 'dap' | 'birp' | 'girp' | 'free-form' | 'intake' | 'discharge';
@@ -396,6 +403,9 @@ export interface AIValidation {
   suggestions: AISuggestion[];
   flaggedIssues: AIFlag[];
   confidence: number;
+  isValid: boolean;
+  riskFlags: string[];
+  suggestedIcdCodes: string[];
 }
 
 export interface AISuggestion {
@@ -403,6 +413,8 @@ export interface AISuggestion {
   suggestion: string;
   confidence: number;
   reasoning: string;
+  message: string;
+  field?: string; // Optional field name if applicable
 }
 
 export interface AIFlag {

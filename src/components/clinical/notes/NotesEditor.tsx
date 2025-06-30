@@ -20,7 +20,8 @@ import {
   Target,
   Activity,
   PenTool,
-  Search
+  Search,
+  X
 } from 'lucide-react';
 import { ClinicalNote, NoteTemplate, AIValidation } from '@/types/clinical';
 import type { Patient } from '../../../types/patient';
@@ -83,7 +84,10 @@ export function NotesEditor({
   // Ref for MediaRecorder instance
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
 
-  const noteTemplates: UITemplate[] = [
+  // Ref for free-form textarea
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+
+  const noteTemplates: UITemplate[] = React.useMemo(() => [
     {
       id: 'soap',
       name: 'SOAP',
@@ -108,7 +112,7 @@ export function NotesEditor({
       description: 'Formato libre de documentación',
       fields: ['freeText']
     }
-  ];
+  ], []);
 
   const icdCodes = [
     { code: 'F41.1', description: 'Trastorno de ansiedad generalizada' },
@@ -126,7 +130,7 @@ export function NotesEditor({
       const template = noteTemplates.find(t => t.id === note.templateType);
       setSelectedTemplate(template || null);
     }
-  }, [note]);
+  }, [note, noteTemplates]);
 
   const handleTemplateChange = (templateId: string) => {
     const template = noteTemplates.find(t => t.id === templateId);
@@ -164,7 +168,6 @@ export function NotesEditor({
       };
 
       mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
         // Aquí se integraría con un servicio de transcripción AI
         // Por ahora simulamos la transcripción
         const transcription = "Texto transcrito del audio...";
@@ -198,23 +201,33 @@ export function NotesEditor({
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       const validation: AIValidation = {
+        id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2),
+        noteId: note?.id || '',
+        timestamp: new Date(),
+        coherenceScore: 0.95,
+        flaggedIssues: [],
         isValid: true,
         confidence: 0.92,
         suggestions: [
           {
             type: 'intervention',
             message: 'Considere agregar más detalles sobre la respuesta del paciente a la intervención.',
-            field: 'assessment'
+            field: 'assessment',
+            suggestion: 'Agregue detalles sobre la respuesta del paciente a la intervención.',
+            confidence: 0.8,
+            reasoning: 'La intervención carece de detalles sobre la respuesta del paciente.'
           },
           {
-            type: 'consistency',
+            type: 'clarity',
             message: 'Los síntomas descritos son consistentes con el diagnóstico propuesto.',
-            field: 'objective'
+            field: 'objective',
+            suggestion: 'Mantenga la consistencia entre los síntomas y el diagnóstico.',
+            confidence: 0.9,
+            reasoning: 'Los síntomas y el diagnóstico coinciden según el análisis AI.'
           }
         ],
         riskFlags: [],
         suggestedIcdCodes: [
-          { code: 'F41.1', description: 'Trastorno de ansiedad generalizada', confidence: 0.85 }
         ]
       };
       
@@ -264,11 +277,11 @@ export function NotesEditor({
     }
   };
 
-  const addIcdCode = (code: { code: string; description: string }) => {
-    if (!noteData.icdCodes?.includes(code.code)) {
+  const addIcdCode = (code: { code: string; description: string; confidence?: number }) => {
+    if (!noteData.icdCodes?.some((icd: { code: string; description: string; confidence?: number }) => icd.code === code.code)) {
       setNoteData(prev => ({
         ...prev,
-        icdCodes: [...(prev.icdCodes || []), code.code]
+        icdCodes: [...(prev.icdCodes || []), code]
       }));
     }
     setShowIcdSearch(false);
@@ -278,7 +291,7 @@ export function NotesEditor({
   const removeIcdCode = (codeToRemove: string) => {
     setNoteData(prev => ({
       ...prev,
-      icdCodes: prev.icdCodes?.filter(icd => icd !== codeToRemove) || []
+      icdCodes: prev.icdCodes?.filter((icd: { code: string; description: string; confidence?: number }) => icd.code !== codeToRemove) || []
     }));
   };
 
@@ -350,7 +363,7 @@ export function NotesEditor({
               </label>
               <textarea
                 ref={field === 'freeText' ? textareaRef : undefined}
-                value={noteData.content?.[field as keyof typeof noteData.content] || ''}
+                value={String(noteData.content?.[field as keyof typeof noteData.content] ?? '')}
                 onChange={(e) => handleContentChange(field, e.target.value)}
                 disabled={mode === 'view' || noteData.locked === true}
                 style={{
@@ -642,43 +655,40 @@ export function NotesEditor({
               </div>
 
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                {noteData.icdCodes?.map((icd, index) => {
-                  const codeObj = icdCodes.find(c => c.code === icd);
-                  return (
-                    <div key={index} style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem',
-                      padding: '0.5rem 0.75rem',
-                      backgroundColor: '#F0F9FF',
-                      color: '#0C4A6E',
-                      borderRadius: '0.5rem',
-                      border: '1px solid #E0F2FE',
-                      fontSize: '0.75rem',
-                      fontFamily: 'Inter, sans-serif'
-                    }}>
-                      <span style={{ fontWeight: 600 }}>{icd}</span>
-                      <span>{codeObj?.description || ''}</span>
-                      {mode !== 'view' && !noteData.locked && (
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => removeIcdCode(icd)}
-                          style={{
-                            background: 'none',
-                            border: 'none',
-                            cursor: 'pointer',
-                            padding: 0,
-                            display: 'flex',
-                            alignItems: 'center'
-                          }}
-                        >
-                          <X size={12} />
-                        </motion.button>
-                      )}
-                    </div>
-                  );
-                })}
+                {noteData.icdCodes?.map((icd: { code: string; description: string; confidence?: number }, index: number) => (
+                  <div key={index} style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    padding: '0.5rem 0.75rem',
+                    backgroundColor: '#F0F9FF',
+                    color: '#0C4A6E',
+                    borderRadius: '0.5rem',
+                    border: '1px solid #E0F2FE',
+                    fontSize: '0.75rem',
+                    fontFamily: 'Inter, sans-serif'
+                  }}>
+                    <span style={{ fontWeight: 600 }}>{icd.code}</span>
+                    <span>{icd.description || ''}</span>
+                    {mode !== 'view' && !noteData.locked && (
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() => removeIcdCode(icd.code)}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          padding: 0,
+                          display: 'flex',
+                          alignItems: 'center'
+                        }}
+                      >
+                        <X size={12} />
+                      </motion.button>
+                    )}
+                  </div>
+                ))}
               </div>
             </div>
 
@@ -721,7 +731,7 @@ export function NotesEditor({
                           ...prev,
                           riskAssessment: {
                             ...prev.riskAssessment!,
-                            level: e.target.value as any
+                            level: e.target.value as 'low' | 'medium' | 'high'
                           }
                         }))}
                         style={{ display: 'none' }}
@@ -798,29 +808,40 @@ export function NotesEditor({
                 {aiValidation.suggestions.map((suggestion, index) => (
                   <div key={index} style={{
                     padding: '0.75rem',
-                    backgroundColor: suggestion.type === 'improvement' ? '#FEF3C7' : '#EFF6FF',
+                    backgroundColor: suggestion.type === 'intervention' ? '#FEF3C7' : '#EFF6FF',
                     borderRadius: '0.5rem',
-                    border: `1px solid ${suggestion.type === 'improvement' ? '#FDE68A' : '#DBEAFE'}`,
+                    border: `1px solid ${suggestion.type === 'intervention' ? '#FDE68A' : '#DBEAFE'}`,
                     marginBottom: '0.5rem'
                   }}>
                     <div style={{
                       fontSize: '0.75rem',
                       fontWeight: 600,
-                      color: suggestion.type === 'improvement' ? '#92400E' : '#1E40AF',
+                      color: suggestion.type === 'intervention' ? '#92400E' : '#1E40AF',
                       marginBottom: '0.25rem',
                       fontFamily: 'Inter, sans-serif'
                     }}>
-                      {suggestion.type === 'improvement' ? 'Sugerencia' : 'Consistencia'}
+                      {suggestion.type === 'intervention' ? 'Sugerencia' : 'Consistencia'}
                     </div>
                     <div style={{
                       fontSize: '0.75rem',
-                      color: suggestion.type === 'improvement' ? '#78350F' : '#1E3A8A',
+                      color: suggestion.type === 'intervention' ? '#78350F' : '#1E3A8A',
                       lineHeight: '1.4',
                       fontFamily: 'Inter, sans-serif'
                     }}>
                       {suggestion.message}
                     </div>
-                {aiValidation.suggestedIcdCodes && aiValidation.suggestedIcdCodes.length > 0 && (
+                  </div>
+                ))}
+                {Array.isArray(aiValidation.suggestedIcdCodes) &&
+                  aiValidation.suggestedIcdCodes.length > 0 &&
+                  aiValidation.suggestedIcdCodes.every(
+                    (item) =>
+                      typeof item === 'object' &&
+                      item !== null &&
+                      'code' in item &&
+                      'description' in item &&
+                      'confidence' in item
+                  ) ? (
                   <div>
                     <div style={{
                       fontSize: '0.75rem',
@@ -831,12 +852,12 @@ export function NotesEditor({
                     }}>
                       Códigos Sugeridos:
                     </div>
-                    {aiValidation.suggestedIcdCodes.map((code, index) => (
+                    {(aiValidation.suggestedIcdCodes as { code: string; description: string; confidence: number }[]).map((codeObj, index) => (
                       <motion.button
                         key={index}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        onClick={() => addIcdCode({ code: code.code, description: code.description })}
+                        onClick={() => addIcdCode({ code: codeObj.code, description: codeObj.description })}
                         style={{
                           display: 'block',
                           width: '100%',
@@ -851,18 +872,15 @@ export function NotesEditor({
                           fontFamily: 'Inter, sans-serif'
                         }}
                       >
-                        <div style={{ fontWeight: 600, color: '#374151' }}>{code.code}</div>
-                        <div style={{ color: '#6B7280' }}>{code.description}</div>
+                        <div style={{ fontWeight: 600, color: '#374151' }}>{codeObj.code}</div>
+                        <div style={{ color: '#6B7280' }}>{codeObj.description}</div>
                         <div style={{ color: '#10B981', fontSize: '0.625rem' }}>
-                          Confianza: {Math.round(code.confidence * 100)}%
+                          Confianza: {Math.round(codeObj.confidence * 100)}%
                         </div>
                       </motion.button>
                     ))}
                   </div>
-                )}
-                    ))}
-                  </div>
-                )}
+                ) : null}
               </div>
             )}
 
