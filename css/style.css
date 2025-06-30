@@ -243,7 +243,7 @@ font-size: 0.9rem;
 content: '⚠️ Error cargando imagen';
 }
 
-/* ===== OPTIMIZACIÓN ESPECÍFICA PARA IMÁGENES DE CELULAR - AJUSTE PERFECTO ===== */
+/* Optimización específica para imágenes de celular */
 .hero__phone-app-image,
 .phone__app-image {
 width: 100%;
@@ -252,8 +252,7 @@ position: absolute;
 top: 0;
 left: 0;
 z-index: 1;
-/* CAMBIO PRINCIPAL: De 'cover' a 'contain' para que la imagen se ajuste completamente al marco */
-background-size: contain;
+background-size: cover;
 background-position: center;
 background-repeat: no-repeat;
 background-attachment: scroll;
@@ -261,8 +260,6 @@ filter: brightness(1.02) contrast(1.05) saturate(1.08);
 border-radius: var(--phone-border-radius);
 background-blend-mode: normal;
 isolation: isolate;
-/* Agregar un fondo negro para que no se vean espacios vacíos */
-background-color: #000000;
 }
 
 /* Configuración de imágenes por data-feature */
