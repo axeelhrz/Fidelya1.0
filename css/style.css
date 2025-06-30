@@ -4471,3 +4471,115 @@ transition: all var(--drawer-transition);
 transition: all var(--drawer-transition);
 }
 }
+/* ===== CORRECCIONES MÓVILES PARA MARCOS DE TELÉFONOS ===== */
+@media (max-width: 1023px) {
+    .hero__phone,
+    .phone {
+        overflow: hidden;
+        box-shadow: 
+            0 12px 30px rgba(0, 0, 0, 0.25),
+            0 4px 15px rgba(0, 0, 0, 0.15);
+    }
+    
+    .hero__phone-container {
+        transform: none;
+    }
+    
+    .feature__phone {
+        transform: none;
+    }
+    
+    .hero__phone-screen,
+    .phone__screen {
+        border: none;
+    }
+    
+    .hero__phone-app-image,
+    .phone__app-image {
+        border-radius: var(--phone-border-radius);
+    }
+}
+
+@media (max-width: 480px) {
+    :root {
+        --phone-width-mobile: clamp(180px, 50vw, 220px);
+        --phone-height-mobile: clamp(360px, 100vw, 440px);
+        --phone-border-radius: clamp(20px, 4vw, 30px);
+    }
+}
+
+@media (max-width: 360px) {
+    :root {
+        --phone-width-mobile: clamp(160px, 45vw, 200px);
+        --phone-height-mobile: clamp(320px, 90vw, 400px);
+        --phone-border-radius: clamp(18px, 3.5vw, 25px);
+    }
+}
+.feature[data-feature="schedule"] .phone {
+    filter: drop-shadow(0 0 25px rgba(255, 69, 105, 0.12));
+}
+
+.feature[data-feature="stations"] .phone {
+    filter: drop-shadow(0 0 25px rgba(255, 23, 68, 0.12));
+}
+
+@media (max-width: 1023px) {
+    .feature[data-feature="schedule"] .phone,
+    .feature[data-feature="stations"] .phone,
+    .feature[data-feature="calendar"] .phone,
+    .feature[data-feature="log"] .phone,
+    .feature[data-feature="notifications"] .phone,
+    .feature[data-feature="referrals"] .phone {
+        filter: none;
+    }
+}
+.phone::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: radial-gradient(
+        ellipse, 
+        rgba(255, 69, 105, 0.04) 0%,
+        rgba(255, 23, 68, 0.02) 40%,
+        transparent 70%
+    );
+    border-radius: var(--phone-border-radius);
+    z-index: -1;
+    opacity: 0.3;
+    animation: feature-ambient-glow 15s ease-in-out infinite;
+    filter: blur(5px);
+}
+
+@media (max-width: 1023px) {
+    .phone::before {
+        display: none;
+    }
+}
+.hero__phone::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: radial-gradient(ellipse, 
+        rgba(255, 69, 105, 0.05) 0%,
+        rgba(255, 23, 68, 0.02) 40%,
+        transparent 70%
+    );
+    border-radius: var(--phone-border-radius);
+    z-index: -1;
+    opacity: 0.3;
+    animation: ambient-glow 12s ease-in-out infinite;
+    filter: blur(5px);
+}
+
+@media (max-width: 1023px) {
+    .hero__phone::before {
+        display: none;
+    }
+}
+
