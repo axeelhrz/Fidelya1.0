@@ -26,6 +26,27 @@ export interface AgendaModule {
   schedules: TherapistSchedule[];
 }
 
+// ============================================================================
+// AUXILIAR: DEFINICIÓN DE THERAPIST
+// ============================================================================
+
+export interface Therapist {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  specialties: string[];
+  licenseNumber: string;
+  licenseState?: string;
+  licenseExpiry?: Date;
+  photoUrl?: string;
+  isActive: boolean;
+  centers: string[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface Appointment {
   id: string;
   patientId: string;
@@ -513,7 +534,7 @@ export interface TreatmentPlanHistory {
   action: 'created' | 'modified' | 'reviewed' | 'goal-added' | 'goal-modified' | 'goal-achieved' | 'discontinued';
   description: string;
   changedBy: string;
-  changes: any; // JSON object with specific changes
+  changes: Record<string, unknown>; // JSON object with specific changes
 }
 
 export interface PatientTask {
@@ -898,7 +919,7 @@ export interface PatientPortalTask {
   status: string;
   instructions: string;
   resources: TaskResource[];
-  completionData?: any;
+  completionData?: Record<string, unknown>;
   feedback?: string;
   points?: number; // gamification
 }
@@ -1158,7 +1179,7 @@ export interface FormField {
   required: boolean;
   validation: FieldValidation;
   options?: FormFieldOption[];
-  defaultValue?: any;
+  defaultValue?: string | number | boolean | string[] | number[] | boolean[] | null;
   helpText?: string;
   conditional?: ConditionalLogic;
 }
@@ -1174,7 +1195,7 @@ export interface FormFieldOption {
 export interface ConditionalLogic {
   dependsOn: string; // field ID
   condition: 'equals' | 'not-equals' | 'contains' | 'greater-than' | 'less-than';
-  value: any;
+  value: string | number | boolean;
   action: 'show' | 'hide' | 'require' | 'disable';
 }
 
@@ -1188,7 +1209,7 @@ export interface LogicRule {
   condition: string;
   action: string;
   target: string;
-  value: any;
+  value: unknown;
 }
 
 export interface FormStyling {
@@ -1205,7 +1226,7 @@ export interface FormSubmission {
   patientId?: string;
   submittedBy: string;
   submissionDate: Date;
-  data: { [fieldName: string]: any };
+  data: { [fieldName: string]: unknown };
   status: 'draft' | 'submitted' | 'reviewed' | 'processed';
   reviewedBy?: string;
   reviewedAt?: Date;
@@ -1307,7 +1328,7 @@ export interface SearchResult {
   url: string;
   relevanceScore: number;
   highlightedText: string[];
-  metadata: { [key: string]: any };
+  metadata: { [key: string]: unknown };
 }
 
 export interface FavoriteItem {
@@ -1409,7 +1430,7 @@ export interface ClinicalPrivacySettings {
 export interface AnonymizationRule {
   field: string;
   method: 'remove' | 'hash' | 'generalize' | 'substitute';
-  parameters?: any;
+  parameters?: unknown;
 }
 
 export interface AccessControl {
@@ -1421,13 +1442,13 @@ export interface AccessControl {
 export interface Permission {
   resource: string;
   actions: ('create' | 'read' | 'update' | 'delete')[];
-  conditions?: any;
+  conditions?: unknown;
 }
 
 export interface Restriction {
   field: string;
   condition: string;
-  value: any;
+  value: unknown;
 }
 
 // ============================================================================

@@ -858,12 +858,6 @@ function WeekDayView({
                       {slotAppointments.map((appointment, index) => (
                         <motion.div
                           key={appointment.id}
-                          draggable
-                          onDragStart={(e) => onDragStart(e, appointment)}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onAppointmentClick(appointment);
-                          }}
                           whileHover={{ scale: 1.02 }}
                           style={{
                             position: 'absolute',
@@ -881,24 +875,40 @@ function WeekDayView({
                             zIndex: 5
                           }}
                         >
-                          <div style={{
-                            fontSize: '0.75rem',
-                            color: 'white',
-                            fontWeight: 600,
-                            fontFamily: 'Inter, sans-serif',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap'
-                          }}>
-                            {appointment.type === 'individual' ? '👤' :
-                             appointment.type === 'family' ? '👨‍👩‍👧‍👦' :
-                             appointment.type === 'couple' ? '💑' : '👥'} 
-                            {appointment.duration}min
+                          <div
+                            draggable
+                            onDragStart={(e) => onDragStart(e, appointment)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onAppointmentClick(appointment);
+                            }}
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              justifyContent: 'center'
+                            }}
+                          >
+                            <div style={{
+                              fontSize: '0.75rem',
+                              color: 'white',
+                              fontWeight: 600,
+                              fontFamily: 'Inter, sans-serif',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap'
+                            }}>
+                              {appointment.type === 'individual' ? '👤' :
+                               appointment.type === 'family' ? '👨‍👩‍👧‍👦' :
+                               appointment.type === 'couple' ? '💑' : '👥'} 
+                              {appointment.duration}min
+                            </div>
+                            
+                            {appointment.isVirtual && (
+                              <Video size={12} color="white" style={{ position: 'absolute', top: '2px', right: '2px' }} />
+                            )}
                           </div>
-                          
-                          {appointment.isVirtual && (
-                            <Video size={12} color="white" style={{ position: 'absolute', top: '2px', right: '2px' }} />
-                          )}
                         </motion.div>
                       ))}
                     </div>

@@ -9,16 +9,12 @@ import {
   query, 
   where, 
   orderBy, 
-  limit,
   Timestamp,
-  writeBatch,
-  onSnapshot
 } from 'firebase/firestore';
 import { 
   ref, 
   uploadBytes, 
   getDownloadURL, 
-  deleteObject 
 } from 'firebase/storage';
 import { db, storage } from './firebase';
 import {
@@ -31,7 +27,8 @@ import {
   VirtualAppointment,
   SupervisionSession,
   DocumentTemplate,
-  CustomForm
+  CustomForm,
+  ElectronicSignature
 } from '@/types/clinical';
 
 // ============================================================================
@@ -53,22 +50,25 @@ export class ClinicalService {
     return doc(db, 'centers', this.centerId, path, docId);
   }
 
-  protected convertTimestamps(data: any): any {
+  protected convertTimestamps(data: Record<string, unknown>): Record<string, unknown> {
     const converted = { ...data };
     
     // Convertir campos de fecha comunes
     const dateFields = ['date', 'createdAt', 'updatedAt', 'dateOfBirth', 'lastSession', 'startDate', 'endDate', 'dueDate', 'nextReviewDate', 'lastReviewDate'];
     
     dateFields.forEach(field => {
-      if (converted[field] && typeof converted[field].toDate === 'function') {
-        converted[field] = converted[field].toDate();
+      if (
+        converted[field] &&
+        typeof (converted[field] as { toDate?: () => Date }).toDate === 'function'
+      ) {
+        converted[field] = (converted[field] as { toDate: () => Date }).toDate();
       }
     });
     
     return converted;
   }
 
-  protected prepareForFirestore(data: any): any {
+  protected prepareForFirestore(data: Record<string, unknown>): Record<string, unknown> {
     const prepared = { ...data };
     
     // Convertir fechas a Timestamp
@@ -133,7 +133,7 @@ export class PatientsService extends ClinicalService {
     const updateData = this.prepareForFirestore({
       ...updates,
       updatedAt: new Date()
-    });
+    }) as Partial<ExtendedPatient>;
     
     await updateDoc(patientRef, updateData);
   }
@@ -237,7 +237,7 @@ export class AppointmentsService extends ClinicalService {
       updatedAt: new Date()
     });
     
-    await updateDoc(appointmentRef, updateData);
+    await updateDoc(appointmentRef, updateData as Partial<Appointment>);
   }
 
   async getPatientAppointments(patientId: string): Promise<Appointment[]> {
@@ -363,10 +363,10 @@ export class ClinicalNotesService extends ClinicalService {
       previousVersions: [...(currentNote.previousVersions || []), noteId]
     });
     
-    await updateDoc(noteRef, updateData);
+    await updateDoc(noteRef, updateData as Partial<ClinicalNote>);
   }
 
-  async signNote(patientId: string, noteId: string, signature: any): Promise<void> {
+  async signNote(patientId: string, noteId: string, signature: ElectronicSignature): Promise<void> {
     await this.updateNote(patientId, noteId, {
       status: 'signed',
       signature
@@ -424,10 +424,10 @@ export class TreatmentPlansService extends ClinicalService {
       updatedAt: new Date()
     });
     
-    await updateDoc(planRef, updateData);
+    await updateDoc(planRef, updateData as Partial<TreatmentPlan>);
   }
 
-  async addGoalToPlan(patientId: string, planId: string, goal: any): Promise<void> {
+  async addGoalToPlan(patientId: string, planId: string, goal: TreatmentPlan['goals'][number]): Promise<void> {
     const planRef = doc(db, 'centers', this.centerId, 'patients', patientId, 'treatmentPlans', planId);
     const planSnapshot = await getDoc(planRef);
     
@@ -484,7 +484,7 @@ export class AssessmentsService extends ClinicalService {
       updatedAt: new Date()
     });
     
-    await updateDoc(assessmentRef, updateData);
+    await updateDoc(assessmentRef, updateData as Partial<PsychometricAssessment>);
   }
 }
 
@@ -528,7 +528,7 @@ export class TeleconsultationService extends ClinicalService {
     const virtualRef = this.getDocRef('virtualAppointments', virtualId);
     
     const updateData = this.prepareForFirestore(updates);
-    await updateDoc(virtualRef, updateData);
+    await updateDoc(virtualRef, updateData as Partial<VirtualAppointment>);
   }
 }
 
@@ -580,7 +580,7 @@ export class SupervisionService extends ClinicalService {
       updatedAt: new Date()
     });
     
-    await updateDoc(sessionRef, updateData);
+    await updateDoc(sessionRef, updateData as Partial<SupervisionSession>);
   }
 }
 
