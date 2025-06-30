@@ -5789,3 +5789,183 @@ transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
 transition: none; /* Sin transiciones en el video para mejor rendimiento */
 }
 }
+/* ===== CORRECCIÓN ESPECÍFICA PARA VIDEO MÓVIL HERO ===== */
+/* Este archivo hace que el video móvil tenga el mismo tamaño que las imágenes de características */
+
+@media screen and (max-width: 1023px) {
+    /* ===== VIDEO MÓVIL CON TAMAÑO DE CARACTERÍSTICAS ===== */
+    .hero__mobile-video {
+        width: 100% !important;
+        max-width: var(--mobile-feature-image-width) !important; /* Mismo tamaño que características */
+        height: var(--mobile-feature-image-height) !important; /* Misma altura que características */
+        margin: var(--space-xl) auto 0 !important; /* Mismo margen que características */
+        border-radius: var(--mobile-feature-image-border-radius) !important; /* Mismo border-radius */
+        overflow: hidden !important;
+        box-shadow: 
+            0 15px 40px rgba(0, 0, 0, 0.3),
+            0 5px 15px rgba(0, 0, 0, 0.2),
+            0 0 0 1px rgba(255, 255, 255, 0.08) !important; /* Misma sombra que características */
+        filter: drop-shadow(0 8px 20px rgba(255, 69, 105, 0.2)) !important; /* Mismo filtro */
+        position: relative !important;
+        aspect-ratio: unset !important; /* Quitar aspect-ratio forzado */
+    }
+    
+    /* ===== PLAYER DE VIDEO CON TAMAÑO DE CARACTERÍSTICAS ===== */
+    .hero__mobile-video-player {
+        width: 100% !important;
+        height: 100% !important;
+        display: block !important;
+        border-radius: var(--mobile-feature-image-border-radius) !important; /* Mismo border-radius */
+        object-fit: cover !important;
+        object-position: center !important;
+        filter: brightness(1.05) contrast(1.08) saturate(1.1) !important; /* Mismo filtro que características */
+        transform: translateZ(0) !important;
+        backface-visibility: hidden !important;
+    }
+    
+    /* ===== EFECTO AMBIENTAL IGUAL QUE CARACTERÍSTICAS ===== */
+    .hero__mobile-video::before {
+        content: '';
+        position: absolute;
+        top: -10px !important; /* Mismo que características */
+        left: -10px !important;
+        right: -10px !important;
+        bottom: -10px !important;
+        background: radial-gradient(ellipse, 
+            rgba(255, 69, 105, 0.08) 0%,
+            rgba(255, 23, 68, 0.04) 40%,
+            transparent 70%
+        ) !important; /* Mismo gradiente que características */
+        border-radius: calc(var(--mobile-feature-image-border-radius) + 10px) !important;
+        z-index: -1;
+        opacity: 0.3 !important; /* Misma opacidad que características */
+        animation: feature-ambient-glow 15s ease-in-out infinite !important; /* Misma animación */
+        filter: blur(15px) !important; /* Mismo blur que características */
+    }
+    
+    /* ===== EFECTO DE BORDE IGUAL QUE CARACTERÍSTICAS ===== */
+    .hero__mobile-video::after {
+        content: '';
+        position: absolute;
+        top: -3px;
+        left: -3px;
+        right: -3px;
+        bottom: -3px;
+        background: linear-gradient(45deg, 
+            rgba(255, 69, 105, 0.1) 0%,
+            rgba(255, 23, 68, 0.05) 25%,
+            rgba(255, 69, 105, 0.1) 50%,
+            rgba(255, 23, 68, 0.05) 75%,
+            rgba(255, 69, 105, 0.1) 100%
+        );
+        border-radius: calc(var(--mobile-feature-image-border-radius) + 3px);
+        z-index: -1;
+        opacity: 0.6;
+        transition: opacity var(--transition);
+    }
+}
+
+/* ===== USAR LAS MISMAS VARIABLES RESPONSIVAS QUE CARACTERÍSTICAS ===== */
+@media screen and (max-width: 768px) {
+    .hero__mobile-video {
+        max-width: clamp(180px, 50vw, 240px) !important; /* Mismo que características en 768px */
+        height: clamp(360px, 100vw, 480px) !important;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .hero__mobile-video {
+        max-width: clamp(160px, 45vw, 200px) !important; /* Mismo que características en 480px */
+        height: clamp(320px, 90vw, 400px) !important;
+    }
+}
+
+@media screen and (max-width: 360px) {
+    .hero__mobile-video {
+        max-width: clamp(140px, 40vw, 180px) !important; /* Mismo que características en 360px */
+        height: clamp(280px, 80vw, 360px) !important;
+    }
+}
+
+/* ===== OPTIMIZACIÓN PARA RENDIMIENTO (IGUAL QUE CARACTERÍSTICAS) ===== */
+@media screen and (max-width: 1023px) {
+    .hero__mobile-video {
+        will-change: transform !important;
+        contain: layout style paint !important;
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    
+    .hero__mobile-video-player {
+        will-change: transform !important;
+        transform: translateZ(0) !important;
+        backface-visibility: hidden !important;
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+}
+
+/* ===== ELIMINAR HOVER EFFECTS EN MÓVIL (IGUAL QUE CARACTERÍSTICAS) ===== */
+@media screen and (max-width: 1023px) {
+    .hero__mobile-video:hover {
+        transform: none !important;
+        box-shadow: 
+            0 15px 40px rgba(0, 0, 0, 0.3),
+            0 5px 15px rgba(0, 0, 0, 0.2),
+            0 0 0 1px rgba(255, 255, 255, 0.08) !important;
+    }
+    
+    .hero__mobile-video:hover::before {
+        opacity: 0.3 !important;
+    }
+    
+    .hero__mobile-video:hover::after {
+        opacity: 0.6 !important;
+    }
+}
+
+/* ===== CORRECCIÓN PARA DISPOSITIVOS CON NOTCH ===== */
+@supports (padding: max(0px)) {
+    @media screen and (max-width: 1023px) {
+        .hero__mobile-video {
+            margin-left: max(auto, env(safe-area-inset-left, auto)) !important;
+            margin-right: max(auto, env(safe-area-inset-right, auto)) !important;
+        }
+    }
+}
+
+/* ===== MODO OSCURO (IGUAL QUE CARACTERÍSTICAS) ===== */
+@media screen and (max-width: 1023px) and (prefers-color-scheme: dark) {
+    .hero__mobile-video {
+        box-shadow: 
+            0 15px 40px rgba(0, 0, 0, 0.3),
+            0 5px 15px rgba(0, 0, 0, 0.2),
+            0 0 0 1px rgba(255, 255, 255, 0.08) !important;
+    }
+    
+    .hero__mobile-video::before {
+        opacity: 0.3 !important;
+    }
+}
+
+/* ===== REDUCCIÓN DE MOVIMIENTO PARA ACCESIBILIDAD ===== */
+@media screen and (max-width: 1023px) and (prefers-reduced-motion: reduce) {
+    .hero__mobile-video::before {
+        animation: none !important;
+        opacity: 0.3 !important;
+        transform: scale(1) !important;
+    }
+    
+    .hero__mobile-video::after {
+        transition: none !important;
+    }
+}
+
+/* ===== ALTO CONTRASTE ===== */
+@media screen and (max-width: 1023px) and (prefers-contrast: high) {
+    .hero__mobile-video {
+        border: 2px solid rgba(255, 255, 255, 0.2) !important;
+    }
+}
