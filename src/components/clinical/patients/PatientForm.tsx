@@ -1476,7 +1476,7 @@ export function PatientForm({
                 }}>
                   Copago (€)
                 </label>
-                                <input
+                <input
                   type="number"
                   min="0"
                   step="0.01"
@@ -1912,9 +1912,12 @@ export function PatientForm({
                           const updatedConsents = existingConsents.filter(c => c.type !== consent.id);
                           if (e.target.checked) {
                             updatedConsents.push({
+                              id: `consent-${consent.id}-${Date.now()}`,
                               type: consent.id,
                               signed: true,
+                              signedDate: new Date(),
                               signedAt: new Date(),
+                              documentUrl: `/documents/consent-forms/${consent.id}.pdf`,
                               version: '1.0'
                             });
                           }
@@ -2387,4 +2390,3 @@ export function PatientForm({
     </div>
   );
 }
-

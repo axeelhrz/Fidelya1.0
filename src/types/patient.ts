@@ -40,6 +40,7 @@ export interface Patient {
   createdAt: Date;
   updatedAt: Date;
   notes?: string;
+  age?: number; // Optional, can be calculated from dateOfBirth
 }
 
 export interface PatientSummary {
