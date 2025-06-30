@@ -4464,4 +4464,200 @@ transition: all var(--drawer-transition);
 .nav__close {
 transition: all var(--drawer-transition);
 }
+}/* ===== CORRECCIÓN ESPECÍFICA PARA ELIMINAR MARCO NEGRO DEL VIDEO MÓVIL ===== */
+
+@media screen and (max-width: 1023px) {
+    /* ===== ELIMINAR COMPLETAMENTE CUALQUIER MARCO NEGRO DEL VIDEO MÓVIL ===== */
+    .hero__mobile-video {
+        width: 100% !important;
+        max-width: 320px !important;
+        margin: var(--space-xl) auto 0 !important;
+        border-radius: 0 !important; /* ELIMINAR BORDES REDONDEADOS */
+        overflow: hidden !important;
+        box-shadow: none !important; /* ELIMINAR SOMBRAS */
+        filter: none !important; /* ELIMINAR FILTROS */
+        border: none !important; /* ELIMINAR BORDES */
+        outline: none !important; /* ELIMINAR CONTORNOS */
+        background: transparent !important; /* FONDO TRANSPARENTE */
+        padding: 0 !important; /* SIN PADDING */
+    }
+    
+    .hero__mobile-video-player {
+        width: 100% !important;
+        height: auto !important;
+        display: block !important;
+        border-radius: 0 !important; /* ELIMINAR BORDES REDONDEADOS DEL VIDEO */
+        object-fit: cover !important; /* CUBRIR COMPLETAMENTE EL CONTENEDOR */
+        object-position: center !important; /* CENTRAR EL VIDEO */
+        filter: none !important; /* ELIMINAR FILTROS QUE PUEDAN CAUSAR MARCOS */
+        border: none !important; /* ELIMINAR CUALQUIER BORDE */
+        outline: none !important; /* ELIMINAR CONTORNOS */
+        box-shadow: none !important; /* ELIMINAR SOMBRAS */
+        background: transparent !important; /* FONDO TRANSPARENTE */
+        margin: 0 !important; /* SIN MÁRGENES */
+        padding: 0 !important; /* SIN PADDING */
+        transform: none !important; /* SIN TRANSFORMACIONES */
+        clip-path: none !important; /* SIN RECORTES */
+        mask: none !important; /* SIN MÁSCARAS */
+        -webkit-mask: none !important; /* SIN MÁSCARAS WEBKIT */
+    }
+    
+    /* ===== ELIMINAR CONTROLES NATIVOS DEL VIDEO QUE PUEDAN CAUSAR MARCOS ===== */
+    .hero__mobile-video-player::-webkit-media-controls {
+        display: none !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+    }
+    
+    .hero__mobile-video-player::-webkit-media-controls-panel {
+        display: none !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+    }
+    
+    .hero__mobile-video-player::-webkit-media-controls-play-button {
+        display: none !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+    }
+    
+    .hero__mobile-video-player::-webkit-media-controls-start-playback-button {
+        display: none !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+    }
+    
+    /* ===== ASEGURAR QUE NO HAY ELEMENTOS PADRE QUE CAUSEN MARCOS ===== */
+    .hero__cta-group {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    
+    /* ===== CORRECCIÓN ESPECÍFICA PARA DIFERENTES TAMAÑOS DE PANTALLA ===== */
+    @media screen and (max-width: 768px) {
+        .hero__mobile-video {
+            max-width: 280px !important;
+            border-radius: 0 !important;
+        }
+        
+        .hero__mobile-video-player {
+            border-radius: 0 !important;
+        }
+    }
+    
+    @media screen and (max-width: 480px) {
+        .hero__mobile-video {
+            max-width: 240px !important;
+            border-radius: 0 !important;
+        }
+        
+        .hero__mobile-video-player {
+            border-radius: 0 !important;
+        }
+    }
+    
+    @media screen and (max-width: 360px) {
+        .hero__mobile-video {
+            max-width: 200px !important;
+            border-radius: 0 !important;
+        }
+        
+        .hero__mobile-video-player {
+            border-radius: 0 !important;
+        }
+    }
+    
+    /* ===== ALTERNATIVA: SI EL PROBLEMA PERSISTE, USAR ASPECT-RATIO ===== */
+    .hero__mobile-video-player {
+        aspect-ratio: 9/16 !important; /* PROPORCIÓN TÍPICA DE VIDEO MÓVIL */
+        width: 100% !important;
+        height: auto !important;
+        object-fit: cover !important;
+        object-position: center !important;
+    }
+    
+    /* ===== CORRECCIÓN ADICIONAL PARA WEBKIT/SAFARI ===== */
+    .hero__mobile-video-player {
+        -webkit-appearance: none !important;
+        -webkit-border-radius: 0 !important;
+        -moz-border-radius: 0 !important;
+        border-radius: 0 !important;
+        -webkit-background-clip: padding-box !important;
+        background-clip: padding-box !important;
+    }
+    
+    /* ===== ELIMINAR CUALQUIER PSEUDO-ELEMENTO QUE PUEDA CAUSAR MARCOS ===== */
+    .hero__mobile-video::before,
+    .hero__mobile-video::after,
+    .hero__mobile-video-player::before,
+    .hero__mobile-video-player::after {
+        display: none !important;
+        content: none !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+    }
+    
+    /* ===== CORRECCIÓN PARA CONTENEDORES PADRE ===== */
+    .hero__content {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+    
+    .hero__container {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+    
+    /* ===== FORZAR TRANSPARENCIA EN TODOS LOS ELEMENTOS RELACIONADOS ===== */
+    .mobile-only {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        outline: none !important;
+    }
 }
+
+/* ===== CORRECCIÓN ESPECÍFICA PARA DISPOSITIVOS CON NOTCH ===== */
+@supports (padding: max(0px)) {
+    @media screen and (max-width: 1023px) {
+        .hero__mobile-video {
+            margin-left: max(0px, env(safe-area-inset-left, 0px)) !important;
+            margin-right: max(0px, env(safe-area-inset-right, 0px)) !important;
+        }
+    }
+}
+
+/* ===== CORRECCIÓN PARA MODO OSCURO ===== */
+@media screen and (max-width: 1023px) and (prefers-color-scheme: dark) {
+    .hero__mobile-video,
+    .hero__mobile-video-player {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+}
+
+/* ===== CORRECCIÓN PARA ALTO CONTRASTE ===== */
+@media screen and (max-width: 1023px) and (prefers-contrast: high) {
+    .hero__mobile-video,
+    .hero__mobile-video-player {
+        border: none !important;
+        outline: none !important;
+        box-shadow: none !important;
+    }
+}
+
+/* ===== CORRECCIÓN FINAL: SI NADA FUNCIONA, USAR CLIP-PATH ===== */
+@media screen and (max-width: 1023px) {
+    .hero__mobile-video-player {
+        /* Recortar cualquier marco negro que pueda aparecer */
+        clip-path: inset(0px 0px 0px 0px) !important;
+        -webkit-clip-path: inset(0px 0px 0px 0px) !important;
+    }
+}
+
