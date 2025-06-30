@@ -4359,4 +4359,17 @@ color: var(--text-primary);
     pointer-events: auto !important;
     position: relative !important;
     z-index: 10 !important;
+    cursor: pointer !important;
+}
+
+.btn--primary,
+.btn--cta,
+.btn--cta-video,
+.btn--secondary,
+.btn--demo,
+.btn--footer {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    position: relative !important;
+    z-index: 5 !important;
 }
