@@ -124,7 +124,7 @@ export function GlobalSearchCommand({
     ...documents.map(document => ({
       id: document.id,
       type: 'document' as const,
-      title: document.title,
+      title: document.title ?? 'Sin título',
       subtitle: document.patientName || 'Sin paciente asignado',
       description: `${document.type} • ${document.status}`,
       icon: FileText,
@@ -334,7 +334,7 @@ export function GlobalSearchCommand({
               color: '#1F2937',
               fontFamily: 'Space Grotesk, sans-serif'
             }}>
-              {documents.filter(d => d.status === 'pending').length}
+              {documents.filter(d => d.status === 'draft').length}
             </div>
             <div style={{
               fontSize: '0.75rem',

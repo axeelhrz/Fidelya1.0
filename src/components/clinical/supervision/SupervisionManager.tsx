@@ -41,8 +41,6 @@ export function SupervisionManager({
   const [selectedTherapist, setSelectedTherapist] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
-  const [showSessionModal, setShowSessionModal] = useState(false);
-  const [currentSession, setCurrentSession] = useState<SupervisionSession | null>(null);
 
   const tabs = [
     { id: 'overview', label: 'Resumen', icon: Activity },
@@ -123,13 +121,11 @@ export function SupervisionManager({
   };
 
   const handleCreateSession = () => {
-    setCurrentSession(null);
-    setShowSessionModal(true);
+    // Modal logic removed
   };
 
-  const handleViewSession = (session: SupervisionSession) => {
-    setCurrentSession(session);
-    setShowSessionModal(true);
+  const handleViewSession = () => {
+    // Modal logic removed
   };
 
   const renderOverview = () => (
@@ -620,7 +616,7 @@ export function SupervisionManager({
                 <motion.button
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
-                  onClick={() => handleViewSession(session)}
+                  onClick={() => handleViewSession()}
                   style={{
                     padding: '0.5rem',
                     backgroundColor: '#EEF2FF',
@@ -852,7 +848,7 @@ export function SupervisionManager({
                 <motion.button
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
-                  onClick={() => handleViewSession(session)}
+                  onClick={() => handleViewSession()}
                   style={{
                     padding: '0.5rem',
                     backgroundColor: '#EEF2FF',

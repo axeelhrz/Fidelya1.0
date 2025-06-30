@@ -53,7 +53,7 @@ export interface Appointment {
   id: string;
   patientId: string;
   therapistId: string;
-  roomId: string;
+  roomId?: string;
   centerId: string;
   date: Date;
   dateTime: Date; // Added for compatibility with TeleconsultationManager
@@ -73,6 +73,7 @@ export interface Appointment {
   meetingLink?: string;
   createdAt: Date;
   updatedAt: Date;
+  patientName?: string; // Added for compatibility with SupervisionManager
 }
 
 export type AppointmentType = 'individual' | 'group' | 'family' | 'couple' | 'assessment' | 'supervision';
@@ -167,6 +168,38 @@ export interface Patient {
   updatedAt: Date;
   lastSession?: Date;
   totalSessions: number;
+  // Additional fields for compatibility
+  address?: {
+    street: string;
+    city: string;
+    state: string;
+    zipCode: string;
+    country: string;
+  };
+  emergencyContact?: {
+    name: string;
+    relationship: string;
+    phone: string;
+    email?: string;
+  };
+  medicalHistory?: {
+    allergies: string[];
+    medications: string[];
+    previousDiagnoses: string[];
+    familyHistory: string[];
+  };
+  insuranceInfo?: {
+    provider: string;
+    policyNumber: string;
+    groupNumber?: string;
+  };
+  preferences?: {
+    preferredLanguage: string;
+    communicationMethod: 'email' | 'phone' | 'sms';
+    appointmentReminders: boolean;
+  };
+  notes?: string;
+  age?: number; // Optional, can be calculated from dateOfBirth
 }
 
 // Patient type enum for categorization
@@ -285,6 +318,7 @@ export interface ConsentForm {
   signedDate: Date;
   documentUrl: string;
   version: string;
+  signedAt: Date;
 }
 
 export interface PatientFeedback {
@@ -325,6 +359,36 @@ export interface PatientTimelineEvent {
 }
 
 export type TimelineEventType = 'session' | 'assessment' | 'medication-change' | 'diagnosis-update' | 'referral' | 'discharge' | 'incident' | 'note';
+
+// ============================================================================
+// DOCUMENT INTERFACE (GENERAL)
+// ============================================================================
+
+export interface Document {
+  id: string;
+  name: string;
+  type: DocumentType;
+  url: string;
+  size: number;
+  mimeType: string;
+  uploadedBy: string;
+  uploadedAt: Date;
+  tags: string[];
+  isConfidential: boolean;
+  patientId?: string;
+  metadata?: {
+    version?: string;
+    language?: string;
+    pageCount?: number;
+    wordCount?: number;
+    confidentialityLevel?: 'public' | 'internal' | 'confidential' | 'restricted';
+  };
+  title?: string; // Optional title for better searchability
+  patientName?: string; // Optional for better searchability
+  status?: 'draft' | 'final' | 'archived'; // Optional status for document management
+  updatedAt?: Date; // Optional for tracking changes
+  requiresSignature?: boolean; // Optional for documents that need electronic signatures
+}
 
 // ============================================================================
 // 1.3 NOTAS Y EVOLUCIONES
@@ -500,6 +564,7 @@ export interface TreatmentPlan {
   therapistId: string;
   centerId: string;
   name: string;
+  title: string; // Added for compatibility with SupervisionManager
   description: string;
   startDate: Date;
   endDate?: Date;
@@ -510,14 +575,13 @@ export interface TreatmentPlan {
   adherenceRate: number;
   lastReviewDate?: Date;
   nextReviewDate: Date;
+  reviewDate: Date;
   reviewFrequency: number; // sessions
   signature?: ElectronicSignature;
   createdAt: Date;
   updatedAt: Date;
   history: TreatmentPlanHistory[];
-  reviewDate: Date;
   progressNotes: unknown[]; // Replace 'unknown' with a specific type if available
-  title: string; // Added for compatibility with SupervisionManager
   tasks?: TreatmentTask[]; // Optional for backward compatibility
 }
 
@@ -541,7 +605,9 @@ export interface TreatmentGoal {
   milestones: TreatmentMilestone[];
   category?: string; // Add this line to allow 'category'
   measurable?: string;
-
+  achievable?: string;
+  relevant?: string;
+  timeBound?: string;
 }
 
 export type GoalType = 'behavioral' | 'cognitive' | 'emotional' | 'social' | 'functional' | 'symptom-reduction';
@@ -575,6 +641,7 @@ export type InterventionType = 'cbt' | 'dbt' | 'psychodynamic' | 'humanistic' | 
 export interface TreatmentMilestone {
   id: string;
   name: string;
+  title: string;
   description: string;
   targetDate: Date;
   achievedDate?: Date;
@@ -675,6 +742,7 @@ export interface AdherenceMetrics {
   overdueTasks: number; // number of tasks overdue
   weeklyProgress: { week: number; completed: number; total: number }[];  
   goalProgress: { goalId: string; progress: number; milestones: number; totalMilestones: number }[];
+  adherenceRate?: number;
 
   // Completion metrics
   completionRate: number; // 0-100
@@ -797,6 +865,32 @@ export interface AssessmentsModule {
   interpretations: TestInterpretation[];
 }
 
+// Main Assessment interface (compatible with assessment.ts)
+export interface Assessment {
+  id: string;
+  patientId: string;
+  testName: string;
+  testId: string;
+  category: AssessmentCategory;
+  status: 'pending' | 'in-progress' | 'completed' | 'cancelled';
+  score: number;
+  maxScore?: number;
+  percentile?: number;
+  standardScore?: number;
+  tScore?: number;
+  date: Date;
+  completedAt?: Date;
+  duration?: number; // in minutes
+  administeredBy: string;
+  notes?: string;
+  responses?: AssessmentResponse[];
+  interpretation?: AssessmentInterpretation;
+  recommendations?: string[];
+  followUpRequired?: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface PsychometricAssessment {
   id: string;
   patientId: string;
@@ -818,6 +912,46 @@ export interface PsychometricAssessment {
 
 export type AssessmentType = 'screening' | 'diagnostic' | 'progress' | 'outcome' | 'neuropsychological' | 'personality';
 export type AssessmentStatus = 'scheduled' | 'in-progress' | 'completed' | 'cancelled' | 'invalid';
+
+export type AssessmentCategory = 
+  | 'anxiety'
+  | 'depression'
+  | 'cognitive'
+  | 'personality'
+  | 'behavioral'
+  | 'neuropsychological'
+  | 'quality-of-life'
+  | 'trauma'
+  | 'substance-abuse'
+  | 'eating-disorders'
+  | 'mood-disorders'
+  | 'attention-deficit'
+  | 'autism-spectrum'
+  | 'developmental';
+
+export interface AssessmentResponse {
+  questionId: string;
+  value: number | string | boolean;
+  timestamp: Date;
+}
+
+export interface AssessmentInterpretation {
+  overallScore: number;
+  severity: 'minimal' | 'mild' | 'moderate' | 'severe' | 'very-severe';
+  description: string;
+  clinicalSignificance: boolean;
+  subscores?: {
+    [key: string]: {
+      score: number;
+      interpretation: string;
+    };
+  };
+  comparisonToNorms?: {
+    percentile: number;
+    standardScore: number;
+    interpretation: string;
+  };
+}
 
 export interface TestDefinition {
   id: string;
@@ -859,6 +993,17 @@ export interface NormativeData {
   mean: number;
   standardDeviation: number;
   percentiles: { [key: number]: number };
+  ageGroups?: {
+    [key: string]: {
+      mean: number;
+      standardDeviation: number;
+      percentiles: { [percentile: number]: number };
+    };
+  };
+  genderNorms?: {
+    male: NormativeData['ageGroups'];
+    female: NormativeData['ageGroups'];
+  };
 }
 
 export interface TestLicense {
@@ -1071,6 +1216,10 @@ export interface PatientPortalData {
     invoiceCount: number;
     history: PaymentHistory[];
   };
+  // Additional compatibility fields
+  assessments?: Assessment[];
+  notes?: Note[];
+  appointments?: Appointment[];
 }
 
 // Additional interfaces for PatientPortalData
@@ -1090,6 +1239,15 @@ export interface PaymentHistory {
   date: Date;
   method: string;
   status: 'completed' | 'pending' | 'failed';
+}
+
+export interface Note {
+  id: string;
+  patientId: string;
+  authorId: string;
+  content: string;
+  createdAt: Date;
+  updatedAt?: Date;
 }
 
 export interface PatientAccount {
@@ -1816,3 +1974,440 @@ export interface PaginatedResponse<T> {
   hasNext: boolean;
   hasPrevious: boolean;
 }
+
+// ============================================================================
+// INTERFACES ADICIONALES PARA COMPATIBILIDAD Y EXTENSIÓN
+// ============================================================================
+
+// Session interface for clinical sessions
+export interface ClinicalSession {
+  id: string;
+  patientId: string;
+  therapistId: string;
+  appointmentId?: string;
+  date: Date;
+  startTime: Date;
+  endTime?: Date;
+  duration: number; // minutes
+  type: SessionType;
+  status: SessionStatus;
+  location: string;
+  isVirtual: boolean;
+  meetingLink?: string;
+  notes?: string;
+  objectives: string[];
+  interventions: SessionIntervention[];
+  homework: SessionHomework[];
+  riskAssessment?: RiskAssessment;
+  nextSessionPlan?: string;
+  attachments: SessionAttachment[];
+  billing: SessionBilling;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export type SessionType = 'individual' | 'group' | 'family' | 'couple' | 'intake' | 'assessment' | 'follow-up' | 'crisis';
+export type SessionStatus = 'scheduled' | 'in-progress' | 'completed' | 'cancelled' | 'no-show' | 'rescheduled';
+
+export interface SessionIntervention {
+  id: string;
+  type: InterventionType;
+  description: string;
+  duration: number; // minutes
+  effectiveness: number; // 1-5 scale
+  notes?: string;
+}
+
+export interface SessionHomework {
+  id: string;
+  title: string;
+  description: string;
+  dueDate?: Date;
+  completed: boolean;
+  completionNotes?: string;
+}
+
+export interface SessionAttachment {
+  id: string;
+  name: string;
+  type: 'document' | 'image' | 'audio' | 'video';
+  url: string;
+  size: number;
+  uploadedAt: Date;
+}
+
+export interface SessionBilling {
+  amount: number;
+  currency: string;
+  insuranceCovered: boolean;
+  copay?: number;
+  billed: boolean;
+  billedAt?: Date;
+  paid: boolean;
+  paidAt?: Date;
+}
+
+// Diagnosis interface for clinical diagnoses
+export interface ClinicalDiagnosis {
+  id: string;
+  patientId: string;
+  therapistId: string;
+  icdCode: string;
+  dsmCode?: string;
+  description: string;
+  type: DiagnosisType;
+  severity: DiagnosisSeverity;
+  status: DiagnosisStatus;
+  onsetDate?: Date;
+  diagnosisDate: Date;
+  lastReviewDate?: Date;
+  nextReviewDate?: Date;
+  supportingEvidence: string[];
+  differentialDiagnoses: string[];
+  comorbidities: string[];
+  notes?: string;
+  confidence: number; // 0-100
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export type DiagnosisType = 'primary' | 'secondary' | 'provisional' | 'rule-out' | 'historical';
+export type DiagnosisSeverity = 'mild' | 'moderate' | 'severe' | 'in-remission' | 'unspecified';
+export type DiagnosisStatus = 'active' | 'resolved' | 'in-remission' | 'chronic' | 'rule-out';
+
+// Crisis Management interfaces
+export interface CrisisEvent {
+  id: string;
+  patientId: string;
+  therapistId?: string;
+  reportedBy: string;
+  eventDate: Date;
+  type: CrisisType;
+  severity: CrisisSeverity;
+  description: string;
+  riskFactors: string[];
+  protectiveFactors: string[];
+  interventions: CrisisIntervention[];
+  outcome: CrisisOutcome;
+  followUpRequired: boolean;
+  followUpDate?: Date;
+  resolved: boolean;
+  resolvedAt?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export type CrisisType = 'suicidal-ideation' | 'suicide-attempt' | 'self-harm' | 'homicidal-ideation' | 'psychosis' | 'substance-abuse' | 'domestic-violence' | 'child-abuse' | 'other';
+export type CrisisSeverity = 'low' | 'moderate' | 'high' | 'imminent';
+
+export interface CrisisIntervention {
+  id: string;
+  type: 'safety-plan' | 'hospitalization' | 'medication-adjustment' | 'increased-monitoring' | 'family-notification' | 'emergency-contact' | 'other';
+  description: string;
+  implementedBy: string;
+  implementedAt: Date;
+  effectiveness: number; // 1-5 scale
+}
+
+export interface CrisisOutcome {
+  status: 'resolved' | 'stabilized' | 'ongoing' | 'escalated';
+  description: string;
+  safetyLevel: 'safe' | 'low-risk' | 'moderate-risk' | 'high-risk';
+  nextSteps: string[];
+}
+
+// Quality Assurance interfaces
+export interface QualityMetric {
+  id: string;
+  name: string;
+  category: QualityCategory;
+  description: string;
+  target: number;
+  current: number;
+  unit: string;
+  trend: 'improving' | 'stable' | 'declining';
+  lastUpdated: Date;
+  benchmarks: QualityBenchmark[];
+}
+
+export type QualityCategory = 'clinical-outcomes' | 'patient-satisfaction' | 'safety' | 'efficiency' | 'compliance' | 'staff-performance';
+
+export interface QualityBenchmark {
+  type: 'internal' | 'industry' | 'regulatory';
+  value: number;
+  source: string;
+  date: Date;
+}
+
+// Audit Trail interface
+export interface AuditLog {
+  id: string;
+  userId: string;
+  userRole: string;
+  action: AuditAction;
+  resource: string;
+  resourceId: string;
+  details: AuditDetails;
+  timestamp: Date;
+  ipAddress: string;
+  userAgent: string;
+  success: boolean;
+  errorMessage?: string;
+}
+
+export type AuditAction = 'create' | 'read' | 'update' | 'delete' | 'login' | 'logout' | 'export' | 'print' | 'share';
+
+export interface AuditDetails {
+  before?: unknown;
+  after?: unknown;
+  changes?: string[];
+  reason?: string;
+  metadata?: { [key: string]: unknown };
+}
+
+// Integration interfaces for external systems
+export interface ExternalIntegration {
+  id: string;
+  name: string;
+  type: IntegrationType;
+  status: IntegrationStatus;
+  configuration: IntegrationConfig;
+  lastSync?: Date;
+  syncFrequency: number; // minutes
+  errorCount: number;
+  lastError?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export type IntegrationType = 'ehr' | 'billing' | 'insurance' | 'pharmacy' | 'lab' | 'imaging' | 'telehealth' | 'assessment' | 'scheduling';
+export type IntegrationStatus = 'active' | 'inactive' | 'error' | 'pending' | 'disabled';
+
+export interface IntegrationConfig {
+  endpoint: string;
+  apiKey?: string;
+  credentials?: {
+    username: string;
+    password: string;
+  };
+  headers?: { [key: string]: string };
+  timeout: number;
+  retryAttempts: number;
+  mappings: FieldMapping[];
+}
+
+export interface FieldMapping {
+  sourceField: string;
+  targetField: string;
+  transformation?: string;
+  required: boolean;
+}
+
+// Analytics and Reporting interfaces
+export interface ClinicalReport {
+  id: string;
+  name: string;
+  type: ReportType;
+  description: string;
+  parameters: ReportParameter[];
+  schedule?: ReportSchedule;
+  recipients: string[];
+  format: ReportFormat;
+  template: string;
+  lastGenerated?: Date;
+  nextGeneration?: Date;
+  isActive: boolean;
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export type ReportType = 'clinical-outcomes' | 'patient-demographics' | 'financial' | 'operational' | 'quality' | 'compliance' | 'custom';
+export type ReportFormat = 'pdf' | 'excel' | 'csv' | 'html' | 'json';
+
+export interface ReportParameter {
+  name: string;
+  type: 'string' | 'number' | 'date' | 'boolean' | 'select';
+  required: boolean;
+  defaultValue?: unknown;
+  options?: string[];
+  validation?: FieldValidation;
+}
+
+export interface ReportSchedule {
+  frequency: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'annually';
+  dayOfWeek?: number; // 0-6 for weekly
+  dayOfMonth?: number; // 1-31 for monthly
+  time: string; // HH:MM format
+  timezone: string;
+}
+
+// Notification system interfaces
+export interface NotificationTemplate {
+  id: string;
+  name: string;
+  type: NotificationType;
+  subject: string;
+  content: string;
+  variables: NotificationVariable[];
+  channels: NotificationChannel[];
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export type NotificationType = 'appointment-reminder' | 'task-reminder' | 'payment-due' | 'assessment-due' | 'crisis-alert' | 'system-notification' | 'custom';
+export type NotificationChannel = 'email' | 'sms' | 'push' | 'in-app' | 'phone';
+
+export interface NotificationVariable {
+  name: string;
+  description: string;
+  type: 'string' | 'number' | 'date' | 'boolean';
+  required: boolean;
+}
+
+export interface NotificationQueue {
+  id: string;
+  templateId: string;
+  recipientId: string;
+  recipientType: 'patient' | 'therapist' | 'admin';
+  channel: NotificationChannel;
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  scheduledAt: Date;
+  sentAt?: Date;
+  deliveredAt?: Date;
+  readAt?: Date;
+  status: NotificationStatus;
+  attempts: number;
+  lastAttempt?: Date;
+  errorMessage?: string;
+  variables: { [key: string]: unknown };
+}
+
+export type NotificationStatus = 'pending' | 'sent' | 'delivered' | 'read' | 'failed' | 'cancelled';
+
+// Backup and Recovery interfaces
+export interface BackupJob {
+  id: string;
+  name: string;
+  type: BackupType;
+  schedule: BackupSchedule;
+  retention: BackupRetention;
+  encryption: boolean;
+  compression: boolean;
+  status: BackupStatus;
+  lastRun?: Date;
+  nextRun?: Date;
+  size?: number; // bytes
+  duration?: number; // seconds
+  errorMessage?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export type BackupType = 'full' | 'incremental' | 'differential';
+export type BackupStatus = 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
+
+export interface BackupSchedule {
+  frequency: 'hourly' | 'daily' | 'weekly' | 'monthly';
+  time?: string; // HH:MM format
+  dayOfWeek?: number; // 0-6 for weekly
+  dayOfMonth?: number; // 1-31 for monthly
+  timezone: string;
+}
+
+export interface BackupRetention {
+  daily: number; // days
+  weekly: number; // weeks
+  monthly: number; // months
+  yearly: number; // years
+}
+
+// System Configuration interfaces
+export interface SystemConfiguration {
+  id: string;
+  category: ConfigCategory;
+  key: string;
+  value: unknown;
+  type: ConfigType;
+  description: string;
+  isEditable: boolean;
+  requiresRestart: boolean;
+  validation?: ConfigValidation;
+  lastModified: Date;
+  modifiedBy: string;
+}
+
+export type ConfigCategory = 'general' | 'security' | 'clinical' | 'billing' | 'integration' | 'notification' | 'backup' | 'performance';
+export type ConfigType = 'string' | 'number' | 'boolean' | 'json' | 'array';
+
+export interface ConfigValidation {
+  required: boolean;
+  minLength?: number;
+  maxLength?: number;
+  min?: number;
+  max?: number;
+  pattern?: string;
+  options?: unknown[];
+}
+
+// Performance Monitoring interfaces
+export interface PerformanceMetric {
+  id: string;
+  name: string;
+  category: PerformanceCategory;
+  value: number;
+  unit: string;
+  threshold: PerformanceThreshold;
+  timestamp: Date;
+  source: string;
+  metadata?: { [key: string]: unknown };
+}
+
+export type PerformanceCategory = 'response-time' | 'throughput' | 'error-rate' | 'resource-usage' | 'availability' | 'user-experience';
+
+export interface PerformanceThreshold {
+  warning: number;
+  critical: number;
+  operator: 'greater-than' | 'less-than' | 'equals';
+}
+
+// License Management interfaces
+export interface LicenseInfo {
+  id: string;
+  type: LicenseType;
+  features: LicenseFeature[];
+  limits: LicenseLimits;
+  validFrom: Date;
+  validUntil: Date;
+  isActive: boolean;
+  organization: string;
+  contactEmail: string;
+  supportLevel: SupportLevel;
+  lastValidated: Date;
+  validationErrors?: string[];
+}
+
+export type LicenseType = 'trial' | 'basic' | 'professional' | 'enterprise' | 'custom';
+export type SupportLevel = 'community' | 'standard' | 'premium' | 'enterprise';
+
+export interface LicenseFeature {
+  name: string;
+  enabled: boolean;
+  limitations?: { [key: string]: unknown };
+}
+
+export interface LicenseLimits {
+  maxUsers: number;
+  maxPatients: number;
+  maxCenters: number;
+  maxStorage: number; // GB
+  maxApiCalls: number; // per month
+  features: string[];
+}
+
+// ============================================================================
+// EXPORT ALL TYPES FOR EASY IMPORTING
+// ============================================================================
+
+// Re-export commonly used types for convenience

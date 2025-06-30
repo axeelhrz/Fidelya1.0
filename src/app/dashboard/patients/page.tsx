@@ -125,7 +125,8 @@ export default function PatientsPage() {
             signed: true,
             signedDate: new Date('2024-01-10'),
             documentUrl: '/documents/consent1.pdf',
-            version: '1.0'
+            version: '1.0',
+            signedAt: new Date('2024-01-10')
           }
         ],
         privacySettings: {
@@ -273,7 +274,8 @@ export default function PatientsPage() {
             signed: true,
             signedDate: new Date('2024-01-20'),
             documentUrl: '/documents/consent2.pdf',
-            version: '1.0'
+            version: '1.0',
+            signedAt: new Date('2024-01-20')
           }
         ],
         privacySettings: {

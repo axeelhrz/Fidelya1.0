@@ -12,8 +12,6 @@ import {
   query, 
   where, 
   orderBy, 
-  limit,
-  onSnapshot,
   Timestamp 
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -24,10 +22,6 @@ import {
   ClinicalNote,
   TreatmentPlan,
   PsychometricAssessment,
-  VirtualAppointment,
-  SupervisionSession,
-  ClinicalAPIResponse,
-  PaginatedResponse
 } from '@/types/clinical';
 
 // ============================================================================
@@ -39,7 +33,7 @@ export function useClinicalData() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleError = useCallback((error: any, operation: string) => {
+  const handleError = useCallback((error: Error, operation: string) => {
     console.error(`Error in ${operation}:`, error);
     setError(`Error en ${operation}: ${error.message}`);
     setLoading(false);
@@ -90,7 +84,7 @@ export function usePatients() {
       
       setPatients(patientsData);
     } catch (error) {
-      handleError(error, 'obtener pacientes');
+      handleError(error as Error, 'obtener pacientes');
     } finally {
       setLoading(false);
     }
@@ -118,7 +112,7 @@ export function usePatients() {
       
       return null;
     } catch (error) {
-      handleError(error, 'obtener paciente');
+      handleError(error as Error, 'obtener paciente');
       return null;
     }
   }, [centerId, handleError]);
@@ -146,7 +140,7 @@ export function usePatients() {
       
       return docRef.id;
     } catch (error) {
-      handleError(error, 'crear paciente');
+      handleError(error as Error, 'crear paciente');
       return null;
     } finally {
       setLoading(false);
@@ -163,17 +157,26 @@ export function usePatients() {
     try {
       const patientRef = doc(db, 'centers', centerId, 'patients', patientId);
       
-      const updateData = {
+      // Prepare updateData for Firestore (convert dates to Timestamp)
+      const updateData: Partial<ExtendedPatient> & { [key: string]: unknown } = {
         ...updates,
         updatedAt: Timestamp.fromDate(new Date())
       };
       
       // Convertir fechas a Timestamp si existen
       if (updates.dateOfBirth) {
-        updateData.dateOfBirth = Timestamp.fromDate(updates.dateOfBirth);
+        updateData.dateOfBirth = Timestamp.fromDate(
+          updates.dateOfBirth instanceof Date
+            ? updates.dateOfBirth
+            : updates.dateOfBirth.toDate ? updates.dateOfBirth.toDate() : new Date(updates.dateOfBirth)
+        );
       }
       if (updates.lastSession) {
-        updateData.lastSession = Timestamp.fromDate(updates.lastSession);
+        updateData.lastSession = Timestamp.fromDate(
+          updates.lastSession instanceof Date
+            ? updates.lastSession
+            : updates.lastSession.toDate ? updates.lastSession.toDate() : new Date(updates.lastSession)
+        );
       }
       
       await updateDoc(patientRef, updateData);
@@ -524,7 +527,10 @@ export function useClinicalNotes() {
   }, [centerId, setLoading, clearError, handleError, fetchPatientNotes]);
 
   // Firmar nota
-  const signNote = useCallback(async (patientId: string, noteId: string, signature: any): Promise<boolean> => {
+  // Define a type for signature if not already defined
+  type Signature = string; // Replace with the actual type if it's an object
+
+  const signNote = useCallback(async (patientId: string, noteId: string, signature: Signature): Promise<boolean> => {
     return updateNote(patientId, noteId, {
       status: 'signed',
       signature
@@ -765,7 +771,17 @@ export function useAssessments() {
 // ============================================================================
 
 export function useGlobalSearch() {
-  const [searchResults, setSearchResults] = useState<any[]>([]);
+  type SearchResult = {
+    id: string;
+    type: 'patient' | 'appointment';
+    title: string;
+    subtitle: string;
+    description: string;
+    url: string;
+    data: ExtendedPatient | Appointment; // Specify the possible types for search result data
+  };
+
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const { loading, error, clearError, handleError, setLoading, centerId } = useClinicalData();
 
@@ -780,7 +796,7 @@ export function useGlobalSearch() {
     clearError();
     
     try {
-      const results: any[] = [];
+      const results: SearchResult[] = [];
       const searchTerm = query.toLowerCase();
       
       // Buscar en pacientes
@@ -863,7 +879,27 @@ export function useGlobalSearch() {
 // ============================================================================
 
 export function useDashboardMetrics() {
-  const [metrics, setMetrics] = useState<any>({});
+  type DashboardMetrics = {
+    patients: {
+      total: number;
+      active: number;
+      inactive: number;
+      newThisMonth: number;
+    };
+    appointments: {
+      total: number;
+      completed: number;
+      scheduled: number;
+      cancelled: number;
+    };
+    clinical: {
+      averageSessionsPerPatient: number;
+      completionRate: number;
+      noShowRate: number;
+    };
+  };
+
+  const [metrics, setMetrics] = useState<DashboardMetrics | object>({});
   const { loading, error, clearError, handleError, setLoading, centerId } = useClinicalData();
 
   const fetchMetrics = useCallback(async () => {

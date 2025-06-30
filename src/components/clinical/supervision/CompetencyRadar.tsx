@@ -33,7 +33,6 @@ export function CompetencyRadar({
   onUpdateCompetency,
 }: CompetencyRadarProps) {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [showAddModal, setShowAddModal] = useState(false);
 
   const competencyIcons = {
     therapeutic: Heart,
