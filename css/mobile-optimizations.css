@@ -1,0 +1,1325 @@
+/* ===== OPTIMIZACIONES MÓVILES ULTRA FLUIDAS PARA STARFLEX ===== */
+/* Este archivo se carga automáticamente en dispositivos menores a 1024px */
+
+/* ===== VARIABLES MÓVILES ESPECÍFICAS ULTRA OPTIMIZADAS ===== */
+@media screen and (max-width: 1023px) {
+:root {
+/* Escalado fluido para móvil */
+--mobile-scale: clamp(0.8, 2.5vw, 1);
+--mobile-text-scale: clamp(0.875rem, 3.5vw, 1rem);
+--mobile-title-scale: clamp(1.8rem, 7vw, 3.5rem);
+--mobile-subtitle-scale: clamp(1rem, 4vw, 1.3rem);
+
+/* Espaciado optimizado para móvil */
+--mobile-container-padding: clamp(1rem, 4vw, 2rem);
+--mobile-section-padding: clamp(2.5rem, 8vw, 5rem);
+--mobile-element-gap: clamp(1rem, 4vw, 2rem);
+
+/* Tamaños de botones optimizados para touch */
+--mobile-button-height: clamp(48px, 12vw, 60px);
+--mobile-touch-target: 48px;
+
+/* Tamaños de teléfonos optimizados - MÁS COMPACTOS */
+--phone-width-mobile: clamp(200px, 55vw, 260px);
+--phone-height-mobile: clamp(400px, 110vw, 520px);
+
+/* Efectos reducidos para mejor rendimiento - ULTRA RÁPIDOS */
+--mobile-transition: 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+--mobile-transition-fast: 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+--mobile-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+--mobile-blur: blur(10px);
+
+/* Variables específicas para navbar móvil ultra optimizado */
+--navbar-mobile-padding-top: max(env(safe-area-inset-top, 15px), 15px);
+--navbar-mobile-padding-horizontal: max(env(safe-area-inset-left, 20px), 20px);
+--navbar-mobile-content-start: calc(var(--navbar-mobile-padding-top) + 40px);
+
+/* Variables para animaciones ultra fluidas */
+--mobile-menu-transition: 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+--mobile-element-transition: 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+--mobile-button-transition: 0.2s cubic-bezier(0.23, 1, 0.32, 1);
+}
+}
+
+/* ===== CORRECCIONES GENERALES MÓVILES ULTRA OPTIMIZADAS ===== */
+@media screen and (max-width: 1023px) {
+/* Contenedor principal */
+.container {
+padding: 0 var(--mobile-container-padding);
+max-width: 100%;
+}
+
+/* Secciones principales */
+.hero,
+.features,
+.videos,
+.faq,
+.contact {
+padding: var(--mobile-section-padding) 0;
+}
+
+/* Títulos optimizados para móvil */
+h1, h2, h3 {
+line-height: 1.1;
+letter-spacing: -0.02em;
+}
+
+/* Texto optimizado para móvil */
+p, li {
+line-height: 1.6;
+font-size: var(--mobile-text-scale);
+}
+
+/* Botones optimizados para touch */
+.btn,
+.nav__link,
+.contact__channel-btn,
+.faq__question {
+min-height: var(--mobile-touch-target);
+display: flex;
+align-items: center;
+justify-content: center;
+}
+}
+
+/* ===== HERO SECTION MÓVIL ===== */
+@media screen and (max-width: 1023px) {
+.hero {
+min-height: 100vh;
+min-height: 100dvh;
+padding-top: calc(var(--navbar-height-mobile) + var(--space-xl));
+}
+
+.hero__container {
+display: flex;
+flex-direction: column;
+gap: var(--mobile-element-gap);
+text-align: center;
+}
+
+.hero__content {
+order: 2;
+}
+
+.hero__media {
+order: 1;
+margin-bottom: var(--space-xl);
+display: none; /* OCULTAR TELÉFONO EN MÓVIL */
+}
+
+.hero__title {
+font-size: var(--mobile-title-scale);
+margin-bottom: var(--space-lg);
+}
+
+.hero__company-description {
+font-size: var(--mobile-text-scale);
+padding: var(--space-lg);
+margin-bottom: var(--space-lg);
+}
+
+.hero__subtitle {
+font-size: var(--mobile-subtitle-scale);
+margin-bottom: var(--space-xl);
+}
+
+.hero__cta-group {
+gap: var(--space-lg);
+align-items: center;
+}
+
+.hero__download {
+flex-direction: column;
+gap: var(--space-md);
+align-items: center;
+}
+
+.download-btn__image {
+height: clamp(50px, 12vw, 60px);
+width: auto;
+min-width: clamp(160px, 40vw, 180px);
+}
+
+/* VIDEO MÓVIL MÁS COMPACTO */
+.hero__mobile-video {
+max-width: 280px; /* MÁS PEQUEÑO */
+margin: var(--space-lg) auto 0; /* MENOS MARGEN */
+border-radius: 15px; /* MENOS REDONDEADO */
+}
+
+.hero__mobile-video-player {
+border-radius: 15px;
+}
+}
+
+/* ===== NAVBAR MÓVIL ULTRA FLUIDO - SIN SCROLL Y SOLO CIERRE POR BOTÓN ===== */
+@media screen and (max-width: 1023px) {
+.nav {
+padding: 0 var(--mobile-container-padding);
+height: var(--navbar-height-mobile);
+}
+
+.nav__brand {
+z-index: calc(var(--navbar-z-index) + 2);
+}
+
+.nav__logo {
+width: 45px;
+height: 45px;
+border-radius: 10px;
+transition: var(--mobile-button-transition);
+}
+
+.nav__toggle {
+width: 44px;
+height: 44px;
+border-radius: 12px;
+background: linear-gradient(135deg, 
+rgba(15, 20, 30, 0.95) 0%, 
+rgba(21, 25, 34, 0.95) 100%
+);
+backdrop-filter: blur(20px);
+-webkit-backdrop-filter: blur(20px);
+border: 1px solid rgba(255, 69, 105, 0.2);
+box-shadow: 
+0 6px 20px rgba(0, 0, 0, 0.3),
+0 0 15px rgba(255, 69, 105, 0.15);
+transition: var(--mobile-button-transition);
+}
+
+.nav__toggle:hover,
+.nav__toggle:active {
+border-color: var(--starflex-crimson-bright);
+box-shadow: 
+0 8px 25px rgba(0, 0, 0, 0.4),
+0 0 25px rgba(255, 69, 105, 0.25);
+transform: scale(1.05);
+}
+
+.nav__toggle-line {
+width: 20px;
+height: 2px;
+background: var(--text-primary);
+border-radius: 1px;
+transition: var(--mobile-element-transition);
+}
+
+.nav__toggle-line:not(:last-child) {
+margin-bottom: 4px;
+}
+
+/* ===== MENÚ MÓVIL ULTRA FLUIDO - SIN SCROLL, CENTRADO PERFECTO ===== */
+.nav__menu {
+position: fixed;
+top: 0;
+left: -100%;
+width: 100vw;
+height: 100vh;
+height: 100dvh;
+background: linear-gradient(135deg, 
+rgba(10, 13, 20, 0.98) 0%, 
+rgba(21, 25, 34, 0.98) 50%, 
+rgba(30, 35, 48, 0.98) 100%
+);
+backdrop-filter: blur(25px);
+-webkit-backdrop-filter: blur(25px);
+display: flex;
+flex-direction: column;
+justify-content: center; /* CENTRADO VERTICAL PERFECTO */
+align-items: center; /* CENTRADO HORIZONTAL PERFECTO */
+transition: left var(--mobile-menu-transition);
+z-index: calc(var(--navbar-z-index) + 3);
+padding: var(--navbar-mobile-padding-top) var(--navbar-mobile-padding-horizontal) 40px var(--navbar-mobile-padding-horizontal);
+overflow: hidden; /* SIN SCROLL NUNCA */
+gap: var(--space-lg); /* ESPACIADO PERFECTO ENTRE ELEMENTOS */
+}
+
+.nav__menu.active {
+left: 0;
+}
+
+.nav__menu::before {
+content: '';
+position: absolute;
+top: 0;
+left: 0;
+right: 0;
+bottom: 0;
+background: 
+radial-gradient(ellipse at 30% 20%, rgba(255, 69, 105, 0.08) 0%, transparent 50%),
+radial-gradient(ellipse at 70% 80%, rgba(255, 69, 105, 0.06) 0%, transparent 50%);
+z-index: -1;
+animation: mobile-menu-glow 8s ease-in-out infinite;
+}
+
+/* ===== BOTÓN DE CERRAR MÓVIL ULTRA OPTIMIZADO ===== */
+.nav__close {
+position: absolute;
+top: var(--navbar-mobile-padding-top);
+right: var(--navbar-mobile-padding-horizontal);
+width: 44px;
+height: 44px;
+display: flex;
+align-items: center;
+justify-content: center;
+background: linear-gradient(135deg, 
+rgba(15, 20, 30, 0.95) 0%, 
+rgba(21, 25, 34, 0.95) 100%
+);
+backdrop-filter: blur(20px);
+-webkit-backdrop-filter: blur(20px);
+border: 1px solid rgba(255, 69, 105, 0.2);
+border-radius: 12px;
+cursor: pointer;
+transition: var(--mobile-button-transition);
+box-shadow: 
+0 6px 20px rgba(0, 0, 0, 0.3),
+0 0 15px rgba(255, 69, 105, 0.15);
+z-index: 1000;
+}
+
+.nav__close:hover,
+.nav__close:active {
+border-color: var(--starflex-crimson-bright);
+box-shadow: 
+0 8px 25px rgba(0, 0, 0, 0.4),
+0 0 25px rgba(255, 69, 105, 0.25);
+transform: scale(1.05);
+}
+
+.nav__close svg {
+width: 24px;
+height: 24px;
+color: var(--text-primary);
+transition: var(--mobile-element-transition);
+}
+
+.nav__close:hover svg,
+.nav__close:active svg {
+color: var(--starflex-crimson-bright);
+transform: rotate(90deg);
+}
+
+/* ===== SELECTOR DE IDIOMA MÓVIL ULTRA COMPACTO ===== */
+.nav__language-mobile {
+width: 100%;
+max-width: 300px;
+padding: var(--space-lg);
+background: linear-gradient(135deg, 
+rgba(255, 45, 85, 0.08) 0%,
+rgba(21, 25, 34, 0.95) 20%,
+rgba(30, 35, 48, 0.98) 100%
+);
+backdrop-filter: blur(25px);
+-webkit-backdrop-filter: blur(25px);
+border: 1px solid rgba(255, 45, 85, 0.2);
+border-radius: 18px;
+box-shadow: 
+0 10px 30px rgba(0, 0, 0, 0.3),
+0 0 20px rgba(255, 45, 85, 0.1);
+position: relative;
+overflow: hidden;
+order: 1; /* PRIMER ELEMENTO */
+}
+
+.nav__language-mobile::before {
+content: '';
+position: absolute;
+top: 0;
+left: -100%;
+width: 100%;
+height: 100%;
+background: linear-gradient(90deg, 
+transparent, 
+rgba(255, 45, 85, 0.1), 
+transparent
+);
+transition: left 1.5s ease;
+border-radius: 18px;
+}
+
+.nav__language-mobile:hover::before {
+left: 100%;
+}
+
+.nav__language-title {
+font-size: 0.85rem;
+font-weight: 600;
+color: var(--starflex-crimson-bright);
+margin-bottom: var(--space-sm);
+text-align: center;
+text-transform: uppercase;
+letter-spacing: 1px;
+font-family: var(--font-mono);
+}
+
+.nav__language-options {
+display: flex;
+gap: var(--space-sm);
+}
+
+.nav__language-option {
+flex: 1;
+display: flex;
+align-items: center;
+justify-content: center;
+gap: var(--space-xs);
+padding: var(--space-sm) var(--space-md);
+background: transparent;
+border: 1px solid rgba(255, 69, 105, 0.2);
+border-radius: 22px;
+color: var(--text-secondary);
+font-family: var(--font-primary);
+font-size: 0.8rem;
+font-weight: 500;
+cursor: pointer;
+transition: var(--mobile-element-transition);
+min-height: 40px;
+backdrop-filter: blur(10px);
+-webkit-backdrop-filter: blur(10px);
+}
+
+.nav__language-option:hover,
+.nav__language-option:active {
+background: rgba(255, 69, 105, 0.1);
+border-color: rgba(255, 69, 105, 0.4);
+color: var(--text-primary);
+transform: translateY(-1px) scale(1.02);
+box-shadow: 0 4px 12px rgba(255, 69, 105, 0.2);
+}
+
+.nav__language-option.active {
+background: rgba(255, 69, 105, 0.15);
+border-color: rgba(255, 69, 105, 0.5);
+color: var(--starflex-crimson-bright);
+box-shadow: 0 0 15px rgba(255, 69, 105, 0.3);
+}
+
+.nav__language-flag {
+font-size: 1rem;
+}
+
+.nav__language-name {
+font-weight: 600;
+}
+
+/* ===== LISTA DE NAVEGACIÓN MÓVIL ULTRA FLUIDA ===== */
+.nav__list {
+display: flex;
+flex-direction: column;
+gap: var(--space-sm);
+width: 100%;
+max-width: 300px;
+order: 2; /* SEGUNDO ELEMENTO */
+}
+
+.nav__link {
+font-size: 0.95rem;
+padding: var(--space-sm) var(--space-xl);
+background: transparent;
+border: 1px solid rgba(255, 255, 255, 0.1);
+border-radius: 22px;
+backdrop-filter: blur(10px);
+-webkit-backdrop-filter: blur(10px);
+transition: var(--mobile-element-transition);
+position: relative;
+overflow: hidden;
+text-align: center;
+font-weight: 600;
+text-transform: uppercase;
+letter-spacing: 0.5px;
+color: var(--text-secondary);
+min-height: 44px;
+}
+
+.nav__link::before {
+content: '';
+position: absolute;
+top: 0;
+left: -100%;
+width: 100%;
+height: 100%;
+background: linear-gradient(90deg, 
+transparent, 
+rgba(255, 69, 105, 0.1), 
+transparent
+);
+transition: left 0.6s ease;
+}
+
+.nav__link:hover,
+.nav__link:active {
+background: rgba(255, 69, 105, 0.1);
+border-color: rgba(255, 69, 105, 0.3);
+transform: translateY(-1px) scale(1.02);
+box-shadow: 0 4px 12px rgba(255, 69, 105, 0.2);
+color: var(--starflex-crimson-bright);
+}
+
+.nav__link:hover::before,
+.nav__link:active::before {
+left: 100%;
+}
+
+.nav__link.active {
+background: rgba(255, 69, 105, 0.15);
+border-color: rgba(255, 69, 105, 0.4);
+color: var(--starflex-crimson-bright);
+box-shadow: 0 0 15px rgba(255, 69, 105, 0.3);
+}
+
+/* ===== CTA MÓVIL ULTRA OPTIMIZADO ===== */
+.nav__cta-mobile {
+width: 100%;
+max-width: 300px;
+order: 3; /* TERCER ELEMENTO */
+}
+
+.btn--mobile {
+width: 100%;
+padding: var(--space-md) var(--space-xl);
+font-size: 0.95rem;
+font-weight: 700;
+border-radius: 22px;
+background: linear-gradient(135deg, 
+var(--starflex-crimson) 0%, 
+var(--starflex-crimson-bright) 100%
+);
+box-shadow: 
+0 8px 25px rgba(255, 69, 105, 0.4),
+0 0 20px rgba(255, 69, 105, 0.3);
+border: 2px solid rgba(255, 69, 105, 0.4);
+color: #ffffff;
+text-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
+transition: var(--mobile-element-transition);
+text-transform: uppercase;
+letter-spacing: 1px;
+position: relative;
+overflow: hidden;
+min-height: 48px;
+}
+
+.btn--mobile::before {
+content: '';
+position: absolute;
+top: 0;
+left: -100%;
+width: 100%;
+height: 100%;
+background: linear-gradient(90deg, 
+transparent, 
+rgba(255, 255, 255, 0.2), 
+transparent
+);
+transition: left 0.8s ease;
+}
+
+.btn--mobile:hover,
+.btn--mobile:active {
+transform: translateY(-2px) scale(1.02);
+box-shadow: 
+0 12px 35px rgba(255, 69, 105, 0.5),
+0 0 30px rgba(255, 69, 105, 0.4);
+}
+
+.btn--mobile:hover::before,
+.btn--mobile:active::before {
+left: 100%;
+}
+
+/* ===== OCULTAR SELECTOR DE IDIOMA FLOTANTE EN MÓVIL ===== */
+.language-switcher {
+display: none;
+}
+}
+
+/* ===== CARACTERÍSTICAS MÓVILES OPTIMIZADAS - SIN HOVER ===== */
+@media screen and (max-width: 1023px) {
+.features__grid {
+gap: var(--space-5xl);
+}
+
+.feature {
+display: flex;
+flex-direction: column;
+gap: var(--space-2xl);
+text-align: center;
+}
+
+.feature:nth-child(even) {
+direction: ltr;
+}
+
+.feature:nth-child(even) > * {
+direction: ltr;
+}
+
+.feature__phone {
+order: 1;
+width: var(--phone-width-mobile);
+height: var(--phone-height-mobile);
+margin: 0 auto;
+transform: none;
+animation: none;
+}
+
+.feature__content {
+order: 2;
+padding: 0;
+}
+
+.feature__title {
+font-size: clamp(2rem, 6vw, 2.5rem);
+margin-bottom: var(--space-lg);
+}
+
+.feature__description {
+font-size: var(--mobile-subtitle-scale);
+margin-bottom: var(--space-lg);
+text-align: left;
+}
+
+.feature__list {
+text-align: left;
+}
+
+.feature__list-item {
+font-size: var(--mobile-text-scale);
+margin-bottom: var(--space-md);
+padding: var(--space-sm) 0;
+}
+
+/* ELIMINAR HOVER EN MÓVIL */
+.feature__list-item:hover {
+transform: none;
+background: transparent;
+padding-left: 0;
+color: var(--text-secondary);
+}
+
+/* ELIMINAR HOVER EN TELÉFONOS */
+.phone:hover {
+transform: none;
+box-shadow: 
+0 20px 60px rgba(0, 0, 0, 0.4),
+0 8px 30px rgba(0, 0, 0, 0.3),
+0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+}
+
+/* ===== VIDEOS SECTION MÓVIL ===== */
+@media screen and (max-width: 1023px) {
+.videos__player-container {
+padding: var(--space-lg);
+border-radius: 20px;
+}
+
+.videos__player-frame {
+border-radius: 15px;
+margin-bottom: var(--space-lg);
+}
+
+.videos__play-button {
+width: 80px;
+height: 80px;
+}
+
+.videos__play-icon {
+width: 30px;
+height: 30px;
+}
+
+.videos__play-title {
+font-size: 1.2rem;
+}
+
+.videos__play-subtitle {
+font-size: 0.9rem;
+}
+
+.videos__info {
+display: block;
+text-align: center;
+}
+
+.videos__info-main h3 {
+font-size: 1.5rem;
+margin-bottom: var(--space-sm);
+}
+
+.videos__info-description {
+font-size: var(--mobile-text-scale);
+}
+
+.videos__cta {
+padding: var(--space-2xl);
+border-radius: 20px;
+}
+
+.videos__cta-title {
+font-size: clamp(1.8rem, 6vw, 2.2rem);
+}
+
+.videos__cta-description {
+font-size: var(--mobile-subtitle-scale);
+}
+
+.videos__cta-buttons {
+flex-direction: column;
+gap: var(--space-lg);
+}
+
+.btn--cta-video,
+.btn--secondary {
+width: 100%;
+max-width: 280px;
+padding: var(--space-md) var(--space-lg);
+}
+}
+
+/* ===== FAQ MÓVIL ===== */
+@media screen and (max-width: 1023px) {
+.faq__search {
+padding: var(--space-md) var(--space-lg) var(--space-md) 45px;
+font-size: var(--mobile-text-scale);
+}
+
+.faq__search-icon {
+left: 15px;
+width: 18px;
+height: 18px;
+}
+
+.faq__question {
+padding: var(--space-lg) var(--space-md);
+font-size: var(--mobile-text-scale);
+}
+
+.faq__icon {
+width: 28px;
+height: 28px;
+}
+
+.faq__answer.active {
+padding: 0 var(--space-md) var(--space-lg);
+}
+
+.faq__answer-text {
+font-size: var(--mobile-text-scale);
+}
+}
+
+/* ===== CONTACTO MÓVIL ===== */
+@media screen and (max-width: 1023px) {
+.contact__grid {
+grid-template-columns: 1fr;
+gap: var(--space-xl);
+}
+
+.contact__channel {
+padding: var(--space-xl) var(--space-lg);
+}
+
+.contact__channel-icon {
+width: 70px;
+height: 70px;
+margin-bottom: var(--space-lg);
+}
+
+.contact__channel-icon svg {
+width: 32px;
+height: 32px;
+}
+
+.contact__channel-title {
+font-size: 1.2rem;
+}
+
+.contact__channel-description {
+font-size: var(--mobile-text-scale);
+}
+
+.contact__channel-btn {
+padding: var(--space-sm) var(--space-lg);
+font-size: var(--mobile-text-scale);
+min-height: var(--mobile-touch-target);
+}
+
+.contact__footer-content {
+flex-direction: column;
+gap: var(--space-xl);
+text-align: center;
+}
+
+.btn--footer {
+width: 100%;
+max-width: 250px;
+}
+}
+
+/* ===== BOTÓN FLOTANTE MÓVIL ===== */
+@media screen and (max-width: 1023px) {
+.floating-widget {
+bottom: 20px;
+right: 20px;
+}
+
+.floating-widget__main-btn {
+width: 70px;
+height: 70px;
+}
+
+.floating-widget__main-icon {
+width: 35px;
+height: 35px;
+}
+
+.floating-widget__menu-item {
+width: 60px;
+height: 60px;
+}
+
+.floating-widget__icon {
+width: 28px;
+height: 28px;
+}
+
+.floating-widget__tooltip {
+right: 70px;
+font-size: 0.8rem;
+padding: var(--space-xs) var(--space-sm);
+}
+}
+
+/* ===== OPTIMIZACIONES PARA PANTALLAS PEQUEÑAS ===== */
+@media screen and (max-width: 768px) {
+:root {
+--mobile-container-padding: clamp(0.875rem, 3vw, 1.5rem);
+--mobile-section-padding: clamp(2rem, 6vw, 4rem);
+--phone-width-mobile: clamp(180px, 50vw, 240px);
+--phone-height-mobile: clamp(360px, 100vw, 480px);
+--navbar-mobile-content-start: calc(var(--navbar-mobile-padding-top) + 35px);
+}
+
+.hero__title {
+font-size: clamp(2.2rem, 8vw, 3rem);
+}
+
+.features__title,
+.videos__title,
+.faq__title,
+.contact__title {
+font-size: clamp(2rem, 7vw, 2.8rem);
+}
+
+.feature__title {
+font-size: clamp(1.8rem, 6vw, 2.2rem);
+}
+
+/* VIDEO MÓVIL AÚN MÁS COMPACTO */
+.hero__mobile-video {
+max-width: 240px;
+}
+
+/* AJUSTES PARA MENÚ MÓVIL EN PANTALLAS PEQUEÑAS */
+.nav__language-mobile,
+.nav__list,
+.nav__cta-mobile {
+max-width: 280px;
+}
+
+.nav__link {
+font-size: 0.9rem;
+padding: var(--space-sm) var(--space-lg);
+}
+}
+
+@media screen and (max-width: 480px) {
+:root {
+--mobile-container-padding: 1rem;
+--mobile-section-padding: clamp(1.5rem, 5vw, 3rem);
+--phone-width-mobile: clamp(160px, 45vw, 200px);
+--phone-height-mobile: clamp(320px, 90vw, 400px);
+--navbar-mobile-content-start: calc(var(--navbar-mobile-padding-top) + 30px);
+}
+
+.hero__download {
+gap: var(--space-sm);
+}
+
+.download-btn__image {
+height: clamp(45px, 10vw, 55px);
+min-width: clamp(140px, 35vw, 160px);
+}
+
+.contact__grid {
+gap: var(--space-lg);
+}
+
+.contact__channel {
+padding: var(--space-lg) var(--space-md);
+}
+
+/* VIDEO MÓVIL ULTRA COMPACTO */
+.hero__mobile-video {
+max-width: 200px;
+margin: var(--space-md) auto 0;
+}
+
+/* AJUSTES PARA MENÚ MÓVIL EN PANTALLAS MUY PEQUEÑAS */
+.nav__language-mobile,
+.nav__list,
+.nav__cta-mobile {
+max-width: 260px;
+}
+
+.nav__language-option {
+padding: var(--space-xs) var(--space-sm);
+font-size: 0.75rem;
+}
+
+.nav__language-name {
+display: none; /* Solo mostrar banderas en pantallas muy pequeñas */
+}
+
+.nav__link {
+font-size: 0.85rem;
+padding: var(--space-sm) var(--space-md);
+}
+}
+
+@media screen and (max-width: 360px) {
+:root {
+--mobile-container-padding: 0.875rem;
+--mobile-section-padding: clamp(1.25rem, 4vw, 2.5rem);
+--phone-width-mobile: clamp(140px, 40vw, 180px);
+--phone-height-mobile: clamp(280px, 80vw, 360px);
+--navbar-mobile-content-start: calc(var(--navbar-mobile-padding-top) + 25px);
+}
+
+.nav__link {
+font-size: 0.8rem;
+padding: var(--space-xs) var(--space-md);
+}
+
+.faq__question {
+padding: var(--space-md) var(--space-sm);
+font-size: 0.9rem;
+}
+
+/* VIDEO MÓVIL MÍNIMO */
+.hero__mobile-video {
+max-width: 180px;
+}
+
+/* AJUSTES PARA MENÚ MÓVIL EN PANTALLAS MÍNIMAS */
+.nav__language-mobile,
+.nav__list,
+.nav__cta-mobile {
+max-width: 240px;
+}
+
+.nav__close {
+width: 40px;
+height: 40px;
+}
+
+.nav__close svg {
+width: 20px;
+height: 20px;
+}
+}
+
+/* ===== OPTIMIZACIONES PARA DISPOSITIVOS CON NOTCH ===== */
+@supports (padding: max(0px)) {
+@media screen and (max-width: 1023px) {
+.nav__menu {
+padding-top: max(calc(env(safe-area-inset-top, 15px) + 15px), 30px);
+padding-bottom: max(40px, calc(env(safe-area-inset-bottom, 0px) + 40px));
+padding-left: max(var(--mobile-container-padding), env(safe-area-inset-left, var(--mobile-container-padding)));
+padding-right: max(var(--mobile-container-padding), env(safe-area-inset-right, var(--mobile-container-padding)));
+}
+
+.nav__close {
+top: max(calc(env(safe-area-inset-top, 15px) + 15px), 25px);
+right: max(var(--mobile-container-padding), env(safe-area-inset-right, var(--mobile-container-padding)));
+}
+
+.floating-widget {
+bottom: max(20px, calc(env(safe-area-inset-bottom, 0px) + 20px));
+right: max(20px, env(safe-area-inset-right, 20px));
+}
+}
+}
+
+/* ===== MODO OSCURO MÓVIL ===== */
+@media screen and (max-width: 1023px) and (prefers-color-scheme: dark) {
+.nav__link {
+background: transparent;
+border-color: rgba(255, 255, 255, 0.08);
+}
+
+.nav__link:hover {
+background: rgba(255, 69, 105, 0.1);
+border-color: rgba(255, 69, 105, 0.3);
+}
+
+.hero__company-description {
+background: rgba(30, 35, 48, 0.6);
+border-color: rgba(255, 255, 255, 0.06);
+}
+
+.nav__language-option {
+background: transparent;
+border-color: rgba(255, 69, 105, 0.2);
+}
+}
+
+/* ===== OPTIMIZACIONES DE RENDIMIENTO MÓVIL ULTRA ===== */
+@media screen and (max-width: 1023px) {
+/* Reducir animaciones en móvil para máxima fluidez */
+*,
+*::before,
+*::after {
+transition-duration: 0.3s !important;
+animation-duration: 0.3s !important;
+}
+
+/* Optimizar transformaciones para GPU */
+.nav__menu,
+.nav__toggle,
+.nav__close,
+.nav__link,
+.nav__language-option,
+.btn--mobile,
+.hero__phone,
+.feature__phone,
+.nav__logo,
+.floating-widget__main-btn {
+will-change: transform;
+transform: translateZ(0);
+backface-visibility: hidden;
+}
+
+/* Reducir efectos visuales costosos */
+.nav__list::before,
+.btn--primary::before,
+.btn--cta::before,
+.nav__language-mobile::before,
+.nav__link::before {
+display: none;
+}
+
+/* Simplificar sombras para mejor rendimiento */
+.nav__list,
+.btn--primary,
+.btn--cta,
+.contact__channel,
+.faq__item,
+.nav__toggle,
+.nav__close,
+.nav__language-mobile {
+box-shadow: var(--mobile-shadow) !important;
+}
+
+/* ELIMINAR TODOS LOS HOVER EFFECTS EN MÓVIL */
+.phone:hover,
+.feature__phone:hover,
+.contact__channel:hover,
+.feature__list-item:hover,
+.nav__list:hover::before,
+.btn--primary:hover::before,
+.btn--cta:hover::before {
+transform: none !important;
+box-shadow: inherit !important;
+background: inherit !important;
+left: -100% !important;
+}
+
+/* Optimizar el menú móvil para máximo rendimiento */
+.nav__menu {
+contain: layout style paint;
+}
+
+.nav__menu.active {
+contain: none;
+}
+}
+
+/* ===== MODO DE ALTO CONTRASTE ===== */
+@media screen and (max-width: 1023px) and (prefers-contrast: high) {
+.nav__link {
+border-width: 2px;
+}
+
+.btn--primary,
+.btn--cta,
+.btn--mobile {
+border-width: 3px;
+}
+
+.faq__item {
+border-width: 2px;
+}
+
+.contact__channel {
+border-width: 2px;
+}
+
+.nav__language-option {
+border-width: 2px;
+}
+
+.nav__close,
+.nav__toggle {
+border-width: 2px;
+}
+}
+
+/* ===== REDUCCIÓN DE MOVIMIENTO PARA ACCESIBILIDAD ===== */
+@media screen and (max-width: 1023px) and (prefers-reduced-motion: reduce) {
+*,
+*::before,
+*::after {
+animation: none !important;
+transition: none !important;
+}
+
+.nav__menu {
+transition: left 0.1s ease !important;
+}
+
+.floating-widget__menu {
+transition: all 0.1s ease !important;
+}
+
+.nav__close,
+.nav__toggle,
+.nav__link,
+.nav__language-option,
+.btn--mobile {
+transition: all 0.1s ease !important;
+}
+}
+
+/* ===== CORRECCIONES FINALES MÓVILES ULTRA OPTIMIZADAS ===== */
+@media screen and (max-width: 1023px) {
+/* Prevenir zoom en inputs */
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+textarea {
+font-size: 16px !important;
+}
+
+/* Mejorar área de toque para máxima usabilidad */
+button,
+a,
+.nav__link,
+.faq__question,
+.contact__channel-btn,
+.nav__language-option,
+.nav__close,
+.nav__toggle {
+min-height: 44px;
+min-width: 44px;
+}
+
+/* Optimizar scroll para máxima fluidez */
+body {
+-webkit-overflow-scrolling: touch;
+scroll-behavior: smooth;
+overscroll-behavior: contain;
+}
+
+/* Prevenir selección accidental */
+.hero__phone,
+.feature__phone,
+.nav__logo,
+.floating-widget,
+.nav__toggle,
+.nav__close {
+-webkit-user-select: none;
+-moz-user-select: none;
+-ms-user-select: none;
+user-select: none;
+-webkit-touch-callout: none;
+}
+
+/* ELIMINAR EFECTOS ROJIZOS DE FONDO EN MÓVIL PARA MEJOR RENDIMIENTO */
+.hero::before,
+.hero::after,
+.hero .floating-orb-2,
+.hero .floating-orb-3,
+.features::before,
+.videos::before,
+.contact::before {
+opacity: 0.3 !important;
+}
+
+.contact__orb,
+.videos__orb {
+opacity: 0.05 !important;
+}
+
+/* Optimizar el menú móvil para evitar cualquier scroll */
+.nav__menu {
+max-height: 100vh;
+max-height: 100dvh;
+}
+
+/* Asegurar que el contenido del menú nunca exceda la altura */
+.nav__language-mobile {
+flex-shrink: 0;
+}
+
+.nav__list {
+flex-shrink: 0;
+}
+
+.nav__cta-mobile {
+flex-shrink: 0;
+}
+
+/* Optimizar touch events para máxima responsividad */
+.nav__toggle,
+.nav__close,
+.nav__link,
+.nav__language-option,
+.btn--mobile {
+touch-action: manipulation;
+-webkit-tap-highlight-color: transparent;
+}
+}
+
+/* ===== ANIMACIÓN ULTRA FLUIDA PARA EL MENÚ MÓVIL ===== */
+@keyframes mobile-menu-glow {
+0%, 100% {
+opacity: 0.8;
+transform: scale(1);
+}
+50% {
+opacity: 1;
+transform: scale(1.01);
+}
+}
+
+/* ===== CORRECCIONES ESPECÍFICAS PARA EVITAR SCROLL EN EL MENÚ ===== */
+@media screen and (max-width: 1023px) {
+/* Asegurar que el menú nunca tenga scroll */
+.nav__menu {
+overflow: hidden !important;
+-webkit-overflow-scrolling: auto !important;
+}
+
+/* Ajustar el espaciado para que todo quepa sin scroll */
+.nav__menu {
+gap: clamp(var(--space-sm), 3vh, var(--space-lg));
+}
+
+/* Hacer los elementos más compactos en pantallas muy pequeñas */
+@media screen and (max-height: 700px) {
+.nav__language-mobile {
+padding: var(--space-md);
+}
+
+.nav__list {
+gap: var(--space-xs);
+}
+
+.nav__link {
+padding: var(--space-xs) var(--space-lg);
+min-height: 40px;
+}
+
+.btn--mobile {
+padding: var(--space-sm) var(--space-lg);
+min-height: 44px;
+}
+
+.nav__language-option {
+min-height: 36px;
+padding: var(--space-xs) var(--space-sm);
+}
+}
+
+/* Para pantallas muy pequeñas en altura */
+@media screen and (max-height: 600px) {
+.nav__menu {
+gap: var(--space-xs);
+}
+
+.nav__language-mobile {
+padding: var(--space-sm);
+margin-bottom: var(--space-sm);
+}
+
+.nav__language-title {
+margin-bottom: var(--space-xs);
+font-size: 0.8rem;
+}
+
+.nav__list {
+gap: 2px;
+}
+
+.nav__link {
+padding: var(--space-xs) var(--space-md);
+min-height: 36px;
+font-size: 0.8rem;
+}
+
+.btn--mobile {
+padding: var(--space-xs) var(--space-md);
+min-height: 40px;
+font-size: 0.85rem;
+}
+
+.nav__language-option {
+min-height: 32px;
+padding: 2px var(--space-xs);
+font-size: 0.7rem;
+}
+
+.nav__language-flag {
+font-size: 0.9rem;
+}
+}
+}
+
+/* ===== CORRECCIÓN FINAL PARA MÁXIMA FLUIDEZ ===== */
+@media screen and (max-width: 1023px) {
+/* Usar hardware acceleration para máxima fluidez */
+.nav__menu,
+.nav__menu *,
+.nav__toggle,
+.nav__close {
+transform: translateZ(0);
+will-change: transform;
+}
+
+/* Optimizar las transiciones para 60fps */
+.nav__menu {
+transition: left 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.nav__link,
+.nav__language-option,
+.btn--mobile {
+transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.nav__toggle,
+.nav__close {
+transition: all 0.2s cubic-bezier(0.23, 1, 0.32, 1);
+}
+}
+
+/* MEJORÉ: Transiciones más rápidas */
+.nav__toggle {
+    transition: all var(--transition-fast); /* Era var(--transition) */
+}
+
+.nav__toggle-line {
+    transition: all var(--transition-fast); /* Era var(--transition) */
+}
