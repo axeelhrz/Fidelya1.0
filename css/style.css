@@ -4621,3 +4621,595 @@ a.btn--footer {
         box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4) !important;
     }
 }
+
+/* ===== CORRECCIONES PARA ELIMINAR EFECTOS DE LUZ EN NAVBAR MÓVIL ===== */
+
+/* Aplicar solo en dispositivos móviles (1023px y menores) */
+@media screen and (max-width: 1023px) {
+
+/* ===== ELIMINAR TODOS LOS EFECTOS DE LUZ Y BRILLO EN NAVBAR MÓVIL ===== */
+
+/* Navbar principal - sin efectos */
+.nav {
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: none !important;
+}
+
+/* Header - sin efectos */
+.header {
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: none !important;
+}
+
+/* ===== BOTÓN HAMBURGUESA - COMPLETAMENTE LIMPIO ===== */
+.nav__toggle {
+    background: rgba(0, 0, 0, 0.8) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    box-shadow: none !important;
+    transition: all 0.2s ease !important;
+}
+
+.nav__toggle::before {
+    display: none !important;
+    content: none !important;
+}
+
+.nav__toggle:hover,
+.nav__toggle:active,
+.nav__toggle.active {
+    background: rgba(0, 0, 0, 0.9) !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+.nav__toggle:hover::before,
+.nav__toggle:active::before,
+.nav__toggle.active::before {
+    display: none !important;
+    content: none !important;
+    left: -100% !important;
+}
+
+/* Líneas del hamburguesa - sin efectos */
+.nav__toggle-line {
+    background: #ffffff !important;
+    box-shadow: none !important;
+    transition: all 0.2s ease !important;
+}
+
+.nav__toggle.active .nav__toggle-line:nth-child(1),
+.nav__toggle.active .nav__toggle-line:nth-child(3) {
+    background: #ffffff !important;
+    box-shadow: none !important;
+}
+
+/* ===== MENÚ MÓVIL - COMPLETAMENTE LIMPIO ===== */
+.nav__menu {
+    background: rgba(0, 0, 0, 0.95) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: none !important;
+    border: none !important;
+}
+
+.nav__menu::before {
+    display: none !important;
+    content: none !important;
+    background: none !important;
+    animation: none !important;
+}
+
+.nav__menu.active::before {
+    display: none !important;
+    content: none !important;
+}
+
+/* ===== BOTÓN DE CERRAR - COMPLETAMENTE LIMPIO ===== */
+.nav__close {
+    background: rgba(0, 0, 0, 0.8) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    box-shadow: none !important;
+    transition: all 0.2s ease !important;
+}
+
+.nav__close:hover,
+.nav__close:active {
+    background: rgba(0, 0, 0, 0.9) !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+.nav__close svg {
+    transition: all 0.2s ease !important;
+}
+
+.nav__close:hover svg,
+.nav__close:active svg {
+    color: #ffffff !important;
+    transform: none !important;
+}
+
+/* ===== SELECTOR DE IDIOMA MÓVIL - COMPLETAMENTE LIMPIO ===== */
+.nav__language-mobile {
+    background: rgba(0, 0, 0, 0.8) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    box-shadow: none !important;
+}
+
+.nav__language-mobile::before {
+    display: none !important;
+    content: none !important;
+}
+
+.nav__language-mobile:hover::before {
+    display: none !important;
+    content: none !important;
+    left: -100% !important;
+}
+
+.nav__language-title {
+    color: #ffffff !important;
+    text-shadow: none !important;
+}
+
+/* Opciones de idioma - sin efectos */
+.nav__language-option {
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    box-shadow: none !important;
+    transition: all 0.2s ease !important;
+}
+
+.nav__language-option:hover,
+.nav__language-option:active {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+.nav__language-option.active {
+    background: rgba(255, 255, 255, 0.15) !important;
+    border-color: rgba(255, 255, 255, 0.4) !important;
+    box-shadow: none !important;
+}
+
+/* ===== ENLACES DE NAVEGACIÓN - COMPLETAMENTE LIMPIOS ===== */
+.nav__list {
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.nav__list::before {
+    display: none !important;
+    content: none !important;
+}
+
+.nav__list:hover::before {
+    display: none !important;
+    content: none !important;
+    left: -100% !important;
+}
+
+.nav__link {
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    box-shadow: none !important;
+    transition: all 0.2s ease !important;
+}
+
+.nav__link::before {
+    display: none !important;
+    content: none !important;
+}
+
+.nav__link::after {
+    display: none !important;
+    content: none !important;
+}
+
+.nav__link:hover,
+.nav__link:active {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+    box-shadow: none !important;
+    transform: none !important;
+    text-shadow: none !important;
+}
+
+.nav__link:hover::before,
+.nav__link:active::before {
+    display: none !important;
+    content: none !important;
+    left: -100% !important;
+}
+
+.nav__link:hover::after,
+.nav__link:active::after {
+    display: none !important;
+    content: none !important;
+    width: 0 !important;
+    opacity: 0 !important;
+}
+
+.nav__link.active {
+    background: rgba(255, 255, 255, 0.15) !important;
+    border-color: rgba(255, 255, 255, 0.4) !important;
+    color: #ffffff !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+}
+
+.nav__link.active::after {
+    display: none !important;
+    content: none !important;
+    width: 0 !important;
+    opacity: 0 !important;
+}
+
+/* ===== BOTÓN CTA MÓVIL - COMPLETAMENTE LIMPIO ===== */
+.nav__cta-mobile {
+    background: transparent !important;
+}
+
+.btn--mobile {
+    background: linear-gradient(135deg, #FF2D55 0%, #cc1744 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    transition: all 0.2s ease !important;
+}
+
+.btn--mobile::before {
+    display: none !important;
+    content: none !important;
+}
+
+.btn--mobile::after {
+    display: none !important;
+    content: none !important;
+}
+
+.btn--mobile:hover,
+.btn--mobile:active {
+    background: linear-gradient(135deg, #cc1744 0%, #9c0025 100%) !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+    box-shadow: none !important;
+    transform: none !important;
+    text-shadow: none !important;
+}
+
+.btn--mobile:hover::before,
+.btn--mobile:active::before {
+    display: none !important;
+    content: none !important;
+    left: -100% !important;
+}
+
+.btn--mobile:hover::after,
+.btn--mobile:active::after {
+    display: none !important;
+    content: none !important;
+}
+
+/* ===== ELIMINAR TODAS LAS ANIMACIONES DE BRILLO Y LUZ ===== */
+.nav__toggle,
+.nav__close,
+.nav__language-mobile,
+.nav__language-option,
+.nav__link,
+.btn--mobile {
+    animation: none !important;
+}
+
+/* Eliminar cualquier pseudo-elemento con efectos de luz */
+.nav__toggle::before,
+.nav__toggle::after,
+.nav__close::before,
+.nav__close::after,
+.nav__language-mobile::before,
+.nav__language-mobile::after,
+.nav__language-option::before,
+.nav__language-option::after,
+.nav__link::before,
+.nav__link::after,
+.btn--mobile::before,
+.btn--mobile::after {
+    display: none !important;
+    content: none !important;
+    background: none !important;
+    box-shadow: none !important;
+    animation: none !important;
+    transition: none !important;
+}
+
+/* ===== ELIMINAR EFECTOS DE RESPLANDOR Y FILTROS ===== */
+.nav__toggle,
+.nav__close,
+.nav__language-mobile,
+.nav__language-option,
+.nav__link,
+.btn--mobile {
+    filter: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
+/* ===== ELIMINAR SOMBRAS Y BRILLOS ===== */
+.nav__toggle,
+.nav__close,
+.nav__language-mobile,
+.nav__language-option,
+.nav__link,
+.btn--mobile,
+.nav__menu,
+.nav__list {
+    box-shadow: none !important;
+    text-shadow: none !important;
+}
+
+/* ===== COLORES SÓLIDOS Y LIMPIOS ===== */
+.nav__toggle,
+.nav__close {
+    background: rgba(0, 0, 0, 0.8) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+.nav__language-mobile {
+    background: rgba(0, 0, 0, 0.8) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+.nav__language-option,
+.nav__link {
+    background: transparent !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    color: #ffffff !important;
+}
+
+.btn--mobile {
+    background: linear-gradient(135deg, #FF2D55 0%, #cc1744 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    color: #ffffff !important;
+}
+
+/* ===== ESTADOS HOVER SIMPLIFICADOS ===== */
+.nav__toggle:hover,
+.nav__close:hover {
+    background: rgba(0, 0, 0, 0.9) !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+.nav__language-mobile:hover {
+    background: rgba(0, 0, 0, 0.9) !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+.nav__language-option:hover,
+.nav__link:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+    color: #ffffff !important;
+}
+
+.btn--mobile:hover {
+    background: linear-gradient(135deg, #cc1744 0%, #9c0025 100%) !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+    color: #ffffff !important;
+}
+
+/* ===== ESTADOS ACTIVOS SIMPLIFICADOS ===== */
+.nav__language-option.active,
+.nav__link.active {
+    background: rgba(255, 255, 255, 0.15) !important;
+    border-color: rgba(255, 255, 255, 0.4) !important;
+    color: #ffffff !important;
+}
+
+/* ===== ELIMINAR TRANSFORMACIONES Y ESCALAS ===== */
+.nav__toggle:hover,
+.nav__toggle:active,
+.nav__close:hover,
+.nav__close:active,
+.nav__language-option:hover,
+.nav__language-option:active,
+.nav__link:hover,
+.nav__link:active,
+.btn--mobile:hover,
+.btn--mobile:active {
+    transform: none !important;
+    scale: none !important;
+}
+
+/* ===== TRANSICIONES SIMPLIFICADAS ===== */
+.nav__toggle,
+.nav__close,
+.nav__language-mobile,
+.nav__language-option,
+.nav__link,
+.btn--mobile {
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease !important;
+}
+
+/* ===== ELIMINAR CUALQUIER EFECTO DE PARTÍCULAS O RESPLANDOR ===== */
+.nav__menu *,
+.nav__toggle *,
+.nav__close *,
+.nav__language-mobile *,
+.nav__language-option *,
+.nav__link *,
+.btn--mobile * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+    filter: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    animation: none !important;
+}
+
+/* ===== ASEGURAR QUE NO HAY EFECTOS HEREDADOS ===== */
+.nav__menu,
+.nav__menu * {
+    background-image: none !important;
+    background-attachment: scroll !important;
+    background-blend-mode: normal !important;
+}
+
+/* ===== ELIMINAR CUALQUIER GRADIENTE ANIMADO ===== */
+.nav__toggle,
+.nav__close,
+.nav__language-mobile,
+.nav__language-option,
+.nav__link {
+    background-image: none !important;
+    background: rgba(0, 0, 0, 0.8) !important;
+}
+
+.nav__language-option,
+.nav__link {
+    background: transparent !important;
+}
+
+.btn--mobile {
+    background-image: linear-gradient(135deg, #FF2D55 0%, #cc1744 100%) !important;
+}
+
+/* ===== ELIMINAR EFECTOS DE BLUR Y FILTROS ===== */
+.nav__menu,
+.nav__toggle,
+.nav__close,
+.nav__language-mobile,
+.nav__language-option,
+.nav__link,
+.btn--mobile {
+    filter: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    -webkit-filter: none !important;
+}
+
+/* ===== CORRECCIÓN FINAL - ELIMINAR CUALQUIER EFECTO RESIDUAL ===== */
+/* Removed invalid comma-separated @keyframes block to fix syntax error */
+
+/* Deshabilitar todas las animaciones de efectos de luz */
+.nav__menu *,
+.nav__toggle *,
+.nav__close *,
+.nav__language-mobile *,
+.nav__language-option *,
+.nav__link *,
+.btn--mobile * {
+    animation: none !important;
+    animation-name: none !important;
+    animation-duration: 0s !important;
+    animation-iteration-count: 0 !important;
+}
+
+}
+
+/* ===== CORRECCIÓN ADICIONAL PARA ASEGURAR LIMPIEZA TOTAL ===== */
+@media screen and (max-width: 1023px) {
+    
+/* Eliminar cualquier efecto de resplandor del menú principal */
+.nav__menu {
+    background: rgba(0, 0, 0, 0.95) !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+/* Asegurar que el fondo del menú sea completamente sólido */
+.nav__menu::before,
+.nav__menu::after {
+    display: none !important;
+    content: none !important;
+    background: none !important;
+    animation: none !important;
+    opacity: 0 !important;
+}
+
+/* Eliminar cualquier gradiente o efecto de fondo */
+.nav__menu {
+    background-image: none !important;
+    background-attachment: scroll !important;
+    background-blend-mode: normal !important;
+    background-size: auto !important;
+    background-position: 0 0 !important;
+    background-repeat: no-repeat !important;
+}
+
+/* Asegurar que todos los elementos internos sean limpios */
+.nav__menu > * {
+    background: transparent !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    filter: none !important;
+}
+
+/* Eliminar cualquier efecto de partículas o resplandor residual */
+.nav__toggle:hover,
+.nav__close:hover,
+.nav__language-option:hover,
+.nav__link:hover,
+.btn--mobile:hover {
+    background-image: none !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    filter: none !important;
+    animation: none !important;
+}
+
+/* Asegurar que no hay efectos de transición complejos */
+.nav__toggle,
+.nav__close,
+.nav__language-mobile,
+.nav__language-option,
+.nav__link,
+.btn--mobile {
+    transition: background-color 0.2s ease, border-color 0.2s ease !important;
+}
+
+/* Eliminar cualquier will-change que pueda causar efectos no deseados */
+.nav__menu,
+.nav__toggle,
+.nav__close,
+.nav__language-mobile,
+.nav__language-option,
+.nav__link,
+.btn--mobile {
+    will-change: auto !important;
+}
+
+/* Asegurar que no hay transformaciones 3D */
+.nav__menu,
+.nav__toggle,
+.nav__close,
+.nav__language-mobile,
+.nav__language-option,
+.nav__link,
+.btn--mobile {
+    transform: none !important;
+    transform-style: flat !important;
+    perspective: none !important;
+    backface-visibility: visible !important;
+}
+
+}
