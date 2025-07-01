@@ -33,10 +33,10 @@ export default function FinancialPanel() {
   const [selectedPeriod, setSelectedPeriod] = useState('month');
   const [selectedMetric, setSelectedMetric] = useState('revenue');
   
-  const { data, loading, error } = useFinancialData();
+  const { data, loading, error, refresh } = useFinancialData();
 
   const handleRefresh = () => {
-    window.location.reload();
+    refresh();
   };
 
   const handleExport = () => {
@@ -47,7 +47,7 @@ export default function FinancialPanel() {
 
     const exportData = {
       financialData: data.monthlyData,
-      totalStats: data.totalStats,
+      totalStats: data,
       paymentsData: data.paymentsData,
       expensesBreakdown: data.expensesBreakdown,
       exportDate: new Date().toISOString(),
@@ -114,6 +114,7 @@ export default function FinancialPanel() {
     payload?: Array<ChartEntry>;
     label?: string;
   }
+  
   const CustomTooltip = ({ active, payload, label }: TooltipProps) => {
     if (active && payload && payload.length) {
       return (
@@ -511,15 +512,15 @@ export default function FinancialPanel() {
         {[
           {
             title: 'Ingresos Totales',
-            value: data.totalStats.totalRevenue,
-            change: data.totalStats.averageGrowth,
+            value: data.totalRevenue,
+            change: data.averageGrowth,
             icon: TrendingUp,
             color: '#10B981',
             bgColor: '#ECFDF5'
           },
           {
             title: 'Gastos Totales',
-            value: data.totalStats.totalExpenses,
+            value: data.totalExpenses,
             change: 8.2,
             icon: TrendingDown,
             color: '#F59E0B',
@@ -527,7 +528,7 @@ export default function FinancialPanel() {
           },
           {
             title: 'Beneficio Neto',
-            value: data.totalStats.totalProfit,
+            value: data.totalProfit,
             change: 18.7,
             icon: DollarSign,
             color: '#3B82F6',
@@ -535,7 +536,7 @@ export default function FinancialPanel() {
           },
           {
             title: 'Pagos Pendientes',
-            value: data.totalStats.pendingPayments,
+            value: data.pendingPayments,
             change: -5.3,
             icon: Clock,
             color: '#EF4444',
@@ -878,7 +879,7 @@ export default function FinancialPanel() {
                 <tbody>
                   {data.paymentsData.slice(0, 5).map((payment, index) => (
                     <motion.tr
-                      key={payment.id}
+                      key={`${payment.patientName}-${payment.date}-${index}`}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.1 }}

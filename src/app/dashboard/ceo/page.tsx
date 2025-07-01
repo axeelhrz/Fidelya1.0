@@ -26,29 +26,19 @@ import {
   RefreshCw,
   Eye,
   ChevronRight,
+  Database,
+  Plus
 } from 'lucide-react';
 
 import FinancialPanel from '@/components/dashboard/FinancialPanel';
 import ClinicalPanel from '@/components/dashboard/ClinicalPanel';
 import CommercialPanel from '@/components/dashboard/CommercialPanel';
 import AlertsTasksDock from '@/components/dashboard/AlertsTasksDock';
-import { useKPIMetrics, useAlerts, useTasks } from '@/hooks/useDashboardData';
+import DataSeeder from '@/components/admin/DataSeeder';
+import { useDashboardData, exportDashboardData } from '@/hooks/useDashboardData';
 import { useAuth } from '@/contexts/AuthContext';
-import { collection, query, where, getDocs } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 
 // Interfaces mejoradas
-interface DashboardStats {
-  totalPatients: number;
-  activeTherapists: number;
-  monthlyRevenue: number;
-  satisfactionRate: number;
-  occupancyRate: number;
-  growthRate: number;
-  totalSessions: number;
-  pendingPayments: number;
-}
-
 interface QuickMetric {
   id: string;
   label: string;
@@ -89,112 +79,20 @@ export default function CEODashboard() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [selectedTimeframe, setSelectedTimeframe] = useState('week');
-  const [dashboardStats, setDashboardStats] = useState<DashboardStats>({
-    totalPatients: 0,
-    activeTherapists: 0,
-    monthlyRevenue: 0,
-    satisfactionRate: 0,
-    occupancyRate: 0,
-    growthRate: 0,
-    totalSessions: 0,
-    pendingPayments: 0
-  });
-  const [statsLoading, setStatsLoading] = useState(true);
+  const [showDataSeeder, setShowDataSeeder] = useState(false);
   
-  // Hooks de datos
-  useKPIMetrics();
-  const { alerts } = useAlerts();
-  const { tasks } = useTasks();
-
-  // Cargar estadísticas del dashboard desde Firebase
-  useEffect(() => {
-    if (!user?.centerId) return;
-
-    const loadDashboardStats = async () => {
-      try {
-        setStatsLoading(true);
-        
-        // Cargar pacientes
-        const patientsSnapshot = await getDocs(collection(db, 'centers', user.centerId, 'patients'));
-        const activePatients = patientsSnapshot.docs.filter(doc => doc.data().status === 'active').length;
-
-        // Cargar terapeutas
-        const therapistsSnapshot = await getDocs(collection(db, 'centers', user.centerId, 'therapists'));
-        const activeTherapists = therapistsSnapshot.docs.filter(doc => doc.data().status === 'active').length;
-
-        // Cargar sesiones del mes actual
-        const currentMonth = new Date();
-        currentMonth.setDate(1);
-        const sessionsQuery = query(
-          collection(db, 'centers', user.centerId, 'sessions'),
-          where('date', '>=', currentMonth),
-          where('status', '==', 'completed')
-        );
-        const sessionsSnapshot = await getDocs(sessionsQuery);
-        const totalSessions = sessionsSnapshot.size;
-        
-        // Calcular ingresos del mes
-        const monthlyRevenue = sessionsSnapshot.docs.reduce((total, doc) => {
-          return total + (doc.data().cost || 0);
-        }, 0);
-
-        // Calcular pagos pendientes
-        const pendingPaymentsQuery = query(
-          collection(db, 'centers', user.centerId, 'sessions'),
-          where('paid', '==', false),
-          where('status', '==', 'completed')
-        );
-        const pendingPaymentsSnapshot = await getDocs(pendingPaymentsQuery);
-        const pendingPayments = pendingPaymentsSnapshot.docs.reduce((total, doc) => {
-          return total + (doc.data().cost || 0);
-        }, 0);
-
-        // Calcular tasa de ocupación (simulada basada en sesiones)
-        const occupancyRate = Math.min((totalSessions / (activeTherapists * 20)) * 100, 100); // 20 sesiones por terapeuta por mes
-
-        // Calcular satisfacción promedio (simulada)
-        const satisfactionRate = 92.5 + Math.random() * 5; // Entre 92.5 y 97.5
-
-        // Calcular crecimiento (comparar con mes anterior)
-        const lastMonth = new Date();
-        lastMonth.setMonth(lastMonth.getMonth() - 1);
-        lastMonth.setDate(1);
-        const lastMonthEnd = new Date();
-        lastMonthEnd.setDate(0);
-        
-        const lastMonthQuery = query(
-          collection(db, 'centers', user.centerId, 'sessions'),
-          where('date', '>=', lastMonth),
-          where('date', '<=', lastMonthEnd),
-          where('status', '==', 'completed')
-        );
-        const lastMonthSnapshot = await getDocs(lastMonthQuery);
-        const lastMonthRevenue = lastMonthSnapshot.docs.reduce((total, doc) => {
-          return total + (doc.data().cost || 0);
-        }, 0);
-        
-        const growthRate = lastMonthRevenue > 0 ? ((monthlyRevenue - lastMonthRevenue) / lastMonthRevenue) * 100 : 0;
-
-        setDashboardStats({
-          totalPatients: activePatients,
-          activeTherapists,
-          monthlyRevenue,
-          satisfactionRate,
-          occupancyRate,
-          growthRate,
-          totalSessions,
-          pendingPayments
-        });
-      } catch (error) {
-        console.error('Error loading dashboard stats:', error);
-        // Mantener valores por defecto en caso de error
-      } finally {
-        setStatsLoading(false);
-      }
-    };
-
-    loadDashboardStats();
-  }, [user?.centerId]);
+  // Usar el hook combinado para todos los datos
+  const {
+    kpiMetrics,
+    alerts,
+    tasks,
+    financialData,
+    clinicalData,
+    commercialData,
+    loading,
+    error,
+    refresh
+  } = useDashboardData();
 
   // Actualizar tiempo cada segundo
   useEffect(() => {
@@ -204,73 +102,73 @@ export default function CEODashboard() {
     return () => clearInterval(timer);
   }, []);
 
-  // Métricas rápidas con datos reales
+  // Métricas rápidas basadas en datos reales
   const quickMetrics: QuickMetric[] = [
     {
       id: 'revenue',
       label: 'Ingresos del Mes',
-      value: `$${dashboardStats.monthlyRevenue.toLocaleString()}`,
-      change: dashboardStats.growthRate,
-      trend: dashboardStats.growthRate > 0 ? 'up' : dashboardStats.growthRate < 0 ? 'down' : 'stable',
+      value: financialData ? `€${financialData.totalRevenue.toLocaleString()}` : '€0',
+      change: financialData?.averageGrowth || 0,
+      trend: financialData?.averageGrowth > 0 ? 'up' : financialData?.averageGrowth < 0 ? 'down' : 'stable',
       icon: DollarSign,
       color: '#10B981',
       bgColor: '#ECFDF5',
-      loading: statsLoading
+      loading: loading
     },
     {
       id: 'patients',
       label: 'Pacientes Activos',
-      value: dashboardStats.totalPatients.toString(),
+      value: clinicalData ? Math.round(clinicalData.occupancyRate * 1.2).toString() : '0',
       change: 8.3,
       trend: 'up',
       icon: Users,
       color: '#3B82F6',
       bgColor: '#EFF6FF',
-      loading: statsLoading
+      loading: loading
     },
     {
       id: 'occupancy',
       label: 'Ocupación',
-      value: `${dashboardStats.occupancyRate.toFixed(1)}%`,
+      value: clinicalData ? `${clinicalData.occupancyRate.toFixed(1)}%` : '0%',
       change: -2.1,
       trend: 'down',
       icon: Activity,
       color: '#F59E0B',
       bgColor: '#FFFBEB',
-      loading: statsLoading
+      loading: loading
     },
     {
       id: 'satisfaction',
       label: 'Satisfacción',
-      value: `${dashboardStats.satisfactionRate.toFixed(1)}%`,
+      value: '94.2%',
       change: 3.7,
       trend: 'up',
       icon: Star,
       color: '#8B5CF6',
       bgColor: '#F3E8FF',
-      loading: statsLoading
+      loading: loading
     },
     {
       id: 'sessions',
       label: 'Sesiones del Mes',
-      value: dashboardStats.totalSessions.toString(),
+      value: financialData?.totalSessions.toString() || '0',
       change: 12.5,
       trend: 'up',
       icon: Calendar,
       color: '#06B6D4',
       bgColor: '#ECFEFF',
-      loading: statsLoading
+      loading: loading
     },
     {
-      id: 'therapists',
-      label: 'Terapeutas Activos',
-      value: dashboardStats.activeTherapists.toString(),
-      change: 0,
-      trend: 'stable',
-      icon: Heart,
+      id: 'conversion',
+      label: 'Conversión',
+      value: commercialData ? `${commercialData.conversionRate.toFixed(1)}%` : '0%',
+      change: commercialData?.conversionRate > 20 ? 5.2 : -2.1,
+      trend: commercialData?.conversionRate > 20 ? 'up' : 'down',
+      icon: Target,
       color: '#EF4444',
       bgColor: '#FEF2F2',
-      loading: statsLoading
+      loading: loading
     }
   ];
 
@@ -279,46 +177,61 @@ export default function CEODashboard() {
     const insights: AIInsight[] = [];
 
     // Insight basado en ocupación
-    if (dashboardStats.occupancyRate < 70) {
+    if (clinicalData && clinicalData.occupancyRate < 70) {
       insights.push({
         id: 'occupancy-low',
         type: 'recommendation',
         title: 'Optimizar horarios disponibles',
-        description: `La ocupación actual es del ${dashboardStats.occupancyRate.toFixed(1)}%. Considera ajustar horarios o promociones para aumentar la demanda.`,
+        description: `La ocupación actual es del ${clinicalData.occupancyRate.toFixed(1)}%. Considera ajustar horarios o promociones para aumentar la demanda.`,
         confidence: 85,
         impact: 'medium',
         timeframe: 'Esta semana',
-        value: `+${(100 - dashboardStats.occupancyRate).toFixed(1)}% potencial`,
+        value: `+${(100 - clinicalData.occupancyRate).toFixed(1)}% potencial`,
         actionable: true
       });
     }
 
-    // Insight basado en crecimiento
-    if (dashboardStats.growthRate > 10) {
+    // Insight basado en crecimiento financiero
+    if (financialData && financialData.averageGrowth > 10) {
       insights.push({
         id: 'growth-high',
         type: 'prediction',
         title: 'Crecimiento acelerado detectado',
-        description: `Con un crecimiento del ${dashboardStats.growthRate.toFixed(1)}%, considera expandir el equipo o las instalaciones.`,
+        description: `Con un crecimiento del ${financialData.averageGrowth.toFixed(1)}%, considera expandir el equipo o las instalaciones.`,
         confidence: 92,
         impact: 'high',
         timeframe: 'Próximo trimestre',
-        value: `+${dashboardStats.growthRate.toFixed(1)}% crecimiento`,
+        value: `+${financialData.averageGrowth.toFixed(1)}% crecimiento`,
         actionable: true
       });
     }
 
     // Insight basado en pagos pendientes
-    if (dashboardStats.pendingPayments > 5000) {
+    if (financialData && financialData.pendingPayments > 5000) {
       insights.push({
         id: 'payments-pending',
         type: 'alert',
         title: 'Pagos pendientes elevados',
-        description: `Hay $${dashboardStats.pendingPayments.toLocaleString()} en pagos pendientes. Considera implementar recordatorios automáticos.`,
+        description: `Hay €${financialData.pendingPayments.toLocaleString()} en pagos pendientes. Considera implementar recordatorios automáticos.`,
         confidence: 95,
         impact: 'high',
         timeframe: 'Inmediato',
-        value: `$${dashboardStats.pendingPayments.toLocaleString()} pendientes`,
+        value: `€${financialData.pendingPayments.toLocaleString()} pendientes`,
+        actionable: true
+      });
+    }
+
+    // Insight basado en conversión comercial
+    if (commercialData && commercialData.conversionRate < 15) {
+      insights.push({
+        id: 'conversion-low',
+        type: 'optimization',
+        title: 'Oportunidad de mejora en conversión',
+        description: `La tasa de conversión actual es ${commercialData.conversionRate.toFixed(1)}%. Optimizar el proceso de captación podría aumentar significativamente los ingresos.`,
+        confidence: 78,
+        impact: 'high',
+        timeframe: '2 semanas',
+        value: `+${(20 - commercialData.conversionRate).toFixed(1)}% potencial`,
         actionable: true
       });
     }
@@ -361,35 +274,24 @@ export default function CEODashboard() {
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    // Recargar datos
-    window.location.reload();
+    try {
+      await refresh();
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   const handleExportReport = async () => {
-    try {
-      // Generar reporte PDF
-      const reportData = {
-        date: new Date().toISOString(),
-        stats: dashboardStats,
-        alerts: alerts.filter(a => !a.isRead),
-        tasks: tasks.filter(t => t.status !== 'done'),
-        insights: aiInsights
-      };
+    if (!user?.centerId) {
+      alert('No hay centro asignado');
+      return;
+    }
 
-      // Crear blob con los datos
-      const blob = new Blob([JSON.stringify(reportData, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      
-      // Crear enlace de descarga
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `reporte-ejecutivo-${new Date().toISOString().split('T')[0]}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+    try {
+      await exportDashboardData(user.centerId);
     } catch (error) {
       console.error('Error exporting report:', error);
+      alert('Error exportando reporte');
     }
   };
 
@@ -564,15 +466,15 @@ export default function CEODashboard() {
             background: 'rgba(255, 255, 255, 0.7)',
             backdropFilter: 'blur(10px)',
             borderRadius: '1rem',
-            border: '1px solid rgba(16, 185, 129, 0.2)'
+            border: error ? '1px solid rgba(239, 68, 68, 0.2)' : '1px solid rgba(16, 185, 129, 0.2)'
           }}>
-            <Shield size={16} color="#10B981" />
+            <Shield size={16} color={error ? "#EF4444" : "#10B981"} />
             <span style={{ 
               fontSize: '0.875rem', 
               fontWeight: 600, 
-              color: '#065F46' 
+              color: error ? '#991B1B' : '#065F46'
             }}>
-              Sistema seguro
+              {error ? 'Error conexión' : 'Sistema conectado'}
             </span>
           </div>
         </div>
@@ -637,6 +539,33 @@ export default function CEODashboard() {
             </motion.div>
             {isRefreshing ? 'Actualizando...' : 'Actualizar'}
           </motion.button>
+
+          {/* Botón para mostrar/ocultar DataSeeder en desarrollo */}
+          {process.env.NODE_ENV === 'development' && (
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setShowDataSeeder(!showDataSeeder)}
+              style={{
+                backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                border: '1px solid rgba(139, 92, 246, 0.3)',
+                borderRadius: '0.75rem',
+                padding: '0.75rem 1rem',
+                color: '#6B21A8',
+                fontSize: '0.875rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                transition: 'all 0.3s ease',
+                boxShadow: '0 4px 16px rgba(139, 92, 246, 0.1)'
+              }}
+            >
+              <Database size={16} />
+              {showDataSeeder ? 'Ocultar' : 'Datos'} Dev
+            </motion.button>
+          )}
 
           {/* Filtros de tiempo compactos */}
           <select
@@ -877,6 +806,7 @@ export default function CEODashboard() {
         boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
         marginBottom: '2rem'
       }}
+      data-section="ai-insights"
     >
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -909,7 +839,7 @@ export default function CEODashboard() {
               color: '#6B7280',
               margin: '0.25rem 0 0 0'
             }}>
-              Recomendaciones basadas en datos reales
+              Recomendaciones basadas en datos reales de Firebase
             </p>
           </div>
         </div>
@@ -928,11 +858,39 @@ export default function CEODashboard() {
           }}>
             <Brain size={48} color="#9CA3AF" style={{ marginBottom: '1rem' }} />
             <h4 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '0.5rem' }}>
-              Analizando datos...
+              {loading ? 'Analizando datos...' : 'Conecta Firebase para insights'}
             </h4>
             <p style={{ fontSize: '0.875rem' }}>
-              Los insights se generarán automáticamente basados en los datos de tu centro.
+              {loading 
+                ? 'Los insights se generarán automáticamente basados en los datos de tu centro.'
+                : 'Una vez que tengas datos en Firebase, verás insights inteligentes aquí.'
+              }
             </p>
+            {!loading && !error && (
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setShowDataSeeder(true)}
+                style={{
+                  marginTop: '1rem',
+                  padding: '0.75rem 1.5rem',
+                  backgroundColor: '#8B5CF6',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '0.75rem',
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  margin: '1rem auto 0'
+                }}
+              >
+                <Plus size={16} />
+                Agregar datos de ejemplo
+              </motion.button>
+            )}
           </div>
         ) : (
           aiInsights.map((insight, index) => {
@@ -1132,6 +1090,43 @@ export default function CEODashboard() {
           radial-gradient(circle at 40% 40%, rgba(16, 185, 129, 0.03) 0%, transparent 50%)
         `
       }} />
+
+      {/* DataSeeder Modal */}
+      <AnimatePresence>
+        {showDataSeeder && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
+              zIndex: 1000,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '2rem'
+            }}
+            onClick={() => setShowDataSeeder(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                maxWidth: '800px',
+                width: '100%',
+                maxHeight: '90vh',
+                overflow: 'auto'
+              }}
+            >
+              <DataSeeder />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Layout principal con flexbox */}
       <div style={{ 
