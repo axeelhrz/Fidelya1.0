@@ -5703,3 +5703,617 @@ position: relative;
 }
 
 }
+/* ===== CORRECCIÓN DE TRANSICIONES LENTAS - STARFLEX ===== */
+
+/* Redefinir variables de transición para mayor velocidad */
+:root {
+    /* Transiciones más rápidas y naturales */
+    --transition: 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    --transition-fast: 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    --transition-slow: 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    
+    /* Transición específica para navbar */
+    --navbar-transition: 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    
+    /* Transición para botones */
+    --button-transition: 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* ===== CORRECCIONES ESPECÍFICAS PARA NAVBAR ===== */
+
+/* Enlaces de navegación - transición más rápida */
+.nav__link {
+    transition: all var(--navbar-transition) !important;
+}
+
+.nav__link::before {
+    transition: all var(--navbar-transition) !important;
+}
+
+.nav__link::after {
+    transition: all var(--navbar-transition) !important;
+}
+
+/* Botón hamburguesa */
+.nav__toggle {
+    transition: all var(--navbar-transition) !important;
+}
+
+.nav__toggle-line {
+    transition: all var(--navbar-transition) !important;
+}
+
+/* Menú móvil */
+.nav__menu {
+    transition: left var(--navbar-transition) !important;
+}
+
+/* ===== CORRECCIONES PARA BOTONES ===== */
+
+/* Botones principales */
+.btn--primary,
+.btn--cta,
+.btn--cta-video,
+.btn--footer,
+.btn--secondary {
+    transition: all var(--button-transition) !important;
+}
+
+/* Efectos de brillo interno de botones */
+.btn--primary::before,
+.btn--cta::before,
+.btn--cta-video::before,
+.btn--footer::before {
+    transition: left 0.8s ease !important;
+}
+
+/* Anillo exterior neón de botones */
+.btn--primary::after,
+.btn--cta::after,
+.btn--cta-video::after,
+.btn--footer::after {
+    transition: opacity var(--button-transition) !important;
+}
+
+/* ===== CORRECCIONES PARA BOTÓN FLOTANTE ===== */
+
+/* Botón principal flotante */
+.floating-widget__main-btn {
+    transition: all var(--button-transition) !important;
+}
+
+.floating-widget__main-btn::before {
+    transition: opacity 0.6s ease !important;
+}
+
+.floating-widget__main-icon {
+    transition: all var(--button-transition) !important;
+}
+
+/* Menú flotante */
+.floating-widget__menu {
+    transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+}
+
+.floating-widget__menu-item {
+    transition: all var(--button-transition) !important;
+}
+
+.floating-widget__menu-item::before {
+    transition: left 0.8s ease !important;
+}
+
+/* ===== CORRECCIONES PARA SELECTOR DE IDIOMA ===== */
+
+.language-switcher__btn {
+    transition: all var(--navbar-transition) !important;
+}
+
+.language-switcher__dropdown {
+    transition: all var(--navbar-transition) !important;
+}
+
+.language-switcher__option {
+    transition: all var(--navbar-transition) !important;
+}
+
+/* ===== CORRECCIONES PARA ELEMENTOS INTERACTIVOS ===== */
+
+/* Canales de contacto */
+.contact__channel {
+    transition: all var(--button-transition) !important;
+}
+
+.contact__channel-icon {
+    transition: all var(--button-transition) !important;
+}
+
+.contact__channel-btn {
+    transition: all var(--button-transition) !important;
+}
+
+/* FAQ */
+.faq__item {
+    transition: all var(--button-transition) !important;
+}
+
+.faq__question {
+    transition: all var(--button-transition) !important;
+}
+
+.faq__icon {
+    transition: all var(--button-transition) !important;
+}
+
+.faq__icon::before,
+.faq__icon::after {
+    transition: all var(--button-transition) !important;
+}
+
+/* ===== CORRECCIONES PARA CARACTERÍSTICAS ===== */
+
+.feature__phone::before {
+    transition: opacity var(--button-transition) !important;
+}
+
+/* ===== CORRECCIONES PARA VIDEOS ===== */
+
+.videos__player {
+    transition: all var(--button-transition) !important;
+}
+
+.videos__play-overlay {
+    transition: all var(--button-transition) !important;
+}
+
+.videos__play-button {
+    transition: all var(--button-transition) !important;
+}
+
+/* ===== CORRECCIONES PARA ELEMENTOS CON HOVER ===== */
+
+/* Asegurar que todos los elementos con hover tengan transiciones rápidas */
+*:hover {
+    transition-duration: 0.2s !important;
+}
+
+/* ===== CORRECCIONES ESPECÍFICAS PARA MÓVIL ===== */
+
+@media (max-width: 1023px) {
+    /* Usar transiciones aún más rápidas en móvil */
+    :root {
+        --transition-mobile: 0.15s ease !important;
+    }
+    
+    /* Navbar móvil */
+    .nav__toggle,
+    .nav__close,
+    .nav__link,
+    .nav__language-option,
+    .btn--mobile {
+        transition: all var(--transition-mobile) !important;
+    }
+    
+    /* Menú drawer */
+    .nav__menu {
+        transition: left 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+    }
+}
+
+/* ===== OPTIMIZACIÓN PARA DISPOSITIVOS DE BAJO RENDIMIENTO ===== */
+
+@media (prefers-reduced-motion: reduce) {
+    /* Para usuarios que prefieren movimiento reducido, hacer transiciones aún más rápidas */
+    :root {
+        --transition: 0.1s ease !important;
+        --transition-fast: 0.05s ease !important;
+        --transition-slow: 0.15s ease !important;
+        --navbar-transition: 0.1s ease !important;
+        --button-transition: 0.1s ease !important;
+    }
+}
+
+/* ===== CORRECCIÓN PARA EFECTOS DE BRILLO QUE NO NECESITAN SER TAN LENTOS ===== */
+
+/* Efectos de shimmer y brillo más rápidos */
+.btn--primary::before,
+.btn--cta::before,
+.btn--cta-video::before,
+.btn--footer::before,
+.floating-widget__menu-item::before {
+    transition: left 0.6s ease !important;
+}
+
+/* Pulsos y animaciones de resplandor más rápidos */
+@keyframes pulse-gentle {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.1);
+        opacity: 0.8;
+    }
+}
+
+/* Reducir duración de animaciones de resplandor */
+.hero__badge::before,
+.videos__badge-icon,
+.hero__trust::before,
+.feature__list-item::before {
+    animation: pulse-gentle 2s infinite !important;
+}
+
+/* ===== NOTA IMPORTANTE ===== */
+/*
+Esta corrección acelera las transiciones que estaban configuradas como:
+- --transition: 0.6s (600ms) → 0.25s (250ms)
+- --transition-slow: 1s (1000ms) → 0.4s (400ms)
+- --transition-fast: 0.3s (300ms) → 0.15s (150ms)
+
+Esto hace que las interacciones se sientan mucho más responsivas y naturales,
+especialmente en el navbar y los botones.
+*/
+/* ===== CORRECCIONES PARA ELIMINAR ESPACIO VACÍO EN LA PARTE INFERIOR ===== */
+
+/* ===== CORRECCIÓN GLOBAL - ELIMINAR ESPACIOS INNECESARIOS ===== */
+html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    min-height: 100vh !important;
+    min-height: 100dvh !important;
+    overflow-x: hidden !important;
+    position: relative !important;
+}
+
+/* ===== CORRECCIÓN ESPECÍFICA PARA EL FOOTER Y ÚLTIMA SECCIÓN ===== */
+.contact {
+    margin-bottom: 0 !important;
+    padding-bottom: var(--section-padding-y) !important;
+}
+
+.contact__footer {
+    margin-bottom: 0 !important;
+    padding-bottom: var(--space-2xl) !important;
+}
+
+.contact__footer-content {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+/* ===== ELIMINAR MÁRGENES INNECESARIOS DE TODAS LAS SECCIONES ===== */
+section {
+    margin-bottom: 0 !important;
+}
+
+.hero,
+.features,
+.videos,
+.faq,
+.contact {
+    margin-bottom: 0 !important;
+}
+
+/* ===== CORRECCIÓN PARA EL WIDGET FLOTANTE ===== */
+.floating-widget {
+    position: fixed !important;
+    bottom: 30px !important;
+    right: 30px !important;
+    z-index: 1100 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* ===== CORRECCIÓN PARA ELEMENTOS QUE PUEDAN ESTAR CREANDO ESPACIO ===== */
+.bg-canvas {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    z-index: 0 !important;
+}
+
+/* ===== CORRECCIÓN PARA PSEUDO-ELEMENTOS QUE PUEDAN CREAR ESPACIO ===== */
+.contact::after,
+.contact__footer::after,
+.contact__footer-content::after,
+body::after,
+html::after {
+    display: none !important;
+    content: none !important;
+}
+
+/* ===== CORRECCIÓN ESPECÍFICA PARA MÓVILES ===== */
+@media screen and (max-width: 1023px) {
+    .contact {
+        padding-bottom: var(--mobile-section-padding) !important;
+        margin-bottom: 0 !important;
+    }
+    
+    .contact__footer {
+        padding-bottom: var(--space-xl) !important;
+        margin-bottom: 0 !important;
+    }
+    
+    .floating-widget {
+        bottom: 20px !important;
+        right: 20px !important;
+        margin: 0 !important;
+    }
+    
+    /* Asegurar que no hay scroll vertical innecesario */
+    body {
+        overflow-x: hidden !important;
+        position: relative !important;
+    }
+}
+
+/* ===== CORRECCIÓN PARA PANTALLAS MUY PEQUEÑAS ===== */
+@media screen and (max-width: 480px) {
+    .contact {
+        padding-bottom: clamp(1.5rem, 5vw, 3rem) !important;
+    }
+    
+    .contact__footer {
+        padding-bottom: var(--space-lg) !important;
+    }
+}
+
+/* ===== CORRECCIÓN PARA DISPOSITIVOS CON NOTCH ===== */
+@supports (padding: max(0px)) {
+    @media screen and (max-width: 1023px) {
+        .contact__footer {
+            padding-bottom: max(var(--space-xl), calc(env(safe-area-inset-bottom, 0px) + var(--space-lg))) !important;
+        }
+        
+        .floating-widget {
+            bottom: max(20px, calc(env(safe-area-inset-bottom, 0px) + 20px)) !important;
+            right: max(20px, env(safe-area-inset-right, 20px)) !important;
+        }
+    }
+}
+
+/* ===== CORRECCIÓN PARA ELEMENTOS OCULTOS QUE PUEDAN ESTAR OCUPANDO ESPACIO ===== */
+[style*="display: none"],
+.hidden,
+.desktop-only {
+    margin: 0 !important;
+    padding: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
+}
+
+@media screen and (max-width: 1023px) {
+    .desktop-only {
+        display: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        height: 0 !important;
+    }
+}
+
+/* ===== CORRECCIÓN PARA ELEMENTOS ABSOLUTOS O FIJOS ===== */
+.header,
+.language-switcher,
+.floating-widget {
+    margin: 0 !important;
+}
+
+/* ===== CORRECCIÓN FINAL - FORZAR ALTURA EXACTA DEL BODY ===== */
+body {
+    min-height: 100vh !important;
+    min-height: 100dvh !important;
+    max-height: none !important;
+    height: auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.bg-canvas {
+    position: fixed !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+}
+
+/* ===== CORRECCIÓN PARA CONTENIDO PRINCIPAL ===== */
+main {
+    flex: 1 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Si no hay elemento main, aplicar a las secciones principales */
+.hero,
+.features,
+.videos,
+.faq {
+    margin: 0 !important;
+}
+
+.contact {
+    margin: 0 !important;
+    margin-bottom: 0 !important;
+}
+
+/* ===== CORRECCIÓN PARA CUALQUIER ELEMENTO QUE PUEDA ESTAR CREANDO SCROLL VERTICAL INNECESARIO ===== */
+* {
+    box-sizing: border-box !important;
+}
+
+*:not(.bg-canvas):not(.floating-widget):not(.header):not(.language-switcher) {
+    max-width: 100% !important;
+}
+
+/* ===== CORRECCIÓN ESPECÍFICA PARA ELIMINAR ESPACIOS EN BLANCO AL FINAL ===== */
+.contact__footer-content:last-child {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+.contact__footer:last-child {
+    margin-bottom: 0 !important;
+}
+
+.contact:last-child {
+    margin-bottom: 0 !important;
+}
+
+/* ===== CORRECCIÓN PARA ELEMENTOS DE GRID QUE PUEDAN ESTAR CREANDO ESPACIO ===== */
+.contact__grid {
+    margin-bottom: 0 !important;
+}
+
+.contact__grid:last-child {
+    margin-bottom: 0 !important;
+}
+
+/* ===== CORRECCIÓN PARA BOTONES Y ENLACES QUE PUEDAN ESTAR CREANDO ESPACIO ===== */
+.contact__channel:last-child,
+.contact__footer-content > *:last-child {
+    margin-bottom: 0 !important;
+}
+
+/* ===== CORRECCIÓN PARA ASEGURAR QUE NO HAY OVERFLOW VERTICAL ===== */
+html {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    scroll-behavior: smooth !important;
+}
+
+body {
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+}
+
+/* ===== CORRECCIÓN PARA ELEMENTOS CON POSITION ABSOLUTE QUE PUEDAN ESTAR FUERA DEL VIEWPORT ===== */
+.contact::before,
+.contact__bg-effects,
+.contact__orb {
+    position: absolute !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* ===== CORRECCIÓN FINAL PARA ASEGURAR QUE EL CONTENIDO TERMINE EXACTAMENTE DONDE DEBE ===== */
+.contact__footer {
+    position: relative !important;
+    z-index: 3 !important;
+    background: rgba(0, 0, 0, 0.2) !important;
+    backdrop-filter: blur(20px) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+    padding: var(--space-2xl) 0 !important;
+    margin: 0 !important;
+    margin-bottom: 0 !important;
+    overflow: visible !important;
+}
+
+/* ===== CORRECCIÓN PARA MODO OSCURO ===== */
+@media (prefers-color-scheme: dark) {
+    .contact__footer {
+        background: rgba(0, 0, 0, 0.3) !important;
+    }
+}
+
+/* ===== CORRECCIÓN PARA DISPOSITIVOS DE ALTO CONTRASTE ===== */
+@media (prefers-contrast: high) {
+    .contact__footer {
+        border-top-width: 2px !important;
+    }
+}
+
+/* ===== CORRECCIÓN PARA USUARIOS QUE PREFIEREN MOVIMIENTO REDUCIDO ===== */
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto !important;
+    }
+}
+
+/* ===== CORRECCIÓN DE DEPURACIÓN - TEMPORAL PARA IDENTIFICAR ELEMENTOS PROBLEMÁTICOS ===== */
+/*
+Descomenta estas líneas si necesitas identificar qué elementos están creando espacio:
+
+* {
+    outline: 1px solid red !important;
+}
+
+.contact * {
+    outline: 2px solid blue !important;
+}
+
+.contact__footer * {
+    outline: 3px solid green !important;
+}
+*/
+
+/* ===== CORRECCIÓN FINAL - ASEGURAR QUE EL ÚLTIMO ELEMENTO NO TENGA MARGEN INFERIOR ===== */
+body > *:last-child,
+.contact:last-child,
+.contact__footer:last-child,
+.contact__footer-content:last-child,
+.contact__footer-content > *:last-child {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+/* ===== CORRECCIÓN PARA ELEMENTOS FLOTANTES QUE NO DEBEN AFECTAR EL LAYOUT ===== */
+.floating-widget,
+.language-switcher,
+.header {
+    position: fixed !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* ===== CORRECCIÓN PARA ASEGURAR QUE EL VIEWPORT TERMINE CORRECTAMENTE ===== */
+@media screen and (max-width: 1023px) {
+    body {
+        padding-bottom: 0 !important;
+        margin-bottom: 0 !important;
+    }
+    
+    .contact {
+        padding-bottom: var(--mobile-section-padding) !important;
+        margin-bottom: 0 !important;
+    }
+    
+    .contact__footer {
+        padding-bottom: max(var(--space-xl), calc(env(safe-area-inset-bottom, 0px) + var(--space-lg))) !important;
+        margin-bottom: 0 !important;
+    }
+}
+
+/* ===== CORRECCIÓN ESPECÍFICA PARA WEBKIT (SAFARI) ===== */
+@supports (-webkit-appearance: none) {
+    body {
+        -webkit-overflow-scrolling: touch !important;
+    }
+    
+    .contact__footer {
+        -webkit-transform: translateZ(0) !important;
+        transform: translateZ(0) !important;
+    }
+}
+
+/* ===== CORRECCIÓN PARA FIREFOX ===== */
+@-moz-document url-prefix() {
+    body {
+        overflow-x: hidden !important;
+    }
+}
+
+/* ===== CORRECCIÓN FINAL PARA ELIMINAR CUALQUIER ESPACIO RESIDUAL ===== */
+.contact__footer-content:after,
+.contact__footer:after,
+.contact:after,
+body:after,
+html:after {
+    content: none !important;
+    display: none !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
