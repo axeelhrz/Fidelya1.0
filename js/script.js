@@ -20,6 +20,10 @@ let isMobile = window.innerWidth <= 1023;
 let isReducedMotion = false;
 let performanceMode = false;
 
+// Variables globales para el drawer mejorado
+let currentScrollPosition = 0;
+let currentActiveSection = '';
+
 // ===== CONFIGURACIÓN GLOBAL OPTIMIZADA =====
 const CONFIG = {
     // Configuración de animaciones optimizada para móvil - MÁS RÁPIDA Y FLUIDA
@@ -360,9 +364,6 @@ const translationData = {
         'footer-cta-trial': '3 days free'
     }
 };
-
-// ===== RESTO DEL CÓDIGO JAVASCRIPT IGUAL =====
-// [El resto del código JavaScript permanece exactamente igual que el original]
 
 // ===== DETECCIÓN DE DISPOSITIVO Y CAPACIDADES =====
 function detectDeviceCapabilities() {
@@ -794,23 +795,27 @@ function closeLanguageSwitcher() {
     const languageSwitcherBtn = document.getElementById('language-switcher-btn');
     
     if (!languageSwitcher || !languageSwitcherBtn) return;
-    
-    isLanguageSwitcherOpen = false;
+        isLanguageSwitcherOpen = false;
     languageSwitcher.classList.remove('active');
     languageSwitcherBtn.setAttribute('aria-expanded', 'false');
 }
 
 function updateLanguageSwitcher() {
     // Actualizar texto del botón
+    const languageSwitcherBtn = document.getElementById('language-switcher-btn');
     const languageSwitcherText = document.getElementById('language-switcher-text');
     
-    if (languageSwitcherText) {
-        languageSwitcherText.textContent = currentLanguage.toUpperCase();
+    if (languageSwitcherBtn && languageSwitcherText) {
+        const languageNames = {
+            'es': 'Español',
+            'en': 'English'
+        };
+        languageSwitcherText.textContent = languageNames[currentLanguage] || 'Español';
     }
     
     // Actualizar opciones activas
-    const allOptions = document.querySelectorAll('.language-switcher__option');
-    allOptions.forEach(option => {
+    const languageOptions = document.querySelectorAll('.language-switcher__option');
+    languageOptions.forEach(option => {
         const optionLang = option.getAttribute('data-lang');
         if (optionLang === currentLanguage) {
             option.classList.add('active');
@@ -820,228 +825,448 @@ function updateLanguageSwitcher() {
     });
 }
 
-// ===== FUNCIONES DEL BOTÓN FLOTANTE OPTIMIZADAS =====
-function initializeFloatingWidget() {
-    const floatingMainBtn = document.getElementById('floating-main-btn');
-    const floatingMenu = document.getElementById('floating-menu');
+// ===== FUNCIÓN PARA DETECTAR LA SECCIÓN ACTUAL =====
+function detectCurrentSection() {
+    const sections = document.querySelectorAll('section[id]');
+    const scrollY = window.scrollY;
+    const windowHeight = window.innerHeight;
+    const offset = windowHeight * 0.3; // 30% del viewport para activar la sección
     
-    if (!floatingMainBtn || !floatingMenu) return;
+    let currentSection = '';
     
-    floatingMainBtn.addEventListener('click', () => {
-        toggleFloatingMenu();
-    });
-    
-    // Mejor manejo táctil en móvil
-    if (isMobile) {
-        floatingMainBtn.addEventListener('touchstart', () => {
-            floatingMainBtn.style.transform = 'scale(0.95)';
-        });
-        floatingMainBtn.addEventListener('touchend', () => {
-            floatingMainBtn.style.transform = '';
-        });
-    }
-    
-    document.addEventListener('click', (e) => {
-        const floatingWidget = document.getElementById('floating-widget');
-        if (isFloatingMenuOpen && floatingWidget && !floatingWidget.contains(e.target)) {
-            closeFloatingMenu();
+    sections.forEach(section => {
+        const sectionTop = section.offsetTop;
+        const sectionHeight = section.offsetHeight;
+        const sectionId = section.getAttribute('id');
+        
+        // Verificar si la sección está visible en el viewport
+        if (scrollY >= (sectionTop - offset) && scrollY < (sectionTop + sectionHeight - offset)) {
+            currentSection = sectionId;
         }
     });
     
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && isFloatingMenuOpen) {
-            closeFloatingMenu();
-        }
-    });
+    // Si estamos en la parte superior de la página, activar "home"
+    if (scrollY < 100) {
+        currentSection = 'home';
+    }
+    
+    return currentSection;
 }
 
-function toggleFloatingMenu() {
-    if (isFloatingMenuOpen) {
-        closeFloatingMenu();
-    } else {
-        openFloatingMenu();
+// ===== FUNCIÓN PARA ACTUALIZAR EL ENLACE ACTIVO EN EL DRAWER =====
+function updateActiveNavLink(activeSection = null) {
+    const navLinks = document.querySelectorAll('.nav__link');
+    const section = activeSection || detectCurrentSection();
+    
+    // Remover clase active de todos los enlaces
+    navLinks.forEach(link => {
+        link.classList.remove('active');
+        link.setAttribute('aria-current', 'false');
+    });
+    
+    // Agregar clase active al enlace correspondiente
+    if (section) {
+        const activeLink = document.querySelector(`.nav__link[href="#${section}"]`);
+        if (activeLink) {
+            activeLink.classList.add('active');
+            activeLink.setAttribute('aria-current', 'page');
+            currentActiveSection = section;
+        }
     }
 }
 
-function openFloatingMenu() {
-    const floatingMainBtn = document.getElementById('floating-main-btn');
-    const floatingMenu = document.getElementById('floating-menu');
+// ===== FUNCIÓN MEJORADA PARA ABRIR EL MENÚ MÓVIL =====
+function openMobileMenuImproved() {
+    const navToggle = document.getElementById('nav-toggle');
+    const navMenu = document.getElementById('nav-menu');
+    const body = document.body;
     
-    if (!floatingMainBtn || !floatingMenu) return;
+    if (!navToggle || !navMenu) return;
     
-    isFloatingMenuOpen = true;
-    floatingMainBtn.classList.add('active');
-    floatingMenu.classList.add('active');
-    floatingMainBtn.setAttribute('aria-expanded', 'true');
+    // PRESERVAR LA POSICIÓN DE SCROLL ACTUAL
+    currentScrollPosition = window.scrollY;
     
-    // Animación optimizada para móvil - MÁS RÁPIDA
-    const menuItems = floatingMenu.querySelectorAll('.floating-widget__menu-item');
-    menuItems.forEach((item, index) => {
+    // Detectar y actualizar la sección activa antes de abrir el menú
+    updateActiveNavLink();
+    
+    isMenuOpen = true;
+    
+    // Aplicar estilos para prevenir scroll pero mantener posición
+    body.style.position = 'fixed';
+    body.style.top = `-${currentScrollPosition}px`;
+    body.style.width = '100%';
+    body.style.overflow = 'hidden';
+    
+    // Activar el menú con animaciones mejoradas
+    navToggle.classList.add('active');
+    navMenu.classList.add('active');
+    
+    // Actualizar atributos de accesibilidad
+    navToggle.setAttribute('aria-expanded', 'true');
+    navMenu.setAttribute('aria-hidden', 'false');
+    
+    // Animar elementos del menú con mejor rendimiento
+    const navLanguageMobile = navMenu.querySelector('.nav__language-mobile');
+    const navLinks = navMenu.querySelectorAll('.nav__link');
+    const navCtaMobile = navMenu.querySelector('.nav__cta-mobile');
+    
+    // Animar selector de idioma móvil
+    if (navLanguageMobile) {
+        navLanguageMobile.style.opacity = '0';
+        navLanguageMobile.style.transform = 'translateY(20px)';
         setTimeout(() => {
-            item.style.transform = 'translateY(0) scale(1)';
-            item.style.opacity = '1';
-        }, index * (isMobile ? 80 : 120));
+            navLanguageMobile.style.transition = 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+            navLanguageMobile.style.opacity = '1';
+            navLanguageMobile.style.transform = 'translateY(0)';
+        }, 100);
+    }
+    
+    // Animar enlaces del menú con delays progresivos
+    navLinks.forEach((link, index) => {
+        link.style.opacity = '0';
+        link.style.transform = 'translateY(20px)';
+        setTimeout(() => {
+            link.style.transition = 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+            link.style.opacity = '1';
+            link.style.transform = 'translateY(0)';
+        }, 150 + (index * 80));
     });
+    
+    // Animar CTA móvil
+    if (navCtaMobile) {
+        navCtaMobile.style.opacity = '0';
+        navCtaMobile.style.transform = 'translateY(20px)';
+        setTimeout(() => {
+            navCtaMobile.style.transition = 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+            navCtaMobile.style.opacity = '1';
+            navCtaMobile.style.transform = 'translateY(0)';
+        }, 150 + (navLinks.length * 80) + 100);
+    }
+    
+    console.log(`Drawer abierto - Sección actual: ${currentActiveSection}, Scroll preservado: ${currentScrollPosition}px`);
 }
 
-function closeFloatingMenu() {
-    const floatingMainBtn = document.getElementById('floating-main-btn');
-    const floatingMenu = document.getElementById('floating-menu');
+// ===== FUNCIÓN MEJORADA PARA CERRAR EL MENÚ MÓVIL =====
+function closeMobileMenuImproved() {
+    const navToggle = document.getElementById('nav-toggle');
+    const navMenu = document.getElementById('nav-menu');
+    const body = document.body;
     
-    if (!floatingMainBtn || !floatingMenu) return;
+    if (!navToggle || !navMenu) return;
     
-    isFloatingMenuOpen = false;
-    floatingMainBtn.classList.remove('active');
-    floatingMenu.classList.remove('active');
-    floatingMainBtn.setAttribute('aria-expanded', 'false');
+    isMenuOpen = false;
     
-    const menuItems = floatingMenu.querySelectorAll('.floating-widget__menu-item');
-    menuItems.forEach(item => {
-        item.style.transform = '';
-        item.style.opacity = '';
+    // Animaciones de cierre
+    navToggle.classList.remove('active');
+    navMenu.classList.remove('active');
+    
+    // RESTAURAR LA POSICIÓN DE SCROLL EXACTA
+    body.style.position = '';
+    body.style.top = '';
+    body.style.width = '';
+    body.style.overflow = '';
+    
+    // Restaurar scroll a la posición exacta donde estaba
+    window.scrollTo(0, currentScrollPosition);
+    
+    // Actualizar atributos de accesibilidad
+    navToggle.setAttribute('aria-expanded', 'false');
+    navMenu.setAttribute('aria-hidden', 'true');
+    
+    // Resetear estilos de los elementos del menú
+    const elementsToReset = navMenu.querySelectorAll('.nav__language-mobile, .nav__link, .nav__cta-mobile');
+    elementsToReset.forEach(element => {
+        element.style.transition = '';
+        element.style.opacity = '';
+        element.style.transform = '';
     });
+    
+    // Actualizar la sección activa después de cerrar
+    setTimeout(() => {
+        updateActiveNavLink();
+    }, 100);
+    
+    console.log(`Drawer cerrado - Scroll restaurado a: ${currentScrollPosition}px`);
 }
 
-// ===== NAVEGACIÓN RESPONSIVE ULTRA-OPTIMIZADA - SIN GESTOS DE DESLIZAMIENTO =====
-function initializeNavigation() {
+// ===== FUNCIÓN PARA MANEJAR CLICS EN ENLACES DE NAVEGACIÓN =====
+function handleNavLinkClick(event, targetSection) {
+    event.preventDefault();
+    
+    // Cerrar el menú primero
+    closeMobileMenuImproved();
+    
+    // Esperar a que se cierre el menú y luego hacer scroll
+    setTimeout(() => {
+        const targetElement = document.querySelector(targetSection);
+        if (targetElement) {
+            const headerHeight = window.innerWidth <= 1023 ? 70 : 80;
+            const targetPosition = targetElement.offsetTop - headerHeight;
+            
+            // Scroll suave a la sección
+            window.scrollTo({
+                top: targetPosition,
+                behavior: 'smooth'
+            });
+            
+            // Actualizar enlace activo
+            setTimeout(() => {
+                updateActiveNavLink(targetSection.replace('#', ''));
+            }, 500);
+        }
+    }, 300);
+}
+
+// ===== LISTENER PARA DETECTAR CAMBIOS DE SECCIÓN DURANTE EL SCROLL =====
+function initScrollSectionDetection() {
+    let ticking = false;
+    
+    function updateOnScroll() {
+        if (!isMenuOpen) { // Solo actualizar si el menú no está abierto
+            updateActiveNavLink();
+        }
+        ticking = false;
+    }
+    
+    window.addEventListener('scroll', () => {
+        if (!ticking) {
+            requestAnimationFrame(updateOnScroll);
+            ticking = true;
+        }
+    }, { passive: true });
+}
+
+// ===== FUNCIÓN PARA MEJORAR EL OVERLAY DEL DRAWER =====
+function enhanceDrawerOverlay() {
+    const navMenu = document.getElementById('nav-menu');
+    if (!navMenu) return;
+    
+    // Crear overlay mejorado si no existe
+    let overlay = navMenu.querySelector('.nav__menu-overlay');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.className = 'nav__menu-overlay';
+        navMenu.appendChild(overlay);
+    }
+    
+    // Agregar estilos CSS dinámicamente para el overlay mejorado
+    const style = document.createElement('style');
+    style.textContent = `
+        @media screen and (max-width: 1023px) {
+            .nav__menu-overlay {
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: linear-gradient(135deg, 
+                    rgba(255, 45, 85, 0.05) 0%,
+                    rgba(255, 45, 85, 0.02) 25%,
+                    rgba(139, 92, 246, 0.03) 50%,
+                    rgba(255, 45, 85, 0.02) 75%,
+                    rgba(255, 45, 85, 0.05) 100%
+                );
+                opacity: 0;
+                transition: opacity 0.6s ease;
+                pointer-events: none;
+                z-index: -1;
+            }
+            
+            .nav__menu.active .nav__menu-overlay {
+                opacity: 1;
+                animation: overlay-pulse 8s ease-in-out infinite;
+            }
+            
+            @keyframes overlay-pulse {
+                0%, 100% { 
+                    opacity: 0.8;
+                    transform: scale(1);
+                }
+                50% { 
+                    opacity: 1;
+                    transform: scale(1.02);
+                }
+            }
+            
+            /* Mejorar el fondo del drawer */
+            .nav__menu {
+                background: linear-gradient(135deg, 
+                    rgba(10, 13, 20, 0.98) 0%, 
+                    rgba(21, 25, 34, 0.96) 30%,
+                    rgba(30, 35, 48, 0.94) 70%,
+                    rgba(21, 25, 34, 0.96) 100%
+                ) !important;
+                backdrop-filter: blur(30px) !important;
+                -webkit-backdrop-filter: blur(30px) !important;
+            }
+            
+            /* Mejorar el overlay de fondo */
+            .nav__menu::before {
+                background: rgba(0, 0, 0, 0.8) !important;
+                backdrop-filter: blur(8px) !important;
+                -webkit-backdrop-filter: blur(8px) !important;
+            }
+            
+            /* Resaltar enlace activo */
+            .nav__link.active {
+                background: linear-gradient(90deg, 
+                    rgba(255, 45, 85, 0.15) 0%, 
+                    rgba(255, 45, 85, 0.08) 100%
+                ) !important;
+                border-left-color: var(--starflex-red) !important;
+                color: rgba(255, 255, 255, 1) !important;
+                font-weight: 600 !important;
+            }
+            
+            .nav__link.active::before {
+                opacity: 1 !important;
+                transform: translateX(0) !important;
+            }
+        }
+    `;
+    
+    if (!document.querySelector('#drawer-overlay-styles')) {
+        style.id = 'drawer-overlay-styles';
+        document.head.appendChild(style);
+    }
+}
+
+// ===== INICIALIZACIÓN DE LAS MEJORAS DEL DRAWER =====
+function initDrawerImprovements() {
+    // Detectar si estamos en móvil
+    const isMobile = window.innerWidth <= 1023;
+    if (!isMobile) return;
+    
+    // Mejorar el overlay
+    enhanceDrawerOverlay();
+    
+    // Inicializar detección de secciones
+    initScrollSectionDetection();
+    
+    // Actualizar sección activa inicial
+    updateActiveNavLink();
+    
+    // Reemplazar funciones del menú móvil
+    window.openMobileMenu = openMobileMenuImproved;
+    window.closeMobileMenu = closeMobileMenuImproved;
+    
+    // Agregar listeners mejorados a los enlaces de navegación
+    const navLinks = document.querySelectorAll('.nav__link');
+    navLinks.forEach(link => {
+        const href = link.getAttribute('href');
+        if (href && href.startsWith('#')) {
+            link.addEventListener('click', (e) => handleNavLinkClick(e, href));
+        }
+    });
+    
+    // Listener para cerrar el menú al hacer clic en el overlay
+    const navMenu = document.getElementById('nav-menu');
+    if (navMenu) {
+        navMenu.addEventListener('click', (e) => {
+            // Solo cerrar si se hace clic en el overlay, no en el contenido
+            if (e.target === navMenu || e.target.classList.contains('nav__menu-overlay')) {
+                closeMobileMenuImproved();
+            }
+        });
+    }
+    
+    console.log('Mejoras del drawer móvil inicializadas correctamente');
+}
+
+// ===== FUNCIÓN PARA MANEJAR CAMBIOS DE TAMAÑO DE VENTANA =====
+function handleDrawerResize() {
+    const isMobile = window.innerWidth <= 1023;
+    
+    if (!isMobile && isMenuOpen) {
+        // Si cambiamos a desktop y el menú está abierto, cerrarlo
+        closeMobileMenuImproved();
+    } else if (isMobile) {
+        // Si estamos en móvil, asegurar que las mejoras estén activas
+        initDrawerImprovements();
+    }
+}
+
+// ===== NAVEGACIÓN RESPONSIVE OPTIMIZADA =====
+function initializeResponsiveNavigation() {
     const navToggle = document.getElementById('nav-toggle');
     const navMenu = document.getElementById('nav-menu');
     const navClose = document.getElementById('nav-close');
     const navLinks = document.querySelectorAll('.nav__link');
-    const header = document.getElementById('header');
+    const body = document.body;
     
-    // Funcionalidad del logo como enlace
-    const navLogo = document.querySelector('.nav__logo');
-    if (navLogo) {
-        navLogo.addEventListener('click', (e) => {
-            e.preventDefault();
-            
-            if (isMenuOpen) {
-                closeMobileMenu();
-            }
-            
-            const homeSection = document.querySelector('#home');
-            if (homeSection) {
-                smoothScrollToSection(homeSection);
-                
-                const homeLink = document.querySelector('.nav__link[href="#home"]');
-                if (homeLink) {
-                    updateActiveNavLink(homeLink);
-                }
-            }
-        });
-        
-        navLogo.style.cursor = 'pointer';
-        navLogo.setAttribute('tabindex', '0');
-        navLogo.setAttribute('role', 'button');
-        navLogo.setAttribute('aria-label', 'Ir al inicio');
-        
-        // Soporte para teclado
-        navLogo.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                navLogo.click();
-            }
-        });
-
-        // Mejor feedback táctil en móvil
-        if (isMobile) {
-            navLogo.addEventListener('touchstart', () => {
-                navLogo.style.transform = 'scale(0.95)';
-            });
-            navLogo.addEventListener('touchend', () => {
-                navLogo.style.transform = '';
-            });
+    if (!navToggle || !navMenu) return;
+    
+    // Toggle del menú móvil
+    navToggle.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (isMenuOpen) {
+            closeMobileMenu();
+        } else {
+            openMobileMenu();
         }
-    }
+    });
     
-    // Toggle del menú móvil optimizado
-    if (navToggle && navMenu) {
-        navToggle.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            toggleMobileMenu();
-        });
-
-        // Mejor feedback táctil para el botón hamburguesa
-        if (isMobile) {
-            navToggle.addEventListener('touchstart', () => {
-                navToggle.style.transform = 'scale(0.95)';
-            });
-            navToggle.addEventListener('touchend', () => {
-                navToggle.style.transform = '';
-            });
-        }
-    }
-    
-    // Botón de cerrar móvil - SOLO ESTE MÉTODO DE CIERRE
+    // Botón de cerrar
     if (navClose) {
         navClose.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
             closeMobileMenu();
         });
-
-        // Mejor feedback táctil para el botón de cerrar
-        if (isMobile) {
-            navClose.addEventListener('touchstart', () => {
-                navClose.style.transform = 'scale(0.95)';
-            });
-            navClose.addEventListener('touchend', () => {
-                navClose.style.transform = '';
-            });
-        }
     }
     
-    // Cerrar menú al hacer click en un enlace
+    // Enlaces de navegación
     navLinks.forEach(link => {
         link.addEventListener('click', (e) => {
-            if (isMenuOpen) {
-                closeMobileMenu();
-            }
+            const href = link.getAttribute('href');
             
-            e.preventDefault();
-            const targetId = link.getAttribute('href');
-            const targetSection = document.querySelector(targetId);
-            
-            if (targetSection) {
-                smoothScrollToSection(targetSection);
-                updateActiveNavLink(link);
+            if (href && href.startsWith('#')) {
+                e.preventDefault();
+                
+                // Cerrar menú móvil si está abierto
+                if (isMenuOpen) {
+                    closeMobileMenu();
+                }
+                
+                // Scroll suave a la sección
+                const targetElement = document.querySelector(href);
+                if (targetElement) {
+                    const headerHeight = isMobile ? 70 : 80;
+                    const targetPosition = targetElement.offsetTop - headerHeight;
+                    
+                    window.scrollTo({
+                        top: targetPosition,
+                        behavior: 'smooth'
+                    });
+                }
             }
         });
-
-        // Mejor feedback táctil para enlaces en móvil
-        if (isMobile) {
-            link.addEventListener('touchstart', () => {
-                link.style.transform = 'scale(0.98)';
-            });
-            link.addEventListener('touchend', () => {
-                link.style.transform = '';
-            });
+    });
+    
+    // Cerrar menú al hacer clic fuera
+    document.addEventListener('click', (e) => {
+        if (isMenuOpen && navMenu && !navMenu.contains(e.target) && !navToggle.contains(e.target)) {
+            closeMobileMenu();
         }
     });
     
-    // Cerrar menú con click fuera - SOLO EN DESKTOP
-    if (!isMobile) {
-        document.addEventListener('click', (e) => {
-            if (isMenuOpen && navMenu && !navMenu.contains(e.target) && !navToggle.contains(e.target)) {
-                closeMobileMenu();
-            }
-        });
-    }
+    // Cerrar menú con Escape
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && isMenuOpen) {
+            closeMobileMenu();
+        }
+    });
     
-    // Navegación por teclado optimizada
-    initializeKeyboardNavigation();
+    // Prevenir scroll del body cuando el menú está abierto
+    navMenu.addEventListener('touchmove', (e) => {
+        if (isMenuOpen) {
+            e.preventDefault();
+        }
+    }, { passive: false });
 }
 
-function toggleMobileMenu() {
-    if (isMenuOpen) {
-        closeMobileMenu();
-    } else {
-        openMobileMenu();
-    }
-}
-
+// ===== FUNCIONES ORIGINALES DEL MENÚ MÓVIL =====
 function openMobileMenu() {
     const navToggle = document.getElementById('nav-toggle');
     const navMenu = document.getElementById('nav-menu');
@@ -1051,7 +1276,7 @@ function openMobileMenu() {
     
     isMenuOpen = true;
     
-    // Animaciones ultra optimizadas para móvil - MÁS RÁPIDAS Y FLUIDAS
+    // Activar clases
     navToggle.classList.add('active');
     navMenu.classList.add('active');
     body.classList.add('no-scroll');
@@ -1060,52 +1285,49 @@ function openMobileMenu() {
     navToggle.setAttribute('aria-expanded', 'true');
     navMenu.setAttribute('aria-hidden', 'false');
     
-    // Animar elementos del menú con mejor rendimiento - MÁS RÁPIDO
+    // Animaciones de entrada
     const navLanguageMobile = navMenu.querySelector('.nav__language-mobile');
     const navLinks = navMenu.querySelectorAll('.nav__link');
     const navCtaMobile = navMenu.querySelector('.nav__cta-mobile');
     
-    // Animar selector de idioma móvil - MÁS RÁPIDO
+    // Animar selector de idioma móvil
     if (navLanguageMobile) {
         navLanguageMobile.style.opacity = '0';
-        navLanguageMobile.style.transform = 'translateY(15px)';
+        navLanguageMobile.style.transform = 'translateY(20px)';
         setTimeout(() => {
-            navLanguageMobile.style.transition = `all ${isMobile ? '0.3s' : '0.5s'} ease`;
+            navLanguageMobile.style.transition = `all ${isMobile ? '0.3s' : '0.4s'} cubic-bezier(0.25, 0.46, 0.45, 0.94)`;
             navLanguageMobile.style.opacity = '1';
             navLanguageMobile.style.transform = 'translateY(0)';
-        }, isMobile ? 50 : 100);
+        }, 100);
     }
     
-    // Animar enlaces del menú - MÁS RÁPIDO
+    // Animar enlaces del menú
     navLinks.forEach((link, index) => {
         link.style.opacity = '0';
-        link.style.transform = 'translateY(15px)';
+        link.style.transform = 'translateY(20px)';
         setTimeout(() => {
-            link.style.transition = `all ${isMobile ? '0.3s' : '0.5s'} ease`;
+            link.style.transition = `all ${isMobile ? '0.3s' : '0.4s'} cubic-bezier(0.25, 0.46, 0.45, 0.94)`;
             link.style.opacity = '1';
             link.style.transform = 'translateY(0)';
-        }, (index + 1) * (isMobile ? 60 : 100) + (isMobile ? 100 : 200));
+        }, 150 + (index * (isMobile ? 60 : 80)));
     });
     
-    // Animar CTA móvil - MÁS RÁPIDO
+    // Animar CTA móvil
     if (navCtaMobile) {
         navCtaMobile.style.opacity = '0';
-        navCtaMobile.style.transform = 'translateY(15px)';
+        navCtaMobile.style.transform = 'translateY(20px)';
         setTimeout(() => {
-            navCtaMobile.style.transition = `all ${isMobile ? '0.3s' : '0.5s'} ease`;
+            navCtaMobile.style.transition = `all ${isMobile ? '0.3s' : '0.4s'} cubic-bezier(0.25, 0.46, 0.45, 0.94)`;
             navCtaMobile.style.opacity = '1';
             navCtaMobile.style.transform = 'translateY(0)';
-        }, (navLinks.length + 2) * (isMobile ? 60 : 100) + (isMobile ? 100 : 200));
+        }, 150 + (navLinks.length * (isMobile ? 60 : 80)) + 100);
     }
     
-    // Focus optimizado para móvil
-    if (!isMobile) {
+    // Focus en el primer enlace (solo en desktop)
+    if (!isMobile && navLinks.length > 0) {
         setTimeout(() => {
-            const firstLink = navMenu.querySelector('.nav__link');
-            if (firstLink) {
-                firstLink.focus();
-            }
-        }, 400);
+            navLinks[0].focus();
+        }, 300);
     }
 }
 
@@ -1118,7 +1340,7 @@ function closeMobileMenu() {
     
     isMenuOpen = false;
     
-    // Animaciones de cierre ultra optimizadas - MÁS RÁPIDAS
+    // Remover clases
     navToggle.classList.remove('active');
     navMenu.classList.remove('active');
     body.classList.remove('no-scroll');
@@ -1127,7 +1349,7 @@ function closeMobileMenu() {
     navToggle.setAttribute('aria-expanded', 'false');
     navMenu.setAttribute('aria-hidden', 'true');
     
-    // Resetear estilos de los elementos del menú - MÁS RÁPIDO
+    // Resetear estilos de animación
     const elementsToReset = navMenu.querySelectorAll('.nav__language-mobile, .nav__link, .nav__cta-mobile');
     elementsToReset.forEach(element => {
         element.style.transition = '';
@@ -1135,487 +1357,308 @@ function closeMobileMenu() {
         element.style.transform = '';
     });
     
-    // Devolver focus al botón toggle
+    // Devolver focus al botón toggle (solo en desktop)
     if (!isMobile) {
         navToggle.focus();
     }
 }
 
-function smoothScrollToSection(targetSection) {
-    const headerHeight = isMobile ? 70 : 80;
-    const targetPosition = targetSection.offsetTop - headerHeight;
-    
-    // Scroll optimizado para móvil
-    if ('scrollBehavior' in document.documentElement.style && !performanceMode) {
-        window.scrollTo({
-            top: targetPosition,
-            behavior: 'smooth'
-        });
-    } else {
-        // Fallback más rápido para dispositivos de baja potencia
-        window.scrollTo(0, targetPosition);
-    }
-}
-
-function updateActiveNavLink(activeLink) {
-    document.querySelectorAll('.nav__link').forEach(link => {
-        link.classList.remove('active');
-        link.setAttribute('aria-current', 'false');
-    });
-    activeLink.classList.add('active');
-    activeLink.setAttribute('aria-current', 'page');
-}
-
-// ===== NAVEGACIÓN POR TECLADO OPTIMIZADA =====
-function initializeKeyboardNavigation() {
-    const navMenu = document.getElementById('nav-menu');
-    const navToggle = document.getElementById('nav-toggle');
-    if (!navMenu || !navToggle) return;
-    
-    // Manejo de teclas especiales
-    document.addEventListener('keydown', (e) => {
-        // Escape para cerrar menú
-        if (e.key === 'Escape' && isMenuOpen) {
-            e.preventDefault();
-            closeMobileMenu();
-            return;
-        }
-        
-        // Tab trap cuando el menú está abierto (solo en desktop)
-        if (e.key === 'Tab' && isMenuOpen && !isMobile) {
-            handleTabTrap(e);
-        }
-        
-        // Enter o Space en el toggle
-        if ((e.key === 'Enter' || e.key === ' ') && e.target === navToggle) {
-            e.preventDefault();
-            toggleMobileMenu();
-        }
-    });
-}
-
-function handleTabTrap(e) {
-    const navMenu = document.getElementById('nav-menu');
-    const focusableElements = navMenu.querySelectorAll(
-        'a[href], button, [tabindex]:not([tabindex="-1"])'
-    );
-    const firstFocusable = focusableElements[0];
-    const lastFocusable = focusableElements[focusableElements.length - 1];
-    
-    if (e.shiftKey) {
-        // Shift + Tab
-        if (document.activeElement === firstFocusable) {
-            e.preventDefault();
-            lastFocusable.focus();
-        }
-    } else {
-        // Tab
-        if (document.activeElement === lastFocusable) {
-            e.preventDefault();
-            firstFocusable.focus();
-        }
-    }
-}
-
-// ===== EFECTOS DE SCROLL OPTIMIZADOS =====
+// ===== SCROLL EFFECTS OPTIMIZADOS =====
 function initializeScrollEffects() {
-    // Scroll listener optimizado con throttling - MÁS RÁPIDO
-    window.addEventListener('scroll', throttle(() => {
+    let lastScrollY = window.scrollY;
+    let isScrollingDown = false;
+    let ticking = false;
+    
+    const navbar = document.querySelector('.header');
+    const navLinks = document.querySelectorAll('.nav__link');
+    
+    function updateScrollEffects() {
+        const currentScrollY = window.scrollY;
+        isScrollingDown = currentScrollY > lastScrollY;
+        
+        // Navbar hide/show en móvil
+        if (isMobile && navbar) {
+            if (isScrollingDown && currentScrollY > 100) {
+                navbar.style.transform = 'translateY(-100%)';
+            } else {
+                navbar.style.transform = 'translateY(0)';
+            }
+        }
+        
+        // Actualizar enlace activo
+        updateActiveNavLink();
+        
+        lastScrollY = currentScrollY;
+        ticking = false;
+    }
+    
+    const throttledScrollHandler = throttle(updateScrollEffects, isMobile ? 10 : 16);
+    
+    window.addEventListener('scroll', () => {
         if (!ticking) {
-            requestAnimationFrame(() => {
-                updateActiveNavOnScroll();
-                handleScrollDirection();
-                ticking = false;
-            });
+            requestAnimationFrame(throttledScrollHandler);
             ticking = true;
         }
-    }, isMobile ? 32 : 16), { passive: true });
+    }, { passive: true });
 }
 
-function handleScrollDirection() {
-    const currentScrollY = window.scrollY;
+// ===== LOGO FUNCTIONALITY =====
+function initializeLogo() {
+    const logo = document.querySelector('.nav__logo');
+    if (!logo) return;
     
-    if (currentScrollY > lastScrollY && currentScrollY > (isMobile ? 50 : 100)) {
-        isScrollingDown = true;
-    } else {
-        isScrollingDown = false;
-    }
-    
-    lastScrollY = currentScrollY;
-}
-
-function updateActiveNavOnScroll() {
-    const sections = document.querySelectorAll('section[id]');
-    const scrollY = window.scrollY + (isMobile ? 80 : 100);
-    
-    sections.forEach(section => {
-        const sectionTop = section.offsetTop;
-        const sectionHeight = section.offsetHeight;
-        const sectionId = section.getAttribute('id');
+    logo.addEventListener('click', (e) => {
+        e.preventDefault();
         
-        if (scrollY >= sectionTop && scrollY < sectionTop + sectionHeight) {
-            const activeLink = document.querySelector(`.nav__link[href="#${sectionId}"]`);
-            if (activeLink && !activeLink.classList.contains('active')) {
-                updateActiveNavLink(activeLink);
-            }
+        // Cerrar menú móvil si está abierto
+        if (isMenuOpen) {
+            closeMobileMenu();
         }
-    });
-}
-
-// ===== REPRODUCTOR DE VIDEO OPTIMIZADO =====
-function initializeVideoPlayer() {
-    const video = document.getElementById('main-video');
-    const playOverlay = document.getElementById('play-overlay');
-    const progressBar = document.querySelector('.videos__progress-bar');
-    const progressFill = document.querySelector('.videos__progress-fill');
-    const currentTimeDisplay = document.querySelector('.videos__current-time');
-    const durationDisplay = document.querySelector('.videos__duration');
-    const progressIndicators = document.querySelector('.videos__progress-indicators');
-    
-    if (!video || !playOverlay) return;
-    
-    video.controls = false;
-    video.preload = isMobile ? 'none' : 'metadata';
-    
-    video.addEventListener('loadedmetadata', () => {
-        if (durationDisplay) {
-            durationDisplay.textContent = formatTime(video.duration);
-        }
-    });
-    
-    playOverlay.addEventListener('click', () => {
-        if (video.paused) {
-            video.play();
-            playOverlay.classList.add('hidden');
-            if (progressIndicators) {
-                progressIndicators.classList.add('visible');
-            }
-        }
-    });
-    
-    // Mejor manejo táctil en móvil
-    if (isMobile) {
-        playOverlay.addEventListener('touchstart', () => {
-            playOverlay.style.transform = 'scale(0.98)';
-        });
-        playOverlay.addEventListener('touchend', () => {
-            playOverlay.style.transform = '';
-        });
-    }
-    
-    video.addEventListener('click', () => {
-        if (!video.paused) {
-            video.pause();
-            playOverlay.classList.remove('hidden');
-            if (progressIndicators) {
-                progressIndicators.classList.remove('visible');
-            }
-        }
-    });
-    
-    video.addEventListener('timeupdate', () => {
-        if (video.duration) {
-            const progress = (video.currentTime / video.duration) * 100;
-            if (progressFill) {
-                progressFill.style.width = `${progress}%`;
-            }
-            if (currentTimeDisplay) {
-                currentTimeDisplay.textContent = formatTime(video.currentTime);
-            }
-        }
-    });
-    
-    if (progressBar) {
-        progressBar.addEventListener('click', (e) => {
-            const rect = progressBar.getBoundingClientRect();
-            const clickX = e.clientX - rect.left;
-            const width = rect.width;
-            const clickTime = (clickX / width) * video.duration;
-            video.currentTime = clickTime;
-        });
-    }
-    
-    video.addEventListener('ended', () => {
-        playOverlay.classList.remove('hidden');
-        if (progressIndicators) {
-            progressIndicators.classList.remove('visible');
-        }
-        if (progressFill) {
-            progressFill.style.width = '0%';
-        }
-        if (currentTimeDisplay) {
-            currentTimeDisplay.textContent = '0:00';
-        }
-    });
-    
-    video.addEventListener('error', () => {
-        showVideoError();
-    });
-}
-
-function formatTime(seconds) {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = Math.floor(seconds % 60);
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-}
-
-function showVideoError() {
-    const playOverlay = document.getElementById('play-overlay');
-    if (playOverlay) {
-        playOverlay.innerHTML = `
-            <div class="videos__error">
-                <div class="videos__error-icon">⚠️</div>
-                <div class="videos__error-text">Error al cargar el video</div>
-                <div class="videos__error-subtitle">Por favor, intenta recargar la página</div>
-            </div>
-        `;
-    }
-}
-
-// ===== FAQ OPTIMIZADO =====
-function initializeFAQ() {
-    const faqItems = document.querySelectorAll('.faq__item');
-    const searchInput = document.getElementById('faq-search');
-    const noResults = document.getElementById('faq-no-results');
-    
-    faqItems.forEach(item => {
-        const question = item.querySelector('.faq__question');
-        const answer = item.querySelector('.faq__answer');
         
-        if (question && answer) {
-            question.addEventListener('click', () => {
-                const isActive = item.classList.contains('active');
-                
-                // Cerrar otros items
-                faqItems.forEach(otherItem => {
-                    if (otherItem !== item) {
-                        otherItem.classList.remove('active');
-                        const otherAnswer = otherItem.querySelector('.faq__answer');
-                        const otherQuestion = otherItem.querySelector('.faq__question');
-                        if (otherAnswer) otherAnswer.classList.remove('active');
-                        if (otherQuestion) otherQuestion.setAttribute('aria-expanded', 'false');
-                    }
-                });
-                
-                if (isActive) {
-                    item.classList.remove('active');
-                    answer.classList.remove('active');
-                    question.setAttribute('aria-expanded', 'false');
-                } else {
-                    item.classList.add('active');
-                    answer.classList.add('active');
-                    question.setAttribute('aria-expanded', 'true');
-                }
-            });
-
-            // Mejor feedback táctil en móvil
-            if (isMobile) {
-                question.addEventListener('touchstart', () => {
-                    question.style.transform = 'scale(0.98)';
-                });
-                question.addEventListener('touchend', () => {
-                    question.style.transform = '';
-                });
-            }
-        }
-    });
-    
-    if (searchInput) {
-        searchInput.addEventListener('input', debounce((e) => {
-            const searchTerm = e.target.value.toLowerCase().trim();
-            let visibleItems = 0;
-            
-            faqItems.forEach(item => {
-                const questionText = item.querySelector('.faq__question-text');
-                const answerText = item.querySelector('.faq__answer-text');
-                
-                if (questionText && answerText) {
-                    const questionContent = questionText.textContent.toLowerCase();
-                    const answerContent = answerText.textContent.toLowerCase();
-                    
-                    if (searchTerm === '' ||
-                        questionContent.includes(searchTerm) ||
-                        answerContent.includes(searchTerm)) {
-                        item.style.display = 'block';
-                        visibleItems++;
-                    } else {
-                        item.style.display = 'none';
-                        item.classList.remove('active');
-                        const answer = item.querySelector('.faq__answer');
-                        const question = item.querySelector('.faq__question');
-                        if (answer) answer.classList.remove('active');
-                        if (question) question.setAttribute('aria-expanded', 'false');
-                    }
-                }
-            });
-            
-            if (noResults) {
-                if (visibleItems === 0 && searchTerm !== '') {
-                    noResults.classList.add('show');
-                } else {
-                    noResults.classList.remove('show');
-                }
-            }
-        }, isMobile ? 600 : 400));
-    }
-}
-
-// ===== INTERSECTION OBSERVER OPTIMIZADO =====
-function initializeIntersectionObserver() {
-    if (performanceMode) return; // Deshabilitar en modo de rendimiento
-    
-    const observerOptions = {
-        threshold: isMobile ? 0.05 : 0.1,
-        rootMargin: isMobile ? '0px 0px -25px 0px' : '0px 0px -50px 0px'
-    };
-    
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('in-view');
-                if (entry.target.classList.contains('feature')) {
-                    animateFeature(entry.target);
-                }
-            }
+        // Scroll suave al inicio
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
         });
-    }, observerOptions);
-    
-    const elementsToObserve = document.querySelectorAll('.feature, .faq__item, .contact__channel');
-    elementsToObserve.forEach(element => {
-        observer.observe(element);
-    });
-}
-
-function animateFeature(feature) {
-    if (performanceMode) return;
-    
-    const phone = feature.querySelector('.feature__phone');
-    const content = feature.querySelector('.feature__content');
-    
-    // ELIMINAR ANIMACIONES DE HOVER EN MÓVIL
-    if (phone && !isMobile) {
+        
+        // Actualizar enlace activo
         setTimeout(() => {
-            phone.style.transform = 'perspective(1000px) rotateY(1deg) rotateX(0deg) scale(1.02)';
-        }, 600);
-        setTimeout(() => {
-            phone.style.transform = 'perspective(1000px) rotateY(2deg) rotateX(-1deg) scale(1)';
-        }, 1200);
-    }
-    
-    if (content) {
-        const listItems = content.querySelectorAll('.feature__list-item');
-        listItems.forEach((item, index) => {
-            setTimeout(() => {
-                item.style.opacity = '1';
-                item.style.transform = 'translateX(0)';
-            }, 400 + (index * (isMobile ? 80 : 150)));
-        });
-    }
+            updateActiveNavLink('home');
+        }, 500);
+    });
 }
 
-// ===== CONFIGURACIÓN DE LAZY LOADING OPTIMIZADA =====
-function setupImageLazyLoading() {
-    const waitForOptimizer = () => {
-        if (!imageOptimizer) {
-            setTimeout(waitForOptimizer, 100);
-            return;
-        }
-        
-        // Logo del navbar (crítico - cargar inmediatamente)
-        const navLogo = document.querySelector('.nav__logo');
-        if (navLogo) {
-            imageOptimizer.loadImageImmediately(navLogo, 'logo');
-        }
-        
-        // Imagen del hero (crítica - cargar inmediatamente)
-        const heroImage = document.querySelector('.hero__phone-app-image');
-        if (heroImage) {
-            imageOptimizer.loadImageImmediately(heroImage, 'hero');
-        }
-        
-        // Imágenes de características (lazy loading)
-        const featureImages = document.querySelectorAll('.phone__app-image');
-        featureImages.forEach((img, index) => {
-            const imageKeys = [
-                'phones.horario',
-                'phones.estaciones',
-                'phones.calendario',
-                'phones.registro',
-                'phones.notificaciones',
-                'phones.referidos'
-            ];
-            
-            if (imageKeys[index]) {
-                if (isMobile || performanceMode) {
-                    // Cargar inmediatamente en móvil para evitar problemas
-                    imageOptimizer.loadImageImmediately(img, imageKeys[index]);
-                } else {
-                    imageOptimizer.observeImage(img, imageKeys[index]);
-                }
-            }
-        });
-        
-        // Botones de descarga - CORREGIDOS PARA MISMO TAMAÑO
-        const appleBtn = document.querySelector('.download-btn--app-store .download-btn__image');
-        const googleBtn = document.querySelector('.download-btn--google .download-btn__image');
-        
-        if (appleBtn) {
-            imageOptimizer.loadImageImmediately(appleBtn, 'downloads.apple');
-        }
-        if (googleBtn) {
-            imageOptimizer.loadImageImmediately(googleBtn, 'downloads.google');
-        }
-    };
+// ===== FLOATING WIDGET OPTIMIZADO =====
+function initializeFloatingWidget() {
+    const floatingWidget = document.getElementById('floating-widget');
+    const floatingToggle = document.getElementById('floating-toggle');
+    const floatingMenu = document.getElementById('floating-menu');
     
-    waitForOptimizer();
-}
-
-// ===== CORRECCIÓN DEL VIDEO HERO PARA MÓVIL - SIN IMAGEN HERO.JPG =====
-function initializeHeroVideoFallback() {
-    const heroVideo = document.getElementById('hero-video');
-    const heroFallbackImage = document.querySelector('.hero__phone-app-image');
-    const heroMobileVideo = document.getElementById('hero-mobile-video');
+    if (!floatingWidget || !floatingToggle || !floatingMenu) return;
     
-    // Configurar video móvil - MÁS COMPACTO
-    if (heroMobileVideo && isMobile) {
-        heroMobileVideo.muted = true;
-        heroMobileVideo.autoplay = true;
-        heroMobileVideo.loop = true;
-        heroMobileVideo.playsInline = true;
-        heroMobileVideo.preload = 'auto';
-        
-        heroMobileVideo.addEventListener('loadeddata', () => {
-            console.log('Video móvil del hero cargado correctamente');
-        });
-        
-        heroMobileVideo.addEventListener('error', (e) => {
-            console.error('Error cargando video móvil del hero:', e);
-            // Ocultar el contenedor del video si hay error
-            const mobileVideoContainer = document.querySelector('.hero__mobile-video');
-            if (mobileVideoContainer) {
-                mobileVideoContainer.style.display = 'none';
-            }
-        });
-    }
-    
-    if (!heroVideo || !heroFallbackImage) return;
-    
-    // En móvil, usar siempre imagen estática para el video del teléfono
+    // Solo mostrar en desktop
     if (isMobile) {
-        heroVideo.style.display = 'none';
-        heroFallbackImage.style.display = 'block';
-        heroFallbackImage.style.zIndex = '2';
-        console.log('Video del teléfono deshabilitado en móvil, usando imagen estática');
+        floatingWidget.style.display = 'none';
         return;
     }
     
-    // En desktop, intentar cargar video del teléfono
-    heroVideo.muted = true;
-    heroVideo.autoplay = true;
-    heroVideo.loop = true;
-    heroVideo.playsInline = true;
-    heroVideo.preload = 'auto';
+    // Toggle del menú flotante
+    floatingToggle.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if (isFloatingMenuOpen) {
+            closeFloatingMenu();
+        } else {
+            openFloatingMenu();
+        }
+    });
     
+    // Cerrar al hacer clic fuera
+    document.addEventListener('click', (e) => {
+        if (isFloatingMenuOpen && !floatingWidget.contains(e.target)) {
+            closeFloatingMenu();
+        }
+    });
+    
+    // Cerrar con Escape
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && isFloatingMenuOpen) {
+            closeFloatingMenu();
+        }
+    });
+    
+    function openFloatingMenu() {
+        isFloatingMenuOpen = true;
+        floatingWidget.classList.add('active');
+        floatingToggle.setAttribute('aria-expanded', 'true');
+        floatingMenu.setAttribute('aria-hidden', 'false');
+    }
+    
+    function closeFloatingMenu() {
+        isFloatingMenuOpen = false;
+        floatingWidget.classList.remove('active');
+        floatingToggle.setAttribute('aria-expanded', 'false');
+        floatingMenu.setAttribute('aria-hidden', 'true');
+    }
+}
+
+// ===== VIDEO PLAYER OPTIMIZADO =====
+function initializeVideoPlayer() {
+    const videoContainer = document.querySelector('.videos__player-container');
+    const video = document.querySelector('.videos__player-video');
+    const playButton = document.querySelector('.videos__player-play');
+    const overlay = document.querySelector('.videos__player-overlay');
+    const progressBar = document.querySelector('.videos__player-progress-bar');
+    const progressFill = document.querySelector('.videos__player-progress-fill');
+    const timeDisplay = document.querySelector('.videos__player-time');
+    
+    if (!video || !playButton || !overlay) return;
+    
+    let isPlaying = false;
+    let isDragging = false;
+    
+    // Play/Pause functionality
+    function togglePlay() {
+        if (isPlaying) {
+            video.pause();
+        } else {
+            video.play();
+        }
+    }
+    
+    // Event listeners
+    playButton.addEventListener('click', togglePlay);
+    overlay.addEventListener('click', togglePlay);
+    video.addEventListener('click', togglePlay);
+    
+    video.addEventListener('play', () => {
+        isPlaying = true;
+        videoContainer.classList.add('playing');
+        overlay.style.opacity = '0';
+        playButton.style.opacity = '0';
+    });
+    
+    video.addEventListener('pause', () => {
+        isPlaying = false;
+        videoContainer.classList.remove('playing');
+        overlay.style.opacity = '1';
+        playButton.style.opacity = '1';
+    });
+    
+    video.addEventListener('ended', () => {
+        isPlaying = false;
+        videoContainer.classList.remove('playing');
+        overlay.style.opacity = '1';
+        playButton.style.opacity = '1';
+        video.currentTime = 0;
+    });
+    
+    // Progress bar functionality
+    if (progressBar && progressFill && timeDisplay) {
+        video.addEventListener('timeupdate', () => {
+            if (!isDragging) {
+                const progress = (video.currentTime / video.duration) * 100;
+                progressFill.style.width = `${progress}%`;
+                
+                const currentMinutes = Math.floor(video.currentTime / 60);
+                const currentSeconds = Math.floor(video.currentTime % 60);
+                const durationMinutes = Math.floor(video.duration / 60);
+                const durationSeconds = Math.floor(video.duration % 60);
+                
+                timeDisplay.textContent = `${currentMinutes}:${currentSeconds.toString().padStart(2, '0')} / ${durationMinutes}:${durationSeconds.toString().padStart(2, '0')}`;
+            }
+        });
+        
+        progressBar.addEventListener('click', (e) => {
+            const rect = progressBar.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const progress = clickX / rect.width;
+            video.currentTime = progress * video.duration;
+        });
+        
+        // Touch/drag support for progress bar
+        let startX = 0;
+        
+        progressBar.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            startX = e.clientX;
+        });
+        
+        progressBar.addEventListener('touchstart', (e) => {
+            isDragging = true;
+            startX = e.touches[0].clientX;
+        }, { passive: true });
+        
+        document.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                const rect = progressBar.getBoundingClientRect();
+                const progress = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+                progressFill.style.width = `${progress * 100}%`;
+                video.currentTime = progress * video.duration;
+            }
+        });
+        
+        document.addEventListener('touchmove', (e) => {
+            if (isDragging) {
+                const rect = progressBar.getBoundingClientRect();
+                const progress = Math.max(0, Math.min(1, (e.touches[0].clientX - rect.left) / rect.width));
+                progressFill.style.width = `${progress * 100}%`;
+                video.currentTime = progress * video.duration;
+            }
+        }, { passive: true });
+        
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+        
+        document.addEventListener('touchend', () => {
+            isDragging = false;
+        });
+    }
+    
+    // Keyboard controls
+    document.addEventListener('keydown', (e) => {
+        if (videoContainer.matches(':hover') || document.activeElement === video) {
+            switch (e.key) {
+                case ' ':
+                case 'k':
+                    e.preventDefault();
+                    togglePlay();
+                    break;
+                case 'ArrowLeft':
+                    e.preventDefault();
+                    video.currentTime = Math.max(0, video.currentTime - 10);
+                    break;
+                case 'ArrowRight':
+                    e.preventDefault();
+                    video.currentTime = Math.min(video.duration, video.currentTime + 10);
+                    break;
+                case 'm':
+                    e.preventDefault();
+                    video.muted = !video.muted;
+                    break;
+            }
+        }
+    });
+    
+    // Optimización para móvil
+    if (isMobile) {
+        // Reducir calidad en móvil si es necesario
+        video.addEventListener('loadstart', () => {
+            if (performanceMode) {
+                video.preload = 'metadata';
+            }
+        });
+        
+        // Pausar video cuando no está visible
+        const videoObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (!entry.isIntersecting && isPlaying) {
+                    video.pause();
+                }
+            });
+        }, { threshold: 0.5 });
+        
+        videoObserver.observe(video);
+    }
+}
+
+// ===== HERO VIDEO OPTIMIZADO =====
+function initializeHeroVideo() {
+    const heroVideo = document.querySelector('.hero__mobile-video-player');
+    const heroFallbackImage = document.querySelector('.hero__phone-app-image');
+    
+    if (!heroVideo) return;
+    
+    // Configuración optimizada para móvil
+    if (isMobile || performanceMode) {
+        heroVideo.preload = 'metadata';
+        heroVideo.muted = true;
+        heroVideo.playsInline = true;
+    }
+    
+    // Event listeners
     heroVideo.addEventListener('loadeddata', () => {
         heroVideo.classList.remove('loading');
         heroVideo.classList.add('loaded');
@@ -1674,175 +1717,224 @@ function throttle(func, limit) {
 }
 
 // ===== OPTIMIZACIONES DE RENDIMIENTO =====
-function initializePerformanceOptimizations() {
+function optimizePerformance() {
     // Precargar recursos críticos solo en desktop
     if (!isMobile && !performanceMode) {
-        if ('requestIdleCallback' in window) {
-            requestIdleCallback(() => {
-                preloadCriticalResources();
-            });
-        } else {
-            setTimeout(preloadCriticalResources, 3000);
-        }
+        const criticalResources = [
+            './assets/logo.avif',
+            './assets/phones/Hero.avif'
+        ];
+        
+        criticalResources.forEach(resource => {
+            const link = document.createElement('link');
+            link.rel = 'preload';
+            link.as = 'image';
+            link.href = resource;
+            document.head.appendChild(link);
+        });
     }
     
     // Optimizar will-change para móvil
     if (isMobile) {
-        const elementsToOptimize = document.querySelectorAll('.hero__phone, .feature__phone, .nav__logo, .floating-widget__main-btn');
+        const elementsToOptimize = document.querySelectorAll('.nav__menu, .phone, .hero__mobile-video-player');
         elementsToOptimize.forEach(element => {
             element.style.willChange = 'transform';
         });
+        
+        // Limpiar will-change después de las animaciones
+        setTimeout(() => {
+            elementsToOptimize.forEach(element => {
+                element.style.willChange = 'auto';
+            });
+        }, 3000);
     }
     
-    // Limpiar listeners en resize
-    let resizeTimeout;
-    window.addEventListener('resize', () => {
-        clearTimeout(resizeTimeout);
-        resizeTimeout = setTimeout(() => {
-            handleResize();
-        }, isMobile ? 600 : 300);
-    });
-}
-
-function preloadCriticalResources() {
-    const criticalResources = [
-        './assets/phones/Hero.avif',
-        './assets/phones/Horario.avif',
-        './assets/logo.avif',
-        './assets/AppleStore.avif',
-        './assets/GooglePlay.avif'
-    ];
-    
-    criticalResources.forEach(src => {
-        const link = document.createElement('link');
-        link.rel = 'preload';
-        link.as = 'image';
-        link.href = src;
-        document.head.appendChild(link);
-    });
-}
-
-function handleResize() {
-    const newIsMobile = window.innerWidth <= 1023;
-    
-    // Actualizar estado móvil
-    if (newIsMobile !== isMobile) {
-        isMobile = newIsMobile;
-        detectDeviceCapabilities();
-    }
-    
-    // Cerrar menús abiertos
-    if (isMenuOpen && !isMobile) {
-        closeMobileMenu();
-    }
-    
-    if (isFloatingMenuOpen) {
-        closeFloatingMenu();
-    }
-    
-    if (isLanguageSwitcherOpen) {
-        closeLanguageSwitcher();
+    // Lazy loading para imágenes no críticas
+    if ('IntersectionObserver' in window) {
+        const lazyImages = document.querySelectorAll('img[data-src]');
+        const imageObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const img = entry.target;
+                    img.src = img.dataset.src;
+                    img.classList.remove('lazy');
+                    imageObserver.unobserve(img);
+                }
+            });
+        });
+        
+        lazyImages.forEach(img => imageObserver.observe(img));
     }
 }
 
-// ===== ACCESIBILIDAD OPTIMIZADA =====
-function initializeAccessibility() {
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            if (isMenuOpen) {
-                closeMobileMenu();
+// ===== FAQ SECTION OPTIMIZADA =====
+function initializeFAQ() {
+    const faqQuestions = document.querySelectorAll('.faq__question');
+    const faqSearch = document.getElementById('faq-search');
+    const faqItems = document.querySelectorAll('.faq__item');
+    const faqNoResults = document.querySelector('.faq__no-results');
+    
+    // Toggle FAQ items
+    faqQuestions.forEach(question => {
+        question.addEventListener('click', () => {
+            const faqItem = question.closest('.faq__item');
+            const isActive = faqItem.classList.contains('active');
+            
+            // Cerrar todas las preguntas
+            faqItems.forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Abrir la pregunta clickeada si no estaba activa
+            if (!isActive) {
+                faqItem.classList.add('active');
             }
-            if (isFloatingMenuOpen) {
-                closeFloatingMenu();
-            }
-            if (isLanguageSwitcherOpen) {
-                closeLanguageSwitcher();
-            }
-        }
+        });
     });
     
-    // Indicadores visuales de focus mejorados para móvil
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Tab') {
-            document.body.classList.add('keyboard-navigation');
-        }
-    });
-    
-    document.addEventListener('mousedown', () => {
-        document.body.classList.remove('keyboard-navigation');
-    });
-    
-    // Mejorar accesibilidad táctil
-    if (isMobile) {
-        document.addEventListener('touchstart', () => {
-            document.body.classList.add('touch-navigation');
+    // Search functionality
+    if (faqSearch) {
+        const searchHandler = debounce((searchTerm) => {
+            const term = searchTerm.toLowerCase().trim();
+            let visibleCount = 0;
+            
+            faqItems.forEach(item => {
+                const question = item.querySelector('.faq__question-text').textContent.toLowerCase();
+                const answer = item.querySelector('.faq__answer').textContent.toLowerCase();
+                
+                if (term === '' || question.includes(term) || answer.includes(term)) {
+                    item.style.display = 'block';
+                    visibleCount++;
+                } else {
+                    item.style.display = 'none';
+                    item.classList.remove('active');
+                }
+            });
+            
+            // Mostrar/ocultar mensaje de "no results"
+            if (faqNoResults) {
+                faqNoResults.style.display = visibleCount === 0 && term !== '' ? 'block' : 'none';
+            }
+        }, 300);
+        
+        faqSearch.addEventListener('input', (e) => {
+            searchHandler(e.target.value);
         });
     }
+    
+    // Keyboard navigation
+    faqQuestions.forEach((question, index) => {
+        question.addEventListener('keydown', (e) => {
+            switch (e.key) {
+                case 'Enter':
+                case ' ':
+                    e.preventDefault();
+                    question.click();
+                    break;
+                case 'ArrowDown':
+                    e.preventDefault();
+                    const nextQuestion = faqQuestions[index + 1];
+                    if (nextQuestion) nextQuestion.focus();
+                    break;
+                case 'ArrowUp':
+                    e.preventDefault();
+                    const prevQuestion = faqQuestions[index - 1];
+                    if (prevQuestion) prevQuestion.focus();
+                    break;
+            }
+        });
+    });
 }
 
-// ===== INICIALIZACIÓN PRINCIPAL OPTIMIZADA =====
-document.addEventListener('DOMContentLoaded', () => {
-    // Detectar capacidades del dispositivo primero
+// ===== INTERSECTION OBSERVER PARA ANIMACIONES =====
+function initializeIntersectionObserver() {
+    if (!('IntersectionObserver' in window) || performanceMode) return;
+    
+    const observerOptions = {
+        threshold: isMobile ? 0.1 : 0.2,
+        rootMargin: isMobile ? '50px 0px' : '100px 0px'
+    };
+    
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('animate-in');
+                observer.unobserve(entry.target);
+            }
+        });
+    }, observerOptions);
+    
+    // Observar elementos que necesitan animación
+    const elementsToAnimate = document.querySelectorAll('.feature, .faq__item, .contact__channel');
+    elementsToAnimate.forEach(element => {
+        observer.observe(element);
+    });
+}
+
+// ===== INICIALIZACIÓN PRINCIPAL =====
+function initializeApp() {
+    console.log('Inicializando StarFlex App...');
+    
+    // Detectar capacidades del dispositivo
     detectDeviceCapabilities();
     
     // Inicializar optimizador de imágenes
     imageOptimizer = new MobileImageOptimizer();
     
-    // Inicializar sistema de idiomas
+    // Inicializar sistemas principales
     initializeLanguageSystem();
-    
-    // Inicializar selector de idioma flotante (solo desktop)
     initializeLanguageSwitcher();
-    
-    // Inicializar funcionalidades principales
-    initializeNavigation();
-    initializeScrollEffects();
-    initializeVideoPlayer();
-    initializeFAQ();
-    
-    // Inicializar video del hero con fallback
-    initializeHeroVideoFallback();
-    
-    // Inicializar funcionalidades adicionales
-    initializeAccessibility();
+    initializeResponsiveNavigation();
+    initializeLogo();
     initializeFloatingWidget();
     
-    // Configurar lazy loading para imágenes
-    setupImageLazyLoading();
+    // Inicializar reproductores de video
+    initializeVideoPlayer();
+    initializeHeroVideo();
     
-    // Inicializar intersection observer solo si no es modo de rendimiento
-    if (!performanceMode) {
-        initializeIntersectionObserver();
-    }
+    // Inicializar secciones
+    initializeFAQ();
     
-    // Optimizaciones adicionales
-    initializePerformanceOptimizations();
+    // Inicializar efectos y animaciones
+    initializeScrollEffects();
+    initializeIntersectionObserver();
     
-    console.log(`StarFlex inicializado - Móvil: ${isMobile}, Modo rendimiento: ${performanceMode}`);
+    // Optimizaciones de rendimiento
+    optimizePerformance();
+    
+    // Inicializar mejoras del drawer
+    initDrawerImprovements();
+    
+    console.log('StarFlex App inicializada correctamente');
+}
+
+// ===== EVENT LISTENERS PRINCIPALES =====
+document.addEventListener('DOMContentLoaded', () => {
+    initializeApp();
+    
+    // Listener para cambios de tamaño de ventana
+    window.addEventListener('resize', debounce(() => {
+        const wasMobile = isMobile;
+        detectDeviceCapabilities();
+        
+        if (wasMobile !== isMobile) {
+            // Reinicializar componentes que dependen del tamaño de pantalla
+            initializeFloatingWidget();
+            handleDrawerResize();
+        }
+    }, 250));
 });
 
-// ===== MANEJO DE ERRORES OPTIMIZADO =====
+// ===== ERROR HANDLING =====
 window.addEventListener('error', (e) => {
-    console.error('Error en la aplicación:', e.error);
-    
-    // En móvil, intentar recuperación automática
-    if (isMobile && e.error && e.error.message.includes('video')) {
-        console.log('Error de video detectado, forzando fallback de imagen');
-        const heroVideo = document.getElementById('hero-video');
-        const heroImage = document.querySelector('.hero__phone-app-image');
-        if (heroVideo && heroImage) {
-            heroVideo.style.display = 'none';
-            heroImage.style.display = 'block';
-            heroImage.style.zIndex = '2';
-        }
-    }
+    console.error('Error en StarFlex:', e.error);
 });
 
 window.addEventListener('unhandledrejection', (e) => {
-    console.error('Promise rechazada:', e.reason);
+    console.error('Promise rechazada en StarFlex:', e.reason);
 });
 
-// ===== LIMPIEZA AL SALIR =====
+// ===== CLEANUP AL SALIR =====
 window.addEventListener('beforeunload', () => {
     // Limpiar recursos si es necesario
     if (imageOptimizer && imageOptimizer.intersectionObserver) {
@@ -1850,8 +1942,8 @@ window.addEventListener('beforeunload', () => {
     }
 });
 
-// ===== SOPORTE PARA PWA OPTIMIZADO =====
-if ('serviceWorker' in navigator && !isMobile) {
+// ===== PWA SUPPORT =====
+if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js')
             .then(registration => {
@@ -1863,118 +1955,20 @@ if ('serviceWorker' in navigator && !isMobile) {
     });
 }
 
-// ===== CORRECCIÓN PARA EL DRAWER MÓVIL Y OVERLAY =====
-
-// Función para abrir el menú móvil con overlay
-function openMobileMenu() {
-    const navToggle = document.getElementById('nav-toggle');
-    const navMenu = document.getElementById('nav-menu');
-    const body = document.body;
-    
-    if (!navToggle || !navMenu) return;
-    
-    isMenuOpen = true;
-    
-    // Animaciones ultra optimizadas para móvil
-    navToggle.classList.add('active');
-    navMenu.classList.add('active');
-    body.classList.add('no-scroll'); // Prevenir scroll
-    
-    // Actualizar atributos de accesibilidad
-    navToggle.setAttribute('aria-expanded', 'true');
-    navMenu.setAttribute('aria-hidden', 'false');
-    
-    // Animar elementos del menú con mejor rendimiento
-    const navLanguageMobile = navMenu.querySelector('.nav__language-mobile');
-    const navLinks = navMenu.querySelectorAll('.nav__link');
-    const navCtaMobile = navMenu.querySelector('.nav__cta-mobile');
-    
-    // Animar selector de idioma móvil
-    if (navLanguageMobile) {
-        navLanguageMobile.style.opacity = '0';
-        navLanguageMobile.style.transform = 'translateY(15px)';
-        setTimeout(() => {
-            navLanguageMobile.style.transition = `all ${isMobile ? '0.3s' : '0.5s'} ease`;
-            navLanguageMobile.style.opacity = '1';
-            navLanguageMobile.style.transform = 'translateY(0)';
-        }, isMobile ? 50 : 100);
-    }
-    
-    // Animar enlaces del menú
-    navLinks.forEach((link, index) => {
-        link.style.opacity = '0';
-        link.style.transform = 'translateY(15px)';
-        setTimeout(() => {
-            link.style.transition = `all ${isMobile ? '0.3s' : '0.5s'} ease`;
-            link.style.opacity = '1';
-            link.style.transform = 'translateY(0)';
-        }, (index + 1) * (isMobile ? 60 : 100) + (isMobile ? 100 : 200));
+// ===== FUNCIÓN PARA DEBUGGING (OPCIONAL) =====
+function debugDrawerState() {
+    console.log({
+        isMenuOpen,
+        currentScrollPosition,
+        currentActiveSection,
+        windowWidth: window.innerWidth,
+        scrollY: window.scrollY,
+        detectedSection: detectCurrentSection()
     });
-    
-    // Animar CTA móvil
-    if (navCtaMobile) {
-        navCtaMobile.style.opacity = '0';
-        navCtaMobile.style.transform = 'translateY(15px)';
-        setTimeout(() => {
-            navCtaMobile.style.transition = `all ${isMobile ? '0.3s' : '0.5s'} ease`;
-            navCtaMobile.style.opacity = '1';
-            navCtaMobile.style.transform = 'translateY(0)';
-        }, (navLinks.length + 2) * (isMobile ? 60 : 100) + (isMobile ? 100 : 200));
-    }
-    
-    // Focus optimizado para móvil
-    if (!isMobile) {
-        setTimeout(() => {
-            const firstLink = navMenu.querySelector('.nav__link');
-            if (firstLink) {
-                firstLink.focus();
-            }
-        }, 400);
-    }
 }
 
-// Función para cerrar el menú móvil
-function closeMobileMenu() {
-    const navToggle = document.getElementById('nav-toggle');
-    const navMenu = document.getElementById('nav-menu');
-    const body = document.body;
-    
-    if (!navToggle || !navMenu) return;
-    
-    isMenuOpen = false;
-    
-    // Animaciones de cierre ultra optimizadas
-    navToggle.classList.remove('active');
-    navMenu.classList.remove('active');
-    body.classList.remove('no-scroll'); // Permitir scroll nuevamente
-    
-    // Actualizar atributos de accesibilidad
-    navToggle.setAttribute('aria-expanded', 'false');
-    navMenu.setAttribute('aria-hidden', 'true');
-    
-    // Resetear estilos de los elementos del menú
-    const elementsToReset = navMenu.querySelectorAll('.nav__language-mobile, .nav__link, .nav__cta-mobile');
-    elementsToReset.forEach(element => {
-        element.style.transition = '';
-        element.style.opacity = '';
-        element.style.transform = '';
-    });
-    
-    // Devolver focus al botón toggle
-    if (!isMobile) {
-        navToggle.focus();
-    }
-}
+// Hacer disponible globalmente para debugging
+window.debugDrawerState = debugDrawerState;
 
-// Reemplazar las funciones originales cuando el DOM esté listo
-document.addEventListener('DOMContentLoaded', () => {
-    // Guardar referencias a las funciones originales
-    const originalOpenMobileMenu = window.openMobileMenu;
-    const originalCloseMobileMenu = window.closeMobileMenu;
-    
-    // Reemplazar con nuestras versiones mejoradas
-    window.openMobileMenu = openMobileMenu;
-    window.closeMobileMenu = closeMobileMenu;
-    
-    console.log('Funciones de drawer móvil mejoradas aplicadas');
-});
+console.log('StarFlex Script cargado completamente');
+
