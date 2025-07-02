@@ -6689,3 +6689,222 @@ Esta corrección simplifica completamente las animaciones:
 
 Resultado: Efecto limpio y consistente con el resto del sitio.
 */
+/* ===== BOTONES DE DESCARGA CON EFECTOS HOVER RESTAURADOS ===== */
+.hero__download {
+display: flex;
+gap: var(--space-xl);
+margin-bottom: var(--space-lg);
+align-items: center;
+justify-content: flex-start;
+width: 100%;
+}
+
+.download-btn {
+display: inline-block;
+transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+position: relative;
+overflow: visible;
+text-decoration: none;
+cursor: pointer;
+filter: drop-shadow(0 8px 25px rgba(0, 0, 0, 0.3));
+flex-shrink: 0;
+transform: translateZ(0);
+backface-visibility: hidden;
+}
+
+/* ===== EFECTOS HOVER PARA BOTONES DE DESCARGA ===== */
+.download-btn:hover {
+transform: translateY(-4px) scale(1.05) !important;
+filter: drop-shadow(0 15px 35px rgba(0, 0, 0, 0.4)) 
+        drop-shadow(0 0 20px rgba(255, 69, 105, 0.2)) !important;
+transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+}
+
+.download-btn:active {
+transform: translateY(-2px) scale(1.02) !important;
+filter: drop-shadow(0 10px 25px rgba(0, 0, 0, 0.5)) !important;
+transition: all 0.15s ease !important;
+}
+
+.download-btn__image {
+height: 60px;
+width: auto;
+display: block;
+transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+image-rendering: -webkit-optimize-contrast;
+image-rendering: crisp-edges;
+image-rendering: high-quality;
+object-fit: contain;
+object-position: center;
+filter: brightness(1.02) contrast(1.05) saturate(1.08);
+transform: translateZ(0);
+backface-visibility: hidden;
+max-width: 200px;
+}
+
+/* ===== EFECTOS HOVER PARA IMÁGENES DE BOTONES ===== */
+.download-btn:hover .download-btn__image {
+filter: brightness(1.08) contrast(1.12) saturate(1.15) !important;
+transform: scale(1.02) translateZ(0) !important;
+transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+}
+
+.download-btn:active .download-btn__image {
+filter: brightness(1.05) contrast(1.08) saturate(1.1) !important;
+transform: scale(1.01) translateZ(0) !important;
+}
+
+/* ===== CONFIGURACIÓN ESPECÍFICA PARA CADA BOTÓN ===== */
+.download-btn--google .download-btn__image {
+height: 60px;
+width: auto;
+min-width: 180px;
+max-width: 200px;
+background-image: url('../assets/GooglePlay.avif');
+background-size: contain;
+background-repeat: no-repeat;
+background-position: center;
+}
+
+.download-btn--app-store .download-btn__image {
+height: 60px;
+width: auto;
+min-width: 180px;
+max-width: 200px;
+background-image: url('../assets/AppleStore.avif');
+background-size: contain;
+background-repeat: no-repeat;
+background-position: center;
+}
+
+/* ===== EFECTOS HOVER ESPECÍFICOS POR PLATAFORMA ===== */
+.download-btn--google:hover {
+filter: drop-shadow(0 15px 35px rgba(0, 0, 0, 0.4)) 
+        drop-shadow(0 0 20px rgba(52, 168, 83, 0.3)) !important;
+}
+
+.download-btn--app-store:hover {
+filter: drop-shadow(0 15px 35px rgba(0, 0, 0, 0.4)) 
+        drop-shadow(0 0 20px rgba(0, 122, 255, 0.3)) !important;
+}
+
+/* ===== EFECTOS DE BRILLO SUTIL ===== */
+.download-btn::before {
+content: '';
+position: absolute;
+top: 0;
+left: 0;
+right: 0;
+bottom: 0;
+background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.1) 0%, 
+    transparent 50%, 
+    rgba(255, 255, 255, 0.05) 100%
+);
+border-radius: 12px;
+opacity: 0;
+transition: opacity 0.3s ease;
+pointer-events: none;
+z-index: 1;
+}
+
+.download-btn:hover::before {
+opacity: 1;
+}
+
+/* ===== OPTIMIZACIÓN PARA MÓVIL ===== */
+@media (max-width: 1023px) {
+    .download-btn {
+        transition: all 0.2s ease !important;
+    }
+    
+    .download-btn:hover {
+        transform: translateY(-2px) scale(1.03) !important;
+        filter: drop-shadow(0 10px 25px rgba(0, 0, 0, 0.3)) 
+                drop-shadow(0 0 15px rgba(255, 69, 105, 0.15)) !important;
+    }
+    
+    .download-btn__image {
+        transition: all 0.2s ease !important;
+    }
+    
+    .download-btn:hover .download-btn__image {
+        filter: brightness(1.05) contrast(1.08) saturate(1.1) !important;
+        transform: scale(1.01) translateZ(0) !important;
+    }
+    
+    /* Efectos más sutiles en móvil */
+    .download-btn--google:hover {
+        filter: drop-shadow(0 10px 25px rgba(0, 0, 0, 0.3)) 
+                drop-shadow(0 0 15px rgba(52, 168, 83, 0.2)) !important;
+    }
+    
+    .download-btn--app-store:hover {
+        filter: drop-shadow(0 10px 25px rgba(0, 0, 0, 0.3)) 
+                drop-shadow(0 0 15px rgba(0, 122, 255, 0.2)) !important;
+    }
+}
+
+/* ===== ESTADOS FOCUS PARA ACCESIBILIDAD ===== */
+.download-btn:focus {
+outline: 2px solid var(--starflex-red);
+outline-offset: 3px;
+border-radius: 12px;
+}
+
+.download-btn:focus-visible {
+outline: 2px solid var(--starflex-red);
+outline-offset: 3px;
+border-radius: 12px;
+box-shadow: 0 0 0 4px rgba(255, 45, 85, 0.2);
+}
+
+/* ===== CORRECCIÓN PARA USUARIOS QUE PREFIEREN MOVIMIENTO REDUCIDO ===== */
+@media (prefers-reduced-motion: reduce) {
+    .download-btn,
+    .download-btn__image {
+        transition: none !important;
+    }
+    
+    .download-btn:hover {
+        transform: none !important;
+        filter: brightness(1.1) drop-shadow(0 8px 25px rgba(0, 0, 0, 0.3)) !important;
+    }
+    
+    .download-btn:hover .download-btn__image {
+        filter: brightness(1.1) contrast(1.1) saturate(1.1) !important;
+        transform: none !important;
+    }
+}
+
+/* ===== ASEGURAR COMPATIBILIDAD CON OTROS ESTILOS ===== */
+.download-btn,
+.download-btn--google,
+.download-btn--app-store {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    position: relative !important;
+    z-index: 5 !important;
+}
+
+/* ===== EFECTO DE PULSO SUTIL EN HOVER ===== */
+@keyframes download-btn-pulse {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(255, 69, 105, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 0 8px rgba(255, 69, 105, 0);
+    }
+}
+
+.download-btn:hover {
+    animation: download-btn-pulse 2s infinite;
+}
+
+/* ===== CORRECCIÓN PARA PANTALLAS DE ALTA DENSIDAD ===== */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .download-btn__image {
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
+    }
+}
