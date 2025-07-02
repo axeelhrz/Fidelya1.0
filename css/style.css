@@ -11255,3 +11255,693 @@ html .nav__close,
 El drawer ahora es más limpio, moderno y aprovecha mejor el espacio
 sin el botón X, manteniendo toda la funcionalidad de cierre.
 */
+/* ===== REDISEÑO COMPLETO DEL DRAWER MÓVIL - LOGO ARRIBA CENTRADO ===== */
+/* Logo centrado arriba, selector de idioma más abajo, información reorganizada */
+
+/* Aplicar solo en dispositivos móviles */
+@media screen and (max-width: 1023px) {
+
+/* ===== VARIABLES PARA EL NUEVO LAYOUT ===== */
+:root {
+    /* Espaciado optimizado para el nuevo layout */
+    --drawer-header-height: 80px;
+    --drawer-logo-size: 60px;
+    --drawer-content-spacing: clamp(1rem, 3vh, 1.5rem);
+    --drawer-section-gap: clamp(1.5rem, 4vh, 2rem);
+}
+
+/* ===== DRAWER PRINCIPAL CON NUEVO LAYOUT ===== */
+.nav__menu {
+    /* Layout reorganizado */
+    position: fixed !important;
+    top: 0 !important;
+    left: -100% !important;
+    width: min(320px, 85vw) !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    
+    /* Fondo elegante mantenido */
+    background: linear-gradient(135deg, 
+        rgba(10, 13, 20, 0.98) 0%, 
+        rgba(21, 25, 34, 0.96) 30%,
+        rgba(30, 35, 48, 0.94) 70%,
+        rgba(21, 25, 34, 0.96) 100%
+    ) !important;
+    backdrop-filter: blur(30px) !important;
+    -webkit-backdrop-filter: blur(30px) !important;
+    
+    /* Bordes y sombras */
+    border-right: 2px solid rgba(255, 45, 85, 0.3) !important;
+    box-shadow: 
+        0 0 60px rgba(0, 0, 0, 0.8),
+        inset 2px 0 0 rgba(255, 45, 85, 0.2) !important;
+    
+    /* NUEVO LAYOUT FLEXBOX REORGANIZADO */
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-start !important;
+    align-items: stretch !important;
+    
+    /* Padding reorganizado para el nuevo layout */
+    padding: 0 !important;
+    padding-top: max(calc(env(safe-area-inset-top, 20px) + 10px), 20px) !important;
+    padding-bottom: max(calc(env(safe-area-inset-bottom, 20px) + 20px), 30px) !important;
+    padding-left: var(--drawer-content-spacing) !important;
+    padding-right: var(--drawer-content-spacing) !important;
+    
+    /* Sin scroll */
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+    
+    /* Transición suave */
+    transition: left 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+    z-index: 1000 !important;
+}
+
+.nav__menu.active {
+    left: 0 !important;
+}
+
+/* ===== SECCIÓN 1: HEADER CON LOGO CENTRADO ===== */
+.nav__menu-header {
+    /* Crear sección de header */
+    width: 100% !important;
+    height: var(--drawer-header-height) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin-bottom: var(--drawer-section-gap) !important;
+    flex-shrink: 0 !important;
+    position: relative !important;
+}
+
+/* Logo centrado en el header */
+.nav__menu-logo {
+    width: var(--drawer-logo-size) !important;
+    height: var(--drawer-logo-size) !important;
+    background-image: url('../assets/logo.avif') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    border-radius: 15px !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    filter: drop-shadow(0 8px 25px rgba(0, 0, 0, 0.3)) !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+/* Efecto hover para el logo */
+.nav__menu-logo::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: -100% !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(255, 45, 85, 0.2) 50%, 
+        transparent 100%
+    ) !important;
+    transition: left 0.8s ease !important;
+    border-radius: 15px !important;
+    display: block !important;
+    opacity: 1 !important;
+}
+
+.nav__menu-logo:hover::before,
+.nav__menu-logo:active::before {
+    left: 100% !important;
+}
+
+.nav__menu-logo:hover,
+.nav__menu-logo:active {
+    transform: scale(1.05) !important;
+    filter: drop-shadow(0 12px 30px rgba(0, 0, 0, 0.4)) drop-shadow(0 0 20px rgba(255, 45, 85, 0.3)) !important;
+}
+
+/* ===== SECCIÓN 2: NAVEGACIÓN PRINCIPAL (MÁS ABAJO) ===== */
+.nav__list {
+    /* Navegación movida más abajo */
+    display: flex !important;
+    flex-direction: column !important;
+    gap: clamp(0.5rem, 1.5vh, 0.75rem) !important;
+    list-style: none !important;
+    padding: 0 !important;
+    margin: 0 0 var(--drawer-section-gap) 0 !important;
+    
+    /* Ocupar espacio disponible */
+    flex: 1 !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+}
+
+.nav__link {
+    /* Mantener el estilo existente de enlaces */
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    padding: clamp(0.75rem, 3vh, 1rem) clamp(1rem, 4vw, 1.5rem) !important;
+    min-height: clamp(44px, 8vh, 52px) !important;
+    
+    /* Diseño sin cuadrados mantenido */
+    background: transparent !important;
+    border: none !important;
+    border-left: 3px solid transparent !important;
+    border-radius: 0 15px 15px 0 !important;
+    
+    /* Tipografía mantenida */
+    color: rgba(255, 255, 255, 0.8) !important;
+    font-size: clamp(0.85rem, 2.5vw, 0.95rem) !important;
+    font-weight: 500 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    text-decoration: none !important;
+    
+    /* Efectos mantenidos */
+    transition: all 0.3s ease !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+/* Mantener todos los efectos existentes de los enlaces */
+.nav__link::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 0 !important;
+    height: 100% !important;
+    background: linear-gradient(90deg, 
+        rgba(255, 45, 85, 0.1) 0%, 
+        rgba(255, 45, 85, 0.05) 100%
+    ) !important;
+    transition: width 0.4s ease !important;
+    border-radius: 0 15px 15px 0 !important;
+    display: block !important;
+    opacity: 1 !important;
+}
+
+.nav__link::after {
+    content: '→' !important;
+    position: absolute !important;
+    right: 1rem !important;
+    color: rgba(255, 45, 85, 0.6) !important;
+    font-size: clamp(0.8rem, 2.5vw, 1rem) !important;
+    opacity: 0 !important;
+    transform: translateX(-10px) !important;
+    transition: all 0.3s ease !important;
+    display: block !important;
+}
+
+.nav__link:hover,
+.nav__link:active {
+    border-left-color: var(--starflex-red) !important;
+    color: #ffffff !important;
+    transform: translateX(6px) !important;
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.3) !important;
+}
+
+.nav__link:hover::before,
+.nav__link:active::before {
+    width: 100% !important;
+}
+
+.nav__link:hover::after,
+.nav__link:active::after {
+    opacity: 1 !important;
+    transform: translateX(0) !important;
+}
+
+.nav__link.active {
+    border-left-color: var(--starflex-red) !important;
+    color: var(--starflex-red) !important;
+    transform: translateX(8px) !important;
+    text-shadow: 0 0 10px rgba(255, 45, 85, 0.5) !important;
+}
+
+.nav__link.active::before {
+    width: 100% !important;
+    background: linear-gradient(90deg, 
+        rgba(255, 45, 85, 0.2) 0%, 
+        rgba(255, 45, 85, 0.1) 100%
+    ) !important;
+}
+
+.nav__link.active::after {
+    opacity: 1 !important;
+    transform: translateX(0) !important;
+    color: var(--starflex-red) !important;
+}
+
+/* ===== SECCIÓN 3: SELECTOR DE IDIOMA (MÁS ABAJO) ===== */
+.nav__language-mobile {
+    /* Mover el selector de idioma más abajo */
+    width: 100% !important;
+    margin: 0 0 var(--drawer-section-gap) 0 !important;
+    padding: 0 !important;
+    
+    /* Sin contenedor visible */
+    background: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    
+    /* Layout natural */
+    position: relative !important;
+    overflow: visible !important;
+    flex-shrink: 0 !important;
+    box-sizing: border-box !important;
+    
+    /* Sin efectos de contenedor */
+    transition: none !important;
+    cursor: default !important;
+    pointer-events: none !important;
+}
+
+.nav__language-title {
+    /* Título del selector de idioma */
+    color: var(--starflex-red) !important;
+    font-size: clamp(0.75rem, 2.5vw, 0.9rem) !important;
+    font-weight: 600 !important;
+    text-align: center !important;
+    margin-bottom: var(--drawer-content-spacing) !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+    text-shadow: 0 0 8px rgba(255, 45, 85, 0.3) !important;
+    
+    /* Sin efectos de contenedor */
+    background: none !important;
+    border: none !important;
+    padding: 0 !important;
+    transition: none !important;
+    position: relative !important;
+    z-index: 1 !important;
+    cursor: default !important;
+    pointer-events: none !important;
+}
+
+.nav__language-options {
+    /* Opciones de idioma */
+    display: flex !important;
+    gap: var(--drawer-content-spacing) !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    
+    /* Sin contenedor visible */
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    transition: none !important;
+    
+    /* Layout natural */
+    position: relative !important;
+    z-index: 1 !important;
+    cursor: default !important;
+    pointer-events: none !important;
+    overflow: visible !important;
+    box-sizing: border-box !important;
+}
+
+.nav__language-option {
+    /* Botones de idioma compactos */
+    flex: 1 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.5rem !important;
+    
+    /* Tamaño compacto */
+    padding: clamp(0.75rem, 3vh, 1rem) clamp(0.75rem, 3vw, 1.25rem) !important;
+    min-height: clamp(40px, 7vh, 48px) !important;
+    
+    /* Diseño integrado */
+    background: rgba(255, 255, 255, 0.08) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: 12px !important;
+    
+    /* Tipografía */
+    color: rgba(255, 255, 255, 0.9) !important;
+    font-size: clamp(0.75rem, 2.5vw, 0.85rem) !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    
+    /* Interactividad */
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    
+    /* Optimización */
+    position: relative !important;
+    overflow: hidden !important;
+    user-select: none !important;
+    -webkit-tap-highlight-color: transparent !important;
+    touch-action: manipulation !important;
+    pointer-events: auto !important;
+    box-sizing: border-box !important;
+}
+
+/* Mantener todos los efectos existentes de las opciones de idioma */
+.nav__language-option::before {
+    content: '' !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 0 !important;
+    height: 100% !important;
+    background: linear-gradient(180deg, 
+        var(--starflex-red) 0%, 
+        rgba(255, 45, 85, 0.8) 100%
+    ) !important;
+    transition: width 0.3s ease !important;
+    border-radius: 12px 0 0 12px !important;
+    display: block !important;
+    opacity: 1 !important;
+}
+
+.nav__language-option::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: -100% !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(255, 45, 85, 0.1) 50%, 
+        transparent 100%
+    ) !important;
+    transition: left 0.6s ease !important;
+    border-radius: 12px !important;
+    display: block !important;
+    opacity: 1 !important;
+}
+
+.nav__language-option:hover,
+.nav__language-option:active {
+    background: rgba(255, 45, 85, 0.15) !important;
+    border-color: rgba(255, 45, 85, 0.4) !important;
+    color: #ffffff !important;
+    transform: translateY(-1px) scale(1.02) !important;
+    box-shadow: 
+        0 6px 20px rgba(0, 0, 0, 0.2),
+        0 0 15px rgba(255, 45, 85, 0.3) !important;
+}
+
+.nav__language-option:hover::before,
+.nav__language-option:active::before {
+    width: 3px !important;
+}
+
+.nav__language-option:hover::after,
+.nav__language-option:active::after {
+    left: 100% !important;
+}
+
+.nav__language-option.active {
+    background: rgba(255, 45, 85, 0.25) !important;
+    border-color: rgba(255, 45, 85, 0.6) !important;
+    color: var(--starflex-red) !important;
+    box-shadow: 
+        0 6px 20px rgba(0, 0, 0, 0.25),
+        0 0 20px rgba(255, 45, 85, 0.4) !important;
+    text-shadow: 0 0 8px rgba(255, 45, 85, 0.5) !important;
+}
+
+.nav__language-option.active::before {
+    width: 3px !important;
+    background: linear-gradient(180deg, 
+        var(--starflex-red) 0%, 
+        rgba(255, 45, 85, 1) 100%
+    ) !important;
+    box-shadow: 0 0 8px rgba(255, 45, 85, 0.6) !important;
+}
+
+.nav__language-flag {
+    font-size: 1rem !important;
+    line-height: 1 !important;
+    transition: transform 0.3s ease !important;
+    pointer-events: none !important;
+    flex-shrink: 0 !important;
+}
+
+.nav__language-name {
+    font-weight: 700 !important;
+    transition: transform 0.3s ease !important;
+    pointer-events: none !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    min-width: 0 !important;
+}
+
+.nav__language-option:hover .nav__language-flag,
+.nav__language-option:hover .nav__language-name {
+    transform: scale(1.05) !important;
+}
+
+.nav__language-option.active .nav__language-flag,
+.nav__language-option.active .nav__language-name {
+    transform: scale(1.1) !important;
+}
+
+/* ===== SECCIÓN 4: CTA PRINCIPAL (ABAJO) ===== */
+.nav__cta-mobile {
+    /* CTA en la parte inferior */
+    margin: 0 !important;
+    padding: 0 !important;
+    flex-shrink: 0 !important;
+}
+
+.btn--mobile {
+    /* Mantener el diseño espectacular del CTA */
+    width: 100% !important;
+    min-height: clamp(48px, 8vh, 56px) !important;
+    padding: clamp(0.75rem, 3vh, 1rem) clamp(1.5rem, 5vw, 2rem) !important;
+    
+    /* Gradiente mantenido */
+    background: linear-gradient(135deg, 
+        var(--starflex-red) 0%, 
+        rgba(255, 45, 85, 0.9) 50%,
+        var(--starflex-red) 100%
+    ) !important;
+    border: none !important;
+    border-radius: 16px !important;
+    
+    /* Tipografía mantenida */
+    color: #ffffff !important;
+    font-size: clamp(0.9rem, 2.8vw, 1rem) !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5) !important;
+    
+    /* Layout mantenido */
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    
+    /* Efectos mantenidos */
+    box-shadow: 
+        0 8px 25px rgba(255, 45, 85, 0.4),
+        0 0 20px rgba(255, 45, 85, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+    
+    /* Interactividad mantenida */
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.btn--mobile:hover,
+.btn--mobile:active {
+    background: linear-gradient(135deg, 
+        rgba(255, 45, 85, 1) 0%, 
+        #FF1744 50%,
+        rgba(255, 45, 85, 1) 100%
+    ) !important;
+    transform: translateY(-2px) scale(1.02) !important;
+    box-shadow: 
+        0 12px 35px rgba(255, 45, 85, 0.6),
+        0 0 30px rgba(255, 45, 85, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.8) !important;
+}
+
+/* ===== ANIMACIONES REORGANIZADAS PARA EL NUEVO LAYOUT ===== */
+.nav__menu.active .nav__menu-logo {
+    animation: drawerElementSlideIn 0.4s ease-out 0.05s both;
+}
+
+.nav__menu.active .nav__link:nth-child(1) { animation-delay: 0.1s; }
+.nav__menu.active .nav__link:nth-child(2) { animation-delay: 0.15s; }
+.nav__menu.active .nav__link:nth-child(3) { animation-delay: 0.2s; }
+.nav__menu.active .nav__link:nth-child(4) { animation-delay: 0.25s; }
+.nav__menu.active .nav__link:nth-child(5) { animation-delay: 0.3s; }
+
+.nav__menu.active .nav__language-title {
+    animation: drawerElementSlideIn 0.4s ease-out 0.35s both;
+}
+
+.nav__menu.active .nav__language-options {
+    animation: drawerElementSlideIn 0.4s ease-out 0.4s both;
+}
+
+.nav__menu.active .btn--mobile {
+    animation: drawerElementSlideIn 0.4s ease-out 0.45s both;
+}
+
+@keyframes drawerElementSlideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-25px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* ===== RESPONSIVE PARA EL NUEVO LAYOUT ===== */
+
+/* Pantallas medianas */
+@media screen and (max-height: 700px) and (min-height: 600px) {
+    :root {
+        --drawer-header-height: 70px;
+        --drawer-logo-size: 55px;
+        --drawer-content-spacing: 1.25rem;
+        --drawer-section-gap: 1.5rem;
+    }
+}
+
+/* Pantallas pequeñas */
+@media screen and (max-height: 600px) {
+    :root {
+        --drawer-header-height: 60px;
+        --drawer-logo-size: 50px;
+        --drawer-content-spacing: 1rem;
+        --drawer-section-gap: 1.25rem;
+    }
+    
+    .nav__language-name {
+        display: none !important;
+    }
+    
+    .nav__language-option {
+        gap: 0 !important;
+        justify-content: center !important;
+    }
+}
+
+/* Pantallas muy pequeñas */
+@media screen and (max-height: 500px) {
+    :root {
+        --drawer-header-height: 50px;
+        --drawer-logo-size: 45px;
+        --drawer-content-spacing: 0.875rem;
+        --drawer-section-gap: 1rem;
+    }
+}
+
+/* Pantallas estrechas */
+@media screen and (max-width: 360px) {
+    .nav__language-name {
+        display: none !important;
+    }
+    
+    .nav__language-option {
+        gap: 0 !important;
+        justify-content: center !important;
+    }
+}
+
+/* ===== ACCESIBILIDAD PARA EL NUEVO LAYOUT ===== */
+.nav__menu-logo:focus {
+    outline: 2px solid var(--starflex-red) !important;
+    outline-offset: 3px !important;
+    border-radius: 18px !important;
+}
+
+.nav__language-option:focus {
+    outline: 2px solid var(--starflex-red) !important;
+    outline-offset: 2px !important;
+    box-shadow: 
+        0 0 0 4px rgba(255, 45, 85, 0.3),
+        0 6px 20px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* ===== OPTIMIZACIONES DE RENDIMIENTO ===== */
+.nav__menu-logo,
+.nav__language-option {
+    will-change: transform !important;
+    transform: translateZ(0) !important;
+    backface-visibility: hidden !important;
+    contain: layout style paint !important;
+}
+
+/* ===== TOUCH OPTIMIZATIONS ===== */
+.nav__menu-logo,
+.nav__language-option {
+    touch-action: manipulation !important;
+    -webkit-tap-highlight-color: transparent !important;
+    -webkit-touch-callout: none !important;
+    user-select: none !important;
+}
+
+/* Feedback táctil */
+.nav__menu-logo:active {
+    transform: scale(1.02) !important;
+}
+
+.nav__language-option:active {
+    transform: translateY(0) scale(0.98) !important;
+}
+
+}
+
+/* ===== NOTA FINAL ===== */
+/*
+🎨 DRAWER MÓVIL COMPLETAMENTE REORGANIZADO:
+
+✅ NUEVO LAYOUT:
+1. **HEADER**: Logo centrado arriba (sección 1)
+2. **NAVEGACIÓN**: Enlaces principales en el medio (sección 2) 
+3. **IDIOMA**: Selector de idioma más abajo (sección 3)
+4. **CTA**: Botón principal al final (sección 4)
+
+✅ LOGO CENTRADO ARRIBA:
+- Logo de 60px centrado en header de 80px
+- Efectos hover elegantes mantenidos
+- Funcionalidad de navegación al inicio
+- Animación de entrada prioritaria
+
+✅ INFORMACIÓN MÁS ABAJO:
+- Navegación principal movida al centro
+- Selector de idioma reubicado más abajo
+- CTA mantenido en la parte inferior
+- Mejor aprovechamiento del espacio vertical
+
+✅ SELECTOR DE IDIOMA REUBICADO:
+- Movido de la parte superior al área media-baja
+- Mantiene toda su funcionalidad y estética
+- Animación secuencial mejorada
+- Responsive completo mantenido
+
+✅ FUNCIONALIDAD COMPLETA:
+- Todas las animaciones reorganizadas
+- Responsive perfecto en todas las pantallas
+- Accesibilidad mantenida
+- Touch optimizations preservadas
+- Rendimiento optimizado
+
+El resultado es un drawer más organizado y visualmente atractivo
+con el logo prominente arriba y la información mejor distribuida.
+*/
