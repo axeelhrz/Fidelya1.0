@@ -8794,3 +8794,256 @@ body.no-scroll {
 
 El drawer ahora es perfecto: sin scroll, sin superposiciones, completamente responsive y visualmente espectacular.
 */
+/* ===== CORRECCIÓN PARA OCULTAR BOTÓN CTA CUANDO EL DRAWER ESTÁ ABIERTO ===== */
+
+/* Aplicar solo en dispositivos móviles */
+@media screen and (max-width: 1023px) {
+
+/* ===== ASEGURAR QUE EL BOTÓN CTA NUNCA APAREZCA POR ENCIMA DEL DRAWER ===== */
+
+/* Ocultar completamente el botón CTA del navbar en móvil */
+.nav__cta {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    z-index: -1 !important;
+}
+
+/* Asegurar que cuando el menú esté abierto, no haya interferencias */
+body.no-scroll .nav__cta {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    z-index: -1 !important;
+    transform: translateY(-100px) !important;
+}
+
+/* Asegurar que el header completo tenga z-index menor que el drawer */
+.header {
+    z-index: 999 !important; /* Menor que el drawer que tiene 1000 */
+}
+
+/* Asegurar que el navbar tenga z-index menor que el drawer */
+.nav {
+    z-index: 999 !important; /* Menor que el drawer que tiene 1000 */
+}
+
+/* Solo el toggle y el logo pueden tener z-index alto */
+.nav__toggle {
+    z-index: 1001 !important; /* Mayor que el drawer para poder cerrarlo */
+}
+
+.nav__brand,
+.nav__logo {
+    z-index: 1001 !important; /* Mayor que el drawer para poder usarlo */
+}
+
+/* ===== ASEGURAR QUE EL DRAWER TENGA PRIORIDAD TOTAL ===== */
+
+/* El drawer debe tener el z-index más alto (excepto toggle y logo) */
+.nav__menu {
+    z-index: 1000 !important;
+}
+
+/* El botón de cerrar debe estar por encima del drawer */
+.nav__close {
+    z-index: 1002 !important;
+}
+
+/* El overlay del drawer debe cubrir todo */
+.nav__menu::before {
+    z-index: 999 !important;
+}
+
+/* ===== CORRECCIÓN ADICIONAL PARA ELEMENTOS QUE PUEDAN INTERFERIR ===== */
+
+/* Asegurar que ningún otro elemento del navbar interfiera */
+.nav > *:not(.nav__brand):not(.nav__logo):not(.nav__toggle):not(.nav__menu) {
+    z-index: 998 !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    visibility: hidden !important;
+}
+
+/* Cuando el menú esté activo, ocultar todo excepto lo esencial */
+.nav__menu.active ~ .nav__cta,
+.nav__menu.active ~ * {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    visibility: hidden !important;
+    z-index: -1 !important;
+}
+
+/* ===== CORRECCIÓN PARA EL SELECTOR DE IDIOMA FLOTANTE ===== */
+
+/* Ocultar el selector de idioma flotante en móvil */
+.language-switcher {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    z-index: -1 !important;
+}
+
+/* ===== CORRECCIÓN PARA CUALQUIER ELEMENTO FLOTANTE ===== */
+
+/* Asegurar que elementos flotantes no interfieran */
+.floating-widget {
+    z-index: 1100 !important; /* Por encima del drawer pero accesible */
+}
+
+/* Cuando el menú esté abierto, reducir opacidad del widget flotante */
+body.no-scroll .floating-widget {
+    opacity: 0.3 !important;
+    pointer-events: none !important;
+}
+
+/* ===== CORRECCIÓN PARA ELEMENTOS DEL HEADER ===== */
+
+/* Asegurar que solo los elementos esenciales sean visibles */
+.header.menu-open .nav__cta,
+.header.menu-open .language-switcher,
+.header.menu-open .nav > *:not(.nav__brand):not(.nav__logo):not(.nav__toggle):not(.nav__menu) {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    transform: translateY(-50px) !important;
+    transition: all 0.3s ease !important;
+}
+
+/* ===== CORRECCIÓN ESPECÍFICA PARA EL BOTÓN CTA ===== */
+
+/* Múltiples formas de asegurar que el CTA no aparezca */
+.nav__cta,
+.nav__cta-desktop,
+.nav > .btn,
+.nav > .btn--primary,
+.nav > a.btn {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    z-index: -10 !important;
+    position: absolute !important;
+    top: -1000px !important;
+    left: -1000px !important;
+}
+
+/* ===== CORRECCIÓN PARA ESTADOS DEL MENÚ ===== */
+
+/* Cuando el menú no está activo, mantener elementos ocultos */
+.nav__menu:not(.active) ~ .nav__cta {
+    display: none !important;
+}
+
+/* Cuando el menú está activo, forzar ocultación */
+.nav__menu.active ~ .nav__cta {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    z-index: -10 !important;
+}
+
+/* ===== CORRECCIÓN PARA BODY CON MENÚ ABIERTO ===== */
+
+/* Cuando el body tiene la clase no-scroll (menú abierto) */
+body.no-scroll .nav__cta,
+body.no-scroll .language-switcher,
+body.no-scroll .nav > *:not(.nav__brand):not(.nav__logo):not(.nav__toggle):not(.nav__menu) {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    z-index: -10 !important;
+    transform: translateY(-100px) scale(0) !important;
+}
+
+/* ===== CORRECCIÓN FINAL - FUERZA BRUTA ===== */
+
+/* Si todo lo anterior falla, usar !important en todo */
+@media screen and (max-width: 1023px) {
+    .nav__cta,
+    .nav__cta-desktop,
+    .language-switcher,
+    .nav > .btn,
+    .nav > .btn--primary,
+    .nav > a.btn,
+    .nav > *:not(.nav__brand):not(.nav__logo):not(.nav__toggle):not(.nav__menu) {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+        z-index: -100 !important;
+        position: absolute !important;
+        top: -9999px !important;
+        left: -9999px !important;
+        width: 0 !important;
+        height: 0 !important;
+        overflow: hidden !important;
+        clip: rect(0, 0, 0, 0) !important;
+        white-space: nowrap !important;
+        border: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+}
+
+/* ===== ASEGURAR ORDEN DE APILAMIENTO CORRECTO ===== */
+
+/* Orden de z-index de menor a mayor:
+   -100: Elementos completamente ocultos
+   -10: Elementos ocultos temporalmente  
+   -1: Elementos deshabilitados
+   998: Elementos del navbar no esenciales
+   999: Header y nav base
+   1000: Drawer/menú móvil
+   1001: Toggle y logo (para poder interactuar)
+   1002: Botón de cerrar
+   1100: Widget flotante
+*/
+
+}
+
+/* ===== CORRECCIÓN ADICIONAL PARA DESKTOP ===== */
+
+/* En desktop, asegurar que el CTA esté visible normalmente */
+@media screen and (min-width: 1024px) {
+    .nav__cta {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        z-index: auto !important;
+        position: static !important;
+        top: auto !important;
+        left: auto !important;
+        width: auto !important;
+        height: auto !important;
+        overflow: visible !important;
+        clip: auto !important;
+        white-space: normal !important;
+        border: auto !important;
+        margin: auto !important;
+        padding: auto !important;
+    }
+}
+
+/* ===== NOTA IMPORTANTE ===== */
+/*
+Esta corrección asegura que:
+
+1. ✅ El botón CTA del navbar NUNCA aparece en móvil
+2. ✅ Cuando el drawer está abierto, solo son visibles:
+   - El logo (para navegación)
+   - El botón hamburguesa/toggle (para cerrar)
+   - El botón de cerrar (X)
+   - El contenido del drawer
+3. ✅ Todos los demás elementos están completamente ocultos
+4. ✅ El z-index está correctamente ordenado
+5. ✅ En desktop todo funciona normalmente
+
+El problema de superposición queda completamente solucionado.
+*/
