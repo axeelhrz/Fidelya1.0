@@ -6339,3 +6339,353 @@ Con estos cambios:
 6. El diseño se ve más limpio y moderno
 7. Se mantiene la responsividad en móviles
 */
+/* ===== SIMPLIFICACIÓN DE ANIMACIONES - SOLO EFECTO DE APARICIÓN ===== */
+
+/* ===== ELIMINAR TODAS LAS ANIMACIONES COMPLEJAS ===== */
+
+/* Resetear estados iniciales - sin animaciones complejas */
+.feature__phone,
+.phone,
+.phone__screen,
+.phone__content,
+.phone__app-image {
+    /* Eliminar todas las transiciones complejas */
+    transition: none !important;
+    transform: none !important;
+    animation: none !important;
+    will-change: auto !important;
+}
+
+/* ===== SOLO EFECTO DE APARICIÓN COMO LAS LETRAS ===== */
+
+/* Estado inicial - invisible */
+.feature .phone__app-image,
+.feature .phone,
+.feature .feature__phone {
+    opacity: 0 !important;
+    transform: translateY(30px) !important;
+    transition: opacity 0.6s ease, transform 0.6s ease !important;
+}
+
+/* Estado final - visible (igual que las letras) */
+.feature.in-view .phone__app-image,
+.feature.in-view .phone,
+.feature.in-view .feature__phone {
+    opacity: 1 !important;
+    transform: translateY(0) !important;
+    transition: opacity 0.6s ease, transform 0.6s ease !important;
+}
+
+/* ===== ELIMINAR TODOS LOS EFECTOS HOVER ===== */
+
+@media (min-width: 1024px) {
+    .feature:hover .phone__app-image,
+    .feature:hover .phone,
+    .feature:hover .feature__phone {
+        /* Sin efectos hover - mantener estado normal */
+        transform: translateY(0) !important;
+        opacity: 1 !important;
+        filter: none !important;
+        transition: none !important;
+    }
+}
+
+/* ===== ELIMINAR EFECTOS AMBIENTALES ===== */
+
+.phone::before,
+.feature__phone::before {
+    /* Eliminar efectos de brillo ambiental */
+    display: none !important;
+    opacity: 0 !important;
+    animation: none !important;
+    transition: none !important;
+}
+
+/* ===== ELIMINAR TRANSFORMACIONES 3D ===== */
+
+.feature__phone {
+    /* Sin perspectiva 3D */
+    transform: none !important;
+    perspective: none !important;
+}
+
+.phone {
+    /* Sin rotaciones 3D */
+    transform: none !important;
+    perspective: none !important;
+}
+
+/* ===== MANTENER SOLO PROPIEDADES BÁSICAS ===== */
+
+.phone__app-image {
+    /* Solo propiedades básicas de imagen */
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    object-position: center !important;
+    border-radius: var(--phone-border-radius) !important;
+    filter: brightness(1.02) contrast(1.05) saturate(1.08) !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+}
+
+.phone__screen,
+.phone__content {
+    /* Contenedores simples sin efectos */
+    width: 100% !important;
+    height: 100% !important;
+    overflow: hidden !important;
+    border-radius: var(--phone-border-radius) !important;
+    background: transparent !important;
+}
+
+.phone {
+    /* Teléfono simple sin efectos */
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: var(--phone-border-radius) !important;
+    background: #000000 !important;
+    box-shadow: 
+        0 20px 60px rgba(0, 0, 0, 0.4),
+        0 8px 30px rgba(0, 0, 0, 0.3),
+        0 0 0 1px rgba(255, 255, 255, 0.05) !important;
+}
+
+/* ===== DELAYS PROGRESIVOS COMO LAS LETRAS ===== */
+
+/* Aplicar delays similares a los elementos de texto */
+.feature:nth-child(1) .phone__app-image,
+.feature:nth-child(1) .phone,
+.feature:nth-child(1) .feature__phone {
+    transition-delay: 0.1s !important;
+}
+
+.feature:nth-child(2) .phone__app-image,
+.feature:nth-child(2) .phone,
+.feature:nth-child(2) .feature__phone {
+    transition-delay: 0.2s !important;
+}
+
+.feature:nth-child(3) .phone__app-image,
+.feature:nth-child(3) .phone,
+.feature:nth-child(3) .feature__phone {
+    transition-delay: 0.3s !important;
+}
+
+.feature:nth-child(4) .phone__app-image,
+.feature:nth-child(4) .phone,
+.feature:nth-child(4) .feature__phone {
+    transition-delay: 0.4s !important;
+}
+
+.feature:nth-child(5) .phone__app-image,
+.feature:nth-child(5) .phone,
+.feature:nth-child(5) .feature__phone {
+    transition-delay: 0.5s !important;
+}
+
+.feature:nth-child(6) .phone__app-image,
+.feature:nth-child(6) .phone,
+.feature:nth-child(6) .feature__phone {
+    transition-delay: 0.6s !important;
+}
+
+/* ===== OPTIMIZACIÓN PARA MÓVIL ===== */
+
+@media (max-width: 1023px) {
+    /* Transiciones más rápidas en móvil */
+    .feature .phone__app-image,
+    .feature .phone,
+    .feature .feature__phone {
+        transition: opacity 0.4s ease, transform 0.4s ease !important;
+    }
+    
+    .feature.in-view .phone__app-image,
+    .feature.in-view .phone,
+    .feature.in-view .feature__phone {
+        transition: opacity 0.4s ease, transform 0.4s ease !important;
+    }
+    
+    /* Delays más cortos en móvil */
+    .feature:nth-child(1) .phone__app-image,
+    .feature:nth-child(1) .phone,
+    .feature:nth-child(1) .feature__phone {
+        transition-delay: 0.05s !important;
+    }
+    
+    .feature:nth-child(2) .phone__app-image,
+    .feature:nth-child(2) .phone,
+    .feature:nth-child(2) .feature__phone {
+        transition-delay: 0.1s !important;
+    }
+    
+    .feature:nth-child(3) .phone__app-image,
+    .feature:nth-child(3) .phone,
+    .feature:nth-child(3) .feature__phone {
+        transition-delay: 0.15s !important;
+    }
+    
+    .feature:nth-child(4) .phone__app-image,
+    .feature:nth-child(4) .phone,
+    .feature:nth-child(4) .feature__phone {
+        transition-delay: 0.2s !important;
+    }
+    
+    .feature:nth-child(5) .phone__app-image,
+    .feature:nth-child(5) .phone,
+    .feature:nth-child(5) .feature__phone {
+        transition-delay: 0.25s !important;
+    }
+    
+    .feature:nth-child(6) .phone__app-image,
+    .feature:nth-child(6) .phone,
+    .feature:nth-child(6) .feature__phone {
+        transition-delay: 0.3s !important;
+    }
+}
+
+/* ===== ELIMINAR ANIMACIONES DE CARGA ===== */
+
+.phone__app-image.loading,
+.phone__app-image.loaded,
+.phone__app-image.error {
+    /* Sin animaciones de estado de carga */
+    animation: none !important;
+    transition: opacity 0.3s ease !important;
+}
+
+.phone__app-image.loading {
+    opacity: 0.7 !important;
+}
+
+.phone__app-image.loaded {
+    opacity: 1 !important;
+}
+
+.phone__app-image.error {
+    opacity: 0.5 !important;
+}
+
+/* ===== CORRECCIÓN PARA USUARIOS CON MOVIMIENTO REDUCIDO ===== */
+
+@media (prefers-reduced-motion: reduce) {
+    .feature .phone__app-image,
+    .feature .phone,
+    .feature .feature__phone {
+        transition: opacity 0.2s ease !important;
+        transform: none !important;
+    }
+    
+    .feature.in-view .phone__app-image,
+    .feature.in-view .phone,
+    .feature.in-view .feature__phone {
+        opacity: 1 !important;
+        transform: none !important;
+        transition: opacity 0.2s ease !important;
+    }
+    
+    /* Sin delays para movimiento reducido */
+    .feature:nth-child(n) .phone__app-image,
+    .feature:nth-child(n) .phone,
+    .feature:nth-child(n) .feature__phone {
+        transition-delay: 0s !important;
+    }
+}
+
+/* ===== CORRECCIÓN PARA DISPOSITIVOS DE BAJO RENDIMIENTO ===== */
+
+.performance-mode .feature .phone__app-image,
+.performance-mode .feature .phone,
+.performance-mode .feature .feature__phone {
+    transition: opacity 0.3s ease !important;
+    transform: none !important;
+}
+
+.performance-mode .feature.in-view .phone__app-image,
+.performance-mode .feature.in-view .phone,
+.performance-mode .feature.in-view .feature__phone {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: opacity 0.3s ease !important;
+}
+
+/* ===== ASEGURAR ALTA ESPECIFICIDAD ===== */
+
+.features .feature .feature__phone .phone .phone__screen .phone__content .phone__app-image {
+    /* Forzar solo efecto de aparición */
+    transition: opacity 0.6s ease, transform 0.6s ease !important;
+    animation: none !important;
+    will-change: auto !important;
+}
+
+.features .feature.in-view .feature__phone .phone .phone__screen .phone__content .phone__app-image {
+    opacity: 1 !important;
+    transform: translateY(0) !important;
+}
+
+/* ===== ELIMINAR CUALQUIER KEYFRAME ANIMATION ===== */
+
+@keyframes feature-image-enter {
+    /* Deshabilitar todas las animaciones keyframe */
+    0%, 100% {
+        opacity: inherit !important;
+        transform: none !important;
+    }
+}
+@keyframes ambient-glow {
+    0%, 100% {
+        opacity: inherit !important;
+        transform: none !important;
+    }
+}
+@keyframes feature-ambient-glow {
+    0%, 100% {
+        opacity: inherit !important;
+        transform: none !important;
+    }
+}
+@keyframes floating-orb-1 {
+    0%, 100% {
+        opacity: inherit !important;
+        transform: none !important;
+    }
+}
+@keyframes floating-orb-2 {
+    0%, 100% {
+        opacity: inherit !important;
+        transform: none !important;
+    }
+}
+@keyframes floating-orb-3 {
+    0%, 100% {
+        opacity: inherit !important;
+        transform: none !important;
+    }
+}
+
+/* ===== NOTA IMPORTANTE ===== */
+/*
+Esta corrección simplifica completamente las animaciones:
+
+1. **Solo Fade-In**: Igual que las letras de características
+   - opacity: 0 → 1
+   - transform: translateY(30px) → translateY(0)
+
+2. **Sin Efectos Complejos**:
+   - No hover effects
+   - No animaciones 3D
+   - No efectos ambientales
+   - No escalado
+
+3. **Delays Progresivos**: Como las letras
+   - Cada característica aparece secuencialmente
+   - 0.1s, 0.2s, 0.3s, etc.
+
+4. **Optimizado**:
+   - Móvil: transiciones más rápidas
+   - Movimiento reducido: sin transforms
+   - Bajo rendimiento: simplificado
+
+Resultado: Efecto limpio y consistente con el resto del sitio.
+*/
