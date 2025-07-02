@@ -9015,7 +9015,9 @@ body.no-scroll {
     
     .nav__menu {
         -webkit-transform: translateZ(0) !important;
+        transform: translateZ(0) !important;
         -webkit-backface-visibility: hidden !important;
+        backface-visibility: hidden !important;
     }
 }
 
