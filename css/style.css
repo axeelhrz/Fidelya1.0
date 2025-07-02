@@ -8794,3 +8794,80 @@ body.no-scroll {
 
 El drawer ahora es perfecto: sin scroll, sin superposiciones, completamente responsive y visualmente espectacular.
 */
+/* ===== CORRECCIÓN PARA EL DRAWER MÓVIL Y OVERLAY ===== */
+
+@media screen and (max-width: 1023px) {
+    /* ===== VARIABLES PARA EL OVERLAY ===== */
+    :root {
+        --drawer-overlay-bg: rgba(0, 0, 0, 0.7);
+        --drawer-overlay-blur: 5px;
+        --drawer-z-index: 1000;
+        --drawer-cta-z-index: 999;
+    }
+
+    /* ===== OVERLAY PARA DIFUMINAR EL FONDO ===== */
+    .nav__menu::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        height: 100dvh;
+        background: var(--drawer-overlay-bg);
+        backdrop-filter: blur(var(--drawer-overlay-blur));
+        -webkit-backdrop-filter: blur(var(--drawer-overlay-blur));
+        z-index: -1;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                    visibility 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        pointer-events: none;
+    }
+
+    .nav__menu.active::before {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+    }
+
+    /* ===== ASEGURAR QUE EL CTA NO QUEDE POR ENCIMA DEL DRAWER ===== */
+    .nav__cta {
+        z-index: var(--drawer-cta-z-index) !important;
+    }
+
+    .nav__menu {
+        z-index: var(--drawer-z-index) !important;
+    }
+
+    /* ===== ASEGURAR QUE EL BOTÓN DE TOGGLE QUEDE POR ENCIMA DEL OVERLAY ===== */
+    .nav__toggle {
+        z-index: calc(var(--drawer-z-index) + 1) !important;
+    }
+
+    /* ===== ASEGURAR QUE EL BOTÓN DE CERRAR QUEDE POR ENCIMA DEL DRAWER ===== */
+    .nav__close {
+        z-index: calc(var(--drawer-z-index) + 2) !important;
+    }
+
+    /* ===== MEJORAR LA TRANSICIÓN DEL DRAWER ===== */
+    .nav__menu {
+        transition: left 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+    }
+
+    /* ===== PREVENIR SCROLL DEL BODY CUANDO EL DRAWER ESTÁ ABIERTO ===== */
+    body.no-scroll {
+        overflow: hidden !important;
+        position: fixed !important;
+        width: 100% !important;
+        height: 100% !important;
+    }
+}
+
+/* ===== OPTIMIZACIONES PARA DISPOSITIVOS DE BAJA POTENCIA ===== */
+@media (prefers-reduced-motion: reduce) and (max-width: 1023px) {
+    .nav__menu::before {
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+    }
+}
