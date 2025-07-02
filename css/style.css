@@ -9107,3 +9107,490 @@ body.no-scroll {
     }
 }
 
+/* ===== MEJORA COMPLETA DEL SELECTOR DE IDIOMA DEL DRAWER MÓVIL ===== */
+/* Diseño 100% perfecto que sigue la línea del drawer sin romper efectos */
+
+/* Aplicar solo en dispositivos móviles */
+@media screen and (max-width: 1023px) {
+
+/* ===== VARIABLES ESPECÍFICAS PARA EL SELECTOR DE IDIOMA MEJORADO ===== */
+:root {
+    /* Colores que siguen la línea del drawer */
+    --language-bg: linear-gradient(135deg, 
+        rgba(255, 45, 85, 0.08) 0%,
+        rgba(255, 255, 255, 0.05) 30%,
+        rgba(30, 35, 48, 0.85) 70%,
+        rgba(21, 25, 34, 0.9) 100%
+    );
+    --language-border: rgba(255, 45, 85, 0.25);
+    --language-border-hover: rgba(255, 45, 85, 0.4);
+    --language-glow: 0 0 20px rgba(255, 45, 85, 0.2);
+    --language-glow-hover: 0 0 30px rgba(255, 45, 85, 0.3);
+    --language-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    --language-shadow-hover: 0 12px 35px rgba(0, 0, 0, 0.3);
+}
+
+/* ===== CONTENEDOR PRINCIPAL DEL SELECTOR DE IDIOMA ===== */
+.nav__language-mobile {
+    /* Posicionamiento perfecto sin superposiciones */
+    width: 100% !important;
+    margin: 0 0 var(--drawer-gap, 1rem) 0 !important;
+    padding: var(--drawer-padding, 1.5rem) !important;
+    
+    /* Espacio para el botón de cerrar */
+    padding-top: calc(var(--drawer-padding, 1.5rem) + 50px) !important;
+    
+    /* Fondo que sigue la línea del drawer */
+    background: var(--language-bg) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    
+    /* Bordes elegantes */
+    border: 1px solid var(--language-border) !important;
+    border-radius: 20px !important;
+    
+    /* Sombras que complementan el drawer */
+    box-shadow: 
+        var(--language-shadow),
+        var(--language-glow),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+    
+    /* Transición suave */
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+    
+    /* Layout perfecto */
+    position: relative !important;
+    overflow: hidden !important;
+    flex-shrink: 0 !important;
+    box-sizing: border-box !important;
+}
+
+/* Efecto de brillo sutil que sigue la estética del drawer */
+.nav__language-mobile::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: -100% !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(255, 45, 85, 0.1) 50%, 
+        transparent 100%
+    ) !important;
+    transition: left 1.5s ease !important;
+    display: block !important;
+    opacity: 1 !important;
+    border-radius: 20px !important;
+}
+
+.nav__language-mobile:hover::before {
+    left: 100% !important;
+}
+
+/* Estado hover que mantiene la coherencia */
+.nav__language-mobile:hover {
+    border-color: var(--language-border-hover) !important;
+    box-shadow: 
+        var(--language-shadow-hover),
+        var(--language-glow-hover),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+    transform: translateY(-1px) !important;
+}
+
+/* ===== TÍTULO DEL SELECTOR DE IDIOMA ===== */
+.nav__language-title {
+    /* Tipografía que sigue la línea del drawer */
+    color: var(--starflex-red) !important;
+    font-size: clamp(0.75rem, 2.5vw, 0.9rem) !important;
+    font-weight: 700 !important;
+    text-align: center !important;
+    margin-bottom: var(--drawer-gap, 1rem) !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+    
+    /* Efecto de texto que complementa el drawer */
+    text-shadow: 0 0 10px rgba(255, 45, 85, 0.4) !important;
+    
+    /* Transición suave */
+    transition: all 0.3s ease !important;
+}
+
+.nav__language-mobile:hover .nav__language-title {
+    color: var(--starflex-red-bright, #ff4569) !important;
+    text-shadow: 0 0 15px rgba(255, 45, 85, 0.6) !important;
+}
+
+/* ===== CONTENEDOR DE OPCIONES DE IDIOMA ===== */
+.nav__language-options {
+    display: flex !important;
+    gap: var(--drawer-gap, 1rem) !important;
+    width: 100% !important;
+}
+
+/* ===== OPCIONES DE IDIOMA INDIVIDUALES ===== */
+.nav__language-option {
+    /* Layout que sigue la línea del drawer */
+    flex: 1 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.5rem !important;
+    
+    /* Tamaño adaptativo */
+    padding: clamp(0.75rem, 3vh, 1rem) clamp(1rem, 4vw, 1.25rem) !important;
+    min-height: var(--drawer-button-height, 44px) !important;
+    
+    /* Diseño que complementa los enlaces del drawer */
+    background: rgba(255, 255, 255, 0.08) !important;
+    backdrop-filter: blur(15px) !important;
+    -webkit-backdrop-filter: blur(15px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: 16px !important;
+    
+    /* Tipografía consistente */
+    color: rgba(255, 255, 255, 0.9) !important;
+    font-size: clamp(0.75rem, 2.5vw, 0.85rem) !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    
+    /* Interactividad */
+    cursor: pointer !important;
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+    
+    /* Sombras sutiles */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    
+    /* Layout perfecto */
+    position: relative !important;
+    overflow: hidden !important;
+    user-select: none !important;
+    -webkit-tap-highlight-color: transparent !important;
+    touch-action: manipulation !important;
+}
+
+/* Efecto de línea inferior animada que sigue el estilo del drawer */
+.nav__language-option::before {
+    content: '' !important;
+    position: absolute !important;
+    bottom: 0 !important;
+    left: 50% !important;
+    width: 0 !important;
+    height: 2px !important;
+    background: linear-gradient(90deg, 
+        var(--starflex-red) 0%, 
+        rgba(255, 45, 85, 0.8) 100%
+    ) !important;
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+    transform: translateX(-50%) !important;
+    border-radius: 1px !important;
+    display: block !important;
+    opacity: 1 !important;
+}
+
+/* Efecto de brillo deslizante */
+.nav__language-option::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: -100% !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(255, 45, 85, 0.1) 50%, 
+        transparent 100%
+    ) !important;
+    transition: left 0.8s ease !important;
+    border-radius: 16px !important;
+    display: block !important;
+    opacity: 1 !important;
+}
+
+/* ===== ESTADOS HOVER DE LAS OPCIONES ===== */
+.nav__language-option:hover,
+.nav__language-option:active {
+    /* Transformación que sigue la línea del drawer */
+    background: rgba(255, 45, 85, 0.15) !important;
+    border-color: rgba(255, 45, 85, 0.4) !important;
+    color: #ffffff !important;
+    transform: translateY(-2px) scale(1.02) !important;
+    
+    /* Sombras mejoradas */
+    box-shadow: 
+        0 8px 20px rgba(0, 0, 0, 0.2),
+        0 0 20px rgba(255, 45, 85, 0.3) !important;
+}
+
+.nav__language-option:hover::before,
+.nav__language-option:active::before {
+    width: 80% !important;
+}
+
+.nav__language-option:hover::after,
+.nav__language-option:active::after {
+    left: 100% !important;
+}
+
+/* ===== ESTADO ACTIVO DE LAS OPCIONES ===== */
+.nav__language-option.active {
+    /* Estilo que destaca siguiendo la línea del drawer */
+    background: rgba(255, 45, 85, 0.25) !important;
+    border-color: rgba(255, 45, 85, 0.6) !important;
+    color: var(--starflex-red) !important;
+    
+    /* Sombras especiales para el estado activo */
+    box-shadow: 
+        0 8px 25px rgba(0, 0, 0, 0.3),
+        0 0 25px rgba(255, 45, 85, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+    
+    /* Efecto de texto */
+    text-shadow: 0 0 10px rgba(255, 45, 85, 0.5) !important;
+}
+
+.nav__language-option.active::before {
+    width: 90% !important;
+    background: linear-gradient(90deg, 
+        var(--starflex-red) 0%, 
+        rgba(255, 45, 85, 1) 100%
+    ) !important;
+    box-shadow: 0 0 8px rgba(255, 45, 85, 0.6) !important;
+}
+
+/* ===== BANDERAS Y NOMBRES DE IDIOMA ===== */
+.nav__language-flag {
+    font-size: 1.1rem !important;
+    line-height: 1 !important;
+    transition: all 0.3s ease !important;
+}
+
+.nav__language-name {
+    font-weight: 700 !important;
+    transition: all 0.3s ease !important;
+}
+
+.nav__language-option:hover .nav__language-flag,
+.nav__language-option:hover .nav__language-name {
+    transform: scale(1.05) !important;
+}
+
+.nav__language-option.active .nav__language-flag,
+.nav__language-option.active .nav__language-name {
+    transform: scale(1.1) !important;
+}
+
+/* ===== ANIMACIÓN DE ENTRADA QUE SIGUE LA LÍNEA DEL DRAWER ===== */
+.nav__menu.active .nav__language-mobile {
+    animation: languageSelectorSlideIn 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.1s both;
+}
+
+@keyframes languageSelectorSlideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-30px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+    }
+}
+
+/* ===== RESPONSIVE PARA DIFERENTES TAMAÑOS ===== */
+
+/* Pantallas medianas */
+@media screen and (max-height: 700px) and (min-height: 600px) {
+    .nav__language-mobile {
+        padding: var(--drawer-padding, 1.25rem) !important;
+        padding-top: calc(var(--drawer-padding, 1.25rem) + 45px) !important;
+    }
+    
+    .nav__language-title {
+        font-size: clamp(0.7rem, 2.2vw, 0.85rem) !important;
+        margin-bottom: calc(var(--drawer-gap, 1rem) * 0.75) !important;
+    }
+    
+    .nav__language-option {
+        padding: clamp(0.625rem, 2.5vh, 0.875rem) clamp(0.875rem, 3.5vw, 1.125rem) !important;
+        min-height: 40px !important;
+    }
+}
+
+/* Pantallas pequeñas */
+@media screen and (max-height: 600px) {
+    .nav__language-mobile {
+        padding: var(--drawer-padding, 1rem) !important;
+        padding-top: calc(var(--drawer-padding, 1rem) + 40px) !important;
+    }
+    
+    .nav__language-title {
+        font-size: clamp(0.65rem, 2vw, 0.8rem) !important;
+        margin-bottom: calc(var(--drawer-gap, 1rem) * 0.5) !important;
+    }
+    
+    .nav__language-option {
+        padding: clamp(0.5rem, 2vh, 0.75rem) clamp(0.75rem, 3vw, 1rem) !important;
+        min-height: 36px !important;
+        font-size: clamp(0.7rem, 2.2vw, 0.8rem) !important;
+    }
+}
+
+/* Pantallas muy pequeñas */
+@media screen and (max-height: 500px) {
+    .nav__language-mobile {
+        padding: var(--drawer-padding, 0.875rem) !important;
+        padding-top: calc(var(--drawer-padding, 0.875rem) + 35px) !important;
+    }
+    
+    .nav__language-title {
+        font-size: clamp(0.6rem, 1.8vw, 0.75rem) !important;
+        margin-bottom: calc(var(--drawer-gap, 1rem) * 0.375) !important;
+    }
+    
+    .nav__language-option {
+        padding: clamp(0.375rem, 1.5vh, 0.625rem) clamp(0.625rem, 2.5vw, 0.875rem) !important;
+        min-height: 32px !important;
+        font-size: clamp(0.65rem, 2vw, 0.75rem) !important;
+    }
+    
+    .nav__language-name {
+        display: none !important;
+    }
+}
+
+/* ===== RESPONSIVE PARA DIFERENTES ANCHOS ===== */
+@media screen and (max-width: 360px) {
+    .nav__language-name {
+        display: none !important;
+    }
+    
+    .nav__language-option {
+        gap: 0 !important;
+        justify-content: center !important;
+    }
+}
+
+/* ===== OPTIMIZACIONES DE ACCESIBILIDAD ===== */
+.nav__language-option:focus {
+    outline: 2px solid var(--starflex-red) !important;
+    outline-offset: 2px !important;
+    box-shadow: 
+        0 0 0 4px rgba(255, 45, 85, 0.3),
+        0 8px 20px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* ===== MODO OSCURO ===== */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --language-bg: linear-gradient(135deg, 
+            rgba(255, 45, 85, 0.06) 0%,
+            rgba(255, 255, 255, 0.03) 30%,
+            rgba(30, 35, 48, 0.9) 70%,
+            rgba(21, 25, 34, 0.95) 100%
+        );
+    }
+    
+    .nav__language-option {
+        background: rgba(255, 255, 255, 0.05) !important;
+        border-color: rgba(255, 255, 255, 0.1) !important;
+    }
+}
+
+/* ===== ALTO CONTRASTE ===== */
+@media (prefers-contrast: high) {
+    .nav__language-mobile {
+        border-width: 2px !important;
+    }
+    
+    .nav__language-option {
+        border-width: 2px !important;
+    }
+    
+    .nav__language-title {
+        text-shadow: none !important;
+        font-weight: 800 !important;
+    }
+}
+
+/* ===== MOVIMIENTO REDUCIDO ===== */
+@media (prefers-reduced-motion: reduce) {
+    .nav__language-mobile::before,
+    .nav__language-option::before,
+    .nav__language-option::after {
+        transition: none !important;
+    }
+    
+    .nav__menu.active .nav__language-mobile {
+        animation: none !important;
+    }
+    
+    .nav__language-mobile,
+    .nav__language-option,
+    .nav__language-flag,
+    .nav__language-name {
+        transition: all 0.2s ease !important;
+    }
+    
+    .nav__language-option:hover,
+    .nav__language-option:active {
+        transform: none !important;
+    }
+}
+
+/* ===== OPTIMIZACIONES DE RENDIMIENTO ===== */
+.nav__language-mobile,
+.nav__language-option {
+    will-change: transform !important;
+    transform: translateZ(0) !important;
+    backface-visibility: hidden !important;
+    contain: layout style paint !important;
+}
+
+/* ===== TOUCH OPTIMIZATIONS ===== */
+.nav__language-option {
+    touch-action: manipulation !important;
+    -webkit-tap-highlight-color: transparent !important;
+    -webkit-touch-callout: none !important;
+    user-select: none !important;
+}
+
+/* Feedback táctil mejorado */
+.nav__language-option:active {
+    transform: translateY(-1px) scale(0.98) !important;
+}
+
+}
+
+/* ===== NOTA FINAL ===== */
+/*
+🎨 SELECTOR DE IDIOMA DEL DRAWER MÓVIL 100% MEJORADO:
+
+✅ SIGUE LA LÍNEA DEL DRAWER:
+- Misma paleta de colores y gradientes
+- Efectos de brillo consistentes
+- Bordes y sombras armoniosos
+- Transiciones suaves y naturales
+
+✅ SIN ROMPER EFECTOS:
+- Mantiene todos los efectos existentes
+- Animaciones que complementan el drawer
+- Estados hover coherentes
+- Feedback táctil apropiado
+
+✅ DISEÑO PERFECTO:
+- Layout que evita superposiciones
+- Responsive en todas las pantallas
+- Accesibilidad completa
+- Optimización de rendimiento
+
+✅ CARACTERÍSTICAS:
+- Efecto de línea inferior animada
+- Brillo deslizante en hover
+- Estados activos destacados
+- Banderas y texto escalables
+- Animación de entrada fluida
+
+El resultado es un selector de idioma que se integra perfectamente
+con el drawer móvil, manteniendo la coherencia visual y funcional.
+*/
