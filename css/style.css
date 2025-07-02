@@ -5954,3 +5954,388 @@ Esta corrección acelera las transiciones que estaban configuradas como:
 Esto hace que las interacciones se sientan mucho más responsivas y naturales,
 especialmente en el navbar y los botones.
 */
+body {
+overflow-x: hidden !important;
+overflow-y: auto !important;
+}
+/* ===== CORRECCIÓN PARA ELEMENTOS CON POSITION ABSOLUTE QUE PUEDAN ESTAR FUERA DEL VIEWPORT ===== */
+.contact::before,
+.contact__bg-effects,
+.contact__orb {
+position: absolute !important;
+margin: 0 !important;
+padding: 0 !important;
+}
+
+/* ===== ELIMINACIÓN COMPLETA DEL CONTENEDOR DEL FOOTER ===== */
+/* Eliminar completamente el contenedor del footer pero mantener el contenido flotando */
+.contact__footer {
+/* ELIMINAR COMPLETAMENTE EL CONTENEDOR */
+background: none !important;
+backdrop-filter: none !important;
+-webkit-backdrop-filter: none !important;
+border: none !important;
+border-top: none !important;
+box-shadow: none !important;
+
+/* Mantener solo el espaciado y posicionamiento */
+position: relative !important;
+z-index: 3 !important;
+padding: var(--space-3xl) 0 var(--space-2xl) 0 !important;
+margin: 0 !important;
+margin-bottom: 0 !important;
+overflow: visible !important;
+}
+
+/* ===== CONTENIDO DEL FOOTER FLOTANDO SIN CONTENEDOR ===== */
+.contact__footer-content {
+display: flex !important;
+justify-content: space-between !important;
+align-items: center !important;
+gap: var(--space-2xl) !important;
+max-width: var(--max-content-width) !important;
+margin: 0 auto !important;
+width: 100% !important;
+overflow: visible !important;
+padding: 0 var(--section-padding-x) !important;
+
+/* ELIMINAR CUALQUIER FONDO O BORDE */
+background: none !important;
+border: none !important;
+box-shadow: none !important;
+backdrop-filter: none !important;
+-webkit-backdrop-filter: none !important;
+}
+
+/* ===== TEXTO DEL FOOTER FLOTANDO LIBREMENTE ===== */
+.contact__footer-text {
+/* Sin contenedor, solo el texto flotando */
+background: none !important;
+border: none !important;
+padding: 0 !important;
+margin: 0 !important;
+}
+
+.contact__footer-text h3 {
+font-size: 1.1rem !important;
+font-weight: 500 !important;
+color: var(--text-muted) !important;
+margin-bottom: var(--space-xs) !important;
+/* Texto más sutil para que flote naturalmente */
+opacity: 0.8 !important;
+}
+
+.contact__footer-text p {
+font-size: 0.95rem !important;
+color: var(--text-muted) !important;
+font-family: var(--font-mono) !important;
+margin: 0 !important;
+/* Texto más sutil */
+opacity: 0.7 !important;
+}
+
+/* ===== BOTÓN CTA DEL FOOTER SIN CONTENEDOR ===== */
+.contact__footer-cta {
+/* Sin contenedor, solo el botón flotando */
+background: none !important;
+border: none !important;
+padding: 0 !important;
+margin: 0 !important;
+}
+
+/* El botón mantiene su estilo pero sin el contenedor que lo rodea */
+.btn--footer {
+padding: var(--space-md) var(--space-xl) !important;
+font-size: 1rem !important;
+font-weight: 700 !important;
+border-radius: 25px !important;
+min-width: 180px !important;
+display: flex !important;
+flex-direction: column !important;
+align-items: center !important;
+gap: var(--space-xs) !important;
+background: linear-gradient(135deg, 
+var(--starflex-crimson) 0%, 
+var(--starflex-crimson-bright) 100%
+) !important;
+box-shadow: 
+0 10px 30px rgba(184, 0, 46, 0.3),
+inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+border: 1px solid rgba(255, 69, 105, 0.3) !important;
+color: #ffffff !important;
+transition: all var(--transition) !important;
+/* Posicionamiento libre sin restricciones del contenedor */
+position: relative !important;
+z-index: 5 !important;
+}
+
+.btn--footer:hover {
+transform: translateY(-4px) !important;
+box-shadow: 
+0 15px 40px rgba(184, 0, 46, 0.4),
+var(--glow-medium),
+inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+}
+
+.btn--footer span {
+font-weight: 800 !important;
+letter-spacing: 1px !important;
+}
+
+.btn--footer small {
+font-size: 0.8rem !important;
+opacity: 0.9 !important;
+font-family: var(--font-mono) !important;
+text-transform: uppercase !important;
+letter-spacing: 1.5px !important;
+}
+
+/* ===== MOVER EL CONTENIDO UN POCO MÁS ABAJO PARA APROVECHAR ESPACIO ===== */
+.contact__footer {
+/* Mover el contenido más abajo para aprovechar el espacio que antes ocupaba el contenedor */
+padding: var(--space-4xl) 0 var(--space-3xl) 0 !important;
+margin-top: var(--space-2xl) !important;
+}
+
+/* ===== VERSIÓN MÓVIL SIN CONTENEDOR ===== */
+@media screen and (max-width: 1023px) {
+.contact__footer {
+/* Eliminar contenedor en móvil también */
+background: none !important;
+backdrop-filter: none !important;
+-webkit-backdrop-filter: none !important;
+border: none !important;
+box-shadow: none !important;
+
+/* Ajustar espaciado para móvil */
+padding: var(--space-3xl) 0 var(--space-2xl) 0 !important;
+margin-top: var(--space-xl) !important;
+margin-bottom: 0 !important;
+}
+
+.contact__footer-content {
+flex-direction: column !important;
+gap: var(--space-xl) !important;
+text-align: center !important;
+padding: 0 var(--mobile-container-padding) !important;
+
+/* Sin contenedor en móvil */
+background: none !important;
+border: none !important;
+box-shadow: none !important;
+}
+
+.contact__footer-text {
+order: 2 !important;
+}
+
+.contact__footer-cta {
+order: 1 !important;
+}
+
+.btn--footer {
+width: 100% !important;
+max-width: 250px !important;
+margin: 0 auto !important;
+}
+
+/* Ajustar para dispositivos con notch */
+.contact__footer {
+padding-bottom: max(var(--space-2xl), calc(env(safe-area-inset-bottom, 0px) + var(--space-xl))) !important;
+}
+}
+
+/* ===== PANTALLAS MUY PEQUEÑAS ===== */
+@media screen and (max-width: 480px) {
+.contact__footer {
+padding: var(--space-2xl) 0 var(--space-xl) 0 !important;
+margin-top: var(--space-lg) !important;
+}
+
+.contact__footer-content {
+gap: var(--space-lg) !important;
+padding: 0 1rem !important;
+}
+
+.contact__footer-text h3 {
+font-size: 1rem !important;
+}
+
+.contact__footer-text p {
+font-size: 0.9rem !important;
+}
+
+.btn--footer {
+padding: var(--space-sm) var(--space-lg) !important;
+font-size: 0.9rem !important;
+min-width: 160px !important;
+}
+}
+
+/* ===== CORRECCIÓN PARA MODO OSCURO SIN CONTENEDOR ===== */
+@media (prefers-color-scheme: dark) {
+.contact__footer-text h3 {
+color: var(--text-muted) !important;
+opacity: 0.9 !important;
+}
+
+.contact__footer-text p {
+color: var(--text-muted) !important;
+opacity: 0.8 !important;
+}
+}
+
+/* ===== CORRECCIÓN PARA ALTO CONTRASTE ===== */
+@media (prefers-contrast: high) {
+.contact__footer-text h3,
+.contact__footer-text p {
+opacity: 1 !important;
+color: var(--text-secondary) !important;
+}
+
+.btn--footer {
+border-width: 2px !important;
+}
+}
+
+/* ===== CORRECCIÓN PARA USUARIOS QUE PREFIEREN MOVIMIENTO REDUCIDO ===== */
+@media (prefers-reduced-motion: reduce) {
+.btn--footer {
+transition: none !important;
+}
+
+.btn--footer:hover {
+transform: none !important;
+}
+}
+
+/* ===== ASEGURAR QUE EL ÚLTIMO ELEMENTO NO TENGA MARGEN INFERIOR ===== */
+body > *:last-child,
+.contact:last-child,
+.contact__footer:last-child,
+.contact__footer-content:last-child,
+.contact__footer-content > *:last-child {
+margin-bottom: 0 !important;
+padding-bottom: 0 !important;
+}
+
+/* ===== CORRECCIÓN PARA ELEMENTOS FLOTANTES QUE NO DEBEN AFECTAR EL LAYOUT ===== */
+.floating-widget,
+.language-switcher,
+.header {
+position: fixed !important;
+margin: 0 !important;
+padding: 0 !important;
+}
+
+/* ===== CORRECCIÓN PARA ASEGURAR QUE EL VIEWPORT TERMINE CORRECTAMENTE ===== */
+@media screen and (max-width: 1023px) {
+body {
+padding-bottom: 0 !important;
+margin-bottom: 0 !important;
+}
+.contact {
+padding-bottom: var(--mobile-section-padding) !important;
+margin-bottom: 0 !important;
+}
+.contact__footer {
+padding-bottom: max(var(--space-2xl), calc(env(safe-area-inset-bottom, 0px) + var(--space-xl))) !important;
+margin-bottom: 0 !important;
+}
+}
+
+/* ===== CORRECCIÓN ESPECÍFICA PARA WEBKIT (SAFARI) ===== */
+@supports (-webkit-appearance: none) {
+body {
+-webkit-overflow-scrolling: touch !important;
+}
+.contact__footer-content {
+-webkit-transform: translateZ(0) !important;
+transform: translateZ(0) !important;
+}
+}
+
+/* ===== CORRECCIÓN PARA FIREFOX ===== */
+@-moz-document url-prefix() {
+body {
+overflow-x: hidden !important;
+}
+}
+
+/* ===== CORRECCIÓN FINAL PARA ELIMINAR CUALQUIER ESPACIO RESIDUAL ===== */
+.contact__footer-content:after,
+.contact__footer:after,
+.contact:after,
+body:after,
+html:after {
+content: none !important;
+display: none !important;
+height: 0 !important;
+margin: 0 !important;
+padding: 0 !important;
+}
+
+/* ===== OPTIMIZACIÓN ADICIONAL - INTEGRACIÓN NATURAL CON EL FONDO ===== */
+/* El contenido del footer ahora flota naturalmente sobre el fondo de la sección de contacto */
+.contact {
+/* Asegurar que la sección de contacto tenga suficiente espacio para el contenido flotante */
+position: relative !important;
+padding-bottom: calc(var(--section-padding-y) + var(--space-4xl)) !important;
+}
+
+/* ===== EFECTO SUTIL DE SEPARACIÓN SIN CONTENEDOR ===== */
+/* Agregar una línea sutil para separar visualmente el contenido sin usar un contenedor */
+.contact__footer-content::before {
+content: '' !important;
+position: absolute !important;
+top: calc(-1 * var(--space-2xl)) !important;
+left: 50% !important;
+transform: translateX(-50%) !important;
+width: 60px !important;
+height: 1px !important;
+background: linear-gradient(90deg, 
+transparent 0%,
+rgba(255, 255, 255, 0.2) 50%,
+transparent 100%
+) !important;
+opacity: 0.6 !important;
+}
+
+/* ===== VERSIÓN MÓVIL DE LA LÍNEA SEPARADORA ===== */
+@media screen and (max-width: 1023px) {
+.contact__footer-content::before {
+top: calc(-1 * var(--space-xl)) !important;
+width: 40px !important;
+opacity: 0.4 !important;
+}
+}
+
+/* ===== CORRECCIÓN FINAL - ELIMINAR CUALQUIER RASTRO DEL CONTENEDOR ORIGINAL ===== */
+/* Asegurar que no queden estilos residuales del contenedor original */
+.contact__footer {
+/* Resetear completamente cualquier estilo de contenedor */
+background-color: transparent !important;
+background-image: none !important;
+border-radius: 0 !important;
+box-shadow: none !important;
+backdrop-filter: none !important;
+-webkit-backdrop-filter: none !important;
+border: none !important;
+border-top: none !important;
+border-bottom: none !important;
+border-left: none !important;
+border-right: none !important;
+outline: none !important;
+}
+
+/* ===== NOTA IMPORTANTE ===== */
+/*
+Con estos cambios:
+1. Se elimina completamente el contenedor del footer (.contact__footer)
+2. El contenido (texto legal y botón) ahora flota libremente sobre el fondo
+3. Se mantiene la funcionalidad y accesibilidad
+4. Se aprovecha mejor el espacio moviendo el contenido un poco más abajo
+5. Se agrega una línea sutil de separación sin usar un contenedor
+6. El diseño se ve más limpio y moderno
+7. Se mantiene la responsividad en móviles
+*/
