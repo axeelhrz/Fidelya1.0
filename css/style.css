@@ -7657,3 +7657,895 @@ El resultado es un menú móvil que es:
 - Accesible y usable
 - Performante y fluido
 */
+/* ===== BOTONES ULTRA MODERNOS Y ESTÉTICOS PARA STARFLEX ===== */
+/* Rediseño completo de todos los botones con efectos modernos y elegantes */
+
+/* ===== VARIABLES PARA BOTONES MODERNOS ===== */
+:root {
+    /* Gradientes modernos */
+    --btn-gradient-primary: linear-gradient(135deg, #FF2D55 0%, #FF1744 25%, #E91E63 50%, #FF1744 75%, #FF2D55 100%);
+    --btn-gradient-secondary: linear-gradient(135deg, transparent 0%, rgba(255, 45, 85, 0.1) 50%, transparent 100%);
+    --btn-gradient-hover: linear-gradient(135deg, #FF1744 0%, #E91E63 25%, #C2185B 50%, #E91E63 75%, #FF1744 100%);
+    
+    /* Efectos de luz modernos */
+    --btn-glow-soft: 0 0 20px rgba(255, 45, 85, 0.3);
+    --btn-glow-medium: 0 0 30px rgba(255, 45, 85, 0.5);
+    --btn-glow-strong: 0 0 40px rgba(255, 45, 85, 0.7);
+    --btn-glow-intense: 0 0 60px rgba(255, 45, 85, 0.9);
+    
+    /* Sombras modernas */
+    --btn-shadow-soft: 0 4px 15px rgba(0, 0, 0, 0.2);
+    --btn-shadow-medium: 0 8px 25px rgba(0, 0, 0, 0.3);
+    --btn-shadow-strong: 0 15px 35px rgba(0, 0, 0, 0.4);
+    --btn-shadow-floating: 0 20px 50px rgba(0, 0, 0, 0.5);
+    
+    /* Bordes modernos */
+    --btn-border-subtle: 1px solid rgba(255, 255, 255, 0.2);
+    --btn-border-accent: 2px solid rgba(255, 45, 85, 0.4);
+    --btn-border-strong: 2px solid rgba(255, 45, 85, 0.7);
+    
+    /* Transiciones suaves */
+    --btn-transition: 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    --btn-transition-fast: 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    --btn-transition-bounce: 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    
+    /* Tamaños modernos */
+    --btn-height-sm: 40px;
+    --btn-height-md: 48px;
+    --btn-height-lg: 56px;
+    --btn-height-xl: 64px;
+    
+    /* Radios modernos */
+    --btn-radius-sm: 8px;
+    --btn-radius-md: 12px;
+    --btn-radius-lg: 16px;
+    --btn-radius-xl: 20px;
+    --btn-radius-pill: 50px;
+}
+
+/* ===== RESET Y BASE PARA TODOS LOS BOTONES ===== */
+.btn,
+.btn--primary,
+.btn--secondary,
+.btn--cta,
+.btn--cta-video,
+.btn--footer,
+.btn--demo,
+.btn--mobile,
+.download-btn,
+.contact__channel-btn,
+.faq__question,
+.floating-widget__main-btn,
+.floating-widget__menu-item,
+.language-switcher__btn,
+.nav__toggle,
+.nav__close {
+    /* Reset completo */
+    border: none !important;
+    outline: none !important;
+    background: none !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    
+    /* Base moderna */
+    position: relative !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    text-decoration: none !important;
+    font-family: var(--font-primary) !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    transition: all var(--btn-transition) !important;
+    overflow: hidden !important;
+    user-select: none !important;
+    -webkit-tap-highlight-color: transparent !important;
+    transform: translateZ(0) !important;
+    backface-visibility: hidden !important;
+    will-change: transform, box-shadow !important;
+}
+
+/* ===== BOTONES PRIMARIOS ULTRA MODERNOS ===== */
+.btn--primary,
+.btn--cta,
+.btn--cta-video,
+.btn--footer {
+    /* Diseño base moderno */
+    min-height: var(--btn-height-lg) !important;
+    padding: 0 2rem !important;
+    background: var(--btn-gradient-primary) !important;
+    border: var(--btn-border-accent) !important;
+    border-radius: var(--btn-radius-lg) !important;
+    color: #ffffff !important;
+    font-size: 0.95rem !important;
+    font-weight: 700 !important;
+    box-shadow: 
+        var(--btn-shadow-medium),
+        var(--btn-glow-soft),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5) !important;
+    background-size: 200% 100% !important;
+    background-position: 0% 50% !important;
+}
+
+/* Efecto de brillo interno animado */
+.btn--primary::before,
+.btn--cta::before,
+.btn--cta-video::before,
+.btn--footer::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: -100% !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(255, 255, 255, 0.4) 50%, 
+        transparent 100%
+    ) !important;
+    transition: left 1.2s ease !important;
+    z-index: 1 !important;
+    display: block !important;
+    opacity: 1 !important;
+}
+
+/* Anillo exterior de resplandor */
+.btn--primary::after,
+.btn--cta::after,
+.btn--cta-video::after,
+.btn--footer::after {
+    content: '' !important;
+    position: absolute !important;
+    top: -3px !important;
+    left: -3px !important;
+    right: -3px !important;
+    bottom: -3px !important;
+    background: var(--btn-gradient-primary) !important;
+    border-radius: inherit !important;
+    z-index: -1 !important;
+    opacity: 0 !important;
+    transition: opacity var(--btn-transition) !important;
+    filter: blur(8px) !important;
+    display: block !important;
+}
+
+/* Estados hover espectaculares */
+.btn--primary:hover,
+.btn--cta:hover,
+.btn--cta-video:hover,
+.btn--footer:hover {
+    background: var(--btn-gradient-hover) !important;
+    border-color: rgba(255, 45, 85, 0.8) !important;
+    transform: translateY(-4px) scale(1.05) !important;
+    box-shadow: 
+        var(--btn-shadow-floating),
+        var(--btn-glow-intense),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.8) !important;
+    background-position: 100% 50% !important;
+}
+
+.btn--primary:hover::before,
+.btn--cta:hover::before,
+.btn--cta-video:hover::before,
+.btn--footer:hover::before {
+    left: 100% !important;
+}
+
+.btn--primary:hover::after,
+.btn--cta:hover::after,
+.btn--cta-video:hover::after,
+.btn--footer:hover::after {
+    opacity: 1 !important;
+}
+
+/* Estados activos */
+.btn--primary:active,
+.btn--cta:active,
+.btn--cta-video:active,
+.btn--footer:active {
+    transform: translateY(-2px) scale(1.02) !important;
+    box-shadow: 
+        var(--btn-shadow-strong),
+        var(--btn-glow-strong) !important;
+}
+
+/* ===== BOTONES SECUNDARIOS MODERNOS ===== */
+.btn--secondary,
+.btn--demo {
+    min-height: var(--btn-height-lg) !important;
+    padding: 0 2rem !important;
+    background: linear-gradient(135deg, 
+        rgba(255, 255, 255, 0.05) 0%, 
+        rgba(255, 255, 255, 0.1) 100%
+    ) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border: var(--btn-border-accent) !important;
+    border-radius: var(--btn-radius-lg) !important;
+    color: var(--starflex-red) !important;
+    font-size: 0.95rem !important;
+    font-weight: 600 !important;
+    box-shadow: 
+        var(--btn-shadow-soft),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+    text-shadow: 0 0 10px rgba(255, 45, 85, 0.3) !important;
+}
+
+.btn--secondary::before,
+.btn--demo::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: -100% !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(255, 45, 85, 0.2) 50%, 
+        transparent 100%
+    ) !important;
+    transition: left 1s ease !important;
+    z-index: 1 !important;
+    display: block !important;
+    opacity: 1 !important;
+}
+
+.btn--secondary:hover,
+.btn--demo:hover {
+    background: var(--btn-gradient-primary) !important;
+    border-color: rgba(255, 45, 85, 0.8) !important;
+    color: #ffffff !important;
+    transform: translateY(-3px) scale(1.03) !important;
+    box-shadow: 
+        var(--btn-shadow-strong),
+        var(--btn-glow-medium) !important;
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.7) !important;
+}
+
+.btn--secondary:hover::before,
+.btn--demo:hover::before {
+    left: 100% !important;
+}
+
+/* ===== BOTONES DE DESCARGA MODERNOS ===== */
+.download-btn {
+    position: relative !important;
+    display: inline-block !important;
+    border-radius: var(--btn-radius-md) !important;
+    overflow: hidden !important;
+    transition: all var(--btn-transition) !important;
+    box-shadow: var(--btn-shadow-soft) !important;
+    background: linear-gradient(135deg, 
+        rgba(255, 255, 255, 0.05) 0%, 
+        rgba(255, 255, 255, 0.1) 100%
+    ) !important;
+    backdrop-filter: blur(15px) !important;
+    -webkit-backdrop-filter: blur(15px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+.download-btn::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: -100% !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(255, 45, 85, 0.15) 50%, 
+        transparent 100%
+    ) !important;
+    transition: left 1s ease !important;
+    z-index: 1 !important;
+    display: block !important;
+    opacity: 1 !important;
+}
+
+.download-btn:hover {
+    transform: translateY(-5px) scale(1.05) !important;
+    box-shadow: 
+        var(--btn-shadow-strong),
+        var(--btn-glow-soft) !important;
+    border-color: rgba(255, 45, 85, 0.4) !important;
+}
+
+.download-btn:hover::before {
+    left: 100% !important;
+}
+
+.download-btn__image {
+    position: relative !important;
+    z-index: 2 !important;
+    transition: all var(--btn-transition-fast) !important;
+    filter: brightness(1.1) contrast(1.1) !important;
+}
+
+.download-btn:hover .download-btn__image {
+    filter: brightness(1.2) contrast(1.2) drop-shadow(0 0 10px rgba(255, 45, 85, 0.3)) !important;
+}
+
+/* ===== BOTONES DE CONTACTO MODERNOS ===== */
+.contact__channel-btn {
+    min-height: var(--btn-height-md) !important;
+    padding: 0 1.5rem !important;
+    background: linear-gradient(135deg, 
+        rgba(255, 255, 255, 0.08) 0%, 
+        rgba(255, 255, 255, 0.12) 100%
+    ) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: var(--btn-radius-pill) !important;
+    color: var(--text-primary) !important;
+    font-size: 0.9rem !important;
+    font-weight: 600 !important;
+    box-shadow: var(--btn-shadow-soft) !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+}
+
+.contact__channel-btn::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: -100% !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: var(--btn-gradient-primary) !important;
+    transition: left 0.8s ease !important;
+    z-index: -1 !important;
+    border-radius: inherit !important;
+    display: block !important;
+    opacity: 1 !important;
+}
+
+.contact__channel-btn:hover {
+    color: #ffffff !important;
+    border-color: rgba(255, 45, 85, 0.6) !important;
+    transform: translateY(-3px) scale(1.05) !important;
+    box-shadow: 
+        var(--btn-shadow-medium),
+        var(--btn-glow-medium) !important;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.7) !important;
+}
+
+.contact__channel-btn:hover::before {
+    left: 0 !important;
+}
+
+/* ===== BOTONES FAQ MODERNOS ===== */
+.faq__question {
+    width: 100% !important;
+    min-height: var(--btn-height-lg) !important;
+    padding: 1rem 1.5rem !important;
+    background: linear-gradient(135deg, 
+        rgba(255, 255, 255, 0.05) 0%, 
+        rgba(255, 255, 255, 0.08) 100%
+    ) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: var(--btn-radius-lg) !important;
+    color: var(--text-primary) !important;
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    text-align: left !important;
+    text-transform: none !important;
+    letter-spacing: normal !important;
+    box-shadow: var(--btn-shadow-soft) !important;
+    justify-content: space-between !important;
+}
+
+.faq__question::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: -100% !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(255, 45, 85, 0.1) 50%, 
+        transparent 100%
+    ) !important;
+    transition: left 1s ease !important;
+    z-index: 1 !important;
+    display: block !important;
+    opacity: 1 !important;
+}
+
+.faq__question:hover {
+    background: linear-gradient(135deg, 
+        rgba(255, 45, 85, 0.1) 0%, 
+        rgba(255, 45, 85, 0.15) 100%
+    ) !important;
+    border-color: rgba(255, 45, 85, 0.3) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 
+        var(--btn-shadow-medium),
+        var(--btn-glow-soft) !important;
+}
+
+.faq__question:hover::before {
+    left: 100% !important;
+}
+
+.faq__item.active .faq__question {
+    background: linear-gradient(135deg, 
+        rgba(255, 45, 85, 0.15) 0%, 
+        rgba(255, 45, 85, 0.2) 100%
+    ) !important;
+    border-color: rgba(255, 45, 85, 0.5) !important;
+    color: var(--starflex-red) !important;
+    box-shadow: 
+        var(--btn-shadow-medium),
+        var(--btn-glow-medium) !important;
+}
+
+/* ===== BOTÓN FLOTANTE ULTRA MODERNO ===== */
+.floating-widget__main-btn {
+    width: 70px !important;
+    height: 70px !important;
+    background: var(--btn-gradient-primary) !important;
+    border: var(--btn-border-accent) !important;
+    border-radius: 50% !important;
+    box-shadow: 
+        var(--btn-shadow-strong),
+        var(--btn-glow-medium) !important;
+    position: relative !important;
+}
+
+.floating-widget__main-btn::before {
+    content: '' !important;
+    position: absolute !important;
+    top: -4px !important;
+    left: -4px !important;
+    right: -4px !important;
+    bottom: -4px !important;
+    background: var(--btn-gradient-primary) !important;
+    border-radius: 50% !important;
+    z-index: -1 !important;
+    opacity: 0 !important;
+    transition: opacity var(--btn-transition) !important;
+    filter: blur(10px) !important;
+    display: block !important;
+}
+
+.floating-widget__main-btn:hover {
+    transform: scale(1.15) !important;
+    box-shadow: 
+        var(--btn-shadow-floating),
+        var(--btn-glow-intense) !important;
+}
+
+.floating-widget__main-btn:hover::before {
+    opacity: 1 !important;
+}
+
+.floating-widget__main-icon {
+    color: #ffffff !important;
+    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.5)) !important;
+    transition: all var(--btn-transition-fast) !important;
+    z-index: 2 !important;
+    position: relative !important;
+}
+
+.floating-widget__main-btn:hover .floating-widget__main-icon {
+    transform: scale(1.1) !important;
+    filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.8)) !important;
+}
+
+/* ===== BOTONES DEL MENÚ FLOTANTE ===== */
+.floating-widget__menu-item {
+    width: 60px !important;
+    height: 60px !important;
+    border-radius: 50% !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    box-shadow: var(--btn-shadow-medium) !important;
+    position: relative !important;
+}
+
+.floating-widget__menu-item::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: -100% !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(255, 255, 255, 0.3) 50%, 
+        transparent 100%
+    ) !important;
+    transition: left 1s ease !important;
+    border-radius: 50% !important;
+    display: block !important;
+    opacity: 1 !important;
+}
+
+.floating-widget__menu-item:hover {
+    transform: scale(1.15) !important;
+    box-shadow: 
+        var(--btn-shadow-strong),
+        var(--btn-glow-soft) !important;
+}
+
+.floating-widget__menu-item:hover::before {
+    left: 100% !important;
+}
+
+/* ===== SELECTOR DE IDIOMA MODERNO ===== */
+.language-switcher__btn {
+    min-height: var(--btn-height-md) !important;
+    padding: 0 1rem !important;
+    background: linear-gradient(135deg, 
+        rgba(21, 25, 34, 0.95) 0%, 
+        rgba(30, 35, 48, 0.95) 100%
+    ) !important;
+    backdrop-filter: blur(25px) !important;
+    -webkit-backdrop-filter: blur(25px) !important;
+    border: 1px solid var(--border-accent) !important;
+    border-radius: var(--btn-radius-pill) !important;
+    color: var(--text-primary) !important;
+    font-size: 0.85rem !important;
+    font-weight: 600 !important;
+    box-shadow: 
+        var(--btn-shadow-soft),
+        var(--btn-glow-soft) !important;
+    gap: 0.5rem !important;
+}
+
+.language-switcher__btn::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: -100% !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(255, 45, 85, 0.15) 50%, 
+        transparent 100%
+    ) !important;
+    transition: left 1.2s ease !important;
+    border-radius: inherit !important;
+    display: block !important;
+    opacity: 1 !important;
+}
+
+.language-switcher__btn:hover {
+    border-color: rgba(255, 45, 85, 0.6) !important;
+    transform: translateY(-2px) scale(1.05) !important;
+    box-shadow: 
+        var(--btn-shadow-medium),
+        var(--btn-glow-medium) !important;
+}
+
+.language-switcher__btn:hover::before {
+    left: 100% !important;
+}
+
+/* ===== BOTONES MÓVILES ESPECÍFICOS ===== */
+@media screen and (max-width: 1023px) {
+    .nav__toggle {
+        width: 48px !important;
+        height: 48px !important;
+        background: linear-gradient(135deg, 
+            rgba(21, 25, 34, 0.95) 0%, 
+            rgba(30, 35, 48, 0.95) 100%
+        ) !important;
+        backdrop-filter: blur(20px) !important;
+        -webkit-backdrop-filter: blur(20px) !important;
+        border: 1px solid var(--border-accent) !important;
+        border-radius: var(--btn-radius-md) !important;
+        box-shadow: 
+            var(--btn-shadow-medium),
+            var(--btn-glow-soft) !important;
+    }
+    
+    .nav__close {
+        width: 44px !important;
+        height: 44px !important;
+        background: linear-gradient(135deg, 
+            rgba(255, 45, 85, 0.15) 0%, 
+            rgba(21, 25, 34, 0.95) 100%
+        ) !important;
+        backdrop-filter: blur(20px) !important;
+        -webkit-backdrop-filter: blur(20px) !important;
+        border: 1px solid var(--border-accent) !important;
+        border-radius: 50% !important;
+        box-shadow: 
+            var(--btn-shadow-medium),
+            var(--btn-glow-soft) !important;
+    }
+    
+    .btn--mobile {
+        min-height: var(--btn-height-lg) !important;
+        padding: 0 2rem !important;
+        background: var(--btn-gradient-primary) !important;
+        border: var(--btn-border-accent) !important;
+        border-radius: var(--btn-radius-lg) !important;
+        color: #ffffff !important;
+        font-size: 1rem !important;
+        font-weight: 700 !important;
+        box-shadow: 
+            var(--btn-shadow-strong),
+            var(--btn-glow-medium) !important;
+        text-shadow: 0 0 15px rgba(255, 255, 255, 0.8) !important;
+    }
+}
+
+/* ===== EFECTOS ESPECIALES PARA BOTONES CTA ===== */
+.btn--cta .hero__cta-main,
+.btn--cta-video,
+.btn--footer {
+    position: relative !important;
+    z-index: 2 !important;
+}
+
+.btn--cta .hero__cta-main span,
+.btn--cta-video span,
+.btn--footer span {
+    background: linear-gradient(135deg, 
+        #ffffff 0%, 
+        #ffebee 50%, 
+        #ffffff 100%
+    ) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+    font-weight: 800 !important;
+    letter-spacing: 1px !important;
+    position: relative !important;
+    z-index: 3 !important;
+}
+
+.btn--cta .hero__cta-main small,
+.btn--cta-video small,
+.btn--footer small {
+    color: rgba(255, 255, 255, 0.95) !important;
+    font-family: var(--font-mono) !important;
+    text-transform: uppercase !important;
+    letter-spacing: 2px !important;
+    font-weight: 600 !important;
+    text-shadow: 0 0 10px rgba(255, 45, 85, 0.7) !important;
+    position: relative !important;
+    z-index: 3 !important;
+}
+
+/* ===== ESTADOS FOCUS MEJORADOS ===== */
+.btn:focus,
+.btn--primary:focus,
+.btn--secondary:focus,
+.btn--cta:focus,
+.btn--cta-video:focus,
+.btn--footer:focus,
+.btn--demo:focus,
+.btn--mobile:focus,
+.download-btn:focus,
+.contact__channel-btn:focus,
+.faq__question:focus,
+.floating-widget__main-btn:focus,
+.floating-widget__menu-item:focus,
+.language-switcher__btn:focus,
+.nav__toggle:focus,
+.nav__close:focus {
+    outline: 3px solid rgba(255, 45, 85, 0.6) !important;
+    outline-offset: 3px !important;
+    box-shadow: 
+        0 0 0 6px rgba(255, 45, 85, 0.3),
+        var(--btn-shadow-medium),
+        var(--btn-glow-medium) !important;
+}
+
+/* ===== ANIMACIONES ESPECIALES ===== */
+@keyframes btn-pulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 
+            var(--btn-shadow-medium),
+            var(--btn-glow-soft);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 
+            var(--btn-shadow-strong),
+            var(--btn-glow-medium);
+    }
+}
+
+@keyframes btn-glow-rotate {
+    0% {
+        filter: hue-rotate(0deg);
+    }
+    100% {
+        filter: hue-rotate(360deg);
+    }
+}
+
+/* Aplicar animaciones especiales a botones principales */
+.btn--cta,
+.btn--mobile {
+    animation: btn-pulse 4s ease-in-out infinite !important;
+}
+
+.floating-widget__main-btn {
+    animation: btn-glow-rotate 8s linear infinite !important;
+}
+
+/* ===== OPTIMIZACIONES DE RENDIMIENTO ===== */
+.btn,
+.btn--primary,
+.btn--secondary,
+.btn--cta,
+.btn--cta-video,
+.btn--footer,
+.btn--demo,
+.btn--mobile,
+.download-btn,
+.contact__channel-btn,
+.faq__question,
+.floating-widget__main-btn,
+.floating-widget__menu-item,
+.language-switcher__btn,
+.nav__toggle,
+.nav__close {
+    contain: layout style paint !important;
+    will-change: transform, box-shadow !important;
+    transform: translateZ(0) !important;
+    backface-visibility: hidden !important;
+}
+
+/* ===== RESPONSIVE PARA BOTONES ===== */
+@media screen and (max-width: 768px) {
+    .btn--primary,
+    .btn--cta,
+    .btn--cta-video,
+    .btn--footer {
+        min-height: var(--btn-height-md) !important;
+        padding: 0 1.5rem !important;
+        font-size: 0.9rem !important;
+    }
+    
+    .btn--secondary,
+    .btn--demo {
+        min-height: var(--btn-height-md) !important;
+        padding: 0 1.5rem !important;
+        font-size: 0.9rem !important;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .btn--primary,
+    .btn--cta,
+    .btn--cta-video,
+    .btn--footer,
+    .btn--secondary,
+    .btn--demo {
+        min-height: var(--btn-height-sm) !important;
+        padding: 0 1.25rem !important;
+        font-size: 0.85rem !important;
+    }
+    
+    .floating-widget__main-btn {
+        width: 60px !important;
+        height: 60px !important;
+    }
+    
+    .floating-widget__menu-item {
+        width: 50px !important;
+        height: 50px !important;
+    }
+}
+
+/* ===== MODO OSCURO PARA BOTONES ===== */
+@media (prefers-color-scheme: dark) {
+    .btn--secondary,
+    .btn--demo {
+        background: linear-gradient(135deg, 
+            rgba(255, 255, 255, 0.03) 0%, 
+            rgba(255, 255, 255, 0.08) 100%
+        ) !important;
+    }
+    
+    .download-btn {
+        background: linear-gradient(135deg, 
+            rgba(255, 255, 255, 0.03) 0%, 
+            rgba(255, 255, 255, 0.08) 100%
+        ) !important;
+    }
+}
+
+/* ===== ALTO CONTRASTE PARA BOTONES ===== */
+@media (prefers-contrast: high) {
+    .btn--primary,
+    .btn--cta,
+    .btn--cta-video,
+    .btn--footer,
+    .btn--secondary,
+    .btn--demo,
+    .btn--mobile {
+        border-width: 3px !important;
+    }
+}
+
+/* ===== MOVIMIENTO REDUCIDO ===== */
+@media (prefers-reduced-motion: reduce) {
+    .btn,
+    .btn--primary,
+    .btn--secondary,
+    .btn--cta,
+    .btn--cta-video,
+    .btn--footer,
+    .btn--demo,
+    .btn--mobile,
+    .download-btn,
+    .contact__channel-btn,
+    .faq__question,
+    .floating-widget__main-btn,
+    .floating-widget__menu-item,
+    .language-switcher__btn,
+    .nav__toggle,
+    .nav__close {
+        animation: none !important;
+        transition: all 0.2s ease !important;
+    }
+    
+    .btn--primary::before,
+    .btn--cta::before,
+    .btn--cta-video::before,
+    .btn--footer::before,
+    .btn--secondary::before,
+    .btn--demo::before,
+    .download-btn::before,
+    .contact__channel-btn::before,
+    .faq__question::before,
+    .floating-widget__menu-item::before,
+    .language-switcher__btn::before {
+        display: none !important;
+    }
+}
+
+/* ===== NOTA FINAL ===== */
+/*
+🎨 BOTONES ULTRA MODERNOS Y ESTÉTICOS COMPLETADOS:
+
+✅ DISEÑO MODERNO:
+- Gradientes elegantes y dinámicos
+- Efectos de luz y resplandor sofisticados
+- Animaciones fluidas y profesionales
+- Sombras realistas y profundidad
+
+✅ INTERACTIVIDAD AVANZADA:
+- Efectos hover espectaculares
+- Transiciones suaves y naturales
+- Feedback visual inmediato
+- Estados focus accesibles
+
+✅ RESPONSIVE PERFECTO:
+- Adaptación a todas las pantallas
+- Tamaños optimizados para touch
+- Rendimiento optimizado
+- Accesibilidad completa
+
+✅ VARIEDAD COMPLETA:
+- Botones primarios con efectos neón
+- Botones secundarios elegantes
+- Botones de descarga modernos
+- Botones de contacto atractivos
+- FAQ con diseño limpio
+- Flotantes con animaciones
+- Navegación móvil estilizada
+
+El resultado son botones que son:
+- Visualmente impactantes
+- Completamente funcionales
+- Modernos y elegantes
+- Accesibles y usables
+- Performantes y fluidos
+*/
