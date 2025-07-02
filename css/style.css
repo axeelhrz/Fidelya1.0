@@ -5676,3 +5676,49 @@ a.btn--footer {
 }
 
 }
+/* ===== BOTÓN CTA FLOTANTE - CORREGIDO PARA EVITAR SOBREPOSICIÓN ===== */
+.nav__cta {
+pointer-events: auto;
+z-index: calc(var(--navbar-z-index) + 1);
+display: flex;
+flex-direction: row;
+align-items: center;
+justify-content: flex-end;
+gap: var(--space-sm);
+padding: 0;
+margin: 0;
+position: relative;
+}
+
+/* Asegurar que el botón CTA no se sobreponga en pantallas anchas */
+@media (min-width: 1024px) {
+.nav__cta {
+    position: static;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-shrink: 0;
+    min-width: auto;
+    max-width: 250px;
+    overflow: visible;
+}
+
+.nav__cta .btn {
+    white-space: nowrap;
+    font-size: 0.8rem;
+    padding: var(--space-sm) var(--space-lg);
+    min-width: auto;
+    max-width: 220px;
+}
+}
+
+/* Mantener el comportamiento original en pantallas medianas */
+@media (min-width: 768px) and (max-width: 1023px) {
+.nav__cta {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: var(--space-sm);
+    padding: var(--space-sm);
+    margin: var(--space-sm);
+}
+}
