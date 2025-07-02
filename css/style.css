@@ -14075,3 +14075,294 @@ El logo del navbar ahora se oculta elegantemente cuando
 se abre el drawer móvil, creando una experiencia más
 limpia y enfocada en el contenido del menú.
 */
+/* ===== MEJORAS PARA BOTONES DEL SELECTOR DE IDIOMA - PREVENIR CORTES ===== */
+@media screen and (max-width: 1023px) {
+
+/* ===== VARIABLES OPTIMIZADAS PARA PREVENIR CORTES ===== */
+:root {
+    /* Espaciado optimizado que previene overflow */
+    --language-container-padding: clamp(0.75rem, 3vw, 1.25rem);
+    --language-button-gap: clamp(0.5rem, 2vw, 0.75rem);
+    --language-button-padding-h: clamp(0.625rem, 2.5vw, 1rem);
+    --language-button-padding-v: clamp(0.5rem, 2vh, 0.75rem);
+    --language-button-height: clamp(36px, 6vh, 44px);
+    --language-button-font: clamp(0.7rem, 2.2vw, 0.8rem);
+    
+    /* Colores mantenidos */
+    --language-text-color: var(--starflex-red);
+    --language-option-bg: rgba(255, 255, 255, 0.08);
+    --language-option-border: rgba(255, 255, 255, 0.15);
+    --language-option-hover: rgba(255, 45, 85, 0.15);
+    --language-option-active: rgba(255, 45, 85, 0.25);
+}
+
+/* ===== CONTENEDOR PRINCIPAL SIN OVERFLOW ===== */
+.nav__language-mobile {
+    /* Layout que previene overflow */
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 var(--language-container-padding) !important;
+    box-sizing: border-box !important;
+    
+    /* Sin contenedor visible */
+    background: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    
+    /* Layout que previene cortes */
+    position: relative !important;
+    overflow: visible !important;
+    flex-shrink: 0 !important;
+    
+    /* Sin efectos */
+    transition: none !important;
+    cursor: default !important;
+    pointer-events: none !important;
+}
+
+/* ===== TÍTULO OPTIMIZADO ===== */
+.nav__language-title {
+    /* Tipografía optimizada */
+    color: var(--language-text-color) !important;
+    font-size: var(--language-button-font) !important;
+    font-weight: 600 !important;
+    text-align: center !important;
+    margin-bottom: var(--language-button-gap) !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    text-shadow: 0 0 6px rgba(255, 45, 85, 0.3) !important;
+    
+    /* Sin efectos */
+    background: none !important;
+    border: none !important;
+    padding: 0 !important;
+    transition: none !important;
+    position: relative !important;
+    z-index: 1 !important;
+    cursor: default !important;
+    pointer-events: none !important;
+}
+
+/* ===== CONTENEDOR DE OPCIONES OPTIMIZADO ===== */
+.nav__language-options {
+    /* Layout que previene overflow */
+    display: flex !important;
+    gap: var(--language-button-gap) !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 0 calc(var(--language-button-gap) * 1.5) 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+    
+    /* Sin contenedor visible */
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    transition: none !important;
+    
+    /* Layout que previene cortes */
+    position: relative !important;
+    z-index: 1 !important;
+    cursor: default !important;
+    pointer-events: none !important;
+    overflow: visible !important;
+}
+
+/* ===== BOTONES OPTIMIZADOS PARA NO CORTARSE ===== */
+.nav__language-option {
+    /* Layout flexible que previene overflow */
+    flex: 1 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.375rem !important;
+    
+    /* Dimensiones optimizadas */
+    padding: var(--language-button-padding-v) var(--language-button-padding-h) !important;
+    min-height: var(--language-button-height) !important;
+    max-height: var(--language-button-height) !important;
+    min-width: 0 !important;
+    max-width: calc(50% - var(--language-button-gap) / 2) !important;
+    box-sizing: border-box !important;
+    
+    /* Diseño integrado */
+    background: var(--language-option-bg) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    border: 1px solid var(--language-option-border) !important;
+    border-radius: 10px !important;
+    
+    /* Tipografía optimizada */
+    color: rgba(255, 255, 255, 0.9) !important;
+    font-size: var(--language-button-font) !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.3px !important;
+    line-height: 1.2 !important;
+    
+    /* Interactividad suave */
+    cursor: pointer !important;
+    transition: all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+    
+    /* Sombras sutiles */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+    
+    /* Optimización que previene cortes */
+    position: relative !important;
+    overflow: hidden !important;
+    user-select: none !important;
+    -webkit-tap-highlight-color: transparent !important;
+    touch-action: manipulation !important;
+    pointer-events: auto !important;
+    
+    /* Flexbox que previene overflow */
+    flex-basis: 0 !important;
+    flex-grow: 1 !important;
+    flex-shrink: 1 !important;
+}
+
+/* ===== CONTENIDO DE LOS BOTONES OPTIMIZADO ===== */
+.nav__language-flag {
+    font-size: 0.9rem !important;
+    line-height: 1 !important;
+    transition: transform 0.3s ease !important;
+    pointer-events: none !important;
+    flex-shrink: 0 !important;
+}
+
+.nav__language-name {
+    font-weight: 700 !important;
+    transition: transform 0.3s ease !important;
+    pointer-events: none !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    min-width: 0 !important;
+    flex-shrink: 1 !important;
+}
+
+/* ===== EFECTOS HOVER OPTIMIZADOS ===== */
+.nav__language-option:hover {
+    background: var(--language-option-hover) !important;
+    border-color: rgba(255, 45, 85, 0.3) !important;
+    color: #ffffff !important;
+    transform: translateY(-1px) scale(1.01) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+.nav__language-option:active {
+    transform: translateY(0) scale(0.99) !important;
+}
+
+.nav__language-option.active {
+    background: var(--language-option-active) !important;
+    border-color: rgba(255, 45, 85, 0.5) !important;
+    color: var(--starflex-red) !important;
+    box-shadow: 
+        0 4px 15px rgba(0, 0, 0, 0.2),
+        0 0 15px rgba(255, 45, 85, 0.3) !important;
+    text-shadow: 0 0 8px rgba(255, 45, 85, 0.4) !important;
+}
+
+/* ===== RESPONSIVE ESPECÍFICO PARA PANTALLAS PEQUEÑAS ===== */
+/* Pantallas medianas */
+@media screen and (max-height: 700px) and (min-height: 600px) {
+    :root {
+        --language-button-height: 40px;
+        --language-button-padding-v: 0.5rem;
+        --language-button-padding-h: 0.75rem;
+        --language-button-font: 0.75rem;
+        --language-button-gap: 0.625rem;
+    }
+}
+
+/* Pantallas pequeñas */
+@media screen and (max-height: 600px) {
+    :root {
+        --language-container-padding: clamp(0.5rem, 2.5vw, 1rem);
+        --language-button-height: 36px;
+        --language-button-padding-v: 0.375rem;
+        --language-button-padding-h: 0.625rem;
+        --language-button-font: 0.7rem;
+        --language-button-gap: 0.5rem;
+    }
+    
+    .nav__language-option {
+        border-radius: 8px !important;
+        gap: 0.25rem !important;
+    }
+    
+    .nav__language-flag {
+        font-size: 0.8rem !important;
+    }
+}
+
+/* Pantallas muy pequeñas */
+@media screen and (max-height: 500px) {
+    :root {
+        --language-container-padding: clamp(0.375rem, 2vw, 0.75rem);
+        --language-button-height: 32px;
+        --language-button-padding-v: 0.25rem;
+        --language-button-padding-h: 0.5rem;
+        --language-button-font: 0.65rem;
+        --language-button-gap: 0.375rem;
+    }
+    
+    .nav__language-option {
+        border-radius: 6px !important;
+        gap: 0.125rem !important;
+        letter-spacing: 0.2px !important;
+    }
+    
+    .nav__language-flag {
+        font-size: 0.7rem !important;
+    }
+}
+
+/* ===== OPTIMIZACIÓN PARA PANTALLAS ANCHAS PERO BAJAS ===== */
+@media screen and (max-height: 480px) and (min-width: 768px) {
+    :root {
+        --language-container-padding: clamp(1rem, 4vw, 1.5rem);
+        --language-button-gap: 0.75rem;
+        --language-button-padding-h: 0.875rem;
+    }
+}
+
+}
+
+/* ===== NOTA FINAL ===== */
+/*
+🎯 BOTONES DEL SELECTOR DE IDIOMA OPTIMIZADOS:
+
+✅ SIN CORTES EN BORDES:
+- Padding del contenedor calculado para prevenir overflow
+- max-width en botones para evitar desbordamiento
+- Espaciado optimizado según tamaño de pantalla
+- box-sizing: border-box en todos los elementos
+
+✅ RESPONSIVE PERFECTO:
+- Variables CSS que escalan según altura de pantalla
+- Ajustes específicos para pantallas pequeñas y muy pequeñas
+- Optimización especial para pantallas anchas pero bajas
+- Flexbox que se adapta automáticamente
+
+✅ FUNCIONALIDAD MANTENIDA:
+- Todos los efectos hover y active preservados
+- JavaScript sigue funcionando igual
+- Accesibilidad completa mantenida
+- Transiciones suaves conservadas
+
+✅ OPTIMIZACIÓN VISUAL:
+- Sombras sutiles que no interfieren
+- Bordes redondeados apropiados para cada tamaño
+- Tipografía escalable y legible
+- Efectos visuales proporcionados
+
+Los botones ahora nunca se cortarán en los bordes y se adaptarán
+perfectamente a cualquier tamaño de pantalla manteniendo toda
+su funcionalidad y estética.
+*/
