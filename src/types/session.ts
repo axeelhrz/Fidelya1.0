@@ -57,4 +57,8 @@ export interface UpdateSessionData {
   status?: SessionStatus;
   emotionalTonePost?: EmotionalState;
   attachments?: string[];
+summary?: string;
+  recommendation?: string;
+  emotionalTonePost?: string;
+
 }

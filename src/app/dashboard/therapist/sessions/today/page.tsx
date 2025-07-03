@@ -92,10 +92,6 @@ const TodaySessionsPage: React.FC = () => {
     refreshSessions();
   };
 
-  const handleDrawerEdit = (session: Session) => {
-    setDrawerOpen(false);
-    handleEditSession(session);
-  };
 
   const clearFilters = () => {
     applyFilters({});
@@ -264,7 +260,6 @@ const TodaySessionsPage: React.FC = () => {
           open={drawerOpen}
           onClose={() => setDrawerOpen(false)}
           session={drawerSession}
-          onEdit={handleDrawerEdit}
         />
       </Box>
     </LocalizationProvider>

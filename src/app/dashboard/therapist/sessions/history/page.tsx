@@ -21,7 +21,6 @@ import {
   Stack,
   Alert,
   Skeleton,
-  Paper,
   Fab,
   Badge,
   Menu,
@@ -46,7 +45,7 @@ import {
   FilterList,
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useSessionHistory, SessionHistoryFilters } from '../../../../../hooks/useSessionHistory';
+import { useSessionHistory } from '../../../../../hooks/useSessionHistory';
 import { useSessionActions } from '../../../../../hooks/useSessionActions';
 import SessionHistoryFilters from '../../../../../components/clinical/sessions/SessionHistoryFilters';
 import SessionExportModal from '../../../../../components/clinical/sessions/SessionExportModal';
@@ -425,18 +424,15 @@ export default function SessionHistoryPage() {
                   paginatedSessions.map((session, index) => (
                     <motion.tr
                       key={session.id}
-                      component={TableRow}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
-                      hover
-                      sx={{ 
-                        '&:hover': { 
-                          backgroundColor: 'action.hover',
-                          cursor: 'pointer'
-                        }
-                      }}
+                      onMouseEnter={undefined}
+                      onMouseLeave={undefined}
                       onClick={() => handleViewDetails(session)}
+                      style={{
+                        cursor: 'pointer'
+                      }}
                     >
                       <TableCell padding="checkbox" onClick={(e) => e.stopPropagation()}>
                         <Checkbox

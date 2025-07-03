@@ -4,10 +4,6 @@ import {
   Card,
   CardContent,
   TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   Chip,
   Button,
   Grid,
@@ -16,7 +12,6 @@ import {
   IconButton,
   Stack,
   Autocomplete,
-  DatePicker,
 } from '@mui/material';
 import {
   Search,
@@ -66,7 +61,10 @@ const SessionHistoryFilters: React.FC<SessionHistoryFiltersProps> = ({
 }) => {
   const [expanded, setExpanded] = useState(false);
 
-  const handleFilterChange = (key: keyof SessionHistoryFilters, value: any) => {
+  const handleFilterChange = (
+    key: keyof SessionHistoryFilters,
+    value: string | string[] | undefined
+  ) => {
     onFiltersChange({
       ...filters,
       [key]: value,
