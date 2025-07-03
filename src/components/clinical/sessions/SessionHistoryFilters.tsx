@@ -253,14 +253,17 @@ const SessionHistoryFilters: React.FC<SessionHistoryFiltersProps> = ({
                   }}
                   disabled={loading}
                   renderTags={(value, getTagProps) =>
-                    value.map((option, index) => (
-                      <StatusBadge
-                        key={option.value}
-                        status={option.value}
-                        {...getTagProps({ index })}
-                        size="small"
-                      />
-                    ))
+                    value.map((option, index) => {
+                      const { key, ...tagProps } = getTagProps({ index });
+                      return (
+                        <StatusBadge
+                          key={key}
+                          status={option.value}
+                          {...tagProps}
+                          size="small"
+                        />
+                      );
+                    })
                   }
                   renderOption={(props, option) => (
                     <Box component="li" {...props}>
@@ -295,16 +298,19 @@ const SessionHistoryFilters: React.FC<SessionHistoryFiltersProps> = ({
                 }}
                 disabled={loading}
                 renderTags={(value, getTagProps) =>
-                  value.map((option, index) => (
-                    <Chip
-                      key={option.value}
-                      label={option.label}
-                      {...getTagProps({ index })}
-                      size="small"
-                      icon={<EmotionalStateIcon state={option.value} size="small" />}
-                      variant="outlined"
-                    />
-                  ))
+                  value.map((option, index) => {
+                    const { key, ...tagProps } = getTagProps({ index });
+                    return (
+                      <Chip
+                        key={key}
+                        label={option.label}
+                        {...tagProps}
+                        size="small"
+                        icon={<EmotionalStateIcon state={option.value} size="small" />}
+                        variant="outlined"
+                      />
+                    );
+                  })
                 }
                 renderOption={(props, option) => (
                   <Box component="li" {...props} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
