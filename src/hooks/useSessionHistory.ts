@@ -197,7 +197,7 @@ export const useSessionHistory = (
   useEffect(() => {
     clearFilters();
     loadSessions(false);
-  }, [filters, options, user?.centerId, user?.id]);
+  }, [filters, options, user?.centerId, user?.id, clearFilters, loadSessions]);
 
   // Estadísticas calculadas
   const stats = useMemo(() => {
