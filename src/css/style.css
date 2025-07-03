@@ -90,8 +90,8 @@
 --transition-slow: 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 
 /* Variables específicas para navbar */
---navbar-height: 80px;
---navbar-height-mobile: 70px;
+--navbar-height: 85px;
+--navbar-height-mobile: 75px;
 --navbar-z-index: 1000;
 
 /* Variables para tamaños de imágenes optimizadas */
@@ -995,6 +995,18 @@ pointer-events: none;
 background: transparent;
 transition: all var(--transition-slow);
 will-change: transform;
+}
+
+.header.scrolled {
+background: linear-gradient(135deg,
+rgb(10 13 20 / 95%) 0%,
+rgb(21 25 34 / 90%) 100%
+);
+backdrop-filter: blur(25px);
+border-bottom: 1px solid rgb(255 69 105 / 15%);
+box-shadow: 
+0 8px 32px rgb(0 0 0 / 40%),
+0 0 0 1px rgb(255 69 105 / 8%);
 }
 
 /* ===== NAVBAR FUTURISTA ULTRA RESPONSIVE ===== */
