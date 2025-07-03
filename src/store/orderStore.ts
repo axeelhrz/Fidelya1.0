@@ -41,6 +41,7 @@ interface OrderState {
   clearSelectionsByChild: () => void
   getOrderSummaryByChild: () => OrderSummaryByChild
   loadExistingSelections: (selections: OrderSelectionByChild[]) => void
+  clearCartAfterSuccessfulOrder: () => void
 }
 
 export const useOrderStore = create<OrderState>()(
@@ -309,6 +310,14 @@ export const useOrderStore = create<OrderState>()(
 
       loadExistingSelections: (selections: OrderSelectionByChild[]) => {
         set({ selectionsByChild: selections })
+      },
+
+      clearCartAfterSuccessfulOrder: () => {
+        console.log('Clearing cart after successful order')
+        set({ 
+          selectionsByChild: [],
+          selections: []
+        })
       }
     }),
     {

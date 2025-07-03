@@ -18,6 +18,7 @@ interface ProfileFormData {
 interface ExtendedChild extends Child {
   edad: number
   level: SchoolLevel
+  tema?: string // NUEVO: tema del estudiante
 }
 
 interface UseProfileFormReturn {
@@ -127,7 +128,8 @@ export function useProfileForm(): UseProfileFormReturn {
           active: child.active !== undefined ? child.active : true,
           edad: child.edad || child.age || 0,
           age: child.age || child.edad || 0,
-          level: migratedLevel
+          level: migratedLevel,
+          tema: child.tema || undefined // NUEVO: incluir tema
         }
       }).filter(child => child.name.trim() !== '') // Solo incluir hijos con nombre
       
@@ -184,7 +186,8 @@ export function useProfileForm(): UseProfileFormReturn {
       active: true,
       edad: 0,
       age: 0,
-      level: 'Lower School' // Usar el nuevo sistema de niveles
+      level: 'Lower School', // Usar el nuevo sistema de niveles
+      tema: undefined // NUEVO: tema opcional
       // Note: rut is omitted instead of being undefined
     }
     setChildren(prev => [...prev, newChild])
@@ -332,14 +335,15 @@ export function useProfileForm(): UseProfileFormReturn {
         setEmailVerified(false)
       }
 
-      // Transform children back to the format expected by the database
-      // Filtrar solo hijos con nombre válido
+      // MEJORADO: Transform children back to the format expected by the database
+      // Filtrar solo hijos con nombre válido y asegurar que todos los campos estén correctos
       const transformedChildren = children
         .filter(child => safeTrim(child.name)) // Solo hijos con nombre
         .map(child => {
           const childName = safeTrim(child.name)
           const childCurso = safeTrim(child.curso)
           const childRut = child.rut ? safeTrim(child.rut) : undefined
+          const childTema = child.tema ? safeTrim(child.tema) : undefined
           
           const childData: {
             id: string
@@ -350,6 +354,7 @@ export function useProfileForm(): UseProfileFormReturn {
             edad: number
             level: SchoolLevel
             rut?: string
+            tema?: string
           } = {
             id: child.id,
             name: childName,
@@ -363,6 +368,11 @@ export function useProfileForm(): UseProfileFormReturn {
           // Only include rut if it has a value
           if (childRut) {
             childData.rut = childRut
+          }
+          
+          // NUEVO: Only include tema if it has a value
+          if (childTema) {
+            childData.tema = childTema
           }
           
           return childData
@@ -396,17 +406,21 @@ export function useProfileForm(): UseProfileFormReturn {
 
       await updateDoc(userDocRef, cleanedUpdateData)
 
-      // Actualizar datos originales
+      // MEJORADO: Actualizar datos originales con los datos transformados correctamente
       setOriginalData({
         firstName: trimmedFirstName,
         lastName: trimmedLastName,
         email: trimmedEmail,
         phone: trimmedPhone
       })
+      
+      // CORREGIDO: Actualizar originalChildren con los datos actuales para evitar detectar cambios falsos
       setOriginalChildren([...children])
 
       // Clear any previous errors
       setErrors({})
+
+      console.log('Profile data saved successfully, including', transformedChildren.length, 'children')
 
       return true
     } catch (error) {

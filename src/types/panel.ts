@@ -43,6 +43,15 @@ export interface Child {
   age?: number
   edad?: number
   level?: 'Pre School' | 'Lower School' | 'Middle School' | 'High School'
+  tema?: string // NUEVO: tema del estudiante desde colección student
+}
+
+// NUEVO: Tipos para funcionarios
+export type FuncionarioRetiroLocation = 'casino_basica' | 'casino_media' | 'preschool'
+
+export interface FuncionarioData {
+  dondeRetira: FuncionarioRetiroLocation
+  cursoPreschool?: string // Solo si dondeRetira es 'preschool'
 }
 
 export interface User {
@@ -63,6 +72,8 @@ export interface User {
   active: boolean
   createdAt: Date
   phone?: string
+  // NUEVO: Datos específicos de funcionarios
+  funcionarioData?: FuncionarioData
 }
 
 export interface OrderSelectionByChild {
@@ -134,6 +145,21 @@ export const PRICES: Record<UserType, { almuerzo: number; colacion: number }> = 
   funcionario: { almuerzo: 4875, colacion: 4875 }
 }
 
+// NUEVO: Opciones para donde retira el funcionario
+export const FUNCIONARIO_RETIRO_OPTIONS = [
+  { value: 'casino_basica' as const, label: 'Casino Básica' },
+  { value: 'casino_media' as const, label: 'Casino Media' },
+  { value: 'preschool' as const, label: 'Preschool' }
+]
+
+// NUEVO: Cursos de preescolar (playgroup a primero básico)
+export const PRESCHOOL_COURSES = [
+  'Playgroup',
+  'Pre-Kinder',
+  'Kinder',
+  '1° Básico'
+]
+
 // Función helper para obtener el precio de un item
 export function getItemPrice(item: MenuItem, userType: UserType): number {
   // Si el item tiene precio personalizado, usarlo
@@ -148,4 +174,10 @@ export function getItemPrice(item: MenuItem, userType: UserType): number {
   
   // Usar precio base según tipo de usuario
   return PRICES[userType][item.type]
+}
+
+// NUEVO: Función helper para obtener el label de donde retira
+export function getFuncionarioRetiroLabel(location: FuncionarioRetiroLocation): string {
+  const option = FUNCIONARIO_RETIRO_OPTIONS.find(opt => opt.value === location)
+  return option?.label || location
 }

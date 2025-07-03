@@ -43,7 +43,7 @@ interface UseOrderManagementReturn {
 }
 
 export function useOrderManagement(): UseOrderManagementReturn {
-  const { getOrderSummaryByChild } = useOrderStore()
+  const { getOrderSummaryByChild, clearSelectionsByChild } = useOrderStore()
   const { user } = useAuth()
   
   // Usar el nuevo hook de múltiples semanas
@@ -115,7 +115,7 @@ export function useOrderManagement(): UseOrderManagementReturn {
     await loadExistingOrders()
   }, [loadExistingOrders])
 
-  // Procesar pago con mejor manejo de errores - ACTUALIZADO PARA DETECTAR DUPLICADOS
+  // Procesar pago con mejor manejo de errores - MEJORADO PARA EVITAR DUPLICADOS Y LIMPIAR CARRITO
   const processPayment = useCallback(async () => {
     if (!user) {
       setPaymentError('Información de usuario no disponible')
@@ -135,7 +135,7 @@ export function useOrderManagement(): UseOrderManagementReturn {
         throw new Error('No hay elementos seleccionados para procesar el pago')
       }
 
-      // NUEVO: Verificar duplicados antes de procesar
+      // MEJORADO: Verificar duplicados más estrictos antes de procesar
       const selectionsByWeek = new Map<string, typeof summary.selections>()
       
       for (const selection of summary.selections) {
@@ -149,7 +149,7 @@ export function useOrderManagement(): UseOrderManagementReturn {
 
       console.log('Selections grouped by week:', Object.fromEntries(selectionsByWeek))
 
-      // Verificar duplicados para cada semana
+      // Verificar duplicados para cada semana con validación más estricta
       for (const [weekStart, weekSelections] of selectionsByWeek) {
         const processOrderSelections = weekSelections.map(selection => ({
           childId: selection.hijo?.id || 'funcionario',
@@ -175,7 +175,7 @@ export function useOrderManagement(): UseOrderManagementReturn {
           ]
         })).filter(selection => selection.selectedItems.length > 0)
 
-        // Verificar duplicados
+        // MEJORADO: Verificar duplicados más estrictos
         const duplicateCheck = await MenuIntegrationService.checkForDuplicateSelections(
           user, 
           processOrderSelections, 
@@ -185,6 +185,15 @@ export function useOrderManagement(): UseOrderManagementReturn {
         if (duplicateCheck.hasDuplicates) {
           const duplicateMessages = duplicateCheck.warnings.join('\n')
           throw new Error(`No puedes pagar menús que ya pagaste:\n${duplicateMessages}`)
+        }
+
+        // NUEVO: Verificar que no hay pedidos pendientes de pago para evitar duplicados
+        const pendingOrders = existingOrders.filter(order => 
+          order.status === 'pendiente' || order.status === 'procesando_pago'
+        )
+        
+        if (pendingOrders.length > 0) {
+          throw new Error('Ya tienes un pedido pendiente de pago. Completa el pago anterior antes de crear uno nuevo.')
         }
       }
 
@@ -267,8 +276,13 @@ export function useOrderManagement(): UseOrderManagementReturn {
             error: result.error
           })
 
-          // Si es exitoso, redirigir inmediatamente al primer pago
+          // Si es exitoso, limpiar el carrito y redirigir inmediatamente al primer pago
           if (result.success && result.paymentUrl) {
+            console.log(`Payment successful for week ${weekStart}, clearing cart and redirecting`)
+            
+            // NUEVO: Limpiar el carrito después de crear el pedido exitosamente
+            clearSelectionsByChild()
+            
             console.log(`Redirecting to payment URL for week ${weekStart}:`, result.paymentUrl)
             window.location.href = result.paymentUrl
             return // Salir después de la primera redirección exitosa
@@ -310,6 +324,8 @@ export function useOrderManagement(): UseOrderManagementReturn {
           errorMessage = 'Debes seleccionar al menos un elemento antes de proceder al pago.'
         } else if (error.message.includes('ya pagaste')) {
           errorMessage = error.message // Mostrar mensaje específico de duplicados
+        } else if (error.message.includes('pedido pendiente')) {
+          errorMessage = error.message // Mostrar mensaje específico de pedidos pendientes
         } else {
           errorMessage = error.message
         }
@@ -319,7 +335,7 @@ export function useOrderManagement(): UseOrderManagementReturn {
     } finally {
       setIsProcessingPayment(false)
     }
-  }, [user, getOrderSummaryByChild])
+  }, [user, getOrderSummaryByChild, existingOrders, clearSelectionsByChild])
 
   // Reintentar pago
   const retryPayment = useCallback(async () => {

@@ -6,14 +6,16 @@ import { Input } from "@/components/ui/input"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { SchoolLevelSelector } from "@/components/ui/school-level-selector"
 import { CourseSelector } from "@/components/ui/course-selector"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { motion } from "framer-motion"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth"
-import { doc, setDoc } from "firebase/firestore"
+import { doc, setDoc, collection, getDocs } from "firebase/firestore"
 import { auth, db } from "@/app/lib/firebase"
 import { SchoolLevel } from "@/lib/courseUtils"
-import { GraduationCap, Plus, Trash2 } from "lucide-react"
+import { FuncionarioRetiroLocation, FUNCIONARIO_RETIRO_OPTIONS, PRESCHOOL_COURSES } from "@/types/panel"
+import { GraduationCap, Plus, Trash2, MapPin, School } from "lucide-react"
 
 interface ChildData {
   id: number
@@ -22,6 +24,13 @@ interface ChildData {
   class: string
   level: SchoolLevel
   rut: string
+  tema?: string // NUEVO: tema del estudiante
+}
+
+interface StudentTheme {
+  id: string
+  name: string
+  description?: string
 }
 
 export default function RegistroPage() {
@@ -29,13 +38,19 @@ export default function RegistroPage() {
   const [mounted, setMounted] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
+  const [studentThemes, setStudentThemes] = useState<StudentTheme[]>([])
+  const [loadingThemes, setLoadingThemes] = useState(true)
+  
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
     email: "",
     password: "",
     confirmPassword: "",
-    userType: "" as "funcionario" | "apoderado" | ""
+    userType: "" as "funcionario" | "apoderado" | "",
+    // NUEVO: Campos específicos para funcionarios
+    dondeRetira: "" as FuncionarioRetiroLocation | "",
+    cursoPreschool: ""
   })
   
   const [children, setChildren] = useState<ChildData[]>([
@@ -45,13 +60,48 @@ export default function RegistroPage() {
       age: "",
       class: "",
       level: "Lower School",
-      rut: ""
+      rut: "",
+      tema: ""
     }
   ])
 
   useEffect(() => {
     setMounted(true)
+    loadStudentThemes()
   }, [])
+
+  // NUEVO: Cargar temas de estudiantes desde Firebase
+  const loadStudentThemes = async () => {
+    try {
+      setLoadingThemes(true)
+      const themesCollection = collection(db, 'student')
+      const themesSnapshot = await getDocs(themesCollection)
+      
+      const themes: StudentTheme[] = []
+      themesSnapshot.forEach((doc) => {
+        const data = doc.data()
+        themes.push({
+          id: doc.id,
+          name: data.name || data.nombre || doc.id,
+          description: data.description || data.descripcion
+        })
+      })
+      
+      setStudentThemes(themes)
+      console.log('Loaded student themes:', themes)
+    } catch (error) {
+      console.error('Error loading student themes:', error)
+      // Si hay error, usar temas por defecto
+      setStudentThemes([
+        { id: 'general', name: 'General' },
+        { id: 'ciencias', name: 'Ciencias' },
+        { id: 'artes', name: 'Artes' },
+        { id: 'deportes', name: 'Deportes' }
+      ])
+    } finally {
+      setLoadingThemes(false)
+    }
+  }
 
   if (!mounted) {
     return null
@@ -69,10 +119,31 @@ export default function RegistroPage() {
   const handleUserTypeChange = (value: string) => {
     setFormData({
       ...formData,
-      userType: value as "funcionario" | "apoderado"
+      userType: value as "funcionario" | "apoderado",
+      // Limpiar campos específicos de funcionario si cambia a apoderado
+      dondeRetira: value === "funcionario" ? formData.dondeRetira : "",
+      cursoPreschool: value === "funcionario" ? formData.cursoPreschool : ""
     })
     // Limpiar error cuando el usuario seleccione un tipo
     if (error) setError("")
+  }
+
+  // NUEVO: Manejar cambio de donde retira para funcionarios
+  const handleDondeRetiraChange = (value: FuncionarioRetiroLocation) => {
+    setFormData({
+      ...formData,
+      dondeRetira: value,
+      // Limpiar curso de preescolar si no es preschool
+      cursoPreschool: value === "preschool" ? formData.cursoPreschool : ""
+    })
+  }
+
+  // NUEVO: Manejar cambio de curso de preescolar
+  const handleCursoPreschoolChange = (value: string) => {
+    setFormData({
+      ...formData,
+      cursoPreschool: value
+    })
   }
 
   const handleChildChange = (id: number, field: keyof ChildData, value: string | SchoolLevel) => {
@@ -89,7 +160,8 @@ export default function RegistroPage() {
       age: "",
       class: "",
       level: "Lower School",
-      rut: ""
+      rut: "",
+      tema: ""
     }])
   }
 
@@ -133,6 +205,19 @@ export default function RegistroPage() {
     if (!formData.userType) {
       setError("Debes seleccionar un tipo de usuario")
       return false
+    }
+
+    // NUEVO: Validar campos específicos de funcionarios
+    if (formData.userType === "funcionario") {
+      if (!formData.dondeRetira) {
+        setError("Los funcionarios deben seleccionar dónde retiran")
+        return false
+      }
+      
+      if (formData.dondeRetira === "preschool" && !formData.cursoPreschool) {
+        setError("Debes seleccionar un curso de preescolar")
+        return false
+      }
     }
 
     // Validar datos de hijos si se han agregado (tanto para apoderados como funcionarios)
@@ -211,8 +296,15 @@ export default function RegistroPage() {
         curso: child.class.trim(),
         level: child.level,
         rut: child.rut.trim() || null,
-        active: true
+        active: true,
+        tema: child.tema || null // NUEVO: incluir tema del estudiante
       }))
+
+      // NUEVO: Preparar datos específicos de funcionarios
+      const funcionarioData = formData.userType === "funcionario" ? {
+        dondeRetira: formData.dondeRetira,
+        cursoPreschool: formData.dondeRetira === "preschool" ? formData.cursoPreschool : null
+      } : null
 
       // Guardar datos adicionales en Firestore
       const userData = {
@@ -227,7 +319,9 @@ export default function RegistroPage() {
         active: true,
         createdAt: new Date(),
         updatedAt: new Date(),
-        phone: null
+        phone: null,
+        // NUEVO: incluir datos de funcionario si aplica
+        ...(funcionarioData && { funcionarioData })
       }
 
       // Filtrar cualquier valor undefined antes de guardar
@@ -499,6 +593,83 @@ export default function RegistroPage() {
                 </RadioGroup>
               </motion.div>
 
+              {/* NUEVO: Campos específicos para funcionarios */}
+              {formData.userType === "funcionario" && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.5 }}
+                  className="space-y-3"
+                >
+                  <div className="border-t border-slate-200 dark:border-slate-600 pt-3">
+                    <div className="flex items-center space-x-2 mb-3">
+                      <MapPin className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                      <h3 className="text-base font-medium text-slate-800 dark:text-slate-200 text-clean">
+                        Información de retiro
+                      </h3>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                          ¿Dónde retiras? *
+                        </label>
+                        <Select
+                          value={formData.dondeRetira}
+                          onValueChange={handleDondeRetiraChange}
+                          disabled={isLoading}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Selecciona dónde retiras" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {FUNCIONARIO_RETIRO_OPTIONS.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* NUEVO: Selector de curso de preescolar si selecciona preschool */}
+                      {formData.dondeRetira === "preschool" && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.3 }}
+                        >
+                          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                            Curso de Preescolar *
+                          </label>
+                          <Select
+                            value={formData.cursoPreschool}
+                            onValueChange={handleCursoPreschoolChange}
+                            disabled={isLoading}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Selecciona el curso" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {PRESCHOOL_COURSES.map((curso) => (
+                                <SelectItem key={curso} value={curso}>
+                                  {curso}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                            Cursos disponibles desde Playgroup hasta 1° Básico
+                          </p>
+                        </motion.div>
+                      )}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
               {/* Password Fields */}
               <div className="grid grid-cols-2 gap-3">
                 <motion.div
@@ -669,6 +840,36 @@ export default function RegistroPage() {
                             />
                             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                               Puedes escribir cualquier curso personalizado
+                            </p>
+                          </div>
+
+                          {/* NUEVO: Selector de tema del estudiante */}
+                          <div>
+                            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+                              Tema del estudiante (opcional)
+                            </label>
+                            <Select
+                              value={child.tema}
+                              onValueChange={(value) => handleChildChange(child.id, 'tema', value)}
+                              disabled={isLoading || loadingThemes}
+                            >
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder={loadingThemes ? "Cargando temas..." : "Selecciona un tema"} />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="">Sin tema específico</SelectItem>
+                                {studentThemes.map((theme) => (
+                                  <SelectItem key={theme.id} value={theme.id}>
+                                    <div className="flex items-center space-x-2">
+                                      <School className="w-3 h-3" />
+                                      <span>{theme.name}</span>
+                                    </div>
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                              Temas cargados desde la colección de estudiantes
                             </p>
                           </div>
                         </div>

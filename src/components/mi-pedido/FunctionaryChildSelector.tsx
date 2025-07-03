@@ -7,8 +7,8 @@ import { Badge } from '@/components/ui/badge'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
 import { useOrderStore } from '@/store/orderStore'
-import { User } from '@/types/panel'
-import { Users, Plus, User as UserIcon, GraduationCap, Briefcase } from 'lucide-react'
+import { User, getFuncionarioRetiroLabel } from '@/types/panel'
+import { Users, Plus, User as UserIcon, GraduationCap, Briefcase, MapPin, School } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 
@@ -43,6 +43,20 @@ export function FunctionaryChildSelector({ user, isReadOnly }: FunctionaryChildS
   const getCurrentValue = () => {
     if (!currentChild) return 'funcionario'
     return currentChild.id
+  }
+
+  // NUEVO: Obtener información de retiro del funcionario
+  const getFuncionarioRetiroInfo = () => {
+    if (!user.funcionarioData) return null
+    
+    const { dondeRetira, cursoPreschool } = user.funcionarioData
+    let retiroText = getFuncionarioRetiroLabel(dondeRetira)
+    
+    if (dondeRetira === 'preschool' && cursoPreschool) {
+      retiroText += ` - ${cursoPreschool}`
+    }
+    
+    return retiroText
   }
 
   return (
@@ -109,6 +123,14 @@ export function FunctionaryChildSelector({ user, isReadOnly }: FunctionaryChildS
                     Funcionario
                   </Badge>
                 </div>
+                
+                {/* NUEVO: Mostrar información de retiro si está disponible */}
+                {user.funcionarioData && (
+                  <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mt-1">
+                    <MapPin className="w-3 h-3" />
+                    <span>Retira en: {getFuncionarioRetiroInfo()}</span>
+                  </div>
+                )}
               </div>
             </Label>
           </motion.div>
@@ -164,6 +186,14 @@ export function FunctionaryChildSelector({ user, isReadOnly }: FunctionaryChildS
                       <span className="text-xs">RUT: {child.rut}</span>
                     )}
                   </div>
+                  
+                  {/* NUEVO: Mostrar tema del estudiante si está disponible */}
+                  {child.tema && (
+                    <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mt-1">
+                      <School className="w-3 h-3" />
+                      <span>Tema: {child.tema}</span>
+                    </div>
+                  )}
                 </div>
               </Label>
             </motion.div>
@@ -224,6 +254,15 @@ export function FunctionaryChildSelector({ user, isReadOnly }: FunctionaryChildS
                     Funcionario
                   </span>
                 </div>
+                {/* NUEVO: Mostrar información de retiro en el resumen */}
+                {user.funcionarioData && (
+                  <div className="flex justify-between">
+                    <span className="text-emerald-700 dark:text-emerald-300">Retira en:</span>
+                    <span className="font-medium text-emerald-900 dark:text-emerald-100">
+                      {getFuncionarioRetiroInfo()}
+                    </span>
+                  </div>
+                )}
               </>
             ) : (
               <>
@@ -244,6 +283,15 @@ export function FunctionaryChildSelector({ user, isReadOnly }: FunctionaryChildS
                     <span className="text-blue-700 dark:text-blue-300">RUT:</span>
                     <span className="font-medium text-blue-900 dark:text-blue-100">
                       {currentChild.rut}
+                    </span>
+                  </div>
+                )}
+                {/* NUEVO: Mostrar tema en el resumen */}
+                {currentChild.tema && (
+                  <div className="flex justify-between">
+                    <span className="text-blue-700 dark:text-blue-300">Tema:</span>
+                    <span className="font-medium text-blue-900 dark:text-blue-100">
+                      {currentChild.tema}
                     </span>
                   </div>
                 )}
