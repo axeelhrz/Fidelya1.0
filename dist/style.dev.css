@@ -244,7 +244,8 @@ body {
   transition: none;
   transform: translateZ(0);
   will-change: transform;
-  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+          backface-visibility: hidden;
   contain: layout style paint;
 }
 
@@ -409,7 +410,8 @@ body.no-scroll {
   border-radius: 12px;
   transition: none;
   transform: translateZ(0);
-  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+          backface-visibility: hidden;
 }
 
 .nav__logo:focus {
@@ -441,7 +443,8 @@ body.no-scroll {
   white-space: nowrap;
   list-style: none;
   background: rgb(15 20 30 / 90%);
-  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+          backdrop-filter: blur(25px);
   backdrop-filter: blur(25px);
   border: 1px solid var(--glass-border);
   border-radius: 50px;
@@ -578,7 +581,8 @@ body.no-scroll {
   pointer-events: auto;
   cursor: pointer;
   background: rgb(15 20 30 / 95%);
-  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+          backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
   border: 1px solid var(--glass-border);
   border-radius: 15px;
@@ -692,7 +696,8 @@ body.no-scroll {
   rgb(21 25 34 / 95%) 0%,
   rgb(30 35 48 / 95%) 100%
 );
-  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+          backdrop-filter: blur(25px);
   backdrop-filter: blur(25px);
   border: 1px solid var(--border-accent);
   border-radius: 25px;
@@ -795,7 +800,8 @@ body.no-scroll {
   rgb(21 25 34 / 98%) 0%,
   rgb(30 35 48 / 98%) 100%
 );
-  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+          backdrop-filter: blur(30px);
   backdrop-filter: blur(30px);
   border: 1px solid var(--border-accent);
   border-radius: 15px;
@@ -929,7 +935,8 @@ body.no-scroll {
   transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
   transform: translateZ(0) !important;
   will-change: transform, box-shadow !important;
-  backface-visibility: hidden !important;
+  -webkit-backface-visibility: hidden !important;
+          backface-visibility: hidden !important;
 }
 
 /* ===== EFECTO DE BRILLO INTERNO ANIMADO ===== */
@@ -1043,7 +1050,8 @@ body.no-scroll {
   #ffebee 50%,
   #fff 100%
 ) !important;
-  background-clip: text !important;
+  -webkit-background-clip: text !important;
+          background-clip: text !important;
   background-clip: text !important;
   -webkit-text-fill-color: transparent !important;
 }
@@ -1225,7 +1233,9 @@ linear-gradient(135deg, var(--primary-bg) 0%, var(--secondary-bg) 100%);
   text-transform: uppercase;
   letter-spacing: 0.8px;
   pointer-events: none;
-  user-select: none;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+          user-select: none;
   background-color: transparent;
   border: 1px solid var(--starflex-red);
   border-radius: 999px;
@@ -1272,7 +1282,8 @@ linear-gradient(135deg, var(--primary-bg) 0%, var(--secondary-bg) 100%);
   #e2e8f0 70%,
   #cbd5e1 100%
 );
-  background-clip: text;
+  -webkit-background-clip: text;
+          background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -1290,7 +1301,8 @@ linear-gradient(135deg, var(--primary-bg) 0%, var(--secondary-bg) 100%);
   #ff6b9d 100%
 );
   filter: drop-shadow(0 0 20px rgb(255 69 105 / 40%));
-  background-clip: text;
+  -webkit-background-clip: text;
+          background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -1325,7 +1337,8 @@ linear-gradient(135deg, var(--primary-bg) 0%, var(--secondary-bg) 100%);
   #ff4500 100%
 );
   filter: drop-shadow(0 0 15px rgb(255 107 53 / 30%));
-  background-clip: text;
+  -webkit-background-clip: text;
+          background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -1341,7 +1354,8 @@ linear-gradient(135deg, var(--primary-bg) 0%, var(--secondary-bg) 100%);
   line-height: 1.7;
   color: var(--text-secondary);
   background: var(--glass-bg);
-  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+          backdrop-filter: blur(20px);
   border: 1px solid var(--border-subtle);
   border-left: 4px solid var(--starflex-crimson-bright);
   border-radius: 20px;
@@ -1436,7 +1450,8 @@ linear-gradient(135deg, var(--primary-bg) 0%, var(--secondary-bg) 100%);
   transition: all var(--transition);
   transform: translateZ(0);
   will-change: transform, box-shadow;
-  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+          backface-visibility: hidden;
 }
 
 .btn--cta::before {
@@ -1479,7 +1494,8 @@ linear-gradient(135deg, var(--primary-bg) 0%, var(--secondary-bg) 100%);
   #ffebee 50%,
   #fff 100%
 );
-  background-clip: text;
+  -webkit-background-clip: text;
+          background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -1521,15 +1537,18 @@ linear-gradient(135deg, var(--primary-bg) 0%, var(--secondary-bg) 100%);
   width: auto;
   max-width: 200px;
   height: 60px;
-  object-fit: contain;
-  object-position: center;
+  -o-object-fit: contain;
+     object-fit: contain;
+  -o-object-position: center;
+     object-position: center;
   image-rendering: optimize-contrast;
   image-rendering: crisp-edges;
   image-rendering: high-quality;
   filter: brightness(1.02) contrast(1.05) saturate(1.08);
   transition: none;
   transform: translateZ(0);
-  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+          backface-visibility: hidden;
 }
 
 .download-btn--google .download-btn__image {
@@ -1594,7 +1613,8 @@ linear-gradient(135deg, var(--primary-bg) 0%, var(--secondary-bg) 100%);
   display: block;
   width: 100%;
   height: auto;
-  object-fit: cover;
+  -o-object-fit: cover;
+     object-fit: cover;
   filter: brightness(1.02) contrast(1.05) saturate(1.08);
   border-radius: 20px;
 }
@@ -1618,7 +1638,8 @@ linear-gradient(135deg, var(--primary-bg) 0%, var(--secondary-bg) 100%);
 
   /* HACER TRANSPARENTE EL CONTENEDOR DEL TELÉFONO */
   background: transparent !important;
-  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+          backdrop-filter: none !important;
   backdrop-filter: none !important;
   transition: none;
   transform: perspective(1200px) rotateY(-8deg) rotateX(2deg);
@@ -1673,8 +1694,10 @@ linear-gradient(135deg, var(--primary-bg) 0%, var(--secondary-bg) 100%);
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  object-position: center;
+  -o-object-fit: cover;
+     object-fit: cover;
+  -o-object-position: center;
+     object-position: center;
   image-rendering: optimize-contrast;
   image-rendering: crisp-edges;
   filter: brightness(1.02) contrast(1.05) saturate(1.08);
@@ -1682,7 +1705,8 @@ linear-gradient(135deg, var(--primary-bg) 0%, var(--secondary-bg) 100%);
   opacity: 1;
   transition: none;
   transform: translateZ(0);
-  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+          backface-visibility: hidden;
 }
 
 .hero__phone-video::-webkit-media-controls {
@@ -1751,7 +1775,8 @@ linear-gradient(180deg, var(--primary-bg) 0%, var(--secondary-bg) 50%, var(--pri
   var(--starflex-red) 50%,
   var(--starflex-crimson-glow) 100%
 );
-  background-clip: text;
+  -webkit-background-clip: text;
+          background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -1829,7 +1854,8 @@ linear-gradient(180deg, var(--primary-bg) 0%, var(--secondary-bg) 50%, var(--pri
   var(--text-primary) 0%,
   var(--starflex-red) 100%
 );
-  background-clip: text;
+  -webkit-background-clip: text;
+          background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -2154,7 +2180,8 @@ linear-gradient(180deg, var(--primary-bg) 0%, var(--secondary-bg) 50%, var(--pri
     display: block !important;
     width: 100% !important;
     height: auto !important;
-    object-fit: cover !important;
+    -o-object-fit: cover !important;
+       object-fit: cover !important;
     filter: brightness(1.02) contrast(1.05) saturate(1.08) !important;
     border-radius: 20px !important;
   }
@@ -2223,7 +2250,8 @@ linear-gradient(180deg, var(--primary-bg) 0%, var(--secondary-bg) 50%, var(--pri
   #e2e8f0 70%,
   #cbd5e1 100%
 );
-  background-clip: text;
+  -webkit-background-clip: text;
+          background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -2240,7 +2268,8 @@ linear-gradient(180deg, var(--primary-bg) 0%, var(--secondary-bg) 50%, var(--pri
   #ff6b9d 100%
 );
   filter: drop-shadow(0 0 20px rgb(184 0 46 / 40%));
-  background-clip: text;
+  -webkit-background-clip: text;
+          background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -2350,7 +2379,8 @@ linear-gradient(180deg, var(--primary-bg) 0%, var(--secondary-bg) 50%, var(--pri
   padding: var(--space-2xl);
   overflow: hidden;
   background: var(--glass-bg);
-  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+          backdrop-filter: blur(25px);
   border: 1px solid var(--glass-border);
   border-radius: 30px;
   box-shadow:
@@ -2392,7 +2422,8 @@ linear-gradient(180deg, var(--primary-bg) 0%, var(--secondary-bg) 50%, var(--pri
 .videos__player {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  -o-object-fit: cover;
+     object-fit: cover;
   border-radius: 18px;
   outline: none;
   transition: all var(--transition);
@@ -2420,7 +2451,8 @@ linear-gradient(180deg, var(--primary-bg) 0%, var(--secondary-bg) 50%, var(--pri
   rgb(0 0 0 / 40%) 50%,
   rgb(0 0 0 / 70%) 100%
 );
-  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+          backdrop-filter: blur(2px);
   border-radius: 18px;
   opacity: 1;
   transition: all var(--transition);
@@ -2516,7 +2548,8 @@ linear-gradient(180deg, var(--primary-bg) 0%, var(--secondary-bg) 50%, var(--pri
   justify-content: space-between;
   padding: var(--space-md);
   background: rgb(0 0 0 / 80%);
-  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+          backdrop-filter: blur(15px);
   border-radius: 15px;
   opacity: 0;
   transition: all var(--transition);
@@ -2578,7 +2611,8 @@ linear-gradient(180deg, var(--primary-bg) 0%, var(--secondary-bg) 50%, var(--pri
   font-weight: 700;
   color: var(--text-primary);
   background: linear-gradient(135deg, var(--text-primary) 0%, var(--starflex-red) 100%);
-  background-clip: text;
+  -webkit-background-clip: text;
+          background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -2597,7 +2631,8 @@ linear-gradient(180deg, var(--primary-bg) 0%, var(--secondary-bg) 50%, var(--pri
   text-align: center;
   pointer-events: auto;
   background: var(--glass-bg);
-  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+          backdrop-filter: blur(25px);
   border: 1px solid var(--border-subtle);
   border-radius: 30px;
   opacity: 0;
@@ -2636,7 +2671,8 @@ linear-gradient(180deg, var(--primary-bg) 0%, var(--secondary-bg) 50%, var(--pri
   var(--text-primary) 0%,
   var(--starflex-crimson-bright) 100%
 );
-  background-clip: text;
+  -webkit-background-clip: text;
+          background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -2745,7 +2781,8 @@ linear-gradient(180deg, var(--primary-bg) 0%, var(--secondary-bg) 50%, var(--pri
   font-weight: 700;
   letter-spacing: -0.02em;
   background: linear-gradient(135deg, var(--text-primary) 0%, var(--starflex-red) 100%);
-  background-clip: text;
+  -webkit-background-clip: text;
+          background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -2772,11 +2809,17 @@ linear-gradient(180deg, var(--primary-bg) 0%, var(--secondary-bg) 50%, var(--pri
   font-size: 1rem;
   color: var(--text-primary);
   background: var(--glass-bg);
-  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+          backdrop-filter: blur(20px);
   border: 1px solid var(--border-subtle);
   border-radius: 20px;
   outline: none;
   transition: all var(--transition);
+}
+
+.faq__search::-moz-placeholder {
+  font-style: italic;
+  color: var(--text-muted);
 }
 
 .faq__search::placeholder {
@@ -2832,7 +2875,8 @@ linear-gradient(180deg, var(--primary-bg) 0%, var(--secondary-bg) 50%, var(--pri
   position: relative;
   overflow: hidden;
   background: var(--glass-bg);
-  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+          backdrop-filter: blur(20px);
   border: 1px solid var(--border-subtle);
   border-radius: 18px;
   opacity: 0;
@@ -3060,9 +3104,12 @@ linear-gradient(180deg, var(--primary-bg) 0%, var(--secondary-bg) 50%, var(--pri
   text-transform: uppercase;
   letter-spacing: 1px;
   pointer-events: none;
-  user-select: none;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+          user-select: none;
   background: rgb(255 69 105 / 10%);
-  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+          backdrop-filter: blur(20px);
   border: 1px solid rgb(255 69 105 / 20%);
   border-radius: 30px;
   box-shadow: 0 8px 25px rgb(255 69 105 / 15%);
@@ -3090,7 +3137,8 @@ linear-gradient(180deg, var(--primary-bg) 0%, var(--secondary-bg) 50%, var(--pri
   #e2e8f0 50%,
   #cbd5e1 100%
 );
-  background-clip: text;
+  -webkit-background-clip: text;
+          background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -3104,7 +3152,8 @@ linear-gradient(180deg, var(--primary-bg) 0%, var(--secondary-bg) 50%, var(--pri
   var(--starflex-crimson-glow) 100%
 );
   filter: drop-shadow(0 0 20px rgb(255 69 105 / 30%));
-  background-clip: text;
+  -webkit-background-clip: text;
+          background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -3157,7 +3206,8 @@ linear-gradient(180deg, var(--primary-bg) 0%, var(--secondary-bg) 50%, var(--pri
   text-align: center;
   cursor: pointer;
   background: rgb(255 255 255 / 2%);
-  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+          backdrop-filter: blur(10px);
   border: 1px solid rgb(255 255 255 / 5%);
   border-radius: 20px;
   opacity: 0;
@@ -3334,7 +3384,8 @@ linear-gradient(180deg, var(--primary-bg) 0%, var(--secondary-bg) 50%, var(--pri
   padding: var(--space-2xl) 0;
   overflow: visible;
   background: rgb(0 0 0 / 20%);
-  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+          backdrop-filter: blur(20px);
   border-top: 1px solid rgb(255 255 255 / 8%);
   opacity: 0;
   transform: translateY(30px);
@@ -3618,7 +3669,8 @@ linear-gradient(180deg, var(--primary-bg) 0%, var(--secondary-bg) 50%, var(--pri
   rgb(0 0 0 / 95%) 0%,
   rgb(21 25 34 / 95%) 100%
 );
-  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+          backdrop-filter: blur(15px);
   border: 1px solid rgb(255 255 255 / 10%);
   border-radius: 12px;
   box-shadow:
@@ -3676,7 +3728,8 @@ linear-gradient(180deg, var(--primary-bg) 0%, var(--secondary-bg) 50%, var(--pri
     rgb(21 25 34 / 98%) 50%,
     rgb(30 35 48 / 98%) 100%
   );
-    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+            backdrop-filter: blur(30px);
     backdrop-filter: blur(30px);
     border-right: 1px solid rgb(255 69 105 / 20%);
     box-shadow:
@@ -3704,7 +3757,8 @@ linear-gradient(180deg, var(--primary-bg) 0%, var(--secondary-bg) 50%, var(--pri
     visibility: hidden;
     content: '';
     background: var(--drawer-overlay-bg);
-    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+            backdrop-filter: blur(5px);
     backdrop-filter: blur(5px);
     opacity: 0;
     transition: all var(--drawer-transition);
@@ -3732,7 +3786,8 @@ linear-gradient(180deg, var(--primary-bg) 0%, var(--secondary-bg) 50%, var(--pri
     rgb(255 45 85 / 10%) 0%,
     rgb(21 25 34 / 90%) 100%
   );
-    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+            backdrop-filter: blur(20px);
     backdrop-filter: blur(20px);
     border: 1px solid rgb(255 45 85 / 30%);
     border-radius: 12px;
@@ -3775,7 +3830,8 @@ linear-gradient(180deg, var(--primary-bg) 0%, var(--secondary-bg) 50%, var(--pri
     rgb(255 45 85 / 8%) 0%,
     rgb(21 25 34 / 90%) 100%
   );
-    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+            backdrop-filter: blur(20px);
     backdrop-filter: blur(20px);
     border: 1px solid rgb(255 45 85 / 20%);
     border-radius: 16px;
@@ -3866,7 +3922,8 @@ linear-gradient(180deg, var(--primary-bg) 0%, var(--secondary-bg) 50%, var(--pri
     text-transform: uppercase;
     letter-spacing: 0.5px;
     background: rgb(255 255 255 / 3%);
-    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
     backdrop-filter: blur(10px);
     border: 1px solid rgb(255 255 255 / 8%);
     border-radius: 12px;
@@ -4328,7 +4385,8 @@ linear-gradient(180deg, var(--primary-bg) 0%, var(--secondary-bg) 50%, var(--pri
 .language-switcher__btn {
   transform: translateZ(0);
   will-change: transform, box-shadow;
-  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+          backface-visibility: hidden;
 }
 
 /* ===== ACCESIBILIDAD MEJORADA ===== */
@@ -4370,7 +4428,16 @@ linear-gradient(180deg, var(--primary-bg) 0%, var(--secondary-bg) 50%, var(--pri
 }
 
 /* ===== SELECCIÓN DE TEXTO ===== */
+::-moz-selection {
+  color: var(--text-primary);
+  background: var(--starflex-crimson);
+}
 ::selection {
+  color: var(--text-primary);
+  background: var(--starflex-crimson);
+}
+
+::-moz-selection {
   color: var(--text-primary);
   background: var(--starflex-crimson);
 }
@@ -4487,7 +4554,8 @@ a.btn--footer {
     border-radius: var(--mobile-feature-image-border-radius) !important;
     box-shadow: none !important;
     transform: translateZ(0) !important;
-    backface-visibility: hidden !important;
+    -webkit-backface-visibility: hidden !important;
+            backface-visibility: hidden !important;
   }
 
   /* VIDEO MÓVIL COMPLETAMENTE LIMPIO */
@@ -4496,12 +4564,14 @@ a.btn--footer {
     height: auto!important;
     padding: 0 !important;
     margin: 0 !important;
-    object-fit: cover !important;
+    -o-object-fit: cover !important;
+       object-fit: cover !important;
     border: none !important;
     border-radius: 12.5% !important;
     box-shadow: 0 8px 25px rgb(0 0 0 / 20%) !important;
     transform: translateZ(0) !important;
-    backface-visibility: hidden !important;
+    -webkit-backface-visibility: hidden !important;
+            backface-visibility: hidden !important;
   }
 
   /* CONTENEDORES PRINCIPALES SIN RESTRICCIONES */
@@ -4612,7 +4682,8 @@ a.btn--footer {
   /* Navbar principal - sin efectos */
   .nav {
     background: transparent !important;
-    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+            backdrop-filter: none !important;
     backdrop-filter: none !important;
     box-shadow: none !important;
   }
@@ -4620,7 +4691,8 @@ a.btn--footer {
   /* Header - sin efectos */
   .header {
     background: transparent !important;
-    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+            backdrop-filter: none !important;
     backdrop-filter: none !important;
     box-shadow: none !important;
   }
@@ -4628,7 +4700,8 @@ a.btn--footer {
   /* ===== BOTÓN HAMBURGUESA - COMPLETAMENTE LIMPIO ===== */
   .nav__toggle {
     background: rgb(0 0 0 / 80%) !important;
-    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+            backdrop-filter: none !important;
     backdrop-filter: none !important;
     border: 1px solid rgb(255 255 255 / 20%) !important;
     box-shadow: none !important;
@@ -4673,7 +4746,8 @@ a.btn--footer {
   /* ===== MENÚ MÓVIL - COMPLETAMENTE LIMPIO ===== */
   .nav__menu {
     background: rgb(0 0 0 / 95%) !important;
-    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+            backdrop-filter: none !important;
     backdrop-filter: none !important;
     border: none !important;
     box-shadow: none !important;
@@ -4694,7 +4768,8 @@ a.btn--footer {
   /* ===== BOTÓN DE CERRAR - COMPLETAMENTE LIMPIO ===== */
   .nav__close {
     background: rgb(0 0 0 / 80%) !important;
-    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+            backdrop-filter: none !important;
     backdrop-filter: none !important;
     border: 1px solid rgb(255 255 255 / 20%) !important;
     box-shadow: none !important;
@@ -4722,7 +4797,8 @@ a.btn--footer {
   /* ===== SELECTOR DE IDIOMA MÓVIL - COMPLETAMENTE LIMPIO ===== */
   .nav__language-mobile {
     background: rgb(0 0 0 / 80%) !important;
-    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+            backdrop-filter: none !important;
     backdrop-filter: none !important;
     border: 1px solid rgb(255 255 255 / 20%) !important;
     box-shadow: none !important;
@@ -4747,7 +4823,8 @@ a.btn--footer {
   /* Opciones de idioma - sin efectos */
   .nav__language-option {
     background: transparent !important;
-    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+            backdrop-filter: none !important;
     backdrop-filter: none !important;
     border: 1px solid rgb(255 255 255 / 20%) !important;
     box-shadow: none !important;
@@ -4771,7 +4848,8 @@ a.btn--footer {
   /* ===== ENLACES DE NAVEGACIÓN - COMPLETAMENTE LIMPIOS ===== */
   .nav__list {
     background: transparent !important;
-    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+            backdrop-filter: none !important;
     backdrop-filter: none !important;
     border: none !important;
     box-shadow: none !important;
@@ -4790,7 +4868,8 @@ a.btn--footer {
 
   .nav__link {
     background: transparent !important;
-    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+            backdrop-filter: none !important;
     backdrop-filter: none !important;
     border: 1px solid rgb(255 255 255 / 20%) !important;
     box-shadow: none !important;
@@ -4930,7 +5009,8 @@ a.btn--footer {
   .nav__link,
   .btn--mobile {
     filter: none !important;
-    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+            backdrop-filter: none !important;
     backdrop-filter: none !important;
   }
 
@@ -5040,7 +5120,8 @@ a.btn--footer {
   .btn--mobile * {
     text-shadow: none !important;
     filter: none !important;
-    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+            backdrop-filter: none !important;
     backdrop-filter: none !important;
     box-shadow: none !important;
     animation: none !important;
@@ -5083,7 +5164,8 @@ a.btn--footer {
   .btn--mobile {
     filter: none !important;
     filter: none !important;
-    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+            backdrop-filter: none !important;
     backdrop-filter: none !important;
   }
 
@@ -5240,7 +5322,8 @@ a.btn--footer {
     transform: none !important;
     transform-style: flat !important;
     perspective: none !important;
-    backface-visibility: visible !important;
+    -webkit-backface-visibility: visible !important;
+            backface-visibility: visible !important;
   }
 
 }
@@ -5269,7 +5352,8 @@ a.btn--footer {
     var(--mobile-glass-bg) 0%,
     rgb(30 35 48 / 90%) 100%
   ) !important;
-    backdrop-filter: blur(15px) !important;
+    -webkit-backdrop-filter: blur(15px) !important;
+            backdrop-filter: blur(15px) !important;
     backdrop-filter: blur(15px) !important;
     border: 1px solid var(--mobile-neon-border) !important;
     box-shadow:
@@ -5322,7 +5406,8 @@ a.btn--footer {
     rgb(21 25 34 / 98%) 50%,
     rgb(30 35 48 / 98%) 100%
   ) !important;
-    backdrop-filter: blur(25px) !important;
+    -webkit-backdrop-filter: blur(25px) !important;
+            backdrop-filter: blur(25px) !important;
     backdrop-filter: blur(25px) !important;
     border-right: 2px solid var(--mobile-neon-border) !important;
     box-shadow:
@@ -5355,7 +5440,8 @@ a.btn--footer {
     var(--mobile-glass-bg) 0%,
     rgb(30 35 48 / 90%) 100%
   ) !important;
-    backdrop-filter: blur(15px) !important;
+    -webkit-backdrop-filter: blur(15px) !important;
+            backdrop-filter: blur(15px) !important;
     backdrop-filter: blur(15px) !important;
     border: 1px solid var(--mobile-neon-border) !important;
     box-shadow:
@@ -5396,7 +5482,8 @@ a.btn--footer {
     var(--mobile-glass-bg) 20%,
     rgb(30 35 48 / 95%) 100%
   ) !important;
-    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+            backdrop-filter: blur(20px) !important;
     backdrop-filter: blur(20px) !important;
     border: 1px solid var(--mobile-neon-border) !important;
     box-shadow:
@@ -5415,7 +5502,8 @@ a.btn--footer {
   .nav__language-option {
     color: rgb(255 255 255 / 90%) !important;
     background: transparent !important;
-    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+            backdrop-filter: blur(10px) !important;
     backdrop-filter: blur(10px) !important;
     border: 1px solid rgb(255 45 85 / 20%) !important;
     box-shadow: 0 2px 8px rgb(0 0 0 / 20%) !important;
@@ -5453,7 +5541,8 @@ a.btn--footer {
     overflow: hidden !important;
     color: rgb(255 255 255 / 90%) !important;
     background: rgb(255 255 255 / 3%) !important;
-    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+            backdrop-filter: blur(10px) !important;
     backdrop-filter: blur(10px) !important;
     border: 1px solid rgb(255 255 255 / 10%) !important;
     box-shadow:
@@ -5622,7 +5711,8 @@ a.btn--footer {
   .btn--mobile {
     transform: translateZ(0) !important;
     will-change: transform, box-shadow !important;
-    backface-visibility: hidden !important;
+    -webkit-backface-visibility: hidden !important;
+            backface-visibility: hidden !important;
   }
 
   /* ===== ESTADOS DE FOCUS PARA ACCESIBILIDAD ===== */
@@ -5970,7 +6060,8 @@ body {
 
   /* ELIMINAR COMPLETAMENTE EL CONTENEDOR */
   background: none !important;
-  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+          backdrop-filter: none !important;
   backdrop-filter: none !important;
   border: none !important;
   border-top: none !important;
@@ -5991,7 +6082,8 @@ body {
 
   /* ELIMINAR CUALQUIER FONDO O BORDE */
   background: none !important;
-  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+          backdrop-filter: none !important;
   backdrop-filter: none !important;
   border: none !important;
   box-shadow: none !important;
@@ -6101,7 +6193,8 @@ body {
 
     /* Eliminar contenedor en móvil también */
     background: none !important;
-    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+            backdrop-filter: none !important;
     backdrop-filter: none !important;
     border: none !important;
     box-shadow: none !important;
@@ -6316,7 +6409,8 @@ html::after {
   /* Resetear completamente cualquier estilo de contenedor */
   background-color: transparent !important;
   background-image: none !important;
-  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+          backdrop-filter: none !important;
   backdrop-filter: none !important;
   border: none !important;
   border-top: none !important;
@@ -6424,8 +6518,10 @@ Con estos cambios:
   /* Solo propiedades básicas de imagen */
   width: 100% !important;
   height: 100% !important;
-  object-fit: cover !important;
-  object-position: center !important;
+  -o-object-fit: cover !important;
+     object-fit: cover !important;
+  -o-object-position: center !important;
+     object-position: center !important;
   filter: brightness(1.02) contrast(1.05) saturate(1.08) !important;
   background-repeat: no-repeat !important;
   background-position: center !important;
@@ -6703,15 +6799,18 @@ Con estos cambios:
   width: auto;
   max-width: 200px;
   height: 60px;
-  object-fit: contain;
-  object-position: center;
+  -o-object-fit: contain;
+     object-fit: contain;
+  -o-object-position: center;
+     object-position: center;
   image-rendering: optimize-contrast;
   image-rendering: crisp-edges;
   image-rendering: high-quality;
   filter: brightness(1.02) contrast(1.05) saturate(1.08);
   transition: none !important;
   transform: translateZ(0);
-  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+          backface-visibility: hidden;
 }
 
 /* ===== CONFIGURACIÓN ESPECÍFICA PARA CADA BOTÓN ===== */
@@ -6855,7 +6954,8 @@ Con estos cambios:
     rgb(21 25 34 / 95%) 0%,
     rgb(30 35 48 / 95%) 100%
   ) !important;
-    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+            backdrop-filter: blur(20px) !important;
     backdrop-filter: blur(20px) !important;
     border: 1px solid var(--border-accent) !important;
     border-radius: var(--radius-md) !important;
@@ -6957,7 +7057,8 @@ Con estos cambios:
     rgb(30 35 48 / 94%) 70%,
     rgb(21 25 34 / 96%) 100%
   ) !important;
-    backdrop-filter: blur(30px) !important;
+    -webkit-backdrop-filter: blur(30px) !important;
+            backdrop-filter: blur(30px) !important;
     backdrop-filter: blur(30px) !important;
 
     /* Bordes y sombras elegantes */
@@ -6988,7 +7089,8 @@ Con estos cambios:
     visibility: hidden !important;
     content: '' !important;
     background: rgb(0 0 0 / 70%) !important;
-    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+            backdrop-filter: blur(8px) !important;
     backdrop-filter: blur(8px) !important;
     opacity: 0 !important;
     transition: all var(--transition-smooth) !important;
@@ -7016,7 +7118,8 @@ Con estos cambios:
     rgb(255 45 85 / 15%) 0%,
     rgb(21 25 34 / 95%) 100%
   ) !important;
-    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+            backdrop-filter: blur(20px) !important;
     backdrop-filter: blur(20px) !important;
     border: 1px solid var(--border-accent) !important;
     border-radius: var(--radius-full) !important;
@@ -7065,7 +7168,8 @@ Con estos cambios:
     var(--mobile-glass) 20%,
     rgb(30 35 48 / 80%) 100%
   ) !important;
-    backdrop-filter: blur(25px) !important;
+    -webkit-backdrop-filter: blur(25px) !important;
+            backdrop-filter: blur(25px) !important;
     backdrop-filter: blur(25px) !important;
     border: 1px solid var(--border-accent) !important;
     border-radius: var(--radius-xl) !important;
@@ -7106,7 +7210,8 @@ Con estos cambios:
     color: rgb(255 255 255 / 90%) !important;
     cursor: pointer !important;
     background: var(--mobile-glass) !important;
-    backdrop-filter: blur(15px) !important;
+    -webkit-backdrop-filter: blur(15px) !important;
+            backdrop-filter: blur(15px) !important;
     backdrop-filter: blur(15px) !important;
     border: 1px solid var(--border-subtle) !important;
     border-radius: var(--radius-lg) !important;
@@ -7189,7 +7294,8 @@ Con estos cambios:
     text-transform: uppercase !important;
     letter-spacing: 0.5px !important;
     background: var(--mobile-glass) !important;
-    backdrop-filter: blur(15px) !important;
+    -webkit-backdrop-filter: blur(15px) !important;
+            backdrop-filter: blur(15px) !important;
     backdrop-filter: blur(15px) !important;
     border: 1px solid var(--border-subtle) !important;
     border-radius: var(--radius-lg) !important;
@@ -7484,7 +7590,8 @@ Con estos cambios:
   .btn--mobile {
     transform: translateZ(0) !important;
     will-change: transform !important;
-    backface-visibility: hidden !important;
+    -webkit-backface-visibility: hidden !important;
+            backface-visibility: hidden !important;
     contain: layout style paint !important;
   }
 
@@ -7510,7 +7617,9 @@ Con estos cambios:
     touch-action: manipulation !important;
     -webkit-tap-highlight-color: transparent !important;
     -webkit-touch-callout: none !important;
-    user-select: none !important;
+    -webkit-user-select: none !important;
+       -moz-user-select: none !important;
+            user-select: none !important;
   }
 
   /* ===== PREVENIR SCROLL DEL BODY ===== */
@@ -7677,7 +7786,8 @@ El resultado es un menú móvil que es:
 
     /* Eliminar todos los estilos cuadrados anteriores */
     background: none !important;
-    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+            backdrop-filter: none !important;
     backdrop-filter: none !important;
     border: none !important;
     box-shadow: none !important;
@@ -7706,7 +7816,8 @@ El resultado es un menú móvil que es:
     rgb(255 255 255 / 5%) 0%,
     rgb(255 255 255 / 10%) 100%
   ) !important;
-    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+            backdrop-filter: blur(10px) !important;
     backdrop-filter: blur(10px) !important;
     border: 1px solid var(--drawer-border) !important;
     border-radius: 25px !important;
@@ -7983,7 +8094,8 @@ El resultado es un menú móvil que es:
   ) !important;
 
     /* Efectos sutiles */
-    backdrop-filter: blur(15px) !important;
+    -webkit-backdrop-filter: blur(15px) !important;
+            backdrop-filter: blur(15px) !important;
     backdrop-filter: blur(15px) !important;
     border: 1px solid rgb(255 255 255 / 10%) !important;
     border-radius: 20px !important;
@@ -8094,7 +8206,8 @@ El resultado es un menú móvil que es:
   .btn--mobile {
     transform: translateZ(0) !important;
     will-change: transform !important;
-    backface-visibility: hidden !important;
+    -webkit-backface-visibility: hidden !important;
+            backface-visibility: hidden !important;
     contain: layout style paint !important;
   }
 
@@ -8116,7 +8229,9 @@ El resultado es un menú móvil que es:
     touch-action: manipulation !important;
     -webkit-tap-highlight-color: transparent !important;
     -webkit-touch-callout: none !important;
-    user-select: none !important;
+    -webkit-user-select: none !important;
+       -moz-user-select: none !important;
+            user-select: none !important;
   }
 
   /* ===== MODO OSCURO ===== */
@@ -8210,7 +8325,8 @@ El resultado es un menú móvil que es:
     rgb(30 35 48 / 94%) 70%,
     rgb(21 25 34 / 96%) 100%
   ) !important;
-    backdrop-filter: blur(30px) !important;
+    -webkit-backdrop-filter: blur(30px) !important;
+            backdrop-filter: blur(30px) !important;
     backdrop-filter: blur(30px) !important;
 
     /* Bordes y sombras */
@@ -8249,7 +8365,8 @@ El resultado es un menú móvil que es:
     rgb(255 45 85 / 15%) 0%,
     rgb(21 25 34 / 95%) 100%
   ) !important;
-    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+            backdrop-filter: blur(20px) !important;
     backdrop-filter: blur(20px) !important;
     border: 1px solid rgb(255 45 85 / 40%) !important;
     border-radius: 50% !important;
@@ -8309,7 +8426,8 @@ El resultado es un menú móvil que es:
     rgb(255 255 255 / 5%) 50%,
     rgb(30 35 48 / 80%) 100%
   ) !important;
-    backdrop-filter: blur(15px) !important;
+    -webkit-backdrop-filter: blur(15px) !important;
+            backdrop-filter: blur(15px) !important;
     backdrop-filter: blur(15px) !important;
     border: 1px solid rgb(255 45 85 / 20%) !important;
     border-radius: 18px !important;
@@ -8359,7 +8477,8 @@ El resultado es un menú móvil que es:
 
     /* Diseño pill moderno */
     background: rgb(255 255 255 / 8%) !important;
-    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+            backdrop-filter: blur(10px) !important;
     backdrop-filter: blur(10px) !important;
     border: 1px solid rgb(255 255 255 / 15%) !important;
     border-radius: 20px !important;
@@ -8684,7 +8803,8 @@ El resultado es un menú móvil que es:
   .btn--mobile {
     transform: translateZ(0) !important;
     will-change: transform !important;
-    backface-visibility: hidden !important;
+    -webkit-backface-visibility: hidden !important;
+            backface-visibility: hidden !important;
     contain: layout style paint !important;
   }
 
@@ -8708,7 +8828,9 @@ El resultado es un menú móvil que es:
     touch-action: manipulation !important;
     -webkit-tap-highlight-color: transparent !important;
     -webkit-touch-callout: none !important;
-    user-select: none !important;
+    -webkit-user-select: none !important;
+       -moz-user-select: none !important;
+            user-select: none !important;
   }
 
 }
@@ -8738,7 +8860,8 @@ El resultado es un menú móvil que es:
     visibility: hidden;
     content: '';
     background: var(--drawer-overlay-bg);
-    backdrop-filter: blur(var(--drawer-overlay-blur));
+    -webkit-backdrop-filter: blur(var(--drawer-overlay-blur));
+            backdrop-filter: blur(var(--drawer-overlay-blur));
     backdrop-filter: blur(var(--drawer-overlay-blur));
     opacity: 0;
     transition: opacity 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
@@ -8787,7 +8910,8 @@ El resultado es un menú móvil que es:
 /* ===== OPTIMIZACIONES PARA DISPOSITIVOS DE BAJA POTENCIA ===== */
 @media (prefers-reduced-motion: reduce) and (width <= 1023px) {
   .nav__menu::before {
-    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+            backdrop-filter: none;
     backdrop-filter: none;
   }
 }
@@ -8818,7 +8942,8 @@ El resultado es un menú móvil que es:
     pointer-events: none !important;
     visibility: hidden !important;
     background: rgb(0 0 0 / 70%) !important;
-    backdrop-filter: blur(5px) !important;
+    -webkit-backdrop-filter: blur(5px) !important;
+            backdrop-filter: blur(5px) !important;
     backdrop-filter: blur(5px) !important;
     opacity: 0 !important;
     transition: opacity 0.4s ease, visibility 0.4s ease !important;
@@ -8851,7 +8976,8 @@ El resultado es un menú móvil que es:
 
     /* No debe afectar el layout del documento */
     contain: layout style paint !important;
-    backface-visibility: hidden !important;
+    -webkit-backface-visibility: hidden !important;
+            backface-visibility: hidden !important;
   }
 
   .nav__menu.active {
@@ -8908,7 +9034,8 @@ El resultado es un menú móvil que es:
     }
 
     .nav__menu::before {
-      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+              backdrop-filter: none !important;
       backdrop-filter: none !important;
       transition: opacity 0.2s ease, visibility 0.2s ease !important;
     }
@@ -8938,7 +9065,8 @@ El resultado es un menú móvil que es:
     .nav__menu {
       transform: translateZ(0) !important;
       transform: translateZ(0) !important;
-      backface-visibility: hidden !important;
+      -webkit-backface-visibility: hidden !important;
+              backface-visibility: hidden !important;
       backface-visibility: hidden !important;
     }
   }
@@ -8992,7 +9120,9 @@ El resultado es un menú móvil que es:
 .nav__link {
   touch-action: manipulation !important;
   cursor: pointer !important;
-  user-select: none !important;
+  -webkit-user-select: none !important;
+     -moz-user-select: none !important;
+          user-select: none !important;
   -webkit-tap-highlight-color: transparent !important;
 }
 
@@ -9074,7 +9204,8 @@ El resultado es un menú móvil que es:
 
     /* Fondo que sigue la línea del drawer */
     background: var(--language-bg) !important;
-    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+            backdrop-filter: blur(20px) !important;
     backdrop-filter: blur(20px) !important;
 
     /* Bordes elegantes */
@@ -9182,11 +9313,14 @@ El resultado es un menú móvil que es:
 
     /* Interactividad */
     cursor: pointer !important;
-    user-select: none !important;
+    -webkit-user-select: none !important;
+       -moz-user-select: none !important;
+            user-select: none !important;
 
     /* Diseño que complementa los enlaces del drawer */
     background: rgb(255 255 255 / 8%) !important;
-    backdrop-filter: blur(15px) !important;
+    -webkit-backdrop-filter: blur(15px) !important;
+            backdrop-filter: blur(15px) !important;
     backdrop-filter: blur(15px) !important;
     border: 1px solid rgb(255 255 255 / 15%) !important;
     border-radius: 16px !important;
@@ -9473,7 +9607,8 @@ El resultado es un menú móvil que es:
   .nav__language-option {
     transform: translateZ(0) !important;
     will-change: transform !important;
-    backface-visibility: hidden !important;
+    -webkit-backface-visibility: hidden !important;
+            backface-visibility: hidden !important;
     contain: layout style paint !important;
   }
 
@@ -9482,7 +9617,9 @@ El resultado es un menú móvil que es:
     touch-action: manipulation !important;
     -webkit-tap-highlight-color: transparent !important;
     -webkit-touch-callout: none !important;
-    user-select: none !important;
+    -webkit-user-select: none !important;
+       -moz-user-select: none !important;
+            user-select: none !important;
   }
 
   /* Feedback táctil mejorado */
@@ -9527,7 +9664,8 @@ El resultado es un menú móvil que es:
 
     /* ELIMINAR COMPLETAMENTE LA APARIENCIA DE CONTENEDOR */
     background: none !important;
-    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+            backdrop-filter: none !important;
     backdrop-filter: none !important;
     border: none !important;
     border-radius: 0 !important;
@@ -9616,11 +9754,14 @@ El resultado es un menú móvil que es:
 
     /* Interactividad que sigue el patrón del drawer */
     cursor: pointer !important;
-    user-select: none !important;
+    -webkit-user-select: none !important;
+       -moz-user-select: none !important;
+            user-select: none !important;
 
     /* Diseño que sigue la línea de los enlaces del drawer */
     background: var(--language-option-bg) !important;
-    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+            backdrop-filter: blur(10px) !important;
     backdrop-filter: blur(10px) !important;
     border: 1px solid var(--language-option-border) !important;
     border-radius: 12px !important;
@@ -9901,7 +10042,8 @@ El resultado es un menú móvil que es:
   .nav__language-option {
     transform: translateZ(0) !important;
     will-change: transform !important;
-    backface-visibility: hidden !important;
+    -webkit-backface-visibility: hidden !important;
+            backface-visibility: hidden !important;
     contain: layout style paint !important;
   }
 
@@ -9910,7 +10052,9 @@ El resultado es un menú móvil que es:
     touch-action: manipulation !important;
     -webkit-tap-highlight-color: transparent !important;
     -webkit-touch-callout: none !important;
-    user-select: none !important;
+    -webkit-user-select: none !important;
+       -moz-user-select: none !important;
+            user-select: none !important;
   }
 
   /* Feedback táctil */
@@ -9945,7 +10089,8 @@ El resultado es un menú móvil que es:
 
     /* COMPLETAMENTE INVISIBLE COMO CONTENEDOR */
     background: none !important;
-    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+            backdrop-filter: none !important;
     backdrop-filter: none !important;
     border: none !important;
     border-radius: 0 !important;
@@ -9972,7 +10117,8 @@ El resultado es un menú móvil que es:
     /* NINGÚN EFECTO EN EL CONTENEDOR */
     background: none !important;
     filter: none !important;
-    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+            backdrop-filter: none !important;
     backdrop-filter: none !important;
     border: none !important;
     box-shadow: none !important;
@@ -10111,11 +10257,14 @@ El resultado es un menú móvil que es:
 
     /* SOLO ESTOS BOTONES TIENEN INTERACTIVIDAD */
     cursor: pointer !important;
-    user-select: none !important;
+    -webkit-user-select: none !important;
+       -moz-user-select: none !important;
+            user-select: none !important;
 
     /* Diseño integrado */
     background: rgb(255 255 255 / 8%) !important;
-    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+            backdrop-filter: blur(10px) !important;
     backdrop-filter: blur(10px) !important;
     border: 1px solid rgb(255 255 255 / 15%) !important;
     border-radius: 12px !important;
@@ -10303,7 +10452,8 @@ El resultado es un menú móvil que es:
   .nav__language-option {
     transform: translateZ(0) !important;
     will-change: transform !important;
-    backface-visibility: hidden !important;
+    -webkit-backface-visibility: hidden !important;
+            backface-visibility: hidden !important;
     contain: layout style paint !important;
   }
 
@@ -10386,11 +10536,14 @@ El resultado es un menú móvil que es:
 
     /* Interactividad suave */
     cursor: pointer !important;
-    user-select: none !important;
+    -webkit-user-select: none !important;
+       -moz-user-select: none !important;
+            user-select: none !important;
 
     /* Diseño compacto */
     background: rgb(255 255 255 / 8%) !important;
-    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+            backdrop-filter: blur(10px) !important;
     backdrop-filter: blur(10px) !important;
     border: 1px solid rgb(255 255 255 / 15%) !important;
     border-radius: 10px !important;
@@ -10705,7 +10858,8 @@ El resultado es un menú móvil que es:
   .nav__language-option {
     transform: translateZ(0) !important;
     will-change: transform !important;
-    backface-visibility: hidden !important;
+    -webkit-backface-visibility: hidden !important;
+            backface-visibility: hidden !important;
     contain: layout style paint !important;
   }
 
@@ -10714,7 +10868,9 @@ El resultado es un menú móvil que es:
     touch-action: manipulation !important;
     -webkit-tap-highlight-color: transparent !important;
     -webkit-touch-callout: none !important;
-    user-select: none !important;
+    -webkit-user-select: none !important;
+       -moz-user-select: none !important;
+            user-select: none !important;
   }
 
   /* Feedback táctil suave */
@@ -10783,7 +10939,8 @@ El resultado es un menú móvil que es:
 
     /* Sin apariencia de contenedor */
     background: none !important;
-    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+            backdrop-filter: none !important;
     backdrop-filter: none !important;
     border: none !important;
     border-radius: 0 !important;
@@ -10822,7 +10979,8 @@ El resultado es un menú móvil que es:
     rgb(30 35 48 / 94%) 70%,
     rgb(21 25 34 / 96%) 100%
   ) !important;
-    backdrop-filter: blur(25px) !important;
+    -webkit-backdrop-filter: blur(25px) !important;
+            backdrop-filter: blur(25px) !important;
     backdrop-filter: blur(25px) !important;
     border-right: 2px solid rgb(255 45 85 / 30%) !important;
     box-shadow:
@@ -10849,7 +11007,8 @@ El resultado es un menú móvil que es:
     /* Overlay mejorado para cerrar haciendo clic fuera */
     content: '' !important;
     background: rgb(0 0 0 / 70%) !important;
-    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+            backdrop-filter: blur(8px) !important;
     backdrop-filter: blur(8px) !important;
     opacity: 0 !important;
     transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
@@ -11061,7 +11220,8 @@ El resultado es un menú móvil que es:
     rgb(30 35 48 / 94%) 70%,
     rgb(21 25 34 / 96%) 100%
   ) !important;
-    backdrop-filter: blur(30px) !important;
+    -webkit-backdrop-filter: blur(30px) !important;
+            backdrop-filter: blur(30px) !important;
     backdrop-filter: blur(30px) !important;
 
     /* Bordes y sombras */
@@ -11270,7 +11430,8 @@ El resultado es un menú móvil que es:
 
     /* Sin contenedor visible */
     background: none !important;
-    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+            backdrop-filter: none !important;
     backdrop-filter: none !important;
     border: none !important;
     border-radius: 0 !important;
@@ -11354,11 +11515,14 @@ El resultado es un menú móvil que es:
 
     /* Interactividad */
     cursor: pointer !important;
-    user-select: none !important;
+    -webkit-user-select: none !important;
+       -moz-user-select: none !important;
+            user-select: none !important;
 
     /* Diseño integrado */
     background: rgb(255 255 255 / 8%) !important;
-    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+            backdrop-filter: blur(10px) !important;
     backdrop-filter: blur(10px) !important;
     border: 1px solid rgb(255 255 255 / 15%) !important;
     border-radius: 12px !important;
@@ -11645,7 +11809,8 @@ El resultado es un menú móvil que es:
   .nav__language-option {
     transform: translateZ(0) !important;
     will-change: transform !important;
-    backface-visibility: hidden !important;
+    -webkit-backface-visibility: hidden !important;
+            backface-visibility: hidden !important;
     contain: layout style paint !important;
   }
 
@@ -11655,7 +11820,9 @@ El resultado es un menú móvil que es:
     touch-action: manipulation !important;
     -webkit-tap-highlight-color: transparent !important;
     -webkit-touch-callout: none !important;
-    user-select: none !important;
+    -webkit-user-select: none !important;
+       -moz-user-select: none !important;
+            user-select: none !important;
   }
 
   /* Feedback táctil */
@@ -11722,7 +11889,8 @@ El resultado es un menú móvil que es:
     rgb(30 35 48 / 94%) 70%,
     rgb(21 25 34 / 96%) 100%
   ) !important;
-    backdrop-filter: blur(25px) !important;
+    -webkit-backdrop-filter: blur(25px) !important;
+            backdrop-filter: blur(25px) !important;
     backdrop-filter: blur(25px) !important;
     border-right: 2px solid rgb(255 45 85 / 30%) !important;
     box-shadow:
@@ -11930,7 +12098,8 @@ El resultado es un menú móvil que es:
 
     /* Sin contenedor visible */
     background: none !important;
-    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+            backdrop-filter: none !important;
     backdrop-filter: none !important;
     border: none !important;
     border-radius: 0 !important;
@@ -12014,11 +12183,14 @@ El resultado es un menú móvil que es:
 
     /* Interactividad más rápida */
     cursor: pointer !important;
-    user-select: none !important;
+    -webkit-user-select: none !important;
+       -moz-user-select: none !important;
+            user-select: none !important;
 
     /* Diseño compacto */
     background: rgb(255 255 255 / 8%) !important;
-    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+            backdrop-filter: blur(10px) !important;
     backdrop-filter: blur(10px) !important;
     border: 1px solid rgb(255 255 255 / 15%) !important;
     border-radius: 10px !important;
@@ -12311,7 +12483,8 @@ El resultado es un menú móvil que es:
   .nav__language-option {
     transform: translateZ(0) !important;
     will-change: transform !important;
-    backface-visibility: hidden !important;
+    -webkit-backface-visibility: hidden !important;
+            backface-visibility: hidden !important;
     contain: layout style paint !important;
   }
 
@@ -12321,7 +12494,9 @@ El resultado es un menú móvil que es:
     touch-action: manipulation !important;
     -webkit-tap-highlight-color: transparent !important;
     -webkit-touch-callout: none !important;
-    user-select: none !important;
+    -webkit-user-select: none !important;
+       -moz-user-select: none !important;
+            user-select: none !important;
   }
 
   /* Feedback táctil compacto */
@@ -12349,7 +12524,8 @@ El resultado es un menú móvil que es:
     /* Overlay para cerrar haciendo clic fuera */
     content: '' !important;
     background: rgb(0 0 0 / 70%) !important;
-    backdrop-filter: blur(6px) !important;
+    -webkit-backdrop-filter: blur(6px) !important;
+            backdrop-filter: blur(6px) !important;
     backdrop-filter: blur(6px) !important;
     opacity: 0 !important;
     transition: all 0.25s ease !important;
@@ -12412,7 +12588,8 @@ El resultado es un menú móvil que es:
     rgb(30 35 48 / 94%) 70%,
     rgb(21 25 34 / 96%) 100%
   ) !important;
-    backdrop-filter: blur(25px) !important;
+    -webkit-backdrop-filter: blur(25px) !important;
+            backdrop-filter: blur(25px) !important;
     backdrop-filter: blur(25px) !important;
     border-right: 2px solid rgb(255 45 85 / 30%) !important;
     box-shadow:
@@ -12469,7 +12646,8 @@ El resultado es un menú móvil que es:
 
     /* Sin contenedor visible */
     background: none !important;
-    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+            backdrop-filter: none !important;
     backdrop-filter: none !important;
     border: none !important;
     border-radius: 0 !important;
@@ -12553,11 +12731,14 @@ El resultado es un menú móvil que es:
 
     /* Interactividad más rápida */
     cursor: pointer !important;
-    user-select: none !important;
+    -webkit-user-select: none !important;
+       -moz-user-select: none !important;
+            user-select: none !important;
 
     /* Diseño compacto */
     background: rgb(255 255 255 / 8%) !important;
-    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+            backdrop-filter: blur(10px) !important;
     backdrop-filter: blur(10px) !important;
     border: 1px solid rgb(255 255 255 / 15%) !important;
     border-radius: 10px !important;
@@ -12954,7 +13135,8 @@ El resultado es un menú móvil que es:
   .nav__language-option {
     transform: translateZ(0) !important;
     will-change: transform !important;
-    backface-visibility: hidden !important;
+    -webkit-backface-visibility: hidden !important;
+            backface-visibility: hidden !important;
     contain: layout style paint !important;
   }
 
@@ -12963,7 +13145,9 @@ El resultado es un menú móvil que es:
     touch-action: manipulation !important;
     -webkit-tap-highlight-color: transparent !important;
     -webkit-touch-callout: none !important;
-    user-select: none !important;
+    -webkit-user-select: none !important;
+       -moz-user-select: none !important;
+            user-select: none !important;
   }
 
   /* Feedback táctil compacto */
@@ -12987,7 +13171,8 @@ El resultado es un menú móvil que es:
     /* Overlay para cerrar haciendo clic fuera */
     content: '' !important;
     background: rgb(0 0 0 / 70%) !important;
-    backdrop-filter: blur(6px) !important;
+    -webkit-backdrop-filter: blur(6px) !important;
+            backdrop-filter: blur(6px) !important;
     backdrop-filter: blur(6px) !important;
     opacity: 0 !important;
     transition: all 0.25s ease !important;
@@ -13053,7 +13238,8 @@ El resultado es un menú móvil que es:
     /* Transición suave para el logo */
     transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
     transform: translateZ(0) !important;
-    backface-visibility: hidden !important;
+    -webkit-backface-visibility: hidden !important;
+            backface-visibility: hidden !important;
   }
 
   /* CUANDO EL MENÚ ESTÁ ACTIVO, OCULTAR EL LOGO */
@@ -13132,7 +13318,8 @@ El resultado es un menú móvil que es:
     rgb(30 35 48 / 94%) 70%,
     rgb(21 25 34 / 96%) 100%
   ) !important;
-    backdrop-filter: blur(25px) !important;
+    -webkit-backdrop-filter: blur(25px) !important;
+            backdrop-filter: blur(25px) !important;
     backdrop-filter: blur(25px) !important;
     border-right: 2px solid rgb(255 45 85 / 30%) !important;
     box-shadow:
@@ -13167,7 +13354,8 @@ El resultado es un menú móvil que es:
 
     /* Sin contenedor visible */
     background: none !important;
-    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+            backdrop-filter: none !important;
     backdrop-filter: none !important;
     border: none !important;
     border-radius: 0 !important;
@@ -13251,11 +13439,14 @@ El resultado es un menú móvil que es:
 
     /* Interactividad más rápida */
     cursor: pointer !important;
-    user-select: none !important;
+    -webkit-user-select: none !important;
+       -moz-user-select: none !important;
+            user-select: none !important;
 
     /* Diseño compacto */
     background: rgb(255 255 255 / 8%) !important;
-    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+            backdrop-filter: blur(10px) !important;
     backdrop-filter: blur(10px) !important;
     border: 1px solid rgb(255 255 255 / 15%) !important;
     border-radius: 10px !important;
@@ -13654,7 +13845,8 @@ El resultado es un menú móvil que es:
   .nav__language-option {
     transform: translateZ(0) !important;
     will-change: transform !important;
-    backface-visibility: hidden !important;
+    -webkit-backface-visibility: hidden !important;
+            backface-visibility: hidden !important;
     contain: layout style paint !important;
   }
 
@@ -13663,7 +13855,9 @@ El resultado es un menú móvil que es:
     touch-action: manipulation !important;
     -webkit-tap-highlight-color: transparent !important;
     -webkit-touch-callout: none !important;
-    user-select: none !important;
+    -webkit-user-select: none !important;
+       -moz-user-select: none !important;
+            user-select: none !important;
   }
 
   /* Feedback táctil compacto */
@@ -13687,7 +13881,8 @@ El resultado es un menú móvil que es:
     /* Overlay para cerrar haciendo clic fuera */
     content: '' !important;
     background: rgb(0 0 0 / 70%) !important;
-    backdrop-filter: blur(6px) !important;
+    -webkit-backdrop-filter: blur(6px) !important;
+            backdrop-filter: blur(6px) !important;
     backdrop-filter: blur(6px) !important;
     opacity: 0 !important;
     transition: all 0.25s ease !important;
@@ -13739,7 +13934,8 @@ El resultado es un menú móvil que es:
 
     /* Sin contenedor visible */
     background: none !important;
-    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+            backdrop-filter: none !important;
     backdrop-filter: none !important;
     border: none !important;
     border-radius: 0 !important;
@@ -13836,11 +14032,14 @@ El resultado es un menú móvil que es:
 
     /* Interactividad suave */
     cursor: pointer !important;
-    user-select: none !important;
+    -webkit-user-select: none !important;
+       -moz-user-select: none !important;
+            user-select: none !important;
 
     /* Diseño integrado */
     background: var(--language-option-bg) !important;
-    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+            backdrop-filter: blur(10px) !important;
     backdrop-filter: blur(10px) !important;
     border: 1px solid var(--language-option-border) !important;
     border-radius: 10px !important;
@@ -14016,7 +14215,8 @@ El resultado es un menú móvil que es:
     filter: none !important;
     transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
     transform: translateZ(0) !important;
-    backface-visibility: hidden !important;
+    -webkit-backface-visibility: hidden !important;
+            backface-visibility: hidden !important;
   }
 }
 
@@ -14144,3 +14344,5 @@ El resultado es un menú móvil que es:
     padding-bottom: clamp(0.75rem, 2vh, 1rem) !important;
   }
 }
+
+/*# sourceMappingURL=style.dev.css.map */
