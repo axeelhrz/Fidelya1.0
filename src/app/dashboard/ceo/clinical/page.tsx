@@ -15,10 +15,12 @@ import {
   AlertCircle,
   CheckCircle,
   Clock,
-  Brain
+  Brain,
+  Settings
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import ClinicalPanel from '@/components/dashboard/ClinicalPanel';
+import DataSeeder from '@/components/admin/DataSeeder';
 import { useClinicalData } from '@/hooks/useDashboardData';
 import { useAuth } from '@/contexts/AuthContext';
 import Button from '@/components/ui/Button';
@@ -28,6 +30,7 @@ export default function ClinicalOperationsPage() {
   const { user } = useAuth();
   const { data, loading, error, refresh } = useClinicalData();
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [showSeeder, setShowSeeder] = useState(false);
 
   // Actualizar tiempo cada segundo
   useEffect(() => {
@@ -41,18 +44,18 @@ export default function ClinicalOperationsPage() {
     return `${value.toFixed(1)}%`;
   };
 
-  // Calcular métricas en tiempo real
+  // Calcular métricas en tiempo real desde Firebase
   const getRealtimeMetrics = () => {
     if (!data) {
       return [
         { icon: Heart, label: 'Salud Operativa', value: '0%', color: '#6B7280', loading: true },
-        { icon: Shield, label: 'Seguridad', value: '98.7%', color: '#10B981', loading: false },
+        { icon: Shield, label: 'Seguridad', value: '0%', color: '#6B7280', loading: true },
         { icon: Activity, label: 'Eficiencia', value: '0%', color: '#6B7280', loading: true },
         { icon: Brain, label: 'Bienestar', value: '0%', color: '#6B7280', loading: true }
       ];
     }
 
-    // Calcular salud operativa basada en múltiples factores
+    // Calcular salud operativa basada en múltiples factores reales
     const operationalHealth = (
       (data.occupancyRate * 0.3) +
       ((100 - data.cancellationRate) * 0.2) +
@@ -60,19 +63,22 @@ export default function ClinicalOperationsPage() {
       (data.adherenceRate * 0.3)
     );
 
-    // Calcular eficiencia clínica
+    // Calcular eficiencia clínica real
     const clinicalEfficiency = (
       (data.improvementRate * 0.4) +
       (data.adherenceRate * 0.3) +
       ((100 - data.cancellationRate) * 0.3)
     );
 
-    // Índice de bienestar general
+    // Índice de bienestar basado en evaluaciones reales
     const wellnessIndex = (
       (data.improvementRate * 0.5) +
       ((27 - data.averagePhq9) / 27 * 100 * 0.3) +
       ((21 - data.averageGad7) / 21 * 100 * 0.2)
     );
+
+    // Seguridad del paciente (basado en alertas y riesgo)
+    const patientSafety = Math.max(0, 100 - (data.riskPatients * 5));
 
     return [
       { 
@@ -85,8 +91,8 @@ export default function ClinicalOperationsPage() {
       { 
         icon: Shield, 
         label: 'Seguridad Paciente', 
-        value: '98.7%', // Valor fijo alto para seguridad
-        color: '#10B981',
+        value: formatPercentage(patientSafety), 
+        color: patientSafety > 90 ? '#10B981' : patientSafety > 75 ? '#F59E0B' : '#EF4444',
         loading: false
       },
       { 
@@ -108,7 +114,7 @@ export default function ClinicalOperationsPage() {
 
   const realtimeMetrics = getRealtimeMetrics();
 
-  // Calcular estado de salud clínica
+  // Calcular estado de salud clínica desde datos reales
   const getClinicalHealth = () => {
     if (!data) return { score: 0, status: 'unknown', message: 'Sin datos', alerts: [] };
 
@@ -164,14 +170,11 @@ export default function ClinicalOperationsPage() {
     }
 
     // Factor 5: Pacientes de riesgo (10%)
-    const totalPatients = Object.values(data.therapistUtilization).reduce((sum, util) => sum + util, 0) / 10; // Estimación
-    const riskRatio = totalPatients > 0 ? (data.riskPatients / totalPatients) * 100 : 0;
-    
-    if (riskRatio < 10) {
+    if (data.riskPatients < 3) {
       score += 10;
-    } else if (riskRatio < 20) {
+    } else if (data.riskPatients < 6) {
       score += 8;
-    } else if (riskRatio < 30) {
+    } else if (data.riskPatients < 10) {
       score += 5;
     } else {
       score += 2;
@@ -219,6 +222,54 @@ export default function ClinicalOperationsPage() {
       default: return Activity;
     }
   };
+
+  if (showSeeder) {
+    return (
+      <div style={{ 
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #F9FAFB 0%, #FEF2F2 100%)',
+        position: 'relative',
+        overflow: 'hidden'
+      }}>
+        <div style={{ 
+          maxWidth: '1400px', 
+          margin: '0 auto', 
+          padding: '2rem'
+        }}>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            style={{ marginBottom: '2rem' }}
+          >
+            <button
+              onClick={() => setShowSeeder(false)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                padding: '0.75rem 1rem',
+                background: 'rgba(255, 255, 255, 0.8)',
+                backdropFilter: 'blur(12px)',
+                border: '1px solid rgba(229, 231, 235, 0.6)',
+                borderRadius: '12px',
+                cursor: 'pointer',
+                fontSize: '0.875rem',
+                fontWeight: 500,
+                color: '#6B7280',
+                transition: 'all 0.2s ease',
+                marginBottom: '2rem',
+                fontFamily: 'Inter, sans-serif'
+              }}
+            >
+              <ArrowLeft size={16} />
+              Volver a Operaciones Clínicas
+            </button>
+          </motion.div>
+          <DataSeeder />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ 
@@ -286,11 +337,13 @@ export default function ClinicalOperationsPage() {
                 width: '80px',
                 height: '80px',
                 background: error 
-                  ? 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)'
+                  ? 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)'
                   : 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)',
                 borderRadius: '20px',
                 marginBottom: '1.5rem',
-                boxShadow: '0 20px 25px -5px rgba(239, 68, 68, 0.3)'
+                boxShadow: error 
+                  ? '0 20px 25px -5px rgba(245, 158, 11, 0.3)'
+                  : '0 20px 25px -5px rgba(239, 68, 68, 0.3)'
               }}
             >
               {error ? <WifiOff size={40} color="white" /> : <Heart size={40} color="white" />}
@@ -298,7 +351,9 @@ export default function ClinicalOperationsPage() {
 
             <h1 style={{ 
               fontSize: '3rem',
-              background: 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)',
+              background: error 
+                ? 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)'
+                : 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text',
@@ -314,7 +369,8 @@ export default function ClinicalOperationsPage() {
               alignItems: 'center',
               justifyContent: 'center',
               gap: '1rem',
-              marginBottom: '1rem'
+              marginBottom: '1rem',
+              flexWrap: 'wrap'
             }}>
               <div style={{
                 display: 'flex',
@@ -323,15 +379,15 @@ export default function ClinicalOperationsPage() {
                 padding: '0.5rem 1rem',
                 background: 'rgba(255, 255, 255, 0.8)',
                 borderRadius: '1rem',
-                border: error ? '1px solid rgba(239, 68, 68, 0.2)' : '1px solid rgba(16, 185, 129, 0.2)'
+                border: error ? '1px solid rgba(245, 158, 11, 0.2)' : '1px solid rgba(16, 185, 129, 0.2)'
               }}>
-                {error ? <WifiOff size={16} color="#EF4444" /> : <Wifi size={16} color="#10B981" />}
+                {error ? <WifiOff size={16} color="#F59E0B" /> : <Wifi size={16} color="#10B981" />}
                 <span style={{ 
                   fontSize: '0.875rem', 
                   fontWeight: 600,
-                  color: error ? '#EF4444' : '#10B981'
+                  color: error ? '#F59E0B' : '#10B981'
                 }}>
-                  {error ? 'Sin conexión' : 'Conectado a Firebase'}
+                  {error ? 'Sin conexión Firebase' : 'Conectado a Firebase'}
                 </span>
               </div>
               
@@ -352,10 +408,32 @@ export default function ClinicalOperationsPage() {
                 }}>
                   {currentTime.toLocaleTimeString('es-ES', { 
                     hour: '2-digit', 
-                    minute: '2-digit'
+                    minute: '2-digit',
+                    second: '2-digit'
                   })}
                 </span>
               </div>
+
+              {user?.role?.toString() === 'admin' && (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '0.5rem 1rem',
+                  background: 'rgba(255, 255, 255, 0.8)',
+                  borderRadius: '1rem',
+                  border: '1px solid rgba(139, 92, 246, 0.2)'
+                }}>
+                  <Database size={16} color="#8B5CF6" />
+                  <span style={{ 
+                    fontSize: '0.875rem', 
+                    fontWeight: 600,
+                    color: '#6B46C1'
+                  }}>
+                    Centro: {user.centerId}
+                  </span>
+                </div>
+              )}
             </div>
             
             <p style={{ 
@@ -369,7 +447,7 @@ export default function ClinicalOperationsPage() {
             }}>
               {error 
                 ? 'Conecta Firebase para ver monitoreo inteligente de salud operativa'
-                : 'Monitoreo inteligente de salud operativa con alertas predictivas y análisis de riesgo en tiempo real'
+                : 'Monitoreo inteligente de salud operativa con datos en tiempo real desde Firebase'
               }
             </p>
 
@@ -398,7 +476,8 @@ export default function ClinicalOperationsPage() {
                     const exportData = {
                       ...data,
                       exportDate: new Date().toISOString(),
-                      centerId: user?.centerId
+                      centerId: user?.centerId,
+                      timestamp: currentTime.toISOString()
                     };
                     const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
                     const url = URL.createObjectURL(blob);
@@ -423,6 +502,16 @@ export default function ClinicalOperationsPage() {
               >
                 Firebase Console
               </Button>
+
+              {user?.role?.toString() === 'admin' && (
+                <Button
+                  variant="outline"
+                  icon={Settings}
+                  onClick={() => setShowSeeder(true)}
+                >
+                  Gestionar Datos
+                </Button>
+              )}
             </div>
 
             {/* Métricas en tiempo real */}
@@ -543,7 +632,8 @@ export default function ClinicalOperationsPage() {
                     display: 'flex',
                     justifyContent: 'center',
                     gap: '1rem',
-                    flexWrap: 'wrap'
+                    flexWrap: 'wrap',
+                    marginBottom: '1rem'
                   }}>
                     {clinicalHealth.alerts.map((alert, index) => (
                       <span
@@ -563,50 +653,64 @@ export default function ClinicalOperationsPage() {
                   </div>
                 )}
 
-                {data && (
-                  <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-                    gap: '1rem',
-                    marginTop: '1.5rem',
-                    padding: '1rem',
-                    backgroundColor: 'rgba(249, 250, 251, 0.5)',
-                    borderRadius: '1rem'
-                  }}>
-                    <div style={{ textAlign: 'center' }}>
-                      <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#1C1E21' }}>
-                        {data.riskPatients}
-                      </div>
-                      <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>
-                        Pacientes de riesgo
-                      </div>
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+                  gap: '1rem',
+                  marginTop: '1.5rem',
+                  padding: '1rem',
+                  backgroundColor: 'rgba(249, 250, 251, 0.5)',
+                  borderRadius: '1rem'
+                }}>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#1C1E21' }}>
+                      {data.riskPatients}
                     </div>
-                    <div style={{ textAlign: 'center' }}>
-                      <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#1C1E21' }}>
-                        {formatPercentage(data.occupancyRate)}
-                      </div>
-                      <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>
-                        Ocupación
-                      </div>
-                    </div>
-                    <div style={{ textAlign: 'center' }}>
-                      <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#1C1E21' }}>
-                        {formatPercentage(data.adherenceRate)}
-                      </div>
-                      <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>
-                        Adherencia
-                      </div>
-                    </div>
-                    <div style={{ textAlign: 'center' }}>
-                      <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#1C1E21' }}>
-                        {formatPercentage(data.improvementRate)}
-                      </div>
-                      <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>
-                        Mejora
-                      </div>
+                    <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>
+                      Pacientes de riesgo
                     </div>
                   </div>
-                )}
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#1C1E21' }}>
+                      {formatPercentage(data.occupancyRate)}
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>
+                      Ocupación
+                    </div>
+                  </div>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#1C1E21' }}>
+                      {formatPercentage(data.adherenceRate)}
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>
+                      Adherencia
+                    </div>
+                  </div>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#1C1E21' }}>
+                      {formatPercentage(data.improvementRate)}
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>
+                      Mejora
+                    </div>
+                  </div>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#1C1E21' }}>
+                      {data.averagePhq9.toFixed(1)}
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>
+                      PHQ-9 promedio
+                    </div>
+                  </div>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#1C1E21' }}>
+                      {data.averageGad7.toFixed(1)}
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>
+                      GAD-7 promedio
+                    </div>
+                  </div>
+                </div>
               </motion.div>
             )}
           </div>
@@ -618,7 +722,27 @@ export default function ClinicalOperationsPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
         >
-          <ClinicalPanel />
+          <ClinicalPanel 
+            onRefresh={refresh}
+            onExport={() => {
+              if (data) {
+                const exportData = {
+                  ...data,
+                  exportDate: new Date().toISOString(),
+                  centerId: user?.centerId
+                };
+                const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `panel-clinico-${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+              }
+            }}
+          />
         </motion.div>
       </div>
     </div>

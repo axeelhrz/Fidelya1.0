@@ -1,5 +1,6 @@
 import { BaseFirebaseService, FirebaseDocument } from './firebaseService';
 import { COLLECTIONS } from '@/lib/firebase';
+import { Session } from './financialService';
 
 // Interfaces para datos clínicos
 export interface Patient extends FirebaseDocument {
@@ -153,8 +154,6 @@ class PatientService extends BaseFirebaseService<Patient> {
   }
 
   async searchPatients(centerId: string, searchTerm: string): Promise<Patient[]> {
-    // Firebase no soporta búsqueda de texto completo nativamente
-    // Esta es una implementación básica que se puede mejorar con Algolia o similar
     const patients = await this.getActivePatients(centerId);
     const term = searchTerm.toLowerCase();
     
@@ -187,7 +186,6 @@ class TherapistService extends BaseFirebaseService<Therapist> {
       const schedule = therapist.schedule[dayOfWeek];
       if (!schedule || !schedule.available) return false;
       
-      // Verificar si el horario está dentro del rango disponible
       const requestedTime = new Date(`2000-01-01T${time}`);
       const startTime = new Date(`2000-01-01T${schedule.start}`);
       const endTime = new Date(`2000-01-01T${schedule.end}`);
@@ -205,7 +203,6 @@ class TherapistService extends BaseFirebaseService<Therapist> {
     const therapist = await this.getById(centerId, therapistId);
     if (!therapist) throw new Error('Therapist not found');
 
-    // Calcular horas semanales disponibles
     const weeklyHours = Object.values(therapist.schedule).reduce((total, day) => {
       if (!day.available) return total;
       
@@ -270,7 +267,6 @@ class AssessmentService extends BaseFirebaseService<ClinicalAssessment> {
     const scores = assessments.map(a => a.score);
     const dates = assessments.map(a => a.createdAt);
 
-    // Calcular tendencia simple
     let trend: 'improving' | 'stable' | 'declining' = 'stable';
     if (scores.length >= 2) {
       const firstHalf = scores.slice(0, Math.floor(scores.length / 2));
@@ -284,6 +280,50 @@ class AssessmentService extends BaseFirebaseService<ClinicalAssessment> {
     }
 
     return { scores, dates, trend };
+  }
+
+  async calculateImprovementRate(centerId: string): Promise<number> {
+    try {
+      const allAssessments = await this.getAll(centerId, {
+        orderBy: { field: 'createdAt', direction: 'asc' }
+      });
+
+      const patientAssessments = new Map<string, ClinicalAssessment[]>();
+      
+      // Agrupar evaluaciones por paciente
+      allAssessments.forEach(assessment => {
+        if (!patientAssessments.has(assessment.patientId)) {
+          patientAssessments.set(assessment.patientId, []);
+        }
+        patientAssessments.get(assessment.patientId)!.push(assessment);
+      });
+
+      let improvedPatients = 0;
+      let totalPatientsWithMultipleAssessments = 0;
+
+      // Calcular mejora para cada paciente
+      patientAssessments.forEach((assessments) => {
+        if (assessments.length < 2) return;
+        
+        totalPatientsWithMultipleAssessments++;
+        
+        // Comparar primera y última evaluación
+        const firstAssessment = assessments[0];
+        const lastAssessment = assessments[assessments.length - 1];
+        
+        // Considerar mejora si la puntuación ha disminuido (menor es mejor en PHQ-9 y GAD-7)
+        if (lastAssessment.score < firstAssessment.score * 0.8) {
+          improvedPatients++;
+        }
+      });
+
+      return totalPatientsWithMultipleAssessments > 0 
+        ? (improvedPatients / totalPatientsWithMultipleAssessments) * 100 
+        : 0;
+    } catch (error) {
+      console.error('Error calculating improvement rate:', error);
+      return 0;
+    }
   }
 }
 
@@ -334,23 +374,55 @@ class ClinicalAlertService extends BaseFirebaseService<ClinicalAlert> {
   }
 }
 
+class SessionService extends BaseFirebaseService<Session> {
+  constructor() {
+    super(COLLECTIONS.SESSIONS);
+  }
+
+  async getAllSessions(centerId: string): Promise<Session[]> {
+    return this.getAll(centerId, {
+      orderBy: { field: 'date', direction: 'desc' },
+      limit: 1000
+    });
+  }
+
+  async getSessionsByStatus(centerId: string, status: Session['status']): Promise<Session[]> {
+    return this.getAll(centerId, {
+      where: [{ field: 'status', operator: '==', value: status }],
+      orderBy: { field: 'date', direction: 'desc' }
+    });
+  }
+
+  async getRecentSessions(centerId: string, days: number = 30): Promise<Session[]> {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+    
+    return this.getAll(centerId, {
+      where: [{ field: 'date', operator: '>=', value: startDate }],
+      orderBy: { field: 'date', direction: 'desc' }
+    });
+  }
+}
+
 // Servicio principal para datos clínicos
 export class ClinicalService {
   private patientService = new PatientService();
   private therapistService = new TherapistService();
   private assessmentService = new AssessmentService();
   private alertService = new ClinicalAlertService();
+  private sessionService = new SessionService();
 
   async getClinicalMetrics(centerId: string): Promise<ClinicalMetrics> {
     try {
       // Obtener datos en paralelo
-      const [patients, therapists] = await Promise.all([
+      const [patients, therapists, sessions] = await Promise.all([
         this.patientService.getActivePatients(centerId),
         this.therapistService.getActiveTherapists(centerId),
-        this.alertService.getActiveAlerts(centerId)
+        this.sessionService.getAllSessions(centerId),
+        this.assessmentService.getAll(centerId)
       ]);
 
-      // Calcular métricas
+      // Calcular métricas básicas de pacientes
       const totalPatients = patients.length;
       const riskPatients = patients.filter(p => ['high', 'critical'].includes(p.riskLevel)).length;
       
@@ -368,6 +440,25 @@ export class ClinicalService {
       const totalSessions = patients.reduce((sum, p) => sum + p.totalSessions, 0);
       const averageSessionsPerPatient = totalPatients > 0 ? totalSessions / totalPatients : 0;
 
+      // Calcular métricas de sesiones
+      const completedSessions = sessions.filter(s => s.status === 'completed');
+      const cancelledSessions = sessions.filter(s => s.status === 'cancelled');
+      const noShowSessions = sessions.filter(s => s.status === 'no-show');
+      
+      const totalScheduledSessions = sessions.length;
+      const cancellationRate = totalScheduledSessions > 0 
+        ? (cancelledSessions.length / totalScheduledSessions) * 100 
+        : 0;
+      
+      const noShowRate = totalScheduledSessions > 0 
+        ? (noShowSessions.length / totalScheduledSessions) * 100 
+        : 0;
+
+      // Calcular adherencia (sesiones completadas vs programadas)
+      const adherenceRate = totalScheduledSessions > 0 
+        ? (completedSessions.length / totalScheduledSessions) * 100 
+        : 0;
+
       // Calcular utilización de terapeutas
       const therapistUtilization: { [therapistId: string]: number } = {};
       for (const therapist of therapists) {
@@ -375,21 +466,40 @@ export class ClinicalService {
         therapistUtilization[therapist.id] = workload.utilization;
       }
 
+      // Calcular tasa de ocupación general
       const totalCapacity = therapists.reduce((sum, t) => sum + t.maxPatients, 0);
       const totalAssigned = therapists.reduce((sum, t) => sum + t.currentPatients, 0);
       const occupancyRate = totalCapacity > 0 ? (totalAssigned / totalCapacity) * 100 : 0;
 
+      // Calcular tasa de mejora desde evaluaciones
+      const improvementRate = await this.assessmentService.calculateImprovementRate(centerId);
+
+      // Calcular tasa de alta (pacientes dados de alta en los últimos 6 meses)
+      const sixMonthsAgo = new Date();
+      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+      
+      const dischargedPatients = await this.patientService.getAll(centerId, {
+        where: [
+          { field: 'status', operator: '==', value: 'discharged' },
+          { field: 'updatedAt', operator: '>=', value: sixMonthsAgo }
+        ]
+      });
+      
+      const dischargeRate = totalPatients > 0 
+        ? (dischargedPatients.length / (totalPatients + dischargedPatients.length)) * 100 
+        : 0;
+
       return {
         occupancyRate,
-        cancellationRate: 8.3, // Esto se calcularía desde las sesiones
-        noShowRate: 3.2, // Esto se calcularía desde las sesiones
+        cancellationRate,
+        noShowRate,
         averagePhq9,
         averageGad7,
-        adherenceRate: 73.2, // Esto se calcularía desde las sesiones
+        adherenceRate,
         riskPatients,
         averageSessionsPerPatient,
-        improvementRate: 68.5, // Esto se calcularía desde las evaluaciones
-        dischargeRate: 12.8, // Esto se calcularía desde los pacientes dados de alta
+        improvementRate,
+        dischargeRate,
         therapistUtilization,
         waitingListSize: 0, // Implementar lista de espera
         averageWaitTime: 0 // Implementar tiempo de espera promedio
@@ -446,7 +556,7 @@ export class ClinicalService {
       score += 40;
     }
 
-    // Evaluar adherencia (simulado)
+    // Evaluar adherencia
     const recentSessions = patient.totalSessions;
     if (recentSessions < 3) {
       factors.push('Baja adherencia al tratamiento');
@@ -498,8 +608,15 @@ export class ClinicalService {
       orderBy: { field: 'lastName', direction: 'asc' }
     });
   }
+
+  subscribeToSessions(centerId: string, callback: (sessions: Session[]) => void): () => void {
+    return this.sessionService.subscribeToChanges(centerId, callback, {
+      orderBy: { field: 'date', direction: 'desc' },
+      limit: 100
+    });
+  }
 }
 
 // Exportar instancia del servicio
 export const clinicalService = new ClinicalService();
-export { PatientService, TherapistService, AssessmentService, ClinicalAlertService };
+export { PatientService, TherapistService, AssessmentService, ClinicalAlertService, SessionService };

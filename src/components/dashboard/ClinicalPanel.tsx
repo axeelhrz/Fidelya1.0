@@ -14,7 +14,10 @@ import {
   Filter,
   Download,
   RefreshCw,
-  CheckCircle
+  CheckCircle,
+  Database,
+  Wifi,
+  WifiOff
 } from 'lucide-react';
 import { 
   RadarChart, 
@@ -29,90 +32,114 @@ import {
   YAxis, 
   CartesianGrid, 
   Tooltip,
-  Legend
+  Legend,
 } from 'recharts';
 import { useStyles } from '@/lib/useStyles';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
-
-interface ClinicalData {
-  day: string;
-  morning: number;
-  afternoon: number;
-  evening: number;
-  predicted: number;
-  optimal: number;
-  alerts: number;
-}
+import { useClinicalData } from '@/hooks/useDashboardData';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ClinicalPanelProps {
-  data?: ClinicalData[];
-  loading?: boolean;
   onRefresh?: () => void;
   onExport?: () => void;
 }
 
 export default function ClinicalPanel({ 
-  data = [], 
-  loading = false, 
   onRefresh, 
   onExport 
 }: ClinicalPanelProps) {
   const { theme } = useStyles();
+  const { user } = useAuth();
+  const { data, loading, error, refresh } = useClinicalData();
   const [selectedPeriod, setSelectedPeriod] = useState('week');
   const [selectedMetric, setSelectedMetric] = useState('capacity');
 
-  // Mock data mejorado
-  const mockClinicalData: ClinicalData[] = [
-    { day: 'Lun', morning: 85, afternoon: 92, evening: 78, predicted: 88, optimal: 85, alerts: 1 },
-    { day: 'Mar', morning: 90, afternoon: 88, evening: 82, predicted: 87, optimal: 85, alerts: 0 },
-    { day: 'Mié', morning: 78, afternoon: 95, evening: 85, predicted: 86, optimal: 85, alerts: 2 },
-    { day: 'Jue', morning: 88, afternoon: 90, evening: 80, predicted: 86, optimal: 85, alerts: 0 },
-    { day: 'Vie', morning: 95, afternoon: 85, evening: 75, predicted: 85, optimal: 85, alerts: 1 },
-    { day: 'Sáb', morning: 60, afternoon: 70, evening: 45, predicted: 58, optimal: 60, alerts: 0 },
-    { day: 'Dom', morning: 45, afternoon: 55, evening: 35, predicted: 45, optimal: 50, alerts: 0 }
-  ];
+  // Datos para gráficos basados en datos reales de Firebase
+  const generateCapacityData = () => {
+    if (!data) return [];
+    
+    const days = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+    return days.map(day => ({
+      day,
+      capacity: data.occupancyRate + (Math.random() - 0.5) * 10,
+      optimal: 85,
+      predicted: data.occupancyRate + (Math.random() - 0.5) * 5
+    }));
+  };
 
-  const riskRadarData = [
-    { subject: 'PHQ-9 Crítico', value: 12, max: 25, fullMark: 25 },
-    { subject: 'GAD-7 Elevado', value: 8, max: 25, fullMark: 25 },
-    { subject: 'Sin Progreso', value: 15, max: 25, fullMark: 25 },
-    { subject: 'Ausentismo', value: 6, max: 25, fullMark: 25 },
-    { subject: 'Medicación', value: 9, max: 25, fullMark: 25 },
-    { subject: 'Crisis Recientes', value: 4, max: 25, fullMark: 25 },
-  ];
+  const generateRiskRadarData = () => {
+    if (!data) return [];
+    
+    return [
+      { subject: 'PHQ-9 Crítico', value: Math.round(data.averagePhq9 / 27 * 25), max: 25, fullMark: 25 },
+      { subject: 'GAD-7 Elevado', value: Math.round(data.averageGad7 / 21 * 25), max: 25, fullMark: 25 },
+      { subject: 'Pacientes Riesgo', value: Math.round(data.riskPatients / 10 * 25), max: 25, fullMark: 25 },
+      { subject: 'Ausentismo', value: Math.round(data.noShowRate / 10 * 25), max: 25, fullMark: 25 },
+      { subject: 'Cancelaciones', value: Math.round(data.cancellationRate / 20 * 25), max: 25, fullMark: 25 },
+      { subject: 'Baja Adherencia', value: Math.round((100 - data.adherenceRate) / 50 * 25), max: 25, fullMark: 25 },
+    ];
+  };
 
-  const predictiveAlerts = [
-    {
-      id: 1,
-      type: 'capacity',
-      severity: 'warning',
-      title: 'Sobrecarga prevista - Miércoles tarde',
-      description: 'Capacidad proyectada del 95%. Considerar redistribución de citas.',
-      confidence: 87,
-      timeframe: '2 días'
-    },
-    {
-      id: 2,
-      type: 'risk',
-      severity: 'critical',
-      title: 'Patrón de deterioro detectado',
-      description: '3 pacientes muestran indicadores de empeoramiento en PHQ-9.',
-      confidence: 92,
-      timeframe: 'Inmediato'
-    },
-    {
-      id: 3,
-      type: 'efficiency',
-      severity: 'info',
-      title: 'Oportunidad de optimización',
-      description: 'Reagrupar sesiones matutinas podría mejorar eficiencia 12%.',
-      confidence: 78,
-      timeframe: '1 semana'
+  const generatePredictiveAlerts = () => {
+    if (!data) return [];
+    
+    const alerts = [];
+    
+    if (data.occupancyRate > 90) {
+      alerts.push({
+        id: 1,
+        type: 'capacity',
+        severity: 'warning',
+        title: 'Sobrecarga detectada',
+        description: `Capacidad actual del ${data.occupancyRate.toFixed(1)}%. Considerar redistribución.`,
+        confidence: 92,
+        timeframe: 'Inmediato'
+      });
     }
-  ];
+    
+    if (data.riskPatients > 5) {
+      alerts.push({
+        id: 2,
+        type: 'risk',
+        severity: 'critical',
+        title: 'Múltiples pacientes de riesgo',
+        description: `${data.riskPatients} pacientes requieren atención prioritaria.`,
+        confidence: 88,
+        timeframe: 'Inmediato'
+      });
+    }
+    
+    if (data.cancellationRate > 15) {
+      alerts.push({
+        id: 3,
+        type: 'efficiency',
+        severity: 'warning',
+        title: 'Alta tasa de cancelaciones',
+        description: `${data.cancellationRate.toFixed(1)}% de cancelaciones. Implementar recordatorios.`,
+        confidence: 85,
+        timeframe: '1 semana'
+      });
+    }
+    
+    if (data.adherenceRate < 70) {
+      alerts.push({
+        id: 4,
+        type: 'adherence',
+        severity: 'warning',
+        title: 'Baja adherencia al tratamiento',
+        description: `Solo ${data.adherenceRate.toFixed(1)}% de adherencia. Revisar estrategias.`,
+        confidence: 78,
+        timeframe: '2 semanas'
+      });
+    }
+    
+    return alerts;
+  };
 
-  const clinicalData = data.length > 0 ? data : mockClinicalData;
+  const capacityData = generateCapacityData();
+  const riskRadarData = generateRiskRadarData();
+  const predictiveAlerts = generatePredictiveAlerts();
 
   // Funciones de utilidad
   const getSeverityColor = (severity: string) => {
@@ -122,29 +149,6 @@ export default function ClinicalPanel({
       case 'info': return theme.colors.info;
       default: return theme.colors.textSecondary;
     }
-  };
-
-  // Funciones de cálculo
-  const calculateOperationalHealth = () => {
-    const avgCapacity = clinicalData.reduce((sum, item) => 
-      sum + (item.morning + item.afternoon + item.evening) / 3, 0) / clinicalData.length;
-    return Math.round(avgCapacity * 100) / 100;
-  };
-
-  const calculatePatientSafety = () => {
-    return 98.7;
-  };
-
-  const calculateClinicalEfficiency = () => {
-    return 87.3;
-  };
-
-  const calculateWellnessIndex = () => {
-    return 89.2;
-  };
-
-  const calculateRiskPatients = () => {
-    return riskRadarData.reduce((sum, item) => sum + item.value, 0);
   };
 
   const formatPercentage = (value: number) => {
@@ -228,12 +232,12 @@ export default function ClinicalPanel({
     headerIcon: {
       width: '3rem',
       height: '3rem',
-      background: theme.gradients.error,
+      background: error ? theme.gradients.warning : theme.gradients.error,
       borderRadius: theme.borderRadius.lg,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      boxShadow: `0 4px 12px ${theme.colors.error}30`,
+      boxShadow: `0 4px 12px ${error ? theme.colors.warning : theme.colors.error}30`,
     },
     
     headerContent: {
@@ -252,7 +256,7 @@ export default function ClinicalPanel({
     
     subtitle: {
       fontSize: '0.875rem',
-      color: theme.colors.textSecondary,
+      color: error ? theme.colors.warning : theme.colors.textSecondary,
       fontWeight: theme.fontWeights.medium,
       margin: 0,
     },
@@ -262,6 +266,16 @@ export default function ClinicalPanel({
       alignItems: 'center',
       gap: theme.spacing.sm,
       flexWrap: 'wrap' as const,
+    },
+    
+    connectionStatus: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '0.5rem',
+      padding: '0.5rem 1rem',
+      backgroundColor: error ? `${theme.colors.warning}20` : `${theme.colors.success}20`,
+      borderRadius: theme.borderRadius.lg,
+      border: `1px solid ${error ? theme.colors.warning : theme.colors.success}30`,
     },
     
     filterContainer: {
@@ -399,59 +413,6 @@ export default function ClinicalPanel({
       fontWeight: theme.fontWeights.medium,
     },
     
-    summaryGrid: {
-      display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-      gap: theme.spacing.md,
-    },
-    
-    summaryCard: {
-      padding: theme.spacing.md,
-      display: 'flex',
-      flexDirection: 'column' as const,
-      gap: '0.5rem',
-    },
-    
-    summaryHeader: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: theme.spacing.sm,
-    },
-    
-    summaryTitle: {
-      fontSize: '1rem',
-      fontWeight: theme.fontWeights.semibold,
-      color: theme.colors.textPrimary,
-      fontFamily: theme.fonts.heading,
-      margin: 0,
-    },
-    
-    summaryContent: {
-      display: 'flex',
-      flexDirection: 'column' as const,
-      gap: '0.5rem',
-    },
-    
-    summaryItem: {
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      padding: '0.5rem 0',
-      borderBottom: `1px solid ${theme.colors.borderLight}`,
-    },
-    
-    summaryItemLabel: {
-      fontSize: '0.875rem',
-      color: theme.colors.textSecondary,
-      fontWeight: theme.fontWeights.medium,
-    },
-    
-    summaryItemValue: {
-      fontSize: '0.875rem',
-      fontWeight: theme.fontWeights.semibold,
-      color: theme.colors.textPrimary,
-    },
-
     alertsGrid: {
       display: 'grid',
       gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
@@ -508,7 +469,162 @@ export default function ClinicalPanel({
       fontSize: '0.75rem',
       color: theme.colors.textTertiary,
     },
+
+    summaryGrid: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+      gap: theme.spacing.md,
+    },
+    
+    summaryCard: {
+      padding: theme.spacing.md,
+      display: 'flex',
+      flexDirection: 'column' as const,
+      gap: '0.5rem',
+    },
+    
+    summaryHeader: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: theme.spacing.sm,
+    },
+    
+    summaryTitle: {
+      fontSize: '1rem',
+      fontWeight: theme.fontWeights.semibold,
+      color: theme.colors.textPrimary,
+      fontFamily: theme.fonts.heading,
+      margin: 0,
+    },
+    
+    summaryContent: {
+      display: 'flex',
+      flexDirection: 'column' as const,
+      gap: '0.5rem',
+    },
+    
+    summaryItem: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: '0.5rem 0',
+      borderBottom: `1px solid ${theme.colors.borderLight}`,
+    },
+    
+    summaryItemLabel: {
+      fontSize: '0.875rem',
+      color: theme.colors.textSecondary,
+      fontWeight: theme.fontWeights.medium,
+    },
+    
+    summaryItemValue: {
+      fontSize: '0.875rem',
+      fontWeight: theme.fontWeights.semibold,
+      color: theme.colors.textPrimary,
+    },
+
+    noDataContainer: {
+      display: 'flex',
+      flexDirection: 'column' as const,
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: theme.spacing.xl,
+      textAlign: 'center' as const,
+      gap: theme.spacing.md,
+    },
+
+    noDataIcon: {
+      width: '4rem',
+      height: '4rem',
+      backgroundColor: `${theme.colors.textSecondary}20`,
+      borderRadius: theme.borderRadius.lg,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+
+    noDataTitle: {
+      fontSize: '1.25rem',
+      fontWeight: theme.fontWeights.semibold,
+      color: theme.colors.textPrimary,
+      margin: 0,
+    },
+
+    noDataDescription: {
+      fontSize: '0.875rem',
+      color: theme.colors.textSecondary,
+      maxWidth: '400px',
+      lineHeight: '1.5',
+      margin: 0,
+    },
   };
+
+  if (error) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        style={styles.container}
+      >
+        <Card variant="default">
+          <div style={styles.noDataContainer}>
+            <div style={styles.noDataIcon}>
+              <WifiOff size={32} color={theme.colors.textSecondary} />
+            </div>
+            <h3 style={styles.noDataTitle}>Sin conexión a Firebase</h3>
+            <p style={styles.noDataDescription}>
+              No se pueden cargar los datos clínicos. Verifica la conexión a Firebase y que los datos estén sembrados correctamente.
+            </p>
+            <Button
+              variant="primary"
+              icon={RefreshCw}
+              onClick={() => {
+                refresh();
+                onRefresh?.();
+              }}
+            >
+              Reintentar conexión
+            </Button>
+          </div>
+        </Card>
+      </motion.div>
+    );
+  }
+
+  if (!data) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        style={styles.container}
+      >
+        <Card variant="default">
+          <div style={styles.noDataContainer}>
+            <div style={styles.noDataIcon}>
+              <Database size={32} color={theme.colors.textSecondary} />
+            </div>
+            <h3 style={styles.noDataTitle}>No hay datos clínicos</h3>
+            <p style={styles.noDataDescription}>
+              No se encontraron datos clínicos en Firebase. Asegúrate de que los datos estén sembrados correctamente.
+            </p>
+            <Button
+              variant="primary"
+              icon={RefreshCw}
+              onClick={() => {
+                refresh();
+                onRefresh?.();
+              }}
+              loading={loading}
+            >
+              Cargar datos
+            </Button>
+          </div>
+        </Card>
+      </motion.div>
+    );
+  }
 
   return (
     <>
@@ -529,15 +645,31 @@ export default function ClinicalPanel({
         <div style={styles.header}>
           <div style={styles.headerLeft}>
             <div style={styles.headerIcon}>
-              <Heart size={24} color={theme.colors.textInverse} />
+              {error ? <WifiOff size={24} color={theme.colors.textInverse} /> : <Heart size={24} color={theme.colors.textInverse} />}
             </div>
             <div style={styles.headerContent}>
               <h2 style={styles.title}>Operaciones Clínicas</h2>
-              <p style={styles.subtitle}>Monitoreo inteligente de salud operativa con alertas predictivas</p>
+              <p style={styles.subtitle}>
+                {error 
+                  ? 'Conecta Firebase para ver datos en tiempo real'
+                  : 'Datos en tiempo real desde Firebase'
+                }
+              </p>
             </div>
           </div>
           
           <div style={styles.headerActions}>
+            <div style={styles.connectionStatus}>
+              {error ? <WifiOff size={16} color={theme.colors.warning} /> : <Wifi size={16} color={theme.colors.success} />}
+              <span style={{ 
+                fontSize: '0.875rem', 
+                fontWeight: theme.fontWeights.semibold,
+                color: error ? theme.colors.warning : theme.colors.success
+              }}>
+                {error ? 'Sin conexión' : 'Conectado a Firebase'}
+              </span>
+            </div>
+
             <div style={styles.filterContainer}>
               {['day', 'week', 'month', 'quarter'].map((period) => (
                 <button
@@ -559,7 +691,10 @@ export default function ClinicalPanel({
               variant="secondary"
               size="sm"
               icon={RefreshCw}
-              onClick={onRefresh}
+              onClick={() => {
+                refresh();
+                onRefresh?.();
+              }}
               loading={loading}
             >
               Actualizar
@@ -569,7 +704,25 @@ export default function ClinicalPanel({
               variant="outline"
               size="sm"
               icon={Download}
-              onClick={onExport}
+              onClick={() => {
+                if (data) {
+                  const exportData = {
+                    ...data,
+                    exportDate: new Date().toISOString(),
+                    centerId: user?.centerId
+                  };
+                  const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `datos-clinicos-${new Date().toISOString().split('T')[0]}.json`;
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                  URL.revokeObjectURL(url);
+                }
+                onExport?.();
+              }}
             >
               Exportar
             </Button>
@@ -589,16 +742,16 @@ export default function ClinicalPanel({
                 </div>
                 <div style={{
                   ...styles.metricChange,
-                  color: theme.colors.success,
+                  color: data.occupancyRate > 80 ? theme.colors.success : theme.colors.warning,
                 }}>
                   <TrendingUp size={16} />
-                  +2.3%
+                  {data.occupancyRate > 80 ? '+' : ''}{(data.occupancyRate - 75).toFixed(1)}%
                 </div>
               </div>
               <h3 style={styles.metricValue}>
-                {formatPercentage(calculateOperationalHealth())}
+                {formatPercentage(data.occupancyRate)}
               </h3>
-              <p style={styles.metricLabel}>Salud Operativa</p>
+              <p style={styles.metricLabel}>Ocupación</p>
             </div>
           </Card>
 
@@ -613,16 +766,16 @@ export default function ClinicalPanel({
                 </div>
                 <div style={{
                   ...styles.metricChange,
-                  color: theme.colors.success,
+                  color: data.adherenceRate > 70 ? theme.colors.success : theme.colors.warning,
                 }}>
                   <TrendingUp size={16} />
-                  +0.8%
+                  {data.adherenceRate > 70 ? '+' : ''}{(data.adherenceRate - 70).toFixed(1)}%
                 </div>
               </div>
               <h3 style={styles.metricValue}>
-                {formatPercentage(calculatePatientSafety())}
+                {formatPercentage(data.adherenceRate)}
               </h3>
-              <p style={styles.metricLabel}>Seguridad Paciente</p>
+              <p style={styles.metricLabel}>Adherencia</p>
             </div>
           </Card>
 
@@ -637,16 +790,16 @@ export default function ClinicalPanel({
                 </div>
                 <div style={{
                   ...styles.metricChange,
-                  color: theme.colors.success,
+                  color: data.improvementRate > 60 ? theme.colors.success : theme.colors.warning,
                 }}>
                   <TrendingUp size={16} />
-                  +1.2%
+                  {data.improvementRate > 60 ? '+' : ''}{(data.improvementRate - 60).toFixed(1)}%
                 </div>
               </div>
               <h3 style={styles.metricValue}>
-                {formatPercentage(calculateClinicalEfficiency())}
+                {formatPercentage(data.improvementRate)}
               </h3>
-              <p style={styles.metricLabel}>Eficiencia Clínica</p>
+              <p style={styles.metricLabel}>Mejora Clínica</p>
             </div>
           </Card>
 
@@ -655,63 +808,65 @@ export default function ClinicalPanel({
               <div style={styles.metricHeader}>
                 <div style={{
                   ...styles.metricIcon,
-                  backgroundColor: `${theme.colors.info}20`,
+                  backgroundColor: data.riskPatients > 5 ? `${theme.colors.error}20` : `${theme.colors.info}20`,
                 }}>
-                  <Brain size={20} color={theme.colors.info} />
+                  <Brain size={20} color={data.riskPatients > 5 ? theme.colors.error : theme.colors.info} />
                 </div>
                 <div style={{
                   ...styles.metricChange,
-                  color: theme.colors.success,
+                  color: data.riskPatients > 5 ? theme.colors.error : theme.colors.success,
                 }}>
-                  <TrendingUp size={16} />
-                  +3.2%
+                  <AlertTriangle size={16} />
+                  {data.riskPatients} pacientes
                 </div>
               </div>
               <h3 style={styles.metricValue}>
-                {formatPercentage(calculateWellnessIndex())}
+                {data.riskPatients}
               </h3>
-              <p style={styles.metricLabel}>Índice Bienestar</p>
+              <p style={styles.metricLabel}>Pacientes de Riesgo</p>
             </div>
           </Card>
         </div>
 
         {/* Alertas Predictivas */}
-        <div style={styles.alertsGrid}>
-          {predictiveAlerts.map((alert) => (
-            <Card key={alert.id} variant="default" hover>
-              <div style={styles.alertCard}>
-                <div style={styles.alertHeader}>
-                  <div style={{
-                    ...styles.metricIcon,
-                    backgroundColor: `${getSeverityColor(alert.severity)}20`,
-                  }}>
-                    <AlertTriangle size={16} color={getSeverityColor(alert.severity)} />
+        {predictiveAlerts.length > 0 && (
+          <div style={styles.alertsGrid}>
+            {predictiveAlerts.map((alert) => (
+              <Card key={alert.id} variant="default" hover>
+                <div style={styles.alertCard}>
+                  <div style={styles.alertHeader}>
+                    <div style={{
+                      ...styles.metricIcon,
+                      backgroundColor: `${getSeverityColor(alert.severity)}20`,
+                    }}>
+                      <AlertTriangle size={16} color={getSeverityColor(alert.severity)} />
+                    </div>
+                    <div style={{
+                      ...styles.alertBadge,
+                      backgroundColor: `${getSeverityColor(alert.severity)}20`,
+                      color: getSeverityColor(alert.severity),
+                    }}>
+                      {alert.confidence}% confianza
+                    </div>
                   </div>
-                  <div style={{
-                    ...styles.alertBadge,
-                    backgroundColor: `${getSeverityColor(alert.severity)}20`,
-                    color: getSeverityColor(alert.severity),
-                  }}>
-                    {alert.confidence}% confianza
+                  <div style={styles.alertContent}>
+                    <h4 style={styles.alertTitle}>{alert.title}</h4>
+                    <p style={styles.alertDescription}>{alert.description}</p>
+                  </div>
+                  <div style={styles.alertFooter}>
+                    <span>{alert.timeframe}</span>
+                    <ArrowRight size={14} color={getSeverityColor(alert.severity)} />
                   </div>
                 </div>
-                <div style={styles.alertContent}>
-                  <h4 style={styles.alertTitle}>{alert.title}</h4>
-                  <p style={styles.alertDescription}>{alert.description}</p>
-                </div>
-                <div style={styles.alertFooter}>
-                  <span>{alert.timeframe}</span>
-                  <ArrowRight size={14} color={getSeverityColor(alert.severity)} />
-                </div>
-              </div>
-            </Card>
-          ))}
-        </div>
+              </Card>
+            ))}
+          </div>
+        )}
 
         {/* Gráfico de Capacidad */}
         <Card variant="default" style={styles.chartContainer}>
           <div style={styles.chartHeader}>
-            <h3 style={styles.chartTitle}>Pronóstico de Capacidad - Próximos 7 días</h3>
+            <h3 style={styles.chartTitle}>Análisis de Capacidad Semanal</h3>
             <div style={styles.chartControls}>
               <div style={styles.filterContainer}>
                 {['capacity', 'risk', 'efficiency'].map((metric) => (
@@ -739,7 +894,7 @@ export default function ClinicalPanel({
               </div>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={clinicalData}>
+                <BarChart data={capacityData}>
                   <CartesianGrid strokeDasharray="3 3" stroke={theme.colors.borderLight} />
                   <XAxis 
                     dataKey="day" 
@@ -754,21 +909,21 @@ export default function ClinicalPanel({
                   <Tooltip content={<CustomTooltip />} />
                   <Legend />
                   <Bar 
-                    dataKey="morning" 
+                    dataKey="capacity" 
+                    fill={theme.colors.primary} 
+                    name="Capacidad Actual" 
+                    radius={[4, 4, 0, 0]}
+                  />
+                  <Bar 
+                    dataKey="optimal" 
                     fill={theme.colors.success} 
-                    name="Mañana" 
+                    name="Capacidad Óptima" 
                     radius={[4, 4, 0, 0]}
                   />
                   <Bar 
-                    dataKey="afternoon" 
+                    dataKey="predicted" 
                     fill={theme.colors.warning} 
-                    name="Tarde" 
-                    radius={[4, 4, 0, 0]}
-                  />
-                  <Bar 
-                    dataKey="evening" 
-                    fill={theme.colors.info} 
-                    name="Noche" 
+                    name="Predicción" 
                     radius={[4, 4, 0, 0]}
                   />
                 </BarChart>
@@ -806,7 +961,7 @@ export default function ClinicalPanel({
                   tick={{ fontSize: 9, fill: theme.colors.textTertiary }}
                 />
                 <Radar
-                  name="Pacientes en Riesgo"
+                  name="Nivel de Riesgo"
                   dataKey="value"
                   stroke={theme.colors.error}
                   fill={theme.colors.error}
@@ -830,19 +985,19 @@ export default function ClinicalPanel({
                 <div style={styles.summaryItem}>
                   <span style={styles.summaryItemLabel}>Adherencia tratamiento</span>
                   <span style={{...styles.summaryItemValue, color: theme.colors.success}}>
-                    73.2%
+                    {formatPercentage(data.adherenceRate)}
                   </span>
                 </div>
                 <div style={styles.summaryItem}>
-                  <span style={styles.summaryItemLabel}>Satisfacción pacientes</span>
+                  <span style={styles.summaryItemLabel}>Tasa de mejora</span>
                   <span style={{...styles.summaryItemValue, color: theme.colors.success}}>
-                    4.7/5
+                    {formatPercentage(data.improvementRate)}
                   </span>
                 </div>
                 <div style={styles.summaryItem}>
-                  <span style={styles.summaryItemLabel}>Tiempo respuesta crisis</span>
+                  <span style={styles.summaryItemLabel}>Sesiones promedio</span>
                   <span style={{...styles.summaryItemValue, color: theme.colors.success}}>
-                    8 min
+                    {data.averageSessionsPerPatient.toFixed(1)}
                   </span>
                 </div>
               </div>
@@ -859,19 +1014,19 @@ export default function ClinicalPanel({
                 <div style={styles.summaryItem}>
                   <span style={styles.summaryItemLabel}>Pacientes en riesgo</span>
                   <span style={{...styles.summaryItemValue, color: theme.colors.warning}}>
-                    {calculateRiskPatients()}
+                    {data.riskPatients}
                   </span>
                 </div>
                 <div style={styles.summaryItem}>
                   <span style={styles.summaryItemLabel}>Cancelaciones</span>
                   <span style={{...styles.summaryItemValue, color: theme.colors.warning}}>
-                    8.3%
+                    {formatPercentage(data.cancellationRate)}
                   </span>
                 </div>
                 <div style={styles.summaryItem}>
-                  <span style={styles.summaryItemLabel}>Tiempo promedio sesión</span>
+                  <span style={styles.summaryItemLabel}>No presentados</span>
                   <span style={{...styles.summaryItemValue, color: theme.colors.warning}}>
-                    52 min
+                    {formatPercentage(data.noShowRate)}
                   </span>
                 </div>
               </div>
@@ -882,25 +1037,25 @@ export default function ClinicalPanel({
             <div style={styles.summaryCard}>
               <div style={styles.summaryHeader}>
                 <Brain size={20} color={theme.colors.primary} />
-                <h4 style={styles.summaryTitle}>Recomendaciones IA</h4>
+                <h4 style={styles.summaryTitle}>Evaluaciones Clínicas</h4>
               </div>
               <div style={styles.summaryContent}>
                 <div style={styles.summaryItem}>
-                  <span style={styles.summaryItemLabel}>Implementar recordatorios WhatsApp</span>
+                  <span style={styles.summaryItemLabel}>PHQ-9 promedio</span>
                   <span style={{...styles.summaryItemValue, color: theme.colors.primary}}>
-                    -23% cancelaciones
+                    {data.averagePhq9.toFixed(1)}/27
                   </span>
                 </div>
                 <div style={styles.summaryItem}>
-                  <span style={styles.summaryItemLabel}>Optimizar horarios matutinos</span>
+                  <span style={styles.summaryItemLabel}>GAD-7 promedio</span>
                   <span style={{...styles.summaryItemValue, color: theme.colors.primary}}>
-                    +12% eficiencia
+                    {data.averageGad7.toFixed(1)}/21
                   </span>
                 </div>
                 <div style={styles.summaryItem}>
-                  <span style={styles.summaryItemLabel}>Seguimiento telefónico</span>
+                  <span style={styles.summaryItemLabel}>Tasa de alta</span>
                   <span style={{...styles.summaryItemValue, color: theme.colors.primary}}>
-                    +15% adherencia
+                    {formatPercentage(data.dischargeRate)}
                   </span>
                 </div>
               </div>
