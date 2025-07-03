@@ -1,127 +1,79 @@
-'use client';
+import * as React from "react"
 
-import React, { forwardRef, HTMLAttributes } from 'react';
-import { useStyles } from '@/lib/useStyles';
+import { cn } from "@/lib/utils"
 
-interface CardProps extends HTMLAttributes<HTMLDivElement> {
-  variant?: 'default' | 'elevated' | 'outlined' | 'glass';
-  padding?: 'none' | 'sm' | 'md' | 'lg';
-  hover?: boolean;
-  children: React.ReactNode;
-}
+const Card = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn(
+      "rounded-lg border bg-card text-card-foreground shadow-sm",
+      className
+    )}
+    {...props}
+  />
+))
+Card.displayName = "Card"
 
-const Card = forwardRef<HTMLDivElement, CardProps>(({
-  variant = 'default',
-  padding = 'md',
-  hover = true,
-  children,
-  className,
-  style,
-  ...props
-}, ref) => {
-  const { theme } = useStyles();
+const CardHeader = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn("flex flex-col space-y-1.5 p-6", className)}
+    {...props}
+  />
+))
+CardHeader.displayName = "CardHeader"
 
-  const getVariantStyles = () => {
-    const baseStyles = {
-      backgroundColor: theme.colors.surface,
-      borderRadius: theme.borderRadius.xl,
-      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-      position: 'relative' as const,
-      overflow: 'hidden',
-    };
+const CardTitle = React.forwardRef<
+  HTMLParagraphElement,
+  React.HTMLAttributes<HTMLHeadingElement>
+>(({ className, ...props }, ref) => (
+  <h3
+    ref={ref}
+    className={cn(
+      "text-2xl font-semibold leading-none tracking-tight",
+      className
+    )}
+    {...props}
+  />
+))
+CardTitle.displayName = "CardTitle"
 
-    switch (variant) {
-      case 'elevated':
-        return {
-          ...baseStyles,
-          boxShadow: theme.shadows.elevated,
-          border: `1px solid ${theme.colors.borderLight}`,
-        };
-      
-      case 'outlined':
-        return {
-          ...baseStyles,
-          border: `1px solid ${theme.colors.borderMedium}`,
-          boxShadow: 'none',
-        };
-      
-      case 'glass':
-        return {
-          ...baseStyles,
-          backgroundColor: theme.colors.surfaceGlass,
-          backdropFilter: 'blur(20px)',
-          border: `1px solid ${theme.colors.borderLight}`,
-          boxShadow: theme.shadows.card,
-        };
-      
-      default: // default
-        return {
-          ...baseStyles,
-          boxShadow: theme.shadows.card,
-          border: `1px solid ${theme.colors.borderLight}`,
-        };
-    }
-  };
+const CardDescription = React.forwardRef<
+  HTMLParagraphElement,
+  React.HTMLAttributes<HTMLParagraphElement>
+>(({ className, ...props }, ref) => (
+  <p
+    ref={ref}
+    className={cn("text-sm text-muted-foreground", className)}
+    {...props}
+  />
+))
+CardDescription.displayName = "CardDescription"
 
-  const getPaddingStyles = () => {
-    switch (padding) {
-      case 'none':
-        return { padding: 0 };
-      case 'sm':
-        return { padding: theme.spacing.sm };
-      case 'lg':
-        return { padding: theme.spacing.lg };
-      default: // md
-        return { padding: theme.spacing.md };
-    }
-  };
+const CardContent = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div ref={ref} className={cn("p-6 pt-0", className)} {...props} />
+))
+CardContent.displayName = "CardContent"
 
-  // Generate CSS class name for hover effects
-  const getHoverClassName = () => {
-    if (!hover) return '';
-    return 'card-hover-effect';
-  };
+const CardFooter = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn("flex items-center p-6 pt-0", className)}
+    {...props}
+  />
+))
+CardFooter.displayName = "CardFooter"
 
-  // Combine all style objects
-  const cardStyles = {
-    ...getVariantStyles(),
-    ...getPaddingStyles(),
-    ...style,
-  };
-
-  // Combine class names
-  const combinedClassName = [
-    className,
-    getHoverClassName()
-  ].filter(Boolean).join(' ');
-
-  return (
-    <>
-      {/* CSS styles for hover effects */}
-      <style jsx>{`
-        .card-hover-effect:hover {
-          transform: translateY(-4px);
-          box-shadow: ${theme.shadows.floating};
-          border-color: ${variant === 'glass' ? theme.colors.borderMedium : theme.colors.borderPrimary};
-        }
-        
-        .card-hover-effect {
-          cursor: pointer;
-        }
-      `}</style>
-      
-      <div
-        ref={ref}
-        {...props}
-        style={cardStyles}
-        className={combinedClassName}
-      >
-        {children}
-      </div>
-    </>
-  );
-});
-
-Card.displayName = 'Card';
-
-export default Card;
+export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent }
