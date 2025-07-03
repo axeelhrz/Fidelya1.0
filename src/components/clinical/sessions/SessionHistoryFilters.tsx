@@ -6,7 +6,6 @@ import {
   TextField,
   Chip,
   Button,
-  Grid,
   Typography,
   Collapse,
   IconButton,
@@ -93,90 +92,104 @@ const SessionHistoryFilters: React.FC<SessionHistoryFiltersProps> = ({
       <CardContent sx={{ pb: expanded ? 2 : 1 }}>
         {/* Barra de búsqueda principal */}
         <Box sx={{ mb: expanded ? 3 : 0 }}>
-          <Grid container spacing={2} alignItems="center">
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                placeholder="Buscar en notas, resúmenes, motivos de consulta..."
-                value={filters.searchText || ''}
-                onChange={(e) => handleFilterChange('searchText', e.target.value)}
-                disabled={loading}
-                InputProps={{
-                  startAdornment: <Search sx={{ mr: 1, color: 'text.secondary' }} />,
-                  endAdornment: filters.searchText && (
-                    <IconButton
-                      size="small"
-                      onClick={() => handleFilterChange('searchText', '')}
-                    >
-                      <Clear />
-                    </IconButton>
-                  ),
-                }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    backgroundColor: 'background.paper',
-                  },
-                }}
-              />
-            </Grid>
-            
-            <Grid item xs={12} md={4}>
-              <TextField
-                fullWidth
-                placeholder="Buscar por nombre de paciente..."
-                value={filters.patientName || ''}
-                onChange={(e) => handleFilterChange('patientName', e.target.value)}
-                disabled={loading}
-                InputProps={{
-                  startAdornment: <Person sx={{ mr: 1, color: 'text.secondary' }} />,
-                  endAdornment: filters.patientName && (
-                    <IconButton
-                      size="small"
-                      onClick={() => handleFilterChange('patientName', '')}
-                    >
-                      <Clear />
-                    </IconButton>
-                  ),
-                }}
-              />
-            </Grid>
-
-            <Grid item xs={12} md={2}>
-              <Stack direction="row" spacing={1} justifyContent="flex-end">
-                <Button
-                  variant={expanded ? "contained" : "outlined"}
-                  startIcon={<FilterList />}
-                  endIcon={expanded ? <ExpandLess /> : <ExpandMore />}
-                  onClick={() => setExpanded(!expanded)}
-                  disabled={loading}
-                  sx={{ minWidth: 'auto' }}
-                >
-                  Filtros
-                  {activeFiltersCount > 0 && (
-                    <Chip
-                      label={activeFiltersCount}
-                      size="small"
-                      color="primary"
-                      sx={{ ml: 1, height: 20, fontSize: '0.75rem' }}
-                    />
-                  )}
-                </Button>
-
-                {hasActiveFilters && (
-                  <Button
-                    variant="text"
-                    startIcon={<Clear />}
-                    onClick={onClearFilters}
-                    disabled={loading}
-                    color="error"
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: {
+                xs: '1fr',
+                md: '1fr 0.7fr auto'
+              },
+              gap: 2,
+              alignItems: 'center',
+            }}
+          >
+            {/* Campo de búsqueda principal */}
+            <TextField
+              fullWidth
+              placeholder="Buscar en notas, resúmenes, motivos de consulta..."
+              value={filters.searchText || ''}
+              onChange={(e) => handleFilterChange('searchText', e.target.value)}
+              disabled={loading}
+              InputProps={{
+                startAdornment: <Search sx={{ mr: 1, color: 'text.secondary' }} />,
+                endAdornment: filters.searchText && (
+                  <IconButton
                     size="small"
+                    onClick={() => handleFilterChange('searchText', '')}
                   >
-                    Limpiar
-                  </Button>
+                    <Clear />
+                  </IconButton>
+                ),
+              }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  backgroundColor: 'background.paper',
+                },
+              }}
+            />
+            
+            {/* Campo de búsqueda por paciente */}
+            <TextField
+              fullWidth
+              placeholder="Buscar por nombre de paciente..."
+              value={filters.patientName || ''}
+              onChange={(e) => handleFilterChange('patientName', e.target.value)}
+              disabled={loading}
+              InputProps={{
+                startAdornment: <Person sx={{ mr: 1, color: 'text.secondary' }} />,
+                endAdornment: filters.patientName && (
+                  <IconButton
+                    size="small"
+                    onClick={() => handleFilterChange('patientName', '')}
+                  >
+                    <Clear />
+                  </IconButton>
+                ),
+              }}
+            />
+
+            {/* Botones de acción */}
+            <Stack 
+              direction="row" 
+              spacing={1} 
+              sx={{ 
+                justifyContent: { xs: 'flex-start', md: 'flex-end' },
+                gridColumn: { xs: '1 / -1', md: 'auto' }
+              }}
+            >
+              <Button
+                variant={expanded ? "contained" : "outlined"}
+                startIcon={<FilterList />}
+                endIcon={expanded ? <ExpandLess /> : <ExpandMore />}
+                onClick={() => setExpanded(!expanded)}
+                disabled={loading}
+                sx={{ minWidth: 'auto' }}
+              >
+                Filtros
+                {activeFiltersCount > 0 && (
+                  <Chip
+                    label={activeFiltersCount}
+                    size="small"
+                    color="primary"
+                    sx={{ ml: 1, height: 20, fontSize: '0.75rem' }}
+                  />
                 )}
-              </Stack>
-            </Grid>
-          </Grid>
+              </Button>
+
+              {hasActiveFilters && (
+                <Button
+                  variant="text"
+                  startIcon={<Clear />}
+                  onClick={onClearFilters}
+                  disabled={loading}
+                  color="error"
+                  size="small"
+                >
+                  Limpiar
+                </Button>
+              )}
+            </Stack>
+          </Box>
         </Box>
 
         {/* Filtros avanzados */}
@@ -187,9 +200,18 @@ const SessionHistoryFilters: React.FC<SessionHistoryFiltersProps> = ({
               Filtros Avanzados
             </Typography>
 
-            <Grid container spacing={3}>
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: {
+                  xs: '1fr',
+                  md: '1fr 1fr'
+                },
+                gap: 3,
+              }}
+            >
               {/* Filtros de fecha */}
-              <Grid item xs={12} md={6}>
+              <Box>
                 <Typography variant="subtitle2" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <CalendarToday fontSize="small" color="primary" />
                   Rango de Fechas
@@ -214,10 +236,10 @@ const SessionHistoryFilters: React.FC<SessionHistoryFiltersProps> = ({
                     fullWidth
                   />
                 </Stack>
-              </Grid>
+              </Box>
 
               {/* Filtro por estado */}
-              <Grid item xs={12} md={6}>
+              <Box>
                 <Typography variant="subtitle2" gutterBottom>
                   Estado de Sesión
                 </Typography>
@@ -254,51 +276,51 @@ const SessionHistoryFilters: React.FC<SessionHistoryFiltersProps> = ({
                     />
                   )}
                 />
-              </Grid>
+              </Box>
+            </Box>
 
-              {/* Filtro por estado emocional */}
-              <Grid item xs={12}>
-                <Typography variant="subtitle2" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Psychology fontSize="small" color="primary" />
-                  Estado Emocional
-                </Typography>
-                <Autocomplete
-                  multiple
-                  options={emotionalStateOptions}
-                  getOptionLabel={(option) => option.label}
-                  value={emotionalStateOptions.filter(option => filters.emotionalState?.includes(option.value)) || []}
-                  onChange={(_, newValue) => {
-                    handleFilterChange('emotionalState', newValue.map(item => item.value));
-                  }}
-                  disabled={loading}
-                  renderTags={(value, getTagProps) =>
-                    value.map((option, index) => (
-                      <Chip
-                        key={option.value}
-                        label={option.label}
-                        {...getTagProps({ index })}
-                        size="small"
-                        icon={<EmotionalStateIcon state={option.value} size="small" />}
-                        variant="outlined"
-                      />
-                    ))
-                  }
-                  renderOption={(props, option) => (
-                    <Box component="li" {...props} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <EmotionalStateIcon state={option.value} size="small" />
-                      {option.label}
-                    </Box>
-                  )}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      placeholder="Seleccionar estados emocionales..."
+            {/* Filtro por estado emocional - Ocupa toda la fila */}
+            <Box sx={{ mt: 3 }}>
+              <Typography variant="subtitle2" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Psychology fontSize="small" color="primary" />
+                Estado Emocional
+              </Typography>
+              <Autocomplete
+                multiple
+                options={emotionalStateOptions}
+                getOptionLabel={(option) => option.label}
+                value={emotionalStateOptions.filter(option => filters.emotionalState?.includes(option.value)) || []}
+                onChange={(_, newValue) => {
+                  handleFilterChange('emotionalState', newValue.map(item => item.value));
+                }}
+                disabled={loading}
+                renderTags={(value, getTagProps) =>
+                  value.map((option, index) => (
+                    <Chip
+                      key={option.value}
+                      label={option.label}
+                      {...getTagProps({ index })}
+                      size="small"
+                      icon={<EmotionalStateIcon state={option.value} size="small" />}
                       variant="outlined"
                     />
-                  )}
-                />
-              </Grid>
-            </Grid>
+                  ))
+                }
+                renderOption={(props, option) => (
+                  <Box component="li" {...props} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <EmotionalStateIcon state={option.value} size="small" />
+                    {option.label}
+                  </Box>
+                )}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    placeholder="Seleccionar estados emocionales..."
+                    variant="outlined"
+                  />
+                )}
+              />
+            </Box>
 
             {/* Resumen de filtros activos */}
             {hasActiveFilters && (
