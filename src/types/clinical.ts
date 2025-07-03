@@ -206,7 +206,6 @@ export interface Patient {
 export type PatientType = 'individual' | 'family' | 'couple' | 'group' | 'child' | 'adolescent' | 'adult' | 'elderly';
 
 export interface ExtendedPatient {
-  // Datos básicos (ya existentes)
   id: string;
   firstName: string;
   lastName: string;
@@ -215,14 +214,11 @@ export interface ExtendedPatient {
   dateOfBirth: Date;
   gender: 'male' | 'female' | 'other' | 'prefer-not-to-say';
   pronouns?: string;
-  
-  // Datos extendidos
   identification: {
-    type: 'dni' | 'passport' | 'nie';
+    type: 'dni' | 'nie' | 'passport';
     number: string;
     expiryDate?: Date;
   };
-  
   address: {
     street: string;
     city: string;
@@ -230,65 +226,94 @@ export interface ExtendedPatient {
     zipCode: string;
     country: string;
   };
-  
   emergencyContact: {
     name: string;
     phone: string;
     relationship: string;
     email?: string;
   };
-  
-  insurance: {
-    provider?: string;
-    policyNumber?: string;
+  insurance?: {
+    provider: string;
+    policyNumber: string;
     groupNumber?: string;
-    copay?: number;
+    copay: number;
   };
-  
   medicalInfo: {
     allergies: string[];
-    currentMedications: Medication[];
+    currentMedications: Array<{
+      name: string;
+      dosage: string;
+      frequency: string;
+      prescribedBy: string;
+      startDate: Date;
+      notes?: string;
+    }>;
     medicalHistory: string[];
     previousTherapy: boolean;
     previousTherapyDetails?: string;
   };
-  
-  // Información clínica
   assignedTherapist: string;
-  status: PatientStatus;
+  status: 'active' | 'inactive' | 'discharged' | 'pending';
   tags: string[];
-  riskLevel: RiskLevel;
-  
-  // Escalas y evaluaciones
+  riskLevel: 'low' | 'medium' | 'high' | 'critical';
   assessmentScores: {
     phq9?: number;
     gad7?: number;
-    beck?: number;
     custom: { [key: string]: number };
   };
-  
-  // Información administrativa
-  referralSource: ReferralSource;
-  consentForms: ConsentForm[];
-  
-  // Metadatos
-  createdAt: Date;
-  updatedAt: Date;
-  lastSession?: Date;
-  totalSessions: number;
-  
-  // Configuración de privacidad
+  referralSource: {
+    type: 'self' | 'family' | 'friend' | 'doctor' | 'insurance' | 'online' | 'advertisement' | 'other';
+    details?: string;
+    referrerName?: string;
+    referrerContact?: string;
+  };
+  consentForms: Array<{
+    id: string;
+    type: string;
+    signed: boolean;
+    signedDate?: Date;
+    signedAt: Date;
+    documentUrl: string;
+    version: string;
+  }>;
   privacySettings: {
     allowSMS: boolean;
     allowEmail: boolean;
     allowCalls: boolean;
     shareWithFamily: boolean;
   };
-  
-  // Datos de seguimiento
   adherenceRate: number;
-  satisfactionScore?: number;
-  feedback: PatientFeedback[];
+  feedback: Array<{
+    id: string;
+    rating: number;
+    comment: string;
+    date: Date;
+    anonymous: boolean;
+  }>;
+  createdAt: Date;
+  updatedAt: Date;
+  lastSession?: Date;
+  totalSessions: number;
+  emotionalState?: 'improving' | 'stable' | 'struggling' | 'crisis' | 'unknown';
+  nextAppointment?: Date;
+}
+
+export interface PatientFilters {
+  searchTerm?: string;
+  status?: 'active' | 'inactive' | 'discharged' | 'pending';
+  gender?: 'male' | 'female' | 'other' | 'prefer-not-to-say';
+  riskLevel?: 'low' | 'medium' | 'high' | 'critical';
+  ageRange?: {
+    min: number;
+    max: number;
+  };
+  assignedTherapist?: string;
+  dateRange?: {
+    start?: Date;
+    end?: Date;
+  };
+  emotionalState?: 'improving' | 'stable' | 'struggling' | 'crisis' | 'unknown';
+  tags?: string[];
 }
 
 export type PatientStatus = 'active' | 'inactive' | 'discharged' | 'on-hold' | 'transferred';

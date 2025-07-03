@@ -6,9 +6,10 @@ import {
   User, 
   Phone, 
   Mail,
-  MapPin,
   Clock,
-  Activity
+  Activity,
+  Heart,
+  Calendar,
 } from 'lucide-react';
 import { ExtendedPatient } from '@/types/clinical';
 
@@ -28,6 +29,16 @@ export function PatientCard({
   onSelect 
 }: PatientCardProps) {
   
+  const calculateAge = (dateOfBirth: Date) => {
+    const today = new Date();
+    const age = today.getFullYear() - dateOfBirth.getFullYear();
+    const monthDiff = today.getMonth() - dateOfBirth.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dateOfBirth.getDate())) {
+      return age - 1;
+    }
+    return age;
+  };
+
   const getRiskColor = (level: string) => {
     switch (level) {
       case 'low': return '#10B981';
@@ -53,19 +64,19 @@ export function PatientCard({
       case 'active': return '#10B981';
       case 'inactive': return '#6B7280';
       case 'discharged': return '#2563EB';
-      case 'on-hold': return '#F59E0B';
+      case 'pending': return '#F59E0B';
       default: return '#6B7280';
     }
   };
 
-  const calculateAge = (dateOfBirth: Date) => {
-    const today = new Date();
-    const age = today.getFullYear() - dateOfBirth.getFullYear();
-    const monthDiff = today.getMonth() - dateOfBirth.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dateOfBirth.getDate())) {
-      return age - 1;
+  const getEmotionalStateColor = (state?: string) => {
+    switch (state) {
+      case 'improving': return '#10B981';
+      case 'stable': return '#6366F1';
+      case 'struggling': return '#F59E0B';
+      case 'crisis': return '#EF4444';
+      default: return '#6B7280';
     }
-    return age;
   };
 
   const formatLastSession = (lastSession?: Date) => {
@@ -85,7 +96,7 @@ export function PatientCard({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      whileHover={{ scale: 1.01 }}
+      whileHover={{ scale: 1.01, y: -2 }}
       whileTap={{ scale: 0.99 }}
       onClick={onClick}
       style={{
@@ -94,10 +105,25 @@ export function PatientCard({
         borderRadius: '1rem',
         border: `1px solid ${isSelected ? '#2563EB' : '#E5E7EB'}`,
         cursor: onClick ? 'pointer' : 'default',
-        boxShadow: isSelected ? '0 4px 6px -1px rgba(0, 0, 0, 0.1)' : '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
-        transition: 'all 0.2s ease'
+        boxShadow: isSelected 
+          ? '0 8px 25px -5px rgba(37, 99, 235, 0.25)' 
+          : '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+        transition: 'all 0.3s ease',
+        position: 'relative',
+        overflow: 'hidden'
       }}
     >
+      {/* Background decoration */}
+      <div style={{
+        position: 'absolute',
+        top: '-20px',
+        right: '-20px',
+        width: '60px',
+        height: '60px',
+        background: `${getRiskColor(patient.riskLevel)}15`,
+        borderRadius: '50%'
+      }} />
+
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '1rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flex: 1 }}>
@@ -109,7 +135,12 @@ export function PatientCard({
                 e.stopPropagation();
                 onSelect(e.target.checked);
               }}
-              style={{ cursor: 'pointer' }}
+              style={{ 
+                cursor: 'pointer',
+                width: '16px',
+                height: '16px',
+                accentColor: '#2563EB'
+              }}
             />
           )}
           
@@ -117,13 +148,14 @@ export function PatientCard({
             width: '48px',
             height: '48px',
             borderRadius: '50%',
-            backgroundColor: '#EFF6FF',
+            background: 'linear-gradient(135deg, #6366F1 0%, #4F46E5 100%)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            flexShrink: 0
+            flexShrink: 0,
+            boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)'
           }}>
-            <User size={24} color="#2563EB" />
+            <User size={24} color="white" />
           </div>
           
           <div style={{ flex: 1 }}>
@@ -160,7 +192,7 @@ export function PatientCard({
                 {patient.status === 'active' ? 'Activo' : 
                  patient.status === 'inactive' ? 'Inactivo' : 
                  patient.status === 'discharged' ? 'Alta' : 
-                 patient.status === 'on-hold' ? 'En pausa' : patient.status}
+                 patient.status === 'pending' ? 'Pendiente' : patient.status}
               </span>
             </div>
           </div>
@@ -190,7 +222,7 @@ export function PatientCard({
         </div>
       </div>
 
-      {/* Quick Info */}
+      {/* Contact Info */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: showDetails ? '1fr 1fr' : '1fr',
@@ -271,17 +303,40 @@ export function PatientCard({
       {/* Extended Details */}
       {showDetails && (
         <div>
+          {/* Emotional State */}
+          {patient.emotionalState && (
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              marginBottom: '1rem'
+            }}>
+              <Heart size={14} color={getEmotionalStateColor(patient.emotionalState)} />
+              <span style={{
+                fontSize: '0.875rem',
+                fontWeight: 500,
+                color: getEmotionalStateColor(patient.emotionalState),
+                fontFamily: 'Inter, sans-serif'
+              }}>
+                {patient.emotionalState === 'improving' ? 'Mejorando' :
+                 patient.emotionalState === 'stable' ? 'Estable' :
+                 patient.emotionalState === 'struggling' ? 'Dificultades' :
+                 patient.emotionalState === 'crisis' ? 'Crisis' : 'Desconocido'}
+              </span>
+            </div>
+          )}
+
           {/* Tags */}
           {patient.tags && patient.tags.length > 0 && (
             <div style={{ marginBottom: '1rem' }}>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                {patient.tags.map((tag, index) => (
+                {patient.tags.slice(0, 3).map((tag, index) => (
                   <span
                     key={index}
                     style={{
                       padding: '0.25rem 0.5rem',
-                      backgroundColor: '#EFF6FF',
-                      color: '#2563EB',
+                      backgroundColor: '#EEF2FF',
+                      color: '#4338CA',
                       borderRadius: '0.5rem',
                       fontSize: '0.75rem',
                       fontFamily: 'Inter, sans-serif'
@@ -290,6 +345,18 @@ export function PatientCard({
                     {tag}
                   </span>
                 ))}
+                {patient.tags.length > 3 && (
+                  <span style={{
+                    padding: '0.25rem 0.5rem',
+                    backgroundColor: '#F3F4F6',
+                    color: '#6B7280',
+                    borderRadius: '0.5rem',
+                    fontSize: '0.75rem',
+                    fontFamily: 'Inter, sans-serif'
+                  }}>
+                    +{patient.tags.length - 3}
+                  </span>
+                )}
               </div>
             </div>
           )}
@@ -356,17 +423,25 @@ export function PatientCard({
             </div>
           )}
 
-          {/* Address */}
-          {patient.address && (
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
-              <MapPin size={14} color="#6B7280" style={{ marginTop: '0.125rem', flexShrink: 0 }} />
+          {/* Next Appointment */}
+          {patient.nextAppointment && (
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              padding: '0.75rem',
+              backgroundColor: '#ECFDF5',
+              borderRadius: '0.5rem',
+              border: '1px solid #D1FAE5'
+            }}>
+              <Calendar size={14} color="#10B981" />
               <span style={{
                 fontSize: '0.875rem',
-                color: '#6B7280',
-                lineHeight: 1.4,
+                color: '#065F46',
+                fontWeight: 500,
                 fontFamily: 'Inter, sans-serif'
               }}>
-                {patient.address.street}, {patient.address.city}, {patient.address.state} {patient.address.zipCode}
+                Próxima cita: {patient.nextAppointment.toLocaleDateString('es-ES')}
               </span>
             </div>
           )}
