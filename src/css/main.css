@@ -1,0 +1,177 @@
+:root {
+  /* Colores principales */
+  --primary-bg: #0a0d14;
+  --secondary-bg: #151922;
+  --accent-bg: #1e2330;
+
+  --glass-bg: rgb(21 25 34 / 70%);
+  --glass-bg-light: rgb(255 255 255 / 5%);
+  --glass-bg-medium: rgb(255 255 255 / 8%);
+  --glass-bg-strong: rgb(255 255 255 / 12%);
+  --glass-border: rgb(255 255 255 / 12%);
+
+  --starflex-red: #FF2D55;
+  --starflex-red-dark: #cc1744;
+  --starflex-red-bright: #ff4569;
+  --starflex-orange: #ff6b35;
+  --starflex-orange-bright: #ff7a47;
+  --starflex-crimson: #b8002e;
+  --starflex-crimson-glow: #ff1744;
+  --starflex-crimson-light: #d4003a;
+  --starflex-crimson-dark: #9c0025;
+  --starflex-crimson-bright: #ff4569;
+
+  --neon-primary: #FF2D55;
+  --neon-primary-bright: #ff4569;
+  --neon-primary-glow: #ff1744;
+  --neon-glow-soft: 0 0 15px rgb(255 45 85 / 40%);
+  --neon-glow-medium: 0 0 25px rgb(255 45 85 / 60%);
+  --neon-glow-strong: 0 0 35px rgb(255 45 85 / 80%);
+
+  --neon-shadow-base: 0 8px 25px rgb(255 45 85 / 30%);
+  --neon-shadow-hover: 0 15px 40px rgb(255 45 85 / 50%);
+  --neon-shadow-active: 0 20px 50px rgb(255 45 85 / 70%);
+  --shadow-sm: 0 4px 12px rgb(0 0 0 / 15%);
+  --shadow-md: 0 8px 25px rgb(0 0 0 / 20%);
+  --shadow-lg: 0 15px 35px rgb(0 0 0 / 25%);
+  --shadow-xl: 0 25px 50px rgb(0 0 0 / 30%);
+  --shadow-2xl: 0 35px 70px rgb(0 0 0 / 40%);
+  --shadow-crimson: 0 15px 40px rgb(255 45 85 / 40%);
+  --shadow-crimson-hover: 0 25px 60px rgb(255 45 85 / 60%);
+
+  --text-primary: #fff;
+  --text-secondary: #e2e8f0;
+  --text-muted: #94a3b8;
+  --text-accent: #ff4569;
+
+  /* Bordes unificados */
+  --border-subtle: rgb(255 255 255 / 8%);
+  --border-accent: rgb(255 69 105 / 30%);
+  --border-crimson: rgb(184 0 46 / 40%);
+
+  /* Efectos de brillo unificados */
+  --glow-subtle: 0 0 20px rgb(255 69 105 / 20%);
+  --glow-medium: 0 0 30px rgb(255 69 105 / 30%);
+  --glow-strong: 0 0 40px rgb(255 69 105 / 40%);
+
+  /* Tipografía */
+  --font-primary: 'Space Grotesk', -apple-system, blinkmacsystemfont, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  /* Espaciado fluido unificado */
+  --space-xs: 0.375rem;
+  --space-sm: 0.5rem;
+  --space-md: 0.75rem;
+  --space-lg: 1rem;
+  --space-xl: 1.25rem;
+  --space-2xl: 1.5rem;
+  --space-3xl: 2rem;
+  --space-4xl: 2.5rem;
+  --space-5xl: 3rem;
+  --space-6xl: 4rem;
+
+  /* Padding fluido para secciones */
+  --section-padding-x: clamp(1rem, 5vw, 8rem);
+  --section-padding-y: clamp(3rem, 8vh, 8rem);
+
+  /* NUEVAS VARIABLES PARA RESTRICCIONES DE ANCHO MÁXIMO */
+  --max-content-width: 1400px;
+  --max-hero-width: 1600px;
+  --max-features-width: 1500px;
+  --max-videos-width: 1200px;
+  --max-faq-width: 1000px;
+  --max-contact-width: 1200px;
+
+  /* Transiciones unificadas */
+  --transition: 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --transition-fast: 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --transition-slow: 1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+  /* Variables específicas para navbar */
+  --navbar-height: 80px;
+  --navbar-height-mobile: 70px;
+  --navbar-z-index: 1000;
+  --hamburger-size: 24px;
+
+  /* NUEVAS VARIABLES PARA EL DRAWER MODERNO */
+  --drawer-width: 70vw;
+  --drawer-max-width: 350px;
+  --drawer-overlay-bg: rgb(0 0 0 / 60%);
+  --drawer-transition: 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+  /* Variables para el selector de idioma flotante */
+  --language-switcher-z-index: 1050;
+  --language-switcher-safe-area: 20px;
+
+  /* Variables móviles específicas */
+  --mobile-container-padding: clamp(1rem, 4vw, 2rem);
+  --mobile-section-padding: clamp(2.5rem, 8vw, 5rem);
+  --mobile-text-scale: clamp(0.875rem, 3.5vw, 1rem);
+  --mobile-title-scale: clamp(1.8rem, 7vw, 3.5rem);
+  --mobile-button-height: clamp(48px, 12vw, 60px);
+  --mobile-touch-target: 48px;
+
+  /* Variables para tamaños de imágenes optimizadas */
+  --phone-width-desktop: 280px;
+  --phone-height-desktop: 560px;
+
+  /* Variables móviles específicas */
+  --phone-width-mobile: clamp(200px, 70vw, 280px);
+  --phone-height-mobile: clamp(400px, 140vw, 560px);
+  --phone-border-radius: clamp(30px, 6vw, 40px);
+
+  /* Variables específicas para móvil - imágenes de características */
+  --mobile-feature-image-width: clamp(180px, 50vw, 240px);
+  --mobile-feature-image-height: clamp(360px, 100vw, 480px);
+  --mobile-feature-image-border-radius: clamp(20px, 5vw, 30px);
+}
+
+/* ===== RESET MEJORADO ===== */
+*, *::before, *::after {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  overflow-x: hidden;
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+
+body {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: 0;
+  margin: 0;
+  overflow-x: hidden;
+  font-family: var(--font-primary);
+  line-height: 1.5;
+  color: var(--text-primary);
+  background: var(--primary-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.hero__container,
+.features__header,
+.features__grid,
+.videos__header,
+.videos__main-container,
+.videos__cta,
+.faq__header,
+.faq__container,
+.contact__header,
+.contact__grid,
+.contact__footer-content {
+  width: 100%;
+  max-width: var(--max-content-width);
+  margin-right: auto;
+  margin-left: auto;
+}
