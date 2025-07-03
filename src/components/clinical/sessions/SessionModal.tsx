@@ -55,7 +55,14 @@ const SessionModal: React.FC<SessionModalProps> = ({
     emotionalTonePost: '' as EmotionalState | '',
   });
 
-  const [aiAnalysis, setAiAnalysis] = useState<any>(null);
+  type AIAnalysis = {
+    summary: string;
+    recommendation: string;
+    keyInsights: string[];
+    emotionalTone: EmotionalState;
+  } | null;
+
+  const [aiAnalysis, setAiAnalysis] = useState<AIAnalysis>(null);
   const [analyzingAI, setAnalyzingAI] = useState(false);
 
   useEffect(() => {

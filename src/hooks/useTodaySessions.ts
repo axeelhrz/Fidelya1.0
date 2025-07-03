@@ -14,14 +14,14 @@ export const useTodaySessions = (selectedDate?: string) => {
   const today = selectedDate || new Date().toISOString().split('T')[0];
 
   const fetchSessions = useCallback(async () => {
-    if (!user?.centerId || !user?.uid) return;
+    if (!user?.centerId || !user?.id) return;
 
     try {
       setLoading(true);
       setError(null);
       const fetchedSessions = await SessionService.getTodaySessions(
         user.centerId,
-        user.uid,
+        user.id,
         today
       );
       setSessions(fetchedSessions);
@@ -32,7 +32,7 @@ export const useTodaySessions = (selectedDate?: string) => {
     } finally {
       setLoading(false);
     }
-  }, [user?.centerId, user?.uid, today]);
+  }, [user?.centerId, user?.id, today]);
 
   const applyFilters = useCallback((newFilters: SessionFilters) => {
     setFilters(newFilters);

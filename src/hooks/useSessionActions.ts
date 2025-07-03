@@ -10,7 +10,7 @@ export const useSessionActions = () => {
   const [error, setError] = useState<string | null>(null);
 
   const createSession = useCallback(async (sessionData: CreateSessionData): Promise<string | null> => {
-    if (!user?.centerId || !user?.uid) {
+    if (!user?.centerId || !user?.id) {
       setError('Usuario no autenticado');
       return null;
     }
@@ -20,7 +20,7 @@ export const useSessionActions = () => {
       setError(null);
       const sessionId = await SessionService.createSession(user.centerId, {
         ...sessionData,
-        professionalId: user.uid,
+        professionalId: user.id,
       });
       return sessionId;
     } catch (err) {
@@ -30,7 +30,7 @@ export const useSessionActions = () => {
     } finally {
       setLoading(false);
     }
-  }, [user?.centerId, user?.uid]);
+  }, [user?.centerId, user?.id]);
 
   const updateSession = useCallback(async (sessionId: string, updateData: UpdateSessionData): Promise<boolean> => {
     if (!user?.centerId) {

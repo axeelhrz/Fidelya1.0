@@ -6,7 +6,6 @@ import {
   IconButton,
   Stack,
   Chip,
-  Divider,
   Button,
   Paper,
   Avatar,
@@ -17,7 +16,7 @@ import {
   Schedule,
   Notes,
   Psychology,
-  FileText,
+  Description,
   Edit,
   Download,
 } from '@mui/icons-material';
@@ -237,7 +236,7 @@ const SessionDetailDrawer: React.FC<SessionDetailDrawerProps> = ({
             {session.attachments && session.attachments.length > 0 && (
               <Paper sx={{ p: 3 }}>
                 <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <FileText />
+                  <Description />
                   Archivos Adjuntos
                 </Typography>
                 
@@ -246,7 +245,7 @@ const SessionDetailDrawer: React.FC<SessionDetailDrawerProps> = ({
                     <Chip
                       key={index}
                       label={attachment}
-                      icon={<FileText />}
+                      icon={<Description />}
                       variant="outlined"
                       clickable
                       onClick={() => console.log('Download attachment:', attachment)}

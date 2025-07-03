@@ -84,7 +84,11 @@ const SessionFiltersComponent: React.FC<SessionFiltersProps> = ({
           <Select
             value={filters.timeRange || ''}
             label="Horario"
-            onChange={(e) => handleTimeRangeChange(e.target.value as any)}
+            onChange={(e) =>
+              handleTimeRangeChange(
+                (e.target as HTMLInputElement).value as 'morning' | 'afternoon' | 'evening' | ''
+              )
+            }
           >
             <MenuItem value="">Todo el día</MenuItem>
             <MenuItem value="morning">Mañana (6-12h)</MenuItem>
