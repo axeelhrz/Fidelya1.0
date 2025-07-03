@@ -13,10 +13,17 @@
     "build:prod": "postcss css/style.css --config postcss.config.js --output dist/style.min.css --env production",
     "organize": "node scripts/organize-css.js",
     "test:visual": "node scripts/visual-test.js",
-    "optimize": "npm run lint:fix && npm run build:prod",
+    "optimize": "node scripts/optimize-css.js",
+    "optimize:quick": "npm run lint:fix && npm run build:prod",
     "dev": "npm run build:dev && npm run test:visual",
     "clean": "rimraf dist/ css-modules/ reports/",
-    "report": "npm run audit && npm run lint > reports/lint-report.txt"
+    "report": "npm run audit && npm run lint > reports/lint-report.txt",
+    "backup": "cp css/style.css backup/style-$(date +%Y%m%d-%H%M%S).css",
+    "restore": "cp backup/style-original.css css/style.css",
+    "compare": "node scripts/compare-css.js",
+    "validate": "npm run lint && npm run test:visual",
+    "deploy:prep": "npm run optimize && npm run validate",
+    "help": "echo 'Comandos disponibles: audit, lint, organize, optimize, build:dev, build:prod, test:visual, clean, backup, restore'"
   },
   "devDependencies": {
     "stylelint": "^15.11.0",
