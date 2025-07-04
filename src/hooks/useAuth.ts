@@ -5,6 +5,7 @@ import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { authService, LoginCredentials, RegisterData, AuthResponse } from '@/services/auth.service';
 import { UserData } from '@/types/auth';
+import { logAuthError } from '@/lib/firebase-errors';
 
 interface AuthState {
   user: UserData | null;
@@ -35,22 +36,41 @@ export const useAuth = (): AuthState & AuthActions => {
 
   // Initialize auth state listener
   useEffect(() => {
+    console.log('🔐 Initializing auth state listener...');
+    
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       try {
+        console.log('🔐 Auth state changed:', firebaseUser ? 'User signed in' : 'User signed out');
+        
         if (firebaseUser) {
           // User is signed in
+          console.log('🔐 Fetching user data for UID:', firebaseUser.uid);
           const userData = await authService.getUserData(firebaseUser.uid);
           
-          setState(prev => ({
-            ...prev,
-            user: userData,
-            firebaseUser,
-            loading: false,
-            isAuthenticated: !!userData,
-            error: null
-          }));
+          if (userData) {
+            console.log('🔐 User data loaded successfully:', userData.nombre);
+            setState(prev => ({
+              ...prev,
+              user: userData,
+              firebaseUser,
+              loading: false,
+              isAuthenticated: true,
+              error: null
+            }));
+          } else {
+            console.warn('🔐 User data not found in Firestore');
+            setState(prev => ({
+              ...prev,
+              user: null,
+              firebaseUser,
+              loading: false,
+              isAuthenticated: false,
+              error: 'Datos de usuario no encontrados'
+            }));
+          }
         } else {
           // User is signed out
+          console.log('🔐 User signed out, clearing state');
           setState(prev => ({
             ...prev,
             user: null,
@@ -61,7 +81,7 @@ export const useAuth = (): AuthState & AuthActions => {
           }));
         }
       } catch (error) {
-        console.error('Error in auth state change:', error);
+        logAuthError(error, 'Auth State Change');
         setState(prev => ({
           ...prev,
           user: null,
@@ -73,50 +93,86 @@ export const useAuth = (): AuthState & AuthActions => {
       }
     });
 
-    return () => unsubscribe();
+    return () => {
+      console.log('🔐 Cleaning up auth state listener');
+      unsubscribe();
+    };
   }, []);
 
   // Sign in
   const signIn = useCallback(async (credentials: LoginCredentials): Promise<AuthResponse> => {
+    console.log('🔐 useAuth: Sign in attempt');
     setState(prev => ({ ...prev, loading: true, error: null }));
     
-    const response = await authService.signIn(credentials);
-    
-    if (!response.success) {
+    try {
+      const response = await authService.signIn(credentials);
+      
+      if (!response.success) {
+        setState(prev => ({ 
+          ...prev, 
+          loading: false, 
+          error: response.error || 'Error al iniciar sesión' 
+        }));
+      } else {
+        // Success state will be handled by onAuthStateChanged
+        setState(prev => ({ ...prev, loading: false, error: null }));
+      }
+      
+      return response;
+    } catch (error) {
+      logAuthError(error, 'useAuth Sign In');
+      const errorMessage = 'Error inesperado al iniciar sesión';
       setState(prev => ({ 
         ...prev, 
         loading: false, 
-        error: response.error || 'Error al iniciar sesión' 
+        error: errorMessage 
       }));
+      return { success: false, error: errorMessage };
     }
-    
-    return response;
   }, []);
 
   // Register
   const register = useCallback(async (data: RegisterData): Promise<AuthResponse> => {
+    console.log('🔐 useAuth: Registration attempt');
     setState(prev => ({ ...prev, loading: true, error: null }));
     
-    const response = await authService.register(data);
-    
-    if (!response.success) {
+    try {
+      const response = await authService.register(data);
+      
+      if (!response.success) {
+        setState(prev => ({ 
+          ...prev, 
+          loading: false, 
+          error: response.error || 'Error al registrar usuario' 
+        }));
+      } else {
+        // Success state will be handled by onAuthStateChanged
+        setState(prev => ({ ...prev, loading: false, error: null }));
+      }
+      
+      return response;
+    } catch (error) {
+      logAuthError(error, 'useAuth Register');
+      const errorMessage = 'Error inesperado al registrar usuario';
       setState(prev => ({ 
         ...prev, 
         loading: false, 
-        error: response.error || 'Error al registrar usuario' 
+        error: errorMessage 
       }));
+      return { success: false, error: errorMessage };
     }
-    
-    return response;
   }, []);
 
   // Sign out
   const signOut = useCallback(async (): Promise<void> => {
+    console.log('🔐 useAuth: Sign out attempt');
     setState(prev => ({ ...prev, loading: true, error: null }));
     
     try {
       await authService.signOut();
+      // State will be updated by onAuthStateChanged
     } catch (error) {
+      logAuthError(error, 'useAuth Sign Out');
       setState(prev => ({ 
         ...prev, 
         loading: false, 
@@ -128,38 +184,61 @@ export const useAuth = (): AuthState & AuthActions => {
 
   // Reset password
   const resetPassword = useCallback(async (email: string): Promise<AuthResponse> => {
+    console.log('🔐 useAuth: Password reset attempt');
     setState(prev => ({ ...prev, error: null }));
     
-    const response = await authService.resetPassword(email);
-    
-    if (!response.success) {
+    try {
+      const response = await authService.resetPassword(email);
+      
+      if (!response.success) {
+        setState(prev => ({ 
+          ...prev, 
+          error: response.error || 'Error al enviar email de recuperación' 
+        }));
+      }
+      
+      return response;
+    } catch (error) {
+      logAuthError(error, 'useAuth Reset Password');
+      const errorMessage = 'Error inesperado al enviar email de recuperación';
       setState(prev => ({ 
         ...prev, 
-        error: response.error || 'Error al enviar email de recuperación' 
+        error: errorMessage 
       }));
+      return { success: false, error: errorMessage };
     }
-    
-    return response;
   }, []);
 
   // Update password
   const updatePassword = useCallback(async (newPassword: string): Promise<AuthResponse> => {
+    console.log('🔐 useAuth: Password update attempt');
     setState(prev => ({ ...prev, error: null }));
     
-    const response = await authService.updateUserPassword(newPassword);
-    
-    if (!response.success) {
+    try {
+      const response = await authService.updateUserPassword(newPassword);
+      
+      if (!response.success) {
+        setState(prev => ({ 
+          ...prev, 
+          error: response.error || 'Error al actualizar contraseña' 
+        }));
+      }
+      
+      return response;
+    } catch (error) {
+      logAuthError(error, 'useAuth Update Password');
+      const errorMessage = 'Error inesperado al actualizar contraseña';
       setState(prev => ({ 
         ...prev, 
-        error: response.error || 'Error al actualizar contraseña' 
+        error: errorMessage 
       }));
+      return { success: false, error: errorMessage };
     }
-    
-    return response;
   }, []);
 
   // Clear error
   const clearError = useCallback((): void => {
+    console.log('🔐 useAuth: Clearing error');
     setState(prev => ({ ...prev, error: null }));
   }, []);
 
@@ -167,6 +246,7 @@ export const useAuth = (): AuthState & AuthActions => {
   const refreshUser = useCallback(async (): Promise<void> => {
     if (state.firebaseUser) {
       try {
+        console.log('🔐 useAuth: Refreshing user data');
         const userData = await authService.getUserData(state.firebaseUser.uid);
         setState(prev => ({
           ...prev,
@@ -174,7 +254,7 @@ export const useAuth = (): AuthState & AuthActions => {
           isAuthenticated: !!userData
         }));
       } catch (error) {
-        console.error('Error refreshing user:', error);
+        logAuthError(error, 'useAuth Refresh User');
       }
     }
   }, [state.firebaseUser]);

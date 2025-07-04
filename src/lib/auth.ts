@@ -7,7 +7,7 @@ import {
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { auth, db } from './firebase';
 
-export type UserRole = 'asociacion' | 'socio' | 'comercio';
+export type UserRole = 'asociacion' | 'socio' | 'comercio' | 'admin';
 
 export interface UserData {
   uid: string;
@@ -63,6 +63,8 @@ export const getDashboardRoute = (role: UserRole): string => {
       return '/dashboard/comercio';
     case 'socio':
       return '/dashboard/socio';
+    case 'admin':
+      return '/dashboard/asociacion'; // Admin users go to asociacion dashboard
     default:
       return '/dashboard';
   }
