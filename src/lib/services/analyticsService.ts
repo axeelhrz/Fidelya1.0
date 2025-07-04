@@ -33,7 +33,7 @@ export class AnalyticsService {
 
       // Calcular métricas principales
       const totalPatients = patients.length;
-      const activeSessions = sessions.filter(s => s.status === 'programada' || s.status === 'completada').length;
+      const activeSessions = sessions.filter(s => s.status === 'confirmada' || s.status === 'finalizada').length;
       const averageSessionsPerPatient = totalPatients > 0 ? activeSessions / totalPatients : 0;
       
       // Calcular alertas activas
@@ -57,11 +57,11 @@ export class AnalyticsService {
 
       // Calcular tasa de finalización de sesiones
       const scheduledSessions = sessions.length;
-      const completedSessions = sessions.filter(s => s.status === 'completed').length;
+      const completedSessions = sessions.filter(s => s.status === 'finalizada').length;
       const sessionCompletionRate = scheduledSessions > 0 ? (completedSessions / scheduledSessions) * 100 : 0;
 
       // Calcular duración promedio de sesiones
-      const completedSessionsWithDuration = sessions.filter(s => s.status === 'completed' && s.duration);
+      const completedSessionsWithDuration = sessions.filter(s => s.status === 'finalizada' && s.duration);
       const averageSessionDuration = completedSessionsWithDuration.length > 0 
         ? completedSessionsWithDuration.reduce((sum, s) => sum + s.duration, 0) / completedSessionsWithDuration.length 
         : 0;
@@ -148,7 +148,7 @@ export class AnalyticsService {
       other: 0
     };
 
-    const completedSessions = sessions.filter(s => s.status === 'completed' && s.emotionalState);
+    const completedSessions = sessions.filter(s => s.status === 'finalizada' && s.emotionalState);
     
     if (completedSessions.length === 0) return distribution;
 
@@ -203,13 +203,11 @@ export class AnalyticsService {
       const data = monthlyData.get(key)!;
       data.totalSessions += 1;
 
-      if (session.status === 'completed') {
+      if (session.status === 'finalizada') {
         data.completedSessions += 1;
         data.revenue += session.cost || 0;
-      } else if (session.status === 'cancelled') {
+      } else if (session.status === 'cancelada') {
         data.cancelledSessions += 1;
-      } else if (session.status === 'no-show') {
-        data.noShowSessions += 1;
       }
     });
 
@@ -254,7 +252,7 @@ export class AnalyticsService {
     });
 
     sessions
-      .filter(s => s.status === 'completed' && s.emotionalState)
+      .filter(s => s.status === 'finalizada' && s.emotionalState)
       .forEach(session => {
         const evolution = patientEvolution.get(session.patientId);
         if (evolution) {
@@ -303,7 +301,7 @@ export class AnalyticsService {
   private generatePatientSummary(patients: Patient[], sessions: Session[]): PatientAnalyticsSummary[] {
     return patients.map(patient => {
       const patientSessions = sessions.filter(s => s.patientId === patient.id);
-      const completedSessions = patientSessions.filter(s => s.status === 'completed');
+      const completedSessions = patientSessions.filter(s => s.status === 'finalizada');
       
       // Calcular emoción predominante
       const emotionalStates = completedSessions
@@ -350,7 +348,7 @@ export class AnalyticsService {
         : new Date(patient.createdAt);
 
       const upcomingSessions = patientSessions.filter(s => 
-        s.status === 'scheduled' && new Date(s.date) > new Date()
+        s.status === 'confirmada' && new Date(s.date) > new Date()
       );
       const nextSession = upcomingSessions.length > 0 
         ? new Date(Math.min(...upcomingSessions.map(s => new Date(s.date).getTime())))
