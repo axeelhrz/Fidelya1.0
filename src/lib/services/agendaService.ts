@@ -21,7 +21,6 @@ import {
   AgendaFilters,
   CalendarEvent,
   AgendaStats,
-  RecurrenceRule
 } from '../../types/agenda';
 
 export class AgendaService {
@@ -104,7 +103,6 @@ export class AgendaService {
         ...appointmentData,
         professionalId,
         centerId,
-        endDateTime,
         status: 'reservada' as const,
         startDateTime: Timestamp.fromDate(appointmentData.startDateTime),
         endDateTime: Timestamp.fromDate(endDateTime),
@@ -134,19 +132,65 @@ export class AgendaService {
     try {
       const appointmentRef = doc(db, 'centers', centerId, 'appointments', appointmentId);
       
-      const updatePayload: any = {
-        ...updateData,
+      // Prepare the update payload with proper type conversion
+      const updatePayload: Partial<{
+        status: string;
+        type: string;
+        motive: string;
+        notes: string;
+        consultorio: string;
+        startDateTime: Timestamp;
+        endDateTime: Timestamp;
+        duration: number;
+        updatedAt: Timestamp;
+      }> = {
         updatedAt: Timestamp.fromDate(new Date())
       };
 
-      if (updateData.startDateTime) {
+      // Handle each field individually with proper type conversion
+      if (updateData.status !== undefined) {
+        updatePayload.status = updateData.status;
+      }
+
+      if (updateData.type !== undefined) {
+        updatePayload.type = updateData.type;
+      }
+
+      if (updateData.motive !== undefined) {
+        updatePayload.motive = updateData.motive;
+      }
+
+      if (updateData.notes !== undefined) {
+        updatePayload.notes = updateData.notes;
+      }
+
+      if (updateData.consultorio !== undefined) {
+        updatePayload.consultorio = updateData.consultorio;
+      }
+
+      if (updateData.startDateTime !== undefined) {
         updatePayload.startDateTime = Timestamp.fromDate(updateData.startDateTime);
         
-        if (updateData.duration) {
+        // If duration is also provided, calculate new end time
+        if (updateData.duration !== undefined) {
           const endDateTime = new Date(updateData.startDateTime);
           endDateTime.setMinutes(endDateTime.getMinutes() + updateData.duration);
           updatePayload.endDateTime = Timestamp.fromDate(endDateTime);
         }
+      } else if (updateData.duration !== undefined) {
+        // If only duration is updated, we need to get the current start time
+        const currentDoc = await getDoc(appointmentRef);
+        if (currentDoc.exists()) {
+          const currentData = currentDoc.data();
+          const currentStartTime = currentData.startDateTime.toDate();
+          const newEndTime = new Date(currentStartTime);
+          newEndTime.setMinutes(newEndTime.getMinutes() + updateData.duration);
+          updatePayload.endDateTime = Timestamp.fromDate(newEndTime);
+        }
+      }
+
+      if (updateData.duration !== undefined) {
+        updatePayload.duration = updateData.duration;
       }
 
       await updateDoc(appointmentRef, updatePayload);
@@ -399,16 +443,18 @@ export class AgendaService {
       // Calculate next occurrence
       switch (recurrenceRule.type) {
         case 'daily':
-          currentDate.setDate(currentDate.getDate() + recurrenceRule.interval);
+          currentDate = new Date(currentDate.getTime() + (recurrenceRule.interval * 24 * 60 * 60 * 1000));
           break;
         case 'weekly':
-          currentDate.setDate(currentDate.getDate() + (7 * recurrenceRule.interval));
+          currentDate = new Date(currentDate.getTime() + (7 * recurrenceRule.interval * 24 * 60 * 60 * 1000));
           break;
         case 'biweekly':
-          currentDate.setDate(currentDate.getDate() + (14 * recurrenceRule.interval));
+          currentDate = new Date(currentDate.getTime() + (14 * recurrenceRule.interval * 24 * 60 * 60 * 1000));
           break;
         case 'monthly':
-          currentDate.setMonth(currentDate.getMonth() + recurrenceRule.interval);
+          const newDate = new Date(currentDate);
+          newDate.setMonth(newDate.getMonth() + recurrenceRule.interval);
+          currentDate = newDate;
           break;
       }
 
