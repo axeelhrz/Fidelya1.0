@@ -9,8 +9,6 @@ import {
   Download,
   Search,
   X,
-  ChevronDown,
-  MoreVertical,
   Edit,
   Trash2,
   CheckCircle,
@@ -21,31 +19,18 @@ import {
   Sun,
   Moon,
   RefreshCw,
-  Upload,
   Eye,
   AlertCircle,
   Users,
-  Video,
-  MessageSquare,
-  Copy,
-  ExternalLink,
-  Settings,
-  Archive,
-  Star,
-  TrendingUp,
-  BarChart3,
   Calendar as CalendarIcon,
-  Filter as FilterIcon,
   SortAsc,
   SortDesc,
-  Grid3X3,
   List,
   Columns,
   CheckSquare,
   Square
 } from 'lucide-react';
 import { useAgenda } from '@/hooks/useAgenda';
-import { useAuth } from '@/contexts/AuthContext';
 import AppointmentModal from '@/components/clinical/agenda/AppointmentModal';
 import AppointmentDetailsModal from '@/components/clinical/agenda/AppointmentDetailsModal';
 import { 
@@ -56,7 +41,7 @@ import {
   CreateAppointmentData,
   UpdateAppointmentData
 } from '@/types/agenda';
-import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isToday, isTomorrow, isYesterday, parseISO } from 'date-fns';
+import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isToday, isTomorrow, isYesterday } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 // Interfaces para la vista
@@ -89,10 +74,8 @@ interface ViewMode {
 }
 
 export default function AppointmentsPage() {
-  const { user } = useAuth();
   const {
     appointments,
-    stats,
     loading,
     error,
     clearError,
@@ -181,27 +164,37 @@ export default function AppointmentsPage() {
     }
 
     // Apply filters
-    filtered = filterAppointments(filtered, filters);
+    if (Object.keys(filters).length > 0) {
+      const filteredAppointments = filterAppointments(filters);
+      filtered = filtered.filter(appointment => 
+        filteredAppointments.some(filteredApt => filteredApt.id === appointment.id)
+      );
+    }
 
     // Apply sorting
     filtered.sort((a, b) => {
-      let aValue: any = a[sortConfig.field as keyof Appointment];
-      let bValue: any = b[sortConfig.field as keyof Appointment];
+      let aValue: unknown = a[sortConfig.field as keyof Appointment];
+      let bValue: unknown = b[sortConfig.field as keyof Appointment];
 
       // Handle date sorting
       if (sortConfig.field === 'startDateTime') {
-        aValue = new Date(aValue).getTime();
-        bValue = new Date(bValue).getTime();
+        aValue = new Date(aValue as string | number | Date).getTime();
+        bValue = new Date(bValue as string | number | Date).getTime();
       }
 
       // Handle string sorting
-      if (typeof aValue === 'string') {
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
         aValue = aValue.toLowerCase();
         bValue = bValue.toLowerCase();
       }
 
-      if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
-      if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+      if (typeof aValue === 'number' && typeof bValue === 'number') {
+        if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+      } else if (typeof aValue === 'string' && typeof bValue === 'string') {
+        if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+      }
       return 0;
     });
 
@@ -325,10 +318,6 @@ export default function AppointmentsPage() {
   }, [selectedAppointments, deleteAppointment]);
 
   const handleExport = useCallback(async (config: ExportConfig) => {
-    const appointmentsToExport = config.selectedOnly 
-      ? appointments.filter(apt => selectedAppointments.has(apt.id))
-      : filteredAndSortedAppointments;
-
     if (config.format === 'csv') {
       const csvContent = exportToCSV();
       const blob = new Blob([csvContent], { type: 'text/csv' });
@@ -350,7 +339,7 @@ export default function AppointmentsPage() {
     }
 
     setShowExportModal(false);
-  }, [selectedAppointments, filteredAndSortedAppointments, exportToCSV, exportToICS]);
+  }, [exportToCSV, exportToICS]);
 
   const handleRefresh = useCallback(() => {
     const today = new Date();
@@ -965,7 +954,7 @@ export default function AppointmentsPage() {
           color: '#F59E0B',
           bgColor: isDarkMode ? '#92400E' : '#FFFBEB'
         }
-      ].map((stat, index) => (
+      ].map((stat) => (
         <motion.div
           key={stat.label}
           whileHover={{ scale: 1.02 }}
@@ -1105,66 +1094,67 @@ export default function AppointmentsPage() {
             </motion.button>
 
             <motion.button
-              whileHover={{ scale: 1.1 }}
+                            whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               onClick={handleBulkDelete}
               style={{
-              padding: '0.25rem 0.5rem',
-              background: '#EF4444',
-              color: 'white',
-              border: 'none',
-              borderRadius: '0.25rem',
-              fontSize: '0.75rem',
-              cursor: 'pointer',
+                padding: '0.25rem 0.5rem',
+                background: '#EF4444',
+                color: 'white',
+                border: 'none',
+                borderRadius: '0.25rem',
+                fontSize: '0.75rem',
+                cursor: 'pointer',
+                fontFamily: 'Inter, sans-serif'
+              }}
+            >
+              Eliminar
+            </motion.button>
+          </motion.div>
+        )}
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <select
+            value={pageSize}
+            onChange={(e) => setPageSize(Number(e.target.value))}
+            style={{
+              padding: '0.5rem',
+              border: `1px solid ${isDarkMode ? '#475569' : '#D1D5DB'}`,
+              borderRadius: '0.5rem',
+              fontSize: '0.875rem',
+              background: isDarkMode ? '#334155' : 'white',
+              color: isDarkMode ? '#F1F5F9' : '#1F2937',
               fontFamily: 'Inter, sans-serif'
             }}
           >
-            Eliminar
+            <option value={10}>10 por página</option>
+            <option value={25}>25 por página</option>
+            <option value={50}>50 por página</option>
+            <option value={100}>100 por página</option>
+          </select>
+
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => setViewMode(prev => ({ 
+              ...prev, 
+              density: prev.density === 'compact' ? 'comfortable' : 
+                       prev.density === 'comfortable' ? 'spacious' : 'compact'
+            }))}
+            style={{
+              padding: '0.5rem',
+              background: 'transparent',
+              border: `1px solid ${isDarkMode ? '#475569' : '#D1D5DB'}`,
+              borderRadius: '0.5rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            <Columns size={16} color={isDarkMode ? '#94A3B8' : '#6B7280'} />
           </motion.button>
-        </motion.div>
-      )}
-
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-        <select
-          value={pageSize}
-          onChange={(e) => setPageSize(Number(e.target.value))}
-          style={{
-            padding: '0.5rem',
-            border: `1px solid ${isDarkMode ? '#475569' : '#D1D5DB'}`,
-            borderRadius: '0.5rem',
-            fontSize: '0.875rem',
-            background: isDarkMode ? '#334155' : 'white',
-            color: isDarkMode ? '#F1F5F9' : '#1F2937',
-            fontFamily: 'Inter, sans-serif'
-          }}
-        >
-          <option value={10}>10 por página</option>
-          <option value={25}>25 por página</option>
-          <option value={50}>50 por página</option>
-          <option value={100}>100 por página</option>
-        </select>
-
-        <motion.button
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={() => setViewMode(prev => ({ 
-            ...prev, 
-            density: prev.density === 'compact' ? 'comfortable' : 
-                     prev.density === 'comfortable' ? 'spacious' : 'compact'
-          }))}
-          style={{
-            padding: '0.5rem',
-            background: 'transparent',
-            border: `1px solid ${isDarkMode ? '#475569' : '#D1D5DB'}`,
-            borderRadius: '0.5rem',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}
-        >
-          <Columns size={16} color={isDarkMode ? '#94A3B8' : '#6B7280'} />
-        </motion.button>
+        </div>
       </div>
     </div>
   );
@@ -1579,7 +1569,7 @@ export default function AppointmentsPage() {
         <div style={{
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'between',
+          justifyContent: 'space-between',
           padding: '1rem 1.5rem',
           borderTop: `1px solid ${isDarkMode ? 'rgba(148, 163, 184, 0.2)' : 'rgba(229, 231, 235, 0.6)'}`,
           background: isDarkMode ? 'rgba(51, 65, 85, 0.3)' : 'rgba(248, 250, 252, 0.5)'
@@ -2129,3 +2119,4 @@ export default function AppointmentsPage() {
     </div>
   );
 }
+
