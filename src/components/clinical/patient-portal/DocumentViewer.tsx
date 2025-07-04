@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import {
   Dialog,
   DialogTitle,
@@ -199,12 +200,12 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
             overflow: 'hidden'
           }}
         >
-          <img
+          <Image
             src={document.fileUrl}
             alt={document.title}
+            fill
             style={{
-              maxWidth: '100%',
-              maxHeight: '100%',
+              objectFit: 'contain',
               transform: `scale(${zoom / 100}) rotate(${rotation}deg)`,
               transition: 'transform 0.3s ease',
               borderRadius: '4px',

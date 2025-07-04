@@ -52,16 +52,19 @@ export const COLLECTIONS = {
   THERAPISTS: 'therapists',
   SESSIONS: 'sessions',
   APPOINTMENTS: 'appointments',
-  NOTES: 'notes',
-  ALERTS: 'alerts',
-  TASKS: 'tasks',
   ASSESSMENTS: 'assessments',
-  CLINICAL_ALERTS: 'clinical_alerts',
-  AI_INSIGHTS: 'ai_insights',
-  ANALYTICS: 'analytics',
-  MESSAGES: 'messages',
-  VIDEO_CALLS: 'video_calls',
-  PHONE_CALLS: 'phone_calls'
+  NOTES: 'notes',
+  DOCUMENTS: 'documents',
+  TREATMENTS: 'treatments',
+  ALERTS: 'alerts',
+  PHONE_CALLS: 'phone_calls',
+  EXPENSES: 'expenses',
+  FINANCIAL_RECORDS: 'financial_records',
+  REVENUE: 'revenue',
+  PAYMENTS: 'payments',
+  LEADS: 'leads',
+  CAMPAIGNS: 'campaigns',
+  TASKS: 'tasks',
 } as const;
 
 // Utilidades para manejo de errores

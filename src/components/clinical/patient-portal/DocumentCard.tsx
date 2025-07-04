@@ -17,7 +17,7 @@ import {
   PictureAsPdf,
   AudioFile,
   VideoFile,
-  Image,
+  Image as ImageIcon,
   InsertDriveFile,
   FiberNew,
   Schedule,
@@ -62,7 +62,7 @@ const DocumentCard: React.FC<DocumentCardProps> = ({
       case 'jpg':
       case 'jpeg':
       case 'png':
-        return <Image sx={{ color: '#388e3c' }} />;
+        return <ImageIcon sx={{ color: '#388e3c' }} />;
       default:
         return <InsertDriveFile sx={{ color: '#616161' }} />;
     }

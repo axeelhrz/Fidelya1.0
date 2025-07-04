@@ -92,7 +92,7 @@ export interface DocumentAction {
   patientId: string;
   action: 'view' | 'download' | 'share' | 'print';
   timestamp: Date;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, string | number | boolean>;
 }
 
 // Tipos para el visor de documentos

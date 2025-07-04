@@ -5,19 +5,15 @@ import {
   getDoc, 
   addDoc, 
   updateDoc, 
-  deleteDoc, 
   query, 
   where, 
   orderBy, 
-  limit,
   Timestamp,
   increment
 } from 'firebase/firestore';
 import { 
   ref, 
   getDownloadURL, 
-  uploadBytes, 
-  deleteObject 
 } from 'firebase/storage';
 import { db, storage } from '../firebase';
 import { PatientDocument, DocumentFilter, DocumentStats, DocumentAction } from '../../types/documents';
@@ -220,7 +216,7 @@ export class DocumentService {
     patientId: string,
     documentId: string,
     action: DocumentAction['action'],
-    metadata?: Record<string, any>
+    metadata?: Record<string, string | number | boolean>
   ): Promise<void> {
     try {
       const actionData: Omit<DocumentAction, 'id'> = {
@@ -261,22 +257,22 @@ export class DocumentService {
   static async downloadDocument(
     centerId: string,
     patientId: string,
-    document: PatientDocument
+    patientDocument: PatientDocument
   ): Promise<void> {
     try {
-      const downloadUrl = await this.getDownloadUrl(document.fileUrl);
+      const downloadUrl = await this.getDownloadUrl(patientDocument.fileUrl);
       
       // Crear enlace temporal para descarga
       const link = document.createElement('a');
       link.href = downloadUrl;
-      link.download = document.fileName;
+      link.download = patientDocument.fileName;
       link.target = '_blank';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
 
       // Incrementar contador de descargas
-      await this.incrementDownloadCount(centerId, patientId, document.id);
+      await this.incrementDownloadCount(centerId, patientId, patientDocument.id);
     } catch (error) {
       console.error('Error downloading document:', error);
       throw error;
