@@ -30,14 +30,39 @@ export default function AgendaPage() {
     loading: appointmentsLoading, 
     createAppointment,
     updateAppointment,
-    checkInAppointment,
-    checkOutAppointment,
   } = useAppointments();
 
   const { 
     patients, 
     loading: patientsLoading 
   } = usePatients();
+
+  // Función para mapear estados de clinical a agenda
+  const mapClinicalStatusToAgenda = (status: ClinicalAppointment['status']): AgendaAppointment['status'] => {
+    switch (status) {
+      case 'scheduled': return 'reservada';
+      case 'confirmed': return 'confirmada';
+      case 'checked-in': return 'check-in';
+      case 'completed': return 'confirmada'; // Mapear completed a confirmada
+      case 'cancelled': return 'cancelada';
+      case 'no-show': return 'no-show';
+      case 'rescheduled': return 'reservada';
+      default: return 'reservada';
+    }
+  };
+
+  // Función para mapear tipos de clinical a agenda
+  const mapClinicalTypeToAgenda = (type: ClinicalAppointment['type']): AgendaAppointment['type'] => {
+    switch (type) {
+      case 'individual': return 'individual';
+      case 'group': return 'grupal';
+      case 'family': return 'familiar';
+      case 'couple': return 'pareja';
+      case 'assessment': return 'evaluacion';
+      case 'supervision': return 'individual'; // Mapear supervision a individual
+      default: return 'individual';
+    }
+  };
 
   // Convertir appointments de clinical a agenda format
   const appointments: AgendaAppointment[] = clinicalAppointments.map((apt: ClinicalAppointment) => ({
@@ -49,8 +74,8 @@ export default function AgendaPage() {
     startDateTime: apt.date,
     endDateTime: new Date(apt.date.getTime() + apt.duration * 60000),
     duration: apt.duration,
-    status: apt.status as any, // Mapear estados si es necesario
-    type: apt.type as any,
+    status: mapClinicalStatusToAgenda(apt.status),
+    type: mapClinicalTypeToAgenda(apt.type),
     motive: apt.notes || 'Consulta',
     notes: apt.notes,
     consultorio: apt.roomId,
@@ -104,25 +129,21 @@ export default function AgendaPage() {
     }
   ]);
 
-  const [therapists] = useState([
-    { id: 'therapist1', firstName: 'Ana', lastName: 'Martín' },
-    { id: 'therapist2', firstName: 'Luis', lastName: 'Fernández' },
-    { id: 'therapist3', firstName: 'Isabel', lastName: 'Moreno' }
-  ]);
 
-  // Calcular métricas del día
+
+  // Calcular métricas del día usando los estados correctos de agenda
   const todayAppointments = appointments.filter(apt => 
     apt.startDateTime.toDateString() === new Date().toDateString()
   );
 
   const todayMetrics = {
     total: todayAppointments.length,
-    completed: todayAppointments.filter(apt => apt.status === 'completed').length,
-    scheduled: todayAppointments.filter(apt => apt.status === 'scheduled').length,
-    cancelled: todayAppointments.filter(apt => apt.status === 'cancelled').length,
+    completed: todayAppointments.filter(apt => apt.status === 'confirmada').length, // Usar 'confirmada' en lugar de 'completed'
+    scheduled: todayAppointments.filter(apt => apt.status === 'reservada').length, // Usar 'reservada' en lugar de 'scheduled'
+    cancelled: todayAppointments.filter(apt => apt.status === 'cancelada').length, // Usar 'cancelada' en lugar de 'cancelled'
     revenue: todayAppointments
-      .filter(apt => apt.status === 'completed')
-      .reduce((sum, apt) => sum + 80, 0) // Precio fijo por ahora
+      .filter(apt => apt.status === 'confirmada') // Usar 'confirmada'
+      .reduce((sum) => sum + 80, 0) // Precio fijo por ahora
   };
 
   // Handlers
@@ -155,13 +176,16 @@ export default function AgendaPage() {
         // Convertir de agenda format a clinical format
         const clinicalAppointmentData: Partial<ClinicalAppointment> = {
           patientId: appointmentData.patientId,
-          therapistId: appointmentData.professionalId || 'therapist1',
+          therapistId: 'therapist1',
           centerId: 'center1',
           date: appointmentData.startDateTime,
           startTime: appointmentData.startDateTime.toTimeString().slice(0, 5),
           endTime: new Date(appointmentData.startDateTime.getTime() + appointmentData.duration * 60000).toTimeString().slice(0, 5),
           duration: appointmentData.duration,
-          type: appointmentData.type as any,
+          type: appointmentData.type === 'grupal' ? 'group' : 
+                appointmentData.type === 'familiar' ? 'family' :
+                appointmentData.type === 'pareja' ? 'couple' :
+                appointmentData.type === 'evaluacion' ? 'assessment' : 'individual',
           status: 'scheduled',
           notes: appointmentData.notes,
           roomId: appointmentData.consultorio,
@@ -190,26 +214,7 @@ export default function AgendaPage() {
     }
   };
 
-  const handleCheckIn = async (appointmentId: string) => {
-    try {
-      await checkInAppointment(appointmentId);
-    } catch (error) {
-      console.error('Error checking in:', error);
-    }
-  };
 
-  const handleCheckOut = async (appointmentId: string) => {
-    try {
-      await checkOutAppointment(appointmentId);
-    } catch (error) {
-      console.error('Error checking out:', error);
-    }
-  };
-
-  const handleSendReminder = async (appointmentId: string) => {
-    // Implementar envío de recordatorio
-    console.log('Sending reminder for appointment:', appointmentId);
-  };
 
   if (appointmentsLoading || patientsLoading) {
     return (
@@ -333,10 +338,6 @@ export default function AgendaPage() {
         }))}
         consultorios={rooms.map(r => r.name)}
         onSave={handleSaveAppointment}
-        onCheckIn={handleCheckIn}
-        onCheckOut={handleCheckOut}
-        onSendReminder={handleSendReminder}
-        mode={modalMode}
         isCreating={modalMode === 'create'}
       />
 

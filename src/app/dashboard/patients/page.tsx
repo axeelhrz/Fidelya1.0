@@ -140,15 +140,13 @@ export default function PatientsPage() {
         lastSession: new Date('2024-03-10'),
         totalSessions: 12,
         adherenceRate: 85,
-        satisfactionScore: 4.5,
         feedback: [
           {
             id: 'feedback1',
             date: new Date('2024-03-01'),
-            type: 'session',
             rating: 5,
             comment: 'Muy satisfecha con el progreso',
-            sentiment: 'positive'
+            anonymous: false
           }
         ]
       },
@@ -289,15 +287,13 @@ export default function PatientsPage() {
         lastSession: new Date('2024-03-12'),
         totalSessions: 15,
         adherenceRate: 90,
-        satisfactionScore: 4.8,
         feedback: [
           {
             id: 'feedback2',
             date: new Date('2024-03-05'),
-            type: 'general',
             rating: 5,
             comment: 'Me siento mucho mejor',
-            sentiment: 'positive'
+            anonymous: false
           }
         ]
       }

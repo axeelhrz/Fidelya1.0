@@ -26,7 +26,7 @@ export default function DataSeeder() {
       setStatus('idle');
       setMessage('Sembrando datos en Firebase...');
       
-      await seedFirebaseData(user.centerId);
+      await seedFirebaseData();
       
       setStatus('success');
       setMessage('Datos sembrados exitosamente. El dashboard ahora mostrará información real.');
