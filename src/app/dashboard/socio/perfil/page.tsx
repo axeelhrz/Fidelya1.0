@@ -1,9 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import styled from '@emotion/styled';
-import { css } from '@emotion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   User, 
   Edit3, 
@@ -53,7 +51,49 @@ import {
   Shield as ShieldIcon,
   Database,
   BarChart3,
-  Smartphone as DeviceIcon
+  Smartphone as DeviceIcon,
+  MapPin,
+  CreditCard,
+  Eye,
+  EyeOff,
+  Lock,
+  Unlock,
+  Bookmark,
+  Filter,
+  Search,
+  ExternalLink,
+  Plus,
+  Minus,
+  Info,
+  AlertCircle,
+  Gift,
+  Percent,
+  Calendar as CalendarIcon,
+  Clock,
+  Users,
+  ShoppingBag,
+  Wallet,
+  PieChart,
+  LineChart,
+  MoreHorizontal,
+  ArrowUpRight,
+  ArrowDownRight,
+  Maximize2,
+  Minimize2,
+  FileText,
+  Image as ImageIcon,
+  Upload,
+  Link,
+  MessageCircle,
+  Headphones,
+  BookOpen,
+  Lightbulb,
+  Compass,
+  Layers,
+  Grid,
+  List,
+  ToggleLeft,
+  ToggleRight
 } from 'lucide-react';
 import Image from 'next/image';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -63,6 +103,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Input } from '@/components/ui/Input';
 import { LoadingSkeleton } from '@/components/ui/LoadingSkeleton';
 import UnifiedMetricsCard from '@/components/ui/UnifiedMetricsCard';
+import ModernCard from '@/components/ui/ModernCard';
 import { ProfileImageUploader } from '@/components/socio/ProfileImageUploader';
 import { ActivityTimeline } from '@/components/socio/ActivityTimeline';
 import { useSocioProfile } from '@/hooks/useSocioProfile';
@@ -72,696 +113,41 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import toast from 'react-hot-toast';
 
-// Styled Components con CSS-in-JS moderno
-const PageContainer = styled(motion.div)`
-  padding: 2rem;
-  max-width: 1400px;
-  margin: 0 auto;
-  min-height: 100vh;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-`;
+// Styled Components modernos
+const PageContainer = motion.div;
+const MainGrid = motion.div;
+const ProfileSection = motion.div;
+const StatsSection = motion.div;
+const SidebarSection = motion.div;
 
-const HeaderSection = styled(motion.div)`
-  margin-bottom: 3rem;
-  position: relative;
-  overflow: hidden;
-`;
-
-const HeaderContent = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 2rem;
-  
-  @media (max-width: 768px) {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-`;
-
-const HeaderTitle = styled.div`
-  h1 {
-    font-size: 3rem;
-    font-weight: 900;
-    background: linear-gradient(135deg, #1e293b 0%, #6366f1 60%, #8b5cf6 100%);
-    background-clip: text;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    margin-bottom: 0.5rem;
-    letter-spacing: -0.02em;
-    
-    @media (max-width: 768px) {
-      font-size: 2.5rem;
-    }
-  }
-  
-  p {
-    font-size: 1.25rem;
-    color: #64748b;
-    font-weight: 600;
-  }
-`;
-
-const HeaderActions = styled.div`
-  display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
-`;
-
-const MainGrid = styled.div`
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 2rem;
-  
-  @media (max-width: 1200px) {
-    grid-template-columns: 1fr;
-  }
-`;
-
-const MainColumn = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-`;
-
-const SideColumn = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-`;
-
-const ProfileCard = styled(motion.div)`
-  background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
-  border-radius: 2rem;
-  box-shadow: 0 20px 60px -15px rgba(0, 0, 0, 0.1);
-  border: 1px solid #f1f5f9;
-  overflow: hidden;
-  position: relative;
-  
-  &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 25px 80px -20px rgba(0, 0, 0, 0.15);
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-`;
-
-const ProfileHeader = styled.div`
-  height: 10rem;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
-  position: relative;
-  overflow: hidden;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(45deg, rgba(255, 255, 255, 0.1) 0%, transparent 100%);
-  }
-  
-  &::after {
-    content: '';
-    position: absolute;
-    top: 1rem;
-    left: 1rem;
-    width: 8rem;
-    height: 8rem;
-    border: 2px solid rgba(255, 255, 255, 0.2);
-    border-radius: 50%;
-  }
-`;
-
-const ProfileHeaderActions = styled.div`
-  position: absolute;
-  top: 1.5rem;
-  right: 1.5rem;
-  display: flex;
-  gap: 0.75rem;
-`;
-
-const ProfileContent = styled.div`
-  padding: 2rem;
-`;
-
-const ProfileAvatarSection = styled.div`
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  margin-top: -5rem;
-  margin-bottom: 2rem;
-`;
-
-const AvatarContainer = styled.div`
-  position: relative;
-`;
-
-const StatusBadge = styled.div<{ status: string }>`
-  position: absolute;
-  bottom: -0.25rem;
-  left: 1rem;
-  width: 2rem;
-  height: 2rem;
-  border-radius: 50%;
-  border: 4px solid white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  
-  ${({ status }) => {
-    switch (status) {
-      case 'activo':
-        return css`background: linear-gradient(135deg, #10b981, #059669);`;
-      case 'vencido':
-        return css`background: linear-gradient(135deg, #f59e0b, #d97706);`;
-      case 'inactivo':
-        return css`background: linear-gradient(135deg, #ef4444, #dc2626);`;
-      default:
-        return css`background: linear-gradient(135deg, #6b7280, #4b5563);`;
-    }
-  }}
-`;
-
-const LevelBadge = styled.div<{ level: string }>`
-  position: absolute;
-  top: -0.5rem;
-  right: -0.5rem;
-  padding: 0.5rem 0.75rem;
-  border-radius: 1rem;
-  color: white;
-  font-size: 0.75rem;
-  font-weight: 800;
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-  
-  ${({ level }) => {
-    switch (level) {
-      case 'Bronze':
-        return css`background: linear-gradient(135deg, #cd7f32, #b8860b);`;
-      case 'Silver':
-        return css`background: linear-gradient(135deg, #c0c0c0, #a8a8a8);`;
-      case 'Gold':
-        return css`background: linear-gradient(135deg, #ffd700, #ffb347);`;
-      case 'Platinum':
-        return css`background: linear-gradient(135deg, #e5e4e2, #d3d3d3);`;
-      case 'Diamond':
-        return css`background: linear-gradient(135deg, #b9f2ff, #87ceeb);`;
-      default:
-        return css`background: linear-gradient(135deg, #6b7280, #4b5563);`;
-    }
-  }}
-`;
-
-const UserInfo = styled.div`
-  margin-bottom: 2rem;
-  
-  h2 {
-    font-size: 2rem;
-    font-weight: 800;
-    color: #1e293b;
-    margin-bottom: 0.5rem;
-  }
-  
-  .status-container {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 1rem;
-    flex-wrap: wrap;
-  }
-  
-  .status-text {
-    font-size: 1.125rem;
-    color: #64748b;
-    font-weight: 600;
-  }
-`;
-
-const StatusChip = styled.span<{ status: string }>`
-  padding: 0.5rem 1rem;
-  border-radius: 1rem;
-  font-size: 0.875rem;
-  font-weight: 700;
-  border: 2px solid;
-  
-  ${({ status }) => {
-    switch (status) {
-      case 'activo':
-        return css`
-          background: #dcfce7;
-          color: #166534;
-          border-color: #bbf7d0;
-        `;
-      case 'vencido':
-        return css`
-          background: #fef3c7;
-          color: #92400e;
-          border-color: #fde68a;
-        `;
-      case 'inactivo':
-        return css`
-          background: #fee2e2;
-          color: #991b1b;
-          border-color: #fecaca;
-        `;
-      default:
-        return css`
-          background: #f1f5f9;
-          color: #475569;
-          border-color: #e2e8f0;
-        `;
-    }
-  }}
-`;
-
-const LevelProgress = styled.div`
-  margin-bottom: 1.5rem;
-  
-  .progress-bar {
-    background: #f1f5f9;
-    border-radius: 1rem;
-    height: 0.75rem;
-    margin-bottom: 0.5rem;
-    overflow: hidden;
-    position: relative;
-  }
-  
-  .progress-fill {
-    height: 100%;
-    border-radius: 1rem;
-    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-    
-    &::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-      animation: shimmer 2s infinite;
-    }
-  }
-  
-  .progress-labels {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.875rem;
-    color: #64748b;
-    font-weight: 600;
-  }
-  
-  @keyframes shimmer {
-    0% { transform: translateX(-100%); }
-    100% { transform: translateX(100%); }
-  }
-`;
-
-const InfoGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 1.5rem;
-`;
-
-const InfoCard = styled(motion.div)`
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 1.5rem;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-  border-radius: 1.5rem;
-  border: 1px solid #e2e8f0;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  overflow: hidden;
-  
-  &:hover {
-    background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-  }
-  
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-  }
-  
-  &:hover::before {
-    opacity: 1;
-  }
-`;
-
-const InfoIcon = styled.div<{ color: string }>`
-  width: 3rem;
-  height: 3rem;
-  border-radius: 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: ${({ color }) => `linear-gradient(135deg, ${color}20, ${color}10)`};
-  color: ${({ color }) => color};
-  flex-shrink: 0;
-`;
-
-const InfoContent = styled.div`
-  flex: 1;
-  min-width: 0;
-  
-  .label {
-    font-size: 0.875rem;
-    color: #64748b;
-    font-weight: 600;
-    margin-bottom: 0.25rem;
-  }
-  
-  .value {
-    font-size: 1rem;
-    color: #1e293b;
-    font-weight: 700;
-    word-break: break-word;
-  }
-`;
-
-const InfoAction = styled.button`
-  padding: 0.5rem;
-  border: none;
-  background: none;
-  color: #94a3b8;
-  cursor: pointer;
-  border-radius: 0.5rem;
-  transition: all 0.2s ease;
-  
-  &:hover {
-    color: #64748b;
-    background: #f1f5f9;
-    transform: scale(1.1);
-  }
-`;
-
-const StatsCard = styled(motion.div)`
-  background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
-  border-radius: 2rem;
-  box-shadow: 0 20px 60px -15px rgba(0, 0, 0, 0.1);
-  border: 1px solid #f1f5f9;
-  padding: 2rem;
-  position: relative;
-  overflow: hidden;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899);
-  }
-`;
-
-const StatsHeader = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 2rem;
-  flex-wrap: wrap;
-  gap: 1rem;
-  
-  .title-section {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-  }
-  
-  .icon-container {
-    width: 3rem;
-    height: 3rem;
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
-    border-radius: 1rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-  }
-  
-  .title-content h3 {
-    font-size: 1.5rem;
-    font-weight: 800;
-    color: #1e293b;
-    margin-bottom: 0.25rem;
-  }
-  
-  .title-content p {
-    color: #64748b;
-    font-weight: 600;
-  }
-  
-  .actions {
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-  }
-`;
-
-const MetricsGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 2rem;
-`;
-
-const AdditionalMetrics = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 1.5rem;
-  margin-top: 2rem;
-  padding-top: 2rem;
-  border-top: 2px solid #f1f5f9;
-`;
-
-const MetricCard = styled.div<{ color: string }>`
-  text-align: center;
-  padding: 1.5rem;
-  background: ${({ color }) => `linear-gradient(135deg, ${color}10, ${color}05)`};
-  border-radius: 1.5rem;
-  border: 2px solid ${({ color }) => `${color}20`};
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  
-  &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 32px ${({ color }) => `${color}30`};
-    border-color: ${({ color }) => `${color}40`};
-  }
-  
-  .icon-container {
-    width: 3rem;
-    height: 3rem;
-    background: ${({ color }) => color};
-    border-radius: 1rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 1rem;
-    color: white;
-  }
-  
-  .value {
-    font-size: 1.75rem;
-    font-weight: 900;
-    color: ${({ color }) => color};
-    margin-bottom: 0.5rem;
-  }
-  
-  .label {
-    font-size: 0.875rem;
-    color: #64748b;
-    font-weight: 600;
-  }
-`;
-
-const SideCard = styled(motion.div)`
-  background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
-  border-radius: 2rem;
-  box-shadow: 0 20px 60px -15px rgba(0, 0, 0, 0.1);
-  border: 1px solid #f1f5f9;
-  padding: 1.5rem;
-  position: relative;
-  overflow: hidden;
-  
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 25px 80px -20px rgba(0, 0, 0, 0.15);
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-`;
-
-const SideCardHeader = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 1.5rem;
-  
-  .icon-container {
-    width: 2.5rem;
-    height: 2.5rem;
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
-    border-radius: 1rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-  }
-  
-  .title-content h3 {
-    font-size: 1.125rem;
-    font-weight: 800;
-    color: #1e293b;
-    margin-bottom: 0.125rem;
-  }
-  
-  .title-content p {
-    font-size: 0.875rem;
-    color: #64748b;
-    font-weight: 600;
-  }
-`;
-
-const QuickActions = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-`;
-
-const QuickActionButton = styled(motion.button)`
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 1rem;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-  border: 1px solid #e2e8f0;
-  border-radius: 1rem;
-  color: #475569;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  width: 100%;
-  text-align: left;
-  
-  &:hover {
-    background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
-    transform: translateX(4px);
-    border-color: #cbd5e1;
-    color: #334155;
-  }
-  
-  .icon {
-    color: #6366f1;
-  }
-  
-  .text {
-    flex: 1;
-  }
-  
-  .arrow {
-    color: #94a3b8;
-    transition: transform 0.2s ease;
-  }
-  
-  &:hover .arrow {
-    transform: translateX(4px);
-  }
-`;
-
-const TipsCard = styled(motion.div)`
-  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-  border: 2px solid #93c5fd;
-  border-radius: 2rem;
-  padding: 1.5rem;
-  position: relative;
-  overflow: hidden;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, #3b82f6, #6366f1, #8b5cf6);
-  }
-  
-  h3 {
-    font-size: 1.125rem;
-    font-weight: 800;
-    color: #1e40af;
-    margin-bottom: 1rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-`;
-
-const TipsList = styled.ul`
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-`;
-
-const TipItem = styled.li`
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-  font-size: 0.875rem;
-  color: #1e40af;
-  line-height: 1.5;
-  
-  .icon-container {
-    width: 1.5rem;
-    height: 1.5rem;
-    background: #3b82f6;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    margin-top: 0.125rem;
-    color: white;
-  }
-  
-  .text {
-    font-weight: 600;
-  }
-`;
-
-// Animation variants
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1
-    }
-  }
-};
-
+// Interfaces
 interface ProfileFormData {
   nombre: string;
   telefono: string;
   dni: string;
   direccion: string;
-  fechaNacimiento: string; // Cambio: usar string para el input date
+  fechaNacimiento: string;
+}
+
+interface QuickAction {
+  id: string;
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  color: string;
+  action: () => void;
+  badge?: string | number;
+}
+
+interface ProfileStat {
+  id: string;
+  title: string;
+  value: string | number;
+  icon: React.ReactNode;
+  color: string;
+  change?: number;
+  trend?: 'up' | 'down' | 'neutral';
+  description?: string;
 }
 
 export default function SocioPerfilPage() {
@@ -781,17 +167,20 @@ export default function SocioPerfilPage() {
     exportData,
   } = useSocioProfile();
 
-  // Modal states
+  // Estados de modales
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [configModalOpen, setConfigModalOpen] = useState(false);
   const [qrModalOpen, setQrModalOpen] = useState(false);
   const [activityModalOpen, setActivityModalOpen] = useState(false);
   const [statsModalOpen, setStatsModalOpen] = useState(false);
+  const [imageModalOpen, setImageModalOpen] = useState(false);
   
-  // UI states
+  // Estados de UI
   const [refreshing, setRefreshing] = useState(false);
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState<'general' | 'notificaciones' | 'privacidad' | 'avanzado'>('general');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [expandedCard, setExpandedCard] = useState<string | null>(null);
 
   // Datos del perfil con fallbacks mejorados
   const profileData = {
@@ -816,7 +205,7 @@ export default function SocioPerfilPage() {
     }
   };
 
-  // Estadísticas mejoradas con datos reales
+  // Estadísticas mejoradas
   const enhancedStats = {
     beneficiosUsados: stats?.beneficiosUsados || 0,
     ahorroTotal: stats?.ahorroTotal || 0,
@@ -834,33 +223,25 @@ export default function SocioPerfilPage() {
     comerciosMasVisitados: stats?.comerciosMasVisitados || []
   };
 
-  // Configuración con valores del socio o por defecto
+  // Configuración
   const [configuracion, setConfiguracion] = useState<SocioConfiguration>({
-    // Notificaciones
     notificaciones: socio?.configuracion?.notificaciones ?? true,
     notificacionesPush: socio?.configuracion?.notificacionesPush ?? true,
     notificacionesEmail: socio?.configuracion?.notificacionesEmail ?? true,
     notificacionesSMS: socio?.configuracion?.notificacionesSMS ?? false,
-    
-    // Apariencia
     tema: socio?.configuracion?.tema ?? 'light',
     idioma: socio?.configuracion?.idioma ?? 'es',
     moneda: socio?.configuracion?.moneda ?? 'ARS',
     timezone: socio?.configuracion?.timezone ?? 'America/Argentina/Buenos_Aires',
-    
-    // Privacidad
     perfilPublico: socio?.configuracion?.perfilPublico ?? false,
     mostrarEstadisticas: socio?.configuracion?.mostrarEstadisticas ?? true,
     mostrarActividad: socio?.configuracion?.mostrarActividad ?? true,
     compartirDatos: socio?.configuracion?.compartirDatos ?? false,
-    
-    // Preferencias
     beneficiosFavoritos: socio?.configuracion?.beneficiosFavoritos ?? [],
     comerciosFavoritos: socio?.configuracion?.comerciosFavoritos ?? [],
     categoriasFavoritas: socio?.configuracion?.categoriasFavoritas ?? []
   });
 
-  // Corregir el estado del formulario
   const [formData, setFormData] = useState<ProfileFormData>({
     nombre: '',
     telefono: '',
@@ -869,7 +250,7 @@ export default function SocioPerfilPage() {
     fechaNacimiento: ''
   });
 
-  // Update form data when socio data changes
+  // Actualizar datos del formulario
   useEffect(() => {
     if (socio) {
       setFormData({
@@ -891,21 +272,135 @@ export default function SocioPerfilPage() {
     }
   }, [socio]);
 
+  // Estadísticas del perfil
+  const profileStats: ProfileStat[] = [
+    {
+      id: 'beneficios',
+      title: 'Beneficios Usados',
+      value: enhancedStats.beneficiosUsados,
+      icon: <Gift size={24} />,
+      color: '#6366f1',
+      change: 12,
+      trend: 'up',
+      description: 'Total de beneficios utilizados'
+    },
+    {
+      id: 'ahorro',
+      title: 'Total Ahorrado',
+      value: `$${enhancedStats.ahorroTotal.toLocaleString()}`,
+      icon: <Wallet size={24} />,
+      color: '#10b981',
+      change: 8,
+      trend: 'up',
+      description: 'Dinero ahorrado en total'
+    },
+    {
+      id: 'mes',
+      title: 'Este Mes',
+      value: enhancedStats.beneficiosEsteMes,
+      icon: <CalendarIcon size={24} />,
+      color: '#f59e0b',
+      change: -5,
+      trend: 'down',
+      description: 'Beneficios usados este mes'
+    },
+    {
+      id: 'racha',
+      title: 'Días de Racha',
+      value: enhancedStats.racha,
+      icon: <Zap size={24} />,
+      color: '#8b5cf6',
+      change: 15,
+      trend: 'up',
+      description: 'Días consecutivos activo'
+    },
+    {
+      id: 'comercios',
+      title: 'Comercios Visitados',
+      value: enhancedStats.comerciosVisitados,
+      icon: <Building2 size={24} />,
+      color: '#3b82f6',
+      change: 3,
+      trend: 'up',
+      description: 'Comercios únicos visitados'
+    },
+    {
+      id: 'validaciones',
+      title: 'Tasa de Éxito',
+      value: `${enhancedStats.validacionesExitosas}%`,
+      icon: <CheckCircle size={24} />,
+      color: '#10b981',
+      change: 2,
+      trend: 'up',
+      description: 'Validaciones exitosas'
+    }
+  ];
+
+  // Acciones rápidas
+  const quickActions: QuickAction[] = [
+    {
+      id: 'qr',
+      title: 'Mi Código QR',
+      description: 'Ver y compartir mi código QR',
+      icon: <QrCode size={20} />,
+      color: '#6366f1',
+      action: () => setQrModalOpen(true)
+    },
+    {
+      id: 'export',
+      title: 'Exportar Datos',
+      description: 'Descargar toda mi información',
+      icon: <Download size={20} />,
+      color: '#10b981',
+      action: handleExportData
+    },
+    {
+      id: 'config',
+      title: 'Configuración',
+      description: 'Ajustar preferencias',
+      icon: <Settings size={20} />,
+      color: '#8b5cf6',
+      action: () => setConfigModalOpen(true)
+    },
+    {
+      id: 'activity',
+      title: 'Ver Actividad',
+      description: 'Historial completo',
+      icon: <Activity size={20} />,
+      color: '#f59e0b',
+      action: () => setActivityModalOpen(true),
+      badge: activity.length
+    },
+    {
+      id: 'stats',
+      title: 'Estadísticas',
+      description: 'Análisis detallado',
+      icon: <BarChart3 size={20} />,
+      color: '#ec4899',
+      action: () => setStatsModalOpen(true)
+    },
+    {
+      id: 'help',
+      title: 'Centro de Ayuda',
+      description: 'Soporte y guías',
+      icon: <HelpCircle size={20} />,
+      color: '#6b7280',
+      action: () => window.open('/help', '_blank')
+    }
+  ];
+
   // Handlers
   const handleSaveProfile = async () => {
     try {
-      // Validar datos antes de enviar
       if (!formData.nombre.trim()) {
         toast.error('El nombre es obligatorio');
         return;
       }
 
-      // Preparar datos para actualización
       const updateData: any = {
         nombre: formData.nombre.trim(),
       };
 
-      // Solo incluir campos que tienen valor
       if (formData.telefono.trim()) {
         updateData.telefono = formData.telefono.trim();
       }
@@ -918,7 +413,6 @@ export default function SocioPerfilPage() {
         updateData.direccion = formData.direccion.trim();
       }
 
-      // Manejar fecha de nacimiento correctamente
       if (formData.fechaNacimiento) {
         updateData.fechaNacimiento = new Date(formData.fechaNacimiento);
       }
@@ -963,7 +457,7 @@ export default function SocioPerfilPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleExportData = async () => {
+  async function handleExportData() {
     try {
       await exportData();
       toast.success('Datos exportados exitosamente');
@@ -971,7 +465,7 @@ export default function SocioPerfilPage() {
       console.error('Error exporting data:', error);
       toast.error('Error al exportar los datos');
     }
-  };
+  }
 
   const handleImageUpload = async (file: File): Promise<string> => {
     try {
@@ -993,6 +487,15 @@ export default function SocioPerfilPage() {
     }
   };
 
+  const getStatusColor = (estado: string) => {
+    switch (estado) {
+      case 'activo': return '#10b981';
+      case 'vencido': return '#f59e0b';
+      case 'inactivo': return '#ef4444';
+      default: return '#6b7280';
+    }
+  };
+
   const getNivelIcon = (nivel: string) => {
     switch (nivel) {
       case 'Bronze': return <Award size={16} />;
@@ -1004,15 +507,26 @@ export default function SocioPerfilPage() {
     }
   };
 
+  const getNivelColor = (nivel: string) => {
+    switch (nivel) {
+      case 'Bronze': return '#cd7f32';
+      case 'Silver': return '#c0c0c0';
+      case 'Gold': return '#ffd700';
+      case 'Platinum': return '#e5e4e2';
+      case 'Diamond': return '#b9f2ff';
+      default: return '#6b7280';
+    }
+  };
+
   if (loading) {
     return (
       <DashboardLayout
         activeSection="perfil"
         sidebarComponent={SocioSidebar}
       >
-        <PageContainer>
+        <div className="p-8 max-w-7xl mx-auto">
           <LoadingSkeleton className="h-96" />
-        </PageContainer>
+        </div>
       </DashboardLayout>
     );
   }
@@ -1023,613 +537,650 @@ export default function SocioPerfilPage() {
       sidebarComponent={SocioSidebar}
     >
       <PageContainer
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
+        className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.6 }}
       >
-        {/* Header mejorado */}
-        <HeaderSection >
-          <HeaderContent>
-            <HeaderTitle>
-              <h1>Mi Perfil</h1>
-              <p>Gestiona tu información personal y configuración de cuenta</p>
-            </HeaderTitle>
-            <HeaderActions>
-              <Button
-                variant="outline"
-                size="sm"
-                leftIcon={<Share2 size={16} />}
-                onClick={() => setQrModalOpen(true)}
-              >
-                Compartir
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                leftIcon={<Download size={16} />}
-                onClick={handleExportData}
-              >
-                Exportar
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                leftIcon={<RefreshCw size={16} />}
-                onClick={handleRefresh}
-                loading={refreshing}
-              >
-                Actualizar
-              </Button>
-            </HeaderActions>
-          </HeaderContent>
-        </HeaderSection>
+        {/* Header Moderno */}
+        <div className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-gray-200/50">
+          <div className="max-w-7xl mx-auto px-8 py-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center">
+                    <User size={24} className="text-white" />
+                  </div>
+                  <div>
+                    <h1 className="text-3xl font-black bg-gradient-to-r from-gray-900 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                      Mi Perfil
+                    </h1>
+                    <p className="text-gray-600 font-medium">
+                      Gestiona tu información personal y configuración
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  leftIcon={viewMode === 'grid' ? <List size={16} /> : <Grid size={16} />}
+                  onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
+                  className="text-gray-600"
+                >
+                  {viewMode === 'grid' ? 'Lista' : 'Cuadrícula'}
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  leftIcon={<Share2 size={16} />}
+                  onClick={() => setQrModalOpen(true)}
+                >
+                  Compartir
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  leftIcon={<Download size={16} />}
+                  onClick={handleExportData}
+                >
+                  Exportar
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  leftIcon={<RefreshCw size={16} />}
+                  onClick={handleRefresh}
+                  loading={refreshing}
+                >
+                  Actualizar
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
 
-        <MainGrid>
-          {/* Columna Principal */}
-          <MainColumn>
-            {/* Tarjeta de Perfil Principal Mejorada */}
-            <ProfileCard>
-              <ProfileHeader>
-                <ProfileHeaderActions>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    leftIcon={<QrCode size={16} />}
-                    className="bg-white/20 border-white/30 text-white hover:bg-white/30 backdrop-blur-sm"
-                    onClick={() => setQrModalOpen(true)}
-                  >
-                    Mi QR
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    leftIcon={<Settings size={16} />}
-                    className="bg-white/20 border-white/30 text-white hover:bg-white/30 backdrop-blur-sm"
-                    onClick={() => setConfigModalOpen(true)}
-                  >
-                    Configuración
-                  </Button>
-                </ProfileHeaderActions>
-              </ProfileHeader>
+        <div className="max-w-7xl mx-auto px-8 py-8">
+          <MainGrid
+            className="grid grid-cols-1 xl:grid-cols-3 gap-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            {/* Columna Principal - Perfil */}
+            <div className="xl:col-span-2 space-y-8">
+              {/* Tarjeta de Perfil Principal */}
+              <ProfileSection>
+                <ModernCard variant="elevated" size="lg" glow>
+                  {/* Header del perfil con gradiente */}
+                  <div className="relative -m-8 mb-6 h-32 bg-gradient-to-r from-indigo-500 via-purple-600 to-pink-500 rounded-t-2xl overflow-hidden">
+                    <div className="absolute inset-0 bg-black/20"></div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
+                    
+                    {/* Acciones del header */}
+                    <div className="absolute top-6 right-6 flex gap-3">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        leftIcon={<QrCode size={16} />}
+                        className="bg-white/20 border-white/30 text-white hover:bg-white/30 backdrop-blur-sm"
+                        onClick={() => setQrModalOpen(true)}
+                      >
+                        Mi QR
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        leftIcon={<Settings size={16} />}
+                        className="bg-white/20 border-white/30 text-white hover:bg-white/30 backdrop-blur-sm"
+                        onClick={() => setConfigModalOpen(true)}
+                      >
+                        Configurar
+                      </Button>
+                    </div>
 
-              <ProfileContent>
-                <ProfileAvatarSection>
-                  <AvatarContainer>
-                    <ProfileImageUploader
-                      onImageUpload={handleImageUpload}
-                      uploading={uploadingImage}
-                    />
-
-                    <StatusBadge status={profileData.estado}>
-                      <CheckCircle size={12} className="text-white" />
-                    </StatusBadge>
-
-                    <LevelBadge level={profileData.nivel.nivel}>
-                      {getNivelIcon(profileData.nivel.nivel)}
-                      {profileData.nivel.nivel}
-                    </LevelBadge>
-                  </AvatarContainer>
-
-                  <Button
-                    variant="outline"
-                    leftIcon={<Edit3 size={16} />}
-                    onClick={() => setEditModalOpen(true)}
-                  >
-                    Editar Perfil
-                  </Button>
-                </ProfileAvatarSection>
-
-                <UserInfo>
-                  <h2>{profileData.nombre}</h2>
-                  <div className="status-container">
-                    <span className="status-text">{getStatusText(profileData.estado)}</span>
-                    <StatusChip status={profileData.estado}>
-                      {profileData.estado.toUpperCase()}
-                    </StatusChip>
+                    {/* Patrón decorativo */}
+                    <div className="absolute inset-0 opacity-10">
+                      <div className="absolute top-4 left-4 w-20 h-20 border-2 border-white rounded-full"></div>
+                      <div className="absolute bottom-4 right-12 w-16 h-16 border-2 border-white rounded-full"></div>
+                      <div className="absolute top-12 right-4 w-12 h-12 border-2 border-white rounded-full"></div>
+                    </div>
                   </div>
 
-                  <LevelProgress>
-                    <div className="progress-bar">
-                      <div 
-                        className="progress-fill"
-                        style={{ 
-                          width: `${(profileData.nivel.puntos / (profileData.nivel.puntos + profileData.nivel.puntosParaProximoNivel)) * 100}%`,
-                          background: `linear-gradient(90deg, #6366f1, #8b5cf6)`
-                        }}
-                      />
-                    </div>
-                    <div className="progress-labels">
-                      <span>{profileData.nivel.puntos} puntos</span>
-                      <span>{profileData.nivel.puntosParaProximoNivel} para {profileData.nivel.proximoNivel}</span>
-                    </div>
-                  </LevelProgress>
-                </UserInfo>
-
-                <InfoGrid>
-                  <InfoCard
-                    whileHover={{ y: -2 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <InfoIcon color="#3b82f6">
-                      <Mail size={20} />
-                    </InfoIcon>
-                    <InfoContent>
-                      <div className="label">Email</div>
-                      <div className="value">{profileData.email}</div>
-                    </InfoContent>
-                    <InfoAction onClick={handleCopyUserId}>
-                      {copied ? <Check size={16} /> : <Copy size={16} />}
-                    </InfoAction>
-                  </InfoCard>
-
-                  {profileData.telefono && (
-                    <InfoCard
-                      whileHover={{ y: -2 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <InfoIcon color="#10b981">
-                        <Phone size={20} />
-                      </InfoIcon>
-                      <InfoContent>
-                        <div className="label">Teléfono</div>
-                        <div className="value">{profileData.telefono}</div>
-                      </InfoContent>
-                    </InfoCard>
-                  )}
-
-                  {profileData.dni && (
-                    <InfoCard
-                      whileHover={{ y: -2 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <InfoIcon color="#8b5cf6">
-                        <IdCard size={20} />
-                      </InfoIcon>
-                      <InfoContent>
-                        <div className="label">DNI</div>
-                        <div className="value">{profileData.dni}</div>
-                      </InfoContent>
-                    </InfoCard>
-                  )}
-
-                  {profileData.direccion && (
-                    <InfoCard
-                      whileHover={{ y: -2 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <InfoIcon color="#f59e0b">
-                        <Home size={20} />
-                      </InfoIcon>
-                      <InfoContent>
-                        <div className="label">Dirección</div>
-                        <div className="value">{profileData.direccion}</div>
-                      </InfoContent>
-                    </InfoCard>
-                  )}
-
-                  {profileData.fechaNacimiento && (
-                    <InfoCard
-                      whileHover={{ y: -2 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <InfoIcon color="#ec4899">
-                        <Cake size={20} />
-                      </InfoIcon>
-                      <InfoContent>
-                        <div className="label">Fecha de Nacimiento</div>
-                        <div className="value">
-                          {format(profileData.fechaNacimiento, 'dd MMMM yyyy', { locale: es })}
+                  {/* Contenido del perfil */}
+                  <div className="relative">
+                    {/* Avatar y acciones */}
+                    <div className="flex items-start justify-between -mt-20 mb-8">
+                      <div className="relative">
+                        <ProfileImageUploader
+                          currentImage={profileData.avatar || profileData.avatarThumbnail}
+                          onImageUpload={handleImageUpload}
+                          uploading={uploadingImage}
+                          className="relative"
+                        />
+                        
+                        {/* Badge de estado */}
+                        <div 
+                          className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full border-4 border-white flex items-center justify-center shadow-lg"
+                          style={{ backgroundColor: getStatusColor(profileData.estado) }}
+                        >
+                          <CheckCircle size={16} className="text-white" />
                         </div>
-                      </InfoContent>
-                    </InfoCard>
-                  )}
 
-                  <InfoCard
-                    whileHover={{ y: -2 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <InfoIcon color="#6366f1">
-                      <Calendar size={20} />
-                    </InfoIcon>
-                    <InfoContent>
-                      <div className="label">Socio desde</div>
-                      <div className="value">
-                        {format(profileData.creadoEn, 'dd MMMM yyyy', { locale: es })} 
-                        <span style={{ color: '#64748b', marginLeft: '0.5rem' }}>
-                          ({enhancedStats.tiempoComoSocio} días)
-                        </span>
+                        {/* Badge de nivel */}
+                        <div 
+                          className="absolute -top-2 -right-2 px-3 py-1 rounded-full text-white text-xs font-bold flex items-center gap-1 shadow-lg"
+                          style={{ backgroundColor: getNivelColor(profileData.nivel.nivel) }}
+                        >
+                          {getNivelIcon(profileData.nivel.nivel)}
+                          {profileData.nivel.nivel}
+                        </div>
                       </div>
-                    </InfoContent>
-                  </InfoCard>
-                </InfoGrid>
-              </ProfileContent>
-            </ProfileCard>
 
-            {/* Estadísticas Detalladas Mejoradas */}
-            <StatsCard>
-              <StatsHeader>
-                <div className="title-section">
-                  <div className="icon-container">
-                    <BarChart3 size={24} />
-                  </div>
-                  <div className="title-content">
-                    <h3>Estadísticas de Actividad</h3>
-                    <p>Tu rendimiento como socio</p>
-                  </div>
-                </div>
-                <div className="actions">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    leftIcon={<Activity size={16} />}
-                    onClick={() => setActivityModalOpen(true)}
-                  >
-                    Ver Actividad
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    leftIcon={<BarChart3 size={16} />}
-                    onClick={() => setStatsModalOpen(true)}
-                  >
-                    Estadísticas Avanzadas
-                  </Button>
-                </div>
-              </StatsHeader>
+                      <Button
+                        variant="outline"
+                        leftIcon={<Edit3 size={16} />}
+                        onClick={() => setEditModalOpen(true)}
+                        className="mt-4"
+                      >
+                        Editar Perfil
+                      </Button>
+                    </div>
 
-              <MetricsGrid>
-                <UnifiedMetricsCard
-                  title="Beneficios Usados"
-                  value={enhancedStats.beneficiosUsados}
-                  icon={<Award />}
-                  color="#6366f1"
-                  size="medium"
-                  change={12}
-                  trend="up"
-                  description="Total de beneficios utilizados"
-                  showProgress={true}
-                  progressValue={75}
-                />
-
-                <UnifiedMetricsCard
-                  title="Total Ahorrado"
-                  value={`$${enhancedStats.ahorroTotal.toLocaleString()}`}
-                  icon={<Target />}
-                  color="#10b981"
-                  size="medium"
-                  change={8}
-                  trend="up"
-                  description="Dinero ahorrado en total"
-                  showProgress={true}
-                  progressValue={85}
-                />
-
-                <UnifiedMetricsCard
-                  title="Este Mes"
-                  value={enhancedStats.beneficiosEsteMes}
-                  icon={<Activity />}
-                  color="#f59e0b"
-                  size="medium"
-                  change={-5}
-                  trend="down"
-                  description="Beneficios usados este mes"
-                  showProgress={true}
-                  progressValue={60}
-                />
-
-                <UnifiedMetricsCard
-                  title="Días de Racha"
-                  value={enhancedStats.racha}
-                  icon={<Zap />}
-                  color="#8b5cf6"
-                  size="medium"
-                  change={15}
-                  trend="up"
-                  description="Días consecutivos activo"
-                  showProgress={true}
-                  progressValue={90}
-                />
-              </MetricsGrid>
-
-              <AdditionalMetrics>
-                <MetricCard color="#3b82f6">
-                  <div className="icon-container">
-                    <Building2 size={24} />
-                  </div>
-                  <div className="value">{enhancedStats.comerciosVisitados}</div>
-                  <div className="label">Comercios Visitados</div>
-                </MetricCard>
-
-                <MetricCard color="#10b981">
-                  <div className="icon-container">
-                    <CheckCircle size={24} />
-                  </div>
-                  <div className="value">{enhancedStats.validacionesExitosas}%</div>
-                  <div className="label">Validaciones Exitosas</div>
-                </MetricCard>
-
-                <MetricCard color="#8b5cf6">
-                  <div className="icon-container">
-                    <Heart size={24} />
-                  </div>
-                  <div className="value">{enhancedStats.beneficiosFavoritos}</div>
-                  <div className="label">Categorías Favoritas</div>
-                </MetricCard>
-              </AdditionalMetrics>
-            </StatsCard>
-
-            {/* Actividad Reciente */}
-            <motion.div>
-              <ActivityTimeline
-                activities={activity.slice(0, 5)}
-                loading={loading}
-                onLoadMore={() => setActivityModalOpen(true)}
-                hasMore={activity.length > 5}
-              />
-            </motion.div>
-          </MainColumn>
-
-          {/* Columna Lateral Mejorada */}
-          <SideColumn>
-            {/* Mis Asociaciones Mejoradas */}
-            <SideCard>
-              <SideCardHeader>
-                <div className="icon-container">
-                  <Building2 size={20} />
-                </div>
-                <div className="title-content">
-                  <h3>Mis Asociaciones</h3>
-                  <p>Estado de socios</p>
-                </div>
-              </SideCardHeader>
-
-              <div style={{ marginBottom: '1.5rem' }}>
-                {asociaciones?.length > 0 ? asociaciones.map((asociacion, index) => (
-                  <motion.div
-                    key={asociacion.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.4 + index * 0.1 }}
-                    style={{
-                      padding: '1rem',
-                      background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
-                      borderRadius: '1rem',
-                      border: '1px solid #e2e8f0',
-                      marginBottom: '1rem'
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                        <div style={{
-                          width: '2.5rem',
-                          height: '2.5rem',
-                          background: 'white',
-                          borderRadius: '0.5rem',
-                          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center'
-                        }}>
-                          {asociacion.logo ? (
-                            <Image
-                              src={asociacion.logo}
-                              alt={asociacion.nombre}
-                              width={32}
-                              height={32}
-                              style={{ objectFit: 'cover', borderRadius: '0.25rem' }}
-                              unoptimized
-                            />
-                          ) : (
-                            <Building2 size={16} style={{ color: '#64748b' }} />
-                          )}
+                    {/* Información del usuario */}
+                    <div className="space-y-6">
+                      <div>
+                        <h2 className="text-3xl font-black text-gray-900 mb-2">
+                          {profileData.nombre}
+                        </h2>
+                        <div className="flex items-center gap-4 flex-wrap">
+                          <span 
+                            className="px-4 py-2 rounded-full text-sm font-bold border-2 flex items-center gap-2"
+                            style={{ 
+                              backgroundColor: `${getStatusColor(profileData.estado)}20`,
+                              color: getStatusColor(profileData.estado),
+                              borderColor: `${getStatusColor(profileData.estado)}40`
+                            }}
+                          >
+                            <div 
+                              className="w-2 h-2 rounded-full"
+                              style={{ backgroundColor: getStatusColor(profileData.estado) }}
+                            ></div>
+                            {getStatusText(profileData.estado)}
+                          </span>
+                          
+                          <div className="flex items-center gap-2 text-gray-600">
+                            <Calendar size={16} />
+                            <span className="text-sm font-medium">
+                              Socio desde {format(profileData.creadoEn, 'MMMM yyyy', { locale: es })}
+                            </span>
+                          </div>
                         </div>
-                        <div>
-                          <h4 style={{ fontWeight: 700, color: '#1e293b', fontSize: '0.875rem', marginBottom: '0.25rem' }}>{asociacion.nombre}</h4>
-                          <p style={{ fontSize: '0.75rem', color: '#64748b' }}>
-                            {asociacion.estado === 'activo' 
-                              ? `Vence: ${format(asociacion.fechaVencimiento.toDate(), 'dd/MM/yyyy', { locale: es })}`
-                              : `Venció: ${format(asociacion.fechaVencimiento.toDate(), 'dd/MM/yyyy', { locale: es })}`
-                            }
-                          </p>
+                      </div>
+
+                      {/* Progreso de nivel */}
+                      <div className="bg-gray-50 rounded-2xl p-6">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center gap-3">
+                            <div 
+                              className="w-10 h-10 rounded-xl flex items-center justify-center text-white"
+                              style={{ backgroundColor: getNivelColor(profileData.nivel.nivel) }}
+                            >
+                              {getNivelIcon(profileData.nivel.nivel)}
+                            </div>
+                            <div>
+                              <h3 className="font-bold text-gray-900">Nivel {profileData.nivel.nivel}</h3>
+                              <p className="text-sm text-gray-600">
+                                {profileData.nivel.puntos} puntos
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-sm font-medium text-gray-600">
+                              Próximo nivel: {profileData.nivel.proximoNivel}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {profileData.nivel.puntosParaProximoNivel} puntos restantes
+                            </p>
+                          </div>
                         </div>
+                        
+                        <div className="relative">
+                          <div className="w-full bg-gray-200 rounded-full h-3">
+                            <div 
+                              className="h-3 rounded-full transition-all duration-1000 ease-out relative overflow-hidden"
+                              style={{ 
+                                width: `${(profileData.nivel.puntos / (profileData.nivel.puntos + profileData.nivel.puntosParaProximoNivel)) * 100}%`,
+                                background: `linear-gradient(90deg, ${getNivelColor(profileData.nivel.nivel)}, ${getNivelColor(profileData.nivel.proximoNivel || 'Silver')})`
+                              }}
+                            >
+                              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse"></div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Información de contacto */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors">
+                          <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                            <Mail size={20} className="text-blue-600" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-600">Email</p>
+                            <p className="font-semibold text-gray-900 truncate">{profileData.email}</p>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={handleCopyUserId}
+                            className="p-2"
+                          >
+                            {copied ? <Check size={16} /> : <Copy size={16} />}
+                          </Button>
+                        </div>
+
+                        {profileData.telefono && (
+                          <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors">
+                            <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                              <Phone size={20} className="text-green-600" />
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-sm font-medium text-gray-600">Teléfono</p>
+                              <p className="font-semibold text-gray-900">{profileData.telefono}</p>
+                            </div>
+                          </div>
+                        )}
+
+                        {profileData.dni && (
+                          <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors">
+                            <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                              <IdCard size={20} className="text-purple-600" />
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-sm font-medium text-gray-600">DNI</p>
+                              <p className="font-semibold text-gray-900">{profileData.dni}</p>
+                            </div>
+                          </div>
+                        )}
+
+                        {profileData.direccion && (
+                          <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors">
+                            <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
+                              <Home size={20} className="text-orange-600" />
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-sm font-medium text-gray-600">Dirección</p>
+                              <p className="font-semibold text-gray-900">{profileData.direccion}</p>
+                            </div>
+                          </div>
+                        )}
+
+                        {profileData.fechaNacimiento && (
+                          <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors">
+                            <div className="w-12 h-12 bg-pink-100 rounded-xl flex items-center justify-center">
+                              <Cake size={20} className="text-pink-600" />
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-sm font-medium text-gray-600">Fecha de Nacimiento</p>
+                              <p className="font-semibold text-gray-900">
+                                {format(profileData.fechaNacimiento, 'dd MMMM yyyy', { locale: es })}
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </ModernCard>
+              </ProfileSection>
+
+              {/* Estadísticas */}
+              <StatsSection>
+                <ModernCard variant="elevated" size="lg">
+                  <div className="flex items-center justify-between mb-8">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center">
+                        <BarChart3 size={24} className="text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-2xl font-black text-gray-900">Estadísticas</h3>
+                        <p className="text-gray-600 font-medium">Tu rendimiento como socio</p>
                       </div>
                     </div>
                     
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-                      <p style={{ fontSize: '0.75rem', color: '#94a3b8', flex: 1, marginRight: '1rem' }}>{asociacion.descripcion}</p>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        {asociacion.estado === 'activo' ? <CheckCircle size={14} style={{ color: '#10b981' }} /> : <XCircle size={14} style={{ color: '#ef4444' }} />}
-                        <StatusChip status={asociacion.estado}>
-                          {asociacion.estado === 'activo' ? 'Activo' : 'Vencido'}
-                        </StatusChip>
-                      </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        leftIcon={<Activity size={16} />}
+                        onClick={() => setActivityModalOpen(true)}
+                      >
+                        Ver Actividad
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        leftIcon={<Maximize2 size={16} />}
+                        onClick={() => setStatsModalOpen(true)}
+                      >
+                        Expandir
+                      </Button>
                     </div>
+                  </div>
 
-                    <div style={{ paddingTop: '0.75rem', borderTop: '1px solid #e2e8f0' }}>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem', textAlign: 'center' }}>
-                        <div>
-                          <div style={{ fontSize: '0.875rem', fontWeight: 800, color: '#6366f1' }}>{asociacion.beneficiosIncluidos}</div>
-                          <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Beneficios</div>
+                  <div className={`grid gap-6 ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>
+                    {profileStats.map((stat, index) => (
+                      <UnifiedMetricsCard
+                        key={stat.id}
+                        title={stat.title}
+                        value={stat.value}
+                        icon={stat.icon}
+                        color={stat.color}
+                        size={viewMode === 'grid' ? 'medium' : 'small'}
+                        change={stat.change}
+                        trend={stat.trend}
+                        description={stat.description}
+                        showProgress={true}
+                        progressValue={Math.min(Math.abs(stat.change || 0) * 10, 100)}
+                        delay={index * 0.1}
+                        onClick={() => setExpandedCard(expandedCard === stat.id ? null : stat.id)}
+                      />
+                    ))}
+                  </div>
+                </ModernCard>
+              </StatsSection>
+
+              {/* Actividad Reciente */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.6 }}
+              >
+                <ModernCard variant="elevated" size="lg">
+                  <ActivityTimeline
+                    activities={activity.slice(0, 5)}
+                    loading={loading}
+                    onLoadMore={() => setActivityModalOpen(true)}
+                    hasMore={activity.length > 5}
+                  />
+                </ModernCard>
+              </motion.div>
+            </div>
+
+            {/* Columna Lateral */}
+            <SidebarSection className="space-y-8">
+              {/* Mis Asociaciones */}
+              <ModernCard variant="elevated" size="md">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center">
+                    <Building2 size={20} className="text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900">Mis Asociaciones</h3>
+                    <p className="text-sm text-gray-600">Estado de membresías</p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  {asociaciones?.length > 0 ? asociaciones.map((asociacion, index) => (
+                    <motion.div
+                      key={asociacion.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.8 + index * 0.1 }}
+                      className="p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors"
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center">
+                            {asociacion.logo ? (
+                              <Image
+                                src={asociacion.logo}
+                                alt={asociacion.nombre}
+                                width={32}
+                                height={32}
+                                className="object-cover rounded-lg"
+                                unoptimized
+                              />
+                            ) : (
+                              <Building2 size={20} className="text-gray-600" />
+                            )}
+                          </div>
+                          <div>
+                            <h4 className="font-bold text-gray-900">{asociacion.nombre}</h4>
+                            <p className="text-xs text-gray-600">
+                              {asociacion.estado === 'activo' 
+                                ? `Vence: ${format(asociacion.fechaVencimiento.toDate(), 'dd/MM/yyyy', { locale: es })}`
+                                : `Venció: ${format(asociacion.fechaVencimiento.toDate(), 'dd/MM/yyyy', { locale: es })}`
+                              }
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <div style={{ fontSize: '0.875rem', fontWeight: 800, color: '#10b981' }}>{asociacion.descuentoMaximo}%</div>
-                          <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Desc. Máx.</div>
-                        </div>
-                        <div>
-                          <div style={{ fontSize: '0.875rem', fontWeight: 800, color: '#8b5cf6' }}>{asociacion.comerciosAfiliados}</div>
-                          <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Comercios</div>
+                        
+                        <div className="flex items-center gap-2">
+                          {asociacion.estado === 'activo' ? 
+                            <CheckCircle size={16} className="text-green-500" /> : 
+                            <XCircle size={16} className="text-red-500" />
+                          }
+                          <span 
+                            className="px-2 py-1 rounded-full text-xs font-bold"
+                            style={{
+                              backgroundColor: asociacion.estado === 'activo' ? '#dcfce7' : '#fee2e2',
+                              color: asociacion.estado === 'activo' ? '#166534' : '#991b1b'
+                            }}
+                          >
+                            {asociacion.estado === 'activo' ? 'Activo' : 'Vencido'}
+                          </span>
                         </div>
                       </div>
-                    </div>
-                  </motion.div>
-                )) : (
-                  <div style={{ textAlign: 'center', padding: '2rem' }}>
-                    <Building2 size={48} style={{ color: '#cbd5e1', margin: '0 auto 1rem' }} />
-                    <p style={{ color: '#64748b' }}>No hay asociaciones disponibles</p>
+                      
+                      <div className="grid grid-cols-3 gap-3 text-center pt-3 border-t border-gray-200">
+                        <div>
+                          <div className="text-lg font-bold text-indigo-600">{asociacion.beneficiosIncluidos}</div>
+                          <div className="text-xs text-gray-600">Beneficios</div>
+                        </div>
+                        <div>
+                          <div className="text-lg font-bold text-green-600">{asociacion.descuentoMaximo}%</div>
+                          <div className="text-xs text-gray-600">Desc. Máx.</div>
+                        </div>
+                        <div>
+                          <div className="text-lg font-bold text-purple-600">{asociacion.comerciosAfiliados}</div>
+                          <div className="text-xs text-gray-600">Comercios</div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )) : (
+                    <div className="text-center py-8">
+                      <Building2 size={48} className="text-gray-300 mx-auto mb-4" />
+                      <p className="text-gray-600">No hay asociaciones disponibles</p>
                     </div>
                   )}
-              </div>
+                </div>
 
-              <div style={{ paddingTop: '1rem', borderTop: '1px solid #e2e8f0' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem', textAlign: 'center' }}>
-                  <div>
-                    <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#10b981' }}>
-                      {asociaciones?.filter(a => a.estado === 'activo').length || 0}
+                {asociaciones?.length > 0 && (
+                  <div className="mt-6 pt-6 border-t border-gray-200">
+                    <div className="grid grid-cols-2 gap-4 text-center">
+                      <div>
+                        <div className="text-2xl font-black text-green-600">
+                          {asociaciones.filter(a => a.estado === 'activo').length}
+                        </div>
+                        <div className="text-sm text-gray-600">Activas</div>
+                      </div>
+                      <div>
+                        <div className="text-2xl font-black text-red-600">
+                          {asociaciones.filter(a => a.estado === 'vencido').length}
+                        </div>
+                        <div className="text-sm text-gray-600">Vencidas</div>
+                      </div>
                     </div>
-                    <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Activas</div>
+                  </div>
+                )}
+              </ModernCard>
+
+              {/* Acciones Rápidas */}
+              <ModernCard variant="elevated" size="md">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 bg-gradient-to-r from-amber-500 to-orange-600 rounded-xl flex items-center justify-center">
+                    <Zap size={20} className="text-white" />
                   </div>
                   <div>
-                    <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#ef4444' }}>
-                      {asociaciones?.filter(a => a.estado === 'vencido').length || 0}
+                    <h3 className="text-xl font-bold text-gray-900">Acciones Rápidas</h3>
+                    <p className="text-sm text-gray-600">Funciones principales</p>
+                  </div>
+                </div>
+                
+                <div className="space-y-3">
+                  {quickActions.map((action, index) => (
+                    <motion.button
+                      key={action.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 1.0 + index * 0.1 }}
+                      whileHover={{ x: 4 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={action.action}
+                      className="w-full flex items-center gap-4 p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-all duration-200 group"
+                    >
+                      <div 
+                        className="w-10 h-10 rounded-xl flex items-center justify-center text-white"
+                        style={{ backgroundColor: action.color }}
+                      >
+                        {action.icon}
+                      </div>
+                      <div className="flex-1 text-left">
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-semibold text-gray-900">{action.title}</h4>
+                          {action.badge && (
+                            <span 
+                              className="px-2 py-1 rounded-full text-xs font-bold text-white"
+                              style={{ backgroundColor: action.color }}
+                            >
+                              {action.badge}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-600">{action.description}</p>
+                      </div>
+                      <ChevronRight size={16} className="text-gray-400 group-hover:text-gray-600 transition-colors" />
+                    </motion.button>
+                  ))}
+                </div>
+              </ModernCard>
+
+              {/* Consejos y Tips */}
+              <ModernCard variant="glass" size="md">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center">
+                    <Lightbulb size={20} className="text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900">Consejos</h3>
+                    <p className="text-sm text-gray-600">Para optimizar tu perfil</p>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-xl">
+                    <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <CheckCircle size={12} className="text-white" />
                     </div>
-                    <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Vencidas</div>
+                    <div>
+                      <p className="text-sm font-medium text-blue-900">
+                        Mantén tu información actualizada para recibir beneficios personalizados
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3 p-3 bg-green-50 rounded-xl">
+                    <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <Phone size={12} className="text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-green-900">
+                        Verifica que tu teléfono esté correcto para notificaciones importantes
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3 p-3 bg-purple-50 rounded-xl">
+                    <div className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <Camera size={12} className="text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-purple-900">
+                        Agrega una foto de perfil para personalizar tu experiencia
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3 p-3 bg-orange-50 rounded-xl">
+                    <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <TrendingUp size={12} className="text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-orange-900">
+                        Usa más beneficios para subir de nivel y obtener mejores descuentos
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </SideCard>
+              </ModernCard>
+            </SidebarSection>
+          </MainGrid>
+        </div>
 
-            {/* Acciones Rápidas */}
-            <SideCard>
-              <SideCardHeader>
-                <div className="icon-container">
-                  <Zap size={20} />
-                </div>
-                <div className="title-content">
-                  <h3>Acciones Rápidas</h3>
-                  <p>Funciones principales</p>
-                </div>
-              </SideCardHeader>
-              
-              <QuickActions>
-                <QuickActionButton
-                  whileHover={{ x: 4 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => setQrModalOpen(true)}
-                >
-                  <QrCode size={20} className="icon" />
-                  <span className="text">Ver mi código QR</span>
-                  <ChevronRight size={16} className="arrow" />
-                </QuickActionButton>
-                
-                <QuickActionButton
-                  whileHover={{ x: 4 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={handleExportData}
-                >
-                  <Download size={20} className="icon" />
-                  <span className="text">Exportar mis datos</span>
-                  <ChevronRight size={16} className="arrow" />
-                </QuickActionButton>
-                
-                <QuickActionButton
-                  whileHover={{ x: 4 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <Share2 size={20} className="icon" />
-                  <span className="text">Compartir perfil</span>
-                  <ChevronRight size={16} className="arrow" />
-                </QuickActionButton>
-                
-                <QuickActionButton
-                  whileHover={{ x: 4 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => setConfigModalOpen(true)}
-                >
-                  <Settings size={20} className="icon" />
-                  <span className="text">Configuración avanzada</span>
-                  <ChevronRight size={16} className="arrow" />
-                </QuickActionButton>
-                
-                <QuickActionButton
-                  whileHover={{ x: 4 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <HelpCircle size={20} className="icon" />
-                  <span className="text">Centro de ayuda</span>
-                  <ChevronRight size={16} className="arrow" />
-                </QuickActionButton>
-              </QuickActions>
-            </SideCard>
-
-            {/* Consejos y Tips Mejorados */}
-            <TipsCard>
-              <h3>
-                <Sparkles size={20} />
-                Consejos para tu perfil
-              </h3>
-              <TipsList>
-                <TipItem>
-                  <div className="icon-container">
-                    <CheckCircle size={12} />
-                  </div>
-                  <span className="text">Mantén tu información actualizada para recibir beneficios personalizados</span>
-                </TipItem>
-                <TipItem>
-                  <div className="icon-container">
-                    <Phone size={12} />
-                  </div>
-                  <span className="text">Verifica que tu teléfono esté correcto para notificaciones importantes</span>
-                </TipItem>
-                <TipItem>
-                  <div className="icon-container">
-                    <Camera size={12} />
-                  </div>
-                  <span className="text">Agrega una foto de perfil para personalizar tu experiencia</span>
-                </TipItem>
-                <TipItem>
-                  <div className="icon-container">
-                    <TrendingUp size={12} />
-                  </div>
-                  <span className="text">Usa más beneficios para subir de nivel y obtener mejores descuentos</span>
-                </TipItem>
-              </TipsList>
-            </TipsCard>
-          </SideColumn>
-        </MainGrid>
-
-        {/* Modal de Edición de Perfil Mejorado */}
+        {/* Modal de Edición de Perfil */}
         <Dialog open={editModalOpen} onClose={() => setEditModalOpen(false)}>
-          <DialogContent className="max-w-lg">
+          <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-3">
-                <Edit3 size={24} className="text-indigo-600" />
+              <DialogTitle className="flex items-center gap-3 text-2xl">
+                <div className="w-10 h-10 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center">
+                  <Edit3 size={20} className="text-white" />
+                </div>
                 Editar Perfil
               </DialogTitle>
             </DialogHeader>
 
             <div className="space-y-6">
-              <Input
-                label="Nombre completo"
-                value={formData.nombre}
-                onChange={(e) => setFormData(prev => ({ ...prev, nombre: e.target.value }))}
-                placeholder="Tu nombre completo"
-                required
-                icon={<User size={16} />}
-              />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Input
+                  label="Nombre completo"
+                  value={formData.nombre}
+                  onChange={(e) => setFormData(prev => ({ ...prev, nombre: e.target.value }))}
+                  placeholder="Tu nombre completo"
+                  required
+                  icon={<User size={16} />}
+                />
 
-              <Input
-                label="Teléfono"
-                value={formData.telefono}
-                onChange={(e) => setFormData(prev => ({ ...prev, telefono: e.target.value }))}
-                placeholder="Tu número de teléfono"
-                icon={<Phone size={16} />}
-              />
+                <Input
+                  label="Teléfono"
+                  value={formData.telefono}
+                  onChange={(e) => setFormData(prev => ({ ...prev, telefono: e.target.value }))}
+                  placeholder="Tu número de teléfono"
+                  icon={<Phone size={16} />}
+                />
 
-              <Input
-                label="DNI"
-                value={formData.dni}
-                onChange={(e) => setFormData(prev => ({ ...prev, dni: e.target.value }))}
-                placeholder="Tu número de documento"
-                icon={<IdCard size={16} />}
-              />
+                <Input
+                  label="DNI"
+                  value={formData.dni}
+                  onChange={(e) => setFormData(prev => ({ ...prev, dni: e.target.value }))}
+                  placeholder="Tu número de documento"
+                  icon={<IdCard size={16} />}
+                />
 
-              <Input
-                label="Dirección"
-                value={formData.direccion}
-                onChange={(e) => setFormData(prev => ({ ...prev, direccion: e.target.value }))}
-                placeholder="Tu dirección"
-                icon={<Home size={16} />}
-              />
+                <Input
+                  label="Dirección"
+                  value={formData.direccion}
+                  onChange={(e) => setFormData(prev => ({ ...prev, direccion: e.target.value }))}
+                  placeholder="Tu dirección"
+                  icon={<Home size={16} />}
+                />
+              </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1642,8 +1193,30 @@ export default function SocioPerfilPage() {
                     ...prev, 
                     fechaNacimiento: e.target.value
                   }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                 />
+              </div>
+
+              {/* Vista previa de cambios */}
+              <div className="bg-gray-50 rounded-xl p-4">
+                <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                  <Eye size={16} />
+                  Vista previa
+                </h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Nombre:</span>
+                    <span className="font-medium">{formData.nombre || 'Sin especificar'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Teléfono:</span>
+                    <span className="font-medium">{formData.telefono || 'Sin especificar'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">DNI:</span>
+                    <span className="font-medium">{formData.dni || 'Sin especificar'}</span>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -1666,29 +1239,31 @@ export default function SocioPerfilPage() {
           </DialogContent>
         </Dialog>
 
-        {/* Modal de Configuración Mejorado */}
+        {/* Modal de Configuración */}
         <Dialog open={configModalOpen} onClose={() => setConfigModalOpen(false)}>
-          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-3">
-                <Settings size={24} className="text-indigo-600" />
+              <DialogTitle className="flex items-center gap-3 text-2xl">
+                <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl flex items-center justify-center">
+                  <Settings size={20} className="text-white" />
+                </div>
                 Configuración de Cuenta
               </DialogTitle>
             </DialogHeader>
 
             {/* Tabs de configuración */}
-            <div className="mb-6">
-              <div className="flex space-x-1 bg-gray-100 rounded-xl p-1">
+            <div className="mb-8">
+              <div className="flex space-x-1 bg-gray-100 rounded-2xl p-1">
                 {[
-                  { id: 'general', label: 'General', icon: <Settings size={16} /> },
+                  { id: 'general', label: 'General', icon: <Globe size={16} /> },
                   { id: 'notificaciones', label: 'Notificaciones', icon: <Bell size={16} /> },
                   { id: 'privacidad', label: 'Privacidad', icon: <Shield size={16} /> },
-                  { id: 'avanzado', label: 'Avanzado', icon: <Palette size={16} /> }
+                  { id: 'avanzado', label: 'Avanzado', icon: <Settings size={16} /> }
                 ].map((tab) => (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id as 'general' | 'notificaciones' | 'privacidad' | 'avanzado')}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    className={`flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-medium transition-all ${
                       activeTab === tab.id
                         ? 'bg-white text-indigo-600 shadow-sm'
                         : 'text-gray-600 hover:text-gray-900'
@@ -1701,63 +1276,95 @@ export default function SocioPerfilPage() {
               </div>
             </div>
 
-            <div className="space-y-6">
+            <div className="space-y-8">
               {/* Tab General */}
               {activeTab === 'general' && (
-                <div className="space-y-6">
+                <div className="space-y-8">
                   <div>
-                    <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                      <Globe size={16} />
+                    <h4 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                      <Globe size={20} />
                       Preferencias Generales
                     </h4>
-                    <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-3">
                           <Languages size={16} className="inline mr-2" />
                           Idioma
                         </label>
                         <select
                           value={configuracion.idioma}
                           onChange={(e) => setConfiguracion(prev => ({ ...prev, idioma: e.target.value as 'es' | 'en' }))}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                         >
-                          <option value="es">Español</option>
-                          <option value="en">English</option>
+                          <option value="es">🇪🇸 Español</option>
+                          <option value="en">🇺🇸 English</option>
                         </select>
                       </div>
                       
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-3">
                           <DollarSign size={16} className="inline mr-2" />
                           Moneda
                         </label>
                         <select
                           value={configuracion.moneda}
                           onChange={(e) => setConfiguracion(prev => ({ ...prev, moneda: e.target.value as 'ARS' | 'USD' | 'EUR' }))}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                         >
-                          <option value="ARS">Peso Argentino (ARS)</option>
-                          <option value="USD">Dólar Estadounidense (USD)</option>
-                          <option value="EUR">Euro (EUR)</option>
+                          <option value="ARS">💰 Peso Argentino (ARS)</option>
+                          <option value="USD">💵 Dólar Estadounidense (USD)</option>
+                          <option value="EUR">💶 Euro (EUR)</option>
                         </select>
                       </div>
 
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-3">
                           <Clock3 size={16} className="inline mr-2" />
                           Zona Horaria
                         </label>
                         <select
                           value={configuracion.timezone}
                           onChange={(e) => setConfiguracion(prev => ({ ...prev, timezone: e.target.value }))}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                         >
-                          <option value="America/Argentina/Buenos_Aires">Buenos Aires (GMT-3)</option>
-                          <option value="America/New_York">Nueva York (GMT-5)</option>
-                          <option value="Europe/Madrid">Madrid (GMT+1)</option>
-                          <option value="Asia/Tokyo">Tokio (GMT+9)</option>
+                          <option value="America/Argentina/Buenos_Aires">🇦🇷 Buenos Aires (GMT-3)</option>
+                          <option value="America/New_York">🇺🇸 Nueva York (GMT-5)</option>
+                          <option value="Europe/Madrid">🇪🇸 Madrid (GMT+1)</option>
+                          <option value="Asia/Tokyo">🇯🇵 Tokio (GMT+9)</option>
                         </select>
                       </div>
+                    </div>
+                  </div>
+
+                  {/* Tema */}
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                      <Palette size={18} />
+                      Tema de la aplicación
+                    </h4>
+                    <div className="grid grid-cols-3 gap-4">
+                      {[
+                        { value: 'light', label: 'Claro', icon: <Sun size={20} />, bg: 'bg-white', border: 'border-gray-200' },
+                        { value: 'dark', label: 'Oscuro', icon: <Moon size={20} />, bg: 'bg-gray-900', border: 'border-gray-700' },
+                        { value: 'auto', label: 'Automático', icon: <Laptop size={20} />, bg: 'bg-gradient-to-r from-white to-gray-900', border: 'border-gray-300' }
+                      ].map((tema) => (
+                        <button
+                          key={tema.value}
+                          onClick={() => setConfiguracion(prev => ({ ...prev, tema: tema.value as 'light' | 'dark' | 'auto' }))}
+                          className={`flex flex-col items-center gap-3 p-6 rounded-2xl border-2 transition-all ${
+                            configuracion.tema === tema.value
+                              ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                              : `${tema.border} hover:border-gray-300 ${tema.bg}`
+                          }`}
+                        >
+                          <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                            configuracion.tema === tema.value ? 'bg-indigo-100' : 'bg-gray-100'
+                          }`}>
+                            {tema.icon}
+                          </div>
+                          <span className="font-medium">{tema.label}</span>
+                        </button>
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -1766,76 +1373,75 @@ export default function SocioPerfilPage() {
               {/* Tab Notificaciones */}
               {activeTab === 'notificaciones' && (
                 <div className="space-y-6">
-                  <div>
-                    <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                      <Bell size={16} />
-                      Configuración de Notificaciones
-                    </h4>
-                    <div className="space-y-4">
-                      <label className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                        <div className="flex items-center gap-3">
-                          <Bell size={16} className="text-gray-600" />
+                  <h4 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                    <Bell size={20} />
+                    Configuración de Notificaciones
+                  </h4>
+                  
+                  <div className="space-y-4">
+                    {[
+                      {
+                        key: 'notificaciones',
+                        title: 'Notificaciones generales',
+                        description: 'Recibir todas las notificaciones del sistema',
+                        icon: <Bell size={20} />,
+                        color: 'indigo'
+                      },
+                      {
+                        key: 'notificacionesPush',
+                        title: 'Notificaciones push',
+                        description: 'Notificaciones en tiempo real en tu dispositivo',
+                        icon: <DeviceIcon size={20} />,
+                        color: 'blue'
+                      },
+                      {
+                        key: 'notificacionesEmail',
+                        title: 'Notificaciones por email',
+                        description: 'Recibir emails informativos y promocionales',
+                        icon: <Mail size={20} />,
+                        color: 'green'
+                      },
+                      {
+                        key: 'notificacionesSMS',
+                        title: 'Notificaciones SMS',
+                        description: 'Mensajes de texto para eventos importantes',
+                        icon: <Phone size={20} />,
+                        color: 'orange'
+                      }
+                    ].map((notif) => (
+                      <div key={notif.key} className="flex items-center justify-between p-6 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors">
+                        <div className="flex items-center gap-4">
+                          <div className={`w-12 h-12 bg-${notif.color}-100 rounded-xl flex items-center justify-center`}>
+                            <div className={`text-${notif.color}-600`}>
+                              {notif.icon}
+                            </div>
+                          </div>
                           <div>
-                            <span className="text-sm font-medium text-gray-700">Notificaciones generales</span>
-                            <p className="text-xs text-gray-500">Recibir todas las notificaciones</p>
+                            <h5 className="font-semibold text-gray-900">{notif.title}</h5>
+                            <p className="text-sm text-gray-600">{notif.description}</p>
                           </div>
                         </div>
-                        <input
-                          type="checkbox"
-                          checked={configuracion.notificaciones}
-                          onChange={(e) => setConfiguracion(prev => ({ ...prev, notificaciones: e.target.checked }))}
-                          className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                        />
-                      </label>
-
-                      <label className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                        <div className="flex items-center gap-3">
-                          <DeviceIcon size={16} className="text-gray-600" />
-                          <div>
-                            <span className="text-sm font-medium text-gray-700">Notificaciones push</span>
-                            <p className="text-xs text-gray-500">Notificaciones en el dispositivo</p>
-                          </div>
-                        </div>
-                        <input
-                          type="checkbox"
-                          checked={configuracion.notificacionesPush}
-                          onChange={(e) => setConfiguracion(prev => ({ ...prev, notificacionesPush: e.target.checked }))}
-                          className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                        />
-                      </label>
-
-                      <label className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                        <div className="flex items-center gap-3">
-                          <Mail size={16} className="text-gray-600" />
-                          <div>
-                            <span className="text-sm font-medium text-gray-700">Notificaciones por email</span>
-                            <p className="text-xs text-gray-500">Recibir emails informativos</p>
-                          </div>
-                        </div>
-                        <input
-                          type="checkbox"
-                          checked={configuracion.notificacionesEmail}
-                          onChange={(e) => setConfiguracion(prev => ({ ...prev, notificacionesEmail: e.target.checked }))}
-                          className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                        />
-                      </label>
-
-                      <label className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                        <div className="flex items-center gap-3">
-                          <Phone size={16} className="text-gray-600" />
-                          <div>
-                            <span className="text-sm font-medium text-gray-700">Notificaciones SMS</span>
-                            <p className="text-xs text-gray-500">Mensajes de texto importantes</p>
-                          </div>
-                        </div>
-                        <input
-                          type="checkbox"
-                          checked={configuracion.notificacionesSMS}
-                          onChange={(e) => setConfiguracion(prev => ({ ...prev, notificacionesSMS: e.target.checked }))}
-                          className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                        />
-                      </label>
-                    </div>
+                        <button
+                          onClick={() => setConfiguracion(prev => ({ 
+                            ...prev, 
+                            [notif.key]: !prev[notif.key as keyof SocioConfiguration] 
+                          }))}
+                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                            configuracion[notif.key as keyof SocioConfiguration] 
+                              ? 'bg-indigo-600' 
+                              : 'bg-gray-200'
+                          }`}
+                        >
+                          <span
+                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                              configuracion[notif.key as keyof SocioConfiguration] 
+                                ? 'translate-x-6' 
+                                : 'translate-x-1'
+                            }`}
+                          />
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
@@ -1843,75 +1449,88 @@ export default function SocioPerfilPage() {
               {/* Tab Privacidad */}
               {activeTab === 'privacidad' && (
                 <div className="space-y-6">
-                  <div>
-                    <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                      <ShieldIcon size={16} />
-                      Configuración de Privacidad
-                    </h4>
-                    <div className="space-y-4">
-                      <label className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                        <div className="flex items-center gap-3">
-                          <Globe size={16} className="text-gray-600" />
+                  <h4 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                    <ShieldIcon size={20} />
+                    Configuración de Privacidad
+                  </h4>
+                  
+                  <div className="space-y-4">
+                    {[
+                      {
+                        key: 'perfilPublico',
+                        title: 'Perfil público',
+                        description: 'Permitir que otros usuarios vean tu perfil básico',
+                        icon: <Globe size={20} />,
+                        color: 'blue'
+                      },
+                      {
+                        key: 'mostrarEstadisticas',
+                        title: 'Mostrar estadísticas',
+                        description: 'Mostrar tus estadísticas de uso públicamente',
+                        icon: <BarChart3 size={20} />,
+                        color: 'green'
+                      },
+                      {
+                        key: 'mostrarActividad',
+                        title: 'Mostrar actividad',
+                        description: 'Mostrar tu actividad reciente a otros usuarios',
+                        icon: <Activity size={20} />,
+                        color: 'purple'
+                      },
+                      {
+                        key: 'compartirDatos',
+                        title: 'Compartir datos',
+                        description: 'Permitir compartir datos anónimos para mejorar el servicio',
+                        icon: <Share2 size={20} />,
+                        color: 'orange'
+                      }
+                    ].map((privacy) => (
+                      <div key={privacy.key} className="flex items-center justify-between p-6 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors">
+                        <div className="flex items-center gap-4">
+                          <div className={`w-12 h-12 bg-${privacy.color}-100 rounded-xl flex items-center justify-center`}>
+                            <div className={`text-${privacy.color}-600`}>
+                              {privacy.icon}
+                            </div>
+                          </div>
                           <div>
-                            <span className="text-sm font-medium text-gray-700">Perfil público</span>
-                            <p className="text-xs text-gray-500">Permitir que otros vean tu perfil</p>
+                            <h5 className="font-semibold text-gray-900">{privacy.title}</h5>
+                            <p className="text-sm text-gray-600">{privacy.description}</p>
                           </div>
                         </div>
-                        <input
-                          type="checkbox"
-                          checked={configuracion.perfilPublico}
-                          onChange={(e) => setConfiguracion(prev => ({ ...prev, perfilPublico: e.target.checked }))}
-                          className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                        />
-                      </label>
+                        <button
+                          onClick={() => setConfiguracion(prev => ({ 
+                            ...prev, 
+                            [privacy.key]: !prev[privacy.key as keyof SocioConfiguration] 
+                          }))}
+                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                            configuracion[privacy.key as keyof SocioConfiguration] 
+                              ? 'bg-indigo-600' 
+                              : 'bg-gray-200'
+                          }`}
+                        >
+                          <span
+                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                              configuracion[privacy.key as keyof SocioConfiguration] 
+                                ? 'translate-x-6' 
+                                : 'translate-x-1'
+                            }`}
+                          />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
 
-                      <label className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                        <div className="flex items-center gap-3">
-                          <BarChart3 size={16} className="text-gray-600" />
-                          <div>
-                            <span className="text-sm font-medium text-gray-700">Mostrar estadísticas</span>
-                            <p className="text-xs text-gray-500">Mostrar tus estadísticas públicamente</p>
-                          </div>
-                        </div>
-                        <input
-                          type="checkbox"
-                          checked={configuracion.mostrarEstadisticas}
-                          onChange={(e) => setConfiguracion(prev => ({ ...prev, mostrarEstadisticas: e.target.checked }))}
-                          className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                        />
-                      </label>
-
-                      <label className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                        <div className="flex items-center gap-3">
-                          <Activity size={16} className="text-gray-600" />
-                          <div>
-                            <span className="text-sm font-medium text-gray-700">Mostrar actividad</span>
-                            <p className="text-xs text-gray-500">Mostrar tu actividad reciente</p>
-                          </div>
-                        </div>
-                        <input
-                          type="checkbox"
-                          checked={configuracion.mostrarActividad}
-                          onChange={(e) => setConfiguracion(prev => ({ ...prev, mostrarActividad: e.target.checked }))}
-                          className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                        />
-                      </label>
-
-                      <label className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                        <div className="flex items-center gap-3">
-                          <Share2 size={16} className="text-gray-600" />
-                          <div>
-                            <span className="text-sm font-medium text-gray-700">Compartir datos</span>
-                            <p className="text-xs text-gray-500">Permitir compartir datos con socios</p>
-                          </div>
-                        </div>
-                        <input
-                          type="checkbox"
-                          checked={configuracion.compartirDatos}
-                          onChange={(e) => setConfiguracion(prev => ({ ...prev, compartirDatos: e.target.checked }))}
-                          className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                        />
-                      </label>
+                  {/* Información adicional */}
+                  <div className="bg-blue-50 border border-blue-200 rounded-2xl p-6">
+                    <div className="flex items-start gap-3">
+                      <Info size={20} className="text-blue-600 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <h5 className="font-semibold text-blue-900 mb-2">Información sobre privacidad</h5>
+                        <p className="text-sm text-blue-800 leading-relaxed">
+                          Tus datos personales están protegidos y nunca se comparten con terceros sin tu consentimiento explícito. 
+                          Puedes cambiar estas configuraciones en cualquier momento.
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1919,129 +1538,147 @@ export default function SocioPerfilPage() {
 
               {/* Tab Avanzado */}
               {activeTab === 'avanzado' && (
-                <div className="space-y-6">
-                  <div>
-                    <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                      <Palette size={16} />
-                      Configuración Avanzada
-                    </h4>
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Tema de la aplicación</label>
-                        <div className="grid grid-cols-3 gap-3">
-                          {[
-                            { value: 'light', label: 'Claro', icon: <Sun size={16} /> },
-                            { value: 'dark', label: 'Oscuro', icon: <Moon size={16} /> },
-                            { value: 'auto', label: 'Automático', icon: <Laptop size={16} /> }
-                          ].map((tema) => (
-                            <button
-                              key={tema.value}
-                              onClick={() => setConfiguracion(prev => ({ ...prev, tema: tema.value as 'light' | 'dark' | 'auto' }))}
-                              className={`flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all ${
-                                configuracion.tema === tema.value
-                                  ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                                  : 'border-gray-200 hover:border-gray-300'
-                              }`}
-                            >
-                              {tema.icon}
-                              <span className="text-sm font-medium">{tema.label}</span>
-                            </button>
-                          ))}
+                <div className="space-y-8">
+                  <h4 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                    <Database size={20} />
+                    Configuración Avanzada
+                  </h4>
+
+                  {/* Información del dispositivo */}
+                  <div className="bg-gray-50 rounded-2xl p-6">
+                    <h5 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                      <DeviceIcon size={18} />
+                      Información del dispositivo
+                    </h5>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">Último acceso:</span>
+                          <span className="text-sm font-medium text-gray-900">
+                            {format(profileData.ultimoAcceso, 'dd/MM/yyyy HH:mm', { locale: es })}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">Dispositivos conectados:</span>
+                          <span className="text-sm font-medium text-gray-900">
+                            {socio?.dispositivosConectados?.length || 1}
+                          </span>
                         </div>
                       </div>
-
-                      {/* Información del dispositivo */}
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <h5 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
-                          <DeviceIcon size={16} />
-                          Información del dispositivo
-                        </h5>
-                        <div className="space-y-2 text-sm text-gray-600">
-                          <div className="flex justify-between">
-                            <span>Último acceso:</span>
-                            <span>{format(profileData.ultimoAcceso, 'dd/MM/yyyy HH:mm', { locale: es })}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span>Dispositivos conectados:</span>
-                            <span>{socio?.dispositivosConectados?.length || 1}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span>Ubicación actual:</span>
-                            <span>
-                              {socio?.ubicacionActual ? 
-                                `${socio.ubicacionActual.ciudad}, ${socio.ubicacionActual.provincia}` : 
-                                'No disponible'
-                              }
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">Ubicación actual:</span>
+                          <span className="text-sm font-medium text-gray-900">
+                            {socio?.ubicacionActual ? 
+                              `${socio.ubicacionActual.ciudad}, ${socio.ubicacionActual.provincia}` : 
+                              'No disponible'
+                            }
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">ID de usuario:</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-mono text-gray-900">
+                              {user?.uid?.slice(0, 8)}...
                             </span>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={handleCopyUserId}
+                              className="p-1"
+                            >
+                              {copied ? <Check size={12} /> : <Copy size={12} />}
+                            </Button>
                           </div>
                         </div>
                       </div>
+                    </div>
+                  </div>
 
-                      {/* Acciones de cuenta */}
-                      <div className="pt-4 border-t border-gray-200">
-                        <h5 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
-                          <Database size={16} />
-                          Gestión de datos
-                        </h5>
-                        <div className="space-y-3">
-                          <Button
-                            variant="outline"
-                            fullWidth
-                            leftIcon={<Download size={16} />}
-                            onClick={handleExportData}
-                            className="justify-start"
-                          >
-                            Exportar todos mis datos
-                          </Button>
-                          
-                          <Button
-                            variant="outline"
-                            fullWidth
-                            leftIcon={<RotateCcw size={16} />}
-                            className="justify-start"
-                            onClick={() => {
-                              setConfiguracion({
-                                notificaciones: true,
-                                notificacionesPush: true,
-                                notificacionesEmail: true,
-                                notificacionesSMS: false,
-                                tema: 'light',
-                                idioma: 'es',
-                                moneda: 'ARS',
-                                timezone: 'America/Argentina/Buenos_Aires',
-                                perfilPublico: false,
-                                mostrarEstadisticas: true,
-                                mostrarActividad: true,
-                                compartirDatos: false,
-                                beneficiosFavoritos: [],
-                                comerciosFavoritos: [],
-                                categoriasFavoritas: []
-                              });
-                              toast.success('Configuración restablecida');
-                            }}
-                          >
-                            Restablecer configuración
-                          </Button>
-                          
-                          <Button
-                            variant="outline"
-                            fullWidth
-                            leftIcon={<Archive size={16} />}
-                            className="justify-start text-yellow-600 border-yellow-300 hover:bg-yellow-50"
-                          >
-                            Archivar cuenta
-                          </Button>
-                          
-                          <Button
-                            variant="outline"
-                            fullWidth
-                            leftIcon={<Trash2 size={16} />}
-                            className="justify-start text-red-600 border-red-300 hover:bg-red-50"
-                          >
-                            Eliminar cuenta
-                          </Button>
+                  {/* Gestión de datos */}
+                  <div>
+                    <h5 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                      <FileText size={18} />
+                      Gestión de datos
+                    </h5>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <Button
+                        variant="outline"
+                        fullWidth
+                        leftIcon={<Download size={16} />}
+                        onClick={handleExportData}
+                        className="justify-start h-auto p-4"
+                      >
+                        <div className="text-left">
+                          <div className="font-medium">Exportar todos mis datos</div>
+                          <div className="text-sm text-gray-500">Descargar información completa</div>
                         </div>
-                      </div>
+                      </Button>
+                      
+                      <Button
+                        variant="outline"
+                        fullWidth
+                        leftIcon={<RotateCcw size={16} />}
+                        className="justify-start h-auto p-4"
+                        onClick={() => {
+                          setConfiguracion({
+                            notificaciones: true,
+                            notificacionesPush: true,
+                            notificacionesEmail: true,
+                            notificacionesSMS: false,
+                            tema: 'light',
+                            idioma: 'es',
+                            moneda: 'ARS',
+                            timezone: 'America/Argentina/Buenos_Aires',
+                            perfilPublico: false,
+                            mostrarEstadisticas: true,
+                            mostrarActividad: true,
+                            compartirDatos: false,
+                            beneficiosFavoritos: [],
+                            comerciosFavoritos: [],
+                            categoriasFavoritas: []
+                          });
+                          toast.success('Configuración restablecida');
+                        }}
+                      >
+                        <div className="text-left">
+                          <div className="font-medium">Restablecer configuración</div>
+                          <div className="text-sm text-gray-500">Volver a valores por defecto</div>
+                        </div>
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Acciones de cuenta peligrosas */}
+                  <div className="border-t border-gray-200 pt-6">
+                    <h5 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                      <AlertCircle size={18} />
+                      Zona de peligro
+                    </h5>
+                    <div className="space-y-3">
+                      <Button
+                        variant="outline"
+                        fullWidth
+                        leftIcon={<Archive size={16} />}
+                        className="justify-start text-yellow-600 border-yellow-300 hover:bg-yellow-50 h-auto p-4"
+                      >
+                        <div className="text-left">
+                          <div className="font-medium">Archivar cuenta</div>
+                          <div className="text-sm text-yellow-600/80">Desactivar temporalmente tu cuenta</div>
+                        </div>
+                      </Button>
+                      
+                      <Button
+                        variant="outline"
+                        fullWidth
+                        leftIcon={<Trash2 size={16} />}
+                        className="justify-start text-red-600 border-red-300 hover:bg-red-50 h-auto p-4"
+                      >
+                        <div className="text-left">
+                          <div className="font-medium">Eliminar cuenta</div>
+                          <div className="text-sm text-red-600/80">Eliminar permanentemente todos los datos</div>
+                        </div>
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -2071,45 +1708,52 @@ export default function SocioPerfilPage() {
         <Dialog open={qrModalOpen} onClose={() => setQrModalOpen(false)}>
           <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-3">
-                <QrCode size={24} className="text-indigo-600" />
+              <DialogTitle className="flex items-center gap-3 text-xl">
+                <div className="w-10 h-10 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center">
+                  <QrCode size={20} className="text-white" />
+                </div>
                 Mi Código QR
               </DialogTitle>
             </DialogHeader>
 
             <div className="space-y-6 text-center">
               {/* QR Code */}
-              <div className="bg-white p-8 rounded-2xl border-2 border-gray-200 mx-auto inline-block">
-                <div className="w-48 h-48 bg-gray-100 rounded-xl flex items-center justify-center">
+              <div className="bg-white p-8 rounded-3xl border-2 border-gray-200 mx-auto inline-block shadow-lg">
+                <div className="w-48 h-48 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center">
                   <QrCode size={120} className="text-gray-400" />
                 </div>
               </div>
 
               <div>
-                <h3 className="font-semibold text-gray-900 mb-2">Código de Socio</h3>
-                <p className="text-sm text-gray-600 mb-4">
+                <h3 className="text-lg font-bold text-gray-900 mb-2">Código de Socio</h3>
+                <p className="text-sm text-gray-600 mb-6">
                   Muestra este código QR en los comercios para validar tus beneficios
                 </p>
                 
                 {/* ID de usuario */}
-                <div className="bg-gray-50 rounded-lg p-3 flex items-center justify-between">
+                <div className="bg-gray-50 rounded-xl p-4 flex items-center justify-between">
                   <span className="text-sm font-mono text-gray-600">
                     {user?.uid?.slice(0, 8)}...{user?.uid?.slice(-8)}
                   </span>
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={handleCopyUserId}
-                    className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                    className="p-2"
                   >
                     {copied ? <Check size={16} /> : <Copy size={16} />}
-                  </button>
+                  </Button>
                 </div>
 
                 {/* Información adicional */}
-                <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+                <div className="mt-6 p-4 bg-blue-50 rounded-xl">
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
                       <div className="font-medium text-blue-900">Nivel</div>
-                      <div className="text-blue-700">{profileData.nivel.nivel}</div>
+                      <div className="text-blue-700 flex items-center gap-1">
+                        {getNivelIcon(profileData.nivel.nivel)}
+                        {profileData.nivel.nivel}
+                      </div>
                     </div>
                     <div>
                       <div className="font-medium text-blue-900">Puntos</div>
@@ -2161,10 +1805,12 @@ export default function SocioPerfilPage() {
 
         {/* Modal de Actividad Completa */}
         <Dialog open={activityModalOpen} onClose={() => setActivityModalOpen(false)}>
-          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-3">
-                <Activity size={24} className="text-indigo-600" />
+              <DialogTitle className="flex items-center gap-3 text-2xl">
+                <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-red-600 rounded-xl flex items-center justify-center">
+                  <Activity size={20} className="text-white" />
+                </div>
                 Historial de Actividad Completo
               </DialogTitle>
             </DialogHeader>
@@ -2219,10 +1865,12 @@ export default function SocioPerfilPage() {
 
         {/* Modal de Estadísticas Avanzadas */}
         <Dialog open={statsModalOpen} onClose={() => setStatsModalOpen(false)}>
-          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-3">
-                <BarChart3 size={24} className="text-indigo-600" />
+              <DialogTitle className="flex items-center gap-3 text-2xl">
+                <div className="w-10 h-10 bg-gradient-to-r from-pink-500 to-purple-600 rounded-xl flex items-center justify-center">
+                  <BarChart3 size={20} className="text-white" />
+                </div>
                 Estadísticas Avanzadas
               </DialogTitle>
             </DialogHeader>
@@ -2230,62 +1878,50 @@ export default function SocioPerfilPage() {
             <div className="space-y-8">
               {/* Resumen de estadísticas */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl">
-                  <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center mx-auto mb-3">
-                    <TrendingUp size={24} className="text-white" />
+                {[
+                  { title: 'Ahorro Total', value: `$${enhancedStats.ahorroTotal.toLocaleString()}`, icon: <TrendingUp size={24} />, color: '#3b82f6' },
+                  { title: 'Beneficios Usados', value: enhancedStats.beneficiosUsados, icon: <Award size={24} />, color: '#10b981' },
+                  { title: 'Comercios Visitados', value: enhancedStats.comerciosVisitados, icon: <Building2 size={24} />, color: '#8b5cf6' },
+                  { title: 'Días de Racha', value: enhancedStats.racha, icon: <Zap size={24} />, color: '#f59e0b' }
+                ].map((stat, index) => (
+                  <div key={index} className="text-center p-6 bg-gradient-to-br from-gray-50 to-gray-100 rounded-3xl">
+                    <div 
+                      className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 text-white"
+                      style={{ backgroundColor: stat.color }}
+                    >
+                      {stat.icon}
+                    </div>
+                    <div className="text-3xl font-black mb-2" style={{ color: stat.color }}>
+                      {stat.value}
+                    </div>
+                    <div className="text-sm text-gray-600 font-medium">{stat.title}</div>
                   </div>
-                  <div className="text-2xl font-bold text-blue-600">${enhancedStats.ahorroTotal.toLocaleString()}</div>
-                  <div className="text-sm text-gray-600">Ahorro Total</div>
-                </div>
-
-                <div className="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-2xl">
-                  <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center mx-auto mb-3">
-                    <Award size={24} className="text-white" />
-                  </div>
-                  <div className="text-2xl font-bold text-green-600">{enhancedStats.beneficiosUsados}</div>
-                  <div className="text-sm text-gray-600">Beneficios Usados</div>
-                </div>
-
-                <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl">
-                  <div className="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center mx-auto mb-3">
-                    <Building2 size={24} className="text-white" />
-                  </div>
-                  <div className="text-2xl font-bold text-purple-600">{enhancedStats.comerciosVisitados}</div>
-                  <div className="text-sm text-gray-600">Comercios Visitados</div>
-                </div>
-
-                <div className="text-center p-4 bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-2xl">
-                  <div className="w-12 h-12 bg-yellow-500 rounded-xl flex items-center justify-center mx-auto mb-3">
-                    <Zap size={24} className="text-white" />
-                  </div>
-                  <div className="text-2xl font-bold text-yellow-600">{enhancedStats.racha}</div>
-                  <div className="text-sm text-gray-600">Días de Racha</div>
-                </div>
+                ))}
               </div>
 
               {/* Comercios más visitados */}
               {enhancedStats.comerciosMasVisitados.length > 0 && (
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <h4 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-3">
                     <Building2 size={20} />
                     Comercios Más Visitados
                   </h4>
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     {enhancedStats.comerciosMasVisitados.map((comercio, index) => (
-                      <div key={comercio.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center">
-                            <span className="text-sm font-bold text-indigo-600">{index + 1}</span>
+                      <div key={comercio.id} className="flex items-center justify-between p-6 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center">
+                            <span className="text-lg font-bold text-indigo-600">#{index + 1}</span>
                           </div>
                           <div>
-                            <h5 className="font-medium text-gray-900">{comercio.nombre}</h5>
+                            <h5 className="font-semibold text-gray-900">{comercio.nombre}</h5>
                             <p className="text-sm text-gray-500">
                               Última visita: {format(comercio.ultimaVisita.toDate(), 'dd/MM/yyyy', { locale: es })}
                             </p>
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="text-lg font-bold text-indigo-600">{comercio.visitas}</div>
+                          <div className="text-2xl font-bold text-indigo-600">{comercio.visitas}</div>
                           <div className="text-sm text-gray-500">visitas</div>
                         </div>
                       </div>
@@ -2294,25 +1930,17 @@ export default function SocioPerfilPage() {
                 </div>
               )}
 
-              {/* Beneficios por categoría */}
-              {Object.entries(enhancedStats.beneficiosPorCategoria).map(([categoria, cantidad]) => (
-                <div key={categoria} className="p-4 bg-gray-50 rounded-lg">
-                  <div className="text-lg font-bold text-gray-900">{cantidad}</div>
-                  <div className="text-sm text-gray-600">{categoria}</div>
-                </div>
-              ))}
-
               {/* Actividad por mes */}
               {Object.keys(enhancedStats.actividadPorMes).length > 0 && (
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <h4 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-3">
                     <Calendar size={20} />
                     Actividad por Mes (Últimos 12 meses)
                   </h4>
                   <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
                     {Object.entries(enhancedStats.actividadPorMes).map(([mes, actividad]) => (
-                      <div key={mes} className="text-center p-3 bg-gray-50 rounded-lg">
-                        <div className="text-lg font-bold text-indigo-600">{actividad}</div>
+                      <div key={mes} className="text-center p-4 bg-gray-50 rounded-2xl">
+                        <div className="text-2xl font-bold text-indigo-600 mb-2">{actividad}</div>
                         <div className="text-xs text-gray-500">
                           {format(new Date(mes + '-01'), 'MMM yyyy', { locale: es })}
                         </div>
