@@ -53,8 +53,8 @@ class SocioService {
           ...data,
           creadoEn: data.creadoEn || Timestamp.now(),
           fechaNacimiento: data.fechaNacimiento instanceof Timestamp
-            ? data.fechaNacimiento.toDate()
-            : data.fechaNacimiento,
+            ? data.fechaNacimiento
+            : data.fechaNacimiento ? Timestamp.fromDate(new Date(data.fechaNacimiento)) : undefined,
           configuracion: this.getDefaultConfiguration(data.configuracion),
           nivel: this.getDefaultLevel(data.nivel),
         } as Socio;
@@ -75,23 +75,54 @@ class SocioService {
     profileData: UpdateSocioProfileData
   ): Promise<void> {
     try {
+      // Validar datos antes de actualizar
+      const validationErrors = this.validateProfileData(profileData);
+      if (validationErrors.length > 0) {
+        throw new Error(validationErrors.join(', '));
+      }
+
       const socioRef = doc(db, COLLECTIONS.SOCIOS, socioId);
       
       // Preparar datos para actualización
-      const updateData: Partial<UpdateSocioProfileData> & { actualizadoEn: FirestoreTimestamp } = {
-        ...profileData,
+      const updateData: any = {
         actualizadoEn: Timestamp.now()
       };
 
+      // Solo incluir campos que tienen valor
+      if (profileData.nombre !== undefined) {
+        updateData.nombre = profileData.nombre.trim();
+      }
+
+      if (profileData.telefono !== undefined && profileData.telefono.trim()) {
+        updateData.telefono = profileData.telefono.trim();
+      }
+
+      if (profileData.dni !== undefined && profileData.dni.trim()) {
+        updateData.dni = profileData.dni.trim();
+      }
+
+      if (profileData.direccion !== undefined && profileData.direccion.trim()) {
+        updateData.direccion = profileData.direccion.trim();
+      }
+
+      // Manejar fecha de nacimiento correctamente
       if (profileData.fechaNacimiento) {
-        // Store as Firestore Timestamp
-        const fechaNacimientoDate =
-          profileData.fechaNacimiento instanceof Date
-            ? profileData.fechaNacimiento
-            : (profileData.fechaNacimiento && profileData.fechaNacimiento instanceof Timestamp
-                ? profileData.fechaNacimiento.toDate()
-                : new Date(profileData.fechaNacimiento as string | number | Date));
-        updateData.fechaNacimiento = FirestoreTimestamp.fromDate(fechaNacimientoDate);
+        if (profileData.fechaNacimiento instanceof Date) {
+          updateData.fechaNacimiento = Timestamp.fromDate(profileData.fechaNacimiento);
+        } else if (profileData.fechaNacimiento instanceof Timestamp) {
+          updateData.fechaNacimiento = profileData.fechaNacimiento;
+        } else {
+          // Si es string, convertir a Date primero
+          const fecha = new Date(profileData.fechaNacimiento as string);
+          if (!isNaN(fecha.getTime())) {
+            updateData.fechaNacimiento = Timestamp.fromDate(fecha);
+          }
+        }
+      }
+
+      // Incluir configuración si se proporciona
+      if (profileData.configuracion) {
+        updateData.configuracion = profileData.configuracion;
       }
 
       await updateDoc(socioRef, updateData);
@@ -337,7 +368,6 @@ class SocioService {
               return comercio.ultimaVisita;
             }
             if (comercio.ultimaVisita instanceof Date) {
-              return Timestamp.fromDate(comercio.ultimaVisita);
             }
             // Si es undefined, usar Timestamp.now() o un valor por defecto
             return Timestamp.now();
@@ -546,22 +576,30 @@ class SocioService {
   validateProfileData(data: Partial<SocioProfileData>): string[] {
     const errors: string[] = [];
 
-    if (data.nombre && data.nombre.trim().length < 2) {
+    if (data.nombre !== undefined && data.nombre.trim().length < 2) {
       errors.push('El nombre debe tener al menos 2 caracteres');
     }
 
-    if (data.telefono && data.telefono.length < 8) {
+    if (data.telefono !== undefined && data.telefono.trim() && data.telefono.trim().length < 8) {
       errors.push('El teléfono debe tener al menos 8 dígitos');
     }
 
-    if (data.dni && data.dni.length < 7) {
+    if (data.dni !== undefined && data.dni.trim() && data.dni.trim().length < 7) {
       errors.push('El DNI debe tener al menos 7 caracteres');
     }
 
     if (data.fechaNacimiento) {
-      const edad = new Date().getFullYear() - data.fechaNacimiento.getFullYear();
-      if (edad < 16 || edad > 120) {
+      const fecha = data.fechaNacimiento instanceof Date 
+        ? data.fechaNacimiento 
+        : new Date(data.fechaNacimiento);
+      
+      if (isNaN(fecha.getTime())) {
         errors.push('La fecha de nacimiento no es válida');
+      } else {
+        const edad = new Date().getFullYear() - fecha.getFullYear();
+        if (edad < 16 || edad > 120) {
+          errors.push('La fecha de nacimiento no es válida (edad debe estar entre 16 y 120 años)');
+        }
       }
     }
 
@@ -751,3 +789,4 @@ class SocioService {
 // Export singleton instance
 export const socioService = new SocioService();
 export default socioService;
+            

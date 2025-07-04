@@ -756,13 +756,12 @@ const containerVariants = {
   }
 };
 
-
 interface ProfileFormData {
   nombre: string;
   telefono: string;
   dni: string;
   direccion: string;
-  fechaNacimiento?: Date;
+  fechaNacimiento: string; // Cambio: usar string para el input date
 }
 
 export default function SocioPerfilPage() {
@@ -861,12 +860,13 @@ export default function SocioPerfilPage() {
     categoriasFavoritas: socio?.configuracion?.categoriasFavoritas ?? []
   });
 
+  // Corregir el estado del formulario
   const [formData, setFormData] = useState<ProfileFormData>({
-    nombre: profileData.nombre,
-    telefono: profileData.telefono,
-    dni: profileData.dni,
-    direccion: profileData.direccion,
-    fechaNacimiento: profileData.fechaNacimiento
+    nombre: '',
+    telefono: '',
+    dni: '',
+    direccion: '',
+    fechaNacimiento: ''
   });
 
   // Update form data when socio data changes
@@ -877,7 +877,9 @@ export default function SocioPerfilPage() {
         telefono: socio.telefono || '',
         dni: socio.dni || '',
         direccion: socio.direccion || '',
-        fechaNacimiento: socio.fechaNacimiento?.toDate()
+        fechaNacimiento: socio.fechaNacimiento 
+          ? format(socio.fechaNacimiento.toDate(), 'yyyy-MM-dd')
+          : ''
       });
       
       if (socio.configuracion) {
@@ -892,16 +894,41 @@ export default function SocioPerfilPage() {
   // Handlers
   const handleSaveProfile = async () => {
     try {
-      await updateProfile({
-        nombre: formData.nombre,
-        telefono: formData.telefono || undefined,
-        dni: formData.dni || undefined,
-        direccion: formData.direccion || undefined,
-        fechaNacimiento: formData.fechaNacimiento
-      });
+      // Validar datos antes de enviar
+      if (!formData.nombre.trim()) {
+        toast.error('El nombre es obligatorio');
+        return;
+      }
+
+      // Preparar datos para actualización
+      const updateData: any = {
+        nombre: formData.nombre.trim(),
+      };
+
+      // Solo incluir campos que tienen valor
+      if (formData.telefono.trim()) {
+        updateData.telefono = formData.telefono.trim();
+      }
+
+      if (formData.dni.trim()) {
+        updateData.dni = formData.dni.trim();
+      }
+
+      if (formData.direccion.trim()) {
+        updateData.direccion = formData.direccion.trim();
+      }
+
+      // Manejar fecha de nacimiento correctamente
+      if (formData.fechaNacimiento) {
+        updateData.fechaNacimiento = new Date(formData.fechaNacimiento);
+      }
+
+      await updateProfile(updateData);
       setEditModalOpen(false);
-    } catch {
-      // Error is handled by the hook
+      toast.success('Perfil actualizado exitosamente');
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast.error('Error al actualizar el perfil');
     }
   };
 
@@ -909,8 +936,10 @@ export default function SocioPerfilPage() {
     try {
       await updateConfiguration(configuracion);
       setConfigModalOpen(false);
-    } catch {
-      // Error is handled by the hook
+      toast.success('Configuración actualizada exitosamente');
+    } catch (error) {
+      console.error('Error updating configuration:', error);
+      toast.error('Error al actualizar la configuración');
     }
   };
 
@@ -919,6 +948,9 @@ export default function SocioPerfilPage() {
     try {
       await refreshData();
       toast.success('Datos actualizados');
+    } catch (error) {
+      console.error('Error refreshing data:', error);
+      toast.error('Error al actualizar los datos');
     } finally {
       setRefreshing(false);
     }
@@ -934,13 +966,20 @@ export default function SocioPerfilPage() {
   const handleExportData = async () => {
     try {
       await exportData();
-    } catch {
-      // Error is handled by the hook
+      toast.success('Datos exportados exitosamente');
+    } catch (error) {
+      console.error('Error exporting data:', error);
+      toast.error('Error al exportar los datos');
     }
   };
 
   const handleImageUpload = async (file: File): Promise<string> => {
-    return await uploadProfileImage(file);
+    try {
+      return await uploadProfileImage(file);
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      throw error;
+    }
   };
 
   // Utility functions
@@ -1371,16 +1410,9 @@ export default function SocioPerfilPage() {
                           alignItems: 'center',
                           justifyContent: 'center'
                         }}>
+                          {asociacion.logo ? (
                             <Image
-                              src={asociacion.logo || ''}
-                              alt={asociacion.nombre}
-                              width={32}
-                              height={32}
-                              style={{ objectFit: 'cover', borderRadius: '0.25rem' }}
-                              unoptimized
-                            />
-                            <Image
-                              src={asociacion.logo || ''}
+                              src={asociacion.logo}
                               alt={asociacion.nombre}
                               width={32}
                               height={32}
@@ -1389,6 +1421,7 @@ export default function SocioPerfilPage() {
                             />
                           ) : (
                             <Building2 size={16} style={{ color: '#64748b' }} />
+                          )}
                         </div>
                         <div>
                           <h4 style={{ fontWeight: 700, color: '#1e293b', fontSize: '0.875rem', marginBottom: '0.25rem' }}>{asociacion.nombre}</h4>
@@ -1433,8 +1466,8 @@ export default function SocioPerfilPage() {
                   <div style={{ textAlign: 'center', padding: '2rem' }}>
                     <Building2 size={48} style={{ color: '#cbd5e1', margin: '0 auto 1rem' }} />
                     <p style={{ color: '#64748b' }}>No hay asociaciones disponibles</p>
-                  </div>
-                )}
+                    </div>
+                  )}
               </div>
 
               <div style={{ paddingTop: '1rem', borderTop: '1px solid #e2e8f0' }}>
@@ -1455,7 +1488,6 @@ export default function SocioPerfilPage() {
               </div>
             </SideCard>
 
-            {/* Acciones Rápidas */}
             {/* Acciones Rápidas */}
             <SideCard>
               <SideCardHeader>
@@ -1605,10 +1637,10 @@ export default function SocioPerfilPage() {
                 </label>
                 <input
                   type="date"
-                  value={formData.fechaNacimiento ? format(formData.fechaNacimiento, 'yyyy-MM-dd') : ''}
+                  value={formData.fechaNacimiento}
                   onChange={(e) => setFormData(prev => ({ 
                     ...prev, 
-                    fechaNacimiento: e.target.value ? new Date(e.target.value) : undefined 
+                    fechaNacimiento: e.target.value
                   }))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 />
@@ -2263,22 +2295,12 @@ export default function SocioPerfilPage() {
               )}
 
               {/* Beneficios por categoría */}
-              {Object.keys(enhancedStats.beneficiosPorCategoria).length > 0 && (
-                <div>
-                  <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                    <Award size={20} />
-                    Beneficios por Categoría
-                  </h4>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {Object.entries(enhancedStats.beneficiosPorCategoria).map(([categoria, cantidad]) => (
-                      <div key={categoria} className="p-4 bg-gray-50 rounded-lg">
-                        <div className="text-lg font-bold text-gray-900">{cantidad}</div>
-                        <div className="text-sm text-gray-600">{categoria}</div>
-                      </div>
-                    ))}
-                  </div>
+              {Object.entries(enhancedStats.beneficiosPorCategoria).map(([categoria, cantidad]) => (
+                <div key={categoria} className="p-4 bg-gray-50 rounded-lg">
+                  <div className="text-lg font-bold text-gray-900">{cantidad}</div>
+                  <div className="text-sm text-gray-600">{categoria}</div>
                 </div>
-              )}
+              ))}
 
               {/* Actividad por mes */}
               {Object.keys(enhancedStats.actividadPorMes).length > 0 && (

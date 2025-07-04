@@ -115,7 +115,6 @@ export interface Socio {
     provincia: string;
   };
   asociacion: string;
-
 }
 
 export interface SocioFormData {
@@ -187,10 +186,9 @@ export interface UpdateSocioProfileData {
   telefono?: string;
   dni?: string;
   direccion?: string;
-  fechaNacimiento?: Date | Timestamp;
+  fechaNacimiento?: Date | Timestamp | string;
   avatar?: string;
   configuracion?: Partial<SocioConfiguration>;
-
 }
 
 export interface SocioActivityFilter {
