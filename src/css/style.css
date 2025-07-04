@@ -786,7 +786,7 @@ display: flex;
 align-items: center;
 width: 100%;
 min-height: auto;
-padding: calc(var(--navbar-height) + var(--space-2xl)) var(--section-padding-x) clamp(2rem, 8vh, 4rem);
+padding: calc(var(--navbar-height) + var(--space-6xl)) var(--section-padding-x) clamp(2rem, 8vh, 4rem);
 overflow: hidden;
 background:
 linear-gradient(135deg, var(--primary-bg) 0%, var(--secondary-bg) 100%);
@@ -936,6 +936,23 @@ filter: drop-shadow(0 0 20px rgb(255 69 105 / 40%));
 background-clip: text;
 -webkit-background-clip: text;
 -webkit-text-fill-color: transparent;
+}
+
+.hero__title--highlight::after {
+position: absolute;
+bottom: -10px;
+left: 0;
+width: 100%;
+height: 4px;
+content: '';
+background: linear-gradient(90deg,
+var(--starflex-crimson) 0%,
+var(--starflex-crimson-bright) 50%,
+transparent 100%
+);
+border-radius: 2px;
+opacity: 0.8;
+animation: glow-line 6s ease-in-out infinite;
 }
 
 .hero__title--amazon {
@@ -2020,6 +2037,17 @@ transform: scale(1);
 50% {
 opacity: 0.8;
 transform: scale(1.2);
+}
+}
+
+@keyframes glow-line {
+0%, 100% {
+opacity: 0.8;
+transform: scaleX(1);
+}
+50% {
+opacity: 1;
+transform: scaleX(1.05);
 }
 }
 
