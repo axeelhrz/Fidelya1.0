@@ -1,5 +1,4 @@
 import { BaseFirebaseService } from './firebaseService';
-import { clinicalService } from './clinicalService';
 import { COLLECTIONS } from '@/lib/firebase';
 import { 
   TherapistAnalytics, 
@@ -11,7 +10,6 @@ import {
   SymptomImprovement,
   PatientAnalyticsSummary,
   AIInsight,
-  AnalyticsMetric
 } from '@/types/analytics';
 import { Session } from '@/types/session';
 import { Patient } from '@/types/patient';
@@ -35,7 +33,7 @@ export class AnalyticsService {
 
       // Calcular métricas principales
       const totalPatients = patients.length;
-      const activeSessions = sessions.filter(s => s.status === 'completed').length;
+      const activeSessions = sessions.filter(s => s.status === 'programada' || s.status === 'completada').length;
       const averageSessionsPerPatient = totalPatients > 0 ? activeSessions / totalPatients : 0;
       
       // Calcular alertas activas
@@ -377,9 +375,9 @@ export class AnalyticsService {
   async getAIInsights(centerId: string, therapistId: string): Promise<AIInsight[]> {
     try {
       // En una implementación real, esto se generaría con IA
-      const mockInsights: AIInsight[] = [
+      const now = new Date();
+      const mockInsights: Omit<AIInsight, 'id' | 'createdAt' | 'updatedAt'>[] = [
         {
-          id: '1',
           type: 'recommendation',
           title: 'Aumentar frecuencia de seguimiento',
           description: 'Se recomienda aumentar la frecuencia de sesiones para 3 pacientes con alta alerta emocional.',
@@ -392,11 +390,9 @@ export class AnalyticsService {
             'Considerar terapia intensiva'
           ],
           relatedPatients: ['patient1', 'patient2', 'patient3'],
-          createdAt: new Date(),
           category: 'clinical'
         },
         {
-          id: '2',
           type: 'alert',
           title: 'Patrón de cancelaciones',
           description: '5 pacientes han cancelado 2+ sesiones consecutivas. Riesgo de abandono del tratamiento.',
@@ -408,11 +404,9 @@ export class AnalyticsService {
             'Ofrecer sesiones virtuales como alternativa',
             'Revisar horarios disponibles'
           ],
-          createdAt: new Date(),
           category: 'operational'
         },
         {
-          id: '3',
           type: 'trend',
           title: 'Mejora en síntomas de ansiedad',
           description: 'Los pacientes muestran una mejora del 65% en síntomas de ansiedad en los últimos 3 meses.',
@@ -423,12 +417,17 @@ export class AnalyticsService {
             'Continuar con las técnicas actuales',
             'Documentar estrategias exitosas'
           ],
-          createdAt: new Date(),
           category: 'clinical'
         }
       ];
 
-      return mockInsights;
+      // Convert mock data to full AIInsight objects with Firebase document properties
+      return mockInsights.map((insight, index) => ({
+        id: `insight_${index + 1}`,
+        ...insight,
+        createdAt: now,
+        updatedAt: now
+      }));
     } catch (error) {
       console.error('Error getting AI insights:', error);
       return [];

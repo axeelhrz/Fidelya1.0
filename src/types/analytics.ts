@@ -1,3 +1,5 @@
+import { FirebaseDocument } from '@/lib/services/firebaseService';
+
 export interface TherapistAnalytics {
   totalPatients: number;
   activeSessions: number;
@@ -101,8 +103,7 @@ export interface ExportOptions {
   };
 }
 
-export interface AIInsight {
-  id: string;
+export interface AIInsight extends FirebaseDocument {
   type: 'recommendation' | 'alert' | 'trend' | 'optimization';
   title: string;
   description: string;
@@ -111,7 +112,6 @@ export interface AIInsight {
   actionable: boolean;
   suggestedActions: string[];
   relatedPatients?: string[];
-  createdAt: Date;
   category: 'clinical' | 'operational' | 'patient-care';
 }
 
