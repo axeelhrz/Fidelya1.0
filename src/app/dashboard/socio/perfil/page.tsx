@@ -1,3 +1,1250 @@
+'use client';
+
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  User, 
+  Edit3, 
+  Mail, 
+  Phone, 
+  Calendar, 
+  Settings,
+  Save,
+  X,
+  RefreshCw,
+  Building2,
+  CheckCircle,
+  XCircle,
+  TrendingUp,
+  Award,
+  Target,
+  Activity,
+  Bell,
+  Shield,
+  Palette,
+  Camera,
+  Download,
+  Star,
+  Zap,
+  Heart,
+  Crown,
+  Sparkles,
+  Globe,
+  Sun,
+  Moon,
+  Laptop,
+  ChevronRight,
+  HelpCircle,
+  Copy,
+  Check,
+  QrCode,
+  Share2,
+  RotateCcw,
+  Archive,
+  Trash2,
+  Cake,
+  Home,
+  IdCard,
+  Languages,
+  DollarSign,
+  Clock3,
+  Shield as ShieldIcon,
+  Database,
+  BarChart3,
+  Smartphone as DeviceIcon,
+  MapPin,
+  CreditCard,
+  Eye,
+  EyeOff,
+  Lock,
+  Unlock,
+  Bookmark,
+  Filter,
+  Search,
+  ExternalLink,
+  Plus,
+  Minus,
+  Info,
+  AlertCircle,
+  Gift,
+  Percent,
+  Calendar as CalendarIcon,
+  Clock,
+  Users,
+  ShoppingBag,
+  Wallet,
+  PieChart,
+  LineChart,
+  MoreHorizontal,
+  ArrowUpRight,
+  ArrowDownRight,
+  Maximize2,
+  Minimize2,
+  FileText,
+  Image as ImageIcon,
+  Upload,
+  Link,
+  MessageCircle,
+  Headphones,
+  BookOpen,
+  Lightbulb,
+  Compass,
+  Layers,
+  Grid,
+  List,
+  ToggleLeft,
+  ToggleRight,
+  ChevronDown,
+  Loader2,
+  TrendingDown,
+  Remove
+} from 'lucide-react';
+import Image from 'next/image';
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { SocioSidebar } from '@/components/layout/SocioSidebar';
+import { useSocioProfile } from '@/hooks/useSocioProfile';
+import { useAuth } from '@/hooks/useAuth';
+import { SocioConfiguration, SocioActivity } from '@/types/socio';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
+import toast from 'react-hot-toast';
+
+// Interfaces
+interface ProfileFormData {
+  nombre: string;
+  telefono: string;
+  dni: string;
+  direccion: string;
+  fechaNacimiento: string;
+}
+
+interface QuickAction {
+  id: string;
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  color: string;
+  action: () => void;
+  badge?: string | number;
+}
+
+interface ProfileStat {
+  id: string;
+  title: string;
+  value: string | number;
+  icon: React.ReactNode;
+  color: string;
+  change?: number;
+  trend?: 'up' | 'down' | 'neutral';
+  description?: string;
+}
+
+// Componente Button interno
+const Button: React.FC<{
+  children: React.ReactNode;
+  variant?: 'default' | 'outline' | 'ghost';
+  size?: 'sm' | 'md' | 'lg';
+  leftIcon?: React.ReactNode;
+  rightIcon?: React.ReactNode;
+  loading?: boolean;
+  disabled?: boolean;
+  fullWidth?: boolean;
+  onClick?: () => void;
+  className?: string;
+  type?: 'button' | 'submit';
+}> = ({
+  children,
+  variant = 'default',
+  size = 'md',
+  leftIcon,
+  rightIcon,
+  loading = false,
+  disabled = false,
+  fullWidth = false,
+  onClick,
+  className = '',
+  type = 'button'
+}) => {
+  const baseClasses = 'inline-flex items-center justify-center font-medium rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2';
+  
+  const variantClasses = {
+    default: 'bg-indigo-600 text-white hover:bg-indigo-700 focus:ring-indigo-500 shadow-lg hover:shadow-xl',
+    outline: 'border-2 border-gray-300 text-gray-700 hover:bg-gray-50 focus:ring-gray-500',
+    ghost: 'text-gray-600 hover:bg-gray-100 focus:ring-gray-500'
+  };
+
+  const sizeClasses = {
+    sm: 'px-3 py-2 text-sm gap-2',
+    md: 'px-4 py-3 text-sm gap-2',
+    lg: 'px-6 py-4 text-base gap-3'
+  };
+
+  return (
+    <button
+      type={type}
+      onClick={onClick}
+      disabled={disabled || loading}
+      className={`
+        ${baseClasses}
+        ${variantClasses[variant]}
+        ${sizeClasses[size]}
+        ${fullWidth ? 'w-full' : ''}
+        ${disabled || loading ? 'opacity-50 cursor-not-allowed' : ''}
+        ${className}
+      `}
+    >
+      {loading ? (
+        <Loader2 size={16} className="animate-spin" />
+      ) : (
+        leftIcon
+      )}
+      {children}
+      {rightIcon}
+    </button>
+  );
+};
+
+// Componente Input interno
+const Input: React.FC<{
+  label?: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  placeholder?: string;
+  type?: string;
+  required?: boolean;
+  icon?: React.ReactNode;
+  className?: string;
+}> = ({
+  label,
+  value,
+  onChange,
+  placeholder,
+  type = 'text',
+  required = false,
+  icon,
+  className = ''
+}) => {
+  return (
+    <div className={className}>
+      {label && (
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          {label}
+          {required && <span className="text-red-500 ml-1">*</span>}
+        </label>
+      )}
+      <div className="relative">
+        {icon && (
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <div className="text-gray-400">
+              {icon}
+            </div>
+          </div>
+        )}
+        <input
+          type={type}
+          value={value}
+          onChange={onChange}
+          placeholder={placeholder}
+          required={required}
+          className={`
+            w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors
+            ${icon ? 'pl-10' : ''}
+          `}
+        />
+      </div>
+    </div>
+  );
+};
+
+// Componente Dialog interno
+const Dialog: React.FC<{
+  open: boolean;
+  onClose: () => void;
+  children: React.ReactNode;
+}> = ({ open, onClose, children }) => {
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [open]);
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 overflow-y-auto">
+      <div className="flex min-h-screen items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm"
+          onClick={onClose}
+        />
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: 20 }}
+          className="relative bg-white rounded-3xl shadow-2xl max-w-full max-h-[90vh] overflow-hidden"
+        >
+          {children}
+        </motion.div>
+      </div>
+    </div>
+  );
+};
+
+const DialogContent: React.FC<{
+  children: React.ReactNode;
+  className?: string;
+}> = ({ children, className = '' }) => {
+  return (
+    <div className={`p-8 ${className}`}>
+      {children}
+    </div>
+  );
+};
+
+const DialogHeader: React.FC<{
+  children: React.ReactNode;
+}> = ({ children }) => {
+  return (
+    <div className="mb-6">
+      {children}
+    </div>
+  );
+};
+
+const DialogTitle: React.FC<{
+  children: React.ReactNode;
+  className?: string;
+}> = ({ children, className = '' }) => {
+  return (
+    <h2 className={`text-2xl font-bold text-gray-900 ${className}`}>
+      {children}
+    </h2>
+  );
+};
+
+const DialogFooter: React.FC<{
+  children: React.ReactNode;
+}> = ({ children }) => {
+  return (
+    <div className="flex gap-3 justify-end pt-6 border-t border-gray-200">
+      {children}
+    </div>
+  );
+};
+
+// Componente ModernCard interno
+const ModernCard: React.FC<{
+  children: React.ReactNode;
+  variant?: 'default' | 'glass' | 'gradient' | 'elevated';
+  className?: string;
+  onClick?: () => void;
+}> = ({
+  children,
+  variant = 'default',
+  className = '',
+  onClick
+}) => {
+  const variantClasses = {
+    default: 'bg-white border border-gray-200 shadow-lg hover:shadow-xl',
+    glass: 'bg-white/80 backdrop-blur-xl border border-white/20 shadow-xl',
+    gradient: 'bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-500 text-white shadow-2xl',
+    elevated: 'bg-white border border-gray-100 shadow-xl hover:shadow-2xl'
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -4 }}
+      className={`
+        ${variantClasses[variant]}
+        rounded-3xl p-8 transition-all duration-300 cursor-pointer
+        ${className}
+      `}
+      onClick={onClick}
+    >
+      {children}
+    </motion.div>
+  );
+};
+
+// Componente MetricsCard interno
+const MetricsCard: React.FC<{
+  title: string;
+  value: string | number;
+  icon: React.ReactNode;
+  color: string;
+  change?: number;
+  trend?: 'up' | 'down' | 'neutral';
+  description?: string;
+  onClick?: () => void;
+}> = ({
+  title,
+  value,
+  icon,
+  color,
+  change = 0,
+  trend = 'neutral',
+  description,
+  onClick
+}) => {
+  const getTrendIcon = () => {
+    switch (trend) {
+      case 'up': return <TrendingUp size={16} />;
+      case 'down': return <TrendingDown size={16} />;
+      default: return <Remove size={16} />;
+    }
+  };
+
+  const getTrendColor = () => {
+    switch (trend) {
+      case 'up': return '#10b981';
+      case 'down': return '#ef4444';
+      default: return '#6b7280';
+    }
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      whileHover={{ y: -4, scale: 1.02 }}
+      className="bg-white rounded-3xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer border border-gray-100"
+      onClick={onClick}
+    >
+      <div className="flex items-start justify-between mb-4">
+        <div 
+          className="w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-lg"
+          style={{ backgroundColor: color }}
+        >
+          {icon}
+        </div>
+        
+        {change !== 0 && (
+          <div className="flex items-center gap-1 px-2 py-1 rounded-lg" style={{ backgroundColor: `${getTrendColor()}20` }}>
+            <div style={{ color: getTrendColor() }}>
+              {getTrendIcon()}
+            </div>
+            <span className="text-sm font-bold" style={{ color: getTrendColor() }}>
+              {change > 0 ? '+' : ''}{change}%
+            </span>
+          </div>
+        )}
+      </div>
+      
+      <div>
+        <p className="text-sm font-medium text-gray-600 mb-2">{title}</p>
+        <p className="text-3xl font-black text-gray-900 mb-2">
+          {typeof value === 'number' ? value.toLocaleString() : value}
+        </p>
+        {description && (
+          <p className="text-sm text-gray-500">{description}</p>
+        )}
+      </div>
+      
+      {/* Progress bar */}
+      <div className="mt-4">
+        <div className="w-full bg-gray-200 rounded-full h-2">
+          <div 
+            className="h-2 rounded-full transition-all duration-1000"
+            style={{ 
+              width: `${Math.min(Math.abs(change) * 10, 100)}%`,
+              backgroundColor: color 
+            }}
+          />
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+// Componente ProfileImageUploader interno
+const ProfileImageUploader: React.FC<{
+  currentImage?: string;
+  onImageUpload: (file: File) => Promise<string>;
+  uploading?: boolean;
+}> = ({
+  currentImage,
+  onImageUpload,
+  uploading = false
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [dragOver, setDragOver] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileSelect = (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      toast.error('Por favor selecciona un archivo de imagen válido');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('La imagen no puede superar los 5MB');
+      return;
+    }
+
+    setSelectedFile(file);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setPreviewImage(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > 0) {
+      handleFileSelect(files[0]);
+    }
+  };
+
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      handleFileSelect(files[0]);
+    }
+  };
+
+  const handleUpload = async () => {
+    if (!selectedFile) return;
+
+    try {
+      await onImageUpload(selectedFile);
+      setIsOpen(false);
+      setPreviewImage(null);
+      setSelectedFile(null);
+      toast.success('Imagen actualizada exitosamente');
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast.error('Error al subir la imagen');
+    }
+  };
+
+  return (
+    <>
+      <div className="relative">
+        <motion.div
+          whileHover={{ scale: 1.05 }}
+          className="relative cursor-pointer"
+          onClick={() => setIsOpen(true)}
+        >
+          <div className="w-32 h-32 bg-white rounded-3xl shadow-xl flex items-center justify-center border-4 border-white">
+            <div className="w-28 h-28 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center relative overflow-hidden">
+              {currentImage ? (
+                <Image
+                  src={currentImage}
+                  alt="Avatar"
+                  className="w-full h-full object-cover"
+                  fill
+                  sizes="112px"
+                  style={{ objectFit: 'cover' }}
+                  priority
+                />
+              ) : (
+                <User size={40} className="text-white" />
+              )}
+              
+              {uploading && (
+                <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                  <Loader2 size={24} className="text-white animate-spin" />
+                </div>
+              )}
+            </div>
+          </div>
+          
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+            className="absolute -bottom-2 -right-2 w-10 h-10 bg-indigo-500 hover:bg-indigo-600 rounded-full flex items-center justify-center text-white shadow-lg transition-all duration-200"
+            disabled={uploading}
+          >
+            {uploading ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              <Camera size={16} />
+            )}
+          </motion.button>
+        </motion.div>
+      </div>
+
+      <Dialog open={isOpen} onClose={() => setIsOpen(false)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3">
+              <Camera size={24} className="text-indigo-600" />
+              Cambiar Imagen de Perfil
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-6">
+            {(previewImage || currentImage) && (
+              <div className="text-center">
+                <div className="w-32 h-32 mx-auto bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center relative overflow-hidden">
+                  <Image
+                    src={previewImage || currentImage || ''}
+                    alt="Preview"
+                    className="w-full h-full object-cover"
+                    fill
+                    sizes="128px"
+                    style={{ objectFit: 'cover' }}
+                    priority
+                  />
+                </div>
+                <p className="text-sm text-gray-500 mt-3">
+                  {previewImage ? 'Nueva imagen' : 'Imagen actual'}
+                </p>
+              </div>
+            )}
+
+            <div
+              className={`border-2 border-dashed rounded-2xl p-8 text-center transition-all duration-200 ${
+                dragOver 
+                  ? 'border-indigo-500 bg-indigo-50' 
+                  : 'border-gray-300 hover:border-gray-400'
+              }`}
+              onDrop={handleDrop}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setDragOver(true);
+              }}
+              onDragLeave={() => setDragOver(false)}
+            >
+              <div className="space-y-4">
+                <div className="w-16 h-16 bg-gray-100 rounded-xl flex items-center justify-center mx-auto">
+                  <Upload size={24} className="text-gray-600" />
+                </div>
+                
+                <div>
+                  <p className="text-lg font-medium text-gray-900 mb-2">
+                    Arrastra una imagen aquí
+                  </p>
+                  <p className="text-sm text-gray-500 mb-4">
+                    O haz clic para seleccionar un archivo
+                  </p>
+                  
+                  <Button
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                    leftIcon={<ImageIcon size={16} />}
+                  >
+                    Seleccionar Archivo
+                  </Button>
+                </div>
+                
+                <p className="text-xs text-gray-400">
+                  Formatos soportados: JPG, PNG, WebP (máx. 5MB)
+                </p>
+              </div>
+            </div>
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleFileInputChange}
+              className="hidden"
+            />
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsOpen(false);
+                setPreviewImage(null);
+                setSelectedFile(null);
+              }}
+              leftIcon={<X size={16} />}
+            >
+              Cancelar
+            </Button>
+            
+            <Button 
+              onClick={handleUpload}
+              disabled={!selectedFile || uploading}
+              loading={uploading}
+              leftIcon={<Check size={16} />}
+            >
+              Guardar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+};
+
+// Componente ActivityTimeline interno
+const ActivityTimeline: React.FC<{
+  activities: SocioActivity[];
+  loading?: boolean;
+  onLoadMore?: () => void;
+  hasMore?: boolean;
+}> = ({
+  activities,
+  loading = false,
+  onLoadMore,
+  hasMore = false
+}) => {
+  const [filter, setFilter] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+
+  const getActivityIcon = (tipo: SocioActivity['tipo']) => {
+    switch (tipo) {
+      case 'beneficio': return <Gift size={16} />;
+      case 'validacion': return <QrCode size={16} />;
+      case 'registro': return <User size={16} />;
+      case 'actualizacion': return <Settings size={16} />;
+      case 'configuracion': return <Settings size={16} />;
+      default: return <Activity size={16} />;
+    }
+  };
+
+  const getActivityColor = (tipo: SocioActivity['tipo']) => {
+    switch (tipo) {
+      case 'beneficio': return '#10b981';
+      case 'validacion': return '#6366f1';
+      case 'registro': return '#8b5cf6';
+      case 'actualizacion': return '#f59e0b';
+      case 'configuracion': return '#6b7280';
+      default: return '#6b7280';
+    }
+  };
+
+  const getActivityBadge = (tipo: SocioActivity['tipo']) => {
+    switch (tipo) {
+      case 'beneficio': return { text: 'Beneficio', color: 'bg-green-100 text-green-800' };
+      case 'validacion': return { text: 'Validación', color: 'bg-blue-100 text-blue-800' };
+      case 'registro': return { text: 'Registro', color: 'bg-purple-100 text-purple-800' };
+      case 'actualizacion': return { text: 'Actualización', color: 'bg-yellow-100 text-yellow-800' };
+      case 'configuracion': return { text: 'Configuración', color: 'bg-gray-100 text-gray-800' };
+      default: return { text: 'Actividad', color: 'bg-gray-100 text-gray-800' };
+    }
+  };
+
+  const filteredActivities = activities.filter(activity => {
+    const matchesFilter = filter === 'all' || activity.tipo === filter;
+    const matchesSearch = searchTerm === '' || 
+      activity.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      activity.descripcion.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    return matchesFilter && matchesSearch;
+  });
+
+  const filterOptions = [
+    { value: 'all', label: 'Todas las actividades', icon: <Activity size={16} /> },
+    { value: 'beneficio', label: 'Beneficios', icon: <Gift size={16} /> },
+    { value: 'validacion', label: 'Validaciones', icon: <QrCode size={16} /> },
+    { value: 'actualizacion', label: 'Actualizaciones', icon: <Settings size={16} /> },
+    { value: 'registro', label: 'Registros', icon: <User size={16} /> }
+  ];
+
+  return (
+    <div className="space-y-6">
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
+              <Clock size={20} className="text-purple-600" />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-gray-900">Actividad Reciente</h3>
+              <p className="text-sm text-gray-500">
+                {filteredActivities.length} actividades
+              </p>
+            </div>
+          </div>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            leftIcon={<Filter size={16} />}
+            onClick={() => setShowFilters(!showFilters)}
+            className={showFilters ? 'bg-indigo-50 border-indigo-200' : ''}
+          >
+            Filtros
+          </Button>
+        </div>
+
+        <AnimatePresence>
+          {showFilters && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="space-y-4 p-4 bg-gray-50 rounded-2xl"
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="relative">
+                  <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Buscar actividad..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  />
+                </div>
+                
+                <select
+                  value={filter}
+                  onChange={(e) => setFilter(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                >
+                  {filterOptions.map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <div className="flex flex-wrap gap-2">
+                {filterOptions.map(option => (
+                  <button
+                    key={option.value}
+                    onClick={() => setFilter(option.value)}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                      filter === option.value
+                        ? 'bg-indigo-100 text-indigo-700 border border-indigo-200'
+                        : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                    }`}
+                  >
+                    {option.icon}
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      <div className="relative">
+        <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-200"></div>
+        
+        <div className="space-y-6">
+          {filteredActivities.map((activity, index) => {
+            const badge = getActivityBadge(activity.tipo);
+            
+            return (
+              <motion.div
+                key={activity.id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className="relative flex items-start gap-4"
+              >
+                <div 
+                  className="relative z-10 w-12 h-12 rounded-xl flex items-center justify-center text-white shadow-lg"
+                  style={{ backgroundColor: getActivityColor(activity.tipo) }}
+                >
+                  {getActivityIcon(activity.tipo)}
+                </div>
+
+                <div className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <h4 className="font-semibold text-gray-900">{activity.titulo}</h4>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${badge.color}`}>
+                          {badge.text}
+                        </span>
+                      </div>
+                      <p className="text-gray-600 mb-3">{activity.descripcion}</p>
+                      
+                      {activity.metadata && (
+                        <div className="space-y-2">
+                          {activity.metadata.comercioNombre && (
+                            <div className="flex items-center gap-2 text-sm text-gray-500">
+                              <Building2 size={14} />
+                              <span>{activity.metadata.comercioNombre}</span>
+                            </div>
+                          )}
+                          
+                          {activity.metadata.ubicacion && (
+                            <div className="flex items-center gap-2 text-sm text-gray-500">
+                              <MapPin size={14} />
+                              <span>{activity.metadata.ubicacion}</span>
+                            </div>
+                          )}
+                          
+                          {activity.metadata.montoDescuento && (
+                            <div className="flex items-center gap-2 text-sm text-green-600 font-medium">
+                              <TrendingUp size={14} />
+                              <span>Ahorro: ${activity.metadata.montoDescuento}</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="text-right">
+                      <p className="text-sm text-gray-500">
+                        {format(activity.fecha.toDate(), 'HH:mm', { locale: es })}
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        {format(activity.fecha.toDate(), 'dd MMM', { locale: es })}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {(activity.metadata?.comercioId || activity.metadata?.beneficioId) && (
+                    <div className="flex items-center gap-2 pt-3 border-t border-gray-100">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        leftIcon={<ExternalLink size={14} />}
+                        className="text-xs"
+                      >
+                        Ver detalles
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+
+        {filteredActivities.length === 0 && !loading && (
+          <div className="text-center py-12">
+            <div className="w-16 h-16 bg-gray-100 rounded-xl flex items-center justify-center mx-auto mb-4">
+              <Activity size={24} className="text-gray-400" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              No hay actividad
+            </h3>
+            <p className="text-gray-500">
+              {searchTerm || filter !== 'all' 
+                ? 'No se encontraron actividades con los filtros aplicados'
+                : 'Aún no tienes actividad registrada'
+              }
+            </p>
+          </div>
+        )}
+
+        {hasMore && (
+          <div className="text-center pt-6">
+            <Button
+              variant="outline"
+              onClick={onLoadMore}
+              loading={loading}
+              leftIcon={<ChevronDown size={16} />}
+            >
+              Cargar más actividades
+            </Button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Componente LoadingSkeleton interno
+const LoadingSkeleton: React.FC<{
+  className?: string;
+}> = ({ className = '' }) => {
+  return (
+    <div className={`animate-pulse ${className}`}>
+      <div className="space-y-6">
+        <div className="h-8 bg-gray-200 rounded-xl w-1/3"></div>
+        <div className="space-y-4">
+          <div className="h-4 bg-gray-200 rounded w-full"></div>
+          <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+          <div className="h-4 bg-gray-200 rounded w-4/6"></div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-32 bg-gray-200 rounded-2xl"></div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default function SocioPerfilPage() {
+  const { user } = useAuth();
+  const { 
+    socio, 
+    stats, 
+    asociaciones, 
+    activity,
+    loading, 
+    updating, 
+    uploadingImage,
+    updateProfile, 
+    updateConfiguration,
+    uploadProfileImage,
+    refreshData,
+    exportData,
+  } = useSocioProfile();
+
+  // Estados de modales
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [configModalOpen, setConfigModalOpen] = useState(false);
+  const [qrModalOpen, setQrModalOpen] = useState(false);
+  const [activityModalOpen, setActivityModalOpen] = useState(false);
+  const [statsModalOpen, setStatsModalOpen] = useState(false);
+  
+  // Estados de UI
+  const [refreshing, setRefreshing] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [activeTab, setActiveTab] = useState<'general' | 'notificaciones' | 'privacidad' | 'avanzado'>('general');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+
+  // Datos del perfil con fallbacks mejorados
+  const profileData = {
+    nombre: socio?.nombre || user?.nombre || 'Usuario',
+    email: socio?.email || user?.email || '',
+    telefono: socio?.telefono || '',
+    dni: socio?.dni || '',
+    direccion: socio?.direccion || '',
+    fechaNacimiento: socio?.fechaNacimiento?.toDate(),
+    estado: socio?.estado || 'activo',
+    creadoEn: socio?.creadoEn?.toDate() || new Date(),
+    ultimoAcceso: socio?.ultimoAcceso?.toDate() || new Date(),
+    avatar: socio?.avatar || null,
+    avatarThumbnail: socio?.avatarThumbnail || null,
+    nivel: socio?.nivel || {
+      nivel: 'Bronze',
+      puntos: 0,
+      puntosParaProximoNivel: 1000,
+      proximoNivel: 'Silver',
+      beneficiosDesbloqueados: [],
+      descuentoAdicional: 0
+    }
+  };
+
+  // Estadísticas mejoradas
+  const enhancedStats = {
+    beneficiosUsados: stats?.beneficiosUsados || 0,
+    ahorroTotal: stats?.ahorroTotal || 0,
+    beneficiosEsteMes: stats?.beneficiosEsteMes || 0,
+    asociacionesActivas: stats?.asociacionesActivas || 0,
+    racha: stats?.racha || 0,
+    comerciosVisitados: stats?.comerciosVisitados || 0,
+    validacionesExitosas: stats?.validacionesExitosas || 0,
+    descuentoPromedio: stats?.descuentoPromedio || 0,
+    ahorroEsteMes: stats?.ahorroEsteMes || 0,
+    beneficiosFavoritos: stats?.beneficiosFavoritos || 0,
+    tiempoComoSocio: stats?.tiempoComoSocio || 0,
+    actividadPorMes: stats?.actividadPorMes || {},
+    beneficiosPorCategoria: stats?.beneficiosPorCategoria || {},
+    comerciosMasVisitados: stats?.comerciosMasVisitados || []
+  };
+
+  // Configuración
+  const [configuracion, setConfiguracion] = useState<SocioConfiguration>({
+    notificaciones: socio?.configuracion?.notificaciones ?? true,
+    notificacionesPush: socio?.configuracion?.notificacionesPush ?? true,
+    notificacionesEmail: socio?.configuracion?.notificacionesEmail ?? true,
+    notificacionesSMS: socio?.configuracion?.notificacionesSMS ?? false,
+    tema: socio?.configuracion?.tema ?? 'light',
+    idioma: socio?.configuracion?.idioma ?? 'es',
+    moneda: socio?.configuracion?.moneda ?? 'ARS',
+    timezone: socio?.configuracion?.timezone ?? 'America/Argentina/Buenos_Aires',
+    perfilPublico: socio?.configuracion?.perfilPublico ?? false,
+    mostrarEstadisticas: socio?.configuracion?.mostrarEstadisticas ?? true,
+    mostrarActividad: socio?.configuracion?.mostrarActividad ?? true,
+    compartirDatos: socio?.configuracion?.compartirDatos ?? false,
+    beneficiosFavoritos: socio?.configuracion?.beneficiosFavoritos ?? [],
+    comerciosFavoritos: socio?.configuracion?.comerciosFavoritos ?? [],
+    categoriasFavoritas: socio?.configuracion?.categoriasFavoritas ?? []
+  });
+
+  const [formData, setFormData] = useState<ProfileFormData>({
+    nombre: '',
+    telefono: '',
+    dni: '',
+    direccion: '',
+    fechaNacimiento: ''
+  });
+
+  // Actualizar datos del formulario
+  useEffect(() => {
+    if (socio) {
+      setFormData({
+        nombre: socio.nombre || '',
+        telefono: socio.telefono || '',
+        dni: socio.dni || '',
+        direccion: socio.direccion || '',
+        fechaNacimiento: socio.fechaNacimiento 
+          ? format(socio.fechaNacimiento.toDate(), 'yyyy-MM-dd')
+          : ''
+      });
+      
+      if (socio.configuracion) {
+        setConfiguracion(prev => ({
+          ...prev,
+          ...socio.configuracion
+        }));
+      }
+    }
+  }, [socio]);
+
+  // Estadísticas del perfil
+  const profileStats: ProfileStat[] = [
+    {
+      id: 'beneficios',
+      title: 'Beneficios Usados',
+      value: enhancedStats.beneficiosUsados,
+      icon: <Gift size={24} />,
+      color: '#6366f1',
+      change: 12,
+      trend: 'up',
+      description: 'Total de beneficios utilizados'
+    },
+    {
+      id: 'ahorro',
+      title: 'Total Ahorrado',
+      value: `$${enhancedStats.ahorroTotal.toLocaleString()}`,
+      icon: <Wallet size={24} />,
+      color: '#10b981',
+      change: 8,
+      trend: 'up',
+      description: 'Dinero ahorrado en total'
+    },
+    {
+      id: 'mes',
+      title: 'Este Mes',
+      value: enhancedStats.beneficiosEsteMes,
+      icon: <CalendarIcon size={24} />,
+      color: '#f59e0b',
+      change: -5,
+      trend: 'down',
+      description: 'Beneficios usados este mes'
+    },
+    {
+      id: 'racha',
+      title: 'Días de Racha',
+      value: enhancedStats.racha,
+      icon: <Zap size={24} />,
+      color: '#8b5cf6',
+      change: 15,
+      trend: 'up',
+      description: 'Días consecutivos activo'
+    },
+    {
+      id: 'comercios',
+      title: 'Comercios Visitados',
+      value: enhancedStats.comerciosVisitados,
+      icon: <Building2 size={24} />,
+      color: '#3b82f6',
+      change: 3,
+      trend: 'up',
+      description: 'Comercios únicos visitados'
+    },
+    {
+      id: 'validaciones',
+      title: 'Tasa de Éxito',
+      value: `${enhancedStats.validacionesExitosas}%`,
+      icon: <CheckCircle size={24} />,
+      color: '#10b981',
+      change: 2,
+      trend: 'up',
+      description: 'Validaciones exitosas'
+    }
+  ];
+
+  // Acciones rápidas
+  const quickActions: QuickAction[] = [
+    {
+      id: 'qr',
+      title: 'Mi Código QR',
+      description: 'Ver y compartir mi código QR',
+      icon: <QrCode size={20} />,
+      color: '#6366f1',
+      action: () => setQrModalOpen(true)
+    },
+    {
+      id: 'export',
+      title: 'Exportar Datos',
+      description: 'Descargar toda mi información',
+      icon: <Download size={20} />,
+      color: '#10b981',
+      action: handleExportData
+    },
+    {
+      id: 'config',
+      title: 'Configuración',
+      description: 'Ajustar preferencias',
+      icon: <Settings size={20} />,
+      color: '#8b5cf6',
+      action: () => setConfigModalOpen(true)
+    },
+    {
+      id: 'activity',
+      title: 'Ver Actividad',
+      description: 'Historial completo',
+      icon: <Activity size={20} />,
+      color: '#f59e0b',
+      action: () => setActivityModalOpen(true),
+      badge: activity.length
+    },
+    {
+      id: 'stats',
+      title: 'Estadísticas',
+      description: 'Análisis detallado',
+      icon: <BarChart3 size={20} />,
+      color: '#ec4899',
+      action: () => setStatsModalOpen(true)
+    },
+    {
+      id: 'help',
+      title: 'Centro de Ayuda',
+      description: 'Soporte y guías',
+      icon: <HelpCircle size={20} />,
+      color: '#6b7280',
+      action: () => window.open('/help', '_blank')
+    }
+  ];
+
+  // Handlers
+  const handleSaveProfile = async () => {
+    try {
+      if (!formData.nombre.trim()) {
+        toast.error('El nombre es obligatorio');
+        return;
+      }
+
+      const updateData: any = {
+        nombre: formData.nombre.trim(),
+      };
+
+      if (formData.telefono.trim()) {
+        updateData.telefono = formData.telefono.trim();
+      }
+
+      if (formData.dni.trim()) {
+        updateData.dni = formData.dni.trim();
+      }
+
+      if (formData.direccion.trim()) {
+        updateData.direccion = formData.direccion.trim();
+      }
+
+      if (formData.fechaNacimiento) {
+        updateData.fechaNacimiento = new Date(formData.fechaNacimiento);
+      }
+
+      await updateProfile(updateData);
       setEditModalOpen(false);
       toast.success('Perfil actualizado exitosamente');
     } catch (error) {
