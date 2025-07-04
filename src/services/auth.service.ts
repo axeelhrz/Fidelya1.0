@@ -18,7 +18,7 @@ import {
 import { auth, db } from '@/lib/firebase';
 import { UserData } from '@/types/auth';
 import { COLLECTIONS } from '@/lib/constants';
-import { handleFirebaseError, logAuthError } from '@/lib/firebase-errors';
+import { logAuthError, getFirebaseErrorMessage } from '@/lib/firebase-errors';
 
 export interface LoginCredentials {
   email: string;
@@ -103,7 +103,7 @@ class AuthService {
       
       return {
         success: false,
-        error: handleFirebaseError(error as Error)
+        error: getFirebaseErrorMessage(error)
       };
     }
   }
@@ -189,7 +189,7 @@ class AuthService {
       
       return {
         success: false,
-        error: handleFirebaseError(error as Error)
+        error: getFirebaseErrorMessage(error)
       };
     }
   }
@@ -231,7 +231,7 @@ class AuthService {
       
       return {
         success: false,
-        error: handleFirebaseError(error as Error)
+        error: getFirebaseErrorMessage(error)
       };
     }
   }
@@ -264,7 +264,7 @@ class AuthService {
       
       return {
         success: false,
-        error: handleFirebaseError(error as Error)
+        error: getFirebaseErrorMessage(error)
       };
     }
   }
@@ -339,7 +339,7 @@ class AuthService {
       
       return {
         success: false,
-        error: handleFirebaseError(error as Error)
+        error: getFirebaseErrorMessage(error)
       };
     }
   }
