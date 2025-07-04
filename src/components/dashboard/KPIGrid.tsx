@@ -2,6 +2,16 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
+import { 
+  DollarSign, 
+  Users, 
+  Activity, 
+  Target,
+  Calendar,
+  Heart,
+  Brain,
+  Zap
+} from 'lucide-react';
 import { KPIMetric } from '@/types/dashboard';
 import KPICard from './KPICard';
 import { useStyles } from '@/lib/useStyles';
@@ -10,6 +20,60 @@ interface KPIGridProps {
   metrics: KPIMetric[];
   onCardClick?: (metric: KPIMetric) => void;
 }
+
+// Helper function to get icon based on KPI name/type
+const getKPIIcon = (name: string) => {
+  const lowerName = name.toLowerCase();
+  
+  if (lowerName.includes('revenue') || lowerName.includes('income') || lowerName.includes('financial')) {
+    return <DollarSign size={20} />;
+  }
+  if (lowerName.includes('patient') || lowerName.includes('client')) {
+    return <Users size={20} />;
+  }
+  if (lowerName.includes('session') || lowerName.includes('appointment')) {
+    return <Calendar size={20} />;
+  }
+  if (lowerName.includes('satisfaction') || lowerName.includes('rating')) {
+    return <Heart size={20} />;
+  }
+  if (lowerName.includes('clinical') || lowerName.includes('treatment')) {
+    return <Brain size={20} />;
+  }
+  if (lowerName.includes('efficiency') || lowerName.includes('performance')) {
+    return <Zap size={20} />;
+  }
+  if (lowerName.includes('target') || lowerName.includes('goal')) {
+    return <Target size={20} />;
+  }
+  
+  return <Activity size={20} />;
+};
+
+// Helper function to get color based on status
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case 'success':
+      return '#10B981'; // green
+    case 'warning':
+      return '#F59E0B'; // amber
+    case 'error':
+      return '#EF4444'; // red
+    default:
+      return '#6366F1'; // indigo
+  }
+};
+
+// Helper function to format change percentage
+const formatChange = (current: number, previous: number, trend: string) => {
+  if (previous === 0) return '';
+  
+  const changePercent = ((current - previous) / previous * 100).toFixed(1);
+  const isPositive = trend === 'up';
+  const sign = isPositive ? '+' : '';
+  
+  return `${sign}${changePercent}% vs anterior`;
+};
 
 export default function KPIGrid({ metrics, onCardClick }: KPIGridProps) {
   const { theme, responsive } = useStyles();
@@ -119,13 +183,21 @@ export default function KPIGrid({ metrics, onCardClick }: KPIGridProps) {
       style={styles.container}
     >
       <div style={styles.grid}>
-        {metrics.map((metric, index) => (
-          <KPICard
+        {metrics.map((metric) => (
+          <div
             key={metric.id}
-            metric={metric}
-            index={index}
             onClick={() => onCardClick?.(metric)}
-          />
+            style={{ cursor: onCardClick ? 'pointer' : 'default' }}
+          >
+            <KPICard
+              title={metric.name}
+              value={`${metric.value}${metric.unit ? ` ${metric.unit}` : ''}`}
+              icon={getKPIIcon(metric.name)}
+              color={getStatusColor(metric.status)}
+              change={formatChange(metric.value, metric.previousValue, metric.trend)}
+              description={metric.target ? `Meta: ${metric.target}${metric.unit ? ` ${metric.unit}` : ''}` : undefined}
+            />
+          </div>
         ))}
       </div>
     </motion.div>
