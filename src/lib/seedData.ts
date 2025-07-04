@@ -6,6 +6,7 @@ import {
 import { db, COLLECTIONS } from '@/lib/firebase';
 import { Session, Payment, Expense } from '@/lib/services/financialService';
 import { Patient, Therapist, ClinicalAssessment } from '@/lib/services/clinicalService';
+import { PatientDocument } from '@/types/documents';
 import { Lead, Campaign } from '@/lib/services/commercialService';
 import { Alert, Task } from '@/hooks/useDashboardData';
 
@@ -868,6 +869,11 @@ export async function clearFirebaseData() {
   // para eliminar colecciones completas. Aquí solo mostramos la estructura.
   
   console.log('⚠️ Para limpiar datos en producción, usa Firebase Admin SDK');
+}
+
+// Función de utilidad para sembrar datos de Firebase
+export async function seedFirebaseData() {
+  return await seedData();
 }
 
 // Extiende la interfaz Window para evitar errores de TypeScript
