@@ -17,8 +17,7 @@ import {
   useTheme,
   useMediaQuery,
   Card,
-  CardContent,
-  Grid
+  CardContent
 } from '@mui/material';
 import {
   Close,
@@ -27,12 +26,9 @@ import {
   OpenInNew,
   Person,
   Schedule,
-  Category,
   Label,
-  FileDownload,
   Info,
   CheckCircle,
-  RadioButtonUnchecked
 } from '@mui/icons-material';
 import { PatientDocument } from '../../../types/documents';
 import { formatDistanceToNow, format } from 'date-fns';
@@ -64,7 +60,6 @@ const DocumentDetailModal: React.FC<DocumentDetailModalProps> = ({
   // ============================================================================
   // EFECTOS
   // ============================================================================
-  
   useEffect(() => {
     if (document && !document.isRead && onMarkAsRead) {
       // Marcar como leído automáticamente al abrir el modal
@@ -75,7 +70,6 @@ const DocumentDetailModal: React.FC<DocumentDetailModalProps> = ({
   // ============================================================================
   // HELPERS
   // ============================================================================
-  
   const getTypeColor = (type: PatientDocument['type']) => {
     const colors = {
       consentimiento: '#1976d2',
@@ -136,10 +130,8 @@ const DocumentDetailModal: React.FC<DocumentDetailModalProps> = ({
   // ============================================================================
   // HANDLERS
   // ============================================================================
-  
   const handleDownload = async () => {
     if (!document) return;
-
     try {
       setDownloading(true);
       await onDownload(document);
@@ -164,7 +156,6 @@ const DocumentDetailModal: React.FC<DocumentDetailModalProps> = ({
   // ============================================================================
   // RENDER
   // ============================================================================
-  
   return (
     <>
       <Dialog
@@ -221,7 +212,6 @@ const DocumentDetailModal: React.FC<DocumentDetailModalProps> = ({
               />
             )}
           </Box>
-          
           <IconButton onClick={onClose} size="small">
             <Close />
           </IconButton>
@@ -231,9 +221,15 @@ const DocumentDetailModal: React.FC<DocumentDetailModalProps> = ({
         <DialogContent sx={{ p: 0 }}>
           <Box sx={{ p: 3 }}>
             {/* Información principal */}
-            <Grid container spacing={3}>
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: { xs: 'column', md: 'row' },
+                gap: 3
+              }}
+            >
               {/* Columna izquierda - Información del documento */}
-              <Grid item xs={12} md={8}>
+              <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 66.666%' } }}>
                 <Stack spacing={2}>
                   {/* Descripción */}
                   <Box>
@@ -307,10 +303,10 @@ const DocumentDetailModal: React.FC<DocumentDetailModalProps> = ({
                     </Box>
                   )}
                 </Stack>
-              </Grid>
+              </Box>
 
               {/* Columna derecha - Metadatos */}
-              <Grid item xs={12} md={4}>
+              <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 33.333%' } }}>
                 <Card variant="outlined">
                   <CardContent>
                     <Stack spacing={2}>
@@ -376,7 +372,6 @@ const DocumentDetailModal: React.FC<DocumentDetailModalProps> = ({
                           <Typography variant="caption" color="text.secondary" sx={{ ml: 2.5 }}>
                             {formatDistanceToNow(document.createdAt, { addSuffix: true, locale: es })}
                           </Typography>
-
                           {document.readAt && (
                             <>
                               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 1 }}>
@@ -442,8 +437,8 @@ const DocumentDetailModal: React.FC<DocumentDetailModalProps> = ({
                     </Stack>
                   </CardContent>
                 </Card>
-              </Grid>
-            </Grid>
+              </Box>
+            </Box>
           </Box>
         </DialogContent>
 
