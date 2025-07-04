@@ -1,5 +1,6 @@
 import { BaseFirebaseService } from './firebaseService';
 import { COLLECTIONS } from '@/lib/firebase';
+import { WhereFilterOp } from 'firebase/firestore';
 import { 
   TherapistAnalytics, 
   AnalyticsFilters, 
@@ -11,7 +12,7 @@ import {
   PatientAnalyticsSummary,
   AIInsight,
 } from '@/types/analytics';
-import { Session } from '@/types/session';
+import { Session, EmotionalState } from '@/types/session';
 import { Patient } from '@/types/patient';
 
 export class AnalyticsService {
@@ -48,7 +49,7 @@ export class AnalyticsService {
       const predominantEmotions = this.calculateEmotionalDistribution(sessions);
 
       // Calcular tasa de seguimiento
-      const patientsWithMultipleSessions = patients.filter(p => p.totalSessions >= 2).length;
+      const patientsWithMultipleSessions = patients.filter(p => (p.totalSessions ?? 0) >= 2).length;
       const followUpRate = totalPatients > 0 ? (patientsWithMultipleSessions / totalPatients) * 100 : 0;
 
       // Calcular retención de pacientes
@@ -109,13 +110,12 @@ export class AnalyticsService {
       orderBy: { field: 'lastName', direction: 'asc' }
     });
   }
-
   private async getTherapistSessions(
     centerId: string, 
     therapistId: string, 
     filters?: AnalyticsFilters
   ): Promise<Session[]> {
-    const whereConditions: any[] = [
+    const whereConditions: Array<{ field: string; operator: WhereFilterOp; value: string | Date }> = [
       { field: 'therapistId', operator: '==', value: therapistId }
     ];
 
@@ -148,24 +148,37 @@ export class AnalyticsService {
       other: 0
     };
 
-    const completedSessions = sessions.filter(s => s.status === 'finalizada' && s.emotionalState);
+    const completedSessions = sessions.filter(s => s.status === 'finalizada' && s.emotionalTonePre);
     
     if (completedSessions.length === 0) return distribution;
 
-    // Simular distribución basada en datos de sesiones
+    // Calcular distribución basada en el estado emocional previo a la sesión
     completedSessions.forEach(session => {
-      const beforeState = session.emotionalState?.before || 5;
+      const emotionalState = session.emotionalTonePre;
       
-      if (beforeState <= 3) {
-        distribution.depression += 1;
-      } else if (beforeState <= 4) {
-        distribution.anxiety += 1;
-      } else if (beforeState <= 6) {
-        distribution.stress += 1;
-      } else if (beforeState <= 7) {
-        distribution.calm += 1;
-      } else {
-        distribution.happiness += 1;
+      switch (emotionalState) {
+        case 'ansioso':
+          distribution.anxiety += 1;
+          break;
+        case 'triste':
+          distribution.depression += 1;
+          break;
+        case 'irritado':
+          distribution.anger += 1;
+          break;
+        case 'confundido':
+          distribution.stress += 1;
+          break;
+        case 'neutral':
+          distribution.calm += 1;
+          break;
+        case 'positivo':
+        case 'muy_positivo':
+          distribution.happiness += 1;
+          break;
+        default:
+          distribution.other += 1;
+          break;
       }
     });
 
@@ -222,7 +235,7 @@ export class AnalyticsService {
     const total = patients.length;
 
     patients.forEach(patient => {
-      patient.diagnosis.forEach(diagnosis => {
+      patient.diagnosis?.forEach(diagnosis => {
         reasonCounts.set(diagnosis, (reasonCounts.get(diagnosis) || 0) + 1);
       });
     });
@@ -252,15 +265,19 @@ export class AnalyticsService {
     });
 
     sessions
-      .filter(s => s.status === 'finalizada' && s.emotionalState)
+      .filter(s => s.status === 'finalizada' && s.emotionalTonePre && s.emotionalTonePost)
       .forEach(session => {
         const evolution = patientEvolution.get(session.patientId);
-        if (evolution) {
-          const improvement = (session.emotionalState.after - session.emotionalState.before);
+        if (evolution && session.emotionalTonePre && session.emotionalTonePost) {
+          // Convertir estados emocionales a valores numéricos para calcular mejora
+          const beforeValue = this.getEmotionalStateValue(session.emotionalTonePre);
+          const afterValue = this.getEmotionalStateValue(session.emotionalTonePost);
+          const improvement = afterValue - beforeValue;
+          
           evolution.sessions.push({
             date: new Date(session.date),
-            beforeSession: session.emotionalState.before,
-            afterSession: session.emotionalState.after,
+            beforeSession: beforeValue,
+            afterSession: afterValue,
             improvement
           });
         }
@@ -285,6 +302,20 @@ export class AnalyticsService {
       .sort((a, b) => b.averageImprovement - a.averageImprovement);
   }
 
+  private getEmotionalStateValue(state: EmotionalState): number {
+    // Convertir estados emocionales a valores numéricos (1-10)
+    switch (state) {
+      case 'triste': return 2;
+      case 'ansioso': return 3;
+      case 'irritado': return 4;
+      case 'confundido': return 4;
+      case 'neutral': return 5;
+      case 'positivo': return 7;
+      case 'muy_positivo': return 9;
+      default: return 5; // neutral por defecto
+    }
+  }
+
   private calculateSymptomImprovement(patients: Patient[]): SymptomImprovement[] {
     // Simplificado - en una implementación real se compararían evaluaciones pre/post
     const symptoms = ['Ansiedad', 'Depresión', 'Estrés', 'Insomnio', 'Fobias'];
@@ -303,21 +334,31 @@ export class AnalyticsService {
       const patientSessions = sessions.filter(s => s.patientId === patient.id);
       const completedSessions = patientSessions.filter(s => s.status === 'finalizada');
       
-      // Calcular emoción predominante
+      // Calcular emoción predominante basada en estados emocionales previos
       const emotionalStates = completedSessions
-        .filter(s => s.emotionalState)
-        .map(s => s.emotionalState.before);
+        .filter(s => s.emotionalTonePre)
+        .map(s => s.emotionalTonePre!);
       
-      const avgEmotionalState = emotionalStates.length > 0 
-        ? emotionalStates.reduce((a, b) => a + b, 0) / emotionalStates.length 
-        : 5;
-
       let predominantEmotion = 'Neutral';
-      if (avgEmotionalState <= 3) predominantEmotion = 'Depresión';
-      else if (avgEmotionalState <= 4) predominantEmotion = 'Ansiedad';
-      else if (avgEmotionalState <= 6) predominantEmotion = 'Estrés';
-      else if (avgEmotionalState <= 7) predominantEmotion = 'Calma';
-      else predominantEmotion = 'Bienestar';
+      if (emotionalStates.length > 0) {
+        const emotionCounts = new Map<string, number>();
+        emotionalStates.forEach(state => {
+          emotionCounts.set(state, (emotionCounts.get(state) || 0) + 1);
+        });
+        
+        const mostCommon = Array.from(emotionCounts.entries())
+          .sort((a, b) => b[1] - a[1])[0];
+        
+        switch (mostCommon[0]) {
+          case 'ansioso': predominantEmotion = 'Ansiedad'; break;
+          case 'triste': predominantEmotion = 'Depresión'; break;
+          case 'irritado': predominantEmotion = 'Irritabilidad'; break;
+          case 'confundido': predominantEmotion = 'Confusión'; break;
+          case 'positivo': predominantEmotion = 'Bienestar'; break;
+          case 'muy_positivo': predominantEmotion = 'Muy Positivo'; break;
+          default: predominantEmotion = 'Neutral'; break;
+        }
+      }
 
       // Calcular alertas activas
       let activeAlerts = 0;
@@ -325,10 +366,10 @@ export class AnalyticsService {
       else if (patient.riskLevel === 'high') activeAlerts = 2;
       else if (patient.riskLevel === 'medium') activeAlerts = 1;
 
-      // Calcular progreso general
+      // Calcular progreso general basado en mejora emocional
       const improvements = completedSessions
-        .filter(s => s.emotionalState)
-        .map(s => s.emotionalState.after - s.emotionalState.before);
+        .filter(s => s.emotionalTonePre && s.emotionalTonePost)
+        .map(s => this.getEmotionalStateValue(s.emotionalTonePost!) - this.getEmotionalStateValue(s.emotionalTonePre!));
       
       const averageImprovement = improvements.length > 0 
         ? improvements.reduce((a, b) => a + b, 0) / improvements.length 
@@ -363,14 +404,14 @@ export class AnalyticsService {
         lastSession,
         nextSession,
         overallProgress,
-        riskLevel: patient.riskLevel,
+        riskLevel: patient.riskLevel ?? 'low',
         adherenceRate,
         averageImprovement
       };
     }).sort((a, b) => b.overallProgress - a.overallProgress);
   }
 
-  async getAIInsights(centerId: string, therapistId: string): Promise<AIInsight[]> {
+  async getAIInsights(): Promise<AIInsight[]> {
     try {
       // En una implementación real, esto se generaría con IA
       const now = new Date();

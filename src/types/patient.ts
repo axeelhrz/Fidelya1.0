@@ -41,6 +41,9 @@ export interface Patient {
   updatedAt: Date;
   notes?: string;
   age?: number; // Optional, can be calculated from dateOfBirth
+  riskLevel?: 'low' | 'medium' | 'high' | 'critical';
+  totalSessions?: number; // Optional, can be calculated from related sessions
+  diagnosis?: string[]; // Optional, can be used for tracking patient conditions
 }
 
 export interface PatientSummary {

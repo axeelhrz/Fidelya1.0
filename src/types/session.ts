@@ -7,7 +7,9 @@ export type EmotionalState =
   | 'ansioso' 
   | 'triste' 
   | 'irritado' 
-  | 'confundido';
+  | 'confundido'
+  | 'before'
+  | 'after';
 
 export interface Session {
   id: string;
@@ -28,6 +30,8 @@ export interface Session {
   attachments?: string[];
   createdAt: Date;
   updatedAt: Date;
+  emotionalState?: EmotionalState; // Optional, can be derived from emotionalTonePre and emotionalTonePost
+  cost: number;
 }
 
 export interface SessionFilters {
@@ -57,8 +61,6 @@ export interface UpdateSessionData {
   status?: SessionStatus;
   emotionalTonePost?: EmotionalState;
   attachments?: string[];
-summary?: string;
+  summary?: string;
   recommendation?: string;
-  emotionalTonePost?: string;
-
 }

@@ -30,7 +30,7 @@ export function useAnalyticsData(filters?: AnalyticsFilters) {
 
       const [analyticsData, insightsData] = await Promise.all([
         analyticsService.getTherapistAnalytics(user.centerId, user.id, filters),
-        analyticsService.getAIInsights(user.centerId, user.id)
+        analyticsService.getAIInsights()
       ]);
 
       setAnalytics(analyticsData);
