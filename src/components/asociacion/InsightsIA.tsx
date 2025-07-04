@@ -28,6 +28,8 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  useTheme,
+  useMediaQuery,
 } from '@mui/material';
 import {
   AutoGraph,
@@ -115,6 +117,9 @@ const InsightCard: React.FC<InsightCardProps> = ({
   onApply,
   isProcessing = false
 }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
   const getImpactColor = () => {
     switch (insight.impact) {
       case 'critical': return '#dc2626';
@@ -127,12 +132,12 @@ const InsightCard: React.FC<InsightCardProps> = ({
 
   const getCategoryIcon = () => {
     switch (insight.category) {
-      case 'prediction': return <AutoGraph sx={{ fontSize: 14 }} />;
-      case 'recommendation': return <Lightbulb sx={{ fontSize: 14 }} />;
-      case 'alert': return <Warning sx={{ fontSize: 14 }} />;
-      case 'opportunity': return <Star sx={{ fontSize: 14 }} />;
-      case 'anomaly': return <ErrorOutline sx={{ fontSize: 14 }} />;
-      default: return <Info sx={{ fontSize: 14 }} />;
+      case 'prediction': return <AutoGraph sx={{ fontSize: { xs: 12, md: 14 } }} />;
+      case 'recommendation': return <Lightbulb sx={{ fontSize: { xs: 12, md: 14 } }} />;
+      case 'alert': return <Warning sx={{ fontSize: { xs: 12, md: 14 } }} />;
+      case 'opportunity': return <Star sx={{ fontSize: { xs: 12, md: 14 } }} />;
+      case 'anomaly': return <ErrorOutline sx={{ fontSize: { xs: 12, md: 14 } }} />;
+      default: return <Info sx={{ fontSize: { xs: 12, md: 14 } }} />;
     }
   };
 
@@ -147,19 +152,21 @@ const InsightCard: React.FC<InsightCardProps> = ({
     }
   };
 
-
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95, y: 20 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       transition={{ duration: 0.5, delay }}
-      style={{ flex: '1 1 0', minWidth: '380px' }}
+      style={{ 
+        width: '100%',
+        minWidth: isMobile ? '100%' : '380px'
+      }}
     >
       <Card
         elevation={0}
         sx={{
           border: insight.status === 'new' ? `2px solid ${insight.color}` : '1px solid #f1f5f9',
-          borderRadius: 4,
+          borderRadius: { xs: 3, md: 4 },
           background: insight.status === 'new' 
             ? `linear-gradient(135deg, ${alpha(insight.color, 0.05)} 0%, #ffffff 100%)`
             : 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
@@ -200,7 +207,7 @@ const InsightCard: React.FC<InsightCardProps> = ({
 
         {/* Status badge */}
         {insight.status === 'new' && (
-          <Box sx={{ position: 'absolute', top: 12, right: 12, zIndex: 1 }}>
+          <Box sx={{ position: 'absolute', top: { xs: 8, md: 12 }, right: { xs: 8, md: 12 }, zIndex: 1 }}>
             <Badge
               badgeContent="NUEVO"
               sx={{
@@ -208,7 +215,7 @@ const InsightCard: React.FC<InsightCardProps> = ({
                   bgcolor: insight.color,
                   color: 'white',
                   fontWeight: 700,
-                  fontSize: '0.65rem',
+                  fontSize: { xs: '0.6rem', md: '0.65rem' },
                   animation: 'pulse 2s infinite',
                   '@keyframes pulse': {
                     '0%, 100%': { opacity: 1, transform: 'scale(1)' },
@@ -220,13 +227,24 @@ const InsightCard: React.FC<InsightCardProps> = ({
           </Box>
         )}
 
-        <CardContent sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column' }}>
-          <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2.5, mb: 2.5 }}>
+        <CardContent sx={{ 
+          p: { xs: 2, md: 3 }, 
+          height: '100%', 
+          display: 'flex', 
+          flexDirection: 'column' 
+        }}>
+          <Box sx={{ 
+            display: 'flex', 
+            alignItems: 'flex-start', 
+            gap: { xs: 2, md: 2.5 }, 
+            mb: { xs: 2, md: 2.5 },
+            flexWrap: { xs: 'wrap', sm: 'nowrap' }
+          }}>
             <Avatar
               className="insight-icon"
               sx={{
-                width: 52,
-                height: 52,
+                width: { xs: 44, md: 52 },
+                height: { xs: 44, md: 52 },
                 bgcolor: alpha(insight.color, 0.1),
                 color: insight.color,
                 borderRadius: 3,
@@ -234,45 +252,59 @@ const InsightCard: React.FC<InsightCardProps> = ({
                 boxShadow: `0 4px 15px ${alpha(insight.color, 0.2)}`,
               }}
             >
-              {isProcessing ? <CircularProgress size={24} sx={{ color: 'inherit' }} /> : insight.icon}
+              {isProcessing ? <CircularProgress size={isMobile ? 20 : 24} sx={{ color: 'inherit' }} /> : insight.icon}
             </Avatar>
             
             <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1, flexWrap: 'wrap' }}>
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: 1, 
+                mb: 1, 
+                flexWrap: 'wrap' 
+              }}>
                 <Typography 
                   variant="h6" 
                   sx={{ 
                     fontWeight: 700, 
                     color: '#0f172a', 
-                    fontSize: '1rem',
+                    fontSize: { xs: '0.9rem', md: '1rem' },
                     lineHeight: 1.2,
+                    flex: { xs: '1 1 100%', sm: '1 1 auto' }
                   }}
                 >
                   {insight.title}
                 </Typography>
-                <Chip
-                  icon={getCategoryIcon()}
-                  label={getCategoryLabel()}
-                  size="small"
-                  sx={{
-                    bgcolor: alpha(insight.color, 0.1),
-                    color: insight.color,
-                    fontWeight: 600,
-                    fontSize: '0.65rem',
-                    height: 20,
-                  }}
-                />
-                <Chip
-                  label={insight.impact.toUpperCase()}
-                  size="small"
-                  sx={{
-                    bgcolor: alpha(getImpactColor(), 0.1),
-                    color: getImpactColor(),
-                    fontWeight: 600,
-                    fontSize: '0.65rem',
-                    height: 20,
-                  }}
-                />
+                <Box sx={{ 
+                  display: 'flex', 
+                  gap: 1, 
+                  flexWrap: 'wrap',
+                  flex: { xs: '1 1 100%', sm: '0 0 auto' }
+                }}>
+                  <Chip
+                    icon={getCategoryIcon()}
+                    label={getCategoryLabel()}
+                    size="small"
+                    sx={{
+                      bgcolor: alpha(insight.color, 0.1),
+                      color: insight.color,
+                      fontWeight: 600,
+                      fontSize: { xs: '0.6rem', md: '0.65rem' },
+                      height: { xs: 18, md: 20 },
+                    }}
+                  />
+                  <Chip
+                    label={insight.impact.toUpperCase()}
+                    size="small"
+                    sx={{
+                      bgcolor: alpha(getImpactColor(), 0.1),
+                      color: getImpactColor(),
+                      fontWeight: 600,
+                      fontSize: { xs: '0.6rem', md: '0.65rem' },
+                      height: { xs: 18, md: 20 },
+                    }}
+                  />
+                </Box>
               </Box>
               
               <Typography 
@@ -280,7 +312,7 @@ const InsightCard: React.FC<InsightCardProps> = ({
                 sx={{ 
                   color: '#64748b', 
                   lineHeight: 1.4, 
-                  fontSize: '0.85rem',
+                  fontSize: { xs: '0.8rem', md: '0.85rem' },
                   mb: 2,
                 }}
               >
@@ -288,25 +320,41 @@ const InsightCard: React.FC<InsightCardProps> = ({
               </Typography>
               
               {/* Metrics */}
-              <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
+              <Stack 
+                direction={{ xs: 'column', sm: 'row' }} 
+                spacing={{ xs: 1, sm: 2 }} 
+                sx={{ mb: 2 }}
+              >
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <Psychology sx={{ fontSize: 14, color: '#94a3b8' }} />
-                  <Typography variant="caption" sx={{ color: '#94a3b8', fontWeight: 500 }}>
+                  <Psychology sx={{ fontSize: { xs: 12, md: 14 }, color: '#94a3b8' }} />
+                  <Typography variant="caption" sx={{ 
+                    color: '#94a3b8', 
+                    fontWeight: 500,
+                    fontSize: { xs: '0.7rem', md: '0.75rem' }
+                  }}>
                     {insight.confidence}% confianza
                   </Typography>
                 </Box>
                 {insight.estimatedValue && (
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                    <AttachMoney sx={{ fontSize: 14, color: '#94a3b8' }} />
-                    <Typography variant="caption" sx={{ color: '#94a3b8', fontWeight: 500 }}>
+                    <AttachMoney sx={{ fontSize: { xs: 12, md: 14 }, color: '#94a3b8' }} />
+                    <Typography variant="caption" sx={{ 
+                      color: '#94a3b8', 
+                      fontWeight: 500,
+                      fontSize: { xs: '0.7rem', md: '0.75rem' }
+                    }}>
                       ${insight.estimatedValue.toLocaleString()}
                     </Typography>
                   </Box>
                 )}
                 {insight.timeframe && (
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                    <Schedule sx={{ fontSize: 14, color: '#94a3b8' }} />
-                    <Typography variant="caption" sx={{ color: '#94a3b8', fontWeight: 500 }}>
+                    <Schedule sx={{ fontSize: { xs: 12, md: 14 }, color: '#94a3b8' }} />
+                    <Typography variant="caption" sx={{ 
+                      color: '#94a3b8', 
+                      fontWeight: 500,
+                      fontSize: { xs: '0.7rem', md: '0.75rem' }
+                    }}>
                       {insight.timeframe}
                     </Typography>
                   </Box>
@@ -315,11 +363,24 @@ const InsightCard: React.FC<InsightCardProps> = ({
 
               {/* Confidence bar */}
               <Box sx={{ mb: 2 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
-                  <Typography variant="caption" sx={{ color: '#94a3b8', fontWeight: 600 }}>
+                <Box sx={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'center', 
+                  mb: 0.5 
+                }}>
+                  <Typography variant="caption" sx={{ 
+                    color: '#94a3b8', 
+                    fontWeight: 600,
+                    fontSize: { xs: '0.7rem', md: '0.75rem' }
+                  }}>
                     Nivel de confianza
                   </Typography>
-                  <Typography variant="caption" sx={{ color: '#1e293b', fontWeight: 700 }}>
+                  <Typography variant="caption" sx={{ 
+                    color: '#1e293b', 
+                    fontWeight: 700,
+                    fontSize: { xs: '0.7rem', md: '0.75rem' }
+                  }}>
                     {insight.confidence}%
                   </Typography>
                 </Box>
@@ -327,7 +388,7 @@ const InsightCard: React.FC<InsightCardProps> = ({
                   variant="determinate"
                   value={insight.confidence}
                   sx={{
-                    height: 4,
+                    height: { xs: 3, md: 4 },
                     borderRadius: 2,
                     bgcolor: alpha(insight.color, 0.1),
                     '& .MuiLinearProgress-bar': {
@@ -342,7 +403,11 @@ const InsightCard: React.FC<InsightCardProps> = ({
 
           {/* Actions */}
           <Box sx={{ mt: 'auto' }}>
-            <Stack direction="row" spacing={1}>
+            <Stack 
+              direction={{ xs: 'column', sm: 'row' }} 
+              spacing={1}
+              sx={{ width: '100%' }}
+            >
               <Button
                 onClick={() => onViewDetails(insight)}
                 size="small"
@@ -353,6 +418,7 @@ const InsightCard: React.FC<InsightCardProps> = ({
                   fontWeight: 600,
                   color: '#64748b',
                   flex: 1,
+                  fontSize: { xs: '0.8rem', md: '0.875rem' },
                   '&:hover': {
                     color: insight.color,
                     bgcolor: alpha(insight.color, 0.05),
@@ -373,6 +439,7 @@ const InsightCard: React.FC<InsightCardProps> = ({
                     fontWeight: 600,
                     background: insight.gradient,
                     flex: 1,
+                    fontSize: { xs: '0.8rem', md: '0.875rem' },
                     '&:hover': {
                       background: insight.gradient,
                       filter: 'brightness(0.9)',
@@ -396,6 +463,7 @@ const InsightCard: React.FC<InsightCardProps> = ({
                     color: '#10b981',
                     fontWeight: 600,
                     flex: 1,
+                    fontSize: { xs: '0.7rem', md: '0.75rem' },
                   }}
                 />
               )}
@@ -417,18 +485,24 @@ const AIMetricCard: React.FC<{
   processing?: boolean;
   loading?: boolean;
 }> = ({ title, value, subtitle, icon, color, trend, processing = false, loading = false }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      style={{ flex: '1 1 0', minWidth: '250px' }}
+      style={{ 
+        width: '100%',
+        minWidth: isMobile ? '100%' : '250px'
+      }}
     >
       <Card
         elevation={0}
         sx={{
           border: '1px solid #f1f5f9',
-          borderRadius: 4,
+          borderRadius: { xs: 3, md: 4 },
           background: 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
           position: 'relative',
           overflow: 'hidden',
@@ -445,38 +519,63 @@ const AIMetricCard: React.FC<{
             bgcolor: color,
           }}
         />
-        <CardContent sx={{ p: 3 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+        <CardContent sx={{ p: { xs: 2, md: 3 } }}>
+          <Box sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'space-between', 
+            mb: { xs: 1.5, md: 2 },
+            flexWrap: { xs: 'wrap', sm: 'nowrap' },
+            gap: { xs: 1, sm: 0 }
+          }}>
             <Avatar
               sx={{
-                width: 44,
-                height: 44,
+                width: { xs: 40, md: 44 },
+                height: { xs: 40, md: 44 },
                 bgcolor: alpha(color, 0.1),
                 color: color,
                 borderRadius: 3,
               }}
             >
-              {processing || loading ? <CircularProgress size={20} sx={{ color }} /> : icon}
+              {processing || loading ? <CircularProgress size={isMobile ? 16 : 20} sx={{ color }} /> : icon}
             </Avatar>
             {trend && (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: 0.5,
+                order: { xs: 3, sm: 2 }
+              }}>
                 {trend === 'up' ? (
-                  <TrendingUp sx={{ fontSize: 16, color: '#10b981' }} />
+                  <TrendingUp sx={{ fontSize: { xs: 14, md: 16 }, color: '#10b981' }} />
                 ) : trend === 'down' ? (
-                  <TrendingDown sx={{ fontSize: 16, color: '#ef4444' }} />
+                  <TrendingDown sx={{ fontSize: { xs: 14, md: 16 }, color: '#ef4444' }} />
                 ) : (
-                  <TrendingFlat sx={{ fontSize: 16, color: '#6366f1' }} />
+                  <TrendingFlat sx={{ fontSize: { xs: 14, md: 16 }, color: '#6366f1' }} />
                 )}
               </Box>
             )}
           </Box>
-          <Typography variant="h4" sx={{ fontWeight: 900, color: '#0f172a', mb: 0.5, fontSize: '1.8rem' }}>
+          <Typography variant="h4" sx={{ 
+            fontWeight: 900, 
+            color: '#0f172a', 
+            mb: 0.5, 
+            fontSize: { xs: '1.5rem', md: '1.8rem' }
+          }}>
             {loading ? '...' : value}
           </Typography>
-          <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 600, fontSize: '0.9rem', mb: 0.5 }}>
+          <Typography variant="body2" sx={{ 
+            color: '#64748b', 
+            fontWeight: 600, 
+            fontSize: { xs: '0.8rem', md: '0.9rem' }, 
+            mb: 0.5 
+          }}>
             {title}
           </Typography>
-          <Typography variant="caption" sx={{ color: '#94a3b8', fontSize: '0.75rem' }}>
+          <Typography variant="caption" sx={{ 
+            color: '#94a3b8', 
+            fontSize: { xs: '0.7rem', md: '0.75rem' }
+          }}>
             {subtitle}
           </Typography>
         </CardContent>
@@ -491,6 +590,8 @@ const PredictionChart: React.FC<{
   color: string;
   loading?: boolean;
 }> = ({ title, data, color, loading = false }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const maxValue = Math.max(...data.map(d => Math.max(d.actual || 0, d.predicted)));
 
   return (
@@ -498,54 +599,87 @@ const PredictionChart: React.FC<{
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.6, delay: 0.2 }}
-      style={{ flex: '1 1 0', minWidth: '400px' }}
+      style={{ 
+        width: '100%',
+        minWidth: isMobile ? '100%' : '400px'
+      }}
     >
       <Card
         elevation={0}
         sx={{
           border: '1px solid #f1f5f9',
-          borderRadius: 4,
+          borderRadius: { xs: 3, md: 4 },
           background: 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
           height: '100%',
         }}
       >
-        <CardContent sx={{ p: 3 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+        <CardContent sx={{ p: { xs: 2, md: 3 } }}>
+          <Box sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: 2, 
+            mb: { xs: 2, md: 3 },
+            flexWrap: { xs: 'wrap', sm: 'nowrap' }
+          }}>
             <Avatar
               sx={{
-                width: 44,
-                height: 44,
+                width: { xs: 40, md: 44 },
+                height: { xs: 40, md: 44 },
                 bgcolor: alpha(color, 0.1),
                 color: color,
                 borderRadius: 3,
               }}
             >
-              {loading ? <CircularProgress size={20} /> : <AutoGraph />}
+              {loading ? <CircularProgress size={isMobile ? 16 : 20} /> : <AutoGraph />}
             </Avatar>
             <Box>
-              <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', fontSize: '1.1rem' }}>
+              <Typography variant="h6" sx={{ 
+                fontWeight: 700, 
+                color: '#1e293b', 
+                fontSize: { xs: '1rem', md: '1.1rem' }
+              }}>
                 {title}
               </Typography>
-              <Typography variant="body2" sx={{ color: '#64748b', fontSize: '0.85rem' }}>
+              <Typography variant="body2" sx={{ 
+                color: '#64748b', 
+                fontSize: { xs: '0.8rem', md: '0.85rem' }
+              }}>
                 Predicción basada en IA
               </Typography>
             </Box>
           </Box>
           
           {loading ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 200 }}>
+            <Box sx={{ 
+              display: 'flex', 
+              justifyContent: 'center', 
+              alignItems: 'center', 
+              height: { xs: 150, md: 200 } 
+            }}>
               <CircularProgress size={40} sx={{ color }} />
             </Box>
           ) : (
             <>
-              <Box sx={{ height: 200, display: 'flex', alignItems: 'end', gap: 1, px: 2 }}>
+              <Box sx={{ 
+                height: { xs: 150, md: 200 }, 
+                display: 'flex', 
+                alignItems: 'end', 
+                gap: { xs: 0.5, md: 1 }, 
+                px: { xs: 1, md: 2 } 
+              }}>
                 {data.map((item, index) => (
                   <Tooltip
                     key={index}
                     title={`${item.month}: ${item.predicted} (${item.confidence || 85}% confianza)`}
                     arrow
                   >
-                    <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                    <Box sx={{ 
+                      flex: 1, 
+                      display: 'flex', 
+                      flexDirection: 'column', 
+                      alignItems: 'center', 
+                      gap: 1 
+                    }}>
                       {item.actual && (
                         <Box
                           sx={{
@@ -576,7 +710,7 @@ const PredictionChart: React.FC<{
                       <Typography
                         variant="caption"
                         sx={{
-                          fontSize: '0.7rem',
+                          fontSize: { xs: '0.6rem', md: '0.7rem' },
                           color: '#94a3b8',
                           fontWeight: 600,
                           mt: 1,
@@ -589,16 +723,41 @@ const PredictionChart: React.FC<{
                 ))}
               </Box>
               
-              <Box sx={{ display: 'flex', justifyContent: 'center', gap: 3, mt: 3 }}>
+              <Box sx={{ 
+                display: 'flex', 
+                justifyContent: 'center', 
+                gap: { xs: 2, md: 3 }, 
+                mt: { xs: 2, md: 3 },
+                flexWrap: 'wrap'
+              }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Box sx={{ width: 12, height: 12, bgcolor: alpha(color, 0.5), borderRadius: 1 }} />
-                  <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>
+                  <Box sx={{ 
+                    width: { xs: 10, md: 12 }, 
+                    height: { xs: 10, md: 12 }, 
+                    bgcolor: alpha(color, 0.5), 
+                    borderRadius: 1 
+                  }} />
+                  <Typography variant="caption" sx={{ 
+                    color: '#64748b', 
+                    fontWeight: 600,
+                    fontSize: { xs: '0.7rem', md: '0.75rem' }
+                  }}>
                     Datos reales
                   </Typography>
                 </Box>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Box sx={{ width: 12, height: 12, bgcolor: color, borderRadius: 1, border: `1px dashed ${color}` }} />
-                  <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>
+                  <Box sx={{ 
+                    width: { xs: 10, md: 12 }, 
+                    height: { xs: 10, md: 12 }, 
+                    bgcolor: color, 
+                    borderRadius: 1, 
+                    border: `1px dashed ${color}` 
+                  }} />
+                  <Typography variant="caption" sx={{ 
+                    color: '#64748b', 
+                    fontWeight: 600,
+                    fontSize: { xs: '0.7rem', md: '0.75rem' }
+                  }}>
                     Predicción IA
                   </Typography>
                 </Box>
@@ -617,6 +776,9 @@ const InsightDetailsDialog: React.FC<{
   insight: AIInsight | null;
   onApply?: (insight: AIInsight) => void;
 }> = ({ open, onClose, insight, onApply }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
   if (!insight) return null;
 
   return (
@@ -625,10 +787,12 @@ const InsightDetailsDialog: React.FC<{
       onClose={onClose}
       maxWidth="md"
       fullWidth
+      fullScreen={isMobile}
       PaperProps={{
         sx: {
-          borderRadius: 4,
-          maxHeight: '80vh',
+          borderRadius: isMobile ? 0 : 4,
+          maxHeight: isMobile ? '100vh' : '80vh',
+          m: isMobile ? 0 : 2,
         }
       }}
     >
@@ -637,13 +801,21 @@ const InsightDetailsDialog: React.FC<{
         alignItems: 'center', 
         justifyContent: 'space-between',
         pb: 2,
-        borderBottom: '1px solid #e2e8f0'
+        borderBottom: '1px solid #e2e8f0',
+        px: { xs: 2, md: 3 },
+        py: { xs: 2, md: 3 }
       }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+        <Box sx={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: 2,
+          flex: 1,
+          minWidth: 0
+        }}>
           <Avatar
             sx={{
-              width: 44,
-              height: 44,
+              width: { xs: 40, md: 44 },
+              height: { xs: 40, md: 44 },
               bgcolor: alpha(insight.color, 0.1),
               color: insight.color,
               borderRadius: 3,
@@ -651,40 +823,65 @@ const InsightDetailsDialog: React.FC<{
           >
             {insight.icon}
           </Avatar>
-          <Box>
-            <Typography variant="h6" sx={{ fontWeight: 700 }}>
+          <Box sx={{ minWidth: 0, flex: 1 }}>
+            <Typography variant="h6" sx={{ 
+              fontWeight: 700,
+              fontSize: { xs: '1rem', md: '1.25rem' },
+              lineHeight: 1.2
+            }}>
               {insight.title}
             </Typography>
-            <Typography variant="body2" sx={{ color: '#64748b' }}>
+            <Typography variant="body2" sx={{ 
+              color: '#64748b',
+              fontSize: { xs: '0.8rem', md: '0.875rem' }
+            }}>
               Generado por IA • {format(insight.createdAt.toDate(), 'dd/MM/yyyy HH:mm')}
             </Typography>
           </Box>
         </Box>
-        <IconButton onClick={onClose}>
+        <IconButton onClick={onClose} sx={{ ml: 1 }}>
           <Close />
         </IconButton>
       </DialogTitle>
 
-      <DialogContent sx={{ p: 4 }}>
-        <Stack spacing={3}>
+      <DialogContent sx={{ 
+        p: { xs: 2, md: 4 },
+        overflow: 'auto'
+      }}>
+        <Stack spacing={{ xs: 2, md: 3 }}>
           <Box>
-            <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
+            <Typography variant="h6" sx={{ 
+              fontWeight: 700, 
+              mb: 2,
+              fontSize: { xs: '1rem', md: '1.25rem' }
+            }}>
               Descripción Detallada
             </Typography>
-            <Typography variant="body1" sx={{ color: '#64748b', lineHeight: 1.6 }}>
+            <Typography variant="body1" sx={{ 
+              color: '#64748b', 
+              lineHeight: 1.6,
+              fontSize: { xs: '0.9rem', md: '1rem' }
+            }}>
               {insight.description}
             </Typography>
           </Box>
 
           <Box>
-            <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
+            <Typography variant="h6" sx={{ 
+              fontWeight: 700, 
+              mb: 2,
+              fontSize: { xs: '1rem', md: '1.25rem' }
+            }}>
               Métricas del Insight
             </Typography>
             <Box sx={{ 
-              display: 'flex', 
-              flexWrap: 'wrap', 
-              gap: 2,
-              '& > *': { minWidth: '200px', flex: '1 1 0' }
+              display: 'grid',
+              gridTemplateColumns: {
+                xs: '1fr',
+                sm: 'repeat(2, 1fr)',
+                md: 'repeat(3, 1fr)'
+              },
+              gap: { xs: 2, md: 3 }
             }}>
               <AIMetricCard
                 title="Confianza"
@@ -714,13 +911,17 @@ const InsightDetailsDialog: React.FC<{
 
           {Object.keys(insight.data).length > 0 && (
             <Box>
-              <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
+              <Typography variant="h6" sx={{ 
+                fontWeight: 700, 
+                mb: 2,
+                fontSize: { xs: '1rem', md: '1.25rem' }
+              }}>
                 Datos Adicionales
               </Typography>
               <Paper
                 elevation={0}
                 sx={{
-                  p: 3,
+                  p: { xs: 2, md: 3 },
                   bgcolor: '#f8fafc',
                   border: '1px solid #e2e8f0',
                   borderRadius: 3,
@@ -728,11 +929,27 @@ const InsightDetailsDialog: React.FC<{
               >
                 <Stack spacing={2}>
                   {Object.entries(insight.data).map(([key, value]) => (
-                    <Box key={key} sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <Typography variant="body2" sx={{ fontWeight: 600, color: '#475569' }}>
+                    <Box key={key} sx={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between',
+                      flexWrap: { xs: 'wrap', sm: 'nowrap' },
+                      gap: { xs: 1, sm: 0 }
+                    }}>
+                      <Typography variant="body2" sx={{ 
+                        fontWeight: 600, 
+                        color: '#475569',
+                        fontSize: { xs: '0.8rem', md: '0.875rem' },
+                        flex: { xs: '1 1 100%', sm: '1 1 auto' }
+                      }}>
                         {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}:
                       </Typography>
-                      <Typography variant="body2" sx={{ color: '#1e293b', fontWeight: 700 }}>
+                      <Typography variant="body2" sx={{ 
+                        color: '#1e293b', 
+                        fontWeight: 700,
+                        fontSize: { xs: '0.8rem', md: '0.875rem' },
+                        flex: { xs: '1 1 100%', sm: '0 0 auto' },
+                        textAlign: { xs: 'left', sm: 'right' }
+                      }}>
                         {typeof value === 'number' ? value.toLocaleString() : value}
                       </Typography>
                     </Box>
@@ -744,8 +961,20 @@ const InsightDetailsDialog: React.FC<{
         </Stack>
       </DialogContent>
 
-      <DialogActions sx={{ p: 3, borderTop: '1px solid #e2e8f0' }}>
-        <Button onClick={onClose} sx={{ textTransform: 'none' }}>
+      <DialogActions sx={{ 
+        p: { xs: 2, md: 3 }, 
+        borderTop: '1px solid #e2e8f0',
+        flexDirection: { xs: 'column', sm: 'row' },
+        gap: { xs: 1, sm: 0 }
+      }}>
+        <Button 
+          onClick={onClose} 
+          sx={{ 
+            textTransform: 'none',
+            order: { xs: 2, sm: 1 },
+            width: { xs: '100%', sm: 'auto' }
+          }}
+        >
           Cerrar
         </Button>
         {insight.actionable && onApply && insight.status !== 'applied' && (
@@ -760,6 +989,8 @@ const InsightDetailsDialog: React.FC<{
               textTransform: 'none',
               fontWeight: 600,
               background: insight.gradient,
+              order: { xs: 1, sm: 2 },
+              width: { xs: '100%', sm: 'auto' }
             }}
           >
             Aplicar Insight
@@ -775,6 +1006,7 @@ export const InsightsIA: React.FC<InsightsIAProps> = ({
 }) => {
   const { user } = useAuth();
   const { stats } = useSocios();
+  
   const [loading, setLoading] = useState(true);
   const [aiInsights, setAiInsights] = useState<AIInsight[]>([]);
   const [aiModel, setAiModel] = useState<AIModel | null>(null);
@@ -802,7 +1034,7 @@ export const InsightsIA: React.FC<InsightsIAProps> = ({
         impact: 'high',
         category: 'prediction',
         priority: 1,
-        icon: <TrendingUp sx={{ fontSize: 24 }} />,
+        icon: <TrendingUp sx={{ fontSize: { xs: 20, md: 24 } }} />,
         color: '#10b981',
         gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
         createdAt: Timestamp.fromDate(subDays(now, Math.floor(Math.random() * 3))),
@@ -829,7 +1061,7 @@ export const InsightsIA: React.FC<InsightsIAProps> = ({
         impact: 'critical',
         category: 'alert',
         priority: 1,
-        icon: <Warning sx={{ fontSize: 24 }} />,
+        icon: <Warning sx={{ fontSize: { xs: 20, md: 24 } }} />,
         color: '#ef4444',
         gradient: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
         createdAt: Timestamp.fromDate(subDays(now, 1)),
@@ -855,7 +1087,7 @@ export const InsightsIA: React.FC<InsightsIAProps> = ({
       impact: 'medium',
       category: 'recommendation',
       priority: 2,
-      icon: <Schedule sx={{ fontSize: 24 }} />,
+      icon: <Schedule sx={{ fontSize: { xs: 20, md: 24 } }} />,
       color: '#6366f1',
       gradient: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
       createdAt: Timestamp.fromDate(subDays(now, 2)),
@@ -882,7 +1114,7 @@ export const InsightsIA: React.FC<InsightsIAProps> = ({
         impact: 'high',
         category: 'opportunity',
         priority: 1,
-        icon: <AttachMoney sx={{ fontSize: 24 }} />,
+        icon: <AttachMoney sx={{ fontSize: { xs: 20, md: 24 } }} />,
         color: '#f59e0b',
         gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
         createdAt: Timestamp.fromDate(subDays(now, 1)),
@@ -908,7 +1140,7 @@ export const InsightsIA: React.FC<InsightsIAProps> = ({
       impact: 'medium',
       category: 'prediction',
       priority: 3,
-      icon: <Group sx={{ fontSize: 24 }} />,
+      icon: <Group sx={{ fontSize: { xs: 20, md: 24 } }} />,
       color: '#8b5cf6',
       gradient: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
       createdAt: Timestamp.fromDate(subDays(now, 3)),
@@ -932,7 +1164,7 @@ export const InsightsIA: React.FC<InsightsIAProps> = ({
       impact: 'high',
       category: 'recommendation',
       priority: 2,
-      icon: <Psychology sx={{ fontSize: 24 }} />,
+      icon: <Psychology sx={{ fontSize: { xs: 20, md: 24 } }} />,
       color: '#06b6d4',
       gradient: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
       createdAt: Timestamp.fromDate(subDays(now, 1)),
@@ -1049,7 +1281,7 @@ export const InsightsIA: React.FC<InsightsIAProps> = ({
       title: 'Insights Generados',
       value: aiInsights.length,
       subtitle: 'Últimas 24 horas',
-      icon: <AutoAwesome sx={{ fontSize: 20 }} />,
+      icon: <AutoAwesome sx={{ fontSize: { xs: 18, md: 20 } }} />,
       color: '#6366f1',
       trend: 'up' as const,
       loading: loading || propLoading
@@ -1058,7 +1290,7 @@ export const InsightsIA: React.FC<InsightsIAProps> = ({
       title: 'Precisión del Modelo',
       value: aiModel ? `${aiModel.accuracy}%` : '94.2%',
       subtitle: 'Promedio histórico',
-      icon: <Psychology sx={{ fontSize: 20 }} />,
+      icon: <Psychology sx={{ fontSize: { xs: 18, md: 20 } }} />,
       color: '#10b981',
       trend: 'up' as const,
       loading: loading || propLoading
@@ -1067,7 +1299,7 @@ export const InsightsIA: React.FC<InsightsIAProps> = ({
       title: 'Procesamiento IA',
       value: '2.3s',
       subtitle: 'Tiempo promedio',
-      icon: <Speed sx={{ fontSize: 20 }} />,
+      icon: <Speed sx={{ fontSize: { xs: 18, md: 20 } }} />,
       color: '#f59e0b',
       processing: loading,
       loading: loading || propLoading
@@ -1076,7 +1308,7 @@ export const InsightsIA: React.FC<InsightsIAProps> = ({
       title: 'Datos Analizados',
       value: aiModel ? `${(aiModel.dataPoints / 1000).toFixed(1)}K` : '847K',
       subtitle: 'Puntos de datos',
-      icon: <DataUsage sx={{ fontSize: 20 }} />,
+      icon: <DataUsage sx={{ fontSize: { xs: 18, md: 20 } }} />,
       color: '#8b5cf6',
       trend: 'neutral' as const,
       loading: loading || propLoading
@@ -1099,27 +1331,37 @@ export const InsightsIA: React.FC<InsightsIAProps> = ({
   );
 
   return (
-    <Box sx={{ p: 4, maxWidth: '100%', overflow: 'hidden' }}>
+    <Box sx={{ 
+      p: 0, // Remove padding since it's handled by parent
+      maxWidth: '100%', 
+      overflow: 'hidden' 
+    }}>
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
-        <Box sx={{ mb: 6 }}>
+        <Box sx={{ mb: { xs: 4, md: 6 } }}>
           <Box sx={{ 
             display: 'flex', 
             alignItems: 'center', 
             justifyContent: 'space-between', 
-            mb: 4,
-            flexWrap: 'wrap',
-            gap: 3
+            mb: { xs: 3, md: 4 },
+            flexDirection: { xs: 'column', md: 'row' },
+            gap: { xs: 3, md: 0 }
           }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: { xs: 2, md: 3 },
+              textAlign: { xs: 'center', md: 'left' },
+              flexDirection: { xs: 'column', sm: 'row' }
+            }}>
               <Avatar
                 sx={{
-                  width: 64,
-                  height: 64,
+                  width: { xs: 56, md: 64 },
+                  height: { xs: 56, md: 64 },
                   borderRadius: 4,
                   background: 'linear-gradient(135deg, #ec4899 0%, #8b5cf6 50%, #6366f1 100%)',
                   boxShadow: '0 12px 40px rgba(236, 72, 153, 0.3)',
@@ -1136,14 +1378,14 @@ export const InsightsIA: React.FC<InsightsIAProps> = ({
                   }
                 }}
               >
-                <AutoGraph sx={{ fontSize: 32 }} />
+                <AutoGraph sx={{ fontSize: { xs: 28, md: 32 } }} />
               </Avatar>
               <Box>
                 <Typography
                   variant="h3"
                   sx={{
                     fontWeight: 900,
-                    fontSize: { xs: '2rem', md: '2.5rem' },
+                    fontSize: { xs: '1.8rem', sm: '2.2rem', md: '2.5rem' },
                     background: 'linear-gradient(135deg, #0f172a 0%, #ec4899 40%, #8b5cf6 70%, #6366f1 100%)',
                     backgroundClip: 'text',
                     WebkitBackgroundClip: 'text',
@@ -1160,7 +1402,7 @@ export const InsightsIA: React.FC<InsightsIAProps> = ({
                   sx={{
                     color: '#64748b',
                     fontWeight: 600,
-                    fontSize: { xs: '1rem', md: '1.2rem' },
+                    fontSize: { xs: '0.9rem', sm: '1rem', md: '1.2rem' },
                   }}
                 >
                   Inteligencia artificial para decisiones estratégicas • {user?.email?.split('@')[0] || 'Administrador'}
@@ -1168,7 +1410,12 @@ export const InsightsIA: React.FC<InsightsIAProps> = ({
               </Box>
             </Box>
             
-            <Stack direction="row" spacing={2} alignItems="center">
+            <Stack 
+              direction={{ xs: 'column', sm: 'row' }} 
+              spacing={2} 
+              alignItems="center"
+              sx={{ width: { xs: '100%', md: 'auto' } }}
+            >
               <FormControlLabel
                 control={
                   <Switch
@@ -1185,7 +1432,11 @@ export const InsightsIA: React.FC<InsightsIAProps> = ({
                   />
                 }
                 label={
-                  <Typography variant="body2" sx={{ fontWeight: 600, color: '#64748b' }}>
+                  <Typography variant="body2" sx={{ 
+                    fontWeight: 600, 
+                    color: '#64748b',
+                    fontSize: { xs: '0.8rem', md: '0.875rem' }
+                  }}>
                     Auto-refresh
                   </Typography>
                 }
@@ -1211,13 +1462,14 @@ export const InsightsIA: React.FC<InsightsIAProps> = ({
                 variant="contained"
                 startIcon={<SmartToy />}
                 sx={{
-                  py: 2,
-                  px: 4,
+                  py: { xs: 1.5, md: 2 },
+                  px: { xs: 3, md: 4 },
                   borderRadius: 3,
                   textTransform: 'none',
                   fontWeight: 700,
                   background: 'linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%)',
                   boxShadow: '0 8px 32px rgba(236, 72, 153, 0.3)',
+                  width: { xs: '100%', sm: 'auto' },
                   '&:hover': {
                     background: 'linear-gradient(135deg, #db2777 0%, #7c3aed 100%)',
                     transform: 'translateY(-2px)',
@@ -1237,8 +1489,8 @@ export const InsightsIA: React.FC<InsightsIAProps> = ({
             sx={{
               bgcolor: alpha('#ec4899', 0.05),
               border: `2px solid ${alpha('#ec4899', 0.15)}`,
-              borderRadius: 4,
-              p: 3,
+              borderRadius: { xs: 3, md: 4 },
+              p: { xs: 2, md: 3 },
               position: 'relative',
               overflow: 'hidden',
               '&::before': {
@@ -1255,11 +1507,12 @@ export const InsightsIA: React.FC<InsightsIAProps> = ({
             <Box sx={{ 
               display: 'flex', 
               alignItems: 'center', 
-              gap: 3,
-              flexWrap: 'wrap',
-              justifyContent: 'space-between'
+              gap: { xs: 2, md: 3 },
+              flexDirection: { xs: 'column', sm: 'row' },
+              justifyContent: 'space-between',
+              textAlign: { xs: 'center', sm: 'left' }
             }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 2, md: 3 } }}>
                 <Box
                   sx={{
                     width: 12,
@@ -1273,11 +1526,21 @@ export const InsightsIA: React.FC<InsightsIAProps> = ({
                     },
                   }}
                 />
-                <Typography variant="body1" sx={{ color: '#475569', fontWeight: 700, fontSize: '1.1rem' }}>
+                <Typography variant="body1" sx={{ 
+                  color: '#475569', 
+                  fontWeight: 700, 
+                  fontSize: { xs: '0.95rem', md: '1.1rem' }
+                }}>
                   <Box component="span" sx={{ fontWeight: 900 }}>IA {aiModel?.status === 'active' ? 'Activa' : 'Entrenando'}</Box> - Modelo entrenado con {stats.total.toLocaleString()} registros de miembros
                 </Typography>
               </Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: 2, 
+                flexWrap: 'wrap',
+                justifyContent: { xs: 'center', sm: 'flex-end' }
+              }}>
                 <Chip
                   icon={<Memory />}
                   label={`Modelo ${aiModel?.version || 'v2.1.0'}`}
@@ -1285,9 +1548,14 @@ export const InsightsIA: React.FC<InsightsIAProps> = ({
                     bgcolor: alpha('#ec4899', 0.1),
                     color: '#ec4899',
                     fontWeight: 600,
+                    fontSize: { xs: '0.7rem', md: '0.75rem' }
                   }}
                 />
-                <Typography variant="body2" sx={{ color: '#94a3b8', fontWeight: 700 }}>
+                <Typography variant="body2" sx={{ 
+                  color: '#94a3b8', 
+                  fontWeight: 700,
+                  fontSize: { xs: '0.8rem', md: '0.9rem' }
+                }}>
                   Última actualización: {aiModel ? format(aiModel.lastTrained, 'dd/MM HH:mm') : 'Hace 2 horas'}
                 </Typography>
               </Box>
@@ -1298,13 +1566,14 @@ export const InsightsIA: React.FC<InsightsIAProps> = ({
 
       {/* AI Metrics */}
       <Box sx={{ 
-        display: 'flex', 
-        flexWrap: 'wrap', 
-        gap: 3, 
-        mb: 6,
-        '& > *': {
-          minWidth: { xs: '100%', sm: 'calc(50% - 12px)', lg: 'calc(25% - 18px)' }
-        }
+        display: 'grid',
+        gridTemplateColumns: {
+          xs: '1fr',
+          sm: 'repeat(2, 1fr)',
+          lg: 'repeat(4, 1fr)'
+        },
+        gap: { xs: 2, md: 3 },
+        mb: { xs: 4, md: 6 }
       }}>
         {aiMetrics.map((metric, index) => (
           <AIMetricCard key={index} {...metric} />
@@ -1315,16 +1584,25 @@ export const InsightsIA: React.FC<InsightsIAProps> = ({
       <Box sx={{ 
         display: 'flex', 
         flexDirection: { xs: 'column', lg: 'row' },
-        gap: 6,
+        gap: { xs: 4, md: 6 },
         alignItems: 'stretch'
       }}>
         {/* Insights Section */}
         <Box sx={{ flex: '2 1 0', minWidth: 0 }}>
-          <Box sx={{ mb: 4 }}>
-            <Typography variant="h5" sx={{ fontWeight: 800, color: '#0f172a', mb: 1 }}>
+          <Box sx={{ mb: { xs: 3, md: 4 } }}>
+            <Typography variant="h5" sx={{ 
+              fontWeight: 800, 
+              color: '#0f172a', 
+              mb: 1,
+              fontSize: { xs: '1.3rem', md: '1.5rem' }
+            }}>
               Insights Inteligentes
             </Typography>
-            <Typography variant="body1" sx={{ color: '#64748b', fontWeight: 500 }}>
+            <Typography variant="body1" sx={{ 
+              color: '#64748b', 
+              fontWeight: 500,
+              fontSize: { xs: '0.9rem', md: '1rem' }
+            }}>
               Recomendaciones y predicciones generadas por IA
             </Typography>
           </Box>
@@ -1332,20 +1610,33 @@ export const InsightsIA: React.FC<InsightsIAProps> = ({
           {loading || propLoading ? (
             // Loading skeleton
             <Box sx={{ 
-              display: 'flex', 
-              flexWrap: 'wrap', 
-              gap: 4,
+              display: 'grid',
+              gridTemplateColumns: {
+                xs: '1fr',
+                md: 'repeat(2, 1fr)',
+                xl: 'repeat(3, 1fr)'
+              },
+              gap: { xs: 3, md: 4 },
               alignItems: 'stretch'
             }}>
               {Array.from({ length: 6 }).map((_, index) => (
-                <Box key={index} style={{ flex: '1 1 0', minWidth: '380px' }}>
-                  <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 4, height: '100%' }}>
-                    <CardContent sx={{ p: 3 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2.5, mb: 2.5 }}>
+                <Box key={index}>
+                  <Card elevation={0} sx={{ 
+                    border: '1px solid #f1f5f9', 
+                    borderRadius: { xs: 3, md: 4 }, 
+                    height: '100%' 
+                  }}>
+                    <CardContent sx={{ p: { xs: 2, md: 3 } }}>
+                      <Box sx={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: { xs: 2, md: 2.5 }, 
+                        mb: { xs: 2, md: 2.5 } 
+                      }}>
                         <Box
                           sx={{
-                            width: 52,
-                            height: 52,
+                            width: { xs: 44, md: 52 },
+                            height: { xs: 44, md: 52 },
                             bgcolor: '#f1f5f9',
                             borderRadius: 3,
                             animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
@@ -1373,9 +1664,13 @@ export const InsightsIA: React.FC<InsightsIAProps> = ({
             </Box>
           ) : (
             <Box sx={{ 
-              display: 'flex', 
-              flexWrap: 'wrap', 
-              gap: 4,
+              display: 'grid',
+              gridTemplateColumns: {
+                xs: '1fr',
+                md: 'repeat(2, 1fr)',
+                xl: 'repeat(3, 1fr)'
+              },
+              gap: { xs: 3, md: 4 },
               alignItems: 'stretch'
             }}>
               {aiInsights.map((insight, index) => (
@@ -1401,29 +1696,38 @@ export const InsightsIA: React.FC<InsightsIAProps> = ({
               <Paper
                 elevation={0}
                 sx={{
-                  p: 6,
+                  p: { xs: 4, md: 6 },
                   textAlign: 'center',
                   border: '2px dashed #e2e8f0',
-                  borderRadius: 4,
+                  borderRadius: { xs: 3, md: 4 },
                   bgcolor: '#fafbfc',
                 }}
               >
                 <Avatar
                   sx={{
-                    width: 64,
-                    height: 64,
+                    width: { xs: 56, md: 64 },
+                    height: { xs: 56, md: 64 },
                     bgcolor: alpha('#ec4899', 0.1),
                     color: '#ec4899',
                     mx: 'auto',
                     mb: 3,
                   }}
                 >
-                  <AutoGraph sx={{ fontSize: 32 }} />
+                  <AutoGraph sx={{ fontSize: { xs: 28, md: 32 } }} />
                 </Avatar>
-                <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', mb: 2 }}>
+                <Typography variant="h6" sx={{ 
+                  fontWeight: 700, 
+                  color: '#1e293b', 
+                  mb: 2,
+                  fontSize: { xs: '1.1rem', md: '1.25rem' }
+                }}>
                   Generando Insights
                 </Typography>
-                <Typography variant="body1" sx={{ color: '#64748b', mb: 4 }}>
+                <Typography variant="body1" sx={{ 
+                  color: '#64748b', 
+                  mb: 4,
+                  fontSize: { xs: '0.9rem', md: '1rem' }
+                }}>
                   La IA está analizando tus datos para generar insights personalizados.
                   Esto puede tomar unos minutos.
                 </Typography>
@@ -1435,6 +1739,8 @@ export const InsightsIA: React.FC<InsightsIAProps> = ({
                     textTransform: 'none',
                     fontWeight: 600,
                     background: 'linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%)',
+                    px: { xs: 3, md: 4 },
+                    py: { xs: 1.5, md: 2 }
                   }}
                 >
                   Actualizar Análisis
@@ -1445,8 +1751,12 @@ export const InsightsIA: React.FC<InsightsIAProps> = ({
         </Box>
 
         {/* Sidebar */}
-        <Box sx={{ flex: '1 1 0', minWidth: '400px' }}>
-          <Stack spacing={4}>
+        <Box sx={{ 
+          flex: '1 1 0', 
+          minWidth: { xs: '100%', lg: '400px' },
+          maxWidth: { xs: '100%', lg: '500px' }
+        }}>
+          <Stack spacing={{ xs: 3, md: 4 }}>
             {/* Growth Prediction */}
             <PredictionChart
               title="Predicción de Crecimiento"
@@ -1465,16 +1775,22 @@ export const InsightsIA: React.FC<InsightsIAProps> = ({
                 elevation={0}
                 sx={{
                   border: '1px solid #f1f5f9',
-                  borderRadius: 4,
+                  borderRadius: { xs: 3, md: 4 },
                   background: 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
                 }}
               >
-                <CardContent sx={{ p: 3 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+                <CardContent sx={{ p: { xs: 2, md: 3 } }}>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: 2, 
+                    mb: { xs: 2, md: 3 },
+                    flexWrap: { xs: 'wrap', sm: 'nowrap' }
+                  }}>
                     <Avatar
                       sx={{
-                        width: 44,
-                        height: 44,
+                        width: { xs: 40, md: 44 },
+                        height: { xs: 40, md: 44 },
                         bgcolor: alpha('#ef4444', 0.1),
                         color: '#ef4444',
                         borderRadius: 3,
@@ -1483,10 +1799,17 @@ export const InsightsIA: React.FC<InsightsIAProps> = ({
                       <NotificationsActive />
                     </Avatar>
                     <Box>
-                      <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', fontSize: '1.1rem' }}>
+                      <Typography variant="h6" sx={{ 
+                        fontWeight: 700, 
+                        color: '#1e293b', 
+                        fontSize: { xs: '1rem', md: '1.1rem' }
+                      }}>
                         Acciones Prioritarias
                       </Typography>
-                      <Typography variant="body2" sx={{ color: '#64748b', fontSize: '0.85rem' }}>
+                      <Typography variant="body2" sx={{ 
+                        color: '#64748b', 
+                        fontSize: { xs: '0.8rem', md: '0.85rem' }
+                      }}>
                         Requieren atención inmediata
                       </Typography>
                     </Box>
@@ -1503,14 +1826,14 @@ export const InsightsIA: React.FC<InsightsIAProps> = ({
                           <ListItemIcon>
                             <Avatar
                               sx={{
-                                width: 32,
-                                height: 32,
+                                width: { xs: 28, md: 32 },
+                                height: { xs: 28, md: 32 },
                                 bgcolor: alpha(insight.color, 0.1),
                                 color: insight.color,
                                 borderRadius: 2,
                               }}
                             >
-                              {React.isValidElement(insight.icon) && (insight.icon as React.ReactElement).type
+                              {React.isValidElement(insight.icon) && (insight.icon as React.ReactElement<unknown>)
                                 ? React.cloneElement(insight.icon as React.ReactElement<unknown>)
                                 : insight.icon}
                             </Avatar>
@@ -1519,12 +1842,12 @@ export const InsightsIA: React.FC<InsightsIAProps> = ({
                             primary={insight.title}
                             secondary={`${insight.confidence}% confianza • ${insight.impact.toUpperCase()}`}
                             primaryTypographyProps={{ 
-                              fontSize: '0.9rem', 
+                              fontSize: { xs: '0.8rem', md: '0.9rem' }, 
                               fontWeight: 600,
                               color: '#1e293b'
                             }}
                             secondaryTypographyProps={{ 
-                              fontSize: '0.75rem',
+                              fontSize: { xs: '0.7rem', md: '0.75rem' },
                               color: '#94a3b8'
                             }}
                           />
@@ -1536,12 +1859,12 @@ export const InsightsIA: React.FC<InsightsIAProps> = ({
                             primary="No hay acciones prioritarias"
                             secondary="Todos los insights están bajo control"
                             primaryTypographyProps={{ 
-                              fontSize: '0.9rem', 
+                              fontSize: { xs: '0.8rem', md: '0.9rem' }, 
                               fontWeight: 600,
                               color: '#10b981'
                             }}
                             secondaryTypographyProps={{ 
-                              fontSize: '0.8rem',
+                              fontSize: { xs: '0.75rem', md: '0.8rem' },
                               color: '#64748b'
                             }}
                           />
@@ -1563,16 +1886,22 @@ export const InsightsIA: React.FC<InsightsIAProps> = ({
                 elevation={0}
                 sx={{
                   border: '1px solid #f1f5f9',
-                  borderRadius: 4,
+                  borderRadius: { xs: 3, md: 4 },
                   background: 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
                 }}
               >
-                <CardContent sx={{ p: 3 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+                <CardContent sx={{ p: { xs: 2, md: 3 } }}>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: 2, 
+                    mb: { xs: 2, md: 3 },
+                    flexWrap: { xs: 'wrap', sm: 'nowrap' }
+                  }}>
                     <Avatar
                       sx={{
-                        width: 44,
-                        height: 44,
+                        width: { xs: 40, md: 44 },
+                        height: { xs: 40, md: 44 },
                         bgcolor: alpha('#6366f1', 0.1),
                         color: '#6366f1',
                         borderRadius: 3,
@@ -1581,10 +1910,17 @@ export const InsightsIA: React.FC<InsightsIAProps> = ({
                       <SmartToy />
                     </Avatar>
                     <Box>
-                      <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', fontSize: '1.1rem' }}>
+                      <Typography variant="h6" sx={{ 
+                        fontWeight: 700, 
+                        color: '#1e293b', 
+                        fontSize: { xs: '1rem', md: '1.1rem' }
+                      }}>
                         Estado del Modelo IA
                       </Typography>
-                      <Typography variant="body2" sx={{ color: '#64748b', fontSize: '0.85rem' }}>
+                      <Typography variant="body2" sx={{ 
+                        color: '#64748b', 
+                        fontSize: { xs: '0.8rem', md: '0.85rem' }
+                      }}>
                         Información técnica
                       </Typography>
                     </Box>
@@ -1596,8 +1932,19 @@ export const InsightsIA: React.FC<InsightsIAProps> = ({
                     </Box>
                   ) : (
                     <Stack spacing={2}>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Typography variant="body2" sx={{ fontWeight: 600, color: '#475569' }}>
+                      <Box sx={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'center',
+                        flexWrap: { xs: 'wrap', sm: 'nowrap' },
+                        gap: { xs: 1, sm: 0 }
+                      }}>
+                        <Typography variant="body2" sx={{ 
+                          fontWeight: 600, 
+                          color: '#475569',
+                          fontSize: { xs: '0.8rem', md: '0.875rem' },
+                          flex: { xs: '1 1 100%', sm: '1 1 auto' }
+                        }}>
                           Versión del Modelo
                         </Typography>
                         <Chip
@@ -1607,37 +1954,90 @@ export const InsightsIA: React.FC<InsightsIAProps> = ({
                             bgcolor: alpha('#6366f1', 0.1),
                             color: '#6366f1',
                             fontWeight: 600,
+                            fontSize: { xs: '0.7rem', md: '0.75rem' },
+                            flex: { xs: '1 1 100%', sm: '0 0 auto' },
+                            justifyContent: { xs: 'center', sm: 'flex-start' }
                           }}
                         />
                       </Box>
                       
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Typography variant="body2" sx={{ fontWeight: 600, color: '#475569' }}>
+                      <Box sx={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'center',
+                        flexWrap: { xs: 'wrap', sm: 'nowrap' },
+                        gap: { xs: 1, sm: 0 }
+                      }}>
+                        <Typography variant="body2" sx={{ 
+                          fontWeight: 600, 
+                          color: '#475569',
+                          fontSize: { xs: '0.8rem', md: '0.875rem' },
+                          flex: { xs: '1 1 100%', sm: '1 1 auto' }
+                        }}>
                           Precisión
                         </Typography>
-                        <Typography variant="body2" sx={{ fontWeight: 700, color: '#10b981' }}>
+                        <Typography variant="body2" sx={{ 
+                          fontWeight: 700, 
+                          color: '#10b981',
+                          fontSize: { xs: '0.8rem', md: '0.875rem' },
+                          flex: { xs: '1 1 100%', sm: '0 0 auto' },
+                          textAlign: { xs: 'left', sm: 'right' }
+                        }}>
                           {aiModel?.accuracy || 94.2}%
                         </Typography>
                       </Box>
                       
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Typography variant="body2" sx={{ fontWeight: 600, color: '#475569' }}>
+                      <Box sx={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'center',
+                        flexWrap: { xs: 'wrap', sm: 'nowrap' },
+                        gap: { xs: 1, sm: 0 }
+                      }}>
+                        <Typography variant="body2" sx={{ 
+                          fontWeight: 600, 
+                          color: '#475569',
+                          fontSize: { xs: '0.8rem', md: '0.875rem' },
+                          flex: { xs: '1 1 100%', sm: '1 1 auto' }
+                        }}>
                           Datos de Entrenamiento
                         </Typography>
-                        <Typography variant="body2" sx={{ fontWeight: 700, color: '#1e293b' }}>
+                        <Typography variant="body2" sx={{ 
+                          fontWeight: 700, 
+                          color: '#1e293b',
+                          fontSize: { xs: '0.8rem', md: '0.875rem' },
+                          flex: { xs: '1 1 100%', sm: '0 0 auto' },
+                          textAlign: { xs: 'left', sm: 'right' }
+                        }}>
                           {aiModel?.dataPoints.toLocaleString() || '12.7K'} registros
                         </Typography>
                       </Box>
                       
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Typography variant="body2" sx={{ fontWeight: 600, color: '#475569' }}>
+                      <Box sx={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'center',
+                        flexWrap: { xs: 'wrap', sm: 'nowrap' },
+                        gap: { xs: 1, sm: 0 }
+                      }}>
+                        <Typography variant="body2" sx={{ 
+                          fontWeight: 600, 
+                          color: '#475569',
+                          fontSize: { xs: '0.8rem', md: '0.875rem' },
+                          flex: { xs: '1 1 100%', sm: '1 1 auto' }
+                        }}>
                           Estado
                         </Typography>
                         <Chip
                           label={aiModel?.status === 'active' ? 'Activo' : 'Entrenando'}
                           size="small"
                           color={aiModel?.status === 'active' ? 'success' : 'warning'}
-                          sx={{ fontWeight: 600 }}
+                          sx={{ 
+                            fontWeight: 600,
+                            fontSize: { xs: '0.7rem', md: '0.75rem' },
+                            flex: { xs: '1 1 100%', sm: '0 0 auto' },
+                            justifyContent: { xs: 'center', sm: 'flex-start' }
+                          }}
                         />
                       </Box>
                     </Stack>

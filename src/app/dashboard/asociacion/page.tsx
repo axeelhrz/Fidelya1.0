@@ -9,6 +9,8 @@ import {
   Button,
   Avatar,
   alpha,
+  useTheme,
+  useMediaQuery,
 } from '@mui/material';
 import {
   PersonAdd,
@@ -44,90 +46,118 @@ import { SocioDialog } from '@/components/asociacion/SocioDialog';
 import { DeleteConfirmDialog } from '@/components/asociacion/DeleteConfirmDialog';
 import { CsvImport } from '@/components/asociacion/CsvImport';
 
-const LoadingScreen: React.FC<{ message: string }> = ({ message }) => (
-  <Box 
-    sx={{ 
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center'
-    }}
-  >
-    <motion.div 
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.5 }}
-    >
-      <Box sx={{ textAlign: 'center' }}>
-        <Box sx={{ position: 'relative', mb: 4 }}>
-          <Box
-            sx={{
-              width: 80,
-              height: 80,
-              border: '6px solid #e2e8f0',
-              borderRadius: '50%',
-              borderTopColor: '#6366f1',
-              borderRightColor: '#8b5cf6',
-              animation: 'spin 1.5s linear infinite',
-              mx: 'auto',
-              '@keyframes spin': {
-                '0%': { transform: 'rotate(0deg)' },
-                '100%': { transform: 'rotate(360deg)' },
-              },
-            }}
-          />
-        </Box>
-        <Typography variant="h4" sx={{ fontWeight: 900, color: '#0f172a', mb: 2 }}>
-          Cargando Dashboard Ejecutivo
-        </Typography>
-        <Typography variant="h6" sx={{ color: '#64748b', fontWeight: 500 }}>
-          {message}
-        </Typography>
-      </Box>
-    </motion.div>
-  </Box>
-);
+const LoadingScreen: React.FC<{ message: string }> = ({ message }) => {
 
-const AccessDeniedScreen: React.FC = () => (
-  <Box 
-    sx={{ 
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center'
-    }}
-  >
-    <Container maxWidth="sm">
+  return (
+    <Box 
+      sx={{ 
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        p: { xs: 2, md: 4 }
+      }}
+    >
       <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5 }}
       >
         <Box sx={{ textAlign: 'center' }}>
-          <Avatar
-            sx={{
-              width: 100,
-              height: 100,
-              bgcolor: alpha('#ef4444', 0.1),
-              color: '#ef4444',
-              mx: 'auto',
-              mb: 4,
-            }}
-          >
-            <Security sx={{ fontSize: 50 }} />
-          </Avatar>
-          
-          <Typography variant="h3" sx={{ fontWeight: 900, color: '#0f172a', mb: 2 }}>
-            Acceso Restringido
+          <Box sx={{ position: 'relative', mb: 4 }}>
+            <Box
+              sx={{
+                width: { xs: 64, md: 80 },
+                height: { xs: 64, md: 80 },
+                border: '6px solid #e2e8f0',
+                borderRadius: '50%',
+                borderTopColor: '#6366f1',
+                borderRightColor: '#8b5cf6',
+                animation: 'spin 1.5s linear infinite',
+                mx: 'auto',
+                '@keyframes spin': {
+                  '0%': { transform: 'rotate(0deg)' },
+                  '100%': { transform: 'rotate(360deg)' },
+                },
+              }}
+            />
+          </Box>
+          <Typography variant="h4" sx={{ 
+            fontWeight: 900, 
+            color: '#0f172a', 
+            mb: 2,
+            fontSize: { xs: '1.5rem', md: '2rem' }
+          }}>
+            Cargando Dashboard Ejecutivo
           </Typography>
-          <Typography variant="h6" sx={{ color: '#64748b', mb: 4, maxWidth: 400, mx: 'auto' }}>
-            Necesitas permisos de asociación para acceder a este dashboard ejecutivo.
+          <Typography variant="h6" sx={{ 
+            color: '#64748b', 
+            fontWeight: 500,
+            fontSize: { xs: '1rem', md: '1.25rem' }
+          }}>
+            {message}
           </Typography>
         </Box>
       </motion.div>
-    </Container>
-  </Box>
-);
+    </Box>
+  );
+};
+
+const AccessDeniedScreen: React.FC = () => {
+
+  return (
+    <Box 
+      sx={{ 
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        p: { xs: 2, md: 4 }
+      }}
+    >
+      <Container maxWidth="sm">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          <Box sx={{ textAlign: 'center' }}>
+            <Avatar
+              sx={{
+                width: { xs: 80, md: 100 },
+                height: { xs: 80, md: 100 },
+                bgcolor: alpha('#ef4444', 0.1),
+                color: '#ef4444',
+                mx: 'auto',
+                mb: 4,
+              }}
+            >
+              <Security sx={{ fontSize: { xs: 40, md: 50 } }} />
+            </Avatar>
+            
+            <Typography variant="h3" sx={{ 
+              fontWeight: 900, 
+              color: '#0f172a', 
+              mb: 2,
+              fontSize: { xs: '2rem', md: '3rem' }
+            }}>
+              Acceso Restringido
+            </Typography>
+            <Typography variant="h6" sx={{ 
+              color: '#64748b', 
+              mb: 4, 
+              maxWidth: 400, 
+              mx: 'auto',
+              fontSize: { xs: '1rem', md: '1.25rem' }
+            }}>
+              Necesitas permisos de asociación para acceder a este dashboard ejecutivo.
+            </Typography>
+          </Box>
+        </motion.div>
+      </Container>
+    </Box>
+  );
+};
 
 // Componente para cada sección del dashboard
 const DashboardSection: React.FC<{ 
@@ -153,6 +183,8 @@ const DashboardSection: React.FC<{
   onCsvImport,
   onNavigate
 }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   
   switch (section) {
     case 'overview':
@@ -166,30 +198,51 @@ const DashboardSection: React.FC<{
     case 'analytics':
     case 'metrics':
       return (
-        <Container maxWidth="xl" sx={{ py: 4 }}>
+        <Box sx={{ 
+          maxWidth: '100%',
+          overflow: 'hidden',
+          px: { xs: 0, sm: 2, md: 4 },
+          py: { xs: 2, md: 4 }
+        }}>
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <Box sx={{ mb: 6 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, mb: 4 }}>
+            <Box sx={{ mb: { xs: 4, md: 6 } }}>
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: { xs: 2, md: 3 }, 
+                mb: { xs: 3, md: 4 },
+                flexDirection: { xs: 'column', sm: 'row' },
+                textAlign: { xs: 'center', sm: 'left' }
+              }}>
                 <Avatar
                   sx={{
-                    width: 64,
-                    height: 64,
+                    width: { xs: 56, md: 64 },
+                    height: { xs: 56, md: 64 },
                     borderRadius: 4,
                     background: 'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)',
                     boxShadow: '0 12px 40px rgba(139, 92, 246, 0.3)',
                   }}
                 >
-                  <Analytics sx={{ fontSize: 32 }} />
+                  <Analytics sx={{ fontSize: { xs: 28, md: 32 } }} />
                 </Avatar>
                 <Box>
-                  <Typography variant="h3" sx={{ fontWeight: 900, color: '#0f172a', mb: 1 }}>
+                  <Typography variant="h3" sx={{ 
+                    fontWeight: 900, 
+                    color: '#0f172a', 
+                    mb: 1,
+                    fontSize: { xs: '2rem', md: '3rem' }
+                  }}>
                     Analytics Avanzado
                   </Typography>
-                  <Typography variant="h6" sx={{ color: '#64748b', fontWeight: 600 }}>
+                  <Typography variant="h6" sx={{ 
+                    color: '#64748b', 
+                    fontWeight: 600,
+                    fontSize: { xs: '1rem', md: '1.25rem' }
+                  }}>
                     Métricas y análisis profundo
                   </Typography>
                 </Box>
@@ -197,7 +250,7 @@ const DashboardSection: React.FC<{
             </Box>
           </motion.div>
           <AdvancedAnalytics loading={loading} />
-        </Container>
+        </Box>
       );
 
     case 'reports':
@@ -209,15 +262,22 @@ const DashboardSection: React.FC<{
 
     case 'insights':
       return (
-        <InsightsIA
-          loading={loading}
-        />
+        <Box sx={{ 
+          maxWidth: '100%',
+          overflow: 'hidden',
+          px: { xs: 0, sm: 2, md: 4 },
+          py: { xs: 2, md: 4 }
+        }}>
+          <InsightsIA
+            loading={loading}
+          />
+        </Box>
       );
 
     // Gestión de Datos - Exportar Datos
     case 'export':
       return (
-        <Container maxWidth="xl" sx={{ py: 4 }}>
+        <Container maxWidth="xl" sx={{ py: { xs: 2, md: 4 } }}>
           <DataExportSection
             socios={socios}
             stats={Object.fromEntries(
@@ -233,17 +293,17 @@ const DashboardSection: React.FC<{
     // Gestión de Datos - Importar CSV
     case 'import':
       return (
-        <Container maxWidth="xl" sx={{ py: 4 }}>
+        <Container maxWidth="xl" sx={{ py: { xs: 2, md: 4 } }}>
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <Box sx={{ mb: 6, textAlign: 'center' }}>
+            <Box sx={{ mb: { xs: 4, md: 6 }, textAlign: 'center' }}>
               <Avatar
                 sx={{
-                  width: 80,
-                  height: 80,
+                  width: { xs: 64, md: 80 },
+                  height: { xs: 64, md: 80 },
                   borderRadius: 4,
                   background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
                   boxShadow: '0 12px 40px rgba(59, 130, 246, 0.3)',
@@ -251,28 +311,40 @@ const DashboardSection: React.FC<{
                   mb: 3,
                 }}
               >
-                <Upload sx={{ fontSize: 40 }} />
+                <Upload sx={{ fontSize: { xs: 32, md: 40 } }} />
               </Avatar>
-              <Typography variant="h3" sx={{ fontWeight: 900, color: '#0f172a', mb: 2 }}>
+              <Typography variant="h3" sx={{ 
+                fontWeight: 900, 
+                color: '#0f172a', 
+                mb: 2,
+                fontSize: { xs: '2rem', md: '3rem' }
+              }}>
                 Importación de Datos
               </Typography>
-              <Typography variant="h6" sx={{ color: '#64748b', fontWeight: 600, mb: 4 }}>
+              <Typography variant="h6" sx={{ 
+                color: '#64748b', 
+                fontWeight: 600, 
+                mb: 4,
+                fontSize: { xs: '1rem', md: '1.25rem' }
+              }}>
                 Carga masiva de miembros desde archivos CSV
               </Typography>
               <Button
                 onClick={onCsvImport}
                 variant="contained"
                 startIcon={<Upload />}
-                size="large"
+                size={isMobile ? "medium" : "large"}
                 sx={{
-                  py: 2,
-                  px: 6,
+                  py: { xs: 1.5, md: 2 },
+                  px: { xs: 4, md: 6 },
                   borderRadius: 4,
                   textTransform: 'none',
                   fontWeight: 700,
-                  fontSize: '1.1rem',
+                  fontSize: { xs: '1rem', md: '1.1rem' },
                   background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
                   boxShadow: '0 8px 32px rgba(59, 130, 246, 0.3)',
+                  width: { xs: '100%', sm: 'auto' },
+                  maxWidth: { xs: '300px', sm: 'none' },
                   '&:hover': {
                     background: 'linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%)',
                     transform: 'translateY(-2px)',
@@ -291,7 +363,7 @@ const DashboardSection: React.FC<{
     // Gestión de Datos - Respaldos
     case 'backup':
       return (
-        <Container maxWidth="xl" sx={{ py: 4 }}>
+        <Container maxWidth="xl" sx={{ py: { xs: 2, md: 4 } }}>
           <BackupManagementSection loading={loading} />
         </Container>
       );
@@ -307,18 +379,25 @@ const DashboardSection: React.FC<{
         : socios;
 
       return (
-        <Container maxWidth="xl" sx={{ py: 4 }}>
+        <Container maxWidth="xl" sx={{ py: { xs: 2, md: 4 } }}>
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <Box sx={{ mb: 6 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, mb: 4 }}>
+            <Box sx={{ mb: { xs: 4, md: 6 } }}>
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: { xs: 2, md: 3 }, 
+                mb: { xs: 3, md: 4 },
+                flexDirection: { xs: 'column', md: 'row' },
+                textAlign: { xs: 'center', md: 'left' }
+              }}>
                 <Avatar
                   sx={{
-                    width: 64,
-                    height: 64,
+                    width: { xs: 56, md: 64 },
+                    height: { xs: 56, md: 64 },
                     borderRadius: 4,
                     background: section === 'active-members' 
                       ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
@@ -332,27 +411,39 @@ const DashboardSection: React.FC<{
                       : '0 12px 40px rgba(6, 182, 212, 0.3)',
                   }}
                 >
-                  <Group sx={{ fontSize: 32 }} />
+                  <Group sx={{ fontSize: { xs: 28, md: 32 } }} />
                 </Avatar>
-                <Box>
-                  <Typography variant="h3" sx={{ fontWeight: 900, color: '#0f172a', mb: 1 }}>
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="h3" sx={{ 
+                    fontWeight: 900, 
+                    color: '#0f172a', 
+                    mb: 1,
+                    fontSize: { xs: '2rem', md: '3rem' }
+                  }}>
                     {section === 'active-members' ? 'Miembros Activos' :
                      section === 'expired-members' ? 'Miembros Vencidos' :
                      'Gestión de Miembros'}
                   </Typography>
-                  <Typography variant="h6" sx={{ color: '#64748b', fontWeight: 600 }}>
+                  <Typography variant="h6" sx={{ 
+                    color: '#64748b', 
+                    fontWeight: 600,
+                    fontSize: { xs: '1rem', md: '1.25rem' }
+                  }}>
                     {filteredSocios.length} miembros encontrados
                   </Typography>
                 </Box>
-                <Box sx={{ ml: 'auto' }}>
+                <Box sx={{ 
+                  ml: { xs: 0, md: 'auto' },
+                  width: { xs: '100%', md: 'auto' }
+                }}>
                   <Button
                     onClick={onAddSocio}
                     variant="contained"
                     startIcon={<PersonAdd />}
-                    size="large"
+                    size={isMobile ? "medium" : "large"}
                     sx={{
-                      py: 2,
-                      px: 4,
+                      py: { xs: 1.5, md: 2 },
+                      px: { xs: 3, md: 4 },
                       borderRadius: 4,
                       textTransform: 'none',
                       fontWeight: 700,
@@ -366,6 +457,7 @@ const DashboardSection: React.FC<{
                         : section === 'expired-members'
                         ? '0 8px 32px rgba(239, 68, 68, 0.3)'
                         : '0 8px 32px rgba(6, 182, 212, 0.3)',
+                      width: { xs: '100%', md: 'auto' },
                       '&:hover': {
                         transform: 'translateY(-2px)',
                         boxShadow: section === 'active-members' 
@@ -401,41 +493,65 @@ const DashboardSection: React.FC<{
     case 'email-campaigns':
     case 'templates':
       return (
-        <Container maxWidth="xl" sx={{ py: 4 }}>
+        <Container maxWidth="xl" sx={{ py: { xs: 2, md: 4 } }}>
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <Box sx={{ mb: 6 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, mb: 4 }}>
+            <Box sx={{ mb: { xs: 4, md: 6 } }}>
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: { xs: 2, md: 3 }, 
+                mb: { xs: 3, md: 4 },
+                flexDirection: { xs: 'column', sm: 'row' },
+                textAlign: { xs: 'center', sm: 'left' }
+              }}>
                 <Avatar
                   sx={{
-                    width: 64,
-                    height: 64,
+                    width: { xs: 56, md: 64 },
+                    height: { xs: 56, md: 64 },
                     borderRadius: 4,
                     background: 'linear-gradient(135deg, #ec4899 0%, #be185d 100%)',
                     boxShadow: '0 12px 40px rgba(236, 72, 153, 0.3)',
                   }}
                 >
-                  <CloudUpload sx={{ fontSize: 32 }} />
+                  <CloudUpload sx={{ fontSize: { xs: 28, md: 32 } }} />
                 </Avatar>
                 <Box>
-                  <Typography variant="h3" sx={{ fontWeight: 900, color: '#0f172a', mb: 1 }}>
+                  <Typography variant="h3" sx={{ 
+                    fontWeight: 900, 
+                    color: '#0f172a', 
+                    mb: 1,
+                    fontSize: { xs: '2rem', md: '3rem' }
+                  }}>
                     {section === 'email-campaigns' ? 'Campañas de Email' : 'Plantillas de Comunicación'}
                   </Typography>
-                  <Typography variant="h6" sx={{ color: '#64748b', fontWeight: 600 }}>
+                  <Typography variant="h6" sx={{ 
+                    color: '#64748b', 
+                    fontWeight: 600,
+                    fontSize: { xs: '1rem', md: '1.25rem' }
+                  }}>
                     Sistema de comunicaciones
                   </Typography>
                 </Box>
               </Box>
             </Box>
           </motion.div>
-          <Box sx={{ textAlign: 'center', py: 8 }}>
-            <Typography variant="h4" sx={{ fontWeight: 700, color: '#1e293b', mb: 2 }}>
+          <Box sx={{ textAlign: 'center', py: { xs: 6, md: 8 } }}>
+            <Typography variant="h4" sx={{ 
+              fontWeight: 700, 
+              color: '#1e293b', 
+              mb: 2,
+              fontSize: { xs: '1.5rem', md: '2rem' }
+            }}>
               Funcionalidad en Desarrollo
             </Typography>
-            <Typography variant="body1" sx={{ color: '#64748b' }}>
+            <Typography variant="body1" sx={{ 
+              color: '#64748b',
+              fontSize: { xs: '0.9rem', md: '1rem' }
+            }}>
               El sistema de {section === 'email-campaigns' ? 'campañas de email' : 'plantillas'} estará disponible próximamente.
             </Typography>
           </Box>
@@ -446,12 +562,20 @@ const DashboardSection: React.FC<{
     case 'settings':
     case 'help':
       return (
-        <Container maxWidth="xl" sx={{ py: 4 }}>
-          <Box sx={{ textAlign: 'center', py: 8 }}>
-            <Typography variant="h4" sx={{ fontWeight: 700, color: '#1e293b', mb: 2 }}>
+        <Container maxWidth="xl" sx={{ py: { xs: 2, md: 4 } }}>
+          <Box sx={{ textAlign: 'center', py: { xs: 6, md: 8 } }}>
+            <Typography variant="h4" sx={{ 
+              fontWeight: 700, 
+              color: '#1e293b', 
+              mb: 2,
+              fontSize: { xs: '1.5rem', md: '2rem' }
+            }}>
               {section === 'settings' ? 'Configuración del Sistema' : 'Ayuda y Soporte'}
             </Typography>
-            <Typography variant="body1" sx={{ color: '#64748b' }}>
+            <Typography variant="body1" sx={{ 
+              color: '#64748b',
+              fontSize: { xs: '0.9rem', md: '1rem' }
+            }}>
               Esta funcionalidad estará disponible próximamente.
             </Typography>
           </Box>
@@ -460,12 +584,20 @@ const DashboardSection: React.FC<{
 
     default:
       return (
-        <Container maxWidth="xl" sx={{ py: 4 }}>
-          <Box sx={{ textAlign: 'center', py: 8 }}>
-            <Typography variant="h4" sx={{ fontWeight: 700, color: '#1e293b', mb: 2 }}>
+        <Container maxWidth="xl" sx={{ py: { xs: 2, md: 4 } }}>
+          <Box sx={{ textAlign: 'center', py: { xs: 6, md: 8 } }}>
+            <Typography variant="h4" sx={{ 
+              fontWeight: 700, 
+              color: '#1e293b', 
+              mb: 2,
+              fontSize: { xs: '1.5rem', md: '2rem' }
+            }}>
               Sección en Desarrollo
             </Typography>
-            <Typography variant="body1" sx={{ color: '#64748b' }}>
+            <Typography variant="body1" sx={{ 
+              color: '#64748b',
+              fontSize: { xs: '0.9rem', md: '1rem' }
+            }}>
               Esta funcionalidad estará disponible próximamente.
             </Typography>
           </Box>

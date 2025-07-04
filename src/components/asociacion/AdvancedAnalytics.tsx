@@ -22,6 +22,8 @@ import {
   FormControl,
   InputLabel,
   Tooltip,
+  useTheme,
+  useMediaQuery,
 } from '@mui/material';
 import {
   TrendingUp,
@@ -123,6 +125,9 @@ const MetricCard: React.FC<MetricCardProps> = ({
   loading = false,
   onClick
 }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -134,7 +139,10 @@ const MetricCard: React.FC<MetricCardProps> = ({
         stiffness: 100,
         damping: 15
       }}
-      style={{ flex: '1 1 0', minWidth: '280px' }}
+      style={{ 
+        width: '100%',
+        minWidth: isMobile ? '100%' : '280px'
+      }}
     >
       <Card
         elevation={0}
@@ -143,7 +151,7 @@ const MetricCard: React.FC<MetricCardProps> = ({
           position: 'relative',
           overflow: 'hidden',
           border: '1px solid #f1f5f9',
-          borderRadius: 4,
+          borderRadius: { xs: 3, md: 4 },
           background: 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
           transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
           cursor: onClick ? 'pointer' : 'default',
@@ -178,13 +186,25 @@ const MetricCard: React.FC<MetricCardProps> = ({
           }}
         />
 
-        <CardContent sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column' }}>
-          <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 2 }}>
+        <CardContent sx={{ 
+          p: { xs: 2, md: 3 }, 
+          height: '100%', 
+          display: 'flex', 
+          flexDirection: 'column' 
+        }}>
+          <Box sx={{ 
+            display: 'flex', 
+            alignItems: 'flex-start', 
+            justifyContent: 'space-between', 
+            mb: { xs: 1.5, md: 2 },
+            flexWrap: { xs: 'wrap', sm: 'nowrap' },
+            gap: { xs: 1, sm: 0 }
+          }}>
             <Avatar
               className="metric-icon"
               sx={{
-                width: 56,
-                height: 56,
+                width: { xs: 48, md: 56 },
+                height: { xs: 48, md: 56 },
                 bgcolor: alpha(color, 0.1),
                 color: color,
                 borderRadius: 3,
@@ -192,19 +212,26 @@ const MetricCard: React.FC<MetricCardProps> = ({
                 boxShadow: `0 6px 20px ${alpha(color, 0.2)}`,
               }}
             >
-              {loading ? <CircularProgress size={24} sx={{ color: 'inherit' }} /> : icon}
+              {loading ? <CircularProgress size={isMobile ? 20 : 24} sx={{ color: 'inherit' }} /> : icon}
             </Avatar>
 
             {/* Trend indicator */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              {trend === 'up' && <TrendingUp sx={{ fontSize: 18, color: '#10b981' }} />}
-              {trend === 'down' && <TrendingDown sx={{ fontSize: 18, color: '#ef4444' }} />}
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 1,
+              order: { xs: 3, sm: 2 },
+              width: { xs: '100%', sm: 'auto' },
+              justifyContent: { xs: 'flex-end', sm: 'flex-start' }
+            }}>
+              {trend === 'up' && <TrendingUp sx={{ fontSize: { xs: 16, md: 18 }, color: '#10b981' }} />}
+              {trend === 'down' && <TrendingDown sx={{ fontSize: { xs: 16, md: 18 }, color: '#ef4444' }} />}
               <Typography
                 variant="body2"
                 sx={{
                   fontWeight: 700,
                   color: trend === 'up' ? '#10b981' : trend === 'down' ? '#ef4444' : '#6b7280',
-                  fontSize: '0.85rem'
+                  fontSize: { xs: '0.8rem', md: '0.85rem' }
                 }}
               >
                 {change > 0 ? '+' : ''}{change}%
@@ -218,7 +245,7 @@ const MetricCard: React.FC<MetricCardProps> = ({
               sx={{
                 color: '#94a3b8',
                 fontWeight: 700,
-                fontSize: '0.7rem',
+                fontSize: { xs: '0.65rem', md: '0.7rem' },
                 letterSpacing: '0.1em',
                 textTransform: 'uppercase',
                 mb: 1,
@@ -233,7 +260,7 @@ const MetricCard: React.FC<MetricCardProps> = ({
               sx={{
                 fontWeight: 900,
                 color: '#0f172a',
-                fontSize: '2.2rem',
+                fontSize: { xs: '1.8rem', sm: '2rem', md: '2.2rem' },
                 letterSpacing: '-0.02em',
                 lineHeight: 0.9,
                 mb: subtitle ? 1 : 0,
@@ -248,7 +275,7 @@ const MetricCard: React.FC<MetricCardProps> = ({
                 sx={{
                   color: '#64748b',
                   fontWeight: 600,
-                  fontSize: '0.85rem'
+                  fontSize: { xs: '0.8rem', md: '0.85rem' }
                 }}
               >
                 {subtitle}
@@ -257,7 +284,7 @@ const MetricCard: React.FC<MetricCardProps> = ({
           </Box>
 
           {/* Progress indicator */}
-          <Box sx={{ mt: 2 }}>
+          <Box sx={{ mt: { xs: 1.5, md: 2 } }}>
             <LinearProgress
               variant="determinate"
               value={loading ? 0 : Math.min(Math.abs(change) * 5, 100)}
@@ -293,6 +320,9 @@ const ChartCard: React.FC<{
   loading?: boolean;
   onExport?: () => void;
 }> = ({ title, subtitle, data, color, type, icon, loading = false, onExport }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
   // Determine max value based on chart type and data shape
   type ChartDataType =
     | { level: string; count: number; percentage: number }
@@ -318,21 +348,40 @@ const ChartCard: React.FC<{
   const renderChart = () => {
     if (loading) {
       return (
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 250 }}>
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          height: { xs: 200, md: 250 } 
+        }}>
           <CircularProgress size={40} sx={{ color }} />
         </Box>
       );
     }
 
+    const chartHeight = isMobile ? 200 : 250;
+
     switch (type) {
       case 'bar':
         return (
-          <Box sx={{ height: 250, py: 2 }}>
-            <Stack spacing={2.5}>
-              {data.slice(0, 6).map((item, index) => (
+          <Box sx={{ height: chartHeight, py: 2 }}>
+            <Stack spacing={isMobile ? 2 : 2.5}>
+              {data.slice(0, isMobile ? 4 : 6).map((item, index) => (
                 <Box key={index}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                    <Typography variant="body2" sx={{ fontWeight: 600, color: '#475569', fontSize: '0.9rem' }}>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center', 
+                    mb: 1,
+                    flexWrap: { xs: 'wrap', sm: 'nowrap' },
+                    gap: { xs: 0.5, sm: 0 }
+                  }}>
+                    <Typography variant="body2" sx={{ 
+                      fontWeight: 600, 
+                      color: '#475569', 
+                      fontSize: { xs: '0.8rem', md: '0.9rem' },
+                      flex: { xs: '1 1 100%', sm: '1 1 auto' }
+                    }}>
                       {'level' in item
                         ? item.level
                         : 'name' in item
@@ -343,8 +392,18 @@ const ChartCard: React.FC<{
                         ? item.date
                         : ''}
                     </Typography>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Typography variant="body2" sx={{ fontWeight: 700, color: '#1e293b', fontSize: '0.9rem' }}>
+                    <Box sx={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: 1,
+                      flex: { xs: '1 1 100%', sm: '0 0 auto' },
+                      justifyContent: { xs: 'space-between', sm: 'flex-end' }
+                    }}>
+                      <Typography variant="body2" sx={{ 
+                        fontWeight: 700, 
+                        color: '#1e293b', 
+                        fontSize: { xs: '0.8rem', md: '0.9rem' }
+                      }}>
                         {'count' in item
                           ? item.count
                           : 'value' in item
@@ -367,8 +426,8 @@ const ChartCard: React.FC<{
                             bgcolor: alpha(color, 0.1),
                             color: color,
                             fontWeight: 700,
-                            fontSize: '0.7rem',
-                            height: 20,
+                            fontSize: { xs: '0.65rem', md: '0.7rem' },
+                            height: { xs: 18, md: 20 },
                           }}
                         />
                       )}
@@ -388,7 +447,7 @@ const ChartCard: React.FC<{
                         : 0
                     }
                     sx={{
-                      height: 8,
+                      height: { xs: 6, md: 8 },
                       borderRadius: 4,
                       bgcolor: alpha(color, 0.1),
                       '& .MuiLinearProgress-bar': {
@@ -405,26 +464,51 @@ const ChartCard: React.FC<{
 
       case 'pie':
         return (
-          <Box sx={{ height: 250, py: 2 }}>
-            <Stack spacing={2.5}>
+          <Box sx={{ height: chartHeight, py: 2 }}>
+            <Stack spacing={isMobile ? 2 : 2.5}>
               {data.map((item, index) => (
-                <Box key={index} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Box key={index} sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'space-between',
+                  flexWrap: { xs: 'wrap', sm: 'nowrap' },
+                  gap: { xs: 1, sm: 2 }
+                }}>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: 2,
+                    flex: { xs: '1 1 100%', sm: '1 1 auto' }
+                  }}>
                     <Box
                       sx={{
-                        width: 12,
-                        height: 12,
+                        width: { xs: 10, md: 12 },
+                        height: { xs: 10, md: 12 },
                         borderRadius: '50%',
                         bgcolor: 'color' in item ? item.color : color,
                         boxShadow: `0 2px 8px ${alpha('color' in item ? item.color : color, 0.3)}`,
                       }}
                     />
-                    <Typography variant="body2" sx={{ fontWeight: 600, color: '#475569', fontSize: '0.9rem' }}>
+                    <Typography variant="body2" sx={{ 
+                      fontWeight: 600, 
+                      color: '#475569', 
+                      fontSize: { xs: '0.8rem', md: '0.9rem' }
+                    }}>
                       {'name' in item ? item.name : 'level' in item ? item.level : 'month' in item ? item.month : 'date' in item ? item.date : ''}
                     </Typography>
                   </Box>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Typography variant="body2" sx={{ fontWeight: 700, color: '#1e293b', fontSize: '0.9rem' }}>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: 2,
+                    flex: { xs: '1 1 100%', sm: '0 0 auto' },
+                    justifyContent: { xs: 'space-between', sm: 'flex-end' }
+                  }}>
+                    <Typography variant="body2" sx={{ 
+                      fontWeight: 700, 
+                      color: '#1e293b', 
+                      fontSize: { xs: '0.8rem', md: '0.9rem' }
+                    }}>
                       {'value' in item
                         ? item.value
                         : 'count' in item
@@ -446,8 +530,8 @@ const ChartCard: React.FC<{
                         bgcolor: alpha('color' in item && item.color ? item.color : color, 0.1),
                         color: 'color' in item && item.color ? item.color : color,
                         fontWeight: 700,
-                        fontSize: '0.7rem',
-                        height: 20,
+                        fontSize: { xs: '0.65rem', md: '0.7rem' },
+                        height: { xs: 18, md: 20 },
                       }}
                     />
                   </Box>
@@ -459,7 +543,14 @@ const ChartCard: React.FC<{
 
       case 'line':
         return (
-          <Box sx={{ height: 250, display: 'flex', alignItems: 'end', gap: 1, px: 2, py: 2 }}>
+          <Box sx={{ 
+            height: chartHeight, 
+            display: 'flex', 
+            alignItems: 'end', 
+            gap: { xs: 0.5, md: 1 }, 
+            px: { xs: 1, md: 2 }, 
+            py: 2 
+          }}>
             {data.map((item, index) => (
               <Tooltip
                 key={index}
@@ -482,7 +573,7 @@ const ChartCard: React.FC<{
                     ) / maxValue * 100}%`,
                     bgcolor: alpha(color, 0.7),
                     borderRadius: '4px 4px 0 0',
-                    minHeight: 8,
+                    minHeight: { xs: 6, md: 8 },
                     position: 'relative',
                     cursor: 'pointer',
                     '&:hover': {
@@ -496,10 +587,10 @@ const ChartCard: React.FC<{
                     variant="caption"
                     sx={{
                       position: 'absolute',
-                      bottom: -25,
+                      bottom: { xs: -20, md: -25 },
                       left: '50%',
                       transform: 'translateX(-50%)',
-                      fontSize: '0.7rem',
+                      fontSize: { xs: '0.6rem', md: '0.7rem' },
                       color: '#94a3b8',
                       fontWeight: 600,
                       whiteSpace: 'nowrap',
@@ -523,12 +614,21 @@ const ChartCard: React.FC<{
 
       case 'timeline':
         return (
-          <Box sx={{ height: 250, py: 2 }}>
-            <Stack spacing={2}>
-              {data.slice(0, 5).map((item, index) => (
-                <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                  <Box sx={{ minWidth: 60 }}>
-                    <Typography variant="caption" sx={{ color: '#94a3b8', fontWeight: 600, fontSize: '0.75rem' }}>
+          <Box sx={{ height: chartHeight, py: 2 }}>
+            <Stack spacing={isMobile ? 1.5 : 2}>
+              {data.slice(0, isMobile ? 4 : 5).map((item, index) => (
+                <Box key={index} sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: { xs: 2, md: 3 },
+                  flexWrap: { xs: 'wrap', sm: 'nowrap' }
+                }}>
+                  <Box sx={{ minWidth: { xs: 50, md: 60 } }}>
+                    <Typography variant="caption" sx={{ 
+                      color: '#94a3b8', 
+                      fontWeight: 600, 
+                      fontSize: { xs: '0.7rem', md: '0.75rem' }
+                    }}>
                       {'date' in item
                         ? item.date
                         : 'month' in item
@@ -541,26 +641,46 @@ const ChartCard: React.FC<{
                     </Typography>
                   </Box>
                   <Box sx={{ flex: 1 }}>
-                    <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
+                    <Box sx={{ 
+                      display: 'flex', 
+                      gap: 1, 
+                      mb: 1,
+                      flexWrap: 'wrap'
+                    }}>
                       {('registrations' in item) && (
                         <Chip
                           label={`+${item.registrations}`}
                           size="small"
-                          sx={{ bgcolor: alpha('#10b981', 0.1), color: '#10b981', fontSize: '0.7rem', height: 20 }}
+                          sx={{ 
+                            bgcolor: alpha('#10b981', 0.1), 
+                            color: '#10b981', 
+                            fontSize: { xs: '0.65rem', md: '0.7rem' }, 
+                            height: { xs: 18, md: 20 }
+                          }}
                         />
                       )}
                       {('activations' in item) && (
                         <Chip
                           label={`${item.activations}`}
                           size="small"
-                          sx={{ bgcolor: alpha('#6366f1', 0.1), color: '#6366f1', fontSize: '0.7rem', height: 20 }}
+                          sx={{ 
+                            bgcolor: alpha('#6366f1', 0.1), 
+                            color: '#6366f1', 
+                            fontSize: { xs: '0.65rem', md: '0.7rem' }, 
+                            height: { xs: 18, md: 20 }
+                          }}
                         />
                       )}
                       {('expirations' in item) && item.expirations > 0 && (
                         <Chip
                           label={`-${item.expirations}`}
                           size="small"
-                          sx={{ bgcolor: alpha('#ef4444', 0.1), color: '#ef4444', fontSize: '0.7rem', height: 20 }}
+                          sx={{ 
+                            bgcolor: alpha('#ef4444', 0.1), 
+                            color: '#ef4444', 
+                            fontSize: { xs: '0.65rem', md: '0.7rem' }, 
+                            height: { xs: 18, md: 20 }
+                          }}
                         />
                       )}
                     </Box>
@@ -578,7 +698,7 @@ const ChartCard: React.FC<{
                           : 0
                       }
                       sx={{
-                        height: 4,
+                        height: { xs: 3, md: 4 },
                         borderRadius: 2,
                         bgcolor: alpha(color, 0.1),
                         '& .MuiLinearProgress-bar': {
@@ -604,25 +724,40 @@ const ChartCard: React.FC<{
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay: 0.2 }}
-      style={{ flex: '1 1 0', minWidth: '400px' }}
+      style={{ 
+        width: '100%',
+        minWidth: isMobile ? '100%' : '400px'
+      }}
     >
       <Card
         elevation={0}
         sx={{
           border: '1px solid #f1f5f9',
-          borderRadius: 4,
+          borderRadius: { xs: 3, md: 4 },
           overflow: 'hidden',
           background: 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
           height: '100%',
         }}
       >
-        <CardContent sx={{ p: 3 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+        <CardContent sx={{ p: { xs: 2, md: 3 } }}>
+          <Box sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'space-between', 
+            mb: { xs: 2, md: 3 },
+            flexWrap: { xs: 'wrap', sm: 'nowrap' },
+            gap: { xs: 2, sm: 0 }
+          }}>
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 2,
+              flex: { xs: '1 1 100%', sm: '1 1 auto' }
+            }}>
               <Avatar
                 sx={{
-                  width: 44,
-                  height: 44,
+                  width: { xs: 40, md: 44 },
+                  height: { xs: 40, md: 44 },
                   bgcolor: alpha(color, 0.1),
                   color: color,
                   borderRadius: 3,
@@ -631,17 +766,31 @@ const ChartCard: React.FC<{
                 {icon}
               </Avatar>
               <Box>
-                <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', mb: 0.5, fontSize: '1.1rem' }}>
+                <Typography variant="h6" sx={{ 
+                  fontWeight: 700, 
+                  color: '#1e293b', 
+                  mb: 0.5, 
+                  fontSize: { xs: '1rem', md: '1.1rem' }
+                }}>
                   {title}
                 </Typography>
                 {subtitle && (
-                  <Typography variant="body2" sx={{ color: '#64748b', fontSize: '0.85rem' }}>
+                  <Typography variant="body2" sx={{ 
+                    color: '#64748b', 
+                    fontSize: { xs: '0.8rem', md: '0.85rem' }
+                  }}>
                     {subtitle}
                   </Typography>
                 )}
               </Box>
             </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 1,
+              flex: { xs: '1 1 100%', sm: '0 0 auto' },
+              justifyContent: { xs: 'space-between', sm: 'flex-end' }
+            }}>
               <Chip
                 label={type.toUpperCase()}
                 size="small"
@@ -649,11 +798,11 @@ const ChartCard: React.FC<{
                   bgcolor: alpha(color, 0.1),
                   color: color,
                   fontWeight: 700,
-                  fontSize: '0.7rem',
-                  height: 24,
+                  fontSize: { xs: '0.65rem', md: '0.7rem' },
+                  height: { xs: 20, md: 24 },
                 }}
               />
-              {onExport && (
+              {onExport && !isMobile && (
                 <IconButton
                   size="small"
                   onClick={onExport}
@@ -683,6 +832,9 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
 }) => {
   const { user } = useAuth();
   const { stats } = useSocios();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData>({
     totalMembers: 0,
     activeMembers: 0,
@@ -916,7 +1068,7 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
       title: 'Total de Miembros',
       value: analyticsData.totalMembers.toLocaleString(),
       change: analyticsData.growthRate,
-      icon: <Group sx={{ fontSize: 28 }} />,
+      icon: <Group sx={{ fontSize: { xs: 24, md: 28 } }} />,
       color: '#6366f1',
       gradient: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
       delay: 0,
@@ -928,7 +1080,7 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
       title: 'Tasa de Retención',
       value: `${analyticsData.retentionRate}%`,
       change: analyticsData.retentionRate - 75, // Compare against 75% baseline
-      icon: <Star sx={{ fontSize: 28 }} />,
+      icon: <Star sx={{ fontSize: { xs: 24, md: 28 } }} />,
       color: '#10b981',
       gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
       delay: 0.1,
@@ -940,7 +1092,7 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
       title: 'Engagement Score',
       value: `${analyticsData.engagementScore}%`,
       change: analyticsData.engagementScore - 70, // Compare against 70% baseline
-      icon: <Speed sx={{ fontSize: 28 }} />,
+      icon: <Speed sx={{ fontSize: { xs: 24, md: 28 } }} />,
       color: '#f59e0b',
       gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
       delay: 0.2,
@@ -952,7 +1104,7 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
       title: 'Tiempo Promedio',
       value: `${analyticsData.averageLifetime}m`,
       change: analyticsData.averageLifetime - 18, // Compare against 18 months baseline
-      icon: <Schedule sx={{ fontSize: 28 }} />,
+      icon: <Schedule sx={{ fontSize: { xs: 24, md: 28 } }} />,
       color: '#8b5cf6',
       gradient: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
       delay: 0.3,
@@ -964,7 +1116,7 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
 
   if (error) {
     return (
-      <Box sx={{ p: 4 }}>
+      <Box sx={{ p: { xs: 2, md: 4 } }}>
         <Alert severity="error" sx={{ mb: 4 }}>
           {error}
         </Alert>
@@ -973,40 +1125,50 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
   }
 
   return (
-    <Box sx={{ p: 4, maxWidth: '100%', overflow: 'hidden' }}>
+    <Box sx={{ 
+      p: 0,
+      maxWidth: '100%', 
+      overflow: 'hidden' 
+    }}>
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
-        <Box sx={{ mb: 6 }}>
+        <Box sx={{ mb: { xs: 4, md: 6 } }}>
           <Box sx={{ 
             display: 'flex', 
             alignItems: 'center', 
             justifyContent: 'space-between', 
-            mb: 4,
-            flexWrap: 'wrap',
-            gap: 3
+            mb: { xs: 3, md: 4 },
+            flexDirection: { xs: 'column', md: 'row' },
+            gap: { xs: 3, md: 0 }
           }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: { xs: 2, md: 3 },
+              textAlign: { xs: 'center', md: 'left' },
+              flexDirection: { xs: 'column', sm: 'row' }
+            }}>
               <Avatar
                 sx={{
-                  width: 64,
-                  height: 64,
+                  width: { xs: 56, md: 64 },
+                  height: { xs: 56, md: 64 },
                   borderRadius: 4,
                   background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%)',
                   boxShadow: '0 12px 40px rgba(99, 102, 241, 0.3)',
                 }}
               >
-                <Analytics sx={{ fontSize: 32 }} />
+                <Analytics sx={{ fontSize: { xs: 28, md: 32 } }} />
               </Avatar>
               <Box>
                 <Typography
                   variant="h3"
                   sx={{
                     fontWeight: 900,
-                    fontSize: { xs: '2rem', md: '2.5rem' },
+                    fontSize: { xs: '1.8rem', sm: '2.2rem', md: '2.5rem' },
                     background: 'linear-gradient(135deg, #0f172a 0%, #6366f1 60%, #8b5cf6 100%)',
                     backgroundClip: 'text',
                     WebkitBackgroundClip: 'text',
@@ -1023,7 +1185,7 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
                   sx={{
                     color: '#64748b',
                     fontWeight: 600,
-                    fontSize: { xs: '1rem', md: '1.2rem' },
+                    fontSize: { xs: '0.9rem', sm: '1rem', md: '1.2rem' },
                   }}
                 >
                   Insights profundos y métricas de rendimiento • {user?.email?.split('@')[0] || 'Administrador'}
@@ -1031,8 +1193,13 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
               </Box>
             </Box>
             
-            <Stack direction="row" spacing={2} alignItems="center">
-              <FormControl size="small" sx={{ minWidth: 120 }}>
+            <Stack 
+              direction={{ xs: 'column', sm: 'row' }} 
+              spacing={2} 
+              alignItems="center"
+              sx={{ width: { xs: '100%', md: 'auto' } }}
+            >
+              <FormControl size="small" sx={{ minWidth: 120, width: { xs: '100%', sm: 'auto' } }}>
                 <InputLabel>Período</InputLabel>
                 <Select
                   value={dateRange}
@@ -1064,15 +1231,16 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
                 onClick={() => handleExport('general')}
                 variant="contained"
                 startIcon={<Download />}
-                size="large"
+                size={isMobile ? "medium" : "large"}
                 sx={{
-                  py: 2,
-                  px: 4,
+                  py: { xs: 1.5, md: 2 },
+                  px: { xs: 3, md: 4 },
                   borderRadius: 3,
                   textTransform: 'none',
                   fontWeight: 700,
                   background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
                   boxShadow: '0 8px 32px rgba(99, 102, 241, 0.3)',
+                  width: { xs: '100%', sm: 'auto' },
                   '&:hover': {
                     background: 'linear-gradient(135deg, #5b21b6 0%, #7c3aed 100%)',
                     transform: 'translateY(-2px)',
@@ -1092,8 +1260,8 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
             sx={{
               bgcolor: alpha('#6366f1', 0.05),
               border: `2px solid ${alpha('#6366f1', 0.15)}`,
-              borderRadius: 4,
-              p: 3,
+              borderRadius: { xs: 3, md: 4 },
+              p: { xs: 2, md: 3 },
               position: 'relative',
               overflow: 'hidden',
               '&::before': {
@@ -1110,11 +1278,12 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
             <Box sx={{ 
               display: 'flex', 
               alignItems: 'center', 
-              gap: 3,
-              flexWrap: 'wrap',
-              justifyContent: 'space-between'
+              gap: { xs: 2, md: 3 },
+              flexDirection: { xs: 'column', sm: 'row' },
+              justifyContent: 'space-between',
+              textAlign: { xs: 'center', sm: 'left' }
             }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 2, md: 3 } }}>
                 <Box
                   sx={{
                     width: 12,
@@ -1128,13 +1297,21 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
                     },
                   }}
                 />
-                <Typography variant="body1" sx={{ color: '#5b21b6', fontWeight: 700, fontSize: '1.1rem' }}>
+                <Typography variant="body1" sx={{ 
+                  color: '#5b21b6', 
+                  fontWeight: 700, 
+                  fontSize: { xs: '0.95rem', md: '1.1rem' }
+                }}>
                   <Box component="span" sx={{ fontWeight: 900 }}>Analytics en tiempo real</Box> - Datos actualizados automáticamente
                 </Typography>
               </Box>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                 <CalendarToday sx={{ fontSize: 18, color: '#8b5cf6' }} />
-                <Typography variant="body2" sx={{ color: '#8b5cf6', fontWeight: 700 }}>
+                <Typography variant="body2" sx={{ 
+                  color: '#8b5cf6', 
+                  fontWeight: 700,
+                  fontSize: { xs: '0.8rem', md: '0.9rem' }
+                }}>
                   Período: {dateRange === '7d' ? '7 días' : dateRange === '30d' ? '30 días' : '90 días'}
                 </Typography>
               </Box>
@@ -1145,13 +1322,14 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
 
       {/* Metrics Cards */}
       <Box sx={{ 
-        display: 'flex', 
-        flexWrap: 'wrap', 
-        gap: 3, 
-        mb: 6,
-        '& > *': {
-          minWidth: { xs: '100%', sm: 'calc(50% - 12px)', lg: 'calc(25% - 18px)' }
-        }
+        display: 'grid',
+        gridTemplateColumns: {
+          xs: '1fr',
+          sm: 'repeat(2, 1fr)',
+          lg: 'repeat(4, 1fr)'
+        },
+        gap: { xs: 2, md: 3 },
+        mb: { xs: 4, md: 6 }
       }}>
         {metrics.map((metric, index) => (
           <MetricCard key={index} {...metric} />
@@ -1162,13 +1340,16 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
       <Box sx={{ 
         display: 'flex', 
         flexDirection: 'column',
-        gap: 4
+        gap: { xs: 3, md: 4 }
       }}>
         {/* First Row - Monthly Trends and Status Distribution */}
         <Box sx={{ 
-          display: 'flex', 
-          flexWrap: 'wrap', 
-          gap: 4,
+          display: 'grid',
+          gridTemplateColumns: {
+            xs: '1fr',
+            lg: 'repeat(2, 1fr)'
+          },
+          gap: { xs: 3, md: 4 },
           alignItems: 'stretch'
         }}>
           <ChartCard
@@ -1195,9 +1376,12 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
 
         {/* Second Row - Engagement Levels and Activity Timeline */}
         <Box sx={{ 
-          display: 'flex', 
-          flexWrap: 'wrap', 
-          gap: 4,
+          display: 'grid',
+          gridTemplateColumns: {
+            xs: '1fr',
+            lg: 'repeat(2, 1fr)'
+          },
+          gap: { xs: 3, md: 4 },
           alignItems: 'stretch'
         }}>
           <ChartCard
