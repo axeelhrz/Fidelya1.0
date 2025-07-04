@@ -5,7 +5,6 @@ import {
   Box,
   Container,
   Typography,
-  Grid,
   Alert,
   Skeleton,
   Stack,
@@ -18,7 +17,6 @@ import {
 } from '@mui/material';
 import {
   Description,
-  CloudDownload,
   Refresh,
   FilterList
 } from '@mui/icons-material';
@@ -121,35 +119,46 @@ const PatientDocumentsPage: React.FC = () => {
   // ============================================================================
   
   const renderSkeletonCards = () => (
-    <Grid container spacing={3}>
+    <Box
+      sx={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: 3,
+        '& > *': {
+          flex: {
+            xs: '1 1 100%',
+            sm: '1 1 calc(50% - 12px)',
+            md: '1 1 calc(33.333% - 16px)'
+          }
+        }
+      }}
+    >
       {Array.from({ length: 6 }).map((_, index) => (
-        <Grid item xs={12} sm={6} md={4} key={index}>
-          <Paper sx={{ p: 2, height: 280 }}>
-            <Stack spacing={2}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Skeleton variant="circular" width={24} height={24} />
-                <Skeleton variant="rectangular" width={80} height={20} />
-              </Box>
-              <Skeleton variant="text" sx={{ fontSize: '1.2rem' }} />
-              <Skeleton variant="text" sx={{ fontSize: '1rem' }} />
-              <Skeleton variant="text" sx={{ fontSize: '1rem' }} />
-              <Skeleton variant="rectangular" height={60} />
+        <Paper key={index} sx={{ p: 2, height: 280 }}>
+          <Stack spacing={2}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Skeleton variant="circular" width={24} height={24} />
+              <Skeleton variant="rectangular" width={80} height={20} />
+            </Box>
+            <Skeleton variant="text" sx={{ fontSize: '1.2rem' }} />
+            <Skeleton variant="text" sx={{ fontSize: '1rem' }} />
+            <Skeleton variant="text" sx={{ fontSize: '1rem' }} />
+            <Skeleton variant="rectangular" height={60} />
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Skeleton variant="rectangular" width={60} height={20} />
+              <Skeleton variant="rectangular" width={80} height={20} />
+            </Box>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 'auto' }}>
+              <Skeleton variant="text" width={100} />
               <Box sx={{ display: 'flex', gap: 1 }}>
-                <Skeleton variant="rectangular" width={60} height={20} />
-                <Skeleton variant="rectangular" width={80} height={20} />
+                <Skeleton variant="circular" width={32} height={32} />
+                <Skeleton variant="circular" width={32} height={32} />
               </Box>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 'auto' }}>
-                <Skeleton variant="text" width={100} />
-                <Box sx={{ display: 'flex', gap: 1 }}>
-                  <Skeleton variant="circular" width={32} height={32} />
-                  <Skeleton variant="circular" width={32} height={32} />
-                </Box>
-              </Box>
-            </Stack>
-          </Paper>
-        </Grid>
+            </Box>
+          </Stack>
+        </Paper>
       ))}
-    </Grid>
+    </Box>
   );
 
   const renderEmptyState = () => (
@@ -272,18 +281,30 @@ const PatientDocumentsPage: React.FC = () => {
         ) : documents.length === 0 ? (
           stats?.total === 0 ? renderEmptyState() : renderNoResults()
         ) : (
-          <Grid container spacing={3}>
+          <Box
+            sx={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: 3,
+              '& > *': {
+                flex: {
+                  xs: '1 1 100%',
+                  sm: '1 1 calc(50% - 12px)',
+                  md: '1 1 calc(33.333% - 16px)'
+                }
+              }
+            }}
+          >
             {documents.map((document) => (
-              <Grid item xs={12} sm={6} md={4} key={document.id}>
-                <DocumentCard
-                  document={document}
-                  onView={handleViewDocument}
-                  onDownload={handleDownloadDocument}
-                  loading={downloading === document.id}
-                />
-              </Grid>
+              <DocumentCard
+                key={document.id}
+                document={document}
+                onView={handleViewDocument}
+                onDownload={handleDownloadDocument}
+                loading={downloading === document.id}
+              />
             ))}
-          </Grid>
+          </Box>
         )}
       </Box>
 
@@ -293,40 +314,52 @@ const PatientDocumentsPage: React.FC = () => {
           <Typography variant="h6" gutterBottom>
             Resumen
           </Typography>
-          <Grid container spacing={2}>
-            <Grid item xs={6} sm={3}>
+          <Box
+            sx={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: 2,
+              '& > *': {
+                flex: {
+                  xs: '1 1 calc(50% - 8px)',
+                  sm: '1 1 calc(25% - 12px)'
+                }
+              }
+            }}
+          >
+            <Box>
               <Typography variant="body2" color="text.secondary">
                 Total de documentos
               </Typography>
               <Typography variant="h6">
                 {stats.total}
               </Typography>
-            </Grid>
-            <Grid item xs={6} sm={3}>
+            </Box>
+            <Box>
               <Typography variant="body2" color="text.secondary">
                 Sin leer
               </Typography>
               <Typography variant="h6" color={stats.unread > 0 ? 'primary.main' : 'inherit'}>
                 {stats.unread}
               </Typography>
-            </Grid>
-            <Grid item xs={6} sm={3}>
+            </Box>
+            <Box>
               <Typography variant="body2" color="text.secondary">
                 Agregados recientemente
               </Typography>
               <Typography variant="h6">
                 {stats.recentlyAdded}
               </Typography>
-            </Grid>
-            <Grid item xs={6} sm={3}>
+            </Box>
+            <Box>
               <Typography variant="body2" color="text.secondary">
                 Tamaño total
               </Typography>
               <Typography variant="h6">
                 {(stats.totalSize / 1024 / 1024).toFixed(1)} MB
               </Typography>
-            </Grid>
-          </Grid>
+            </Box>
+          </Box>
         </Paper>
       )}
 
@@ -353,7 +386,7 @@ const PatientDocumentsPage: React.FC = () => {
         isOpen={detailModalOpen}
         onClose={handleCloseDetailModal}
         onDownload={handleDownloadDocument}
-        onMarkAsRead={markAsRead}
+        onMarkAsRead={(document) => markAsRead(document.id)}
         loading={downloading === selectedDocument?.id}
       />
 
