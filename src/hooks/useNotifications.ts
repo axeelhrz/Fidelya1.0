@@ -20,6 +20,7 @@ import {
   getNotificationStats,
   cleanupExpiredNotifications,
 } from '@/utils/firestore/notifications';
+import { notificationService } from '@/services/notifications.service';
 
 export const useNotifications = () => {
   const [notifications, setNotifications] = useState<NotificationType[]>([]);
@@ -37,6 +38,7 @@ export const useNotifications = () => {
   });
   const [filters, setFilters] = useState<NotificationFilters>({});
   const [error, setError] = useState<string | null>(null);
+  const [sendingExternal, setSendingExternal] = useState(false);
   const unsubscribeRef = useRef<(() => void) | null>(null);
   const [newNotificationCount, setNewNotificationCount] = useState(0);
   const previousNotificationIds = useRef<Set<string>>(new Set());
@@ -273,14 +275,76 @@ export const useNotifications = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const createNotification = useCallback(async (data: NotificationFormData): Promise<void> => {
+  // Función mejorada para crear notificación con envío externo
+  const createNotification = useCallback(async (
+    data: NotificationFormData & {
+      sendExternal?: boolean;
+      recipientIds?: string[];
+    }
+  ): Promise<void> => {
     try {
-      await createNotificationFirestore(data);
-      toast.success('Notificación creada exitosamente');
+      setSendingExternal(true);
+      
+      // Crear la notificación en Firestore
+      const notificationId = await createNotificationFirestore(data);
+      
+      // Si se especifica envío externo y hay destinatarios
+      if (data.sendExternal && data.recipientIds && data.recipientIds.length > 0) {
+        toast.loading('Enviando notificaciones externas...', { id: 'sending-external' });
+        
+        try {
+          // Enviar notificaciones externas
+          const deliveryResults = await notificationService.sendNotificationToUsers(
+            notificationId,
+            data.recipientIds,
+            data
+          );
+          
+          toast.dismiss('sending-external');
+          
+          // Mostrar resultados del envío
+          const successMessage = [];
+          if (deliveryResults.emailSent > 0) {
+            successMessage.push(`${deliveryResults.emailSent} emails`);
+          }
+          if (deliveryResults.smsSent > 0) {
+            successMessage.push(`${deliveryResults.smsSent} SMS`);
+          }
+          if (deliveryResults.pushSent > 0) {
+            successMessage.push(`${deliveryResults.pushSent} push`);
+          }
+          
+          if (successMessage.length > 0) {
+            toast.success(`Notificación creada y enviada: ${successMessage.join(', ')}`);
+          } else {
+            toast.warning('Notificación creada pero no se pudieron enviar notificaciones externas');
+          }
+          
+        } catch (externalError) {
+          toast.dismiss('sending-external');
+          console.error('Error sending external notifications:', externalError);
+          toast.warning('Notificación creada pero falló el envío externo');
+        }
+      } else {
+        toast.success('Notificación creada exitosamente');
+      }
+      
     } catch (error) {
       console.error('Error creating notification:', error);
       toast.error('Error al crear la notificación');
       throw error;
+    } finally {
+      setSendingExternal(false);
+    }
+  }, []);
+
+  // Función para obtener estadísticas de entrega
+  const getDeliveryStats = useCallback(async (notificationId: string) => {
+    try {
+      return await notificationService.getDeliveryStats(notificationId);
+    } catch (error) {
+      console.error('Error getting delivery stats:', error);
+      return null;
     }
   }, []);
 
@@ -387,6 +451,7 @@ export const useNotifications = () => {
     stats,
     filters,
     newNotificationCount,
+    sendingExternal,
     setFilters,
     createNotification,
     markAsRead,
@@ -397,5 +462,6 @@ export const useNotifications = () => {
     bulkAction,
     clearNewNotificationCount,
     refreshStats,
+    getDeliveryStats,
   };
 };

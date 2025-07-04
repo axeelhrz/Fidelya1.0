@@ -33,6 +33,9 @@ import {
   Card,
   CardContent,
   Zoom,
+  Checkbox,
+  FormGroup,
+  Divider,
 } from '@mui/material';
 import {
   Close,
@@ -56,6 +59,11 @@ import {
   Star,
   Bolt,
   Stars,
+  Email,
+  Sms,
+  PhoneAndroid,
+  Group,
+  PersonAdd,
 } from '@mui/icons-material';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -65,7 +73,7 @@ import { NotificationFormData, NotificationType, NotificationPriority, Notificat
 interface CreateNotificationDialogProps {
   open: boolean;
   onClose: () => void;
-  onSave: (data: NotificationFormData) => Promise<void>;
+  onSave: (data: NotificationFormData & { sendExternal?: boolean; recipientIds?: string[] }) => Promise<void>;
   loading?: boolean;
 }
 
@@ -204,9 +212,25 @@ export const CreateNotificationDialog: React.FC<CreateNotificationDialogProps> =
   const [showPreview, setShowPreview] = useState(false);
   const [hasExpiration, setHasExpiration] = useState(false);
   const [hasAction, setHasAction] = useState(false);
+  const [sendExternal, setSendExternal] = useState(false);
+  const [selectedChannels, setSelectedChannels] = useState({
+    email: true,
+    sms: false,
+    push: true
+  });
+  const [recipientType, setRecipientType] = useState<'all' | 'specific'>('all');
+  const [selectedRecipients, setSelectedRecipients] = useState<string[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [expirationDate, setExpirationDate] = useState('');
   const [expirationTime, setExpirationTime] = useState('');
+
+  // Mock recipients data - in real app, this would come from API
+  const availableRecipients = [
+    { id: '1', name: 'Juan Pérez', email: 'juan@example.com', type: 'socio' },
+    { id: '2', name: 'María García', email: 'maria@example.com', type: 'socio' },
+    { id: '3', name: 'Carlos López', email: 'carlos@example.com', type: 'comercio' },
+    { id: '4', name: 'Ana Martínez', email: 'ana@example.com', type: 'socio' },
+  ];
 
   // Reset form when dialog opens/closes
   useEffect(() => {
@@ -224,6 +248,10 @@ export const CreateNotificationDialog: React.FC<CreateNotificationDialogProps> =
       setShowPreview(false);
       setHasExpiration(false);
       setHasAction(false);
+      setSendExternal(false);
+      setSelectedChannels({ email: true, sms: false, push: true });
+      setRecipientType('all');
+      setSelectedRecipients([]);
       setErrors({});
       setExpirationDate('');
       setExpirationTime('');
@@ -259,6 +287,14 @@ export const CreateNotificationDialog: React.FC<CreateNotificationDialogProps> =
       ...prev,
       tags: prev.tags?.filter(tag => tag !== tagToRemove) || []
     }));
+  };
+
+  const handleRecipientToggle = (recipientId: string) => {
+    setSelectedRecipients(prev => 
+      prev.includes(recipientId)
+        ? prev.filter(id => id !== recipientId)
+        : [...prev, recipientId]
+    );
   };
 
   const handleExpirationChange = React.useCallback(() => {
@@ -309,6 +345,10 @@ export const CreateNotificationDialog: React.FC<CreateNotificationDialogProps> =
       }
     }
 
+    if (sendExternal && recipientType === 'specific' && selectedRecipients.length === 0) {
+      newErrors.recipients = 'Selecciona al menos un destinatario';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -333,6 +373,8 @@ export const CreateNotificationDialog: React.FC<CreateNotificationDialogProps> =
           : undefined,
         actionUrl: hasAction ? formData.actionUrl : undefined,
         actionLabel: hasAction ? formData.actionLabel : undefined,
+        sendExternal,
+        recipientIds: sendExternal && recipientType === 'specific' ? selectedRecipients : undefined,
       };
 
       await onSave(submitData);
@@ -388,61 +430,7 @@ export const CreateNotificationDialog: React.FC<CreateNotificationDialogProps> =
           }
         }}
       >
-        {/* Animated Background Elements */}
-        <Box
-          sx={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            overflow: 'hidden',
-            pointerEvents: 'none',
-            zIndex: 0,
-          }}
-        >
-          {/* Floating Orbs */}
-          <Box
-            sx={{
-              position: 'absolute',
-              top: '10%',
-              right: '15%',
-              width: 120,
-              height: 120,
-              borderRadius: '50%',
-              background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%)',
-              animation: 'float 6s ease-in-out infinite',
-              '@keyframes float': {
-                '0%, 100%': { transform: 'translateY(0px) rotate(0deg)' },
-                '50%': { transform: 'translateY(-20px) rotate(180deg)' },
-              },
-            }}
-          />
-          <Box
-            sx={{
-              position: 'absolute',
-              bottom: '20%',
-              left: '10%',
-              width: 80,
-              height: 80,
-              borderRadius: '50%',
-              background: 'linear-gradient(135deg, rgba(236, 72, 153, 0.1) 0%, rgba(219, 39, 119, 0.1) 100%)',
-              animation: 'float 8s ease-in-out infinite reverse',
-            }}
-          />
-          
-          {/* Grid Pattern */}
-          <Box
-            sx={{
-              position: 'absolute',
-              inset: 0,
-              opacity: 0.03,
-              backgroundImage: `radial-gradient(circle at 2px 2px, rgba(99, 102, 241, 0.8) 1px, transparent 0)`,
-              backgroundSize: '40px 40px',
-            }}
-          />
-        </Box>
-
+        {/* Header */}
         <DialogTitle sx={{ p: 0, position: 'relative', zIndex: 1 }}>
           <Box
             sx={{
@@ -453,41 +441,6 @@ export const CreateNotificationDialog: React.FC<CreateNotificationDialogProps> =
               overflow: 'hidden',
             }}
           >
-            {/* Animated Background Pattern */}
-            <Box
-              sx={{
-                position: 'absolute',
-                inset: 0,
-                opacity: 0.1,
-                backgroundImage: `radial-gradient(circle at 2px 2px, white 1px, transparent 0)`,
-                backgroundSize: '30px 30px',
-                animation: 'shimmer 20s linear infinite',
-                '@keyframes shimmer': {
-                  '0%': { transform: 'translateX(-100%) translateY(-100%)' },
-                  '100%': { transform: 'translateX(100%) translateY(100%)' },
-                },
-              }}
-            />
-            
-            {/* Glowing Orb */}
-            <Box
-              sx={{
-                position: 'absolute',
-                top: '50%',
-                right: '20%',
-                width: 200,
-                height: 200,
-                borderRadius: '50%',
-                background: 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%)',
-                transform: 'translateY(-50%)',
-                animation: 'pulse 4s ease-in-out infinite',
-                '@keyframes pulse': {
-                  '0%, 100%': { opacity: 0.3, transform: 'translateY(-50%) scale(1)' },
-                  '50%': { opacity: 0.1, transform: 'translateY(-50%) scale(1.1)' },
-                },
-              }}
-            />
-            
             <Box sx={{ 
               display: 'flex', 
               alignItems: 'center', 
@@ -519,11 +472,6 @@ export const CreateNotificationDialog: React.FC<CreateNotificationDialogProps> =
                       mb: 1,
                       fontSize: { xs: '1.75rem', sm: '2rem' },
                       lineHeight: 1.2,
-                      background: 'linear-gradient(135deg, #ffffff 0%, rgba(255,255,255,0.8) 100%)',
-                      backgroundClip: 'text',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                      textShadow: '0 2px 4px rgba(0,0,0,0.1)',
                     }}
                   >
                     ✨ Nueva Notificación
@@ -542,55 +490,24 @@ export const CreateNotificationDialog: React.FC<CreateNotificationDialogProps> =
                 </Box>
               </Box>
               
-              <Box sx={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: 2,
-                flexShrink: 0,
-                ml: 3,
-              }}>
-                <Tooltip title="Vista previa en tiempo real" arrow>
-                  <IconButton
-                    onClick={() => setShowPreview(!showPreview)}
-                    sx={{
-                      color: 'white',
-                      background: showPreview 
-                        ? 'linear-gradient(135deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.2) 100%)'
-                        : 'linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.1) 100%)',
-                      backdropFilter: 'blur(10px)',
-                      border: '1px solid rgba(255,255,255,0.2)',
-                      width: 48,
-                      height: 48,
-                      '&:hover': {
-                        background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.3) 0%, rgba(220, 38, 38, 0.2) 100%)',
-                        transform: 'scale(1.05)',
-                      },
-                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                    }}
-                  >
-                    <Preview />
-                  </IconButton>
-                </Tooltip>
-                
-                <IconButton
-                  onClick={onClose}
-                  sx={{
-                    color: 'white',
-                    background: 'linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.1) 100%)',
-                    backdropFilter: 'blur(10px)',
-                    border: '1px solid rgba(255,255,255,0.2)',
-                    width: 48,
-                    height: 48,
-                    '&:hover': {
-                      background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.3) 0%, rgba(220, 38, 38, 0.2) 100%)',
-                      transform: 'scale(1.05)',
-                    },
-                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  }}
-                >
-                  <Close />
-                </IconButton>
-              </Box>
+              <IconButton
+                onClick={onClose}
+                sx={{
+                  color: 'white',
+                  background: 'linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.1) 100%)',
+                  backdropFilter: 'blur(10px)',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  width: 48,
+                  height: 48,
+                  '&:hover': {
+                    background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.3) 0%, rgba(220, 38, 38, 0.2) 100%)',
+                    transform: 'scale(1.05)',
+                  },
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                }}
+              >
+                <Close />
+              </IconButton>
             </Box>
 
             {loading && (
@@ -678,18 +595,6 @@ export const CreateNotificationDialog: React.FC<CreateNotificationDialogProps> =
                           borderRadius: 3,
                           background: 'rgba(255,255,255,0.8)',
                           backdropFilter: 'blur(10px)',
-                          '&:hover': {
-                            background: 'rgba(255,255,255,0.9)',
-                          },
-                          '&.Mui-focused': {
-                            background: 'rgba(255,255,255,1)',
-                            boxShadow: '0 0 0 3px rgba(99, 102, 241, 0.1)',
-                          }
-                        },
-                        '& .MuiFormHelperText-root': {
-                          marginTop: 1,
-                          fontSize: '0.75rem',
-                          fontWeight: 500,
                         }
                       }}
                     />
@@ -710,18 +615,6 @@ export const CreateNotificationDialog: React.FC<CreateNotificationDialogProps> =
                           borderRadius: 3,
                           background: 'rgba(255,255,255,0.8)',
                           backdropFilter: 'blur(10px)',
-                          '&:hover': {
-                            background: 'rgba(255,255,255,0.9)',
-                          },
-                          '&.Mui-focused': {
-                            background: 'rgba(255,255,255,1)',
-                            boxShadow: '0 0 0 3px rgba(99, 102, 241, 0.1)',
-                          }
-                        },
-                        '& .MuiFormHelperText-root': {
-                          marginTop: 1,
-                          fontSize: '0.75rem',
-                          fontWeight: 500,
                         }
                       }}
                     />
@@ -901,6 +794,214 @@ export const CreateNotificationDialog: React.FC<CreateNotificationDialogProps> =
                 </CardContent>
               </Card>
 
+              {/* External Delivery Settings */}
+              <Card 
+                elevation={0}
+                sx={{
+                  background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(248,250,252,0.9) 100%)',
+                  border: '1px solid rgba(226, 232, 240, 0.8)',
+                  borderRadius: 4,
+                  overflow: 'hidden',
+                }}
+              >
+                <CardContent sx={{ p: 4 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+                    <Avatar
+                      sx={{
+                        width: 40,
+                        height: 40,
+                        background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                        color: 'white',
+                      }}
+                    >
+                      <Send />
+                    </Avatar>
+                    <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b' }}>
+                      Envío Externo
+                    </Typography>
+                  </Box>
+
+                  <Stack spacing={3}>
+                    {/* Enable External Sending */}
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={sendExternal}
+                          onChange={(e) => setSendExternal(e.target.checked)}
+                          sx={{
+                            '& .MuiSwitch-switchBase.Mui-checked': {
+                              color: '#10b981',
+                            },
+                            '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                              backgroundColor: '#10b981',
+                            },
+                          }}
+                        />
+                      }
+                      label={
+                        <Box>
+                          <Typography variant="body1" sx={{ fontWeight: 600, color: '#1e293b' }}>
+                            Enviar notificaciones externas
+                          </Typography>
+                          <Typography variant="caption" sx={{ color: '#64748b', display: 'block' }}>
+                            Envía la notificación por email, SMS y push notifications
+                          </Typography>
+                        </Box>
+                      }
+                    />
+
+                    {sendExternal && (
+                      <Fade in={sendExternal}>
+                        <Box sx={{ 
+                          p: 3,
+                          background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(5, 150, 105, 0.05) 100%)',
+                          borderRadius: 3,
+                          border: '1px solid rgba(16, 185, 129, 0.2)',
+                        }}>
+                          {/* Channel Selection */}
+                          <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600, color: '#475569' }}>
+                            Canales de Envío
+                          </Typography>
+                          
+                          <FormGroup row sx={{ mb: 3 }}>
+                            <FormControlLabel
+                              control={
+                                <Checkbox
+                                  checked={selectedChannels.email}
+                                  onChange={(e) => setSelectedChannels(prev => ({ ...prev, email: e.target.checked }))}
+                                  sx={{ color: '#6366f1' }}
+                                />
+                              }
+                              label={
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                  <Email sx={{ color: '#6366f1', fontSize: 20 }} />
+                                  <Typography variant="body2" sx={{ fontWeight: 600 }}>Email</Typography>
+                                </Box>
+                              }
+                            />
+                            <FormControlLabel
+                              control={
+                                <Checkbox
+                                  checked={selectedChannels.sms}
+                                  onChange={(e) => setSelectedChannels(prev => ({ ...prev, sms: e.target.checked }))}
+                                  sx={{ color: '#f59e0b' }}
+                                />
+                              }
+                              label={
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                  <Sms sx={{ color: '#f59e0b', fontSize: 20 }} />
+                                  <Typography variant="body2" sx={{ fontWeight: 600 }}>SMS</Typography>
+                                </Box>
+                              }
+                            />
+                            <FormControlLabel
+                              control={
+                                <Checkbox
+                                  checked={selectedChannels.push}
+                                  onChange={(e) => setSelectedChannels(prev => ({ ...prev, push: e.target.checked }))}
+                                  sx={{ color: '#8b5cf6' }}
+                                />
+                              }
+                              label={
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                  <PhoneAndroid sx={{ color: '#8b5cf6', fontSize: 20 }} />
+                                  <Typography variant="body2" sx={{ fontWeight: 600 }}>Push</Typography>
+                                </Box>
+                              }
+                            />
+                          </FormGroup>
+
+                          <Divider sx={{ my: 2 }} />
+
+                          {/* Recipient Selection */}
+                          <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600, color: '#475569' }}>
+                            Destinatarios
+                          </Typography>
+                          
+                          <FormControl component="fieldset" sx={{ mb: 2 }}>
+                            <FormControlLabel
+                              control={
+                                <Checkbox
+                                  checked={recipientType === 'all'}
+                                  onChange={() => setRecipientType('all')}
+                                  sx={{ color: '#10b981' }}
+                                />
+                              }
+                              label={
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                  <Group sx={{ color: '#10b981', fontSize: 20 }} />
+                                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                                    Todos los usuarios
+                                  </Typography>
+                                </Box>
+                              }
+                            />
+                            <FormControlLabel
+                              control={
+                                <Checkbox
+                                  checked={recipientType === 'specific'}
+                                  onChange={() => setRecipientType('specific')}
+                                  sx={{ color: '#6366f1' }}
+                                />
+                              }
+                              label={
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                  <PersonAdd sx={{ color: '#6366f1', fontSize: 20 }} />
+                                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                                    Usuarios específicos
+                                  </Typography>
+                                </Box>
+                              }
+                            />
+                          </FormControl>
+
+                          {recipientType === 'specific' && (
+                            <Box sx={{ 
+                              maxHeight: 200, 
+                              overflowY: 'auto',
+                              border: '1px solid rgba(226, 232, 240, 0.8)',
+                              borderRadius: 2,
+                              p: 2,
+                              background: 'rgba(255,255,255,0.8)',
+                            }}>
+                              {availableRecipients.map((recipient) => (
+                                <FormControlLabel
+                                  key={recipient.id}
+                                  control={
+                                    <Checkbox
+                                      checked={selectedRecipients.includes(recipient.id)}
+                                      onChange={() => handleRecipientToggle(recipient.id)}
+                                      size="small"
+                                    />
+                                  }
+                                  label={
+                                    <Box>
+                                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                                        {recipient.name}
+                                      </Typography>
+                                      <Typography variant="caption" sx={{ color: '#64748b' }}>
+                                        {recipient.email} • {recipient.type}
+                                      </Typography>
+                                    </Box>
+                                  }
+                                  sx={{ display: 'block', mb: 1 }}
+                                />
+                              ))}
+                            </Box>
+                          )}
+
+                          {errors.recipients && (
+                            <Typography variant="caption" sx={{ color: '#ef4444', mt: 1, display: 'block' }}>
+                              {errors.recipients}
+                            </Typography>
+                          )}
+                        </Box>
+                      </Fade>
+                    )}
+                  </Stack>
+                </CardContent>
+              </Card>
+
               {/* Advanced Options */}
               <Card 
                 elevation={0}
@@ -937,7 +1038,7 @@ export const CreateNotificationDialog: React.FC<CreateNotificationDialogProps> =
                           sx={{
                             width: 32,
                             height: 32,
-                            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                            background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
                             color: 'white',
                           }}
                         >
@@ -1202,30 +1303,6 @@ export const CreateNotificationDialog: React.FC<CreateNotificationDialogProps> =
                       position: 'relative',
                     }}
                   >
-                    {/* Animated Border */}
-                    <Box
-                      sx={{
-                        position: 'absolute',
-                        inset: 0,
-                        borderRadius: 4,
-                        padding: '2px',
-                        background: 'linear-gradient(45deg, #10b981, #059669, #10b981)',
-                        backgroundSize: '200% 200%',
-                        animation: 'gradientShift 3s ease infinite',
-                        '@keyframes gradientShift': {
-                          '0%, 100%': { backgroundPosition: '0% 50%' },
-                          '50%': { backgroundPosition: '100% 50%' },
-                        },
-                        '&::before': {
-                          content: '""',
-                          position: 'absolute',
-                          inset: '2px',
-                          borderRadius: 'inherit',
-                          background: 'white',
-                        }
-                      }}
-                    />
-                    
                     <CardContent sx={{ p: 4, position: 'relative', zIndex: 1 }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
                         <Avatar
@@ -1384,7 +1461,7 @@ export const CreateNotificationDialog: React.FC<CreateNotificationDialogProps> =
                 },
               }}
             >
-              {loading ? 'Enviando Magia...' : '✨ Enviar Notificación'}
+              {loading ? 'Enviando Magia...' : sendExternal ? '✨ Crear y Enviar' : '✨ Crear Notificación'}
             </Button>
           </Box>
         </DialogActions>
@@ -1401,9 +1478,11 @@ export const CreateNotificationDialog: React.FC<CreateNotificationDialogProps> =
           >
             <Zoom in={!!formData.title && !!formData.message}>
               <Chip
-                label="¡Listo para enviar!"
+                label={sendExternal ? "¡Listo para enviar!" : "¡Listo para crear!"}
                 sx={{
-                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  background: sendExternal 
+                    ? 'linear-gradient(135deg, #ec4899 0%, #be185d 100%)'
+                    : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                   color: 'white',
                   fontWeight: 700,
                   animation: 'bounce 2s infinite',
