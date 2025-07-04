@@ -1269,7 +1269,6 @@ export default function PatientTreatmentPage() {
                 );
               })}
             </div>
-            </div>
           </motion.div>
 
           {/* Treatment Tasks */}
@@ -1596,7 +1595,7 @@ export default function PatientTreatmentPage() {
                         </div>
                       )}
                     </div>
-                  </motion.div>
+                  </div>
                 </motion.div>
               ))}
             </div>
