@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion } from 'framer-motion';
 import {
   Box,
@@ -587,6 +587,13 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
   const { user } = useAuth();
   const { stats, loading: sociosLoading } = useSocios();
   const { stats: notificationStats } = useNotifications();
+  
+  // Use refs to store stable mock data that won't change on re-renders
+  const mockDataRef = useRef({
+    storageUsed: Math.floor(Math.random() * 2048) + 512, // Generate once and keep stable
+    lastBackup: subDays(new Date(), Math.floor(Math.random() * 3)) // Generate once and keep stable
+  });
+  
   const [systemMetrics, setSystemMetrics] = useState<SystemMetrics>({
     totalMembers: 0,
     activeMembers: 0,
@@ -647,9 +654,8 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
           if (stats.activos > stats.total * 0.9) systemHealth = 'excellent';
           else if (stats.activos > stats.total * 0.7) systemHealth = 'good';
 
-          // Mock storage and backup data
-          const storageUsed = Math.floor(Math.random() * 2048) + 512; // Random between 512MB and 2.5GB
-          const lastBackup = subDays(new Date(), Math.floor(Math.random() * 3)); // Random within last 3 days
+          // Use stable mock data from ref instead of generating new random values
+          const { storageUsed, lastBackup } = mockDataRef.current;
 
           setSystemMetrics({
             totalMembers: stats.total,
