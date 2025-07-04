@@ -14,7 +14,6 @@ import {
   Share2,
   MessageSquare,
   Award,
-  BarChart3,
   FileText,
   Lightbulb,
   Heart,
@@ -24,17 +23,12 @@ import {
   ChevronRight,
   ChevronDown,
   Play,
-  Pause,
-  RotateCcw,
   Star,
   Eye,
   ExternalLink,
   Bell,
   CheckCircle,
-  XCircle,
-  AlertCircle,
   Info,
-  Settings,
   Moon,
   Sun
 } from 'lucide-react';
@@ -56,7 +50,6 @@ export default function PatientTreatmentPage() {
     error,
     markTaskCompleted,
     markTaskInProgress,
-    markMaterialCompleted,
     markAlertResolved,
     markNoteRead,
     exportTreatmentPlan,
@@ -68,7 +61,6 @@ export default function PatientTreatmentPage() {
   const [darkMode, setDarkMode] = useState(false);
   const [expandedObjective, setExpandedObjective] = useState<string | null>(null);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
-  const [selectedMaterialId, setSelectedMaterialId] = useState<string | null>(null);
   const [showExportModal, setShowExportModal] = useState(false);
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [showMaterialModal, setShowMaterialModal] = useState(false);
@@ -800,13 +792,14 @@ export default function PatientTreatmentPage() {
       </motion.div>
 
       {/* Main Content Grid */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: '2fr 1fr',
-        gap: '2rem',
-        marginBottom: '2rem'
-      }}
-      className="responsive-grid"
+      <div 
+        style={{
+          display: 'grid',
+          gridTemplateColumns: '2fr 1fr',
+          gap: '2rem',
+          marginBottom: '2rem'
+        }}
+        className="responsive-grid"
       >
         {/* Left Column */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
@@ -1385,7 +1378,7 @@ export default function PatientTreatmentPage() {
                             <span style={{
                               fontSize: '0.75rem',
                               color: theme.textSecondary
-                            }}>
+                                            }}>
                               {task.type}
                             </span>
                           </div>
@@ -1446,8 +1439,7 @@ export default function PatientTreatmentPage() {
                               <motion.button
                                 key={resource.id}
                                 whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() => setSelectedMaterialId(resource.id)}
+                                onClick={() => window.open(resource.url || '#', '_blank')}
                                 style={{
                                   display: 'flex',
                                   alignItems: 'center',
@@ -2118,7 +2110,6 @@ export default function PatientTreatmentPage() {
                     cursor: 'pointer'
                   }}
                   onClick={() => {
-                    setSelectedMaterialId(material.id);
                     setShowMaterialModal(true);
                   }}
                 >
@@ -2500,3 +2491,4 @@ export default function PatientTreatmentPage() {
     </div>
   );
 }
+
