@@ -13,11 +13,11 @@ import {
   AccordionSummary,
   AccordionDetails,
   Typography,
-  Grid,
   Badge,
   useTheme,
   InputAdornment,
-  Autocomplete
+  Autocomplete,
+  SelectChangeEvent
 } from '@mui/material';
 import {
   Search,
@@ -32,7 +32,7 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { es } from 'date-fns/locale';
-import { DocumentFilter, DocumentStats, DocumentType } from '../../../types/documents';
+import { DocumentFilter, DocumentStats, DocumentType, DocumentCategory } from '../../../types/documents';
 
 interface DocumentFiltersProps {
   filters: DocumentFilter;
@@ -55,7 +55,6 @@ const DocumentFilters: React.FC<DocumentFiltersProps> = ({
   // ============================================================================
   // OPCIONES DE FILTROS
   // ============================================================================
-  
   const documentTypes: { value: DocumentType; label: string; color: string }[] = [
     { value: 'consentimiento', label: 'Consentimiento', color: '#1976d2' },
     { value: 'informe', label: 'Informe', color: '#388e3c' },
@@ -93,32 +92,31 @@ const DocumentFilters: React.FC<DocumentFiltersProps> = ({
   // ============================================================================
   // HANDLERS
   // ============================================================================
-  
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     onFiltersChange({
       ...filters,
       search: event.target.value || undefined
     });
   };
-
-  const handleTypeChange = (event: any) => {
+  const handleTypeChange = (event: SelectChangeEvent) => {
     onFiltersChange({
       ...filters,
-      type: event.target.value || undefined
+      type: (event.target.value as DocumentType) || undefined
     });
   };
 
-  const handleCategoryChange = (event: any) => {
+  const handleCategoryChange = (event: SelectChangeEvent) => {
     onFiltersChange({
       ...filters,
-      category: event.target.value || undefined
+      category: (event.target.value as DocumentCategory) || undefined
     });
   };
 
-  const handleReadStatusChange = (event: any) => {
+  const handleReadStatusChange = (event: SelectChangeEvent<string>) => {
+    const value = event.target.value;
     onFiltersChange({
       ...filters,
-      isRead: event.target.value !== '' ? event.target.value : undefined
+      isRead: value !== '' ? value === 'true' : undefined
     });
   };
 
@@ -152,14 +150,12 @@ const DocumentFilters: React.FC<DocumentFiltersProps> = ({
       }
     });
   };
-
-  const handleTagsChange = (event: any, newTags: string[]) => {
+  const handleTagsChange = (event: React.SyntheticEvent, newTags: string[]) => {
     onFiltersChange({
       ...filters,
       tags: newTags.length > 0 ? newTags : undefined
     });
   };
-
   const getActiveFiltersCount = () => {
     let count = 0;
     if (filters.search) count++;
@@ -176,7 +172,6 @@ const DocumentFilters: React.FC<DocumentFiltersProps> = ({
   // ============================================================================
   // RENDER
   // ============================================================================
-  
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
       <Box sx={{ mb: 3 }}>
@@ -221,7 +216,7 @@ const DocumentFilters: React.FC<DocumentFiltersProps> = ({
             label={`No leídos (${stats?.unread || 0})`}
             variant={filters.isRead === false ? 'filled' : 'outlined'}
             color={filters.isRead === false ? 'primary' : 'default'}
-            onClick={() => handleReadStatusChange({ target: { value: filters.isRead === false ? '' : false } })}
+            onClick={() => handleReadStatusChange({ target: { value: filters.isRead === false ? '' : 'false' } } as SelectChangeEvent)}
             disabled={loading}
             sx={{ cursor: 'pointer' }}
           />
@@ -284,12 +279,31 @@ const DocumentFilters: React.FC<DocumentFiltersProps> = ({
               )}
             </Typography>
           </AccordionSummary>
-          
           <AccordionDetails>
-            <Grid container spacing={2}>
-              {/* Tipo de documento */}
-              <Grid item xs={12} sm={6} md={3}>
-                <FormControl fullWidth size="small">
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 2
+              }}
+            >
+              {/* Primera fila de filtros */}
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: 2,
+                  '& > *': {
+                    flex: {
+                      xs: '1 1 100%',
+                      sm: '1 1 calc(50% - 8px)',
+                      md: '1 1 calc(25% - 12px)'
+                    }
+                  }
+                }}
+              >
+                {/* Tipo de documento */}
+                <FormControl size="small">
                   <InputLabel>Tipo de documento</InputLabel>
                   <Select
                     value={filters.type || ''}
@@ -323,11 +337,9 @@ const DocumentFilters: React.FC<DocumentFiltersProps> = ({
                     ))}
                   </Select>
                 </FormControl>
-              </Grid>
 
-              {/* Categoría */}
-              <Grid item xs={12} sm={6} md={3}>
-                <FormControl fullWidth size="small">
+                {/* Categoría */}
+                <FormControl size="small">
                   <InputLabel>Categoría</InputLabel>
                   <Select
                     value={filters.category || ''}
@@ -340,9 +352,9 @@ const DocumentFilters: React.FC<DocumentFiltersProps> = ({
                       <MenuItem key={category.value} value={category.value}>
                         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
                           {category.label}
-                          {stats?.byCategory[category.value] && (
+                          {stats?.byCategory[category.value as DocumentCategory] && (
                             <Chip
-                              label={stats.byCategory[category.value]}
+                              label={stats.byCategory[category.value as DocumentCategory]}
                               size="small"
                               sx={{ height: 16, fontSize: '0.7rem' }}
                             />
@@ -352,30 +364,41 @@ const DocumentFilters: React.FC<DocumentFiltersProps> = ({
                     ))}
                   </Select>
                 </FormControl>
-              </Grid>
 
-              {/* Estado de lectura */}
-              <Grid item xs={12} sm={6} md={3}>
-                <FormControl fullWidth size="small">
+                <FormControl size="small">
                   <InputLabel>Estado de lectura</InputLabel>
                   <Select
-                    value={filters.isRead !== undefined ? filters.isRead : ''}
+                    value={filters.isRead !== undefined ? filters.isRead.toString() : ''}
                     onChange={handleReadStatusChange}
                     label="Estado de lectura"
                     disabled={loading}
                   >
                     <MenuItem value="">Todos</MenuItem>
                     {readStatusOptions.map((option) => (
-                      <MenuItem key={option.value.toString()} value={option.value}>
+                      <MenuItem key={option.value.toString()} value={option.value.toString()}>
                         {option.label}
                       </MenuItem>
                     ))}
                   </Select>
                 </FormControl>
-              </Grid>
+              </Box>
 
-              {/* Fecha desde */}
-              <Grid item xs={12} sm={6} md={3}>
+              {/* Segunda fila de filtros - Fechas */}
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: 2,
+                  '& > *': {
+                    flex: {
+                      xs: '1 1 100%',
+                      sm: '1 1 calc(50% - 8px)',
+                      md: '1 1 calc(25% - 12px)'
+                    }
+                  }
+                }}
+              >
+                {/* Fecha desde */}
                 <DatePicker
                   label="Fecha desde"
                   value={filters.dateRange?.start || null}
@@ -395,10 +418,8 @@ const DocumentFilters: React.FC<DocumentFiltersProps> = ({
                     }
                   }}
                 />
-              </Grid>
 
-              {/* Fecha hasta */}
-              <Grid item xs={12} sm={6} md={3}>
+                {/* Fecha hasta */}
                 <DatePicker
                   label="Fecha hasta"
                   value={filters.dateRange?.end || null}
@@ -419,10 +440,10 @@ const DocumentFilters: React.FC<DocumentFiltersProps> = ({
                     }
                   }}
                 />
-              </Grid>
+              </Box>
 
-              {/* Etiquetas */}
-              <Grid item xs={12} sm={6} md={6}>
+              {/* Tercera fila - Etiquetas */}
+              <Box>
                 <Autocomplete
                   multiple
                   options={availableTags}
@@ -459,15 +480,15 @@ const DocumentFilters: React.FC<DocumentFiltersProps> = ({
                     />
                   )}
                 />
-              </Grid>
-            </Grid>
+              </Box>
+            </Box>
 
             {/* Estadísticas de filtros */}
             {stats && (
               <Box sx={{ mt: 2, p: 2, backgroundColor: theme.palette.grey[50], borderRadius: 1 }}>
                 <Typography variant="caption" color="text.secondary">
-                  Total de documentos: {stats.total} | 
-                  No leídos: {stats.unread} | 
+                  Total de documentos: {stats.total} |
+                  No leídos: {stats.unread} |
                   Agregados recientemente: {stats.recentlyAdded} |
                   Tamaño total: {(stats.totalSize / 1024 / 1024).toFixed(1)} MB
                 </Typography>
