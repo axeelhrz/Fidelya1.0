@@ -35,6 +35,7 @@ import {
 import { usePatientTreatment } from '@/hooks/usePatientTreatment';
 import TaskCompletionModal from '@/components/clinical/patient-portal/TaskCompletionModal';
 import ExportTreatmentModal from '@/components/clinical/patient-portal/ExportTreatmentModal';
+import type { TreatmentExportOptions } from '@/types/treatment';
 
 export default function PatientTreatmentPage() {
   const {
@@ -63,7 +64,6 @@ export default function PatientTreatmentPage() {
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [showExportModal, setShowExportModal] = useState(false);
   const [showTaskModal, setShowTaskModal] = useState(false);
-  const [showMaterialModal, setShowMaterialModal] = useState(false);
 
   // Statistics
   const taskStats = getTaskStats();
@@ -94,7 +94,7 @@ export default function PatientTreatmentPage() {
   };
 
   // Handle export
-  const handleExport = async (options: any) => {
+  const handleExport = async (options: TreatmentExportOptions) => {
     try {
       const exportUrl = await exportTreatmentPlan(options);
       // In a real implementation, this would trigger the download or email
@@ -1378,7 +1378,7 @@ export default function PatientTreatmentPage() {
                             <span style={{
                               fontSize: '0.75rem',
                               color: theme.textSecondary
-                                            }}>
+                            }}>
                               {task.type}
                             </span>
                           </div>
@@ -1504,7 +1504,7 @@ export default function PatientTreatmentPage() {
                             margin: 0,
                             fontStyle: 'italic'
                           }}>
-                            "{task.patientFeedback}"
+                            &ldquo;{task.patientFeedback}&rdquo;
                           </p>
                         </div>
                       )}
@@ -2109,9 +2109,6 @@ export default function PatientTreatmentPage() {
                     border: `1px solid ${theme.border}`,
                     cursor: 'pointer'
                   }}
-                  onClick={() => {
-                    setShowMaterialModal(true);
-                  }}
                 >
                   <div style={{
                     display: 'flex',
@@ -2491,4 +2488,3 @@ export default function PatientTreatmentPage() {
     </div>
   );
 }
-

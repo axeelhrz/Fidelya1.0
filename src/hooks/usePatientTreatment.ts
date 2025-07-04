@@ -12,7 +12,6 @@ import {
   TherapistNote,
   TreatmentExportOptions,
   ShareOptions,
-  TreatmentFilters,
   TaskFilters,
   MaterialFilters
 } from '@/types/treatment';
@@ -91,7 +90,7 @@ export function usePatientTreatment(): UsePatientTreatmentReturn {
   const [loading, setLoading] = useState(true);
   const [loadingTasks, setLoadingTasks] = useState(false);
   const [loadingMaterials, setLoadingMaterials] = useState(false);
-  const [loadingProgress, setLoadingProgress] = useState(false);
+  const [loadingProgress] = useState(false);
   
   // Error state
   const [error, setError] = useState<string | null>(null);

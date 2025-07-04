@@ -6,8 +6,6 @@ import {
   X,
   CheckCircle2,
   Star,
-  MessageSquare,
-  Clock,
   Award
 } from 'lucide-react';
 

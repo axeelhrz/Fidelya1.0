@@ -8,7 +8,6 @@ import {
   Mail,
   FileText,
   CheckCircle,
-  Calendar,
   Target,
   BookOpen,
   MessageSquare,
@@ -16,7 +15,7 @@ import {
   Settings,
   Share2
 } from 'lucide-react';
-import { TreatmentExportOptions, ExportSection } from '@/types/treatment';
+import { TreatmentExportOptions } from '@/types/treatment';
 
 interface ExportTreatmentModalProps {
   isOpen: boolean;
@@ -83,7 +82,7 @@ export default function ExportTreatmentModal({
     { value: 'progreso', label: 'Solo Progreso', description: 'Enfocado en evolución y logros' }
   ];
 
-  const sectionIcons: { [key: string]: any } = {
+  const sectionIcons: { [key: string]: React.ComponentType<{ size?: number; color?: string }> } = {
     'Información General': Settings,
     'Objetivos SMART': Target,
     'Tareas y Actividades': CheckCircle,
@@ -202,7 +201,7 @@ export default function ExportTreatmentModal({
                         key={format.value}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        onClick={() => setExportOptions(prev => ({ ...prev, format: format.value as any }))}
+                        onClick={() => setExportOptions(prev => ({ ...prev, format: format.value as TreatmentExportOptions['format'] }))}
                         style={{
                           padding: '1rem',
                           border: `2px solid ${exportOptions.format === format.value ? '#3B82F6' : '#E2E8F0'}`,
@@ -258,7 +257,7 @@ export default function ExportTreatmentModal({
                       key={template.value}
                       whileHover={{ scale: 1.01 }}
                       whileTap={{ scale: 0.99 }}
-                      onClick={() => setExportOptions(prev => ({ ...prev, template: template.value as any }))}
+                      onClick={() => setExportOptions(prev => ({ ...prev, template: template.value as 'completo' | 'resumen' | 'progreso' }))}
                       style={{
                         display: 'flex',
                         alignItems: 'center',
