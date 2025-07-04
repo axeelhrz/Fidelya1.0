@@ -16,34 +16,16 @@ import {
   FlashlightOff,
   RotateCcw,
   Info,
-  Settings,
-  Monitor,
-  Smartphone
+  Settings
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Dialog, DialogContent } from '@/components/ui/Dialog';
+import { useCamera } from '@/hooks/useCamera';
+import { CameraDiagnostics } from './CameraDiagnostics';
 
 interface QRScannerButtonProps {
   onScan: (qrData: string) => void;
   loading?: boolean;
-}
-
-interface CameraError {
-  name: string;
-  message: string;
-  constraint?: string;
-}
-
-interface CameraState {
-  hasPermission: boolean | null;
-  isLoading: boolean;
-  error: CameraError | null;
-  stream: MediaStream | null;
-  deviceInfo: {
-    isMobile: boolean;
-    hasCamera: boolean;
-    supportedConstraints: MediaTrackSupportedConstraints | null;
-  };
 }
 
 const ScannerButton = styled(motion.button)<{ loading: boolean }>`
@@ -166,7 +148,7 @@ const VideoElement = styled.video`
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transform: scaleX(-1);
+  transform: scaleX(-1); /* Mirror effect for better UX */
 `;
 
 const ScannerOverlay = styled.div`
@@ -185,6 +167,7 @@ const ScanFrame = styled(motion.div)`
   border: 2px solid rgba(255, 255, 255, 0.8);
   border-radius: 1.5rem;
   
+  /* Esquinas del marco */
   &::before,
   &::after {
     content: '';
@@ -306,16 +289,6 @@ const ErrorState = styled(motion.div)`
     opacity: 0.9;
     line-height: 1.5;
   }
-  
-  .error-details {
-    font-size: 0.75rem;
-    opacity: 0.7;
-    margin-bottom: 1.5rem;
-    padding: 0.75rem;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 0.5rem;
-    font-family: monospace;
-  }
 `;
 
 const LoadingState = styled(motion.div)`
@@ -370,62 +343,6 @@ const ControlsSection = styled.div`
     text-align: center;
     font-weight: 500;
   }
-  
-  .debug-info {
-    margin-top: 1rem;
-    padding: 0.75rem;
-    background: #f1f5f9;
-    border-radius: 0.5rem;
-    font-size: 0.75rem;
-    color: #64748b;
-    
-    .debug-item {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 0.25rem;
-      
-      &:last-child {
-        margin-bottom: 0;
-      }
-    }
-  }
-`;
-
-const DiagnosticSection = styled.div`
-  margin-top: 1rem;
-  padding: 1rem;
-  background: #fef3c7;
-  border: 1px solid #fcd34d;
-  border-radius: 0.75rem;
-  
-  .diagnostic-title {
-    font-size: 0.875rem;
-    font-weight: 700;
-    color: #92400e;
-    margin-bottom: 0.5rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-  
-  .diagnostic-list {
-    font-size: 0.75rem;
-    color: #92400e;
-    
-    .diagnostic-item {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 0.25rem;
-      
-      .status {
-        font-weight: 600;
-        
-        &.success { color: #059669; }
-        &.error { color: #dc2626; }
-        &.warning { color: #d97706; }
-      }
-    }
-  }
 `;
 
 export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
@@ -436,118 +353,32 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
   const [flashEnabled, setFlashEnabled] = useState(false);
   const [showDiagnostics, setShowDiagnostics] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const retryCountRef = useRef(0);
-  const maxRetries = 3;
 
-  const [cameraState, setCameraState] = useState<CameraState>({
-    hasPermission: null,
-    isLoading: false,
-    error: null,
-    stream: null,
-    deviceInfo: {
-      isMobile: false,
-      hasCamera: false,
-      supportedConstraints: null
-    }
+  const {
+    cameraState,
+    retryCount,
+    maxRetries,
+    startCamera,
+    stopCamera,
+    retryCamera,
+    toggleFlash,
+    getErrorMessage,
+    streamRef
+  } = useCamera({
+    maxRetries: 3,
+    preferredFacingMode: 'environment'
   });
 
-  const detectDeviceInfo = useCallback(() => {
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    const hasCamera = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
-    const supportedConstraints = navigator.mediaDevices?.getSupportedConstraints() || null;
-
-    setCameraState(prev => ({
-      ...prev,
-      deviceInfo: {
-        isMobile,
-        hasCamera,
-        supportedConstraints
-      }
-    }));
-
-    console.log('🔍 Device Detection:', {
-      isMobile,
-      hasCamera,
-      supportedConstraints,
-      userAgent: navigator.userAgent
-    });
-  }, []);
-
-  const getCameraConfigurations = useCallback(() => {
-    const { isMobile } = cameraState.deviceInfo;
+  const handleOpenScanner = useCallback(async () => {
+    console.log('🚀 Opening scanner...');
+    setScannerOpen(true);
+    const stream = await startCamera();
     
-    const configs: MediaStreamConstraints[] = [
-      {
-        video: {
-          facingMode: 'environment',
-          width: { ideal: 1280, min: 640 },
-          height: { ideal: 720, min: 480 },
-          frameRate: { ideal: 30, min: 15 }
-        }
-      },
-      {
-        video: {
-          facingMode: 'environment',
-          width: { ideal: 640 },
-          height: { ideal: 480 }
-        }
-      },
-      {
-        video: {
-          width: { ideal: 1280, min: 640 },
-          height: { ideal: 720, min: 480 },
-          frameRate: { ideal: 30, min: 15 }
-        }
-      },
-      {
-        video: {
-          width: { ideal: 640 },
-          height: { ideal: 480 }
-        }
-      },
-      {
-        video: true
-      }
-    ];
-
-    return isMobile ? configs : configs.slice(2);
-  }, [cameraState.deviceInfo]);
-
-  const startCamera = useCallback(async () => {
-    console.log('🎥 Starting camera...');
-    setCameraState(prev => ({ ...prev, isLoading: true, error: null }));
-
-    try {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        throw new Error('Tu navegador no soporta acceso a la cámara');
-      }
-
-      const configurations = getCameraConfigurations();
-      let stream: MediaStream | null = null;
-      let lastError: Error | null = null;
-
-      for (let i = 0; i < configurations.length; i++) {
-        try {
-          console.log(`🔄 Trying camera config ${i + 1}/${configurations.length}:`, configurations[i]);
-          stream = await navigator.mediaDevices.getUserMedia(configurations[i]);
-          console.log('✅ Camera started successfully with config:', configurations[i]);
-          break;
-        } catch (error) {
-          console.warn(`❌ Config ${i + 1} failed:`, error);
-          lastError = error as Error;
-          continue;
-        }
-      }
-
-      if (!stream) {
-        throw lastError || new Error('No se pudo acceder a la cámara con ninguna configuración');
-      }
-
-      streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        
+    if (stream && videoRef.current) {
+      videoRef.current.srcObject = stream;
+      
+      // Esperar a que el video esté listo
+      try {
         await new Promise<void>((resolve, reject) => {
           const video = videoRef.current!;
           const timeout = setTimeout(() => {
@@ -556,7 +387,7 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
 
           video.onloadedmetadata = () => {
             clearTimeout(timeout);
-            console.log('✅ Video metadata loaded');
+            console.log('✅ Video metadata loaded and ready');
             resolve();
           };
 
@@ -565,106 +396,35 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
             reject(new Error('Error cargando el video'));
           };
         });
+      } catch (error) {
+        console.error('❌ Error setting up video element:', error);
       }
-
-      setCameraState(prev => ({
-        ...prev,
-        hasPermission: true,
-        isLoading: false,
-        error: null,
-        stream
-      }));
-
-      retryCountRef.current = 0;
-      console.log('🎉 Camera setup completed successfully');
-
-    } catch (error) {
-      console.error('❌ Camera error:', error);
-      
-      const cameraError: CameraError = {
-        name: (error as Error).name || 'UnknownError',
-        message: (error as Error).message || 'Error desconocido',
-        constraint: (error as any).constraint
-      };
-
-      setCameraState(prev => ({
-        ...prev,
-        hasPermission: false,
-        isLoading: false,
-        error: cameraError,
-        stream: null
-      }));
     }
-  }, [getCameraConfigurations]);
-
-  const stopCamera = useCallback(() => {
-    console.log('🛑 Stopping camera...');
-    
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => {
-        track.stop();
-        console.log('🔇 Stopped track:', track.kind);
-      });
-      streamRef.current = null;
-    }
-    
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
-    }
-
-    setCameraState(prev => ({
-      ...prev,
-      hasPermission: null,
-      error: null,
-      stream: null
-    }));
-
-    setFlashEnabled(false);
-  }, []);
-
-  const toggleFlash = useCallback(async () => {
-    if (!streamRef.current) return;
-
-    try {
-      const track = streamRef.current.getVideoTracks()[0];
-      const capabilities = track.getCapabilities();
-      
-      console.log('💡 Flash capabilities:', capabilities);
-      
-      if ('torch' in capabilities) {
-        await track.applyConstraints({
-          advanced: [{ torch: !flashEnabled } as any]
-        });
-        setFlashEnabled(!flashEnabled);
-        console.log('💡 Flash toggled:', !flashEnabled);
-      } else {
-        console.warn('💡 Flash not supported on this device');
-      }
-    } catch (error) {
-      console.error('💡 Error toggling flash:', error);
-    }
-  }, [flashEnabled]);
-
-  const handleOpenScanner = useCallback(() => {
-    console.log('🚀 Opening scanner...');
-    setScannerOpen(true);
-    detectDeviceInfo();
-    startCamera();
-  }, [detectDeviceInfo, startCamera]);
+  }, [startCamera]);
 
   const handleCloseScanner = useCallback(() => {
     console.log('🔒 Closing scanner...');
     setScannerOpen(false);
     stopCamera();
     setShowDiagnostics(false);
-    retryCountRef.current = 0;
+    setFlashEnabled(false);
+    
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
   }, [stopCamera]);
 
-  const handleRetryCamera = useCallback(() => {
-    retryCountRef.current++;
-    console.log(`🔄 Retrying camera (attempt ${retryCountRef.current}/${maxRetries})`);
-    startCamera();
-  }, [startCamera]);
+  const handleRetryCamera = useCallback(async () => {
+    const stream = await retryCamera();
+    if (stream && videoRef.current) {
+      videoRef.current.srcObject = stream;
+    }
+  }, [retryCamera]);
+
+  const handleToggleFlash = useCallback(async () => {
+    const newFlashState = await toggleFlash(!flashEnabled);
+    setFlashEnabled(newFlashState);
+  }, [toggleFlash, flashEnabled]);
 
   const handleManualInput = useCallback(() => {
     const mockQRData = 'fidelya://comercio/comercio123?beneficio=beneficio456&t=' + Date.now();
@@ -672,50 +432,6 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
     onScan(mockQRData);
     handleCloseScanner();
   }, [onScan, handleCloseScanner]);
-
-  const getErrorMessage = (error: CameraError): string => {
-    switch (error.name) {
-      case 'NotAllowedError':
-        return 'Permisos de cámara denegados. Por favor, permite el acceso a la cámara en tu navegador.';
-      case 'NotFoundError':
-        return 'No se encontró ninguna cámara en tu dispositivo.';
-      case 'NotReadableError':
-        return 'La cámara está siendo usada por otra aplicación.';
-      case 'OverconstrainedError':
-        return 'La configuración de cámara solicitada no es compatible con tu dispositivo.';
-      case 'SecurityError':
-        return 'Error de seguridad. Asegúrate de estar usando HTTPS.';
-      case 'AbortError':
-        return 'Acceso a la cámara cancelado.';
-      default:
-        return error.message || 'Error desconocido al acceder a la cámara.';
-    }
-  };
-
-  const getErrorSolution = (error: CameraError): string => {
-    switch (error.name) {
-      case 'NotAllowedError':
-        return 'Haz clic en el ícono de cámara en la barra de direcciones y permite el acceso.';
-      case 'NotFoundError':
-        return 'Conecta una cámara a tu dispositivo o usa un dispositivo con cámara integrada.';
-      case 'NotReadableError':
-        return 'Cierra otras aplicaciones que puedan estar usando la cámara.';
-      case 'SecurityError':
-        return 'Asegúrate de estar accediendo desde una conexión segura (HTTPS).';
-      default:
-        return 'Intenta recargar la página o usar un navegador diferente.';
-    }
-  };
-
-  useEffect(() => {
-    return () => {
-      stopCamera();
-    };
-  }, [stopCamera]);
-
-  useEffect(() => {
-    detectDeviceInfo();
-  }, [detectDeviceInfo]);
 
   return (
     <>
@@ -798,11 +514,8 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
                       <div className="error-message">
                         {getErrorMessage(cameraState.error)}
                       </div>
-                      <div className="error-details">
-                        {cameraState.error.name}: {cameraState.error.message}
-                      </div>
                       <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'center' }}>
-                        {retryCountRef.current < maxRetries && (
+                        {retryCount < maxRetries && (
                           <Button
                             variant="outline"
                             onClick={handleRetryCamera}
@@ -810,7 +523,7 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
                             className="bg-white text-gray-900"
                             size="sm"
                           >
-                            Reintentar ({retryCountRef.current + 1}/{maxRetries})
+                            Reintentar ({retryCount + 1}/{maxRetries})
                           </Button>
                         )}
                         <Button
@@ -892,7 +605,7 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
                       <>
                         <Button
                           variant="outline"
-                          onClick={toggleFlash}
+                          onClick={handleToggleFlash}
                           leftIcon={flashEnabled ? <FlashlightOff size={16} /> : <Flashlight size={16} />}
                           size="sm"
                           disabled={!cameraState.deviceInfo.supportedConstraints?.torch}
@@ -917,63 +630,11 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
                     Solicita al comercio que muestre su código QR oficial
                   </div>
 
-                  <div className="debug-info">
-                    <div className="debug-item">
-                      <span>Dispositivo:</span>
-                      <span>{cameraState.deviceInfo.isMobile ? 'Móvil' : 'Desktop'}</span>
-                    </div>
-                    <div className="debug-item">
-                      <span>Soporte cámara:</span>
-                      <span>{cameraState.deviceInfo.hasCamera ? 'Sí' : 'No'}</span>
-                    </div>
-                    <div className="debug-item">
-                      <span>Estado:</span>
-                      <span>
-                        {cameraState.isLoading ? 'Cargando' : 
-                         cameraState.hasPermission === true ? 'Activa' :
-                         cameraState.hasPermission === false ? 'Error' : 'Inactiva'}
-                      </span>
-                    </div>
-                  </div>
-
-                  {showDiagnostics && (
-                    <DiagnosticSection>
-                      <div className="diagnostic-title">
-                        <Settings size={14} />
-                        Información de Diagnóstico
-                      </div>
-                      <div className="diagnostic-list">
-                        <div className="diagnostic-item">
-                          <span>HTTPS:</span>
-                          <span className={location.protocol === 'https:' ? 'status success' : 'status error'}>
-                            {location.protocol === 'https:' ? 'Activo' : 'Inactivo'}
-                          </span>
-                        </div>
-                        <div className="diagnostic-item">
-                          <span>MediaDevices API:</span>
-                          <span className={navigator.mediaDevices ? 'status success' : 'status error'}>
-                            {navigator.mediaDevices ? 'Disponible' : 'No disponible'}
-                          </span>
-                        </div>
-                        <div className="diagnostic-item">
-                          <span>getUserMedia:</span>
-                          <span className={navigator.mediaDevices?.getUserMedia ? 'status success' : 'status error'}>
-                            {navigator.mediaDevices?.getUserMedia ? 'Disponible' : 'No disponible'}
-                          </span>
-                        </div>
-                        <div className="diagnostic-item">
-                          <span>Navegador:</span>
-                          <span className="status">{navigator.userAgent.split(' ').pop()}</span>
-                        </div>
-                        {cameraState.error && (
-                          <div className="diagnostic-item">
-                            <span>Último error:</span>
-                            <span className="status error">{cameraState.error.name}</span>
-                          </div>
-                        )}
-                      </div>
-                    </DiagnosticSection>
-                  )}
+                  <CameraDiagnostics
+                    isVisible={showDiagnostics}
+                    onClose={() => setShowDiagnostics(false)}
+                    cameraError={cameraState.error}
+                  />
                 </ControlsSection>
               </ScannerModal>
             </DialogContent>
