@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -35,11 +35,13 @@ import {
   Key,
   Send,
   Close,
+  Warning,
 } from '@mui/icons-material';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
 import { loginSchema, type LoginFormData } from '@/lib/validations/auth';
-import { signIn, resetPassword, getDashboardRoute } from '@/lib/auth';
+import { authService } from '@/services/auth.service';
+import { getDashboardRoute } from '@/lib/auth';
 
 const LoginPage = () => {
   const router = useRouter();
@@ -48,62 +50,70 @@ const LoginPage = () => {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
   const [isResetting, setIsResetting] = useState(false);
+  const [configValid, setConfigValid] = useState(true);
 
   const {
     register,
     handleSubmit,
     formState: { errors },
     setError,
+    clearErrors,
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
   });
 
+  // Validate Firebase configuration on component mount
+  useEffect(() => {
+    const isValid = authService.validateFirebaseConfig();
+    setConfigValid(isValid);
+    
+    if (!isValid) {
+      toast.error('Error de configuración. Contacta al administrador.');
+    }
+  }, []);
+
   const handleLogin = async (data: LoginFormData) => {
     try {
       setIsSubmitting(true);
-      const userData = await signIn(data.email, data.password);
-      
-      if (userData.estado === 'inactivo') {
-        throw new Error('Tu cuenta está inactiva. Contacta al administrador.');
+      clearErrors();
+
+      console.log('🔐 Login attempt for:', data.email);
+
+      // Validate Firebase configuration before attempting login
+      if (!configValid) {
+        throw new Error('Error de configuración del sistema. Contacta al administrador.');
       }
 
-      toast.success(`¡Bienvenido, ${userData.nombre}!`);
+      const response = await authService.signIn({
+        email: data.email.trim().toLowerCase(),
+        password: data.password
+      });
+
+      if (!response.success) {
+        console.error('🔐 Login failed:', response.error);
+        setError('root', { message: response.error || 'Error al iniciar sesión' });
+        return;
+      }
+
+      if (!response.user) {
+        console.error('🔐 Login succeeded but no user data returned');
+        setError('root', { message: 'Error al obtener datos del usuario' });
+        return;
+      }
+
+      console.log('🔐 Login successful for user:', response.user.nombre);
+      toast.success(`¡Bienvenido, ${response.user.nombre}!`);
       
-      const dashboardRoute = getDashboardRoute(userData.role);
+      const dashboardRoute = getDashboardRoute(response.user.role);
+      console.log('🔐 Redirecting to:', dashboardRoute);
       router.push(dashboardRoute);
-    } catch (error: unknown) {
-      let message = 'Ha ocurrido un error. Inténtalo de nuevo.';
       
-      if (error && typeof error === 'object' && 'code' in error) {
-        const firebaseError = error as { code: string; message: string };
-        
-        switch (firebaseError.code) {
-          case 'auth/user-not-found':
-            message = 'No existe una cuenta con este email.';
-            break;
-          case 'auth/wrong-password':
-            message = 'Contraseña incorrecta.';
-            break;
-          case 'auth/invalid-email':
-            message = 'El formato del email no es válido.';
-            break;
-          case 'auth/user-disabled':
-            message = 'Esta cuenta ha sido deshabilitada.';
-            break;
-          case 'auth/too-many-requests':
-            message = 'Demasiados intentos fallidos. Intenta más tarde.';
-            break;
-          default:
-            if (firebaseError.message) {
-              message = firebaseError.message;
-            }
-        }
-      } else if (
-        typeof error === 'object' &&
-        error !== null &&
-        'message' in error &&
-        typeof (error as { message?: unknown }).message === 'string'
-      ) {
+    } catch (error: unknown) {
+      console.error('🔐 Login error:', error);
+      
+      let message = 'Ha ocurrido un error inesperado. Intenta nuevamente.';
+      
+      if (error && typeof error === 'object' && 'message' in error) {
         message = (error as { message: string }).message;
       }
       
@@ -126,21 +136,20 @@ const LoginPage = () => {
 
     setIsResetting(true);
     try {
-      await resetPassword(resetEmail);
-      toast.success('Enlace de recuperación enviado a tu email');
-      setShowForgotPassword(false);
-      setResetEmail('');
-    } catch (error: unknown) {
-      if (
-        typeof error === 'object' &&
-        error !== null &&
-        'code' in error &&
-        (error as { code?: unknown }).code === 'auth/user-not-found'
-      ) {
-        toast.error('No existe una cuenta con este email');
+      console.log('🔐 Password reset attempt for:', resetEmail);
+      
+      const response = await authService.resetPassword(resetEmail.trim().toLowerCase());
+      
+      if (response.success) {
+        toast.success('Enlace de recuperación enviado a tu email');
+        setShowForgotPassword(false);
+        setResetEmail('');
       } else {
-        toast.error('Error al enviar el enlace de recuperación');
+        toast.error(response.error || 'Error al enviar el enlace de recuperación');
       }
+    } catch (error: unknown) {
+      console.error('🔐 Password reset error:', error);
+      toast.error('Error al enviar el enlace de recuperación');
     } finally {
       setIsResetting(false);
     }
@@ -171,6 +180,22 @@ const LoginPage = () => {
       }}
     >
       <Container maxWidth="sm">
+        {/* Configuration Error Alert */}
+        {!configValid && (
+          <Alert 
+            severity="error" 
+            sx={{ 
+              mb: 3,
+              borderRadius: 3,
+              bgcolor: alpha('#ef4444', 0.05),
+              border: `1px solid ${alpha('#ef4444', 0.2)}`,
+            }}
+            icon={<Warning />}
+          >
+            Error de configuración del sistema. Contacta al administrador.
+          </Alert>
+        )}
+
         {/* Header */}
         <Box sx={{ textAlign: 'center', mb: 5 }}>
           <IconButton
@@ -303,6 +328,7 @@ const LoginPage = () => {
                       placeholder="tu@email.com"
                       type="email"
                       fullWidth
+                      disabled={!configValid}
                       error={!!errors.email}
                       helperText={errors.email?.message}
                       InputProps={{
@@ -342,6 +368,7 @@ const LoginPage = () => {
                       placeholder="Tu contraseña"
                       type={showPassword ? 'text' : 'password'}
                       fullWidth
+                      disabled={!configValid}
                       error={!!errors.password}
                       helperText={errors.password?.message}
                       InputProps={{
@@ -355,6 +382,7 @@ const LoginPage = () => {
                             <IconButton
                               onClick={() => setShowPassword(!showPassword)}
                               edge="end"
+                              disabled={!configValid}
                               sx={{ color: '#94a3b8' }}
                             >
                               {showPassword ? <VisibilityOff /> : <Visibility />}
@@ -392,6 +420,7 @@ const LoginPage = () => {
                 <Box sx={{ textAlign: 'center' }}>
                   <Button
                     onClick={() => setShowForgotPassword(!showForgotPassword)}
+                    disabled={!configValid}
                     sx={{
                       textTransform: 'none',
                       fontWeight: 600,
@@ -476,6 +505,7 @@ const LoginPage = () => {
                               onChange={(e) => setResetEmail(e.target.value)}
                               size="small"
                               fullWidth
+                              disabled={!configValid}
                               InputProps={{
                                 startAdornment: (
                                   <InputAdornment position="start">
@@ -506,7 +536,7 @@ const LoginPage = () => {
                             <Box sx={{ display: 'flex', gap: 1 }}>
                               <Button
                                 onClick={handlePasswordReset}
-                                disabled={isResetting || !resetEmail}
+                                disabled={isResetting || !resetEmail || !configValid}
                                 variant="contained"
                                 size="small"
                                 startIcon={<Send />}
@@ -560,7 +590,7 @@ const LoginPage = () => {
                   type="submit"
                   variant="contained"
                   fullWidth
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || !configValid}
                   endIcon={isSubmitting ? null : <Login />}
                   sx={{
                     py: 2.5,
@@ -621,6 +651,7 @@ const LoginPage = () => {
                   href="/auth/register"
                   variant="outlined"
                   fullWidth
+                  disabled={!configValid}
                   startIcon={<PersonAdd />}
                   sx={{
                     py: 2,
@@ -645,7 +676,7 @@ const LoginPage = () => {
                   Crear cuenta nueva
                 </Button>
 
-                {/* Security Features - Replaced Grid with Flexbox */}
+                {/* Security Features */}
                 <Paper
                   elevation={0}
                   sx={{
