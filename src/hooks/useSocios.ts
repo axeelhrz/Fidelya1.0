@@ -77,10 +77,10 @@ export const useSocios = () => {
         creadoEn: Timestamp.now(),
         pagos: []
       });
-      toast.success('Miembro agregado exitosamente');
+      toast.success('Socio agregado exitosamente');
     } catch (err) {
       console.error('Error adding socio:', err);
-      toast.error('Error al agregar el miembro');
+      toast.error('Error al agregar el socio');
       throw new Error('Error al agregar el socio');
     }
   };
@@ -92,10 +92,10 @@ export const useSocios = () => {
         ...socioData,
         actualizadoEn: Timestamp.now()
       });
-      toast.success('Miembro actualizado exitosamente');
+      toast.success('Socio actualizado exitosamente');
     } catch (err) {
       console.error('Error updating socio:', err);
-      toast.error('Error al actualizar el miembro');
+      toast.error('Error al actualizar el socio');
       throw new Error('Error al actualizar el socio');
     }
   };
@@ -106,7 +106,7 @@ export const useSocios = () => {
         // Eliminación permanente
         const socioRef = doc(db, 'socios', uid);
         await deleteDoc(socioRef);
-        toast.success('Miembro eliminado permanentemente');
+        toast.success('Socio eliminado permanentemente');
       } else {
         // Eliminación suave (marcar como inactivo)
         const socioRef = doc(db, 'socios', uid);
@@ -114,11 +114,11 @@ export const useSocios = () => {
           estado: 'inactivo',
           actualizadoEn: Timestamp.now()
         });
-        toast.success('Miembro desactivado exitosamente');
+        toast.success('Socio desactivado exitosamente');
       }
     } catch (err) {
       console.error('Error deleting socio:', err);
-      toast.error('Error al eliminar el miembro');
+      toast.error('Error al eliminar el socio');
       throw new Error('Error al eliminar el socio');
     }
   };
@@ -130,10 +130,10 @@ export const useSocios = () => {
         estado: 'activo',
         actualizadoEn: Timestamp.now()
       });
-      toast.success('Miembro restaurado exitosamente');
+      toast.success('Socio restaurado exitosamente');
     } catch (err) {
       console.error('Error restoring socio:', err);
-      toast.error('Error al restaurar el miembro');
+      toast.error('Error al restaurar el socio');
       throw new Error('Error al restaurar el socio');
     }
   };
@@ -153,10 +153,10 @@ export const useSocios = () => {
       );
       
       await Promise.all(promises);
-      toast.success(`${sociosData.length} miembros importados exitosamente`);
+      toast.success(`${sociosData.length} socios importados exitosamente`);
     } catch (err) {
       console.error('Error adding multiple socios:', err);
-      toast.error('Error al importar los miembros');
+      toast.error('Error al importar los socios');
       throw new Error('Error al importar los socios');
     }
   };
@@ -172,10 +172,10 @@ export const useSocios = () => {
       });
       
       await Promise.all(promises);
-      toast.success(`${uids.length} miembros actualizados exitosamente`);
+      toast.success(`${uids.length} socios actualizados exitosamente`);
     } catch (err) {
       console.error('Error bulk updating socios:', err);
-      toast.error('Error al actualizar los miembros');
+      toast.error('Error al actualizar los socios');
       throw new Error('Error al actualizar los socios');
     }
   };
@@ -196,10 +196,10 @@ export const useSocios = () => {
       
       await Promise.all(promises);
       const action = permanent ? 'eliminados permanentemente' : 'desactivados';
-      toast.success(`${uids.length} miembros ${action} exitosamente`);
+      toast.success(`${uids.length} socios ${action} exitosamente`);
     } catch (err) {
       console.error('Error bulk deleting socios:', err);
-      toast.error('Error al procesar los miembros');
+      toast.error('Error al procesar los socios');
       throw new Error('Error al procesar los socios');
     }
   };

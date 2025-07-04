@@ -650,12 +650,12 @@ class ReportsService {
     switch (templateId) {
       case 'member-summary': {
         const memberData = data as MemberReportData;
-        return `Resumen de ${memberData.totalSocios} miembros: ${memberData.sociosActivos} activos, ${memberData.sociosVencidos} vencidos. Total de ${memberData.totalValidaciones} validaciones con ${memberData.validacionesExitosas} exitosas.`;
+        return `Resumen de ${memberData.totalSocios} socios: ${memberData.sociosActivos} activos, ${memberData.sociosVencidos} vencidos. Total de ${memberData.totalValidaciones} validaciones con ${memberData.validacionesExitosas} exitosas.`;
       }
       
       case 'growth-analysis': {
         const growthData = data as GrowthReportData;
-        return `Análisis de crecimiento: ${growthData.totalGrowth} nuevos miembros en el período, con un promedio mensual de ${Math.round(growthData.averageMonthlyGrowth)} miembros.`;
+        return `Análisis de crecimiento: ${growthData.totalGrowth} nuevos socios en el período, con un promedio mensual de ${Math.round(growthData.averageMonthlyGrowth)} socios.`;
       }
       
       case 'activity-timeline': {

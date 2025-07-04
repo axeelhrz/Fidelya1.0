@@ -629,7 +629,7 @@ const mockNotifications: Notification[] = [
   {
     id: '2',
     title: '⚠️ Recordatorio de renovación',
-    message: 'Tu membresía premium vence en 15 días. Renueva ahora y mantén todos tus beneficios exclusivos sin interrupciones.',
+    message: 'Tu socio premium vence en 15 días. Renueva ahora y mantén todos tus beneficios exclusivos sin interrupciones.',
     type: 'warning',
     priority: 'urgent',
     status: 'unread',
@@ -681,7 +681,7 @@ const mockNotifications: Notification[] = [
   {
     id: '6',
     title: '💳 Pago procesado correctamente',
-    message: 'Tu pago de renovación anual ha sido procesado exitosamente. Tu membresía está activa hasta diciembre 2025.',
+    message: 'Tu pago de renovación anual ha sido procesado exitosamente. Tu socio está activo hasta diciembre 2025.',
     type: 'success',
     priority: 'low',
     status: 'read',
@@ -951,7 +951,7 @@ export default function SocioNotificacionesPage() {
                 <option value="">Todas las categorías</option>
                 {categories.map(category => (
                   <option key={category} value={category}>
-                    {category === 'membership' && 'Membresía'}
+                    {category === 'membership' && 'Socios'}
                     {category === 'payment' && 'Pagos'}
                     {category === 'general' && 'General'}
                     {category === 'event' && 'Eventos'}
@@ -1069,7 +1069,7 @@ export default function SocioNotificacionesPage() {
                         
                         {notification.category && (
                           <CategoryBadge category={notification.category}>
-                            {notification.category === 'membership' && 'Membresía'}
+                            {notification.category === 'membership' && 'Socios'}
                             {notification.category === 'payment' && 'Pagos'}
                             {notification.category === 'general' && 'General'}
                             {notification.category === 'event' && 'Eventos'}

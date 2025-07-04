@@ -928,7 +928,7 @@ export const SocioSidebar: React.FC<SocioSidebarProps> = ({
                         fontSize: '0.7rem',
                       }}
                     >
-                      Estado de Membresía
+                      Socio Activo
                     </Typography>
                     <Typography 
                       variant="body2" 

@@ -203,7 +203,7 @@ export const ProfileCard: React.FC = () => {
                   <Calendar size={16} className="text-gray-600" />
                 </div>
                 <span className="text-gray-900">
-                  Miembro desde {format(
+                  Socio desde {format(
                     typeof socio.creadoEn?.toDate === 'function'
                       ? socio.creadoEn.toDate()
                       : new Date(socio.creadoEn as unknown as string | number | Date),

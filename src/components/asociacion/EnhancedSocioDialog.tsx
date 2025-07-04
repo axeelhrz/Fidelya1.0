@@ -58,7 +58,7 @@ interface EnhancedSocioDialogProps {
 const steps = [
   {
     label: 'Información Personal',
-    description: 'Datos básicos del miembro',
+    description: 'Datos básicos del socio',
     icon: <Person />,
   },
   {
@@ -213,7 +213,7 @@ export const EnhancedSocioDialog: React.FC<EnhancedSocioDialogProps> = ({
                   Información Personal
                 </Typography>
                 <Typography variant="body2" sx={{ color: '#64748b' }}>
-                  Ingresa los datos básicos del miembro
+                  Ingresa los datos básicos del socio
                 </Typography>
               </Box>
 
@@ -429,10 +429,10 @@ export const EnhancedSocioDialog: React.FC<EnhancedSocioDialogProps> = ({
                   },
                 }}
               >
-                <InputLabel>Estado del miembro</InputLabel>
+                <InputLabel>Estado del socio</InputLabel>
                 <Select
                   {...register('estado')}
-                  label="Estado del miembro"
+                  label="Estado del socio"
                   defaultValue="activo"
                 >
                   <MenuItem value="activo">
@@ -496,7 +496,7 @@ export const EnhancedSocioDialog: React.FC<EnhancedSocioDialogProps> = ({
                 }}
               >
                 <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#6366f1', mb: 2 }}>
-                  Resumen del Miembro
+                  Resumen del Socio
                 </Typography>
                 
                 <Stack spacing={2}>
@@ -603,10 +603,10 @@ export const EnhancedSocioDialog: React.FC<EnhancedSocioDialogProps> = ({
               </Avatar>
               <Box>
                 <Typography variant="h4" sx={{ fontWeight: 900, mb: 0.5 }}>
-                  {isEditing ? 'Editar Miembro' : 'Nuevo Miembro'}
+                  {isEditing ? 'Editar Socio' : 'Nuevo Socio'}
                 </Typography>
                 <Typography variant="body1" sx={{ opacity: 0.9 }}>
-                  {isEditing ? 'Actualiza la información del miembro' : 'Registro completo paso a paso'}
+                  {isEditing ? 'Actualiza la información del socio' : 'Registro completo paso a paso'}
                 </Typography>
               </Box>
             </Box>
@@ -850,7 +850,7 @@ export const EnhancedSocioDialog: React.FC<EnhancedSocioDialogProps> = ({
                   transition: 'all 0.2s ease'
                 }}
               >
-                {isSubmitting ? 'Guardando...' : (isEditing ? 'Actualizar' : 'Crear')} Miembro
+                {isSubmitting ? 'Guardando...' : (isEditing ? 'Actualizar' : 'Crear')} Socio
               </Button>
             )}
           </Stack>

@@ -50,7 +50,7 @@ const statusLabels: Record<NotificationStatus, string> = {
 
 const categoryLabels: Record<NotificationCategory, string> = {
   system: 'Sistema',
-  membership: 'Membresía',
+  membership: 'Socios',
   payment: 'Pagos',
   event: 'Eventos',
   general: 'General'

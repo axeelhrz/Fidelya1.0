@@ -36,7 +36,7 @@ const mockNotifications = [
   {
     id: '2',
     title: 'Recordatorio de vencimiento',
-    message: 'Tu membresía vence en 30 días. Renueva para seguir disfrutando beneficios',
+    message: 'Tu socio vence en 30 días. Renueva para seguir disfrutando beneficios',
     type: 'warning' as const,
     priority: 'high' as const,
     status: 'unread' as const,

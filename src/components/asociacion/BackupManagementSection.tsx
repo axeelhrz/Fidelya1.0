@@ -559,7 +559,7 @@ const RestoreDialog: React.FC<RestoreDialogProps> = ({
               label="Tipo de restauración"
             >
               <MenuItem value="full">Restauración completa</MenuItem>
-              <MenuItem value="socios_only">Solo miembros</MenuItem>
+              <MenuItem value="socios_only">Solo socios</MenuItem>
               <MenuItem value="settings_only">Solo configuración</MenuItem>
             </Select>
           </FormControl>

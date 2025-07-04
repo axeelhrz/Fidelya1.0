@@ -582,14 +582,14 @@ const ReportPreviewDialog: React.FC<{
               gap: 2
             }}>
               <MetricCard
-                title="Total Miembros"
+                title="Total Socios"
                 value={mockData.summary.totalMembers}
                 change={mockData.summary.growthRate}
                 icon={<Group />}
                 color="#6366f1"
               />
               <MetricCard
-                title="Miembros Activos"
+                title="Socios Activos"
                 value={mockData.summary.activeMembers}
                 change={mockData.summary.retentionRate - 80}
                 icon={<CheckCircle />}
@@ -705,8 +705,8 @@ export const ReportsSection: React.FC<ReportsSectionProps> = ({
   const reportTemplates: ReportTemplate[] = useMemo(() => [
     {
       id: 'member-summary',
-      title: 'Resumen de Miembros',
-      description: 'Estadísticas completas de todos los miembros con análisis de tendencias',
+      title: 'Resumen de Socios',
+      description: 'Estadísticas completas de todos los socios con análisis de tendencias',
       icon: <Group sx={{ fontSize: 24 }} />,
       color: '#6366f1',
       gradient: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
@@ -816,7 +816,7 @@ export const ReportsSection: React.FC<ReportsSectionProps> = ({
 
   const categoryOptions = [
     { label: 'Todos los Reportes', value: 'all' },
-    { label: 'Miembros', value: 'members' },
+    { label: 'Socios', value: 'members' },
     { label: 'Financiero', value: 'financial' },
     { label: 'Actividad', value: 'activity' },
     { label: 'Crecimiento', value: 'growth' },
@@ -1437,4 +1437,3 @@ export const ReportsSection: React.FC<ReportsSectionProps> = ({
     </Box>
   );
 };
-

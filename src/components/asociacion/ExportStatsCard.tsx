@@ -43,7 +43,7 @@ export const ExportStatsCard: React.FC<ExportStatsCardProps> = ({
       value: totalRecords.toLocaleString(),
       icon: <Assessment />,
       color: '#6366f1',
-      description: 'Total de miembros en la base de datos'
+      description: 'Total de socios en la base de datos'
     },
     {
       label: 'Para Exportar',

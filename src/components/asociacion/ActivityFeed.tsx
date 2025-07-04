@@ -62,8 +62,8 @@ const mockActivities: ActivityItem[] = [
   {
     id: '1',
     type: 'member_added',
-    title: 'Nuevo miembro registrado',
-    description: 'Juan Pérez se ha registrado como nuevo miembro',
+    title: 'Nuevo socio registrado',
+    description: 'Juan Pérez se ha registrado como nuevo socio',
     timestamp: new Date(Date.now() - 5 * 60 * 1000),
     user: 'Sistema',
     severity: 'success'
@@ -72,7 +72,7 @@ const mockActivities: ActivityItem[] = [
     id: '2',
     type: 'bulk_import',
     title: 'Importación masiva completada',
-    description: '25 miembros importados desde archivo CSV',
+    description: '25 socios importados desde archivo CSV',
     timestamp: new Date(Date.now() - 15 * 60 * 1000),
     user: 'Admin',
     metadata: { count: 25 },
@@ -101,7 +101,7 @@ const mockActivities: ActivityItem[] = [
     id: '5',
     type: 'export',
     title: 'Exportación de datos',
-    description: 'Lista de miembros exportada a CSV',
+    description: 'Lista de socios exportada a CSV',
     timestamp: new Date(Date.now() - 60 * 60 * 1000),
     user: 'Admin',
     severity: 'info'
@@ -118,7 +118,7 @@ const mockActivities: ActivityItem[] = [
   {
     id: '7',
     type: 'member_deleted',
-    title: 'Miembro eliminado',
+    title: 'Socio eliminado',
     description: 'Ana Martínez fue eliminada del sistema',
     timestamp: new Date(Date.now() - 120 * 60 * 1000),
     user: 'Admin',
@@ -304,7 +304,7 @@ const ActivityItem: React.FC<{ activity: ActivityItem; index: number }> = ({ act
             {activity.metadata && (
               <Chip
                 label={
-                  activity.type === 'bulk_import' ? `${activity.metadata.count} miembros` :
+                  activity.type === 'bulk_import' ? `${activity.metadata.count} socios` :
                   activity.type === 'payment' ? `$${activity.metadata.amount}` :
                   'Detalles'
                 }
@@ -508,7 +508,7 @@ export const ActivityFeed: React.FC<ActivityFeedProps> = ({
           <Stack direction="row" spacing={2} flexWrap="wrap">
             {[
               { key: 'all', label: 'Todos', icon: Timeline },
-              { key: 'members', label: 'Miembros', icon: Group },
+              { key: 'members', label: 'Socios', icon: Group },
               { key: 'system', label: 'Sistema', icon: Settings },
               { key: 'security', label: 'Seguridad', icon: Security },
             ].map(({ key, label, icon: Icon }) => {
@@ -600,7 +600,7 @@ export const ActivityFeed: React.FC<ActivityFeedProps> = ({
             <ListItemIcon>
               <Group fontSize="small" />
             </ListItemIcon>
-            <ListItemText>Actividad de miembros</ListItemText>
+            <ListItemText>Actividad de socios</ListItemText>
             <Badge badgeContent={getFilterCount('members')} color="primary" />
           </MenuItem>
           <MenuItem onClick={() => { setFilter('system'); setAnchorEl(null); }}>

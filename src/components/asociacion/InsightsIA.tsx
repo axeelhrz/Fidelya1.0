@@ -1029,7 +1029,7 @@ export const InsightsIA: React.FC<InsightsIAProps> = ({
       insights.push({
         id: 'growth-prediction',
         title: 'Crecimiento Acelerado Detectado',
-        description: `El modelo predice un crecimiento del ${Math.round(15 + Math.random() * 15)}% en los próximos 3 meses basado en la alta tasa de miembros activos (${Math.round((stats.activos / stats.total) * 100)}%).`,
+        description: `El modelo predice un crecimiento del ${Math.round(15 + Math.random() * 15)}% en los próximos 3 meses basado en la alta tasa de socios activos (${Math.round((stats.activos / stats.total) * 100)}%).`,
         confidence: 85 + Math.round(Math.random() * 10),
         impact: 'high',
         category: 'prediction',
@@ -1056,7 +1056,7 @@ export const InsightsIA: React.FC<InsightsIAProps> = ({
       insights.push({
         id: 'retention-alert',
         title: 'Riesgo de Abandono Identificado',
-        description: `${stats.vencidos} miembros muestran patrones de baja actividad. Se recomienda campaña de re-engagement inmediata para evitar pérdidas.`,
+        description: `${stats.vencidos} socios muestran patrones de baja actividad. Se recomienda campaña de re-engagement inmediata para evitar pérdidas.`,
         confidence: 92,
         impact: 'critical',
         category: 'alert',
@@ -1109,7 +1109,7 @@ export const InsightsIA: React.FC<InsightsIAProps> = ({
       insights.push({
         id: 'revenue-opportunity',
         title: 'Oportunidad de Ingresos Adicionales',
-        description: `${premiumCandidates} miembros muestran patrones de alto engagement. Segmento premium identificado con potencial de ingresos adicionales.`,
+        description: `${premiumCandidates} socios muestran patrones de alto engagement. Segmento premium identificado con potencial de ingresos adicionales.`,
         confidence: 85,
         impact: 'high',
         category: 'opportunity',
@@ -1135,7 +1135,7 @@ export const InsightsIA: React.FC<InsightsIAProps> = ({
     insights.push({
       id: 'demographic-insight',
       title: 'Patrón Demográfico Emergente',
-      description: 'Incremento del 45% en miembros de 25-35 años detectado. Ajusta estrategias de marketing para este segmento.',
+      description: 'Incremento del 45% en socios de 25-35 años detectado. Ajusta estrategias de marketing para este segmento.',
       confidence: 73,
       impact: 'medium',
       category: 'prediction',
@@ -1531,7 +1531,7 @@ export const InsightsIA: React.FC<InsightsIAProps> = ({
                   fontWeight: 700, 
                   fontSize: { xs: '0.95rem', md: '1.1rem' }
                 }}>
-                  <Box component="span" sx={{ fontWeight: 900 }}>IA {aiModel?.status === 'active' ? 'Activa' : 'Entrenando'}</Box> - Modelo entrenado con {stats.total.toLocaleString()} registros de miembros
+                  <Box component="span" sx={{ fontWeight: 900 }}>IA {aiModel?.status === 'active' ? 'Activa' : 'Entrenando'}</Box> - Modelo entrenado con {stats.total.toLocaleString()} registros de socios
                 </Typography>
               </Box>
               <Box sx={{ 

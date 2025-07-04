@@ -100,7 +100,7 @@ const ITEMS_PER_PAGE_OPTIONS = [10, 25, 50, 100];
 const columns: TableColumn[] = [
   { id: 'select', label: '', minWidth: 50 },
   { id: 'avatar', label: '', minWidth: 60 },
-  { id: 'nombre', label: 'Miembro', minWidth: 200, sortable: true },
+  { id: 'nombre', label: 'Socio', minWidth: 200, sortable: true },
   { id: 'email', label: 'Contacto', minWidth: 250, sortable: true },
   { id: 'estado', label: 'Estado', minWidth: 120, sortable: true },
   { id: 'creadoEn', label: 'Fecha de Alta', minWidth: 150, sortable: true },
@@ -269,41 +269,32 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
     setBulkMenuAnchor(null);
   };
 
-  const handleDeleteClick = (socio: Socio, type: 'soft' | 'permanent' = 'soft') => {
-    setMemberToDelete(socio);
-    setDeleteType(type);
-    setDeleteDialogOpen(true);
-    setAnchorEl(null);
-  };
-
-  const handleConfirmDelete = async () => {
+  const handleDeleteMember = async () => {
     if (!memberToDelete) return;
-
+    
     setDeleting(true);
     try {
       if (deleteType === 'permanent') {
         // Eliminación permanente de Firebase
         await deleteDoc(doc(db, 'socios', memberToDelete.uid));
-        toast.success('Miembro eliminado permanentemente');
+        toast.success('Socio eliminado permanentemente');
       } else {
         // Eliminación suave (cambiar estado a inactivo)
         await updateDoc(doc(db, 'socios', memberToDelete.uid), {
           estado: 'inactivo',
           actualizadoEn: Timestamp.now()
         });
-        toast.success('Miembro marcado como inactivo');
+        toast.success('Socio marcado como inactivo');
       }
       
       // Llamar al callback de eliminación si existe
       onDelete(memberToDelete);
-      
-      // Refrescar datos si la función está disponible
       if (onRefresh) {
         onRefresh();
       }
     } catch (error) {
-      console.error('Error al eliminar miembro:', error);
-      toast.error('Error al eliminar el miembro');
+      console.error('Error al eliminar socio:', error);
+      toast.error('Error al eliminar el socio');
     } finally {
       setDeleting(false);
       setDeleteDialogOpen(false);
@@ -399,11 +390,11 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
           <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { sm: 'center' }, justifyContent: 'space-between', gap: 3, mb: 4 }}>
             <Box>
               <Typography variant="h5" sx={{ fontWeight: 800, color: '#0f172a', mb: 0.5, fontSize: '1.5rem' }}>
-                Gestión de Miembros
+                Gestión de Socios
               </Typography>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                 <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500 }}>
-                  {filtered.length} miembros encontrados
+                  {filtered.length} socios encontrados
                 </Typography>
                 {selectedMembers.length > 0 && (
                   <Chip
@@ -459,7 +450,7 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
                   transition: 'all 0.2s ease'
                 }}
               >
-                Nuevo Miembro
+                Nuevo Socio
               </Button>
             </Stack>
           </Box>
@@ -586,7 +577,7 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
                 >
                   <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <Typography variant="body2" sx={{ color: '#6366f1', fontWeight: 600 }}>
-                      {selectedMembers.length} miembros seleccionados
+                      {selectedMembers.length} socios seleccionados
                     </Typography>
                     <Stack direction="row" spacing={1}>
                       <Button
@@ -637,12 +628,12 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
               <People sx={{ fontSize: 40 }} />
             </Avatar>
             <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', mb: 1 }}>
-              No hay miembros
+              No hay socios
             </Typography>
             <Typography variant="body1" sx={{ color: '#64748b', mb: 4, maxWidth: 400, mx: 'auto' }}>
               {searchTerm || statusFilter !== 'all' 
-                ? 'No se encontraron miembros con los filtros aplicados'
-                : 'Comienza agregando tu primer miembro'
+                ? 'No se encontraron socios con los filtros aplicados'
+                : 'Comienza agregando tu primer socio'
               }
             </Typography>
             {(!searchTerm && statusFilter === 'all') && (
@@ -666,7 +657,7 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
                   transition: 'all 0.2s ease'
                 }}
               >
-                Agregar Primer Miembro
+                Agregar Primer Socio
               </Button>
             )}
           </Box>
@@ -864,7 +855,7 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
                             </Tooltip>
                             <Tooltip title="Eliminar">
                               <IconButton
-                                onClick={() => handleDeleteClick(socio, 'soft')}
+                                onClick={() => handleDeleteMember()}
                                 size="small"
                                 sx={{
                                   color: '#94a3b8',
@@ -910,7 +901,7 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
             {totalPages > 1 && (
               <Box sx={{ p: 4, borderTop: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500 }}>
-                  Mostrando {startIndex + 1} a {Math.min(startIndex + itemsPerPage, filtered.length)} de {filtered.length} miembros
+                  Mostrando {startIndex + 1} a {Math.min(startIndex + itemsPerPage, filtered.length)} de {filtered.length} socios
                 </Typography>
                 <Pagination
                   count={totalPages}
@@ -967,7 +958,7 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
             </Avatar>
             <Box>
               <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b' }}>
-                {deleteType === 'permanent' ? 'Eliminar Permanentemente' : 'Desactivar Miembro'}
+                {deleteType === 'permanent' ? 'Eliminar Permanentemente' : 'Desactivar Socio'}
               </Typography>
               <Typography variant="body2" sx={{ color: '#64748b' }}>
                 {memberToDelete?.nombre}
@@ -982,13 +973,13 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
             sx={{ mb: 3, borderRadius: 3 }}
           >
             {deleteType === 'permanent' 
-              ? 'Esta acción eliminará permanentemente al miembro de Firebase. No se puede deshacer.'
-              : 'Esta acción marcará al miembro como inactivo. Podrás reactivarlo más tarde.'
+              ? 'Esta acción eliminará permanentemente al socio de Firebase. No se puede deshacer.'
+              : 'Esta acción marcará al socio como inactivo. Podrás reactivarlo más tarde.'
             }
           </Alert>
           
           <Typography variant="body1" sx={{ color: '#475569', mb: 2 }}>
-            ¿Estás seguro de que deseas {deleteType === 'permanent' ? 'eliminar permanentemente' : 'desactivar'} a este miembro?
+            ¿Estás seguro de que deseas {deleteType === 'permanent' ? 'eliminar permanentemente' : 'desactivar'} a este socio?
           </Typography>
           
           {deleteType === 'soft' && (
@@ -1041,7 +1032,7 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
             Cancelar
           </Button>
           <Button
-            onClick={handleConfirmDelete}
+            onClick={handleDeleteMember}
             disabled={deleting}
             variant="contained"
             startIcon={deleting ? <CircularProgress size={16} /> : (deleteType === 'permanent' ? <DeleteForever /> : <Archive />)}
@@ -1080,7 +1071,7 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
           <ListItemIcon>
             <Edit fontSize="small" />
           </ListItemIcon>
-          <ListItemText>Editar Miembro</ListItemText>
+          <ListItemText>Editar Socio</ListItemText>
         </MenuItem>
         <MenuItem onClick={() => setAnchorEl(null)}>
           <ListItemIcon>
@@ -1096,7 +1087,7 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
         </MenuItem>
         <Divider />
         <MenuItem onClick={() => {
-          if (memberToDelete) handleDeleteClick(memberToDelete, 'soft');
+          if (memberToDelete) handleDeleteMember();
         }}>
           <ListItemIcon>
             <Archive fontSize="small" />
@@ -1104,7 +1095,7 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
           <ListItemText>Desactivar</ListItemText>
         </MenuItem>
         <MenuItem onClick={() => {
-          if (memberToDelete) handleDeleteClick(memberToDelete, 'permanent');
+          if (memberToDelete) handleDeleteMember();
         }} sx={{ color: '#ef4444' }}>
           <ListItemIcon>
             <DeleteForever fontSize="small" sx={{ color: '#ef4444' }} />

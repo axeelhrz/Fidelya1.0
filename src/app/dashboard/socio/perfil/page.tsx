@@ -947,7 +947,7 @@ export default function SocioPerfilPage() {
   const getStatusText = (estado: string) => {
     switch (estado) {
       case 'activo': return 'Socio Activo';
-      case 'vencido': return 'Membresía Vencida';
+      case 'vencido': return 'Socio Vencido';
       case 'inactivo': return 'Socio Inactivo';
       case 'pendiente': return 'Pendiente de Activación';
       default: return 'Estado Desconocido';
@@ -1193,7 +1193,7 @@ export default function SocioPerfilPage() {
                       <Calendar size={20} />
                     </InfoIcon>
                     <InfoContent>
-                      <div className="label">Miembro desde</div>
+                      <div className="label">Socio desde</div>
                       <div className="value">
                         {format(profileData.creadoEn, 'dd MMMM yyyy', { locale: es })} 
                         <span style={{ color: '#64748b', marginLeft: '0.5rem' }}>
@@ -1340,7 +1340,7 @@ export default function SocioPerfilPage() {
                 </div>
                 <div className="title-content">
                   <h3>Mis Asociaciones</h3>
-                  <p>Estado de membresías</p>
+                  <p>Estado de socios</p>
                 </div>
               </SideCardHeader>
 

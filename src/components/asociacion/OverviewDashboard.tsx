@@ -91,8 +91,8 @@ interface KPICardProps {
   change: number;
   icon: React.ReactNode;
   color: string;
-  gradient: string;
-  delay: number;
+  gradient?: string;
+  delay?: number;
   subtitle?: string;
   trend?: 'up' | 'down' | 'neutral';
   onClick?: () => void;
@@ -105,8 +105,8 @@ const KPICard: React.FC<KPICardProps> = ({
   change,
   icon,
   color,
-  gradient,
-  delay,
+  gradient = `linear-gradient(135deg, ${color} 0%, ${color} 100%)`,
+  delay = 0,
   subtitle,
   trend = 'neutral',
   onClick,
@@ -717,28 +717,20 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
 
   const kpiMetrics = useMemo(() => [
     {
-      title: 'Total de Miembros',
+      title: 'Total de Socios',
       value: systemMetrics.totalMembers.toLocaleString(),
       change: systemMetrics.growthRate,
       icon: <Group sx={{ fontSize: 28 }} />,
       color: '#6366f1',
-      gradient: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-      delay: 0,
-      subtitle: 'Crecimiento mensual',
-      trend: systemMetrics.growthRate > 0 ? 'up' as const : systemMetrics.growthRate < 0 ? 'down' as const : 'neutral' as const,
       onClick: () => onNavigate('all-members'),
       loading: sociosLoading
     },
     {
-      title: 'Miembros Activos',
+      title: 'Socios Activos',
       value: systemMetrics.activeMembers.toLocaleString(),
       change: systemMetrics.retentionRate,
       icon: <CheckCircle sx={{ fontSize: 28 }} />,
       color: '#10b981',
-      gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-      delay: 0.1,
-      subtitle: 'Tasa de retención',
-      trend: systemMetrics.retentionRate > 80 ? 'up' as const : systemMetrics.retentionRate < 60 ? 'down' as const : 'neutral' as const,
       onClick: () => onNavigate('active-members'),
       loading: sociosLoading
     },
@@ -756,7 +748,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
       loading: false
     },
     {
-      title: 'Miembros Vencidos',
+      title: 'Socios Vencidos',
       value: systemMetrics.expiredMembers.toLocaleString(),
       change: systemMetrics.expiredMembers > 0 ? -((systemMetrics.expiredMembers / Math.max(systemMetrics.totalMembers, 1)) * 100) : 0,
       icon: <Warning sx={{ fontSize: 28 }} />,
@@ -875,7 +867,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                   transition: 'all 0.3s ease'
                 }}
               >
-                Nuevo Miembro
+                Nuevo Socio
               </Button>
             </Stack>
           </Box>

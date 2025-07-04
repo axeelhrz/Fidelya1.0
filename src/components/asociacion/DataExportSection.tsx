@@ -568,7 +568,7 @@ export const DataExportSection: React.FC<DataExportSectionProps> = ({
     {
       id: 'nombre',
       label: 'Nombre Completo',
-      description: 'Nombre y apellidos del miembro',
+      description: 'Nombre y apellidos del socio',
       category: 'basic',
       required: true,
       dataType: 'string'
@@ -615,7 +615,7 @@ export const DataExportSection: React.FC<DataExportSectionProps> = ({
     {
       id: 'antiguedad',
       label: 'Antigüedad',
-      description: 'Tiempo como miembro (en días)',
+      description: 'Tiempo como socio (en días)',
       category: 'dates',
       dataType: 'number'
     },
@@ -623,7 +623,7 @@ export const DataExportSection: React.FC<DataExportSectionProps> = ({
     {
       id: 'estado',
       label: 'Estado',
-      description: 'Estado actual del miembro',
+      description: 'Estado actual del socio',
       category: 'status',
       required: true,
       dataType: 'string'
@@ -660,7 +660,7 @@ export const DataExportSection: React.FC<DataExportSectionProps> = ({
     {
       id: 'engagement',
       label: 'Nivel de Engagement',
-      description: 'Puntuación de participación del miembro',
+      description: 'Puntuación de participación del socio',
       category: 'analytics',
       dataType: 'number'
     },
@@ -847,7 +847,7 @@ export const DataExportSection: React.FC<DataExportSectionProps> = ({
       setExportProgress({
         step: 'Preparando datos...',
         progress: 10,
-        message: 'Recopilando información de miembros'
+        message: 'Recopilando información de socios'
       });
       await new Promise(resolve => setTimeout(resolve, 500));
 
@@ -868,7 +868,7 @@ export const DataExportSection: React.FC<DataExportSectionProps> = ({
       });
 
       const timestamp = new Date().toISOString().split('T')[0];
-      const filename = `miembros_export_${timestamp}${selectedFormatData?.fileExtension}`;
+      const filename = `socios_export_${timestamp}${selectedFormatData?.fileExtension}`;
       await new Promise(resolve => setTimeout(resolve, 500));
 
       // Step 4: Download
@@ -934,21 +934,18 @@ export const DataExportSection: React.FC<DataExportSectionProps> = ({
         case 'pdf':
           // For PDF, we'll create a simple text report (in a real app, you'd use a PDF library)
           const pdfContent = `
-REPORTE DE MIEMBROS
-===================
+REPORTE DE SOCIOS
+=================
 
 Fecha de exportación: ${new Date().toLocaleDateString('es-ES')}
 Total de registros: ${exportData.length}
-Campos incluidos: ${selectedFields.length}
 
-DATOS:
-------
 ${exportData.map((row, index) => {
-            return `${index + 1}. ${row.nombre || 'Sin nombre'} - ${row.email || 'Sin email'} - ${row.estado || 'Sin estado'}`;
-          }).join('\n')}
+  return `${index + 1}. ${row.nombre || 'Sin nombre'} - ${row.email || 'Sin email'} - ${row.estado || 'Sin estado'}`;
+}).join('\n')}
 
-Generado por Fidelya - Sistema de Gestión de Miembros
-          `.trim();
+Generado por Fidelya - Sistema de Gestión de Socios
+`.trim();
 
           downloadFile(pdfContent, filename.replace('.pdf', '.txt'), 'text/plain;charset=utf-8;');
           toast('Reporte PDF exportado como texto. Para funcionalidad completa de PDF, considera usar una biblioteca especializada.');
@@ -1140,7 +1137,7 @@ Generado por Fidelya - Sistema de Gestión de Miembros
                       {stats.total.toLocaleString()}
                     </Typography>
                     <Typography variant="caption" sx={{ color: '#64748b' }}>
-                      Total Miembros
+                      Total Socios
                     </Typography>
                   </Box>
                 </Box>
@@ -1158,7 +1155,7 @@ Generado por Fidelya - Sistema de Gestión de Miembros
                       {stats.activos.toLocaleString()}
                     </Typography>
                     <Typography variant="caption" sx={{ color: '#64748b' }}>
-                      Miembros Activos
+                      Socios Activos
                     </Typography>
                   </Box>
                 </Box>
@@ -1300,11 +1297,11 @@ Generado por Fidelya - Sistema de Gestión de Miembros
                     </Typography>
                     <Stack spacing={3}>
                       <FormControl fullWidth>
-                        <InputLabel>Estado de Miembros</InputLabel>
+                        <InputLabel>Estado de Socios</InputLabel>
                         <Select
                           value={statusFilter}
                           onChange={(e) => setStatusFilter(e.target.value)}
-                          label="Estado de Miembros"
+                          label="Estado de Socios"
                           startAdornment={<FilterList sx={{ color: '#94a3b8', mr: 1 }} />}
                         >
                           <MenuItem value="all">Todos los estados</MenuItem>

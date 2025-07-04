@@ -131,7 +131,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
     },
     {
       id: 'members',
-      label: 'Miembros',
+      label: 'Socios',
       icon: <PeopleAlt />,
       badge: stats.total,
       color: '#06b6d4',
@@ -140,7 +140,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
       children: [
         {
           id: 'all-members',
-          label: 'Todos los Miembros',
+          label: 'Todos los Socios',
           icon: <Group />,
           badge: stats.total,
           color: '#06b6d4',
@@ -148,7 +148,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
         },
         {
           id: 'active-members',
-          label: 'Miembros Activos',
+          label: 'Socios Activos',
           icon: <PersonAdd />,
           badge: stats.activos,
           color: '#10b981',
@@ -156,7 +156,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
         },
         {
           id: 'expired-members',
-          label: 'Miembros Vencidos',
+          label: 'Socios Vencidos',
           icon: <History />,
           badge: stats.vencidos,
           color: '#ef4444',
@@ -1125,3 +1125,5 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
     </Drawer>
   );
 };
+
+export default DashboardSidebar;

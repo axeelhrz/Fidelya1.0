@@ -157,8 +157,8 @@ const categoryOptions: { value: NotificationCategory; label: string; description
   },
   { 
     value: 'membership', 
-    label: 'Membresía', 
-    description: 'Relacionadas con miembros y registros',
+    label: 'Socios', 
+    description: 'Relacionadas con socios y registros',
     icon: <Notifications />,
     color: '#8b5cf6'
   },
@@ -537,7 +537,7 @@ export const CreateNotificationDialog: React.FC<CreateNotificationDialogProps> =
                       fontWeight: 500,
                     }}
                   >
-                    Crea y envía notificaciones impactantes a tus miembros
+                    Crea y envía notificaciones impactantes a tus socios
                   </Typography>
                 </Box>
               </Box>

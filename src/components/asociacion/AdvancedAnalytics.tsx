@@ -556,7 +556,7 @@ const ChartCard: React.FC<{
                 key={index}
                 title={
                   'month' in item && 'members' in item && 'growth' in item
-                    ? `${item.month}: ${item.members} miembros (${item.growth > 0 ? '+' : ''}${item.growth}%)`
+                    ? `${item.month}: ${item.members} socios (${item.growth > 0 ? '+' : ''}${item.growth}%)`
                     : ''
                 }
                 arrow
@@ -1045,8 +1045,8 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
     // Mock export functionality
     const csvData = [
       ['Métrica', 'Valor', 'Cambio'],
-      ['Total Miembros', analyticsData.totalMembers.toString(), `${analyticsData.growthRate}%`],
-      ['Miembros Activos', analyticsData.activeMembers.toString(), `${analyticsData.retentionRate}%`],
+      ['Total Socios', analyticsData.totalMembers.toString(), `${analyticsData.growthRate}%`],
+      ['Socios Activos', analyticsData.activeMembers.toString(), `${analyticsData.retentionRate}%`],
       ['Engagement Score', analyticsData.engagementScore.toString(), ''],
       ['Tiempo Promedio', `${analyticsData.averageLifetime} meses`, ''],
     ];
@@ -1065,7 +1065,7 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
 
   const metrics = useMemo(() => [
     {
-      title: 'Total de Miembros',
+      title: 'Total de Socios',
       value: analyticsData.totalMembers.toLocaleString(),
       change: analyticsData.growthRate,
       icon: <Group sx={{ fontSize: { xs: 24, md: 28 } }} />,
@@ -1084,7 +1084,7 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
       color: '#10b981',
       gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
       delay: 0.1,
-      subtitle: 'Miembros activos',
+      subtitle: 'Socios activos',
       trend: analyticsData.retentionRate > 80 ? 'up' as const : analyticsData.retentionRate < 60 ? 'down' as const : 'neutral' as const,
       loading: loading || propLoading
     },
@@ -1354,22 +1354,20 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
         }}>
           <ChartCard
             title="Tendencias Mensuales"
-            subtitle="Evolución de miembros en el tiempo"
+            subtitle="Evolución de socios en el tiempo"
             data={analyticsData.monthlyTrends}
             color="#6366f1"
             type="line"
             icon={<ShowChart />}
-            loading={loading || propLoading}
             onExport={() => handleExport('monthly-trends')}
           />
           <ChartCard
             title="Distribución de Estados"
-            subtitle="Clasificación actual de miembros"
+            subtitle="Clasificación actual de socios"
             data={analyticsData.statusDistribution}
             color="#10b981"
             type="pie"
             icon={<PieChart />}
-            loading={loading || propLoading}
             onExport={() => handleExport('status-distribution')}
           />
         </Box>
@@ -1386,12 +1384,11 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
         }}>
           <ChartCard
             title="Niveles de Engagement"
-            subtitle="Participación de miembros por categoría"
+            subtitle="Participación de socios por categoría"
             data={analyticsData.engagementLevels}
             color="#8b5cf6"
             type="bar"
             icon={<BarChart />}
-            loading={loading || propLoading}
             onExport={() => handleExport('engagement-levels')}
           />
           <ChartCard
@@ -1401,7 +1398,6 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
             color="#f59e0b"
             type="timeline"
             icon={<Timeline />}
-            loading={loading || propLoading}
             onExport={() => handleExport('activity-timeline')}
           />
         </Box>

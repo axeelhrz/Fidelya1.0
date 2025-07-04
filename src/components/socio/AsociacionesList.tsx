@@ -102,18 +102,18 @@ export const AsociacionesList: React.FC<AsociacionesListProps> = ({
         if (fechaVencimiento) {
           return `Vence: ${format(fechaVencimiento, 'dd/MM/yyyy', { locale: es })}`;
         }
-        return 'Membresía activa';
+        return 'Socio activo';
       case 'vencido':
         if (fechaVencimiento) {
           return `Venció: ${format(fechaVencimiento, 'dd/MM/yyyy', { locale: es })}`;
         }
-        return 'Membresía vencida';
+        return 'Socio vencido';
       case 'pendiente':
         return 'Activación pendiente';
       case 'inactivo':
-        return 'Membresía inactiva';
+        return 'Socio inactivo';
       case 'suspendido':
-        return 'Membresía suspendida';
+        return 'Socio suspendido';
       default:
         return '';
     }
@@ -136,7 +136,7 @@ export const AsociacionesList: React.FC<AsociacionesListProps> = ({
         </div>
         <div>
           <h3 className="font-semibold text-gray-900">Mis Asociaciones</h3>
-          <p className="text-sm text-gray-500">Estado de membresías</p>
+          <p className="text-sm text-gray-500">Estado de socios</p>
         </div>
       </div>
 

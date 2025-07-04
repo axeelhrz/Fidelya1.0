@@ -171,7 +171,7 @@ export const useBackup = () => {
       setProgress({
         step: 'Preparando datos...',
         progress: 10,
-        message: 'Recopilando información de miembros'
+        message: 'Recopilando información de socios'
       });
 
       // Create backup metadata with proper null handling

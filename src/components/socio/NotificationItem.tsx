@@ -399,7 +399,7 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({
 
   const getCategoryLabel = (category: string) => {
     switch (category) {
-      case 'membership': return 'Membresía';
+      case 'membership': return 'Socios';
       case 'payment': return 'Pagos';
       case 'general': return 'General';
       case 'event': return 'Eventos';

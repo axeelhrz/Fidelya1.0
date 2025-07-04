@@ -148,7 +148,7 @@ export const useDataExport = () => {
       setProgress({
         step: 'Preparando datos...',
         progress: 10,
-        message: 'Recopilando información de miembros'
+        message: 'Recopilando información de socios'
       });
       
       await new Promise(resolve => setTimeout(resolve, 500));
@@ -178,7 +178,7 @@ export const useDataExport = () => {
         pdf: '.pdf'
       };
       
-      const filename = `miembros_export_${timestamp}${fileExtensions[options.format]}`;
+      const filename = `socios_export_${timestamp}${fileExtensions[options.format]}`;
       
       await new Promise(resolve => setTimeout(resolve, 500));
       
@@ -203,7 +203,7 @@ export const useDataExport = () => {
         promedioMensual: 'Promedio Mensual',
         engagement: 'Engagement (%)',
         asociacionId: 'ID Asociación',
-        tipoMembresia: 'Tipo de Membresía',
+        tipoMembresia: 'Tipo de Socio',
         notas: 'Notas',
         tags: 'Etiquetas'
       };
@@ -257,24 +257,17 @@ export const useDataExport = () => {
         case 'pdf':
           // Create a structured text report
           const pdfContent = `
-REPORTE DE MIEMBROS - FIDELYA
+REPORTE DE SOCIOS - FIDELYA
 ==============================
 
 Fecha de exportación: ${new Date().toLocaleDateString('es-ES')}
 Hora de exportación: ${new Date().toLocaleTimeString('es-ES')}
-Total de registros: ${exportData.length}
-Campos incluidos: ${options.fields.length}
-
-FILTROS APLICADOS:
-------------------
-Estado: ${options.filters.status === 'all' ? 'Todos' : options.filters.status || 'Todos'}
-Rango de fechas: ${options.filters.dateRange === 'all' ? 'Completo' : options.filters.dateRange || 'Completo'}
 
 CAMPOS EXPORTADOS:
 ------------------
 ${options.fields.map(field => `• ${fieldLabels[field as keyof typeof fieldLabels] || field}`).join('\n')}
 
-DATOS DE MIEMBROS:
+DATOS DE SOCIOS:
 ==================
 
 ${exportData.map((row, index) => {
@@ -291,7 +284,7 @@ ${exportData.map((row, index) => {
 }).join('\n\n')}
 
 ==========================================
-Generado por Fidelya - Sistema de Gestión de Miembros
+Generado por Fidelya - Sistema de Gestión de Socios
 Versión 1.0 - ${new Date().getFullYear()}
           `.trim();
           

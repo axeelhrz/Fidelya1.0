@@ -502,7 +502,7 @@ const MembershipHealthCard: React.FC<{
             </Avatar>
             <Box>
               <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', mb: 0.5 }}>
-                Estado de Membresía
+                Estado de Socio
               </Typography>
               <Chip
                 label={getHealthLabel()}
@@ -841,7 +841,7 @@ export const SocioOverviewDashboard: React.FC<SocioOverviewDashboardProps> = ({
                     fontSize: { xs: '1rem', md: '1.2rem' },
                   }}
                 >
-                  ¡Hola, {user?.nombre || 'Socio'}! • Miembro activo
+                  ¡Hola, {user?.nombre || 'Socio'}! • Socio activo
                 </Typography>
               </Box>
             </Box>
@@ -930,7 +930,7 @@ export const SocioOverviewDashboard: React.FC<SocioOverviewDashboardProps> = ({
                   }}
                 />
                 <Typography variant="body1" sx={{ color: '#047857', fontWeight: 700, fontSize: '1.1rem' }}>
-                  <Box component="span" sx={{ fontWeight: 900 }}>Membresía activa</Box> - Disfruta todos tus beneficios
+                  <Box component="span" sx={{ fontWeight: 900 }}>Socio activo</Box> - Disfruta todos tus beneficios
                 </Typography>
               </Box>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>

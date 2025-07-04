@@ -327,7 +327,7 @@ const DashboardSection: React.FC<{
                 mb: 4,
                 fontSize: { xs: '1rem', md: '1.25rem' }
               }}>
-                Carga masiva de miembros desde archivos CSV
+                Carga masiva de socios desde archivos CSV
               </Typography>
               <Button
                 onClick={onCsvImport}
@@ -420,16 +420,16 @@ const DashboardSection: React.FC<{
                     mb: 1,
                     fontSize: { xs: '2rem', md: '3rem' }
                   }}>
-                    {section === 'active-members' ? 'Miembros Activos' :
-                     section === 'expired-members' ? 'Miembros Vencidos' :
-                     'Gestión de Miembros'}
+                    {section === 'active-members' ? 'Socios Activos' :
+                     section === 'expired-members' ? 'Socios Vencidos' :
+                     'Gestión de Socios'}
                   </Typography>
                   <Typography variant="h6" sx={{ 
                     color: '#64748b', 
                     fontWeight: 600,
                     fontSize: { xs: '1rem', md: '1.25rem' }
                   }}>
-                    {filteredSocios.length} miembros encontrados
+                    {filteredSocios.length} socios encontrados
                   </Typography>
                 </Box>
                 <Box sx={{ 
@@ -469,7 +469,7 @@ const DashboardSection: React.FC<{
                       transition: 'all 0.3s ease'
                     }}
                   >
-                    Nuevo Miembro
+                    Nuevo Socio
                   </Button>
                 </Box>
               </Box>
@@ -652,14 +652,14 @@ export default function AsociacionDashboard() {
     try {
       if (socioDialog.socio) {
         await updateSocio(socioDialog.socio.uid, data);
-        toast.success('Miembro actualizado correctamente');
+        toast.success('Socio actualizado correctamente');
       } else {
         await addSocio(data);
-        toast.success('Miembro agregado correctamente');
+        toast.success('Socio agregado correctamente');
       }
       setSocioDialog({ open: false });
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Error al guardar el miembro');
+      toast.error(error instanceof Error ? error.message : 'Error al guardar el socio');
     } finally {
       setActionLoading(false);
     }
@@ -671,10 +671,10 @@ export default function AsociacionDashboard() {
     setActionLoading(true);
     try {
       await deleteSocio(deleteDialog.socio.uid);
-      toast.success('Miembro eliminado correctamente');
+      toast.success('Socio eliminado correctamente');
       setDeleteDialog({ open: false });
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Error al eliminar el miembro');
+      toast.error(error instanceof Error ? error.message : 'Error al eliminar el socio');
     } finally {
       setActionLoading(false);
     }
@@ -685,10 +685,10 @@ export default function AsociacionDashboard() {
       setActionLoading(true);
       try {
         await addMultipleSocios(sociosData);
-        toast.success(`${sociosData.length} miembros importados correctamente`);
+        toast.success(`${sociosData.length} socios importados correctamente`);
         setCsvImportOpen(false);
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : 'Error al importar los miembros');
+        toast.error(error instanceof Error ? error.message : 'Error al importar los socios');
       } finally {
         setActionLoading(false);
       }
@@ -708,34 +708,34 @@ export default function AsociacionDashboard() {
           break;
         case 'email':
           // Mock email functionality
-          toast.success(`Email enviado a ${selectedIds.length} miembros`);
+          toast.success(`Email enviado a ${selectedIds.length} socios`);
           break;
         case 'activate':
           // Mock activation functionality
           for (const id of selectedIds) {
             await updateSocio(id, { estado: 'activo' });
           }
-          toast.success(`${selectedIds.length} miembros activados`);
+          toast.success(`${selectedIds.length} socios activados`);
           break;
         case 'archive':
           // Mock archive functionality
           for (const id of selectedIds) {
             await updateSocio(id, { estado: 'vencido' });
           }
-          toast.success(`${selectedIds.length} miembros archivados`);
+          toast.success(`${selectedIds.length} socios archivados`);
           break;
         case 'delete':
           // Mock delete functionality
           for (const id of selectedIds) {
             await deleteSocio(id);
           }
-          toast.success(`${selectedIds.length} miembros eliminados`);
+          toast.success(`${selectedIds.length} socios eliminados`);
           break;
         case 'print':
           toast('Función de impresión en desarrollo');
           break;
         default:
-          toast(`Acción "${action}" aplicada a ${selectedIds.length} miembros`);
+          toast(`Acción "${action}" aplicada a ${selectedIds.length} socios`);
       }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Error al ejecutar la acción');
