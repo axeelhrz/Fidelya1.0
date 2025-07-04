@@ -29,11 +29,9 @@ import {
   Fade,
   Slide,
   Paper,
-  Divider,
   Stack,
   Card,
   CardContent,
-  useTheme,
   Zoom,
 } from '@mui/material';
 import {
@@ -57,7 +55,7 @@ import {
   Palette,
   Star,
   Bolt,
-  Sparkles,
+  Stars,
 } from '@mui/icons-material';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -193,7 +191,6 @@ export const CreateNotificationDialog: React.FC<CreateNotificationDialogProps> =
   onSave,
   loading = false
 }) => {
-  const theme = useTheme();
   const [formData, setFormData] = useState<NotificationFormData>({
     title: '',
     message: '',
@@ -210,7 +207,6 @@ export const CreateNotificationDialog: React.FC<CreateNotificationDialogProps> =
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [expirationDate, setExpirationDate] = useState('');
   const [expirationTime, setExpirationTime] = useState('');
-  const [step, setStep] = useState(0);
 
   // Reset form when dialog opens/closes
   useEffect(() => {
@@ -231,7 +227,6 @@ export const CreateNotificationDialog: React.FC<CreateNotificationDialogProps> =
       setErrors({});
       setExpirationDate('');
       setExpirationTime('');
-      setStep(0);
     }
   }, [open]);
 
@@ -347,7 +342,6 @@ export const CreateNotificationDialog: React.FC<CreateNotificationDialogProps> =
   };
 
   const selectedType = typeOptions.find(t => t.value === formData.type);
-  const selectedPriority = priorityOptions.find(p => p.value === formData.priority);
   const selectedCategory = categoryOptions.find(c => c.value === formData.category);
 
   const characterCount = {
@@ -368,7 +362,9 @@ export const CreateNotificationDialog: React.FC<CreateNotificationDialogProps> =
         maxWidth="lg"
         fullWidth
         TransitionComponent={Slide}
-        TransitionProps={{ direction: 'up' }}
+        slotProps={{
+          transition: { direction: 'up' }
+        }}
         PaperProps={{
           sx: {
             borderRadius: 6,
@@ -660,7 +656,7 @@ export const CreateNotificationDialog: React.FC<CreateNotificationDialogProps> =
                         color: 'white',
                       }}
                     >
-                      <Sparkles />
+                      <Stars />
                     </Avatar>
                     <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b' }}>
                       Contenido Principal
