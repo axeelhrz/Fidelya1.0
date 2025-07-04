@@ -20,7 +20,7 @@ import PatientSummaryTable from '@/components/clinical/analytics/PatientSummaryT
 import AIInsightsPanel from '@/components/clinical/analytics/AIInsightsPanel';
 
 export default function TherapistAnalyticsPage() {
-  const { filters, updateFilters, resetFilters } = useAnalyticsFilters();
+  const { filters, updateFilters } = useAnalyticsFilters();
   const { analytics, insights, kpiMetrics, loading, error, refresh, exportData } = useAnalyticsData(filters);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);

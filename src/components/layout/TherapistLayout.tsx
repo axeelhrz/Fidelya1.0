@@ -194,6 +194,8 @@ export default function TherapistLayout({ children }: TherapistLayoutProps) {
     }
   ];
 
+  // ... resto del código del layout permanece igual ...
+
   const toggleExpanded = (itemId: string) => {
     setExpandedItems(prev => 
       prev.includes(itemId) 
@@ -1042,31 +1044,33 @@ export default function TherapistLayout({ children }: TherapistLayoutProps) {
                       </div>
                     </div>
                     
-                    <motion.button
-                      whileHover={{ 
-                        backgroundColor: 'rgba(16, 185, 129, 0.04)',
-                        x: 2
-                      }}
-                      whileTap={{ scale: 0.98 }}
-                      style={{
-                        width: '100%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.625rem',
-                        padding: '0.75rem 1rem',
-                        border: 'none',
-                        background: 'transparent',
-                        cursor: 'pointer',
-                        fontSize: '0.8125rem',
-                        color: '#374151',
-                        fontFamily: 'Inter, sans-serif',
-                        fontWeight: 500,
-                        transition: 'all 0.2s ease'
-                      }}
-                    >
-                      <Settings size={14} />
-                      Mi Perfil
-                    </motion.button>
+                    <Link href="/dashboard/therapist/profile" style={{ textDecoration: 'none' }}>
+                      <motion.button
+                        whileHover={{ 
+                          backgroundColor: 'rgba(16, 185, 129, 0.04)',
+                          x: 2
+                        }}
+                        whileTap={{ scale: 0.98 }}
+                        style={{
+                          width: '100%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.625rem',
+                          padding: '0.75rem 1rem',
+                          border: 'none',
+                          background: 'transparent',
+                          cursor: 'pointer',
+                          fontSize: '0.8125rem',
+                          color: '#374151',
+                          fontFamily: 'Inter, sans-serif',
+                          fontWeight: 500,
+                          transition: 'all 0.2s ease'
+                        }}
+                      >
+                        <Settings size={14} />
+                        Mi Perfil
+                      </motion.button>
+                    </Link>
 
                     <div style={{
                       height: '1px',
