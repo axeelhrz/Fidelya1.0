@@ -10,9 +10,11 @@ import { Lead, Campaign } from '@/lib/services/commercialService';
 import { Alert, Task } from '@/hooks/useDashboardData';
 
 // Función principal para sembrar datos
-export async function seedFirebaseData(centerId: string = 'center1') {
+export async function seedData() {
   try {
-    console.log('🌱 Iniciando siembra de datos en Firebase...');
+    console.log('🌱 Iniciando proceso de siembra de datos...');
+    
+    const centerId = 'center1';
     
     await Promise.all([
       seedTherapists(centerId),
@@ -27,9 +29,12 @@ export async function seedFirebaseData(centerId: string = 'center1') {
       seedAssessments(centerId)
     ]);
     
-    console.log('✅ Datos sembrados exitosamente');
+    // Agregar siembra de documentos
+    await seedPatientDocuments(centerId);
+    
+    console.log('✅ Proceso de siembra completado exitosamente');
   } catch (error) {
-    console.error('❌ Error sembrando datos:', error);
+    console.error('❌ Error durante la siembra de datos:', error);
     throw error;
   }
 }
@@ -647,6 +652,212 @@ async function seedAssessments(centerId: string) {
   }
   
   console.log(`✅ ${assessments.length} evaluaciones creadas`);
+}
+
+// Función para sembrar documentos de pacientes
+async function seedPatientDocuments(centerId: string) {
+  const documents: Omit<PatientDocument, 'id' | 'createdAt' | 'updatedAt'>[] = [
+    {
+      patientId: 'patient1',
+      centerId: centerId,
+      title: 'Consentimiento Informado - Tratamiento Psicológico',
+      description: 'Documento de consentimiento para el inicio del tratamiento psicológico individual con enfoque cognitivo-conductual.',
+      type: 'consentimiento',
+      fileUrl: '/documents/consentimiento_001.pdf',
+      fileName: 'consentimiento_tratamiento.pdf',
+      fileType: 'pdf',
+      fileSize: 245760,
+      tags: ['consentimiento', 'legal', 'tratamiento', 'cognitivo-conductual'],
+      uploadedBy: 'therapist1',
+      uploadedByName: 'Dra. Ana García',
+      isRead: true,
+      readAt: new Date('2024-01-16'),
+      downloadCount: 2,
+      lastDownloaded: new Date('2024-01-20'),
+      category: 'legal',
+      privacy: 'privado',
+      isRequired: true,
+      notes: 'Documento firmado y archivado correctamente.',
+      metadata: {
+        version: '1.0',
+        author: 'Centro Psicológico',
+        language: 'es',
+        keywords: ['consentimiento', 'tratamiento', 'psicología']
+      }
+    },
+    {
+      patientId: 'patient1',
+      centerId: centerId,
+      title: 'Informe de Evaluación Inicial',
+      description: 'Resultado de la evaluación psicológica inicial con diagnóstico, recomendaciones de tratamiento y plan terapéutico.',
+      type: 'informe',
+      fileUrl: '/documents/evaluacion_inicial_001.pdf',
+      fileName: 'evaluacion_inicial.pdf',
+      fileType: 'pdf',
+      fileSize: 512000,
+      tags: ['evaluación', 'diagnóstico', 'inicial', 'plan-terapéutico'],
+      uploadedBy: 'therapist1',
+      uploadedByName: 'Dra. Ana García',
+      isRead: false,
+      downloadCount: 0,
+      category: 'clinico',
+      privacy: 'privado',
+      notes: 'Informe completo de la evaluación inicial con plan de tratamiento recomendado. Incluye resultados de pruebas psicométricas.',
+      metadata: {
+        version: '1.0',
+        author: 'Dra. Ana García',
+        language: 'es',
+        summary: 'Evaluación inicial que confirma diagnóstico de Trastorno de Ansiedad Generalizada con recomendaciones específicas de tratamiento.',
+        keywords: ['evaluación', 'ansiedad', 'diagnóstico', 'tratamiento']
+      }
+    },
+    {
+      patientId: 'patient1',
+      centerId: centerId,
+      title: 'Guía de Técnicas de Relajación',
+      description: 'Material psicoeducativo con técnicas de relajación progresiva, respiración diafragmática y manejo de ansiedad.',
+      type: 'psicoeducacion',
+      fileUrl: '/documents/tecnicas_relajacion.pdf',
+      fileName: 'guia_relajacion.pdf',
+      fileType: 'pdf',
+      fileSize: 1024000,
+      tags: ['psicoeducación', 'ansiedad', 'técnicas', 'relajación', 'respiración'],
+      uploadedBy: 'therapist1',
+      uploadedByName: 'Dra. Ana García',
+      isRead: true,
+      readAt: new Date('2024-02-02'),
+      downloadCount: 3,
+      lastDownloaded: new Date('2024-02-15'),
+      category: 'educativo',
+      privacy: 'compartido',
+      metadata: {
+        version: '2.1',
+        author: 'Equipo Clínico',
+        language: 'es',
+        summary: 'Guía práctica con ejercicios de relajación y técnicas de manejo de ansiedad para uso diario.',
+        keywords: ['relajación', 'ansiedad', 'técnicas', 'ejercicios']
+      }
+    },
+    {
+      patientId: 'patient1',
+      centerId: centerId,
+      title: 'Certificado de Tratamiento',
+      description: 'Certificado médico que acredita el tratamiento psicológico en curso para presentación en instituciones.',
+      type: 'certificado',
+      fileUrl: '/documents/certificado_tratamiento.pdf',
+      fileName: 'certificado_tratamiento.pdf',
+      fileType: 'pdf',
+      fileSize: 180000,
+      tags: ['certificado', 'médico', 'tratamiento', 'institucional'],
+      uploadedBy: 'therapist1',
+      uploadedByName: 'Dra. Ana García',
+      isRead: false,
+      downloadCount: 0,
+      category: 'administrativo',
+      privacy: 'privado',
+      expiresAt: new Date('2024-12-31'),
+      metadata: {
+        version: '1.0',
+        author: 'Dra. Ana García',
+        language: 'es',
+        summary: 'Certificado oficial que acredita el tratamiento psicológico actual del paciente.'
+      }
+    },
+    {
+      patientId: 'patient1',
+      centerId: centerId,
+      title: 'Audio de Meditación Guiada',
+      description: 'Sesión de meditación guiada de 15 minutos para la práctica diaria de mindfulness y reducción de ansiedad.',
+      type: 'recurso',
+      fileUrl: '/documents/meditacion_guiada.mp3',
+      fileName: 'meditacion_15min.mp3',
+      fileType: 'audio',
+      fileSize: 14400000,
+      tags: ['meditación', 'mindfulness', 'audio', 'práctica', 'ansiedad'],
+      uploadedBy: 'therapist1',
+      uploadedByName: 'Dra. Ana García',
+      isRead: true,
+      readAt: new Date('2024-02-21'),
+      downloadCount: 5,
+      lastDownloaded: new Date('2024-03-01'),
+      category: 'educativo',
+      privacy: 'compartido',
+      metadata: {
+        version: '1.0',
+        author: 'Centro de Mindfulness',
+        language: 'es',
+        summary: 'Audio de meditación guiada diseñado específicamente para reducir la ansiedad y promover la relajación.',
+        keywords: ['meditación', 'mindfulness', 'relajación', 'audio']
+      }
+    },
+    {
+      patientId: 'patient1',
+      centerId: centerId,
+      title: 'Plan de Tratamiento Personalizado',
+      description: 'Plan detallado de tratamiento con objetivos específicos, cronograma de sesiones y actividades terapéuticas.',
+      type: 'plan-tratamiento',
+      fileUrl: '/documents/plan_tratamiento.pdf',
+      fileName: 'plan_tratamiento_personalizado.pdf',
+      fileType: 'pdf',
+      fileSize: 680000,
+      tags: ['plan', 'tratamiento', 'objetivos', 'cronograma', 'personalizado'],
+      uploadedBy: 'therapist1',
+      uploadedByName: 'Dra. Ana García',
+      isRead: true,
+      readAt: new Date('2024-03-05'),
+      downloadCount: 1,
+      lastDownloaded: new Date('2024-03-05'),
+      category: 'clinico',
+      privacy: 'privado',
+      metadata: {
+        version: '1.2',
+        author: 'Dra. Ana García',
+        language: 'es',
+        summary: 'Plan de tratamiento individualizado con objetivos SMART y cronograma detallado de intervenciones.',
+        keywords: ['plan', 'tratamiento', 'objetivos', 'terapia']
+      }
+    },
+    {
+      patientId: 'patient1',
+      centerId: centerId,
+      title: 'Registro de Actividades Diarias',
+      description: 'Formato para el registro diario de actividades, estado de ánimo y práctica de técnicas aprendidas.',
+      type: 'tarea',
+      fileUrl: '/documents/registro_actividades.pdf',
+      fileName: 'registro_diario.pdf',
+      fileType: 'pdf',
+      fileSize: 320000,
+      tags: ['registro', 'actividades', 'estado-ánimo', 'seguimiento', 'tarea'],
+      uploadedBy: 'therapist1',
+      uploadedByName: 'Dra. Ana García',
+      isRead: true,
+      readAt: new Date('2024-03-10'),
+      downloadCount: 4,
+      lastDownloaded: new Date('2024-03-18'),
+      category: 'educativo',
+      privacy: 'privado',
+      metadata: {
+        version: '1.0',
+        author: 'Equipo Clínico',
+        language: 'es',
+        summary: 'Herramienta de autoregistro para el seguimiento diario del progreso terapéutico.',
+        keywords: ['registro', 'seguimiento', 'actividades', 'progreso']
+      }
+    }
+  ];
+
+  for (const document of documents) {
+    await addDoc(collection(db, COLLECTIONS.CENTERS, centerId, COLLECTIONS.PATIENTS, document.patientId, 'documents'), {
+      ...document,
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+      readAt: document.readAt ? Timestamp.fromDate(document.readAt) : null,
+      lastDownloaded: document.lastDownloaded ? Timestamp.fromDate(document.lastDownloaded) : null,
+      expiresAt: document.expiresAt ? Timestamp.fromDate(document.expiresAt) : null
+    });
+  }
+
+  console.log(`✅ ${documents.length} documentos de pacientes creados`);
 }
 
 // Función para limpiar datos existentes (opcional)
