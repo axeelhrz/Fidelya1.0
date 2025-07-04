@@ -33,7 +33,8 @@ import {
 } from '@mui/icons-material';
 import Link from 'next/link';
 import { comercioRegisterSchema, type ComercioRegisterFormData } from '@/lib/validations/auth';
-import { createUser, getDashboardRoute } from '@/lib/auth';
+import { authService } from '@/services/auth.service';
+import { getDashboardRoute } from '@/lib/auth';
 
 const ComercioRegisterPage = () => {
   const router = useRouter();
@@ -53,22 +54,30 @@ const ComercioRegisterPage = () => {
   const handleRegister = async (data: ComercioRegisterFormData) => {
     try {
       setIsSubmitting(true);
-      const userData = await createUser(data.email, data.password, {
-        nombre: data.nombre,
+      
+      const response = await authService.register({
         email: data.email,
+        password: data.password,
+        nombre: data.nombre,
         role: 'comercio',
-        estado: 'activo',
+        additionalData: {
+          nombreComercio: data.nombreComercio,
+          categoria: data.categoria
+        }
       });
       
-      const dashboardRoute = getDashboardRoute(userData.role);
-      router.push(dashboardRoute);
-    } catch (error: unknown) {
-      let message = 'Ha ocurrido un error. Inténtalo de nuevo.';
-      if (error instanceof Error) {
-        message = error.message;
+      if (response.success && response.user) {
+        const dashboardRoute = getDashboardRoute(response.user.role);
+        router.push(dashboardRoute);
+      } else {
+        setError('root', {
+          message: response.error || 'Error al crear la cuenta. Inténtalo de nuevo.',
+        });
       }
+    } catch (error: unknown) {
+      console.error('Registration error:', error);
       setError('root', {
-        message,
+        message: 'Ha ocurrido un error inesperado. Inténtalo de nuevo.',
       });
     } finally {
       setIsSubmitting(false);
