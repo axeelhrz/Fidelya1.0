@@ -22,6 +22,11 @@ import {
   Tooltip,
   Paper,
   Stack,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
 } from '@mui/material';
 import {
   Dashboard,
@@ -44,9 +49,12 @@ import {
   DataUsage,
   PeopleAlt,
   Campaign,
+  Warning,
 } from '@mui/icons-material';
 import { useAuth } from '@/hooks/useAuth';
 import { useSocios } from '@/hooks/useSocios';
+import { useRouter } from 'next/navigation';
+import { toast } from 'react-hot-toast';
 
 interface DashboardSidebarProps {
   open: boolean;
@@ -76,9 +84,12 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
   activeSection
 }) => {
   const theme = useTheme();
-  const { user } = useAuth();
+  const router = useRouter();
+  const { user, signOut } = useAuth();
   const { stats } = useSocios();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
+  const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   const handleExpandClick = (itemId: string) => {
     if (!open) return; // No expandir en modo colapsado
@@ -87,6 +98,29 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
         ? prev.filter(id => id !== itemId)
         : [...prev, itemId]
     );
+  };
+
+  const handleLogoutClick = () => {
+    setLogoutDialogOpen(true);
+  };
+
+  const handleLogoutConfirm = async () => {
+    setLoggingOut(true);
+    try {
+      await signOut();
+      toast.success('Sesión cerrada correctamente');
+      router.push('/auth/login');
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+      toast.error('Error al cerrar sesión. Inténtalo de nuevo.');
+    } finally {
+      setLoggingOut(false);
+      setLogoutDialogOpen(false);
+    }
+  };
+
+  const handleLogoutCancel = () => {
+    setLogoutDialogOpen(false);
   };
 
   const menuItems: MenuItem[] = [
@@ -897,7 +931,8 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
             >
               <ListItem disablePadding>
                 <ListItemButton
-                  onClick={() => {/* Handle logout */}}
+                  onClick={handleLogoutClick}
+                  disabled={loggingOut}
                   sx={{
                     minHeight: 52,
                     px: 3,
@@ -913,6 +948,10 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                       borderColor: '#ef4444',
                       transform: 'translateX(4px)',
                       boxShadow: '0 6px 20px rgba(239, 68, 68, 0.2)',
+                    },
+                    '&:disabled': {
+                      opacity: 0.6,
+                      transform: 'none',
                     },
                   }}
                 >
@@ -934,7 +973,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                           fontSize: '0.9rem',
                         }}
                       >
-                        Cerrar Sesión
+                        {loggingOut ? 'Cerrando...' : 'Cerrar Sesión'}
                       </Typography>
                     }
                     secondary={
@@ -966,7 +1005,8 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
               <Tooltip title="Cerrar Sesión" placement="right" arrow>
                 <ListItem disablePadding>
                   <ListItemButton
-                    onClick={() => {/* Handle logout */}}
+                    onClick={handleLogoutClick}
+                    disabled={loggingOut}
                     sx={{
                       minHeight: 60,
                       width: 60,
@@ -982,6 +1022,10 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                         borderColor: '#ef4444',
                         transform: 'translateY(-2px)',
                         boxShadow: '0 8px 25px rgba(239, 68, 68, 0.3)',
+                      },
+                      '&:disabled': {
+                        opacity: 0.6,
+                        transform: 'none',
                       },
                     }}
                   >
@@ -1098,31 +1142,113 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
   );
 
   return (
-    <Drawer
-      variant="permanent"
-      open={open}
-      sx={{
-        width: open ? SIDEBAR_WIDTH : SIDEBAR_COLLAPSED_WIDTH,
-        flexShrink: 0,
-        '& .MuiDrawer-paper': {
+    <>
+      <Drawer
+        variant="permanent"
+        open={open}
+        sx={{
           width: open ? SIDEBAR_WIDTH : SIDEBAR_COLLAPSED_WIDTH,
-          boxSizing: 'border-box',
-          transition: theme.transitions.create('width', {
-            easing: theme.transitions.easing.sharp,
-            duration: theme.transitions.duration.enteringScreen,
-          }),
-          overflowX: 'hidden',
-          overflowY: 'hidden',
-          border: 'none',
-          boxShadow: open 
-            ? '0 0 50px rgba(0,0,0,0.08)' 
-            : '0 0 30px rgba(0,0,0,0.12)',
-          backdropFilter: 'blur(10px)',
-        },
-      }}
-    >
-      {sidebarContent}
-    </Drawer>
+          flexShrink: 0,
+          '& .MuiDrawer-paper': {
+            width: open ? SIDEBAR_WIDTH : SIDEBAR_COLLAPSED_WIDTH,
+            boxSizing: 'border-box',
+            transition: theme.transitions.create('width', {
+              easing: theme.transitions.easing.sharp,
+              duration: theme.transitions.duration.enteringScreen,
+            }),
+            overflowX: 'hidden',
+            overflowY: 'hidden',
+            border: 'none',
+            boxShadow: open 
+              ? '0 0 50px rgba(0,0,0,0.08)' 
+              : '0 0 30px rgba(0,0,0,0.12)',
+            backdropFilter: 'blur(10px)',
+          },
+        }}
+      >
+        {sidebarContent}
+      </Drawer>
+
+      {/* Logout Confirmation Dialog */}
+      <Dialog
+        open={logoutDialogOpen}
+        onClose={handleLogoutCancel}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 4,
+            background: 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
+            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.1)',
+            border: '1px solid #e2e8f0',
+          }
+        }}
+      >
+        <DialogTitle sx={{ pb: 2 }}>
+          <Stack direction="row" alignItems="center" spacing={2}>
+            <Avatar
+              sx={{
+                width: 48,
+                height: 48,
+                background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                color: 'white',
+              }}
+            >
+              <Warning sx={{ fontSize: 24 }} />
+            </Avatar>
+            <Box>
+              <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b' }}>
+                Confirmar Cierre de Sesión
+              </Typography>
+              <Typography variant="body2" sx={{ color: '#64748b', mt: 0.5 }}>
+                ¿Estás seguro de que deseas cerrar tu sesión?
+              </Typography>
+            </Box>
+          </Stack>
+        </DialogTitle>
+        
+        <DialogContent sx={{ py: 2 }}>
+          <Typography variant="body1" sx={{ color: '#475569' }}>
+            Se cerrará tu sesión actual y serás redirigido a la página de inicio de sesión. 
+            Cualquier trabajo no guardado se perderá.
+          </Typography>
+        </DialogContent>
+        
+        <DialogActions sx={{ p: 3, pt: 2 }}>
+          <Button
+            onClick={handleLogoutCancel}
+            variant="outlined"
+            sx={{
+              borderColor: '#e2e8f0',
+              color: '#64748b',
+              '&:hover': {
+                borderColor: '#cbd5e1',
+                bgcolor: '#f8fafc',
+              },
+            }}
+          >
+            Cancelar
+          </Button>
+          <Button
+            onClick={handleLogoutConfirm}
+            variant="contained"
+            disabled={loggingOut}
+            sx={{
+              background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+              color: 'white',
+              '&:hover': {
+                background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',
+              },
+              '&:disabled': {
+                opacity: 0.6,
+              },
+            }}
+          >
+            {loggingOut ? 'Cerrando Sesión...' : 'Cerrar Sesión'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
   );
 };
 

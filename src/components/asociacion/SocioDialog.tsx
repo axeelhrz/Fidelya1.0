@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, UseFormRegister } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   Dialog,
   DialogTitle,
@@ -22,7 +22,6 @@ import {
   FormHelperText,
   alpha,
   Avatar,
-  Divider,
   Paper,
   Chip,
   IconButton,
@@ -32,7 +31,6 @@ import {
   Slide,
   useTheme,
   useMediaQuery,
-  Grid,
   Card,
   CardContent,
 } from '@mui/material';
@@ -40,14 +38,11 @@ import {
   Person,
   Email,
   Phone,
-  CreditCard,
   Close,
   Save,
   PersonAdd,
   CheckCircle,
   Info,
-  Visibility,
-  VisibilityOff,
   Star,
   Security,
   ContactMail,
@@ -135,13 +130,13 @@ const FormSection: React.FC<{
 );
 
 const StyledTextField: React.FC<{
-  register: any;
-  name: string;
+  register: UseFormRegister<SocioFormData>;
+  name: keyof SocioFormData;
   label: string;
   placeholder: string;
   type?: string;
   icon: React.ReactNode;
-  error?: any;
+  error?: { message?: string };
   helperText?: string;
   required?: boolean;
 }> = ({ register, name, label, placeholder, type = 'text', icon, error, helperText, required = false }) => (
@@ -235,7 +230,6 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
   useEffect(() => {
     const requiredFields = ['nombre', 'email'];
     const optionalFields = ['telefono', 'dni'];
-    const allFields = [...requiredFields, ...optionalFields];
     
     const filledRequiredFields = requiredFields.filter(field => 
       watchedFields[field as keyof SocioFormData]?.toString().trim()
@@ -310,7 +304,9 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
       scroll="paper"
       fullScreen={isMobile}
       TransitionComponent={isMobile ? Slide : Fade}
-      TransitionProps={isMobile ? { direction: 'up' } : {}}
+      slotProps={{
+        transition: isMobile ? { direction: 'up' } : {}
+      }}
       sx={{
         '& .MuiDialog-container': {
           alignItems: 'center',
@@ -551,100 +547,105 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
               icon={<AccountCircle />}
               color="#6366f1"
             >
-              <Grid container spacing={3}>
-                <Grid item xs={12}>
-                  <StyledTextField
-                    register={register}
-                    name="nombre"
-                    label="Nombre completo"
-                    placeholder="Ingresa el nombre completo del socio"
-                    icon={<Person />}
-                    error={errors.nombre}
-                    helperText={errors.nombre?.message}
-                    required
-                  />
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <StyledTextField
-                    register={register}
-                    name="dni"
-                    label="DNI / Documento"
-                    placeholder="Número de documento"
-                    icon={<Badge />}
-                    error={errors.dni}
-                    helperText={errors.dni?.message || "Documento de identidad (opcional)"}
-                  />
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <FormControl 
-                    fullWidth 
-                    error={!!errors.estado}
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: 3,
-                        bgcolor: '#fafbfc',
-                        transition: 'all 0.3s ease',
-                        '& fieldset': {
-                          borderColor: errors.estado ? '#ef4444' : '#e2e8f0',
-                          borderWidth: 2,
+              <Stack spacing={3}>
+                <StyledTextField
+                  register={register}
+                  name="nombre"
+                  label="Nombre completo"
+                  placeholder="Ingresa el nombre completo del socio"
+                  icon={<Person />}
+                  error={errors.nombre}
+                  helperText={errors.nombre?.message}
+                  required
+                />
+                
+                <Stack 
+                  direction={isTablet ? "column" : "row"} 
+                  spacing={3}
+                >
+                  <Box sx={{ flex: 1 }}>
+                    <StyledTextField
+                      register={register}
+                      name="dni"
+                      label="DNI / Documento"
+                      placeholder="Número de documento"
+                      icon={<Badge />}
+                      error={errors.dni}
+                      helperText={errors.dni?.message || "Documento de identidad (opcional)"}
+                    />
+                  </Box>
+                  
+                  <Box sx={{ flex: 1 }}>
+                    <FormControl 
+                      fullWidth 
+                      error={!!errors.estado}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: 3,
+                          bgcolor: '#fafbfc',
+                          transition: 'all 0.3s ease',
+                          '& fieldset': {
+                            borderColor: errors.estado ? '#ef4444' : '#e2e8f0',
+                            borderWidth: 2,
+                          },
+                          '&:hover fieldset': {
+                            borderColor: errors.estado ? '#ef4444' : '#6366f1',
+                            borderWidth: 2,
+                          },
+                          '&.Mui-focused fieldset': {
+                            borderColor: errors.estado ? '#ef4444' : '#6366f1',
+                            borderWidth: 2,
+                            boxShadow: errors.estado ? '0 0 0 3px rgba(239, 68, 68, 0.1)' : '0 0 0 3px rgba(99, 102, 241, 0.1)',
+                          },
+                          '&.Mui-focused': {
+                            bgcolor: 'white',
+                          }
                         },
-                        '&:hover fieldset': {
-                          borderColor: errors.estado ? '#ef4444' : '#6366f1',
-                          borderWidth: 2,
+                        '& .MuiInputLabel-root': {
+                          fontWeight: 600,
+                          '&.Mui-focused': {
+                            color: errors.estado ? '#ef4444' : '#6366f1',
+                          },
                         },
-                        '&.Mui-focused fieldset': {
-                          borderColor: errors.estado ? '#ef4444' : '#6366f1',
-                          borderWidth: 2,
-                          boxShadow: errors.estado ? '0 0 0 3px rgba(239, 68, 68, 0.1)' : '0 0 0 3px rgba(99, 102, 241, 0.1)',
-                        },
-                        '&.Mui-focused': {
-                          bgcolor: 'white',
-                        }
-                      },
-                      '& .MuiInputLabel-root': {
-                        fontWeight: 600,
-                        '&.Mui-focused': {
-                          color: errors.estado ? '#ef4444' : '#6366f1',
-                        },
-                      },
-                    }}
-                  >
-                    <InputLabel>Estado del socio</InputLabel>
-                    <Select
-                      {...register('estado')}
-                      label="Estado del socio"
-                      defaultValue="activo"
-                      startAdornment={
-                        <InputAdornment position="start">
-                          <Security sx={{ color: '#94a3b8', fontSize: '1.3rem', mr: 1 }} />
-                        </InputAdornment>
-                      }
+                      }}
                     >
-                      <MenuItem value="activo">
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                          <CheckCircle sx={{ color: '#10b981', fontSize: 20 }} />
-                          <Box>
-                            <Typography variant="body2" sx={{ fontWeight: 600 }}>Activo</Typography>
-                            <Typography variant="caption" sx={{ color: '#64748b' }}>Socio con membresía vigente</Typography>
+                      <InputLabel>Estado del socio</InputLabel>
+                      <Select
+                        {...register('estado')}
+                        label="Estado del socio"
+                        defaultValue="activo"
+                        startAdornment={
+                          <InputAdornment position="start">
+                            <Security sx={{ color: '#94a3b8', fontSize: '1.3rem', mr: 1 }} />
+                          </InputAdornment>
+                        }
+                      >
+                        <MenuItem value="activo">
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <CheckCircle sx={{ color: '#10b981', fontSize: 20 }} />
+                            <Box>
+                              <Typography variant="body2" sx={{ fontWeight: 600 }}>Activo</Typography>
+                              <Typography variant="caption" sx={{ color: '#64748b' }}>Socio con membresía vigente</Typography>
+                            </Box>
                           </Box>
-                        </Box>
-                      </MenuItem>
-                      <MenuItem value="vencido">
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                          <Info sx={{ color: '#ef4444', fontSize: 20 }} />
-                          <Box>
-                            <Typography variant="body2" sx={{ fontWeight: 600 }}>Vencido</Typography>
-                            <Typography variant="caption" sx={{ color: '#64748b' }}>Membresía expirada</Typography>
+                        </MenuItem>
+                        <MenuItem value="vencido">
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <Info sx={{ color: '#ef4444', fontSize: 20 }} />
+                            <Box>
+                              <Typography variant="body2" sx={{ fontWeight: 600 }}>Vencido</Typography>
+                              <Typography variant="caption" sx={{ color: '#64748b' }}>Membresía expirada</Typography>
+                            </Box>
                           </Box>
-                        </Box>
-                      </MenuItem>
-                    </Select>
-                    {errors.estado && (
-                      <FormHelperText sx={{ fontWeight: 500 }}>{errors.estado.message}</FormHelperText>
-                    )}
-                  </FormControl>
-                </Grid>
-              </Grid>
+                        </MenuItem>
+                      </Select>
+                      {errors.estado && (
+                        <FormHelperText sx={{ fontWeight: 500 }}>{errors.estado.message}</FormHelperText>
+                      )}
+                    </FormControl>
+                  </Box>
+                </Stack>
+              </Stack>
             </FormSection>
 
             {/* Contact Information Section */}
@@ -654,32 +655,29 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
               icon={<ContactMail />}
               color="#10b981"
             >
-              <Grid container spacing={3}>
-                <Grid item xs={12}>
-                  <StyledTextField
-                    register={register}
-                    name="email"
-                    label="Correo electrónico"
-                    type="email"
-                    placeholder="socio@email.com"
-                    icon={<Email />}
-                    error={errors.email}
-                    helperText={errors.email?.message || "Email principal para notificaciones"}
-                    required
-                  />
-                </Grid>
-                <Grid item xs={12}>
-                  <StyledTextField
-                    register={register}
-                    name="telefono"
-                    label="Teléfono"
-                    placeholder="Número de teléfono con código de área"
-                    icon={<Phone />}
-                    error={errors.telefono}
-                    helperText={errors.telefono?.message || "Teléfono de contacto (opcional)"}
-                  />
-                </Grid>
-              </Grid>
+              <Stack spacing={3}>
+                <StyledTextField
+                  register={register}
+                  name="email"
+                  label="Correo electrónico"
+                  type="email"
+                  placeholder="socio@email.com"
+                  icon={<Email />}
+                  error={errors.email}
+                  helperText={errors.email?.message || "Email principal para notificaciones"}
+                  required
+                />
+                
+                <StyledTextField
+                  register={register}
+                  name="telefono"
+                  label="Teléfono"
+                  placeholder="Número de teléfono con código de área"
+                  icon={<Phone />}
+                  error={errors.telefono}
+                  helperText={errors.telefono?.message || "Teléfono de contacto (opcional)"}
+                />
+              </Stack>
             </FormSection>
 
             {/* Form Summary */}
@@ -708,44 +706,57 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
                     </Typography>
                   </Box>
                   
-                  <Grid container spacing={2}>
-                    <Grid item xs={12} sm={6}>
-                      <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 600, mb: 0.5 }}>
-                        Nombre:
-                      </Typography>
-                      <Typography variant="body1" sx={{ color: '#1e293b', fontWeight: 700 }}>
-                        {watchedFields.nombre || 'No especificado'}
-                      </Typography>
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                      <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 600, mb: 0.5 }}>
-                        Email:
-                      </Typography>
-                      <Typography variant="body1" sx={{ color: '#1e293b', fontWeight: 700 }}>
-                        {watchedFields.email || 'No especificado'}
-                      </Typography>
-                    </Grid>
-                    {watchedFields.telefono && (
-                      <Grid item xs={12} sm={6}>
+                  <Stack spacing={2}>
+                    <Stack 
+                      direction={isMobile ? "column" : "row"} 
+                      spacing={2}
+                    >
+                      <Box sx={{ flex: 1 }}>
                         <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 600, mb: 0.5 }}>
-                          Teléfono:
+                          Nombre:
                         </Typography>
                         <Typography variant="body1" sx={{ color: '#1e293b', fontWeight: 700 }}>
-                          {watchedFields.telefono}
+                          {watchedFields.nombre || 'No especificado'}
                         </Typography>
-                      </Grid>
-                    )}
-                    {watchedFields.dni && (
-                      <Grid item xs={12} sm={6}>
+                      </Box>
+                      <Box sx={{ flex: 1 }}>
                         <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 600, mb: 0.5 }}>
-                          DNI:
+                          Email:
                         </Typography>
                         <Typography variant="body1" sx={{ color: '#1e293b', fontWeight: 700 }}>
-                          {watchedFields.dni}
+                          {watchedFields.email || 'No especificado'}
                         </Typography>
-                      </Grid>
+                      </Box>
+                    </Stack>
+                    
+                    {(watchedFields.telefono || watchedFields.dni) && (
+                      <Stack 
+                        direction={isMobile ? "column" : "row"} 
+                        spacing={2}
+                      >
+                        {watchedFields.telefono && (
+                          <Box sx={{ flex: 1 }}>
+                            <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 600, mb: 0.5 }}>
+                              Teléfono:
+                            </Typography>
+                            <Typography variant="body1" sx={{ color: '#1e293b', fontWeight: 700 }}>
+                              {watchedFields.telefono}
+                            </Typography>
+                          </Box>
+                        )}
+                        {watchedFields.dni && (
+                          <Box sx={{ flex: 1 }}>
+                            <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 600, mb: 0.5 }}>
+                              DNI:
+                            </Typography>
+                            <Typography variant="body1" sx={{ color: '#1e293b', fontWeight: 700 }}>
+                              {watchedFields.dni}
+                            </Typography>
+                          </Box>
+                        )}
+                      </Stack>
                     )}
-                  </Grid>
+                  </Stack>
                 </Paper>
               </motion.div>
             )}
