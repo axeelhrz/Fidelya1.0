@@ -13,13 +13,6 @@ import {
   IconButton,
   Chip,
   Alert,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
   Tooltip,
   alpha,
   CircularProgress,
@@ -33,7 +26,6 @@ import {
   ListItemIcon,
 } from '@mui/material';
 import {
-  Notifications,
   Send,
   CheckCircle,
   Error,
@@ -44,10 +36,6 @@ import {
   Stop,
   RestartAlt,
   TrendingUp,
-  TrendingDown,
-  Email,
-  Sms,
-  PhoneAndroid,
   Speed,
   BugReport,
   Healing,
@@ -264,7 +252,7 @@ export const NotificationDashboard: React.FC = () => {
             Estado del Sistema: {health.status === 'critical' ? 'Crítico' : 'Advertencia'}
           </Typography>
           <Typography variant="body2">
-            {health.issues.length} problema(s) detectado(s). Haz clic en "Ver Detalles" para más información.
+            {health.issues.length} problema(s) detectado(s). Haz clic en &quot;Ver Detalles&quot; para más información.
           </Typography>
         </Alert>
       )}

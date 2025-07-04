@@ -1,29 +1,30 @@
-import type { Metadata } from "next";
-import "./globals.css";
-import { ToastProvider } from "@/components/providers/ToastProvider";
+import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
+import './globals.css';
+import { ClientLayout } from './ClientLayout';
+import { initializeNotificationSystem } from '@/lib/notification-init';
+
+const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: "Fidelya - El futuro de los programas de fidelidad",
-  description: "Conecta asociaciones, comercios y socios en un ecosistema inteligente potenciado por IA para maximizar la fidelización y el crecimiento.",
+  title: 'Fidelita - Sistema de Gestión de Socios',
+  description: 'Plataforma integral para la gestión de socios, comercios y beneficios',
 };
+
+// Inicializar sistema de notificaciones en el servidor
+initializeNotificationSystem();
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="es">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-      </head>
-      <body 
-        className="antialiased"
-        style={{ fontFamily: 'var(--font-inter)' }}
-      >
-        {children}
-        <ToastProvider />
+      <body className={inter.className}>
+        <ClientLayout>
+          {children}
+        </ClientLayout>
       </body>
     </html>
   );

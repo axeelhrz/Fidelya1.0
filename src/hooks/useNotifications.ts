@@ -7,6 +7,7 @@ import type {
   NotificationFormData,
   NotificationFilters,
   NotificationStats,
+  NotificationTemplate,
 } from '@/types/notification';
 import {
   subscribeToNotifications,
@@ -21,6 +22,7 @@ import {
   cleanupExpiredNotifications,
 } from '@/utils/firestore/notifications';
 import { notificationService } from '@/services/notifications.service';
+import { notificationQueueService } from '@/services/notification-queue.service';
 
 export const useNotifications = () => {
   const [notifications, setNotifications] = useState<NotificationType[]>([]);
@@ -39,6 +41,15 @@ export const useNotifications = () => {
   const [filters, setFilters] = useState<NotificationFilters>({});
   const [error, setError] = useState<string | null>(null);
   const [sendingExternal, setSendingExternal] = useState(false);
+  const [queueStats, setQueueStats] = useState({
+    pending: 0,
+    processing: 0,
+    completed: 0,
+    failed: 0,
+    totalProcessed: 0,
+    averageProcessingTime: 0,
+    successRate: 0,
+  });
   const unsubscribeRef = useRef<(() => void) | null>(null);
   const [newNotificationCount, setNewNotificationCount] = useState(0);
   const previousNotificationIds = useRef<Set<string>>(new Set());
@@ -46,40 +57,28 @@ export const useNotifications = () => {
   // Función para reproducir sonido de notificación usando Web Audio API
   const playNotificationSound = useCallback(() => {
     try {
-      // Crear un contexto de audio
       const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-      
-      // Crear un oscilador para generar el sonido
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
       
-      // Conectar los nodos
       oscillator.connect(gainNode);
       gainNode.connect(audioContext.destination);
       
-      // Configurar el sonido
       oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
       oscillator.frequency.setValueAtTime(600, audioContext.currentTime + 0.1);
       
-      // Configurar el volumen
       gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
       gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
       
-      // Reproducir el sonido
       oscillator.start(audioContext.currentTime);
       oscillator.stop(audioContext.currentTime + 0.2);
       
     } catch {
-      // Fallback: intentar reproducir un archivo de audio si existe
       try {
         const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT');
         audio.volume = 0.3;
-        audio.play().catch(() => {
-          // Silently fail if audio can't be played
-        });
-      } catch {
-        // Silently fail if audio is not available
-      }
+        audio.play().catch(() => {});
+      } catch {}
     }
   }, []);
 
@@ -95,14 +94,12 @@ export const useNotifications = () => {
         silent: false,
       });
 
-      // Auto-close after 5 seconds for non-urgent notifications
       if (notification.priority !== 'urgent') {
         setTimeout(() => {
           browserNotification.close();
         }, 5000);
       }
 
-      // Handle click on notification
       browserNotification.onclick = () => {
         window.focus();
         if (notification.actionUrl) {
@@ -128,7 +125,6 @@ export const useNotifications = () => {
     setLoading(true);
     setError(null);
 
-    // Solicitar permisos de notificación
     requestNotificationPermission();
 
     try {
@@ -136,21 +132,18 @@ export const useNotifications = () => {
         (newNotifications) => {
           if (!mounted) return;
 
-          // Detectar nuevas notificaciones
           const currentIds = new Set(newNotifications.map(n => n.id));
           const newIds = [...currentIds].filter(id => !previousNotificationIds.current.has(id));
           
           if (newIds.length > 0 && previousNotificationIds.current.size > 0) {
             setNewNotificationCount(prev => prev + newIds.length);
             
-            // Reproducir sonido y mostrar notificación del navegador para nuevas notificaciones
             newIds.forEach(id => {
               const notification = newNotifications.find(n => n.id === id);
               if (notification && notification.status === 'unread') {
                 playNotificationSound();
                 showBrowserNotification(notification);
                 
-                // Mostrar toast para notificaciones de alta prioridad
                 if (notification.priority === 'urgent' || notification.priority === 'high') {
                   toast.success(`Nueva notificación: ${notification.title}`, {
                     duration: 5000,
@@ -185,11 +178,26 @@ export const useNotifications = () => {
     };
   }, [filters, playNotificationSound, showBrowserNotification, requestNotificationPermission]);
 
+  // Cargar estadísticas de cola
+  useEffect(() => {
+    const loadQueueStats = async () => {
+      try {
+        const stats = await notificationQueueService.getQueueStats();
+        setQueueStats(stats);
+      } catch (error) {
+        console.error('Error loading queue stats:', error);
+      }
+    };
+
+    loadQueueStats();
+    const interval = setInterval(loadQueueStats, 30000); // Cada 30 segundos
+    return () => clearInterval(interval);
+  }, []);
+
   // Aplicar filtros localmente
   useEffect(() => {
     let filtered = [...allNotifications];
 
-    // Aplicar filtros adicionales que no se pueden hacer en Firestore
     if (filters.search) {
       const searchLower = filters.search.toLowerCase();
       filtered = filtered.filter(notification =>
@@ -275,11 +283,14 @@ export const useNotifications = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Función mejorada para crear notificación con envío externo
+  // Función mejorada para crear notificación con envío externo y cola
   const createNotification = useCallback(async (
     data: NotificationFormData & {
       sendExternal?: boolean;
       recipientIds?: string[];
+      useQueue?: boolean;
+      scheduledFor?: Date;
+      priority?: 'low' | 'medium' | 'high' | 'urgent';
     }
   ): Promise<void> => {
     try {
@@ -288,42 +299,66 @@ export const useNotifications = () => {
       // Crear la notificación en Firestore
       const notificationId = await createNotificationFirestore(data);
       
-      // Si se especifica envío externo y hay destinatarios
+      // Si se especifica envío externo
       if (data.sendExternal && data.recipientIds && data.recipientIds.length > 0) {
-        toast.loading('Enviando notificaciones externas...', { id: 'sending-external' });
-        
-        try {
-          // Enviar notificaciones externas
-          const deliveryResults = await notificationService.sendNotificationToUsers(
-            notificationId,
-            data.recipientIds,
-            data
-          );
+        if (data.useQueue) {
+          // Usar sistema de colas
+          toast.loading('Agregando a cola de envío...', { id: 'queuing' });
           
-          toast.dismiss('sending-external');
+          try {
+            await notificationQueueService.enqueueNotification(
+              notificationId,
+              data.recipientIds,
+              data,
+              {
+                priority: data.priority || 'medium',
+                scheduledFor: data.scheduledFor,
+                maxAttempts: data.priority === 'urgent' ? 5 : 3,
+              }
+            );
+            
+            toast.dismiss('queuing');
+            toast.success(`Notificación agregada a cola para ${data.recipientIds.length} destinatarios`);
+          } catch (queueError) {
+            toast.dismiss('queuing');
+            console.error('Error queuing notification:', queueError);
+            toast.warning('Notificación creada pero falló al agregar a cola');
+          }
+        } else {
+          // Envío directo
+          toast.loading('Enviando notificaciones externas...', { id: 'sending-external' });
           
-          // Mostrar resultados del envío
-          const successMessage = [];
-          if (deliveryResults.emailSent > 0) {
-            successMessage.push(`${deliveryResults.emailSent} emails`);
+          try {
+            const deliveryResults = await notificationService.sendNotificationToUsers(
+              notificationId,
+              data.recipientIds,
+              data
+            );
+            
+            toast.dismiss('sending-external');
+            
+            const successMessage = [];
+            if (deliveryResults.emailSent > 0) {
+              successMessage.push(`${deliveryResults.emailSent} emails`);
+            }
+            if (deliveryResults.smsSent > 0) {
+              successMessage.push(`${deliveryResults.smsSent} SMS`);
+            }
+            if (deliveryResults.pushSent > 0) {
+              successMessage.push(`${deliveryResults.pushSent} push`);
+            }
+            
+            if (successMessage.length > 0) {
+              toast.success(`Notificación enviada: ${successMessage.join(', ')}`);
+            } else {
+              toast.warning('Notificación creada pero no se pudieron enviar notificaciones externas');
+            }
+            
+          } catch (externalError) {
+            toast.dismiss('sending-external');
+            console.error('Error sending external notifications:', externalError);
+            toast.warning('Notificación creada pero falló el envío externo');
           }
-          if (deliveryResults.smsSent > 0) {
-            successMessage.push(`${deliveryResults.smsSent} SMS`);
-          }
-          if (deliveryResults.pushSent > 0) {
-            successMessage.push(`${deliveryResults.pushSent} push`);
-          }
-          
-          if (successMessage.length > 0) {
-            toast.success(`Notificación creada y enviada: ${successMessage.join(', ')}`);
-          } else {
-            toast.warning('Notificación creada pero no se pudieron enviar notificaciones externas');
-          }
-          
-        } catch (externalError) {
-          toast.dismiss('sending-external');
-          console.error('Error sending external notifications:', externalError);
-          toast.warning('Notificación creada pero falló el envío externo');
         }
       } else {
         toast.success('Notificación creada exitosamente');
@@ -338,6 +373,44 @@ export const useNotifications = () => {
     }
   }, []);
 
+  // Función para crear notificación desde template
+  const createNotificationFromTemplate = useCallback(async (
+    template: NotificationTemplate,
+    variables: Record<string, string>,
+    options: {
+      sendExternal?: boolean;
+      recipientIds?: string[];
+      useQueue?: boolean;
+      scheduledFor?: Date;
+    } = {}
+  ): Promise<void> => {
+    try {
+      // Reemplazar variables en el template
+      let title = template.title;
+      let message = template.message;
+      
+      Object.entries(variables).forEach(([key, value]) => {
+        const regex = new RegExp(`\\{\\{${key}\\}\\}`, 'g');
+        title = title.replace(regex, value);
+        message = message.replace(regex, value);
+      });
+
+      // Crear notificación con datos del template
+      await createNotification({
+        title,
+        message,
+        type: template.type,
+        priority: template.priority,
+        category: template.category,
+        tags: template.variables,
+        ...options,
+      });
+    } catch (error) {
+      console.error('Error creating notification from template:', error);
+      throw error;
+    }
+  }, [createNotification]);
+
   // Función para obtener estadísticas de entrega
   const getDeliveryStats = useCallback(async (notificationId: string) => {
     try {
@@ -345,6 +418,85 @@ export const useNotifications = () => {
     } catch (error) {
       console.error('Error getting delivery stats:', error);
       return null;
+    }
+  }, []);
+
+  // Función para obtener estadísticas de cola
+  const getQueueStats = useCallback(async () => {
+    try {
+      return await notificationQueueService.getQueueStats();
+    } catch (error) {
+      console.error('Error getting queue stats:', error);
+      return null;
+    }
+  }, []);
+
+  // Función para obtener salud de la cola
+  const getQueueHealth = useCallback(async () => {
+    try {
+      return await notificationQueueService.getQueueHealth();
+    } catch (error) {
+      console.error('Error getting queue health:', error);
+      return null;
+    }
+  }, []);
+
+  // Función para reintentar notificaciones fallidas
+  const retryFailedNotifications = useCallback(async () => {
+    try {
+      const retriedCount = await notificationQueueService.retryAllFailedNotifications();
+      toast.success(`${retriedCount} notificaciones reintentadas`);
+      return retriedCount;
+    } catch (error) {
+      console.error('Error retrying failed notifications:', error);
+      toast.error('Error al reintentar notificaciones');
+      throw error;
+    }
+  }, []);
+
+  // Función para limpiar notificaciones antiguas
+  const cleanupOldNotifications = useCallback(async (days: number = 30) => {
+    try {
+      const deletedCount = await notificationQueueService.cleanupOldNotifications(days);
+      toast.success(`${deletedCount} notificaciones antiguas eliminadas`);
+      return deletedCount;
+    } catch (error) {
+      console.error('Error cleaning up old notifications:', error);
+      toast.error('Error al limpiar notificaciones antiguas');
+      throw error;
+    }
+  }, []);
+
+  // Función para programar notificación
+  const scheduleNotification = useCallback(async (
+    data: NotificationFormData & {
+      recipientIds?: string[];
+    },
+    scheduledFor: Date
+  ): Promise<void> => {
+    try {
+      // Crear la notificación en Firestore
+      const notificationId = await createNotificationFirestore(data);
+      
+      // Agregar a cola programada
+      if (data.recipientIds && data.recipientIds.length > 0) {
+        await notificationQueueService.scheduleNotification(
+          notificationId,
+          data.recipientIds,
+          data,
+          scheduledFor,
+          {
+            priority: data.priority || 'medium',
+            maxAttempts: 3,
+          }
+        );
+        
+        toast.success(`Notificación programada para ${scheduledFor.toLocaleString()}`);
+      }
+    } catch (error) {
+      console.error('Error scheduling notification:', error);
+      toast.error('Error al programar la notificación');
+      throw error;
     }
   }, []);
 
@@ -444,6 +596,7 @@ export const useNotifications = () => {
   }, []);
 
   return {
+    // Data
     notifications,
     allNotifications,
     loading,
@@ -452,8 +605,12 @@ export const useNotifications = () => {
     filters,
     newNotificationCount,
     sendingExternal,
+    queueStats,
+
+    // Basic Actions
     setFilters,
     createNotification,
+    createNotificationFromTemplate,
     markAsRead,
     markAsUnread,
     archiveNotification,
@@ -462,6 +619,18 @@ export const useNotifications = () => {
     bulkAction,
     clearNewNotificationCount,
     refreshStats,
+
+    // Advanced Features
     getDeliveryStats,
+    getQueueStats,
+    getQueueHealth,
+    retryFailedNotifications,
+    cleanupOldNotifications,
+    scheduleNotification,
+
+    // Utilities
+    playNotificationSound,
+    showBrowserNotification,
+    requestNotificationPermission,
   };
 };

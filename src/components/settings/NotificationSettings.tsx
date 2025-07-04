@@ -9,7 +9,6 @@ import {
   Switch,
   FormControlLabel,
   FormGroup,
-  Divider,
   Button,
   TextField,
   Alert,
@@ -19,7 +18,6 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
-  Slider,
   Select,
   MenuItem,
   FormControl,
@@ -37,7 +35,6 @@ import {
   Save,
   ExpandMore,
   NotificationsActive,
-  NotificationsOff,
 } from '@mui/icons-material';
 import { toast } from 'react-hot-toast';
 import { NotificationSettings } from '@/types/notification';

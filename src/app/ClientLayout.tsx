@@ -1,109 +1,51 @@
 'use client';
 
-import React from 'react';
-import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
+import { useEffect } from 'react';
+import { Toaster } from 'react-hot-toast';
+import { initializeClientNotifications } from '@/lib/notification-init';
 
-const theme = createTheme({
-  typography: {
-    fontFamily: 'Inter, system-ui, sans-serif',
-    h1: {
-      fontFamily: '"Plus Jakarta Sans", sans-serif',
-      fontWeight: 800,
-    },
-    h2: {
-      fontFamily: '"Plus Jakarta Sans", sans-serif',
-      fontWeight: 700,
-    },
-    h3: {
-      fontFamily: '"Plus Jakarta Sans", sans-serif',
-      fontWeight: 700,
-    },
-    h4: {
-      fontFamily: '"Plus Jakarta Sans", sans-serif',
-      fontWeight: 600,
-    },
-    h5: {
-      fontFamily: '"Plus Jakarta Sans", sans-serif',
-      fontWeight: 600,
-    },
-    h6: {
-      fontFamily: '"Plus Jakarta Sans", sans-serif',
-      fontWeight: 600,
-    },
-    button: {
-      fontFamily: '"Plus Jakarta Sans", sans-serif',
-      fontWeight: 600,
-    },
-  },
-  palette: {
-    mode: 'light',
-    primary: {
-      main: '#6366f1',
-      light: '#8fa5f3',
-      dark: '#4f46e5',
-    },
-    secondary: {
-      main: '#8b5cf6',
-      light: '#a78bfa',
-      dark: '#7c3aed',
-    },
-    background: {
-      default: '#fafafa',
-      paper: '#ffffff',
-    },
-    text: {
-      primary: '#1a1a1a',
-      secondary: '#666666',
-    },
-  },
-  shape: {
-    borderRadius: 12,
-  },
-  components: {
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          textTransform: 'none',
-          fontWeight: 600,
-          borderRadius: 12,
-          fontFamily: '"Plus Jakarta Sans", sans-serif',
-        },
-      },
-    },
-    MuiCard: {
-      styleOverrides: {
-        root: {
-          borderRadius: 16,
-        },
-      },
-    },
-    MuiPaper: {
-      styleOverrides: {
-        root: {
-          borderRadius: 16,
-        },
-      },
-    },
-    MuiChip: {
-      styleOverrides: {
-        root: {
-          fontFamily: '"Plus Jakarta Sans", sans-serif',
-          fontWeight: 600,
-        },
-      },
-    },
-  },
-});
-
-interface ClientLayoutProps {
+export function ClientLayout({
+  children,
+}: {
   children: React.ReactNode;
-}
+}) {
+  useEffect(() => {
+    // Inicializar notificaciones del cliente
+    initializeClientNotifications();
+  }, []);
 
-export default function ClientLayout({ children }: ClientLayoutProps) {
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
+    <>
       {children}
-    </ThemeProvider>
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: '#363636',
+            color: '#fff',
+            borderRadius: '12px',
+            padding: '16px',
+            fontSize: '14px',
+            fontWeight: '500',
+          },
+          success: {
+            style: {
+              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+            },
+          },
+          error: {
+            style: {
+              background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+            },
+          },
+          loading: {
+            style: {
+              background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+            },
+          },
+        }}
+      />
+    </>
   );
 }

@@ -30,7 +30,7 @@ interface QueuedNotification {
   createdAt: Date;
   updatedAt: Date;
   scheduledFor?: Date;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 interface QueueStats {
@@ -69,7 +69,7 @@ class NotificationQueueService {
       priority?: 'low' | 'medium' | 'high' | 'urgent';
       scheduledFor?: Date;
       maxAttempts?: number;
-      metadata?: Record<string, any>;
+      metadata?: Record<string, unknown>;
     } = {}
   ): Promise<string[]> {
     const {
