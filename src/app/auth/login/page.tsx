@@ -257,7 +257,7 @@ const LoginPage = () => {
                 letterSpacing: '-0.01em'
               }}
             >
-              Fidelita
+              Fidelya
             </Typography>
           </Box>
 
@@ -289,7 +289,7 @@ const LoginPage = () => {
               lineHeight: 1.5
             }}
           >
-            Accede a tu cuenta de Fidelita y gestiona tu programa de fidelidad
+            Accede a tu cuenta de Fidelya y gestiona tu programa de fidelidad
           </Typography>
         </Box>
 

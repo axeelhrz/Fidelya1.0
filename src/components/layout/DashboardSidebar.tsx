@@ -608,7 +608,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                         WebkitTextFillColor: 'transparent',
                       }}
                     >
-                      Fidelita Pro
+                      Fidelya Pro
                     </Typography>
                     <Typography 
                       variant="caption" 

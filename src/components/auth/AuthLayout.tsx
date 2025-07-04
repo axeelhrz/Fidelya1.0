@@ -117,7 +117,7 @@ export function AuthLayout({
           className="text-center mt-8"
         >
           <p className="text-xs text-gray-500">
-            © 2024 Fidelita. Todos los derechos reservados.
+            © 2024 Fidelya. Todos los derechos reservados.
           </p>
         </motion.div>
       </div>

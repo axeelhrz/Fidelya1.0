@@ -947,7 +947,7 @@ ${exportData.map((row, index) => {
             return `${index + 1}. ${row.nombre || 'Sin nombre'} - ${row.email || 'Sin email'} - ${row.estado || 'Sin estado'}`;
           }).join('\n')}
 
-Generado por Fidelita - Sistema de Gestión de Miembros
+Generado por Fidelya - Sistema de Gestión de Miembros
           `.trim();
 
           downloadFile(pdfContent, filename.replace('.pdf', '.txt'), 'text/plain;charset=utf-8;');

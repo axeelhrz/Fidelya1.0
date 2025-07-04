@@ -145,7 +145,7 @@ const RegisterPage = () => {
                 WebkitTextFillColor: 'transparent',
               }}
             >
-              Fidelita
+              Fidelya
             </Box>
           </Typography>
           

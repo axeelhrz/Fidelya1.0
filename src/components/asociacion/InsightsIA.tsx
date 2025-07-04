@@ -964,8 +964,8 @@ export const InsightsIA: React.FC<InsightsIAProps> = ({
     const timer = setTimeout(() => {
       setAiInsights(generateInsights);
       setAiModel({
-        id: 'fidelita-ai-v2',
-        name: 'Fidelita AI',
+        id: 'fidelya-ai-v2',
+        name: 'Fidelya AI',
         version: '2.1.0',
         accuracy: 94.2,
         lastTrained: subDays(new Date(), 2),

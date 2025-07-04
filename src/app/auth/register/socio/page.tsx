@@ -163,7 +163,7 @@ const SocioRegisterPage = () => {
                 letterSpacing: '-0.01em'
               }}
             >
-              Fidelita
+              Fidelya
             </Typography>
           </Box>
 

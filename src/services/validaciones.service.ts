@@ -182,10 +182,10 @@ export class ValidacionesService {
 
   static parseQRData(qrString: string): QRData | null {
     try {
-      // Esperamos un formato como: fidelita://comercio/{comercioId}?beneficio={beneficioId}&t={timestamp}
+      // Esperamos un formato como: fidelya://comercio/{comercioId}?beneficio={beneficioId}&t={timestamp}
       const url = new URL(qrString);
       
-      if (url.protocol !== 'fidelita:' || !url.pathname.startsWith('//comercio/')) {
+      if (url.protocol !== 'fidelya:' || !url.pathname.startsWith('//comercio/')) {
         return null;
       }
 

@@ -412,7 +412,7 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
   };
 
   const handleManualInput = () => {
-    const mockQRData = 'fidelita://comercio/comercio123?beneficio=beneficio456&t=' + Date.now();
+    const mockQRData = 'fidelya://comercio/comercio123?beneficio=beneficio456&t=' + Date.now();
     onScan(mockQRData);
     handleCloseScanner();
   };

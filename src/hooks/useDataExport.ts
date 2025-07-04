@@ -257,7 +257,7 @@ export const useDataExport = () => {
         case 'pdf':
           // Create a structured text report
           const pdfContent = `
-REPORTE DE MIEMBROS - FIDELITA
+REPORTE DE MIEMBROS - FIDELYA
 ==============================
 
 Fecha de exportación: ${new Date().toLocaleDateString('es-ES')}
@@ -291,7 +291,7 @@ ${exportData.map((row, index) => {
 }).join('\n\n')}
 
 ==========================================
-Generado por Fidelita - Sistema de Gestión de Miembros
+Generado por Fidelya - Sistema de Gestión de Miembros
 Versión 1.0 - ${new Date().getFullYear()}
           `.trim();
           

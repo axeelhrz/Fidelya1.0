@@ -158,7 +158,7 @@ const ComercioRegisterPage = () => {
                 letterSpacing: '-0.01em'
               }}
             >
-              Fidelita
+              Fidelya
             </Typography>
           </Box>
 
