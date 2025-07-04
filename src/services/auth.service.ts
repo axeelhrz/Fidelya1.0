@@ -29,7 +29,7 @@ export interface RegisterData {
   email: string;
   password: string;
   nombre: string;
-  role: 'comercio' | 'socio' | 'asociacion';
+  role: 'comercio' | 'socio' | 'asociacion' | 'admin';
   additionalData?: Record<string, unknown>;
 }
 
@@ -164,12 +164,14 @@ class AuthService {
 
       console.log('🔐 Creating role-specific document...');
 
-      // Create role-specific document
-      await this.createRoleDocument(userCredential.user.uid, role, {
-        nombre,
-        email: email.trim().toLowerCase(),
-        ...additionalData
-      });
+      // Create role-specific document (skip for admin role)
+      if (role !== 'admin') {
+        await this.createRoleDocument(userCredential.user.uid, role, {
+          nombre,
+          email: email.trim().toLowerCase(),
+          ...additionalData
+        });
+      }
 
       const fullUserData: UserData = {
         uid: userCredential.user.uid,
@@ -290,7 +292,12 @@ class AuthService {
         estado: data.estado,
         creadoEn: data.creadoEn?.toDate() || new Date(),
         actualizadoEn: data.actualizadoEn?.toDate() || new Date(),
-        ultimoAcceso: data.ultimoAcceso?.toDate() || new Date()
+        ultimoAcceso: data.ultimoAcceso?.toDate() || new Date(),
+        telefono: data.telefono,
+        avatar: data.avatar,
+        configuracion: data.configuracion,
+        metadata: data.metadata,
+        asociacionId: data.asociacionId
       };
 
       console.log('🔐 User data retrieved successfully');
@@ -363,7 +370,14 @@ class AuthService {
     try {
       const collection = role === 'comercio' ? COLLECTIONS.COMERCIOS :
                         role === 'socio' ? COLLECTIONS.SOCIOS :
-                        COLLECTIONS.ASOCIACIONES;
+                        role === 'asociacion' ? COLLECTIONS.ASOCIACIONES :
+                        null;
+
+      // Skip role document creation for admin or unknown roles
+      if (!collection) {
+        console.log('🔐 Skipping role document creation for role:', role);
+        return;
+      }
 
       const roleData: Record<string, unknown> = {
         ...data,
