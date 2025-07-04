@@ -324,7 +324,7 @@ left: 100%;
 position: relative;
 z-index: 1;
 flex-shrink: 0;
-padding: var(--space-sm) var(--space-md);
+padding: var(--space-md) var(--space-lg);
 overflow: hidden;
 font-family: var(--font-mono);
 font-size: 0.85rem;
@@ -1776,10 +1776,19 @@ transition: width 0.3s ease;
 
 .nav__link::after {
 position: absolute;
+bottom: -8px;
+left: 50%;
+width: 0;
+height: 3px;
 right: 0.875rem;
 display: block;
 font-size: clamp(0.75rem, 2vw, 0.9rem);
 color: rgb(255 45 85 / 60%);
+background: linear-gradient(90deg,
+var(--starflex-crimson-glow) 0%,
+var(--starflex-crimson-bright) 50%,
+var(--starflex-crimson-glow) 100%
+);
 content: '→';
 opacity: 0;
 transition: all 0.25s ease;
