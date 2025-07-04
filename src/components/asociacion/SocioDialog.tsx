@@ -110,11 +110,15 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
       onClose={handleClose}
       maxWidth="sm"
       fullWidth
+      scroll="body"
       PaperProps={{
         sx: {
           borderRadius: 5,
           boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          maxHeight: '90vh',
+          display: 'flex',
+          flexDirection: 'column',
         }
       }}
     >
@@ -125,7 +129,8 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
           background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
           color: 'white',
           position: 'relative',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          flexShrink: 0,
         }}
       >
         <Box sx={{ p: 4, position: 'relative', zIndex: 1 }}>
@@ -176,8 +181,28 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
         />
       </DialogTitle>
 
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <DialogContent sx={{ p: 4 }}>
+      <form onSubmit={handleSubmit(onSubmit)} style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+        <DialogContent 
+          sx={{ 
+            p: 4,
+            flex: 1,
+            overflowY: 'auto',
+            '&::-webkit-scrollbar': {
+              width: '8px',
+            },
+            '&::-webkit-scrollbar-track': {
+              background: '#f1f5f9',
+              borderRadius: '4px',
+            },
+            '&::-webkit-scrollbar-thumb': {
+              background: '#cbd5e1',
+              borderRadius: '4px',
+              '&:hover': {
+                background: '#94a3b8',
+              },
+            },
+          }}
+        >
           <Stack spacing={4}>
             {/* Nombre */}
             <TextField
@@ -395,7 +420,7 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
           </Stack>
         </DialogContent>
 
-        <DialogActions sx={{ p: 4, pt: 0 }}>
+        <DialogActions sx={{ p: 4, pt: 0, flexShrink: 0, borderTop: '1px solid #f1f5f9' }}>
           <Stack direction="row" spacing={2} sx={{ width: '100%' }}>
             <Button
               onClick={handleClose}
