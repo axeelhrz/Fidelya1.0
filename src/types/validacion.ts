@@ -1,0 +1,63 @@
+import { Timestamp } from 'firebase/firestore';
+
+export interface Validacion {
+  id: string;
+  socioId: string;
+  socioNombre: string;
+  asociacionId: string;
+  asociacionNombre: string;
+  comercioId: string;
+  comercioNombre: string;
+  beneficioId?: string;
+  beneficioTitulo?: string;
+  fechaHora: Timestamp;
+  resultado: 'habilitado' | 'no_habilitado' | 'vencido' | 'suspendido';
+  motivo?: string;
+  montoDescuento?: number;
+  metadata?: {
+    ubicacion?: {
+      lat: number;
+      lng: number;
+    };
+    dispositivo?: string;
+    ip?: string;
+    qrData?: string;
+  };
+}
+
+export interface ValidacionRequest {
+  socioId: string;
+  comercioId: string;
+  beneficioId?: string;
+  ubicacion?: {
+    lat: number;
+    lng: number;
+  };
+}
+
+export interface ValidacionResponse {
+  resultado: string;
+  motivo?: string;
+  beneficio?: {
+    id: string;
+    titulo: string;
+    descuento: number;
+    tipo: string;
+    comercioNombre: string;
+    descripcion?: string;
+    fechaFin?: Date;
+  };
+  socio: {
+    nombre: string;
+    estado: string;
+    asociacion: string;
+  }
+  validacionId?: string;
+}
+
+export interface QRData {
+  comercioId: string;
+  beneficioId?: string;
+  timestamp: number;
+  signature?: string;
+}
