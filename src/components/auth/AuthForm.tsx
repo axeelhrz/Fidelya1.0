@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AlertCircle, CheckCircle } from 'lucide-react';
+import { getFirebaseErrorMessage } from '@/lib/firebase-errors';
 
 import { ZodTypeAny, TypeOf } from 'zod';
 
@@ -53,47 +54,8 @@ export function AuthForm<TSchema extends ZodTypeAny>({
       await onSubmit(data);
       setSubmitSuccess(true);
     } catch (error: unknown) {
-      let message = 'Ha ocurrido un error. Inténtalo de nuevo.';
-      
-      if (error && typeof error === 'object' && 'code' in error) {
-        const firebaseError = error as { code: string; message: string };
-        
-        switch (firebaseError.code) {
-          case 'auth/user-not-found':
-            message = 'No existe una cuenta con este email.';
-            break;
-          case 'auth/wrong-password':
-            message = 'Contraseña incorrecta.';
-            break;
-          case 'auth/invalid-email':
-            message = 'El formato del email no es válido.';
-            break;
-          case 'auth/user-disabled':
-            message = 'Esta cuenta ha sido deshabilitada.';
-            break;
-          case 'auth/too-many-requests':
-            message = 'Demasiados intentos fallidos. Intenta más tarde.';
-            break;
-          case 'auth/email-already-in-use':
-            message = 'Ya existe una cuenta con este email.';
-            break;
-          case 'auth/weak-password':
-            message = 'La contraseña es muy débil.';
-            break;
-          default:
-            if (firebaseError.message) {
-              message = firebaseError.message;
-            }
-        }
-      } else if (
-        error &&
-        typeof error === 'object' &&
-        'message' in error &&
-        typeof (error as { message?: unknown }).message === 'string'
-      ) {
-        message = (error as { message: string }).message;
-      }
-      
+      // Use the centralized error handling from firebase-errors.ts
+      const message = getFirebaseErrorMessage(error);
       setError('root', { message });
     } finally {
       setIsSubmitting(false);
@@ -157,7 +119,7 @@ export function AuthForm<TSchema extends ZodTypeAny>({
           >
             <div className="flex items-center gap-3">
               <CheckCircle size={20} className="text-green-500 flex-shrink-0" />
-              <p className="text-sm text-green-700 font-medium">¡Inicio de sesión exitoso!</p>
+              <p className="text-sm text-green-700 font-medium">¡Operación exitosa!</p>
             </div>
           </motion.div>
         )}
