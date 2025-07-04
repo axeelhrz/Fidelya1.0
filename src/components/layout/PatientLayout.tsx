@@ -10,7 +10,6 @@ import {
   FileText,
   Heart,
   Bell,
-  CreditCard,
   Settings,
   LogOut,
   Menu,
@@ -91,22 +90,6 @@ export default function PatientLayout({ children }: PatientLayoutProps) {
       color: '#06B6D4',
       bgColor: '#ECFEFF'
     },
-    {
-      name: 'Pagos',
-      href: '/dashboard/patient/payments',
-      icon: CreditCard,
-      description: 'Facturación',
-      color: '#84CC16',
-      bgColor: '#F0FDF4'
-    },
-    {
-      name: 'Notificaciones',
-      href: '/dashboard/patient/notifications',
-      icon: Bell,
-      description: 'Alertas y avisos',
-      color: '#F97316',
-      bgColor: '#FFF7ED'
-    }
   ];
 
   const handleLogout = async () => {
