@@ -46,19 +46,22 @@ if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
 
 // Configuración de colecciones
 export const COLLECTIONS = {
-  CENTERS: 'centers',
   USERS: 'users',
+  CENTERS: 'centers',
   PATIENTS: 'patients',
   THERAPISTS: 'therapists',
   SESSIONS: 'sessions',
   APPOINTMENTS: 'appointments',
-  PAYMENTS: 'payments',
-  EXPENSES: 'expenses',
+  NOTES: 'notes',
   ALERTS: 'alerts',
   TASKS: 'tasks',
-  METRICS: 'metrics',
-  CAMPAIGNS: 'campaigns',
-  LEADS: 'leads'
+  ASSESSMENTS: 'assessments',
+  CLINICAL_ALERTS: 'clinical_alerts',
+  AI_INSIGHTS: 'ai_insights',
+  ANALYTICS: 'analytics',
+  MESSAGES: 'messages',
+  VIDEO_CALLS: 'video_calls',
+  PHONE_CALLS: 'phone_calls'
 } as const;
 
 // Utilidades para manejo de errores
