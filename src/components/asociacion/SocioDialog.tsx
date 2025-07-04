@@ -307,23 +307,36 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
       onClose={handleClose}
       maxWidth="md"
       fullWidth
-      scroll="body"
+      scroll="paper"
       fullScreen={isMobile}
       TransitionComponent={isMobile ? Slide : Fade}
       TransitionProps={isMobile ? { direction: 'up' } : {}}
+      sx={{
+        '& .MuiDialog-container': {
+          alignItems: 'center',
+          justifyContent: 'center',
+        },
+        '& .MuiBackdrop-root': {
+          backgroundColor: 'rgba(15, 23, 42, 0.8)',
+          backdropFilter: 'blur(8px)',
+        },
+      }}
       PaperProps={{
         sx: {
           borderRadius: isMobile ? 0 : 6,
           boxShadow: isMobile ? 'none' : '0 32px 64px rgba(0, 0, 0, 0.12)',
           overflow: 'hidden',
-          maxHeight: isMobile ? '100vh' : '95vh',
+          maxHeight: isMobile ? '100vh' : '90vh',
+          height: isMobile ? '100vh' : 'auto',
           display: 'flex',
           flexDirection: 'column',
           background: 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
+          margin: isMobile ? 0 : 2,
+          position: 'relative',
         }
       }}
     >
-      {/* Enhanced Header */}
+      {/* Enhanced Header - Fixed */}
       <DialogTitle
         sx={{
           p: 0,
@@ -379,32 +392,30 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
               </Box>
             </Box>
             
-            {!isMobile && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.3, delay: 0.4 }}
-              >
-                <Tooltip title="Cerrar">
-                  <IconButton
-                    onClick={handleClose}
-                    disabled={isSubmitting}
-                    sx={{
-                      color: 'white',
-                      bgcolor: alpha('#ffffff', 0.1),
-                      border: '2px solid rgba(255, 255, 255, 0.2)',
-                      '&:hover': {
-                        bgcolor: alpha('#ffffff', 0.2),
-                        transform: 'scale(1.1)',
-                      },
-                      transition: 'all 0.2s ease'
-                    }}
-                  >
-                    <Close />
-                  </IconButton>
-                </Tooltip>
-              </motion.div>
-            )}
+            <motion.div
+              initial={{ opacity: 0, scale: 0 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3, delay: 0.4 }}
+            >
+              <Tooltip title="Cerrar">
+                <IconButton
+                  onClick={handleClose}
+                  disabled={isSubmitting}
+                  sx={{
+                    color: 'white',
+                    bgcolor: alpha('#ffffff', 0.1),
+                    border: '2px solid rgba(255, 255, 255, 0.2)',
+                    '&:hover': {
+                      bgcolor: alpha('#ffffff', 0.2),
+                      transform: 'scale(1.1)',
+                    },
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  <Close />
+                </IconButton>
+              </Tooltip>
+            </motion.div>
           </Box>
           
           {/* Progress Section */}
@@ -495,12 +506,23 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
         />
       </DialogTitle>
 
-      <form onSubmit={handleSubmit(onSubmit)} style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+      {/* Scrollable Content */}
+      <Box
+        component="form"
+        onSubmit={handleSubmit(onSubmit)}
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          flex: 1,
+          minHeight: 0, // Important for flex scrolling
+        }}
+      >
         <DialogContent 
           sx={{ 
             p: isMobile ? 2 : 4,
             flex: 1,
             overflowY: 'auto',
+            overflowX: 'hidden',
             background: 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
             '&::-webkit-scrollbar': {
               width: '8px',
@@ -516,6 +538,9 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
                 background: 'linear-gradient(135deg, #94a3b8, #64748b)',
               },
             },
+            // Firefox scrollbar
+            scrollbarWidth: 'thin',
+            scrollbarColor: '#cbd5e1 #f1f5f9',
           }}
         >
           <Box sx={{ maxWidth: '100%', mx: 'auto' }}>
@@ -727,7 +752,7 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
           </Box>
         </DialogContent>
 
-        {/* Enhanced Actions */}
+        {/* Fixed Actions */}
         <DialogActions 
           sx={{ 
             p: isMobile ? 2 : 4, 
@@ -743,60 +768,31 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
             spacing={2} 
             sx={{ width: '100%' }}
           >
-            {isMobile && (
-              <Button
-                onClick={handleClose}
-                disabled={isSubmitting}
-                variant="outlined"
-                startIcon={<Close />}
-                fullWidth
-                sx={{
-                  py: 1.5,
-                  borderRadius: 3,
-                  textTransform: 'none',
-                  fontWeight: 700,
-                  borderColor: '#e2e8f0',
-                  color: '#475569',
-                  borderWidth: 2,
-                  '&:hover': {
-                    borderColor: '#6366f1',
-                    bgcolor: alpha('#6366f1', 0.03),
-                    color: '#6366f1',
-                  },
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                Cancelar
-              </Button>
-            )}
-            
-            {!isMobile && (
-              <Button
-                onClick={handleClose}
-                disabled={isSubmitting}
-                variant="outlined"
-                startIcon={<Close />}
-                sx={{
-                  flex: 1,
-                  py: 1.5,
-                  borderRadius: 3,
-                  textTransform: 'none',
-                  fontWeight: 700,
-                  borderColor: '#e2e8f0',
-                  color: '#475569',
-                  borderWidth: 2,
-                  '&:hover': {
-                    borderColor: '#6366f1',
-                    bgcolor: alpha('#6366f1', 0.03),
-                    color: '#6366f1',
-                    transform: 'translateY(-1px)',
-                  },
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                Cancelar
-              </Button>
-            )}
+            <Button
+              onClick={handleClose}
+              disabled={isSubmitting}
+              variant="outlined"
+              startIcon={<Close />}
+              sx={{
+                flex: isMobile ? undefined : 1,
+                py: 1.5,
+                borderRadius: 3,
+                textTransform: 'none',
+                fontWeight: 700,
+                borderColor: '#e2e8f0',
+                color: '#475569',
+                borderWidth: 2,
+                '&:hover': {
+                  borderColor: '#6366f1',
+                  bgcolor: alpha('#6366f1', 0.03),
+                  color: '#6366f1',
+                  transform: 'translateY(-1px)',
+                },
+                transition: 'all 0.2s ease'
+              }}
+            >
+              Cancelar
+            </Button>
             
             <motion.div
               style={{ flex: isMobile ? undefined : 1 }}
@@ -876,7 +872,7 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
             </motion.div>
           </Stack>
         </DialogActions>
-      </form>
+      </Box>
     </Dialog>
   );
 };
