@@ -11,21 +11,22 @@ import {
   CheckCircle
 } from 'lucide-react';
 import { CalendarView } from '@/components/clinical/agenda/CalendarView';
-import { AppointmentModal } from '@/components/clinical/agenda/AppointmentModal';
+import AppointmentModal from '@/components/clinical/agenda/AppointmentModal';
 import { ClinicalCard } from '@/components/clinical/ClinicalCard';
 import { useAppointments, usePatients } from '@/hooks/useClinicalData';
-import { Appointment, ConsultingRoom } from '@/types/clinical';
+import { Appointment as ClinicalAppointment, ConsultingRoom } from '@/types/clinical';
+import { Appointment as AgendaAppointment, CreateAppointmentData } from '@/types/agenda';
 
 export default function AgendaPage() {
   const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('week');
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showAppointmentModal, setShowAppointmentModal] = useState(false);
-  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+  const [selectedAppointment, setSelectedAppointment] = useState<AgendaAppointment | null>(null);
   const [modalMode, setModalMode] = useState<'create' | 'edit' | 'view'>('create');
 
   // Hooks para datos
   const { 
-    appointments, 
+    appointments: clinicalAppointments, 
     loading: appointmentsLoading, 
     createAppointment,
     updateAppointment,
@@ -37,6 +38,25 @@ export default function AgendaPage() {
     patients, 
     loading: patientsLoading 
   } = usePatients();
+
+  // Convertir appointments de clinical a agenda format
+  const appointments: AgendaAppointment[] = clinicalAppointments.map((apt: ClinicalAppointment) => ({
+    id: apt.id,
+    patientId: apt.patientId,
+    patientName: apt.patientName || 'Paciente',
+    professionalId: apt.therapistId,
+    centerId: apt.centerId,
+    startDateTime: apt.date,
+    endDateTime: new Date(apt.date.getTime() + apt.duration * 60000),
+    duration: apt.duration,
+    status: apt.status as any, // Mapear estados si es necesario
+    type: apt.type as any,
+    motive: apt.notes || 'Consulta',
+    notes: apt.notes,
+    consultorio: apt.roomId,
+    createdAt: apt.createdAt,
+    updatedAt: apt.updatedAt
+  }));
 
   // Mock data para desarrollo
   const [rooms] = useState<ConsultingRoom[]>([
@@ -92,7 +112,7 @@ export default function AgendaPage() {
 
   // Calcular métricas del día
   const todayAppointments = appointments.filter(apt => 
-    apt.date.toDateString() === new Date().toDateString()
+    apt.startDateTime.toDateString() === new Date().toDateString()
   );
 
   const todayMetrics = {
@@ -101,12 +121,12 @@ export default function AgendaPage() {
     scheduled: todayAppointments.filter(apt => apt.status === 'scheduled').length,
     cancelled: todayAppointments.filter(apt => apt.status === 'cancelled').length,
     revenue: todayAppointments
-      .filter(apt => apt.paid && apt.status === 'completed')
-      .reduce((sum, apt) => sum + apt.cost, 0)
+      .filter(apt => apt.status === 'completed')
+      .reduce((sum, apt) => sum + 80, 0) // Precio fijo por ahora
   };
 
   // Handlers
-  const handleAppointmentClick = (appointment: Appointment) => {
+  const handleAppointmentClick = (appointment: AgendaAppointment) => {
     setSelectedAppointment(appointment);
     setModalMode('view');
     setShowAppointmentModal(true);
@@ -129,12 +149,40 @@ export default function AgendaPage() {
     }
   };
 
-  const handleSaveAppointment = async (appointmentData: Partial<Appointment>) => {
+  const handleSaveAppointment = async (appointmentData: CreateAppointmentData) => {
     try {
       if (modalMode === 'create') {
-        await createAppointment(appointmentData as Appointment);
+        // Convertir de agenda format a clinical format
+        const clinicalAppointmentData: Partial<ClinicalAppointment> = {
+          patientId: appointmentData.patientId,
+          therapistId: appointmentData.professionalId || 'therapist1',
+          centerId: 'center1',
+          date: appointmentData.startDateTime,
+          startTime: appointmentData.startDateTime.toTimeString().slice(0, 5),
+          endTime: new Date(appointmentData.startDateTime.getTime() + appointmentData.duration * 60000).toTimeString().slice(0, 5),
+          duration: appointmentData.duration,
+          type: appointmentData.type as any,
+          status: 'scheduled',
+          notes: appointmentData.notes,
+          roomId: appointmentData.consultorio,
+          reminderSent: false,
+          cost: 80,
+          paid: false,
+          isVirtual: false,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        };
+        
+        await createAppointment(clinicalAppointmentData as ClinicalAppointment);
       } else if (selectedAppointment) {
-        await updateAppointment(selectedAppointment.id, appointmentData);
+        // Convertir update data
+        const updateData = {
+          date: appointmentData.startDateTime,
+          duration: appointmentData.duration,
+          notes: appointmentData.notes,
+          roomId: appointmentData.consultorio
+        };
+        await updateAppointment(selectedAppointment.id, updateData);
       }
       setShowAppointmentModal(false);
     } catch (error) {
@@ -258,10 +306,10 @@ export default function AgendaPage() {
       {/* Calendar */}
       <div style={{ flex: 1, overflow: 'hidden' }}>
         <CalendarView
-          appointments={appointments}
+          appointments={clinicalAppointments} // Usar appointments originales para CalendarView
           rooms={rooms}
           therapistSchedules={[]} // TODO: Implement therapist schedules
-          onAppointmentClick={handleAppointmentClick}
+          onAppointmentClick={(apt) => handleAppointmentClick(appointments.find(a => a.id === apt.id)!)}
           onAppointmentMove={handleAppointmentMove}
           onCreateAppointment={handleCreateAppointment}
           onUpdateAppointment={updateAppointment}
@@ -276,15 +324,20 @@ export default function AgendaPage() {
       <AppointmentModal
         isOpen={showAppointmentModal}
         onClose={() => setShowAppointmentModal(false)}
-        appointment={selectedAppointment ?? undefined}
-        patients={patients}
-        rooms={rooms}
-        therapists={therapists}
+        appointment={selectedAppointment}
+        patients={patients.map(p => ({
+          id: p.id,
+          name: `${p.firstName} ${p.lastName}`,
+          phone: p.phone,
+          email: p.email
+        }))}
+        consultorios={rooms.map(r => r.name)}
         onSave={handleSaveAppointment}
         onCheckIn={handleCheckIn}
         onCheckOut={handleCheckOut}
         onSendReminder={handleSendReminder}
         mode={modalMode}
+        isCreating={modalMode === 'create'}
       />
 
       {/* Floating Action Button */}
