@@ -26,7 +26,6 @@ import {
 import {
   Search,
   AlertTriangle,
-  Calendar,
   TrendingUp,
   TrendingDown,
   Minus,
@@ -78,6 +77,11 @@ export default function PatientSummaryTable({ patients, loading = false }: Patie
   const sortedPatients = [...filteredPatients].sort((a, b) => {
     let aValue = a[orderBy];
     let bValue = b[orderBy];
+
+    // Handle null/undefined values
+    if (aValue == null && bValue == null) return 0;
+    if (aValue == null) return order === 'asc' ? -1 : 1;
+    if (bValue == null) return order === 'asc' ? 1 : -1;
 
     // Manejar fechas
     if (aValue instanceof Date && bValue instanceof Date) {
@@ -303,18 +307,20 @@ export default function PatientSummaryTable({ patients, loading = false }: Patie
             </TableHead>
             <TableBody>
               {paginatedPatients.map((patient, index) => (
-                <motion.tr
+                <TableRow
                   key={patient.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.05 * index }}
-                  component={TableRow}
                   sx={{
                     '&:hover': {
                       backgroundColor: 'rgba(16, 185, 129, 0.04)'
                     }
                   }}
                 >
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.05 * index }}
+                    style={{ display: 'contents' }}
+                  >
                   <TableCell>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                       <Avatar
@@ -451,7 +457,8 @@ export default function PatientSummaryTable({ patients, loading = false }: Patie
                       </Tooltip>
                     </Box>
                   </TableCell>
-                </motion.tr>
+                  </motion.div>
+                </TableRow>
               ))}
             </TableBody>
           </Table>
