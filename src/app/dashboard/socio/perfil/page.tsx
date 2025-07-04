@@ -1,423 +1,3 @@
-'use client';
-
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  User, 
-  Edit3, 
-  Mail, 
-  Phone, 
-  Calendar, 
-  Settings,
-  Save,
-  X,
-  RefreshCw,
-  Building2,
-  CheckCircle,
-  XCircle,
-  TrendingUp,
-  Award,
-  Target,
-  Activity,
-  Bell,
-  Shield,
-  Palette,
-  Camera,
-  Download,
-  Star,
-  Zap,
-  Heart,
-  Crown,
-  Sparkles,
-  Globe,
-  Sun,
-  Moon,
-  Laptop,
-  ChevronRight,
-  HelpCircle,
-  Copy,
-  Check,
-  QrCode,
-  Share2,
-  RotateCcw,
-  Archive,
-  Trash2,
-  Cake,
-  Home,
-  IdCard,
-  Languages,
-  DollarSign,
-  Clock3,
-  Shield as ShieldIcon,
-  Database,
-  BarChart3,
-  Smartphone as DeviceIcon,
-  MapPin,
-  CreditCard,
-  Eye,
-  EyeOff,
-  Lock,
-  Unlock,
-  Bookmark,
-  Filter,
-  Search,
-  ExternalLink,
-  Plus,
-  Minus,
-  Info,
-  AlertCircle,
-  Gift,
-  Percent,
-  Calendar as CalendarIcon,
-  Clock,
-  Users,
-  ShoppingBag,
-  Wallet,
-  PieChart,
-  LineChart,
-  MoreHorizontal,
-  ArrowUpRight,
-  ArrowDownRight,
-  Maximize2,
-  Minimize2,
-  FileText,
-  Image as ImageIcon,
-  Upload,
-  Link,
-  MessageCircle,
-  Headphones,
-  BookOpen,
-  Lightbulb,
-  Compass,
-  Layers,
-  Grid,
-  List,
-  ToggleLeft,
-  ToggleRight
-} from 'lucide-react';
-import Image from 'next/image';
-import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { SocioSidebar } from '@/components/layout/SocioSidebar';
-import { Button } from '@/components/ui/Button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/Dialog';
-import { Input } from '@/components/ui/Input';
-import { LoadingSkeleton } from '@/components/ui/LoadingSkeleton';
-import UnifiedMetricsCard from '@/components/ui/UnifiedMetricsCard';
-import ModernCard from '@/components/ui/ModernCard';
-import { ProfileImageUploader } from '@/components/socio/ProfileImageUploader';
-import { ActivityTimeline } from '@/components/socio/ActivityTimeline';
-import { useSocioProfile } from '@/hooks/useSocioProfile';
-import { useAuth } from '@/hooks/useAuth';
-import { SocioConfiguration } from '@/types/socio';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
-import toast from 'react-hot-toast';
-
-// Styled Components modernos
-const PageContainer = motion.div;
-const MainGrid = motion.div;
-const ProfileSection = motion.div;
-const StatsSection = motion.div;
-const SidebarSection = motion.div;
-
-// Interfaces
-interface ProfileFormData {
-  nombre: string;
-  telefono: string;
-  dni: string;
-  direccion: string;
-  fechaNacimiento: string;
-}
-
-interface QuickAction {
-  id: string;
-  title: string;
-  description: string;
-  icon: React.ReactNode;
-  color: string;
-  action: () => void;
-  badge?: string | number;
-}
-
-interface ProfileStat {
-  id: string;
-  title: string;
-  value: string | number;
-  icon: React.ReactNode;
-  color: string;
-  change?: number;
-  trend?: 'up' | 'down' | 'neutral';
-  description?: string;
-}
-
-export default function SocioPerfilPage() {
-  const { user } = useAuth();
-  const { 
-    socio, 
-    stats, 
-    asociaciones, 
-    activity,
-    loading, 
-    updating, 
-    uploadingImage,
-    updateProfile, 
-    updateConfiguration,
-    uploadProfileImage,
-    refreshData,
-    exportData,
-  } = useSocioProfile();
-
-  // Estados de modales
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [configModalOpen, setConfigModalOpen] = useState(false);
-  const [qrModalOpen, setQrModalOpen] = useState(false);
-  const [activityModalOpen, setActivityModalOpen] = useState(false);
-  const [statsModalOpen, setStatsModalOpen] = useState(false);
-  const [imageModalOpen, setImageModalOpen] = useState(false);
-  
-  // Estados de UI
-  const [refreshing, setRefreshing] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const [activeTab, setActiveTab] = useState<'general' | 'notificaciones' | 'privacidad' | 'avanzado'>('general');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [expandedCard, setExpandedCard] = useState<string | null>(null);
-
-  // Datos del perfil con fallbacks mejorados
-  const profileData = {
-    nombre: socio?.nombre || user?.nombre || 'Usuario',
-    email: socio?.email || user?.email || '',
-    telefono: socio?.telefono || '',
-    dni: socio?.dni || '',
-    direccion: socio?.direccion || '',
-    fechaNacimiento: socio?.fechaNacimiento?.toDate(),
-    estado: socio?.estado || 'activo',
-    creadoEn: socio?.creadoEn?.toDate() || new Date(),
-    ultimoAcceso: socio?.ultimoAcceso?.toDate() || new Date(),
-    avatar: socio?.avatar || null,
-    avatarThumbnail: socio?.avatarThumbnail || null,
-    nivel: socio?.nivel || {
-      nivel: 'Bronze',
-      puntos: 0,
-      puntosParaProximoNivel: 1000,
-      proximoNivel: 'Silver',
-      beneficiosDesbloqueados: [],
-      descuentoAdicional: 0
-    }
-  };
-
-  // Estadísticas mejoradas
-  const enhancedStats = {
-    beneficiosUsados: stats?.beneficiosUsados || 0,
-    ahorroTotal: stats?.ahorroTotal || 0,
-    beneficiosEsteMes: stats?.beneficiosEsteMes || 0,
-    asociacionesActivas: stats?.asociacionesActivas || 0,
-    racha: stats?.racha || 0,
-    comerciosVisitados: stats?.comerciosVisitados || 0,
-    validacionesExitosas: stats?.validacionesExitosas || 0,
-    descuentoPromedio: stats?.descuentoPromedio || 0,
-    ahorroEsteMes: stats?.ahorroEsteMes || 0,
-    beneficiosFavoritos: stats?.beneficiosFavoritos || 0,
-    tiempoComoSocio: stats?.tiempoComoSocio || 0,
-    actividadPorMes: stats?.actividadPorMes || {},
-    beneficiosPorCategoria: stats?.beneficiosPorCategoria || {},
-    comerciosMasVisitados: stats?.comerciosMasVisitados || []
-  };
-
-  // Configuración
-  const [configuracion, setConfiguracion] = useState<SocioConfiguration>({
-    notificaciones: socio?.configuracion?.notificaciones ?? true,
-    notificacionesPush: socio?.configuracion?.notificacionesPush ?? true,
-    notificacionesEmail: socio?.configuracion?.notificacionesEmail ?? true,
-    notificacionesSMS: socio?.configuracion?.notificacionesSMS ?? false,
-    tema: socio?.configuracion?.tema ?? 'light',
-    idioma: socio?.configuracion?.idioma ?? 'es',
-    moneda: socio?.configuracion?.moneda ?? 'ARS',
-    timezone: socio?.configuracion?.timezone ?? 'America/Argentina/Buenos_Aires',
-    perfilPublico: socio?.configuracion?.perfilPublico ?? false,
-    mostrarEstadisticas: socio?.configuracion?.mostrarEstadisticas ?? true,
-    mostrarActividad: socio?.configuracion?.mostrarActividad ?? true,
-    compartirDatos: socio?.configuracion?.compartirDatos ?? false,
-    beneficiosFavoritos: socio?.configuracion?.beneficiosFavoritos ?? [],
-    comerciosFavoritos: socio?.configuracion?.comerciosFavoritos ?? [],
-    categoriasFavoritas: socio?.configuracion?.categoriasFavoritas ?? []
-  });
-
-  const [formData, setFormData] = useState<ProfileFormData>({
-    nombre: '',
-    telefono: '',
-    dni: '',
-    direccion: '',
-    fechaNacimiento: ''
-  });
-
-  // Actualizar datos del formulario
-  useEffect(() => {
-    if (socio) {
-      setFormData({
-        nombre: socio.nombre || '',
-        telefono: socio.telefono || '',
-        dni: socio.dni || '',
-        direccion: socio.direccion || '',
-        fechaNacimiento: socio.fechaNacimiento 
-          ? format(socio.fechaNacimiento.toDate(), 'yyyy-MM-dd')
-          : ''
-      });
-      
-      if (socio.configuracion) {
-        setConfiguracion(prev => ({
-          ...prev,
-          ...socio.configuracion
-        }));
-      }
-    }
-  }, [socio]);
-
-  // Estadísticas del perfil
-  const profileStats: ProfileStat[] = [
-    {
-      id: 'beneficios',
-      title: 'Beneficios Usados',
-      value: enhancedStats.beneficiosUsados,
-      icon: <Gift size={24} />,
-      color: '#6366f1',
-      change: 12,
-      trend: 'up',
-      description: 'Total de beneficios utilizados'
-    },
-    {
-      id: 'ahorro',
-      title: 'Total Ahorrado',
-      value: `$${enhancedStats.ahorroTotal.toLocaleString()}`,
-      icon: <Wallet size={24} />,
-      color: '#10b981',
-      change: 8,
-      trend: 'up',
-      description: 'Dinero ahorrado en total'
-    },
-    {
-      id: 'mes',
-      title: 'Este Mes',
-      value: enhancedStats.beneficiosEsteMes,
-      icon: <CalendarIcon size={24} />,
-      color: '#f59e0b',
-      change: -5,
-      trend: 'down',
-      description: 'Beneficios usados este mes'
-    },
-    {
-      id: 'racha',
-      title: 'Días de Racha',
-      value: enhancedStats.racha,
-      icon: <Zap size={24} />,
-      color: '#8b5cf6',
-      change: 15,
-      trend: 'up',
-      description: 'Días consecutivos activo'
-    },
-    {
-      id: 'comercios',
-      title: 'Comercios Visitados',
-      value: enhancedStats.comerciosVisitados,
-      icon: <Building2 size={24} />,
-      color: '#3b82f6',
-      change: 3,
-      trend: 'up',
-      description: 'Comercios únicos visitados'
-    },
-    {
-      id: 'validaciones',
-      title: 'Tasa de Éxito',
-      value: `${enhancedStats.validacionesExitosas}%`,
-      icon: <CheckCircle size={24} />,
-      color: '#10b981',
-      change: 2,
-      trend: 'up',
-      description: 'Validaciones exitosas'
-    }
-  ];
-
-  // Acciones rápidas
-  const quickActions: QuickAction[] = [
-    {
-      id: 'qr',
-      title: 'Mi Código QR',
-      description: 'Ver y compartir mi código QR',
-      icon: <QrCode size={20} />,
-      color: '#6366f1',
-      action: () => setQrModalOpen(true)
-    },
-    {
-      id: 'export',
-      title: 'Exportar Datos',
-      description: 'Descargar toda mi información',
-      icon: <Download size={20} />,
-      color: '#10b981',
-      action: handleExportData
-    },
-    {
-      id: 'config',
-      title: 'Configuración',
-      description: 'Ajustar preferencias',
-      icon: <Settings size={20} />,
-      color: '#8b5cf6',
-      action: () => setConfigModalOpen(true)
-    },
-    {
-      id: 'activity',
-      title: 'Ver Actividad',
-      description: 'Historial completo',
-      icon: <Activity size={20} />,
-      color: '#f59e0b',
-      action: () => setActivityModalOpen(true),
-      badge: activity.length
-    },
-    {
-      id: 'stats',
-      title: 'Estadísticas',
-      description: 'Análisis detallado',
-      icon: <BarChart3 size={20} />,
-      color: '#ec4899',
-      action: () => setStatsModalOpen(true)
-    },
-    {
-      id: 'help',
-      title: 'Centro de Ayuda',
-      description: 'Soporte y guías',
-      icon: <HelpCircle size={20} />,
-      color: '#6b7280',
-      action: () => window.open('/help', '_blank')
-    }
-  ];
-
-  // Handlers
-  const handleSaveProfile = async () => {
-    try {
-      if (!formData.nombre.trim()) {
-        toast.error('El nombre es obligatorio');
-        return;
-      }
-
-      const updateData: any = {
-        nombre: formData.nombre.trim(),
-      };
-
-      if (formData.telefono.trim()) {
-        updateData.telefono = formData.telefono.trim();
-      }
-
-      if (formData.dni.trim()) {
-        updateData.dni = formData.dni.trim();
-      }
-
-      if (formData.direccion.trim()) {
-        updateData.direccion = formData.direccion.trim();
-      }
-
-      if (formData.fechaNacimiento) {
-        updateData.fechaNacimiento = new Date(formData.fechaNacimiento);
-      }
-
-      await updateProfile(updateData);
       setEditModalOpen(false);
       toast.success('Perfil actualizado exitosamente');
     } catch (error) {
@@ -536,7 +116,7 @@ export default function SocioPerfilPage() {
       activeSection="perfil"
       sidebarComponent={SocioSidebar}
     >
-      <PageContainer
+      <motion.div
         className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -606,7 +186,7 @@ export default function SocioPerfilPage() {
         </div>
 
         <div className="max-w-7xl mx-auto px-8 py-8">
-          <MainGrid
+          <motion.div
             className="grid grid-cols-1 xl:grid-cols-3 gap-8"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -615,10 +195,14 @@ export default function SocioPerfilPage() {
             {/* Columna Principal - Perfil */}
             <div className="xl:col-span-2 space-y-8">
               {/* Tarjeta de Perfil Principal */}
-              <ProfileSection>
-                <ModernCard variant="elevated" size="lg" glow>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.3 }}
+              >
+                <ModernCard variant="elevated" className="overflow-hidden">
                   {/* Header del perfil con gradiente */}
-                  <div className="relative -m-8 mb-6 h-32 bg-gradient-to-r from-indigo-500 via-purple-600 to-pink-500 rounded-t-2xl overflow-hidden">
+                  <div className="relative -m-8 mb-6 h-32 bg-gradient-to-r from-indigo-500 via-purple-600 to-pink-500 rounded-t-3xl overflow-hidden">
                     <div className="absolute inset-0 bg-black/20"></div>
                     <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
                     
@@ -661,7 +245,6 @@ export default function SocioPerfilPage() {
                           currentImage={profileData.avatar || profileData.avatarThumbnail}
                           onImageUpload={handleImageUpload}
                           uploading={uploadingImage}
-                          className="relative"
                         />
                         
                         {/* Badge de estado */}
@@ -838,11 +421,15 @@ export default function SocioPerfilPage() {
                     </div>
                   </div>
                 </ModernCard>
-              </ProfileSection>
+              </motion.div>
 
               {/* Estadísticas */}
-              <StatsSection>
-                <ModernCard variant="elevated" size="lg">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.4 }}
+              >
+                <ModernCard variant="elevated">
                   <div className="flex items-center justify-between mb-8">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center">
@@ -876,33 +463,29 @@ export default function SocioPerfilPage() {
 
                   <div className={`grid gap-6 ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>
                     {profileStats.map((stat, index) => (
-                      <UnifiedMetricsCard
+                      <MetricsCard
                         key={stat.id}
                         title={stat.title}
                         value={stat.value}
                         icon={stat.icon}
                         color={stat.color}
-                        size={viewMode === 'grid' ? 'medium' : 'small'}
                         change={stat.change}
                         trend={stat.trend}
                         description={stat.description}
-                        showProgress={true}
-                        progressValue={Math.min(Math.abs(stat.change || 0) * 10, 100)}
-                        delay={index * 0.1}
-                        onClick={() => setExpandedCard(expandedCard === stat.id ? null : stat.id)}
+                        onClick={() => setStatsModalOpen(true)}
                       />
                     ))}
                   </div>
                 </ModernCard>
-              </StatsSection>
+              </motion.div>
 
               {/* Actividad Reciente */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.6 }}
+                transition={{ duration: 0.6, delay: 0.5 }}
               >
-                <ModernCard variant="elevated" size="lg">
+                <ModernCard variant="elevated">
                   <ActivityTimeline
                     activities={activity.slice(0, 5)}
                     loading={loading}
@@ -914,224 +497,243 @@ export default function SocioPerfilPage() {
             </div>
 
             {/* Columna Lateral */}
-            <SidebarSection className="space-y-8">
+            <div className="space-y-8">
               {/* Mis Asociaciones */}
-              <ModernCard variant="elevated" size="md">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center">
-                    <Building2 size={20} className="text-white" />
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.6 }}
+              >
+                <ModernCard variant="elevated">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center">
+                      <Building2 size={20} className="text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900">Mis Asociaciones</h3>
+                      <p className="text-sm text-gray-600">Estado de membresías</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-gray-900">Mis Asociaciones</h3>
-                    <p className="text-sm text-gray-600">Estado de membresías</p>
-                  </div>
-                </div>
 
-                <div className="space-y-4">
-                  {asociaciones?.length > 0 ? asociaciones.map((asociacion, index) => (
-                    <motion.div
-                      key={asociacion.id}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.8 + index * 0.1 }}
-                      className="p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors"
-                    >
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center">
-                            {asociacion.logo ? (
-                              <Image
-                                src={asociacion.logo}
-                                alt={asociacion.nombre}
-                                width={32}
-                                height={32}
-                                className="object-cover rounded-lg"
-                                unoptimized
-                              />
-                            ) : (
-                              <Building2 size={20} className="text-gray-600" />
-                            )}
+                  <div className="space-y-4">
+                    {asociaciones?.length > 0 ? asociaciones.map((asociacion, index) => (
+                      <motion.div
+                        key={asociacion.id}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.8 + index * 0.1 }}
+                        className="p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors"
+                      >
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center">
+                              {asociacion.logo ? (
+                                <Image
+                                  src={asociacion.logo}
+                                  alt={asociacion.nombre}
+                                  width={32}
+                                  height={32}
+                                  className="object-cover rounded-lg"
+                                  unoptimized
+                                />
+                              ) : (
+                                <Building2 size={20} className="text-gray-600" />
+                              )}
+                            </div>
+                            <div>
+                              <h4 className="font-bold text-gray-900">{asociacion.nombre}</h4>
+                              <p className="text-xs text-gray-600">
+                                {asociacion.estado === 'activo' 
+                                  ? `Vence: ${format(asociacion.fechaVencimiento.toDate(), 'dd/MM/yyyy', { locale: es })}`
+                                  : `Venció: ${format(asociacion.fechaVencimiento.toDate(), 'dd/MM/yyyy', { locale: es })}`
+                                }
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <h4 className="font-bold text-gray-900">{asociacion.nombre}</h4>
-                            <p className="text-xs text-gray-600">
-                              {asociacion.estado === 'activo' 
-                                ? `Vence: ${format(asociacion.fechaVencimiento.toDate(), 'dd/MM/yyyy', { locale: es })}`
-                                : `Venció: ${format(asociacion.fechaVencimiento.toDate(), 'dd/MM/yyyy', { locale: es })}`
-                              }
-                            </p>
+                          
+                          <div className="flex items-center gap-2">
+                            {asociacion.estado === 'activo' ? 
+                              <CheckCircle size={16} className="text-green-500" /> : 
+                              <XCircle size={16} className="text-red-500" />
+                            }
+                            <span 
+                              className="px-2 py-1 rounded-full text-xs font-bold"
+                              style={{
+                                backgroundColor: asociacion.estado === 'activo' ? '#dcfce7' : '#fee2e2',
+                                color: asociacion.estado === 'activo' ? '#166534' : '#991b1b'
+                              }}
+                            >
+                              {asociacion.estado === 'activo' ? 'Activo' : 'Vencido'}
+                            </span>
                           </div>
                         </div>
                         
-                        <div className="flex items-center gap-2">
-                          {asociacion.estado === 'activo' ? 
-                            <CheckCircle size={16} className="text-green-500" /> : 
-                            <XCircle size={16} className="text-red-500" />
-                          }
-                          <span 
-                            className="px-2 py-1 rounded-full text-xs font-bold"
-                            style={{
-                              backgroundColor: asociacion.estado === 'activo' ? '#dcfce7' : '#fee2e2',
-                              color: asociacion.estado === 'activo' ? '#166534' : '#991b1b'
-                            }}
-                          >
-                            {asociacion.estado === 'activo' ? 'Activo' : 'Vencido'}
-                          </span>
+                        <div className="grid grid-cols-3 gap-3 text-center pt-3 border-t border-gray-200">
+                          <div>
+                            <div className="text-lg font-bold text-indigo-600">{asociacion.beneficiosIncluidos}</div>
+                            <div className="text-xs text-gray-600">Beneficios</div>
+                          </div>
+                          <div>
+                            <div className="text-lg font-bold text-green-600">{asociacion.descuentoMaximo}%</div>
+                            <div className="text-xs text-gray-600">Desc. Máx.</div>
+                          </div>
+                          <div>
+                            <div className="text-lg font-bold text-purple-600">{asociacion.comerciosAfiliados}</div>
+                            <div className="text-xs text-gray-600">Comercios</div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )) : (
+                      <div className="text-center py-8">
+                        <Building2 size={48} className="text-gray-300 mx-auto mb-4" />
+                        <p className="text-gray-600">No hay asociaciones disponibles</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {asociaciones?.length > 0 && (
+                    <div className="mt-6 pt-6 border-t border-gray-200">
+                      <div className="grid grid-cols-2 gap-4 text-center">
+                        <div>
+                          <div className="text-2xl font-black text-green-600">
+                            {asociaciones.filter(a => a.estado === 'activo').length}
+                          </div>
+                          <div className="text-sm text-gray-600">Activas</div>
+                        </div>
+                        <div>
+                          <div className="text-2xl font-black text-red-600">
+                            {asociaciones.filter(a => a.estado === 'vencido').length}
+                          </div>
+                          <div className="text-sm text-gray-600">Vencidas</div>
                         </div>
                       </div>
-                      
-                      <div className="grid grid-cols-3 gap-3 text-center pt-3 border-t border-gray-200">
-                        <div>
-                          <div className="text-lg font-bold text-indigo-600">{asociacion.beneficiosIncluidos}</div>
-                          <div className="text-xs text-gray-600">Beneficios</div>
-                        </div>
-                        <div>
-                          <div className="text-lg font-bold text-green-600">{asociacion.descuentoMaximo}%</div>
-                          <div className="text-xs text-gray-600">Desc. Máx.</div>
-                        </div>
-                        <div>
-                          <div className="text-lg font-bold text-purple-600">{asociacion.comerciosAfiliados}</div>
-                          <div className="text-xs text-gray-600">Comercios</div>
-                        </div>
-                      </div>
-                    </motion.div>
-                  )) : (
-                    <div className="text-center py-8">
-                      <Building2 size={48} className="text-gray-300 mx-auto mb-4" />
-                      <p className="text-gray-600">No hay asociaciones disponibles</p>
                     </div>
                   )}
-                </div>
-
-                {asociaciones?.length > 0 && (
-                  <div className="mt-6 pt-6 border-t border-gray-200">
-                    <div className="grid grid-cols-2 gap-4 text-center">
-                      <div>
-                        <div className="text-2xl font-black text-green-600">
-                          {asociaciones.filter(a => a.estado === 'activo').length}
-                        </div>
-                        <div className="text-sm text-gray-600">Activas</div>
-                      </div>
-                      <div>
-                        <div className="text-2xl font-black text-red-600">
-                          {asociaciones.filter(a => a.estado === 'vencido').length}
-                        </div>
-                        <div className="text-sm text-gray-600">Vencidas</div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </ModernCard>
+                </ModernCard>
+              </motion.div>
 
               {/* Acciones Rápidas */}
-              <ModernCard variant="elevated" size="md">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 bg-gradient-to-r from-amber-500 to-orange-600 rounded-xl flex items-center justify-center">
-                    <Zap size={20} className="text-white" />
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.7 }}
+              >
+                <ModernCard variant="elevated">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 bg-gradient-to-r from-amber-500 to-orange-600 rounded-xl flex items-center justify-center">
+                      <Zap size={20} className="text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900">Acciones Rápidas</h3>
+                      <p className="text-sm text-gray-600">Funciones principales</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-gray-900">Acciones Rápidas</h3>
-                    <p className="text-sm text-gray-600">Funciones principales</p>
-                  </div>
-                </div>
-                
-                <div className="space-y-3">
-                  {quickActions.map((action, index) => (
-                    <motion.button
-                      key={action.id}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 1.0 + index * 0.1 }}
-                      whileHover={{ x: 4 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={action.action}
-                      className="w-full flex items-center gap-4 p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-all duration-200 group"
-                    >
-                      <div 
-                        className="w-10 h-10 rounded-xl flex items-center justify-center text-white"
-                        style={{ backgroundColor: action.color }}
+                  
+                  <div className="space-y-3">
+                    {quickActions.map((action, index) => (
+                      <motion.button
+                        key={action.id}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 1.0 + index * 0.1 }}
+                        whileHover={{ x: 4 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={action.action}
+                        className="w-full flex items-center gap-4 p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-all duration-200 group"
                       >
-                        {action.icon}
-                      </div>
-                      <div className="flex-1 text-left">
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-semibold text-gray-900">{action.title}</h4>
-                          {action.badge && (
-                            <span 
-                              className="px-2 py-1 rounded-full text-xs font-bold text-white"
-                              style={{ backgroundColor: action.color }}
-                            >
-                              {action.badge}
-                            </span>
-                          )}
+                        <div 
+                          className="w-10 h-10 rounded-xl flex items-center justify-center text-white"
+                          style={{ backgroundColor: action.color }}
+                        >
+                          {action.icon}
                         </div>
-                        <p className="text-sm text-gray-600">{action.description}</p>
-                      </div>
-                      <ChevronRight size={16} className="text-gray-400 group-hover:text-gray-600 transition-colors" />
-                    </motion.button>
-                  ))}
-                </div>
-              </ModernCard>
+                        <div className="flex-1 text-left">
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-semibold text-gray-900">{action.title}</h4>
+                            {action.badge && (
+                              <span 
+                                className="px-2 py-1 rounded-full text-xs font-bold text-white"
+                                style={{ backgroundColor: action.color }}
+                              >
+                                {action.badge}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-sm text-gray-600">{action.description}</p>
+                        </div>
+                        <ChevronRight size={16} className="text-gray-400 group-hover:text-gray-600 transition-colors" />
+                      </motion.button>
+                    ))}
+                  </div>
+                </ModernCard>
+              </motion.div>
 
               {/* Consejos y Tips */}
-              <ModernCard variant="glass" size="md">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center">
-                    <Lightbulb size={20} className="text-white" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-gray-900">Consejos</h3>
-                    <p className="text-sm text-gray-600">Para optimizar tu perfil</p>
-                  </div>
-                </div>
-                <div className="space-y-4">
-                  <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-xl">
-                    <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <CheckCircle size={12} className="text-white" />
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.8 }}
+              >
+                <ModernCard variant="glass">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center">
+                      <Lightbulb size={20} className="text-white" />
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-blue-900">
-                        Mantén tu información actualizada para recibir beneficios personalizados
-                      </p>
+                      <h3 className="text-xl font-bold text-gray-900">Consejos</h3>
+                      <p className="text-sm text-gray-600">Para optimizar tu perfil</p>
                     </div>
                   </div>
 
-                  <div className="flex items-start gap-3 p-3 bg-green-50 rounded-xl">
-                    <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Phone size={12} className="text-white" />
+                  <div className="space-y-4">
+                    <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-xl">
+                      <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <CheckCircle size={12} className="text-white" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-blue-900">
+                          Mantén tu información actualizada para recibir beneficios personalizados
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-green-900">
-                        Verifica que tu teléfono esté correcto para notificaciones importantes
-                      </p>
-                    </div>
-                  </div>
 
-                  <div className="flex items-start gap-3 p-3 bg-purple-50 rounded-xl">
-                    <div className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Camera size={12} className="text-white" />
+                    <div className="flex items-start gap-3 p-3 bg-green-50 rounded-xl">
+                      <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <Phone size={12} className="text-white" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-green-900">
+                          Verifica que tu teléfono esté correcto para notificaciones importantes
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-purple-900">
-                        Agrega una foto de perfil para personalizar tu experiencia
-                      </p>
-                    </div>
-                  </div>
 
-                  <div className="flex items-start gap-3 p-3 bg-orange-50 rounded-xl">
-                    <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <TrendingUp size={12} className="text-white" />
+                    <div className="flex items-start gap-3 p-3 bg-purple-50 rounded-xl">
+                      <div className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <Camera size={12} className="text-white" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-purple-900">
+                          Agrega una foto de perfil para personalizar tu experiencia
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-orange-900">
-                        Usa más beneficios para subir de nivel y obtener mejores descuentos
-                      </p>
+
+                    <div className="flex items-start gap-3 p-3 bg-orange-50 rounded-xl">
+                      <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <TrendingUp size={12} className="text-white" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-orange-900">
+                          Usa más beneficios para subir de nivel y obtener mejores descuentos
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </ModernCard>
-            </SidebarSection>
-          </MainGrid>
+                </ModernCard>
+              </motion.div>
+            </div>
+          </motion.div>
         </div>
 
         {/* Modal de Edición de Perfil */}
@@ -1992,7 +1594,7 @@ export default function SocioPerfilPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      </PageContainer>
+      </motion.div>
     </DashboardLayout>
   );
 }
