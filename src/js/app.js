@@ -1032,6 +1032,17 @@ function initializeNavigation() {
     
     // Navegación por teclado optimizada
     initializeKeyboardNavigation();
+    
+    // Inicializar la sección activa al cargar la página
+    initializeActiveSection();
+}
+
+// ===== FUNCIÓN PARA INICIALIZAR LA SECCIÓN ACTIVA AL CARGAR =====
+function initializeActiveSection() {
+    // Esperar un poco para que la página se cargue completamente
+    setTimeout(() => {
+        updateActiveNavOnScroll();
+    }, 100);
 }
 
 function toggleMobileMenu() {
@@ -1158,12 +1169,17 @@ function smoothScrollToSection(targetSection) {
 }
 
 function updateActiveNavLink(activeLink) {
+    // Remover clase active de todos los enlaces
     document.querySelectorAll('.nav__link').forEach(link => {
         link.classList.remove('active');
         link.setAttribute('aria-current', 'false');
     });
-    activeLink.classList.add('active');
-    activeLink.setAttribute('aria-current', 'page');
+    
+    // Agregar clase active al enlace actual
+    if (activeLink) {
+        activeLink.classList.add('active');
+        activeLink.setAttribute('aria-current', 'page');
+    }
 }
 
 // ===== NAVEGACIÓN POR TECLADO OPTIMIZADA =====
@@ -1225,6 +1241,7 @@ function initializeScrollEffects() {
             requestAnimationFrame(() => {
                 updateActiveNavOnScroll();
                 handleScrollDirection();
+                updateHeaderOnScroll();
                 ticking = false;
             });
             ticking = true;
@@ -1244,22 +1261,78 @@ function handleScrollDirection() {
     lastScrollY = currentScrollY;
 }
 
+// ===== FUNCIÓN MEJORADA PARA ACTUALIZAR NAVEGACIÓN ACTIVA =====
 function updateActiveNavOnScroll() {
     const sections = document.querySelectorAll('section[id]');
-    const scrollY = window.scrollY + (isMobile ? 80 : 100);
+    const scrollY = window.scrollY;
+    const headerHeight = isMobile ? 80 : 100;
+    const windowHeight = window.innerHeight;
+    
+    let activeSection = null;
+    let maxVisibleArea = 0;
     
     sections.forEach(section => {
         const sectionTop = section.offsetTop;
         const sectionHeight = section.offsetHeight;
+        const sectionBottom = sectionTop + sectionHeight;
         const sectionId = section.getAttribute('id');
         
-        if (scrollY >= sectionTop && scrollY < sectionTop + sectionHeight) {
-            const activeLink = document.querySelector(`.nav__link[href="#${sectionId}"]`);
-            if (activeLink && !activeLink.classList.contains('active')) {
-                updateActiveNavLink(activeLink);
-            }
+        // Calcular qué parte de la sección está visible
+        const viewportTop = scrollY + headerHeight;
+        const viewportBottom = scrollY + windowHeight;
+        
+        // Determinar el área visible de la sección
+        const visibleTop = Math.max(viewportTop, sectionTop);
+        const visibleBottom = Math.min(viewportBottom, sectionBottom);
+        const visibleArea = Math.max(0, visibleBottom - visibleTop);
+        
+        // Si esta sección tiene más área visible que la anterior, marcarla como activa
+        if (visibleArea > maxVisibleArea && visibleArea > 50) { // Mínimo 50px visibles
+            maxVisibleArea = visibleArea;
+            activeSection = sectionId;
         }
     });
+    
+    // Si no hay sección con suficiente área visible, usar la lógica tradicional
+    if (!activeSection) {
+        const scrollPosition = scrollY + headerHeight + 50; // Offset adicional
+        
+        sections.forEach(section => {
+            const sectionTop = section.offsetTop;
+            const sectionHeight = section.offsetHeight;
+            const sectionId = section.getAttribute('id');
+            
+            if (scrollPosition >= sectionTop && scrollPosition < sectionTop + sectionHeight) {
+                activeSection = sectionId;
+            }
+        });
+    }
+    
+    // Actualizar el enlace activo si hay una sección activa
+    if (activeSection) {
+        const activeLink = document.querySelector(`.nav__link[href="#${activeSection}"]`);
+        const currentActiveLink = document.querySelector('.nav__link.active');
+        
+        // Solo actualizar si el enlace activo ha cambiado
+        if (activeLink && activeLink !== currentActiveLink) {
+            updateActiveNavLink(activeLink);
+        }
+    }
+}
+
+// ===== FUNCIÓN PARA ACTUALIZAR EL HEADER EN SCROLL =====
+function updateHeaderOnScroll() {
+    const header = document.getElementById('header');
+    if (!header) return;
+    
+    const scrollY = window.scrollY;
+    const threshold = isMobile ? 50 : 100;
+    
+    if (scrollY > threshold) {
+        header.classList.add('scrolled');
+    } else {
+        header.classList.remove('scrolled');
+    }
 }
 
 // ===== REPRODUCTOR DE VIDEO OPTIMIZADO =====
@@ -1729,6 +1802,11 @@ function handleResize() {
     if (newIsMobile !== isMobile) {
         isMobile = newIsMobile;
         detectDeviceCapabilities();
+        
+        // Reinicializar la detección de sección activa después del resize
+        setTimeout(() => {
+            updateActiveNavOnScroll();
+        }, 100);
     }
     
     // Cerrar menús abiertos
@@ -1863,6 +1941,161 @@ if ('serviceWorker' in navigator && !isMobile) {
     });
 }
 
+// ===== FUNCIONES ADICIONALES PARA NAVEGACIÓN MEJORADA =====
+
+// Función para manejar clics en enlaces del navbar (tanto desktop como móvil)
+function handleNavLinkClick(link, targetId) {
+    const targetSection = document.querySelector(targetId);
+    
+    if (targetSection) {
+        // Cerrar menú móvil si está abierto
+        if (isMenuOpen) {
+            closeMobileMenu();
+        }
+        
+        // Hacer scroll suave a la sección
+        smoothScrollToSection(targetSection);
+        
+        // Actualizar enlace activo inmediatamente
+        updateActiveNavLink(link);
+        
+        // Actualizar URL sin recargar la página
+        if (history.pushState) {
+            history.pushState(null, null, targetId);
+        }
+    }
+}
+
+// Función para manejar el botón "atrás" del navegador
+window.addEventListener('popstate', (e) => {
+    const hash = window.location.hash;
+    if (hash) {
+        const targetSection = document.querySelector(hash);
+        const targetLink = document.querySelector(`.nav__link[href="${hash}"]`);
+        
+        if (targetSection && targetLink) {
+            smoothScrollToSection(targetSection);
+            updateActiveNavLink(targetLink);
+        }
+    } else {
+        // Si no hay hash, ir al inicio
+        const homeSection = document.querySelector('#home');
+        const homeLink = document.querySelector('.nav__link[href="#home"]');
+        
+        if (homeSection && homeLink) {
+            smoothScrollToSection(homeSection);
+            updateActiveNavLink(homeLink);
+        }
+    }
+});
+
+// Función para inicializar la navegación basada en la URL actual
+function initializeNavigationFromURL() {
+    const hash = window.location.hash;
+    
+    if (hash) {
+        const targetSection = document.querySelector(hash);
+        const targetLink = document.querySelector(`.nav__link[href="${hash}"]`);
+        
+        if (targetSection && targetLink) {
+            // Esperar un poco para que la página se cargue
+            setTimeout(() => {
+                smoothScrollToSection(targetSection);
+                updateActiveNavLink(targetLink);
+            }, 500);
+        }
+    } else {
+        // Si no hay hash, marcar "Inicio" como activo por defecto
+        const homeLink = document.querySelector('.nav__link[href="#home"]');
+        if (homeLink) {
+            updateActiveNavLink(homeLink);
+        }
+    }
+}
+
+// Función mejorada para detectar intersección de secciones
+function createAdvancedSectionObserver() {
+    if (!('IntersectionObserver' in window)) return;
+    
+    const observerOptions = {
+        root: null,
+        rootMargin: `-${isMobile ? 80 : 100}px 0px -50% 0px`,
+        threshold: [0, 0.1, 0.25, 0.5, 0.75, 1]
+    };
+    
+    const sectionObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            const sectionId = entry.target.getAttribute('id');
+            const navLink = document.querySelector(`.nav__link[href="#${sectionId}"]`);
+            
+            if (entry.isIntersecting && entry.intersectionRatio > 0.1) {
+                // Marcar esta sección como visible
+                entry.target.setAttribute('data-visible', 'true');
+                
+                // Si esta sección tiene más del 25% visible, activar su enlace
+                if (entry.intersectionRatio > 0.25 && navLink) {
+                    const currentActive = document.querySelector('.nav__link.active');
+                    if (currentActive !== navLink) {
+                        updateActiveNavLink(navLink);
+                    }
+                }
+            } else {
+                // Marcar esta sección como no visible
+                entry.target.setAttribute('data-visible', 'false');
+            }
+        });
+    }, observerOptions);
+    
+    // Observar todas las secciones
+    const sections = document.querySelectorAll('section[id]');
+    sections.forEach(section => {
+        sectionObserver.observe(section);
+    });
+    
+    return sectionObserver;
+}
+
+// Función para debug (solo en desarrollo)
+function debugActiveSection() {
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        console.log('=== DEBUG: Secciones y navegación ===');
+        
+        const sections = document.querySelectorAll('section[id]');
+        const scrollY = window.scrollY;
+        const headerHeight = isMobile ? 80 : 100;
+        
+        console.log(`Scroll Y: ${scrollY}, Header Height: ${headerHeight}`);
+        
+        sections.forEach(section => {
+            const sectionTop = section.offsetTop;
+            const sectionHeight = section.offsetHeight;
+            const sectionId = section.getAttribute('id');
+            const isVisible = section.getAttribute('data-visible') === 'true';
+            
+            console.log(`Sección: ${sectionId}`);
+            console.log(`  Top: ${sectionTop}, Height: ${sectionHeight}`);
+            console.log(`  Visible: ${isVisible}`);
+            console.log(`  ---`);
+        });
+        
+        const activeLink = document.querySelector('.nav__link.active');
+        if (activeLink) {
+            console.log(`Enlace activo: ${activeLink.getAttribute('href')}`);
+        }
+        
+        console.log('=====================================');
+    }
+}
+
+// Agregar función de debug al scroll (solo en desarrollo)
+if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    let debugTimeout;
+    window.addEventListener('scroll', () => {
+        clearTimeout(debugTimeout);
+        debugTimeout = setTimeout(debugActiveSection, 1000);
+    });
+}
+
 // ===== CORRECCIÓN PARA EL DRAWER MÓVIL Y OVERLAY =====
 
 // Función para abrir el menú móvil con overlay
@@ -1966,15 +2199,19 @@ function closeMobileMenu() {
     }
 }
 
-// Reemplazar las funciones originales cuando el DOM esté listo
+// Inicializar navegación avanzada cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', () => {
-    // Guardar referencias a las funciones originales
-    const originalOpenMobileMenu = window.openMobileMenu;
-    const originalCloseMobileMenu = window.closeMobileMenu;
+    // Inicializar navegación basada en URL
+    setTimeout(() => {
+        initializeNavigationFromURL();
+    }, 200);
     
-    // Reemplazar con nuestras versiones mejoradas
-    window.openMobileMenu = openMobileMenu;
-    window.closeMobileMenu = closeMobileMenu;
+    // Crear observador avanzado de secciones (opcional, como alternativa)
+    if (!performanceMode) {
+        setTimeout(() => {
+            createAdvancedSectionObserver();
+        }, 1000);
+    }
     
-    console.log('Funciones de drawer móvil mejoradas aplicadas');
+    console.log('Sistema de navegación activa mejorado inicializado');
 });
