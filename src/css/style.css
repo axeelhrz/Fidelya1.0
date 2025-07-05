@@ -4349,7 +4349,7 @@ opacity: 0.6;
 animation: grid-cinematic-drift 120s linear infinite;
 }
 
-/* ===== CONTENEDOR DEL REPRODUCTOR PROFESIONAL ===== */
+/* ===== CONTENEDOR DEL REPRODUCTOR PROFESIONAL SIN ANIMACIONES ===== */
 .videos__player-container {
 position: relative;
 z-index: 2;
@@ -4369,7 +4369,7 @@ backdrop-filter: blur(30px) saturate(180%);
 border: 1px solid rgba(255, 69, 105, 0.15);
 border-radius: 35px;
 
-/* Sombras cinematográficas */
+/* Sombras cinematográficas estáticas */
 box-shadow:
     0 30px 100px rgba(0, 0, 0, 0.6),
     0 15px 50px rgba(0, 0, 0, 0.4),
@@ -4378,26 +4378,7 @@ box-shadow:
     inset 0 -1px 0 rgba(0, 0, 0, 0.2);
 }
 
-/* Efecto shimmer cinematográfico */
-.videos__player-container::before {
-position: absolute;
-top: 0;
-left: -100%;
-width: 100%;
-height: 100%;
-content: '';
-background: linear-gradient(90deg,
-    transparent 0%,
-    rgba(255, 45, 85, 0.08) 30%,
-    rgba(255, 45, 85, 0.12) 50%,
-    rgba(255, 45, 85, 0.08) 70%,
-    transparent 100%
-);
-border-radius: 35px;
-animation: player-shimmer 8s ease-in-out infinite;
-}
-
-/* ===== FRAME DEL REPRODUCTOR CINEMATOGRÁFICO ===== */
+/* ===== FRAME DEL REPRODUCTOR CINEMATOGRÁFICO CON ESQUINAS SIEMPRE CURVAS ===== */
 .videos__player-frame {
 position: relative;
 width: 100%;
@@ -4415,7 +4396,7 @@ box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 
-/* ===== REPRODUCTOR DE VIDEO PROFESIONAL ===== */
+/* ===== REPRODUCTOR DE VIDEO PROFESIONAL CON ESQUINAS CURVAS ===== */
 .videos__player {
 width: 100%;
 height: 100%;
@@ -4429,7 +4410,7 @@ filter: brightness(1.02) contrast(1.05) saturate(1.08);
 display: none !important;
 }
 
-/* ===== OVERLAY DE REPRODUCCIÓN CINEMATOGRÁFICO ===== */
+/* ===== OVERLAY DE REPRODUCCIÓN CINEMATOGRÁFICO CON ESQUINAS CURVAS ===== */
 .videos__play-overlay {
 position: absolute;
 inset: 0;
@@ -4450,13 +4431,12 @@ background: linear-gradient(135deg,
 backdrop-filter: blur(3px);
 border-radius: 23px;
 opacity: 1;
-transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+transition: opacity 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 .videos__play-overlay.hidden {
 pointer-events: none;
 opacity: 0;
-backdrop-filter: blur(0px);
 }
 
 /* ===== BOTÓN DE REPRODUCCIÓN CINEMATOGRÁFICO ===== */
@@ -4568,7 +4548,7 @@ color: rgba(255, 255, 255, 0.9);
 letter-spacing: 0.5px;
 }
 
-/* ===== INDICADORES DE PROGRESO CINEMATOGRÁFICOS ===== */
+/* ===== INDICADORES DE PROGRESO CINEMATOGRÁFICOS CON ESQUINAS CURVAS ===== */
 .videos__progress-indicators {
 position: absolute;
 right: 25px;
@@ -5063,18 +5043,6 @@ font-size: 1rem;
 }
 }
 
-@keyframes player-shimmer {
-0% {
-    left: -100%;
-}
-33% {
-    left: 100%;
-}
-100% {
-    left: -100%;
-}
-}
-
 @keyframes play-pulse-cinematic {
 0% {
     opacity: 0.8;
@@ -5119,7 +5087,6 @@ to {
 .videos::after,
 .videos__orb,
 .videos__grid-overlay,
-.videos__player-container::before,
 .videos__cta::before,
 .videos__badge::before {
 animation: none !important;
