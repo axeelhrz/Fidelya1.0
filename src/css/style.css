@@ -1722,7 +1722,6 @@ z-index: 1;
 width: 300px;
 height: 300px;
 content: '';
-background: radial-gradient(circle, rgb(255 69 105 / 10%) 0%, transparent 70%);
 filter: blur(40px);
 border-radius: 50%;
 animation: floating-orb-1 20s ease-in-out infinite;
