@@ -32,7 +32,9 @@ export interface OrderStateByChild {
   metadata?: {
     version: string
     source: string
-    [key: string]: string | number | boolean | Date | null
+    orderNumber?: number // Nuevo: número de pedido para múltiples pedidos
+    isAdditionalOrder?: boolean // Nuevo: indica si es un pedido adicional
+    [key: string]: string | number | boolean | Date | null | undefined
   }
 }
 
@@ -59,9 +61,9 @@ export class OrderService {
   private static readonly VERSION = '1.0.0'
 
   /**
-   * Obtiene el pedido activo de un usuario para una semana específica
+   * Obtiene TODOS los pedidos de un usuario para una semana específica - ACTUALIZADO
    */
-  static async getUserOrder(userId: string, weekStart: string): Promise<OrderStateByChild | null> {
+  static async getUserOrders(userId: string, weekStart: string): Promise<OrderStateByChild[]> {
     try {
       if (!userId || !weekStart) {
         throw new Error('userId y weekStart son requeridos')
@@ -72,22 +74,37 @@ export class OrderService {
         ordersRef,
         where('userId', '==', userId),
         where('weekStart', '==', weekStart),
-        where('status', 'in', ['pendiente', 'pagado', 'procesando_pago']),
-        orderBy('createdAt', 'desc'),
-        limit(1)
+        orderBy('createdAt', 'desc')
       )
       
       const snapshot = await getDocs(q)
+      const orders: OrderStateByChild[] = []
       
-      if (snapshot.empty) {
-        return null
-      }
+      snapshot.forEach((doc) => {
+        const order = this.mapDocumentToOrder(doc.id, doc.data())
+        if (order) {
+          orders.push(order)
+        }
+      })
       
-      const docData = snapshot.docs[0]
-      return this.mapDocumentToOrder(docData.id, docData.data())
+      console.log(`📋 Found ${orders.length} orders for user ${userId} in week ${weekStart}`)
+      return orders
+    } catch (error) {
+      console.error('Error fetching user orders:', error)
+      throw new Error('No se pudieron cargar los pedidos del usuario')
+    }
+  }
+
+  /**
+   * Obtiene el pedido activo más reciente (para compatibilidad) - DEPRECATED
+   */
+  static async getUserOrder(userId: string, weekStart: string): Promise<OrderStateByChild | null> {
+    try {
+      const orders = await this.getUserOrders(userId, weekStart)
+      return orders.length > 0 ? orders[0] : null
     } catch (error) {
       console.error('Error fetching user order:', error)
-      throw new Error('No se pudo cargar el pedido del usuario')
+      return null
     }
   }
 
@@ -207,7 +224,7 @@ export class OrderService {
   }
 
   /**
-   * Guarda un nuevo pedido
+   * Guarda un nuevo pedido - ACTUALIZADO para múltiples pedidos
    */
   static async saveOrder(order: Omit<OrderStateByChild, 'id' | 'createdAt' | 'fechaCreacion' | 'updatedAt'>): Promise<string> {
     try {
@@ -226,6 +243,11 @@ export class OrderService {
       // Recalcular total para asegurar consistencia
       const calculatedTotal = this.calculateOrderTotal(cleanedSelections, order.tipoUsuario)
 
+      // Obtener número de pedido para múltiples pedidos
+      const existingOrders = await this.getUserOrders(order.userId, order.weekStart)
+      const orderNumber = existingOrders.length + 1
+      const isAdditionalOrder = orderNumber > 1
+
       // Preparar datos para Firebase
       const orderData: Record<string, string | number | boolean | Timestamp | OrderSelectionByChild[] | object> = {
         userId: order.userId,
@@ -240,6 +262,8 @@ export class OrderService {
         metadata: {
           version: this.VERSION,
           source: 'web',
+          orderNumber,
+          isAdditionalOrder,
           ...order.metadata
         }
       }
@@ -252,10 +276,16 @@ export class OrderService {
       // Limpiar datos undefined
       const finalOrderData = this.cleanOrderData(orderData)
       
-      console.log('Saving order:', { userId: order.userId, weekStart: order.weekStart, total: calculatedTotal })
+      console.log('💾 Saving order:', { 
+        userId: order.userId, 
+        weekStart: order.weekStart, 
+        total: calculatedTotal,
+        orderNumber,
+        isAdditionalOrder
+      })
       
       const docRef = await addDoc(ordersRef, finalOrderData)
-      console.log('Order saved successfully with ID:', docRef.id)
+      console.log('✅ Order saved successfully with ID:', docRef.id)
       
       return docRef.id
     } catch (error) {
@@ -315,7 +345,7 @@ export class OrderService {
       const cleanedUpdateData = this.cleanOrderData(updateData) as Record<string, string | number | boolean | Timestamp | OrderSelectionByChild[] | object | null>
       
       await updateDoc(orderRef, cleanedUpdateData)
-      console.log('Order updated successfully:', orderId)
+      console.log('✅ Order updated successfully:', orderId)
     } catch (error) {
       console.error('Error updating order:', error)
       if (error instanceof Error) {
@@ -393,13 +423,14 @@ export class OrderService {
   }
 
   /**
-   * Valida un pedido antes de proceder al pago - ACTUALIZADO: Sin restricciones de almuerzo
+   * Valida un pedido antes de proceder al pago - ACTUALIZADO: Permite múltiples pedidos
    */
   static validateOrderByChild(
     selections: OrderSelectionByChild[], 
     weekDays: string[], 
     isOrderingAllowed: boolean,
-    user: User
+    user: User,
+    existingOrders?: OrderStateByChild[] // Nuevo parámetro opcional
   ): OrderValidation {
     const errors: string[] = []
     const warnings: string[] = []
@@ -441,23 +472,24 @@ export class OrderService {
       errors.push('Hay selecciones inválidas en el pedido')
     }
     
+    // NUEVO: Información sobre múltiples pedidos
+    if (existingOrders && existingOrders.length > 0) {
+      const paidOrders = existingOrders.filter(order => order.status === 'pagado')
+      const pendingOrders = existingOrders.filter(order => order.status === 'pendiente' || order.status === 'procesando_pago')
+      
+      if (paidOrders.length > 0) {
+        warnings.push(`Ya tienes ${paidOrders.length} pedido(s) pagado(s) para esta semana. Este será un pedido adicional.`)
+      }
+      
+      if (pendingOrders.length > 0) {
+        warnings.push(`Tienes ${pendingOrders.length} pedido(s) pendiente(s) de pago. Puedes agregar más elementos o crear un nuevo pedido.`)
+      }
+    }
+    
     // Advertencias informativas (no bloquean el pago)
     const weekDaysLaboral = weekDays.filter((_, index) => index < 5) // Solo lunes a viernes
     const selectionsWithAlmuerzo = selections.filter(s => s.almuerzo)
     const selectionsWithColacion = selections.filter(s => s.colacion)
-    
-    // Advertencia sobre días sin almuerzo (solo si hay algunos almuerzos seleccionados)
-    if (selectionsWithAlmuerzo.length > 0) {
-      const daysWithoutAlmuerzo = weekDaysLaboral.filter(day => {
-        const daySelections = selections.filter(s => s.date === day && s.almuerzo)
-        return daySelections.length === 0
-      })
-      
-      if (daysWithoutAlmuerzo.length > 0) {
-        warnings.push(`Tienes ${daysWithoutAlmuerzo.length} día(s) sin almuerzo seleccionado. Puedes agregar más días después del pago.`)
-        missingDays.push(...daysWithoutAlmuerzo)
-      }
-    }
     
     // Información sobre el tipo de pedido
     if (selectionsWithAlmuerzo.length === 0 && selectionsWithColacion.length > 0) {
@@ -478,12 +510,13 @@ export class OrderService {
   }
 
   /**
-   * Método de compatibilidad con la estructura anterior - ACTUALIZADO: Sin restricciones de almuerzo
+   * Método de compatibilidad con la estructura anterior - ACTUALIZADO
    */
   static validateOrder(
     selections: OrderSelectionByChild[], 
     weekDays: string[], 
-    isOrderingAllowed: boolean
+    isOrderingAllowed: boolean,
+    existingOrders?: OrderStateByChild[]
   ): OrderValidation {
     const errors: string[] = []
     const warnings: string[] = []
@@ -499,23 +532,24 @@ export class OrderService {
       errors.push('Debe seleccionar al menos un almuerzo o colación para proceder')
     }
     
+    // NUEVO: Información sobre múltiples pedidos
+    if (existingOrders && existingOrders.length > 0) {
+      const paidOrders = existingOrders.filter(order => order.status === 'pagado')
+      const pendingOrders = existingOrders.filter(order => order.status === 'pendiente' || order.status === 'procesando_pago')
+      
+      if (paidOrders.length > 0) {
+        warnings.push(`Ya tienes ${paidOrders.length} pedido(s) pagado(s) para esta semana.`)
+      }
+      
+      if (pendingOrders.length > 0) {
+        warnings.push(`Tienes ${pendingOrders.length} pedido(s) pendiente(s) de pago.`)
+      }
+    }
+    
     // Advertencias informativas
     const weekDaysLaboral = weekDays.filter((_, index) => index < 5) // Solo lunes a viernes
     const selectionsWithAlmuerzo = selections.filter(s => s.almuerzo)
     const selectionsWithColacion = selections.filter(s => s.colacion)
-    
-    // Advertencia sobre días sin almuerzo (solo si hay algunos almuerzos seleccionados)
-    if (selectionsWithAlmuerzo.length > 0) {
-      const daysWithoutAlmuerzo = weekDaysLaboral.filter(day => {
-        const selection = selections.find(s => s.date === day && s.almuerzo)
-        return !selection
-      })
-      
-      if (daysWithoutAlmuerzo.length > 0) {
-        warnings.push(`${daysWithoutAlmuerzo.length} día(s) sin almuerzo seleccionado`)
-        missingDays.push(...daysWithoutAlmuerzo)
-      }
-    }
     
     // Información sobre colaciones
     if (selectionsWithColacion.length > 0 && selectionsWithAlmuerzo.length === 0) {
