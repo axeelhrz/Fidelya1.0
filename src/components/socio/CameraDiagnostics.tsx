@@ -8,11 +8,9 @@ import {
   XCircle, 
   AlertTriangle,
   Monitor,
-  Smartphone,
-  Camera,
-  Shield,
-  Wifi,
-  Info
+  Info,
+  X,
+  RefreshCw
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 
@@ -193,7 +191,7 @@ export const CameraDiagnostics: React.FC<CameraDiagnosticsProps> = ({
   const [diagnostics, setDiagnostics] = useState<DiagnosticResult[]>([]);
   const [systemInfo, setSystemInfo] = useState<Record<string, string>>({});
 
-  const runDiagnostics = async () => {
+  const runDiagnostics = React.useCallback(async () => {
     const results: DiagnosticResult[] = [];
 
     // 1. Verificar HTTPS
@@ -266,7 +264,7 @@ export const CameraDiagnostics: React.FC<CameraDiagnosticsProps> = ({
             'Ve a configuración del navegador y permite el acceso a la cámara' : 
             permission.state === 'prompt' ? 'Se solicitarán permisos al usar la cámara' : undefined
         });
-      } catch (error) {
+      } catch {
         results.push({
           name: 'Verificación de Permisos',
           status: 'info',
@@ -303,9 +301,9 @@ export const CameraDiagnostics: React.FC<CameraDiagnosticsProps> = ({
     }
 
     setDiagnostics(results);
-  };
+  }, [cameraError]);
 
-  const collectSystemInfo = () => {
+  const collectSystemInfo = React.useCallback(() => {
     const info: Record<string, string> = {};
     
     // Información del navegador
@@ -319,7 +317,15 @@ export const CameraDiagnostics: React.FC<CameraDiagnosticsProps> = ({
     info['Densidad'] = `${window.devicePixelRatio}x`;
     
     // Información de la conexión
-    const connection = (navigator as any).connection;
+    // Minimal NetworkInformation type for TypeScript
+    type NetworkInformation = {
+      effectiveType?: string;
+      downlink?: number;
+      rtt?: number;
+      saveData?: boolean;
+    };
+    
+    const connection = (navigator as Navigator & { connection?: NetworkInformation }).connection;
     if (connection) {
       info['Conexión'] = connection.effectiveType || 'Desconocida';
     }
@@ -329,7 +335,7 @@ export const CameraDiagnostics: React.FC<CameraDiagnosticsProps> = ({
     info['Touch'] = 'ontouchstart' in window ? 'Sí' : 'No';
     
     setSystemInfo(info);
-  };
+  }, []);
 
   const getBrowserName = (): string => {
     const userAgent = navigator.userAgent;
@@ -411,7 +417,7 @@ export const CameraDiagnostics: React.FC<CameraDiagnosticsProps> = ({
       runDiagnostics();
       collectSystemInfo();
     }
-  }, [isVisible, cameraError]);
+  }, [isVisible, cameraError, runDiagnostics, collectSystemInfo]);
 
   if (!isVisible) return null;
 

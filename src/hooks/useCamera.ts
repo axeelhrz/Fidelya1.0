@@ -161,10 +161,12 @@ export const useCamera = (options: UseCameraOptions = {}) => {
     } catch (error) {
       console.error('❌ Camera error:', error);
       
+      type ErrorWithConstraint = Error & { constraint?: string };
+      const err = error as ErrorWithConstraint;
       const cameraError: CameraError = {
-        name: (error as Error).name || 'UnknownError',
-        message: (error as Error).message || 'Error desconocido',
-        constraint: (error as any).constraint
+        name: err.name || 'UnknownError',
+        message: err.message || 'Error desconocido',
+        constraint: err.constraint
       };
 
       setCameraState(prev => ({
@@ -223,7 +225,7 @@ export const useCamera = (options: UseCameraOptions = {}) => {
       
       if ('torch' in capabilities) {
         await track.applyConstraints({
-          advanced: [{ torch: enabled } as any]
+          advanced: [{ torch: enabled } as MediaTrackConstraintSet]
         });
         console.log('💡 Flash toggled:', enabled);
         return enabled;

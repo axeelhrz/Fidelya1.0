@@ -6,10 +6,8 @@ import {
   getDocs, 
   query, 
   where, 
-  orderBy, 
   limit,
   serverTimestamp,
-  Timestamp 
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { 
@@ -236,7 +234,7 @@ export class NotificationService {
       
       if (!snapshot.empty) {
         const doc = snapshot.docs[0];
-        return { ...doc.data(), id: doc.id } as NotificationSettings;
+        return { ...doc.data(), id: doc.id } as unknown as NotificationSettings;
       }
 
       // Return default settings if none exist

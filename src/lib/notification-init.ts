@@ -52,7 +52,7 @@ export const initializeClientNotifications = () => {
     // Registrar Service Worker para notificaciones push (si existe)
     if ('serviceWorker' in navigator && 'PushManager' in window) {
       navigator.serviceWorker.register('/sw.js')
-        .then(registration => {
+        .then(() => {
           console.log('📱 Service Worker registrado para notificaciones push');
         })
         .catch(error => {

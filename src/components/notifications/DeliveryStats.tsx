@@ -9,7 +9,6 @@ import {
   Avatar,
   LinearProgress,
   Chip,
-  Grid,
   Tooltip,
   IconButton,
   alpha,
@@ -50,7 +49,7 @@ export const DeliveryStats: React.FC<DeliveryStatsProps> = ({
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  const loadStats = async () => {
+  const loadStats = React.useCallback(async () => {
     try {
       setLoading(true);
       const deliveryStats = await getDeliveryStats(notificationId);
@@ -62,7 +61,7 @@ export const DeliveryStats: React.FC<DeliveryStatsProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [getDeliveryStats, notificationId]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -75,7 +74,7 @@ export const DeliveryStats: React.FC<DeliveryStatsProps> = ({
     if (notificationId) {
       loadStats();
     }
-  }, [notificationId]);
+  }, [notificationId, loadStats]);
 
   if (loading) {
     return (
@@ -176,51 +175,55 @@ export const DeliveryStats: React.FC<DeliveryStatsProps> = ({
         </Box>
 
         {/* Overview Stats */}
-        <Grid container spacing={3} sx={{ mb: 4 }}>
-          <Grid item xs={6} sm={3}>
-            <Box sx={{ textAlign: 'center' }}>
-              <Typography variant="h4" sx={{ fontWeight: 900, color: '#1e293b', mb: 1 }}>
-                {stats.total}
-              </Typography>
-              <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 600 }}>
-                Total Enviados
-              </Typography>
-            </Box>
-          </Grid>
+        <Box sx={{ 
+          display: 'flex', 
+          flexWrap: 'wrap',
+          gap: 3,
+          mb: 4,
+          '& > *': {
+            flex: '1 1 calc(50% - 12px)',
+            minWidth: '120px',
+            '@media (min-width: 600px)': {
+              flex: '1 1 calc(25% - 18px)',
+            }
+          }
+        }}>
+          <Box sx={{ textAlign: 'center' }}>
+            <Typography variant="h4" sx={{ fontWeight: 900, color: '#1e293b', mb: 1 }}>
+              {stats.total}
+            </Typography>
+            <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 600 }}>
+              Total Enviados
+            </Typography>
+          </Box>
           
-          <Grid item xs={6} sm={3}>
-            <Box sx={{ textAlign: 'center' }}>
-              <Typography variant="h4" sx={{ fontWeight: 900, color: '#10b981', mb: 1 }}>
-                {stats.sent}
-              </Typography>
-              <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 600 }}>
-                Exitosos
-              </Typography>
-            </Box>
-          </Grid>
+          <Box sx={{ textAlign: 'center' }}>
+            <Typography variant="h4" sx={{ fontWeight: 900, color: '#10b981', mb: 1 }}>
+              {stats.sent}
+            </Typography>
+            <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 600 }}>
+              Exitosos
+            </Typography>
+          </Box>
           
-          <Grid item xs={6} sm={3}>
-            <Box sx={{ textAlign: 'center' }}>
-              <Typography variant="h4" sx={{ fontWeight: 900, color: '#6366f1', mb: 1 }}>
-                {stats.delivered}
-              </Typography>
-              <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 600 }}>
-                Entregados
-              </Typography>
-            </Box>
-          </Grid>
+          <Box sx={{ textAlign: 'center' }}>
+            <Typography variant="h4" sx={{ fontWeight: 900, color: '#6366f1', mb: 1 }}>
+              {stats.delivered}
+            </Typography>
+            <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 600 }}>
+              Entregados
+            </Typography>
+          </Box>
           
-          <Grid item xs={6} sm={3}>
-            <Box sx={{ textAlign: 'center' }}>
-              <Typography variant="h4" sx={{ fontWeight: 900, color: '#ef4444', mb: 1 }}>
-                {stats.failed}
-              </Typography>
-              <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 600 }}>
-                Fallidos
-              </Typography>
-            </Box>
-          </Grid>
-        </Grid>
+          <Box sx={{ textAlign: 'center' }}>
+            <Typography variant="h4" sx={{ fontWeight: 900, color: '#ef4444', mb: 1 }}>
+              {stats.failed}
+            </Typography>
+            <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 600 }}>
+              Fallidos
+            </Typography>
+          </Box>
+        </Box>
 
         <Divider sx={{ my: 3 }} />
 
@@ -262,53 +265,63 @@ export const DeliveryStats: React.FC<DeliveryStatsProps> = ({
             Distribución por Canal
           </Typography>
           
-          <Grid container spacing={2}>
+          <Box sx={{ 
+            display: 'flex', 
+            flexWrap: 'wrap',
+            gap: 2,
+            '& > *': {
+              flex: '1 1 calc(50% - 8px)',
+              minWidth: '140px',
+              '@media (min-width: 600px)': {
+                flex: '1 1 calc(25% - 12px)',
+              }
+            }
+          }}>
             {Object.entries(stats.byChannel).map(([channel, count]) => (
-              <Grid item xs={6} sm={3} key={channel}>
-                <Card
-                  elevation={0}
+              <Card
+                key={channel}
+                elevation={0}
+                sx={{
+                  p: 2,
+                  border: '1px solid #f1f5f9',
+                  borderRadius: 3,
+                  textAlign: 'center',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    borderColor: alpha(channelColors[channel as keyof typeof channelColors] || '#6366f1', 0.3),
+                    transform: 'translateY(-2px)',
+                    boxShadow: `0 8px 32px ${alpha(channelColors[channel as keyof typeof channelColors] || '#6366f1', 0.15)}`,
+                  }
+                }}
+              >
+                <Avatar
                   sx={{
-                    p: 2,
-                    border: '1px solid #f1f5f9',
-                    borderRadius: 3,
-                    textAlign: 'center',
-                    transition: 'all 0.3s ease',
-                    '&:hover': {
-                      borderColor: alpha(channelColors[channel as keyof typeof channelColors] || '#6366f1', 0.3),
-                      transform: 'translateY(-2px)',
-                      boxShadow: `0 8px 32px ${alpha(channelColors[channel as keyof typeof channelColors] || '#6366f1', 0.15)}`,
-                    }
+                    width: 40,
+                    height: 40,
+                    bgcolor: alpha(channelColors[channel as keyof typeof channelColors] || '#6366f1', 0.1),
+                    color: channelColors[channel as keyof typeof channelColors] || '#6366f1',
+                    mx: 'auto',
+                    mb: 2,
                   }}
                 >
-                  <Avatar
-                    sx={{
-                      width: 40,
-                      height: 40,
-                      bgcolor: alpha(channelColors[channel as keyof typeof channelColors] || '#6366f1', 0.1),
-                      color: channelColors[channel as keyof typeof channelColors] || '#6366f1',
-                      mx: 'auto',
-                      mb: 2,
-                    }}
-                  >
-                    {channelIcons[channel as keyof typeof channelIcons] || <Send />}
-                  </Avatar>
-                  
-                  <Typography variant="h5" sx={{ fontWeight: 900, color: '#1e293b', mb: 1 }}>
-                    {count}
-                  </Typography>
-                  
-                  <Typography variant="caption" sx={{ 
-                    color: '#64748b', 
-                    fontWeight: 600,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.1em'
-                  }}>
-                    {channelLabels[channel as keyof typeof channelLabels] || channel}
-                  </Typography>
-                </Card>
-              </Grid>
+                  {channelIcons[channel as keyof typeof channelIcons] || <Send />}
+                </Avatar>
+                
+                <Typography variant="h5" sx={{ fontWeight: 900, color: '#1e293b', mb: 1 }}>
+                  {count}
+                </Typography>
+                
+                <Typography variant="caption" sx={{ 
+                  color: '#64748b', 
+                  fontWeight: 600,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.1em'
+                }}>
+                  {channelLabels[channel as keyof typeof channelLabels] || channel}
+                </Typography>
+              </Card>
             ))}
-          </Grid>
+          </Box>
         </Box>
 
         {/* Status Indicators */}

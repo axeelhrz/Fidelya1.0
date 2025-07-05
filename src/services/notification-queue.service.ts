@@ -302,7 +302,7 @@ class NotificationQueueService {
 
         if (completedWithTimes.length > 0) {
           const totalTime = completedWithTimes.reduce((sum, item) => {
-            const completedAt = new Date(item.metadata!.completedAt);
+            const completedAt = new Date(item.metadata!.completedAt as string | number | Date);
             const createdAt = new Date(item.createdAt);
             return sum + (completedAt.getTime() - createdAt.getTime());
           }, 0);
@@ -366,13 +366,13 @@ class NotificationQueueService {
   }
 
   // Get failed notifications for manual retry
-  async getFailedNotifications(limit: number = 50): Promise<QueuedNotification[]> {
+  async getFailedNotifications(limitCount: number = 50): Promise<QueuedNotification[]> {
     try {
       const failedQuery = query(
         collection(db, this.COLLECTION_NAME),
         where('status', '==', 'failed'),
         orderBy('updatedAt', 'desc'),
-        limit(limit)
+        limit(limitCount)
       );
 
       const snapshot = await getDocs(failedQuery);
@@ -430,7 +430,7 @@ class NotificationQueueService {
     options: {
       priority?: 'low' | 'medium' | 'high' | 'urgent';
       maxAttempts?: number;
-      metadata?: Record<string, any>;
+      metadata?: Record<string, unknown>;
     } = {}
   ): Promise<string[]> {
     return this.enqueueNotification(notificationId, recipientIds, notificationData, {
