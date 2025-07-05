@@ -1,0 +1,193 @@
+/* ===== EFECTOS DE BOTONES UNIFICADOS ===== */
+
+/* ===== EFECTO DE BRILLO INTERNO ANIMADO ===== */
+.btn--primary::before,
+.btn--cta::before,
+.btn--cta-video::before,
+.btn--footer::before {
+position: absolute !important;
+top: 0 !important;
+left: -100% !important;
+z-index: 1 !important;
+width: 100% !important;
+height: 100% !important;
+content: '' !important;
+background: linear-gradient(90deg,
+transparent,
+rgb(255 255 255 / 40%),
+transparent
+) !important;
+border-radius: inherit !important;
+transition: left 1s ease !important;
+}
+
+/* ===== ANILLO EXTERIOR NEÓN ===== */
+.btn--primary::after,
+.btn--cta::after,
+.btn--cta-video::after,
+.btn--footer::after {
+position: absolute !important;
+inset: -3px !important;
+z-index: -1 !important;
+content: '' !important;
+background: linear-gradient(45deg,
+var(--neon-primary-glow),
+var(--neon-primary-bright),
+var(--neon-primary-glow),
+var(--neon-primary-bright)
+) !important;
+filter: blur(2px) !important;
+border-radius: inherit !important;
+opacity: 0 !important;
+transition: opacity 0.3s ease !important;
+}
+
+/* ===== ESTADOS HOVER MEJORADOS ===== */
+.btn--primary:hover,
+.btn--cta:hover,
+.btn--cta-video:hover,
+.btn--footer:hover {
+text-shadow:
+0 0 15px rgb(255 255 255 / 100%),
+0 0 25px rgb(255 45 85 / 80%),
+0 0 35px rgb(255 45 85 / 60%) !important;
+border: 2px solid rgb(255 45 85 / 80%) !important;
+box-shadow:
+var(--neon-shadow-hover),
+var(--neon-glow-medium),
+var(--neon-glow-strong),
+inset 0 1px 0 rgb(255 255 255 / 30%) !important;
+transform: translateY(-3px) scale(1.03) translateZ(0) !important;
+}
+
+/* Activar efectos en hover */
+.btn--primary:hover::before,
+.btn--cta:hover::before,
+.btn--cta-video:hover::before,
+.btn--footer:hover::before {
+left: 100% !important;
+}
+
+.btn--primary:hover::after,
+.btn--cta:hover::after,
+.btn--cta-video:hover::after,
+.btn--footer:hover::after {
+opacity: 1 !important;
+}
+
+/* ===== ESTADOS ACTIVOS/PRESIONADOS ===== */
+.btn--primary:active,
+.btn--cta:active,
+.btn--cta-video:active,
+.btn--footer:active {
+box-shadow:
+var(--neon-shadow-active),
+var(--neon-glow-strong),
+inset 0 1px 0 rgb(255 255 255 / 40%) !important;
+transform: translateY(-1px) scale(1.01) translateZ(0) !important;
+}
+
+/* ===== ESTADOS FOCUS PARA ACCESIBILIDAD ===== */
+.btn--primary:focus,
+.btn--cta:focus,
+.btn--cta-video:focus,
+.btn--footer:focus {
+border-radius: inherit !important;
+outline: 3px solid rgb(255 45 85 / 50%) !important;
+outline-offset: 3px !important;
+}
+
+/* ===== BOTONES SECUNDARIOS ===== */
+.btn--secondary:hover {
+color: white;
+background: var(--starflex-red);
+box-shadow:
+var(--shadow-lg),
+0 0 25px rgb(255 69 105 / 40%);
+transform: translateY(-2px);
+}
+
+/* ===== EFECTOS ESPECÍFICOS PARA ELEMENTOS CON HIGHLIGHT ===== */
+.hero__title--highlight::after,
+.videos__title--highlight::after,
+.contact__title--highlight::after {
+position: absolute;
+bottom: -10px;
+left: 50%;
+width: 80%;
+height: 4px;
+content: '';
+background: linear-gradient(90deg,
+var(--starflex-crimson) 0%,
+var(--starflex-crimson-bright) 50%,
+transparent 100%
+);
+border-radius: 2px;
+opacity: 0.8;
+transform: translateX(-50%);
+animation: glow-line 6s ease-in-out infinite;
+}
+
+.hero__title--highlight::after {
+left: 0;
+width: 100%;
+transform: none;
+animation: crimson-glow-line 6s ease-in-out infinite;
+}
+
+.contact__title--highlight::after {
+width: 60%;
+height: 3px;
+bottom: -8px;
+background: linear-gradient(90deg,
+transparent 0%,
+var(--starflex-red) 50%,
+transparent 100%
+);
+}
+
+/* ===== ANIMACIONES ===== */
+@keyframes glow-line {
+0%, 100% {
+opacity: 0.6;
+transform: translateX(-50%) scaleX(1);
+}
+50% {
+opacity: 1;
+transform: translateX(-50%) scaleX(1.05);
+}
+}
+
+@keyframes crimson-glow-line {
+0%, 100% {
+opacity: 0.6;
+transform: scaleX(1);
+}
+50% {
+opacity: 1;
+transform: scaleX(1.05);
+}
+}
+
+/* ===== CORRECCIÓN PARA USUARIOS QUE PREFIEREN MOVIMIENTO REDUCIDO ===== */
+@media (prefers-reduced-motion: reduce) {
+.btn--primary,
+.btn--cta,
+.btn--cta-video,
+.btn--footer {
+transition: none !important;
+}
+
+.btn--primary:hover,
+.btn--cta:hover,
+.btn--cta-video:hover,
+.btn--footer:hover {
+transform: none !important;
+}
+
+.hero__title--highlight::after,
+.videos__title--highlight::after,
+.contact__title--highlight::after {
+animation: none !important;
+}
+}

@@ -1,0 +1,10 @@
+/* ===== STARFLEX CSS MODULAR ===== */
+/* Generado automáticamente - No editar directamente */
+
+@import './_variables.css';
+@import './_reset.css';
+@import './_base.css';
+@import './_layout.css';
+@import './_components.css';
+@import './_utilities.css';
+@import './_animations.css';

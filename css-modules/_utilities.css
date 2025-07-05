@@ -1,0 +1,9 @@
+/* ===== UTILITIES MODULE ===== */
+
+/* ===== PREVENCIÓN DE SCROLL CUANDO EL MENÚ ESTÁ ABIERTO ===== */
+body.no-scroll {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}

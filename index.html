@@ -36,7 +36,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
     <!-- CSS UNIFICADO - SOLO STYLE.CSS -->
-    <link rel="stylesheet" href="src/css/style.css">
+    <link rel="stylesheet" href="css/style.css">
     
     <!-- Optimización para dispositivos móviles -->
     <meta name="theme-color" content="#FF2D55">
@@ -46,20 +46,8 @@
 </head>
 
 <body>
-    <!-- Canvas de fondo futurista optimizado con nebulosas -->
-    <div class="bg-canvas">
-        <div class="nebula-layer"></div>
-        <div class="light-blobs">
-            <div class="light-blob-1"></div>
-            <div class="light-blob-2"></div>
-            <div class="light-blob-3"></div>
-        </div>
-        <div class="light-particles">
-            <div class="particle-1"></div>
-            <div class="particle-2"></div>
-            <div class="particle-3"></div>
-        </div>
-    </div>
+    <!-- Canvas de fondo futurista optimizado -->
+    <div class="bg-canvas"></div>
     
     <!-- Header optimizado para móvil -->
     <header class="header" id="header">
@@ -72,10 +60,26 @@
             <!-- Navegación optimizada para móvil -->
             <div class="nav__menu" id="nav-menu">
                 <!-- Botón de cerrar para móvil (solo visible en móvil) -->
-
+                <div class="nav__close" id="nav-close" role="button" tabindex="0" aria-label="Cerrar menú de navegación">
+                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                    </svg>
+                </div>
 
                 <!-- Selector de idioma móvil (solo visible en móvil) -->
-
+                <div class="nav__language-mobile">
+                    <div class="nav__language-title" data-translate="nav-language-title">Idioma</div>
+                    <div class="nav__language-options">
+                        <button class="nav__language-option" data-lang="es" aria-label="Cambiar idioma a Español">
+                            <span class="nav__language-flag" role="img" aria-label="Bandera de España">🇪🇸</span>
+                            <span class="nav__language-name">Español</span>
+                        </button>
+                        <button class="nav__language-option" data-lang="en" aria-label="Cambiar idioma a Inglés">
+                            <span class="nav__language-flag" role="img" aria-label="Bandera de Estados Unidos">🇺🇸</span>
+                            <span class="nav__language-name">English</span>
+                        </button>
+                    </div>
+                </div>
 
                 <ul class="nav__list" role="navigation" aria-label="Navegación principal">
                     <li><a href="#home" class="nav__link" data-translate="nav-home" role="menuitem">Inicio</a></li>
@@ -140,9 +144,9 @@
                 </div>
                 
                 <h1 class="hero__title">
-                    <span class="hero__title--main">DOMINA LOS</span>
-                    <span class="hero__title--highlight">BLOQUES DE</span>
-                    <span class="hero__title--amazon">AMAZON FLEX</span>
+                    <span class="hero__title--main" data-translate="hero-title-main">DOMINA LOS</span>
+                    <span class="hero__title--highlight" data-translate="hero-title-highlight">BLOQUES DE</span>
+                    <span class="hero__title--amazon" data-translate="hero-title-amazon">AMAZON FLEX</span>
                 </h1>
                 
                 <div class="hero__company-description">
@@ -659,12 +663,12 @@
             <div class="contact__channel" data-channel="instagram">
                 <div class="contact__channel-icon">
                     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                        <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.0723.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                        <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
                     </svg>
                 </div>
                 <div class="contact__channel-content">
                     <h3 class="contact__channel-title" data-translate="contact-instagram-title">Instagram</h3>
-                    <p class="contact__channel-description" data-translate="contact-instagram-description">Síguenos para contenido visual, tips y actualizaciones diarias sobre los mejores bloques</p>
+                    <p class="contact__channel-description" data-translate="contact-instagram-description">CSíguenos para contenido visual, tips y actualizaciones diarias sobre los mejores bloques</p>
                 </div>
                 <a href="https://www.instagram.com/starflexapp/" target="_blank" rel="noopener noreferrer" class="contact__channel-btn" aria-label="Seguir a StarFlex en Instagram">
                     <span data-translate="contact-instagram-btn">Seguir</span>
@@ -800,7 +804,6 @@
     </div>
 
     <!-- JavaScript optimizado -->
-    <script src="src/js/app.js"></script>
+    <script src="js/script.js"></script>
 </body>
 </html>
-
