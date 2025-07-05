@@ -20,6 +20,9 @@ interface OrderState {
   currentChild: Child | null // null representa al funcionario
   children: Child[]
   
+  // Nuevo: Estado para controlar duplicados
+  existingOrders: string[] // IDs de pedidos existentes para evitar duplicados
+  
   setUserType: (type: UserType) => void
   addSelection: (selection: OrderSelection) => void
   removeSelection: (date: string) => void
@@ -41,6 +44,11 @@ interface OrderState {
   clearSelectionsByChild: () => void
   getOrderSummaryByChild: () => OrderSummaryByChild
   loadExistingSelections: (selections: OrderSelectionByChild[]) => void
+  
+  // Nuevos métodos para manejar duplicados y limpieza
+  setExistingOrders: (orderIds: string[]) => void
+  clearAllSelections: () => void // Limpia todo después del pago exitoso
+  hasExistingOrder: (date: string, childId?: string) => boolean
 }
 
 export const useOrderStore = create<OrderState>()(
@@ -53,6 +61,7 @@ export const useOrderStore = create<OrderState>()(
       selectionsByChild: [],
       currentChild: null, // null representa al funcionario
       children: [],
+      existingOrders: [],
 
       setUserType: (type: UserType) => set({ userType: type }),
 
@@ -309,6 +318,26 @@ export const useOrderStore = create<OrderState>()(
 
       loadExistingSelections: (selections: OrderSelectionByChild[]) => {
         set({ selectionsByChild: selections })
+      },
+
+      // Nuevos métodos para manejar duplicados y limpieza
+      setExistingOrders: (orderIds: string[]) => {
+        set({ existingOrders: orderIds })
+      },
+
+      clearAllSelections: () => {
+        set({ 
+          selections: [], 
+          selectionsByChild: [],
+          existingOrders: []
+        })
+        console.log('🧹 Carrito limpiado después del pago exitoso')
+      },
+
+      hasExistingOrder: (date: string, childId?: string) => {
+        const { existingOrders } = get()
+        const orderKey = `${date}-${childId || 'funcionario'}`
+        return existingOrders.includes(orderKey)
       }
     }),
     {
@@ -318,7 +347,8 @@ export const useOrderStore = create<OrderState>()(
         selectionsByChild: state.selectionsByChild,
         userType: state.userType,
         currentChild: state.currentChild,
-        children: state.children
+        children: state.children,
+        existingOrders: state.existingOrders
       })
     }
   )

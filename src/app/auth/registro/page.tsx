@@ -12,8 +12,28 @@ import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth"
 import { doc, setDoc } from "firebase/firestore"
 import { auth, db } from "@/app/lib/firebase"
 import { SchoolLevel } from "@/lib/courseUtils"
-import { GraduationCap, Plus, Trash2 } from "lucide-react"
+import { GraduationCap, Plus, Trash2, MapPin } from "lucide-react"
 import { getLevels, getCursosByLevel, getStudentsByLevelAndCurso, type StudentRecord } from "@/services/studentsService"
+import { DondeRetiraOption, CURSOS_PRESCHOOL, CursoPreschool } from "@/types/user"
+
+// Configuración de opciones "donde retira"
+const DONDE_RETIRA_OPTIONS = [
+  {
+    value: 'casino_basica' as DondeRetiraOption,
+    label: 'Casino Básica',
+    description: 'Retiro en casino de enseñanza básica'
+  },
+  {
+    value: 'casino_media' as DondeRetiraOption,
+    label: 'Casino Media',
+    description: 'Retiro en casino de enseñanza media'
+  },
+  {
+    value: 'preschool' as DondeRetiraOption,
+    label: 'Preschool',
+    description: 'Retiro en área de preescolar'
+  }
+]
 
 // Interfaz actualizada para incluir todos los campos que luego va a persistir
 interface ChildData {
@@ -25,7 +45,6 @@ interface ChildData {
   rut: string
   edad?: number
   active?: boolean
-  // Agregar cualquier otro campo de StudentRecord que quieras arrastrar
 }
 
 export default function RegistroPage() {
@@ -39,7 +58,10 @@ export default function RegistroPage() {
     email: "",
     password: "",
     confirmPassword: "",
-    userType: "" as "funcionario" | "apoderado" | ""
+    userType: "" as "funcionario" | "apoderado" | "",
+    // Nuevos campos para funcionarios
+    dondeRetira: "" as DondeRetiraOption | "",
+    cursoPreschool: "" as CursoPreschool | ""
   })
   
   const [children, setChildren] = useState<ChildData[]>([
@@ -126,6 +148,13 @@ export default function RegistroPage() {
     const student = students.find(s => s.id === selectedStudent)
     if (!student) return
 
+    // Verificar si el estudiante ya está agregado
+    const existingChild = children.find(child => child.name === student.name && child.class === student.curso)
+    if (existingChild) {
+      setError("Este estudiante ya ha sido agregado")
+      return
+    }
+
     // Usamos directamente todos los campos del registro Firestore:
     const newChild: ChildData = {
       id: children.length > 0 ? Math.max(...children.map(c => c.id)) + 1 : 1,
@@ -136,7 +165,6 @@ export default function RegistroPage() {
       level: student.level as SchoolLevel,
       rut: student.rut ?? "",
       active: student.active,
-      // Agregar cualquier otro campo que quieras copiar
     }
     setChildren([...children, newChild])
 
@@ -146,6 +174,9 @@ export default function RegistroPage() {
     setSelectedStudent("")
     setCursos([])
     setStudents([])
+    
+    // Limpiar error si existía
+    if (error) setError("")
   }
 
   if (!mounted) {
@@ -164,10 +195,22 @@ export default function RegistroPage() {
   const handleUserTypeChange = (value: string) => {
     setFormData({
       ...formData,
-      userType: value as "funcionario" | "apoderado"
+      userType: value as "funcionario" | "apoderado",
+      // Limpiar campos específicos de funcionario si cambia a apoderado
+      dondeRetira: value === "funcionario" ? formData.dondeRetira : "",
+      cursoPreschool: value === "funcionario" ? formData.cursoPreschool : ""
     })
     // Limpiar error cuando el usuario seleccione un tipo
     if (error) setError("")
+  }
+
+  const handleDondeRetiraChange = (value: string) => {
+    setFormData({
+      ...formData,
+      dondeRetira: value as DondeRetiraOption,
+      // Limpiar curso preschool si no es preschool
+      cursoPreschool: value === "preschool" ? formData.cursoPreschool : ""
+    })
   }
 
   const removeChild = (id: number) => {
@@ -210,6 +253,19 @@ export default function RegistroPage() {
     if (!formData.userType) {
       setError("Debes seleccionar un tipo de usuario")
       return false
+    }
+
+    // Validaciones específicas para funcionarios
+    if (formData.userType === "funcionario") {
+      if (!formData.dondeRetira) {
+        setError("Los funcionarios deben seleccionar dónde retiran")
+        return false
+      }
+      
+      if (formData.dondeRetira === "preschool" && !formData.cursoPreschool) {
+        setError("Debes seleccionar un curso para retiro en preschool")
+        return false
+      }
     }
 
     // Validar datos de hijos si se han agregado (tanto para apoderados como funcionarios)
@@ -288,8 +344,8 @@ export default function RegistroPage() {
           edad: parseInt(child.age),
         }))
 
-      // Guardar datos adicionales en Firestore
-      const userData = {
+      // Preparar datos del usuario
+      const userData: Record<string, unknown> = {
         id: user.uid,
         email: formData.email.trim().toLowerCase(),
         firstName: formData.firstName.trim(),
@@ -302,6 +358,14 @@ export default function RegistroPage() {
         createdAt: new Date(),
         updatedAt: new Date(),
         phone: null
+      }
+
+      // Agregar campos específicos de funcionarios
+      if (formData.userType === "funcionario") {
+        userData.dondeRetira = formData.dondeRetira
+        if (formData.dondeRetira === "preschool" && formData.cursoPreschool) {
+          userData.cursoPreschool = formData.cursoPreschool
+        }
       }
 
       // Filtrar cualquier valor undefined antes de guardar
@@ -573,6 +637,79 @@ export default function RegistroPage() {
                 </RadioGroup>
               </motion.div>
 
+              {/* Campos específicos para funcionarios */}
+              {formData.userType === "funcionario" && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.5 }}
+                  className="space-y-3 border-t border-slate-200 dark:border-slate-600 pt-3"
+                >
+                  <div className="flex items-center space-x-2 mb-3">
+                    <MapPin className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                    <h3 className="text-base font-medium text-slate-800 dark:text-slate-200 text-clean">
+                      Información de retiro *
+                    </h3>
+                  </div>
+
+                  {/* Donde retira */}
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                      ¿Dónde retiras tu menú? *
+                    </label>
+                    <select
+                      value={formData.dondeRetira}
+                      onChange={(e) => handleDondeRetiraChange(e.target.value)}
+                      disabled={isLoading}
+                      className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-300"
+                    >
+                      <option value="">Seleccionar lugar de retiro</option>
+                      {DONDE_RETIRA_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                    {formData.dondeRetira && (
+                      <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
+                        {DONDE_RETIRA_OPTIONS.find(opt => opt.value === formData.dondeRetira)?.description}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Curso preschool (solo si selecciona preschool) */}
+                  {formData.dondeRetira === "preschool" && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                        Curso en Preschool *
+                      </label>
+                      <select
+                        value={formData.cursoPreschool}
+                        onChange={(e) => setFormData({...formData, cursoPreschool: e.target.value as CursoPreschool})}
+                        disabled={isLoading}
+                        className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-300"
+                      >
+                        <option value="">Seleccionar curso</option>
+                        {CURSOS_PRESCHOOL.map((curso) => (
+                          <option key={curso} value={curso}>
+                            {curso}
+                          </option>
+                        ))}
+                      </select>
+                      <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
+                        Selecciona el curso correspondiente para el retiro en preschool
+                      </p>
+                    </motion.div>
+                  )}
+                </motion.div>
+              )}
+
               {/* Password Fields */}
               <div className="grid grid-cols-2 gap-3">
                 <motion.div
@@ -618,7 +755,7 @@ export default function RegistroPage() {
                 </motion.div>
               </div>
 
-              {/* Children Section - Desplegables encadenados */}
+              {/* Children Section - Desplegables encadenados mejorados */}
               {formData.userType && (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
@@ -644,7 +781,7 @@ export default function RegistroPage() {
                       </p>
                     )}
                     
-                    {/* Desplegables encadenados */}
+                    {/* Desplegables encadenados mejorados */}
                     <div className="space-y-3">
                       <div className="grid grid-cols-3 gap-3">
                         {/* Nivel educativo */}
@@ -702,6 +839,37 @@ export default function RegistroPage() {
                         </div>
                       </div>
 
+                      {/* Información del estudiante seleccionado */}
+                      {selectedStudent && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          className="p-3 bg-blue-50/50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800"
+                        >
+                          {(() => {
+                            const student = students.find(s => s.id === selectedStudent)
+                            return student ? (
+                              <div className="text-sm">
+                                <p className="font-medium text-blue-800 dark:text-blue-200">
+                                  {student.name}
+                                </p>
+                                <p className="text-blue-600 dark:text-blue-300">
+                                  {student.curso} - {student.level}
+                                </p>
+                                <p className="text-blue-600 dark:text-blue-300">
+                                  Edad: {student.edad} años
+                                </p>
+                                {student.rut && (
+                                  <p className="text-blue-600 dark:text-blue-300">
+                                    RUT: {student.rut}
+                                  </p>
+                                )}
+                              </div>
+                            ) : null
+                          })()}
+                        </motion.div>
+                      )}
+
                       {/* Botón Agregar hijo */}
                       <motion.button
                         type="button"
@@ -721,17 +889,24 @@ export default function RegistroPage() {
                           <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                             Hijos agregados:
                           </h4>
-                          <ul className="space-y-1">
+                          <ul className="space-y-2">
                             {children.filter(child => child.name.trim() !== "").map((child) => (
-                              <li key={child.id} className="flex items-center justify-between text-sm text-slate-600 dark:text-slate-400">
-                                <span>• {child.name} ({child.class})</span>
+                              <li key={child.id} className="flex items-center justify-between p-2 bg-slate-50 dark:bg-slate-800 rounded-md">
+                                <div className="text-sm">
+                                  <p className="font-medium text-slate-800 dark:text-slate-200">
+                                    {child.name}
+                                  </p>
+                                  <p className="text-slate-600 dark:text-slate-400">
+                                    {child.class} - {child.level}
+                                  </p>
+                                </div>
                                 <button
                                   type="button"
                                   onClick={() => removeChild(child.id)}
                                   disabled={isLoading}
                                   className="text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 p-1 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                  <Trash2 className="w-3 h-3" />
+                                  <Trash2 className="w-4 h-4" />
                                 </button>
                               </li>
                             ))}
@@ -755,7 +930,7 @@ export default function RegistroPage() {
                   whileTap={!isLoading ? { scale: 0.98 } : {}}
                 >
                   <Button
-                    type="submit"
+                                    type="submit"
                     disabled={isLoading}
                     className="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-semibold py-2.5 px-6 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 group relative overflow-hidden"
                   >
@@ -854,3 +1029,4 @@ export default function RegistroPage() {
     </div>
   )
 }
+

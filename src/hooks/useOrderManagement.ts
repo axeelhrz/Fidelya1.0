@@ -23,9 +23,10 @@ interface UseOrderManagementReturn {
   menuError: string | null
   weekInfo: WeekInfo | null
   
-  // Estado del pedido - ACTUALIZADO
-  existingOrders: OrderStateByChild[] // Cambio: ahora es un array
-  paidOrders: OrderStateByChild[] // Nuevo: solo pedidos pagados
+  // Estado del pedido - ACTUALIZADO para múltiples pedidos
+  existingOrders: OrderStateByChild[]
+  paidOrders: OrderStateByChild[]
+  pendingOrders: OrderStateByChild[] // Nuevo: pedidos pendientes
   isLoadingOrder: boolean
   orderError: string | null
   
@@ -39,11 +40,15 @@ interface UseOrderManagementReturn {
   processPayment: () => Promise<void>
   clearErrors: () => void
   retryPayment: () => Promise<void>
-  refreshOrders: () => Promise<void> // Nuevo
+  refreshOrders: () => Promise<void>
+  
+  // Nuevas funciones para múltiples pedidos
+  canAddMoreOrders: boolean
+  addAdditionalOrder: () => Promise<void>
 }
 
 export function useOrderManagement(): UseOrderManagementReturn {
-  const { getOrderSummaryByChild } = useOrderStore()
+  const { getOrderSummaryByChild, clearAllSelections, setExistingOrders: setExistingOrdersInStore } = useOrderStore()
   const { user } = useAuth()
   
   // Usar el nuevo hook de múltiples semanas
@@ -55,9 +60,10 @@ export function useOrderManagement(): UseOrderManagementReturn {
     refreshAll
   } = useMultiWeekMenu(user, 4) // Mostrar 4 semanas próximas
   
-  // Estados del pedido - ACTUALIZADOS
+  // Estados del pedido - ACTUALIZADOS para múltiples pedidos
   const [existingOrders, setExistingOrders] = useState<OrderStateByChild[]>([])
   const [paidOrders, setPaidOrders] = useState<OrderStateByChild[]>([])
+  const [pendingOrders, setPendingOrders] = useState<OrderStateByChild[]>([])
   const [isLoadingOrder, setIsLoadingOrder] = useState(true)
   const [orderError, setOrderError] = useState<string | null>(null)
   
@@ -72,7 +78,10 @@ export function useOrderManagement(): UseOrderManagementReturn {
   const isLoadingMenu = isLoadingMultiWeek || (currentWeek?.isLoading ?? true)
   const menuError = multiWeekError || currentWeek?.error || null
 
-  // Cargar pedidos existentes - ACTUALIZADO PARA CARGAR TODOS LOS PEDIDOS
+  // Determinar si se pueden agregar más pedidos
+  const canAddMoreOrders = weekInfo ? weekInfo.isOrderingAllowed : false
+
+  // Cargar pedidos existentes - ACTUALIZADO PARA MANEJAR MÚLTIPLES PEDIDOS
   const loadExistingOrders = useCallback(async () => {
     if (!user || !weekInfo) {
       setIsLoadingOrder(false)
@@ -93,11 +102,23 @@ export function useOrderManagement(): UseOrderManagementReturn {
 
       setExistingOrders(orders)
       
-      // Separar pedidos pagados
+      // Separar pedidos por estado
       const paid = orders.filter(order => order.status === 'pagado')
+      const pending = orders.filter(order => order.status === 'pendiente' || order.status === 'procesando_pago')
+      
       setPaidOrders(paid)
+      setPendingOrders(pending)
 
-      console.log('Paid orders:', paid.length, 'Total orders:', orders.length)
+      // Actualizar el store con los IDs de pedidos existentes para evitar duplicados
+      const existingOrderKeys = orders.map(order => 
+        order.resumenPedido.map(selection => 
+          `${selection.date}-${selection.hijo?.id || 'funcionario'}`
+        )
+      ).flat()
+      
+      setExistingOrdersInStore(existingOrderKeys)
+
+      console.log('Orders by status - Paid:', paid.length, 'Pending:', pending.length, 'Total:', orders.length)
 
     } catch (error) {
       console.error('Error loading existing orders:', error)
@@ -105,17 +126,18 @@ export function useOrderManagement(): UseOrderManagementReturn {
       setOrderError(errorMessage)
       setExistingOrders([])
       setPaidOrders([])
+      setPendingOrders([])
     } finally {
       setIsLoadingOrder(false)
     }
-  }, [user, weekInfo])
+  }, [user, weekInfo, setExistingOrders])
 
   // Función para refrescar pedidos
   const refreshOrders = useCallback(async () => {
     await loadExistingOrders()
   }, [loadExistingOrders])
 
-  // Procesar pago con mejor manejo de errores - ACTUALIZADO PARA DETECTAR DUPLICADOS
+  // Procesar pago con mejor manejo de errores y limpieza de carrito
   const processPayment = useCallback(async () => {
     if (!user) {
       setPaymentError('Información de usuario no disponible')
@@ -135,7 +157,7 @@ export function useOrderManagement(): UseOrderManagementReturn {
         throw new Error('No hay elementos seleccionados para procesar el pago')
       }
 
-      // NUEVO: Verificar duplicados antes de procesar
+      // Agrupar selecciones por semana
       const selectionsByWeek = new Map<string, typeof summary.selections>()
       
       for (const selection of summary.selections) {
@@ -148,45 +170,6 @@ export function useOrderManagement(): UseOrderManagementReturn {
       }
 
       console.log('Selections grouped by week:', Object.fromEntries(selectionsByWeek))
-
-      // Verificar duplicados para cada semana
-      for (const [weekStart, weekSelections] of selectionsByWeek) {
-        const processOrderSelections = weekSelections.map(selection => ({
-          childId: selection.hijo?.id || 'funcionario',
-          childName: selection.hijo?.name || 'Funcionario',
-          date: selection.date,
-          selectedItems: [
-            ...(selection.almuerzo ? [{
-              itemId: selection.almuerzo.id,
-              itemName: selection.almuerzo.name,
-              itemCode: selection.almuerzo.code,
-              category: 'almuerzo' as const,
-              price: selection.almuerzo.price,
-              description: selection.almuerzo.description
-            }] : []),
-            ...(selection.colacion ? [{
-              itemId: selection.colacion.id,
-              itemName: selection.colacion.name,
-              itemCode: selection.colacion.code,
-              category: 'colacion' as const,
-              price: selection.colacion.price,
-              description: selection.colacion.description
-            }] : [])
-          ]
-        })).filter(selection => selection.selectedItems.length > 0)
-
-        // Verificar duplicados
-        const duplicateCheck = await MenuIntegrationService.checkForDuplicateSelections(
-          user, 
-          processOrderSelections, 
-          weekStart
-        )
-
-        if (duplicateCheck.hasDuplicates) {
-          const duplicateMessages = duplicateCheck.warnings.join('\n')
-          throw new Error(`No puedes pagar menús que ya pagaste:\n${duplicateMessages}`)
-        }
-      }
 
       // Procesar cada semana por separado
       const processResults: Array<{
@@ -267,8 +250,13 @@ export function useOrderManagement(): UseOrderManagementReturn {
             error: result.error
           })
 
-          // Si es exitoso, redirigir inmediatamente al primer pago
+          // Si es exitoso, limpiar carrito y redirigir
           if (result.success && result.paymentUrl) {
+            console.log(`✅ Payment successful for week ${weekStart}. Clearing cart...`)
+            
+            // LIMPIAR CARRITO DESPUÉS DEL PAGO EXITOSO
+            clearAllSelections()
+            
             console.log(`Redirecting to payment URL for week ${weekStart}:`, result.paymentUrl)
             window.location.href = result.paymentUrl
             return // Salir después de la primera redirección exitosa
@@ -319,7 +307,22 @@ export function useOrderManagement(): UseOrderManagementReturn {
     } finally {
       setIsProcessingPayment(false)
     }
-  }, [user, getOrderSummaryByChild])
+  }, [user, getOrderSummaryByChild, clearAllSelections])
+
+  // Función para agregar pedidos adicionales
+  const addAdditionalOrder = useCallback(async () => {
+    if (!canAddMoreOrders) {
+      setPaymentError('No se pueden agregar más pedidos en este momento')
+      return
+    }
+
+    // Esta función permite al usuario agregar más elementos al carrito
+    // sin restricciones de duplicados para pedidos adicionales
+    console.log('🍽️ Permitiendo agregar pedidos adicionales...')
+    
+    // Refrescar pedidos existentes para mostrar el estado actual
+    await refreshOrders()
+  }, [canAddMoreOrders, refreshOrders])
 
   // Reintentar pago
   const retryPayment = useCallback(async () => {
@@ -346,6 +349,7 @@ export function useOrderManagement(): UseOrderManagementReturn {
       // Si no hay usuario o weekInfo, limpiar estado del pedido
       setExistingOrders([])
       setPaidOrders([])
+      setPendingOrders([])
       setIsLoadingOrder(false)
     }
   }, [user, weekInfo, loadExistingOrders])
@@ -358,9 +362,10 @@ export function useOrderManagement(): UseOrderManagementReturn {
     menuError,
     weekInfo,
     
-    // Estado del pedido - ACTUALIZADO
-    existingOrders, // Todos los pedidos
-    paidOrders, // Solo pedidos pagados
+    // Estado del pedido - ACTUALIZADO para múltiples pedidos
+    existingOrders,
+    paidOrders,
+    pendingOrders, // Nuevo
     isLoadingOrder,
     orderError,
     
@@ -374,6 +379,10 @@ export function useOrderManagement(): UseOrderManagementReturn {
     processPayment,
     clearErrors,
     retryPayment,
-    refreshOrders // Nuevo
+    refreshOrders,
+    
+    // Nuevas funciones para múltiples pedidos
+    canAddMoreOrders,
+    addAdditionalOrder
   }
 }
