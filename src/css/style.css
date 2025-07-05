@@ -7112,250 +7112,148 @@ animation: contact-loading-spin 1s linear infinite;
 100% { transform: rotate(360deg); }
 }
 
-/* ===== CORRECCIONES PARA MÓVIL - PADDING Y ESPACIADO ===== */
+/* ===== CORRECCIÓN CRÍTICA PARA VISIBILIDAD DE SECCIONES EN MÓVIL ===== */
 
-/* Ajustar padding del hero en móvil para reducir espacio */
+/* Asegurar que todas las secciones sean visibles en móvil */
 @media (width <= 1023px) {
-.hero {
-padding-top: calc(var(--navbar-height-mobile) + var(--space-2xl)) !important;
-padding-bottom: var(--space-2xl) !important;
-}
-
-/* Reducir espaciado entre elementos del hero en móvil */
-.hero__badge,
-.hero__title,
-.hero__company-description,
-.hero__subtitle,
-.hero__cta-group {
-margin-bottom: var(--space-lg) !important;
-}
-
-.hero__company-description {
-padding: var(--space-lg) !important;
-}
-
-.hero__cta-group {
-gap: var(--space-md) !important;
-}
-
-/* CORRECCIÓN CRÍTICA: Asegurar que las secciones sean visibles */
-.features,
-.videos,
-.faq,
-.contact {
-display: block !important;
-visibility: visible !important;
-opacity: 1 !important;
-position: relative !important;
-z-index: 1 !important;
-}
-
-/* Reducir padding de secciones en móvil */
-.features {
-padding: var(--space-4xl) var(--section-padding-x) var(--space-3xl) !important;
-}
-
-.videos {
-padding: var(--space-4xl) var(--section-padding-x) var(--space-3xl) !important;
-}
-
-.faq {
-padding: var(--space-4xl) var(--section-padding-x) var(--space-3xl) !important;
-}
-
-.contact {
-padding: var(--space-4xl) var(--section-padding-x) var(--space-2xl) !important;
-}
-
-/* Reducir espaciado en headers de secciones */
-.features__header,
-.videos__header,
-.faq__header,
-.contact__header {
-margin-bottom: var(--space-3xl) !important;
-}
-
-/* Reducir gap en grids */
-.features__grid {
-gap: var(--space-3xl) !important;
-}
-
-.contact__grid {
-gap: var(--space-xl) !important;
-}
-
-/* Ajustar elementos de características */
-.feature {
-padding: var(--space-2xl) 0 !important;
-gap: var(--space-xl) !important;
-}
-
-.feature__content {
-padding: var(--space-md) !important;
-}
-
-/* Ajustar video container */
-.videos__main-container {
-margin-bottom: var(--space-3xl) !important;
-}
-
-.videos__player-container {
-padding: var(--space-xl) !important;
-}
-
-/* Ajustar FAQ */
-.faq__search-container {
-margin-bottom: var(--space-2xl) !important;
-}
-
-.faq__list {
-gap: var(--space-md) !important;
-}
-
-/* Ajustar contacto */
-.contact__footer {
-padding: var(--space-3xl) 0 var(--space-2xl) 0 !important;
-margin-top: var(--space-2xl) !important;
-}
-}
-
-@media (width <= 480px) {
-.hero {
-padding-top: calc(var(--navbar-height-mobile) + var(--space-lg)) !important;
-padding-bottom: var(--space-lg) !important;
-}
-
-/* Reducir aún más el espaciado en pantallas muy pequeñas */
-.features,
-.videos,
-.faq,
-.contact {
-padding: var(--space-2xl) var(--section-padding-x) var(--space-xl) !important;
-}
-
-.features__header,
-.videos__header,
-.faq__header,
-.contact__header {
-margin-bottom: var(--space-2xl) !important;
-}
-
-.features__grid {
-gap: var(--space-2xl) !important;
-}
-
-.feature {
-padding: var(--space-lg) 0 !important;
-gap: var(--space-lg) !important;
-}
-
-.videos__main-container {
-margin-bottom: var(--space-2xl) !important;
-}
-
-.videos__player-container {
-padding: var(--space-lg) !important;
-}
-
-.faq__search-container {
-margin-bottom: var(--space-lg) !important;
-}
-
-.contact__grid {
-gap: var(--space-lg) !important;
-}
-
-.contact__footer {
-padding: var(--space-2xl) 0 var(--space-lg) 0 !important;
-margin-top: var(--space-lg) !important;
-}
-}
-
-/* ===== CORRECCIÓN ADICIONAL: Asegurar visibilidad de elementos ===== */
-@media (width <= 1023px) {
-/* Forzar visibilidad de todas las secciones principales */
-section {
-display: block !important;
-visibility: visible !important;
-opacity: 1 !important;
-}
-
-/* Asegurar que los contenedores principales sean visibles */
-.features__grid,
-.videos__main-container,
-.faq__container,
-.contact__grid {
-display: block !important;
-visibility: visible !important;
-opacity: 1 !important;
-}
-
-/* Para grid layouts, mantener display grid pero asegurar visibilidad */
-.features__grid {
-display: grid !important;
-}
-
-.contact__grid {
-display: grid !important;
-}
-
-/* Asegurar que los elementos individuales sean visibles */
-.feature,
-.faq__item,
-.contact__channel {
-display: flex !important;
-visibility: visible !important;
-opacity: 1 !important;
-}
-
-/* Remover cualquier transform que pueda estar ocultando contenido */
-.feature,
-.faq__item,
-.contact__channel {
-transform: none !important;
-}
-
-/* Asegurar que las animaciones no interfieran en móvil */
-.feature.in-view,
-.faq__item,
-.contact__channel {
-opacity: 1 !important;
-transform: none !important;
-}
-}
-
-/* ===== CORRECCIÓN DE Z-INDEX PARA MÓVIL ===== */
-@media (width <= 1023px) {
-.hero {
-z-index: 1 !important;
-}
-
-.features,
-.videos,
-.faq,
-.contact {
-z-index: 2 !important;
-position: relative !important;
-}
-
-/* Asegurar que el fondo no interfiera */
-.bg-canvas {
-z-index: 0 !important;
-}
-}
-
-/* ===== CORRECCIÓN DE OVERFLOW PARA MÓVIL ===== */
-@media (width <= 1023px) {
-body {
-overflow-x: hidden !important;
-overflow-y: auto !important;
-}
-
+/* Resetear cualquier problema de z-index o posicionamiento */
 .hero,
 .features,
 .videos,
 .faq,
 .contact {
+position: relative !important;
+z-index: auto !important;
+display: block !important;
+visibility: visible !important;
+opacity: 1 !important;
+width: 100% !important;
 overflow: visible !important;
 }
+
+/* Asegurar que el body permita scroll */
+body {
+overflow-x: hidden !important;
+overflow-y: auto !important;
 }
+
+/* Asegurar que las secciones no se superpongan */
+.hero,
+.features,
+.videos,
+.faq,
+.contact {
+position: relative !important;
+z-index: auto !important;
+}
+
+/* Mantener efectos de fondo pero ajustar z-index */
+.hero::before,
+.hero::after,
+.features::before,
+.features::after,
+.videos::before,
+.videos::after,
+.faq::before,
+.faq::after,
+.contact::before,
+.contact::after {
+z-index: 1 !important;
+}
+
+/* Asegurar que el contenido esté por encima de los efectos */
+.hero__container,
+.features__header,
+.features__grid,
+.videos__header,
+.videos__main-container,
+.faq__header,
+.faq__container,
+.contact__header,
+.contact__grid {
+position: relative !important;
+z-index: 2 !important;
+}
+}
+
+@media (width <= 480px) {
+/* Reducir aún más el espaciado en pantallas pequeñas */
+.hero {
+padding-top: calc(var(--navbar-height-mobile) + var(--space-md)) !important;
+padding-bottom: var(--space-md) !important;
+}
+
+.features,
+.videos,
+.faq {
+padding: var(--space-2xl) var(--section-padding-x) var(--space-lg) !important;
+}
+
+.contact {
+padding: var(--space-2xl) var(--section-padding-x) var(--space-md) !important;
+}
+
+.features__header,
+.videos__header,
+.faq__header,
+.contact__header {
+margin-bottom: var(--space-lg) !important;
+}
+
+.features__grid {
+gap: var(--space-lg) !important;
+}
+
+.feature {
+padding: var(--space-md) 0 !important;
+gap: var(--space-md) !important;
+}
+
+.videos__main-container {
+margin-bottom: var(--space-lg) !important;
+}
+
+.contact__footer {
+padding: var(--space-lg) 0 var(--space-md) 0 !important;
+margin-top: var(--space-md) !important;
+}
+}
+
+/* ===== CORRECCIÓN DE ALTURA MÍNIMA PARA SCROLL ===== */
+@media (width <= 1023px) {
+/* Asegurar que cada sección tenga altura mínima apropiada */
+.hero {
+min-height: 80vh !important;
+}
+
+.features,
+.videos,
+.faq,
+.contact {
+min-height: auto !important;
+}
+
+/* Prevenir que el contenido se corte */
+.hero__container,
+.features__grid,
+.videos__main-container,
+.faq__container,
+.contact__grid {
+width: 100% !important;
+max-width: 100% !important;
+}
+}
+
+/* ===== MANTENER TODOS LOS EFECTOS DE FONDO INTACTOS ===== */
+
+/* Solo reducir la intensidad de blur en móvil para mejor rendimiento */
+.hero .floating-orb-1,
+.hero .floating-orb-2,
+.hero .floating-orb-3 {
+filter: blur(20px) !important;
+}
+
+.contact__orb {
+filter: blur(40px) !important;
+}
+
