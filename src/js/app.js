@@ -382,6 +382,8 @@ function detectDeviceCapabilities() {
     }
 }
 
+
+
 // ===== DETECCIÓN DE SOPORTE DE FORMATOS DE IMAGEN =====
 function detectImageFormats() {
     return new Promise((resolve) => {
