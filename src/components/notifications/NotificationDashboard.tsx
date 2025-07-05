@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import {
   Box,
-  Grid,
   Card,
   CardContent,
   Typography,
@@ -69,11 +68,13 @@ export const NotificationDashboard: React.FC = () => {
     averageProcessingTime: 0,
     successRate: 0,
   });
+
   const [health, setHealth] = useState<QueueHealth>({
     status: 'healthy',
     issues: [],
     recommendations: [],
   });
+
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -88,7 +89,6 @@ export const NotificationDashboard: React.FC = () => {
         notificationQueueService.getQueueStats(),
         notificationQueueService.getQueueHealth(),
       ]);
-      
       setStats(queueStats);
       setHealth(queueHealth);
     } catch (error) {
@@ -102,7 +102,6 @@ export const NotificationDashboard: React.FC = () => {
 
   useEffect(() => {
     loadData();
-    
     // Auto-refresh every 30 seconds
     const interval = setInterval(loadData, 30000);
     return () => clearInterval(interval);
@@ -178,6 +177,37 @@ export const NotificationDashboard: React.FC = () => {
     );
   }
 
+  const statsData = [
+    {
+      title: 'Pendientes',
+      value: stats.pending,
+      icon: <Schedule />,
+      color: '#f59e0b',
+      trend: stats.pending > 50 ? 'high' : stats.pending > 20 ? 'medium' : 'low',
+    },
+    {
+      title: 'Procesando',
+      value: stats.processing,
+      icon: <Send />,
+      color: '#3b82f6',
+      trend: stats.processing > 10 ? 'high' : 'normal',
+    },
+    {
+      title: 'Completadas',
+      value: stats.completed,
+      icon: <CheckCircle />,
+      color: '#10b981',
+      trend: 'positive',
+    },
+    {
+      title: 'Fallidas',
+      value: stats.failed,
+      icon: <Error />,
+      color: '#ef4444',
+      trend: stats.failed > 20 ? 'high' : stats.failed > 5 ? 'medium' : 'low',
+    },
+  ];
+
   return (
     <Box>
       {/* Header */}
@@ -190,7 +220,6 @@ export const NotificationDashboard: React.FC = () => {
             Monitoreo en tiempo real del sistema de envío de notificaciones
           </Typography>
         </Box>
-        
         <Box sx={{ display: 'flex', gap: 2 }}>
           <Tooltip title="Actualizar datos">
             <IconButton
@@ -202,7 +231,7 @@ export const NotificationDashboard: React.FC = () => {
                 '&:hover': { bgcolor: alpha('#6366f1', 0.2) }
               }}
             >
-              <Refresh sx={{ 
+              <Refresh sx={{
                 animation: refreshing ? 'spin 1s linear infinite' : 'none',
                 '@keyframes spin': {
                   '0%': { transform: 'rotate(0deg)' },
@@ -211,18 +240,17 @@ export const NotificationDashboard: React.FC = () => {
               }} />
             </IconButton>
           </Tooltip>
-          
           <Button
             onClick={isProcessing ? handleStopProcessing : handleStartProcessing}
             variant="contained"
             startIcon={isProcessing ? <Stop /> : <PlayArrow />}
             sx={{
               borderRadius: 3,
-              background: isProcessing 
+              background: isProcessing
                 ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
                 : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
               '&:hover': {
-                background: isProcessing 
+                background: isProcessing
                   ? 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)'
                   : 'linear-gradient(135deg, #059669 0%, #047857 100%)',
               },
@@ -258,166 +286,147 @@ export const NotificationDashboard: React.FC = () => {
       )}
 
       {/* Stats Cards */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        {[
-          {
-            title: 'Pendientes',
-            value: stats.pending,
-            icon: <Schedule />,
-            color: '#f59e0b',
-            trend: stats.pending > 50 ? 'high' : stats.pending > 20 ? 'medium' : 'low',
-          },
-          {
-            title: 'Procesando',
-            value: stats.processing,
-            icon: <Send />,
-            color: '#3b82f6',
-            trend: stats.processing > 10 ? 'high' : 'normal',
-          },
-          {
-            title: 'Completadas',
-            value: stats.completed,
-            icon: <CheckCircle />,
-            color: '#10b981',
-            trend: 'positive',
-          },
-          {
-            title: 'Fallidas',
-            value: stats.failed,
-            icon: <Error />,
-            color: '#ef4444',
-            trend: stats.failed > 20 ? 'high' : stats.failed > 5 ? 'medium' : 'low',
-          },
-        ].map((stat, index) => (
-          <Grid item xs={12} sm={6} lg={3} key={index}>
-            <Card
-              elevation={0}
-              sx={{
-                border: '1px solid #f1f5f9',
-                borderRadius: 4,
-                position: 'relative',
-                overflow: 'hidden',
-                transition: 'all 0.3s ease',
-                '&:hover': {
-                  borderColor: alpha(stat.color, 0.3),
-                  transform: 'translateY(-4px)',
-                  boxShadow: `0 12px 40px ${alpha(stat.color, 0.15)}`,
-                },
-              }}
-            >
-              <CardContent sx={{ p: 3 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                  <Avatar
+      <Box sx={{ 
+        display: 'flex', 
+        flexWrap: 'wrap',
+        gap: 3,
+        mb: 4,
+        '& > *': {
+          flex: '1 1 calc(50% - 12px)',
+          minWidth: '200px',
+          '@media (min-width: 900px)': {
+            flex: '1 1 calc(25% - 18px)',
+          }
+        }
+      }}>
+        {statsData.map((stat, index) => (
+          <Card
+            key={index}
+            elevation={0}
+            sx={{
+              border: '1px solid #f1f5f9',
+              borderRadius: 4,
+              position: 'relative',
+              overflow: 'hidden',
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                borderColor: alpha(stat.color, 0.3),
+                transform: 'translateY(-4px)',
+                boxShadow: `0 12px 40px ${alpha(stat.color, 0.15)}`,
+              },
+            }}
+          >
+            <CardContent sx={{ p: 3 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                <Avatar
+                  sx={{
+                    width: 48,
+                    height: 48,
+                    bgcolor: alpha(stat.color, 0.1),
+                    color: stat.color,
+                  }}
+                >
+                  {stat.icon}
+                </Avatar>
+                {stat.trend === 'high' && (
+                  <Chip
+                    icon={<TrendingUp />}
+                    label="Alto"
+                    size="small"
                     sx={{
-                      width: 48,
-                      height: 48,
-                      bgcolor: alpha(stat.color, 0.1),
-                      color: stat.color,
+                      bgcolor: alpha('#ef4444', 0.1),
+                      color: '#ef4444',
+                      fontWeight: 600,
                     }}
-                  >
-                    {stat.icon}
-                  </Avatar>
-                  
-                  {stat.trend === 'high' && (
-                    <Chip
-                      icon={<TrendingUp />}
-                      label="Alto"
-                      size="small"
-                      sx={{
-                        bgcolor: alpha('#ef4444', 0.1),
-                        color: '#ef4444',
-                        fontWeight: 600,
-                      }}
-                    />
-                  )}
-                </Box>
-                
-                <Typography variant="h3" sx={{ fontWeight: 900, color: stat.color, mb: 1 }}>
-                  {stat.value.toLocaleString()}
-                </Typography>
-                
-                <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 600 }}>
-                  {stat.title}
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
+                  />
+                )}
+              </Box>
+              <Typography variant="h3" sx={{ fontWeight: 900, color: stat.color, mb: 1 }}>
+                {stat.value.toLocaleString()}
+              </Typography>
+              <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 600 }}>
+                {stat.title}
+              </Typography>
+            </CardContent>
+          </Card>
         ))}
-      </Grid>
+      </Box>
 
       {/* Performance Metrics */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} md={6}>
-          <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 4 }}>
-            <CardContent sx={{ p: 4 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-                <Avatar sx={{ bgcolor: alpha('#10b981', 0.1), color: '#10b981' }}>
-                  <TrendingUp />
-                </Avatar>
-                <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                  Tasa de Éxito
-                </Typography>
-              </Box>
-              
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                <Typography variant="h3" sx={{ fontWeight: 900, color: '#10b981' }}>
-                  {stats.successRate.toFixed(1)}%
-                </Typography>
-                <Chip
-                  label={stats.successRate >= 95 ? 'Excelente' : stats.successRate >= 80 ? 'Bueno' : 'Necesita Atención'}
-                  size="small"
-                  sx={{
-                    bgcolor: alpha(stats.successRate >= 95 ? '#10b981' : stats.successRate >= 80 ? '#f59e0b' : '#ef4444', 0.1),
-                    color: stats.successRate >= 95 ? '#10b981' : stats.successRate >= 80 ? '#f59e0b' : '#ef4444',
-                    fontWeight: 600,
-                  }}
-                />
-              </Box>
-              
-              <LinearProgress
-                variant="determinate"
-                value={stats.successRate}
+      <Box sx={{ 
+        display: 'flex', 
+        flexWrap: 'wrap',
+        gap: 3,
+        mb: 4,
+        '& > *': {
+          flex: '1 1 100%',
+          '@media (min-width: 768px)': {
+            flex: '1 1 calc(50% - 12px)',
+          }
+        }
+      }}>
+        <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 4 }}>
+          <CardContent sx={{ p: 4 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+              <Avatar sx={{ bgcolor: alpha('#10b981', 0.1), color: '#10b981' }}>
+                <TrendingUp />
+              </Avatar>
+              <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                Tasa de Éxito
+              </Typography>
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+              <Typography variant="h3" sx={{ fontWeight: 900, color: '#10b981' }}>
+                {stats.successRate.toFixed(1)}%
+              </Typography>
+              <Chip
+                label={stats.successRate >= 95 ? 'Excelente' : stats.successRate >= 80 ? 'Bueno' : 'Necesita Atención'}
+                size="small"
                 sx={{
-                  height: 8,
-                  borderRadius: 4,
-                  bgcolor: alpha('#e5e7eb', 0.3),
-                  '& .MuiLinearProgress-bar': {
-                    borderRadius: 4,
-                    bgcolor: stats.successRate >= 95 ? '#10b981' : stats.successRate >= 80 ? '#f59e0b' : '#ef4444',
-                  }
+                  bgcolor: alpha(stats.successRate >= 95 ? '#10b981' : stats.successRate >= 80 ? '#f59e0b' : '#ef4444', 0.1),
+                  color: stats.successRate >= 95 ? '#10b981' : stats.successRate >= 80 ? '#f59e0b' : '#ef4444',
+                  fontWeight: 600,
                 }}
               />
-              
-              <Typography variant="caption" sx={{ color: '#64748b', mt: 1, display: 'block' }}>
-                De {stats.totalProcessed.toLocaleString()} notificaciones procesadas
+            </Box>
+            <LinearProgress
+              variant="determinate"
+              value={stats.successRate}
+              sx={{
+                height: 8,
+                borderRadius: 4,
+                bgcolor: alpha('#e5e7eb', 0.3),
+                '& .MuiLinearProgress-bar': {
+                  borderRadius: 4,
+                  bgcolor: stats.successRate >= 95 ? '#10b981' : stats.successRate >= 80 ? '#f59e0b' : '#ef4444',
+                }
+              }}
+            />
+            <Typography variant="caption" sx={{ color: '#64748b', mt: 1, display: 'block' }}>
+              De {stats.totalProcessed.toLocaleString()} notificaciones procesadas
+            </Typography>
+          </CardContent>
+        </Card>
+
+        <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 4 }}>
+          <CardContent sx={{ p: 4 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+              <Avatar sx={{ bgcolor: alpha('#6366f1', 0.1), color: '#6366f1' }}>
+                <Speed />
+              </Avatar>
+              <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                Tiempo Promedio de Procesamiento
               </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        
-        <Grid item xs={12} md={6}>
-          <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 4 }}>
-            <CardContent sx={{ p: 4 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-                <Avatar sx={{ bgcolor: alpha('#6366f1', 0.1), color: '#6366f1' }}>
-                  <Speed />
-                </Avatar>
-                <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                  Tiempo Promedio de Procesamiento
-                </Typography>
-              </Box>
-              
-              <Typography variant="h3" sx={{ fontWeight: 900, color: '#6366f1', mb: 1 }}>
-                {formatProcessingTime(stats.averageProcessingTime)}
-              </Typography>
-              
-              <Typography variant="body2" sx={{ color: '#64748b' }}>
-                Tiempo desde cola hasta entrega
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+            </Box>
+            <Typography variant="h3" sx={{ fontWeight: 900, color: '#6366f1', mb: 1 }}>
+              {formatProcessingTime(stats.averageProcessingTime)}
+            </Typography>
+            <Typography variant="body2" sx={{ color: '#64748b' }}>
+              Tiempo desde cola hasta entrega
+            </Typography>
+          </CardContent>
+        </Card>
+      </Box>
 
       {/* System Health */}
       <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 4, mb: 4 }}>
@@ -436,7 +445,6 @@ export const NotificationDashboard: React.FC = () => {
                 </Typography>
               </Box>
             </Box>
-            
             <Chip
               label={health.status === 'healthy' ? 'Saludable' : health.status === 'warning' ? 'Advertencia' : 'Crítico'}
               sx={{
@@ -448,7 +456,6 @@ export const NotificationDashboard: React.FC = () => {
               }}
             />
           </Box>
-          
           {health.issues.length > 0 && (
             <Alert severity={health.status === 'critical' ? 'error' : 'warning'} sx={{ borderRadius: 3 }}>
               <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
@@ -477,7 +484,6 @@ export const NotificationDashboard: React.FC = () => {
           <Typography variant="h6" sx={{ fontWeight: 700, mb: 3 }}>
             Acciones Rápidas
           </Typography>
-          
           <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
             <Button
               onClick={() => setRetryDialogOpen(true)}
@@ -488,7 +494,6 @@ export const NotificationDashboard: React.FC = () => {
             >
               Reintentar Fallidas ({stats.failed})
             </Button>
-            
             <Button
               onClick={handleCleanupOld}
               startIcon={<Healing />}
@@ -497,7 +502,6 @@ export const NotificationDashboard: React.FC = () => {
             >
               Limpiar Antiguas
             </Button>
-            
             <Button
               onClick={() => setHealthDialogOpen(true)}
               startIcon={<BugReport />}
@@ -528,13 +532,11 @@ export const NotificationDashboard: React.FC = () => {
             </Typography>
           </Box>
         </DialogTitle>
-        
         <DialogContent>
           <Box sx={{ mb: 3 }}>
             <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
               Estado Actual: {health.status === 'healthy' ? 'Saludable' : health.status === 'warning' ? 'Advertencia' : 'Crítico'}
             </Typography>
-            
             {health.issues.length > 0 && (
               <Box sx={{ mb: 3 }}>
                 <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
@@ -552,7 +554,6 @@ export const NotificationDashboard: React.FC = () => {
                 </List>
               </Box>
             )}
-            
             {health.recommendations.length > 0 && (
               <Box>
                 <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
@@ -572,7 +573,6 @@ export const NotificationDashboard: React.FC = () => {
             )}
           </Box>
         </DialogContent>
-        
         <DialogActions sx={{ p: 3 }}>
           <Button onClick={() => setHealthDialogOpen(false)} sx={{ borderRadius: 3 }}>
             Cerrar
@@ -598,7 +598,6 @@ export const NotificationDashboard: React.FC = () => {
             </Typography>
           </Box>
         </DialogTitle>
-        
         <DialogContent>
           <Typography variant="body1" sx={{ mb: 2 }}>
             ¿Estás seguro de que quieres reintentar todas las {stats.failed} notificaciones fallidas?
@@ -607,10 +606,9 @@ export const NotificationDashboard: React.FC = () => {
             Esta acción restablecerá el contador de intentos y volverá a poner las notificaciones en la cola de procesamiento.
           </Typography>
         </DialogContent>
-        
         <DialogActions sx={{ p: 3 }}>
-          <Button 
-            onClick={() => setRetryDialogOpen(false)} 
+          <Button
+            onClick={() => setRetryDialogOpen(false)}
             sx={{ borderRadius: 3 }}
           >
             Cancelar
