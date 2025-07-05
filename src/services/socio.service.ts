@@ -76,7 +76,29 @@ class SocioService {
   ): Promise<void> {
     try {
       // Validar datos antes de actualizar
-      const validationErrors = this.validateProfileData(profileData);
+      // Adapt fechaNacimiento to Date | undefined for validation
+      let fechaNacimiento: Date | undefined = undefined;
+      if (profileData.fechaNacimiento) {
+        if (profileData.fechaNacimiento instanceof Date) {
+          fechaNacimiento = profileData.fechaNacimiento;
+        } else if (
+          typeof profileData.fechaNacimiento === 'object' &&
+          profileData.fechaNacimiento !== null &&
+          typeof (profileData.fechaNacimiento as { toDate?: () => Date }).toDate === 'function'
+        ) {
+          fechaNacimiento = (profileData.fechaNacimiento as { toDate: () => Date }).toDate();
+        } else if (typeof profileData.fechaNacimiento === 'string') {
+          const d = new Date(profileData.fechaNacimiento);
+          if (!isNaN(d.getTime())) {
+            fechaNacimiento = d;
+          }
+        }
+      }
+      const dataForValidation = {
+        ...profileData,
+        fechaNacimiento,
+      };
+      const validationErrors = this.validateProfileData(dataForValidation);
       if (validationErrors.length > 0) {
         throw new Error(validationErrors.join(', '));
       }
@@ -84,7 +106,7 @@ class SocioService {
       const socioRef = doc(db, COLLECTIONS.SOCIOS, socioId);
       
       // Preparar datos para actualización
-      const updateData: any = {
+      const updateData: Partial<Socio> = {
         actualizadoEn: Timestamp.now()
       };
 
@@ -122,7 +144,7 @@ class SocioService {
 
       // Incluir configuración si se proporciona
       if (profileData.configuracion) {
-        updateData.configuracion = profileData.configuracion;
+        updateData.configuracion = this.getDefaultConfiguration(profileData.configuracion);
       }
 
       await updateDoc(socioRef, updateData);

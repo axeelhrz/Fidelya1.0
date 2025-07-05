@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import styled from '@emotion/styled';
 import { css } from '@emotion/react';
@@ -363,7 +363,6 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
     retryCamera,
     toggleFlash,
     getErrorMessage,
-    streamRef
   } = useCamera({
     maxRetries: 3,
     preferredFacingMode: 'environment'
@@ -608,7 +607,7 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
                           onClick={handleToggleFlash}
                           leftIcon={flashEnabled ? <FlashlightOff size={16} /> : <Flashlight size={16} />}
                           size="sm"
-                          disabled={!cameraState.deviceInfo.supportedConstraints?.torch}
+                          disabled={!('torch' in (cameraState.deviceInfo.supportedConstraints ?? {}))}
                         >
                           {flashEnabled ? 'Apagar Flash' : 'Encender Flash'}
                         </Button>

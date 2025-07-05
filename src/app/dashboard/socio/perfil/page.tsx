@@ -17,7 +17,6 @@ import {
   XCircle,
   TrendingUp,
   Award,
-  Target,
   Activity,
   Bell,
   Shield,
@@ -26,7 +25,6 @@ import {
   Download,
   Star,
   Zap,
-  Heart,
   Crown,
   Sparkles,
   Globe,
@@ -53,51 +51,27 @@ import {
   BarChart3,
   Smartphone as DeviceIcon,
   MapPin,
-  CreditCard,
   Eye,
-  EyeOff,
-  Lock,
-  Unlock,
-  Bookmark,
   Filter,
   Search,
   ExternalLink,
-  Plus,
-  Minus,
   Info,
   AlertCircle,
   Gift,
-  Percent,
   Calendar as CalendarIcon,
   Clock,
-  Users,
-  ShoppingBag,
   Wallet,
-  PieChart,
-  LineChart,
-  MoreHorizontal,
-  ArrowUpRight,
-  ArrowDownRight,
   Maximize2,
-  Minimize2,
   FileText,
   Image as ImageIcon,
   Upload,
-  Link,
-  MessageCircle,
-  Headphones,
-  BookOpen,
   Lightbulb,
-  Compass,
-  Layers,
   Grid,
   List,
-  ToggleLeft,
-  ToggleRight,
   ChevronDown,
   Loader2,
   TrendingDown,
-  Remove
+  Move
 } from 'lucide-react';
 import Image from 'next/image';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -401,7 +375,7 @@ const MetricsCard: React.FC<{
     switch (trend) {
       case 'up': return <TrendingUp size={16} />;
       case 'down': return <TrendingDown size={16} />;
-      default: return <Remove size={16} />;
+      default: return <Move size={16} />;
     }
   };
 
@@ -1224,7 +1198,15 @@ export default function SocioPerfilPage() {
         return;
       }
 
-      const updateData: any = {
+      interface UpdateProfileData {
+        nombre: string;
+        telefono?: string;
+        dni?: string;
+        direccion?: string;
+        fechaNacimiento?: Date;
+      }
+
+      const updateData: UpdateProfileData = {
         nombre: formData.nombre.trim(),
       };
 
@@ -1489,7 +1471,7 @@ export default function SocioPerfilPage() {
                     <div className="flex items-start justify-between -mt-20 mb-8">
                       <div className="relative">
                         <ProfileImageUploader
-                          currentImage={profileData.avatar || profileData.avatarThumbnail}
+                          currentImage={profileData.avatar || profileData.avatarThumbnail || undefined}
                           onImageUpload={handleImageUpload}
                           uploading={uploadingImage}
                         />
@@ -1709,7 +1691,7 @@ export default function SocioPerfilPage() {
                   </div>
 
                   <div className={`grid gap-6 ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>
-                    {profileStats.map((stat, index) => (
+                    {profileStats.map((stat) => (
                       <MetricsCard
                         key={stat.id}
                         title={stat.title}
