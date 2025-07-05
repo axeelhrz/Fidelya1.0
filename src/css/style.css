@@ -264,3 +264,371 @@ min-height: 44px;
 min-width: 44px;
 }
 }
+
+/* ===== HERO SECTION MEJORADO CON FONDO FUTURISTA PREMIUM - OPTIMIZADO MÓVIL ===== */
+.hero {
+position: relative;
+z-index: 2;
+display: flex;
+align-items: center;
+width: 100%;
+min-height: 100vh;
+min-height: 100dvh;
+padding: calc(var(--navbar-height) + var(--space-4xl)) var(--section-padding-x) var(--space-4xl);
+overflow: hidden;
+/* FONDO BASE NEGRO/AZUL OSCURO CON GRADIENTE SUTIL PARA PROFUNDIDAD */
+background: 
+radial-gradient(ellipse at 20% 30%, var(--secondary-bg) 0%, transparent 50%),
+radial-gradient(ellipse at 80% 70%, var(--accent-bg) 0%, transparent 50%),
+linear-gradient(135deg, 
+var(--primary-bg) 0%, 
+var(--secondary-bg) 30%, 
+var(--primary-bg) 70%, 
+var(--accent-bg) 100%
+);
+/* Optimización para móvil */
+will-change: transform;
+contain: layout style paint;
+}
+
+/* CAPA DE LUCES NEÓN SUAVES CON EFECTO DIFUSO Y DESENFOCADO - OPTIMIZADA MÓVIL */
+.hero::before {
+position: absolute;
+inset: 0;
+z-index: 1;
+content: '';
+pointer-events: none;
+/* Luces neón suaves en tonos rosa, rojo y naranja con efecto difuso */
+background:
+/* Blob neón rosa principal - efecto etéreo */
+radial-gradient(ellipse 400px 300px at 15% 25%, var(--hero-neon-pink-bright) 0%, var(--hero-neon-pink) 30%, transparent 70%),
+/* Blob neón rojo secundario - mancha difusa */
+radial-gradient(ellipse 350px 250px at 85% 75%, var(--hero-neon-red) 0%, transparent 60%),
+/* Blob neón naranja terciario - efecto desenfocado */
+radial-gradient(ellipse 300px 200px at 70% 20%, var(--hero-neon-orange-bright) 0%, var(--hero-neon-orange) 40%, transparent 70%),
+/* Blob neón rosa difuso adicional */
+radial-gradient(ellipse 500px 400px at 40% 80%, var(--hero-neon-pink) 0%, transparent 50%),
+/* Halo sutil central para profundidad */
+radial-gradient(ellipse 600px 300px at 50% 50%, var(--hero-halo-pink) 0%, transparent 60%);
+/* Animación suave de respiración para efecto inmersivo */
+animation: hero-neon-breathe 8s ease-in-out infinite;
+/* Optimización para móvil */
+will-change: transform, opacity;
+}
+
+/* CAPA DE PARTÍCULAS FINAS Y DISPERSAS CON BRILLO TENUE - OPTIMIZADA MÓVIL */
+.hero::after {
+position: absolute;
+inset: 0;
+z-index: 2;
+content: '';
+pointer-events: none;
+/* Partículas como polvo estelar o puntos de luz flotando */
+background-image:
+/* Partículas grandes brillantes - efecto cósmico */
+radial-gradient(circle at 20% 30%, var(--hero-particle-glow) 1px, transparent 1px),
+radial-gradient(circle at 80% 20%, var(--hero-particle-glow) 1px, transparent 1px),
+radial-gradient(circle at 60% 70%, var(--hero-particle-glow) 1px, transparent 1px),
+radial-gradient(circle at 30% 80%, var(--hero-particle-glow) 1px, transparent 1px),
+radial-gradient(circle at 90% 60%, var(--hero-particle-glow) 1px, transparent 1px),
+/* Partículas medianas dispersas */
+radial-gradient(circle at 45% 15%, var(--hero-particle-dim) 0.5px, transparent 0.5px),
+radial-gradient(circle at 75% 45%, var(--hero-particle-dim) 0.5px, transparent 0.5px),
+radial-gradient(circle at 25% 60%, var(--hero-particle-dim) 0.5px, transparent 0.5px),
+radial-gradient(circle at 85% 85%, var(--hero-particle-dim) 0.5px, transparent 0.5px),
+/* Partículas finas muy dispersas - polvo estelar */
+radial-gradient(circle at 10% 50%, var(--hero-particle-fine) 0.3px, transparent 0.3px),
+radial-gradient(circle at 50% 10%, var(--hero-particle-fine) 0.3px, transparent 0.3px),
+radial-gradient(circle at 90% 30%, var(--hero-particle-fine) 0.3px, transparent 0.3px),
+radial-gradient(circle at 35% 90%, var(--hero-particle-fine) 0.3px, transparent 0.3px);
+background-size: 
+clamp(150px, 25vw, 200px) clamp(150px, 25vw, 200px), 
+clamp(130px, 22vw, 180px) clamp(130px, 22vw, 180px), 
+clamp(160px, 27vw, 220px) clamp(160px, 27vw, 220px), 
+clamp(120px, 20vw, 160px) clamp(120px, 20vw, 160px), 
+clamp(140px, 23vw, 190px) clamp(140px, 23vw, 190px),
+clamp(90px, 15vw, 120px) clamp(90px, 15vw, 120px), 
+clamp(100px, 17vw, 140px) clamp(100px, 17vw, 140px), 
+clamp(80px, 13vw, 110px) clamp(80px, 13vw, 110px), 
+clamp(95px, 16vw, 130px) clamp(95px, 16vw, 130px),
+clamp(60px, 10vw, 80px) clamp(60px, 10vw, 80px), 
+clamp(65px, 11vw, 90px) clamp(65px, 11vw, 90px), 
+clamp(50px, 8vw, 70px) clamp(50px, 8vw, 70px), 
+clamp(60px, 10vw, 85px) clamp(60px, 10vw, 85px);
+/* Animación de movimiento cósmico sugerente */
+animation: cosmic-particle-drift 20s linear infinite;
+/* Optimización para móvil */
+will-change: transform;
+}
+
+/* ORBES FLOTANTES ADICIONALES PARA MAYOR PROFUNDIDAD Y ATMÓSFERA - OPTIMIZADOS MÓVIL */
+.hero .floating-orb-1 {
+position: absolute;
+top: 20%;
+left: 10%;
+z-index: 1;
+width: clamp(200px, 40vw, 300px);
+height: clamp(200px, 40vw, 300px);
+background: radial-gradient(circle, var(--hero-neon-pink) 0%, var(--hero-halo-pink) 40%, transparent 70%);
+filter: blur(clamp(40px, 8vw, 60px));
+border-radius: 50%;
+opacity: 0.6;
+animation: floating-orb-1 25s ease-in-out infinite;
+/* Optimización para móvil */
+will-change: transform, opacity;
+}
+
+.hero .floating-orb-2 {
+position: absolute;
+top: 60%;
+right: 15%;
+z-index: 1;
+width: clamp(170px, 35vw, 250px);
+height: clamp(170px, 35vw, 250px);
+background: radial-gradient(circle, var(--hero-neon-orange-bright) 0%, var(--hero-halo-orange) 40%, transparent 70%);
+filter: blur(clamp(35px, 7vw, 50px));
+border-radius: 50%;
+opacity: 0.5;
+animation: floating-orb-2 30s ease-in-out infinite;
+/* Optimización para móvil */
+will-change: transform, opacity;
+}
+
+.hero .floating-orb-3 {
+position: absolute;
+bottom: 20%;
+left: 30%;
+z-index: 1;
+width: clamp(140px, 30vw, 200px);
+height: clamp(140px, 30vw, 200px);
+background: radial-gradient(circle, var(--hero-neon-red) 0%, var(--hero-halo-red) 40%, transparent 70%);
+filter: blur(clamp(30px, 6vw, 40px));
+border-radius: 50%;
+opacity: 0.4;
+animation: floating-orb-3 22s ease-in-out infinite;
+/* Optimización para móvil */
+will-change: transform, opacity;
+}
+
+/* HALOS Y GLOWS COMPLEMENTARIOS PARA REFORZAR ESTÉTICA NEÓN - OPTIMIZADOS MÓVIL */
+.hero .ambient-glow {
+position: absolute;
+inset: 0;
+z-index: 1;
+pointer-events: none;
+background:
+/* Halo superior izquierdo */
+radial-gradient(ellipse clamp(300px, 50vw, 400px) clamp(150px, 25vw, 200px) at 20% 20%, var(--hero-halo-pink) 0%, transparent 60%),
+/* Halo inferior derecho */
+radial-gradient(ellipse clamp(250px, 45vw, 350px) clamp(130px, 22vw, 180px) at 80% 80%, var(--hero-halo-orange) 0%, transparent 60%),
+/* Halo central difuso */
+radial-gradient(ellipse clamp(350px, 60vw, 500px) clamp(180px, 30vw, 250px) at 50% 60%, var(--hero-halo-red) 0%, transparent 70%);
+animation: ambient-glow-pulse 12s ease-in-out infinite;
+/* Optimización para móvil */
+will-change: transform, opacity;
+}
+
+/* TEXTURA DE GRANO FINA Y DISCRETA PARA REALISMO PREMIUM - OPTIMIZADA MÓVIL */
+.hero .grain-texture {
+position: absolute;
+inset: 0;
+z-index: 3;
+pointer-events: none;
+background-image: 
+repeating-linear-gradient(
+0deg,
+transparent,
+transparent 1px,
+rgba(255, 255, 255, 0.01) 1px,
+rgba(255, 255, 255, 0.01) 2px
+),
+repeating-linear-gradient(
+90deg,
+transparent,
+transparent 1px,
+rgba(255, 255, 255, 0.01) 1px,
+rgba(255, 255, 255, 0.01) 2px
+);
+opacity: 0.3;
+mix-blend-mode: overlay;
+}
+
+/* CAPAS DE PROFUNDIDAD ADICIONALES PARA EFECTO INMERSIVO - OPTIMIZADAS MÓVIL */
+.hero .depth-layer-1 {
+position: absolute;
+inset: 0;
+z-index: 1;
+background: 
+radial-gradient(ellipse clamp(600px, 80vw, 800px) clamp(300px, 40vw, 400px) at 30% 70%, rgba(255, 45, 85, 0.03) 0%, transparent 50%),
+radial-gradient(ellipse clamp(450px, 60vw, 600px) clamp(225px, 30vw, 300px) at 70% 30%, rgba(255, 107, 53, 0.02) 0%, transparent 50%);
+animation: depth-shift-1 15s ease-in-out infinite;
+/* Optimización para móvil */
+will-change: transform;
+}
+
+.hero .depth-layer-2 {
+position: absolute;
+inset: 0;
+z-index: 1;
+background: 
+radial-gradient(ellipse clamp(525px, 70vw, 700px) clamp(260px, 35vw, 350px) at 60% 40%, rgba(255, 23, 68, 0.025) 0%, transparent 60%),
+radial-gradient(ellipse clamp(375px, 50vw, 500px) clamp(190px, 25vw, 250px) at 40% 80%, rgba(255, 45, 85, 0.02) 0%, transparent 60%);
+animation: depth-shift-2 18s ease-in-out infinite;
+/* Optimización para móvil */
+will-change: transform;
+}
+
+/* CONTENIDO DEL HERO CON Z-INDEX APROPIADO PARA ESTAR ENCIMA - OPTIMIZADO MÓVIL */
+.hero__container {
+position: relative;
+z-index: 10;
+display: grid;
+grid-template-columns: 1fr;
+gap: var(--space-4xl);
+align-items: center;
+width: 100%;
+max-width: var(--max-hero-width);
+margin: 0 auto;
+text-align: center;
+}
+
+.hero__content {
+position: relative;
+z-index: 11;
+width: 100%;
+animation: fadeInUp 1s ease-out;
+}
+
+.hero__media {
+position: relative;
+z-index: 11;
+display: none;
+align-items: center;
+justify-content: center;
+width: 100%;
+animation: fadeInRight 1s ease-out 0.3s both;
+}
+
+/* ===== OPTIMIZACIONES ESPECÍFICAS PARA MÓVIL ===== */
+@media (width >= 1024px) {
+.hero {
+padding: calc(var(--navbar-height) + var(--space-6xl)) var(--section-padding-x) clamp(2rem, 8vh, 4rem);
+}
+
+.hero__container {
+grid-template-columns: 1.2fr 1fr;
+gap: var(--space-5xl);
+text-align: left;
+}
+
+.hero__media {
+display: flex;
+}
+}
+
+@media (width <= 1023px) {
+/* Reducir intensidad de efectos en móvil para mejor rendimiento */
+.hero::before {
+background:
+radial-gradient(ellipse 300px 200px at 15% 25%, var(--hero-neon-pink) 0%, transparent 60%),
+radial-gradient(ellipse 250px 150px at 85% 75%, var(--hero-neon-red) 0%, transparent 50%),
+radial-gradient(ellipse 200px 120px at 70% 20%, var(--hero-neon-orange) 0%, transparent 60%);
+}
+
+.hero .floating-orb-1,
+.hero .floating-orb-2,
+.hero .floating-orb-3 {
+filter: blur(30px);
+}
+
+/* Simplificar partículas en móvil */
+.hero::after {
+background-image:
+radial-gradient(circle at 20% 30%, var(--hero-particle-dim) 1px, transparent 1px),
+radial-gradient(circle at 80% 70%, var(--hero-particle-dim) 1px, transparent 1px),
+radial-gradient(circle at 50% 50%, var(--hero-particle-dim) 0.5px, transparent 0.5px);
+background-size: 150px 150px, 120px 120px, 100px 100px;
+}
+
+/* Ajustar padding del hero en móvil */
+.hero {
+padding-top: calc(var(--navbar-height-mobile) + var(--space-4xl));
+padding-bottom: var(--space-3xl);
+}
+}
+
+@media (width <= 480px) {
+.hero {
+padding-top: calc(var(--navbar-height-mobile) + var(--space-3xl));
+padding-bottom: var(--space-2xl);
+}
+
+/* Reducir aún más los efectos en pantallas muy pequeñas */
+.hero .floating-orb-1,
+.hero .floating-orb-2,
+.hero .floating-orb-3 {
+width: clamp(100px, 25vw, 150px);
+height: clamp(100px, 25vw, 150px);
+filter: blur(20px);
+}
+
+.hero .ambient-glow,
+.hero .depth-layer-1,
+.hero .depth-layer-2 {
+opacity: 0.5;
+}
+}
+
+/* ===== MODO DE RENDIMIENTO (DISPOSITIVOS DE BAJA POTENCIA) ===== */
+@media (prefers-reduced-motion: reduce) {
+.hero::before,
+.hero::after,
+.hero .floating-orb-1,
+.hero .floating-orb-2,
+.hero .floating-orb-3,
+.hero .ambient-glow,
+.hero .depth-layer-1,
+.hero .depth-layer-2 {
+animation: none !important;
+}
+
+/* Mantener efectos estáticos pero sin animación */
+.hero::before {
+opacity: 0.6;
+transform: scale(1);
+}
+}
+
+/* ===== MODO ALTO CONTRASTE ===== */
+@media (prefers-contrast: high) {
+.hero {
+background: 
+linear-gradient(135deg, 
+#000000 0%, 
+#1a1a1a 50%, 
+#000000 100%
+);
+}
+
+.hero::before {
+background:
+radial-gradient(ellipse 400px 300px at 15% 25%, rgba(255, 45, 85, 0.3) 0%, transparent 70%),
+radial-gradient(ellipse 350px 250px at 85% 75%, rgba(255, 23, 68, 0.25) 0%, transparent 60%);
+}
+}
+
+/* ===== OPTIMIZACIONES PARA DISPOSITIVOS CON POCA MEMORIA ===== */
+@media (max-width: 480px) and (max-height: 800px) {
+.hero .grain-texture,
+.hero .depth-layer-1,
+.hero .depth-layer-2 {
+display: none;
+}
+
+.hero::after {
+background-image:
+radial-gradient(circle at 30% 50%, var(--hero-particle-dim) 0.5px, transparent 0.5px),
+radial-gradient(circle at 70% 50%, var(--hero-particle-dim) 0.5px, transparent 0.5px);
+background-size: 100px 100px, 80px 80px;
+}
+}
