@@ -2585,3 +2585,620 @@ opacity: 1;
 visibility: visible;
 transform: translateY(-50%) translateX(0);
 }
+
+/* ===== SECCIÓN CARACTERÍSTICAS OPTIMIZADA ===== */
+.features {
+position: relative;
+width: 100%;
+padding: clamp(1.5rem, 6vh, 3rem) var(--section-padding-x);
+overflow: hidden;
+background:
+linear-gradient(180deg, var(--primary-bg) 0%, var(--secondary-bg) 50%, var(--primary-bg) 100%);
+}
+
+.features::before {
+position: absolute;
+inset: 0;
+z-index: 1;
+content: '';
+background:
+radial-gradient(ellipse at 25% 25%, rgb(255 69 105 / 4%) 0%, transparent 60%),
+radial-gradient(ellipse at 75% 75%, rgb(184 0 46 / 3%) 0%, transparent 60%);
+}
+
+.features__header {
+position: relative;
+z-index: 3;
+margin-bottom: var(--space-5xl);
+text-align: center;
+opacity: 0;
+transform: translateY(30px);
+animation: fadeInUp 1s ease-out 0.2s forwards;
+}
+
+.features__title {
+position: relative;
+margin-bottom: var(--space-xl);
+font-size: clamp(2.5rem, 6vw, 4.5rem);
+font-weight: 800;
+letter-spacing: -0.02em;
+background: linear-gradient(135deg,
+var(--text-primary) 0%,
+var(--starflex-red) 50%,
+var(--starflex-crimson-glow) 100%
+);
+background-clip: text;
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+}
+
+.features__title::after {
+position: absolute;
+bottom: -8px;
+left: 50%;
+width: 60px;
+height: 3px;
+content: '';
+background: linear-gradient(90deg,
+var(--starflex-red),
+var(--starflex-crimson-glow)
+);
+border-radius: 2px;
+transform: translateX(-50%);
+}
+
+.features__subtitle {
+max-width: 700px;
+margin: 0 auto;
+font-size: 1.3rem;
+line-height: 1.6;
+color: var(--text-secondary);
+}
+
+.features__grid {
+position: relative;
+z-index: 3;
+display: grid;
+gap: clamp(2rem, 8vh, 4rem);
+width: 100%;
+max-width: var(--max-features-width, 1500px);
+margin: 0 auto;
+}
+
+/* ===== CARACTERÍSTICAS INDIVIDUALES ===== */
+.feature {
+position: relative;
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: var(--space-5xl);
+align-items: center;
+width: 100%;
+opacity: 0;
+transform: translateY(50px);
+}
+
+.feature.in-view {
+animation: slideInUp 1s ease-out forwards;
+}
+
+.feature:nth-child(even) {
+direction: rtl;
+}
+
+.feature:nth-child(even) > * {
+direction: ltr;
+}
+
+/* ===== CONTENIDO DE CARACTERÍSTICAS OPTIMIZADO ===== */
+.feature__content {
+position: relative;
+width: 100%;
+padding: 0;
+}
+
+.feature__title {
+margin-bottom: var(--space-xl);
+font-family: var(--font-mono);
+font-size: clamp(2.2rem, 5.5vw, 2.8rem);
+font-weight: 800;
+text-transform: uppercase;
+letter-spacing: -0.02em;
+background: linear-gradient(135deg,
+var(--text-primary) 0%,
+var(--starflex-red) 100%
+);
+background-clip: text;
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+}
+
+.feature__description {
+max-width: none;
+margin-bottom: var(--space-xl);
+font-size: 1.2rem;
+line-height: 1.7;
+color: var(--text-secondary);
+}
+
+.feature__list {
+padding: 0;
+margin-bottom: var(--space-2xl);
+list-style: none;
+}
+
+.feature__list-item {
+display: flex;
+gap: var(--space-md);
+align-items: flex-start;
+padding: var(--space-sm) 0;
+padding-left: 0;
+margin-bottom: var(--space-lg);
+font-size: 1.1rem;
+line-height: 1.6;
+color: var(--text-secondary);
+text-align: left;
+border-radius: 8px;
+transition: none;
+}
+
+.feature__list-item::before {
+flex-shrink: 0;
+width: 8px;
+height: 8px;
+margin-top: 8px;
+content: '';
+background: var(--starflex-crimson-glow);
+border-radius: 50%;
+box-shadow: 0 0 10px var(--starflex-crimson-glow);
+animation: pulse-gentle 4s infinite;
+}
+
+/* ===== TELÉFONOS DE CARACTERÍSTICAS - DESKTOP Y MÓVIL ===== */
+.feature__phone {
+position: relative;
+width: var(--phone-width-desktop);
+height: var(--phone-height-desktop);
+margin: 0 auto;
+filter: drop-shadow(0 10px 30px rgb(255 69 105 / 15%));
+transition: none;
+transform: perspective(1000px) rotateY(2deg) rotateX(-1deg);
+}
+
+.feature__phone::before {
+position: absolute;
+inset: -2px;
+z-index: -1;
+content: '';
+background: linear-gradient(45deg,
+rgb(255 69 105 / 10%) 0%,
+rgb(255 23 68 / 5%) 25%,
+rgb(255 69 105 / 10%) 50%,
+rgb(255 23 68 / 5%) 75%,
+rgb(255 69 105 / 10%) 100%
+);
+border-radius: calc(var(--phone-border-radius) + 2px);
+opacity: 0;
+transition: opacity var(--transition);
+}
+
+.feature.in-view .feature__phone::before {
+opacity: 1;
+}
+
+.phone {
+position: relative;
+width: 100%;
+height: 100%;
+overflow: hidden;
+background: linear-gradient(135deg,
+rgb(255 69 105 / 2%) 0%,
+rgb(0 0 0 / 95%) 20%,
+rgb(0 0 0 / 100%) 80%,
+rgb(255 69 105 / 2%) 100%
+);
+border-radius: var(--phone-border-radius);
+box-shadow:
+0 20px 60px rgb(0 0 0 / 40%),
+0 8px 30px rgb(0 0 0 / 30%),
+0 0 0 1px rgb(255 255 255 / 5%);
+transition: none;
+will-change: transform;
+contain: layout style paint;
+}
+
+/* Efectos específicos por característica */
+.feature[data-feature="schedule"] .phone {
+filter: drop-shadow(0 0 25px rgb(255 69 105 / 12%));
+}
+
+.feature[data-feature="stations"] .phone {
+filter: drop-shadow(0 0 25px rgb(255 23 68 / 12%));
+}
+
+.feature[data-feature="calendar"] .phone {
+filter: drop-shadow(0 0 25px rgb(255 45 107 / 12%));
+}
+
+.feature[data-feature="log"] .phone {
+filter: drop-shadow(0 0 25px rgb(184 0 46 / 12%));
+}
+
+.feature[data-feature="notifications"] .phone {
+filter: drop-shadow(0 0 25px rgb(255 69 105 / 12%));
+}
+
+.feature[data-feature="referrals"] .phone {
+filter: drop-shadow(0 0 25px rgb(255 45 85 / 15%));
+}
+
+.phone::before {
+position: absolute;
+inset: -15px;
+z-index: -1;
+content: '';
+background: radial-gradient(
+ellipse,
+rgb(255 69 105 / 8%) 0%,
+rgb(255 23 68 / 4%) 40%,
+transparent 70%
+);
+filter: blur(20px);
+border-radius: calc(var(--phone-border-radius) + 15px);
+opacity: 0.5;
+animation: feature-ambient-glow 15s ease-in-out infinite;
+}
+
+.feature[data-feature="referrals"] .phone::before {
+background: radial-gradient(ellipse,
+rgb(255 45 85 / 10%) 0%,
+rgb(255 45 85 / 5%) 40%,
+transparent 70%
+);
+}
+
+.phone__screen {
+position: relative;
+width: 100%;
+height: 100%;
+overflow: hidden;
+background: #000;
+border: 1px solid rgb(255 255 255 / 6%);
+border-radius: var(--phone-border-radius);
+}
+
+.phone__content {
+width: 100%;
+height: 100%;
+overflow: hidden;
+background: #000;
+border-radius: var(--phone-border-radius);
+}
+
+/* ===== IMÁGENES DE APLICACIÓN EN LOS TELÉFONOS ===== */
+.phone__app-image {
+position: absolute;
+top: 0;
+left: 0;
+z-index: 1;
+width: 100%;
+height: 100%;
+filter: brightness(1.02) contrast(1.05) saturate(1.08);
+background-repeat: no-repeat;
+background-attachment: scroll;
+background-position: center;
+background-size: cover;
+background-blend-mode: normal;
+isolation: isolate;
+border-radius: var(--phone-border-radius);
+}
+
+/* Configuración de imágenes por data-feature */
+.feature[data-feature="schedule"] .phone__app-image {
+background-image: url('../assets/phones/Horario.avif');
+}
+
+.feature[data-feature="stations"] .phone__app-image {
+background-image: url('../assets/phones/Estaciones.avif');
+}
+
+.feature[data-feature="calendar"] .phone__app-image {
+background-image: url('../assets/phones/Calendario.avif');
+}
+
+.feature[data-feature="log"] .phone__app-image {
+background-image: url('../assets/phones/Registro.avif');
+}
+
+.feature[data-feature="notifications"] .phone__app-image {
+background-image: url('../assets/phones/Notificaciones.avif');
+}
+
+.feature[data-feature="referrals"] .phone__app-image {
+background-image: url('../assets/phones/Referidos.avif');
+}
+
+/* ===== ANIMACIÓN DE APARICIÓN SIMPLE ===== */
+.feature .phone__app-image,
+.feature .phone,
+.feature .feature__phone {
+opacity: 0;
+transition: opacity 0.6s ease, transform 0.6s ease;
+transform: translateY(30px);
+}
+
+.feature.in-view .phone__app-image,
+.feature.in-view .phone,
+.feature.in-view .feature__phone {
+opacity: 1;
+transition: opacity 0.6s ease, transform 0.6s ease;
+transform: translateY(0);
+}
+
+/* Delays progresivos */
+.feature:nth-child(1) .phone__app-image,
+.feature:nth-child(1) .phone,
+.feature:nth-child(1) .feature__phone {
+transition-delay: 0.1s;
+}
+
+.feature:nth-child(2) .phone__app-image,
+.feature:nth-child(2) .phone,
+.feature:nth-child(2) .feature__phone {
+transition-delay: 0.2s;
+}
+
+.feature:nth-child(3) .phone__app-image,
+.feature:nth-child(3) .phone,
+.feature:nth-child(3) .feature__phone {
+transition-delay: 0.3s;
+}
+
+.feature:nth-child(4) .phone__app-image,
+.feature:nth-child(4) .phone,
+.feature:nth-child(4) .feature__phone {
+transition-delay: 0.4s;
+}
+
+.feature:nth-child(5) .phone__app-image,
+.feature:nth-child(5) .phone,
+.feature:nth-child(5) .feature__phone {
+transition-delay: 0.5s;
+}
+
+.feature:nth-child(6) .phone__app-image,
+.feature:nth-child(6) .phone,
+.feature:nth-child(6) .feature__phone {
+transition-delay: 0.6s;
+}
+
+/* ===== OPTIMIZACIONES MÓVILES PARA CARACTERÍSTICAS ===== */
+@media screen and (width <= 1023px) {
+/* Reducir espaciado en móvil */
+.features {
+padding-top: clamp(1rem, 4vh, 2rem);
+padding-bottom: clamp(1rem, 4vh, 2rem);
+}
+
+.features__grid {
+gap: clamp(1.5rem, 5vh, 2.5rem);
+}
+
+/* ===== MOSTRAR IMÁGENES DE CARACTERÍSTICAS EN MÓVIL ===== */
+.feature__phone {
+display: block !important;
+order: 1 !important;
+width: var(--mobile-feature-image-width, clamp(180px, 50vw, 240px)) !important;
+height: var(--mobile-feature-image-height, clamp(360px, 100vw, 480px)) !important;
+margin: 0 auto var(--space-xl) auto !important;
+visibility: visible !important;
+filter: drop-shadow(0 8px 20px rgb(255 69 105 / 20%)) !important;
+opacity: 1 !important;
+transform: none !important;
+}
+
+.phone {
+display: block !important;
+visibility: visible !important;
+background: linear-gradient(135deg,
+rgb(255 69 105 / 3%) 0%,
+rgb(0 0 0 / 97%) 15%,
+rgb(0 0 0 / 100%) 85%,
+rgb(255 69 105 / 3%) 100%
+) !important;
+border-radius: var(--mobile-feature-image-border-radius, clamp(20px, 5vw, 30px)) !important;
+box-shadow:
+0 15px 40px rgb(0 0 0 / 30%),
+0 5px 15px rgb(0 0 0 / 20%),
+0 0 0 1px rgb(255 255 255 / 8%) !important;
+opacity: 1 !important;
+}
+
+.phone__screen,
+.phone__content {
+display: block !important;
+visibility: visible !important;
+border-radius: var(--mobile-feature-image-border-radius, clamp(20px, 5vw, 30px)) !important;
+opacity: 1 !important;
+}
+
+.phone__app-image {
+display: block !important;
+visibility: visible !important;
+filter: brightness(1.05) contrast(1.08) saturate(1.1) !important;
+border-radius: var(--mobile-feature-image-border-radius, clamp(20px, 5vw, 30px)) !important;
+opacity: 1 !important;
+}
+
+/* ===== EFECTOS AMBIENTALES MÓVILES ===== */
+.feature__phone::before {
+display: block !important;
+visibility: visible !important;
+border-radius: calc(var(--mobile-feature-image-border-radius, clamp(20px, 5vw, 30px)) + 3px) !important;
+opacity: 0.6 !important;
+}
+
+.phone::before {
+inset: -10px !important;
+display: block !important;
+visibility: visible !important;
+filter: blur(15px) !important;
+border-radius: calc(var(--mobile-feature-image-border-radius, clamp(20px, 5vw, 30px)) + 10px) !important;
+opacity: 0.3 !important;
+}
+
+/* ===== LAYOUT MÓVIL PARA CARACTERÍSTICAS ===== */
+.feature {
+display: flex !important;
+flex-direction: column !important;
+grid-template-columns: none !important;
+gap: var(--space-2xl) !important;
+text-align: center !important;
+}
+
+.feature:nth-child(even) {
+direction: ltr !important;
+flex-direction: column !important;
+}
+
+.feature:nth-child(even) > * {
+direction: ltr !important;
+}
+
+.feature__content {
+order: 2 !important;
+text-align: center !important;
+}
+
+.feature__title {
+margin-bottom: var(--space-lg) !important;
+font-size: clamp(2rem, 6vw, 2.5rem) !important;
+text-align: center !important;
+}
+
+.feature__description {
+max-width: 100% !important;
+margin-bottom: var(--space-lg) !important;
+font-size: clamp(1rem, 4vw, 1.2rem) !important;
+text-align: left !important;
+}
+
+.feature__list {
+max-width: 100% !important;
+text-align: left !important;
+}
+
+.feature__list-item {
+padding: var(--space-sm) 0 !important;
+margin-bottom: var(--space-md) !important;
+font-size: clamp(0.9rem, 3.5vw, 1rem) !important;
+text-align: left !important;
+}
+
+/* Transiciones más rápidas en móvil */
+.feature .phone__app-image,
+.feature .phone,
+.feature .feature__phone {
+transition: opacity 0.4s ease, transform 0.4s ease !important;
+}
+
+.feature.in-view .phone__app-image,
+.feature.in-view .phone,
+.feature.in-view .feature__phone {
+transition: opacity 0.4s ease, transform 0.4s ease !important;
+}
+
+/* Delays más cortos en móvil */
+.feature:nth-child(1) .phone__app-image,
+.feature:nth-child(1) .phone,
+.feature:nth-child(1) .feature__phone {
+transition-delay: 0.05s !important;
+}
+
+.feature:nth-child(2) .phone__app-image,
+.feature:nth-child(2) .phone,
+.feature:nth-child(2) .feature__phone {
+transition-delay: 0.1s !important;
+}
+
+.feature:nth-child(3) .phone__app-image,
+.feature:nth-child(3) .phone,
+.feature:nth-child(3) .feature__phone {
+transition-delay: 0.15s !important;
+}
+
+.feature:nth-child(4) .phone__app-image,
+.feature:nth-child(4) .phone,
+.feature:nth-child(4) .feature__phone {
+transition-delay: 0.2s !important;
+}
+
+.feature:nth-child(5) .phone__app-image,
+.feature:nth-child(5) .phone,
+.feature:nth-child(5) .feature__phone {
+transition-delay: 0.25s !important;
+}
+
+.feature:nth-child(6) .phone__app-image,
+.feature:nth-child(6) .phone,
+.feature:nth-child(6) .feature__phone {
+transition-delay: 0.3s !important;
+}
+}
+
+/* ===== ANIMACIONES PARA CARACTERÍSTICAS ===== */
+@keyframes slideInUp {
+from {
+opacity: 0;
+transform: translateY(50px);
+}
+to {
+opacity: 1;
+transform: translateY(0);
+}
+}
+
+@keyframes feature-ambient-glow {
+0%, 100% {
+opacity: 0.5;
+transform: scale(1);
+}
+50% {
+opacity: 0.7;
+transform: scale(1.03);
+}
+}
+
+/* ===== CORRECCIÓN PARA USUARIOS QUE PREFIEREN MOVIMIENTO REDUCIDO ===== */
+@media (prefers-reduced-motion: reduce) {
+.feature .phone__app-image,
+.feature .phone,
+.feature .feature__phone {
+transition: opacity 0.2s ease !important;
+transform: none !important;
+}
+
+.feature.in-view .phone__app-image,
+.feature.in-view .phone,
+.feature.in-view .feature__phone {
+opacity: 1 !important;
+transition: opacity 0.2s ease !important;
+transform: none !important;
+}
+
+/* Sin delays para movimiento reducido */
+.feature:nth-child(n) .phone__app-image,
+.feature:nth-child(n) .phone,
+.feature:nth-child(n) .feature__phone {
+transition-delay: 0s !important;
+}
+}
+
+/* ===== OPTIMIZACIONES DE RENDIMIENTO ===== */
+.feature__phone,
+.phone,
+.phone__app-image {
+transform: translateZ(0);
+will-change: auto;
+backface-visibility: hidden;
+contain: layout style paint;
+}
