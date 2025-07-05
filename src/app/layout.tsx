@@ -1,31 +1,34 @@
-import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
-import './globals.css';
-import { ClientLayout } from './ClientLayout';
-import { initializeNotificationSystem } from '@/lib/notification-init';
+import type { Metadata } from "next"
+import { Inter } from "next/font/google"
+import "./globals.css"
+import { ThemeProvider } from "@/components/theme-provider"
+import { Toaster } from "@/components/ui/toaster"
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: 'Fidelita - Sistema de Gestión de Socios',
-  description: 'Plataforma integral para la gestión de socios, comercios y beneficios',
-};
-
-// Inicializar sistema de notificaciones en el servidor
-initializeNotificationSystem();
+  title: "Casino Escolar",
+  description: "Sistema de gestión de casino escolar",
+}
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: React.ReactNode
 }) {
   return (
-    <html lang="es">
+    <html lang="es" suppressHydrationWarning>
       <body className={inter.className}>
-        <ClientLayout>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="light"
+          enableSystem
+          disableTransitionOnChange
+        >
           {children}
-        </ClientLayout>
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
-  );
+  )
 }

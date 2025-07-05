@@ -1,436 +1,256 @@
-'use client';
+"use client"
 
-import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
+import Link from "next/link"
+import Image from "next/image"
+import { Button } from "@/components/ui/button"
+import { motion } from "framer-motion"
+import { useEffect, useState } from "react"
+import { useTheme } from "next-themes"
 
-const HomePage = () => {
-  const [displayText, setDisplayText] = useState('');
-  const [showCursor, setShowCursor] = useState(true);
-  const [isVisible, setIsVisible] = useState(false);
-  const fullText = 'Fidelya';
+export default function HomePage() {
+  const [mounted, setMounted] = useState(false)
+  const { theme } = useTheme()
 
   useEffect(() => {
-    // Animación de aparición inicial
-    setTimeout(() => setIsVisible(true), 200);
+    setMounted(true)
+  }, [])
 
-    let currentIndex = 0;
-    const typingInterval = setInterval(() => {
-      if (currentIndex <= fullText.length) {
-        setDisplayText(fullText.slice(0, currentIndex));
-        currentIndex++;
-      } else {
-        clearInterval(typingInterval);
-        setTimeout(() => {
-          setShowCursor(false);
-        }, 1500);
-      }
-    }, 250);
-
-    const cursorInterval = setInterval(() => {
-      setShowCursor(prev => !prev);
-    }, 600);
-
-    return () => {
-      clearInterval(typingInterval);
-      clearInterval(cursorInterval);
-    };
-  }, []);
+  if (!mounted) {
+    return null
+  }
 
   return (
-    <>
-      <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500;1,600;1,700;1,800;1,900&family=Inter:wght@400;500;600;700&display=swap');
-        
-        * {
-          margin: 0;
-          padding: 0;
-          box-sizing: border-box;
-        }
-        
-        html, body {
-          height: 100%;
-          font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-          scroll-behavior: smooth;
-          -webkit-font-smoothing: antialiased;
-          -moz-osx-font-smoothing: grayscale;
-        }
-        
-        .font-playfair {
-          font-family: 'Playfair Display', Georgia, serif;
-        }
-        
-        .font-inter {
-          font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
-
-        .typewriter-cursor {
-          animation: blink 1.2s infinite;
-        }
-
-        @keyframes blink {
-          0%, 50% { opacity: 1; }
-          51%, 100% { opacity: 0; }
-        }
-
-        @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-15px); }
-        }
-
-        @keyframes floatDelay {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-12px); }
-        }
-
-        @keyframes bounce {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-8px); }
-        }
-
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.6; }
-        }
-
-        .animate-float {
-          animation: float 5s ease-in-out infinite;
-        }
-
-        .animate-float-delay {
-          animation: floatDelay 7s ease-in-out infinite 2s;
-        }
-
-        .animate-float-delay-long {
-          animation: float 8s ease-in-out infinite 3s;
-        }
-
-        .animate-bounce-slow {
-          animation: bounce 2s ease-in-out infinite;
-        }
-
-        .animate-pulse-slow {
-          animation: pulse 2s ease-in-out infinite;
-        }
-      `}</style>
-
-      <div
-        style={{
-          minHeight: '100vh',
-          background: 'linear-gradient(135deg, #fafafa 0%, #f0f9ff 30%, #eff6ff 70%, #f8fafc 100%)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          position: 'relative',
-          overflow: 'hidden',
-          padding: '2rem 1rem'
-        }}
-      >
-        {/* Elementos decorativos de fondo más sutiles */}
-        <div
-          style={{
-            position: 'absolute',
-            inset: '0',
-            overflow: 'hidden',
-            pointerEvents: 'none'
+    <div className="h-screen relative overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+      {/* Subtle Background Elements */}
+      <div className="absolute inset-0">
+        {/* Soft geometric shapes */}
+        <motion.div
+          className="absolute top-10 right-10 w-64 h-64 bg-gradient-to-br from-blue-100/30 to-indigo-100/30 dark:from-blue-900/15 dark:to-indigo-900/15 rounded-full blur-3xl"
+          animate={{
+            scale: [1, 1.1, 1],
+            opacity: [0.3, 0.5, 0.3],
           }}
-        >
-          {/* Gradientes flotantes más pequeños */}
-          <div
-            className="animate-float"
-            style={{
-              position: 'absolute',
-              top: '20%',
-              left: '10%',
-              width: '200px',
-              height: '200px',
-              background: 'radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, transparent 70%)',
-              borderRadius: '50%',
-              filter: 'blur(30px)',
-              opacity: '0.4'
-            }}
-          />
-          <div
-            className="animate-float-delay"
-            style={{
-              position: 'absolute',
-              bottom: '25%',
-              right: '15%',
-              width: '180px',
-              height: '180px',
-              background: 'radial-gradient(circle, rgba(99, 102, 241, 0.06) 0%, transparent 70%)',
-              borderRadius: '50%',
-              filter: 'blur(25px)',
-              opacity: '0.3'
-            }}
-          />
-
-          {/* Partículas más pequeñas */}
-          <div
-            className="animate-float"
-            style={{
-              position: 'absolute',
-              top: '30%',
-              left: '20%',
-              width: '4px',
-              height: '4px',
-              background: 'linear-gradient(135deg, #3b82f6, #60a5fa)',
-              borderRadius: '50%',
-              boxShadow: '0 0 10px rgba(59, 130, 246, 0.3)',
-              opacity: '0.5'
-            }}
-          />
-          <div
-            className="animate-float-delay"
-            style={{
-              position: 'absolute',
-              top: '60%',
-              right: '25%',
-              width: '3px',
-              height: '3px',
-              background: 'linear-gradient(135deg, #6366f1, #a5b4fc)',
-              borderRadius: '50%',
-              boxShadow: '0 0 8px rgba(99, 102, 241, 0.3)',
-              opacity: '0.4'
-            }}
-          />
-        </div>
-
-        {/* Contenido principal más compacto */}
-        <div
-          style={{
-            position: 'relative',
-            zIndex: '10',
-            textAlign: 'center',
-            maxWidth: '700px',
-            width: '100%',
-            transition: 'all 0.8s ease-out',
-            opacity: isVisible ? '1' : '0',
-            transform: isVisible ? 'translateY(0)' : 'translateY(20px)'
+          transition={{
+            duration: 8,
+            repeat: Infinity,
+            ease: "easeInOut"
           }}
-        >
-          {/* Logo/Título principal más compacto */}
-          <div style={{ marginBottom: '2rem' }}>
-            <h1
-              className="font-playfair"
-              style={{
-                fontSize: 'clamp(3.5rem, 10vw, 5.5rem)',
-                fontWeight: '700',
-                fontStyle: 'italic',
-                marginBottom: '1rem',
-                letterSpacing: '-0.02em',
-                lineHeight: '0.9'
-              }}
-            >
-              <span
-                style={{
-                  background: 'linear-gradient(135deg, #1e293b 0%, #3b82f6 60%, #6366f1 100%)',
-                  backgroundClip: 'text',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent'
-                }}
-              >
-                {displayText}
-              </span>
-              {showCursor && (
-                <span
-                  className="typewriter-cursor"
-                  style={{
-                    background: 'linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)',
-                    backgroundClip: 'text',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent'
-                  }}
-                >
-                  |
-                </span>
-              )}
-            </h1>
-          </div>
-
-          {/* Contenido que aparece después del typing */}
-          <div
-            style={{
-              transition: 'all 0.8s ease-out 0.8s',
-              opacity: displayText === fullText ? '1' : '0',
-              transform: displayText === fullText ? 'translateY(0)' : 'translateY(15px)'
-            }}
-          >
-            {/* Subtítulo más compacto */}
-            <div style={{ marginBottom: '2.5rem' }}>
-              <h2
-                className="font-inter"
-                style={{
-                  fontSize: 'clamp(1.5rem, 4vw, 2.2rem)',
-                  fontWeight: '600',
-                  color: '#334155',
-                  marginBottom: '1.2rem',
-                  lineHeight: '1.3'
-                }}
-              >
-                El futuro de los programas de{' '}
-                <span
-                  style={{
-                    background: 'linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)',
-                    backgroundClip: 'text',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent'
-                  }}
-                >
-                  fidelidad
-                </span>
-              </h2>
-
-              <p
-                className="font-inter"
-                style={{
-                  fontSize: 'clamp(1rem, 2.5vw, 1.15rem)',
-                  color: '#64748b',
-                  lineHeight: '1.6',
-                  fontWeight: '400',
-                  maxWidth: '600px',
-                  margin: '0 auto'
-                }}
-              >
-                Conecta asociaciones, comercios y socios en un ecosistema inteligente
-                potenciado por IA para maximizar la fidelización y el crecimiento.
-              </p>
-            </div>
-
-            {/* Botones más compactos */}
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '1rem',
-                alignItems: 'center',
-                marginBottom: '2.5rem'
-              }}
-            >
-              <Link
-                href="/auth/register"
-                className="font-inter"
-                style={{
-                  position: 'relative',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  padding: '0.9rem 2.2rem',
-                  fontSize: '1.05rem',
-                  fontWeight: '600',
-                  color: 'white',
-                  textDecoration: 'none',
-                  borderRadius: '0.75rem',
-                  border: 'none',
-                  cursor: 'pointer',
-                  minWidth: '240px',
-                  background: 'linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)',
-                  boxShadow: '0 4px 20px rgba(59, 130, 246, 0.25)',
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  overflow: 'hidden'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'linear-gradient(135deg, #2563eb 0%, #4f46e5 100%)';
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = '0 8px 25px rgba(59, 130, 246, 0.35)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)';
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 4px 20px rgba(59, 130, 246, 0.25)';
-                }}
-              >
-                <span style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                  Comenzar Gratis
-                  <svg
-                    style={{
-                      marginLeft: '0.5rem',
-                      width: '1.1rem',
-                      height: '1.1rem',
-                      transition: 'transform 0.3s ease'
-                    }}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2.5}
-                      d="M17 8l4 4m0 0l-4 4m4-4H3"
-                    />
-                  </svg>
-                </span>
-              </Link>
-
-              <Link
-                href="/auth/login"
-                className="font-inter"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  padding: '0.9rem 2.2rem',
-                  fontSize: '1.05rem',
-                  fontWeight: '600',
-                  color: '#475569',
-                  textDecoration: 'none',
-                  borderRadius: '0.75rem',
-                  border: '1.5px solid #e2e8f0',
-                  cursor: 'pointer',
-                  minWidth: '240px',
-                  background: 'rgba(255, 255, 255, 0.8)',
-                  backdropFilter: 'blur(8px)',
-                  boxShadow: '0 2px 10px rgba(0, 0, 0, 0.05)',
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.color = '#3b82f6';
-                  e.currentTarget.style.borderColor = '#3b82f6';
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.95)';
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = '0 4px 15px rgba(59, 130, 246, 0.1)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.color = '#475569';
-                  e.currentTarget.style.borderColor = '#e2e8f0';
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.8)';
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.05)';
-                }}
-              >
-                <span style={{ display: 'flex', alignItems: 'center' }}>
-                  Ya tengo cuenta
-                  <svg
-                    style={{
-                      marginLeft: '0.5rem',
-                      width: '1.1rem',
-                      height: '1.1rem',
-                      transition: 'transform 0.3s ease'
-                    }}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
-                    />
-                  </svg>
-                </span>
-              </Link>
-            </div>
-
-            {/* Indicadores de confianza más compactos */}
-          </div>
-        </div>
-
-        {/* Scroll indicator más pequeño */}
-
+        />
+        
+        <motion.div
+          className="absolute bottom-10 left-10 w-56 h-56 bg-gradient-to-br from-emerald-100/30 to-teal-100/30 dark:from-emerald-900/15 dark:to-teal-900/15 rounded-full blur-3xl"
+          animate={{
+            scale: [1, 1.2, 1],
+            opacity: [0.2, 0.4, 0.2],
+          }}
+          transition={{
+            duration: 10,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 2
+          }}
+        />
       </div>
-    </>
-  );
-};
 
-export default HomePage;
+      {/* Main Content */}
+      <div className="relative z-10 flex flex-col items-center justify-center h-full px-4 py-8">
+        
+        {/* Logo Section */}
+        <motion.div
+          className="text-center mb-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+        >
+          {/* Logo */}
+          <motion.div
+            className="flex justify-center mb-4"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, delay: 0.1, ease: "easeOut" }}
+            whileHover={{ scale: 1.03 }}
+          >
+            <div className="relative w-48 h-28 sm:w-56 sm:h-32 md:w-64 md:h-36 lg:w-72 lg:h-40">
+              <Image
+                src="/logo-colores.png"
+                alt="Casino Escolar"
+                fill
+                className={`object-contain transition-all duration-500 ${
+                  theme === 'dark' 
+                    ? 'brightness-125 contrast-125 saturate-110 drop-shadow-[0_0_20px_rgba(255,255,255,0.25)]' 
+                    : 'invert brightness-90 contrast-110 saturate-105 drop-shadow-[0_0_15px_rgba(0,0,0,0.12)]'
+                }`}
+                priority
+              />
+            </div>
+          </motion.div>
+
+          {/* Elegant separator */}
+          <motion.div
+            className="flex items-center justify-center mb-4"
+            initial={{ opacity: 0, scale: 0 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, delay: 0.3, ease: "easeOut" }}
+          >
+            <div className="w-8 h-px bg-slate-300 dark:bg-slate-600" />
+            <div className="mx-3 w-2 h-2 bg-emerald-400 dark:bg-emerald-500 rounded-full" />
+            <div className="w-8 h-px bg-slate-300 dark:bg-slate-600" />
+          </motion.div>
+
+          {/* Subtitle */}
+          <motion.p
+            className="text-lg md:text-xl text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed font-light"
+            style={{
+              fontFamily: "'Inter', sans-serif",
+            }}
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
+          >
+            Gestión inteligente de alimentación escolar
+            <br />
+            <span className="text-emerald-600 dark:text-emerald-400 font-medium">Nutrición • Organización • Bienestar</span>
+          </motion.p>
+        </motion.div>
+
+        {/* Action Buttons */}
+        <motion.div
+          className="flex flex-col sm:flex-row gap-4 mb-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.6, ease: "easeOut" }}
+        >
+          {/* Login Button */}
+          <Link href="/auth/login">
+            <motion.div
+              whileHover={{ y: -2, scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="group"
+            >
+              <Button
+                size="lg"
+                className="px-8 py-3 text-base font-medium bg-slate-800 hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border-0"
+                style={{
+                  fontFamily: "'Inter', sans-serif",
+                }}
+              >
+                Iniciar Sesión
+                <motion.div
+                  className="ml-2 w-4 h-4"
+                  animate={{ x: [0, 4, 0] }}
+                  transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                >
+                  →
+                </motion.div>
+              </Button>
+            </motion.div>
+          </Link>
+
+          {/* Register Button */}
+          <Link href="/auth/registro">
+            <motion.div
+              whileHover={{ y: -2, scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="group"
+            >
+              <Button
+                size="lg"
+                variant="outline"
+                className="px-8 py-3 text-base font-medium bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm border-2 border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-slate-700 hover:border-emerald-300 dark:hover:border-emerald-500 hover:text-emerald-700 dark:hover:text-emerald-400 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+                style={{
+                  fontFamily: "'Inter', sans-serif",
+                }}
+              >
+                Crear Cuenta
+                <motion.div
+                  className="ml-2 w-4 h-4"
+                  animate={{ rotate: [0, 360] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                >
+                  +
+                </motion.div>
+              </Button>
+            </motion.div>
+          </Link>
+        </motion.div>
+
+        {/* Feature highlights - Compact */}
+        <motion.div
+          className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.8, ease: "easeOut" }}
+        >
+          {/* Feature 1 */}
+          <motion.div
+            className="text-center group"
+            whileHover={{ y: -3, scale: 1.02 }}
+            transition={{ duration: 0.2 }}
+          >
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/50 dark:to-blue-800/50 rounded-2xl flex items-center justify-center mx-auto mb-3 group-hover:shadow-lg transition-all duration-300">
+              <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+            </div>
+            <h3 className="text-base font-semibold text-slate-800 dark:text-slate-100 mb-2">Gestión Simple</h3>
+            <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+              Administra menús y pedidos de forma intuitiva
+            </p>
+          </motion.div>
+
+          {/* Feature 2 */}
+          <motion.div
+            className="text-center group"
+            whileHover={{ y: -3, scale: 1.02 }}
+            transition={{ duration: 0.2 }}
+          >
+            <div className="w-12 h-12 bg-gradient-to-br from-emerald-100 to-emerald-200 dark:from-emerald-900/50 dark:to-emerald-800/50 rounded-2xl flex items-center justify-center mx-auto mb-3 group-hover:shadow-lg transition-all duration-300">
+              <svg className="w-6 h-6 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+              </svg>
+            </div>
+            <h3 className="text-base font-semibold text-slate-800 dark:text-slate-100 mb-2">Alimentación Saludable</h3>
+            <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+              Promovemos hábitos nutricionales balanceados
+            </p>
+          </motion.div>
+
+          {/* Feature 3 */}
+          <motion.div
+            className="text-center group"
+            whileHover={{ y: -3, scale: 1.02 }}
+            transition={{ duration: 0.2 }}
+          >
+            <div className="w-12 h-12 bg-gradient-to-br from-amber-100 to-amber-200 dark:from-amber-900/50 dark:to-amber-800/50 rounded-2xl flex items-center justify-center mx-auto mb-3 group-hover:shadow-lg transition-all duration-300">
+              <svg className="w-6 h-6 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+            </div>
+            <h3 className="text-base font-semibold text-slate-800 dark:text-slate-100 mb-2">Comunidad Educativa</h3>
+            <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+              Conecta familias, estudiantes y administración
+            </p>
+          </motion.div>
+        </motion.div>
+
+        {/* Bottom accent - Compact */}
+        <motion.div
+          className="mt-6 text-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 1.0 }}
+        >
+          <motion.div
+            className="flex items-center justify-center space-x-2 text-slate-400 dark:text-slate-500 text-xs"
+            animate={{ y: [0, -2, 0] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <div className="w-1 h-1 bg-slate-400 dark:bg-slate-500 rounded-full" />
+            <span style={{ fontFamily: "'Inter', sans-serif" }}>Sistema de gestión educativa</span>
+            <div className="w-1 h-1 bg-slate-400 dark:bg-slate-500 rounded-full" />
+          </motion.div>
+        </motion.div>
+      </div>
+    </div>
+  )
+}
