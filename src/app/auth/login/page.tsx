@@ -20,16 +20,14 @@ import {
   Send, 
   X, 
   AlertTriangle,
-  Sparkles
+  Sparkles,
+  Loader2
 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
 import { loginSchema, type LoginFormData } from '@/lib/validations/auth';
 import { authService } from '@/services/auth.service';
 import { getDashboardRoute } from '@/lib/auth';
-import { Input } from '@/components/ui/Input';
-import { Button } from '@/components/ui/Button';
-import { cn } from '@/lib/utils';
 
 const LoginPage = () => {
   const router = useRouter();
@@ -175,7 +173,7 @@ const LoginPage = () => {
         >
           <Link 
             href="/"
-            className="inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors bg-white/60 backdrop-blur-sm px-4 py-2 rounded-xl border border-white/20 shadow-sm hover:shadow-md"
+            className="inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-all duration-200 bg-white/60 backdrop-blur-sm px-4 py-2 rounded-xl border border-white/20 shadow-sm hover:shadow-md hover:scale-105"
           >
             <ArrowLeft size={16} />
             Volver al inicio
@@ -273,47 +271,101 @@ const LoginPage = () => {
                   Iniciar Sesión
                 </motion.h2>
                 
+                {/* Email Input */}
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, delay: 0.3 }}
+                  className="space-y-2"
                 >
-                  <Input
-                    {...register('email')}
-                    type="email"
-                    label="Correo electrónico"
-                    placeholder="tu@email.com"
-                    icon={<Mail size={16} />}
-                    error={errors.email?.message}
-                    disabled={!configValid}
-                    autoComplete="email"
-                  />
+                  <label className="block text-sm font-medium text-gray-700">
+                    Correo electrónico
+                  </label>
+                  <div className="relative">
+                    <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+                      <Mail size={16} />
+                    </div>
+                    <input
+                      {...register('email')}
+                      type="email"
+                      placeholder="tu@email.com"
+                      disabled={!configValid}
+                      autoComplete="email"
+                      className={`w-full pl-12 pr-4 py-3 rounded-xl border text-sm transition-all duration-200 placeholder:text-gray-400 focus:ring-2 focus:ring-indigo-500 focus:outline-none disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed ${
+                        errors.email 
+                          ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
+                          : 'border-gray-300 focus:border-indigo-500'
+                      }`}
+                    />
+                    {errors.email && (
+                      <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
+                        <AlertTriangle size={16} className="text-red-500" />
+                      </div>
+                    )}
+                  </div>
+                  <AnimatePresence>
+                    {errors.email && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.2 }}
+                        className="text-sm text-red-500"
+                      >
+                        {errors.email.message}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </motion.div>
 
+                {/* Password Input */}
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, delay: 0.4 }}
-                  className="relative"
+                  className="space-y-2"
                 >
-                  <Input
-                    {...register('password')}
-                    type={showPassword ? 'text' : 'password'}
-                    label="Contraseña"
-                    placeholder="Tu contraseña"
-                    icon={<Lock size={16} />}
-                    error={errors.password?.message}
-                    disabled={!configValid}
-                    autoComplete="current-password"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-[38px] text-gray-400 hover:text-gray-600 transition-colors"
-                    disabled={!configValid}
-                  >
-                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Contraseña
+                  </label>
+                  <div className="relative">
+                    <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+                      <Lock size={16} />
+                    </div>
+                    <input
+                      {...register('password')}
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="Tu contraseña"
+                      disabled={!configValid}
+                      autoComplete="current-password"
+                      className={`w-full pl-12 pr-12 py-3 rounded-xl border text-sm transition-all duration-200 placeholder:text-gray-400 focus:ring-2 focus:ring-indigo-500 focus:outline-none disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed ${
+                        errors.password 
+                          ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
+                          : 'border-gray-300 focus:border-indigo-500'
+                      }`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                      disabled={!configValid}
+                    >
+                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                  <AnimatePresence>
+                    {errors.password && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.2 }}
+                        className="text-sm text-red-500"
+                      >
+                        {errors.password.message}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </motion.div>
               </div>
 
@@ -358,27 +410,34 @@ const LoginPage = () => {
                           </p>
                           
                           <div className="space-y-3">
-                            <Input
-                              type="email"
-                              placeholder="tu@email.com"
-                              value={resetEmail}
-                              onChange={(e) => setResetEmail(e.target.value)}
-                              icon={<Mail size={16} />}
-                              disabled={!configValid}
-                            />
+                            <div className="relative">
+                              <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+                                <Mail size={16} />
+                              </div>
+                              <input
+                                type="email"
+                                placeholder="tu@email.com"
+                                value={resetEmail}
+                                onChange={(e) => setResetEmail(e.target.value)}
+                                disabled={!configValid}
+                                className="w-full pl-12 pr-4 py-3 rounded-xl border border-indigo-200 text-sm transition-all duration-200 placeholder:text-gray-400 focus:ring-2 focus:ring-indigo-500 focus:outline-none focus:border-indigo-500 bg-white disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed"
+                              />
+                            </div>
                             
                             <div className="flex gap-2">
-                              <Button
+                              <button
                                 type="button"
                                 onClick={handlePasswordReset}
                                 disabled={isResetting || !resetEmail || !configValid}
-                                loading={isResetting}
-                                leftIcon={<Send size={16} />}
-                                className="flex-1"
-                                size="sm"
+                                className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] hover:scale-[1.02]"
                               >
-                                Enviar enlace
-                              </Button>
+                                {isResetting ? (
+                                  <Loader2 size={16} className="animate-spin" />
+                                ) : (
+                                  <Send size={16} />
+                                )}
+                                <span>{isResetting ? 'Enviando...' : 'Enviar enlace'}</span>
+                              </button>
                               <button
                                 type="button"
                                 onClick={() => {
@@ -422,16 +481,18 @@ const LoginPage = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: 0.6 }}
               >
-                <Button
+                <button
                   type="submit"
-                  fullWidth
-                  loading={isSubmitting}
                   disabled={isSubmitting || !configValid}
-                  rightIcon={<LogIn size={16} />}
-                  className="shadow-lg hover:shadow-xl transition-shadow duration-300"
+                  className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] hover:scale-[1.02] shadow-lg hover:shadow-xl"
                 >
-                  Iniciar sesión
-                </Button>
+                  {isSubmitting ? (
+                    <Loader2 size={16} className="animate-spin" />
+                  ) : (
+                    <LogIn size={16} />
+                  )}
+                  <span>{isSubmitting ? 'Iniciando sesión...' : 'Iniciar sesión'}</span>
+                </button>
               </motion.div>
 
               {/* Divider */}
@@ -457,17 +518,13 @@ const LoginPage = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: 0.8 }}
               >
-                <Button
-                  as={Link}
+                <Link
                   href="/auth/register"
-                  variant="outline"
-                  fullWidth
-                  disabled={!configValid}
-                  leftIcon={<UserPlus size={16} />}
-                  className="border-2 hover:border-indigo-300 hover:bg-indigo-50"
+                  className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-600 active:scale-[0.98] hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Crear cuenta nueva
-                </Button>
+                  <UserPlus size={16} />
+                  <span>Crear cuenta nueva</span>
+                </Link>
               </motion.div>
             </form>
           </div>
@@ -489,10 +546,7 @@ const LoginPage = () => {
                 transition={{ duration: 0.3, delay: 0.9 + index * 0.1 }}
                 className="text-center flex-1"
               >
-                <div className={cn(
-                  "w-10 h-10 rounded-xl flex items-center justify-center mx-auto mb-2",
-                  "bg-white/80 shadow-sm"
-                )}>
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center mx-auto mb-2 bg-white/80 shadow-sm">
                   <feature.icon size={18} className={feature.color} />
                 </div>
                 <p className="text-xs font-medium text-gray-600">
@@ -526,7 +580,7 @@ const LoginPage = () => {
                 className="flex items-center justify-between p-3 bg-white/60 rounded-xl"
               >
                 <div className="flex items-center gap-3">
-                  <div className={cn("w-3 h-3 rounded-full", account.color)} />
+                  <div className={`w-3 h-3 rounded-full ${account.color}`} />
                   <span className="font-medium text-amber-900 text-sm">
                     {account.role}
                   </span>
