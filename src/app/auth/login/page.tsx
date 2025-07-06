@@ -4,25 +4,39 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Mail, 
-  Lock, 
-  ArrowLeft, 
-  Eye, 
-  EyeOff, 
-  LogIn, 
-  UserPlus, 
-  Shield, 
-  Zap, 
-  CheckCircle, 
-  Key, 
-  Send, 
-  X, 
-  AlertTriangle,
-  Sparkles,
-  Loader2
-} from 'lucide-react';
+import {
+  Box,
+  Container,
+  Typography,
+  TextField,
+  Button,
+  Card,
+  CardContent,
+  Stack,
+  IconButton,
+  Alert,
+  InputAdornment,
+  alpha,
+  Paper,
+  Divider,
+  Collapse,
+} from '@mui/material';
+import {
+  Email,
+  Lock,
+  ArrowBack,
+  Visibility,
+  VisibilityOff,
+  Login,
+  PersonAdd,
+  Shield,
+  Speed,
+  Verified,
+  Key,
+  Send,
+  Close,
+  Warning,
+} from '@mui/icons-material';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
 import { loginSchema, type LoginFormData } from '@/lib/validations/auth';
@@ -142,475 +156,637 @@ const LoginPage = () => {
   };
 
   const securityFeatures = [
-    { icon: Shield, text: 'SSL Seguro', color: 'text-emerald-500' },
-    { icon: CheckCircle, text: 'Verificado', color: 'text-blue-500' },
-    { icon: Zap, text: 'Acceso Rápido', color: 'text-amber-500' },
+    { icon: <Shield />, text: 'SSL Seguro' },
+    { icon: <Verified />, text: 'Verificado' },
+    { icon: <Speed />, text: 'Acceso Rápido' },
   ];
 
   const demoAccounts = [
-    { role: 'Asociación', email: 'asociacion@demo.com', password: 'demo123', color: 'bg-purple-500' },
-    { role: 'Comercio', email: 'comercio@demo.com', password: 'demo123', color: 'bg-blue-500' },
-    { role: 'Socio', email: 'socio@demo.com', password: 'demo123', color: 'bg-green-500' },
+    { role: 'Asociación', email: 'asociacion@demo.com', password: 'demo123' },
+    { role: 'Comercio', email: 'comercio@demo.com', password: 'demo123' },
+    { role: 'Socio', email: 'socio@demo.com', password: 'demo123' },
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center px-4 py-8 relative overflow-hidden">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 bg-grid opacity-30" />
-      
-      {/* Floating Elements */}
-      <div className="absolute top-20 left-20 w-72 h-72 bg-gradient-to-br from-indigo-200 to-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-pulse" />
-      <div className="absolute top-40 right-20 w-72 h-72 bg-gradient-to-br from-yellow-200 to-pink-200 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-pulse" style={{ animationDelay: '2s' }} />
-      <div className="absolute -bottom-8 left-40 w-72 h-72 bg-gradient-to-br from-blue-200 to-cyan-200 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-pulse" style={{ animationDelay: '4s' }} />
-
-      <div className="w-full max-w-md relative z-10">
-        {/* Back Button */}
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.3 }}
-          className="mb-8"
-        >
-          <Link 
-            href="/"
-            className="inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-all duration-200 bg-white/60 backdrop-blur-sm px-4 py-2 rounded-xl border border-white/20 shadow-sm hover:shadow-md hover:scale-105"
-          >
-            <ArrowLeft size={16} />
-            Volver al inicio
-          </Link>
-        </motion.div>
-
+    <Box 
+      sx={{ 
+        minHeight: '100vh',
+        bgcolor: '#fafbfc',
+        background: 'linear-gradient(135deg, #fafbfc 0%, #f8fafc 100%)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        py: 4
+      }}
+    >
+      <Container maxWidth="sm">
         {/* Configuration Error Alert */}
-        <AnimatePresence>
-          {!configValid && (
-            <motion.div
-              initial={{ opacity: 0, y: -20, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -20, scale: 0.95 }}
-              transition={{ duration: 0.3 }}
-              className="mb-6 rounded-xl bg-red-50 border border-red-200 p-4"
-            >
-              <div className="flex items-center gap-3">
-                <AlertTriangle size={20} className="text-red-500 flex-shrink-0" />
-                <p className="text-sm text-red-700 font-medium">
-                  Error de configuración del sistema. Contacta al administrador.
-                </p>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {!configValid && (
+          <Alert 
+            severity="error" 
+            sx={{ 
+              mb: 3,
+              borderRadius: 3,
+              bgcolor: alpha('#ef4444', 0.05),
+              border: `1px solid ${alpha('#ef4444', 0.2)}`,
+            }}
+            icon={<Warning />}
+          >
+            Error de configuración del sistema. Contacta al administrador.
+          </Alert>
+        )}
 
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="text-center mb-8"
-        >
-          {/* Logo */}
-          <Link href="/" className="inline-block mb-6">
-            <motion.div
-              className="relative w-16 h-16 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl flex items-center justify-center mx-auto shadow-xl"
-              whileHover={{ scale: 1.05, rotate: 5 }}
-              transition={{ duration: 0.2 }}
+        <Box sx={{ textAlign: 'center', mb: 5 }}>
+          <IconButton
+            component={Link}
+            href="/"
+            sx={{ 
+              position: 'absolute',
+              top: 24,
+              left: 24,
+              bgcolor: 'white',
+              boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
+              '&:hover': { 
+                bgcolor: '#f8fafc',
+                transform: 'translateY(-1px)',
+                boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+              },
+              transition: 'all 0.2s ease'
+            }}
+          >
+            <ArrowBack />
+          </IconButton>
+
+          {/* Logo & Brand */}
+          <Box sx={{ mb: 4 }}>
+            <Box
+              component={Link}
+              href="/"
+              sx={{
+                display: 'inline-flex',
+                width: 72,
+                height: 72,
+                borderRadius: 4,
+                background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                color: 'white',
+                textDecoration: 'none',
+                fontSize: '2.2rem',
+                fontWeight: 900,
+                mb: 3,
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 12px 40px rgba(99, 102, 241, 0.3)',
+                letterSpacing: '-0.02em',
+                '&:hover': {
+                  transform: 'translateY(-3px)',
+                  boxShadow: '0 16px 50px rgba(99, 102, 241, 0.4)',
+                },
+                transition: 'all 0.3s ease'
+              }}
             >
-              {/* Sparkle Effect */}
-              <div className="absolute -top-1 -right-1">
-                <motion.div
-                  animate={{ rotate: [0, 360] }}
-                  transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
-                >
-                  <Sparkles size={12} className="text-yellow-300" />
-                </motion.div>
-              </div>
-              
-              <span className="text-2xl font-bold text-white">F</span>
-            </motion.div>
-          </Link>
-          
-          <motion.h1 
-            className="text-3xl md:text-4xl font-bold tracking-tight text-gray-900 mb-3"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
+              F
+            </Box>
+
+            <Typography
+              variant="h6"
+              sx={{
+                fontWeight: 700,
+                color: '#1e293b',
+                fontSize: '1.1rem',
+                letterSpacing: '-0.01em'
+              }}
+            >
+              Fidelya
+            </Typography>
+          </Box>
+
+          <Typography
+            variant="h3"
+            sx={{
+              fontWeight: 900,
+              mb: 1,
+              fontSize: { xs: '2.2rem', md: '2.8rem' },
+              background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 30%, #6366f1 100%)',
+              backgroundClip: 'text',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              letterSpacing: '-0.03em',
+              lineHeight: 0.95,
+            }}
           >
             Bienvenido de vuelta
-          </motion.h1>
+          </Typography>
           
-          <motion.p 
-            className="text-base text-gray-600 mb-6 max-w-sm mx-auto leading-relaxed"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
+          <Typography
+            variant="body1"
+            sx={{ 
+              color: '#64748b', 
+              fontWeight: 500,
+              fontSize: '1.05rem',
+              maxWidth: 420,
+              mx: 'auto',
+              lineHeight: 1.5
+            }}
           >
             Accede a tu cuenta de Fidelya y gestiona tu programa de fidelidad
-          </motion.p>
-        </motion.div>
+          </Typography>
+        </Box>
 
-        {/* Main Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.1 }}
-          className="relative"
+        <Card
+          elevation={0}
+          sx={{
+            borderRadius: 5,
+            border: '1px solid #e2e8f0',
+            bgcolor: 'white',
+            boxShadow: '0 8px 40px rgba(0,0,0,0.06)',
+            overflow: 'hidden'
+          }}
         >
-          {/* Glass Effect Background */}
-          <div className="absolute inset-0 bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20" />
-          
-          {/* Content */}
-          <div className="relative bg-white/40 backdrop-blur-sm rounded-3xl p-8 md:p-10 shadow-xl border border-white/30">
-            <form onSubmit={handleSubmit(handleLogin)} className="space-y-6">
-              {/* Login Form */}
-              <div className="space-y-4">
-                <motion.h2
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: 0.2 }}
-                  className="text-xl font-bold text-gray-900 mb-6"
-                >
-                  Iniciar Sesión
-                </motion.h2>
-                
-                {/* Email Input */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: 0.3 }}
-                  className="space-y-2"
-                >
-                  <label className="block text-sm font-medium text-gray-700">
-                    Correo electrónico
-                  </label>
-                  <div className="relative">
-                    <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
-                      <Mail size={16} />
-                    </div>
-                    <input
+          <CardContent sx={{ p: 5 }}>
+            <Box component="form" onSubmit={handleSubmit(handleLogin)}>
+              <Stack spacing={4}>
+                {/* Login Form */}
+                <Box>
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      fontWeight: 700,
+                      color: '#1e293b',
+                      mb: 3,
+                      fontSize: '1.1rem',
+                      letterSpacing: '-0.01em'
+                    }}
+                  >
+                    Iniciar Sesión
+                  </Typography>
+                  
+                  <Stack spacing={3}>
+                    <TextField
                       {...register('email')}
-                      type="email"
+                      label="Correo electrónico"
                       placeholder="tu@email.com"
+                      type="email"
+                      fullWidth
                       disabled={!configValid}
-                      autoComplete="email"
-                      className={`w-full pl-12 pr-4 py-3 rounded-xl border text-sm transition-all duration-200 placeholder:text-gray-400 focus:ring-2 focus:ring-indigo-500 focus:outline-none disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed ${
-                        errors.email 
-                          ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
-                          : 'border-gray-300 focus:border-indigo-500'
-                      }`}
+                      error={!!errors.email}
+                      helperText={errors.email?.message}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <Email sx={{ color: '#94a3b8', fontSize: '1.3rem' }} />
+                          </InputAdornment>
+                        ),
+                      }}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: 3,
+                          bgcolor: '#fafbfc',
+                          '& fieldset': {
+                            borderColor: '#e2e8f0',
+                          },
+                          '&:hover fieldset': {
+                            borderColor: '#6366f1',
+                          },
+                          '&.Mui-focused fieldset': {
+                            borderColor: '#6366f1',
+                            borderWidth: 2,
+                          },
+                          '&.Mui-focused': {
+                            bgcolor: 'white',
+                          }
+                        },
+                        '& .MuiInputLabel-root.Mui-focused': {
+                          color: '#6366f1',
+                        },
+                      }}
                     />
-                    {errors.email && (
-                      <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-                        <AlertTriangle size={16} className="text-red-500" />
-                      </div>
-                    )}
-                  </div>
-                  <AnimatePresence>
-                    {errors.email && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.2 }}
-                        className="text-sm text-red-500"
-                      >
-                        {errors.email.message}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </motion.div>
 
-                {/* Password Input */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: 0.4 }}
-                  className="space-y-2"
-                >
-                  <label className="block text-sm font-medium text-gray-700">
-                    Contraseña
-                  </label>
-                  <div className="relative">
-                    <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
-                      <Lock size={16} />
-                    </div>
-                    <input
+                    <TextField
                       {...register('password')}
-                      type={showPassword ? 'text' : 'password'}
+                      label="Contraseña"
                       placeholder="Tu contraseña"
+                      type={showPassword ? 'text' : 'password'}
+                      fullWidth
                       disabled={!configValid}
-                      autoComplete="current-password"
-                      className={`w-full pl-12 pr-12 py-3 rounded-xl border text-sm transition-all duration-200 placeholder:text-gray-400 focus:ring-2 focus:ring-indigo-500 focus:outline-none disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed ${
-                        errors.password 
-                          ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
-                          : 'border-gray-300 focus:border-indigo-500'
-                      }`}
+                      error={!!errors.password}
+                      helperText={errors.password?.message}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <Lock sx={{ color: '#94a3b8', fontSize: '1.3rem' }} />
+                          </InputAdornment>
+                        ),
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton
+                              onClick={() => setShowPassword(!showPassword)}
+                              edge="end"
+                              disabled={!configValid}
+                              sx={{ color: '#94a3b8' }}
+                            >
+                              {showPassword ? <VisibilityOff /> : <Visibility />}
+                            </IconButton>
+                          </InputAdornment>
+                        ),
+                      }}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: 3,
+                          bgcolor: '#fafbfc',
+                          '& fieldset': {
+                            borderColor: '#e2e8f0',
+                          },
+                          '&:hover fieldset': {
+                            borderColor: '#6366f1',
+                          },
+                          '&.Mui-focused fieldset': {
+                            borderColor: '#6366f1',
+                            borderWidth: 2,
+                          },
+                          '&.Mui-focused': {
+                            bgcolor: 'white',
+                          }
+                        },
+                        '& .MuiInputLabel-root.Mui-focused': {
+                          color: '#6366f1',
+                        },
+                      }}
                     />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                      disabled={!configValid}
-                    >
-                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </button>
-                  </div>
-                  <AnimatePresence>
-                    {errors.password && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.2 }}
-                        className="text-sm text-red-500"
-                      >
-                        {errors.password.message}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </motion.div>
-              </div>
+                  </Stack>
+                </Box>
 
-              {/* Forgot Password */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.5 }}
-                className="text-center"
-              >
-                <button
-                  type="button"
-                  onClick={() => setShowForgotPassword(!showForgotPassword)}
-                  disabled={!configValid}
-                  className="text-sm font-medium text-indigo-600 hover:text-indigo-500 transition-colors"
-                >
-                  ¿Olvidaste tu contraseña?
-                </button>
+                {/* Forgot Password */}
+                <Box sx={{ textAlign: 'center' }}>
+                  <Button
+                    onClick={() => setShowForgotPassword(!showForgotPassword)}
+                    disabled={!configValid}
+                    sx={{
+                      textTransform: 'none',
+                      fontWeight: 600,
+                      color: '#6366f1',
+                      fontSize: '0.9rem',
+                      '&:hover': {
+                        bgcolor: alpha('#6366f1', 0.05),
+                      }
+                    }}
+                  >
+                    ¿Olvidaste tu contraseña?
+                  </Button>
 
-                <AnimatePresence>
-                  {showForgotPassword && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0, y: -10 }}
-                      animate={{ opacity: 1, height: 'auto', y: 0 }}
-                      exit={{ opacity: 0, height: 0, y: -10 }}
-                      transition={{ duration: 0.3 }}
-                      className="mt-4 p-6 bg-indigo-50 border border-indigo-200 rounded-2xl relative overflow-hidden"
+                  <Collapse in={showForgotPassword}>
+                    <Paper
+                      elevation={0}
+                      sx={{
+                        mt: 3,
+                        p: 4,
+                        bgcolor: alpha('#6366f1', 0.05),
+                        border: `1px solid ${alpha('#6366f1', 0.15)}`,
+                        borderRadius: 4,
+                        position: 'relative',
+                        overflow: 'hidden',
+                        '&::before': {
+                          content: '""',
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          height: '2px',
+                          background: 'linear-gradient(90deg, #6366f1, #8b5cf6)',
+                        }
+                      }}
                     >
-                      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 to-purple-500" />
-                      
-                      <div className="flex items-start gap-4">
-                        <div className="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                          <Key size={20} className="text-indigo-600" />
-                        </div>
+                      <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+                        <Box
+                          sx={{
+                            width: 48,
+                            height: 48,
+                            borderRadius: 3,
+                            bgcolor: alpha('#6366f1', 0.15),
+                            color: '#6366f1',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            flexShrink: 0,
+                          }}
+                        >
+                          <Key sx={{ fontSize: '1.5rem' }} />
+                        </Box>
                         
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-indigo-900 mb-2">
+                        <Box sx={{ flex: 1 }}>
+                          <Typography
+                            variant="h6"
+                            sx={{
+                              fontWeight: 700,
+                              color: '#6366f1',
+                              mb: 1,
+                              fontSize: '1.1rem'
+                            }}
+                          >
                             Recuperar Contraseña
-                          </h3>
-                          <p className="text-sm text-indigo-700 mb-4">
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              color: alpha('#6366f1', 0.8),
+                              mb: 3,
+                              fontSize: '0.9rem'
+                            }}
+                          >
                             Ingresa tu email y te enviaremos un enlace para restablecer tu contraseña.
-                          </p>
+                          </Typography>
                           
-                          <div className="space-y-3">
-                            <div className="relative">
-                              <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
-                                <Mail size={16} />
-                              </div>
-                              <input
-                                type="email"
-                                placeholder="tu@email.com"
-                                value={resetEmail}
-                                onChange={(e) => setResetEmail(e.target.value)}
-                                disabled={!configValid}
-                                className="w-full pl-12 pr-4 py-3 rounded-xl border border-indigo-200 text-sm transition-all duration-200 placeholder:text-gray-400 focus:ring-2 focus:ring-indigo-500 focus:outline-none focus:border-indigo-500 bg-white disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed"
-                              />
-                            </div>
+                          <Stack spacing={2}>
+                            <TextField
+                              label="Email de recuperación"
+                              placeholder="tu@email.com"
+                              type="email"
+                              value={resetEmail}
+                              onChange={(e) => setResetEmail(e.target.value)}
+                              size="small"
+                              fullWidth
+                              disabled={!configValid}
+                              InputProps={{
+                                startAdornment: (
+                                  <InputAdornment position="start">
+                                    <Email sx={{ color: '#94a3b8', fontSize: '1.1rem' }} />
+                                  </InputAdornment>
+                                ),
+                              }}
+                              sx={{
+                                '& .MuiOutlinedInput-root': {
+                                  borderRadius: 2,
+                                  bgcolor: 'white',
+                                  '& fieldset': {
+                                    borderColor: alpha('#6366f1', 0.2),
+                                  },
+                                  '&:hover fieldset': {
+                                    borderColor: '#6366f1',
+                                  },
+                                  '&.Mui-focused fieldset': {
+                                    borderColor: '#6366f1',
+                                  }
+                                },
+                                '& .MuiInputLabel-root.Mui-focused': {
+                                  color: '#6366f1',
+                                },
+                              }}
+                            />
                             
-                            <div className="flex gap-2">
-                              <button
-                                type="button"
+                            <Box sx={{ display: 'flex', gap: 1 }}>
+                              <Button
                                 onClick={handlePasswordReset}
                                 disabled={isResetting || !resetEmail || !configValid}
-                                className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] hover:scale-[1.02]"
+                                variant="contained"
+                                size="small"
+                                startIcon={<Send />}
+                                sx={{
+                                  flex: 1,
+                                  textTransform: 'none',
+                                  fontWeight: 600,
+                                  borderRadius: 2,
+                                  background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                                  '&:hover': {
+                                    background: 'linear-gradient(135deg, #5b21b6 0%, #7c3aed 100%)',
+                                  }
+                                }}
                               >
-                                {isResetting ? (
-                                  <Loader2 size={16} className="animate-spin" />
-                                ) : (
-                                  <Send size={16} />
-                                )}
-                                <span>{isResetting ? 'Enviando...' : 'Enviar enlace'}</span>
-                              </button>
-                              <button
-                                type="button"
+                                {isResetting ? 'Enviando...' : 'Enviar enlace'}
+                              </Button>
+                              <IconButton
                                 onClick={() => {
                                   setShowForgotPassword(false);
                                   setResetEmail('');
                                 }}
-                                className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                                size="small"
+                                sx={{ color: '#94a3b8' }}
                               >
-                                <X size={16} />
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.div>
+                                <Close />
+                              </IconButton>
+                            </Box>
+                          </Stack>
+                        </Box>
+                      </Box>
+                    </Paper>
+                  </Collapse>
+                </Box>
 
-              {/* Error Alert */}
-              <AnimatePresence>
+                {/* Error Alert */}
                 {errors.root && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                    transition={{ duration: 0.2 }}
-                    className="rounded-xl bg-red-50 border border-red-200 p-4"
+                  <Alert 
+                    severity="error" 
+                    sx={{ 
+                      borderRadius: 3,
+                      bgcolor: alpha('#ef4444', 0.05),
+                      border: `1px solid ${alpha('#ef4444', 0.2)}`,
+                    }}
                   >
-                    <div className="flex items-center gap-3">
-                      <AlertTriangle size={20} className="text-red-500 flex-shrink-0" />
-                      <p className="text-sm text-red-700 font-medium">{errors.root.message as string}</p>
-                    </div>
-                  </motion.div>
+                    {errors.root.message}
+                  </Alert>
                 )}
-              </AnimatePresence>
 
-              {/* Submit Button */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.6 }}
-              >
-                <button
+                {/* Submit Button */}
+                <Button
                   type="submit"
+                  variant="contained"
+                  fullWidth
                   disabled={isSubmitting || !configValid}
-                  className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] hover:scale-[1.02] shadow-lg hover:shadow-xl"
+                  endIcon={isSubmitting ? null : <Login />}
+                  sx={{
+                    py: 2.5,
+                    borderRadius: 4,
+                    textTransform: 'none',
+                    fontWeight: 700,
+                    fontSize: '1.1rem',
+                    background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                    boxShadow: '0 8px 32px rgba(99, 102, 241, 0.3)',
+                    letterSpacing: '-0.01em',
+                    '&:hover': {
+                      background: 'linear-gradient(135deg, #5b21b6 0%, #7c3aed 100%)',
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 12px 40px rgba(99, 102, 241, 0.4)',
+                    },
+                    '&:disabled': {
+                      background: '#e2e8f0',
+                      color: '#94a3b8',
+                      transform: 'none',
+                      boxShadow: 'none',
+                    },
+                    transition: 'all 0.3s ease'
+                  }}
                 >
-                  {isSubmitting ? (
-                    <Loader2 size={16} className="animate-spin" />
-                  ) : (
-                    <LogIn size={16} />
-                  )}
-                  <span>{isSubmitting ? 'Iniciando sesión...' : 'Iniciar sesión'}</span>
-                </button>
-              </motion.div>
+                  {isSubmitting ? 'Iniciando sesión...' : 'Iniciar sesión'}
+                </Button>
 
-              {/* Divider */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.4, delay: 0.7 }}
-                className="relative my-8"
-              >
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-200" />
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-4 bg-white/80 text-gray-500 font-medium">
-                    ¿No tienes cuenta?
-                  </span>
-                </div>
-              </motion.div>
+                {/* Divider */}
+                <Box sx={{ position: 'relative', my: 3 }}>
+                  <Divider sx={{ borderColor: '#f1f5f9' }} />
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      top: '50%',
+                      left: '50%',
+                      transform: 'translate(-50%, -50%)',
+                      bgcolor: 'white',
+                      px: 3,
+                    }}
+                  >
+                    <Typography 
+                      variant="body2" 
+                      sx={{ 
+                        color: '#94a3b8', 
+                        fontWeight: 600,
+                        fontSize: '0.9rem',
+                        letterSpacing: '0.02em'
+                      }}
+                    >
+                      ¿No tienes cuenta?
+                    </Typography>
+                  </Box>
+                </Box>
 
-              {/* Register Button */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.8 }}
-              >
-                <Link
+                {/* Register Button */}
+                <Button
+                  component={Link}
                   href="/auth/register"
-                  className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-600 active:scale-[0.98] hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
+                  variant="outlined"
+                  fullWidth
+                  disabled={!configValid}
+                  startIcon={<PersonAdd />}
+                  sx={{
+                    py: 2,
+                    borderRadius: 4,
+                    textTransform: 'none',
+                    fontWeight: 700,
+                    fontSize: '1.05rem',
+                    borderColor: '#e2e8f0',
+                    color: '#475569',
+                    borderWidth: 2,
+                    letterSpacing: '-0.01em',
+                    '&:hover': {
+                      borderColor: '#6366f1',
+                      bgcolor: alpha('#6366f1', 0.03),
+                      color: '#6366f1',
+                      transform: 'translateY(-1px)',
+                      boxShadow: '0 4px 20px rgba(99, 102, 241, 0.1)',
+                    },
+                    transition: 'all 0.2s ease'
+                  }}
                 >
-                  <UserPlus size={16} />
-                  <span>Crear cuenta nueva</span>
-                </Link>
-              </motion.div>
-            </form>
-          </div>
-        </motion.div>
+                  Crear cuenta nueva
+                </Button>
 
-        {/* Security Features */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.9 }}
-          className="mt-8 bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-white/30"
-        >
-          <div className="flex justify-around items-center gap-4">
-            {securityFeatures.map((feature, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.3, delay: 0.9 + index * 0.1 }}
-                className="text-center flex-1"
-              >
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center mx-auto mb-2 bg-white/80 shadow-sm">
-                  <feature.icon size={18} className={feature.color} />
-                </div>
-                <p className="text-xs font-medium text-gray-600">
-                  {feature.text}
-                </p>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
+                {/* Security Features */}
+                <Paper
+                  elevation={0}
+                  sx={{
+                    bgcolor: '#f8fafc',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: 4,
+                    p: 3,
+                    mt: 3
+                  }}
+                >
+                  <Box 
+                    sx={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-around',
+                      alignItems: 'center',
+                      gap: 2
+                    }}
+                  >
+                    {securityFeatures.map((feature, index) => (
+                      <Box key={index} sx={{ textAlign: 'center', flex: 1 }}>
+                        <Box
+                          sx={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: 2,
+                            bgcolor: alpha('#10b981', 0.1),
+                            color: '#10b981',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            mx: 'auto',
+                            mb: 1,
+                          }}
+                        >
+                          {React.cloneElement(feature.icon, { sx: { fontSize: '1.1rem' } })}
+                        </Box>
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            color: '#64748b',
+                            fontWeight: 600,
+                            fontSize: '0.75rem'
+                          }}
+                        >
+                          {feature.text}
+                        </Typography>
+                      </Box>
+                    ))}
+                  </Box>
+                </Paper>
 
-        {/* Demo Accounts */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 1.0 }}
-          className="mt-6 bg-amber-50 border border-amber-200 rounded-2xl p-6 relative overflow-hidden"
-        >
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-400 to-orange-400" />
-          
-          <h3 className="font-semibold text-amber-900 mb-4 text-center">
-            Cuentas de Demostración
-          </h3>
-          
-          <div className="space-y-3">
-            {demoAccounts.map((account, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.3, delay: 1.0 + index * 0.1 }}
-                className="flex items-center justify-between p-3 bg-white/60 rounded-xl"
-              >
-                <div className="flex items-center gap-3">
-                  <div className={`w-3 h-3 rounded-full ${account.color}`} />
-                  <span className="font-medium text-amber-900 text-sm">
-                    {account.role}
-                  </span>
-                </div>
-                <div className="text-right">
-                  <p className="text-xs font-mono text-amber-800">
-                    {account.email}
-                  </p>
-                  <p className="text-xs font-mono text-amber-700">
-                    {account.password}
-                  </p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Footer */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 1.1 }}
-          className="text-center mt-8"
-        >
-          <p className="text-xs text-gray-500">
-            © 2024 Fidelya. Todos los derechos reservados.
-          </p>
-        </motion.div>
-      </div>
-    </div>
+                {/* Demo Accounts */}
+                <Paper
+                  elevation={0}
+                  sx={{
+                    bgcolor: alpha('#f59e0b', 0.05),
+                    border: `1px solid ${alpha('#f59e0b', 0.2)}`,
+                    borderRadius: 4,
+                    p: 3,
+                    position: 'relative',
+                    overflow: 'hidden',
+                    '&::before': {
+                      content: '""',
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      height: '2px',
+                      background: 'linear-gradient(90deg, #f59e0b, #f97316)',
+                    }
+                  }}
+                >
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      fontWeight: 700,
+                      color: '#f59e0b',
+                      mb: 2,
+                      fontSize: '1rem',
+                      textAlign: 'center'
+                    }}
+                  >
+                    Cuentas de Demostración
+                  </Typography>
+                  
+                  <Stack spacing={1}>
+                    {demoAccounts.map((account, index) => (
+                      <Box key={index} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Typography
+                          variant="body2"
+                          sx={{ fontWeight: 600, color: '#92400e', fontSize: '0.8rem' }}
+                        >
+                          {account.role}:
+                        </Typography>
+                        <Typography
+                          variant="body2"
+                          sx={{ color: '#92400e', fontSize: '0.8rem', fontFamily: 'monospace' }}
+                        >
+                          {account.email} / {account.password}
+                        </Typography>
+                      </Box>
+                    ))}
+                  </Stack>
+                </Paper>
+              </Stack>
+            </Box>
+          </CardContent>
+        </Card>
+      </Container>
+    </Box>
   );
 };
 
