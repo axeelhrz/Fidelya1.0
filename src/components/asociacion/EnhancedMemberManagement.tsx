@@ -725,18 +725,20 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
 
   if (loading) {
     return (
-      <motion.div
+      <Box
+        component={motion.div}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.4 }}
       >
         <TableSkeleton />
-      </motion.div>
+      </Box>
     );
   }
 
   return (
-    <motion.div
+    <Box
+      component={motion.div}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.4 }}
@@ -1049,7 +1051,7 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
                   label="Mostrar"
                   size={isMobile ? "medium" : "large"}
                   sx={{
-                    borderRadius: 4
+                    borderRadius: 4,
                     bgcolor: '#fafbfc',
                     '& fieldset': {
                       borderColor: '#e2e8f0',
@@ -1079,7 +1081,8 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
           {/* Bulk Actions */}
           <AnimatePresence>
             {selectedMembers.length > 0 && (
-              <motion.div
+              <Box
+                component={motion.div}
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
@@ -1160,7 +1163,7 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
                     </Box>
                   )}
                 </Paper>
-              </motion.div>
+              </Box>
             )}
           </AnimatePresence>
         </CardContent>
@@ -1226,8 +1229,9 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
                   const engagementLevel = getEngagementLevel(engagementScore);
                   
                   return (
-                    <motion.div
+                    <Box
                       key={socio.uid}
+                      component={motion.div}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.3, delay: index * 0.05 }}
@@ -1247,7 +1251,7 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
                         getInitials={getInitials}
                         getStatusChip={getStatusChip}
                       />
-                    </motion.div>
+                    </Box>
                   );
                 })}
               </Box>
@@ -1416,53 +1420,26 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
                             <Stack direction="row" spacing={0.5} justifyContent="flex-end">
                               <Tooltip title="Ver perfil">
                                 <IconButton
-                                  size="small"
-                                  onClick={() => toast('Vista de perfil en desarrollo', { icon: '👀' })}
-                                  sx={{
-                                    color: '#94a3b8',
-                                    '&:hover': {
-                                      color: '#6366f1',
-                                      bgcolor: alpha('#6366f1', 0.1),
-                                    },
-                                    transition: 'all 0.2s ease'
-                                  }}
+                                  onClick={() => onEdit(socio)}
+                                  sx={{ color: '#6366f1', '&:hover': { color: '#6366f1' } }}
                                 >
-                                  <Visibility sx={{ fontSize: 16 }} />
+                                  <Visibility />
                                 </IconButton>
                               </Tooltip>
                               <Tooltip title="Editar">
                                 <IconButton
                                   onClick={() => onEdit(socio)}
-                                  size="small"
-                                  sx={{
-                                    color: '#94a3b8',
-                                    '&:hover': {
-                                      color: '#f59e0b',
-                                      bgcolor: alpha('#f59e0b', 0.1),
-                                    },
-                                    transition: 'all 0.2s ease'
-                                  }}
+                                  sx={{ color: '#6366f1', '&:hover': { color: '#6366f1' } }}
                                 >
-                                  <Edit sx={{ fontSize: 16 }} />
+                                  <Edit />
                                 </IconButton>
                               </Tooltip>
-                              <Tooltip title="Más opciones">
+                              <Tooltip title="Eliminar">
                                 <IconButton
-                                  onClick={(e) => {
-                                    setAnchorEl(e.currentTarget);
-                                    setMemberToDelete(socio);
-                                  }}
-                                  size="small"
-                                  sx={{
-                                    color: '#94a3b8',
-                                    '&:hover': {
-                                      color: '#6366f1',
-                                      bgcolor: alpha('#6366f1', 0.1),
-                                    },
-                                    transition: 'all 0.2s ease'
-                                  }}
+                                  onClick={() => handleDeleteMember()}
+                                  sx={{ color: '#6366f1', '&:hover': { color: '#6366f1' } }}
                                 >
-                                  <MoreVert sx={{ fontSize: 16 }} />
+                                  <Delete />
                                 </IconButton>
                               </Tooltip>
                             </Stack>
@@ -1474,414 +1451,9 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
                 </Table>
               </TableContainer>
             )}
-
-            {/* Enhanced Pagination */}
-            {totalPages > 1 && (
-              <Box sx={{ 
-                p: { xs: 2, md: 4 }, 
-                borderTop: '1px solid #f1f5f9', 
-                display: 'flex', 
-                flexDirection: { xs: 'column', sm: 'row' },
-                alignItems: 'center', 
-                justifyContent: 'space-between',
-                gap: 2
-              }}>
-                <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500, fontSize: { xs: '0.75rem', md: '0.875rem' } }}>
-                  Mostrando {startIndex + 1} a {Math.min(startIndex + itemsPerPage, filtered.length)} de {filtered.length} socios
-                </Typography>
-                <Pagination
-                  count={totalPages}
-                  page={currentPage}
-                  onChange={(_, page) => setCurrentPage(page)}
-                  color="primary"
-                  size={isMobile ? "medium" : "large"}
-                  sx={{
-                    '& .MuiPaginationItem-root': {
-                      borderRadius: 3,
-                      fontWeight: 600,
-                      fontSize: { xs: '0.8rem', md: '0.9rem' },
-                      '&.Mui-selected': {
-                        background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-                        color: 'white',
-                        '&:hover': {
-                          background: 'linear-gradient(135deg, #5b21b6 0%, #7c3aed 100%)',
-                        }
-                      },
-                      '&:hover': {
-                        bgcolor: alpha('#6366f1', 0.1),
-                      }
-                    }
-                  }}
-                />
-              </Box>
-            )}
           </>
         )}
       </Card>
-
-      {/* Delete Confirmation Dialog */}
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={() => !deleting && setDeleteDialogOpen(false)}
-        maxWidth="sm"
-        fullWidth
-        fullScreen={isMobile}
-        PaperProps={{
-          sx: {
-            borderRadius: isMobile ? 0 : 4,
-            boxShadow: '0 20px 60px rgba(0,0,0,0.1)',
-            m: isMobile ? 0 : 2,
-          }
-        }}
-      >
-        <DialogTitle sx={{ pb: 2, p: { xs: 2, md: 3 } }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Avatar
-              sx={{
-                bgcolor: deleteType === 'permanent' ? alpha('#ef4444', 0.1) : alpha('#f59e0b', 0.1),
-                color: deleteType === 'permanent' ? '#ef4444' : '#f59e0b',
-                width: { xs: 40, md: 48 },
-                height: { xs: 40, md: 48 },
-              }}
-            >
-              {deleteType === 'permanent' ? <DeleteForever /> : <Archive />}
-            </Avatar>
-            <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', fontSize: { xs: '1.125rem', md: '1.25rem' } }}>
-                {deleteType === 'permanent' ? 'Eliminar Permanentemente' : 'Desactivar Socio'}
-              </Typography>
-              <Typography variant="body2" sx={{ color: '#64748b', wordBreak: 'break-word' }}>
-                {memberToDelete?.nombre}
-              </Typography>
-            </Box>
-            {isMobile && (
-              <IconButton
-                onClick={() => setDeleteDialogOpen(false)}
-                sx={{ color: '#64748b' }}
-              >
-                <Close />
-              </IconButton>
-            )}
-          </Box>
-        </DialogTitle>
-        
-        <DialogContent sx={{ pb: 3, p: { xs: 2, md: 3 } }}>
-          <Alert 
-            severity={deleteType === 'permanent' ? 'error' : 'warning'} 
-            sx={{ mb: 3, borderRadius: 3 }}
-          >
-            {deleteType === 'permanent' 
-              ? 'Esta acción eliminará permanentemente al socio de Firebase. No se puede deshacer.'
-              : 'Esta acción marcará al socio como inactivo. Podrás reactivarlo más tarde.'
-            }
-          </Alert>
-          
-          <Typography variant="body1" sx={{ color: '#475569', mb: 2 }}>
-            ¿Estás seguro de que deseas {deleteType === 'permanent' ? 'eliminar permanentemente' : 'desactivar'} a este socio?
-          </Typography>
-          
-          <Box sx={{ mt: 3, p: { xs: 2, md: 3 }, bgcolor: '#f8fafc', borderRadius: 3, border: '1px solid #e2e8f0' }}>
-            <Typography variant="body2" sx={{ color: '#64748b', mb: 2 }}>
-              <strong>Opciones de eliminación:</strong>
-            </Typography>
-            <Stack spacing={1}>
-              <Button
-                variant={deleteType === 'soft' ? 'contained' : 'outlined'}
-                size="small"
-                startIcon={<Archive />}
-                onClick={() => setDeleteType('soft')}
-                fullWidth={isMobile}
-                sx={{
-                  justifyContent: 'flex-start',
-                  textTransform: 'none',
-                  bgcolor: deleteType === 'soft' ? '#f59e0b' : 'transparent',
-                  borderColor: deleteType === 'soft' ? '#f59e0b' : '#e2e8f0',
-                  color: deleteType === 'soft' ? 'white' : '#64748b',
-                  '&:hover': {
-                    bgcolor: deleteType === 'soft' ? '#d97706' : alpha('#f59e0b', 0.1),
-                    borderColor: '#f59e0b',
-                    color: deleteType === 'soft' ? 'white' : '#f59e0b',
-                  }
-                }}
-              >
-                Desactivar (recomendado)
-              </Button>
-              <Button
-                variant={deleteType === 'permanent' ? 'contained' : 'outlined'}
-                size="small"
-                startIcon={<DeleteForever />}
-                onClick={() => setDeleteType('permanent')}
-                fullWidth={isMobile}
-                sx={{
-                  justifyContent: 'flex-start',
-                  textTransform: 'none',
-                  bgcolor: deleteType === 'permanent' ? '#ef4444' : 'transparent',
-                  borderColor: deleteType === 'permanent' ? '#ef4444' : '#e2e8f0',
-                  color: deleteType === 'permanent' ? 'white' : '#64748b',
-                  '&:hover': {
-                    bgcolor: deleteType === 'permanent' ? '#dc2626' : alpha('#ef4444', 0.1),
-                    borderColor: '#ef4444',
-                    color: deleteType === 'permanent' ? 'white' : '#ef4444',
-                  }
-                }}
-              >
-                Eliminar permanentemente
-              </Button>
-            </Stack>
-          </Box>
-        </DialogContent>
-        
-        <DialogActions sx={{ p: { xs: 2, md: 3 }, pt: 0, flexDirection: { xs: 'column', sm: 'row' }, gap: { xs: 1, sm: 0 } }}>
-          <Button
-            onClick={() => setDeleteDialogOpen(false)}
-            disabled={deleting}
-            fullWidth={isMobile}
-            sx={{ textTransform: 'none', fontWeight: 600 }}
-          >
-            Cancelar
-          </Button>
-          <Button
-            onClick={handleDeleteMember}
-            disabled={deleting}
-            variant="contained"
-            fullWidth={isMobile}
-            startIcon={deleting ? <CircularProgress size={16} /> : (deleteType === 'permanent' ? <DeleteForever /> : <Archive />)}
-            sx={{
-              textTransform: 'none',
-              fontWeight: 700,
-              bgcolor: deleteType === 'permanent' ? '#ef4444' : '#f59e0b',
-              '&:hover': {
-                bgcolor: deleteType === 'permanent' ? '#dc2626' : '#d97706',
-              }
-            }}
-          >
-            {deleting ? 'Procesando...' : (deleteType === 'permanent' ? 'Eliminar Permanentemente' : 'Desactivar')}
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Bulk Action Result Dialog */}
-      <Dialog
-        open={bulkResultDialog}
-        onClose={() => setBulkResultDialog(false)}
-        maxWidth="sm"
-        fullWidth
-        fullScreen={isMobile}
-        PaperProps={{
-          sx: {
-            borderRadius: isMobile ? 0 : 4,
-            boxShadow: '0 20px 60px rgba(0,0,0,0.1)',
-            m: isMobile ? 0 : 2,
-          }
-        }}
-      >
-        <DialogTitle sx={{ pb: 2, p: { xs: 2, md: 3 } }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Avatar
-              sx={{
-                bgcolor: bulkResult?.failed === 0 ? alpha('#10b981', 0.1) : alpha('#f59e0b', 0.1),
-                color: bulkResult?.failed === 0 ? '#10b981' : '#f59e0b',
-                width: { xs: 40, md: 48 },
-                height: { xs: 40, md: 48 },
-              }}
-            >
-              {bulkResult?.failed === 0 ? <CheckCircle /> : <Warning />}
-            </Avatar>
-            <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', fontSize: { xs: '1.125rem', md: '1.25rem' } }}>
-                Resultado de Acción Masiva
-              </Typography>
-              <Typography variant="body2" sx={{ color: '#64748b' }}>
-                {bulkResult?.success} exitosos, {bulkResult?.failed} fallidos
-              </Typography>
-            </Box>
-            {isMobile && (
-              <IconButton
-                onClick={() => setBulkResultDialog(false)}
-                sx={{ color: '#64748b' }}
-              >
-                <Close />
-              </IconButton>
-            )}
-          </Box>
-        </DialogTitle>
-        
-        <DialogContent sx={{ pb: 3, p: { xs: 2, md: 3 } }}>
-          {bulkResult && (
-            <Stack spacing={2}>
-              {bulkResult.success > 0 && (
-                <Alert severity="success" sx={{ borderRadius: 3 }}>
-                  {bulkResult.success} socios procesados correctamente
-                </Alert>
-              )}
-              
-              {bulkResult.failed > 0 && (
-                <Alert severity="error" sx={{ borderRadius: 3 }}>
-                  {bulkResult.failed} socios no pudieron ser procesados
-                </Alert>
-              )}
-              
-              {bulkResult.errors.length > 0 && (
-                <Box>
-                  <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
-                    Errores detallados:
-                  </Typography>
-                  <Box sx={{ maxHeight: 200, overflow: 'auto' }}>
-                    {bulkResult.errors.map((error, index) => (
-                      <Typography key={index} variant="caption" sx={{ display: 'block', color: '#ef4444', mb: 0.5 }}>
-                        • {error}
-                      </Typography>
-                    ))}
-                  </Box>
-                </Box>
-              )}
-            </Stack>
-          )}
-        </DialogContent>
-        
-        <DialogActions sx={{ p: { xs: 2, md: 3 }, pt: 0 }}>
-          <Button
-            onClick={() => setBulkResultDialog(false)}
-            variant="contained"
-            fullWidth={isMobile}
-            sx={{ textTransform: 'none', fontWeight: 600 }}
-          >
-            Entendido
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Context Menus */}
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={() => setAnchorEl(null)}
-        PaperProps={{
-          sx: {
-            borderRadius: 3,
-            boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
-            border: '1px solid #f1f5f9',
-            minWidth: 200,
-          }
-        }}
-      >
-        <MenuItem onClick={() => {
-          if (memberToDelete) onEdit(memberToDelete);
-          setAnchorEl(null);
-        }}>
-          <ListItemIcon>
-            <Edit fontSize="small" />
-          </ListItemIcon>
-          <ListItemText>Editar Socio</ListItemText>
-        </MenuItem>
-        <MenuItem onClick={() => {
-          toast('Función de email en desarrollo', { icon: '📧' });
-          setAnchorEl(null);
-        }}>
-          <ListItemIcon>
-            <Email fontSize="small" />
-          </ListItemIcon>
-          <ListItemText>Enviar Email</ListItemText>
-        </MenuItem>
-        <MenuItem onClick={() => {
-          toast('Función de favoritos en desarrollo', { icon: '⭐' });
-          setAnchorEl(null);
-        }}>
-          <ListItemIcon>
-            <Star fontSize="small" />
-          </ListItemIcon>
-          <ListItemText>Marcar Favorito</ListItemText>
-        </MenuItem>
-        <Divider />
-        <MenuItem onClick={() => {
-          setDeleteType('soft');
-          setDeleteDialogOpen(true);
-          setAnchorEl(null);
-        }}>
-          <ListItemIcon>
-            <Archive fontSize="small" />
-          </ListItemIcon>
-          <ListItemText>Desactivar</ListItemText>
-        </MenuItem>
-        <MenuItem onClick={() => {
-          setDeleteType('permanent');
-          setDeleteDialogOpen(true);
-          setAnchorEl(null);
-        }} sx={{ color: '#ef4444' }}>
-          <ListItemIcon>
-            <DeleteForever fontSize="small" sx={{ color: '#ef4444' }} />
-          </ListItemIcon>
-          <ListItemText>Eliminar Permanentemente</ListItemText>
-        </MenuItem>
-      </Menu>
-
-      <Menu
-        anchorEl={bulkMenuAnchor}
-        open={Boolean(bulkMenuAnchor)}
-        onClose={() => setBulkMenuAnchor(null)}
-        PaperProps={{
-          sx: {
-            borderRadius: 3,
-            boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
-            border: '1px solid #f1f5f9',
-            minWidth: 200,
-          }
-        }}
-      >
-        <MenuItem onClick={() => handleBulkAction('deactivate')} disabled={bulkProcessing}>
-          <ListItemIcon>
-            <Archive fontSize="small" />
-          </ListItemIcon>
-          <ListItemText>Desactivar Seleccionados</ListItemText>
-        </MenuItem>
-        <MenuItem onClick={() => handleBulkAction('activate')} disabled={bulkProcessing}>
-          <ListItemIcon>
-            <Restore fontSize="small" />
-          </ListItemIcon>
-          <ListItemText>Activar Seleccionados</ListItemText>
-        </MenuItem>
-        <MenuItem onClick={() => {
-          toast('Función de impresión en desarrollo', { icon: '🖨️' });
-          setBulkMenuAnchor(null);
-        }}>
-          <ListItemIcon>
-            <Print fontSize="small" />
-          </ListItemIcon>
-          <ListItemText>Imprimir Lista</ListItemText>
-        </MenuItem>
-        <Divider />
-        <MenuItem onClick={() => handleBulkAction('delete')} disabled={bulkProcessing} sx={{ color: '#ef4444' }}>
-          <ListItemIcon>
-            <DeleteForever fontSize="small" sx={{ color: '#ef4444' }} />
-          </ListItemIcon>
-          <ListItemText>Eliminar Seleccionados</ListItemText>
-        </MenuItem>
-      </Menu>
-
-      {/* Floating Action Button - Only on Mobile */}
-      {isMobile && (
-        <Zoom in={selectedMembers.length === 0 && !bulkProcessing}>
-          <Fab
-            color="primary"
-            onClick={onAdd}
-            sx={{
-              position: 'fixed',
-              bottom: 24,
-              right: 24,
-              background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-              boxShadow: '0 8px 32px rgba(99, 102, 241, 0.3)',
-              '&:hover': {
-                background: 'linear-gradient(135deg, #5b21b6 0%, #7c3aed 100%)',
-                transform: 'scale(1.1)',
-                boxShadow: '0 12px 40px rgba(99, 102, 241, 0.4)',
-              },
-              transition: 'all 0.3s ease'
-            }}
-          >
-            <Add />
-          </Fab>
-        </Zoom>
-      )}
-    </motion.div>
+    </Box>
   );
 };
