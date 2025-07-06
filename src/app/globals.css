@@ -21,7 +21,6 @@
     scroll-behavior: smooth;
     -webkit-text-size-adjust: 100%;
     tab-size: 4;
-    overflow: hidden; /* Prevent scroll on homepage */
   }
   
   body {
@@ -32,7 +31,6 @@
     font-feature-settings: 'rlig' 1, 'calt' 1;
     line-height: 1.5;
     @apply bg-slate-50 text-slate-900;
-    overflow: hidden; /* Prevent scroll on homepage */
   }
   
   /* Dark mode */
@@ -316,10 +314,15 @@
     @apply bg-slate-900/10 border-slate-700/20;
   }
 
-  /* No scroll utilities */
-  .no-scroll {
+  /* Utilidades específicas para páginas */
+  .homepage-no-scroll {
     overflow: hidden;
     height: 100vh;
+  }
+  
+  .page-with-scroll {
+    overflow-y: auto;
+    min-height: 100vh;
   }
 }
 
