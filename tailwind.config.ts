@@ -181,10 +181,6 @@ const config: Config = {
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
         'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
-        'grid-pattern': 'radial-gradient(circle at 1px 1px, rgba(165, 180, 252, 0.15) 1px, transparent 0)',
-      },
-      backgroundSize: {
-        'grid': '20px 20px',
       },
     },
   },
@@ -203,7 +199,7 @@ const config: Config = {
     'animate-pulse-slow',
     'animate-glow',
     'animate-shimmer',
-    // Clases dinámicas que podrían no detectarse
+    // Patrones para clases dinámicas
     {
       pattern: /^(bg|text|border)-(primary|slate|violet|success|warning|error)-(50|100|200|300|400|500|600|700|800|900|950)$/,
     },
