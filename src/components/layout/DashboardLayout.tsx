@@ -16,7 +16,7 @@ interface DashboardLayoutProps {
   children: React.ReactNode;
   activeSection?: string;
   onSectionChange?: (section: string) => void;
-  sidebarComponent?: React.ComponentType<SidebarProps>;
+  sidebarComponent?: React.ComponentType<SidebarProps> | ((props: SidebarProps) => React.ReactElement);
 }
 
 const SIDEBAR_WIDTH = 320;
@@ -93,6 +93,13 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
   const mainContentStyles = getMainContentStyles();
 
+  const sidebarProps = {
+    open: isMobile ? true : sidebarOpen,
+    onToggle: handleSidebarToggle,
+    onMenuClick: handleMenuClick,
+    activeSection: activeSection,
+  };
+
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50 relative overflow-hidden">
       {/* Background Pattern */}
@@ -118,14 +125,14 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                 {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
               </button>
               <h1 className="text-lg font-bold bg-gradient-to-r from-slate-800 to-blue-600 bg-clip-text text-transparent">
-                Panel Comercial
+                Panel Asociación
               </h1>
             </div>
             
             {/* Mobile Quick Actions */}
             <div className="flex items-center space-x-2">
               <button
-                onClick={() => handleMenuClick('qr-validacion')}
+                onClick={() => handleMenuClick('members')}
                 className="p-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-lg shadow-md"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -169,12 +176,11 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               }}
             >
               <div className="h-full bg-white/90 backdrop-blur-xl border-r border-white/20 shadow-2xl">
-                <SidebarComponent
-                  open={isMobile ? true : sidebarOpen}
-                  onToggle={handleSidebarToggle}
-                  onMenuClick={handleMenuClick}
-                  activeSection={activeSection}
-                />
+                {typeof SidebarComponent === 'function' ? (
+                  <SidebarComponent {...sidebarProps} />
+                ) : (
+                  <SidebarComponent {...sidebarProps} />
+                )}
               </div>
             </motion.div>
           </>

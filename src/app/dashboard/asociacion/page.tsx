@@ -23,6 +23,7 @@ import {
 import { toast } from 'react-hot-toast';
 import { useSocios } from '@/hooks/useSocios';
 import { useAuth } from '@/hooks/useAuth';
+import { useRouter } from 'next/navigation';
 import { Socio, SocioFormData } from '@/types/socio';
 
 type Stats = {
@@ -35,6 +36,7 @@ type Stats = {
 
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { AsociacionSidebar } from '@/components/layout/AsociacionSidebar';
+import { LogoutModal } from '@/components/ui/LogoutModal';
 import { OverviewDashboard } from '@/components/asociacion/OverviewDashboard';
 import { AdvancedAnalytics } from '@/components/asociacion/AdvancedAnalytics';
 import { EnhancedMemberManagement } from '@/components/asociacion/EnhancedMemberManagement';
@@ -363,8 +365,28 @@ const DashboardSection: React.FC<{
   }
 };
 
+// Sidebar personalizado que maneja el logout
+const AsociacionSidebarWithLogout: React.FC<{
+  open: boolean;
+  onToggle: () => void;
+  onMenuClick: (section: string) => void;
+  activeSection: string;
+  onLogoutClick: () => void;
+}> = (props) => {
+  return (
+    <AsociacionSidebar
+      open={props.open}
+      onToggle={props.onToggle}
+      onMenuClick={props.onMenuClick}
+      onLogoutClick={props.onLogoutClick}
+      activeSection={props.activeSection}
+    />
+  );
+};
+
 export default function AsociacionDashboard() {
-  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
+  const { user, loading: authLoading, signOut } = useAuth();
   const { 
     socios, 
     loading, 
@@ -386,11 +408,38 @@ export default function AsociacionDashboard() {
   }>({ open: false });
   const [csvImportOpen, setCsvImportOpen] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+  
+  // Estados para el modal de logout
+  const [logoutModalOpen, setLogoutModalOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   // Redirect if not authenticated
   if (!authLoading && !user) {
     return <AccessDeniedScreen />;
   }
+
+  const handleLogoutClick = () => {
+    setLogoutModalOpen(true);
+  };
+
+  const handleLogoutConfirm = async () => {
+    setLoggingOut(true);
+    try {
+      await signOut();
+      toast.success('Sesión cerrada correctamente');
+      router.push('/auth/login');
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+      toast.error('Error al cerrar sesión. Inténtalo de nuevo.');
+    } finally {
+      setLoggingOut(false);
+      setLogoutModalOpen(false);
+    }
+  };
+
+  const handleLogoutCancel = () => {
+    setLogoutModalOpen(false);
+  };
 
   const handleAddSocio = () => {
     setSocioDialog({ open: true, socio: null });
@@ -440,7 +489,7 @@ export default function AsociacionDashboard() {
   const handleCsvImport = async (sociosData?: SocioFormData[]) => {
     if (sociosData) {
       setActionLoading(true);
-      try {
+            try {
         await addMultipleSocios(sociosData);
         toast.success(`${sociosData.length} socios importados correctamente`);
         setCsvImportOpen(false);
@@ -500,61 +549,77 @@ export default function AsociacionDashboard() {
   }
 
   return (
-    <DashboardLayout 
-      activeSection={activeSection} 
-      onSectionChange={setActiveSection}
-      sidebarComponent={AsociacionSidebar}
-    >
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={activeSection}
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -20 }}
-          transition={{ duration: 0.3 }}
-        >
-          <DashboardSection
-            section={activeSection}
-            socios={socios}
-            stats={Object.fromEntries(
-              Object.entries(stats).filter(
-                ([, value]) => typeof value === 'number' || typeof value === 'undefined'
-              )
-            ) as Stats}
-            loading={loading}
-            onAddSocio={handleAddSocio}
-            onEditSocio={handleEditSocio}
-            onDeleteSocio={handleDeleteSocio}
-            onBulkAction={handleBulkAction}
-            onCsvImport={() => handleCsvImport()}
-            onNavigate={setActiveSection}
+    <>
+      <DashboardLayout 
+        activeSection={activeSection} 
+        onSectionChange={setActiveSection}
+        sidebarComponent={(props) => (
+          <AsociacionSidebarWithLogout
+            {...props}
+            onLogoutClick={handleLogoutClick}
           />
-        </motion.div>
-      </AnimatePresence>
+        )}
+      >
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeSection}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <DashboardSection
+              section={activeSection}
+              socios={socios}
+              stats={Object.fromEntries(
+                Object.entries(stats).filter(
+                  ([, value]) => typeof value === 'number' || typeof value === 'undefined'
+                )
+              ) as Stats}
+              loading={loading}
+              onAddSocio={handleAddSocio}
+              onEditSocio={handleEditSocio}
+              onDeleteSocio={handleDeleteSocio}
+              onBulkAction={handleBulkAction}
+              onCsvImport={() => handleCsvImport()}
+              onNavigate={setActiveSection}
+            />
+          </motion.div>
+        </AnimatePresence>
 
-      {/* Dialogs */}
-      <SocioDialog
-        open={socioDialog.open}
-        onClose={() => setSocioDialog({ open: false })}
-        onSave={handleSaveSocio}
-        socio={socioDialog.socio}
-        loading={actionLoading}
-      />
+        {/* Dialogs */}
+        <SocioDialog
+          open={socioDialog.open}
+          onClose={() => setSocioDialog({ open: false })}
+          onSave={handleSaveSocio}
+          socio={socioDialog.socio}
+          loading={actionLoading}
+        />
 
-      <DeleteConfirmDialog
-        open={deleteDialog.open}
-        onClose={() => setDeleteDialog({ open: false })}
-        onConfirm={handleConfirmDelete}
-        socio={deleteDialog.socio ?? null}
-        loading={actionLoading}
-      />
+        <DeleteConfirmDialog
+          open={deleteDialog.open}
+          onClose={() => setDeleteDialog({ open: false })}
+          onConfirm={handleConfirmDelete}
+          socio={deleteDialog.socio ?? null}
+          loading={actionLoading}
+        />
 
-      <CsvImport
-        open={csvImportOpen}
-        onClose={() => setCsvImportOpen(false)}
-        onImport={handleCsvImport}
-        loading={actionLoading}
+        <CsvImport
+          open={csvImportOpen}
+          onClose={() => setCsvImportOpen(false)}
+          onImport={handleCsvImport}
+          loading={actionLoading}
+        />
+      </DashboardLayout>
+
+      {/* Modal de Logout - Fuera del layout para que aparezca en toda la página */}
+      <LogoutModal
+        isOpen={logoutModalOpen}
+        isLoading={loggingOut}
+        onConfirm={handleLogoutConfirm}
+        onCancel={handleLogoutCancel}
       />
-    </DashboardLayout>
+    </>
   );
 }
+

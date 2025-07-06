@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ChevronLeft, 
@@ -12,13 +12,12 @@ import {
 import { useAuth } from '@/hooks/useAuth';
 import { useSocios } from '@/hooks/useSocios';
 import { useNotifications } from '@/hooks/useNotifications';
-import { useRouter } from 'next/navigation';
-import { toast } from 'react-hot-toast';
 
 interface AsociacionSidebarProps {
   open: boolean;
   onToggle: () => void;
   onMenuClick: (section: string) => void;
+  onLogoutClick: () => void;
   activeSection: string;
 }
 
@@ -64,37 +63,12 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
   open,
   onToggle,
   onMenuClick,
+  onLogoutClick,
   activeSection
 }) => {
-  const router = useRouter();
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const { stats } = useSocios();
   const { newNotificationCount } = useNotifications();
-  const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
-  const [loggingOut, setLoggingOut] = useState(false);
-
-  const handleLogoutClick = () => {
-    setLogoutDialogOpen(true);
-  };
-
-  const handleLogoutConfirm = async () => {
-    setLoggingOut(true);
-    try {
-      await signOut();
-      toast.success('Sesión cerrada correctamente');
-      router.push('/auth/login');
-    } catch (error) {
-      console.error('Error al cerrar sesión:', error);
-      toast.error('Error al cerrar sesión. Inténtalo de nuevo.');
-    } finally {
-      setLoggingOut(false);
-      setLogoutDialogOpen(false);
-    }
-  };
-
-  const handleLogoutCancel = () => {
-    setLogoutDialogOpen(false);
-  };
 
   const menuItems: MenuItem[] = [
     {
@@ -293,251 +267,189 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
   };
 
   return (
-    <>
-      {/* Sidebar */}
-      <motion.div
-        animate={{ width: open ? SIDEBAR_WIDTH : SIDEBAR_COLLAPSED_WIDTH }}
-        transition={{ duration: 0.3, ease: "easeInOut" }}
-        className="fixed left-0 top-0 h-full z-50 bg-gradient-to-b from-slate-50/95 via-white/90 to-slate-100/95 backdrop-blur-xl border-r border-slate-200/50 shadow-2xl"
-      >
-        {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-30">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-transparent to-purple-50/50" />
-          <div className="absolute top-0 left-1/4 w-32 h-32 bg-blue-400/10 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute bottom-0 right-1/4 w-32 h-32 bg-purple-400/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-        </div>
+    <motion.div
+      animate={{ width: open ? SIDEBAR_WIDTH : SIDEBAR_COLLAPSED_WIDTH }}
+      transition={{ duration: 0.3, ease: "easeInOut" }}
+      className="fixed left-0 top-0 h-full z-50 bg-gradient-to-b from-slate-50/95 via-white/90 to-slate-100/95 backdrop-blur-xl border-r border-slate-200/50 shadow-2xl"
+    >
+      {/* Background Pattern */}
+      <div className="absolute inset-0 opacity-30">
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-transparent to-purple-50/50" />
+        <div className="absolute top-0 left-1/4 w-32 h-32 bg-blue-400/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-0 right-1/4 w-32 h-32 bg-purple-400/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+      </div>
 
-        <div className="relative z-10 h-full flex flex-col">
-          {/* Header */}
-          <div className={`${open ? 'p-6' : 'p-4'} border-b border-slate-200/50`}>
-            <div className={`flex items-center ${open ? 'justify-between' : 'justify-center flex-col space-y-4'}`}>
-              <AnimatePresence mode="wait">
-                {open ? (
-                  <motion.div
-                    key="expanded-header"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    transition={{ duration: 0.3 }}
-                    className="flex items-center space-x-4"
-                  >
-                    <motion.div
-                      whileHover={{ scale: 1.05, rotate: 5 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg"
-                    >
-                      <Zap className="w-6 h-6 text-white" />
-                    </motion.div>
-                    
-                    <div>
-                      <h1 className="text-xl font-black bg-gradient-to-r from-slate-800 to-blue-600 bg-clip-text text-transparent">
-                        Asociación
-                      </h1>
-                      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                        Centro Ejecutivo
-                      </p>
-                    </div>
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="collapsed-header"
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <motion.div
-                      whileHover={{ scale: 1.1, rotate: 10 }}
-                      whileTap={{ scale: 0.9 }}
-                      className="w-14 h-14 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-xl"
-                    >
-                      <Zap className="w-7 h-7 text-white" />
-                    </motion.div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-              
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={onToggle}
-                className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center text-white shadow-lg hover:shadow-xl transition-all duration-300"
-              >
-                {open ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
-              </motion.button>
-            </div>
-
-            {/* User Profile - Solo en modo expandido */}
-            <AnimatePresence>
-              {open && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20, scale: 0.9 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -20, scale: 0.9 }}
-                  transition={{ duration: 0.4, delay: 0.1 }}
-                  className="mt-6 p-4 bg-gradient-to-br from-white/60 to-slate-50/60 rounded-2xl border border-slate-200/50 backdrop-blur-sm"
-                >
-                  <div className="flex items-center space-x-3">
-                    <div className="w-11 h-11 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-lg">
-                      <Activity className="w-5 h-5 text-white" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-bold text-slate-800 text-sm truncate">
-                        {user?.email?.split('@')[0] || 'Administrador'}
-                      </div>
-                      <div className="text-xs font-semibold text-slate-500">
-                        Super Administrador
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Stats compactos */}
-                  <div className="flex justify-between mt-4 pt-3 border-t border-slate-200/50">
-                    <div className="text-center">
-                      <div className="font-black text-slate-800 text-base leading-none">
-                        {stats.total}
-                      </div>
-                      <div className="text-xs font-semibold text-slate-500 mt-1">
-                        Total
-                      </div>
-                    </div>
-                    <div className="w-px bg-slate-200/50" />
-                    <div className="text-center">
-                      <div className="font-black text-emerald-600 text-base leading-none">
-                        {stats.activos}
-                      </div>
-                      <div className="text-xs font-semibold text-slate-500 mt-1">
-                        Activos
-                      </div>
-                    </div>
-                    <div className="w-px bg-slate-200/50" />
-                    <div className="text-center">
-                      <div className="font-black text-red-500 text-base leading-none">
-                        {stats.vencidos}
-                      </div>
-                      <div className="text-xs font-semibold text-slate-500 mt-1">
-                        Vencidos
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
-          {/* Navigation */}
-          <div className="flex-1 overflow-y-auto overflow-x-hidden py-6 px-4">
-            <div className="space-y-2">
-              {menuItems.map(item => 
-                open ? renderExpandedMenuItem(item) : renderCollapsedMenuItem(item)
-              )}
-            </div>
-          </div>
-
-          {/* Logout Section */}
-          <div className={`border-t border-slate-200/50 ${open ? 'p-6' : 'p-4'}`}>
+      <div className="relative z-10 h-full flex flex-col">
+        {/* Header */}
+        <div className={`${open ? 'p-6' : 'p-4'} border-b border-slate-200/50`}>
+          <div className={`flex items-center ${open ? 'justify-between' : 'justify-center flex-col space-y-4'}`}>
             <AnimatePresence mode="wait">
               {open ? (
-                <motion.button
-                  key="expanded-logout"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
+                <motion.div
+                  key="expanded-header"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
                   transition={{ duration: 0.3 }}
-                  whileHover={{ x: 4, scale: 1.01 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={handleLogoutClick}
-                  disabled={loggingOut}
-                  className="w-full px-4 py-3 bg-gradient-to-r from-red-50 to-rose-50 hover:from-red-100 hover:to-rose-100 border border-red-200/50 hover:border-red-300/50 rounded-2xl flex items-center space-x-3 text-red-600 hover:text-red-700 transition-all duration-300 disabled:opacity-60"
+                  className="flex items-center space-x-4"
                 >
-                  <LogOut className="w-5 h-5" />
-                  <div className="text-left">
-                    <div className="font-semibold text-sm">
-                      {loggingOut ? 'Cerrando...' : 'Cerrar Sesión'}
-                    </div>
-                    <div className="text-xs opacity-70">
-                      Salir del sistema
-                    </div>
+                  <motion.div
+                    whileHover={{ scale: 1.05, rotate: 5 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg"
+                  >
+                    <Zap className="w-6 h-6 text-white" />
+                  </motion.div>
+                  
+                  <div>
+                    <h1 className="text-xl font-black bg-gradient-to-r from-slate-800 to-blue-600 bg-clip-text text-transparent">
+                      Asociación
+                    </h1>
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                      Centro Ejecutivo
+                    </p>
                   </div>
-                </motion.button>
+                </motion.div>
               ) : (
-                <motion.button
-                  key="collapsed-logout"
+                <motion.div
+                  key="collapsed-header"
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.8 }}
                   transition={{ duration: 0.3 }}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={handleLogoutClick}
-                  disabled={loggingOut}
-                  className="w-14 h-14 bg-gradient-to-br from-red-50 to-rose-50 hover:from-red-100 hover:to-rose-100 border border-red-200/50 hover:border-red-300/50 rounded-2xl flex items-center justify-center text-red-600 hover:text-red-700 transition-all duration-300 mx-auto disabled:opacity-60"
                 >
-                  <LogOut className="w-5 h-5" />
-                </motion.button>
+                  <motion.div
+                    whileHover={{ scale: 1.1, rotate: 10 }}
+                    whileTap={{ scale: 0.9 }}
+                    className="w-14 h-14 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-xl"
+                  >
+                    <Zap className="w-7 h-7 text-white" />
+                  </motion.div>
+                </motion.div>
               )}
             </AnimatePresence>
+            
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={onToggle}
+              className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center text-white shadow-lg hover:shadow-xl transition-all duration-300"
+            >
+              {open ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+            </motion.button>
+          </div>
+
+          {/* User Profile - Solo en modo expandido */}
+          <AnimatePresence>
+            {open && (
+              <motion.div
+                initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -20, scale: 0.9 }}
+                transition={{ duration: 0.4, delay: 0.1 }}
+                className="mt-6 p-4 bg-gradient-to-br from-white/60 to-slate-50/60 rounded-2xl border border-slate-200/50 backdrop-blur-sm"
+              >
+                <div className="flex items-center space-x-3">
+                  <div className="w-11 h-11 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-lg">
+                    <Activity className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-bold text-slate-800 text-sm truncate">
+                      {user?.email?.split('@')[0] || 'Administrador'}
+                    </div>
+                    <div className="text-xs font-semibold text-slate-500">
+                      Super Administrador
+                    </div>
+                  </div>
+                </div>
+
+                {/* Stats compactos */}
+                <div className="flex justify-between mt-4 pt-3 border-t border-slate-200/50">
+                  <div className="text-center">
+                    <div className="font-black text-slate-800 text-base leading-none">
+                      {stats.total}
+                    </div>
+                    <div className="text-xs font-semibold text-slate-500 mt-1">
+                      Total
+                    </div>
+                  </div>
+                  <div className="w-px bg-slate-200/50" />
+                  <div className="text-center">
+                    <div className="font-black text-emerald-600 text-base leading-none">
+                      {stats.activos}
+                    </div>
+                    <div className="text-xs font-semibold text-slate-500 mt-1">
+                      Activos
+                    </div>
+                  </div>
+                  <div className="w-px bg-slate-200/50" />
+                  <div className="text-center">
+                    <div className="font-black text-red-500 text-base leading-none">
+                      {stats.vencidos}
+                    </div>
+                    <div className="text-xs font-semibold text-slate-500 mt-1">
+                      Vencidos
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Navigation */}
+        <div className="flex-1 overflow-y-auto overflow-x-hidden py-6 px-4">
+          <div className="space-y-2">
+            {menuItems.map(item => 
+              open ? renderExpandedMenuItem(item) : renderCollapsedMenuItem(item)
+            )}
           </div>
         </div>
-      </motion.div>
 
-      {/* Logout Confirmation Dialog */}
-      <AnimatePresence>
-        {logoutDialogOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4"
-            onClick={handleLogoutCancel}
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              transition={{ duration: 0.3 }}
-              onClick={(e) => e.stopPropagation()}
-              className="bg-white rounded-3xl shadow-2xl border border-slate-200/50 p-8 max-w-md w-full"
-            >
-              <div className="flex items-center space-x-4 mb-6">
-                <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-rose-600 rounded-2xl flex items-center justify-center">
-                  <LogOut className="w-6 h-6 text-white" />
+        {/* Logout Section */}
+        <div className={`border-t border-slate-200/50 ${open ? 'p-6' : 'p-4'}`}>
+          <AnimatePresence mode="wait">
+            {open ? (
+              <motion.button
+                key="expanded-logout"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
+                whileHover={{ x: 4, scale: 1.01 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={onLogoutClick}
+                className="w-full px-4 py-3 bg-gradient-to-r from-red-50 to-rose-50 hover:from-red-100 hover:to-rose-100 border border-red-200/50 hover:border-red-300/50 rounded-2xl flex items-center space-x-3 text-red-600 hover:text-red-700 transition-all duration-300"
+              >
+                <LogOut className="w-5 h-5" />
+                <div className="text-left">
+                  <div className="font-semibold text-sm">
+                    Cerrar Sesión
+                  </div>
+                  <div className="text-xs opacity-70">
+                    Salir del sistema
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-xl font-bold text-slate-800">
-                    Confirmar Cierre de Sesión
-                  </h3>
-                  <p className="text-sm text-slate-600 mt-1">
-                    ¿Estás seguro de que deseas cerrar tu sesión?
-                  </p>
-                </div>
-              </div>
-              
-              <p className="text-slate-600 mb-8">
-                Se cerrará tu sesión actual y serás redirigido a la página de inicio de sesión. 
-                Cualquier trabajo no guardado se perderá.
-              </p>
-              
-              <div className="flex space-x-3">
-                <button
-                  onClick={handleLogoutCancel}
-                  className="flex-1 px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl font-semibold transition-colors duration-200"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={handleLogoutConfirm}
-                  disabled={loggingOut}
-                  className="flex-1 px-4 py-3 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white rounded-2xl font-semibold transition-all duration-200 disabled:opacity-60"
-                >
-                  {loggingOut ? 'Cerrando Sesión...' : 'Cerrar Sesión'}
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </>
+              </motion.button>
+            ) : (
+              <motion.button
+                key="collapsed-logout"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                transition={{ duration: 0.3 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={onLogoutClick}
+                className="w-14 h-14 bg-gradient-to-br from-red-50 to-rose-50 hover:from-red-100 hover:to-rose-100 border border-red-200/50 hover:border-red-300/50 rounded-2xl flex items-center justify-center text-red-600 hover:text-red-700 transition-all duration-300 mx-auto"
+              >
+                <LogOut className="w-5 h-5" />
+              </motion.button>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+    </motion.div>
   );
 };
 
