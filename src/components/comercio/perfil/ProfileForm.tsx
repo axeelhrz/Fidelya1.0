@@ -94,8 +94,6 @@ export const ProfileForm: React.FC = () => {
     }
   });
 
-  // Watch form values for real-time validation
-
   // Watch for changes
   useEffect(() => {
     setHasChanges(isDirty);
@@ -836,9 +834,6 @@ export const ProfileForm: React.FC = () => {
             </form>
           </CardContent>
         </Card>
-
-        {/* QR Section */}
-        <QRSection />
 
         {/* Save Changes Alert */}
         <AnimatePresence>

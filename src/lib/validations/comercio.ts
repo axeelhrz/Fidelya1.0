@@ -63,7 +63,6 @@ export const comercioProfileSchema = z.object({
     .or(z.literal('')),
   visible: z
     .boolean()
-    .optional()
     .default(true),
   redesSociales: z.object({
     facebook: z
