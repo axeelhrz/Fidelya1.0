@@ -1,443 +1,388 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import styled from '@emotion/styled';
-import { css } from '@emotion/react';
-import { Bell, Filter, CheckCheck, Archive } from 'lucide-react';
-import { Notification } from '@/types/notification';
-import { NotificationItem } from './NotificationItem';
-import { Input } from '@/components/ui/Input';
-import { Button } from '@/components/ui/Button';
+import { 
+  Bell, 
+  Gift, 
+  AlertCircle, 
+  Info, 
+  CheckCircle, 
+  X, 
+  Filter,
+  Search,
+  MoreVertical,
+  Trash2,
+  Archive,
+  Star,
+  Clock,
+  Calendar,
+  Tag,
+  Eye,
+  EyeOff
+} from 'lucide-react';
+import { format, isToday, isYesterday } from 'date-fns';
+import { es } from 'date-fns/locale';
 
-interface NotificationsListProps {
-  notifications?: Notification[];
-  onMarkAsRead?: (id: string) => void;
-  onMarkAllAsRead?: () => void;
-  onDeleteNotification?: (id: string) => void;
-  loading?: boolean;
+interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  type: 'info' | 'success' | 'warning' | 'error';
+  priority: 'low' | 'medium' | 'high';
+  status: 'read' | 'unread';
+  category: 'membership' | 'benefit' | 'payment' | 'system';
+  createdAt: Date;
+  updatedAt: Date;
+  read: boolean;
+  starred?: boolean;
+  actionUrl?: string;
 }
 
-const ListContainer = styled(motion.div)`
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-`;
+interface NotificationsListProps {
+  notifications: Notification[];
+  onMarkAsRead: (id: string) => void;
+  onMarkAllAsRead: () => void;
+}
 
-const HeaderCard = styled(motion.div)`
-  background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
-  border-radius: 2rem;
-  box-shadow: 0 20px 60px -15px rgba(0, 0, 0, 0.1);
-  border: 1px solid #f1f5f9;
-  padding: 2rem;
-  position: relative;
-  overflow: hidden;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, #ef4444, #f59e0b, #10b981);
-  }
-`;
+const NotificationCard: React.FC<{
+  notification: Notification;
+  onMarkAsRead: (id: string) => void;
+  onToggleStar?: (id: string) => void;
+  onDelete?: (id: string) => void;
+}> = ({ notification, onMarkAsRead, onToggleStar, onDelete }) => {
+  const [showActions, setShowActions] = useState(false);
 
-const HeaderContent = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 2rem;
-  flex-wrap: wrap;
-  gap: 1rem;
-  
-  .title-section {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-  }
-  
-  .icon-container {
-    width: 3rem;
-    height: 3rem;
-    background: linear-gradient(135deg, #ef4444, #dc2626);
-    border-radius: 1rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-  }
-  
-  .title-content h2 {
-    font-size: 1.5rem;
-    font-weight: 800;
-    color: #1e293b;
-    margin-bottom: 0.25rem;
-  }
-  
-  .title-content p {
-    color: #64748b;
-    font-weight: 600;
-  }
-`;
+  const getNotificationIcon = () => {
+    const icons = {
+      info: <Info size={20} />,
+      success: <CheckCircle size={20} />,
+      warning: <AlertCircle size={20} />,
+      error: <X size={20} />
+    };
+    return icons[notification.type];
+  };
 
-const FilterControls = styled.div`
-  display: grid;
-  grid-template-columns: 2fr auto;
-  gap: 1rem;
-  align-items: end;
-  
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
-  }
-`;
+  const getNotificationColor = () => {
+    const colors = {
+      info: 'from-blue-500 to-blue-600',
+      success: 'from-emerald-500 to-emerald-600',
+      warning: 'from-amber-500 to-amber-600',
+      error: 'from-red-500 to-red-600'
+    };
+    return colors[notification.type];
+  };
 
-const FilterTabs = styled.div`
-  display: flex;
-  background: #f1f5f9;
-  border-radius: 1rem;
-  padding: 0.25rem;
-  gap: 0.25rem;
-  margin-top: 1rem;
-`;
+  const getPriorityColor = () => {
+    const colors = {
+      low: 'bg-gray-100 text-gray-600',
+      medium: 'bg-amber-100 text-amber-700',
+      high: 'bg-red-100 text-red-700'
+    };
+    return colors[notification.priority];
+  };
 
-const FilterTab = styled(motion.button)<{ active: boolean }>`
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1rem;
-  border-radius: 0.75rem;
-  font-weight: 600;
-  font-size: 0.875rem;
-  border: none;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  
-  ${({ active }) => active ? css`
-    background: white;
-    color: #1e293b;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  ` : css`
-    background: transparent;
-    color: #64748b;
-    
-    &:hover {
-      color: #1e293b;
-      background: rgba(255, 255, 255, 0.5);
+  const formatTime = (date: Date) => {
+    if (isToday(date)) {
+      return `Hoy ${format(date, 'HH:mm')}`;
+    } else if (isYesterday(date)) {
+      return `Ayer ${format(date, 'HH:mm')}`;
+    } else {
+      return format(date, 'dd/MM/yyyy HH:mm', { locale: es });
     }
-  `}
-`;
-
-const TabBadge = styled.span<{ color: string; active: boolean }>`
-  background: ${({ color, active }) => active ? color : '#e2e8f0'};
-  color: ${({ active }) => active ? 'white' : '#64748b'};
-  padding: 0.125rem 0.5rem;
-  border-radius: 0.75rem;
-  font-size: 0.75rem;
-  font-weight: 800;
-  min-width: 1.25rem;
-  height: 1.25rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
-`;
-
-const NotificationsListContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-`;
-
-const LoadingSkeleton = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-`;
-
-const SkeletonItem = styled.div`
-  background: white;
-  border-radius: 1.5rem;
-  padding: 1.5rem;
-  border: 1px solid #f1f5f9;
-  
-  .skeleton-header {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 1rem;
-  }
-  
-  .skeleton-avatar {
-    width: 3rem;
-    height: 3rem;
-    background: #f1f5f9;
-    border-radius: 1rem;
-    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  }
-  
-  .skeleton-content {
-    flex: 1;
-  }
-  
-  .skeleton-title {
-    height: 1rem;
-    background: #f1f5f9;
-    border-radius: 0.5rem;
-    margin-bottom: 0.5rem;
-    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  }
-  
-  .skeleton-text {
-    height: 0.75rem;
-    background: #f1f5f9;
-    border-radius: 0.5rem;
-    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  }
-  
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-  }
-`;
-
-const EmptyState = styled(motion.div)`
-  background: white;
-  border-radius: 2rem;
-  padding: 4rem 2rem;
-  border: 1px solid #f1f5f9;
-  text-align: center;
-  
-  .icon {
-    width: 4rem;
-    height: 4rem;
-    background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
-    border-radius: 1.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 1.5rem;
-    color: #94a3b8;
-  }
-  
-  .title {
-    font-size: 1.25rem;
-    font-weight: 800;
-    color: #1e293b;
-    margin-bottom: 0.5rem;
-  }
-  
-  .description {
-    color: #64748b;
-    font-weight: 500;
-    margin-bottom: 1.5rem;
-  }
-`;
-
-export const NotificationsList: React.FC<NotificationsListProps> = ({
-  notifications = [],
-  onMarkAsRead,
-  onMarkAllAsRead,
-  onDeleteNotification,
-  loading = false
-}) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all');
-
-  const filteredNotifications = notifications.filter(notification => {
-    const matchesSearch = notification.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         notification.message.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesFilter = filter === 'all' || 
-                         (filter === 'unread' && notification.status === 'unread') ||
-                         (filter === 'read' && notification.status === 'read');
-
-    return matchesSearch && matchesFilter;
-  });
-
-  const unreadCount = notifications.filter(n => n.status === 'unread').length;
-  const readCount = notifications.filter(n => n.status === 'read').length;
-
-  if (loading) {
-    return (
-      <LoadingSkeleton>
-        {[...Array(5)].map((_, i) => (
-          <SkeletonItem key={i}>
-            <div className="skeleton-header">
-              <div className="skeleton-avatar"></div>
-              <div className="skeleton-content">
-                <div className="skeleton-title" style={{ width: '75%' }}></div>
-                <div className="skeleton-text" style={{ width: '50%' }}></div>
-              </div>
-            </div>
-          </SkeletonItem>
-        ))}
-      </LoadingSkeleton>
-    );
-  }
+  };
 
   return (
-    <ListContainer
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.6 }}
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      className={`
+        relative bg-white rounded-2xl border p-6 transition-all duration-300 hover:shadow-lg
+        ${notification.read ? 'border-gray-200' : 'border-blue-200 bg-blue-50/30'}
+      `}
     >
+      {/* Unread Indicator */}
+      {!notification.read && (
+        <div className="absolute top-4 left-4 w-3 h-3 bg-blue-500 rounded-full animate-pulse" />
+      )}
+
       {/* Header */}
-      <HeaderCard
+      <div className="flex items-start gap-4 mb-4">
+        <div className={`
+          w-12 h-12 rounded-xl flex items-center justify-center text-white shadow-lg bg-gradient-to-r
+          ${getNotificationColor()}
+        `}>
+          {getNotificationIcon()}
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-2">
+            <h3 className={`
+              font-bold text-lg leading-tight
+              ${notification.read ? 'text-gray-700' : 'text-gray-900'}
+            `}>
+              {notification.title}
+            </h3>
+            
+            <div className="flex items-center gap-2">
+              {/* Priority Badge */}
+              <span className={`
+                px-2 py-1 rounded-full text-xs font-medium uppercase tracking-wide
+                ${getPriorityColor()}
+              `}>
+                {notification.priority}
+              </span>
+
+              {/* Actions Menu */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowActions(!showActions)}
+                  className="p-1 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+                >
+                  <MoreVertical size={16} className="text-gray-400" />
+                </button>
+
+                <AnimatePresence>
+                  {showActions && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                      className="absolute right-0 top-8 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-10 min-w-[150px]"
+                    >
+                      <button
+                        onClick={() => {
+                          onMarkAsRead(notification.id);
+                          setShowActions(false);
+                        }}
+                        className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2"
+                      >
+                        {notification.read ? <EyeOff size={14} /> : <Eye size={14} />}
+                        {notification.read ? 'Marcar como no leída' : 'Marcar como leída'}
+                      </button>
+                      
+                      {onToggleStar && (
+                        <button
+                          onClick={() => {
+                            onToggleStar(notification.id);
+                            setShowActions(false);
+                          }}
+                          className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2"
+                        >
+                          <Star size={14} className={notification.starred ? 'text-amber-500' : ''} />
+                          {notification.starred ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+                        </button>
+                      )}
+                      
+                      <button
+                        className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2"
+                      >
+                        <Archive size={14} />
+                        Archivar
+                      </button>
+                      
+                      {onDelete && (
+                        <button
+                          onClick={() => {
+                            onDelete(notification.id);
+                            setShowActions(false);
+                          }}
+                          className="w-full px-4 py-2 text-left text-sm hover:bg-red-50 text-red-600 flex items-center gap-2"
+                        >
+                          <Trash2 size={14} />
+                          Eliminar
+                        </button>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
+          </div>
+
+          {/* Category and Time */}
+          <div className="flex items-center gap-3 mt-2 text-sm text-gray-500">
+            <div className="flex items-center gap-1">
+              <Tag size={12} />
+              <span className="capitalize">{notification.category}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Clock size={12} />
+              <span>{formatTime(notification.createdAt)}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Message */}
+      <p className={`
+        text-base leading-relaxed mb-4
+        ${notification.read ? 'text-gray-600' : 'text-gray-700'}
+      `}>
+        {notification.message}
+      </p>
+
+      {/* Action Button */}
+      {notification.actionUrl && (
+        <button className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-2 rounded-xl font-medium hover:from-blue-600 hover:to-purple-700 transition-all duration-200">
+          Ver detalles
+        </button>
+      )}
+
+      {/* Click overlay to mark as read */}
+      {!notification.read && (
+        <button
+          onClick={() => onMarkAsRead(notification.id)}
+          className="absolute inset-0 rounded-2xl"
+          aria-label="Marcar como leída"
+        />
+      )}
+    </motion.div>
+  );
+};
+
+export const NotificationsList: React.FC<NotificationsListProps> = ({
+  notifications,
+  onMarkAsRead,
+  onMarkAllAsRead
+}) => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterType, setFilterType] = useState<'all' | 'unread' | 'read'>('all');
+  const [filterCategory, setFilterCategory] = useState<string>('all');
+
+  // Filter notifications
+  const filteredNotifications = useMemo(() => {
+    return notifications.filter(notification => {
+      const matchesSearch = notification.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           notification.message.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesType = filterType === 'all' || 
+                         (filterType === 'read' && notification.read) ||
+                         (filterType === 'unread' && !notification.read);
+      
+      const matchesCategory = filterCategory === 'all' || notification.category === filterCategory;
+
+      return matchesSearch && matchesType && matchesCategory;
+    });
+  }, [notifications, searchTerm, filterType, filterCategory]);
+
+  const unreadCount = notifications.filter(n => !n.read).length;
+  const categories = [...new Set(notifications.map(n => n.category))];
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4"
+      >
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+            <Bell size={32} />
+            Notificaciones
+            {unreadCount > 0 && (
+              <span className="bg-red-500 text-white text-sm font-bold px-3 py-1 rounded-full">
+                {unreadCount}
+              </span>
+            )}
+          </h1>
+          <p className="text-gray-600 mt-2">
+            Mantente al día con las últimas actualizaciones
+          </p>
+        </div>
+
+        {unreadCount > 0 && (
+          <button
+            onClick={onMarkAllAsRead}
+            className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-xl font-medium transition-colors duration-200"
+          >
+            Marcar todas como leídas
+          </button>
+        )}
+      </motion.div>
+
+      {/* Filters */}
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
+        className="bg-white rounded-2xl border border-gray-200 p-6"
       >
-        <HeaderContent>
-          <div className="title-section">
-            <div className="icon-container">
-              <Bell size={20} />
-            </div>
-            <div className="title-content">
-              <h2>Centro de Notificaciones</h2>
-              <p>
-                {unreadCount > 0 ? `${unreadCount} sin leer de ${notifications.length}` : 'Todo al día'}
-              </p>
-            </div>
+        <div className="flex flex-col lg:flex-row gap-4">
+          {/* Search */}
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+            <input
+              type="text"
+              placeholder="Buscar notificaciones..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
           </div>
 
-          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-            {unreadCount > 0 && onMarkAllAsRead && (
-              <Button
-                variant="outline"
-                size="sm"
-                leftIcon={<CheckCheck size={16} />}
-                onClick={onMarkAllAsRead}
-              >
-                Marcar Todas
-              </Button>
-            )}
-            
-            <Button
-              variant="outline"
-              size="sm"
-              leftIcon={<Archive size={16} />}
-            >
-              Archivar
-            </Button>
-          </div>
-        </HeaderContent>
-
-        {/* Filtros y búsqueda */}
-        <FilterControls>
-          <Input
-            placeholder="Buscar notificaciones..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-
-          <Button
-            variant="outline"
-            size="sm"
-            leftIcon={<Filter size={16} />}
+          {/* Type Filter */}
+          <select
+            value={filterType}
+            onChange={(e) => setFilterType(e.target.value as any)}
+            className="px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
-            Filtros
-          </Button>
-        </FilterControls>
+            <option value="all">Todas</option>
+            <option value="unread">No leídas</option>
+            <option value="read">Leídas</option>
+          </select>
 
-        {/* Tabs de filtro */}
-        <FilterTabs>
-          <FilterTab
-            active={filter === 'all'}
-            onClick={() => setFilter('all')}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+          {/* Category Filter */}
+          <select
+            value={filterCategory}
+            onChange={(e) => setFilterCategory(e.target.value)}
+            className="px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
-            <Bell size={16} />
-            Todas
-            <TabBadge color="#6366f1" active={filter === 'all'}>
-              {notifications.length}
-            </TabBadge>
-          </FilterTab>
-          
-          <FilterTab
-            active={filter === 'unread'}
-            onClick={() => setFilter('unread')}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            <Bell size={16} />
-            Sin Leer
-            <TabBadge color="#ef4444" active={filter === 'unread'}>
-              {unreadCount}
-            </TabBadge>
-          </FilterTab>
-          
-          <FilterTab
-            active={filter === 'read'}
-            onClick={() => setFilter('read')}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            <CheckCheck size={16} />
-            Leídas
-            <TabBadge color="#10b981" active={filter === 'read'}>
-              {readCount}
-            </TabBadge>
-          </FilterTab>
-        </FilterTabs>
-      </HeaderCard>
+            <option value="all">Todas las categorías</option>
+            {categories.map(category => (
+              <option key={category} value={category} className="capitalize">
+                {category}
+              </option>
+            ))}
+          </select>
+        </div>
+      </motion.div>
 
-      {/* Lista de notificaciones */}
-      <NotificationsListContainer>
+      {/* Notifications List */}
+      <div className="space-y-4">
         <AnimatePresence>
           {filteredNotifications.length > 0 ? (
-            filteredNotifications.map((notification, index) => (
-              <motion.div
+            filteredNotifications.map((notification) => (
+              <NotificationCard
                 key={notification.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ delay: index * 0.05, duration: 0.4 }}
-              >
-                <NotificationItem
-                  notification={notification}
-                  onMarkAsRead={onMarkAsRead}
-                  onDelete={onDeleteNotification}
-                />
-              </motion.div>
+                notification={notification}
+                onMarkAsRead={onMarkAsRead}
+              />
             ))
           ) : (
-            <EmptyState
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.4 }}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center py-12"
             >
-              <div className="icon">
-                <Bell size={32} />
-              </div>
-              <div className="title">
-                {searchTerm || filter !== 'all' ? 'No se encontraron notificaciones' : 'No hay notificaciones'}
-              </div>
-              <div className="description">
-                {searchTerm || filter !== 'all' 
-                  ? 'Intenta ajustar los filtros de búsqueda'
-                  : 'Cuando recibas notificaciones aparecerán aquí'
+              <Bell size={48} className="text-gray-300 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                {searchTerm || filterType !== 'all' || filterCategory !== 'all' 
+                  ? 'No se encontraron notificaciones'
+                  : 'No tienes notificaciones'
                 }
-              </div>
-              {(searchTerm || filter !== 'all') && (
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setSearchTerm('');
-                    setFilter('all');
-                  }}
-                >
-                  Limpiar Filtros
-                </Button>
-              )}
-            </EmptyState>
+              </h3>
+              <p className="text-gray-500">
+                {searchTerm || filterType !== 'all' || filterCategory !== 'all'
+                  ? 'Intenta ajustar los filtros de búsqueda'
+                  : 'Te notificaremos cuando tengas nuevas actualizaciones'
+                }
+              </p>
+            </motion.div>
           )}
         </AnimatePresence>
-      </NotificationsListContainer>
-    </ListContainer>
+      </div>
+    </div>
   );
 };

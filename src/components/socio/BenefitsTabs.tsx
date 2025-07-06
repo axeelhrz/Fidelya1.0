@@ -1,356 +1,275 @@
 'use client';
 
 import React from 'react';
-import styled from '@emotion/styled';
 import { motion } from 'framer-motion';
-import { css } from '@emotion/react';
-import { Gift, History, TrendingUp, Award, Target, Zap } from 'lucide-react';
+import { 
+  Gift, 
+  CheckCircle, 
+  DollarSign, 
+  TrendingUp, 
+  Star,
+  Calendar,
+  Target,
+  Award
+} from 'lucide-react';
 
 interface BenefitsTabsProps {
   activeTab: 'disponibles' | 'usados';
   onTabChange: (tab: 'disponibles' | 'usados') => void;
-  stats?: {
+  stats: {
     disponibles: number;
     usados: number;
     ahorroTotal: number;
   };
 }
 
-const TabsContainer = styled(motion.div)`
-  background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
-  border-radius: 2rem;
-  box-shadow: 0 20px 60px -15px rgba(0, 0, 0, 0.1);
-  border: 1px solid #f1f5f9;
-  padding: 2rem;
-  margin-bottom: 2rem;
-  position: relative;
-  overflow: hidden;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899);
-  }
-`;
+interface TabData {
+  id: 'disponibles' | 'usados';
+  label: string;
+  icon: React.ReactNode;
+  color: string;
+  gradient: string;
+  description: string;
+}
 
-const StatsHeader = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 2rem;
-  
-  .icon-container {
-    width: 3rem;
-    height: 3rem;
-    background: linear-gradient(135deg, #f59e0b, #d97706);
-    border-radius: 1rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-  }
-  
-  .title-content h2 {
-    font-size: 1.5rem;
-    font-weight: 800;
-    color: #1e293b;
-    margin-bottom: 0.25rem;
-  }
-  
-  .title-content p {
-    color: #64748b;
-    font-weight: 600;
-  }
-`;
-
-const AhorroCard = styled(motion.div)`
-  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
-  border: 2px solid #86efac;
-  border-radius: 1.5rem;
-  padding: 1.5rem;
-  margin-bottom: 2rem;
-  position: relative;
-  overflow: hidden;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, #10b981, #059669, #047857);
-  }
-  
-  .content {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-  
-  .text-section {
-    flex: 1;
-  }
-  
-  .label {
-    font-size: 0.875rem;
-    color: #166534;
-    font-weight: 700;
-    margin-bottom: 0.25rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
-  
-  .value {
-    font-size: 2rem;
-    font-weight: 900;
-    color: #14532d;
-    letter-spacing: -0.02em;
-  }
-  
-  .icon-container {
-    width: 3rem;
-    height: 3rem;
-    background: #10b981;
-    border-radius: 1rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    box-shadow: 0 8px 24px rgba(16, 185, 129, 0.3);
-  }
-`;
-
-const TabsNavigation = styled.div`
-  position: relative;
-  background: #f1f5f9;
-  border-radius: 1.5rem;
-  padding: 0.5rem;
-  display: flex;
-`;
-
-const Tab = styled(motion.button)<{ active: boolean }>`
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  padding: 1rem 1.5rem;
-  border-radius: 1rem;
-  font-weight: 700;
-  font-size: 1rem;
-  border: none;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  z-index: 2;
-  
-  ${({ active }) => active ? css`
-    background: white;
-    color: #1e293b;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-  ` : css`
-    background: transparent;
-    color: #64748b;
-    
-    &:hover {
-      color: #1e293b;
-    }
-  `}
-`;
-
-const TabBadge = styled.span<{ color: string; active: boolean }>`
-  background: ${({ color, active }) => active ? color : '#e2e8f0'};
-  color: ${({ active }) => active ? 'white' : '#64748b'};
-  padding: 0.25rem 0.75rem;
-  border-radius: 1rem;
-  font-size: 0.875rem;
-  font-weight: 800;
-  min-width: 1.5rem;
-  height: 1.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
-`;
-
-const StatsGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
-  margin-top: 1.5rem;
-`;
-
-const StatItem = styled(motion.div)<{ color: string }>`
-  text-align: center;
-  padding: 1rem;
-  background: ${({ color }) => `linear-gradient(135deg, ${color}10, ${color}05)`};
-  border: 1px solid ${({ color }) => `${color}20`};
-  border-radius: 1rem;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px ${({ color }) => `${color}20`};
-    border-color: ${({ color }) => `${color}40`};
-  }
-  
-  .icon {
-    width: 2.5rem;
-    height: 2.5rem;
-    background: ${({ color }) => color};
-    border-radius: 0.75rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 0.75rem;
-    color: white;
-  }
-  
-  .value {
-    font-size: 1.5rem;
-    font-weight: 900;
-    color: ${({ color }) => color};
-    margin-bottom: 0.25rem;
-  }
-  
-  .label {
-    font-size: 0.75rem;
-    color: #64748b;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
-`;
+const StatCard: React.FC<{
+  icon: React.ReactNode;
+  label: string;
+  value: string | number;
+  color: string;
+  gradient: string;
+  delay: number;
+}> = ({ icon, label, value, color, gradient, delay }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ delay }}
+    className="bg-white rounded-2xl border border-gray-200 p-6 hover:shadow-lg transition-all duration-300"
+  >
+    <div className="flex items-center gap-4">
+      <div 
+        className="w-12 h-12 rounded-xl flex items-center justify-center text-white shadow-lg"
+        style={{ background: gradient }}
+      >
+        {icon}
+      </div>
+      <div>
+        <p className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-1">
+          {label}
+        </p>
+        <p className="text-2xl font-bold text-gray-900">
+          {value}
+        </p>
+      </div>
+    </div>
+  </motion.div>
+);
 
 export const BenefitsTabs: React.FC<BenefitsTabsProps> = ({
   activeTab,
   onTabChange,
-  stats = { disponibles: 0, usados: 0, ahorroTotal: 0 }
+  stats
 }) => {
-  const tabs = [
+  const tabs: TabData[] = [
     {
-      id: 'disponibles' as const,
+      id: 'disponibles',
       label: 'Disponibles',
       icon: <Gift size={20} />,
-      count: stats.disponibles,
-      color: '#10b981'
+      color: '#6366f1',
+      gradient: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+      description: 'Beneficios listos para usar'
     },
     {
-      id: 'usados' as const,
+      id: 'usados',
       label: 'Usados',
-      icon: <History size={20} />,
-      count: stats.usados,
-      color: '#6366f1'
+      icon: <CheckCircle size={20} />,
+      color: '#10b981',
+      gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+      description: 'Historial de beneficios'
+    }
+  ];
+
+  const statsData = [
+    {
+      icon: <Gift size={20} />,
+      label: 'Disponibles',
+      value: stats.disponibles,
+      color: '#6366f1',
+      gradient: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+      delay: 0.1
+    },
+    {
+      icon: <CheckCircle size={20} />,
+      label: 'Usados',
+      value: stats.usados,
+      color: '#10b981',
+      gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+      delay: 0.2
+    },
+    {
+      icon: <DollarSign size={20} />,
+      label: 'Total Ahorrado',
+      value: `$${stats.ahorroTotal.toLocaleString()}`,
+      color: '#f59e0b',
+      gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+      delay: 0.3
+    },
+    {
+      icon: <TrendingUp size={20} />,
+      label: 'Promedio Mensual',
+      value: `$${Math.round(stats.ahorroTotal / 3).toLocaleString()}`,
+      color: '#ec4899',
+      gradient: 'linear-gradient(135deg, #ec4899 0%, #be185d 100%)',
+      delay: 0.4
     }
   ];
 
   return (
-    <TabsContainer
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
-    >
+    <div className="space-y-8">
       {/* Header */}
-      <StatsHeader>
-        <div className="icon-container">
-          <TrendingUp size={20} />
-        </div>
-        <div className="title-content">
-          <h2>Resumen de Beneficios</h2>
-          <p>Tu actividad y ahorros</p>
-        </div>
-      </StatsHeader>
-
-      {/* Ahorro total destacado */}
-      <AhorroCard
-        whileHover={{ scale: 1.02 }}
-        transition={{ duration: 0.2 }}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="text-center"
       >
-        <div className="content">
-          <div className="text-section">
-            <div className="label">Total Ahorrado</div>
-            <div className="value">${stats.ahorroTotal.toLocaleString()}</div>
+        <h2 className="text-3xl font-bold text-gray-900 mb-4">
+          Gestiona tus Beneficios
+        </h2>
+        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          Descubre beneficios exclusivos y mantén un registro de tus ahorros
+        </p>
+      </motion.div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {statsData.map((stat, index) => (
+          <StatCard key={stat.label} {...stat} />
+        ))}
+      </div>
+
+      {/* Tab Navigation */}
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+        <div className="flex bg-gray-100 rounded-2xl p-2">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => onTabChange(tab.id)}
+              className={`
+                relative flex items-center gap-3 px-6 py-4 rounded-xl font-semibold transition-all duration-300
+                ${activeTab === tab.id 
+                  ? 'text-white shadow-lg' 
+                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+                }
+              `}
+              style={{
+                background: activeTab === tab.id ? tab.gradient : 'transparent'
+              }}
+            >
+              {/* Background for active tab */}
+              {activeTab === tab.id && (
+                <motion.div
+                  layoutId="activeTab"
+                  className="absolute inset-0 rounded-xl"
+                  style={{ background: tab.gradient }}
+                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                />
+              )}
+              
+              {/* Content */}
+              <div className="relative z-10 flex items-center gap-3">
+                {tab.icon}
+                <div className="text-left">
+                  <div className="font-bold">{tab.label}</div>
+                  <div className={`text-xs ${activeTab === tab.id ? 'text-white/80' : 'text-gray-500'}`}>
+                    {tab.description}
+                  </div>
+                </div>
+                
+                {/* Badge */}
+                <div className={`
+                  px-2 py-1 rounded-full text-xs font-bold
+                  ${activeTab === tab.id 
+                    ? 'bg-white/20 text-white' 
+                    : 'bg-gray-200 text-gray-600'
+                  }
+                `}>
+                  {tab.id === 'disponibles' ? stats.disponibles : stats.usados}
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+
+        {/* Additional Info */}
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="flex items-center gap-4 text-sm text-gray-600"
+        >
+          <div className="flex items-center gap-2">
+            <Calendar size={16} />
+            <span>Última actualización: Hoy</span>
           </div>
-          <div className="icon-container">
-            <TrendingUp size={20} />
+          <div className="flex items-center gap-2">
+            <Star size={16} className="text-amber-500" />
+            <span>Socio Premium</span>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Progress Bar */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+        className="bg-white rounded-2xl border border-gray-200 p-6"
+      >
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl flex items-center justify-center">
+              <Target size={20} className="text-white" />
+            </div>
+            <div>
+              <h3 className="font-bold text-gray-900">Progreso Mensual</h3>
+              <p className="text-sm text-gray-600">Meta: 10 beneficios usados</p>
+            </div>
+          </div>
+          <div className="text-right">
+            <p className="text-2xl font-bold text-gray-900">{stats.usados}/10</p>
+            <p className="text-sm text-gray-500">Este mes</p>
           </div>
         </div>
-      </AhorroCard>
 
-      {/* Estadísticas adicionales */}
-      <StatsGrid>
-        <StatItem
-          color="#10b981"
-          whileHover={{ y: -2 }}
-          transition={{ duration: 0.2 }}
-        >
-          <div className="icon">
-            <Gift size={16} />
+        {/* Progress Bar */}
+        <div className="w-full bg-gray-200 rounded-full h-3 mb-4">
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ width: `${Math.min((stats.usados / 10) * 100, 100)}%` }}
+            transition={{ duration: 1, delay: 0.6 }}
+            className="bg-gradient-to-r from-purple-500 to-pink-600 h-3 rounded-full"
+          />
+        </div>
+
+        {/* Achievements */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Award size={16} className="text-amber-500" />
+            <span className="text-sm font-medium text-gray-700">
+              {stats.usados >= 10 ? '¡Meta alcanzada!' : `${10 - stats.usados} beneficios para la meta`}
+            </span>
           </div>
-          <div className="value">{stats.disponibles}</div>
-          <div className="label">Disponibles</div>
-        </StatItem>
-
-        <StatItem
-          color="#6366f1"
-          whileHover={{ y: -2 }}
-          transition={{ duration: 0.2 }}
-        >
-          <div className="icon">
-            <Award size={16} />
+          <div className="flex items-center gap-1">
+            {[...Array(5)].map((_, i) => (
+              <Star
+                key={i}
+                size={16}
+                className={`${i < Math.floor(stats.usados / 2) ? 'text-amber-500' : 'text-gray-300'}`}
+                fill={i < Math.floor(stats.usados / 2) ? 'currentColor' : 'none'}
+              />
+            ))}
           </div>
-          <div className="value">{stats.usados}</div>
-          <div className="label">Usados</div>
-        </StatItem>
-
-        <StatItem
-          color="#f59e0b"
-          whileHover={{ y: -2 }}
-          transition={{ duration: 0.2 }}
-        >
-          <div className="icon">
-            <Target size={16} />
-          </div>
-          <div className="value">{Math.round((stats.usados / (stats.disponibles + stats.usados)) * 100) || 0}%</div>
-          <div className="label">Tasa de Uso</div>
-        </StatItem>
-
-        <StatItem
-          color="#8b5cf6"
-          whileHover={{ y: -2 }}
-          transition={{ duration: 0.2 }}
-        >
-          <div className="icon">
-            <Zap size={16} />
-          </div>
-          <div className="value">{stats.ahorroTotal > 0 ? Math.round(stats.ahorroTotal / Math.max(stats.usados, 1)) : 0}</div>
-          <div className="label">Ahorro Promedio</div>
-        </StatItem>
-      </StatsGrid>
-
-      {/* Tabs Navigation */}
-      <TabsNavigation style={{ marginTop: '2rem' }}>
-        {tabs.map((tab) => (
-          <Tab
-            key={tab.id}
-            active={activeTab === tab.id}
-            onClick={() => onTabChange(tab.id)}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            {tab.icon}
-            <span>{tab.label}</span>
-            <TabBadge color={tab.color} active={activeTab === tab.id}>
-              {tab.count}
-            </TabBadge>
-          </Tab>
-        ))}
-      </TabsNavigation>
-    </TabsContainer>
+        </div>
+      </motion.div>
+    </div>
   );
 };

@@ -6,7 +6,7 @@ import {
   TrendingUp,
   TrendingDown,
   Gift,
-  QrCodeScanner,
+  ScanLine as QrCodeScanner,
   Bell,
   Calendar,
   MapPin,
@@ -29,7 +29,7 @@ import {
   CheckCircle,
   AlertCircle,
   Info,
-  TrendingFlat
+  Minus
 } from 'lucide-react';
 import { Timestamp } from 'firebase/firestore';
 import { useAuth } from '@/hooks/useAuth';
@@ -153,7 +153,7 @@ const KPICard: React.FC<{
           <div className="flex items-center gap-1">
             {trend === 'up' && <TrendingUp size={16} className="text-emerald-500" />}
             {trend === 'down' && <TrendingDown size={16} className="text-red-500" />}
-            {trend === 'neutral' && <TrendingFlat size={16} className="text-gray-400" />}
+            {trend === 'neutral' && <Minus size={16} className="text-gray-400" />}
             <span className={`
               text-sm font-bold
               ${trend === 'up' ? 'text-emerald-500' : trend === 'down' ? 'text-red-500' : 'text-gray-400'}

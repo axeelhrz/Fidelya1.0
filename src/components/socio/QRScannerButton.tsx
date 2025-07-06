@@ -1,9 +1,7 @@
 'use client';
 
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import styled from '@emotion/styled';
-import { css } from '@emotion/react';
 import { 
   QrCode, 
   Camera, 
@@ -16,7 +14,13 @@ import {
   FlashlightOff,
   RotateCcw,
   Info,
-  Settings
+  Settings,
+  Smartphone,
+  Monitor,
+  CheckCircle,
+  Copy,
+  Download,
+  Share2
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Dialog, DialogContent } from '@/components/ui/Dialog';
@@ -28,330 +32,18 @@ interface QRScannerButtonProps {
   loading?: boolean;
 }
 
-const ScannerButton = styled(motion.button)<{ loading: boolean }>`
-  width: 100%;
-  height: 5rem;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
-  border: none;
-  border-radius: 1.5rem;
-  color: white;
-  font-size: 1.125rem;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 20px 40px rgba(99, 102, 241, 0.3);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  
-  &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 25px 50px rgba(99, 102, 241, 0.4);
-    background: linear-gradient(135deg, #5b21b6, #7c3aed);
-  }
-  
-  &:active {
-    transform: translateY(-2px);
-  }
-  
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgba(255, 255, 255, 0.2),
-      transparent
-    );
-    transition: left 0.6s ease;
-  }
-  
-  &:hover::before {
-    left: 100%;
-  }
-  
-  ${({ loading }) => loading && css`
-    pointer-events: none;
-    opacity: 0.8;
-  `}
-`;
-
-const ScannerModal = styled(motion.div)`
-  background: white;
-  border-radius: 2rem;
-  overflow: hidden;
-  max-width: 28rem;
-  width: 100%;
-  box-shadow: 0 25px 80px -20px rgba(0, 0, 0, 0.3);
-`;
-
-const ModalHeader = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1.5rem;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-  border-bottom: 1px solid #e2e8f0;
-  
-  .title-section {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-  }
-  
-  .icon-container {
-    width: 2.5rem;
-    height: 2.5rem;
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
-    border-radius: 0.75rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-  }
-  
-  h3 {
-    font-size: 1.125rem;
-    font-weight: 800;
-    color: #1e293b;
-  }
-  
-  .close-button {
-    padding: 0.5rem;
-    border: none;
-    background: none;
-    cursor: pointer;
-    border-radius: 0.5rem;
-    transition: all 0.2s ease;
-    
-    &:hover {
-      background: #e2e8f0;
-    }
-  }
-`;
-
-const ScannerArea = styled.div`
-  position: relative;
-  background: #000;
-  aspect-ratio: 1;
-  overflow: hidden;
-`;
-
-const VideoElement = styled.video`
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transform: scaleX(-1); /* Mirror effect for better UX */
-`;
-
-const ScannerOverlay = styled.div`
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.3);
-`;
-
-const ScanFrame = styled(motion.div)`
-  position: relative;
-  width: 16rem;
-  height: 16rem;
-  border: 2px solid rgba(255, 255, 255, 0.8);
-  border-radius: 1.5rem;
-  
-  /* Esquinas del marco */
-  &::before,
-  &::after {
-    content: '';
-    position: absolute;
-    width: 2rem;
-    height: 2rem;
-    border: 4px solid #6366f1;
-  }
-  
-  &::before {
-    top: -4px;
-    left: -4px;
-    border-right: none;
-    border-bottom: none;
-    border-radius: 1rem 0 0 0;
-  }
-  
-  &::after {
-    top: -4px;
-    right: -4px;
-    border-left: none;
-    border-bottom: none;
-    border-radius: 0 1rem 0 0;
-  }
-`;
-
-const ScanFrameCorners = styled.div`
-  position: absolute;
-  inset: 0;
-  
-  &::before,
-  &::after {
-    content: '';
-    position: absolute;
-    width: 2rem;
-    height: 2rem;
-    border: 4px solid #6366f1;
-  }
-  
-  &::before {
-    bottom: -4px;
-    left: -4px;
-    border-right: none;
-    border-top: none;
-    border-radius: 0 0 0 1rem;
-  }
-  
-  &::after {
-    bottom: -4px;
-    right: -4px;
-    border-left: none;
-    border-top: none;
-    border-radius: 0 0 1rem 0;
-  }
-`;
-
-const ScanLine = styled(motion.div)`
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, transparent, #6366f1, transparent);
-  box-shadow: 0 0 20px #6366f1;
-`;
-
-const ScannerInstructions = styled.div`
-  position: absolute;
-  bottom: 2rem;
-  left: 50%;
-  transform: translateX(-50%);
-  text-align: center;
-  color: white;
-  
-  .main-text {
-    font-size: 1rem;
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
-  }
-  
-  .sub-text {
-    font-size: 0.875rem;
-    opacity: 0.9;
-    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
-  }
-`;
-
-const ErrorState = styled(motion.div)`
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.8);
-  color: white;
-  text-align: center;
-  padding: 2rem;
-  
-  .error-icon {
-    width: 4rem;
-    height: 4rem;
-    background: #ef4444;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 1rem;
-  }
-  
-  .error-title {
-    font-size: 1.25rem;
-    font-weight: 700;
-    margin-bottom: 0.5rem;
-  }
-  
-  .error-message {
-    margin-bottom: 1.5rem;
-    opacity: 0.9;
-    line-height: 1.5;
-  }
-`;
-
-const LoadingState = styled(motion.div)`
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.8);
-  color: white;
-  text-align: center;
-  
-  .loading-icon {
-    width: 4rem;
-    height: 4rem;
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 1rem;
-  }
-  
-  .loading-text {
-    font-size: 1.125rem;
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-  }
-  
-  .loading-details {
-    font-size: 0.875rem;
-    opacity: 0.8;
-  }
-`;
-
-const ControlsSection = styled.div`
-  padding: 1.5rem;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-  border-top: 1px solid #e2e8f0;
-  
-  .controls-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.75rem;
-    margin-bottom: 1rem;
-  }
-  
-  .help-text {
-    font-size: 0.75rem;
-    color: #64748b;
-    text-align: center;
-    font-weight: 500;
-  }
-`;
-
-export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
-  onScan,
-  loading = false
-}) => {
-  const [scannerOpen, setScannerOpen] = useState(false);
+// Enhanced Scanner Modal Component
+const EnhancedScannerModal: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  onScan: (qrData: string) => void;
+  loading: boolean;
+}> = ({ isOpen, onClose, onScan, loading }) => {
+  const [scannerMode, setScannerMode] = useState<'camera' | 'manual' | 'demo'>('camera');
+  const [manualCode, setManualCode] = useState('');
   const [flashEnabled, setFlashEnabled] = useState(false);
   const [showDiagnostics, setShowDiagnostics] = useState(false);
+  const [scanSuccess, setScanSuccess] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const {
@@ -368,15 +60,22 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
     preferredFacingMode: 'environment'
   });
 
-  const handleOpenScanner = useCallback(async () => {
-    console.log('🚀 Opening scanner...');
-    setScannerOpen(true);
+  // Start camera when modal opens
+  useEffect(() => {
+    if (isOpen && scannerMode === 'camera') {
+      handleStartCamera();
+    }
+    return () => {
+      if (isOpen) {
+        stopCamera();
+      }
+    };
+  }, [isOpen, scannerMode]);
+
+  const handleStartCamera = useCallback(async () => {
     const stream = await startCamera();
-    
     if (stream && videoRef.current) {
       videoRef.current.srcObject = stream;
-      
-      // Esperar a que el video esté listo
       try {
         await new Promise<void>((resolve, reject) => {
           const video = videoRef.current!;
@@ -386,7 +85,6 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
 
           video.onloadedmetadata = () => {
             clearTimeout(timeout);
-            console.log('✅ Video metadata loaded and ready');
             resolve();
           };
 
@@ -396,22 +94,10 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
           };
         });
       } catch (error) {
-        console.error('❌ Error setting up video element:', error);
+        console.error('Error setting up video element:', error);
       }
     }
   }, [startCamera]);
-
-  const handleCloseScanner = useCallback(() => {
-    console.log('🔒 Closing scanner...');
-    setScannerOpen(false);
-    stopCamera();
-    setShowDiagnostics(false);
-    setFlashEnabled(false);
-    
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
-    }
-  }, [stopCamera]);
 
   const handleRetryCamera = useCallback(async () => {
     const stream = await retryCamera();
@@ -425,221 +111,442 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
     setFlashEnabled(newFlashState);
   }, [toggleFlash, flashEnabled]);
 
-  const handleManualInput = useCallback(() => {
+  const handleManualSubmit = useCallback(() => {
+    if (manualCode.trim()) {
+      setScanSuccess(true);
+      setTimeout(() => {
+        onScan(manualCode.trim());
+        onClose();
+        setScanSuccess(false);
+        setManualCode('');
+      }, 1000);
+    }
+  }, [manualCode, onScan, onClose]);
+
+  const handleDemoScan = useCallback(() => {
     const mockQRData = 'fidelya://comercio/comercio123?beneficio=beneficio456&t=' + Date.now();
-    console.log('🧪 Using demo QR data:', mockQRData);
-    onScan(mockQRData);
-    handleCloseScanner();
-  }, [onScan, handleCloseScanner]);
+    setScanSuccess(true);
+    setTimeout(() => {
+      onScan(mockQRData);
+      onClose();
+      setScanSuccess(false);
+    }, 1000);
+  }, [onScan, onClose]);
+
+  const handleModeChange = (mode: 'camera' | 'manual' | 'demo') => {
+    setScannerMode(mode);
+    if (mode === 'camera') {
+      handleStartCamera();
+    } else {
+      stopCamera();
+    }
+  };
+
+  const renderCameraMode = () => (
+    <div className="relative bg-black rounded-2xl overflow-hidden aspect-square">
+      {cameraState.isLoading && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 text-white z-10">
+          <div className="w-16 h-16 bg-gradient-to-r from-violet-500 to-purple-600 rounded-full flex items-center justify-center mb-4">
+            <RefreshCw size={24} className="animate-spin" />
+          </div>
+          <p className="text-lg font-semibold mb-2">Iniciando cámara...</p>
+          <p className="text-sm opacity-80">
+            {cameraState.deviceInfo.isMobile ? 'Configurando cámara trasera' : 'Configurando cámara'}
+          </p>
+        </div>
+      )}
+
+      {cameraState.hasPermission === false && cameraState.error && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 text-white z-10 p-6">
+          <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mb-4">
+            <AlertCircle size={24} />
+          </div>
+          <h3 className="text-lg font-semibold mb-2">Error de Cámara</h3>
+          <p className="text-center mb-6 opacity-90">
+            {getErrorMessage(cameraState.error)}
+          </p>
+          <div className="flex gap-3">
+            {retryCount < maxRetries && (
+              <Button
+                variant="outline"
+                onClick={handleRetryCamera}
+                leftIcon={<RefreshCw size={16} />}
+                className="bg-white text-gray-900"
+                size="sm"
+              >
+                Reintentar ({retryCount + 1}/{maxRetries})
+              </Button>
+            )}
+            <Button
+              variant="outline"
+              onClick={() => setShowDiagnostics(!showDiagnostics)}
+              leftIcon={<Settings size={16} />}
+              className="bg-white text-gray-900"
+              size="sm"
+            >
+              Diagnóstico
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {cameraState.hasPermission && !cameraState.isLoading && cameraState.stream && (
+        <>
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            muted
+            className="w-full h-full object-cover transform scale-x-[-1]"
+          />
+          
+          {/* Scanner Overlay */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="relative w-64 h-64 border-2 border-white/80 rounded-2xl"
+            >
+              {/* Corner Indicators */}
+              <div className="absolute -top-1 -left-1 w-8 h-8 border-l-4 border-t-4 border-violet-500 rounded-tl-xl" />
+              <div className="absolute -top-1 -right-1 w-8 h-8 border-r-4 border-t-4 border-violet-500 rounded-tr-xl" />
+              <div className="absolute -bottom-1 -left-1 w-8 h-8 border-l-4 border-b-4 border-violet-500 rounded-bl-xl" />
+              <div className="absolute -bottom-1 -right-1 w-8 h-8 border-r-4 border-b-4 border-violet-500 rounded-br-xl" />
+              
+              {/* Scanning Line */}
+              <motion.div
+                animate={{ y: [0, 256, 0] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-violet-500 to-transparent shadow-lg"
+                style={{ boxShadow: '0 0 20px #8b5cf6' }}
+              />
+            </motion.div>
+          </div>
+
+          {/* Instructions */}
+          <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 text-center text-white">
+            <motion.p
+              animate={{ opacity: [1, 0.7, 1] }}
+              transition={{ duration: 2, repeat: Infinity }}
+              className="text-lg font-semibold mb-2 drop-shadow-lg"
+            >
+              Apunta la cámara al código QR
+            </motion.p>
+            <p className="text-sm opacity-90 drop-shadow-lg">
+              Mantén el código dentro del marco
+            </p>
+          </div>
+        </>
+      )}
+    </div>
+  );
+
+  const renderManualMode = () => (
+    <div className="space-y-6">
+      <div className="text-center">
+        <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <Smartphone size={24} className="text-white" />
+        </div>
+        <h3 className="text-xl font-bold text-gray-900 mb-2">Ingreso Manual</h3>
+        <p className="text-gray-600">
+          Ingresa el código QR proporcionado por el comercio
+        </p>
+      </div>
+
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Código QR
+          </label>
+          <div className="relative">
+            <input
+              type="text"
+              value={manualCode}
+              onChange={(e) => setManualCode(e.target.value)}
+              placeholder="Ej: fidelya://comercio/abc123?beneficio=xyz789"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all duration-200"
+            />
+            {manualCode && (
+              <button
+                onClick={() => setManualCode('')}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                <X size={16} />
+              </button>
+            )}
+          </div>
+        </div>
+
+        <Button
+          onClick={handleManualSubmit}
+          disabled={!manualCode.trim() || loading}
+          className="w-full bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700"
+          size="lg"
+          leftIcon={scanSuccess ? <CheckCircle size={20} /> : <Scan size={20} />}
+        >
+          {scanSuccess ? 'Código Validado' : loading ? 'Validando...' : 'Validar Código'}
+        </Button>
+
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+          <div className="flex items-start gap-3">
+            <Info size={16} className="text-amber-600 mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="text-sm font-medium text-amber-800 mb-1">
+                ¿Cómo obtener el código?
+              </p>
+              <ul className="text-xs text-amber-700 space-y-1">
+                <li>• Solicita al comercio que muestre su código QR</li>
+                <li>• Pide el código de validación manual</li>
+                <li>• Verifica que el código sea válido</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderDemoMode = () => (
+    <div className="space-y-6">
+      <div className="text-center">
+        <div className="w-16 h-16 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <Zap size={24} className="text-white" />
+        </div>
+        <h3 className="text-xl font-bold text-gray-900 mb-2">Modo Demo</h3>
+        <p className="text-gray-600">
+          Prueba la funcionalidad con datos de ejemplo
+        </p>
+      </div>
+
+      <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-xl p-6">
+        <div className="text-center space-y-4">
+          <div className="w-32 h-32 bg-white rounded-xl border-2 border-emerald-300 flex items-center justify-center mx-auto">
+            <QrCode size={48} className="text-emerald-600" />
+          </div>
+          <div>
+            <h4 className="font-semibold text-emerald-900 mb-2">Código QR Demo</h4>
+            <p className="text-sm text-emerald-700 mb-4">
+              Este es un código de ejemplo para probar la funcionalidad
+            </p>
+            <div className="bg-white rounded-lg p-3 border border-emerald-200">
+              <code className="text-xs text-emerald-800 break-all">
+                fidelya://comercio/demo123?beneficio=demo456
+              </code>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <Button
+        onClick={handleDemoScan}
+        disabled={loading}
+        className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700"
+        size="lg"
+        leftIcon={scanSuccess ? <CheckCircle size={20} /> : <Zap size={20} />}
+      >
+        {scanSuccess ? 'Demo Ejecutado' : loading ? 'Procesando...' : 'Probar Demo'}
+      </Button>
+
+      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+        <div className="flex items-start gap-3">
+          <Info size={16} className="text-blue-600 mt-0.5 flex-shrink-0" />
+          <div>
+            <p className="text-sm font-medium text-blue-800 mb-1">
+              Acerca del modo demo
+            </p>
+            <p className="text-xs text-blue-700">
+              Este modo simula un escaneo exitoso con datos de prueba. 
+              Úsalo para familiarizarte con el proceso de validación.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <Dialog open={isOpen} onClose={onClose}>
+          <DialogContent className="max-w-lg p-0 overflow-hidden">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="bg-white rounded-3xl overflow-hidden"
+            >
+              {/* Header */}
+              <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b border-gray-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-r from-violet-500 to-purple-600 rounded-xl flex items-center justify-center">
+                      <Scan size={20} className="text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-bold text-gray-900">Escanear QR</h2>
+                      <p className="text-sm text-gray-600">Validar beneficio</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={onClose}
+                    className="p-2 hover:bg-gray-200 rounded-xl transition-colors duration-200"
+                  >
+                    <X size={20} className="text-gray-600" />
+                  </button>
+                </div>
+
+                {/* Mode Selector */}
+                <div className="flex bg-white rounded-xl p-1 mt-4">
+                  {[
+                    { id: 'camera', label: 'Cámara', icon: <Camera size={16} /> },
+                    { id: 'manual', label: 'Manual', icon: <Smartphone size={16} /> },
+                    { id: 'demo', label: 'Demo', icon: <Zap size={16} /> }
+                  ].map((mode) => (
+                    <button
+                      key={mode.id}
+                      onClick={() => handleModeChange(mode.id as any)}
+                      className={`
+                        flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg transition-all duration-200
+                        ${scannerMode === mode.id 
+                          ? 'bg-violet-500 text-white shadow-sm' 
+                          : 'text-gray-600 hover:bg-gray-50'
+                        }
+                      `}
+                    >
+                      {mode.icon}
+                      <span className="text-sm font-medium">{mode.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="p-6">
+                {scannerMode === 'camera' && renderCameraMode()}
+                {scannerMode === 'manual' && renderManualMode()}
+                {scannerMode === 'demo' && renderDemoMode()}
+              </div>
+
+              {/* Camera Controls */}
+              {scannerMode === 'camera' && cameraState.hasPermission && cameraState.stream && (
+                <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleToggleFlash}
+                        leftIcon={flashEnabled ? <FlashlightOff size={16} /> : <Flashlight size={16} />}
+                        disabled={!('torch' in (cameraState.deviceInfo.supportedConstraints ?? {}))}
+                      >
+                        {flashEnabled ? 'Apagar' : 'Flash'}
+                      </Button>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleRetryCamera}
+                        leftIcon={<RotateCcw size={16} />}
+                      >
+                        Reiniciar
+                      </Button>
+                    </div>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowDiagnostics(!showDiagnostics)}
+                      leftIcon={<Settings size={16} />}
+                    >
+                      Diagnóstico
+                    </Button>
+                  </div>
+
+                  <div className="mt-3 text-center">
+                    <p className="text-xs text-gray-500 flex items-center justify-center gap-1">
+                      <Info size={12} />
+                      Solicita al comercio que muestre su código QR oficial
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Diagnostics */}
+              <CameraDiagnostics
+                isVisible={showDiagnostics}
+                onClose={() => setShowDiagnostics(false)}
+                cameraError={cameraState.error}
+              />
+            </motion.div>
+          </DialogContent>
+        </Dialog>
+      )}
+    </AnimatePresence>
+  );
+};
+
+export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
+  onScan,
+  loading = false
+}) => {
+  const [scannerOpen, setScannerOpen] = useState(false);
+
+  const handleOpenScanner = useCallback(() => {
+    setScannerOpen(true);
+  }, []);
+
+  const handleCloseScanner = useCallback(() => {
+    setScannerOpen(false);
+  }, []);
+
+  const handleScan = useCallback((qrData: string) => {
+    onScan(qrData);
+    setScannerOpen(false);
+  }, [onScan]);
 
   return (
     <>
-      <ScannerButton
-        loading={loading}
+      <motion.button
         onClick={handleOpenScanner}
         disabled={loading}
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
+        className={`
+          w-full h-20 bg-gradient-to-r from-violet-500 to-purple-600 
+          hover:from-violet-600 hover:to-purple-700 
+          disabled:opacity-50 disabled:cursor-not-allowed
+          text-white font-bold text-lg rounded-2xl 
+          flex items-center justify-center gap-3
+          shadow-lg hover:shadow-xl transition-all duration-300
+          relative overflow-hidden group
+        `}
       >
-        <motion.div
-          animate={loading ? { rotate: 360 } : { rotate: 0 }}
-          transition={loading ? { duration: 1, repeat: Infinity, ease: "linear" } : {}}
-        >
-          {loading ? <RefreshCw size={24} /> : <QrCode size={24} />}
-        </motion.div>
-        {loading ? 'Procesando...' : 'Escanear Código QR'}
-      </ScannerButton>
+        {/* Background Animation */}
+        <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+        
+        {/* Content */}
+        <div className="relative z-10 flex items-center gap-3">
+          <motion.div
+            animate={loading ? { rotate: 360 } : { rotate: 0 }}
+            transition={loading ? { duration: 1, repeat: Infinity, ease: "linear" } : {}}
+          >
+            {loading ? <RefreshCw size={24} /> : <QrCode size={24} />}
+          </motion.div>
+          <span>{loading ? 'Procesando...' : 'Escanear Código QR'}</span>
+        </div>
 
-      <AnimatePresence>
-        {scannerOpen && (
-          <Dialog open={scannerOpen} onClose={handleCloseScanner}>
-            <DialogContent className="max-w-md p-0 overflow-hidden">
-              <ScannerModal
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-              >
-                <ModalHeader>
-                  <div className="title-section">
-                    <div className="icon-container">
-                      <Scan size={16} />
-                    </div>
-                    <h3>Escanear QR</h3>
-                  </div>
-                  <button
-                    onClick={handleCloseScanner}
-                    className="close-button"
-                  >
-                    <X size={16} />
-                  </button>
-                </ModalHeader>
-
-                <ScannerArea>
-                  {cameraState.isLoading && (
-                    <LoadingState
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                    >
-                      <div className="loading-icon">
-                        <motion.div
-                          animate={{ rotate: 360 }}
-                          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                        >
-                          <Camera size={24} />
-                        </motion.div>
-                      </div>
-                      <div className="loading-text">Iniciando cámara...</div>
-                      <div className="loading-details">
-                        {cameraState.deviceInfo.isMobile ? 'Configurando cámara trasera' : 'Configurando cámara'}
-                      </div>
-                    </LoadingState>
-                  )}
-
-                  {cameraState.hasPermission === false && cameraState.error && (
-                    <ErrorState
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                    >
-                      <div className="error-icon">
-                        <AlertCircle size={24} />
-                      </div>
-                      <div className="error-title">Error de Cámara</div>
-                      <div className="error-message">
-                        {getErrorMessage(cameraState.error)}
-                      </div>
-                      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'center' }}>
-                        {retryCount < maxRetries && (
-                          <Button
-                            variant="outline"
-                            onClick={handleRetryCamera}
-                            leftIcon={<RefreshCw size={16} />}
-                            className="bg-white text-gray-900"
-                            size="sm"
-                          >
-                            Reintentar ({retryCount + 1}/{maxRetries})
-                          </Button>
-                        )}
-                        <Button
-                          variant="outline"
-                          onClick={() => setShowDiagnostics(!showDiagnostics)}
-                          leftIcon={<Settings size={16} />}
-                          className="bg-white text-gray-900"
-                          size="sm"
-                        >
-                          Diagnóstico
-                        </Button>
-                      </div>
-                    </ErrorState>
-                  )}
-
-                  {cameraState.hasPermission && !cameraState.isLoading && cameraState.stream && (
-                    <>
-                      <VideoElement
-                        ref={videoRef}
-                        autoPlay
-                        playsInline
-                        muted
-                      />
-                      
-                      <ScannerOverlay>
-                        <ScanFrame
-                          initial={{ scale: 0.8, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
-                        >
-                          <ScanFrameCorners />
-                          <ScanLine
-                            animate={{ y: [0, 256, 0] }}
-                            transition={{ 
-                              duration: 2, 
-                              repeat: Infinity, 
-                              ease: "linear" 
-                            }}
-                          />
-                        </ScanFrame>
-                        
-                        <ScannerInstructions>
-                          <motion.div
-                            className="main-text"
-                            animate={{ opacity: [1, 0.7, 1] }}
-                            transition={{ duration: 2, repeat: Infinity }}
-                          >
-                            Apunta la cámara al código QR
-                          </motion.div>
-                          <div className="sub-text">
-                            Mantén el código dentro del marco
-                          </div>
-                        </ScannerInstructions>
-                      </ScannerOverlay>
-                    </>
-                  )}
-                </ScannerArea>
-
-                <ControlsSection>
-                  <div className="controls-grid">
-                    <Button
-                      variant="outline"
-                      onClick={handleCloseScanner}
-                      leftIcon={<X size={16} />}
-                      size="sm"
-                    >
-                      Cancelar
-                    </Button>
-                    
-                    <Button
-                      onClick={handleManualInput}
-                      leftIcon={<Zap size={16} />}
-                      size="sm"
-                    >
-                      Probar Demo
-                    </Button>
-                    
-                    {cameraState.hasPermission && cameraState.stream && (
-                      <>
-                        <Button
-                          variant="outline"
-                          onClick={handleToggleFlash}
-                          leftIcon={flashEnabled ? <FlashlightOff size={16} /> : <Flashlight size={16} />}
-                          size="sm"
-                          disabled={!('torch' in (cameraState.deviceInfo.supportedConstraints ?? {}))}
-                        >
-                          {flashEnabled ? 'Apagar Flash' : 'Encender Flash'}
-                        </Button>
-                        
-                        <Button
-                          variant="outline"
-                          onClick={handleRetryCamera}
-                          leftIcon={<RotateCcw size={16} />}
-                          size="sm"
-                        >
-                          Reiniciar
-                        </Button>
-                      </>
-                    )}
-                  </div>
-                  
-                  <div className="help-text">
-                    <Info size={12} style={{ display: 'inline', marginRight: '0.25rem' }} />
-                    Solicita al comercio que muestre su código QR oficial
-                  </div>
-
-                  <CameraDiagnostics
-                    isVisible={showDiagnostics}
-                    onClose={() => setShowDiagnostics(false)}
-                    cameraError={cameraState.error}
-                  />
-                </ControlsSection>
-              </ScannerModal>
-            </DialogContent>
-          </Dialog>
+        {/* Pulse Effect */}
+        {!loading && (
+          <div className="absolute inset-0 rounded-2xl bg-violet-400 opacity-0 group-hover:opacity-20 animate-pulse" />
         )}
-      </AnimatePresence>
+      </motion.button>
+
+      <EnhancedScannerModal
+        isOpen={scannerOpen}
+        onClose={handleCloseScanner}
+        onScan={handleScan}
+        loading={loading}
+      />
     </>
   );
 };
