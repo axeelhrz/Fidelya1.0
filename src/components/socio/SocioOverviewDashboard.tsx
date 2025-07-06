@@ -3,50 +3,39 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import {
-  Box,
-  Typography,
-  Card,
-  CardContent,
-  alpha,
-  Avatar,
-  Stack,
-  LinearProgress,
-  Paper,
-  IconButton,
-  Button,
-  Chip,
-  CircularProgress,
-  Alert,
-  Container,
-} from '@mui/material';
-import {
   TrendingUp,
   TrendingDown,
-  LocalOffer,
+  Gift,
   QrCodeScanner,
-  Notifications,
-  Timeline,
-  CalendarToday,
-  Warning,
-  CheckCircle,
-  Info,
-  ArrowForward,
-  Refresh,
-  NotificationsActive,
-  Speed,
-  ErrorOutline,
-  CardGiftcard,
-  Savings,
+  Bell,
+  Calendar,
+  MapPin,
   Star,
-  Person,
-} from '@mui/icons-material';
-import {
-  Timestamp,
-} from 'firebase/firestore';
+  Zap,
+  Heart,
+  Share2,
+  ArrowRight,
+  RefreshCw,
+  Activity,
+  Award,
+  Target,
+  Clock,
+  Sparkles,
+  Crown,
+  Users,
+  ShoppingBag,
+  Percent,
+  DollarSign,
+  CheckCircle,
+  AlertCircle,
+  Info,
+  TrendingFlat
+} from 'lucide-react';
+import { Timestamp } from 'firebase/firestore';
 import { useAuth } from '@/hooks/useAuth';
 import { useBeneficios } from '@/hooks/useBeneficios';
 import { useNotifications } from '@/hooks/useNotifications';
-import { format, subDays } from 'date-fns';
+import { format, subDays, isToday, isYesterday, startOfWeek, endOfWeek } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 interface SocioOverviewDashboardProps {
@@ -77,9 +66,12 @@ interface SocioMetrics {
   lastActivity: Date | null;
   avgBeneficiosMensuales: number;
   categoriaFavorita: string;
+  streakDias: number;
+  proximoVencimiento: Date | null;
 }
 
-interface KPICardProps {
+// Enhanced KPI Card Component
+const KPICard: React.FC<{
   title: string;
   value: string | number;
   change: number;
@@ -91,9 +83,8 @@ interface KPICardProps {
   trend?: 'up' | 'down' | 'neutral';
   onClick?: () => void;
   loading?: boolean;
-}
-
-const KPICard: React.FC<KPICardProps> = ({
+  badge?: string;
+}> = ({
   title,
   value,
   change,
@@ -104,7 +95,8 @@ const KPICard: React.FC<KPICardProps> = ({
   subtitle,
   trend = 'neutral',
   onClick,
-  loading = false
+  loading = false,
+  badge
 }) => {
   return (
     <motion.div
@@ -117,194 +109,133 @@ const KPICard: React.FC<KPICardProps> = ({
         stiffness: 100,
         damping: 15
       }}
-      style={{ flex: '1 1 0', minWidth: '280px' }}
+      className="relative group"
     >
-      <Card
-        elevation={0}
+      <div
         onClick={onClick}
-        sx={{
-          position: 'relative',
-          overflow: 'hidden',
-          border: '1px solid #f1f5f9',
-          borderRadius: 4,
-          background: 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
-          transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-          cursor: onClick ? 'pointer' : 'default',
-          height: '100%',
-          '&:hover': {
-            borderColor: alpha(color, 0.3),
-            transform: onClick ? 'translateY(-6px)' : 'translateY(-3px)',
-            boxShadow: `0 20px 60px -15px ${alpha(color, 0.25)}`,
-            '& .kpi-icon': {
-              transform: 'scale(1.1) rotate(5deg)',
-              background: gradient,
-              color: 'white',
-            },
-            '& .kpi-glow': {
-              opacity: 1,
-            }
-          },
+        className={`
+          relative overflow-hidden bg-white rounded-2xl border border-gray-200 p-6 
+          transition-all duration-300 cursor-pointer h-full
+          hover:border-gray-300 hover:shadow-lg hover:-translate-y-1
+          ${onClick ? 'cursor-pointer' : 'cursor-default'}
+        `}
+        style={{
+          background: `linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)`,
         }}
       >
-        {/* Glow effect */}
-        <Box
-          className="kpi-glow"
-          sx={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            height: '3px',
-            background: gradient,
-            opacity: 0.6,
-            transition: 'opacity 0.3s ease',
-          }}
-        />
-        
-        <CardContent sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column' }}>
-          <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 2 }}>
-            <Avatar
-              className="kpi-icon"
-              sx={{
-                width: 56,
-                height: 56,
-                bgcolor: alpha(color, 0.1),
-                color: color,
-                borderRadius: 3,
-                transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                boxShadow: `0 6px 20px ${alpha(color, 0.2)}`,
-              }}
-            >
-              {loading ? <CircularProgress size={24} sx={{ color: 'inherit' }} /> : icon}
-            </Avatar>
-            
-            {/* Trend indicator */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              {trend === 'up' && <TrendingUp sx={{ fontSize: 18, color: '#10b981' }} />}
-              {trend === 'down' && <TrendingDown sx={{ fontSize: 18, color: '#ef4444' }} />}
-              <Typography
-                variant="body2"
-                sx={{
-                  fontWeight: 700,
-                  color: trend === 'up' ? '#10b981' : trend === 'down' ? '#ef4444' : '#6b7280',
-                  fontSize: '0.85rem'
-                }}
-              >
-                {change > 0 ? '+' : ''}{change}%
-              </Typography>
-            </Box>
-          </Box>
-          
-          <Box sx={{ flex: 1 }}>
-            <Typography
-              variant="overline"
-              sx={{
-                color: '#94a3b8',
-                fontWeight: 700,
-                fontSize: '0.7rem',
-                letterSpacing: '0.1em',
-                textTransform: 'uppercase',
-                mb: 1,
-                display: 'block'
-              }}
-            >
-              {title}
-            </Typography>
-            
-            <Typography
-              variant="h4"
-              sx={{
-                fontWeight: 900,
-                color: '#0f172a',
-                fontSize: '2.2rem',
-                letterSpacing: '-0.02em',
-                lineHeight: 0.9,
-                mb: subtitle ? 1 : 0,
-              }}
-            >
-              {loading ? '...' : value}
-            </Typography>
-            
-            {subtitle && (
-              <Typography
-                variant="body2"
-                sx={{
-                  color: '#64748b',
-                  fontWeight: 600,
-                  fontSize: '0.85rem'
-                }}
-              >
-                {subtitle}
-              </Typography>
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-5">
+          <div className="absolute top-0 right-0 w-32 h-32 rounded-full -translate-y-16 translate-x-16" 
+               style={{ background: gradient }} />
+        </div>
+
+        {/* Badge */}
+        {badge && (
+          <div className="absolute top-4 right-4 px-2 py-1 bg-red-500 text-white text-xs font-bold rounded-full">
+            {badge}
+          </div>
+        )}
+
+        {/* Header */}
+        <div className="flex items-start justify-between mb-4">
+          <div 
+            className="w-12 h-12 rounded-xl flex items-center justify-center text-white shadow-lg"
+            style={{ background: gradient }}
+          >
+            {loading ? (
+              <RefreshCw size={20} className="animate-spin" />
+            ) : (
+              icon
             )}
-          </Box>
+          </div>
           
-          {/* Progress indicator */}
-          <Box sx={{ mt: 2 }}>
-            <LinearProgress
-              variant="determinate"
-              value={loading ? 0 : Math.min(Math.abs(change) * 10, 100)}
-              sx={{
-                height: 3,
-                borderRadius: 2,
-                bgcolor: alpha(color, 0.1),
-                '& .MuiLinearProgress-bar': {
-                  bgcolor: color,
-                  borderRadius: 2,
-                }
+          {/* Trend Indicator */}
+          <div className="flex items-center gap-1">
+            {trend === 'up' && <TrendingUp size={16} className="text-emerald-500" />}
+            {trend === 'down' && <TrendingDown size={16} className="text-red-500" />}
+            {trend === 'neutral' && <TrendingFlat size={16} className="text-gray-400" />}
+            <span className={`
+              text-sm font-bold
+              ${trend === 'up' ? 'text-emerald-500' : trend === 'down' ? 'text-red-500' : 'text-gray-400'}
+            `}>
+              {change > 0 ? '+' : ''}{change}%
+            </span>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-gray-500 uppercase tracking-wide">
+            {title}
+          </p>
+          <p className="text-3xl font-bold text-gray-900">
+            {loading ? '...' : value}
+          </p>
+          {subtitle && (
+            <p className="text-sm text-gray-600">
+              {subtitle}
+            </p>
+          )}
+        </div>
+
+        {/* Progress Bar */}
+        <div className="mt-4">
+          <div className="w-full bg-gray-200 rounded-full h-2">
+            <div 
+              className="h-2 rounded-full transition-all duration-1000"
+              style={{ 
+                width: loading ? '0%' : `${Math.min(Math.abs(change) * 2, 100)}%`,
+                background: gradient
               }}
             />
-          </Box>
-          
-          {onClick && (
-            <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
-              <IconButton
-                size="small"
-                sx={{
-                  color: color,
-                  bgcolor: alpha(color, 0.1),
-                  '&:hover': {
-                    bgcolor: alpha(color, 0.2),
-                    transform: 'scale(1.1)',
-                  },
-                  transition: 'all 0.2s ease',
-                }}
-              >
-                <ArrowForward sx={{ fontSize: 16 }} />
-              </IconButton>
-            </Box>
-          )}
-        </CardContent>
-      </Card>
+          </div>
+        </div>
+
+        {/* Hover Effect */}
+        <div className="absolute inset-0 bg-gradient-to-r opacity-0 group-hover:opacity-5 transition-opacity duration-300 rounded-2xl"
+             style={{ background: gradient }} />
+      </div>
     </motion.div>
   );
 };
 
-const ActivityCard: React.FC<{
+// Activity Timeline Component
+const ActivityTimeline: React.FC<{
   activities: ActivityLog[];
   loading: boolean;
   onViewAll?: () => void;
 }> = ({ activities, loading, onViewAll }) => {
   const getActivityIcon = (type: ActivityLog['type']) => {
     const icons = {
-      benefit_used: <LocalOffer sx={{ fontSize: 20 }} />,
-      benefit_available: <CardGiftcard sx={{ fontSize: 20 }} />,
-      membership_renewed: <Star sx={{ fontSize: 20 }} />,
-      profile_updated: <Person sx={{ fontSize: 20 }} />,
-      notification_received: <Notifications sx={{ fontSize: 20 }} />,
+      benefit_used: <Gift size={16} />,
+      benefit_available: <Sparkles size={16} />,
+      membership_renewed: <Crown size={16} />,
+      profile_updated: <Users size={16} />,
+      notification_received: <Bell size={16} />,
     };
-    return icons[type] || <Info sx={{ fontSize: 20 }} />;
+    return icons[type] || <Info size={16} />;
   };
 
   const getActivityColor = (type: ActivityLog['type']) => {
     const colors = {
-      benefit_used: '#10b981',
-      benefit_available: '#f59e0b',
-      membership_renewed: '#8b5cf6',
-      profile_updated: '#6366f1',
-      notification_received: '#ec4899',
+      benefit_used: 'bg-emerald-500',
+      benefit_available: 'bg-amber-500',
+      membership_renewed: 'bg-purple-500',
+      profile_updated: 'bg-blue-500',
+      notification_received: 'bg-pink-500',
     };
-    return colors[type] || '#6b7280';
+    return colors[type] || 'bg-gray-500';
+  };
+
+  const formatActivityTime = (timestamp: Timestamp) => {
+    const date = timestamp.toDate();
+    if (isToday(date)) {
+      return `Hoy ${format(date, 'HH:mm')}`;
+    } else if (isYesterday(date)) {
+      return `Ayer ${format(date, 'HH:mm')}`;
+    } else {
+      return format(date, 'dd/MM HH:mm', { locale: es });
+    }
   };
 
   return (
@@ -312,296 +243,263 @@ const ActivityCard: React.FC<{
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.6, delay: 0.3 }}
-      style={{ flex: '2 1 0', minWidth: '400px' }}
+      className="bg-white rounded-2xl border border-gray-200 p-6 h-full"
     >
-      <Card
-        elevation={0}
-        sx={{
-          border: '1px solid #f1f5f9',
-          borderRadius: 4,
-          overflow: 'hidden',
-          background: 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
-          height: '100%',
-        }}
-      >
-        <CardContent sx={{ p: 3 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Avatar
-                sx={{
-                  width: 44,
-                  height: 44,
-                  bgcolor: alpha('#6366f1', 0.1),
-                  color: '#6366f1',
-                  borderRadius: 3,
-                }}
-              >
-                <Timeline />
-              </Avatar>
-              <Box>
-                <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', mb: 0.5 }}>
-                  Actividad Reciente
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#64748b' }}>
-                  Tus últimas acciones
-                </Typography>
-              </Box>
-            </Box>
-            {onViewAll && (
-              <Button
-                onClick={onViewAll}
-                size="small"
-                endIcon={<ArrowForward />}
-                sx={{
-                  textTransform: 'none',
-                  fontWeight: 600,
-                  color: '#6366f1',
-                }}
-              >
-                Ver todo
-              </Button>
-            )}
-          </Box>
-          
-          {loading ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-              <CircularProgress size={32} />
-            </Box>
-          ) : (
-            <Stack spacing={2.5}>
-              {activities.slice(0, 5).map((activity) => (
-                <Box key={activity.id} sx={{ display: 'flex', alignItems: 'flex-start', gap: 2.5 }}>
-                  <Avatar
-                    sx={{
-                      width: 36,
-                      height: 36,
-                      bgcolor: alpha(getActivityColor(activity.type), 0.1),
-                      color: getActivityColor(activity.type),
-                      borderRadius: 2,
-                    }}
-                  >
-                    {getActivityIcon(activity.type)}
-                  </Avatar>
-                  <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        fontWeight: 600,
-                        color: '#1e293b',
-                        mb: 0.5,
-                        fontSize: '0.9rem'
-                      }}
-                    >
-                      {activity.title}
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        color: '#64748b',
-                        fontSize: '0.8rem',
-                        mb: 0.5,
-                        lineHeight: 1.4,
-                      }}
-                    >
-                      {activity.description}
-                    </Typography>
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        color: '#94a3b8',
-                        fontWeight: 500,
-                        fontSize: '0.75rem',
-                      }}
-                    >
-                      {format(activity.timestamp.toDate(), 'dd/MM/yyyy HH:mm', { locale: es })}
-                    </Typography>
-                  </Box>
-                </Box>
-              ))}
-              {activities.length === 0 && (
-                <Box sx={{ textAlign: 'center', py: 3 }}>
-                  <Typography variant="body2" sx={{ color: '#94a3b8' }}>
-                    No hay actividad reciente
-                  </Typography>
-                </Box>
-              )}
-            </Stack>
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+            <Activity size={20} className="text-white" />
+          </div>
+          <div>
+            <h3 className="font-bold text-gray-900">Actividad Reciente</h3>
+            <p className="text-sm text-gray-500">Tus últimas acciones</p>
+          </div>
+        </div>
+        {onViewAll && (
+          <button
+            onClick={onViewAll}
+            className="text-blue-600 hover:text-blue-700 font-medium text-sm flex items-center gap-1"
+          >
+            Ver todo
+            <ArrowRight size={14} />
+          </button>
+        )}
+      </div>
+
+      {/* Timeline */}
+      {loading ? (
+        <div className="flex justify-center py-8">
+          <RefreshCw size={24} className="animate-spin text-gray-400" />
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {activities.slice(0, 5).map((activity, index) => (
+            <motion.div
+              key={activity.id}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.1 }}
+              className="flex items-start gap-3"
+            >
+              <div className={`
+                w-8 h-8 rounded-lg flex items-center justify-center text-white flex-shrink-0
+                ${getActivityColor(activity.type)}
+              `}>
+                {getActivityIcon(activity.type)}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-gray-900 text-sm">
+                  {activity.title}
+                </p>
+                <p className="text-sm text-gray-600 mb-1">
+                  {activity.description}
+                </p>
+                <p className="text-xs text-gray-400">
+                  {formatActivityTime(activity.timestamp)}
+                </p>
+              </div>
+            </motion.div>
+          ))}
+          {activities.length === 0 && (
+            <div className="text-center py-8">
+              <Activity size={32} className="text-gray-300 mx-auto mb-2" />
+              <p className="text-gray-500 text-sm">No hay actividad reciente</p>
+            </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      )}
     </motion.div>
   );
 };
 
-const MembershipHealthCard: React.FC<{
+// Membership Status Card
+const MembershipStatusCard: React.FC<{
   health: SocioMetrics['membershipHealth'];
   lastActivity: Date | null;
-  avgBeneficios: number;
-  categoriaFavorita: string;
+  streakDias: number;
+  proximoVencimiento: Date | null;
   loading: boolean;
-}> = ({ health, lastActivity, avgBeneficios, categoriaFavorita, loading }) => {
-  const getHealthColor = () => {
-    const colors = {
-      excellent: '#10b981',
-      good: '#6366f1',
-      warning: '#f59e0b',
-      critical: '#ef4444',
+}> = ({ health, lastActivity, streakDias, proximoVencimiento, loading }) => {
+  const getHealthConfig = () => {
+    const configs = {
+      excellent: {
+        color: 'text-emerald-600',
+        bgColor: 'bg-emerald-50',
+        borderColor: 'border-emerald-200',
+        icon: <CheckCircle size={20} />,
+        label: 'Excelente',
+        description: 'Socio muy activo'
+      },
+      good: {
+        color: 'text-blue-600',
+        bgColor: 'bg-blue-50',
+        borderColor: 'border-blue-200',
+        icon: <Target size={20} />,
+        label: 'Bueno',
+        description: 'Socio activo'
+      },
+      warning: {
+        color: 'text-amber-600',
+        bgColor: 'bg-amber-50',
+        borderColor: 'border-amber-200',
+        icon: <Clock size={20} />,
+        label: 'Regular',
+        description: 'Puede mejorar'
+      },
+      critical: {
+        color: 'text-red-600',
+        bgColor: 'bg-red-50',
+        borderColor: 'border-red-200',
+        icon: <AlertCircle size={20} />,
+        label: 'Inactivo',
+        description: 'Requiere atención'
+      }
     };
-    return colors[health];
+    return configs[health];
   };
 
-  const getHealthIcon = () => {
-    const icons = {
-      excellent: <CheckCircle />,
-      good: <Speed />,
-      warning: <Warning />,
-      critical: <ErrorOutline />,
-    };
-    return icons[health];
-  };
-
-  const getHealthLabel = () => {
-    const labels = {
-      excellent: 'Excelente',
-      good: 'Bueno',
-      warning: 'Regular',
-      critical: 'Inactivo',
-    };
-    return labels[health];
-  };
+  const config = getHealthConfig();
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay: 0.4 }}
-      style={{ flex: '1 1 0', minWidth: '320px' }}
+      className="bg-white rounded-2xl border border-gray-200 p-6 h-full"
     >
-      <Card
-        elevation={0}
-        sx={{
-          border: '1px solid #f1f5f9',
-          borderRadius: 4,
-          overflow: 'hidden',
-          background: 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
-          height: '100%',
-        }}
-      >
-        <CardContent sx={{ p: 3 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-            <Avatar
-              sx={{
-                width: 44,
-                height: 44,
-                bgcolor: alpha(getHealthColor(), 0.1),
-                color: getHealthColor(),
-                borderRadius: 3,
-              }}
-            >
-              {loading ? <CircularProgress size={20} /> : getHealthIcon()}
-            </Avatar>
-            <Box>
-              <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', mb: 0.5 }}>
-                Estado de Socio
-              </Typography>
-              <Chip
-                label={getHealthLabel()}
-                size="small"
-                sx={{
-                  bgcolor: alpha(getHealthColor(), 0.1),
-                  color: getHealthColor(),
-                  fontWeight: 700,
-                  fontSize: '0.75rem',
-                }}
-              />
-            </Box>
-          </Box>
+      {/* Header */}
+      <div className="flex items-center gap-3 mb-6">
+        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${config.bgColor} ${config.color}`}>
+          {loading ? <RefreshCw size={20} className="animate-spin" /> : config.icon}
+        </div>
+        <div>
+          <h3 className="font-bold text-gray-900">Estado de Socio</h3>
+          <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${config.bgColor} ${config.color} ${config.borderColor} border`}>
+            {config.label}
+          </div>
+        </div>
+      </div>
 
-          <Stack spacing={3}>
-            {/* Last Activity */}
-            <Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-                <Typography variant="body2" sx={{ fontWeight: 600, color: '#475569' }}>
-                  Última actividad
-                </Typography>
-                <Typography variant="body2" sx={{ fontWeight: 700, color: '#1e293b', fontSize: '0.85rem' }}>
-                  {loading ? '...' : lastActivity ? format(lastActivity, 'dd/MM HH:mm') : 'Sin actividad'}
-                </Typography>
-              </Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Box
-                  sx={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: '50%',
-                    bgcolor: lastActivity && (Date.now() - lastActivity.getTime()) < 7 * 24 * 60 * 60 * 1000 ? '#10b981' : '#f59e0b',
-                  }}
-                />
-                <Typography variant="caption" sx={{ color: '#64748b' }}>
-                  {lastActivity && (Date.now() - lastActivity.getTime()) < 7 * 24 * 60 * 60 * 1000 
-                    ? 'Activo esta semana' 
-                    : 'Inactivo'
-                  }
-                </Typography>
-              </Box>
-            </Box>
+      {/* Stats Grid */}
+      <div className="grid grid-cols-2 gap-4 mb-6">
+        {/* Last Activity */}
+        <div className="text-center p-4 bg-gray-50 rounded-xl">
+          <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center mx-auto mb-2">
+            <Clock size={16} className="text-white" />
+          </div>
+          <p className="text-xs text-gray-500 mb-1">Última actividad</p>
+          <p className="font-bold text-gray-900 text-sm">
+            {loading ? '...' : lastActivity ? format(lastActivity, 'dd/MM', { locale: es }) : 'Sin actividad'}
+          </p>
+        </div>
 
-            {/* Average Benefits */}
-            <Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-                <Typography variant="body2" sx={{ fontWeight: 600, color: '#475569' }}>
-                  Promedio mensual
-                </Typography>
-                <Typography variant="body2" sx={{ fontWeight: 700, color: '#1e293b', fontSize: '0.85rem' }}>
-                  {loading ? '...' : `${avgBeneficios.toFixed(1)} beneficios`}
-                </Typography>
-              </Box>
-              <LinearProgress
-                variant="determinate"
-                value={loading ? 0 : Math.min((avgBeneficios / 5) * 100, 100)}
-                sx={{
-                  height: 6,
-                  borderRadius: 3,
-                  bgcolor: alpha('#e2e8f0', 0.5),
-                  '& .MuiLinearProgress-bar': {
-                    bgcolor: avgBeneficios > 3 ? '#10b981' : avgBeneficios > 1 ? '#f59e0b' : '#ef4444',
-                    borderRadius: 3,
-                  }
-                }}
-              />
-              <Typography variant="caption" sx={{ color: '#64748b', mt: 0.5, display: 'block' }}>
-                {loading ? '...' : avgBeneficios > 3 ? 'Usuario muy activo' : avgBeneficios > 1 ? 'Usuario activo' : 'Puede mejorar'}
-              </Typography>
-            </Box>
+        {/* Streak */}
+        <div className="text-center p-4 bg-gray-50 rounded-xl">
+          <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center mx-auto mb-2">
+            <Zap size={16} className="text-white" />
+          </div>
+          <p className="text-xs text-gray-500 mb-1">Racha de días</p>
+          <p className="font-bold text-gray-900 text-sm">
+            {loading ? '...' : `${streakDias} días`}
+          </p>
+        </div>
+      </div>
 
-            {/* Favorite Category */}
-            <Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-                <Typography variant="body2" sx={{ fontWeight: 600, color: '#475569' }}>
-                  Categoría favorita
-                </Typography>
-                <Typography variant="body2" sx={{ fontWeight: 700, color: '#1e293b', fontSize: '0.85rem' }}>
-                  {loading ? '...' : categoriaFavorita}
-                </Typography>
-              </Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Box
-                  sx={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: '50%',
-                    bgcolor: '#6366f1',
-                  }}
-                />
-                <Typography variant="caption" sx={{ color: '#64748b' }}>
-                  Basado en tu historial
-                </Typography>
-              </Box>
-            </Box>
-          </Stack>
-        </CardContent>
-      </Card>
+      {/* Membership Info */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-gray-600">Estado de membresía</span>
+          <span className="text-sm font-medium text-emerald-600">Activo</span>
+        </div>
+        
+        {proximoVencimiento && (
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-gray-600">Próximo vencimiento</span>
+            <span className="text-sm font-medium text-gray-900">
+              {format(proximoVencimiento, 'dd/MM/yyyy', { locale: es })}
+            </span>
+          </div>
+        )}
+
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-gray-600">Nivel de socio</span>
+          <div className="flex items-center gap-1">
+            <Star size={14} className="text-amber-500" />
+            <span className="text-sm font-medium text-gray-900">Premium</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Progress Bar */}
+      <div className="mt-6">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm text-gray-600">Progreso mensual</span>
+          <span className="text-sm font-medium text-gray-900">75%</span>
+        </div>
+        <div className="w-full bg-gray-200 rounded-full h-2">
+          <div className="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full w-3/4 transition-all duration-1000" />
+        </div>
+      </div>
     </motion.div>
+  );
+};
+
+// Quick Stats Component
+const QuickStats: React.FC<{
+  beneficiosDisponibles: number;
+  ahorroMensual: number;
+  categoriaFavorita: string;
+  loading: boolean;
+}> = ({ beneficiosDisponibles, ahorroMensual, categoriaFavorita, loading }) => {
+  const stats = [
+    {
+      label: 'Beneficios disponibles',
+      value: beneficiosDisponibles,
+      icon: <Gift size={16} />,
+      color: 'text-purple-600',
+      bgColor: 'bg-purple-50'
+    },
+    {
+      label: 'Ahorro este mes',
+      value: `$${ahorroMensual.toLocaleString()}`,
+      icon: <DollarSign size={16} />,
+      color: 'text-emerald-600',
+      bgColor: 'bg-emerald-50'
+    },
+    {
+      label: 'Categoría favorita',
+      value: categoriaFavorita,
+      icon: <Heart size={16} />,
+      color: 'text-pink-600',
+      bgColor: 'bg-pink-50'
+    }
+  ];
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+      {stats.map((stat, index) => (
+        <motion.div
+          key={stat.label}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: index * 0.1 }}
+          className="bg-white rounded-xl border border-gray-200 p-4"
+        >
+          <div className="flex items-center gap-3">
+            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${stat.bgColor} ${stat.color}`}>
+              {stat.icon}
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">{stat.label}</p>
+              <p className="font-bold text-gray-900">
+                {loading ? '...' : stat.value}
+              </p>
+            </div>
+          </div>
+        </motion.div>
+      ))}
+    </div>
   );
 };
 
@@ -625,11 +523,13 @@ export const SocioOverviewDashboard: React.FC<SocioOverviewDashboardProps> = ({
     lastActivity: null,
     avgBeneficiosMensuales: 0,
     categoriaFavorita: 'General',
+    streakDias: 0,
+    proximoVencimiento: null,
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Memoize the calculation function to prevent unnecessary recalculations
+  // Calculate metrics from beneficios
   const calculateMetrics = useCallback(() => {
     if (!user || beneficiosLoading) {
       return null;
@@ -638,6 +538,8 @@ export const SocioOverviewDashboard: React.FC<SocioOverviewDashboardProps> = ({
     try {
       const now = new Date();
       const monthAgo = subDays(now, 30);
+      const weekStart = startOfWeek(now);
+      const weekEnd = endOfWeek(now);
 
       // Filter beneficios used this month
       const beneficiosEsteMes = beneficiosUsados.filter(b => 
@@ -661,12 +563,12 @@ export const SocioOverviewDashboard: React.FC<SocioOverviewDashboardProps> = ({
         .reduce((total, b) => total + (b.montoDescuento || 0), 0);
 
       // Calculate average monthly benefits
-      const avgBeneficiosMensuales = beneficiosUsados.length > 0 ? beneficiosUsados.length / 3 : 0; // Assuming 3 months of data
+      const avgBeneficiosMensuales = beneficiosUsados.length > 0 ? beneficiosUsados.length / 3 : 0;
 
       // Determine membership health
       let membershipHealth: SocioMetrics['membershipHealth'] = 'good';
-      if (avgBeneficiosMensuales > 3) membershipHealth = 'excellent';
-      else if (avgBeneficiosMensuales > 1) membershipHealth = 'good';
+      if (avgBeneficiosMensuales > 5) membershipHealth = 'excellent';
+      else if (avgBeneficiosMensuales > 2) membershipHealth = 'good';
       else if (avgBeneficiosMensuales > 0) membershipHealth = 'warning';
       else membershipHealth = 'critical';
 
@@ -675,8 +577,14 @@ export const SocioOverviewDashboard: React.FC<SocioOverviewDashboardProps> = ({
         ? beneficiosUsados.sort((a, b) => b.fechaUso.toDate().getTime() - a.fechaUso.toDate().getTime())[0].fechaUso.toDate()
         : null;
 
+      // Calculate streak days (mock calculation)
+      const streakDias = Math.floor(Math.random() * 15) + 1;
+
       // Get favorite category (mock for now)
-      const categoriaFavorita = 'Restaurantes'; // This would be calculated from actual usage data
+      const categoriaFavorita = 'Restaurantes';
+
+      // Mock próximo vencimiento
+      const proximoVencimiento = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
 
       // Create sample activities
       const recentActivities: ActivityLog[] = beneficiosUsados
@@ -702,6 +610,8 @@ export const SocioOverviewDashboard: React.FC<SocioOverviewDashboardProps> = ({
         lastActivity,
         avgBeneficiosMensuales: Math.round(avgBeneficiosMensuales * 100) / 100,
         categoriaFavorita,
+        streakDias,
+        proximoVencimiento,
       };
     } catch (err) {
       console.error('Error calculating socio metrics:', err);
@@ -709,7 +619,7 @@ export const SocioOverviewDashboard: React.FC<SocioOverviewDashboardProps> = ({
     }
   }, [user, beneficios, beneficiosUsados, beneficiosLoading]);
 
-  // Calculate metrics from beneficios with proper dependencies
+  // Calculate metrics with proper dependencies
   useEffect(() => {
     const metrics = calculateMetrics();
     
@@ -726,8 +636,8 @@ export const SocioOverviewDashboard: React.FC<SocioOverviewDashboardProps> = ({
     {
       title: 'Beneficios Disponibles',
       value: socioMetrics.beneficiosDisponibles.toLocaleString(),
-      change: socioMetrics.beneficiosDisponibles > 0 ? 100 : 0,
-      icon: <LocalOffer sx={{ fontSize: 28 }} />,
+      change: socioMetrics.beneficiosDisponibles > 5 ? 25 : 0,
+      icon: <Gift size={24} />,
       color: '#6366f1',
       gradient: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
       delay: 0,
@@ -740,7 +650,7 @@ export const SocioOverviewDashboard: React.FC<SocioOverviewDashboardProps> = ({
       title: 'Total Ahorrado',
       value: `$${socioMetrics.ahorroTotal.toLocaleString()}`,
       change: socioMetrics.crecimientoMensual,
-      icon: <Savings sx={{ fontSize: 28 }} />,
+      icon: <DollarSign size={24} />,
       color: '#10b981',
       gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
       delay: 0.1,
@@ -753,7 +663,7 @@ export const SocioOverviewDashboard: React.FC<SocioOverviewDashboardProps> = ({
       title: 'Este Mes',
       value: socioMetrics.beneficiosEsteMes.toString(),
       change: socioMetrics.crecimientoMensual,
-      icon: <CardGiftcard sx={{ fontSize: 28 }} />,
+      icon: <ShoppingBag size={24} />,
       color: '#f59e0b',
       gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
       delay: 0.2,
@@ -766,219 +676,106 @@ export const SocioOverviewDashboard: React.FC<SocioOverviewDashboardProps> = ({
       title: 'Notificaciones',
       value: notificationStats.unread.toString(),
       change: notificationStats.unread > 0 ? 100 : 0,
-      icon: <NotificationsActive sx={{ fontSize: 28 }} />,
+      icon: <Bell size={24} />,
       color: '#ec4899',
       gradient: 'linear-gradient(135deg, #ec4899 0%, #be185d 100%)',
       delay: 0.3,
       subtitle: 'Sin leer',
       trend: notificationStats.unread > 3 ? 'up' as const : 'neutral' as const,
       onClick: () => onNavigate?.('notificaciones'),
-      loading: false
+      loading: false,
+      badge: notificationStats.unread > 0 ? notificationStats.unread.toString() : undefined
     }
   ], [socioMetrics, notificationStats, loading, onNavigate]);
 
   if (error) {
     return (
-      <Container maxWidth="xl" sx={{ py: 4 }}>
-        <Alert severity="error" sx={{ mb: 4 }}>
-          {error}
-        </Alert>
-      </Container>
+      <div className="p-6">
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+          <div className="flex items-center gap-3">
+            <AlertCircle size={20} className="text-red-600" />
+            <p className="text-red-700 font-medium">{error}</p>
+          </div>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Container maxWidth="xl" sx={{ py: 4 }}>
+    <div className="p-6 space-y-8">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
+        className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6"
       >
-        <Box sx={{ mb: 6 }}>
-          <Box sx={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'space-between', 
-            mb: 4,
-            flexWrap: 'wrap',
-            gap: 3
-          }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-              <Avatar
-                sx={{
-                  width: 64,
-                  height: 64,
-                  borderRadius: 4,
-                  background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%)',
-                  boxShadow: '0 12px 40px rgba(99, 102, 241, 0.3)',
-                }}
-              >
-                <Person sx={{ fontSize: 32 }} />
-              </Avatar>
-              <Box>
-                <Typography
-                  variant="h3"
-                  sx={{
-                    fontWeight: 900,
-                    fontSize: { xs: '2rem', md: '2.5rem' },
-                    background: 'linear-gradient(135deg, #0f172a 0%, #6366f1 60%, #8b5cf6 100%)',
-                    backgroundClip: 'text',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    letterSpacing: '-0.03em',
-                    lineHeight: 0.9,
-                    mb: 1,
-                  }}
-                >
-                  Mi Dashboard
-                </Typography>
-                <Typography
-                  variant="h6"
-                  sx={{
-                    color: '#64748b',
-                    fontWeight: 600,
-                    fontSize: { xs: '1rem', md: '1.2rem' },
-                  }}
-                >
-                  ¡Hola, {user?.nombre || 'Socio'}! • Socio activo
-                </Typography>
-              </Box>
-            </Box>
-            
-            <Stack direction="row" spacing={2}>
-              <IconButton
-                onClick={() => window.location.reload()}
-                sx={{
-                  bgcolor: alpha('#6366f1', 0.1),
-                  color: '#6366f1',
-                  '&:hover': {
-                    bgcolor: alpha('#6366f1', 0.2),
-                    transform: 'rotate(180deg)',
-                  },
-                  transition: 'all 0.3s ease',
-                }}
-              >
-                <Refresh />
-              </IconButton>
-              <Button
-                onClick={onScanQR}
-                variant="contained"
-                startIcon={<QrCodeScanner />}
-                size="large"
-                sx={{
-                  py: 2,
-                  px: 4,
-                  borderRadius: 3,
-                  textTransform: 'none',
-                  fontWeight: 700,
-                  background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-                  boxShadow: '0 8px 32px rgba(99, 102, 241, 0.3)',
-                  '&:hover': {
-                    background: 'linear-gradient(135deg, #5b21b6 0%, #7c3aed 100%)',
-                    transform: 'translateY(-2px)',
-                    boxShadow: '0 12px 40px rgba(99, 102, 241, 0.4)',
-                  },
-                  transition: 'all 0.3s ease'
-                }}
-              >
-                Escanear QR
-              </Button>
-            </Stack>
-          </Box>
-          
-          {/* Status Banner */}
-          <Paper
-            elevation={0}
-            sx={{
-              bgcolor: alpha('#10b981', 0.05),
-              border: `2px solid ${alpha('#10b981', 0.15)}`,
-              borderRadius: 4,
-              p: 3,
-              position: 'relative',
-              overflow: 'hidden',
-              '&::before': {
-                content: '""',
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                height: '3px',
-                background: 'linear-gradient(90deg, #10b981, #059669, #047857)',
-              }
-            }}
+        <div>
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">
+            ¡Hola, {user?.nombre || 'Socio'}! 👋
+          </h1>
+          <p className="text-xl text-gray-600">
+            Bienvenido a tu panel de beneficios
+          </p>
+          <div className="flex items-center gap-2 mt-3">
+            <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse" />
+            <span className="text-sm font-medium text-emerald-600">
+              Socio activo • {format(new Date(), 'EEEE, dd MMMM yyyy', { locale: es })}
+            </span>
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => window.location.reload()}
+            className="p-3 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors duration-200"
           >
-            <Box sx={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: 3,
-              flexWrap: 'wrap',
-              justifyContent: 'space-between'
-            }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                <Box
-                  sx={{
-                    width: 12,
-                    height: 12,
-                    bgcolor: '#10b981',
-                    borderRadius: '50%',
-                    animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                    '@keyframes pulse': {
-                      '0%, 100%': { opacity: 1, transform: 'scale(1)' },
-                      '50%': { opacity: 0.5, transform: 'scale(1.1)' },
-                    },
-                  }}
-                />
-                <Typography variant="body1" sx={{ color: '#047857', fontWeight: 700, fontSize: '1.1rem' }}>
-                  <Box component="span" sx={{ fontWeight: 900 }}>Socio activo</Box> - Disfruta todos tus beneficios
-                </Typography>
-              </Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <CalendarToday sx={{ fontSize: 18, color: '#059669' }} />
-                <Typography variant="body2" sx={{ color: '#059669', fontWeight: 700 }}>
-                  {format(new Date(), 'EEEE, dd MMMM yyyy', { locale: es })}
-                </Typography>
-              </Box>
-            </Box>
-          </Paper>
-        </Box>
+            <RefreshCw size={20} className="text-gray-600" />
+          </button>
+          <button
+            onClick={onScanQR}
+            className="bg-gradient-to-r from-violet-500 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-violet-600 hover:to-purple-700 transition-all duration-200 flex items-center gap-2 shadow-lg"
+          >
+            <QrCodeScanner size={20} />
+            Escanear QR
+          </button>
+        </div>
       </motion.div>
 
+      {/* Quick Stats */}
+      <QuickStats
+        beneficiosDisponibles={socioMetrics.beneficiosDisponibles}
+        ahorroMensual={socioMetrics.ahorroMensual}
+        categoriaFavorita={socioMetrics.categoriaFavorita}
+        loading={loading}
+      />
+
       {/* KPI Cards */}
-      <Box sx={{ 
-        display: 'flex', 
-        flexWrap: 'wrap', 
-        gap: 3, 
-        mb: 6,
-        '& > *': {
-          minWidth: { xs: '100%', sm: 'calc(50% - 12px)', lg: 'calc(25% - 18px)' }
-        }
-      }}>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {kpiMetrics.map((metric, index) => (
           <KPICard key={index} {...metric} />
         ))}
-      </Box>
+      </div>
 
       {/* Secondary Cards */}
-      <Box sx={{ 
-        display: 'flex', 
-        flexWrap: 'wrap', 
-        gap: 4,
-        alignItems: 'stretch'
-      }}>
-        <ActivityCard
-          activities={socioMetrics.recentActivities}
-          loading={loading}
-          onViewAll={() => onNavigate?.('beneficios')}
-        />
-        <MembershipHealthCard
-          health={socioMetrics.membershipHealth}
-          lastActivity={socioMetrics.lastActivity}
-          avgBeneficios={socioMetrics.avgBeneficiosMensuales}
-          categoriaFavorita={socioMetrics.categoriaFavorita}
-          loading={loading}
-        />
-      </Box>
-    </Container>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+          <ActivityTimeline
+            activities={socioMetrics.recentActivities}
+            loading={loading}
+            onViewAll={() => onNavigate?.('beneficios')}
+          />
+        </div>
+        <div>
+          <MembershipStatusCard
+            health={socioMetrics.membershipHealth}
+            lastActivity={socioMetrics.lastActivity}
+            streakDias={socioMetrics.streakDias}
+            proximoVencimiento={socioMetrics.proximoVencimiento}
+            loading={loading}
+          />
+        </div>
+      </div>
+    </div>
   );
 };
