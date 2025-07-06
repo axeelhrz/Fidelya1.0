@@ -4,7 +4,6 @@ import React, { useState, useEffect, useMemo } from 'react';
 import {
   Box,
   Typography,
-  Grid,
   Paper,
   Stack,
   Button,
@@ -315,29 +314,31 @@ const SystemStatusCard: React.FC<{
           </Typography>
         </Box>
 
-        {/* Metrics Grid */}
-        <Grid container spacing={3}>
-          <Grid item xs={6}>
-            <Box sx={{ textAlign: 'center', p: 3, bgcolor: '#f8fafc', borderRadius: 3 }}>
-              <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 700, mb: 1 }}>
-                Último Respaldo
-              </Typography>
-              <Typography variant="h6" sx={{ fontWeight: 800, color: '#1e293b' }}>
-                {loading ? '...' : health.lastBackup ? format(health.lastBackup, 'dd/MM HH:mm') : 'Nunca'}
-              </Typography>
-            </Box>
-          </Grid>
-          <Grid item xs={6}>
-            <Box sx={{ textAlign: 'center', p: 3, bgcolor: '#f8fafc', borderRadius: 3 }}>
-              <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 700, mb: 1 }}>
-                Respuesta
-              </Typography>
-              <Typography variant="h6" sx={{ fontWeight: 800, color: '#1e293b' }}>
-                {loading ? '...' : `${health.responseTime}ms`}
-              </Typography>
-            </Box>
-          </Grid>
-        </Grid>
+        {/* Metrics using CSS Grid */}
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: 3,
+          }}
+        >
+          <Box sx={{ textAlign: 'center', p: 3, bgcolor: '#f8fafc', borderRadius: 3 }}>
+            <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 700, mb: 1 }}>
+              Último Respaldo
+            </Typography>
+            <Typography variant="h6" sx={{ fontWeight: 800, color: '#1e293b' }}>
+              {loading ? '...' : health.lastBackup ? format(health.lastBackup, 'dd/MM HH:mm') : 'Nunca'}
+            </Typography>
+          </Box>
+          <Box sx={{ textAlign: 'center', p: 3, bgcolor: '#f8fafc', borderRadius: 3 }}>
+            <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 700, mb: 1 }}>
+              Respuesta
+            </Typography>
+            <Typography variant="h6" sx={{ fontWeight: 800, color: '#1e293b' }}>
+              {loading ? '...' : `${health.responseTime}ms`}
+            </Typography>
+          </Box>
+        </Box>
       </Stack>
     </Paper>
   );
@@ -750,10 +751,44 @@ const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
           </Paper>
         </Box>
 
-        {/* Main Content */}
-        <Grid container spacing={4}>
+        {/* Main Content using CSS Grid */}
+        <Box
+          sx={{
+            display: 'grid',
+            gap: 4,
+            gridTemplateColumns: {
+              xs: '1fr',
+              sm: 'repeat(2, 1fr)',
+              lg: 'repeat(4, 1fr)',
+            },
+            gridTemplateRows: 'auto',
+            gridTemplateAreas: {
+              xs: `
+                "metric1"
+                "metric2"
+                "metric3"
+                "metric4"
+                "activity"
+                "system"
+                "actions"
+              `,
+              sm: `
+                "metric1 metric2"
+                "metric3 metric4"
+                "activity activity"
+                "system system"
+                "actions actions"
+              `,
+              lg: `
+                "metric1 metric2 metric3 metric4"
+                "activity activity activity system"
+                "actions actions actions actions"
+              `,
+            },
+          }}
+        >
           {/* KPI Metrics */}
-          <Grid item xs={12} sm={6} lg={3}>
+          <Box sx={{ gridArea: 'metric1' }}>
             <MetricCard
               title="Total Socios"
               value={stats.total}
@@ -765,9 +800,9 @@ const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
               onClick={() => onNavigate('all-members')}
               loading={sociosLoading}
             />
-          </Grid>
+          </Box>
           
-          <Grid item xs={12} sm={6} lg={3}>
+          <Box sx={{ gridArea: 'metric2' }}>
             <MetricCard
               title="Socios Activos"
               value={stats.activos}
@@ -779,9 +814,9 @@ const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
               onClick={() => onNavigate('active-members')}
               loading={sociosLoading}
             />
-          </Grid>
+          </Box>
           
-          <Grid item xs={12} sm={6} lg={3}>
+          <Box sx={{ gridArea: 'metric3' }}>
             <MetricCard
               title="Notificaciones"
               value={notificationStats.unread}
@@ -792,9 +827,9 @@ const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
               trendValue={notificationStats.unread > 5 ? 25 : 0}
               onClick={() => onNavigate('notifications')}
             />
-          </Grid>
+          </Box>
           
-          <Grid item xs={12} sm={6} lg={3}>
+          <Box sx={{ gridArea: 'metric4' }}>
             <MetricCard
               title="Socios Vencidos"
               value={stats.vencidos}
@@ -806,27 +841,27 @@ const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
               onClick={() => onNavigate('expired-members')}
               loading={sociosLoading}
             />
-          </Grid>
+          </Box>
 
           {/* Activity Feed */}
-          <Grid item xs={12} lg={8}>
+          <Box sx={{ gridArea: 'activity' }}>
             <ActivityFeedCard
               activities={activities}
               loading={loading}
               onViewAll={() => onNavigate('notifications')}
             />
-          </Grid>
+          </Box>
 
           {/* System Health */}
-          <Grid item xs={12} lg={4}>
+          <Box sx={{ gridArea: 'system' }}>
             <SystemStatusCard
               health={{ ...systemHealth, status: healthStatus }}
               loading={loading}
             />
-          </Grid>
+          </Box>
 
           {/* Quick Actions */}
-          <Grid item xs={12}>
+          <Box sx={{ gridArea: 'actions' }}>
             <Paper
               elevation={0}
               sx={{
@@ -839,48 +874,57 @@ const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
               <Typography variant="h5" sx={{ fontWeight: 700, color: '#1e293b', mb: 4 }}>
                 Acciones Rápidas
               </Typography>
-              <Grid container spacing={3}>
+              <Box
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: {
+                    xs: '1fr',
+                    sm: 'repeat(2, 1fr)',
+                    md: 'repeat(4, 1fr)',
+                  },
+                  gap: 3,
+                }}
+              >
                 {quickActions.map((action, index) => (
-                  <Grid item xs={12} sm={6} md={3} key={index}>
-                    <Button
-                      onClick={action.onClick}
-                      variant="outlined"
-                      startIcon={action.icon}
-                      fullWidth
-                      sx={{
-                        py: 3,
-                        px: 4,
-                        borderColor: '#e2e8f0',
-                        color: action.color,
-                        textTransform: 'none',
-                        fontWeight: 700,
-                        justifyContent: 'flex-start',
-                        flexDirection: 'column',
-                        alignItems: 'flex-start',
-                        height: '120px',
-                        '&:hover': {
-                          borderColor: action.color,
-                          bgcolor: `${action.color}08`,
-                        },
-                        '& .MuiButton-startIcon': {
-                          margin: 0,
-                          mb: 2,
-                        }
-                      }}
-                    >
-                      <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5 }}>
-                        {action.title}
-                      </Typography>
-                      <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 600 }}>
-                        {action.description}
-                      </Typography>
-                    </Button>
-                  </Grid>
+                  <Button
+                    key={index}
+                    onClick={action.onClick}
+                    variant="outlined"
+                    startIcon={action.icon}
+                    fullWidth
+                    sx={{
+                      py: 3,
+                      px: 4,
+                      borderColor: '#e2e8f0',
+                      color: action.color,
+                      textTransform: 'none',
+                      fontWeight: 700,
+                      justifyContent: 'flex-start',
+                      flexDirection: 'column',
+                      alignItems: 'flex-start',
+                      height: '120px',
+                      '&:hover': {
+                        borderColor: action.color,
+                        bgcolor: `${action.color}08`,
+                      },
+                      '& .MuiButton-startIcon': {
+                        margin: 0,
+                        mb: 2,
+                      }
+                    }}
+                  >
+                    <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5 }}>
+                      {action.title}
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 600 }}>
+                      {action.description}
+                    </Typography>
+                  </Button>
                 ))}
-              </Grid>
+              </Box>
             </Paper>
-          </Grid>
-        </Grid>
+          </Box>
+        </Box>
       </Container>
     </Box>
   );
