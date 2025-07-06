@@ -7112,4 +7112,449 @@ animation: contact-loading-spin 1s linear infinite;
 100% { transform: rotate(360deg); }
 }
 
+/* ===== MEJORAS ORGANIZACIONALES DEL NAVBAR EXISTENTE ===== */
+
+/* Asegurar que el navbar tenga mejor organización y espaciado */
+.nav {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: var(--max-content-width);
+    height: 100%;
+    padding: var(--space-md) var(--section-padding-x);
+    margin: 0 auto;
+    overflow: visible;
+    pointer-events: none;
+    gap: var(--space-2xl); /* MEJOR ESPACIADO ENTRE ELEMENTOS */
+}
+
+/* Mejorar el logo con efectos más sutiles */
+.nav__logo {
+    position: relative;
+    width: 55px;
+    height: 55px;
+    cursor: pointer;
+    image-rendering: optimize-contrast;
+    image-rendering: crisp-edges;
+    background-image: url('../assets/logo.avif');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    border-radius: 18px;
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    
+    /* MEJORA: Sombra más sutil y profesional */
+    filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.3)) 
+           drop-shadow(0 0 15px rgba(255, 69, 105, 0.2));
+}
+
+.nav__logo:hover {
+    /* MEJORA: Hover más elegante */
+    filter: drop-shadow(0 12px 30px rgba(0, 0, 0, 0.4)) 
+           drop-shadow(0 0 25px rgba(255, 69, 105, 0.35));
+    transform: translateY(-2px) scale(1.05);
+}
+
+/* Mejorar el menú central para mejor organización */
+.nav__menu {
+    position: absolute;
+    top: 50%;
+    left: 44%;
+    width: auto;
+    max-width: calc(100vw - 500px); /* MEJORA: Más espacio para el CTA */
+    overflow: visible;
+    pointer-events: auto;
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    transform: translate(-50%, -50%);
+}
+
+.nav__list {
+    position: relative;
+    display: flex;
+    gap: var(--space-md); /* MEJORA: Mejor espaciado entre enlaces */
+    align-items: center;
+    width: auto;
+    padding: var(--space-lg) var(--space-4xl);
+    overflow: hidden;
+    white-space: nowrap;
+    list-style: none;
+    background: linear-gradient(135deg,
+        rgba(15, 20, 30, 0.85) 0%,
+        rgba(21, 25, 34, 0.8) 25%,
+        rgba(18, 23, 32, 0.82) 50%,
+        rgba(21, 25, 34, 0.8) 75%,
+        rgba(15, 20, 30, 0.85) 100%
+    );
+    backdrop-filter: blur(25px) saturate(180%);
+    border: 1px solid rgba(255, 69, 105, 0.2);
+    border-radius: 60px;
+    box-shadow:
+        0 20px 60px rgba(0, 0, 0, 0.4),
+        0 8px 30px rgba(0, 0, 0, 0.3),
+        0 0 0 1px rgba(255, 69, 105, 0.15),
+        inset 0 3px 0 rgba(255, 255, 255, 0.15),
+        inset 0 -2px 0 rgba(0, 0, 0, 0.3);
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Mejorar los enlaces con mejor organización */
+.nav__link {
+    position: relative;
+    z-index: 2;
+    flex-shrink: 0;
+    padding: var(--space-md) var(--space-xl); /* MEJORA: Padding más consistente */
+    overflow: hidden;
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-decoration: none;
+    text-transform: uppercase;
+    letter-spacing: 1px; /* MEJORA: Mejor legibilidad */
+    white-space: nowrap;
+    border-radius: 30px;
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Mejorar el CTA para que esté más a la derecha y sea más prominente */
+.nav__cta {
+    position: relative;
+    z-index: calc(var(--navbar-z-index) + 1);
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    min-width: 280px; /* MEJORA: Más ancho garantizado */
+    padding: 0;
+    margin: 0;
+    margin-left: auto; /* MEJORA: Empujar completamente a la derecha */
+    pointer-events: auto;
+}
+
+.btn--premium {
+    position: relative;
+    min-width: 240px; /* MEJORA: Botón más ancho */
+    padding: var(--space-lg) var(--space-3xl); /* MEJORA: Más padding */
+    overflow: hidden;
+    font-family: var(--font-mono);
+    font-size: 0.9rem; /* MEJORA: Texto más legible */
+    font-weight: 800;
+    color: #fff;
+    text-decoration: none;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    white-space: nowrap;
+    border: 2px solid rgb(255 69 105 / 40%);
+    border-radius: 35px;
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    transform: translateZ(0);
+    will-change: transform, box-shadow;
+    backface-visibility: hidden;
+    
+    /* MEJORA: Gradiente más vibrante */
+    background: linear-gradient(135deg,
+        var(--starflex-crimson-dark) 0%,
+        var(--starflex-crimson) 25%,
+        var(--starflex-crimson-light) 50%,
+        var(--starflex-crimson-glow) 75%,
+        var(--starflex-crimson-bright) 100%
+    );
+    
+    /* MEJORA: Sombras más impactantes */
+    box-shadow:
+        0 12px 35px rgb(255 45 85 / 45%),
+        0 0 25px rgb(255 45 85 / 35%),
+        inset 0 2px 0 rgb(255 255 255 / 20%),
+        inset 0 -1px 0 rgb(0 0 0 / 15%);
+}
+
+.btn--premium:hover {
+    /* MEJORA: Hover más dramático */
+    border-color: rgb(255 69 105 / 70%);
+    box-shadow:
+        0 18px 50px rgb(255 45 85 / 60%),
+        0 0 35px rgb(255 45 85 / 45%),
+        0 0 60px rgb(255 45 85 / 25%),
+        inset 0 2px 0 rgb(255 255 255 / 30%),
+        inset 0 -1px 0 rgb(0 0 0 / 20%);
+    transform: translateY(-4px) scale(1.03); /* MEJORA: Más movimiento */
+}
+
+/* Mejorar el botón hamburguesa */
+.nav__toggle {
+    position: relative;
+    z-index: calc(var(--navbar-z-index) + 2);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 52px; /* MEJORA: Más grande */
+    height: 52px;
+    overflow: hidden;
+    pointer-events: auto;
+    cursor: pointer;
+    background: linear-gradient(135deg,
+        rgb(21 25 34 / 98%) 0%,
+        rgb(30 35 48 / 96%) 25%,
+        rgb(25 30 40 / 97%) 50%,
+        rgb(30 35 48 / 96%) 75%,
+        rgb(21 25 34 / 98%) 100%
+    );
+    backdrop-filter: blur(30px) saturate(180%);
+    border: 1px solid rgb(255 69 105 / 25%);
+    border-radius: 18px;
+    box-shadow:
+        0 10px 30px rgb(0 0 0 / 40%),
+        0 0 20px rgb(255 45 85 / 20%),
+        inset 0 2px 0 rgb(255 255 255 / 10%),
+        inset 0 -1px 0 rgb(0 0 0 / 20%);
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.nav__toggle:hover {
+    /* MEJORA: Hover más elegante */
+    border-color: var(--starflex-crimson-bright);
+    box-shadow:
+        0 15px 40px rgb(0 0 0 / 50%),
+        0 0 30px rgb(255 45 85 / 35%),
+        inset 0 2px 0 rgb(255 255 255 / 15%),
+        inset 0 -1px 0 rgb(0 0 0 / 30%);
+    transform: translateY(-2px) scale(1.03);
+}
+
+/* Mejorar las líneas del hamburguesa */
+.nav__toggle-line {
+    position: relative;
+    width: 28px; /* MEJORA: Líneas más largas */
+    height: 3px;
+    background: linear-gradient(90deg, 
+        #fff 0%, 
+        #f1f5f9 50%, 
+        #fff 100%
+    );
+    border-radius: 4px;
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    transform-origin: center;
+    box-shadow: 0 0 12px rgb(255 255 255 / 25%); /* MEJORA: Más brillo */
+}
+
+.nav__toggle-line:not(:last-child) {
+    margin-bottom: 7px; /* MEJORA: Mejor espaciado */
+}
+
+/* Responsive mejorado con mejor organización */
+@media (width <= 1400px) {
+    .nav__menu {
+        max-width: calc(100vw - 450px); /* MEJORA: Más espacio para CTA */
+    }
+    
+    .nav__cta {
+        min-width: 250px;
+    }
+    
+    .btn--premium {
+        min-width: 200px;
+        padding: var(--space-md) var(--space-2xl);
+        font-size: 0.85rem;
+    }
+}
+
+@media (width <= 1200px) {
+    .nav__menu {
+        max-width: calc(100vw - 380px);
+    }
+    
+    .nav__list {
+        padding: var(--space-md) var(--space-3xl);
+        gap: var(--space-sm);
+    }
+    
+    .nav__link {
+        padding: var(--space-sm) var(--space-lg);
+        font-size: 0.85rem;
+    }
+    
+    .nav__cta {
+        min-width: 220px;
+    }
+    
+    .btn--premium {
+        min-width: 180px;
+        padding: var(--space-sm) var(--space-xl);
+        font-size: 0.8rem;
+    }
+}
+
+@media (width <= 1023px) {
+    .nav__toggle {
+        display: flex;
+    }
+    
+    .nav__cta {
+        display: none;
+    }
+    
+    .nav__menu {
+        /* MEJORA: Drawer más organizado */
+        position: fixed;
+        top: 0;
+        left: -100%;
+        z-index: 1000;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        gap: clamp(1rem, 2.5vh, 1.25rem);
+        align-items: stretch;
+        justify-content: flex-start;
+        width: min(340px, 85vw); /* MEJORA: Drawer más ancho */
+        height: 100vh;
+        height: 100dvh;
+        padding: clamp(1.5rem, 4vw, 2rem);
+        padding-top: max(calc(env(safe-area-inset-top, 20px) + clamp(1.5rem, 4vw, 2rem)), calc(clamp(1.5rem, 4vw, 2rem) + 20px));
+        padding-bottom: max(calc(env(safe-area-inset-bottom, 20px) + clamp(1.5rem, 4vw, 2rem)), clamp(1.5rem, 4vw, 2rem));
+        overflow: hidden;
+        
+        /* MEJORA: Fondo más elegante */
+        background: linear-gradient(135deg,
+            rgba(10, 13, 20, 0.98) 0%,
+            rgba(21, 25, 34, 0.96) 25%,
+            rgba(30, 35, 48, 0.94) 50%,
+            rgba(25, 30, 40, 0.95) 75%,
+            rgba(21, 25, 34, 0.96) 100%
+        );
+        backdrop-filter: blur(35px) saturate(180%);
+        border-right: 3px solid rgba(255, 45, 85, 0.4); /* MEJORA: Borde más vibrante */
+        box-shadow:
+            0 0 80px rgba(0, 0, 0, 0.9),
+            inset 3px 0 0 rgba(255, 45, 85, 0.3),
+            inset 0 0 60px rgba(255, 45, 85, 0.1);
+        
+        transition: left 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        transform: none;
+        max-width: none;
+    }
+    
+    .nav__menu.active {
+        left: 0;
+    }
+    
+    /* MEJORA: Overlay más elegante */
+    .nav__menu::before {
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: -1;
+        display: block;
+        width: 100vw;
+        height: 100vh;
+        height: 100dvh;
+        pointer-events: none;
+        visibility: hidden;
+        content: '';
+        background: linear-gradient(135deg,
+            rgba(0, 0, 0, 0.8) 0%,
+            rgba(10, 13, 20, 0.85) 100%
+        );
+        backdrop-filter: blur(12px);
+        opacity: 0;
+        transition: all 0.4s ease;
+    }
+    
+    .nav__menu.active::before {
+        pointer-events: auto;
+        visibility: visible;
+        opacity: 1;
+    }
+    
+    /* MEJORA: Lista móvil más organizada */
+    .nav__list {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        gap: calc(clamp(1rem, 2.5vh, 1.25rem) * 0.5);
+        order: 2;
+        min-height: 0;
+        padding: 0;
+        margin: 0;
+        overflow: hidden;
+        list-style: none;
+        background: none;
+        backdrop-filter: none;
+        border: none;
+        border-radius: 0;
+        box-shadow: none;
+    }
+    
+    .nav__link {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        min-height: clamp(48px, 8vh, 58px); /* MEJORA: Enlaces más altos */
+        padding: clamp(1rem, 3vh, 1.25rem) clamp(1.5rem, 4.5vw, 2rem);
+        overflow: hidden;
+        font-size: clamp(0.9rem, 2.8vw, 1.1rem); /* MEJORA: Texto más grande */
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.85);
+        text-decoration: none;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        background: transparent;
+        border: none;
+        border-left: 4px solid transparent;
+        border-radius: 0 18px 18px 0; /* MEJORA: Bordes más redondeados */
+        transition: all 0.3s ease;
+    }
+}
+
+/* MEJORA: Mejor espaciado en móviles pequeños */
+@media (width <= 480px) {
+    .nav__logo {
+        width: 45px;
+        height: 45px;
+    }
+    
+    .nav__toggle {
+        width: 48px;
+        height: 48px;
+    }
+    
+    .nav__toggle-line {
+        width: 24px;
+        height: 2.5px;
+    }
+    
+    .nav__menu {
+        width: min(320px, 90vw); /* MEJORA: Drawer más ancho en móviles pequeños */
+        padding: clamp(1.25rem, 3.5vw, 1.5rem);
+    }
+}
+
+/* MEJORA: Animaciones más suaves */
+@keyframes navbar-pulse {
+    0%, 100% {
+        box-shadow:
+            0 20px 60px rgba(0, 0, 0, 0.4),
+            0 8px 30px rgba(0, 0, 0, 0.3),
+            0 0 0 1px rgba(255, 69, 105, 0.15),
+            inset 0 3px 0 rgba(255, 255, 255, 0.15),
+            inset 0 -2px 0 rgba(0, 0, 0, 0.3);
+    }
+    50% {
+        box-shadow:
+            0 25px 70px rgba(0, 0, 0, 0.45),
+            0 12px 40px rgba(0, 0, 0, 0.35),
+            0 0 0 1px rgba(255, 69, 105, 0.25),
+            0 0 25px rgba(255, 69, 105, 0.15),
+            inset 0 3px 0 rgba(255, 255, 255, 0.2),
+            inset 0 -2px 0 rgba(0, 0, 0, 0.35);
+    }
+}
+
+/* MEJORA: Pulso más sutil en el navbar */
+.nav__list {
+    animation: navbar-pulse 8s ease-in-out infinite;
+}
 
