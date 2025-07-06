@@ -215,12 +215,21 @@ export const SocioSidebar: React.FC<SocioSidebarProps> = ({
     }
   ];
 
-  const handleMenuClick = (item: MenuItem) => {
+  const handleMenuClick = (item: MenuItem, event?: React.MouseEvent) => {
+    // Prevenir que el click se propague y cause efectos no deseados
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+
+    // Navegar sin cambiar el estado del sidebar
     if (item.route) {
       router.push(item.route);
     } else if (onMenuClick) {
       onMenuClick(item.id);
     }
+
+    // NO llamamos a onToggle aquí para mantener el estado del sidebar
   };
 
   const isActive = (item: MenuItem) => {
@@ -295,16 +304,25 @@ export const SocioSidebar: React.FC<SocioSidebarProps> = ({
         whileTap={{ scale: 0.95 }}
         className="relative group"
       >
-        {/* Tooltip */}
+        {/* Tooltip mejorado */}
         <div className="absolute left-full ml-4 top-1/2 -translate-y-1/2 z-50 opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none">
           <div className="bg-slate-900/95 backdrop-blur-xl text-white px-4 py-3 rounded-2xl shadow-2xl border border-white/10 min-w-[200px]">
             <div className="font-semibold text-sm mb-1">{item.label}</div>
             {item.description && (
               <div className="text-xs text-slate-300 opacity-80">{item.description}</div>
             )}
-            {item.badge && (
+            {item.badge && typeof item.badge === 'number' && item.badge > 0 && (
               <div className="text-xs text-blue-300 mt-1 font-medium">
-                {typeof item.badge === 'number' && item.badge > 0 ? `${item.badge} nuevos` : item.badge}
+                {item.id === 'beneficios' ? `${item.badge} disponibles` : 
+                 item.id === 'notificaciones' ? `${item.badge} nuevas` : 
+                 item.badge}
+              </div>
+            )}
+            {/* Indicador de página activa */}
+            {active && (
+              <div className="text-xs text-green-300 mt-1 font-medium flex items-center gap-1">
+                <div className="w-2 h-2 bg-green-400 rounded-full" />
+                Página actual
               </div>
             )}
             {/* Arrow */}
@@ -313,7 +331,7 @@ export const SocioSidebar: React.FC<SocioSidebarProps> = ({
         </div>
 
         <button
-          onClick={() => handleMenuClick(item)}
+          onClick={(e) => handleMenuClick(item, e)}
           className={`
             relative w-14 h-14 rounded-2xl mx-auto mb-3 transition-all duration-500 ease-out
             flex items-center justify-center overflow-hidden group
@@ -376,7 +394,7 @@ export const SocioSidebar: React.FC<SocioSidebarProps> = ({
         className="mb-3"
       >
         <button
-          onClick={() => handleMenuClick(item)}
+          onClick={(e) => handleMenuClick(item, e)}
           className={`
             relative w-full px-4 py-3 rounded-2xl transition-all duration-500 ease-out
             flex items-center group overflow-hidden min-h-[56px]
@@ -524,6 +542,7 @@ export const SocioSidebar: React.FC<SocioSidebarProps> = ({
               whileTap={{ scale: 0.9 }}
               onClick={onToggle}
               className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center text-white shadow-lg hover:shadow-xl transition-all duration-300"
+              title={open ? 'Colapsar sidebar' : 'Expandir sidebar'}
             >
               {open ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
             </motion.button>
@@ -714,6 +733,7 @@ export const SocioSidebar: React.FC<SocioSidebarProps> = ({
                   whileTap={{ scale: 0.95 }}
                   onClick={onLogoutClick}
                   className="w-14 h-14 bg-gradient-to-br from-red-50 to-rose-50 hover:from-red-100 hover:to-rose-100 border border-red-200/50 hover:border-red-300/50 rounded-2xl flex items-center justify-center text-red-600 hover:text-red-700 transition-all duration-300 mx-auto"
+                  title="Cerrar sesión"
                 >
                   <LogOut className="w-5 h-5" />
                 </motion.button>
