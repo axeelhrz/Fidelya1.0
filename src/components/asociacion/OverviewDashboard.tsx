@@ -121,7 +121,13 @@ const MetricCard: React.FC<{
           color: color,
         }}
       >
-        {loading ? <CircularProgress size={28} sx={{ color }} /> : React.cloneElement(icon as React.ReactElement, { sx: { fontSize: 28 } })}
+        {loading ? (
+          <CircularProgress size={28} sx={{ color }} />
+        ) : (
+          <Box sx={{ fontSize: 28, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {icon}
+          </Box>
+        )}
       </Box>
       {trend && trendValue !== undefined && (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
