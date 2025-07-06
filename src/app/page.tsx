@@ -21,6 +21,7 @@ import {
   Menu,
   X
 } from 'lucide-react';
+import { ScrollToTop } from '@/components/ui/ScrollToTop';
 
 export default function HomePage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -339,7 +340,7 @@ export default function HomePage() {
             </motion.p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div id="perfiles" className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {roles.map((role, index) => (
               <motion.div
                 key={role.title}
@@ -635,6 +636,9 @@ export default function HomePage() {
           </div>
         </div>
       </footer>
+
+      {/* Scroll to Top Button */}
+      <ScrollToTop />
     </div>
   );
 }

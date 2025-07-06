@@ -27,15 +27,26 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: 'Fidelita - Sistema de Gestión de Socios',
-  description: 'Plataforma integral para la gestión de socios, comercios y beneficios',
-  keywords: ['fidelidad', 'socios', 'comercios', 'beneficios', 'gestión'],
-  authors: [{ name: 'Fidelita Team' }],
+  title: 'Fidelya - Sistema de Gestión de Socios y Beneficios',
+  description: 'La plataforma que conecta asociaciones, socios y comercios en un ecosistema inteligente de beneficios y fidelización.',
+  keywords: ['fidelidad', 'socios', 'comercios', 'beneficios', 'gestión', 'asociaciones', 'QR', 'validación'],
+  authors: [{ name: 'Fidelya Team' }],
   viewport: 'width=device-width, initial-scale=1',
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#6366f1' },
-    { media: '(prefers-color-scheme: dark)', color: '#4f46e5' }
+    { media: '(prefers-color-scheme: light)', color: '#2563eb' },
+    { media: '(prefers-color-scheme: dark)', color: '#1d4ed8' }
   ],
+  openGraph: {
+    title: 'Fidelya - Sistema de Gestión de Socios y Beneficios',
+    description: 'La plataforma que conecta asociaciones, socios y comercios en un ecosistema inteligente de beneficios y fidelización.',
+    type: 'website',
+    locale: 'es_ES',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Fidelya - Sistema de Gestión de Socios y Beneficios',
+    description: 'La plataforma que conecta asociaciones, socios y comercios en un ecosistema inteligente de beneficios y fidelización.',
+  }
 };
 
 // Inicializar sistema de notificaciones en el servidor
