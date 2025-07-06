@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   Box,
   Card,
@@ -29,19 +29,16 @@ import {
   Close,
   ContentCopy,
   CheckCircle,
-  FileDownload,
   PictureAsPdf,
   Image as ImageIcon,
 } from '@mui/icons-material';
-import { useAuth } from '@/hooks/useAuth';
+import Image from 'next/image';
 import { useComercios } from '@/hooks/useComercios';
 import QRCode from 'qrcode';
 import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 import toast from 'react-hot-toast';
 
 export const QRSection: React.FC = () => {
-  const { user } = useAuth();
   const { comercio, generateQRUrl } = useComercios();
   const [qrDialogOpen, setQrDialogOpen] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -49,19 +46,11 @@ export const QRSection: React.FC = () => {
   const [generating, setGenerating] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const qrRef = useRef<HTMLDivElement>(null);
-  const posterRef = useRef<HTMLDivElement>(null);
 
   // Generate QR validation URL
   const qrUrl = generateQRUrl();
 
-  // Generate QR code data URL
-  useEffect(() => {
-    if (qrUrl) {
-      generateQRCode();
-    }
-  }, [qrUrl]);
-
-  const generateQRCode = async () => {
+  const generateQRCode = React.useCallback(async () => {
     try {
       setGenerating(true);
       const dataUrl = await QRCode.toDataURL(qrUrl, {
@@ -80,7 +69,14 @@ export const QRSection: React.FC = () => {
     } finally {
       setGenerating(false);
     }
-  };
+  }, [qrUrl]);
+
+  // Generate QR code data URL
+  useEffect(() => {
+    if (qrUrl) {
+      generateQRCode();
+    }
+  }, [qrUrl, generateQRCode]);
 
   const handleCopyUrl = async () => {
     try {
@@ -283,7 +279,7 @@ export const QRSection: React.FC = () => {
           text: 'Escanea este QR para validar beneficios en Fidelitá',
           files: [file],
         });
-      } catch (error) {
+      } catch {
         // Fallback to URL sharing
         if (navigator.share) {
           try {
@@ -396,14 +392,18 @@ export const QRSection: React.FC = () => {
                     {generating ? (
                       <CircularProgress sx={{ color: '#ec4899' }} />
                     ) : qrDataUrl ? (
-                      <img 
-                        src={qrDataUrl} 
-                        alt="Código QR" 
-                        style={{ 
-                          width: '90%', 
-                          height: '90%', 
-                          objectFit: 'contain' 
-                        }} 
+                      <Image
+                        src={qrDataUrl}
+                        alt="Código QR"
+                        width={180}
+                        height={180}
+                        style={{
+                          width: '90%',
+                          height: '90%',
+                          objectFit: 'contain'
+                        }}
+                        unoptimized
+                        priority
                       />
                     ) : (
                       <QrCode sx={{ fontSize: 60, color: '#ec4899', opacity: 0.5 }} />
@@ -782,14 +782,18 @@ export const QRSection: React.FC = () => {
               }}
             >
               {qrDataUrl ? (
-                <img 
-                  src={qrDataUrl} 
-                  alt="Código QR" 
-                  style={{ 
-                    width: '90%', 
-                    height: '90%', 
-                    objectFit: 'contain' 
-                  }} 
+                <Image
+                  src={qrDataUrl}
+                  alt="Código QR"
+                  width={270}
+                  height={270}
+                  style={{
+                    width: '90%',
+                    height: '90%',
+                    objectFit: 'contain'
+                  }}
+                  unoptimized
+                  priority
                 />
               ) : (
                 <CircularProgress sx={{ color: '#ec4899' }} />

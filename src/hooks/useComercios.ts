@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { 
   onSnapshot, 
   doc, 
-  Timestamp,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Comercio, ComercioFormData, ComercioStats } from '@/types/comercio';
@@ -70,12 +69,16 @@ export const useComercios = (): UseComerciosReturn => {
     return () => unsubscribe();
   }, [user]);
 
+
+
+
+
   // Load stats when comercio is loaded
   useEffect(() => {
     if (comercio && user) {
       refreshStats();
     }
-  }, [comercio?.uid]);
+  }, [comercio, user, refreshStats]);
 
   // Update comercio profile
   const updateProfile = useCallback(async (data: ComercioFormData): Promise<boolean> => {

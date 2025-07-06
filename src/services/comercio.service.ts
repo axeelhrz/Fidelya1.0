@@ -10,10 +10,8 @@ import {
   limit,
   Timestamp,
   writeBatch,
-  increment
 } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
-import { db, storage } from '@/lib/firebase';
+import { db } from '@/lib/firebase';
 import { Comercio, ComercioFormData, ComercioStats, Validacion } from '@/types/comercio';
 import { uploadImage, deleteImage, generateImagePath } from '@/utils/storage/uploadImage';
 
