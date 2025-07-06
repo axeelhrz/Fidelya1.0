@@ -8,18 +8,23 @@ import {
   Gift,
   ScanLine as QrCodeScanner,
   Bell,
+  Calendar,
+  MapPin,
   Star,
   Zap,
   Heart,
+  Share2,
   ArrowRight,
   RefreshCw,
   Activity,
+  Award,
   Target,
   Clock,
   Sparkles,
   Crown,
   Users,
   ShoppingBag,
+  Percent,
   DollarSign,
   CheckCircle,
   AlertCircle,
@@ -31,7 +36,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useBeneficios } from '@/hooks/useBeneficios';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useSocioProfile } from '@/hooks/useSocioProfile';
-import { format, subDays, isToday, isYesterday } from 'date-fns';
+import { format, subDays, isToday, isYesterday, startOfWeek, endOfWeek } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 interface SocioOverviewDashboardProps {
@@ -88,6 +93,7 @@ const KPICard: React.FC<{
   value,
   change,
   icon,
+  color,
   gradient,
   delay,
   subtitle,
@@ -569,15 +575,7 @@ export const SocioOverviewDashboard: React.FC<SocioOverviewDashboardProps> = ({
       const monthAgo = subDays(now, 30);
 
       // Use real stats if available
-      type RealStats = {
-        ahorroTotal?: number;
-        ahorroEsteMes?: number;
-        beneficiosUsados?: number;
-        beneficiosEsteMes?: number;
-        racha?: number;
-        beneficiosPorCategoria?: Record<string, number>;
-      };
-      const realStats: RealStats = stats || {};
+      const realStats = stats || {};
       
       // Filter beneficios used this month
       const beneficiosEsteMes = beneficiosUsados.filter(b => 
@@ -618,12 +616,16 @@ export const SocioOverviewDashboard: React.FC<SocioOverviewDashboardProps> = ({
       // Use real streak from stats or calculate
       const streakDias = realStats.racha || Math.floor(Math.random() * 15) + 1;
 
-      // Get favorite category from real stats
-      const categoriaFavorita = realStats.beneficiosPorCategoria 
-        ? Object.keys(realStats.beneficiosPorCategoria).reduce((a, b) => 
-            realStats.beneficiosPorCategoria![a] > realStats.beneficiosPorCategoria![b] ? a : b
-          )
-        : 'Restaurantes';
+      // Get favorite category from real stats with proper error handling
+      let categoriaFavorita = 'General';
+      if (realStats.beneficiosPorCategoria && typeof realStats.beneficiosPorCategoria === 'object') {
+        const categorias = Object.keys(realStats.beneficiosPorCategoria);
+        if (categorias.length > 0) {
+          categoriaFavorita = categorias.reduce((a, b) => 
+            (realStats.beneficiosPorCategoria![a] || 0) > (realStats.beneficiosPorCategoria![b] || 0) ? a : b
+          );
+        }
+      }
 
       // Get próximo vencimiento from asociaciones
       const proximoVencimiento = asociaciones.length > 0 
