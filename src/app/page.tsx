@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { Typewriter } from 'react-simple-typewriter';
 import Link from 'next/link';
 import { Zap } from 'lucide-react';
 
@@ -23,15 +24,23 @@ export default function HomePage() {
           </span>
         </motion.div>
 
-        {/* Tagline */}
+        {/* Tagline with Typewriter Effect */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.3 }}
           className="mb-8"
         >
-          <h1 className="text-3xl md:text-4xl text-gray-600 font-medium mb-4">
-            disfruta.
+          <h1 className="text-3xl md:text-4xl text-gray-600 font-medium mb-4 h-16 flex items-center justify-center">
+            <Typewriter
+              words={['disfruta.']}
+              loop={1}
+              cursor
+              cursorStyle="|"
+              typeSpeed={150}
+              deleteSpeed={50}
+              delaySpeed={1000}
+            />
           </h1>
         </motion.div>
 
