@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Box,
@@ -13,77 +13,467 @@ import {
   Paper,
   alpha,
   LinearProgress,
+  IconButton,
+  Tooltip,
+  Chip,
 } from '@mui/material';
 import {
   PhotoCamera,
   Store,
   CloudUpload,
   Image as ImageIcon,
+  Delete,
+  Edit,
+  Visibility,
+  DragIndicator,
+  CheckCircle,
+  ErrorOutline,
 } from '@mui/icons-material';
 import { useComercios } from '@/hooks/useComercios';
 import toast from 'react-hot-toast';
 
+interface ImageUploadState {
+  uploading: boolean;
+  progress: number;
+  preview: string | null;
+  error: string | null;
+}
+
 export const ImageUploader: React.FC = () => {
   const { comercio, uploadImage } = useComercios();
-  const [uploading, setUploading] = useState<'logo' | 'portada' | null>(null);
-  const [uploadProgress, setUploadProgress] = useState(0);
+  const [logoState, setLogoState] = useState<ImageUploadState>({
+    uploading: false,
+    progress: 0,
+    preview: null,
+    error: null
+  });
+  const [portadaState, setPortadaState] = useState<ImageUploadState>({
+    uploading: false,
+    progress: 0,
+    preview: null,
+    error: null
+  });
   
   const logoInputRef = useRef<HTMLInputElement>(null);
   const portadaInputRef = useRef<HTMLInputElement>(null);
+  const [dragOver, setDragOver] = useState<'logo' | 'portada' | null>(null);
 
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'imagen') => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    // Validations
+  const validateFile = (file: File): string | null => {
     if (!file.type.startsWith('image/')) {
-      toast.error('Por favor selecciona un archivo de imagen válido');
-      return;
+      return 'Por favor selecciona un archivo de imagen válido';
     }
-
     if (file.size > 5 * 1024 * 1024) {
-      toast.error('La imagen debe ser menor a 5MB');
+      return 'La imagen debe ser menor a 5MB';
+    }
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      return 'Solo se permiten archivos JPG, PNG o WebP';
+    }
+    return null;
+  };
+
+  const createPreview = (file: File): Promise<string> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => resolve(e.target?.result as string);
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const simulateProgress = (setState: React.Dispatch<React.SetStateAction<ImageUploadState>>) => {
+    let progress = 0;
+    const interval = setInterval(() => {
+      progress += Math.random() * 15;
+      if (progress >= 90) {
+        clearInterval(interval);
+        progress = 90;
+      }
+      setState(prev => ({ ...prev, progress }));
+    }, 200);
+    return interval;
+  };
+
+  const handleImageUpload = async (file: File, type: 'logo' | 'imagen') => {
+    const setState = type === 'logo' ? setLogoState : setPortadaState;
+    
+    // Validate file
+    const validationError = validateFile(file);
+    if (validationError) {
+      setState(prev => ({ ...prev, error: validationError }));
+      toast.error(validationError);
       return;
     }
 
-    const uploadType = type === 'logo' ? 'logo' : 'portada';
-    setUploading(uploadType);
-    setUploadProgress(0);
+    // Create preview
+    const preview = await createPreview(file);
+    
+    setState(prev => ({ 
+      ...prev, 
+      uploading: true, 
+      progress: 0, 
+      preview, 
+      error: null 
+    }));
 
     // Simulate progress
-    const progressInterval = setInterval(() => {
-      setUploadProgress(prev => {
-        if (prev >= 90) {
-          clearInterval(progressInterval);
-          return 90;
-        }
-        return prev + 10;
-      });
-    }, 200);
+    const progressInterval = simulateProgress(setState);
 
     try {
-      await uploadImage(file, type);
-      setUploadProgress(100);
-      setTimeout(() => {
-        setUploading(null);
-        setUploadProgress(0);
-      }, 1000);
-    } catch {
+      const downloadURL = await uploadImage(file, type);
+      
+      if (downloadURL) {
+        clearInterval(progressInterval);
+        setState(prev => ({ 
+          ...prev, 
+          progress: 100, 
+          uploading: false,
+          preview: null 
+        }));
+        
+        // Reset after success animation
+        setTimeout(() => {
+          setState(prev => ({ ...prev, progress: 0 }));
+        }, 2000);
+      }
+    } catch (error) {
       clearInterval(progressInterval);
-      setUploading(null);
-      setUploadProgress(0);
+      const errorMessage = error instanceof Error ? error.message : 'Error al subir la imagen';
+      setState(prev => ({ 
+        ...prev, 
+        uploading: false, 
+        progress: 0, 
+        error: errorMessage,
+        preview: null 
+      }));
     }
+  };
 
-    // Reset input
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'imagen') => {
+    const file = event.target.files?.[0];
+    if (file) {
+      handleImageUpload(file, type);
+    }
     event.target.value = '';
   };
 
-  const triggerFileInput = (type: 'logo' | 'portada') => {
-    if (type === 'logo') {
-      logoInputRef.current?.click();
+  const handleDrop = useCallback((event: React.DragEvent, type: 'logo' | 'imagen') => {
+    event.preventDefault();
+    setDragOver(null);
+    
+    const files = Array.from(event.dataTransfer.files);
+    const imageFile = files.find(file => file.type.startsWith('image/'));
+    
+    if (imageFile) {
+      handleImageUpload(imageFile, type);
     } else {
+      toast.error('Por favor arrastra un archivo de imagen');
+    }
+  }, []);
+
+  const handleDragOver = useCallback((event: React.DragEvent, type: 'logo' | 'portada') => {
+    event.preventDefault();
+    setDragOver(type);
+  }, []);
+
+  const handleDragLeave = useCallback((event: React.DragEvent) => {
+    event.preventDefault();
+    setDragOver(null);
+  }, []);
+
+  const triggerFileInput = (type: 'logo' | 'portada') => {
+    if (type === 'logo' && !logoState.uploading) {
+      logoInputRef.current?.click();
+    } else if (type === 'portada' && !portadaState.uploading) {
       portadaInputRef.current?.click();
     }
+  };
+
+  const ImageUploadCard: React.FC<{
+    type: 'logo' | 'portada';
+    state: ImageUploadState;
+    currentImage?: string;
+    title: string;
+    subtitle: string;
+    icon: React.ReactNode;
+    color: string;
+    aspectRatio: string;
+    size: { width: number; height: number };
+  }> = ({ type, state, currentImage, title, subtitle, icon, color, aspectRatio, size }) => {
+    const isDragging = dragOver === type;
+    const hasImage = currentImage || state.preview;
+    const isUploading = state.uploading;
+
+    return (
+      <Box sx={{ flex: 1, minWidth: 300 }}>
+        <Typography 
+          variant="h6" 
+          sx={{ 
+            fontWeight: 700, 
+            color: '#374151', 
+            mb: 3,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1
+          }}
+        >
+          {icon}
+          {title}
+        </Typography>
+        
+        <Paper
+          elevation={0}
+          sx={{
+            p: 4,
+            border: `2px dashed ${isDragging ? color : '#d1d5db'}`,
+            borderRadius: 4,
+            textAlign: 'center',
+            position: 'relative',
+            transition: 'all 0.3s ease',
+            cursor: isUploading ? 'not-allowed' : 'pointer',
+            bgcolor: isDragging ? alpha(color, 0.05) : 'transparent',
+            '&:hover': {
+              borderColor: isUploading ? '#d1d5db' : color,
+              bgcolor: isUploading ? 'transparent' : alpha(color, 0.05),
+            },
+          }}
+          onClick={() => !isUploading && triggerFileInput(type)}
+          onDrop={(e) => handleDrop(e, type === 'logo' ? 'logo' : 'imagen')}
+          onDragOver={(e) => handleDragOver(e, type)}
+          onDragLeave={handleDragLeave}
+        >
+          <Stack spacing={3} alignItems="center">
+            {/* Image Preview */}
+            <motion.div
+              whileHover={{ scale: isUploading ? 1 : 1.02 }}
+              whileTap={{ scale: isUploading ? 1 : 0.98 }}
+            >
+              {type === 'logo' ? (
+                <Box sx={{ position: 'relative' }}>
+                  <Avatar
+                    src={state.preview || currentImage}
+                    sx={{
+                      width: size.width,
+                      height: size.height,
+                      bgcolor: alpha(color, 0.1),
+                      border: '4px solid #f1f5f9',
+                      position: 'relative',
+                    }}
+                  >
+                    {!hasImage && <Store sx={{ fontSize: 40, color }} />}
+                  </Avatar>
+                  
+                  {hasImage && (
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        inset: 0,
+                        bgcolor: alpha('#000', 0.4),
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        opacity: 0,
+                        transition: 'opacity 0.3s ease',
+                        '&:hover': { opacity: 1 },
+                      }}
+                    >
+                      <Edit sx={{ fontSize: 24, color: 'white' }} />
+                    </Box>
+                  )}
+                </Box>
+              ) : (
+                <Paper
+                  elevation={0}
+                  sx={{
+                    width: size.width,
+                    height: size.height,
+                    bgcolor: alpha(color, 0.1),
+                    border: '4px solid #f1f5f9',
+                    borderRadius: 3,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundImage: hasImage ? `url(${state.preview || currentImage})` : 'none',
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    position: 'relative',
+                    overflow: 'hidden',
+                  }}
+                >
+                  {!hasImage && <ImageIcon sx={{ fontSize: 50, color }} />}
+                  
+                  {hasImage && (
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        inset: 0,
+                        bgcolor: alpha('#000', 0.4),
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        opacity: 0,
+                        transition: 'opacity 0.3s ease',
+                        '&:hover': { opacity: 1 },
+                      }}
+                    >
+                      <Edit sx={{ fontSize: 30, color: 'white' }} />
+                    </Box>
+                  )}
+                </Paper>
+              )}
+            </motion.div>
+
+            {/* Upload Info */}
+            <Box>
+              <Typography variant="h6" sx={{ fontWeight: 700, color: '#374151', mb: 1 }}>
+                {hasImage ? `Cambiar ${title}` : `Subir ${title}`}
+              </Typography>
+              <Typography variant="body2" sx={{ color: '#64748b', mb: 2 }}>
+                {subtitle}
+              </Typography>
+              <Stack direction="row" spacing={1} justifyContent="center" flexWrap="wrap">
+                <Chip
+                  label="PNG, JPG, WebP"
+                  size="small"
+                  sx={{ bgcolor: alpha(color, 0.1), color }}
+                />
+                <Chip
+                  label="Máx. 5MB"
+                  size="small"
+                  sx={{ bgcolor: alpha(color, 0.1), color }}
+                />
+              </Stack>
+            </Box>
+
+            {/* Upload State */}
+            <AnimatePresence mode="wait">
+              {isUploading ? (
+                <motion.div
+                  key="uploading"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  style={{ width: '100%' }}
+                >
+                  <Box sx={{ width: '100%', mb: 2 }}>
+                    <LinearProgress 
+                      variant="determinate" 
+                      value={state.progress}
+                      sx={{
+                        height: 8,
+                        borderRadius: 4,
+                        bgcolor: alpha(color, 0.2),
+                        '& .MuiLinearProgress-bar': {
+                          bgcolor: color,
+                          borderRadius: 4,
+                        }
+                      }}
+                    />
+                  </Box>
+                  <Typography variant="body2" sx={{ color, fontWeight: 600 }}>
+                    {state.progress === 100 ? 'Completado!' : `Subiendo... ${Math.round(state.progress)}%`}
+                  </Typography>
+                </motion.div>
+              ) : state.error ? (
+                <motion.div
+                  key="error"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                >
+                  <Stack direction="row" alignItems="center" spacing={1} sx={{ color: '#ef4444' }}>
+                    <ErrorOutline fontSize="small" />
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                      Error al subir
+                    </Typography>
+                  </Stack>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="ready"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                >
+                  <Stack direction="row" spacing={2} alignItems="center">
+                    {isDragging ? (
+                      <Chip
+                        icon={<DragIndicator />}
+                        label="Suelta aquí"
+                        sx={{
+                          bgcolor: alpha(color, 0.2),
+                          color,
+                          fontWeight: 600,
+                        }}
+                      />
+                    ) : (
+                      <Button
+                        variant="contained"
+                        startIcon={<CloudUpload />}
+                        sx={{
+                          background: `linear-gradient(135deg, ${color} 0%, ${color}dd 100%)`,
+                          boxShadow: `0 4px 20px ${alpha(color, 0.3)}`,
+                          '&:hover': {
+                            background: `linear-gradient(135deg, ${color}dd 0%, ${color}bb 100%)`,
+                            boxShadow: `0 6px 25px ${alpha(color, 0.4)}`,
+                          }
+                        }}
+                      >
+                        {hasImage ? 'Cambiar' : 'Subir'}
+                      </Button>
+                    )}
+                  </Stack>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Drag & Drop Hint */}
+            {!isUploading && (
+              <Typography variant="caption" sx={{ color: '#9ca3af', fontStyle: 'italic' }}>
+                O arrastra y suelta una imagen aquí
+              </Typography>
+            )}
+          </Stack>
+
+          {/* Hidden file inputs */}
+          <input
+            ref={type === 'logo' ? logoInputRef : portadaInputRef}
+            type="file"
+            hidden
+            accept="image/*"
+            onChange={(e) => handleFileSelect(e, type === 'logo' ? 'logo' : 'imagen')}
+            disabled={isUploading}
+          />
+        </Paper>
+
+        {/* Image Actions */}
+        {hasImage && !isUploading && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <Stack direction="row" spacing={1} justifyContent="center" sx={{ mt: 2 }}>
+              <Tooltip title="Ver imagen completa">
+                <IconButton
+                  size="small"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    window.open(currentImage || state.preview || '', '_blank');
+                  }}
+                  sx={{
+                    bgcolor: alpha('#06b6d4', 0.1),
+                    color: '#06b6d4',
+                    '&:hover': { bgcolor: alpha('#06b6d4', 0.2) }
+                  }}
+                >
+                  <Visibility fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            </Stack>
+          </motion.div>
+        )}
+      </Box>
+    );
   };
 
   return (
@@ -136,288 +526,30 @@ export const ImageUploader: React.FC = () => {
 
         <Box sx={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
           {/* Logo Upload */}
-          <Box sx={{ flex: 1, minWidth: 300 }}>
-            <Typography 
-              variant="h6" 
-              sx={{ 
-                fontWeight: 700, 
-                color: '#374151', 
-                mb: 3,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1
-              }}
-            >
-              <Store sx={{ fontSize: 20, color: '#10b981' }} />
-              Logo del Comercio
-            </Typography>
-            
-            <Paper
-              elevation={0}
-              sx={{
-                p: 4,
-                border: '2px dashed #d1d5db',
-                borderRadius: 4,
-                textAlign: 'center',
-                position: 'relative',
-                transition: 'all 0.3s ease',
-                cursor: uploading === 'logo' ? 'not-allowed' : 'pointer',
-                '&:hover': {
-                  borderColor: uploading === 'logo' ? '#d1d5db' : '#10b981',
-                  bgcolor: uploading === 'logo' ? 'transparent' : alpha('#10b981', 0.05),
-                },
-              }}
-              onClick={() => !uploading && triggerFileInput('logo')}
-            >
-              <Stack spacing={3} alignItems="center">
-                <motion.div
-                  whileHover={{ scale: uploading === 'logo' ? 1 : 1.05 }}
-                  whileTap={{ scale: uploading === 'logo' ? 1 : 0.95 }}
-                >
-                  <Avatar
-                    src={comercio?.logoUrl}
-                    sx={{
-                      width: 120,
-                      height: 120,
-                      bgcolor: alpha('#10b981', 0.1),
-                      border: '4px solid #f1f5f9',
-                      position: 'relative',
-                    }}
-                  >
-                    {!comercio?.logoUrl && <Store sx={{ fontSize: 40, color: '#10b981' }} />}
-                  </Avatar>
-                </motion.div>
-
-                <Box>
-                  <Typography variant="h6" sx={{ fontWeight: 700, color: '#374151', mb: 1 }}>
-                    {comercio?.logoUrl ? 'Cambiar Logo' : 'Subir Logo'}
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: '#64748b', mb: 2 }}>
-                    Tamaño recomendado: 300x300px
-                  </Typography>
-                  <Typography variant="caption" sx={{ color: '#9ca3af' }}>
-                    PNG, JPG hasta 5MB
-                  </Typography>
-                </Box>
-
-                <AnimatePresence>
-                  {uploading === 'logo' ? (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      style={{ width: '100%' }}
-                    >
-                      <Box sx={{ width: '100%', mb: 2 }}>
-                        <LinearProgress 
-                          variant="determinate" 
-                          value={uploadProgress}
-                          sx={{
-                            height: 8,
-                            borderRadius: 4,
-                            bgcolor: alpha('#10b981', 0.2),
-                            '& .MuiLinearProgress-bar': {
-                              bgcolor: '#10b981',
-                              borderRadius: 4,
-                            }
-                          }}
-                        />
-                      </Box>
-                      <Typography variant="body2" sx={{ color: '#10b981', fontWeight: 600 }}>
-                        {uploadProgress === 100 ? 'Completado!' : `Subiendo... ${uploadProgress}%`}
-                      </Typography>
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                    >
-                      <Button
-                        variant="contained"
-                        startIcon={<CloudUpload />}
-                        sx={{
-                          background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                          boxShadow: '0 4px 20px rgba(16, 185, 129, 0.3)',
-                          '&:hover': {
-                            background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
-                            boxShadow: '0 6px 25px rgba(16, 185, 129, 0.4)',
-                          }
-                        }}
-                      >
-                        {comercio?.logoUrl ? 'Cambiar' : 'Subir'}
-                      </Button>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </Stack>
-
-              <input
-                ref={logoInputRef}
-                type="file"
-                hidden
-                accept="image/*"
-                onChange={(e) => handleImageUpload(e, 'logo')}
-                disabled={!!uploading}
-              />
-            </Paper>
-          </Box>
+          <ImageUploadCard
+            type="logo"
+            state={logoState}
+            currentImage={comercio?.logoUrl}
+            title="Logo del Comercio"
+            subtitle="Tamaño recomendado: 300x300px"
+            icon={<Store sx={{ fontSize: 20, color: '#10b981' }} />}
+            color="#10b981"
+            aspectRatio="1:1"
+            size={{ width: 120, height: 120 }}
+          />
 
           {/* Portada Upload */}
-          <Box sx={{ flex: 1, minWidth: 300 }}>
-            <Typography 
-              variant="h6" 
-              sx={{ 
-                fontWeight: 700, 
-                color: '#374151', 
-                mb: 3,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1
-              }}
-            >
-              <ImageIcon sx={{ fontSize: 20, color: '#6366f1' }} />
-              Imagen de Portada
-            </Typography>
-            
-            <Paper
-              elevation={0}
-              sx={{
-                p: 4,
-                border: '2px dashed #d1d5db',
-                borderRadius: 4,
-                textAlign: 'center',
-                position: 'relative',
-                transition: 'all 0.3s ease',
-                cursor: uploading === 'portada' ? 'not-allowed' : 'pointer',
-                '&:hover': {
-                  borderColor: uploading === 'portada' ? '#d1d5db' : '#6366f1',
-                  bgcolor: uploading === 'portada' ? 'transparent' : alpha('#6366f1', 0.05),
-                },
-              }}
-              onClick={() => !uploading && triggerFileInput('portada')}
-            >
-              <Stack spacing={3} alignItems="center">
-                <motion.div
-                  whileHover={{ scale: uploading === 'portada' ? 1 : 1.02 }}
-                  whileTap={{ scale: uploading === 'portada' ? 1 : 0.98 }}
-                >
-                  <Paper
-                    elevation={0}
-                    sx={{
-                      width: 240,
-                      height: 140,
-                      bgcolor: alpha('#6366f1', 0.1),
-                      border: '4px solid #f1f5f9',
-                      borderRadius: 3,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      backgroundImage: comercio?.imagenPrincipalUrl ? `url(${comercio.imagenPrincipalUrl})` : 'none',
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center',
-                      position: 'relative',
-                      overflow: 'hidden',
-                    }}
-                  >
-                    {!comercio?.imagenPrincipalUrl && (
-                      <ImageIcon sx={{ fontSize: 50, color: '#6366f1' }} />
-                    )}
-                    
-                    {comercio?.imagenPrincipalUrl && (
-                      <Box
-                        sx={{
-                          position: 'absolute',
-                          inset: 0,
-                          bgcolor: alpha('#000', 0.4),
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          opacity: 0,
-                          transition: 'opacity 0.3s ease',
-                          '&:hover': { opacity: 1 },
-                        }}
-                      >
-                        <PhotoCamera sx={{ fontSize: 30, color: 'white' }} />
-                      </Box>
-                    )}
-                  </Paper>
-                </motion.div>
-
-                <Box>
-                  <Typography variant="h6" sx={{ fontWeight: 700, color: '#374151', mb: 1 }}>
-                    {comercio?.imagenPrincipalUrl ? 'Cambiar Portada' : 'Subir Portada'}
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: '#64748b', mb: 2 }}>
-                    Tamaño recomendado: 1200x600px
-                  </Typography>
-                  <Typography variant="caption" sx={{ color: '#9ca3af' }}>
-                    PNG, JPG hasta 5MB
-                  </Typography>
-                </Box>
-
-                <AnimatePresence>
-                  {uploading === 'portada' ? (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      style={{ width: '100%' }}
-                    >
-                      <Box sx={{ width: '100%', mb: 2 }}>
-                        <LinearProgress 
-                          variant="determinate" 
-                          value={uploadProgress}
-                          sx={{
-                            height: 8,
-                            borderRadius: 4,
-                            bgcolor: alpha('#6366f1', 0.2),
-                            '& .MuiLinearProgress-bar': {
-                              bgcolor: '#6366f1',
-                              borderRadius: 4,
-                            }
-                          }}
-                        />
-                      </Box>
-                      <Typography variant="body2" sx={{ color: '#6366f1', fontWeight: 600 }}>
-                        {uploadProgress === 100 ? 'Completado!' : `Subiendo... ${uploadProgress}%`}
-                      </Typography>
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                    >
-                      <Button
-                        variant="contained"
-                        startIcon={<CloudUpload />}
-                        sx={{
-                          background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-                          boxShadow: '0 4px 20px rgba(99, 102, 241, 0.3)',
-                          '&:hover': {
-                            background: 'linear-gradient(135deg, #5b21b6 0%, #7c3aed 100%)',
-                            boxShadow: '0 6px 25px rgba(99, 102, 241, 0.4)',
-                          }
-                        }}
-                      >
-                        {comercio?.imagenPrincipalUrl ? 'Cambiar' : 'Subir'}
-                      </Button>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </Stack>
-
-              <input
-                ref={portadaInputRef}
-                type="file"
-                hidden
-                accept="image/*"
-                onChange={(e) => handleImageUpload(e, 'imagen')}
-                disabled={!!uploading}
-              />
-            </Paper>
-          </Box>
+          <ImageUploadCard
+            type="portada"
+            state={portadaState}
+            currentImage={comercio?.imagenPrincipalUrl}
+            title="Imagen de Portada"
+            subtitle="Tamaño recomendado: 1200x600px"
+            icon={<ImageIcon sx={{ fontSize: 20, color: '#6366f1' }} />}
+            color="#6366f1"
+            aspectRatio="2:1"
+            size={{ width: 240, height: 140 }}
+          />
         </Box>
 
         {/* Tips */}
@@ -444,6 +576,9 @@ export const ImageUploader: React.FC = () => {
               </Typography>
               <Typography variant="body2" sx={{ color: '#0f766e' }}>
                 • <strong>Calidad:</strong> Imágenes nítidas y bien iluminadas generan más confianza
+              </Typography>
+              <Typography variant="body2" sx={{ color: '#0f766e' }}>
+                • <strong>Formatos:</strong> PNG para logos con transparencia, JPG para fotos
               </Typography>
             </Stack>
           </Paper>

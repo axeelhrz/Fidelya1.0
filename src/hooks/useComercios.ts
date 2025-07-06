@@ -4,148 +4,178 @@ import { useState, useEffect, useCallback } from 'react';
 import { 
   onSnapshot, 
   doc, 
-  updateDoc, 
   Timestamp,
 } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
-import { db, storage } from '@/lib/firebase';
+import { db } from '@/lib/firebase';
 import { Comercio, ComercioFormData, ComercioStats } from '@/types/comercio';
+import { ComercioService } from '@/services/comercio.service';
 import { useAuth } from './useAuth';
 import toast from 'react-hot-toast';
 
-export const useComercios = () => {
+interface UseComerciosReturn {
+  comercio: Comercio | null;
+  loading: boolean;
+  error: string | null;
+  stats: ComercioStats | null;
+  statsLoading: boolean;
+  updateProfile: (data: ComercioFormData) => Promise<boolean>;
+  uploadImage: (file: File, type: 'logo' | 'imagen') => Promise<string | null>;
+  updateVisibility: (visible: boolean) => Promise<boolean>;
+  refreshStats: () => Promise<void>;
+  generateQRUrl: () => string;
+}
+
+export const useComercios = (): UseComerciosReturn => {
   const { user } = useAuth();
   const [comercio, setComercio] = useState<Comercio | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [stats, setStats] = useState<ComercioStats | null>(null);
+  const [statsLoading, setStatsLoading] = useState(false);
 
-  // Fetch comercio data
+  // Fetch comercio data with real-time updates
   useEffect(() => {
     if (!user) {
       setLoading(false);
+      setComercio(null);
       return;
     }
 
+    setLoading(true);
+    setError(null);
+
     const comercioRef = doc(db, 'comercios', user.uid);
     
-    const unsubscribe = onSnapshot(comercioRef, (doc) => {
-      if (doc.exists()) {
-        setComercio({ uid: doc.id, ...doc.data() } as Comercio);
-      } else {
-        setComercio(null);
+    const unsubscribe = onSnapshot(
+      comercioRef, 
+      (doc) => {
+        if (doc.exists()) {
+          const comercioData = { uid: doc.id, ...doc.data() } as Comercio;
+          setComercio(comercioData);
+          setError(null);
+        } else {
+          setComercio(null);
+          setError('Comercio no encontrado');
+        }
+        setLoading(false);
+      }, 
+      (error) => {
+        console.error('Error fetching comercio:', error);
+        setError('Error al cargar los datos del comercio');
+        setLoading(false);
+        toast.error('Error al cargar los datos del comercio');
       }
-      setLoading(false);
-    }, (error) => {
-      console.error('Error fetching comercio:', error);
-      setError('Error al cargar los datos del comercio');
-      setLoading(false);
-    });
+    );
 
     return () => unsubscribe();
   }, [user]);
 
+  // Load stats when comercio is loaded
+  useEffect(() => {
+    if (comercio && user) {
+      refreshStats();
+    }
+  }, [comercio?.uid]);
+
   // Update comercio profile
   const updateProfile = useCallback(async (data: ComercioFormData): Promise<boolean> => {
-    if (!user || !comercio) return false;
+    if (!user) {
+      toast.error('Usuario no autenticado');
+      return false;
+    }
 
     try {
       setLoading(true);
-      const comercioRef = doc(db, 'comercios', user.uid);
-      
-      await updateDoc(comercioRef, {
-        ...data,
-        actualizadoEn: Timestamp.now()
-      });
-
+      await ComercioService.updateProfile(user.uid, data);
       toast.success('Perfil actualizado correctamente');
       return true;
     } catch (error) {
       console.error('Error updating profile:', error);
-      toast.error('Error al actualizar el perfil');
+      const errorMessage = error instanceof Error ? error.message : 'Error al actualizar el perfil';
+      toast.error(errorMessage);
+      setError(errorMessage);
       return false;
     } finally {
       setLoading(false);
     }
-  }, [user, comercio]);
+  }, [user]);
 
   // Upload image (logo or main image)
   const uploadImage = useCallback(async (file: File, type: 'logo' | 'imagen'): Promise<string | null> => {
-    if (!user) return null;
+    if (!user) {
+      toast.error('Usuario no autenticado');
+      return null;
+    }
 
     try {
-      const fileExtension = file.name.split('.').pop();
-      const fileName = `${type}_${Date.now()}.${fileExtension}`;
-      const storageRef = ref(storage, `comercios/${user.uid}/${fileName}`);
-
-      // Delete old image if exists
-      if (comercio) {
-        const oldImageUrl = type === 'logo' ? comercio.logoUrl : comercio.imagenPrincipalUrl;
-        if (oldImageUrl) {
-          try {
-            const oldImageRef = ref(storage, oldImageUrl);
-            await deleteObject(oldImageRef);
-          } catch {
-            console.log('Old image not found or already deleted');
-          }
-        }
-      }
-
-      // Upload new image
-      await uploadBytes(storageRef, file);
-      const downloadURL = await getDownloadURL(storageRef);
-
-      // Update comercio document
-      const comercioRef = doc(db, 'comercios', user.uid);
-      const updateData = type === 'logo' 
-        ? { logoUrl: downloadURL }
-        : { imagenPrincipalUrl: downloadURL };
-
-      await updateDoc(comercioRef, {
-        ...updateData,
-        actualizadoEn: Timestamp.now()
-      });
-
+      const loadingToast = toast.loading(`Subiendo ${type === 'logo' ? 'logo' : 'imagen'}...`);
+      
+      const downloadURL = await ComercioService.uploadComercioImage(user.uid, file, type);
+      
+      toast.dismiss(loadingToast);
       toast.success(`${type === 'logo' ? 'Logo' : 'Imagen'} actualizada correctamente`);
+      
       return downloadURL;
     } catch (error) {
       console.error('Error uploading image:', error);
-      toast.error(`Error al subir ${type === 'logo' ? 'el logo' : 'la imagen'}`);
+      const errorMessage = error instanceof Error ? error.message : `Error al subir ${type === 'logo' ? 'el logo' : 'la imagen'}`;
+      toast.error(errorMessage);
       return null;
     }
-  }, [user, comercio]);
+  }, [user]);
 
-  // Get comercio statistics
-  const getStats = useCallback(async (): Promise<ComercioStats | null> => {
-    if (!user) return null;
+  // Update visibility
+  const updateVisibility = useCallback(async (visible: boolean): Promise<boolean> => {
+    if (!user) {
+      toast.error('Usuario no autenticado');
+      return false;
+    }
 
     try {
-      // This would typically involve multiple queries to get comprehensive stats
-      // For now, we'll return mock data structure
-      const stats: ComercioStats = {
-        totalValidaciones: 0,
-        validacionesHoy: 0,
-        validacionesMes: 0,
-        beneficiosActivos: 0,
-        beneficiosVencidos: 0,
-        asociacionesVinculadas: comercio?.asociacionesVinculadas?.length || 0,
-        sociosAlcanzados: 0,
-        ingresosPotenciales: 0,
-        tasaConversion: 0
-      };
-
-      return stats;
+      await ComercioService.updateVisibility(user.uid, visible);
+      toast.success(`Comercio ${visible ? 'visible' : 'oculto'} para socios`);
+      return true;
     } catch (error) {
-      console.error('Error getting stats:', error);
-      return null;
+      console.error('Error updating visibility:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Error al actualizar la visibilidad';
+      toast.error(errorMessage);
+      return false;
     }
-  }, [user, comercio]);
+  }, [user]);
+
+  // Refresh stats
+  const refreshStats = useCallback(async (): Promise<void> => {
+    if (!user) return;
+
+    try {
+      setStatsLoading(true);
+      const newStats = await ComercioService.getComercioStats(user.uid);
+      setStats(newStats);
+    } catch (error) {
+      console.error('Error refreshing stats:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Error al cargar estadísticas';
+      setError(errorMessage);
+    } finally {
+      setStatsLoading(false);
+    }
+  }, [user]);
+
+  // Generate QR URL
+  const generateQRUrl = useCallback((): string => {
+    if (!user) return '';
+    return ComercioService.generateQRValidationURL(user.uid);
+  }, [user]);
 
   return {
     comercio,
     loading,
     error,
+    stats,
+    statsLoading,
     updateProfile,
     uploadImage,
-    getStats
+    updateVisibility,
+    refreshStats,
+    generateQRUrl
   };
 };
