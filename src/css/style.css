@@ -7112,3 +7112,69 @@ animation: contact-loading-spin 1s linear infinite;
 100% { transform: rotate(360deg); }
 }
 
+/* ===== FORZAR VISIBILIDAD EN MÓVIL ===== */
+@media (width <= 1023px) {
+    /* Asegurar que todas las secciones sean visibles */
+    .features,
+    .videos,
+    .faq,
+    .contact {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        position: relative !important;
+        z-index: 1 !important;
+    }
+    
+    /* Asegurar altura mínima para las secciones */
+    .features,
+    .videos,
+    .faq,
+    .contact {
+        min-height: auto !important;
+        height: auto !important;
+    }
+    
+    /* Resetear cualquier transform que pueda ocultar contenido */
+    .features,
+    .videos,
+    .faq,
+    .contact {
+        transform: none !important;
+    }
+    
+    /* Asegurar que los contenedores internos también sean visibles */
+    .features__grid,
+    .videos__main-container,
+    .faq__container,
+    .contact__grid {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    
+    /* Para el grid de features en móvil */
+    .features__grid {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: var(--space-2xl) !important;
+    }
+    
+    /* Para el grid de contacto en móvil */
+    .contact__grid {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* ===== DEBUGGING: Bordes temporales para identificar secciones ===== */
+/* Descomenta estas líneas temporalmente para ver las secciones */
+/*
+@media (width <= 1023px) {
+    .features { border: 2px solid red !important; }
+    .videos { border: 2px solid blue !important; }
+    .faq { border: 2px solid green !important; }
+    .contact { border: 2px solid yellow !important; }
+}
+*/
+
