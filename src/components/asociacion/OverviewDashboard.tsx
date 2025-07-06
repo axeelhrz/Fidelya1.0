@@ -121,13 +121,7 @@ const MetricCard: React.FC<{
           color: color,
         }}
       >
-        {loading ? (
-          <CircularProgress size={28} sx={{ color }} />
-        ) : (
-          <Box sx={{ fontSize: 28, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            {icon}
-          </Box>
-        )}
+        {loading ? <CircularProgress size={28} sx={{ color }} /> : React.cloneElement(icon as React.ReactElement, { sx: { fontSize: 28 } })}
       </Box>
       {trend && trendValue !== undefined && (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
@@ -886,46 +880,134 @@ const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                   gridTemplateColumns: {
                     xs: '1fr',
                     sm: 'repeat(2, 1fr)',
-                    md: 'repeat(4, 1fr)',
+                    md: 'repeat(2, 1fr)',
+                    lg: 'repeat(4, 1fr)',
                   },
                   gap: 3,
                 }}
               >
                 {quickActions.map((action, index) => (
-                  <Button
+                  <Paper
                     key={index}
+                    elevation={0}
                     onClick={action.onClick}
-                    variant="outlined"
-                    startIcon={action.icon}
-                    fullWidth
                     sx={{
-                      py: 3,
-                      px: 4,
-                      borderColor: '#e2e8f0',
-                      color: action.color,
-                      textTransform: 'none',
-                      fontWeight: 700,
-                      justifyContent: 'flex-start',
+                      p: 3,
+                      border: '2px solid #e2e8f0',
+                      borderRadius: 3,
+                      bgcolor: '#ffffff',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease-in-out',
+                      display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'flex-start',
-                      height: '120px',
+                      gap: 2,
+                      minHeight: '140px',
+                      position: 'relative',
+                      overflow: 'hidden',
                       '&:hover': {
                         borderColor: action.color,
-                        bgcolor: `${action.color}08`,
+                        bgcolor: `${action.color}05`,
+                        transform: 'translateY(-2px)',
+                        boxShadow: `0 8px 25px ${action.color}20`,
                       },
-                      '& .MuiButton-startIcon': {
-                        margin: 0,
-                        mb: 2,
-                      }
+                      '&::before': {
+                        content: '""',
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        height: 3,
+                        bgcolor: action.color,
+                        opacity: 0,
+                        transition: 'opacity 0.2s ease-in-out',
+                      },
+                      '&:hover::before': {
+                        opacity: 1,
+                      },
                     }}
                   >
-                    <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5 }}>
-                      {action.title}
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 600 }}>
-                      {action.description}
-                    </Typography>
-                  </Button>
+                    {/* Icon Container */}
+                    <Box
+                      sx={{
+                        width: 48,
+                        height: 48,
+                        borderRadius: 2.5,
+                        bgcolor: `${action.color}15`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: action.color,
+                        transition: 'all 0.2s ease-in-out',
+                        mb: 1,
+                      }}
+                    >
+                      {React.cloneElement(action.icon as React.ReactElement, { 
+                        sx: { fontSize: 24 } 
+                      })}
+                    </Box>
+
+                    {/* Content */}
+                    <Box sx={{ flex: 1, width: '100%' }}>
+                      <Typography 
+                        variant="h6" 
+                        sx={{ 
+                          fontWeight: 700, 
+                          color: '#1e293b',
+                          fontSize: '1.1rem',
+                          mb: 1,
+                          lineHeight: 1.3,
+                        }}
+                      >
+                        {action.title}
+                      </Typography>
+                      <Typography 
+                        variant="body2" 
+                        sx={{ 
+                          color: '#64748b', 
+                          fontWeight: 500,
+                          fontSize: '0.9rem',
+                          lineHeight: 1.4,
+                        }}
+                      >
+                        {action.description}
+                      </Typography>
+                    </Box>
+
+                    {/* Hover Arrow Indicator */}
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        top: 16,
+                        right: 16,
+                        width: 24,
+                        height: 24,
+                        borderRadius: '50%',
+                        bgcolor: `${action.color}10`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        opacity: 0,
+                        transform: 'scale(0.8)',
+                        transition: 'all 0.2s ease-in-out',
+                        '.MuiPaper-root:hover &': {
+                          opacity: 1,
+                          transform: 'scale(1)',
+                        },
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          width: 0,
+                          height: 0,
+                          borderLeft: '4px solid transparent',
+                          borderRight: '4px solid transparent',
+                          borderBottom: `6px solid ${action.color}`,
+                          transform: 'rotate(45deg)',
+                        }}
+                      />
+                    </Box>
+                  </Paper>
                 ))}
               </Box>
             </Paper>
