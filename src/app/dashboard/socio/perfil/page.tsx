@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   User, 
@@ -50,7 +50,10 @@ import {
   Zap,
   Sparkles,
   Diamond,
-  Hexagon
+  Hexagon,
+  PieChart,
+  LineChart,
+  TrendingDown
 } from 'lucide-react';
 import Image from 'next/image';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -292,8 +295,14 @@ const StatsCard: React.FC<{
   icon: React.ReactNode;
   color: string;
   change?: number;
-}> = ({ title, value, icon, color, change }) => (
-  <div className="bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md transition-shadow duration-200">
+  onClick?: () => void;
+}> = ({ title, value, icon, color, change, onClick }) => (
+  <div 
+    className={`bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md transition-shadow duration-200 ${
+      onClick ? 'cursor-pointer hover:border-blue-300' : ''
+    }`}
+    onClick={onClick}
+  >
     <div className="flex items-center justify-between mb-3">
       <div 
         className="w-10 h-10 rounded-lg flex items-center justify-center text-white"
@@ -305,7 +314,7 @@ const StatsCard: React.FC<{
         <div className={`flex items-center gap-1 text-sm font-medium ${
           change >= 0 ? 'text-green-600' : 'text-red-600'
         }`}>
-          <TrendingUp size={14} />
+          {change >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
           {change > 0 ? '+' : ''}{change}%
         </div>
       )}
@@ -318,6 +327,276 @@ const StatsCard: React.FC<{
     </div>
   </div>
 );
+
+// Detailed Stats Modal Component
+const DetailedStatsModal: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  stats: any;
+  socio: any;
+}> = ({ isOpen, onClose, stats, socio }) => {
+  const [activeTab, setActiveTab] = useState<'overview' | 'trends' | 'categories' | 'merchants'>('overview');
+
+  // Calculate additional metrics
+  const additionalMetrics = useMemo(() => {
+    if (!stats) return {};
+
+    const totalDays = socio?.creadoEn ? 
+      Math.floor((new Date().getTime() - socio.creadoEn.toDate().getTime()) / (1000 * 60 * 60 * 24)) : 0;
+    
+    const avgBenefitsPerMonth = totalDays > 0 ? 
+      Math.round((stats.beneficiosUsados / totalDays) * 30) : 0;
+    
+    const avgSavingsPerBenefit = stats.beneficiosUsados > 0 ? 
+      Math.round(stats.ahorroTotal / stats.beneficiosUsados) : 0;
+
+    const efficiencyScore = stats.validacionesExitosas || 0;
+
+    return {
+      totalDays,
+      avgBenefitsPerMonth,
+      avgSavingsPerBenefit,
+      efficiencyScore
+    };
+  }, [stats, socio]);
+
+  // Mock data for charts (in a real app, this would come from the stats)
+  const chartData = useMemo(() => {
+    const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'];
+    const benefitsData = [12, 19, 15, 25, 22, 18];
+    const savingsData = [1200, 1900, 1500, 2500, 2200, 1800];
+
+    return { months, benefitsData, savingsData };
+  }, []);
+
+  const categoryData = [
+    { name: 'Restaurantes', value: 35, color: '#3b82f6' },
+    { name: 'Retail', value: 25, color: '#10b981' },
+    { name: 'Servicios', value: 20, color: '#f59e0b' },
+    { name: 'Entretenimiento', value: 15, color: '#ef4444' },
+    { name: 'Otros', value: 5, color: '#8b5cf6' }
+  ];
+
+  const topMerchants = [
+    { name: 'Restaurante El Buen Sabor', visits: 8, savings: 1200 },
+    { name: 'Tienda Fashion Plus', visits: 6, savings: 800 },
+    { name: 'Café Central', visits: 5, savings: 450 },
+    { name: 'Librería Moderna', visits: 4, savings: 320 },
+    { name: 'Farmacia Salud', visits: 3, savings: 180 }
+  ];
+
+  if (!isOpen) return null;
+
+  return (
+    <Dialog open={isOpen} onClose={onClose}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <BarChart3 size={24} />
+            Estadísticas Detalladas
+          </DialogTitle>
+        </DialogHeader>
+
+        {/* Tabs */}
+        <div className="mb-6">
+          <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
+            {[
+              { id: 'overview', label: 'Resumen', icon: <PieChart size={16} /> },
+              { id: 'trends', label: 'Tendencias', icon: <LineChart size={16} /> },
+              { id: 'categories', label: 'Categorías', icon: <Target size={16} /> },
+              { id: 'merchants', label: 'Comercios', icon: <Building2 size={16} /> }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  activeTab === tab.id
+                    ? 'bg-white text-blue-600 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                {tab.icon}
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          {/* Overview Tab */}
+          {activeTab === 'overview' && (
+            <div className="space-y-6">
+              {/* Key Metrics Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                      <Calendar size={16} className="text-white" />
+                    </div>
+                    <span className="text-sm font-medium text-blue-700">Días como socio</span>
+                  </div>
+                  <p className="text-2xl font-bold text-blue-900">{additionalMetrics.totalDays}</p>
+                </div>
+
+                <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
+                      <TrendingUp size={16} className="text-white" />
+                    </div>
+                    <span className="text-sm font-medium text-green-700">Promedio mensual</span>
+                  </div>
+                  <p className="text-2xl font-bold text-green-900">{additionalMetrics.avgBenefitsPerMonth}</p>
+                </div>
+
+                <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center">
+                      <DollarSign size={16} className="text-white" />
+                    </div>
+                    <span className="text-sm font-medium text-purple-700">Ahorro promedio</span>
+                  </div>
+                  <p className="text-2xl font-bold text-purple-900">${additionalMetrics.avgSavingsPerBenefit}</p>
+                </div>
+
+                <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-4">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
+                      <Zap size={16} className="text-white" />
+                    </div>
+                    <span className="text-sm font-medium text-orange-700">Eficiencia</span>
+                  </div>
+                  <p className="text-2xl font-bold text-orange-900">{additionalMetrics.efficiencyScore}%</p>
+                </div>
+              </div>
+
+              {/* Progress Indicators */}
+              <div className="bg-gray-50 rounded-xl p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Progreso del Nivel</h3>
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex justify-between text-sm text-gray-600 mb-2">
+                      <span>Puntos actuales</span>
+                      <span>{socio?.nivel?.puntos || 0} / {(socio?.nivel?.puntos || 0) + (socio?.nivel?.puntosParaProximoNivel || 1000)}</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-3">
+                      <div 
+                        className="bg-gradient-to-r from-blue-500 to-purple-600 h-3 rounded-full transition-all duration-500"
+                        style={{ 
+                          width: `${((socio?.nivel?.puntos || 0) / ((socio?.nivel?.puntos || 0) + (socio?.nivel?.puntosParaProximoNivel || 1000))) * 100}%` 
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Trends Tab */}
+          {activeTab === 'trends' && (
+            <div className="space-y-6">
+              <div className="bg-white border border-gray-200 rounded-xl p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Beneficios Usados por Mes</h3>
+                <div className="h-64 flex items-end justify-between gap-2">
+                  {chartData.benefitsData.map((value, index) => (
+                    <div key={index} className="flex flex-col items-center flex-1">
+                      <div 
+                        className="bg-gradient-to-t from-blue-500 to-blue-400 rounded-t-lg w-full transition-all duration-500 hover:from-blue-600 hover:to-blue-500"
+                        style={{ height: `${(value / Math.max(...chartData.benefitsData)) * 200}px` }}
+                      />
+                      <span className="text-xs text-gray-600 mt-2">{chartData.months[index]}</span>
+                      <span className="text-xs font-medium text-gray-900">{value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="bg-white border border-gray-200 rounded-xl p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Ahorros por Mes ($)</h3>
+                <div className="h-64 flex items-end justify-between gap-2">
+                  {chartData.savingsData.map((value, index) => (
+                    <div key={index} className="flex flex-col items-center flex-1">
+                      <div 
+                        className="bg-gradient-to-t from-green-500 to-green-400 rounded-t-lg w-full transition-all duration-500 hover:from-green-600 hover:to-green-500"
+                        style={{ height: `${(value / Math.max(...chartData.savingsData)) * 200}px` }}
+                      />
+                      <span className="text-xs text-gray-600 mt-2">{chartData.months[index]}</span>
+                      <span className="text-xs font-medium text-gray-900">${value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Categories Tab */}
+          {activeTab === 'categories' && (
+            <div className="space-y-6">
+              <div className="bg-white border border-gray-200 rounded-xl p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Distribución por Categorías</h3>
+                <div className="space-y-4">
+                  {categoryData.map((category, index) => (
+                    <div key={index} className="flex items-center gap-4">
+                      <div className="flex-1">
+                        <div className="flex justify-between text-sm mb-1">
+                          <span className="font-medium text-gray-900">{category.name}</span>
+                          <span className="text-gray-600">{category.value}%</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div 
+                            className="h-2 rounded-full transition-all duration-500"
+                            style={{ 
+                              width: `${category.value}%`,
+                              backgroundColor: category.color
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Merchants Tab */}
+          {activeTab === 'merchants' && (
+            <div className="space-y-6">
+              <div className="bg-white border border-gray-200 rounded-xl p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Comercios Más Visitados</h3>
+                <div className="space-y-4">
+                  {topMerchants.map((merchant, index) => (
+                    <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                          <span className="text-sm font-bold text-blue-600">#{index + 1}</span>
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-900">{merchant.name}</p>
+                          <p className="text-sm text-gray-600">{merchant.visits} visitas</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-semibold text-green-600">${merchant.savings}</p>
+                        <p className="text-xs text-gray-500">ahorrado</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} fullWidth>
+            Cerrar
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 // Main Component
 export default function CleanSocioPerfilPage() {
@@ -340,6 +619,7 @@ export default function CleanSocioPerfilPage() {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [configModalOpen, setConfigModalOpen] = useState(false);
   const [qrModalOpen, setQrModalOpen] = useState(false);
+  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   
   // UI states
   const [refreshing, setRefreshing] = useState(false);
@@ -367,15 +647,29 @@ export default function CleanSocioPerfilPage() {
     }
   };
 
-  // Enhanced stats with safe fallbacks
-  const enhancedStats = {
-    beneficiosUsados: stats?.beneficiosUsados || 0,
-    ahorroTotal: stats?.ahorroTotal || 0,
-    beneficiosEsteMes: stats?.beneficiosEsteMes || 0,
-    racha: stats?.racha || 0,
-    comerciosVisitados: stats?.comerciosVisitados || 0,
-    validacionesExitosas: stats?.validacionesExitosas || 95
-  };
+  // Enhanced stats with safe fallbacks and calculated changes
+  const enhancedStats = useMemo(() => {
+    const currentStats = {
+      beneficiosUsados: stats?.beneficiosUsados || 0,
+      ahorroTotal: stats?.ahorroTotal || 0,
+      beneficiosEsteMes: stats?.beneficiosEsteMes || 0,
+      racha: stats?.racha || 0,
+      comerciosVisitados: stats?.comerciosVisitados || 0,
+      validacionesExitosas: stats?.validacionesExitosas || 95
+    };
+
+    // Calculate percentage changes (mock data - in real app this would come from historical data)
+    const changes = {
+      beneficiosUsados: Math.floor(Math.random() * 30) - 10, // -10 to +20
+      ahorroTotal: Math.floor(Math.random() * 25) - 5, // -5 to +20
+      beneficiosEsteMes: Math.floor(Math.random() * 40) - 15, // -15 to +25
+      racha: Math.floor(Math.random() * 50) - 20, // -20 to +30
+      comerciosVisitados: Math.floor(Math.random() * 20) - 5, // -5 to +15
+      validacionesExitosas: Math.floor(Math.random() * 10) - 3 // -3 to +7
+    };
+
+    return { ...currentStats, changes };
+  }, [stats]);
 
   // Configuration state
   const [configuracion, setConfiguracion] = useState<SocioConfiguration>({
@@ -721,7 +1015,7 @@ export default function CleanSocioPerfilPage() {
                                 </span>
                               ))}
                             </div>
-                          </div>
+                                                    </div>
                         )}
                       </div>
 
@@ -812,6 +1106,7 @@ export default function CleanSocioPerfilPage() {
                     variant="outline"
                     size="sm"
                     leftIcon={<BarChart3 size={16} />}
+                    onClick={() => setDetailsModalOpen(true)}
                   >
                     Ver detalles
                   </Button>
@@ -823,42 +1118,42 @@ export default function CleanSocioPerfilPage() {
                     value={enhancedStats.beneficiosUsados}
                     icon={<Gift size={16} />}
                     color="#3b82f6"
-                    change={12}
+                    change={enhancedStats.changes.beneficiosUsados}
                   />
                   <StatsCard
                     title="Total Ahorrado"
                     value={`$${enhancedStats.ahorroTotal.toLocaleString()}`}
                     icon={<Wallet size={16} />}
                     color="#10b981"
-                    change={8}
+                    change={enhancedStats.changes.ahorroTotal}
                   />
                   <StatsCard
                     title="Este Mes"
                     value={enhancedStats.beneficiosEsteMes}
                     icon={<Calendar size={16} />}
                     color="#f59e0b"
-                    change={-5}
+                    change={enhancedStats.changes.beneficiosEsteMes}
                   />
                   <StatsCard
                     title="Días de Racha"
                     value={enhancedStats.racha}
                     icon={<Target size={16} />}
                     color="#ef4444"
-                    change={15}
+                    change={enhancedStats.changes.racha}
                   />
                   <StatsCard
                     title="Comercios"
                     value={enhancedStats.comerciosVisitados}
                     icon={<Building2 size={16} />}
                     color="#8b5cf6"
-                    change={3}
+                    change={enhancedStats.changes.comerciosVisitados}
                   />
                   <StatsCard
                     title="Tasa de Éxito"
                     value={`${enhancedStats.validacionesExitosas}%`}
                     icon={<CheckCircle size={16} />}
                     color="#10b981"
-                    change={2}
+                    change={enhancedStats.changes.validacionesExitosas}
                   />
                 </div>
               </div>
@@ -934,7 +1229,14 @@ export default function CleanSocioPerfilPage() {
           </div>
         </div>
 
-        {/* Modals remain the same... */}
+        {/* Detailed Stats Modal */}
+        <DetailedStatsModal
+          isOpen={detailsModalOpen}
+          onClose={() => setDetailsModalOpen(false)}
+          stats={stats}
+          socio={socio}
+        />
+
         {/* Edit Profile Modal */}
         <Dialog open={editModalOpen} onClose={() => setEditModalOpen(false)}>
           <DialogContent className="max-w-md">
@@ -1225,3 +1527,4 @@ export default function CleanSocioPerfilPage() {
     </DashboardLayout>
   );
 }
+
