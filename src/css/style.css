@@ -7112,9 +7112,11 @@ animation: contact-loading-spin 1s linear infinite;
 100% { transform: rotate(360deg); }
 }
 
-/* ===== FORZAR VISIBILIDAD EN MÓVIL ===== */
+/* ... existing code ... */
+
+/* ===== CORRECCIÓN CRÍTICA PARA VISIBILIDAD EN MÓVIL ===== */
 @media (width <= 1023px) {
-    /* Asegurar que todas las secciones sean visibles */
+    /* FORZAR VISIBILIDAD DE TODAS LAS SECCIONES EN MÓVIL */
     .features,
     .videos,
     .faq,
@@ -7124,57 +7126,191 @@ animation: contact-loading-spin 1s linear infinite;
         opacity: 1 !important;
         position: relative !important;
         z-index: 1 !important;
-    }
-    
-    /* Asegurar altura mínima para las secciones */
-    .features,
-    .videos,
-    .faq,
-    .contact {
+        transform: none !important;
         min-height: auto !important;
         height: auto !important;
+        overflow: visible !important;
     }
     
-    /* Resetear cualquier transform que pueda ocultar contenido */
+    /* ASEGURAR QUE LOS CONTENEDORES INTERNOS TAMBIÉN SEAN VISIBLES */
+    .features__container,
+    .features__grid,
+    .videos__container,
+    .videos__main-container,
+    .faq__container,
+    .contact__container,
+    .contact__grid {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        position: relative !important;
+        transform: none !important;
+        overflow: visible !important;
+    }
+    
+    /* CONFIGURACIÓN ESPECÍFICA PARA GRIDS EN MÓVIL */
+    .features__grid {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: var(--space-2xl) !important;
+        width: 100% !important;
+    }
+    
+    .contact__grid {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: var(--space-xl) !important;
+        width: 100% !important;
+    }
+    
+    /* ASEGURAR PADDING Y MÁRGENES CORRECTOS */
     .features,
     .videos,
     .faq,
     .contact {
-        transform: none !important;
+        padding: var(--section-padding-y) var(--section-padding-x) !important;
+        margin: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
     }
     
-    /* Asegurar que los contenedores internos también sean visibles */
-    .features__grid,
-    .videos__main-container,
-    .faq__container,
-    .contact__grid {
+    /* ELEMENTOS INDIVIDUALES DE CARACTERÍSTICAS */
+    .feature {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        margin-bottom: var(--space-3xl) !important;
+    }
+    
+    .feature__content,
+    .feature__phone {
         display: block !important;
         visibility: visible !important;
         opacity: 1 !important;
     }
     
-    /* Para el grid de features en móvil */
-    .features__grid {
-        display: flex !important;
-        flex-direction: column !important;
-        gap: var(--space-2xl) !important;
+    /* ELEMENTOS DE VIDEO */
+    .videos__content,
+    .videos__player-container,
+    .video-overlay {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
     }
     
-    /* Para el grid de contacto en móvil */
-    .contact__grid {
-        display: grid !important;
-        grid-template-columns: 1fr !important;
+    /* ELEMENTOS DE FAQ */
+    .faq__item,
+    .faq__question,
+    .faq__answer {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
     }
-}
-
-/* ===== DEBUGGING: Bordes temporales para identificar secciones ===== */
-/* Descomenta estas líneas temporalmente para ver las secciones */
-/*
-@media (width <= 1023px) {
+    
+    /* ELEMENTOS DE CONTACTO */
+    .contact__channel {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        flex-direction: column !important;
+        margin-bottom: var(--space-xl) !important;
+    }
+    
+    /* RESETEAR CUALQUIER ANIMACIÓN QUE PUEDA CAUSAR PROBLEMAS */
+    .features *,
+    .videos *,
+    .faq *,
+    .contact * {
+        animation-play-state: running !important;
+        animation-fill-mode: forwards !important;
+    }
+    
+    /* ASEGURAR QUE NO HAY ELEMENTOS FLOTANTES QUE OCULTEN CONTENIDO */
+    .features::before,
+    .features::after,
+    .videos::before,
+    .videos::after,
+    .faq::before,
+    .faq::after,
+    .contact::before,
+    .contact::after {
+        display: none !important;
+    }
+    
+    /* CORREGIR CUALQUIER PROBLEMA DE POSICIONAMIENTO ABSOLUTO */
+    .features .feature__phone,
+    .videos .video-container,
+    .faq .faq__search,
+    .contact .contact__badge {
+        position: relative !important;
+        top: auto !important;
+        left: auto !important;
+        right: auto !important;
+        bottom: auto !important;
+    }
+    
+    /* ASEGURAR QUE LOS BADGES Y TÍTULOS SEAN VISIBLES */
+    .features__badge,
+    .videos__badge,
+    .faq__badge,
+    .contact__badge,
+    .features__title,
+    .videos__title,
+    .faq__title,
+    .contact__title {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        position: relative !important;
+    }
+    
+    /* CORREGIR PROBLEMAS DE OVERFLOW HIDDEN */
+    body,
+    html,
+    .hero,
+    .features,
+    .videos,
+    .faq,
+    .contact {
+        overflow-x: hidden !important;
+        overflow-y: visible !important;
+    }
+    
+    /* ASEGURAR QUE NO HAY ELEMENTOS CON HEIGHT: 0 */
+    .features,
+    .videos,
+    .faq,
+    .contact {
+        min-height: 50vh !important;
+    }
+    
+    /* DEBUGGING: Bordes temporales para identificar secciones */
+    /* Descomenta estas líneas temporalmente para ver las secciones */
+    /*
     .features { border: 2px solid red !important; }
     .videos { border: 2px solid blue !important; }
     .faq { border: 2px solid green !important; }
     .contact { border: 2px solid yellow !important; }
+    */
 }
-*/
+
+/* REGLAS ADICIONALES PARA DISPOSITIVOS MUY PEQUEÑOS */
+@media (width <= 480px) {
+    .features,
+    .videos,
+    .faq,
+    .contact {
+        padding: calc(var(--section-padding-y) * 0.7) calc(var(--section-padding-x) * 0.5) !important;
+    }
+    
+    .features__grid {
+        gap: var(--space-xl) !important;
+    }
+    
+    .contact__grid {
+        gap: var(--space-lg) !important;
+    }
+}
+
+/* ... rest of existing code ... */
 
