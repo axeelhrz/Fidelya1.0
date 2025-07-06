@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
 import { useComercios } from '@/hooks/useComercios';
@@ -14,7 +14,7 @@ import { ComercioAnalytics } from '@/components/comercio/ComercioAnalytics';
 import { ComercioOperaciones } from '@/components/comercio/ComercioOperaciones';
 import { ComercioProfile } from '@/components/comercio/ComercioProfile';
 import { ComercioNotifications } from '@/components/comercio/ComercioNotifications';
-import { Shield, AlertTriangle, Loader2 } from 'lucide-react';
+import { Shield, Loader2 } from 'lucide-react';
 
 // Modern Loading Screen Component
 const ModernLoadingScreen: React.FC<{ message: string }> = ({ message }) => (
@@ -32,7 +32,7 @@ const ModernLoadingScreen: React.FC<{ message: string }> = ({ message }) => (
           animate={{ rotate: 360 }}
           transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
         >
-          <div className="absolute inset-0 rounded-full border-4 border-gradient-to-r from-blue-500 to-purple-600 opacity-20"></div>
+          <div className="absolute inset-0 rounded-full border-4 border-blue-200 opacity-20"></div>
           <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-blue-500 border-r-purple-600"></div>
         </motion.div>
         
@@ -225,7 +225,13 @@ export default function ComercioDashboard() {
         <div className="relative min-h-full">
           {/* Background Pattern */}
           <div className="absolute inset-0 opacity-30">
-            <div className="absolute inset-0 bg-grid bg-[size:20px_20px] [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)]"></div>
+            <div 
+              className="absolute inset-0 opacity-50"
+              style={{
+                backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(165, 180, 252, 0.15) 1px, transparent 0)',
+                backgroundSize: '20px 20px'
+              }}
+            />
           </div>
           
           {/* Content */}

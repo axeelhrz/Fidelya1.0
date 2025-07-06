@@ -156,7 +156,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             <motion.div
               initial={isMobile ? { x: -SIDEBAR_WIDTH } : false}
               animate={isMobile ? { x: 0 } : false}
-              exit={isMobile ? { x: -SIDEBAR_WIDTH } : false}
+              exit={isMobile ? { x: -SIDEBAR_WIDTH } : undefined}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
               className={`
                 ${isMobile ? 'fixed' : 'fixed'} 

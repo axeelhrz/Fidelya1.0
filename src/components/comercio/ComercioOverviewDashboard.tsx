@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
 import { useComercios } from '@/hooks/useComercios';
 import { useBeneficios } from '@/hooks/useBeneficios';
@@ -18,23 +18,15 @@ import {
   Receipt, 
   Bell,
   Calendar,
-  Users,
-  DollarSign,
   Activity,
   ArrowUpRight,
-  ArrowDownRight,
   RefreshCw,
-  Eye,
   BarChart3,
   Zap,
   Target,
   Clock,
   CheckCircle,
   AlertCircle,
-  Smartphone,
-  Globe,
-  Star,
-  Heart
 } from 'lucide-react';
 import { Timestamp } from 'firebase/firestore';
 

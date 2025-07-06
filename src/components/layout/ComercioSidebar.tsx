@@ -22,13 +22,9 @@ import {
   ChevronRight,
   ChevronDown,
   User,
-  Settings,
   TrendingUp,
   Target,
-  Zap,
-  Activity,
   Shield,
-  Crown,
   Sparkles
 } from 'lucide-react';
 
