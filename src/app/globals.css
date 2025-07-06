@@ -21,6 +21,7 @@
     scroll-behavior: smooth;
     -webkit-text-size-adjust: 100%;
     tab-size: 4;
+    overflow: hidden; /* Prevent scroll on homepage */
   }
   
   body {
@@ -31,6 +32,7 @@
     font-feature-settings: 'rlig' 1, 'calt' 1;
     line-height: 1.5;
     @apply bg-slate-50 text-slate-900;
+    overflow: hidden; /* Prevent scroll on homepage */
   }
   
   /* Dark mode */
@@ -40,11 +42,11 @@
   
   /* Selección de texto mejorada */
   ::selection {
-    @apply bg-gradient-to-r from-primary-200 to-violet-200 text-primary-900;
+    @apply bg-gradient-to-r from-blue-200 to-cyan-200 text-blue-900;
   }
   
   .dark ::selection {
-    @apply bg-gradient-to-r from-primary-800 to-violet-800 text-primary-100;
+    @apply bg-gradient-to-r from-blue-800 to-cyan-800 text-blue-100;
   }
   
   /* Scrollbar personalizado mejorado */
@@ -62,11 +64,11 @@
   }
   
   ::-webkit-scrollbar-thumb {
-    @apply bg-gradient-to-b from-primary-500 to-violet-500 rounded-full shadow-lg;
+    @apply bg-gradient-to-b from-blue-500 to-cyan-500 rounded-full shadow-lg;
   }
   
   ::-webkit-scrollbar-thumb:hover {
-    @apply from-primary-600 to-violet-600 shadow-xl;
+    @apply from-blue-600 to-cyan-600 shadow-xl;
   }
   
   /* Inputs numéricos */
@@ -97,12 +99,12 @@
 @layer components {
   /* Botones premium */
   .btn-primary {
-    @apply inline-flex items-center justify-center px-8 py-4 text-base font-semibold text-white bg-gradient-to-r from-primary-600 via-primary-700 to-violet-600 rounded-2xl shadow-2xl hover:shadow-primary-500/25 transform hover:-translate-y-1 hover:scale-105 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 relative overflow-hidden;
+    @apply inline-flex items-center justify-center px-8 py-4 text-base font-semibold text-white bg-gradient-to-r from-blue-600 via-cyan-600 to-indigo-600 rounded-2xl shadow-2xl hover:shadow-blue-500/25 transform hover:-translate-y-1 hover:scale-105 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 relative overflow-hidden;
   }
   
   .btn-primary::before {
     content: '';
-    @apply absolute inset-0 bg-gradient-to-r from-primary-700 via-primary-800 to-violet-700 opacity-0 transition-opacity duration-300;
+    @apply absolute inset-0 bg-gradient-to-r from-blue-700 via-cyan-700 to-indigo-700 opacity-0 transition-opacity duration-300;
   }
   
   .btn-primary:hover::before {
@@ -110,7 +112,7 @@
   }
   
   .btn-secondary {
-    @apply inline-flex items-center justify-center px-8 py-4 text-base font-semibold text-slate-700 bg-white/80 backdrop-blur-sm border border-slate-300/50 rounded-2xl shadow-lg hover:shadow-xl hover:bg-white transform hover:-translate-y-1 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+    @apply inline-flex items-center justify-center px-8 py-4 text-base font-semibold text-slate-700 bg-white/80 backdrop-blur-sm border border-slate-300/50 rounded-2xl shadow-lg hover:shadow-xl hover:bg-white transform hover:-translate-y-1 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
   }
   
   .dark .btn-secondary {
@@ -157,6 +159,11 @@
   .hover-glow {
     @apply hover:shadow-glow-lg transition-all duration-300;
   }
+
+  /* Typing effect */
+  .typing-cursor {
+    @apply animate-pulse;
+  }
 }
 
 /* Utilidades personalizadas mejoradas */
@@ -169,15 +176,15 @@
   /* Patrón de grid de fondo mejorado */
   .bg-grid {
     background-image: 
-      radial-gradient(circle at 1px 1px, rgba(165, 180, 252, 0.15) 1px, transparent 0),
-      radial-gradient(circle at 20px 20px, rgba(139, 92, 246, 0.1) 1px, transparent 0);
+      radial-gradient(circle at 1px 1px, rgba(59, 130, 246, 0.15) 1px, transparent 0),
+      radial-gradient(circle at 20px 20px, rgba(99, 102, 241, 0.1) 1px, transparent 0);
     background-size: 20px 20px, 40px 40px;
   }
   
   .dark .bg-grid {
     background-image: 
-      radial-gradient(circle at 1px 1px, rgba(165, 180, 252, 0.1) 1px, transparent 0),
-      radial-gradient(circle at 20px 20px, rgba(139, 92, 246, 0.05) 1px, transparent 0);
+      radial-gradient(circle at 1px 1px, rgba(59, 130, 246, 0.1) 1px, transparent 0),
+      radial-gradient(circle at 20px 20px, rgba(99, 102, 241, 0.05) 1px, transparent 0);
   }
   
   /* Efectos glass mejorados */
@@ -207,20 +214,20 @@
   }
   
   .glow-xl {
-    box-shadow: 0 0 60px rgba(99, 102, 241, 0.3);
+    box-shadow: 0 0 60px rgba(59, 130, 246, 0.3);
   }
   
   .text-glow {
-    text-shadow: 0 0 30px rgba(165, 180, 252, 0.6);
+    text-shadow: 0 0 30px rgba(147, 197, 253, 0.6);
   }
   
   .dark .text-glow {
-    text-shadow: 0 0 30px rgba(165, 180, 252, 0.4);
+    text-shadow: 0 0 30px rgba(147, 197, 253, 0.4);
   }
   
   /* Texto con gradiente mejorado */
   .gradient-text {
-    @apply bg-gradient-to-r from-primary-600 via-violet-600 to-primary-600 bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-blue-600 via-cyan-600 to-indigo-600 bg-clip-text text-transparent;
     background-size: 200% 100%;
     animation: gradient-shift 3s ease-in-out infinite;
   }
@@ -307,6 +314,12 @@
   
   .dark .frosted-glass {
     @apply bg-slate-900/10 border-slate-700/20;
+  }
+
+  /* No scroll utilities */
+  .no-scroll {
+    overflow: hidden;
+    height: 100vh;
   }
 }
 
@@ -427,6 +440,43 @@
   }
 }
 
+/* Animaciones específicas para la página principal */
+@keyframes typewriter {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+@keyframes cursor-blink {
+  0%, 50% {
+    opacity: 1;
+  }
+  51%, 100% {
+    opacity: 0;
+  }
+}
+
+@keyframes float-gentle {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(59, 130, 246, 0.6);
+  }
+}
+
 /* Clases para accesibilidad */
 .sr-only {
   position: absolute;
@@ -512,4 +562,20 @@
 /* Efectos de entrada escalonados */
 .stagger-animation {
   animation-delay: calc(var(--stagger-delay, 0) * 100ms);
+}
+
+/* Efectos específicos para la homepage */
+.homepage-container {
+  height: 100vh;
+  overflow: hidden;
+}
+
+.typing-effect {
+  overflow: hidden;
+  white-space: nowrap;
+  animation: typewriter 2s steps(7) 1s both;
+}
+
+.cursor-effect {
+  animation: cursor-blink 1s infinite;
 }
