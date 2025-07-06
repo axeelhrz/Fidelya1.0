@@ -70,7 +70,7 @@ interface SystemHealth {
   responseTime: number;
 }
 
-// Componente de Métrica Simple
+// Componente de Métrica Simple - Ahora cuadrado
 const MetricCard: React.FC<{
   title: string;
   value: string | number;
@@ -91,12 +91,14 @@ const MetricCard: React.FC<{
       borderRadius: 3,
       bgcolor: '#ffffff',
       cursor: onClick ? 'pointer' : 'default',
-      height: '100%',
       display: 'flex',
       flexDirection: 'column',
       position: 'relative',
       overflow: 'hidden',
-      minHeight: '200px',
+      // Hacer las tarjetas cuadradas
+      aspectRatio: '1',
+      minHeight: 'auto',
+      height: 'auto',
       '&::before': {
         content: '""',
         position: 'absolute',
@@ -108,12 +110,12 @@ const MetricCard: React.FC<{
       },
     }}
   >
-    <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 3 }}>
+    <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 2 }}>
       <Box
         sx={{
-          width: 56,
-          height: 56,
-          borderRadius: 3,
+          width: 48,
+          height: 48,
+          borderRadius: 2.5,
           bgcolor: `${color}15`,
           display: 'flex',
           alignItems: 'center',
@@ -121,21 +123,21 @@ const MetricCard: React.FC<{
           color: color,
         }}
       >
-        {loading ? <CircularProgress size={28} sx={{ color }} /> : React.cloneElement(icon as React.ReactElement, { sx: { fontSize: 28 } })}
+        {loading ? <CircularProgress size={24} sx={{ color }} /> : React.cloneElement(icon as React.ReactElement, { sx: { fontSize: 24 } })}
       </Box>
       {trend && trendValue !== undefined && (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
           {trend === 'up' ? (
-            <TrendingUp sx={{ fontSize: 18, color: '#10b981' }} />
+            <TrendingUp sx={{ fontSize: 16, color: '#10b981' }} />
           ) : trend === 'down' ? (
-            <TrendingDown sx={{ fontSize: 18, color: '#ef4444' }} />
+            <TrendingDown sx={{ fontSize: 16, color: '#ef4444' }} />
           ) : null}
           <Typography
             variant="body2"
             sx={{
               fontWeight: 700,
               color: trend === 'up' ? '#10b981' : trend === 'down' ? '#ef4444' : '#64748b',
-              fontSize: '0.9rem',
+              fontSize: '0.8rem',
             }}
           >
             {trendValue > 0 ? '+' : ''}{trendValue}%
@@ -144,15 +146,15 @@ const MetricCard: React.FC<{
       )}
     </Box>
     
-    <Box sx={{ flex: 1 }}>
+    <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
       <Typography
         variant="overline"
         sx={{
           color: '#64748b',
           fontWeight: 700,
-          fontSize: '0.8rem',
+          fontSize: '0.75rem',
           letterSpacing: '0.1em',
-          mb: 2,
+          mb: 1,
           display: 'block',
         }}
       >
@@ -164,9 +166,9 @@ const MetricCard: React.FC<{
         sx={{
           fontWeight: 800,
           color: '#0f172a',
-          fontSize: '2.5rem',
+          fontSize: '2rem',
           lineHeight: 1,
-          mb: subtitle ? 1.5 : 0,
+          mb: subtitle ? 1 : 0,
         }}
       >
         {loading ? '...' : typeof value === 'number' ? value.toLocaleString() : value}
@@ -174,11 +176,11 @@ const MetricCard: React.FC<{
       
       {subtitle && (
         <Typography
-          variant="body1"
+          variant="body2"
           sx={{
             color: '#64748b',
             fontWeight: 600,
-            fontSize: '1rem',
+            fontSize: '0.9rem',
           }}
         >
           {subtitle}
@@ -698,7 +700,7 @@ const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
             </Stack>
           </Box>
 
-          {/* System Status Banner */}
+          {/* System Status Banner - Sin "Sistema" */}
           <Paper
             elevation={0}
             sx={{
@@ -733,9 +735,9 @@ const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                 flex: 1,
                 fontSize: '1.1rem',
               }}>
-                Sistema {healthStatus === 'excellent' ? 'Excelente' : 
-                        healthStatus === 'good' ? 'Operativo' :
-                        healthStatus === 'warning' ? 'Con Advertencias' : 'Crítico'}
+                {healthStatus === 'excellent' ? 'Excelente' : 
+                 healthStatus === 'good' ? 'Operativo' :
+                 healthStatus === 'warning' ? 'Con Advertencias' : 'Crítico'}
               </Typography>
               <Chip
                 label={`${systemHealth.uptime}% Uptime`}
@@ -787,7 +789,7 @@ const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
             },
           }}
         >
-          {/* KPI Metrics */}
+          {/* KPI Metrics - Ahora cuadradas */}
           <Box sx={{ gridArea: 'metric1' }}>
             <MetricCard
               title="Total Socios"
