@@ -42,6 +42,8 @@ export const initializeNotificationSystem = () => {
 export const initializeClientNotifications = () => {
   // Solo en el cliente (navegador)
   if (typeof window !== 'undefined') {
+    console.log('🔔 Inicializando notificaciones del cliente...');
+    
     // Solicitar permisos de notificación
     if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission().then(permission => {
@@ -49,15 +51,31 @@ export const initializeClientNotifications = () => {
       });
     }
     
-    // Registrar Service Worker para notificaciones push (si existe)
+    // Registrar Service Worker para notificaciones push (solo si existe el archivo)
     if ('serviceWorker' in navigator && 'PushManager' in window) {
-      navigator.serviceWorker.register('/sw.js')
-        .then(() => {
-          console.log('📱 Service Worker registrado para notificaciones push');
+      // Check if service worker file exists before registering
+      fetch('/sw.js', { method: 'HEAD' })
+        .then(response => {
+          if (response.ok) {
+            // Service worker file exists, register it
+            navigator.serviceWorker.register('/sw.js')
+              .then(() => {
+                console.log('📱 Service Worker registrado para notificaciones push');
+              })
+              .catch(error => {
+                console.log('❌ Error registrando Service Worker:', error);
+              });
+          } else {
+            console.log('ℹ️ Service Worker no encontrado, saltando registro');
+          }
         })
-        .catch(error => {
-          console.log('❌ Error registrando Service Worker:', error);
+        .catch(() => {
+          console.log('ℹ️ Service Worker no disponible, saltando registro');
         });
+    } else {
+      console.log('ℹ️ Service Worker o Push Manager no soportados en este navegador');
     }
+    
+    console.log('✅ Notificaciones del cliente inicializadas');
   }
 };
