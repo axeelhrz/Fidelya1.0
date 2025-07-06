@@ -18,15 +18,12 @@ import {
   Chip,
 } from '@mui/material';
 import {
-  PhotoCamera,
   Store,
   CloudUpload,
   Image as ImageIcon,
-  Delete,
   Edit,
   Visibility,
   DragIndicator,
-  CheckCircle,
   ErrorOutline,
 } from '@mui/icons-material';
 import { useComercios } from '@/hooks/useComercios';
@@ -58,7 +55,7 @@ export const ImageUploader: React.FC = () => {
   const portadaInputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState<'logo' | 'portada' | null>(null);
 
-  const validateFile = (file: File): string | null => {
+  const validateFile = useCallback((file: File): string | null => {
     if (!file.type.startsWith('image/')) {
       return 'Por favor selecciona un archivo de imagen válido';
     }
@@ -69,17 +66,17 @@ export const ImageUploader: React.FC = () => {
       return 'Solo se permiten archivos JPG, PNG o WebP';
     }
     return null;
-  };
+  }, []);
 
-  const createPreview = (file: File): Promise<string> => {
+  const createPreview = useCallback((file: File): Promise<string> => {
     return new Promise((resolve) => {
       const reader = new FileReader();
       reader.onload = (e) => resolve(e.target?.result as string);
       reader.readAsDataURL(file);
     });
-  };
+  }, []);
 
-  const simulateProgress = (setState: React.Dispatch<React.SetStateAction<ImageUploadState>>) => {
+  const simulateProgress = useCallback((setState: React.Dispatch<React.SetStateAction<ImageUploadState>>) => {
     let progress = 0;
     const interval = setInterval(() => {
       progress += Math.random() * 15;
@@ -90,62 +87,65 @@ export const ImageUploader: React.FC = () => {
       setState(prev => ({ ...prev, progress }));
     }, 200);
     return interval;
-  };
+  }, []);
 
-  const handleImageUpload = async (file: File, type: 'logo' | 'imagen') => {
-    const setState = type === 'logo' ? setLogoState : setPortadaState;
-    
-    // Validate file
-    const validationError = validateFile(file);
-    if (validationError) {
-      setState(prev => ({ ...prev, error: validationError }));
-      toast.error(validationError);
-      return;
-    }
-
-    // Create preview
-    const preview = await createPreview(file);
-    
-    setState(prev => ({ 
-      ...prev, 
-      uploading: true, 
-      progress: 0, 
-      preview, 
-      error: null 
-    }));
-
-    // Simulate progress
-    const progressInterval = simulateProgress(setState);
-
-    try {
-      const downloadURL = await uploadImage(file, type);
+  const handleImageUpload = useCallback(
+    async (file: File, type: 'logo' | 'imagen') => {
+      const setState = type === 'logo' ? setLogoState : setPortadaState;
       
-      if (downloadURL) {
-        clearInterval(progressInterval);
-        setState(prev => ({ 
-          ...prev, 
-          progress: 100, 
-          uploading: false,
-          preview: null 
-        }));
-        
-        // Reset after success animation
-        setTimeout(() => {
-          setState(prev => ({ ...prev, progress: 0 }));
-        }, 2000);
+      // Validate file
+      const validationError = validateFile(file);
+      if (validationError) {
+        setState(prev => ({ ...prev, error: validationError }));
+        toast.error(validationError);
+        return;
       }
-    } catch (error) {
-      clearInterval(progressInterval);
-      const errorMessage = error instanceof Error ? error.message : 'Error al subir la imagen';
+
+      // Create preview
+      const preview = await createPreview(file);
+      
       setState(prev => ({ 
         ...prev, 
-        uploading: false, 
+        uploading: true, 
         progress: 0, 
-        error: errorMessage,
-        preview: null 
+        preview, 
+        error: null 
       }));
-    }
-  };
+
+      // Simulate progress
+      const progressInterval = simulateProgress(setState);
+
+      try {
+        const downloadURL = await uploadImage(file, type);
+        
+        if (downloadURL) {
+          clearInterval(progressInterval);
+          setState(prev => ({ 
+            ...prev, 
+            progress: 100, 
+            uploading: false,
+            preview: null 
+          }));
+          
+          // Reset after success animation
+          setTimeout(() => {
+            setState(prev => ({ ...prev, progress: 0 }));
+          }, 2000);
+        }
+      } catch (error) {
+        clearInterval(progressInterval);
+        const errorMessage = error instanceof Error ? error.message : 'Error al subir la imagen';
+        setState(prev => ({ 
+          ...prev, 
+          uploading: false, 
+          progress: 0, 
+          error: errorMessage,
+          preview: null 
+        }));
+      }
+    },
+    [uploadImage, validateFile, createPreview, simulateProgress]
+  );
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'imagen') => {
     const file = event.target.files?.[0];
@@ -167,7 +167,7 @@ export const ImageUploader: React.FC = () => {
     } else {
       toast.error('Por favor arrastra un archivo de imagen');
     }
-  }, []);
+  }, [handleImageUpload]);
 
   const handleDragOver = useCallback((event: React.DragEvent, type: 'logo' | 'portada') => {
     event.preventDefault();
@@ -197,7 +197,7 @@ export const ImageUploader: React.FC = () => {
     color: string;
     aspectRatio: string;
     size: { width: number; height: number };
-  }> = ({ type, state, currentImage, title, subtitle, icon, color, aspectRatio, size }) => {
+  }> = ({ type, state, currentImage, title, subtitle, icon, color, size }) => {
     const isDragging = dragOver === type;
     const hasImage = currentImage || state.preview;
     const isUploading = state.uploading;
