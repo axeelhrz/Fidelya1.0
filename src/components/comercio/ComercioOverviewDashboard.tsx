@@ -1,46 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { motion } from 'framer-motion';
-import {
-  Box,
-  Typography,
-  Card,
-  CardContent,
-  alpha,
-  Avatar,
-  Stack,
-  LinearProgress,
-  Paper,
-  IconButton,
-  Button,
-  Chip,
-  CircularProgress,
-  Alert,
-  Container,
-} from '@mui/material';
-import {
-  TrendingUp,
-  TrendingDown,
-  Store,
-  LocalOffer,
-  QrCode,
-  Receipt,
-  Timeline,
-  CalendarToday,
-  Warning,
-  CheckCircle,
-  Info,
-  ArrowForward,
-  Refresh,
-  NotificationsActive,
-  Speed,
-  ErrorOutline,
-  Campaign,
-} from '@mui/icons-material';
-import {
-  Timestamp,
-} from 'firebase/firestore';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
 import { useComercios } from '@/hooks/useComercios';
 import { useBeneficios } from '@/hooks/useBeneficios';
@@ -48,6 +9,34 @@ import { useValidaciones } from '@/hooks/useValidaciones';
 import { useNotifications } from '@/hooks/useNotifications';
 import { format, subDays, startOfDay } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { 
+  TrendingUp, 
+  TrendingDown, 
+  Store, 
+  Gift, 
+  QrCode, 
+  Receipt, 
+  Bell,
+  Calendar,
+  Users,
+  DollarSign,
+  Activity,
+  ArrowUpRight,
+  ArrowDownRight,
+  RefreshCw,
+  Eye,
+  BarChart3,
+  Zap,
+  Target,
+  Clock,
+  CheckCircle,
+  AlertCircle,
+  Smartphone,
+  Globe,
+  Star,
+  Heart
+} from 'lucide-react';
+import { Timestamp } from 'firebase/firestore';
 
 interface ComercioOverviewDashboardProps {
   onNavigate?: (section: string) => void;
@@ -79,7 +68,8 @@ interface ComercioMetrics {
   avgValidacionesDiarias: number;
 }
 
-interface KPICardProps {
+// Modern KPI Card Component
+const ModernKPICard: React.FC<{
   title: string;
   value: string | number;
   change: number;
@@ -91,25 +81,24 @@ interface KPICardProps {
   trend?: 'up' | 'down' | 'neutral';
   onClick?: () => void;
   loading?: boolean;
-}
+}> = ({ title, value, change, icon, color, gradient, delay, subtitle, trend = 'neutral', onClick, loading = false }) => {
+  
+  const getTrendIcon = () => {
+    if (trend === 'up') return <TrendingUp className="w-4 h-4" />;
+    if (trend === 'down') return <TrendingDown className="w-4 h-4" />;
+    return null;
+  };
 
-const KPICard: React.FC<KPICardProps> = ({
-  title,
-  value,
-  change,
-  icon,
-  color,
-  gradient,
-  delay,
-  subtitle,
-  trend = 'neutral',
-  onClick,
-  loading = false
-}) => {
+  const getTrendColor = () => {
+    if (trend === 'up') return 'text-emerald-600';
+    if (trend === 'down') return 'text-red-500';
+    return 'text-slate-500';
+  };
+
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.95, y: 20 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
+      initial={{ opacity: 0, y: 20, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{
         duration: 0.6,
         delay,
@@ -117,196 +106,122 @@ const KPICard: React.FC<KPICardProps> = ({
         stiffness: 100,
         damping: 15
       }}
-      style={{ flex: '1 1 0', minWidth: '280px' }}
+      whileHover={{ 
+        y: -8, 
+        scale: 1.02,
+        transition: { duration: 0.2 }
+      }}
+      className="group cursor-pointer"
+      onClick={onClick}
     >
-      <Card
-        elevation={0}
-        onClick={onClick}
-        sx={{
-          position: 'relative',
-          overflow: 'hidden',
-          border: '1px solid #f1f5f9',
-          borderRadius: 4,
-          background: 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
-          transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-          cursor: onClick ? 'pointer' : 'default',
-          height: '100%',
-          '&:hover': {
-            borderColor: alpha(color, 0.3),
-            transform: onClick ? 'translateY(-6px)' : 'translateY(-3px)',
-            boxShadow: `0 20px 60px -15px ${alpha(color, 0.25)}`,
-            '& .kpi-icon': {
-              transform: 'scale(1.1) rotate(5deg)',
-              background: gradient,
-              color: 'white',
-            },
-            '& .kpi-glow': {
-              opacity: 1,
-            }
-          },
-        }}
-      >
-        {/* Glow effect */}
-        <Box
-          className="kpi-glow"
-          sx={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            height: '3px',
-            background: gradient,
-            opacity: 0.6,
-            transition: 'opacity 0.3s ease',
-          }}
+      <div className="relative overflow-hidden bg-white/80 backdrop-blur-xl rounded-2xl border border-white/20 shadow-xl hover:shadow-2xl transition-all duration-500">
+        {/* Gradient Background */}
+        <div 
+          className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-500"
+          style={{ background: gradient }}
         />
         
-        <CardContent sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column' }}>
-          <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 2 }}>
-            <Avatar
-              className="kpi-icon"
-              sx={{
-                width: 56,
-                height: 56,
-                bgcolor: alpha(color, 0.1),
-                color: color,
-                borderRadius: 3,
-                transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                boxShadow: `0 6px 20px ${alpha(color, 0.2)}`,
-              }}
+        {/* Glow Effect */}
+        <div 
+          className="absolute -inset-1 opacity-0 group-hover:opacity-20 blur-xl transition-opacity duration-500"
+          style={{ background: gradient }}
+        />
+        
+        {/* Content */}
+        <div className="relative p-6">
+          {/* Header */}
+          <div className="flex items-start justify-between mb-4">
+            <div 
+              className="p-3 rounded-xl shadow-lg group-hover:scale-110 transition-transform duration-300"
+              style={{ background: `${color}15` }}
             >
-              {loading ? <CircularProgress size={24} sx={{ color: 'inherit' }} /> : icon}
-            </Avatar>
+              <div style={{ color }} className="w-6 h-6">
+                {loading ? (
+                  <div className="w-6 h-6 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  icon
+                )}
+              </div>
+            </div>
             
-            {/* Trend indicator */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              {trend === 'up' && <TrendingUp sx={{ fontSize: 18, color: '#10b981' }} />}
-              {trend === 'down' && <TrendingDown sx={{ fontSize: 18, color: '#ef4444' }} />}
-              <Typography
-                variant="body2"
-                sx={{
-                  fontWeight: 700,
-                  color: trend === 'up' ? '#10b981' : trend === 'down' ? '#ef4444' : '#6b7280',
-                  fontSize: '0.85rem'
-                }}
-              >
+            {/* Trend Indicator */}
+            <div className={`flex items-center space-x-1 ${getTrendColor()}`}>
+              {getTrendIcon()}
+              <span className="text-sm font-bold">
                 {change > 0 ? '+' : ''}{change}%
-              </Typography>
-            </Box>
-          </Box>
+              </span>
+            </div>
+          </div>
           
-          <Box sx={{ flex: 1 }}>
-            <Typography
-              variant="overline"
-              sx={{
-                color: '#94a3b8',
-                fontWeight: 700,
-                fontSize: '0.7rem',
-                letterSpacing: '0.1em',
-                textTransform: 'uppercase',
-                mb: 1,
-                display: 'block'
-              }}
-            >
-              {title}
-            </Typography>
-            
-            <Typography
-              variant="h4"
-              sx={{
-                fontWeight: 900,
-                color: '#0f172a',
-                fontSize: '2.2rem',
-                letterSpacing: '-0.02em',
-                lineHeight: 0.9,
-                mb: subtitle ? 1 : 0,
-              }}
-            >
+          {/* Value */}
+          <div className="mb-2">
+            <h3 className="text-3xl font-black text-slate-800 group-hover:text-slate-900 transition-colors">
               {loading ? '...' : value}
-            </Typography>
-            
-            {subtitle && (
-              <Typography
-                variant="body2"
-                sx={{
-                  color: '#64748b',
-                  fontWeight: 600,
-                  fontSize: '0.85rem'
-                }}
-              >
-                {subtitle}
-              </Typography>
-            )}
-          </Box>
+            </h3>
+            <p className="text-sm font-medium text-slate-500 uppercase tracking-wider">
+              {title}
+            </p>
+          </div>
           
-          {/* Progress indicator */}
-          <Box sx={{ mt: 2 }}>
-            <LinearProgress
-              variant="determinate"
-              value={loading ? 0 : Math.min(Math.abs(change) * 10, 100)}
-              sx={{
-                height: 3,
-                borderRadius: 2,
-                bgcolor: alpha(color, 0.1),
-                '& .MuiLinearProgress-bar': {
-                  bgcolor: color,
-                  borderRadius: 2,
-                }
-              }}
-            />
-          </Box>
-          
-          {onClick && (
-            <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
-              <IconButton
-                size="small"
-                sx={{
-                  color: color,
-                  bgcolor: alpha(color, 0.1),
-                  '&:hover': {
-                    bgcolor: alpha(color, 0.2),
-                    transform: 'scale(1.1)',
-                  },
-                  transition: 'all 0.2s ease',
-                }}
-              >
-                <ArrowForward sx={{ fontSize: 16 }} />
-              </IconButton>
-            </Box>
+          {/* Subtitle */}
+          {subtitle && (
+            <p className="text-xs text-slate-400 font-medium">
+              {subtitle}
+            </p>
           )}
-        </CardContent>
-      </Card>
+          
+          {/* Progress Bar */}
+          <div className="mt-4 h-1 bg-slate-100 rounded-full overflow-hidden">
+            <motion.div
+              className="h-full rounded-full"
+              style={{ background: gradient }}
+              initial={{ width: 0 }}
+              animate={{ width: loading ? '0%' : `${Math.min(Math.abs(change) * 2, 100)}%` }}
+              transition={{ duration: 1, delay: delay + 0.5 }}
+            />
+          </div>
+        </div>
+        
+        {/* Click Indicator */}
+        {onClick && (
+          <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <ArrowUpRight className="w-4 h-4 text-slate-400" />
+          </div>
+        )}
+      </div>
     </motion.div>
   );
 };
 
-const ActivityCard: React.FC<{
+// Modern Activity Feed Component
+const ModernActivityFeed: React.FC<{
   activities: ActivityLog[];
   loading: boolean;
   onViewAll?: () => void;
 }> = ({ activities, loading, onViewAll }) => {
+  
   const getActivityIcon = (type: ActivityLog['type']) => {
     const icons = {
-      validation_completed: <QrCode sx={{ fontSize: 20 }} />,
-      benefit_redeemed: <LocalOffer sx={{ fontSize: 20 }} />,
-      profile_updated: <Store sx={{ fontSize: 20 }} />,
-      qr_generated: <QrCode sx={{ fontSize: 20 }} />,
-      system_alert: <Warning sx={{ fontSize: 20 }} />,
-      notification_received: <Campaign sx={{ fontSize: 20 }} />,
+      validation_completed: <QrCode className="w-4 h-4" />,
+      benefit_redeemed: <Gift className="w-4 h-4" />,
+      profile_updated: <Store className="w-4 h-4" />,
+      qr_generated: <QrCode className="w-4 h-4" />,
+      system_alert: <AlertCircle className="w-4 h-4" />,
+      notification_received: <Bell className="w-4 h-4" />,
     };
-    return icons[type] || <Info sx={{ fontSize: 20 }} />;
+    return icons[type] || <Activity className="w-4 h-4" />;
   };
 
   const getActivityColor = (type: ActivityLog['type']) => {
     const colors = {
-      validation_completed: '#10b981',
-      benefit_redeemed: '#f59e0b',
-      profile_updated: '#6366f1',
-      qr_generated: '#8b5cf6',
-      system_alert: '#ef4444',
-      notification_received: '#ec4899',
+      validation_completed: 'from-emerald-500 to-teal-500',
+      benefit_redeemed: 'from-amber-500 to-orange-500',
+      profile_updated: 'from-blue-500 to-indigo-500',
+      qr_generated: 'from-purple-500 to-pink-500',
+      system_alert: 'from-red-500 to-rose-500',
+      notification_received: 'from-cyan-500 to-blue-500',
     };
-    return colors[type] || '#6b7280';
+    return colors[type] || 'from-slate-500 to-gray-500';
   };
 
   return (
@@ -314,269 +229,222 @@ const ActivityCard: React.FC<{
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.6, delay: 0.3 }}
-      style={{ flex: '2 1 0', minWidth: '400px' }}
+      className="bg-white/80 backdrop-blur-xl rounded-2xl border border-white/20 shadow-xl overflow-hidden"
     >
-      <Card
-        elevation={0}
-        sx={{
-          border: '1px solid #f1f5f9',
-          borderRadius: 4,
-          overflow: 'hidden',
-          background: 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
-          height: '100%',
-        }}
-      >
-        <CardContent sx={{ p: 3 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Avatar
-                sx={{
-                  width: 44,
-                  height: 44,
-                  bgcolor: alpha('#6366f1', 0.1),
-                  color: '#6366f1',
-                  borderRadius: 3,
-                }}
-              >
-                <Timeline />
-              </Avatar>
-              <Box>
-                <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', mb: 0.5 }}>
-                  Actividad Reciente
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#64748b' }}>
-                  Últimas acciones del comercio
-                </Typography>
-              </Box>
-            </Box>
-            {onViewAll && (
-              <Button
-                onClick={onViewAll}
-                size="small"
-                endIcon={<ArrowForward />}
-                sx={{
-                  textTransform: 'none',
-                  fontWeight: 600,
-                  color: '#6366f1',
-                }}
-              >
-                Ver todo
-              </Button>
-            )}
-          </Box>
-          
-          {loading ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-              <CircularProgress size={32} />
-            </Box>
-          ) : (
-            <Stack spacing={2.5}>
-              {activities.slice(0, 5).map((activity) => (
-                <Box key={activity.id} sx={{ display: 'flex', alignItems: 'flex-start', gap: 2.5 }}>
-                  <Avatar
-                    sx={{
-                      width: 36,
-                      height: 36,
-                      bgcolor: alpha(getActivityColor(activity.type), 0.1),
-                      color: getActivityColor(activity.type),
-                      borderRadius: 2,
-                    }}
-                  >
-                    {getActivityIcon(activity.type)}
-                  </Avatar>
-                  <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        fontWeight: 600,
-                        color: '#1e293b',
-                        mb: 0.5,
-                        fontSize: '0.9rem'
-                      }}
-                    >
-                      {activity.title}
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        color: '#64748b',
-                        fontSize: '0.8rem',
-                        mb: 0.5,
-                        lineHeight: 1.4,
-                      }}
-                    >
-                      {activity.description}
-                    </Typography>
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        color: '#94a3b8',
-                        fontWeight: 500,
-                        fontSize: '0.75rem',
-                      }}
-                    >
-                      {format(activity.timestamp.toDate(), 'dd/MM/yyyy HH:mm', { locale: es })}
-                    </Typography>
-                  </Box>
-                </Box>
-              ))}
-              {activities.length === 0 && (
-                <Box sx={{ textAlign: 'center', py: 3 }}>
-                  <Typography variant="body2" sx={{ color: '#94a3b8' }}>
-                    No hay actividad reciente
-                  </Typography>
-                </Box>
-              )}
-            </Stack>
+      {/* Header */}
+      <div className="p-6 border-b border-slate-100">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl">
+              <Activity className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-slate-800">Actividad Reciente</h3>
+              <p className="text-sm text-slate-500">Últimas acciones del comercio</p>
+            </div>
+          </div>
+          {onViewAll && (
+            <button
+              onClick={onViewAll}
+              className="flex items-center space-x-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors duration-200"
+            >
+              <span className="text-sm font-medium text-slate-700">Ver todo</span>
+              <ArrowUpRight className="w-4 h-4 text-slate-500" />
+            </button>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
+      
+      {/* Content */}
+      <div className="p-6">
+        {loading ? (
+          <div className="space-y-4">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="flex items-center space-x-4 animate-pulse">
+                <div className="w-10 h-10 bg-slate-200 rounded-xl"></div>
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 bg-slate-200 rounded w-3/4"></div>
+                  <div className="h-3 bg-slate-200 rounded w-1/2"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {activities.slice(0, 5).map((activity, index) => (
+              <motion.div
+                key={activity.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className="flex items-start space-x-4 p-3 rounded-xl hover:bg-slate-50 transition-colors duration-200"
+              >
+                <div className={`p-2 rounded-xl bg-gradient-to-r ${getActivityColor(activity.type)} shadow-lg`}>
+                  <div className="text-white">
+                    {getActivityIcon(activity.type)}
+                  </div>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-sm font-semibold text-slate-800 truncate">
+                    {activity.title}
+                  </h4>
+                  <p className="text-xs text-slate-500 mt-1 line-clamp-2">
+                    {activity.description}
+                  </p>
+                  <p className="text-xs text-slate-400 mt-2">
+                    {format(activity.timestamp.toDate(), 'dd/MM/yyyy HH:mm', { locale: es })}
+                  </p>
+                </div>
+              </motion.div>
+            ))}
+            {activities.length === 0 && (
+              <div className="text-center py-8">
+                <Activity className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                <p className="text-slate-500 font-medium">No hay actividad reciente</p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </motion.div>
   );
 };
 
-const ComercioHealthCard: React.FC<{
+// Modern Health Status Component
+const ModernHealthStatus: React.FC<{
   health: ComercioMetrics['systemHealth'];
   lastActivity: Date | null;
   avgValidaciones: number;
   loading: boolean;
 }> = ({ health, lastActivity, avgValidaciones, loading }) => {
-  const getHealthColor = () => {
-    const colors = {
-      excellent: '#10b981',
-      good: '#6366f1',
-      warning: '#f59e0b',
-      critical: '#ef4444',
+  
+  const getHealthConfig = () => {
+    const configs = {
+      excellent: {
+        color: 'from-emerald-500 to-teal-500',
+        icon: <CheckCircle className="w-6 h-6" />,
+        label: 'Excelente',
+        bgColor: 'from-emerald-50 to-teal-50',
+        textColor: 'text-emerald-700'
+      },
+      good: {
+        color: 'from-blue-500 to-indigo-500',
+        icon: <Zap className="w-6 h-6" />,
+        label: 'Bueno',
+        bgColor: 'from-blue-50 to-indigo-50',
+        textColor: 'text-blue-700'
+      },
+      warning: {
+        color: 'from-amber-500 to-orange-500',
+        icon: <AlertCircle className="w-6 h-6" />,
+        label: 'Atención',
+        bgColor: 'from-amber-50 to-orange-50',
+        textColor: 'text-amber-700'
+      },
+      critical: {
+        color: 'from-red-500 to-rose-500',
+        icon: <AlertCircle className="w-6 h-6" />,
+        label: 'Crítico',
+        bgColor: 'from-red-50 to-rose-50',
+        textColor: 'text-red-700'
+      }
     };
-    return colors[health];
+    return configs[health];
   };
 
-  const getHealthIcon = () => {
-    const icons = {
-      excellent: <CheckCircle />,
-      good: <Speed />,
-      warning: <Warning />,
-      critical: <ErrorOutline />,
-    };
-    return icons[health];
-  };
-
-  const getHealthLabel = () => {
-    const labels = {
-      excellent: 'Excelente',
-      good: 'Bueno',
-      warning: 'Atención',
-      critical: 'Crítico',
-    };
-    return labels[health];
-  };
+  const config = getHealthConfig();
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay: 0.4 }}
-      style={{ flex: '1 1 0', minWidth: '320px' }}
+      className="bg-white/80 backdrop-blur-xl rounded-2xl border border-white/20 shadow-xl overflow-hidden"
     >
-      <Card
-        elevation={0}
-        sx={{
-          border: '1px solid #f1f5f9',
-          borderRadius: 4,
-          overflow: 'hidden',
-          background: 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
-          height: '100%',
-        }}
-      >
-        <CardContent sx={{ p: 3 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-            <Avatar
-              sx={{
-                width: 44,
-                height: 44,
-                bgcolor: alpha(getHealthColor(), 0.1),
-                color: getHealthColor(),
-                borderRadius: 3,
-              }}
-            >
-              {loading ? <CircularProgress size={20} /> : getHealthIcon()}
-            </Avatar>
-            <Box>
-              <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', mb: 0.5 }}>
-                Estado del Comercio
-              </Typography>
-              <Chip
-                label={getHealthLabel()}
-                size="small"
-                sx={{
-                  bgcolor: alpha(getHealthColor(), 0.1),
-                  color: getHealthColor(),
-                  fontWeight: 700,
-                  fontSize: '0.75rem',
-                }}
+      {/* Header */}
+      <div className={`p-6 bg-gradient-to-r ${config.bgColor}`}>
+        <div className="flex items-center space-x-3">
+          <div className={`p-3 bg-gradient-to-r ${config.color} rounded-xl shadow-lg`}>
+            <div className="text-white">
+              {loading ? (
+                <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                config.icon
+              )}
+            </div>
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-slate-800">Estado del Comercio</h3>
+            <span className={`inline-block px-3 py-1 rounded-full text-sm font-bold ${config.textColor} bg-white/50`}>
+              {config.label}
+            </span>
+          </div>
+        </div>
+      </div>
+      
+      {/* Content */}
+      <div className="p-6 space-y-6">
+        {/* Last Activity */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <Clock className="w-5 h-5 text-slate-400" />
+            <span className="text-sm font-medium text-slate-600">Última actividad</span>
+          </div>
+          <div className="text-right">
+            <p className="text-sm font-bold text-slate-800">
+              {loading ? '...' : lastActivity ? format(lastActivity, 'dd/MM HH:mm') : 'Sin actividad'}
+            </p>
+            <div className="flex items-center space-x-2 mt-1">
+              <div 
+                className={`w-2 h-2 rounded-full ${
+                  lastActivity && (Date.now() - lastActivity.getTime()) < 24 * 60 * 60 * 1000 
+                    ? 'bg-emerald-500' 
+                    : 'bg-amber-500'
+                }`}
               />
-            </Box>
-          </Box>
+              <span className="text-xs text-slate-500">
+                {lastActivity && (Date.now() - lastActivity.getTime()) < 24 * 60 * 60 * 1000 
+                  ? 'Activo hoy' 
+                  : 'Inactivo'
+                }
+              </span>
+            </div>
+          </div>
+        </div>
 
-          <Stack spacing={3}>
-            {/* Last Activity */}
-            <Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-                <Typography variant="body2" sx={{ fontWeight: 600, color: '#475569' }}>
-                  Última actividad
-                </Typography>
-                <Typography variant="body2" sx={{ fontWeight: 700, color: '#1e293b', fontSize: '0.85rem' }}>
-                  {loading ? '...' : lastActivity ? format(lastActivity, 'dd/MM HH:mm') : 'Sin actividad'}
-                </Typography>
-              </Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Box
-                  sx={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: '50%',
-                    bgcolor: lastActivity && (Date.now() - lastActivity.getTime()) < 24 * 60 * 60 * 1000 ? '#10b981' : '#f59e0b',
-                  }}
-                />
-                <Typography variant="caption" sx={{ color: '#64748b' }}>
-                  {lastActivity && (Date.now() - lastActivity.getTime()) < 24 * 60 * 60 * 1000 
-                    ? 'Activo hoy' 
-                    : 'Inactivo'
-                  }
-                </Typography>
-              </Box>
-            </Box>
-
-            {/* Average Validations */}
-            <Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-                <Typography variant="body2" sx={{ fontWeight: 600, color: '#475569' }}>
-                  Promedio diario
-                </Typography>
-                <Typography variant="body2" sx={{ fontWeight: 700, color: '#1e293b', fontSize: '0.85rem' }}>
-                  {loading ? '...' : `${avgValidaciones.toFixed(1)} validaciones`}
-                </Typography>
-              </Box>
-              <LinearProgress
-                variant="determinate"
-                value={loading ? 0 : Math.min((avgValidaciones / 10) * 100, 100)}
-                sx={{
-                  height: 6,
-                  borderRadius: 3,
-                  bgcolor: alpha('#e2e8f0', 0.5),
-                  '& .MuiLinearProgress-bar': {
-                    bgcolor: avgValidaciones > 5 ? '#10b981' : avgValidaciones > 2 ? '#f59e0b' : '#ef4444',
-                    borderRadius: 3,
-                  }
-                }}
-              />
-              <Typography variant="caption" sx={{ color: '#64748b', mt: 0.5, display: 'block' }}>
-                {loading ? '...' : avgValidaciones > 5 ? 'Excelente rendimiento' : avgValidaciones > 2 ? 'Buen rendimiento' : 'Puede mejorar'}
-              </Typography>
-            </Box>
-          </Stack>
-        </CardContent>
-      </Card>
+        {/* Average Validations */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center space-x-3">
+              <Target className="w-5 h-5 text-slate-400" />
+              <span className="text-sm font-medium text-slate-600">Promedio diario</span>
+            </div>
+            <span className="text-sm font-bold text-slate-800">
+              {loading ? '...' : `${avgValidaciones.toFixed(1)} validaciones`}
+            </span>
+          </div>
+          
+          {/* Progress Bar */}
+          <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+            <motion.div
+              className={`h-full bg-gradient-to-r ${
+                avgValidaciones > 5 
+                  ? 'from-emerald-500 to-teal-500' 
+                  : avgValidaciones > 2 
+                    ? 'from-amber-500 to-orange-500' 
+                    : 'from-red-500 to-rose-500'
+              }`}
+              initial={{ width: 0 }}
+              animate={{ width: loading ? '0%' : `${Math.min((avgValidaciones / 10) * 100, 100)}%` }}
+              transition={{ duration: 1, delay: 0.5 }}
+            />
+          </div>
+          
+          <p className="text-xs text-slate-500 mt-2">
+            {loading ? '...' : avgValidaciones > 5 ? 'Excelente rendimiento' : avgValidaciones > 2 ? 'Buen rendimiento' : 'Puede mejorar'}
+          </p>
+        </div>
+      </div>
     </motion.div>
   );
 };
@@ -609,7 +477,7 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
 
   const stats = getStats();
 
-  // Memoize the calculation function to prevent unnecessary recalculations
+  // Calculate metrics from validaciones
   const calculateMetrics = useCallback(() => {
     if (!user || validacionesLoading || beneficiosLoading) {
       return null;
@@ -700,7 +568,7 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
     }
   }, [user, validaciones, activeBeneficios, stats, validacionesLoading, beneficiosLoading]);
 
-  // Calculate metrics from validaciones with proper dependencies
+  // Calculate metrics with proper dependencies
   useEffect(() => {
     const metrics = calculateMetrics();
     
@@ -718,9 +586,9 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
       title: 'Validaciones Totales',
       value: comercioMetrics.totalValidaciones.toLocaleString(),
       change: comercioMetrics.crecimientoMensual,
-      icon: <QrCode sx={{ fontSize: 28 }} />,
-      color: '#6366f1',
-      gradient: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+      icon: <QrCode className="w-6 h-6" />,
+      color: '#3b82f6',
+      gradient: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
       delay: 0,
       subtitle: 'Crecimiento mensual',
       trend: comercioMetrics.crecimientoMensual > 0 ? 'up' as const : comercioMetrics.crecimientoMensual < 0 ? 'down' as const : 'neutral' as const,
@@ -731,7 +599,7 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
       title: 'Validaciones Hoy',
       value: comercioMetrics.validacionesHoy.toLocaleString(),
       change: comercioMetrics.crecimientoSemanal,
-      icon: <Receipt sx={{ fontSize: 28 }} />,
+      icon: <Receipt className="w-6 h-6" />,
       color: '#10b981',
       gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
       delay: 0.1,
@@ -744,7 +612,7 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
       title: 'Beneficios Activos',
       value: comercioMetrics.beneficiosActivos.toString(),
       change: comercioMetrics.beneficiosActivos > 0 ? 100 : 0,
-      icon: <LocalOffer sx={{ fontSize: 28 }} />,
+      icon: <Gift className="w-6 h-6" />,
       color: '#f59e0b',
       gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
       delay: 0.2,
@@ -757,7 +625,7 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
       title: 'Notificaciones',
       value: notificationStats.unread.toString(),
       change: notificationStats.unread > 0 ? 100 : 0,
-      icon: <NotificationsActive sx={{ fontSize: 28 }} />,
+      icon: <Bell className="w-6 h-6" />,
       color: '#ec4899',
       gradient: 'linear-gradient(135deg, #ec4899 0%, #be185d 100%)',
       delay: 0.3,
@@ -770,205 +638,286 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
 
   if (error) {
     return (
-      <Container maxWidth="xl" sx={{ py: 4 }}>
-        <Alert severity="error" sx={{ mb: 4 }}>
-          {error}
-        </Alert>
-      </Container>
+      <div className="p-6">
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+          <div className="flex items-center space-x-3">
+            <AlertCircle className="w-5 h-5 text-red-500" />
+            <span className="text-red-700 font-medium">{error}</span>
+          </div>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Container maxWidth="xl" sx={{ py: 4 }}>
-      {/* Header */}
+    <div className="min-h-screen p-4 md:p-6 lg:p-8">
+      {/* Header Section */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
+        className="mb-8"
       >
-        <Box sx={{ mb: 6 }}>
-          <Box sx={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'space-between', 
-            mb: 4,
-            flexWrap: 'wrap',
-            gap: 3
-          }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-              <Avatar
-                sx={{
-                  width: 64,
-                  height: 64,
-                  borderRadius: 4,
-                  background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%)',
-                  boxShadow: '0 12px 40px rgba(99, 102, 241, 0.3)',
-                }}
-              >
-                <Store sx={{ fontSize: 32 }} />
-              </Avatar>
-              <Box>
-                <Typography
-                  variant="h3"
-                  sx={{
-                    fontWeight: 900,
-                    fontSize: { xs: '2rem', md: '2.5rem' },
-                    background: 'linear-gradient(135deg, #0f172a 0%, #6366f1 60%, #8b5cf6 100%)',
-                    backgroundClip: 'text',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    letterSpacing: '-0.03em',
-                    lineHeight: 0.9,
-                    mb: 1,
-                  }}
-                >
-                  Panel de Control
-                </Typography>
-                <Typography
-                  variant="h6"
-                  sx={{
-                    color: '#64748b',
-                    fontWeight: 600,
-                    fontSize: { xs: '1rem', md: '1.2rem' },
-                  }}
-                >
-                  {comercio?.nombreComercio || 'Mi Comercio'} • {user?.email?.split('@')[0] || 'Comercio'}
-                </Typography>
-              </Box>
-            </Box>
-            
-            <Stack direction="row" spacing={2}>
-              <IconButton
-                onClick={() => window.location.reload()}
-                sx={{
-                  bgcolor: alpha('#6366f1', 0.1),
-                  color: '#6366f1',
-                  '&:hover': {
-                    bgcolor: alpha('#6366f1', 0.2),
-                    transform: 'rotate(180deg)',
-                  },
-                  transition: 'all 0.3s ease',
-                }}
-              >
-                <Refresh />
-              </IconButton>
-              <Button
-                onClick={() => onNavigate?.('qr-validacion')}
-                variant="contained"
-                startIcon={<QrCode />}
-                size="large"
-                sx={{
-                  py: 2,
-                  px: 4,
-                  borderRadius: 3,
-                  textTransform: 'none',
-                  fontWeight: 700,
-                  background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-                  boxShadow: '0 8px 32px rgba(99, 102, 241, 0.3)',
-                  '&:hover': {
-                    background: 'linear-gradient(135deg, #5b21b6 0%, #7c3aed 100%)',
-                    transform: 'translateY(-2px)',
-                    boxShadow: '0 12px 40px rgba(99, 102, 241, 0.4)',
-                  },
-                  transition: 'all 0.3s ease'
-                }}
-              >
-                Validar QR
-              </Button>
-            </Stack>
-          </Box>
+        {/* Welcome Header */}
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6 space-y-4 lg:space-y-0">
+          <div className="flex items-center space-x-4">
+            <div className="relative">
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 via-purple-600 to-pink-500 rounded-2xl flex items-center justify-center shadow-xl">
+                <Store className="w-8 h-8 text-white" />
+              </div>
+              <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center">
+                <CheckCircle className="w-4 h-4 text-white" />
+              </div>
+            </div>
+            <div>
+              <h1 className="text-3xl md:text-4xl font-black bg-gradient-to-r from-slate-800 via-blue-600 to-purple-600 bg-clip-text text-transparent">
+                Panel de Control
+              </h1>
+              <p className="text-slate-600 font-medium text-lg">
+                {comercio?.nombreComercio || 'Mi Comercio'} • {user?.email?.split('@')[0] || 'Comercio'}
+              </p>
+            </div>
+          </div>
           
-          {/* Status Banner */}
-          <Paper
-            elevation={0}
-            sx={{
-              bgcolor: alpha('#10b981', 0.05),
-              border: `2px solid ${alpha('#10b981', 0.15)}`,
-              borderRadius: 4,
-              p: 3,
-              position: 'relative',
-              overflow: 'hidden',
-              '&::before': {
-                content: '""',
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                height: '3px',
-                background: 'linear-gradient(90deg, #10b981, #059669, #047857)',
-              }
-            }}
-          >
-            <Box sx={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: 3,
-              flexWrap: 'wrap',
-              justifyContent: 'space-between'
-            }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                <Box
-                  sx={{
-                    width: 12,
-                    height: 12,
-                    bgcolor: '#10b981',
-                    borderRadius: '50%',
-                    animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                    '@keyframes pulse': {
-                      '0%, 100%': { opacity: 1, transform: 'scale(1)' },
-                      '50%': { opacity: 0.5, transform: 'scale(1.1)' },
-                    },
-                  }}
-                />
-                <Typography variant="body1" sx={{ color: '#047857', fontWeight: 700, fontSize: '1.1rem' }}>
-                  <Box component="span" sx={{ fontWeight: 900 }}>Comercio activo</Box> - Sistema de validaciones operativo
-                </Typography>
-              </Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <CalendarToday sx={{ fontSize: 18, color: '#059669' }} />
-                <Typography variant="body2" sx={{ color: '#059669', fontWeight: 700 }}>
-                  {format(new Date(), 'EEEE, dd MMMM yyyy', { locale: es })}
-                </Typography>
-              </Box>
-            </Box>
-          </Paper>
-        </Box>
+          {/* Action Buttons */}
+          <div className="flex items-center space-x-3">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => window.location.reload()}
+              className="p-3 bg-white/80 backdrop-blur-xl border border-white/20 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+            >
+              <RefreshCw className="w-5 h-5 text-slate-600" />
+            </motion.button>
+            
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => onNavigate?.('qr-validacion')}
+              className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center space-x-2"
+            >
+              <QrCode className="w-5 h-5" />
+              <span>Validar QR</span>
+            </motion.button>
+          </div>
+        </div>
+        
+        {/* Status Banner */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="relative overflow-hidden bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-2xl p-4 md:p-6"
+        >
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 to-teal-500"></div>
+          
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-3 md:space-y-0">
+            <div className="flex items-center space-x-4">
+              <div className="relative">
+                <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse"></div>
+                <div className="absolute inset-0 w-3 h-3 bg-emerald-500 rounded-full animate-ping opacity-75"></div>
+              </div>
+              <div>
+                <h3 className="text-emerald-800 font-bold text-lg">
+                  Comercio Operativo
+                </h3>
+                <p className="text-emerald-600 font-medium">
+                  Sistema de validaciones funcionando correctamente
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex items-center space-x-3 text-emerald-700">
+              <Calendar className="w-5 h-5" />
+              <span className="font-semibold">
+                {format(new Date(), 'EEEE, dd MMMM yyyy', { locale: es })}
+              </span>
+            </div>
+          </div>
+        </motion.div>
       </motion.div>
 
-      {/* KPI Cards */}
-      <Box sx={{ 
-        display: 'flex', 
-        flexWrap: 'wrap', 
-        gap: 3, 
-        mb: 6,
-        '& > *': {
-          minWidth: { xs: '100%', sm: 'calc(50% - 12px)', lg: 'calc(25% - 18px)' }
-        }
-      }}>
+      {/* KPI Cards Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
         {kpiMetrics.map((metric, index) => (
-          <KPICard key={index} {...metric} />
+          <ModernKPICard key={index} {...metric} />
         ))}
-      </Box>
+      </div>
 
-      {/* Secondary Cards */}
-      <Box sx={{ 
-        display: 'flex', 
-        flexWrap: 'wrap', 
-        gap: 4,
-        alignItems: 'stretch'
-      }}>
-        <ActivityCard
-          activities={comercioMetrics.recentActivities}
-          loading={loading}
-          onViewAll={() => onNavigate?.('historial-validaciones')}
-        />
-        <ComercioHealthCard
-          health={comercioMetrics.systemHealth}
-          lastActivity={comercioMetrics.lastActivity}
-          avgValidaciones={comercioMetrics.avgValidacionesDiarias}
-          loading={loading}
-        />
-      </Box>
-    </Container>
+      {/* Secondary Content Grid */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 md:gap-8">
+        {/* Activity Feed - Takes 2 columns on xl screens */}
+        <div className="xl:col-span-2">
+          <ModernActivityFeed
+            activities={comercioMetrics.recentActivities}
+            loading={loading}
+            onViewAll={() => onNavigate?.('historial-validaciones')}
+          />
+        </div>
+        
+        {/* Health Status - Takes 1 column */}
+        <div className="xl:col-span-1">
+          <ModernHealthStatus
+            health={comercioMetrics.systemHealth}
+            lastActivity={comercioMetrics.lastActivity}
+            avgValidaciones={comercioMetrics.avgValidacionesDiarias}
+            loading={loading}
+          />
+        </div>
+      </div>
+
+      {/* Quick Actions Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6 }}
+        className="mt-8"
+      >
+        <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-white/20 shadow-xl p-6">
+          <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center space-x-3">
+            <Zap className="w-6 h-6 text-blue-500" />
+            <span>Acciones Rápidas</span>
+          </h3>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[
+              {
+                title: 'Ver Analytics',
+                description: 'Métricas detalladas',
+                icon: <BarChart3 className="w-6 h-6" />,
+                color: 'from-blue-500 to-indigo-500',
+                action: () => onNavigate?.('analytics')
+              },
+              {
+                title: 'Gestionar Beneficios',
+                description: 'Crear y editar ofertas',
+                icon: <Gift className="w-6 h-6" />,
+                color: 'from-amber-500 to-orange-500',
+                action: () => onNavigate?.('beneficios')
+              },
+              {
+                title: 'Mi Perfil',
+                description: 'Configurar comercio',
+                icon: <Store className="w-6 h-6" />,
+                color: 'from-emerald-500 to-teal-500',
+                action: () => onNavigate?.('perfil')
+              },
+              {
+                title: 'Notificaciones',
+                description: 'Centro de mensajes',
+                icon: <Bell className="w-6 h-6" />,
+                color: 'from-purple-500 to-pink-500',
+                action: () => onNavigate?.('notificaciones')
+              }
+            ].map((item, index) => (
+              <motion.button
+                key={index}
+                whileHover={{ scale: 1.02, y: -2 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={item.action}
+                className="p-4 bg-gradient-to-br from-slate-50 to-white rounded-xl border border-slate-200 hover:border-slate-300 transition-all duration-300 text-left group"
+              >
+                <div className={`w-12 h-12 bg-gradient-to-r ${item.color} rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300`}>
+                  <div className="text-white">
+                    {item.icon}
+                  </div>
+                </div>
+                <h4 className="font-bold text-slate-800 mb-1">{item.title}</h4>
+                <p className="text-sm text-slate-500">{item.description}</p>
+              </motion.button>
+            ))}
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Performance Insights */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.8 }}
+        className="mt-8"
+      >
+        <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-white/20 shadow-xl p-6">
+          <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center space-x-3">
+            <Target className="w-6 h-6 text-purple-500" />
+            <span>Insights de Rendimiento</span>
+          </h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Performance Score */}
+            <div className="text-center">
+              <div className="relative w-24 h-24 mx-auto mb-4">
+                <svg className="w-24 h-24 transform -rotate-90" viewBox="0 0 100 100">
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="40"
+                    stroke="#e5e7eb"
+                    strokeWidth="8"
+                    fill="none"
+                  />
+                  <motion.circle
+                    cx="50"
+                    cy="50"
+                    r="40"
+                    stroke="url(#gradient1)"
+                    strokeWidth="8"
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeDasharray={`${2 * Math.PI * 40}`}
+                    initial={{ strokeDashoffset: 2 * Math.PI * 40 }}
+                    animate={{ 
+                      strokeDashoffset: 2 * Math.PI * 40 * (1 - (comercioMetrics.avgValidacionesDiarias / 10))
+                    }}
+                    transition={{ duration: 2, delay: 1 }}
+                  />
+                  <defs>
+                    <linearGradient id="gradient1" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#3b82f6" />
+                      <stop offset="100%" stopColor="#8b5cf6" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-2xl font-bold text-slate-800">
+                    {Math.round((comercioMetrics.avgValidacionesDiarias / 10) * 100)}%
+                  </span>
+                </div>
+              </div>
+              <h4 className="font-bold text-slate-800 mb-2">Score de Rendimiento</h4>
+              <p className="text-sm text-slate-500">Basado en validaciones diarias</p>
+            </div>
+
+            {/* Trend Analysis */}
+            <div className="text-center">
+              <div className="w-24 h-24 mx-auto mb-4 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-full flex items-center justify-center">
+                {comercioMetrics.crecimientoMensual > 0 ? (
+                  <TrendingUp className="w-12 h-12 text-emerald-600" />
+                ) : (
+                  <TrendingDown className="w-12 h-12 text-red-500" />
+                )}
+              </div>
+              <h4 className="font-bold text-slate-800 mb-2">Tendencia Mensual</h4>
+              <p className={`text-sm font-semibold ${
+                comercioMetrics.crecimientoMensual > 0 ? 'text-emerald-600' : 'text-red-500'
+              }`}>
+                {comercioMetrics.crecimientoMensual > 0 ? '+' : ''}{comercioMetrics.crecimientoMensual.toFixed(1)}%
+              </p>
+            </div>
+
+            {/* Activity Level */}
+            <div className="text-center">
+              <div className="w-24 h-24 mx-auto mb-4 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full flex items-center justify-center">
+                <Activity className="w-12 h-12 text-purple-600" />
+              </div>
+              <h4 className="font-bold text-slate-800 mb-2">Nivel de Actividad</h4>
+              <p className="text-sm text-slate-500">
+                {comercioMetrics.validacionesHoy > 0 ? 'Activo hoy' : 'Sin actividad hoy'}
+              </p>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    </div>
   );
 };
