@@ -32,6 +32,23 @@ export const useComercios = (): UseComerciosReturn => {
   const [stats, setStats] = useState<ComercioStats | null>(null);
   const [statsLoading, setStatsLoading] = useState(false);
 
+  // Refresh stats function - declared early to avoid hoisting issues
+  const refreshStats = useCallback(async (): Promise<void> => {
+    if (!user) return;
+
+    try {
+      setStatsLoading(true);
+      const newStats = await ComercioService.getComercioStats(user.uid);
+      setStats(newStats);
+    } catch (error) {
+      console.error('Error refreshing stats:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Error al cargar estadísticas';
+      setError(errorMessage);
+    } finally {
+      setStatsLoading(false);
+    }
+  }, [user]);
+
   // Fetch comercio data with real-time updates
   useEffect(() => {
     if (!user) {
@@ -69,16 +86,12 @@ export const useComercios = (): UseComerciosReturn => {
     return () => unsubscribe();
   }, [user]);
 
-
-
-
-
   // Load stats when comercio is loaded
   useEffect(() => {
     if (comercio && user) {
       refreshStats();
     }
-  }, [comercio, user, refreshStats]);
+  }, [comercio, refreshStats, user]);
 
   // Update comercio profile
   const updateProfile = useCallback(async (data: ComercioFormData): Promise<boolean> => {
@@ -143,23 +156,6 @@ export const useComercios = (): UseComerciosReturn => {
       const errorMessage = error instanceof Error ? error.message : 'Error al actualizar la visibilidad';
       toast.error(errorMessage);
       return false;
-    }
-  }, [user]);
-
-  // Refresh stats
-  const refreshStats = useCallback(async (): Promise<void> => {
-    if (!user) return;
-
-    try {
-      setStatsLoading(true);
-      const newStats = await ComercioService.getComercioStats(user.uid);
-      setStats(newStats);
-    } catch (error) {
-      console.error('Error refreshing stats:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Error al cargar estadísticas';
-      setError(errorMessage);
-    } finally {
-      setStatsLoading(false);
     }
   }, [user]);
 
