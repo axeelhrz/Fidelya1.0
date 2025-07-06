@@ -70,12 +70,12 @@ interface SystemHealth {
   responseTime: number;
 }
 
-// Componente de Métrica Simple - Ahora cuadrado
+// Componente de Métrica Simple - Dimensiones uniformes
 const MetricCard: React.FC<{
   title: string;
   value: string | number;
   subtitle?: string;
-  icon: React.ReactNode;
+  icon: React.ReactElement;
   color: string;
   trend?: 'up' | 'down' | 'neutral';
   trendValue?: number;
@@ -86,7 +86,7 @@ const MetricCard: React.FC<{
     elevation={0}
     onClick={onClick}
     sx={{
-      p: 4,
+      p: 3,
       border: '1px solid #f1f5f9',
       borderRadius: 3,
       bgcolor: '#ffffff',
@@ -95,10 +95,11 @@ const MetricCard: React.FC<{
       flexDirection: 'column',
       position: 'relative',
       overflow: 'hidden',
-      // Hacer las tarjetas cuadradas
-      aspectRatio: '1',
-      minHeight: 'auto',
-      height: 'auto',
+      // Dimensiones exactas y uniformes
+      width: '100%',
+      height: '200px',
+      minHeight: '200px',
+      maxHeight: '200px',
       '&::before': {
         content: '""',
         position: 'absolute',
@@ -110,34 +111,56 @@ const MetricCard: React.FC<{
       },
     }}
   >
-    <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 2 }}>
+    {/* Header con icono y tendencia */}
+    <Box sx={{ 
+      display: 'flex', 
+      alignItems: 'flex-start', 
+      justifyContent: 'space-between', 
+      mb: 2,
+      height: '48px',
+      minHeight: '48px'
+    }}>
       <Box
         sx={{
-          width: 48,
-          height: 48,
+          width: 44,
+          height: 44,
           borderRadius: 2.5,
           bgcolor: `${color}15`,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           color: color,
+          flexShrink: 0,
         }}
       >
-        {loading ? <CircularProgress size={24} sx={{ color }} /> : React.cloneElement(icon as React.ReactElement, { sx: { fontSize: 24 } })}
+        {loading ? (
+          <CircularProgress size={22} sx={{ color }} />
+        ) : (
+          React.isValidElement(icon)
+            ? React.cloneElement(
+                icon as React.ReactElement<{ sx?: object }>,
+                {
+                  ...(icon.props || {}),
+                  sx: { ...((icon.props as { sx?: object })?.sx || {}), fontSize: 22 }
+                }
+              )
+            : icon
+        )}
       </Box>
       {trend && trendValue !== undefined && (
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexShrink: 0 }}>
           {trend === 'up' ? (
-            <TrendingUp sx={{ fontSize: 16, color: '#10b981' }} />
+            <TrendingUp sx={{ fontSize: 14, color: '#10b981' }} />
           ) : trend === 'down' ? (
-            <TrendingDown sx={{ fontSize: 16, color: '#ef4444' }} />
+            <TrendingDown sx={{ fontSize: 14, color: '#ef4444' }} />
           ) : null}
           <Typography
             variant="body2"
             sx={{
               fontWeight: 700,
               color: trend === 'up' ? '#10b981' : trend === 'down' ? '#ef4444' : '#64748b',
-              fontSize: '0.8rem',
+              fontSize: '0.75rem',
+              whiteSpace: 'nowrap',
             }}
           >
             {trendValue > 0 ? '+' : ''}{trendValue}%
@@ -146,16 +169,26 @@ const MetricCard: React.FC<{
       )}
     </Box>
     
-    <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+    {/* Contenido principal */}
+    <Box sx={{ 
+      flex: 1, 
+      display: 'flex', 
+      flexDirection: 'column', 
+      justifyContent: 'center',
+      minHeight: 0,
+    }}>
       <Typography
         variant="overline"
         sx={{
           color: '#64748b',
           fontWeight: 700,
-          fontSize: '0.75rem',
+          fontSize: '0.7rem',
           letterSpacing: '0.1em',
           mb: 1,
           display: 'block',
+          lineHeight: 1.2,
+          height: '16px',
+          overflow: 'hidden',
         }}
       >
         {title}
@@ -166,9 +199,12 @@ const MetricCard: React.FC<{
         sx={{
           fontWeight: 800,
           color: '#0f172a',
-          fontSize: '2rem',
+          fontSize: '1.8rem',
           lineHeight: 1,
           mb: subtitle ? 1 : 0,
+          height: subtitle ? 'auto' : '36px',
+          display: 'flex',
+          alignItems: 'center',
         }}
       >
         {loading ? '...' : typeof value === 'number' ? value.toLocaleString() : value}
@@ -180,7 +216,12 @@ const MetricCard: React.FC<{
           sx={{
             color: '#64748b',
             fontWeight: 600,
-            fontSize: '0.9rem',
+            fontSize: '0.8rem',
+            lineHeight: 1.3,
+            height: '20px',
+            overflow: 'hidden',
+            display: 'flex',
+            alignItems: 'center',
           }}
         >
           {subtitle}
@@ -699,58 +740,6 @@ const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
               </Button>
             </Stack>
           </Box>
-
-          {/* System Status Banner - Sin "Sistema" */}
-          <Paper
-            elevation={0}
-            sx={{
-              p: 4,
-              border: `2px solid ${
-                healthStatus === 'excellent' ? '#bbf7d0' : 
-                healthStatus === 'good' ? '#bfdbfe' :
-                healthStatus === 'warning' ? '#fed7aa' : '#fecaca'
-              }`,
-              borderRadius: 3,
-              bgcolor: healthStatus === 'excellent' ? '#f0fdf4' : 
-                      healthStatus === 'good' ? '#f0f9ff' :
-                      healthStatus === 'warning' ? '#fffbeb' : '#fef2f2',
-            }}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-              <Box
-                sx={{
-                  width: 16,
-                  height: 16,
-                  borderRadius: '50%',
-                  bgcolor: healthStatus === 'excellent' ? '#10b981' : 
-                          healthStatus === 'good' ? '#3b82f6' :
-                          healthStatus === 'warning' ? '#f59e0b' : '#ef4444',
-                }}
-              />
-              <Typography variant="h6" sx={{ 
-                color: healthStatus === 'excellent' ? '#047857' : 
-                       healthStatus === 'good' ? '#1e40af' :
-                       healthStatus === 'warning' ? '#d97706' : '#dc2626',
-                fontWeight: 700,
-                flex: 1,
-                fontSize: '1.1rem',
-              }}>
-                {healthStatus === 'excellent' ? 'Excelente' : 
-                 healthStatus === 'good' ? 'Operativo' :
-                 healthStatus === 'warning' ? 'Con Advertencias' : 'Crítico'}
-              </Typography>
-              <Chip
-                label={`${systemHealth.uptime}% Uptime`}
-                sx={{
-                  bgcolor: 'rgba(255, 255, 255, 0.9)',
-                  fontWeight: 700,
-                  fontSize: '0.85rem',
-                  height: 36,
-                  px: 2,
-                }}
-              />
-            </Box>
-          </Paper>
         </Box>
 
         {/* Main Content using CSS Grid */}
@@ -789,7 +778,7 @@ const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
             },
           }}
         >
-          {/* KPI Metrics - Ahora cuadradas */}
+          {/* KPI Metrics - Dimensiones uniformes */}
           <Box sx={{ gridArea: 'metric1' }}>
             <MetricCard
               title="Total Socios"
@@ -944,9 +933,9 @@ const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                         mb: 1,
                       }}
                     >
-                      {React.cloneElement(action.icon as React.ReactElement, { 
-                        sx: { fontSize: 24 } 
-                      })}
+                      {React.isValidElement(action.icon) && (action.icon.type as React.JSXElementConstructor<unknown> & { muiName?: string }).muiName
+                        ? React.cloneElement(action.icon as React.ReactElement<{ sx?: object }>, { sx: { fontSize: 24 } })
+                        : action.icon}
                     </Box>
 
                     {/* Content */}
