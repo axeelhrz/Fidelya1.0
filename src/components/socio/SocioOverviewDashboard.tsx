@@ -36,7 +36,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useBeneficios } from '@/hooks/useBeneficios';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useSocioProfile } from '@/hooks/useSocioProfile';
-import { format, subDays, isToday, isYesterday, startOfWeek, endOfWeek } from 'date-fns';
+import { format, subDays, isToday, isYesterday, startOfWeek, endOfWeek, differenceInDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 interface SocioOverviewDashboardProps {
@@ -72,6 +72,8 @@ interface SocioMetrics {
   estado: string;
   nivelSocio: string;
   progresoMensual: number;
+  tiempoComoSocio: number;
+  diasHastaVencimiento: number;
 }
 
 // Enhanced KPI Card Component
@@ -317,7 +319,7 @@ const ActivityTimeline: React.FC<{
   );
 };
 
-// Membership Status Card
+// Membership Status Card - Conectado a Firebase
 const MembershipStatusCard: React.FC<{
   health: SocioMetrics['membershipHealth'];
   lastActivity: Date | null;
@@ -326,8 +328,11 @@ const MembershipStatusCard: React.FC<{
   estado: string;
   nivelSocio: string;
   progresoMensual: number;
+  tiempoComoSocio: number;
+  diasHastaVencimiento: number;
   loading: boolean;
-}> = ({ health, lastActivity, streakDias, proximoVencimiento, estado, nivelSocio, progresoMensual, loading }) => {
+}> = ({ health, lastActivity, streakDias, proximoVencimiento, estado, nivelSocio, progresoMensual, tiempoComoSocio, diasHastaVencimiento, loading }) => {
+  
   const getHealthConfig = () => {
     const configs = {
       excellent: {
@@ -366,22 +371,69 @@ const MembershipStatusCard: React.FC<{
     return configs[health];
   };
 
-  const getEstadoColor = (estado: string) => {
+  const getEstadoConfig = (estado: string) => {
     switch (estado) {
       case 'activo':
-        return 'text-emerald-600';
+        return {
+          color: 'text-emerald-600',
+          bgColor: 'bg-emerald-50',
+          label: 'Activo',
+          icon: <CheckCircle size={16} />
+        };
       case 'vencido':
-        return 'text-red-600';
+        return {
+          color: 'text-red-600',
+          bgColor: 'bg-red-50',
+          label: 'Vencido',
+          icon: <AlertCircle size={16} />
+        };
       case 'inactivo':
-        return 'text-gray-600';
+        return {
+          color: 'text-gray-600',
+          bgColor: 'bg-gray-50',
+          label: 'Inactivo',
+          icon: <Clock size={16} />
+        };
       case 'pendiente':
-        return 'text-amber-600';
+        return {
+          color: 'text-amber-600',
+          bgColor: 'bg-amber-50',
+          label: 'Pendiente',
+          icon: <Clock size={16} />
+        };
       default:
-        return 'text-gray-600';
+        return {
+          color: 'text-gray-600',
+          bgColor: 'bg-gray-50',
+          label: 'Desconocido',
+          icon: <Info size={16} />
+        };
     }
   };
 
+  const getNivelConfig = (nivel: string) => {
+    const configs = {
+      'Bronze': { color: 'text-amber-700', stars: 1 },
+      'Silver': { color: 'text-gray-500', stars: 2 },
+      'Gold': { color: 'text-yellow-500', stars: 3 },
+      'Platinum': { color: 'text-purple-600', stars: 4 },
+      'Diamond': { color: 'text-blue-600', stars: 5 },
+      'Premium': { color: 'text-violet-600', stars: 5 }
+    };
+    return configs[nivel as keyof typeof configs] || { color: 'text-gray-500', stars: 1 };
+  };
+
+  const getVencimientoUrgencia = (dias: number) => {
+    if (dias < 0) return { color: 'text-red-600', label: 'Vencido', urgente: true };
+    if (dias <= 7) return { color: 'text-red-600', label: 'Muy urgente', urgente: true };
+    if (dias <= 30) return { color: 'text-amber-600', label: 'Próximo', urgente: false };
+    return { color: 'text-emerald-600', label: 'Vigente', urgente: false };
+  };
+
   const config = getHealthConfig();
+  const estadoConfig = getEstadoConfig(estado);
+  const nivelConfig = getNivelConfig(nivelSocio);
+  const vencimientoConfig = getVencimientoUrgencia(diasHastaVencimiento);
 
   return (
     <motion.div
@@ -430,27 +482,52 @@ const MembershipStatusCard: React.FC<{
 
       {/* Membership Info */}
       <div className="space-y-4">
+        {/* Estado de membresía */}
         <div className="flex items-center justify-between">
           <span className="text-sm text-gray-600">Estado de membresía</span>
-          <span className={`text-sm font-medium capitalize ${getEstadoColor(estado)}`}>
-            {loading ? '...' : estado}
-          </span>
+          <div className={`flex items-center gap-1 px-2 py-1 rounded-lg ${estadoConfig.bgColor}`}>
+            {estadoConfig.icon}
+            <span className={`text-sm font-medium capitalize ${estadoConfig.color}`}>
+              {loading ? '...' : estadoConfig.label}
+            </span>
+          </div>
         </div>
         
+        {/* Tiempo como socio */}
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-gray-600">Tiempo como socio</span>
+          <span className="text-sm font-medium text-gray-900">
+            {loading ? '...' : `${tiempoComoSocio} días`}
+          </span>
+        </div>
+
+        {/* Próximo vencimiento */}
         {proximoVencimiento && (
           <div className="flex items-center justify-between">
             <span className="text-sm text-gray-600">Próximo vencimiento</span>
-            <span className="text-sm font-medium text-gray-900">
-              {loading ? '...' : format(proximoVencimiento, 'dd/MM/yyyy', { locale: es })}
-            </span>
+            <div className="text-right">
+              <div className="text-sm font-medium text-gray-900">
+                {loading ? '...' : format(proximoVencimiento, 'dd/MM/yyyy', { locale: es })}
+              </div>
+              <div className={`text-xs ${vencimientoConfig.color}`}>
+                {loading ? '' : 
+                  diasHastaVencimiento < 0 ? 
+                    `Vencido hace ${Math.abs(diasHastaVencimiento)} días` :
+                    `${diasHastaVencimiento} días restantes`
+                }
+              </div>
+            </div>
           </div>
         )}
 
+        {/* Nivel de socio */}
         <div className="flex items-center justify-between">
           <span className="text-sm text-gray-600">Nivel de socio</span>
           <div className="flex items-center gap-1">
-            <Star size={14} className="text-amber-500" />
-            <span className="text-sm font-medium text-gray-900">
+            {Array.from({ length: nivelConfig.stars }).map((_, i) => (
+              <Star key={i} size={12} className={`${nivelConfig.color} fill-current`} />
+            ))}
+            <span className={`text-sm font-medium ml-1 ${nivelConfig.color}`}>
               {loading ? '...' : nivelSocio}
             </span>
           </div>
@@ -471,7 +548,34 @@ const MembershipStatusCard: React.FC<{
             style={{ width: loading ? '0%' : `${progresoMensual}%` }}
           />
         </div>
+        <div className="flex justify-between text-xs text-gray-500 mt-1">
+          <span>0%</span>
+          <span>Meta: 100%</span>
+        </div>
       </div>
+
+      {/* Alertas de vencimiento */}
+      {vencimientoConfig.urgente && !loading && (
+        <div className={`mt-4 p-3 rounded-lg ${
+          diasHastaVencimiento < 0 ? 'bg-red-50 border border-red-200' : 'bg-amber-50 border border-amber-200'
+        }`}>
+          <div className="flex items-center gap-2">
+            <AlertCircle size={16} className={vencimientoConfig.color} />
+            <span className={`text-sm font-medium ${vencimientoConfig.color}`}>
+              {diasHastaVencimiento < 0 ? 
+                'Membresía vencida' : 
+                'Membresía por vencer'
+              }
+            </span>
+          </div>
+          <p className="text-xs text-gray-600 mt-1">
+            {diasHastaVencimiento < 0 ? 
+              'Contacta a tu asociación para renovar tu membresía.' :
+              'Renueva tu membresía para seguir disfrutando de los beneficios.'
+            }
+          </p>
+        </div>
+      )}
     </motion.div>
   );
 };
@@ -560,6 +664,8 @@ export const SocioOverviewDashboard: React.FC<SocioOverviewDashboardProps> = ({
     estado: 'activo',
     nivelSocio: 'Premium',
     progresoMensual: 75,
+    tiempoComoSocio: 0,
+    diasHastaVencimiento: 0,
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -614,7 +720,7 @@ export const SocioOverviewDashboard: React.FC<SocioOverviewDashboardProps> = ({
         : null;
 
       // Use real streak from stats or calculate
-      const streakDias = realStats.racha || Math.floor(Math.random() * 15) + 1;
+      const streakDias = realStats.racha || 0;
 
       // Get favorite category from real stats with proper error handling
       let categoriaFavorita = 'General';
@@ -632,6 +738,13 @@ export const SocioOverviewDashboard: React.FC<SocioOverviewDashboardProps> = ({
         ? asociaciones[0].fechaVencimiento.toDate()
         : new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
 
+      // Calculate days until expiration
+      const diasHastaVencimiento = proximoVencimiento ? differenceInDays(proximoVencimiento, now) : 0;
+
+      // Calculate time as socio
+      const tiempoComoSocio = socio?.creadoEn ? 
+        differenceInDays(now, socio.creadoEn.toDate()) : 0;
+
       // Convert real activity to ActivityLog format
       const recentActivities: ActivityLog[] = activity.slice(0, 5).map((act) => ({
         id: act.id,
@@ -645,8 +758,9 @@ export const SocioOverviewDashboard: React.FC<SocioOverviewDashboardProps> = ({
         metadata: act.metadata,
       }));
 
-      // Calculate monthly progress based on activity
-      const progresoMensual = Math.min(Math.round((beneficiosEsteMes / 10) * 100), 100);
+      // Calculate monthly progress based on activity and goals
+      const metaMensual = 10; // Meta de 10 beneficios por mes
+      const progresoMensual = Math.min(Math.round((beneficiosEsteMes / metaMensual) * 100), 100);
 
       return {
         beneficiosDisponibles: beneficios.length,
@@ -665,6 +779,8 @@ export const SocioOverviewDashboard: React.FC<SocioOverviewDashboardProps> = ({
         estado: socio?.estado || 'activo',
         nivelSocio: socio?.nivel?.nivel || 'Premium',
         progresoMensual,
+        tiempoComoSocio,
+        diasHastaVencimiento,
       };
     } catch (err) {
       console.error('Error calculating socio metrics:', err);
@@ -838,6 +954,8 @@ export const SocioOverviewDashboard: React.FC<SocioOverviewDashboardProps> = ({
             estado={socioMetrics.estado}
             nivelSocio={socioMetrics.nivelSocio}
             progresoMensual={socioMetrics.progresoMensual}
+            tiempoComoSocio={socioMetrics.tiempoComoSocio}
+            diasHastaVencimiento={socioMetrics.diasHastaVencimiento}
             loading={loading}
           />
         </div>
