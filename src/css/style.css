@@ -7112,205 +7112,591 @@ animation: contact-loading-spin 1s linear infinite;
 100% { transform: rotate(360deg); }
 }
 
-/* ... existing code ... */
+/* ===== NAVBAR FUTURISTA ULTRA-ATRACTIVO ===== */
 
-/* ===== CORRECCIÓN CRÍTICA PARA VISIBILIDAD EN MÓVIL ===== */
+/* Header con efectos de cristal y neón */
+.header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: var(--navbar-z-index);
+    width: 100%;
+    height: var(--navbar-height);
+    background: linear-gradient(135deg,
+        rgba(10, 13, 20, 0.85) 0%,
+        rgba(21, 25, 34, 0.9) 25%,
+        rgba(30, 35, 48, 0.85) 50%,
+        rgba(25, 30, 40, 0.9) 75%,
+        rgba(21, 25, 34, 0.85) 100%
+    );
+    backdrop-filter: blur(25px) saturate(1.2);
+    border-bottom: 2px solid transparent;
+    border-image: linear-gradient(90deg,
+        transparent 0%,
+        rgba(255, 45, 85, 0.3) 20%,
+        rgba(255, 69, 105, 0.5) 50%,
+        rgba(255, 45, 85, 0.3) 80%,
+        transparent 100%
+    ) 1;
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.4),
+        0 0 0 1px rgba(255, 45, 85, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    transition: all var(--transition-slow);
+    overflow: visible;
+}
+
+/* Efecto de partículas en el header */
+.header::before {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: -1;
+    width: 100%;
+    height: 100%;
+    content: '';
+    background: 
+        radial-gradient(circle at 20% 50%, rgba(255, 45, 85, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 80% 50%, rgba(255, 69, 105, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 50% 0%, rgba(255, 107, 53, 0.08) 0%, transparent 70%);
+    animation: navbar-particles 8s ease-in-out infinite;
+}
+
+/* Efecto de scroll mejorado */
+.header.scrolled {
+    background: linear-gradient(135deg,
+        rgba(10, 13, 20, 0.95) 0%,
+        rgba(21, 25, 34, 0.98) 25%,
+        rgba(30, 35, 48, 0.95) 50%,
+        rgba(25, 30, 40, 0.98) 75%,
+        rgba(21, 25, 34, 0.95) 100%
+    );
+    backdrop-filter: blur(30px) saturate(1.4);
+    border-image: linear-gradient(90deg,
+        transparent 0%,
+        rgba(255, 45, 85, 0.4) 20%,
+        rgba(255, 69, 105, 0.6) 50%,
+        rgba(255, 45, 85, 0.4) 80%,
+        transparent 100%
+    ) 1;
+    box-shadow:
+        0 12px 40px rgba(0, 0, 0, 0.6),
+        0 0 0 1px rgba(255, 45, 85, 0.2),
+        0 0 30px rgba(255, 45, 85, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+/* Navegación principal ultra-mejorada */
+.nav {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: var(--max-content-width);
+    height: 100%;
+    padding: var(--space-md) var(--section-padding-x);
+    margin: 0 auto;
+    gap: var(--space-xl);
+}
+
+/* Logo con efectos holográficos */
+.nav__brand {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    pointer-events: auto;
+}
+
+.nav__logo {
+    position: relative;
+    width: 52px;
+    height: 52px;
+    background: linear-gradient(135deg,
+        var(--starflex-red) 0%,
+        var(--starflex-crimson-bright) 30%,
+        var(--starflex-crimson-glow) 70%,
+        var(--starflex-red-bright) 100%
+    );
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
+    box-shadow:
+        0 8px 25px rgba(255, 45, 85, 0.4),
+        0 0 20px rgba(255, 45, 85, 0.3),
+        inset 0 2px 0 rgba(255, 255, 255, 0.3),
+        inset 0 -2px 0 rgba(0, 0, 0, 0.2);
+    transition: all var(--transition);
+    cursor: pointer;
+    overflow: hidden;
+}
+
+/* Efecto holográfico del logo */
+.nav__logo::before {
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    z-index: 1;
+    width: 200%;
+    height: 200%;
+    content: '';
+    background: linear-gradient(45deg,
+        transparent 30%,
+        rgba(255, 255, 255, 0.3) 50%,
+        transparent 70%
+    );
+    transform: rotate(45deg) translate(-100%, -100%);
+    transition: transform 0.6s ease;
+}
+
+.nav__logo:hover::before {
+    transform: rotate(45deg) translate(100%, 100%);
+}
+
+.nav__logo:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow:
+        0 12px 35px rgba(255, 45, 85, 0.5),
+        0 0 30px rgba(255, 45, 85, 0.4),
+        0 0 60px rgba(255, 45, 85, 0.2),
+        inset 0 2px 0 rgba(255, 255, 255, 0.4),
+        inset 0 -2px 0 rgba(0, 0, 0, 0.3);
+}
+
+/* Menú central con cristal futurista */
+.nav__menu {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: auto;
+    transition: all var(--transition-slow);
+}
+
+.nav__list {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-sm) var(--space-lg);
+    margin: 0;
+    list-style: none;
+    background: linear-gradient(135deg,
+        rgba(255, 255, 255, 0.08) 0%,
+        rgba(255, 255, 255, 0.12) 25%,
+        rgba(255, 255, 255, 0.08) 50%,
+        rgba(255, 255, 255, 0.12) 75%,
+        rgba(255, 255, 255, 0.08) 100%
+    );
+    backdrop-filter: blur(20px) saturate(1.1);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 25px;
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        0 0 0 1px rgba(255, 45, 85, 0.1),
+        inset 0 2px 0 rgba(255, 255, 255, 0.15),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+    transition: all var(--transition);
+}
+
+/* Enlaces con efectos neón */
+.nav__link {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-sm) var(--space-lg);
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.85);
+    text-decoration: none;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-radius: 18px;
+    transition: all var(--transition);
+    overflow: hidden;
+}
+
+/* Efecto de fondo en hover */
+.nav__link::before {
+    position: absolute;
+    top: 0;
+    left: -100%;
+    z-index: -1;
+    width: 100%;
+    height: 100%;
+    content: '';
+    background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(255, 45, 85, 0.15) 50%,
+        transparent 100%
+    );
+    transition: left 0.4s ease;
+}
+
+.nav__link:hover::before {
+    left: 100%;
+}
+
+.nav__link:hover {
+    color: #fff;
+    text-shadow: 0 0 10px rgba(255, 45, 85, 0.6);
+    background: linear-gradient(135deg,
+        rgba(255, 45, 85, 0.2) 0%,
+        rgba(255, 69, 105, 0.15) 100%
+    );
+    border: 1px solid rgba(255, 45, 85, 0.3);
+    box-shadow:
+        0 4px 15px rgba(255, 45, 85, 0.3),
+        0 0 20px rgba(255, 45, 85, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    transform: translateY(-1px);
+}
+
+/* Estado activo del enlace */
+.nav__link.active {
+    color: #fff;
+    text-shadow: 0 0 12px rgba(255, 45, 85, 0.8);
+    background: linear-gradient(135deg,
+        rgba(255, 45, 85, 0.25) 0%,
+        rgba(255, 69, 105, 0.2) 100%
+    );
+    border: 1px solid rgba(255, 45, 85, 0.4);
+    box-shadow:
+        0 6px 20px rgba(255, 45, 85, 0.4),
+        0 0 25px rgba(255, 45, 85, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+/* CTA Button ultra-premium */
+.nav__cta {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    min-width: 260px;
+    pointer-events: auto;
+}
+
+.btn--primary {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    padding: var(--space-md) var(--space-xl);
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: #fff;
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    background: linear-gradient(135deg,
+        var(--starflex-red) 0%,
+        var(--starflex-crimson-bright) 30%,
+        var(--starflex-crimson-glow) 70%,
+        var(--starflex-red-bright) 100%
+    );
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 25px;
+    box-shadow:
+        0 10px 30px rgba(255, 45, 85, 0.5),
+        0 0 25px rgba(255, 45, 85, 0.4),
+        0 0 50px rgba(255, 45, 85, 0.2),
+        inset 0 2px 0 rgba(255, 255, 255, 0.3),
+        inset 0 -2px 0 rgba(0, 0, 0, 0.2);
+    transition: all var(--transition);
+    overflow: hidden;
+}
+
+/* Efecto de brillo animado */
+.btn--primary::before {
+    position: absolute;
+    top: 0;
+    left: -100%;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    content: '';
+    background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.4) 50%,
+        transparent 100%
+    );
+    transition: left 0.6s ease;
+}
+
+.btn--primary:hover::before {
+    left: 100%;
+}
+
+.btn--primary:hover {
+    transform: translateY(-3px) scale(1.02);
+    text-shadow: 0 0 20px rgba(255, 255, 255, 1);
+    border-color: rgba(255, 255, 255, 0.4);
+    box-shadow:
+        0 15px 40px rgba(255, 45, 85, 0.6),
+        0 0 35px rgba(255, 45, 85, 0.5),
+        0 0 70px rgba(255, 45, 85, 0.3),
+        0 0 100px rgba(255, 45, 85, 0.1),
+        inset 0 2px 0 rgba(255, 255, 255, 0.4),
+        inset 0 -2px 0 rgba(0, 0, 0, 0.3);
+}
+
+.btn--primary:active {
+    transform: translateY(-1px) scale(0.98);
+}
+
+/* Botón hamburguesa futurista */
+.nav__toggle {
+    position: relative;
+    z-index: 1001;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    padding: 0;
+    cursor: pointer;
+    background: linear-gradient(135deg,
+        rgba(255, 255, 255, 0.1) 0%,
+        rgba(255, 255, 255, 0.05) 100%
+    );
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 14px;
+    box-shadow:
+        0 6px 20px rgba(0, 0, 0, 0.3),
+        0 0 0 1px rgba(255, 45, 85, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    transition: all var(--transition);
+    overflow: hidden;
+}
+
+/* Efecto de pulso en el hamburguesa */
+.nav__toggle::after {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: -1;
+    width: 0;
+    height: 0;
+    content: '';
+    background: radial-gradient(circle, rgba(255, 45, 85, 0.3) 0%, transparent 70%);
+    border-radius: 50%;
+    transition: all 0.4s ease;
+    transform: translate(-50%, -50%);
+}
+
+.nav__toggle:hover::after {
+    width: 100px;
+    height: 100px;
+}
+
+.nav__toggle:hover {
+    transform: translateY(-2px);
+    border-color: rgba(255, 45, 85, 0.3);
+    box-shadow:
+        0 8px 25px rgba(0, 0, 0, 0.4),
+        0 0 20px rgba(255, 45, 85, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* Líneas del hamburguesa con efectos neón */
+.nav__toggle-line {
+    position: relative;
+    width: 24px;
+    height: 2px;
+    background: linear-gradient(90deg,
+        rgba(255, 255, 255, 0.8) 0%,
+        #fff 50%,
+        rgba(255, 255, 255, 0.8) 100%
+    );
+    border-radius: 2px;
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+    transition: all var(--transition);
+    transform-origin: center;
+}
+
+.nav__toggle-line:not(:last-child) {
+    margin-bottom: 5px;
+}
+
+.nav__toggle:hover .nav__toggle-line {
+    background: linear-gradient(90deg,
+        var(--starflex-crimson-bright) 0%,
+        #fff 50%,
+        var(--starflex-crimson-bright) 100%
+    );
+    box-shadow: 0 0 12px rgba(255, 45, 85, 0.5);
+}
+
+/* Estados activos del hamburguesa */
+.nav__toggle.active .nav__toggle-line:nth-child(1) {
+    transform: rotate(45deg) translate(6px, 6px);
+    background: linear-gradient(90deg,
+        var(--starflex-red) 0%,
+        #fff 50%,
+        var(--starflex-red) 100%
+    );
+}
+
+.nav__toggle.active .nav__toggle-line:nth-child(2) {
+    opacity: 0;
+    transform: scale(0);
+}
+
+.nav__toggle.active .nav__toggle-line:nth-child(3) {
+    transform: rotate(-45deg) translate(6px, -6px);
+    background: linear-gradient(90deg,
+        var(--starflex-red) 0%,
+        #fff 50%,
+        var(--starflex-red) 100%
+    );
+}
+
+/* Animaciones del navbar */
+@keyframes navbar-particles {
+    0%, 100% {
+        opacity: 0.8;
+        transform: translateX(0) scale(1);
+    }
+    33% {
+        opacity: 1;
+        transform: translateX(10px) scale(1.05);
+    }
+    66% {
+        opacity: 0.9;
+        transform: translateX(-5px) scale(0.95);
+    }
+}
+
+@keyframes link-float {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-2px);
+    }
+}
+
+/* Responsive mejorado */
+@media (width <= 1400px) {
+    .nav__menu {
+        max-width: calc(100vw - 380px);
+    }
+    
+    .nav__cta {
+        min-width: 220px;
+    }
+    
+    .btn--primary {
+        min-height: 44px;
+        padding: var(--space-sm) var(--space-lg);
+        font-size: 0.85rem;
+    }
+}
+
+@media (width <= 1200px) {
+    .nav__menu {
+        max-width: calc(100vw - 320px);
+    }
+    
+    .nav__list {
+        padding: var(--space-xs) var(--space-md);
+        gap: 0;
+    }
+    
+    .nav__link {
+        padding: var(--space-xs) var(--space-md);
+        font-size: 0.8rem;
+    }
+}
+
 @media (width <= 1023px) {
-    /* FORZAR VISIBILIDAD DE TODAS LAS SECCIONES EN MÓVIL */
-    .features,
-    .videos,
-    .faq,
-    .contact {
-        display: block !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        position: relative !important;
-        z-index: 1 !important;
-        transform: none !important;
-        min-height: auto !important;
-        height: auto !important;
-        overflow: visible !important;
+    .nav__toggle {
+        display: flex;
     }
     
-    /* ASEGURAR QUE LOS CONTENEDORES INTERNOS TAMBIÉN SEAN VISIBLES */
-    .features__container,
-    .features__grid,
-    .videos__container,
-    .videos__main-container,
-    .faq__container,
-    .contact__container,
-    .contact__grid {
-        display: block !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        position: relative !important;
-        transform: none !important;
-        overflow: visible !important;
+    .nav__cta {
+        display: none;
     }
     
-    /* CONFIGURACIÓN ESPECÍFICA PARA GRIDS EN MÓVIL */
-    .features__grid {
-        display: flex !important;
-        flex-direction: column !important;
-        gap: var(--space-2xl) !important;
-        width: 100% !important;
+    .nav__menu {
+        /* Drawer móvil ultra-atractivo */
+        position: fixed;
+        top: 0;
+        left: -100%;
+        z-index: 1000;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: flex-start;
+        width: min(340px, 85vw);
+        height: 100vh;
+        height: 100dvh;
+        padding: clamp(1.5rem, 4vw, 2rem);
+        padding-top: max(calc(env(safe-area-inset-top, 20px) + clamp(1.5rem, 4vw, 2rem)), calc(clamp(1.5rem, 4vw, 2rem) + 20px));
+        overflow: hidden;
+        
+        /* Fondo ultra-futurista */
+        background: linear-gradient(135deg,
+            rgba(10, 13, 20, 0.98) 0%,
+            rgba(21, 25, 34, 0.96) 25%,
+            rgba(30, 35, 48, 0.94) 50%,
+            rgba(25, 30, 40, 0.95) 75%,
+            rgba(21, 25, 34, 0.96) 100%
+        );
+        backdrop-filter: blur(35px) saturate(1.3);
+        border-right: 3px solid;
+        border-image: linear-gradient(180deg,
+            transparent 0%,
+            rgba(255, 45, 85, 0.4) 20%,
+            rgba(255, 69, 105, 0.6) 50%,
+            rgba(255, 45, 85, 0.4) 80%,
+            transparent 100%
+        ) 1;
+        box-shadow:
+            0 0 80px rgba(0, 0, 0, 0.9),
+            0 0 40px rgba(255, 45, 85, 0.2),
+            inset 3px 0 0 rgba(255, 45, 85, 0.3),
+            inset 0 0 60px rgba(255, 45, 85, 0.1);
+        
+        transition: left 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        transform: none;
+        max-width: none;
     }
     
-    .contact__grid {
-        display: grid !important;
-        grid-template-columns: 1fr !important;
-        gap: var(--space-xl) !important;
-        width: 100% !important;
+    .nav__menu.active {
+        left: 0;
     }
     
-    /* ASEGURAR PADDING Y MÁRGENES CORRECTOS */
-    .features,
-    .videos,
-    .faq,
-    .contact {
-        padding: var(--section-padding-y) var(--section-padding-x) !important;
-        margin: 0 !important;
-        width: 100% !important;
-        max-width: 100% !important;
+    /* Overlay mejorado */
+    .nav__menu::before {
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: -1;
+        width: 100vw;
+        height: 100vh;
+        height: 100dvh;
+        content: '';
+        background: linear-gradient(135deg,
+            rgba(0, 0, 0, 0.8) 0%,
+            rgba(10, 13, 20, 0.85) 100%
+        );
+        backdrop-filter: blur(10px);
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transition: all 0.4s ease;
     }
     
-    /* ELEMENTOS INDIVIDUALES DE CARACTERÍSTICAS */
-    .feature {
-        display: block !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        margin-bottom: var(--space-3xl) !important;
-    }
-    
-    .feature__content,
-    .feature__phone {
-        display: block !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-    }
-    
-    /* ELEMENTOS DE VIDEO */
-    .videos__content,
-    .videos__player-container,
-    .video-overlay {
-        display: block !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-    }
-    
-    /* ELEMENTOS DE FAQ */
-    .faq__item,
-    .faq__question,
-    .faq__answer {
-        display: block !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-    }
-    
-    /* ELEMENTOS DE CONTACTO */
-    .contact__channel {
-        display: flex !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        flex-direction: column !important;
-        margin-bottom: var(--space-xl) !important;
-    }
-    
-    /* RESETEAR CUALQUIER ANIMACIÓN QUE PUEDA CAUSAR PROBLEMAS */
-    .features *,
-    .videos *,
-    .faq *,
-    .contact * {
-        animation-play-state: running !important;
-        animation-fill-mode: forwards !important;
-    }
-    
-    /* ASEGURAR QUE NO HAY ELEMENTOS FLOTANTES QUE OCULTEN CONTENIDO */
-    .features::before,
-    .features::after,
-    .videos::before,
-    .videos::after,
-    .faq::before,
-    .faq::after,
-    .contact::before,
-    .contact::after {
-        display: none !important;
-    }
-    
-    /* CORREGIR CUALQUIER PROBLEMA DE POSICIONAMIENTO ABSOLUTO */
-    .features .feature__phone,
-    .videos .video-container,
-    .faq .faq__search,
-    .contact .contact__badge {
-        position: relative !important;
-        top: auto !important;
-        left: auto !important;
-        right: auto !important;
-        bottom: auto !important;
-    }
-    
-    /* ASEGURAR QUE LOS BADGES Y TÍTULOS SEAN VISIBLES */
-    .features__badge,
-    .videos__badge,
-    .faq__badge,
-    .contact__badge,
-    .features__title,
-    .videos__title,
-    .faq__title,
-    .contact__title {
-        display: block !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        position: relative !important;
-    }
-    
-    /* CORREGIR PROBLEMAS DE OVERFLOW HIDDEN */
-    body,
-    html,
-    .hero,
-    .features,
-    .videos,
-    .faq,
-    .contact {
-        overflow-x: hidden !important;
-        overflow-y: visible !important;
-    }
-    
-    /* ASEGURAR QUE NO HAY ELEMENTOS CON HEIGHT: 0 */
-    .features,
-    .videos,
-    .faq,
-    .contact {
-        min-height: 50vh !important;
-    }
-    
-    /* DEBUGGING: Bordes temporales para identificar secciones */
-    /* Descomenta estas líneas temporalmente para ver las secciones */
-    /*
-    .features { border: 2px solid red !important; }
-    .videos { border: 2px solid blue !important; }
-    .faq { border: 2px solid green !important; }
-    .contact { border: 2px solid yellow !important; }
-    */
-}
-
-/* REGLAS ADICIONALES PARA DISPOSITIVOS MUY PEQUEÑOS */
-@media (width <= 480px) {
-    .features,
-    .videos,
-    .faq,
-    .contact {
-        padding: calc(var(--section-padding-y) * 0.7) calc(var(--section-padding-x) * 0.5) !important;
-    }
-    
-    .features__grid {
-        gap: var(--space-xl) !important;
-    }
-    
-    .contact__grid {
-        gap: var(--space-lg) !important;
+    .nav__menu.active::before {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
     }
 }
-
-/* ... rest of existing code ... */
 
