@@ -21,8 +21,6 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
-  useTheme,
-  useMediaQuery,
   Divider,
 } from '@mui/material';
 import {
@@ -38,14 +36,12 @@ import {
   CalendarToday,
   Download,
   Refresh,
-  Timeline,
   Insights,
-  Assessment,
   DataUsage,
 } from '@mui/icons-material';
 import { useAuth } from '@/hooks/useAuth';
 import { useSocios } from '@/hooks/useSocios';
-import { format, subDays, startOfDay, endOfDay, isAfter, isBefore, startOfMonth, endOfMonth } from 'date-fns';
+import { format, subDays, startOfMonth, endOfMonth, isAfter, isBefore } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 interface AdvancedAnalyticsProps {
@@ -77,18 +73,6 @@ interface AnalyticsData {
     count: number;
     percentage: number;
   }>;
-  activityTimeline: Array<{
-    date: string;
-    registrations: number;
-    activations: number;
-    expirations: number;
-  }>;
-  membershipTrends: Array<{
-    period: string;
-    newMembers: number;
-    renewals: number;
-    churn: number;
-  }>;
   ageDistribution: Array<{
     range: string;
     count: number;
@@ -112,6 +96,7 @@ interface MetricCardProps {
   subtitle?: string;
   trend?: 'up' | 'down' | 'neutral';
   loading?: boolean;
+  progressValue?: number;
 }
 
 const MetricCard: React.FC<MetricCardProps> = ({
@@ -123,8 +108,32 @@ const MetricCard: React.FC<MetricCardProps> = ({
   delay,
   subtitle,
   trend = 'neutral',
-  loading = false
+  loading = false,
+  progressValue
 }) => {
+  // Calcular el valor de progreso basado en el tipo de métrica
+  const getProgressValue = () => {
+    if (progressValue !== undefined) return progressValue;
+    
+    // Para porcentajes, usar el valor directamente
+    if (typeof value === 'string' && value.includes('%')) {
+      const numValue = parseFloat(value.replace('%', ''));
+      return Math.min(numValue, 100);
+    }
+    
+    // Para números absolutos, usar una escala relativa
+    if (typeof value === 'string') {
+      const numValue = parseInt(value.replace(/,/g, ''));
+      if (title.includes('Total')) {
+        // Para total de socios, escalar basado en un máximo esperado
+        return Math.min((numValue / 100) * 100, 100);
+      }
+    }
+    
+    // Para cambios, usar el valor absoluto del cambio
+    return Math.min(Math.abs(change) * 2, 100);
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -207,7 +216,7 @@ const MetricCard: React.FC<MetricCardProps> = ({
                   fontSize: '0.75rem'
                 }}
               >
-                {change > 0 ? '+' : ''}{change}%
+                {change > 0 ? '+' : ''}{change.toFixed(1)}%
               </Typography>
             </Box>
           </Box>
@@ -257,11 +266,19 @@ const MetricCard: React.FC<MetricCardProps> = ({
           </Box>
 
           <Box sx={{ mt: 1.5 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
+              <Typography variant="caption" sx={{ color: '#64748b', fontSize: '0.7rem' }}>
+                Progreso
+              </Typography>
+              <Typography variant="caption" sx={{ color: color, fontWeight: 600, fontSize: '0.7rem' }}>
+                {getProgressValue().toFixed(0)}%
+              </Typography>
+            </Box>
             <LinearProgress
               variant="determinate"
-              value={loading ? 0 : Math.min(Math.abs(change) * 3, 100)}
+              value={loading ? 0 : getProgressValue()}
               sx={{
-                height: 3,
+                height: 4,
                 borderRadius: 2,
                 bgcolor: alpha(color, 0.1),
                 '& .MuiLinearProgress-bar': {
@@ -280,29 +297,25 @@ const MetricCard: React.FC<MetricCardProps> = ({
 const ChartCard: React.FC<{
   title: string;
   subtitle?: string;
-  data: any[];
+  data: Array<Record<string, unknown>>;
   color: string;
-  type: 'bar' | 'line' | 'pie' | 'timeline' | 'horizontal-bar';
+  type: 'bar' | 'line' | 'pie' | 'horizontal-bar';
   icon: React.ReactNode;
   loading?: boolean;
   onExport?: () => void;
   height?: number;
 }> = ({ title, subtitle, data, color, type, icon, loading = false, onExport, height = 280 }) => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const maxValue = useMemo(() => {
     if (!data || data.length === 0) return 0;
     switch (type) {
       case 'bar':
       case 'horizontal-bar':
-        return Math.max(...data.map((d: any) => d.count || d.value || 0));
+        return Math.max(...data.map((d: { count?: number; value?: number }) => d.count || d.value || 0));
       case 'pie':
-        return Math.max(...data.map((d: any) => d.value || d.count || 0));
+        return Math.max(...data.map((d: { value?: number; count?: number }) => d.value || d.count || 0));
       case 'line':
-        return Math.max(...data.map((d: any) => d.members || d.value || 0));
-      case 'timeline':
-        return Math.max(...data.map((d: any) => Math.max(d.registrations || 0, d.newMembers || 0)));
+        return Math.max(...data.map((d: { members?: number; value?: number }) => d.members || d.value || 0));
       default:
         return 0;
     }
@@ -364,7 +377,7 @@ const ChartCard: React.FC<{
                       textOverflow: 'ellipsis',
                       whiteSpace: 'nowrap'
                     }}>
-                      {item.level || item.name || item.range || item.status || ''}
+                      {String(item.level ?? item.name ?? item.range ?? item.status ?? '')}
                     </Typography>
                     <Box sx={{ 
                       display: 'flex', 
@@ -396,7 +409,7 @@ const ChartCard: React.FC<{
                   </Box>
                   <LinearProgress
                     variant="determinate"
-                    value={maxValue > 0 ? ((item.count || item.value || 0) / maxValue) * 100 : 0}
+                    value={maxValue > 0 ? ((Number(item.count) || Number(item.value) || 0) / maxValue) * 100 : 0}
                     sx={{
                       height: 6,
                       borderRadius: 3,
@@ -448,7 +461,7 @@ const ChartCard: React.FC<{
                       textOverflow: 'ellipsis',
                       whiteSpace: 'nowrap'
                     }}>
-                      {item.name || item.level || item.range || item.status || ''}
+                      {String(item.name || item.level || item.range || item.status || '')}
                     </Typography>
                   </Box>
                   <Box sx={{ 
@@ -468,8 +481,8 @@ const ChartCard: React.FC<{
                       label={`${item.percentage || 0}%`}
                       size="small"
                       sx={{
-                        bgcolor: alpha(item.color || color, 0.1),
-                        color: item.color || color,
+                        bgcolor: alpha(typeof item.color === 'string' && item.color ? item.color : color, 0.1),
+                        color: typeof item.color === 'string' && item.color ? item.color : color,
                         fontWeight: 600,
                         fontSize: '0.65rem',
                         height: 18,
@@ -497,7 +510,7 @@ const ChartCard: React.FC<{
                 key={index}
                 sx={{
                   flex: 1,
-                  height: `${maxValue > 0 ? ((item.members || item.value || 0) / maxValue * 100) : 0}%`,
+                  height: `${maxValue > 0 ? ((Number(item.members) || Number(item.value) || 0) / maxValue * 100) : 0}%`,
                   bgcolor: alpha(color, 0.7),
                   borderRadius: '3px 3px 0 0',
                   minHeight: 6,
@@ -520,105 +533,10 @@ const ChartCard: React.FC<{
                     whiteSpace: 'nowrap',
                   }}
                 >
-                  {item.month || item.period || item.date || ''}
+                  {String(item.month || item.period || item.date || '')}
                 </Typography>
               </Box>
             ))}
-          </Box>
-        );
-
-      case 'timeline':
-        return (
-          <Box sx={{ height: height, py: 1.5 }}>
-            <Stack spacing={1.5}>
-              {data.map((item, index) => (
-                <Box key={index} sx={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: 2
-                }}>
-                  <Box sx={{ minWidth: 50 }}>
-                    <Typography variant="caption" sx={{ 
-                      color: '#64748b', 
-                      fontWeight: 600, 
-                      fontSize: '0.7rem'
-                    }}>
-                      {item.date || item.period || ''}
-                    </Typography>
-                  </Box>
-                  <Box sx={{ flex: 1 }}>
-                    <Box sx={{ 
-                      display: 'flex', 
-                      gap: 0.5, 
-                      mb: 0.5,
-                      flexWrap: 'wrap'
-                    }}>
-                      {(item.registrations > 0 || item.newMembers > 0) && (
-                        <Chip
-                          label={`+${item.registrations || item.newMembers || 0}`}
-                          size="small"
-                          sx={{ 
-                            bgcolor: alpha('#10b981', 0.1), 
-                            color: '#10b981', 
-                            fontSize: '0.65rem', 
-                            height: 16
-                          }}
-                        />
-                      )}
-                      {item.activations > 0 && (
-                        <Chip
-                          label={`${item.activations}`}
-                          size="small"
-                          sx={{ 
-                            bgcolor: alpha('#6366f1', 0.1), 
-                            color: '#6366f1', 
-                            fontSize: '0.65rem', 
-                            height: 16
-                          }}
-                        />
-                      )}
-                      {(item.expirations > 0 || item.churn > 0) && (
-                        <Chip
-                          label={`-${item.expirations || item.churn || 0}`}
-                          size="small"
-                          sx={{ 
-                            bgcolor: alpha('#ef4444', 0.1), 
-                            color: '#ef4444', 
-                            fontSize: '0.65rem', 
-                            height: 16
-                          }}
-                        />
-                      )}
-                      {item.renewals > 0 && (
-                        <Chip
-                          label={`↻${item.renewals}`}
-                          size="small"
-                          sx={{ 
-                            bgcolor: alpha('#8b5cf6', 0.1), 
-                            color: '#8b5cf6', 
-                            fontSize: '0.65rem', 
-                            height: 16
-                          }}
-                        />
-                      )}
-                    </Box>
-                    <LinearProgress
-                      variant="determinate"
-                      value={maxValue > 0 ? ((item.registrations || item.newMembers || 0) / maxValue) * 100 : 0}
-                      sx={{
-                        height: 3,
-                        borderRadius: 2,
-                        bgcolor: alpha(color, 0.1),
-                        '& .MuiLinearProgress-bar': {
-                          bgcolor: color,
-                          borderRadius: 2,
-                        }
-                      }}
-                    />
-                  </Box>
-                </Box>
-              ))}
-            </Stack>
           </Box>
         );
 
@@ -748,8 +666,6 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
 }) => {
   const { user } = useAuth();
   const { stats, allSocios } = useSocios();
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData>({
     totalMembers: 0,
@@ -763,8 +679,6 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
     monthlyTrends: [],
     statusDistribution: [],
     engagementLevels: [],
-    activityTimeline: [],
-    membershipTrends: [],
     ageDistribution: [],
     paymentAnalysis: [],
   });
@@ -908,45 +822,6 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
         },
       ];
 
-      // Activity timeline with correct dates
-      const activityTimeline = Array.from({ length: 7 }, (_, i) => {
-        const date = subDays(endDate, 6 - i);
-        const dayStart = startOfDay(date);
-        const dayEnd = endOfDay(date);
-        
-        const dayRegistrations = allSocios.filter(socio => {
-          if (!socio.creadoEn) return false;
-          const createdDate = socio.creadoEn.toDate();
-          return isAfter(createdDate, dayStart) && isBefore(createdDate, dayEnd);
-        }).length;
-        
-        return {
-          date: format(date, 'dd/MM', { locale: es }),
-          registrations: dayRegistrations,
-          activations: Math.max(0, dayRegistrations - Math.floor(Math.random() * 2)),
-          expirations: Math.max(0, Math.floor(Math.random() * 2)),
-        };
-      });
-
-      // Membership trends with correct weeks
-      const membershipTrends = Array.from({ length: 4 }, (_, i) => {
-        const weekStart = subDays(endDate, (3 - i) * 7);
-        const weekEnd = subDays(endDate, (2 - i) * 7);
-        
-        const weekSocios = allSocios.filter(socio => {
-          if (!socio.creadoEn) return false;
-          const createdDate = socio.creadoEn.toDate();
-          return isAfter(createdDate, weekStart) && isBefore(createdDate, weekEnd);
-        }).length;
-
-        return {
-          period: `Sem ${4 - i}`,
-          newMembers: weekSocios,
-          renewals: Math.max(0, Math.floor(weekSocios * 0.4)),
-          churn: Math.max(0, Math.floor(Math.random() * 2)),
-        };
-      });
-
       // Age distribution
       const ageDistribution = [
         { range: '18-25', count: Math.floor(stats.total * 0.15), percentage: 15 },
@@ -975,8 +850,6 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
         monthlyTrends,
         statusDistribution,
         engagementLevels,
-        activityTimeline,
-        membershipTrends,
         ageDistribution,
         paymentAnalysis,
       });
@@ -1028,40 +901,44 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
       delay: 0,
       subtitle: 'Crecimiento total',
       trend: analyticsData.growthRate > 0 ? 'up' as const : analyticsData.growthRate < 0 ? 'down' as const : 'neutral' as const,
-      loading: loading || propLoading
+      loading: loading || propLoading,
+      progressValue: Math.min((analyticsData.totalMembers / 50) * 100, 100) // Escala basada en 50 socios como máximo esperado
     },
     {
       title: 'Tasa de Retención',
       value: `${analyticsData.retentionRate.toFixed(1)}%`,
-      change: analyticsData.retentionRate - 75,
+      change: analyticsData.retentionRate - 75, // Comparar contra 75% como baseline
       icon: <Star sx={{ fontSize: 24 }} />,
       color: '#10b981',
       delay: 0.1,
       subtitle: 'Socios activos',
       trend: analyticsData.retentionRate > 80 ? 'up' as const : analyticsData.retentionRate < 60 ? 'down' as const : 'neutral' as const,
-      loading: loading || propLoading
+      loading: loading || propLoading,
+      progressValue: analyticsData.retentionRate // Usar directamente el porcentaje
     },
     {
       title: 'Engagement Score',
       value: `${analyticsData.engagementScore.toFixed(0)}%`,
-      change: analyticsData.engagementScore - 70,
+      change: analyticsData.engagementScore - 70, // Comparar contra 70% como baseline
       icon: <Speed sx={{ fontSize: 24 }} />,
       color: '#f59e0b',
       delay: 0.2,
       subtitle: 'Nivel de participación',
       trend: analyticsData.engagementScore > 75 ? 'up' as const : analyticsData.engagementScore < 50 ? 'down' as const : 'neutral' as const,
-      loading: loading || propLoading
+      loading: loading || propLoading,
+      progressValue: analyticsData.engagementScore // Usar directamente el porcentaje
     },
     {
       title: 'Tiempo Promedio',
       value: `${analyticsData.averageLifetime.toFixed(1)}m`,
-      change: analyticsData.averageLifetime - 18,
+      change: analyticsData.averageLifetime - 18, // Comparar contra 18 meses como baseline
       icon: <Schedule sx={{ fontSize: 24 }} />,
       color: '#8b5cf6',
       delay: 0.3,
       subtitle: 'Permanencia media',
       trend: analyticsData.averageLifetime > 20 ? 'up' as const : analyticsData.averageLifetime < 15 ? 'down' as const : 'neutral' as const,
-      loading: loading || propLoading
+      loading: loading || propLoading,
+      progressValue: Math.min((analyticsData.averageLifetime / 36) * 100, 100) // Escala basada en 36 meses como máximo esperado
     }
   ], [analyticsData, loading, propLoading]);
 
@@ -1345,40 +1222,6 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
           </Box>
           <Box sx={{ flex: 1 }}>
             <ChartCard
-              title="Actividad Semanal"
-              subtitle="Registros y activaciones por día"
-              data={analyticsData.activityTimeline}
-              color="#f59e0b"
-              type="timeline"
-              icon={<Timeline />}
-              loading={loading || propLoading}
-              onExport={() => handleExport('activity-timeline')}
-              height={260}
-            />
-          </Box>
-        </Box>
-
-        {/* Third Row */}
-        <Box sx={{ 
-          display: 'flex',
-          flexDirection: { xs: 'column', lg: 'row' },
-          gap: 3
-        }}>
-          <Box sx={{ flex: 1 }}>
-            <ChartCard
-              title="Tendencias Semanales"
-              subtitle="Nuevos miembros y renovaciones"
-              data={analyticsData.membershipTrends}
-              color="#ec4899"
-              type="timeline"
-              icon={<Assessment />}
-              loading={loading || propLoading}
-              onExport={() => handleExport('membership-trends')}
-              height={260}
-            />
-          </Box>
-          <Box sx={{ flex: 1 }}>
-            <ChartCard
               title="Distribución por Edad"
               subtitle="Rangos etarios de los socios"
               data={analyticsData.ageDistribution}
@@ -1392,7 +1235,7 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
           </Box>
         </Box>
 
-        {/* Fourth Row - Payment Analysis */}
+        {/* Third Row - Payment Analysis */}
         <Box sx={{ width: '100%' }}>
           <ChartCard
             title="Análisis de Pagos"
