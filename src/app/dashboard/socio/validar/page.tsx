@@ -24,7 +24,8 @@ import {
   Calendar,
   MapPin,
   Users,
-  Activity
+  Activity,
+  Scan
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { SocioSidebar } from '@/components/layout/SocioSidebar';
@@ -88,49 +89,79 @@ export default function SocioValidarPage() {
   const [recentValidations, setRecentValidations] = useState<any[]>([]);
   const [beneficiosDisponibles, setBeneficiosDisponibles] = useState<Beneficio[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Cargar datos iniciales
-  useEffect(() => {
-    if (user && user.role === 'socio') {
-      loadInitialData();
+  // Cargar datos iniciales con manejo de errores mejorado
+  const loadInitialData = useCallback(async () => {
+    if (!user || !user.asociacionId) {
+      console.log('❌ Usuario o asociación no disponible');
+      setLoading(false);
+      return;
     }
-  }, [user]);
-
-  const loadInitialData = async () => {
-    if (!user || !user.asociacionId) return;
     
     try {
+      console.log('🔄 Cargando datos iniciales para:', user.uid);
       setLoading(true);
+      setError(null);
       
-      // Cargar beneficios disponibles
-      const beneficios = await BeneficiosService.getBeneficiosDisponibles(
-        user.uid, 
-        user.asociacionId
+      // Cargar datos en paralelo con timeouts
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout: La carga de datos está tomando demasiado tiempo')), 15000)
       );
-      setBeneficiosDisponibles(beneficios);
 
-      // Cargar historial de validaciones
-      const historial = await ValidacionesService.getHistorialValidaciones(user.uid);
+      const dataPromises = [
+        // Cargar beneficios disponibles con manejo de errores específico
+        BeneficiosService.getBeneficiosDisponibles(user.uid, user.asociacionId)
+          .catch(error => {
+            console.warn('⚠️ Error cargando beneficios, usando datos por defecto:', error);
+            return []; // Retornar array vacío en caso de error
+          }),
+        
+        // Cargar historial de validaciones con manejo de errores específico
+        ValidacionesService.getHistorialValidaciones(user.uid)
+          .catch(error => {
+            console.warn('⚠️ Error cargando historial, usando datos por defecto:', error);
+            return []; // Retornar array vacío en caso de error
+          })
+      ];
+
+      const [beneficios, historial] = await Promise.race([
+        Promise.all(dataPromises),
+        timeoutPromise
+      ]) as [Beneficio[], any[]];
+
+      console.log('✅ Datos cargados:', { 
+        beneficios: beneficios.length, 
+        historial: historial.length 
+      });
+
+      setBeneficiosDisponibles(beneficios);
       setRecentValidations(historial.slice(0, 5)); // Solo las últimas 5
 
-      // Calcular estadísticas
+      // Calcular estadísticas de forma segura
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       
       const validacionesHoy = historial.filter(v => {
-        const validationDate = v.fechaHora.toDate();
-        validationDate.setHours(0, 0, 0, 0);
-        return validationDate.getTime() === today.getTime();
+        try {
+          const validationDate = v.fechaHora?.toDate ? v.fechaHora.toDate() : new Date(v.fechaHora);
+          validationDate.setHours(0, 0, 0, 0);
+          return validationDate.getTime() === today.getTime();
+        } catch {
+          return false;
+        }
       }).length;
 
       const validacionesExitosas = historial.filter(v => v.resultado === 'habilitado').length;
       
-      // Calcular ahorro total (esto dependería de tener datos de montos)
+      // Calcular ahorro total de forma segura
       const ahorroTotal = historial
         .filter(v => v.resultado === 'habilitado')
         .reduce((total, v) => total + (v.montoDescuento || 0), 0);
 
-      const ultimaValidacion = historial.length > 0 ? historial[0].fechaHora.toDate() : null;
+      const ultimaValidacion = historial.length > 0 && historial[0].fechaHora 
+        ? (historial[0].fechaHora.toDate ? historial[0].fechaHora.toDate() : new Date(historial[0].fechaHora))
+        : null;
 
       setStats({
         validacionesHoy,
@@ -141,12 +172,40 @@ export default function SocioValidarPage() {
       });
 
     } catch (error) {
-      console.error('Error loading initial data:', error);
-      toast.error('Error al cargar los datos');
+      console.error('❌ Error loading initial data:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Error al cargar los datos';
+      setError(errorMessage);
+      toast.error(errorMessage);
+      
+      // Establecer datos por defecto en caso de error
+      setStats({
+        validacionesHoy: 0,
+        validacionesExitosas: 0,
+        ahorroTotal: 0,
+        ultimaValidacion: null,
+        beneficiosDisponibles: 0
+      });
+      setBeneficiosDisponibles([]);
+      setRecentValidations([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  // Cargar datos iniciales solo cuando el usuario esté disponible
+  useEffect(() => {
+    if (user && user.role === 'socio' && user.asociacionId) {
+      loadInitialData();
+    } else if (user && user.role !== 'socio') {
+      // Redirigir si no es socio
+      console.log('❌ Usuario no es socio, redirigiendo...');
+      router.push('/dashboard');
+    } else if (user && !user.asociacionId) {
+      // Usuario sin asociación
+      setError('Tu cuenta no tiene una asociación asignada. Contacta al administrador.');
+      setLoading(false);
+    }
+  }, [user, loadInitialData, router]);
 
   const handleLogoutClick = () => {
     setLogoutModalOpen(true);
@@ -213,6 +272,11 @@ export default function SocioValidarPage() {
     setValidationResult(null);
   };
 
+  const handleRetry = () => {
+    setError(null);
+    loadInitialData();
+  };
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-AR', {
       style: 'currency',
@@ -256,6 +320,40 @@ export default function SocioValidarPage() {
     }
   };
 
+  // Mostrar error si hay problemas
+  if (error && !loading) {
+    return (
+      <DashboardLayout
+        activeSection="validar"
+        sidebarComponent={(props) => (
+          <SocioSidebarWithLogout
+            {...props}
+            onLogoutClick={handleLogoutClick}
+          />
+        )}
+      >
+        <div className="p-6">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center max-w-md">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <AlertCircle size={24} className="text-red-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Error al cargar datos</h3>
+              <p className="text-gray-600 mb-4">{error}</p>
+              <button
+                onClick={handleRetry}
+                className="bg-violet-500 hover:bg-violet-600 text-white px-4 py-2 rounded-lg transition-colors duration-200"
+              >
+                Reintentar
+              </button>
+            </div>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Mostrar loading
   if (loading) {
     return (
       <DashboardLayout
@@ -445,7 +543,10 @@ export default function SocioValidarPage() {
                             </span>
                           </div>
                           <span className="text-xs opacity-75">
-                            {formatDate(validation.fechaHora.toDate())}
+                            {validation.fechaHora?.toDate 
+                              ? formatDate(validation.fechaHora.toDate())
+                              : formatDate(new Date(validation.fechaHora))
+                            }
                           </span>
                         </div>
                         {validation.beneficioTitulo && (
