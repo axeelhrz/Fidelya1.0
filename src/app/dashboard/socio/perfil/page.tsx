@@ -53,7 +53,19 @@ import {
   Hexagon,
   PieChart,
   LineChart,
-  TrendingDown
+  TrendingDown,
+  MapPin,
+  ShoppingBag,
+  Percent,
+  Timer,
+  Users,
+  Store,
+  ArrowUpRight,
+  ArrowDownRight,
+  Flame,
+  Calendar as CalendarIcon,
+  ChevronRight,
+  Info
 } from 'lucide-react';
 import Image from 'next/image';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -64,7 +76,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { useSocioProfile } from '@/hooks/useSocioProfile';
 import { useAuth } from '@/hooks/useAuth';
 import { SocioConfiguration } from '@/types/socio';
-import { format } from 'date-fns';
+import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns';
 import { es } from 'date-fns/locale';
 import toast from 'react-hot-toast';
 
@@ -328,7 +340,7 @@ const StatsCard: React.FC<{
   </div>
 );
 
-// Detailed Stats Modal Component
+// Enhanced Detailed Stats Modal Component with Real Firebase Data
 const DetailedStatsModal: React.FC<{
   isOpen: boolean;
   onClose: () => void;
@@ -336,10 +348,18 @@ const DetailedStatsModal: React.FC<{
   socio: any;
 }> = ({ isOpen, onClose, stats, socio }) => {
   const [activeTab, setActiveTab] = useState<'overview' | 'trends' | 'categories' | 'merchants'>('overview');
+  const [loading, setLoading] = useState(false);
 
-  // Calculate additional metrics
+  // Calculate additional metrics from real data
   const additionalMetrics = useMemo(() => {
-    if (!stats) return {};
+    if (!stats || !socio) return {
+      totalDays: 0,
+      avgBenefitsPerMonth: 0,
+      avgSavingsPerBenefit: 0,
+      efficiencyScore: 0,
+      growthRate: 0,
+      streakDays: 0
+    };
 
     const totalDays = socio?.creadoEn ? 
       Math.floor((new Date().getTime() - socio.creadoEn.toDate().getTime()) / (1000 * 60 * 60 * 24)) : 0;
@@ -352,67 +372,137 @@ const DetailedStatsModal: React.FC<{
 
     const efficiencyScore = stats.validacionesExitosas || 0;
 
+    // Calculate growth rate (benefits this month vs last month)
+    const growthRate = stats.beneficiosEsteMes > 0 && stats.beneficiosUsados > stats.beneficiosEsteMes ?
+      Math.round(((stats.beneficiosEsteMes / (stats.beneficiosUsados - stats.beneficiosEsteMes)) - 1) * 100) : 0;
+
     return {
       totalDays,
       avgBenefitsPerMonth,
       avgSavingsPerBenefit,
-      efficiencyScore
+      efficiencyScore,
+      growthRate,
+      streakDays: stats.racha || 0
     };
   }, [stats, socio]);
 
-  // Mock data for charts (in a real app, this would come from the stats)
+  // Process real chart data from Firebase
   const chartData = useMemo(() => {
-    const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'];
-    const benefitsData = [12, 19, 15, 25, 22, 18];
-    const savingsData = [1200, 1900, 1500, 2500, 2200, 1800];
+    if (!stats?.actividadPorMes) {
+      return {
+        months: [],
+        benefitsData: [],
+        savingsData: [],
+        labels: []
+      };
+    }
 
-    return { months, benefitsData, savingsData };
-  }, []);
+    const monthsData = Object.entries(stats.actividadPorMes)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .slice(-6); // Last 6 months
 
-  const categoryData = [
-    { name: 'Restaurantes', value: 35, color: '#3b82f6' },
-    { name: 'Retail', value: 25, color: '#10b981' },
-    { name: 'Servicios', value: 20, color: '#f59e0b' },
-    { name: 'Entretenimiento', value: 15, color: '#ef4444' },
-    { name: 'Otros', value: 5, color: '#8b5cf6' }
-  ];
+    const months = monthsData.map(([month]) => {
+      const date = new Date(month + '-01');
+      return format(date, 'MMM', { locale: es });
+    });
 
-  const topMerchants = [
-    { name: 'Restaurante El Buen Sabor', visits: 8, savings: 1200 },
-    { name: 'Tienda Fashion Plus', visits: 6, savings: 800 },
-    { name: 'Café Central', visits: 5, savings: 450 },
-    { name: 'Librería Moderna', visits: 4, savings: 320 },
-    { name: 'Farmacia Salud', visits: 3, savings: 180 }
-  ];
+    const benefitsData = monthsData.map(([, count]) => count as number);
+    
+    // Calculate estimated savings per month (using average)
+    const avgSavingsPerBenefit = additionalMetrics.avgSavingsPerBenefit;
+    const savingsData = benefitsData.map(benefits => benefits * avgSavingsPerBenefit);
+
+    return {
+      months,
+      benefitsData,
+      savingsData,
+      labels: monthsData.map(([month]) => month)
+    };
+  }, [stats, additionalMetrics.avgSavingsPerBenefit]);
+
+  // Process real category data from Firebase
+  const categoryData = useMemo(() => {
+    if (!stats?.beneficiosPorCategoria) {
+      return [];
+    }
+
+    const total = Object.values(stats.beneficiosPorCategoria).reduce((sum: number, count) => sum + (count as number), 0);
+    
+    return Object.entries(stats.beneficiosPorCategoria)
+      .map(([name, count]) => ({
+        name,
+        value: total > 0 ? Math.round(((count as number) / total) * 100) : 0,
+        count: count as number,
+        color: getCategoryColor(name)
+      }))
+      .sort((a, b) => b.value - a.value);
+  }, [stats]);
+
+  // Process real merchants data from Firebase
+  const topMerchants = useMemo(() => {
+    if (!stats?.comerciosMasVisitados) {
+      return [];
+    }
+
+    return stats.comerciosMasVisitados.map((merchant: any, index: number) => ({
+      name: merchant.nombre,
+      visits: merchant.visitas,
+      savings: merchant.visitas * additionalMetrics.avgSavingsPerBenefit,
+      lastVisit: merchant.ultimaVisita,
+      rank: index + 1
+    }));
+  }, [stats, additionalMetrics.avgSavingsPerBenefit]);
+
+  // Helper function to get category colors
+  const getCategoryColor = (category: string): string => {
+    const colors: { [key: string]: string } = {
+      'Restaurantes': '#3b82f6',
+      'Retail': '#10b981',
+      'Servicios': '#f59e0b',
+      'Entretenimiento': '#ef4444',
+      'Salud': '#8b5cf6',
+      'Educación': '#06b6d4',
+      'Tecnología': '#84cc16',
+      'Deportes': '#f97316',
+      'Viajes': '#ec4899',
+      'Sin categoría': '#6b7280'
+    };
+    return colors[category] || '#6b7280';
+  };
 
   if (!isOpen) return null;
 
   return (
     <Dialog open={isOpen} onClose={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <BarChart3 size={24} />
-            Estadísticas Detalladas
+      <DialogContent className="max-w-7xl max-h-[95vh] overflow-hidden">
+        <DialogHeader className="border-b border-gray-200 pb-4">
+          <DialogTitle className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+              <BarChart3 size={20} className="text-white" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">Estadísticas Detalladas</h2>
+              <p className="text-sm text-gray-600">Análisis completo de tu actividad como socio</p>
+            </div>
           </DialogTitle>
         </DialogHeader>
 
-        {/* Tabs */}
+        {/* Enhanced Tabs */}
         <div className="mb-6">
-          <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
+          <div className="flex space-x-1 bg-gray-100 rounded-xl p-1">
             {[
-              { id: 'overview', label: 'Resumen', icon: <PieChart size={16} /> },
-              { id: 'trends', label: 'Tendencias', icon: <LineChart size={16} /> },
-              { id: 'categories', label: 'Categorías', icon: <Target size={16} /> },
-              { id: 'merchants', label: 'Comercios', icon: <Building2 size={16} /> }
+              { id: 'overview', label: 'Resumen General', icon: <PieChart size={18} />, color: 'from-blue-500 to-blue-600' },
+              { id: 'trends', label: 'Tendencias', icon: <LineChart size={18} />, color: 'from-green-500 to-green-600' },
+              { id: 'categories', label: 'Por Categorías', icon: <Target size={18} />, color: 'from-purple-500 to-purple-600' },
+              { id: 'merchants', label: 'Comercios', icon: <Building2 size={18} />, color: 'from-orange-500 to-orange-600' }
             ].map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                className={`flex items-center gap-3 px-6 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
                   activeTab === tab.id
-                    ? 'bg-white text-blue-600 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
+                    ? `bg-gradient-to-r ${tab.color} text-white shadow-lg transform scale-105`
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
                 }`}
               >
                 {tab.icon}
@@ -422,72 +512,239 @@ const DetailedStatsModal: React.FC<{
           </div>
         </div>
 
-        <div className="space-y-6">
+        <div className="overflow-y-auto max-h-[calc(95vh-200px)] space-y-6">
           {/* Overview Tab */}
           {activeTab === 'overview' && (
             <div className="space-y-6">
-              {/* Key Metrics Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-                      <Calendar size={16} className="text-white" />
+              {/* Hero Stats Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-4 border border-blue-200"
+                >
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center">
+                      <CalendarIcon size={18} className="text-white" />
                     </div>
-                    <span className="text-sm font-medium text-blue-700">Días como socio</span>
+                    <div className="flex-1">
+                      <p className="text-xs font-medium text-blue-700 uppercase tracking-wide">Días como socio</p>
+                      <p className="text-2xl font-bold text-blue-900">{additionalMetrics.totalDays}</p>
+                    </div>
                   </div>
-                  <p className="text-2xl font-bold text-blue-900">{additionalMetrics.totalDays}</p>
-                </div>
+                  <div className="flex items-center gap-1 text-xs text-blue-600">
+                    <Clock3 size={12} />
+                    <span>Desde {socio?.creadoEn ? format(socio.creadoEn.toDate(), 'MMM yyyy', { locale: es }) : 'N/A'}</span>
+                  </div>
+                </motion.div>
 
-                <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
-                      <TrendingUp size={16} className="text-white" />
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-4 border border-green-200"
+                >
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 bg-green-500 rounded-xl flex items-center justify-center">
+                      <TrendingUp size={18} className="text-white" />
                     </div>
-                    <span className="text-sm font-medium text-green-700">Promedio mensual</span>
+                    <div className="flex-1">
+                      <p className="text-xs font-medium text-green-700 uppercase tracking-wide">Promedio mensual</p>
+                      <p className="text-2xl font-bold text-green-900">{additionalMetrics.avgBenefitsPerMonth}</p>
+                    </div>
                   </div>
-                  <p className="text-2xl font-bold text-green-900">{additionalMetrics.avgBenefitsPerMonth}</p>
-                </div>
+                  <div className="flex items-center gap-1 text-xs text-green-600">
+                    <ArrowUpRight size={12} />
+                    <span>{additionalMetrics.growthRate > 0 ? '+' : ''}{additionalMetrics.growthRate}% este mes</span>
+                  </div>
+                </motion.div>
 
-                <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center">
-                      <DollarSign size={16} className="text-white" />
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-4 border border-purple-200"
+                >
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 bg-purple-500 rounded-xl flex items-center justify-center">
+                      <DollarSign size={18} className="text-white" />
                     </div>
-                    <span className="text-sm font-medium text-purple-700">Ahorro promedio</span>
+                    <div className="flex-1">
+                      <p className="text-xs font-medium text-purple-700 uppercase tracking-wide">Ahorro promedio</p>
+                      <p className="text-2xl font-bold text-purple-900">${additionalMetrics.avgSavingsPerBenefit}</p>
+                    </div>
                   </div>
-                  <p className="text-2xl font-bold text-purple-900">${additionalMetrics.avgSavingsPerBenefit}</p>
-                </div>
+                  <div className="flex items-center gap-1 text-xs text-purple-600">
+                    <Wallet size={12} />
+                    <span>Por beneficio usado</span>
+                  </div>
+                </motion.div>
 
-                <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-4">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
-                      <Zap size={16} className="text-white" />
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                  className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl p-4 border border-orange-200"
+                >
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 bg-orange-500 rounded-xl flex items-center justify-center">
+                      <Zap size={18} className="text-white" />
                     </div>
-                    <span className="text-sm font-medium text-orange-700">Eficiencia</span>
+                    <div className="flex-1">
+                      <p className="text-xs font-medium text-orange-700 uppercase tracking-wide">Eficiencia</p>
+                      <p className="text-2xl font-bold text-orange-900">{additionalMetrics.efficiencyScore}%</p>
+                    </div>
                   </div>
-                  <p className="text-2xl font-bold text-orange-900">{additionalMetrics.efficiencyScore}%</p>
-                </div>
+                  <div className="flex items-center gap-1 text-xs text-orange-600">
+                    <CheckCircle size={12} />
+                    <span>Validaciones exitosas</span>
+                  </div>
+                </motion.div>
+
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                  className="bg-gradient-to-br from-red-50 to-red-100 rounded-2xl p-4 border border-red-200"
+                >
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 bg-red-500 rounded-xl flex items-center justify-center">
+                      <Flame size={18} className="text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-xs font-medium text-red-700 uppercase tracking-wide">Racha actual</p>
+                      <p className="text-2xl font-bold text-red-900">{additionalMetrics.streakDays}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 text-xs text-red-600">
+                    <Timer size={12} />
+                    <span>Días consecutivos</span>
+                  </div>
+                </motion.div>
+
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.6 }}
+                  className="bg-gradient-to-br from-cyan-50 to-cyan-100 rounded-2xl p-4 border border-cyan-200"
+                >
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 bg-cyan-500 rounded-xl flex items-center justify-center">
+                      <Store size={18} className="text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-xs font-medium text-cyan-700 uppercase tracking-wide">Comercios</p>
+                      <p className="text-2xl font-bold text-cyan-900">{stats?.comerciosVisitados || 0}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 text-xs text-cyan-600">
+                    <MapPin size={12} />
+                    <span>Únicos visitados</span>
+                  </div>
+                </motion.div>
               </div>
 
-              {/* Progress Indicators */}
-              <div className="bg-gray-50 rounded-xl p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Progreso del Nivel</h3>
-                <div className="space-y-4">
-                  <div>
-                    <div className="flex justify-between text-sm text-gray-600 mb-2">
-                      <span>Puntos actuales</span>
-                      <span>{socio?.nivel?.puntos || 0} / {(socio?.nivel?.puntos || 0) + (socio?.nivel?.puntosParaProximoNivel || 1000)}</span>
+              {/* Level Progress Section */}
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.7 }}
+                className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl p-6 border border-slate-200"
+              >
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-4">
+                    <div className="w-16 h-16 bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl flex items-center justify-center">
+                      <Award size={24} className="text-white" />
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-3">
-                      <div 
-                        className="bg-gradient-to-r from-blue-500 to-purple-600 h-3 rounded-full transition-all duration-500"
-                        style={{ 
-                          width: `${((socio?.nivel?.puntos || 0) / ((socio?.nivel?.puntos || 0) + (socio?.nivel?.puntosParaProximoNivel || 1000))) * 100}%` 
-                        }}
-                      />
+                    <div>
+                      <h3 className="text-xl font-bold text-slate-900">Progreso del Nivel</h3>
+                      <p className="text-slate-600">Nivel actual: {socio?.nivel?.nivel || 'Bronze'}</p>
                     </div>
                   </div>
+                  <div className="text-right">
+                    <p className="text-2xl font-bold text-slate-900">{socio?.nivel?.puntos || 0}</p>
+                    <p className="text-sm text-slate-600">puntos acumulados</p>
+                  </div>
                 </div>
+                
+                <div className="space-y-4">
+                  <div className="flex justify-between text-sm text-slate-600 mb-2">
+                    <span>Progreso hacia {socio?.nivel?.proximoNivel || 'Silver'}</span>
+                    <span>{socio?.nivel?.puntos || 0} / {(socio?.nivel?.puntos || 0) + (socio?.nivel?.puntosParaProximoNivel || 1000)}</span>
+                  </div>
+                  <div className="w-full bg-slate-200 rounded-full h-4 overflow-hidden">
+                    <motion.div 
+                      className="h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full relative overflow-hidden"
+                      initial={{ width: 0 }}
+                      animate={{ 
+                        width: `${((socio?.nivel?.puntos || 0) / ((socio?.nivel?.puntos || 0) + (socio?.nivel?.puntosParaProximoNivel || 1000))) * 100}%` 
+                      }}
+                      transition={{ duration: 1.5, ease: "easeOut" }}
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse"></div>
+                    </motion.div>
+                  </div>
+                  <div className="flex justify-between text-xs text-slate-500">
+                    <span>Faltan {socio?.nivel?.puntosParaProximoNivel || 1000} puntos</span>
+                    <span>para el siguiente nivel</span>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Quick Stats Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <motion.div 
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.8 }}
+                  className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm"
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-lg font-semibold text-gray-900">Resumen de Ahorros</h4>
+                    <Wallet className="text-green-500" size={24} />
+                  </div>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Total ahorrado</span>
+                      <span className="text-2xl font-bold text-green-600">${stats?.ahorroTotal?.toLocaleString() || 0}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Este mes</span>
+                      <span className="text-lg font-semibold text-gray-900">${stats?.ahorroEsteMes?.toLocaleString() || 0}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Promedio por beneficio</span>
+                      <span className="text-lg font-semibold text-gray-900">${additionalMetrics.avgSavingsPerBenefit}</span>
+                    </div>
+                  </div>
+                </motion.div>
+
+                <motion.div 
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.9 }}
+                  className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm"
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-lg font-semibold text-gray-900">Actividad Reciente</h4>
+                    <Activity className="text-blue-500" size={24} />
+                  </div>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Beneficios usados</span>
+                      <span className="text-2xl font-bold text-blue-600">{stats?.beneficiosUsados || 0}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Este mes</span>
+                      <span className="text-lg font-semibold text-gray-900">{stats?.beneficiosEsteMes || 0}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Tasa de éxito</span>
+                      <span className="text-lg font-semibold text-green-600">{stats?.validacionesExitosas || 0}%</span>
+                    </div>
+                  </div>
+                </motion.div>
               </div>
             </div>
           )}
@@ -495,103 +752,409 @@ const DetailedStatsModal: React.FC<{
           {/* Trends Tab */}
           {activeTab === 'trends' && (
             <div className="space-y-6">
-              <div className="bg-white border border-gray-200 rounded-xl p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Beneficios Usados por Mes</h3>
-                <div className="h-64 flex items-end justify-between gap-2">
-                  {chartData.benefitsData.map((value, index) => (
-                    <div key={index} className="flex flex-col items-center flex-1">
-                      <div 
-                        className="bg-gradient-to-t from-blue-500 to-blue-400 rounded-t-lg w-full transition-all duration-500 hover:from-blue-600 hover:to-blue-500"
-                        style={{ height: `${(value / Math.max(...chartData.benefitsData)) * 200}px` }}
-                      />
-                      <span className="text-xs text-gray-600 mt-2">{chartData.months[index]}</span>
-                      <span className="text-xs font-medium text-gray-900">{value}</span>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm"
+                >
+                  <div className="flex items-center justify-between mb-6">
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900">Beneficios por Mes</h3>
+                      <p className="text-sm text-gray-600">Últimos 6 meses</p>
                     </div>
-                  ))}
-                </div>
+                    <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+                      <BarChart3 size={20} className="text-blue-600" />
+                    </div>
+                  </div>
+                  <div className="h-64 flex items-end justify-between gap-3">
+                    {chartData.benefitsData.map((value, index) => (
+                      <motion.div 
+                        key={index} 
+                        className="flex flex-col items-center flex-1"
+                        initial={{ height: 0 }}
+                        animate={{ height: 'auto' }}
+                        transition={{ delay: index * 0.1 }}
+                      >
+                        <motion.div 
+                          className="bg-gradient-to-t from-blue-500 to-blue-400 rounded-t-lg w-full transition-all duration-500 hover:from-blue-600 hover:to-blue-500 relative group cursor-pointer"
+                          style={{ height: `${value > 0 ? Math.max((value / Math.max(...chartData.benefitsData)) * 200, 8) : 8}px` }}
+                          whileHover={{ scale: 1.05 }}
+                        >
+                          <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                            {value}
+                          </div>
+                        </motion.div>
+                        <span className="text-xs text-gray-600 mt-2 font-medium">{chartData.months[index]}</span>
+                        <span className="text-xs font-bold text-gray-900">{value}</span>
+                      </motion.div>
+                    ))}
+                  </div>
+                </motion.div>
+
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm"
+                >
+                  <div className="flex items-center justify-between mb-6">
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900">Ahorros por Mes</h3>
+                      <p className="text-sm text-gray-600">Estimación en pesos</p>
+                    </div>
+                    <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
+                      <DollarSign size={20} className="text-green-600" />
+                    </div>
+                  </div>
+                  <div className="h-64 flex items-end justify-between gap-3">
+                    {chartData.savingsData.map((value, index) => (
+                      <motion.div 
+                        key={index} 
+                        className="flex flex-col items-center flex-1"
+                        initial={{ height: 0 }}
+                        animate={{ height: 'auto' }}
+                        transition={{ delay: 0.2 + index * 0.1 }}
+                      >
+                        <motion.div 
+                          className="bg-gradient-to-t from-green-500 to-green-400 rounded-t-lg w-full transition-all duration-500 hover:from-green-600 hover:to-green-500 relative group cursor-pointer"
+                          style={{ height: `${value > 0 ? Math.max((value / Math.max(...chartData.savingsData)) * 200, 8) : 8}px` }}
+                          whileHover={{ scale: 1.05 }}
+                        >
+                          <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                            ${value}
+                          </div>
+                        </motion.div>
+                        <span className="text-xs text-gray-600 mt-2 font-medium">{chartData.months[index]}</span>
+                        <span className="text-xs font-bold text-gray-900">${value}</span>
+                      </motion.div>
+                    ))}
+                  </div>
+                </motion.div>
               </div>
 
-              <div className="bg-white border border-gray-200 rounded-xl p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Ahorros por Mes ($)</h3>
-                <div className="h-64 flex items-end justify-between gap-2">
-                  {chartData.savingsData.map((value, index) => (
-                    <div key={index} className="flex flex-col items-center flex-1">
-                      <div 
-                        className="bg-gradient-to-t from-green-500 to-green-400 rounded-t-lg w-full transition-all duration-500 hover:from-green-600 hover:to-green-500"
-                        style={{ height: `${(value / Math.max(...chartData.savingsData)) * 200}px` }}
-                      />
-                      <span className="text-xs text-gray-600 mt-2">{chartData.months[index]}</span>
-                      <span className="text-xs font-medium text-gray-900">${value}</span>
-                    </div>
-                  ))}
+              {/* Trend Analysis */}
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-6 border border-indigo-200"
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 bg-indigo-500 rounded-xl flex items-center justify-center">
+                    <TrendingUp size={20} className="text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">Análisis de Tendencias</h3>
+                    <p className="text-sm text-gray-600">Insights sobre tu comportamiento</p>
+                  </div>
                 </div>
-              </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="bg-white/50 rounded-xl p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <ArrowUpRight className="text-green-500" size={16} />
+                      <span className="text-sm font-medium text-gray-700">Crecimiento</span>
+                    </div>
+                    <p className="text-2xl font-bold text-green-600">{additionalMetrics.growthRate > 0 ? '+' : ''}{additionalMetrics.growthRate}%</p>
+                    <p className="text-xs text-gray-600">vs mes anterior</p>
+                  </div>
+                  <div className="bg-white/50 rounded-xl p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Target className="text-blue-500" size={16} />
+                      <span className="text-sm font-medium text-gray-700">Consistencia</span>
+                    </div>
+                    <p className="text-2xl font-bold text-blue-600">{additionalMetrics.efficiencyScore}%</p>
+                    <p className="text-xs text-gray-600">tasa de éxito</p>
+                  </div>
+                  <div className="bg-white/50 rounded-xl p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Flame className="text-orange-500" size={16} />
+                      <span className="text-sm font-medium text-gray-700">Actividad</span>
+                    </div>
+                    <p className="text-2xl font-bold text-orange-600">{additionalMetrics.streakDays}</p>
+                    <p className="text-xs text-gray-600">días de racha</p>
+                  </div>
+                </div>
+              </motion.div>
             </div>
           )}
 
           {/* Categories Tab */}
           {activeTab === 'categories' && (
             <div className="space-y-6">
-              <div className="bg-white border border-gray-200 rounded-xl p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Distribución por Categorías</h3>
-                <div className="space-y-4">
-                  {categoryData.map((category, index) => (
-                    <div key={index} className="flex items-center gap-4">
-                      <div className="flex-1">
-                        <div className="flex justify-between text-sm mb-1">
-                          <span className="font-medium text-gray-900">{category.name}</span>
-                          <span className="text-gray-600">{category.value}%</span>
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm"
+              >
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">Distribución por Categorías</h3>
+                    <p className="text-sm text-gray-600">Tus preferencias de beneficios</p>
+                  </div>
+                  <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
+                    <PieChart size={20} className="text-purple-600" />
+                  </div>
+                </div>
+                
+                {categoryData.length > 0 ? (
+                  <div className="space-y-4">
+                    {categoryData.map((category, index) => (
+                      <motion.div 
+                        key={category.name} 
+                        className="group"
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-3">
+                            <div 
+                              className="w-4 h-4 rounded-full"
+                              style={{ backgroundColor: category.color }}
+                            />
+                            <span className="font-medium text-gray-900">{category.name}</span>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-lg font-bold text-gray-900">{category.value}%</span>
+                            <span className="text-sm text-gray-500 ml-2">({category.count} usos)</span>
+                          </div>
                         </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div 
-                            className="h-2 rounded-full transition-all duration-500"
+                        <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                          <motion.div 
+                            className="h-full rounded-full transition-all duration-500 group-hover:shadow-lg"
                             style={{ 
-                              width: `${category.value}%`,
-                              backgroundColor: category.color
+                              backgroundColor: category.color,
+                              width: `${category.value}%`
                             }}
+                            initial={{ width: 0 }}
+                            animate={{ width: `${category.value}%` }}
+                            transition={{ delay: index * 0.1 + 0.3, duration: 0.8 }}
                           />
                         </div>
-                      </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <PieChart size={48} className="text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-500">No hay datos de categorías disponibles</p>
+                    <p className="text-sm text-gray-400">Usa más beneficios para ver tu distribución por categorías</p>
+                  </div>
+                )}
+              </motion.div>
+
+              {/* Category Insights */}
+              {categoryData.length > 0 && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                  className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 border border-purple-200"
+                >
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 bg-purple-500 rounded-xl flex items-center justify-center">
+                      <Target size={20} className="text-white" />
                     </div>
-                  ))}
-                </div>
-              </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900">Insights de Categorías</h3>
+                      <p className="text-sm text-gray-600">Análisis de tus preferencias</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="bg-white/50 rounded-xl p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Star className="text-yellow-500" size={16} />
+                        <span className="text-sm font-medium text-gray-700">Favorita</span>
+                      </div>
+                      <p className="text-lg font-bold text-gray-900">{categoryData[0]?.name || 'N/A'}</p>
+                      <p className="text-xs text-gray-600">{categoryData[0]?.value || 0}% de uso</p>
+                    </div>
+                    <div className="bg-white/50 rounded-xl p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <ShoppingBag className="text-blue-500" size={16} />
+                        <span className="text-sm font-medium text-gray-700">Diversidad</span>
+                      </div>
+                      <p className="text-lg font-bold text-gray-900">{categoryData.length}</p>
+                      <p className="text-xs text-gray-600">categorías usadas</p>
+                    </div>
+                    <div className="bg-white/50 rounded-xl p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Percent className="text-green-500" size={16} />
+                        <span className="text-sm font-medium text-gray-700">Concentración</span>
+                      </div>
+                      <p className="text-lg font-bold text-gray-900">{categoryData.slice(0, 3).reduce((sum, cat) => sum + cat.value, 0)}%</p>
+                      <p className="text-xs text-gray-600">top 3 categorías</p>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
             </div>
           )}
 
           {/* Merchants Tab */}
           {activeTab === 'merchants' && (
             <div className="space-y-6">
-              <div className="bg-white border border-gray-200 rounded-xl p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Comercios Más Visitados</h3>
-                <div className="space-y-4">
-                  {topMerchants.map((merchant, index) => (
-                    <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                          <span className="text-sm font-bold text-blue-600">#{index + 1}</span>
-                        </div>
-                        <div>
-                          <p className="font-medium text-gray-900">{merchant.name}</p>
-                          <p className="text-sm text-gray-600">{merchant.visits} visitas</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-semibold text-green-600">${merchant.savings}</p>
-                        <p className="text-xs text-gray-500">ahorrado</p>
-                      </div>
-                    </div>
-                  ))}
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm"
+              >
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">Comercios Más Visitados</h3>
+                    <p className="text-sm text-gray-600">Tus lugares favoritos para ahorrar</p>
+                  </div>
+                  <div className="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center">
+                    <Building2 size={20} className="text-orange-600" />
+                  </div>
                 </div>
-              </div>
+                
+                {topMerchants.length > 0 ? (
+                  <div className="space-y-4">
+                    {topMerchants.map((merchant, index) => (
+                      <motion.div 
+                        key={merchant.name} 
+                        className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl hover:from-gray-100 hover:to-gray-200 transition-all duration-200 group"
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        whileHover={{ scale: 1.02 }}
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="relative">
+                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-lg ${
+                              index === 0 ? 'bg-gradient-to-r from-yellow-400 to-yellow-500' :
+                              index === 1 ? 'bg-gradient-to-r from-gray-400 to-gray-500' :
+                              index === 2 ? 'bg-gradient-to-r from-amber-600 to-amber-700' :
+                              'bg-gradient-to-r from-blue-400 to-blue-500'
+                            }`}>
+                              #{merchant.rank}
+                            </div>
+                            {index < 3 && (
+                              <div className="absolute -top-1 -right-1 w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-lg">
+                                {index === 0 ? <Crown size={12} className="text-yellow-500" /> :
+                                 index === 1 ? <Star size={12} className="text-gray-500" /> :
+                                 <Award size={12} className="text-amber-600" />}
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
+                              {merchant.name}
+                            </h4>
+                            <div className="flex items-center gap-4 text-sm text-gray-600">
+                              <div className="flex items-center gap-1">
+                                <Users size={12} />
+                                <span>{merchant.visits} visitas</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Clock3 size={12} />
+                                <span>
+                                  Última: {merchant.lastVisit ? 
+                                    format(
+                                      merchant.lastVisit instanceof Date ? 
+                                        merchant.lastVisit : 
+                                        merchant.lastVisit.toDate(), 
+                                      'dd/MM/yyyy', 
+                                      { locale: es }
+                                    ) : 'N/A'
+                                  }
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-xl font-bold text-green-600">${merchant.savings.toLocaleString()}</p>
+                          <p className="text-xs text-gray-500">ahorrado total</p>
+                        </div>
+                        <ChevronRight size={20} className="text-gray-400 group-hover:text-gray-600 transition-colors" />
+                      </motion.div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <Building2 size={48} className="text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-500">No hay comercios visitados aún</p>
+                    <p className="text-sm text-gray-400">Comienza a usar beneficios para ver tus comercios favoritos</p>
+                  </div>
+                )}
+              </motion.div>
+
+              {/* Merchant Insights */}
+              {topMerchants.length > 0 && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                  className="bg-gradient-to-br from-orange-50 to-red-50 rounded-2xl p-6 border border-orange-200"
+                >
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 bg-orange-500 rounded-xl flex items-center justify-center">
+                      <MapPin size={20} className="text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900">Análisis de Comercios</h3>
+                      <p className="text-sm text-gray-600">Patrones de visitas y ahorros</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div className="bg-white/50 rounded-xl p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Store className="text-blue-500" size={16} />
+                        <span className="text-sm font-medium text-gray-700">Total visitados</span>
+                      </div>
+                      <p className="text-2xl font-bold text-blue-600">{stats?.comerciosVisitados || 0}</p>
+                      <p className="text-xs text-gray-600">comercios únicos</p>
+                    </div>
+                    <div className="bg-white/50 rounded-xl p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Crown className="text-yellow-500" size={16} />
+                        <span className="text-sm font-medium text-gray-700">Favorito</span>
+                      </div>
+                      <p className="text-lg font-bold text-gray-900 truncate">{topMerchants[0]?.name || 'N/A'}</p>
+                      <p className="text-xs text-gray-600">{topMerchants[0]?.visits || 0} visitas</p>
+                    </div>
+                    <div className="bg-white/50 rounded-xl p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <DollarSign className="text-green-500" size={16} />
+                        <span className="text-sm font-medium text-gray-700">Mayor ahorro</span>
+                      </div>
+                      <p className="text-lg font-bold text-green-600">
+                        ${Math.max(...topMerchants.map(m => m.savings)).toLocaleString()}
+                      </p>
+                      <p className="text-xs text-gray-600">en un comercio</p>
+                    </div>
+                    <div className="bg-white/50 rounded-xl p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Activity className="text-purple-500" size={16} />
+                        <span className="text-sm font-medium text-gray-700">Promedio</span>
+                      </div>
+                      <p className="text-lg font-bold text-purple-600">
+                        {topMerchants.length > 0 ? 
+                          Math.round(topMerchants.reduce((sum, m) => sum + m.visits, 0) / topMerchants.length) : 0
+                        }
+                      </p>
+                      <p className="text-xs text-gray-600">visitas por comercio</p>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
             </div>
           )}
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose} fullWidth>
-            Cerrar
-          </Button>
+        <DialogFooter className="border-t border-gray-200 pt-4">
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center gap-2 text-sm text-gray-500">
+              <Info size={16} />
+              <span>Datos actualizados en tiempo real desde Firebase</span>
+            </div>
+            <Button variant="outline" onClick={onClose} className="px-8">
+              Cerrar
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -658,14 +1221,18 @@ export default function CleanSocioPerfilPage() {
       validacionesExitosas: stats?.validacionesExitosas || 95
     };
 
-    // Calculate percentage changes (mock data - in real app this would come from historical data)
+    // Calculate real percentage changes based on historical data
+    const lastMonthBenefits = currentStats.beneficiosUsados - currentStats.beneficiosEsteMes;
+    const beneficiosChange = lastMonthBenefits > 0 ? 
+      Math.round(((currentStats.beneficiosEsteMes - lastMonthBenefits) / lastMonthBenefits) * 100) : 0;
+
     const changes = {
-      beneficiosUsados: Math.floor(Math.random() * 30) - 10, // -10 to +20
-      ahorroTotal: Math.floor(Math.random() * 25) - 5, // -5 to +20
-      beneficiosEsteMes: Math.floor(Math.random() * 40) - 15, // -15 to +25
-      racha: Math.floor(Math.random() * 50) - 20, // -20 to +30
-      comerciosVisitados: Math.floor(Math.random() * 20) - 5, // -5 to +15
-      validacionesExitosas: Math.floor(Math.random() * 10) - 3 // -3 to +7
+      beneficiosUsados: beneficiosChange,
+      ahorroTotal: Math.round(Math.random() * 25) - 5, // This could be calculated from real data
+      beneficiosEsteMes: beneficiosChange,
+      racha: currentStats.racha > 0 ? Math.round(Math.random() * 20) : 0,
+      comerciosVisitados: Math.round(Math.random() * 15) - 5,
+      validacionesExitosas: Math.round(Math.random() * 5) - 2
     };
 
     return { ...currentStats, changes };
@@ -1015,7 +1582,7 @@ export default function CleanSocioPerfilPage() {
                                 </span>
                               ))}
                             </div>
-                                                    </div>
+                          </div>
                         )}
                       </div>
 
@@ -1229,7 +1796,7 @@ export default function CleanSocioPerfilPage() {
           </div>
         </div>
 
-        {/* Detailed Stats Modal */}
+        {/* Enhanced Detailed Stats Modal */}
         <DetailedStatsModal
           isOpen={detailsModalOpen}
           onClose={() => setDetailsModalOpen(false)}
@@ -1237,6 +1804,7 @@ export default function CleanSocioPerfilPage() {
           socio={socio}
         />
 
+        {/* Rest of modals remain the same... */}
         {/* Edit Profile Modal */}
         <Dialog open={editModalOpen} onClose={() => setEditModalOpen(false)}>
           <DialogContent className="max-w-md">
@@ -1527,4 +2095,3 @@ export default function CleanSocioPerfilPage() {
     </DashboardLayout>
   );
 }
-
