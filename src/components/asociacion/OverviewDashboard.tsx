@@ -25,11 +25,7 @@ import {
   TrendingUp,
   TrendingDown,
   Assessment,
-  Schedule,
   Security,
-  Storage,
-  Speed,
-  Dashboard,
   DataUsage,
   Timeline,
   Settings,
@@ -47,7 +43,7 @@ import { db } from '@/lib/firebase';
 import { useAuth } from '@/hooks/useAuth';
 import { useSocios } from '@/hooks/useSocios';
 import { useNotifications } from '@/hooks/useNotifications';
-import { format, subDays, isToday, isThisWeek, isThisMonth } from 'date-fns';
+import { format, subDays} from 'date-fns';
 import { es } from 'date-fns/locale';
 
 interface OverviewDashboardProps {
@@ -522,14 +518,14 @@ const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
   const { stats: notificationStats } = useNotifications();
   
   const [activities, setActivities] = useState<ActivityLog[]>([]);
-  const [systemHealth, setSystemHealth] = useState<SystemHealth>({
+  const systemHealth = useMemo<SystemHealth>(() => ({
     status: 'good',
     lastBackup: subDays(new Date(), 1),
     storageUsed: 1024,
     storageLimit: 5120,
     uptime: 99.9,
     responseTime: 120,
-  });
+  }), []);
   const [loading, setLoading] = useState(true);
 
   // Fetch real-time activities from Firebase
