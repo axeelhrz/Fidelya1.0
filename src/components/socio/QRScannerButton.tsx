@@ -20,7 +20,9 @@ import {
   CheckCircle,
   Copy,
   Download,
-  Share2
+  Share2,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Dialog, DialogContent } from '@/components/ui/Dialog';
@@ -44,7 +46,11 @@ const EnhancedScannerModal: React.FC<{
   const [flashEnabled, setFlashEnabled] = useState(false);
   const [showDiagnostics, setShowDiagnostics] = useState(false);
   const [scanSuccess, setScanSuccess] = useState(false);
+  const [isScanning, setIsScanning] = useState(false);
+  const [showManualCode, setShowManualCode] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const scanIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const {
     cameraState,
@@ -60,6 +66,61 @@ const EnhancedScannerModal: React.FC<{
     preferredFacingMode: 'environment'
   });
 
+  // QR Code detection function (simplified - in production use a proper QR library)
+  const detectQRCode = useCallback(() => {
+    if (!videoRef.current || !canvasRef.current) return null;
+    
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    const context = canvas.getContext('2d');
+    
+    if (!context || video.videoWidth === 0 || video.videoHeight === 0) return null;
+    
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+    // In a real implementation, you would use a QR code detection library here
+    // For demo purposes, we'll simulate QR detection
+    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+    
+    // Simulate QR detection (replace with actual QR library)
+    // This is just for demonstration - use jsQR or similar library in production
+    return null;
+  }, []);
+
+  // Start QR scanning
+  const startQRScanning = useCallback(() => {
+    if (scanIntervalRef.current) return;
+    
+    setIsScanning(true);
+    scanIntervalRef.current = setInterval(() => {
+      const qrData = detectQRCode();
+      if (qrData) {
+        setIsScanning(false);
+        setScanSuccess(true);
+        if (scanIntervalRef.current) {
+          clearInterval(scanIntervalRef.current);
+          scanIntervalRef.current = null;
+        }
+        setTimeout(() => {
+          onScan(qrData);
+          onClose();
+          setScanSuccess(false);
+        }, 1000);
+      }
+    }, 100);
+  }, [detectQRCode, onScan, onClose]);
+
+  // Stop QR scanning
+  const stopQRScanning = useCallback(() => {
+    if (scanIntervalRef.current) {
+      clearInterval(scanIntervalRef.current);
+      scanIntervalRef.current = null;
+    }
+    setIsScanning(false);
+  }, []);
+
   // Start camera when modal opens
   useEffect(() => {
     if (isOpen && scannerMode === 'camera') {
@@ -68,6 +129,7 @@ const EnhancedScannerModal: React.FC<{
     return () => {
       if (isOpen) {
         stopCamera();
+        stopQRScanning();
       }
     };
   }, [isOpen, scannerMode]);
@@ -85,7 +147,10 @@ const EnhancedScannerModal: React.FC<{
 
           video.onloadedmetadata = () => {
             clearTimeout(timeout);
-            resolve();
+            video.play().then(() => {
+              startQRScanning();
+              resolve();
+            }).catch(reject);
           };
 
           video.onerror = () => {
@@ -97,14 +162,16 @@ const EnhancedScannerModal: React.FC<{
         console.error('Error setting up video element:', error);
       }
     }
-  }, [startCamera]);
+  }, [startCamera, startQRScanning]);
 
   const handleRetryCamera = useCallback(async () => {
+    stopQRScanning();
     const stream = await retryCamera();
     if (stream && videoRef.current) {
       videoRef.current.srcObject = stream;
+      startQRScanning();
     }
-  }, [retryCamera]);
+  }, [retryCamera, startQRScanning, stopQRScanning]);
 
   const handleToggleFlash = useCallback(async () => {
     const newFlashState = await toggleFlash(!flashEnabled);
@@ -134,6 +201,7 @@ const EnhancedScannerModal: React.FC<{
   }, [onScan, onClose]);
 
   const handleModeChange = (mode: 'camera' | 'manual' | 'demo') => {
+    stopQRScanning();
     setScannerMode(mode);
     if (mode === 'camera') {
       handleStartCamera();
@@ -144,6 +212,9 @@ const EnhancedScannerModal: React.FC<{
 
   const renderCameraMode = () => (
     <div className="relative bg-black rounded-2xl overflow-hidden aspect-square">
+      {/* Hidden canvas for QR detection */}
+      <canvas ref={canvasRef} className="hidden" />
+      
       {cameraState.isLoading && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 text-white z-10">
           <div className="w-16 h-16 bg-gradient-to-r from-violet-500 to-purple-600 rounded-full flex items-center justify-center mb-4">
@@ -197,7 +268,7 @@ const EnhancedScannerModal: React.FC<{
             autoPlay
             playsInline
             muted
-            className="w-full h-full object-cover transform scale-x-[-1]"
+            className="w-full h-full object-cover"
           />
           
           {/* Scanner Overlay */}
@@ -214,12 +285,25 @@ const EnhancedScannerModal: React.FC<{
               <div className="absolute -bottom-1 -right-1 w-8 h-8 border-r-4 border-b-4 border-violet-500 rounded-br-xl" />
               
               {/* Scanning Line */}
-              <motion.div
-                animate={{ y: [0, 256, 0] }}
-                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-violet-500 to-transparent shadow-lg"
-                style={{ boxShadow: '0 0 20px #8b5cf6' }}
-              />
+              {isScanning && (
+                <motion.div
+                  animate={{ y: [0, 256, 0] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                  className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-violet-500 to-transparent shadow-lg"
+                  style={{ boxShadow: '0 0 20px #8b5cf6' }}
+                />
+              )}
+
+              {/* Success indicator */}
+              {scanSuccess && (
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="absolute inset-0 flex items-center justify-center bg-green-500/20 rounded-2xl"
+                >
+                  <CheckCircle size={48} className="text-green-500" />
+                </motion.div>
+              )}
             </motion.div>
           </div>
 
@@ -230,7 +314,7 @@ const EnhancedScannerModal: React.FC<{
               transition={{ duration: 2, repeat: Infinity }}
               className="text-lg font-semibold mb-2 drop-shadow-lg"
             >
-              Apunta la cámara al código QR
+              {isScanning ? 'Escaneando...' : 'Apunta la cámara al código QR'}
             </motion.p>
             <p className="text-sm opacity-90 drop-shadow-lg">
               Mantén el código dentro del marco
@@ -260,20 +344,29 @@ const EnhancedScannerModal: React.FC<{
           </label>
           <div className="relative">
             <input
-              type="text"
+              type={showManualCode ? "text" : "password"}
               value={manualCode}
               onChange={(e) => setManualCode(e.target.value)}
               placeholder="Ej: fidelya://comercio/abc123?beneficio=xyz789"
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all duration-200"
+              className="w-full px-4 py-3 pr-20 border border-gray-300 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all duration-200"
             />
-            {manualCode && (
+            <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
               <button
-                onClick={() => setManualCode('')}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                type="button"
+                onClick={() => setShowManualCode(!showManualCode)}
+                className="text-gray-400 hover:text-gray-600"
               >
-                <X size={16} />
+                {showManualCode ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
-            )}
+              {manualCode && (
+                <button
+                  onClick={() => setManualCode('')}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X size={16} />
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
