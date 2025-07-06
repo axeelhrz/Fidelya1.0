@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import { 
   QrCode,
@@ -65,8 +65,9 @@ interface ValidationStats {
   beneficiosDisponibles: number;
 }
 
-export default function SocioValidarPage() {
+const SocioValidarContent: React.FC = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, signOut } = useAuth();
   
   // Estados para el modal de logout
@@ -90,6 +91,20 @@ export default function SocioValidarPage() {
   const [beneficiosDisponibles, setBeneficiosDisponibles] = useState<Beneficio[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Handle QR from URL parameters
+  useEffect(() => {
+    const qrParam = searchParams.get('qr');
+    if (qrParam && user) {
+      try {
+        const decodedQr = decodeURIComponent(qrParam);
+        handleQRScan(decodedQr);
+      } catch (error) {
+        console.error('Error processing QR from URL:', error);
+        toast.error('Error al procesar el código QR de la URL');
+      }
+    }
+  }, [searchParams, user]);
 
   // Cargar datos iniciales con manejo de errores mejorado
   const loadInitialData = useCallback(async () => {
@@ -238,30 +253,39 @@ export default function SocioValidarPage() {
 
     setScannerLoading(true);
     try {
+      console.log('🔍 Procesando QR escaneado:', qrData);
+      
+      // Parse QR data
       const parsedData = ValidacionesService.parseQRData(qrData);
       if (!parsedData) {
-        throw new Error('Código QR inválido');
+        throw new Error('Código QR inválido o formato no reconocido');
       }
 
+      console.log('✅ QR parseado correctamente:', parsedData);
+
+      // Validate access
       const result = await ValidacionesService.validarAcceso({
         socioId: user.uid,
         comercioId: parsedData.comercioId,
         beneficioId: parsedData.beneficioId
       });
 
+      console.log('🎯 Resultado de validación:', result);
+
       setValidationResult(result);
       setValidationModalOpen(true);
       
       if (result.resultado === 'habilitado') {
-        toast.success('¡Validación exitosa!');
+        toast.success('¡Validación exitosa! Beneficio activado');
         // Recargar datos después de una validación exitosa
         loadInitialData();
       } else {
-        toast.error('Validación fallida');
+        toast.error(`Validación fallida: ${result.motivo || 'Error desconocido'}`);
       }
     } catch (error) {
-      console.error('Error validating QR:', error);
-      toast.error(error instanceof Error ? error.message : 'Error al validar el código QR');
+      console.error('❌ Error validating QR:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Error al validar el código QR';
+      toast.error(errorMessage);
     } finally {
       setScannerLoading(false);
     }
@@ -270,6 +294,13 @@ export default function SocioValidarPage() {
   const handleValidationModalClose = () => {
     setValidationModalOpen(false);
     setValidationResult(null);
+    
+    // Clear QR parameter from URL if present
+    if (searchParams.get('qr')) {
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.delete('qr');
+      router.replace(newUrl.pathname + newUrl.search);
+    }
   };
 
   const handleRetry = () => {
@@ -651,5 +682,35 @@ export default function SocioValidarPage() {
         result={validationResult}
       />
     </>
+  );
+};
+
+export default function SocioValidarPage() {
+  return (
+    <Suspense fallback={
+      <DashboardLayout
+        activeSection="validar"
+        sidebarComponent={(props) => (
+          <SocioSidebarWithLogout
+            {...props}
+            onLogoutClick={() => {}}
+          />
+        )}
+      >
+        <div className="p-6">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-gradient-to-r from-violet-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <RefreshCw size={24} className="text-white animate-spin" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Cargando...</h3>
+              <p className="text-gray-500">Preparando validación</p>
+            </div>
+          </div>
+        </div>
+      </DashboardLayout>
+    }>
+      <SocioValidarContent />
+    </Suspense>
   );
 }

@@ -44,41 +44,26 @@ export const getComercioById = async (userId: string): Promise<Comercio | null> 
   }
 };
 
-export const updateComercioImage = async (
-  userId: string,
-  imageUrl: string,
-  type: 'logo' | 'imagen'
-): Promise<void> => {
+export const getComerciosByAsociacion = async (asociacionId: string): Promise<Comercio[]> => {
   try {
-    const comercioRef = doc(db, 'comercios', userId);
-    const updateData = type === 'logo' 
-      ? { logoUrl: imageUrl }
-      : { imagenPrincipalUrl: imageUrl };
+    const comerciosRef = collection(db, 'comercios');
+    const q = query(
+      comerciosRef,
+      where('asociacionesVinculadas', 'array-contains', asociacionId),
+      where('estado', '==', 'activo')
+    );
     
-    await updateDoc(comercioRef, {
-      ...updateData,
-      actualizadoEn: Timestamp.now()
-    });
-  } catch (error) {
-    console.error('Error updating comercio image:', error);
-    throw new Error('Error al actualizar la imagen del comercio');
-  }
-};
-
-export const toggleComercioVisibility = async (
-  userId: string,
-  visible: boolean
-): Promise<void> => {
-  try {
-    const comercioRef = doc(db, 'comercios', userId);
+    const querySnapshot = await getDocs(q);
+    const comercios: Comercio[] = [];
     
-    await updateDoc(comercioRef, {
-      visible,
-      actualizadoEn: Timestamp.now()
+    querySnapshot.forEach((doc) => {
+      comercios.push({ uid: doc.id, ...doc.data() } as Comercio);
     });
+    
+    return comercios;
   } catch (error) {
-    console.error('Error updating comercio visibility:', error);
-    throw new Error('Error al actualizar la visibilidad del comercio');
+    console.error('Error getting comercios by asociacion:', error);
+    throw new Error('Error al obtener comercios de la asociación');
   }
 };
 
@@ -141,24 +126,35 @@ export const getComerciosStats = async (userId: string) => {
   }
 };
 
-export const generateQRValidationUrl = (comercioId: string): string => {
+// Updated QR generation functions to match the service
+export const generateQRValidationUrl = (comercioId: string, beneficioId?: string): string => {
+  const timestamp = Date.now();
+  const baseUrl = `fidelya://comercio/${comercioId}?t=${timestamp}`;
+  return beneficioId ? `${baseUrl}&beneficio=${beneficioId}` : baseUrl;
+};
+
+export const generateWebValidationUrl = (comercioId: string, beneficioId?: string): string => {
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
-  return `${baseUrl}/validar-beneficio?comercio=${comercioId}`;
+  const params = new URLSearchParams({ comercio: comercioId });
+  if (beneficioId) {
+    params.append('beneficio', beneficioId);
+  }
+  return `${baseUrl}/validar-beneficio?${params.toString()}`;
 };
 
 export const validateComercioData = (data: Partial<ComercioFormData>): string[] => {
   const errors: string[] = [];
   
+  if (data.nombreComercio && data.nombreComercio.trim().length < 2) {
+    errors.push('El nombre del comercio debe tener al menos 2 caracteres');
+  }
+  
   if (data.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
-    errors.push('El formato del email no es válido');
+    errors.push('El email no tiene un formato válido');
   }
   
-  if (data.telefono && data.telefono.length < 8) {
-    errors.push('El teléfono debe tener al menos 8 dígitos');
-  }
-  
-  if (data.sitioWeb && !data.sitioWeb.startsWith('http')) {
-    errors.push('El sitio web debe comenzar con http:// o https://');
+  if (data.telefono && !/^[\d\s\-\+\(\)]+$/.test(data.telefono)) {
+    errors.push('El teléfono solo puede contener números, espacios y caracteres especiales básicos');
   }
   
   return errors;

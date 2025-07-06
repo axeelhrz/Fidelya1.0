@@ -21,7 +21,8 @@ interface UseComerciosReturn {
   uploadImage: (file: File, type: 'logo' | 'imagen') => Promise<string | null>;
   updateVisibility: (visible: boolean) => Promise<boolean>;
   refreshStats: () => Promise<void>;
-  generateQRUrl: () => string;
+  generateQRUrl: (beneficioId?: string) => string;
+  generateWebUrl: (beneficioId?: string) => string;
 }
 
 export const useComercios = (): UseComerciosReturn => {
@@ -159,10 +160,16 @@ export const useComercios = (): UseComerciosReturn => {
     }
   }, [user]);
 
-  // Generate QR URL
-  const generateQRUrl = useCallback((): string => {
+  // Generate QR URL (fidelya:// protocol for app scanning)
+  const generateQRUrl = useCallback((beneficioId?: string): string => {
     if (!user) return '';
-    return ComercioService.generateQRValidationURL(user.uid);
+    return ComercioService.generateQRValidationURL(user.uid, beneficioId);
+  }, [user]);
+
+  // Generate web URL (http:// for fallback/web access)
+  const generateWebUrl = useCallback((beneficioId?: string): string => {
+    if (!user) return '';
+    return ComercioService.generateWebValidationURL(user.uid, beneficioId);
   }, [user]);
 
   return {
@@ -175,6 +182,7 @@ export const useComercios = (): UseComerciosReturn => {
     uploadImage,
     updateVisibility,
     refreshStats,
-    generateQRUrl
+    generateQRUrl,
+    generateWebUrl
   };
 };

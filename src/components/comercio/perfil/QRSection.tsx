@@ -19,6 +19,8 @@ import {
   Tooltip,
   Chip,
   CircularProgress,
+  Tabs,
+  Tab,
 } from '@mui/material';
 import {
   QrCode,
@@ -31,6 +33,9 @@ import {
   CheckCircle,
   PictureAsPdf,
   Image as ImageIcon,
+  ExternalLink,
+  Smartphone,
+  Language,
 } from '@mui/icons-material';
 import Image from 'next/image';
 import { useComercios } from '@/hooks/useComercios';
@@ -39,21 +44,26 @@ import jsPDF from 'jspdf';
 import toast from 'react-hot-toast';
 
 export const QRSection: React.FC = () => {
-  const { comercio, generateQRUrl } = useComercios();
+  const { comercio, generateQRUrl, generateWebUrl } = useComercios();
   const [qrDialogOpen, setQrDialogOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
+  const [webQrDataUrl, setWebQrDataUrl] = useState<string>('');
   const [generating, setGenerating] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [activeTab, setActiveTab] = useState(0);
   const qrRef = useRef<HTMLDivElement>(null);
 
-  // Generate QR validation URL
-  const qrUrl = generateQRUrl();
+  // Generate QR validation URLs
+  const qrUrl = generateQRUrl(); // fidelya:// protocol for app scanning
+  const webUrl = generateWebUrl(); // http:// protocol for web access
 
   const generateQRCode = React.useCallback(async () => {
     try {
       setGenerating(true);
-      const dataUrl = await QRCode.toDataURL(qrUrl, {
+      
+      // Generate QR for app scanning (fidelya:// protocol)
+      const appQrDataUrl = await QRCode.toDataURL(qrUrl, {
         width: 400,
         margin: 2,
         color: {
@@ -62,35 +72,50 @@ export const QRSection: React.FC = () => {
         },
         errorCorrectionLevel: 'M'
       });
-      setQrDataUrl(dataUrl);
+      setQrDataUrl(appQrDataUrl);
+
+      // Generate QR for web access (http:// protocol) as fallback
+      const webQrDataUrl = await QRCode.toDataURL(webUrl, {
+        width: 400,
+        margin: 2,
+        color: {
+          dark: '#000000',
+          light: '#FFFFFF'
+        },
+        errorCorrectionLevel: 'M'
+      });
+      setWebQrDataUrl(webQrDataUrl);
+      
     } catch (error) {
       console.error('Error generating QR code:', error);
       toast.error('Error al generar el código QR');
     } finally {
       setGenerating(false);
     }
-  }, [qrUrl]);
+  }, [qrUrl, webUrl]);
 
   // Generate QR code data URL
   useEffect(() => {
-    if (qrUrl) {
+    if (qrUrl && webUrl) {
       generateQRCode();
     }
-  }, [qrUrl, generateQRCode]);
+  }, [qrUrl, webUrl, generateQRCode]);
 
-  const handleCopyUrl = async () => {
+  const handleCopyUrl = async (urlType: 'app' | 'web' = 'web') => {
     try {
-      await navigator.clipboard.writeText(qrUrl);
+      const urlToCopy = urlType === 'app' ? qrUrl : webUrl;
+      await navigator.clipboard.writeText(urlToCopy);
       setCopied(true);
-      toast.success('URL copiada al portapapeles');
+      toast.success(`URL ${urlType === 'app' ? 'de aplicación' : 'web'} copiada al portapapeles`);
       setTimeout(() => setCopied(false), 2000);
     } catch {
       toast.error('Error al copiar la URL');
     }
   };
 
-  const handleDownloadQR = async (format: 'png' | 'pdf' = 'png') => {
-    if (!qrDataUrl) return;
+  const handleDownloadQR = async (format: 'png' | 'pdf' = 'png', qrType: 'app' | 'web' = 'app') => {
+    const dataUrl = qrType === 'app' ? qrDataUrl : webQrDataUrl;
+    if (!dataUrl) return;
 
     try {
       setDownloading(true);
@@ -98,13 +123,13 @@ export const QRSection: React.FC = () => {
       if (format === 'png') {
         // Download as PNG
         const link = document.createElement('a');
-        link.download = `qr-${comercio?.nombreComercio || 'comercio'}.png`;
-        link.href = qrDataUrl;
+        link.download = `qr-${qrType}-${comercio?.nombreComercio || 'comercio'}.png`;
+        link.href = dataUrl;
         link.click();
-        toast.success('QR descargado como imagen');
+        toast.success(`QR ${qrType === 'app' ? 'de aplicación' : 'web'} descargado como imagen`);
       } else {
         // Generate PDF poster
-        await generatePDFPoster();
+        await generatePDFPoster(qrType);
       }
     } catch (error) {
       console.error('Error downloading QR:', error);
@@ -114,8 +139,11 @@ export const QRSection: React.FC = () => {
     }
   };
 
-  const generatePDFPoster = async () => {
+  const generatePDFPoster = async (qrType: 'app' | 'web' = 'app') => {
     try {
+      const dataUrl = qrType === 'app' ? qrDataUrl : webQrDataUrl;
+      if (!dataUrl) return;
+
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
@@ -131,30 +159,42 @@ export const QRSection: React.FC = () => {
       const comercioName = comercio?.nombreComercio || 'Mi Comercio';
       pdf.text(comercioName, pageWidth / 2, 45, { align: 'center' });
 
+      // Add QR type indicator
+      pdf.setFontSize(12);
+      pdf.setFont('helvetica', 'italic');
+      pdf.text(
+        qrType === 'app' ? '(Para aplicación móvil)' : '(Para acceso web)', 
+        pageWidth / 2, 55, 
+        { align: 'center' }
+      );
+
       // Add QR code
-      if (qrDataUrl) {
-        const qrSize = 120;
-        const qrX = (pageWidth - qrSize) / 2;
-        const qrY = 60;
-        pdf.addImage(qrDataUrl, 'PNG', qrX, qrY, qrSize, qrSize);
-      }
+      const qrSize = 120;
+      const qrX = (pageWidth - qrSize) / 2;
+      const qrY = 70;
+      pdf.addImage(dataUrl, 'PNG', qrX, qrY, qrSize, qrSize);
 
       // Add instructions
       pdf.setFontSize(14);
       pdf.setFont('helvetica', 'bold');
-      pdf.text('Instrucciones:', 20, 200);
+      pdf.text('Instrucciones:', 20, 210);
       
       pdf.setFontSize(12);
       pdf.setFont('helvetica', 'normal');
-      const instructions = [
-        '1. Coloca este cartel en un lugar visible de tu comercio',
-        '2. Los socios escanearán el código para validar beneficios',
-        '3. El código está vinculado a tu comercio automáticamente',
+      const instructions = qrType === 'app' ? [
+        '1. Los socios deben escanear este código con la aplicación Fidelitá',
+        '2. El código está optimizado para la aplicación móvil',
+        '3. Coloca este cartel en un lugar visible de tu comercio',
         '4. Mantén el cartel limpio y sin daños para mejor lectura'
+      ] : [
+        '1. Los socios pueden escanear este código con cualquier lector QR',
+        '2. El código redirige a la página web de validación',
+        '3. Funciona como respaldo si no tienen la aplicación',
+        '4. Coloca este cartel en un lugar visible de tu comercio'
       ];
 
       instructions.forEach((instruction, index) => {
-        pdf.text(instruction, 20, 215 + (index * 8));
+        pdf.text(instruction, 20, 225 + (index * 8));
       });
 
       // Add footer
@@ -164,23 +204,24 @@ export const QRSection: React.FC = () => {
       pdf.text(new Date().toLocaleDateString(), pageWidth / 2, pageHeight - 5, { align: 'center' });
 
       // Save PDF
-      pdf.save(`cartel-qr-${comercio?.nombreComercio || 'comercio'}.pdf`);
-      toast.success('Cartel PDF descargado correctamente');
+      pdf.save(`cartel-qr-${qrType}-${comercio?.nombreComercio || 'comercio'}.pdf`);
+      toast.success(`Cartel PDF ${qrType === 'app' ? 'de aplicación' : 'web'} descargado correctamente`);
     } catch (error) {
       console.error('Error generating PDF:', error);
       toast.error('Error al generar el cartel PDF');
     }
   };
 
-  const handlePrintQR = () => {
-    if (!qrDataUrl) return;
+  const handlePrintQR = (qrType: 'app' | 'web' = 'app') => {
+    const dataUrl = qrType === 'app' ? qrDataUrl : webQrDataUrl;
+    if (!dataUrl) return;
 
     const printWindow = window.open('', '_blank');
     if (printWindow) {
       printWindow.document.write(`
         <html>
           <head>
-            <title>QR - ${comercio?.nombreComercio || 'Comercio'}</title>
+            <title>QR ${qrType === 'app' ? 'Aplicación' : 'Web'} - ${comercio?.nombreComercio || 'Comercio'}</title>
             <style>
               body { 
                 font-family: Arial, sans-serif; 
@@ -199,6 +240,12 @@ export const QRSection: React.FC = () => {
               .subtitle { 
                 font-size: 18px; 
                 color: #666; 
+                margin-bottom: 10px; 
+              }
+              .qr-type { 
+                font-size: 14px; 
+                color: #888; 
+                font-style: italic;
                 margin-bottom: 30px; 
               }
               .qr-container { 
@@ -239,19 +286,27 @@ export const QRSection: React.FC = () => {
             <div class="header">
               <div class="title">Código QR de Validación</div>
               <div class="subtitle">${comercio?.nombreComercio || 'Mi Comercio'}</div>
+              <div class="qr-type">${qrType === 'app' ? '(Para aplicación móvil)' : '(Para acceso web)'}</div>
             </div>
             
             <div class="qr-container">
-              <img src="${qrDataUrl}" alt="Código QR" class="qr-image" />
+              <img src="${dataUrl}" alt="Código QR" class="qr-image" />
             </div>
             
             <div class="instructions">
               <h3>Instrucciones de Uso:</h3>
               <ol>
-                <li>Coloca este cartel en un lugar visible de tu comercio</li>
-                <li>Los socios escanearán el código para validar beneficios</li>
-                <li>El código está vinculado a tu comercio automáticamente</li>
-                <li>Mantén el cartel limpio y sin daños para mejor lectura</li>
+                ${qrType === 'app' ? `
+                  <li>Los socios deben escanear este código con la aplicación Fidelitá</li>
+                  <li>El código está optimizado para la aplicación móvil</li>
+                  <li>Coloca este cartel en un lugar visible de tu comercio</li>
+                  <li>Mantén el cartel limpio y sin daños para mejor lectura</li>
+                ` : `
+                  <li>Los socios pueden escanear este código con cualquier lector QR</li>
+                  <li>El código redirige a la página web de validación</li>
+                  <li>Funciona como respaldo si no tienen la aplicación</li>
+                  <li>Coloca este cartel en un lugar visible de tu comercio</li>
+                `}
               </ol>
             </div>
             
@@ -266,17 +321,20 @@ export const QRSection: React.FC = () => {
     }
   };
 
-  const handleShareQR = async () => {
-    if (navigator.share && qrDataUrl) {
+  const handleShareQR = async (qrType: 'app' | 'web' = 'app') => {
+    const dataUrl = qrType === 'app' ? qrDataUrl : webQrDataUrl;
+    const urlToShare = qrType === 'app' ? qrUrl : webUrl;
+    
+    if (navigator.share && dataUrl) {
       try {
         // Convert data URL to blob for sharing
-        const response = await fetch(qrDataUrl);
+        const response = await fetch(dataUrl);
         const blob = await response.blob();
-        const file = new File([blob], `qr-${comercio?.nombreComercio || 'comercio'}.png`, { type: 'image/png' });
+        const file = new File([blob], `qr-${qrType}-${comercio?.nombreComercio || 'comercio'}.png`, { type: 'image/png' });
 
         await navigator.share({
-          title: `QR de ${comercio?.nombreComercio || 'Mi Comercio'}`,
-          text: 'Escanea este QR para validar beneficios en Fidelitá',
+          title: `QR ${qrType === 'app' ? 'de Aplicación' : 'Web'} de ${comercio?.nombreComercio || 'Mi Comercio'}`,
+          text: `Escanea este QR para validar beneficios en Fidelitá ${qrType === 'app' ? '(Aplicación)' : '(Web)'}`,
           files: [file],
         });
       } catch {
@@ -284,20 +342,32 @@ export const QRSection: React.FC = () => {
         if (navigator.share) {
           try {
             await navigator.share({
-              title: `QR de ${comercio?.nombreComercio || 'Mi Comercio'}`,
-              text: 'Escanea este QR para validar beneficios en Fidelitá',
-              url: qrUrl,
+              title: `QR ${qrType === 'app' ? 'de Aplicación' : 'Web'} de ${comercio?.nombreComercio || 'Mi Comercio'}`,
+              text: `Escanea este QR para validar beneficios en Fidelitá ${qrType === 'app' ? '(Aplicación)' : '(Web)'}`,
+              url: urlToShare,
             });
           } catch {
-            handleCopyUrl();
+            handleCopyUrl(qrType);
           }
         } else {
-          handleCopyUrl();
+          handleCopyUrl(qrType);
         }
       }
     } else {
-      handleCopyUrl();
+      handleCopyUrl(qrType);
     }
+  };
+
+  const getCurrentQRData = () => {
+    return activeTab === 0 ? qrDataUrl : webQrDataUrl;
+  };
+
+  const getCurrentQRType = (): 'app' | 'web' => {
+    return activeTab === 0 ? 'app' : 'web';
+  };
+
+  const getCurrentUrl = () => {
+    return activeTab === 0 ? qrUrl : webUrl;
   };
 
   return (
@@ -342,10 +412,10 @@ export const QRSection: React.FC = () => {
               }}
             >
               <QrCode sx={{ fontSize: 32, color: '#ec4899' }} />
-              Código QR de Validación
+              Códigos QR de Validación
             </Typography>
             <Typography variant="body1" sx={{ color: '#64748b', fontWeight: 500 }}>
-              Este QR permite a los socios validar sus beneficios en tu comercio. Imprímelo y colócalo en un lugar visible.
+              Genera códigos QR para que los socios validen sus beneficios. Disponible en dos formatos: aplicación móvil y acceso web.
             </Typography>
           </Box>
 
@@ -362,6 +432,25 @@ export const QRSection: React.FC = () => {
                   background: 'linear-gradient(135deg, #fafbfc 0%, #ffffff 100%)',
                 }}
               >
+                {/* QR Type Tabs */}
+                <Tabs
+                  value={activeTab}
+                  onChange={(_, newValue) => setActiveTab(newValue)}
+                  centered
+                  sx={{ mb: 3 }}
+                >
+                  <Tab 
+                    icon={<Smartphone />} 
+                    label="Aplicación" 
+                    sx={{ minHeight: 48 }}
+                  />
+                  <Tab 
+                    icon={<Language />} 
+                    label="Web" 
+                    sx={{ minHeight: 48 }}
+                  />
+                </Tabs>
+
                 <motion.div
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
@@ -391,9 +480,9 @@ export const QRSection: React.FC = () => {
                   >
                     {generating ? (
                       <CircularProgress sx={{ color: '#ec4899' }} />
-                    ) : qrDataUrl ? (
+                    ) : getCurrentQRData() ? (
                       <Image
-                        src={qrDataUrl}
+                        src={getCurrentQRData()}
                         alt="Código QR"
                         width={180}
                         height={180}
@@ -410,7 +499,7 @@ export const QRSection: React.FC = () => {
                     )}
                     
                     {/* Hover overlay */}
-                    {qrDataUrl && (
+                    {getCurrentQRData() && (
                       <Box
                         sx={{
                           position: 'absolute',
@@ -432,17 +521,20 @@ export const QRSection: React.FC = () => {
                 </motion.div>
 
                 <Typography variant="h6" sx={{ fontWeight: 700, color: '#374151', mb: 1 }}>
-                  QR de Validación
+                  QR {activeTab === 0 ? 'de Aplicación' : 'Web'}
                 </Typography>
                 <Typography variant="body2" sx={{ color: '#64748b', mb: 3 }}>
-                  Los socios escanean este código para validar beneficios
+                  {activeTab === 0 
+                    ? 'Optimizado para la aplicación móvil Fidelitá'
+                    : 'Compatible con cualquier lector QR, redirige a la página de validación web'
+                  }
                 </Typography>
 
                 <Stack direction="row" spacing={2} justifyContent="center" flexWrap="wrap">
                   <Tooltip title="Ver QR completo">
                     <IconButton
                       onClick={() => setQrDialogOpen(true)}
-                      disabled={!qrDataUrl}
+                      disabled={!getCurrentQRData()}
                       sx={{
                         bgcolor: alpha('#ec4899', 0.1),
                         color: '#ec4899',
@@ -461,8 +553,8 @@ export const QRSection: React.FC = () => {
                   
                   <Tooltip title="Compartir QR">
                     <IconButton
-                      onClick={handleShareQR}
-                      disabled={!qrDataUrl}
+                      onClick={() => handleShareQR(getCurrentQRType())}
+                      disabled={!getCurrentQRData()}
                       sx={{
                         bgcolor: alpha('#06b6d4', 0.1),
                         color: '#06b6d4',
@@ -481,8 +573,8 @@ export const QRSection: React.FC = () => {
 
                   <Tooltip title="Imprimir QR">
                     <IconButton
-                      onClick={handlePrintQR}
-                      disabled={!qrDataUrl}
+                      onClick={() => handlePrintQR(getCurrentQRType())}
+                      disabled={!getCurrentQRData()}
                       sx={{
                         bgcolor: alpha('#10b981', 0.1),
                         color: '#10b981',
@@ -516,7 +608,7 @@ export const QRSection: React.FC = () => {
                   }}
                 >
                   <Typography variant="h6" sx={{ fontWeight: 700, color: '#374151', mb: 2 }}>
-                    URL de Validación
+                    URL de Validación {activeTab === 0 ? '(Aplicación)' : '(Web)'}
                   </Typography>
                   
                   <Box
@@ -537,14 +629,14 @@ export const QRSection: React.FC = () => {
                         fontSize: '0.85rem',
                       }}
                     >
-                      {qrUrl}
+                      {getCurrentUrl()}
                     </Typography>
                   </Box>
 
                   <Button
                     variant="outlined"
                     startIcon={copied ? <CheckCircle /> : <ContentCopy />}
-                    onClick={handleCopyUrl}
+                    onClick={() => handleCopyUrl(getCurrentQRType())}
                     fullWidth
                     sx={{
                       borderColor: copied ? '#10b981' : '#d1d5db',
@@ -576,8 +668,8 @@ export const QRSection: React.FC = () => {
                     <Button
                       variant="contained"
                       startIcon={downloading ? <CircularProgress size={16} /> : <PictureAsPdf />}
-                      onClick={() => handleDownloadQR('pdf')}
-                      disabled={!qrDataUrl || downloading}
+                      onClick={() => handleDownloadQR('pdf', getCurrentQRType())}
+                      disabled={!getCurrentQRData() || downloading}
                       fullWidth
                       sx={{
                         background: 'linear-gradient(135deg, #ec4899 0%, #be185d 100%)',
@@ -593,14 +685,14 @@ export const QRSection: React.FC = () => {
                         }
                       }}
                     >
-                      {downloading ? 'Generando...' : 'Descargar Cartel PDF'}
+                      {downloading ? 'Generando...' : `Descargar Cartel PDF ${activeTab === 0 ? '(App)' : '(Web)'}`}
                     </Button>
                     
                     <Button
                       variant="outlined"
                       startIcon={<ImageIcon />}
-                      onClick={() => handleDownloadQR('png')}
-                      disabled={!qrDataUrl}
+                      onClick={() => handleDownloadQR('png', getCurrentQRType())}
+                      disabled={!getCurrentQRData()}
                       fullWidth
                       sx={{
                         borderColor: '#d1d5db',
@@ -621,8 +713,8 @@ export const QRSection: React.FC = () => {
                     <Button
                       variant="outlined"
                       startIcon={<Print />}
-                      onClick={handlePrintQR}
-                      disabled={!qrDataUrl}
+                      onClick={() => handlePrintQR(getCurrentQRType())}
+                      disabled={!getCurrentQRData()}
                       fullWidth
                       sx={{
                         borderColor: '#d1d5db',
@@ -660,7 +752,7 @@ export const QRSection: React.FC = () => {
                   </Stack>
                   
                   <Typography variant="body2" sx={{ color: '#047857', mb: 3 }}>
-                    Tu código QR está funcionando correctamente y listo para recibir validaciones.
+                    Tus códigos QR están funcionando correctamente y listos para recibir validaciones.
                   </Typography>
 
                   <Stack direction="row" spacing={1} flexWrap="wrap">
@@ -716,6 +808,12 @@ export const QRSection: React.FC = () => {
               </Typography>
               <Stack spacing={1}>
                 <Typography variant="body2" sx={{ color: '#4c1d95' }}>
+                  <strong>QR de Aplicación:</strong> Optimizado para socios que usan la app móvil Fidelitá
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#4c1d95' }}>
+                  <strong>QR Web:</strong> Compatible con cualquier lector QR, redirige a la página web de validación
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#4c1d95' }}>
                   1. <strong>Descarga</strong> el cartel con QR en formato PDF o imprime directamente
                 </Typography>
                 <Typography variant="body2" sx={{ color: '#4c1d95' }}>
@@ -751,7 +849,7 @@ export const QRSection: React.FC = () => {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
               <QrCode sx={{ color: '#ec4899', fontSize: 28 }} />
               <Typography variant="h5" sx={{ fontWeight: 700, color: '#0f172a' }}>
-                Código QR de Validación
+                Código QR {activeTab === 0 ? 'de Aplicación' : 'Web'}
               </Typography>
             </Box>
             <IconButton onClick={() => setQrDialogOpen(false)}>
@@ -781,9 +879,9 @@ export const QRSection: React.FC = () => {
                 boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
               }}
             >
-              {qrDataUrl ? (
+              {getCurrentQRData() ? (
                 <Image
-                  src={qrDataUrl}
+                  src={getCurrentQRData()}
                   alt="Código QR"
                   width={270}
                   height={270}
@@ -804,7 +902,10 @@ export const QRSection: React.FC = () => {
           <Typography variant="h6" sx={{ fontWeight: 700, color: '#374151', mb: 2 }}>
             {comercio?.nombreComercio || 'Mi Comercio'}
           </Typography>
-          <Typography variant="body1" sx={{ color: '#64748b', mb: 4 }}>
+          <Typography variant="body1" sx={{ color: '#64748b', mb: 1 }}>
+            {activeTab === 0 ? 'Para aplicación móvil' : 'Para acceso web'}
+          </Typography>
+          <Typography variant="body2" sx={{ color: '#64748b', mb: 4 }}>
             Escanea este código para validar beneficios
           </Typography>
 
@@ -825,7 +926,7 @@ export const QRSection: React.FC = () => {
                 fontSize: '0.8rem',
               }}
             >
-              {qrUrl}
+              {getCurrentUrl()}
             </Typography>
           </Box>
         </DialogContent>
@@ -835,8 +936,8 @@ export const QRSection: React.FC = () => {
             <Button
               variant="outlined"
               startIcon={<Share />}
-              onClick={handleShareQR}
-              disabled={!qrDataUrl}
+              onClick={() => handleShareQR(getCurrentQRType())}
+              disabled={!getCurrentQRData()}
               sx={{ flex: 1 }}
             >
               Compartir
@@ -844,8 +945,8 @@ export const QRSection: React.FC = () => {
             <Button
               variant="contained"
               startIcon={downloading ? <CircularProgress size={16} /> : <Download />}
-              onClick={() => handleDownloadQR('pdf')}
-              disabled={!qrDataUrl || downloading}
+              onClick={() => handleDownloadQR('pdf', getCurrentQRType())}
+              disabled={!getCurrentQRData() || downloading}
               sx={{
                 flex: 1,
                 background: 'linear-gradient(135deg, #ec4899 0%, #be185d 100%)',

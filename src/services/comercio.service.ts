@@ -133,7 +133,7 @@ export class ComercioService {
 
       // Calculate additional stats
       const validacionesExitosas = totalSnapshot.docs.filter(
-        doc => doc.data().resultado === 'valido'
+        doc => doc.data().resultado === 'habilitado'
       ).length;
 
       const tasaConversion = totalValidaciones > 0 
@@ -168,7 +168,7 @@ export class ComercioService {
       const query_ = query(
         validacionesRef,
         where('comercioId', '==', userId),
-        where('resultado', '==', 'valido'),
+        where('resultado', '==', 'habilitado'),
         orderBy('fechaHora', 'desc'),
         limit(100)
       );
@@ -179,7 +179,9 @@ export class ComercioService {
       snapshot.docs.forEach(doc => {
         const data = doc.data();
         const beneficioId = data.beneficioId;
-        beneficioCount[beneficioId] = (beneficioCount[beneficioId] || 0) + 1;
+        if (beneficioId) {
+          beneficioCount[beneficioId] = (beneficioCount[beneficioId] || 0) + 1;
+        }
       });
 
       const mostUsedId = Object.keys(beneficioCount).reduce((a, b) => 
@@ -208,9 +210,20 @@ export class ComercioService {
   }
 
   // Generate QR validation URL
-  static generateQRValidationURL(comercioId: string): string {
+  static generateQRValidationURL(comercioId: string, beneficioId?: string): string {
+    const timestamp = Date.now();
+    const baseUrl = `fidelya://comercio/${comercioId}?t=${timestamp}`;
+    return beneficioId ? `${baseUrl}&beneficio=${beneficioId}` : baseUrl;
+  }
+
+  // Generate web validation URL for fallback
+  static generateWebValidationURL(comercioId: string, beneficioId?: string): string {
     const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
-    return `${baseUrl}/validar-beneficio?comercio=${comercioId}&t=${Date.now()}`;
+    const params = new URLSearchParams({ comercio: comercioId });
+    if (beneficioId) {
+      params.append('beneficio', beneficioId);
+    }
+    return `${baseUrl}/validar-beneficio?${params.toString()}`;
   }
 
   // Validate comercio exists and is active
