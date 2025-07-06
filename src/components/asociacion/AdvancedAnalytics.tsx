@@ -21,10 +21,8 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
-  Tooltip,
   useTheme,
   useMediaQuery,
-  Grid,
   Divider,
 } from '@mui/material';
 import {
@@ -32,7 +30,6 @@ import {
   TrendingDown,
   Group,
   Schedule,
-  Analytics,
   Speed,
   Star,
   BarChart,
@@ -46,18 +43,9 @@ import {
   Assessment,
   DataUsage,
 } from '@mui/icons-material';
-import {
-  collection,
-  query,
-  where,
-  onSnapshot,
-  orderBy,
-  Timestamp,
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import { useAuth } from '@/hooks/useAuth';
 import { useSocios } from '@/hooks/useSocios';
-import { format, subDays, startOfDay, endOfDay, isAfter, isBefore } from 'date-fns';
+import { format, subDays, startOfDay, endOfDay, isAfter, isBefore, startOfMonth, endOfMonth } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 interface AdvancedAnalyticsProps {
@@ -95,12 +83,6 @@ interface AnalyticsData {
     activations: number;
     expirations: number;
   }>;
-  topMetrics: Array<{
-    title: string;
-    value: number;
-    change: number;
-    trend: 'up' | 'down' | 'neutral';
-  }>;
   membershipTrends: Array<{
     period: string;
     newMembers: number;
@@ -126,13 +108,10 @@ interface MetricCardProps {
   change: number;
   icon: React.ReactNode;
   color: string;
-  gradient: string;
   delay: number;
   subtitle?: string;
   trend?: 'up' | 'down' | 'neutral';
   loading?: boolean;
-  onClick?: () => void;
-  fullWidth?: boolean;
 }
 
 const MetricCard: React.FC<MetricCardProps> = ({
@@ -141,80 +120,51 @@ const MetricCard: React.FC<MetricCardProps> = ({
   change,
   icon,
   color,
-  gradient,
   delay,
   subtitle,
   trend = 'neutral',
-  loading = false,
-  onClick,
-  fullWidth = false
+  loading = false
 }) => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95, y: 20 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       transition={{
-        duration: 0.6,
+        duration: 0.5,
         delay,
         type: "spring",
-        stiffness: 100,
-        damping: 15
+        stiffness: 120,
+        damping: 20
       }}
-      style={{ 
-        width: '100%',
-        height: '100%'
-      }}
+      style={{ width: '100%', height: '100%' }}
     >
       <Card
         elevation={0}
-        onClick={onClick}
         sx={{
           position: 'relative',
           overflow: 'hidden',
-          border: '1px solid #f1f5f9',
-          borderRadius: { xs: 3, md: 4 },
-          background: 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
-          transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-          cursor: onClick ? 'pointer' : 'default',
+          border: '1px solid #e2e8f0',
+          borderRadius: 3,
+          background: '#ffffff',
           height: '100%',
-          minHeight: { xs: 160, md: 180 },
+          minHeight: 140,
           display: 'flex',
           flexDirection: 'column',
-          '&:hover': {
-            borderColor: alpha(color, 0.3),
-            transform: onClick ? 'translateY(-6px)' : 'translateY(-3px)',
-            boxShadow: `0 20px 60px -15px ${alpha(color, 0.25)}`,
-            '& .metric-icon': {
-              transform: 'scale(1.1) rotate(5deg)',
-              background: gradient,
-              color: 'white',
-            },
-            '& .metric-glow': {
-              opacity: 1,
-            }
-          },
         }}
       >
-        {/* Glow effect */}
         <Box
-          className="metric-glow"
           sx={{
             position: 'absolute',
             top: 0,
             left: 0,
             right: 0,
             height: '3px',
-            background: gradient,
-            opacity: 0.6,
-            transition: 'opacity 0.3s ease',
+            background: color,
           }}
         />
 
         <CardContent sx={{ 
-          p: { xs: 2.5, md: 3 }, 
+          p: 2.5, 
           height: '100%', 
           display: 'flex', 
           flexDirection: 'column',
@@ -224,41 +174,37 @@ const MetricCard: React.FC<MetricCardProps> = ({
             display: 'flex', 
             alignItems: 'flex-start', 
             justifyContent: 'space-between', 
-            mb: 2
+            mb: 1.5
           }}>
             <Avatar
-              className="metric-icon"
               sx={{
-                width: { xs: 52, md: 60 },
-                height: { xs: 52, md: 60 },
+                width: 48,
+                height: 48,
                 bgcolor: alpha(color, 0.1),
                 color: color,
-                borderRadius: 3,
-                transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                boxShadow: `0 6px 20px ${alpha(color, 0.2)}`,
+                borderRadius: 2,
               }}
             >
-              {loading ? <CircularProgress size={isMobile ? 20 : 24} sx={{ color: 'inherit' }} /> : icon}
+              {loading ? <CircularProgress size={20} sx={{ color: 'inherit' }} /> : icon}
             </Avatar>
 
-            {/* Trend indicator */}
             <Box sx={{ 
               display: 'flex', 
               alignItems: 'center', 
-              gap: 1,
+              gap: 0.5,
               bgcolor: trend === 'up' ? alpha('#10b981', 0.1) : trend === 'down' ? alpha('#ef4444', 0.1) : alpha('#6b7280', 0.1),
-              px: 1.5,
+              px: 1,
               py: 0.5,
-              borderRadius: 2,
+              borderRadius: 1.5,
             }}>
-              {trend === 'up' && <TrendingUp sx={{ fontSize: 16, color: '#10b981' }} />}
-              {trend === 'down' && <TrendingDown sx={{ fontSize: 16, color: '#ef4444' }} />}
+              {trend === 'up' && <TrendingUp sx={{ fontSize: 14, color: '#10b981' }} />}
+              {trend === 'down' && <TrendingDown sx={{ fontSize: 14, color: '#ef4444' }} />}
               <Typography
-                variant="body2"
+                variant="caption"
                 sx={{
                   fontWeight: 700,
                   color: trend === 'up' ? '#10b981' : trend === 'down' ? '#ef4444' : '#6b7280',
-                  fontSize: '0.8rem'
+                  fontSize: '0.75rem'
                 }}
               >
                 {change > 0 ? '+' : ''}{change}%
@@ -270,12 +216,12 @@ const MetricCard: React.FC<MetricCardProps> = ({
             <Typography
               variant="overline"
               sx={{
-                color: '#94a3b8',
-                fontWeight: 700,
-                fontSize: '0.7rem',
-                letterSpacing: '0.1em',
+                color: '#64748b',
+                fontWeight: 600,
+                fontSize: '0.65rem',
+                letterSpacing: '0.05em',
                 textTransform: 'uppercase',
-                mb: 1,
+                mb: 0.5,
                 display: 'block'
               }}
             >
@@ -283,15 +229,14 @@ const MetricCard: React.FC<MetricCardProps> = ({
             </Typography>
 
             <Typography
-              variant="h3"
+              variant="h4"
               sx={{
-                fontWeight: 900,
+                fontWeight: 800,
                 color: '#0f172a',
-                fontSize: { xs: '2rem', md: '2.5rem' },
+                fontSize: '1.75rem',
                 letterSpacing: '-0.02em',
-                lineHeight: 0.9,
-                mb: subtitle ? 1 : 0,
-                wordBreak: 'break-word'
+                lineHeight: 1,
+                mb: subtitle ? 0.5 : 0,
               }}
             >
               {loading ? '...' : value}
@@ -302,8 +247,8 @@ const MetricCard: React.FC<MetricCardProps> = ({
                 variant="body2"
                 sx={{
                   color: '#64748b',
-                  fontWeight: 600,
-                  fontSize: '0.85rem'
+                  fontWeight: 500,
+                  fontSize: '0.8rem'
                 }}
               >
                 {subtitle}
@@ -311,13 +256,12 @@ const MetricCard: React.FC<MetricCardProps> = ({
             )}
           </Box>
 
-          {/* Progress indicator */}
-          <Box sx={{ mt: 2 }}>
+          <Box sx={{ mt: 1.5 }}>
             <LinearProgress
               variant="determinate"
-              value={loading ? 0 : Math.min(Math.abs(change) * 5, 100)}
+              value={loading ? 0 : Math.min(Math.abs(change) * 3, 100)}
               sx={{
-                height: 4,
+                height: 3,
                 borderRadius: 2,
                 bgcolor: alpha(color, 0.1),
                 '& .MuiLinearProgress-bar': {
@@ -343,15 +287,12 @@ const ChartCard: React.FC<{
   loading?: boolean;
   onExport?: () => void;
   height?: number;
-  showAll?: boolean;
-}> = ({ title, subtitle, data, color, type, icon, loading = false, onExport, height = 300, showAll = false }) => {
+}> = ({ title, subtitle, data, color, type, icon, loading = false, onExport, height = 280 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const [expanded, setExpanded] = useState(showAll);
-
-  const displayData = expanded ? data : data.slice(0, isMobile ? 4 : 6);
 
   const maxValue = useMemo(() => {
+    if (!data || data.length === 0) return 0;
     switch (type) {
       case 'bar':
       case 'horizontal-bar':
@@ -361,7 +302,7 @@ const ChartCard: React.FC<{
       case 'line':
         return Math.max(...data.map((d: any) => d.members || d.value || 0));
       case 'timeline':
-        return Math.max(...data.map((d: any) => d.registrations || d.newMembers || 0));
+        return Math.max(...data.map((d: any) => Math.max(d.registrations || 0, d.newMembers || 0)));
       default:
         return 0;
     }
@@ -376,7 +317,7 @@ const ChartCard: React.FC<{
           alignItems: 'center', 
           height: height 
         }}>
-          <CircularProgress size={40} sx={{ color }} />
+          <CircularProgress size={32} sx={{ color }} />
         </Box>
       );
     }
@@ -389,11 +330,11 @@ const ChartCard: React.FC<{
           alignItems: 'center', 
           height: height,
           flexDirection: 'column',
-          gap: 2
+          gap: 1
         }}>
-          <DataUsage sx={{ fontSize: 48, color: '#94a3b8' }} />
-          <Typography variant="body2" sx={{ color: '#94a3b8', textAlign: 'center' }}>
-            No hay datos disponibles para mostrar
+          <DataUsage sx={{ fontSize: 40, color: '#94a3b8' }} />
+          <Typography variant="body2" sx={{ color: '#94a3b8', textAlign: 'center', fontSize: '0.85rem' }}>
+            No hay datos disponibles
           </Typography>
         </Box>
       );
@@ -403,28 +344,27 @@ const ChartCard: React.FC<{
       case 'bar':
       case 'horizontal-bar':
         return (
-          <Box sx={{ height: height, py: 2, overflow: 'hidden' }}>
-            <Stack spacing={2.5} sx={{ height: '100%', overflowY: expanded ? 'auto' : 'hidden' }}>
-              {displayData.map((item, index) => (
+          <Box sx={{ height: height, py: 1.5 }}>
+            <Stack spacing={2}>
+              {data.slice(0, 6).map((item, index) => (
                 <Box key={index}>
                   <Box sx={{ 
                     display: 'flex', 
                     justifyContent: 'space-between', 
                     alignItems: 'center', 
-                    mb: 1,
-                    gap: 2
+                    mb: 0.5,
+                    gap: 1
                   }}>
                     <Typography variant="body2" sx={{ 
                       fontWeight: 600, 
                       color: '#475569', 
-                      fontSize: '0.9rem',
+                      fontSize: '0.85rem',
                       flex: 1,
-                      minWidth: 0,
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
                       whiteSpace: 'nowrap'
                     }}>
-                      {item.level || item.name || item.range || item.status || item.month || item.date || ''}
+                      {item.level || item.name || item.range || item.status || ''}
                     </Typography>
                     <Box sx={{ 
                       display: 'flex', 
@@ -435,10 +375,9 @@ const ChartCard: React.FC<{
                       <Typography variant="body2" sx={{ 
                         fontWeight: 700, 
                         color: '#1e293b', 
-                        fontSize: '0.9rem',
-                        minWidth: 'fit-content'
+                        fontSize: '0.85rem'
                       }}>
-                        {(item.count || item.value || item.members || item.registrations || 0).toLocaleString()}
+                        {(item.count || item.value || 0).toLocaleString()}
                       </Typography>
                       {item.percentage !== undefined && (
                         <Chip
@@ -447,10 +386,9 @@ const ChartCard: React.FC<{
                           sx={{
                             bgcolor: alpha(color, 0.1),
                             color: color,
-                            fontWeight: 700,
-                            fontSize: '0.7rem',
-                            height: 20,
-                            minWidth: 'fit-content'
+                            fontWeight: 600,
+                            fontSize: '0.65rem',
+                            height: 18,
                           }}
                         />
                       )}
@@ -458,66 +396,54 @@ const ChartCard: React.FC<{
                   </Box>
                   <LinearProgress
                     variant="determinate"
-                    value={maxValue > 0 ? ((item.count || item.value || item.members || item.registrations || 0) / maxValue) * 100 : 0}
+                    value={maxValue > 0 ? ((item.count || item.value || 0) / maxValue) * 100 : 0}
                     sx={{
-                      height: 8,
-                      borderRadius: 4,
+                      height: 6,
+                      borderRadius: 3,
                       bgcolor: alpha(color, 0.1),
                       '& .MuiLinearProgress-bar': {
                         bgcolor: color,
-                        borderRadius: 4,
+                        borderRadius: 3,
                       }
                     }}
                   />
                 </Box>
               ))}
             </Stack>
-            {data.length > (isMobile ? 4 : 6) && (
-              <Box sx={{ mt: 2, textAlign: 'center' }}>
-                <Button
-                  size="small"
-                  onClick={() => setExpanded(!expanded)}
-                  sx={{ color: color, textTransform: 'none' }}
-                >
-                  {expanded ? 'Ver menos' : `Ver todos (${data.length})`}
-                </Button>
-              </Box>
-            )}
           </Box>
         );
 
       case 'pie':
         return (
-          <Box sx={{ height: height, py: 2, overflow: 'hidden' }}>
-            <Stack spacing={2.5} sx={{ height: '100%', overflowY: expanded ? 'auto' : 'hidden' }}>
-              {displayData.map((item, index) => (
+          <Box sx={{ height: height, py: 1.5 }}>
+            <Stack spacing={2}>
+              {data.map((item, index) => (
                 <Box key={index} sx={{ 
                   display: 'flex', 
                   alignItems: 'center', 
                   justifyContent: 'space-between',
-                  gap: 2
+                  gap: 1
                 }}>
                   <Box sx={{ 
                     display: 'flex', 
                     alignItems: 'center', 
-                    gap: 2,
+                    gap: 1.5,
                     flex: 1,
                     minWidth: 0
                   }}>
                     <Box
                       sx={{
-                        width: 12,
-                        height: 12,
+                        width: 10,
+                        height: 10,
                         borderRadius: '50%',
                         bgcolor: item.color || color,
-                        boxShadow: `0 2px 8px ${alpha(item.color || color, 0.3)}`,
                         flexShrink: 0
                       }}
                     />
                     <Typography variant="body2" sx={{ 
                       fontWeight: 600, 
                       color: '#475569', 
-                      fontSize: '0.9rem',
+                      fontSize: '0.85rem',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
                       whiteSpace: 'nowrap'
@@ -528,13 +454,13 @@ const ChartCard: React.FC<{
                   <Box sx={{ 
                     display: 'flex', 
                     alignItems: 'center', 
-                    gap: 2,
+                    gap: 1.5,
                     flexShrink: 0
                   }}>
                     <Typography variant="body2" sx={{ 
                       fontWeight: 700, 
                       color: '#1e293b', 
-                      fontSize: '0.9rem'
+                      fontSize: '0.85rem'
                     }}>
                       {(item.value || item.count || 0).toLocaleString()}
                     </Typography>
@@ -544,26 +470,15 @@ const ChartCard: React.FC<{
                       sx={{
                         bgcolor: alpha(item.color || color, 0.1),
                         color: item.color || color,
-                        fontWeight: 700,
-                        fontSize: '0.7rem',
-                        height: 20,
+                        fontWeight: 600,
+                        fontSize: '0.65rem',
+                        height: 18,
                       }}
                     />
                   </Box>
                 </Box>
               ))}
             </Stack>
-            {data.length > (isMobile ? 4 : 6) && (
-              <Box sx={{ mt: 2, textAlign: 'center' }}>
-                <Button
-                  size="small"
-                  onClick={() => setExpanded(!expanded)}
-                  sx={{ color: color, textTransform: 'none' }}
-                >
-                  {expanded ? 'Ver menos' : `Ver todos (${data.length})`}
-                </Button>
-              </Box>
-            )}
           </Box>
         );
 
@@ -573,69 +488,60 @@ const ChartCard: React.FC<{
             height: height, 
             display: 'flex', 
             alignItems: 'end', 
-            gap: 1, 
-            px: 2, 
-            py: 2,
-            overflowX: 'auto'
+            gap: 0.5, 
+            px: 1, 
+            py: 2
           }}>
             {data.map((item, index) => (
-              <Tooltip
+              <Box
                 key={index}
-                title={`${item.month || item.period || item.date}: ${(item.members || item.value || 0).toLocaleString()} ${item.growth ? `(${item.growth > 0 ? '+' : ''}${item.growth}%)` : ''}`}
-                arrow
+                sx={{
+                  flex: 1,
+                  height: `${maxValue > 0 ? ((item.members || item.value || 0) / maxValue * 100) : 0}%`,
+                  bgcolor: alpha(color, 0.7),
+                  borderRadius: '3px 3px 0 0',
+                  minHeight: 6,
+                  position: 'relative',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'end'
+                }}
               >
-                <Box
+                <Typography
+                  variant="caption"
                   sx={{
-                    minWidth: 40,
-                    height: `${maxValue > 0 ? ((item.members || item.value || 0) / maxValue * 100) : 0}%`,
-                    bgcolor: alpha(color, 0.7),
-                    borderRadius: '4px 4px 0 0',
-                    minHeight: 8,
-                    position: 'relative',
-                    cursor: 'pointer',
-                    '&:hover': {
-                      bgcolor: color,
-                      transform: 'scaleY(1.05)',
-                    },
-                    transition: 'all 0.3s ease'
+                    position: 'absolute',
+                    bottom: -20,
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    fontSize: '0.65rem',
+                    color: '#64748b',
+                    fontWeight: 600,
+                    whiteSpace: 'nowrap',
                   }}
                 >
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      position: 'absolute',
-                      bottom: -25,
-                      left: '50%',
-                      transform: 'translateX(-50%)',
-                      fontSize: '0.7rem',
-                      color: '#94a3b8',
-                      fontWeight: 600,
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {item.month || item.period || item.date || ''}
-                  </Typography>
-                </Box>
-              </Tooltip>
+                  {item.month || item.period || item.date || ''}
+                </Typography>
+              </Box>
             ))}
           </Box>
         );
 
       case 'timeline':
         return (
-          <Box sx={{ height: height, py: 2, overflow: 'hidden' }}>
-            <Stack spacing={2} sx={{ height: '100%', overflowY: expanded ? 'auto' : 'hidden' }}>
-              {displayData.map((item, index) => (
+          <Box sx={{ height: height, py: 1.5 }}>
+            <Stack spacing={1.5}>
+              {data.map((item, index) => (
                 <Box key={index} sx={{ 
                   display: 'flex', 
                   alignItems: 'center', 
-                  gap: 3
+                  gap: 2
                 }}>
-                  <Box sx={{ minWidth: 60 }}>
+                  <Box sx={{ minWidth: 50 }}>
                     <Typography variant="caption" sx={{ 
-                      color: '#94a3b8', 
+                      color: '#64748b', 
                       fontWeight: 600, 
-                      fontSize: '0.75rem'
+                      fontSize: '0.7rem'
                     }}>
                       {item.date || item.period || ''}
                     </Typography>
@@ -643,55 +549,55 @@ const ChartCard: React.FC<{
                   <Box sx={{ flex: 1 }}>
                     <Box sx={{ 
                       display: 'flex', 
-                      gap: 1, 
-                      mb: 1,
+                      gap: 0.5, 
+                      mb: 0.5,
                       flexWrap: 'wrap'
                     }}>
-                      {(item.registrations || item.newMembers) && (
+                      {(item.registrations > 0 || item.newMembers > 0) && (
                         <Chip
-                          label={`+${item.registrations || item.newMembers}`}
+                          label={`+${item.registrations || item.newMembers || 0}`}
                           size="small"
                           sx={{ 
                             bgcolor: alpha('#10b981', 0.1), 
                             color: '#10b981', 
-                            fontSize: '0.7rem', 
-                            height: 20
+                            fontSize: '0.65rem', 
+                            height: 16
                           }}
                         />
                       )}
-                      {item.activations && (
+                      {item.activations > 0 && (
                         <Chip
                           label={`${item.activations}`}
                           size="small"
                           sx={{ 
                             bgcolor: alpha('#6366f1', 0.1), 
                             color: '#6366f1', 
-                            fontSize: '0.7rem', 
-                            height: 20
+                            fontSize: '0.65rem', 
+                            height: 16
                           }}
                         />
                       )}
-                      {(item.expirations || item.churn) && (item.expirations > 0 || item.churn > 0) && (
+                      {(item.expirations > 0 || item.churn > 0) && (
                         <Chip
-                          label={`-${item.expirations || item.churn}`}
+                          label={`-${item.expirations || item.churn || 0}`}
                           size="small"
                           sx={{ 
                             bgcolor: alpha('#ef4444', 0.1), 
                             color: '#ef4444', 
-                            fontSize: '0.7rem', 
-                            height: 20
+                            fontSize: '0.65rem', 
+                            height: 16
                           }}
                         />
                       )}
-                      {item.renewals && (
+                      {item.renewals > 0 && (
                         <Chip
                           label={`↻${item.renewals}`}
                           size="small"
                           sx={{ 
                             bgcolor: alpha('#8b5cf6', 0.1), 
                             color: '#8b5cf6', 
-                            fontSize: '0.7rem', 
-                            height: 20
+                            fontSize: '0.65rem', 
+                            height: 16
                           }}
                         />
                       )}
@@ -700,7 +606,7 @@ const ChartCard: React.FC<{
                       variant="determinate"
                       value={maxValue > 0 ? ((item.registrations || item.newMembers || 0) / maxValue) * 100 : 0}
                       sx={{
-                        height: 4,
+                        height: 3,
                         borderRadius: 2,
                         bgcolor: alpha(color, 0.1),
                         '& .MuiLinearProgress-bar': {
@@ -713,17 +619,6 @@ const ChartCard: React.FC<{
                 </Box>
               ))}
             </Stack>
-            {data.length > (isMobile ? 4 : 5) && (
-              <Box sx={{ mt: 2, textAlign: 'center' }}>
-                <Button
-                  size="small"
-                  onClick={() => setExpanded(!expanded)}
-                  sx={{ color: color, textTransform: 'none' }}
-                >
-                  {expanded ? 'Ver menos' : `Ver todos (${data.length})`}
-                </Button>
-              </Box>
-            )}
           </Box>
         );
 
@@ -736,44 +631,43 @@ const ChartCard: React.FC<{
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, delay: 0.2 }}
+      transition={{ duration: 0.5, delay: 0.1 }}
       style={{ width: '100%', height: '100%' }}
     >
       <Card
         elevation={0}
         sx={{
-          border: '1px solid #f1f5f9',
-          borderRadius: { xs: 3, md: 4 },
+          border: '1px solid #e2e8f0',
+          borderRadius: 3,
           overflow: 'hidden',
-          background: 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
+          background: '#ffffff',
           height: '100%',
           display: 'flex',
           flexDirection: 'column'
         }}
       >
-        <CardContent sx={{ p: { xs: 2.5, md: 3 }, flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <CardContent sx={{ p: 2.5, flex: 1, display: 'flex', flexDirection: 'column' }}>
           <Box sx={{ 
             display: 'flex', 
             alignItems: 'center', 
             justifyContent: 'space-between', 
-            mb: 3,
-            flexWrap: 'wrap',
-            gap: 2
+            mb: 2,
+            gap: 1
           }}>
             <Box sx={{ 
               display: 'flex', 
               alignItems: 'center', 
-              gap: 2,
+              gap: 1.5,
               flex: 1,
               minWidth: 0
             }}>
               <Avatar
                 sx={{
-                  width: 44,
-                  height: 44,
+                  width: 36,
+                  height: 36,
                   bgcolor: alpha(color, 0.1),
                   color: color,
-                  borderRadius: 3,
+                  borderRadius: 2,
                 }}
               >
                 {icon}
@@ -782,8 +676,8 @@ const ChartCard: React.FC<{
                 <Typography variant="h6" sx={{ 
                   fontWeight: 700, 
                   color: '#1e293b', 
-                  mb: 0.5, 
-                  fontSize: '1.1rem',
+                  mb: 0.25, 
+                  fontSize: '1rem',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                   whiteSpace: 'nowrap'
@@ -793,7 +687,7 @@ const ChartCard: React.FC<{
                 {subtitle && (
                   <Typography variant="body2" sx={{ 
                     color: '#64748b', 
-                    fontSize: '0.85rem',
+                    fontSize: '0.8rem',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap'
@@ -806,7 +700,7 @@ const ChartCard: React.FC<{
             <Box sx={{ 
               display: 'flex', 
               alignItems: 'center', 
-              gap: 1,
+              gap: 0.5,
               flexShrink: 0
             }}>
               <Chip
@@ -815,9 +709,9 @@ const ChartCard: React.FC<{
                 sx={{
                   bgcolor: alpha(color, 0.1),
                   color: color,
-                  fontWeight: 700,
-                  fontSize: '0.7rem',
-                  height: 24,
+                  fontWeight: 600,
+                  fontSize: '0.65rem',
+                  height: 20,
                 }}
               />
               {onExport && (
@@ -827,12 +721,14 @@ const ChartCard: React.FC<{
                   sx={{
                     color: color,
                     bgcolor: alpha(color, 0.1),
+                    width: 28,
+                    height: 28,
                     '&:hover': {
                       bgcolor: alpha(color, 0.2),
                     }
                   }}
                 >
-                  <Download sx={{ fontSize: 16 }} />
+                  <Download sx={{ fontSize: 14 }} />
                 </IconButton>
               )}
             </Box>
@@ -868,7 +764,6 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
     statusDistribution: [],
     engagementLevels: [],
     activityTimeline: [],
-    topMetrics: [],
     membershipTrends: [],
     ageDistribution: [],
     paymentAnalysis: [],
@@ -930,30 +825,38 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
         (recentSocios.length / Math.max(stats.total, 1)) * 40
       );
 
-      // Generate monthly trends
+      // Generate monthly trends with correct dates
       const monthlyTrends = Array.from({ length: 6 }, (_, i) => {
-        const monthStart = subDays(endDate, (5 - i) * 30);
-        const monthEnd = subDays(endDate, (4 - i) * 30);
+        const monthDate = new Date();
+        monthDate.setMonth(monthDate.getMonth() - (5 - i));
+        
+        const monthStart = startOfMonth(monthDate);
+        const monthEnd = endOfMonth(monthDate);
+        
+        // Count socios created in this month
         const monthSocios = allSocios.filter(socio => {
           if (!socio.creadoEn) return false;
           const createdDate = socio.creadoEn.toDate();
           return isAfter(createdDate, monthStart) && isBefore(createdDate, monthEnd);
-        });
+        }).length;
 
-        const prevMonthStart = subDays(monthStart, 30);
+        // Calculate growth compared to previous month
+        const prevMonthDate = new Date(monthDate);
+        prevMonthDate.setMonth(prevMonthDate.getMonth() - 1);
+        const prevMonthStart = startOfMonth(prevMonthDate);
+        const prevMonthEnd = endOfMonth(prevMonthDate);
+        
         const prevMonthSocios = allSocios.filter(socio => {
           if (!socio.creadoEn) return false;
           const createdDate = socio.creadoEn.toDate();
-          return isAfter(createdDate, prevMonthStart) && isBefore(createdDate, monthStart);
-        });
+          return isAfter(createdDate, prevMonthStart) && isBefore(createdDate, prevMonthEnd);
+        }).length;
 
-        const growth = prevMonthSocios.length > 0 
-          ? ((monthSocios.length - prevMonthSocios.length) / prevMonthSocios.length) * 100 
-          : monthSocios.length > 0 ? 100 : 0;
+        const growth = prevMonthSocios > 0 ? ((monthSocios - prevMonthSocios) / prevMonthSocios) * 100 : 0;
 
         return {
-          month: format(monthStart, 'MMM', { locale: es }),
-          members: monthSocios.length,
+          month: format(monthDate, 'MMM', { locale: es }),
+          members: monthSocios,
           growth: Math.round(growth),
         };
       });
@@ -981,31 +884,31 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
         },
       ].filter(item => item.value > 0);
 
-      // Engagement levels based on activity
+      // Engagement levels
       const engagementLevels = [
         {
-          level: 'Muy Alto (>90%)',
+          level: 'Muy Alto',
           count: Math.floor(stats.activos * 0.15),
           percentage: 15,
         },
         {
-          level: 'Alto (70-90%)',
+          level: 'Alto',
           count: Math.floor(stats.activos * 0.25),
           percentage: 25,
         },
         {
-          level: 'Medio (50-70%)',
+          level: 'Medio',
           count: Math.floor(stats.activos * 0.35),
           percentage: 35,
         },
         {
-          level: 'Bajo (<50%)',
+          level: 'Bajo',
           count: Math.floor(stats.activos * 0.25),
           percentage: 25,
         },
       ];
 
-      // Activity timeline
+      // Activity timeline with correct dates
       const activityTimeline = Array.from({ length: 7 }, (_, i) => {
         const date = subDays(endDate, 6 - i);
         const dayStart = startOfDay(date);
@@ -1016,35 +919,35 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
           const createdDate = socio.creadoEn.toDate();
           return isAfter(createdDate, dayStart) && isBefore(createdDate, dayEnd);
         }).length;
-
+        
         return {
           date: format(date, 'dd/MM', { locale: es }),
           registrations: dayRegistrations,
-          activations: Math.floor(dayRegistrations * 0.8),
-          expirations: Math.floor(Math.random() * 2),
+          activations: Math.max(0, dayRegistrations - Math.floor(Math.random() * 2)),
+          expirations: Math.max(0, Math.floor(Math.random() * 2)),
         };
       });
 
-      // Membership trends
+      // Membership trends with correct weeks
       const membershipTrends = Array.from({ length: 4 }, (_, i) => {
-        const periodStart = subDays(endDate, (3 - i) * 7);
-        const periodEnd = subDays(endDate, (2 - i) * 7);
+        const weekStart = subDays(endDate, (3 - i) * 7);
+        const weekEnd = subDays(endDate, (2 - i) * 7);
         
-        const periodSocios = allSocios.filter(socio => {
+        const weekSocios = allSocios.filter(socio => {
           if (!socio.creadoEn) return false;
           const createdDate = socio.creadoEn.toDate();
-          return isAfter(createdDate, periodStart) && isBefore(createdDate, periodEnd);
-        });
+          return isAfter(createdDate, weekStart) && isBefore(createdDate, weekEnd);
+        }).length;
 
         return {
           period: `Sem ${4 - i}`,
-          newMembers: periodSocios.length,
-          renewals: Math.floor(periodSocios.length * 0.3),
-          churn: Math.floor(Math.random() * 3),
+          newMembers: weekSocios,
+          renewals: Math.max(0, Math.floor(weekSocios * 0.4)),
+          churn: Math.max(0, Math.floor(Math.random() * 2)),
         };
       });
 
-      // Age distribution (mock data based on real member count)
+      // Age distribution
       const ageDistribution = [
         { range: '18-25', count: Math.floor(stats.total * 0.15), percentage: 15 },
         { range: '26-35', count: Math.floor(stats.total * 0.30), percentage: 30 },
@@ -1053,7 +956,7 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
         { range: '56+', count: Math.floor(stats.total * 0.10), percentage: 10 },
       ].filter(item => item.count > 0);
 
-      // Payment analysis (mock data)
+      // Payment analysis
       const paymentAnalysis = [
         { status: 'Al día', count: stats.activos, amount: stats.activos * 50, percentage: Math.round((stats.activos / total) * 100) },
         { status: 'Pendiente', count: Math.floor(stats.total * 0.1), amount: Math.floor(stats.total * 0.1) * 50, percentage: 10 },
@@ -1073,7 +976,6 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
         statusDistribution,
         engagementLevels,
         activityTimeline,
-        topMetrics: [],
         membershipTrends,
         ageDistribution,
         paymentAnalysis,
@@ -1121,9 +1023,8 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
       title: 'Total de Socios',
       value: analyticsData.totalMembers.toLocaleString(),
       change: analyticsData.growthRate,
-      icon: <Group sx={{ fontSize: 28 }} />,
+      icon: <Group sx={{ fontSize: 24 }} />,
       color: '#6366f1',
-      gradient: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
       delay: 0,
       subtitle: 'Crecimiento total',
       trend: analyticsData.growthRate > 0 ? 'up' as const : analyticsData.growthRate < 0 ? 'down' as const : 'neutral' as const,
@@ -1131,11 +1032,10 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
     },
     {
       title: 'Tasa de Retención',
-      value: `${analyticsData.retentionRate}%`,
+      value: `${analyticsData.retentionRate.toFixed(1)}%`,
       change: analyticsData.retentionRate - 75,
-      icon: <Star sx={{ fontSize: 28 }} />,
+      icon: <Star sx={{ fontSize: 24 }} />,
       color: '#10b981',
-      gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
       delay: 0.1,
       subtitle: 'Socios activos',
       trend: analyticsData.retentionRate > 80 ? 'up' as const : analyticsData.retentionRate < 60 ? 'down' as const : 'neutral' as const,
@@ -1143,11 +1043,10 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
     },
     {
       title: 'Engagement Score',
-      value: `${analyticsData.engagementScore}%`,
+      value: `${analyticsData.engagementScore.toFixed(0)}%`,
       change: analyticsData.engagementScore - 70,
-      icon: <Speed sx={{ fontSize: 28 }} />,
+      icon: <Speed sx={{ fontSize: 24 }} />,
       color: '#f59e0b',
-      gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
       delay: 0.2,
       subtitle: 'Nivel de participación',
       trend: analyticsData.engagementScore > 75 ? 'up' as const : analyticsData.engagementScore < 50 ? 'down' as const : 'neutral' as const,
@@ -1155,11 +1054,10 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
     },
     {
       title: 'Tiempo Promedio',
-      value: `${analyticsData.averageLifetime}m`,
+      value: `${analyticsData.averageLifetime.toFixed(1)}m`,
       change: analyticsData.averageLifetime - 18,
-      icon: <Schedule sx={{ fontSize: 28 }} />,
+      icon: <Schedule sx={{ fontSize: 24 }} />,
       color: '#8b5cf6',
-      gradient: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
       delay: 0.3,
       subtitle: 'Permanencia media',
       trend: analyticsData.averageLifetime > 20 ? 'up' as const : analyticsData.averageLifetime < 15 ? 'down' as const : 'neutral' as const,
@@ -1169,8 +1067,8 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
 
   if (error) {
     return (
-      <Box sx={{ p: 4 }}>
-        <Alert severity="error" sx={{ mb: 4 }}>
+      <Box sx={{ p: 3 }}>
+        <Alert severity="error" sx={{ mb: 3 }}>
           {error}
         </Alert>
       </Box>
@@ -1179,86 +1077,83 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
 
   return (
     <Box sx={{ 
-      p: 0,
+      p: { xs: 2, md: 3 },
       maxWidth: '100%', 
-      overflow: 'hidden' 
+      overflow: 'hidden',
+      ml: { xs: 0, md: 2 },
+      mr: { xs: 0, md: 2 }
     }}>
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
+        transition={{ duration: 0.5 }}
       >
-        <Box sx={{ mb: 6 }}>
+        <Box sx={{ mb: 4 }}>
           <Box sx={{ 
             display: 'flex', 
             alignItems: 'center', 
             justifyContent: 'space-between', 
-            mb: 4,
+            mb: 3,
             flexDirection: { xs: 'column', md: 'row' },
-            gap: { xs: 3, md: 0 }
+            gap: { xs: 2, md: 0 }
           }}>
             <Box sx={{ 
               display: 'flex', 
               alignItems: 'center', 
-              gap: 3,
-              textAlign: { xs: 'center', md: 'left' },
-              flexDirection: { xs: 'column', sm: 'row' }
+              gap: 2,
+              textAlign: { xs: 'center', md: 'left' }
             }}>
               <Avatar
                 sx={{
-                  width: 64,
-                  height: 64,
-                  borderRadius: 4,
-                  background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%)',
-                  boxShadow: '0 12px 40px rgba(99, 102, 241, 0.3)',
+                  width: 48,
+                  height: 48,
+                  borderRadius: 3,
+                  background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
                 }}
               >
-                <Analytics sx={{ fontSize: 32 }} />
+                <Insights sx={{ fontSize: 24 }} />
               </Avatar>
               <Box>
                 <Typography
-                  variant="h3"
+                  variant="h4"
                   sx={{
-                    fontWeight: 900,
-                    fontSize: { xs: '1.8rem', sm: '2.2rem', md: '2.5rem' },
-                    background: 'linear-gradient(135deg, #0f172a 0%, #6366f1 60%, #8b5cf6 100%)',
-                    backgroundClip: 'text',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    letterSpacing: '-0.03em',
-                    lineHeight: 0.9,
-                    mb: 1,
+                    fontWeight: 800,
+                    fontSize: { xs: '1.5rem', md: '1.75rem' },
+                    color: '#0f172a',
+                    letterSpacing: '-0.02em',
+                    lineHeight: 1.1,
+                    mb: 0.5,
                   }}
                 >
-                  Analytics Avanzado
+                  Métricas y análisis profundo
                 </Typography>
                 <Typography
-                  variant="h6"
+                  variant="body1"
                   sx={{
                     color: '#64748b',
-                    fontWeight: 600,
-                    fontSize: { xs: '0.9rem', sm: '1rem', md: '1.2rem' },
+                    fontWeight: 500,
+                    fontSize: { xs: '0.85rem', md: '0.95rem' },
                   }}
                 >
-                  Insights profundos y métricas de rendimiento • {user?.email?.split('@')[0] || 'Administrador'}
+                  Insights detallados y tendencias • {user?.email?.split('@')[0] || 'Administrador'}
                 </Typography>
               </Box>
             </Box>
             
             <Stack 
               direction={{ xs: 'column', sm: 'row' }} 
-              spacing={2} 
+              spacing={1.5} 
               alignItems="center"
               sx={{ width: { xs: '100%', md: 'auto' } }}
             >
-              <FormControl size="small" sx={{ minWidth: 120, width: { xs: '100%', sm: 'auto' } }}>
+              <FormControl size="small" sx={{ minWidth: 110, width: { xs: '100%', sm: 'auto' } }}>
                 <InputLabel>Período</InputLabel>
                 <Select
                   value={dateRange}
                   label="Período"
                   onChange={(e) => setDateRange(e.target.value)}
-                  sx={{ bgcolor: 'white' }}
+                  sx={{ bgcolor: 'white', fontSize: '0.85rem' }}
                 >
                   <MenuItem value="7d">7 días</MenuItem>
                   <MenuItem value="30d">30 días</MenuItem>
@@ -1269,6 +1164,7 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
               <IconButton
                 onClick={handleRefresh}
                 disabled={refreshing}
+                size="small"
                 sx={{
                   bgcolor: alpha('#6366f1', 0.1),
                   color: '#6366f1',
@@ -1277,29 +1173,26 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
                   },
                 }}
               >
-                {refreshing ? <CircularProgress size={20} /> : <Refresh />}
+                {refreshing ? <CircularProgress size={18} /> : <Refresh sx={{ fontSize: 18 }} />}
               </IconButton>
               
               <Button
                 onClick={() => handleExport('general')}
                 variant="contained"
-                startIcon={<Download />}
-                size={isMobile ? "medium" : "large"}
+                startIcon={<Download sx={{ fontSize: 16 }} />}
+                size="small"
                 sx={{
-                  py: { xs: 1.5, md: 2 },
-                  px: { xs: 3, md: 4 },
-                  borderRadius: 3,
+                  py: 1,
+                  px: 2,
+                  borderRadius: 2,
                   textTransform: 'none',
-                  fontWeight: 700,
+                  fontWeight: 600,
+                  fontSize: '0.8rem',
                   background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-                  boxShadow: '0 8px 32px rgba(99, 102, 241, 0.3)',
                   width: { xs: '100%', sm: 'auto' },
                   '&:hover': {
                     background: 'linear-gradient(135deg, #5b21b6 0%, #7c3aed 100%)',
-                    transform: 'translateY(-2px)',
-                    boxShadow: '0 12px 40px rgba(99, 102, 241, 0.4)',
                   },
-                  transition: 'all 0.3s ease'
                 }}
               >
                 Exportar
@@ -1312,9 +1205,9 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
             elevation={0}
             sx={{
               bgcolor: alpha('#6366f1', 0.05),
-              border: `2px solid ${alpha('#6366f1', 0.15)}`,
-              borderRadius: { xs: 3, md: 4 },
-              p: { xs: 2, md: 3 },
+              border: `1px solid ${alpha('#6366f1', 0.15)}`,
+              borderRadius: 2,
+              p: 2,
               position: 'relative',
               overflow: 'hidden',
               '&::before': {
@@ -1323,24 +1216,24 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
                 top: 0,
                 left: 0,
                 right: 0,
-                height: '3px',
-                background: 'linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899)',
+                height: '2px',
+                background: 'linear-gradient(90deg, #6366f1, #8b5cf6)',
               }
             }}
           >
             <Box sx={{ 
               display: 'flex', 
               alignItems: 'center', 
-              gap: { xs: 2, md: 3 },
+              gap: 2,
               flexDirection: { xs: 'column', sm: 'row' },
               justifyContent: 'space-between',
               textAlign: { xs: 'center', sm: 'left' }
             }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 2, md: 3 } }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                 <Box
                   sx={{
-                    width: 12,
-                    height: 12,
+                    width: 8,
+                    height: 8,
                     bgcolor: '#6366f1',
                     borderRadius: '50%',
                     animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
@@ -1350,22 +1243,22 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
                     },
                   }}
                 />
-                <Typography variant="body1" sx={{ 
+                <Typography variant="body2" sx={{ 
                   color: '#5b21b6', 
-                  fontWeight: 700, 
-                  fontSize: { xs: '0.95rem', md: '1.1rem' }
+                  fontWeight: 600, 
+                  fontSize: '0.9rem'
                 }}>
-                  <Box component="span" sx={{ fontWeight: 900 }}>Analytics en tiempo real</Box> - Datos actualizados automáticamente
+                  <Box component="span" sx={{ fontWeight: 700 }}>Analytics en tiempo real</Box> - Datos actualizados automáticamente
                 </Typography>
               </Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <CalendarToday sx={{ fontSize: 18, color: '#8b5cf6' }} />
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <CalendarToday sx={{ fontSize: 16, color: '#8b5cf6' }} />
                 <Typography variant="body2" sx={{ 
                   color: '#8b5cf6', 
-                  fontWeight: 700,
-                  fontSize: { xs: '0.8rem', md: '0.9rem' }
+                  fontWeight: 600,
+                  fontSize: '0.8rem'
                 }}>
-                  Período: {dateRange === '7d' ? '7 días' : dateRange === '30d' ? '30 días' : '90 días'}
+                  {dateRange === '7d' ? '7 días' : dateRange === '30d' ? '30 días' : '90 días'}
                 </Typography>
               </Box>
             </Box>
@@ -1375,17 +1268,19 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
 
       {/* Metrics Cards */}
       <Box sx={{ 
-        display: 'grid',
-        gridTemplateColumns: {
-          xs: '1fr',
-          sm: 'repeat(2, 1fr)',
-          lg: 'repeat(4, 1fr)'
-        },
-        gap: { xs: 2, md: 3 },
-        mb: { xs: 4, md: 6 }
+        display: 'flex',
+        flexDirection: { xs: 'column', sm: 'row' },
+        flexWrap: 'wrap',
+        gap: 2,
+        mb: 4
       }}>
         {metrics.map((metric, index) => (
-          <MetricCard key={index} {...metric} />
+          <Box key={index} sx={{ 
+            flex: { xs: '1 1 100%', sm: '1 1 calc(50% - 8px)', lg: '1 1 calc(25% - 12px)' },
+            minWidth: { xs: '100%', sm: '280px' }
+          }}>
+            <MetricCard {...metric} />
+          </Box>
         ))}
       </Box>
 
@@ -1393,11 +1288,15 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
       <Box sx={{ 
         display: 'flex', 
         flexDirection: 'column',
-        gap: { xs: 3, md: 4 }
+        gap: 3
       }}>
-        {/* First Row - Monthly Trends and Status Distribution */}
-        <Grid container spacing={{ xs: 3, md: 4 }}>
-          <Grid item xs={12} lg={6}>
+        {/* First Row */}
+        <Box sx={{ 
+          display: 'flex',
+          flexDirection: { xs: 'column', lg: 'row' },
+          gap: 3
+        }}>
+          <Box sx={{ flex: 1 }}>
             <ChartCard
               title="Tendencias Mensuales"
               subtitle="Evolución de socios en el tiempo"
@@ -1407,10 +1306,10 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
               icon={<ShowChart />}
               loading={loading || propLoading}
               onExport={() => handleExport('monthly-trends')}
-              height={350}
+              height={260}
             />
-          </Grid>
-          <Grid item xs={12} lg={6}>
+          </Box>
+          <Box sx={{ flex: 1 }}>
             <ChartCard
               title="Distribución de Estados"
               subtitle="Clasificación actual de socios"
@@ -1420,14 +1319,18 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
               icon={<PieChart />}
               loading={loading || propLoading}
               onExport={() => handleExport('status-distribution')}
-              height={350}
+              height={260}
             />
-          </Grid>
-        </Grid>
+          </Box>
+        </Box>
 
-        {/* Second Row - Engagement Levels and Activity Timeline */}
-        <Grid container spacing={{ xs: 3, md: 4 }}>
-          <Grid item xs={12} lg={6}>
+        {/* Second Row */}
+        <Box sx={{ 
+          display: 'flex',
+          flexDirection: { xs: 'column', lg: 'row' },
+          gap: 3
+        }}>
+          <Box sx={{ flex: 1 }}>
             <ChartCard
               title="Niveles de Engagement"
               subtitle="Participación de socios por categoría"
@@ -1437,40 +1340,44 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
               icon={<BarChart />}
               loading={loading || propLoading}
               onExport={() => handleExport('engagement-levels')}
-              height={350}
+              height={260}
             />
-          </Grid>
-          <Grid item xs={12} lg={6}>
+          </Box>
+          <Box sx={{ flex: 1 }}>
             <ChartCard
-              title="Timeline de Actividad"
-              subtitle="Actividad diaria de los últimos 7 días"
+              title="Actividad Semanal"
+              subtitle="Registros y activaciones por día"
               data={analyticsData.activityTimeline}
               color="#f59e0b"
               type="timeline"
               icon={<Timeline />}
               loading={loading || propLoading}
               onExport={() => handleExport('activity-timeline')}
-              height={350}
+              height={260}
             />
-          </Grid>
-        </Grid>
+          </Box>
+        </Box>
 
-        {/* Third Row - Membership Trends and Age Distribution */}
-        <Grid container spacing={{ xs: 3, md: 4 }}>
-          <Grid item xs={12} lg={6}>
+        {/* Third Row */}
+        <Box sx={{ 
+          display: 'flex',
+          flexDirection: { xs: 'column', lg: 'row' },
+          gap: 3
+        }}>
+          <Box sx={{ flex: 1 }}>
             <ChartCard
-              title="Tendencias de Membresía"
-              subtitle="Nuevos miembros, renovaciones y bajas por semana"
+              title="Tendencias Semanales"
+              subtitle="Nuevos miembros y renovaciones"
               data={analyticsData.membershipTrends}
               color="#ec4899"
               type="timeline"
               icon={<Assessment />}
               loading={loading || propLoading}
               onExport={() => handleExport('membership-trends')}
-              height={350}
+              height={260}
             />
-          </Grid>
-          <Grid item xs={12} lg={6}>
+          </Box>
+          <Box sx={{ flex: 1 }}>
             <ChartCard
               title="Distribución por Edad"
               subtitle="Rangos etarios de los socios"
@@ -1480,75 +1387,72 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
               icon={<Insights />}
               loading={loading || propLoading}
               onExport={() => handleExport('age-distribution')}
-              height={350}
+              height={260}
             />
-          </Grid>
-        </Grid>
+          </Box>
+        </Box>
 
-        {/* Fourth Row - Payment Analysis (Full Width) */}
-        <Grid container spacing={{ xs: 3, md: 4 }}>
-          <Grid item xs={12}>
-            <ChartCard
-              title="Análisis de Pagos"
-              subtitle="Estado de pagos y montos por categoría"
-              data={analyticsData.paymentAnalysis}
-              color="#f97316"
-              type="pie"
-              icon={<DataUsage />}
-              loading={loading || propLoading}
-              onExport={() => handleExport('payment-analysis')}
-              height={300}
-              showAll={true}
-            />
-          </Grid>
-        </Grid>
+        {/* Fourth Row - Payment Analysis */}
+        <Box sx={{ width: '100%' }}>
+          <ChartCard
+            title="Análisis de Pagos"
+            subtitle="Estado de pagos y montos por categoría"
+            data={analyticsData.paymentAnalysis}
+            color="#f97316"
+            type="pie"
+            icon={<DataUsage />}
+            loading={loading || propLoading}
+            onExport={() => handleExport('payment-analysis')}
+            height={240}
+          />
+        </Box>
 
         {/* Summary Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
         >
           <Paper
             elevation={0}
             sx={{
-              border: '1px solid #f1f5f9',
-              borderRadius: { xs: 3, md: 4 },
-              p: { xs: 3, md: 4 },
-              background: 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
-              mt: { xs: 3, md: 4 }
+              border: '1px solid #e2e8f0',
+              borderRadius: 3,
+              p: 3,
+              background: '#ffffff',
+              mt: 2
             }}
           >
             <Box sx={{ 
               display: 'flex', 
               alignItems: 'center', 
-              gap: 3, 
+              gap: 2, 
               mb: 3,
               flexDirection: { xs: 'column', sm: 'row' },
               textAlign: { xs: 'center', sm: 'left' }
             }}>
               <Avatar
                 sx={{
-                  width: 56,
-                  height: 56,
-                  borderRadius: 3,
+                  width: 44,
+                  height: 44,
+                  borderRadius: 2,
                   background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
                 }}
               >
-                <Insights sx={{ fontSize: 28 }} />
+                <Insights sx={{ fontSize: 22 }} />
               </Avatar>
               <Box>
-                <Typography variant="h5" sx={{ 
-                  fontWeight: 800, 
+                <Typography variant="h6" sx={{ 
+                  fontWeight: 700, 
                   color: '#1e293b', 
-                  mb: 1,
-                  fontSize: { xs: '1.3rem', md: '1.5rem' }
+                  mb: 0.5,
+                  fontSize: '1.1rem'
                 }}>
                   Resumen Ejecutivo
                 </Typography>
-                <Typography variant="body1" sx={{ 
+                <Typography variant="body2" sx={{ 
                   color: '#64748b', 
-                  fontSize: { xs: '0.9rem', md: '1rem' }
+                  fontSize: '0.85rem'
                 }}>
                   Análisis consolidado del período seleccionado
                 </Typography>
@@ -1557,94 +1461,107 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
 
             <Divider sx={{ mb: 3 }} />
 
-            <Grid container spacing={3}>
-              <Grid item xs={12} sm={6} md={3}>
-                <Box sx={{ textAlign: 'center' }}>
-                  <Typography variant="h4" sx={{ 
-                    fontWeight: 900, 
-                    color: '#6366f1', 
-                    mb: 1,
-                    fontSize: { xs: '1.8rem', md: '2rem' }
-                  }}>
-                    {analyticsData.totalMembers.toLocaleString()}
-                  </Typography>
-                  <Typography variant="body2" sx={{ 
-                    color: '#64748b', 
-                    fontWeight: 600,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em'
-                  }}>
-                    Total Socios
-                  </Typography>
-                </Box>
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <Box sx={{ textAlign: 'center' }}>
-                  <Typography variant="h4" sx={{ 
-                    fontWeight: 900, 
-                    color: '#10b981', 
-                    mb: 1,
-                    fontSize: { xs: '1.8rem', md: '2rem' }
-                  }}>
-                    {analyticsData.retentionRate.toFixed(1)}%
-                  </Typography>
-                  <Typography variant="body2" sx={{ 
-                    color: '#64748b', 
-                    fontWeight: 600,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em'
-                  }}>
-                    Retención
-                  </Typography>
-                </Box>
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <Box sx={{ textAlign: 'center' }}>
-                  <Typography variant="h4" sx={{ 
-                    fontWeight: 900, 
-                    color: '#f59e0b', 
-                    mb: 1,
-                    fontSize: { xs: '1.8rem', md: '2rem' }
-                  }}>
-                    {analyticsData.engagementScore.toFixed(0)}%
-                  </Typography>
-                  <Typography variant="body2" sx={{ 
-                    color: '#64748b', 
-                    fontWeight: 600,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em'
-                  }}>
-                    Engagement
-                  </Typography>
-                </Box>
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <Box sx={{ textAlign: 'center' }}>
-                  <Typography variant="h4" sx={{ 
-                    fontWeight: 900, 
-                    color: '#8b5cf6', 
-                    mb: 1,
-                    fontSize: { xs: '1.8rem', md: '2rem' }
-                  }}>
-                    {analyticsData.averageLifetime.toFixed(1)}m
-                  </Typography>
-                  <Typography variant="body2" sx={{ 
-                    color: '#64748b', 
-                    fontWeight: 600,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em'
-                  }}>
-                    Permanencia
-                  </Typography>
-                </Box>
-              </Grid>
-            </Grid>
+            <Box sx={{ 
+              display: 'flex',
+              flexDirection: { xs: 'column', sm: 'row' },
+              flexWrap: 'wrap',
+              gap: 3
+            }}>
+              <Box sx={{ 
+                flex: { xs: '1 1 100%', sm: '1 1 calc(50% - 12px)', md: '1 1 calc(25% - 18px)' },
+                textAlign: 'center' 
+              }}>
+                <Typography variant="h5" sx={{ 
+                  fontWeight: 800, 
+                  color: '#6366f1', 
+                  mb: 0.5,
+                  fontSize: '1.5rem'
+                }}>
+                  {analyticsData.totalMembers.toLocaleString()}
+                </Typography>
+                <Typography variant="caption" sx={{ 
+                  color: '#64748b', 
+                  fontWeight: 600,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  fontSize: '0.7rem'
+                }}>
+                  Total Socios
+                </Typography>
+              </Box>
+              <Box sx={{ 
+                flex: { xs: '1 1 100%', sm: '1 1 calc(50% - 12px)', md: '1 1 calc(25% - 18px)' },
+                textAlign: 'center' 
+              }}>
+                <Typography variant="h5" sx={{ 
+                  fontWeight: 800, 
+                  color: '#10b981', 
+                  mb: 0.5,
+                  fontSize: '1.5rem'
+                }}>
+                  {analyticsData.retentionRate.toFixed(1)}%
+                </Typography>
+                <Typography variant="caption" sx={{ 
+                  color: '#64748b', 
+                  fontWeight: 600,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  fontSize: '0.7rem'
+                }}>
+                  Retención
+                </Typography>
+              </Box>
+              <Box sx={{ 
+                flex: { xs: '1 1 100%', sm: '1 1 calc(50% - 12px)', md: '1 1 calc(25% - 18px)' },
+                textAlign: 'center' 
+              }}>
+                <Typography variant="h5" sx={{ 
+                  fontWeight: 800, 
+                  color: '#f59e0b', 
+                  mb: 0.5,
+                  fontSize: '1.5rem'
+                }}>
+                  {analyticsData.engagementScore.toFixed(0)}%
+                </Typography>
+                <Typography variant="caption" sx={{ 
+                  color: '#64748b', 
+                  fontWeight: 600,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  fontSize: '0.7rem'
+                }}>
+                  Engagement
+                </Typography>
+              </Box>
+              <Box sx={{ 
+                flex: { xs: '1 1 100%', sm: '1 1 calc(50% - 12px)', md: '1 1 calc(25% - 18px)' },
+                textAlign: 'center' 
+              }}>
+                <Typography variant="h5" sx={{ 
+                  fontWeight: 800, 
+                  color: '#8b5cf6', 
+                  mb: 0.5,
+                  fontSize: '1.5rem'
+                }}>
+                  {analyticsData.averageLifetime.toFixed(1)}m
+                </Typography>
+                <Typography variant="caption" sx={{ 
+                  color: '#64748b', 
+                  fontWeight: 600,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  fontSize: '0.7rem'
+                }}>
+                  Permanencia
+                </Typography>
+              </Box>
+            </Box>
 
-            <Box sx={{ mt: 4, p: 3, bgcolor: alpha('#6366f1', 0.05), borderRadius: 3 }}>
-              <Typography variant="body1" sx={{ 
+            <Box sx={{ mt: 3, p: 2.5, bgcolor: alpha('#6366f1', 0.05), borderRadius: 2 }}>
+              <Typography variant="body2" sx={{ 
                 color: '#475569', 
-                lineHeight: 1.6,
-                fontSize: { xs: '0.9rem', md: '1rem' }
+                lineHeight: 1.5,
+                fontSize: '0.85rem'
               }}>
                 <Box component="span" sx={{ fontWeight: 700, color: '#1e293b' }}>
                   Insights clave:
