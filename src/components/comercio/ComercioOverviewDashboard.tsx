@@ -1,13 +1,13 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
 import { useComercios } from '@/hooks/useComercios';
 import { useBeneficios } from '@/hooks/useBeneficios';
 import { useValidaciones } from '@/hooks/useValidaciones';
 import { useNotifications } from '@/hooks/useNotifications';
-import { format, subDays, startOfDay } from 'date-fns';
+import { format, subDays, startOfDay, isToday, isThisWeek, isThisMonth } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { 
   TrendingUp, 
@@ -27,8 +27,15 @@ import {
   Clock,
   CheckCircle,
   AlertCircle,
+  Users,
+  DollarSign,
+  Sparkles,
+  Eye,
+  Download,
 } from 'lucide-react';
-import { Timestamp } from 'firebase/firestore';
+import { Timestamp, onSnapshot, collection, query, where, orderBy, limit } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import toast from 'react-hot-toast';
 
 interface ComercioOverviewDashboardProps {
   onNavigate?: (section: string) => void;
@@ -43,6 +50,8 @@ interface ActivityLog {
   metadata?: Record<string, unknown>;
   userId?: string;
   userName?: string;
+  beneficioTitulo?: string;
+  socioNombre?: string;
 }
 
 interface ComercioMetrics {
@@ -58,10 +67,20 @@ interface ComercioMetrics {
   systemHealth: 'excellent' | 'good' | 'warning' | 'critical';
   lastActivity: Date | null;
   avgValidacionesDiarias: number;
+  sociosUnicos: number;
+  ingresosPotenciales: number;
+  tasaConversion: number;
 }
 
-// Modern KPI Card Component
-const ModernKPICard: React.FC<{
+interface RealTimeStats {
+  validacionesEnTiempoReal: number;
+  ultimaValidacion: Date | null;
+  beneficioMasPopular: string | null;
+  horasPico: string[];
+}
+
+// Enhanced KPI Card Component with Real-time Updates
+const EnhancedKPICard: React.FC<{
   title: string;
   value: string | number;
   change: number;
@@ -73,8 +92,38 @@ const ModernKPICard: React.FC<{
   trend?: 'up' | 'down' | 'neutral';
   onClick?: () => void;
   loading?: boolean;
-}> = ({ title, value, change, icon, color, gradient, delay, subtitle, trend = 'neutral', onClick, loading = false }) => {
+  realTimeValue?: number;
+  showPulse?: boolean;
+}> = ({ 
+  title, 
+  value, 
+  change, 
+  icon, 
+  color, 
+  gradient, 
+  delay, 
+  subtitle, 
+  trend = 'neutral', 
+  onClick, 
+  loading = false,
+  realTimeValue,
+  showPulse = false
+}) => {
   
+  const [displayValue, setDisplayValue] = useState(value);
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  // Animate value changes
+  useEffect(() => {
+    if (realTimeValue !== undefined && realTimeValue !== displayValue) {
+      setIsUpdating(true);
+      setTimeout(() => {
+        setDisplayValue(realTimeValue);
+        setIsUpdating(false);
+      }, 300);
+    }
+  }, [realTimeValue, displayValue]);
+
   const getTrendIcon = () => {
     if (trend === 'up') return <TrendingUp className="w-4 h-4" />;
     if (trend === 'down') return <TrendingDown className="w-4 h-4" />;
@@ -103,7 +152,7 @@ const ModernKPICard: React.FC<{
         scale: 1.02,
         transition: { duration: 0.2 }
       }}
-      className="group cursor-pointer"
+      className="group cursor-pointer relative"
       onClick={onClick}
     >
       <div className="relative overflow-hidden bg-white/80 backdrop-blur-xl rounded-2xl border border-white/20 shadow-xl hover:shadow-2xl transition-all duration-500">
@@ -118,13 +167,23 @@ const ModernKPICard: React.FC<{
           className="absolute -inset-1 opacity-0 group-hover:opacity-20 blur-xl transition-opacity duration-500"
           style={{ background: gradient }}
         />
+
+        {/* Real-time Pulse Effect */}
+        {showPulse && (
+          <motion.div
+            className="absolute inset-0 rounded-2xl border-2 border-emerald-400"
+            initial={{ opacity: 0, scale: 1 }}
+            animate={{ opacity: [0, 0.6, 0], scale: [1, 1.05, 1] }}
+            transition={{ duration: 2, repeat: Infinity }}
+          />
+        )}
         
         {/* Content */}
         <div className="relative p-6">
           {/* Header */}
           <div className="flex items-start justify-between mb-4">
             <div 
-              className="p-3 rounded-xl shadow-lg group-hover:scale-110 transition-transform duration-300"
+              className="p-3 rounded-xl shadow-lg group-hover:scale-110 transition-transform duration-300 relative"
               style={{ background: `${color}15` }}
             >
               <div style={{ color }} className="w-6 h-6">
@@ -134,6 +193,15 @@ const ModernKPICard: React.FC<{
                   icon
                 )}
               </div>
+              
+              {/* Real-time indicator */}
+              {showPulse && (
+                <motion.div
+                  className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full"
+                  animate={{ scale: [1, 1.2, 1], opacity: [1, 0.7, 1] }}
+                  transition={{ duration: 1, repeat: Infinity }}
+                />
+              )}
             </div>
             
             {/* Trend Indicator */}
@@ -147,9 +215,15 @@ const ModernKPICard: React.FC<{
           
           {/* Value */}
           <div className="mb-2">
-            <h3 className="text-3xl font-black text-slate-800 group-hover:text-slate-900 transition-colors">
-              {loading ? '...' : value}
-            </h3>
+            <motion.h3 
+              className={`text-3xl font-black text-slate-800 group-hover:text-slate-900 transition-colors ${
+                isUpdating ? 'text-blue-600' : ''
+              }`}
+              animate={isUpdating ? { scale: [1, 1.1, 1] } : {}}
+              transition={{ duration: 0.3 }}
+            >
+              {loading ? '...' : displayValue}
+            </motion.h3>
             <p className="text-sm font-medium text-slate-500 uppercase tracking-wider">
               {title}
             </p>
@@ -185,13 +259,21 @@ const ModernKPICard: React.FC<{
   );
 };
 
-// Modern Activity Feed Component
-const ModernActivityFeed: React.FC<{
+// Enhanced Activity Feed with Real-time Updates
+const EnhancedActivityFeed: React.FC<{
   activities: ActivityLog[];
   loading: boolean;
   onViewAll?: () => void;
-}> = ({ activities, loading, onViewAll }) => {
+  realTimeUpdates?: boolean;
+}> = ({ activities, loading, onViewAll, realTimeUpdates = false }) => {
   
+  const [realtimeActivities, setRealtimeActivities] = useState<ActivityLog[]>(activities);
+  const [newActivityCount, setNewActivityCount] = useState(0);
+
+  useEffect(() => {
+    setRealtimeActivities(activities);
+  }, [activities]);
+
   const getActivityIcon = (type: ActivityLog['type']) => {
     const icons = {
       validation_completed: <QrCode className="w-4 h-4" />,
@@ -216,6 +298,14 @@ const ModernActivityFeed: React.FC<{
     return colors[type] || 'from-slate-500 to-gray-500';
   };
 
+  const formatActivityTime = (timestamp: Timestamp) => {
+    const date = timestamp.toDate();
+    if (isToday(date)) {
+      return `Hoy ${format(date, 'HH:mm')}`;
+    }
+    return format(date, 'dd/MM HH:mm', { locale: es });
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, x: -20 }}
@@ -227,11 +317,29 @@ const ModernActivityFeed: React.FC<{
       <div className="p-6 border-b border-slate-100">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl">
+            <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl relative">
               <Activity className="w-5 h-5 text-white" />
+              {realTimeUpdates && (
+                <motion.div
+                  className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full"
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ duration: 1, repeat: Infinity }}
+                />
+              )}
             </div>
             <div>
-              <h3 className="text-lg font-bold text-slate-800">Actividad Reciente</h3>
+              <h3 className="text-lg font-bold text-slate-800 flex items-center space-x-2">
+                <span>Actividad Reciente</span>
+                {newActivityCount > 0 && (
+                  <motion.span
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="bg-emerald-500 text-white text-xs px-2 py-1 rounded-full"
+                  >
+                    +{newActivityCount}
+                  </motion.span>
+                )}
+              </h3>
               <p className="text-sm text-slate-500">Últimas acciones del comercio</p>
             </div>
           </div>
@@ -262,37 +370,52 @@ const ModernActivityFeed: React.FC<{
             ))}
           </div>
         ) : (
-          <div className="space-y-4">
-            {activities.slice(0, 5).map((activity, index) => (
-              <motion.div
-                key={activity.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="flex items-start space-x-4 p-3 rounded-xl hover:bg-slate-50 transition-colors duration-200"
-              >
-                <div className={`p-2 rounded-xl bg-gradient-to-r ${getActivityColor(activity.type)} shadow-lg`}>
-                  <div className="text-white">
-                    {getActivityIcon(activity.type)}
+          <div className="space-y-4 max-h-96 overflow-y-auto">
+            <AnimatePresence>
+              {realtimeActivities.slice(0, 8).map((activity, index) => (
+                <motion.div
+                  key={activity.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="flex items-start space-x-4 p-3 rounded-xl hover:bg-slate-50 transition-colors duration-200 group"
+                >
+                  <div className={`p-2 rounded-xl bg-gradient-to-r ${getActivityColor(activity.type)} shadow-lg group-hover:scale-110 transition-transform duration-200`}>
+                    <div className="text-white">
+                      {getActivityIcon(activity.type)}
+                    </div>
                   </div>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="text-sm font-semibold text-slate-800 truncate">
-                    {activity.title}
-                  </h4>
-                  <p className="text-xs text-slate-500 mt-1 line-clamp-2">
-                    {activity.description}
-                  </p>
-                  <p className="text-xs text-slate-400 mt-2">
-                    {format(activity.timestamp.toDate(), 'dd/MM/yyyy HH:mm', { locale: es })}
-                  </p>
-                </div>
-              </motion.div>
-            ))}
-            {activities.length === 0 && (
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-sm font-semibold text-slate-800 truncate">
+                      {activity.title}
+                    </h4>
+                    <p className="text-xs text-slate-500 mt-1 line-clamp-2">
+                      {activity.description}
+                      {activity.socioNombre && (
+                        <span className="font-medium text-slate-600"> • {activity.socioNombre}</span>
+                      )}
+                    </p>
+                    <div className="flex items-center justify-between mt-2">
+                      <p className="text-xs text-slate-400 font-medium">
+                        {formatActivityTime(activity.timestamp)}
+                      </p>
+                      {isToday(activity.timestamp.toDate()) && (
+                        <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full font-medium">
+                          Hoy
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+            
+            {realtimeActivities.length === 0 && (
               <div className="text-center py-8">
                 <Activity className="w-12 h-12 text-slate-300 mx-auto mb-3" />
                 <p className="text-slate-500 font-medium">No hay actividad reciente</p>
+                <p className="text-xs text-slate-400 mt-1">Las validaciones aparecerán aquí en tiempo real</p>
               </div>
             )}
           </div>
@@ -302,13 +425,14 @@ const ModernActivityFeed: React.FC<{
   );
 };
 
-// Modern Health Status Component
-const ModernHealthStatus: React.FC<{
+// Enhanced Health Status with Real-time Monitoring
+const EnhancedHealthStatus: React.FC<{
   health: ComercioMetrics['systemHealth'];
   lastActivity: Date | null;
   avgValidaciones: number;
   loading: boolean;
-}> = ({ health, lastActivity, avgValidaciones, loading }) => {
+  realTimeStats?: RealTimeStats;
+}> = ({ health, lastActivity, avgValidaciones, loading, realTimeStats }) => {
   
   const getHealthConfig = () => {
     const configs = {
@@ -317,28 +441,32 @@ const ModernHealthStatus: React.FC<{
         icon: <CheckCircle className="w-6 h-6" />,
         label: 'Excelente',
         bgColor: 'from-emerald-50 to-teal-50',
-        textColor: 'text-emerald-700'
+        textColor: 'text-emerald-700',
+        score: 95
       },
       good: {
         color: 'from-blue-500 to-indigo-500',
         icon: <Zap className="w-6 h-6" />,
         label: 'Bueno',
         bgColor: 'from-blue-50 to-indigo-50',
-        textColor: 'text-blue-700'
+        textColor: 'text-blue-700',
+        score: 75
       },
       warning: {
         color: 'from-amber-500 to-orange-500',
         icon: <AlertCircle className="w-6 h-6" />,
         label: 'Atención',
         bgColor: 'from-amber-50 to-orange-50',
-        textColor: 'text-amber-700'
+        textColor: 'text-amber-700',
+        score: 50
       },
       critical: {
         color: 'from-red-500 to-rose-500',
         icon: <AlertCircle className="w-6 h-6" />,
         label: 'Crítico',
         bgColor: 'from-red-50 to-rose-50',
-        textColor: 'text-red-700'
+        textColor: 'text-red-700',
+        score: 25
       }
     };
     return configs[health];
@@ -356,7 +484,7 @@ const ModernHealthStatus: React.FC<{
       {/* Header */}
       <div className={`p-6 bg-gradient-to-r ${config.bgColor}`}>
         <div className="flex items-center space-x-3">
-          <div className={`p-3 bg-gradient-to-r ${config.color} rounded-xl shadow-lg`}>
+          <div className={`p-3 bg-gradient-to-r ${config.color} rounded-xl shadow-lg relative`}>
             <div className="text-white">
               {loading ? (
                 <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -364,6 +492,13 @@ const ModernHealthStatus: React.FC<{
                 config.icon
               )}
             </div>
+            {realTimeStats && (
+              <motion.div
+                className="absolute -top-1 -right-1 w-3 h-3 bg-white rounded-full"
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 1, repeat: Infinity }}
+              />
+            )}
           </div>
           <div>
             <h3 className="text-lg font-bold text-slate-800">Estado del Comercio</h3>
@@ -376,6 +511,51 @@ const ModernHealthStatus: React.FC<{
       
       {/* Content */}
       <div className="p-6 space-y-6">
+        {/* Health Score Circle */}
+        <div className="flex items-center justify-center">
+          <div className="relative w-32 h-32">
+            <svg className="w-32 h-32 transform -rotate-90" viewBox="0 0 100 100">
+              <circle
+                cx="50"
+                cy="50"
+                r="40"
+                stroke="#e5e7eb"
+                strokeWidth="8"
+                fill="none"
+              />
+              <motion.circle
+                cx="50"
+                cy="50"
+                r="40"
+                stroke={`url(#healthGradient-${health})`}
+                strokeWidth="8"
+                fill="none"
+                strokeLinecap="round"
+                strokeDasharray={`${2 * Math.PI * 40}`}
+                initial={{ strokeDashoffset: 2 * Math.PI * 40 }}
+                animate={{ 
+                  strokeDashoffset: 2 * Math.PI * 40 * (1 - (config.score / 100))
+                }}
+                transition={{ duration: 2, delay: 0.5 }}
+              />
+              <defs>
+                <linearGradient id={`healthGradient-${health}`} x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor={health === 'excellent' ? '#10b981' : health === 'good' ? '#3b82f6' : health === 'warning' ? '#f59e0b' : '#ef4444'} />
+                  <stop offset="100%" stopColor={health === 'excellent' ? '#059669' : health === 'good' ? '#1d4ed8' : health === 'warning' ? '#d97706' : '#dc2626'} />
+                </linearGradient>
+              </defs>
+            </svg>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="text-center">
+                <span className="text-2xl font-bold text-slate-800">
+                  {config.score}%
+                </span>
+                <p className="text-xs text-slate-500">Salud</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Last Activity */}
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
@@ -436,6 +616,28 @@ const ModernHealthStatus: React.FC<{
             {loading ? '...' : avgValidaciones > 5 ? 'Excelente rendimiento' : avgValidaciones > 2 ? 'Buen rendimiento' : 'Puede mejorar'}
           </p>
         </div>
+
+        {/* Real-time Stats */}
+        {realTimeStats && (
+          <div className="border-t border-slate-100 pt-4">
+            <h4 className="text-sm font-semibold text-slate-700 mb-3 flex items-center space-x-2">
+              <Sparkles className="w-4 h-4" />
+              <span>Tiempo Real</span>
+            </h4>
+            <div className="space-y-2">
+              <div className="flex justify-between text-xs">
+                <span className="text-slate-500">Validaciones hoy:</span>
+                <span className="font-semibold text-slate-700">{realTimeStats.validacionesEnTiempoReal}</span>
+              </div>
+              {realTimeStats.beneficioMasPopular && (
+                <div className="flex justify-between text-xs">
+                  <span className="text-slate-500">Más popular:</span>
+                  <span className="font-semibold text-slate-700 truncate max-w-24">{realTimeStats.beneficioMasPopular}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </motion.div>
   );
@@ -445,7 +647,7 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
   onNavigate
 }) => {
   const { user } = useAuth();
-  const { comercio } = useComercios();
+  const { comercio, refreshStats } = useComercios();
   const { activeBeneficios, loading: beneficiosLoading } = useBeneficios();
   const { validaciones, getStats, loading: validacionesLoading } = useValidaciones();
   const { stats: notificationStats } = useNotifications();
@@ -463,11 +665,104 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
     systemHealth: 'good',
     lastActivity: null,
     avgValidacionesDiarias: 0,
+    sociosUnicos: 0,
+    ingresosPotenciales: 0,
+    tasaConversion: 0,
   });
+  
+  const [realTimeStats, setRealTimeStats] = useState<RealTimeStats>({
+    validacionesEnTiempoReal: 0,
+    ultimaValidacion: null,
+    beneficioMasPopular: null,
+    horasPico: [],
+  });
+  
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
 
   const stats = getStats();
+
+  // Real-time Firebase listeners
+  useEffect(() => {
+    if (!user) return;
+
+    const validacionesRef = collection(db, 'validaciones');
+    const todayStart = startOfDay(new Date());
+    
+    // Real-time validaciones listener
+    const validacionesQuery = query(
+      validacionesRef,
+      where('comercioId', '==', user.uid),
+      where('fechaHora', '>=', Timestamp.fromDate(todayStart)),
+      orderBy('fechaHora', 'desc')
+    );
+
+    const unsubscribeValidaciones = onSnapshot(
+      validacionesQuery,
+      (snapshot) => {
+        const todayValidaciones = snapshot.docs.length;
+        const latestValidacion = snapshot.docs[0]?.data();
+        
+        setRealTimeStats(prev => ({
+          ...prev,
+          validacionesEnTiempoReal: todayValidaciones,
+          ultimaValidacion: latestValidacion?.fechaHora?.toDate() || null,
+        }));
+
+        // Show toast for new validations
+        if (todayValidaciones > realTimeStats.validacionesEnTiempoReal) {
+          toast.success('¡Nueva validación recibida!', {
+            icon: '🎉',
+            duration: 3000,
+          });
+        }
+
+        setLastUpdate(new Date());
+      },
+      (error) => {
+        console.error('Error in real-time validaciones listener:', error);
+        toast.error('Error en tiempo real');
+      }
+    );
+
+    // Real-time activities listener
+    const activitiesQuery = query(
+      validacionesRef,
+      where('comercioId', '==', user.uid),
+      orderBy('fechaHora', 'desc'),
+      limit(10)
+    );
+
+    const unsubscribeActivities = onSnapshot(
+      activitiesQuery,
+      (snapshot) => {
+        const activities: ActivityLog[] = snapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            type: 'validation_completed',
+            title: 'Validación completada',
+            description: `Beneficio canjeado por socio`,
+            timestamp: data.fechaHora,
+            metadata: { validacionId: doc.id },
+            socioNombre: data.socioNombre || 'Socio anónimo',
+            beneficioTitulo: data.beneficioTitulo || 'Beneficio',
+          };
+        });
+
+        setComercioMetrics(prev => ({
+          ...prev,
+          recentActivities: activities,
+        }));
+      }
+    );
+
+    return () => {
+      unsubscribeValidaciones();
+      unsubscribeActivities();
+    };
+  }, [user, realTimeStats.validacionesEnTiempoReal]);
 
   // Calculate metrics from validaciones
   const calculateMetrics = useCallback(() => {
@@ -516,11 +811,18 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
       // Calculate average daily validations
       const avgValidacionesDiarias = validacionesMes / 30;
 
+      // Calculate unique socios
+      const sociosUnicos = new Set(validaciones.map(v => v.socioId)).size;
+
+      // Calculate conversion rate
+      const validacionesExitosas = validaciones.filter(v => v.resultado === 'valido').length;
+      const tasaConversion = validaciones.length > 0 ? (validacionesExitosas / validaciones.length) * 100 : 0;
+
       // Determine system health
       let systemHealth: ComercioMetrics['systemHealth'] = 'good';
-      if (avgValidacionesDiarias > 5) systemHealth = 'excellent';
-      else if (avgValidacionesDiarias > 2) systemHealth = 'good';
-      else if (avgValidacionesDiarias > 0) systemHealth = 'warning';
+      if (avgValidacionesDiarias > 5 && tasaConversion > 80) systemHealth = 'excellent';
+      else if (avgValidacionesDiarias > 2 && tasaConversion > 60) systemHealth = 'good';
+      else if (avgValidacionesDiarias > 0 && tasaConversion > 40) systemHealth = 'warning';
       else systemHealth = 'critical';
 
       // Get last activity
@@ -528,17 +830,8 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
         ? validaciones.sort((a, b) => b.fechaHora.toDate().getTime() - a.fechaHora.toDate().getTime())[0].fechaHora.toDate()
         : null;
 
-      // Create sample activities
-      const recentActivities: ActivityLog[] = validaciones
-        .slice(0, 5)
-        .map((v, index) => ({
-          id: v.id || `activity-${index}`,
-          type: 'validation_completed' as const,
-          title: 'Validación completada',
-          description: `Beneficio canjeado por socio`,
-          timestamp: v.fechaHora,
-          metadata: { validacionId: v.id },
-        }));
+      // Estimate potential income (example calculation)
+      const ingresosPotenciales = validacionesExitosas * 15; // Assuming average benefit value
 
       return {
         totalValidaciones: stats.totalValidaciones,
@@ -549,23 +842,29 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
         beneficiosCanjeados: stats.totalValidaciones,
         crecimientoSemanal: Math.round(crecimientoSemanal * 100) / 100,
         crecimientoMensual: Math.round(crecimientoMensual * 100) / 100,
-        recentActivities,
+        recentActivities: comercioMetrics.recentActivities,
         systemHealth,
         lastActivity,
         avgValidacionesDiarias: Math.round(avgValidacionesDiarias * 100) / 100,
+        sociosUnicos,
+        ingresosPotenciales,
+        tasaConversion: Math.round(tasaConversion * 100) / 100,
       };
     } catch (err) {
       console.error('Error calculating comercio metrics:', err);
       throw new Error('Error al cargar las métricas del comercio');
     }
-  }, [user, validaciones, activeBeneficios, stats, validacionesLoading, beneficiosLoading]);
+  }, [user, validaciones, activeBeneficios, stats, validacionesLoading, beneficiosLoading, comercioMetrics.recentActivities]);
 
   // Calculate metrics with proper dependencies
   useEffect(() => {
     const metrics = calculateMetrics();
     
     if (metrics) {
-      setComercioMetrics(metrics);
+      setComercioMetrics(prev => ({
+        ...prev,
+        ...metrics,
+      }));
       setLoading(false);
       setError(null);
     } else if (!validacionesLoading && !beneficiosLoading) {
@@ -573,6 +872,7 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
     }
   }, [calculateMetrics, validacionesLoading, beneficiosLoading]);
 
+  // Enhanced KPI metrics with real-time values
   const kpiMetrics = useMemo(() => [
     {
       title: 'Validaciones Totales',
@@ -585,20 +885,24 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
       subtitle: 'Crecimiento mensual',
       trend: comercioMetrics.crecimientoMensual > 0 ? 'up' as const : comercioMetrics.crecimientoMensual < 0 ? 'down' as const : 'neutral' as const,
       onClick: () => onNavigate?.('historial-validaciones'),
-      loading: loading
+      loading: loading,
+      realTimeValue: comercioMetrics.totalValidaciones,
+      showPulse: realTimeStats.validacionesEnTiempoReal > comercioMetrics.validacionesHoy
     },
     {
       title: 'Validaciones Hoy',
-      value: comercioMetrics.validacionesHoy.toLocaleString(),
+      value: realTimeStats.validacionesEnTiempoReal.toLocaleString(),
       change: comercioMetrics.crecimientoSemanal,
       icon: <Receipt className="w-6 h-6" />,
       color: '#10b981',
       gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
       delay: 0.1,
-      subtitle: 'Crecimiento semanal',
+      subtitle: 'Tiempo real',
       trend: comercioMetrics.crecimientoSemanal > 0 ? 'up' as const : comercioMetrics.crecimientoSemanal < 0 ? 'down' as const : 'neutral' as const,
       onClick: () => onNavigate?.('qr-validacion'),
-      loading: loading
+      loading: loading,
+      realTimeValue: realTimeStats.validacionesEnTiempoReal,
+      showPulse: true
     },
     {
       title: 'Beneficios Activos',
@@ -611,22 +915,34 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
       subtitle: 'Disponibles',
       trend: comercioMetrics.beneficiosActivos > 3 ? 'up' as const : 'neutral' as const,
       onClick: () => onNavigate?.('beneficios'),
-      loading: beneficiosLoading
+      loading: beneficiosLoading,
+      realTimeValue: comercioMetrics.beneficiosActivos
     },
     {
-      title: 'Notificaciones',
-      value: notificationStats.unread.toString(),
-      change: notificationStats.unread > 0 ? 100 : 0,
-      icon: <Bell className="w-6 h-6" />,
-      color: '#ec4899',
-      gradient: 'linear-gradient(135deg, #ec4899 0%, #be185d 100%)',
+      title: 'Socios Únicos',
+      value: comercioMetrics.sociosUnicos.toString(),
+      change: comercioMetrics.sociosUnicos > 0 ? 50 : 0,
+      icon: <Users className="w-6 h-6" />,
+      color: '#8b5cf6',
+      gradient: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
       delay: 0.3,
-      subtitle: 'Sin leer',
-      trend: notificationStats.unread > 5 ? 'up' as const : 'neutral' as const,
-      onClick: () => onNavigate?.('notificaciones'),
-      loading: false
+      subtitle: 'Este mes',
+      trend: comercioMetrics.sociosUnicos > 10 ? 'up' as const : 'neutral' as const,
+      onClick: () => onNavigate?.('analytics'),
+      loading: loading,
+      realTimeValue: comercioMetrics.sociosUnicos
     }
-  ], [comercioMetrics, notificationStats, beneficiosLoading, loading, onNavigate]);
+  ], [comercioMetrics, realTimeStats, beneficiosLoading, loading, onNavigate]);
+
+  // Pull to refresh functionality
+  const handleRefresh = useCallback(async () => {
+    try {
+      await refreshStats();
+      toast.success('Datos actualizados');
+    } catch (error) {
+      toast.error('Error al actualizar');
+    }
+  }, [refreshStats]);
 
   if (error) {
     return (
@@ -643,7 +959,7 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
 
   return (
     <div className="min-h-screen p-4 md:p-6 lg:p-8">
-      {/* Header Section */}
+      {/* Enhanced Header Section */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -660,6 +976,12 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
               <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center">
                 <CheckCircle className="w-4 h-4 text-white" />
               </div>
+              {/* Real-time indicator */}
+              <motion.div
+                className="absolute -top-1 -left-1 w-4 h-4 bg-blue-500 rounded-full"
+                animate={{ scale: [1, 1.2, 1], opacity: [1, 0.7, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              />
             </div>
             <div>
               <h1 className="text-3xl md:text-4xl font-black bg-gradient-to-r from-slate-800 via-blue-600 to-purple-600 bg-clip-text text-transparent">
@@ -668,33 +990,42 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
               <p className="text-slate-600 font-medium text-lg">
                 {comercio?.nombreComercio || 'Mi Comercio'} • {user?.email?.split('@')[0] || 'Comercio'}
               </p>
+              <p className="text-xs text-slate-400 mt-1">
+                Última actualización: {format(lastUpdate, 'HH:mm:ss')}
+              </p>
             </div>
           </div>
           
-          {/* Action Buttons */}
+          {/* Enhanced Action Buttons */}
           <div className="flex items-center space-x-3">
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => window.location.reload()}
-              className="p-3 bg-white/80 backdrop-blur-xl border border-white/20 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+              onClick={handleRefresh}
+              className="p-3 bg-white/80 backdrop-blur-xl border border-white/20 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 relative group"
             >
-              <RefreshCw className="w-5 h-5 text-slate-600" />
+              <RefreshCw className="w-5 h-5 text-slate-600 group-hover:rotate-180 transition-transform duration-500" />
             </motion.button>
             
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => onNavigate?.('qr-validacion')}
-              className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center space-x-2"
+              className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center space-x-2 relative overflow-hidden"
             >
-              <QrCode className="w-5 h-5" />
-              <span>Validar QR</span>
+              <motion.div
+                className="absolute inset-0 bg-white/20"
+                initial={{ x: '-100%' }}
+                whileHover={{ x: '100%' }}
+                transition={{ duration: 0.5 }}
+              />
+              <QrCode className="w-5 h-5 relative z-10" />
+              <span className="relative z-10">Validar QR</span>
             </motion.button>
           </div>
         </div>
         
-        {/* Status Banner */}
+        {/* Enhanced Status Banner with Real-time Info */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -706,12 +1037,23 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
           <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-3 md:space-y-0">
             <div className="flex items-center space-x-4">
               <div className="relative">
-                <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse"></div>
+                <motion.div 
+                  className="w-3 h-3 bg-emerald-500 rounded-full"
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                />
                 <div className="absolute inset-0 w-3 h-3 bg-emerald-500 rounded-full animate-ping opacity-75"></div>
               </div>
               <div>
-                <h3 className="text-emerald-800 font-bold text-lg">
-                  Comercio Operativo
+                <h3 className="text-emerald-800 font-bold text-lg flex items-center space-x-2">
+                  <span>Comercio Operativo</span>
+                  <motion.span
+                    className="text-xs bg-emerald-200 text-emerald-800 px-2 py-1 rounded-full"
+                    animate={{ opacity: [0.7, 1, 0.7] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  >
+                    EN VIVO
+                  </motion.span>
                 </h3>
                 <p className="text-emerald-600 font-medium">
                   Sistema de validaciones funcionando correctamente
@@ -719,46 +1061,59 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
               </div>
             </div>
             
-            <div className="flex items-center space-x-3 text-emerald-700">
-              <Calendar className="w-5 h-5" />
-              <span className="font-semibold">
-                {format(new Date(), 'EEEE, dd MMMM yyyy', { locale: es })}
-              </span>
+            <div className="flex items-center space-x-6 text-emerald-700">
+              <div className="flex items-center space-x-2">
+                <Calendar className="w-5 h-5" />
+                <span className="font-semibold">
+                  {format(new Date(), 'EEEE, dd MMMM yyyy', { locale: es })}
+                </span>
+              </div>
+              
+              {realTimeStats.ultimaValidacion && (
+                <div className="flex items-center space-x-2">
+                  <Clock className="w-4 h-4" />
+                  <span className="text-sm">
+                    Última: {format(realTimeStats.ultimaValidacion, 'HH:mm')}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </motion.div>
       </motion.div>
 
-      {/* KPI Cards Grid */}
+      {/* Enhanced KPI Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
         {kpiMetrics.map((metric, index) => (
-          <ModernKPICard key={index} {...metric} />
+          <EnhancedKPICard key={index} {...metric} />
         ))}
       </div>
 
       {/* Secondary Content Grid */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 md:gap-8">
-        {/* Activity Feed - Takes 2 columns on xl screens */}
+        {/* Enhanced Activity Feed - Takes 2 columns on xl screens */}
         <div className="xl:col-span-2">
-          <ModernActivityFeed
+          <EnhancedActivityFeed
             activities={comercioMetrics.recentActivities}
             loading={loading}
             onViewAll={() => onNavigate?.('historial-validaciones')}
+            realTimeUpdates={true}
           />
         </div>
         
-        {/* Health Status - Takes 1 column */}
+        {/* Enhanced Health Status - Takes 1 column */}
         <div className="xl:col-span-1">
-          <ModernHealthStatus
+          <EnhancedHealthStatus
             health={comercioMetrics.systemHealth}
             lastActivity={comercioMetrics.lastActivity}
             avgValidaciones={comercioMetrics.avgValidacionesDiarias}
             loading={loading}
+            realTimeStats={realTimeStats}
           />
         </div>
       </div>
 
-      {/* Quick Actions Section */}
+      {/* Enhanced Quick Actions Section */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -769,6 +1124,11 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
           <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center space-x-3">
             <Zap className="w-6 h-6 text-blue-500" />
             <span>Acciones Rápidas</span>
+            <motion.div
+              className="w-2 h-2 bg-blue-500 rounded-full"
+              animate={{ scale: [1, 1.5, 1] }}
+              transition={{ duration: 1, repeat: Infinity }}
+            />
           </h3>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -778,14 +1138,16 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
                 description: 'Métricas detalladas',
                 icon: <BarChart3 className="w-6 h-6" />,
                 color: 'from-blue-500 to-indigo-500',
-                action: () => onNavigate?.('analytics')
+                action: () => onNavigate?.('analytics'),
+                badge: 'Nuevo'
               },
               {
                 title: 'Gestionar Beneficios',
                 description: 'Crear y editar ofertas',
                 icon: <Gift className="w-6 h-6" />,
                 color: 'from-amber-500 to-orange-500',
-                action: () => onNavigate?.('beneficios')
+                action: () => onNavigate?.('beneficios'),
+                badge: `${comercioMetrics.beneficiosActivos} activos`
               },
               {
                 title: 'Mi Perfil',
@@ -799,7 +1161,8 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
                 description: 'Centro de mensajes',
                 icon: <Bell className="w-6 h-6" />,
                 color: 'from-purple-500 to-pink-500',
-                action: () => onNavigate?.('notificaciones')
+                action: () => onNavigate?.('notificaciones'),
+                badge: notificationStats.unread > 0 ? `${notificationStats.unread} nuevas` : undefined
               }
             ].map((item, index) => (
               <motion.button
@@ -807,12 +1170,30 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
                 whileHover={{ scale: 1.02, y: -2 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={item.action}
-                className="p-4 bg-gradient-to-br from-slate-50 to-white rounded-xl border border-slate-200 hover:border-slate-300 transition-all duration-300 text-left group"
+                className="p-4 bg-gradient-to-br from-slate-50 to-white rounded-xl border border-slate-200 hover:border-slate-300 transition-all duration-300 text-left group relative overflow-hidden"
               >
-                <div className={`w-12 h-12 bg-gradient-to-r ${item.color} rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300`}>
+                {/* Badge */}
+                {item.badge && (
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full font-bold"
+                  >
+                    {item.badge}
+                  </motion.div>
+                )}
+                
+                <div className={`w-12 h-12 bg-gradient-to-r ${item.color} rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300 relative`}>
                   <div className="text-white">
                     {item.icon}
                   </div>
+                  {/* Glow effect */}
+                  <motion.div
+                    className="absolute inset-0 bg-white/30 rounded-xl"
+                    initial={{ opacity: 0 }}
+                    whileHover={{ opacity: 1 }}
+                    transition={{ duration: 0.3 }}
+                  />
                 </div>
                 <h4 className="font-bold text-slate-800 mb-1">{item.title}</h4>
                 <p className="text-sm text-slate-500">{item.description}</p>
@@ -822,7 +1203,7 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
         </div>
       </motion.div>
 
-      {/* Performance Insights */}
+      {/* Enhanced Performance Insights with Real-time Data */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -833,9 +1214,16 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
           <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center space-x-3">
             <Target className="w-6 h-6 text-purple-500" />
             <span>Insights de Rendimiento</span>
+            <motion.div
+              className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full font-medium"
+              animate={{ opacity: [0.7, 1, 0.7] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              Tiempo Real
+            </motion.div>
           </h3>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {/* Performance Score */}
             <div className="text-center">
               <div className="relative w-24 h-24 mx-auto mb-4">
@@ -852,7 +1240,7 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
                     cx="50"
                     cy="50"
                     r="40"
-                    stroke="url(#gradient1)"
+                    stroke="url(#performanceGradient)"
                     strokeWidth="8"
                     fill="none"
                     strokeLinecap="round"
@@ -864,7 +1252,7 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
                     transition={{ duration: 2, delay: 1 }}
                   />
                   <defs>
-                    <linearGradient id="gradient1" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <linearGradient id="performanceGradient" x1="0%" y1="0%" x2="100%" y2="0%">
                       <stop offset="0%" stopColor="#3b82f6" />
                       <stop offset="100%" stopColor="#8b5cf6" />
                     </linearGradient>
@@ -882,12 +1270,18 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
 
             {/* Trend Analysis */}
             <div className="text-center">
-              <div className="w-24 h-24 mx-auto mb-4 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-full flex items-center justify-center">
+              <div className="w-24 h-24 mx-auto mb-4 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-full flex items-center justify-center relative">
                 {comercioMetrics.crecimientoMensual > 0 ? (
                   <TrendingUp className="w-12 h-12 text-emerald-600" />
                 ) : (
                   <TrendingDown className="w-12 h-12 text-red-500" />
                 )}
+                <motion.div
+                  className="absolute inset-0 bg-emerald-200 rounded-full"
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1.2, opacity: 0 }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                />
               </div>
               <h4 className="font-bold text-slate-800 mb-2">Tendencia Mensual</h4>
               <p className={`text-sm font-semibold ${
@@ -897,17 +1291,91 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
               </p>
             </div>
 
+            {/* Conversion Rate */}
+            <div className="text-center">
+              <div className="w-24 h-24 mx-auto mb-4 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center relative">
+                <Target className="w-12 h-12 text-blue-600" />
+                <motion.div
+                  className="absolute inset-0 border-2 border-blue-400 rounded-full"
+                  animate={{ scale: [1, 1.1, 1], opacity: [0.5, 1, 0.5] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                />
+              </div>
+              <h4 className="font-bold text-slate-800 mb-2">Tasa de Conversión</h4>
+              <p className="text-sm font-semibold text-blue-600">
+                {comercioMetrics.tasaConversion.toFixed(1)}%
+              </p>
+            </div>
+
             {/* Activity Level */}
             <div className="text-center">
-              <div className="w-24 h-24 mx-auto mb-4 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full flex items-center justify-center">
+              <div className="w-24 h-24 mx-auto mb-4 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full flex items-center justify-center relative">
                 <Activity className="w-12 h-12 text-purple-600" />
+                {realTimeStats.validacionesEnTiempoReal > 0 && (
+                  <motion.div
+                    className="absolute -top-2 -right-2 w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center text-white text-xs font-bold"
+                    animate={{ scale: [1, 1.2, 1] }}
+                    transition={{ duration: 1, repeat: Infinity }}
+                  >
+                    {realTimeStats.validacionesEnTiempoReal}
+                  </motion.div>
+                )}
               </div>
               <h4 className="font-bold text-slate-800 mb-2">Nivel de Actividad</h4>
               <p className="text-sm text-slate-500">
-                {comercioMetrics.validacionesHoy > 0 ? 'Activo hoy' : 'Sin actividad hoy'}
+                {realTimeStats.validacionesEnTiempoReal > 0 ? 'Activo hoy' : 'Sin actividad hoy'}
               </p>
             </div>
           </div>
+
+          {/* Real-time Metrics Bar */}
+          <div className="mt-8 pt-6 border-t border-slate-100">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-slate-800">
+                  {comercioMetrics.sociosUnicos}
+                </div>
+                <div className="text-sm text-slate-500">Socios Únicos</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-emerald-600">
+                  ${comercioMetrics.ingresosPotenciales.toLocaleString()}
+                </div>
+                <div className="text-sm text-slate-500">Ingresos Potenciales</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-blue-600">
+                  {comercioMetrics.validacionesSemana}
+                </div>
+                <div className="text-sm text-slate-500">Esta Semana</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-purple-600">
+                  {comercioMetrics.validacionesMes}
+                </div>
+                <div className="text-sm text-slate-500">Este Mes</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Real-time Updates Indicator */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 1.5 }}
+        className="fixed bottom-20 right-6 z-30"
+      >
+        <div className="bg-white/90 backdrop-blur-md rounded-full px-4 py-2 shadow-lg border border-white/20 flex items-center space-x-2">
+          <motion.div
+            className="w-2 h-2 bg-emerald-500 rounded-full"
+            animate={{ scale: [1, 1.2, 1] }}
+            transition={{ duration: 1, repeat: Infinity }}
+          />
+          <span className="text-xs font-medium text-slate-600">
+            Datos en tiempo real
+          </span>
         </div>
       </motion.div>
     </div>
