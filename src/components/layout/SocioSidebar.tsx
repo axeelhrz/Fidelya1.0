@@ -1,53 +1,23 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter, usePathname } from 'next/navigation';
-import {
-  Box,
-  Drawer,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  Typography,
-  Avatar,
-  Divider,
-  IconButton,
-  Chip,
-  useTheme,
-  alpha,
-  Badge,
-  Tooltip,
-  Paper,
-  Stack,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-} from '@mui/material';
-import {
-  Home,
-  Person,
-  CardGiftcard,
-  QrCodeScanner,
-  Notifications,
-  Logout,
-  ChevronLeft,
-  ChevronRight,
-  AccountCircle,
-  Warning,
-} from '@mui/icons-material';
+import { 
+  ChevronLeft, 
+  ChevronRight, 
+  LogOut,
+  Zap,
+  Activity
+} from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useNotifications } from '@/hooks/useNotifications';
-import { toast } from 'react-hot-toast';
 
 interface SocioSidebarProps {
   open: boolean;
   onToggle: () => void;
   onMenuClick?: (section: string) => void;
+  onLogoutClick: () => void;
   activeSection?: string;
 }
 
@@ -62,51 +32,57 @@ interface MenuItem {
   route?: string;
 }
 
-const SIDEBAR_WIDTH = 340;
-const SIDEBAR_COLLAPSED_WIDTH = 85;
+const SIDEBAR_WIDTH = 320;
+const SIDEBAR_COLLAPSED_WIDTH = 80;
+
+// Iconos modernos usando Lucide React
+const HomeIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+  </svg>
+);
+
+const PersonIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+  </svg>
+);
+
+const GiftIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
+  </svg>
+);
+
+const QrCodeIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1z" />
+  </svg>
+);
+
+const BellIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5zM10.97 4.97a.235.235 0 0 0-.02.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.061L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05z" />
+  </svg>
+);
 
 export const SocioSidebar: React.FC<SocioSidebarProps> = ({
   open,
   onToggle,
   onMenuClick,
+  onLogoutClick,
   activeSection
 }) => {
-  const theme = useTheme();
   const router = useRouter();
   const pathname = usePathname();
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const { stats: notificationStats } = useNotifications();
-  const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
-  const [loggingOut, setLoggingOut] = useState(false);
-
-  const handleLogoutClick = () => {
-    setLogoutDialogOpen(true);
-  };
-
-  const handleLogoutConfirm = async () => {
-    setLoggingOut(true);
-    try {
-      await signOut();
-      toast.success('Sesión cerrada correctamente');
-      router.push('/auth/login');
-    } catch (error) {
-      console.error('Error al cerrar sesión:', error);
-      toast.error('Error al cerrar sesión. Inténtalo de nuevo.');
-    } finally {
-      setLoggingOut(false);
-      setLogoutDialogOpen(false);
-    }
-  };
-
-  const handleLogoutCancel = () => {
-    setLogoutDialogOpen(false);
-  };
 
   const menuItems: MenuItem[] = [
     {
       id: 'dashboard',
       label: 'Inicio',
-      icon: <Home />,
+      icon: <HomeIcon />,
       color: '#6366f1',
       gradient: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
       description: 'Panel principal',
@@ -115,7 +91,7 @@ export const SocioSidebar: React.FC<SocioSidebarProps> = ({
     {
       id: 'perfil',
       label: 'Mi Perfil',
-      icon: <Person />,
+      icon: <PersonIcon />,
       color: '#10b981',
       gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
       description: 'Información personal',
@@ -124,7 +100,7 @@ export const SocioSidebar: React.FC<SocioSidebarProps> = ({
     {
       id: 'beneficios',
       label: 'Beneficios',
-      icon: <CardGiftcard />,
+      icon: <GiftIcon />,
       color: '#f59e0b',
       gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
       description: 'Descuentos disponibles',
@@ -133,7 +109,7 @@ export const SocioSidebar: React.FC<SocioSidebarProps> = ({
     {
       id: 'validar',
       label: 'Validar Beneficio',
-      icon: <QrCodeScanner />,
+      icon: <QrCodeIcon />,
       color: '#8b5cf6',
       gradient: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
       description: 'Escanear QR',
@@ -142,7 +118,7 @@ export const SocioSidebar: React.FC<SocioSidebarProps> = ({
     {
       id: 'notificaciones',
       label: 'Notificaciones',
-      icon: <Notifications />,
+      icon: <BellIcon />,
       badge: notificationStats.unread || 0,
       color: '#ef4444',
       gradient: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
@@ -177,117 +153,66 @@ export const SocioSidebar: React.FC<SocioSidebarProps> = ({
         transition={{ duration: 0.3 }}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
+        className="relative group"
       >
-        <Tooltip
-          title={
-            <Box>
-              <Typography variant="body2" sx={{ fontWeight: 700, mb: 0.5 }}>
-                {item.label}
-              </Typography>
-              {item.description && (
-                <Typography variant="caption" sx={{ opacity: 0.8 }}>
-                  {item.description}
-                </Typography>
-              )}
-            </Box>
-          }
-          placement="right"
-          arrow
-          slotProps={{
-            tooltip: {
-              sx: {
-                bgcolor: 'rgba(15, 23, 42, 0.95)',
-                backdropFilter: 'blur(10px)',
-                border: '1px solid rgba(255,255,255,0.1)',
-                borderRadius: 2,
-                p: 2,
-                maxWidth: 280,
-              }
+        {/* Tooltip */}
+        <div className="absolute left-full ml-4 top-1/2 -translate-y-1/2 z-50 opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none">
+          <div className="bg-slate-900/95 backdrop-blur-xl text-white px-4 py-3 rounded-2xl shadow-2xl border border-white/10 min-w-[200px]">
+            <div className="font-semibold text-sm mb-1">{item.label}</div>
+            {item.description && (
+              <div className="text-xs text-slate-300 opacity-80">{item.description}</div>
+            )}
+            {/* Arrow */}
+            <div className="absolute right-full top-1/2 -translate-y-1/2 border-8 border-transparent border-r-slate-900/95"></div>
+          </div>
+        </div>
+
+        <button
+          onClick={() => handleMenuClick(item)}
+          className={`
+            relative w-14 h-14 rounded-2xl mx-auto mb-3 transition-all duration-500 ease-out
+            flex items-center justify-center overflow-hidden group
+            ${active 
+              ? 'bg-gradient-to-br shadow-2xl scale-110' 
+              : 'bg-white/60 hover:bg-white/80 border border-slate-200/50 hover:border-slate-300/50'
             }
+          `}
+          style={{
+            background: active ? item.gradient : undefined,
+            boxShadow: active ? `0 20px 40px ${item.color}40` : undefined,
           }}
         >
-          <ListItem disablePadding sx={{ mb: 1.5 }}>
-            <ListItemButton
-              onClick={() => handleMenuClick(item)}
-              sx={{
-                minHeight: 60,
-                width: 60,
-                borderRadius: 3,
-                mx: 'auto',
-                position: 'relative',
-                overflow: 'hidden',
-                background: active ? item.gradient : 'transparent',
-                border: active ? 'none' : `2px solid ${alpha(item.color, 0.15)}`,
-                transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                '&:hover': {
-                  background: active ? item.gradient : alpha(item.color, 0.1),
-                  border: `2px solid ${item.color}`,
-                  transform: 'translateY(-2px)',
-                  boxShadow: `0 8px 25px ${alpha(item.color, active ? 0.4 : 0.15)}`,
-                },
-                '&::before': {
-                  content: '""',
-                  position: 'absolute',
-                  inset: -3,
-                  background: item.gradient,
-                  borderRadius: 'inherit',
-                  opacity: active ? 0.3 : 0,
-                  filter: 'blur(8px)',
-                  zIndex: -1,
-                  transition: 'opacity 0.3s ease',
-                },
-                '&:hover::before': {
-                  opacity: 0.7,
-                },
-              }}
-            >
-              <ListItemIcon
-                sx={{
-                  minWidth: 0,
-                  justifyContent: 'center',
-                  color: active ? 'white' : item.color,
-                  position: 'relative',
-                  zIndex: 1,
-                }}
-              >
-                <Badge 
-                  badgeContent={item.badge} 
-                  color="error"
-                  invisible={!item.badge}
-                  sx={{
-                    '& .MuiBadge-badge': {
-                      fontSize: '0.6rem',
-                      minWidth: 16,
-                      height: 16,
-                      fontWeight: 700,
-                      background: active ? 'rgba(255,255,255,0.9)' : '#ef4444',
-                      color: active ? item.color : 'white',
-                      border: active ? `1px solid ${alpha('#ffffff', 0.3)}` : 'none',
-                      top: -2,
-                      right: -2,
-                    }
-                  }}
-                >
-                  <motion.div
-                    animate={active ? { 
-                      rotate: [0, 5, -5, 0],
-                      scale: [1, 1.1, 1],
-                    } : {}}
-                    transition={{ 
-                      duration: 2, 
-                      repeat: Infinity, 
-                      repeatType: "reverse" 
-                    }}
-                  >
-                    <Box sx={{ fontSize: 26, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      {item.icon}
-                    </Box>
-                  </motion.div>
-                </Badge>
-              </ListItemIcon>
-            </ListItemButton>
-          </ListItem>
-        </Tooltip>
+          {/* Glow effect */}
+          {active && (
+            <div 
+              className="absolute inset-0 rounded-2xl opacity-30 blur-xl"
+              style={{ background: item.gradient }}
+            />
+          )}
+          
+          {/* Icon container */}
+          <div className={`relative z-10 ${active ? 'text-white' : ''}`} style={{ color: !active ? item.color : undefined }}>
+            {item.badge ? (
+              <div className="relative">
+                {item.icon}
+                <div className={`
+                  absolute -top-2 -right-2 min-w-[18px] h-[18px] rounded-full text-[10px] font-bold
+                  flex items-center justify-center px-1
+                  ${active ? 'bg-white/90 text-slate-800' : 'bg-red-500 text-white'}
+                  shadow-lg
+                `}>
+                  {item.badge > 99 ? '99+' : item.badge}
+                </div>
+              </div>
+            ) : (
+              item.icon
+            )}
+          </div>
+
+          {/* Hover effect */}
+          <div className="absolute inset-0 rounded-2xl bg-gradient-to-br opacity-0 group-hover:opacity-10 transition-opacity duration-300" 
+               style={{ background: item.gradient }} />
+        </button>
       </motion.div>
     );
   };
@@ -301,831 +226,267 @@ export const SocioSidebar: React.FC<SocioSidebarProps> = ({
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.3 }}
-        whileHover={{ scale: 1.01 }}
-        whileTap={{ scale: 0.99 }}
+        whileHover={{ x: 4 }}
+        whileTap={{ scale: 0.98 }}
+        className="mb-3"
       >
-        <ListItem disablePadding sx={{ mb: 1 }}>
-          <ListItemButton
-            onClick={() => handleMenuClick(item)}
-            sx={{
-              minHeight: 56,
-              px: 3,
-              py: 2,
-              borderRadius: 3,
-              position: 'relative',
-              overflow: 'hidden',
-              background: active ? item.gradient : 'transparent',
-              color: active ? 'white' : '#64748b',
-              border: active ? 'none' : `1px solid ${alpha(item.color, 0.1)}`,
-              transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-              '&:hover': {
-                background: active ? item.gradient : alpha(item.color, 0.08),
-                color: active ? 'white' : item.color,
-                transform: 'translateX(4px)',
-                boxShadow: `0 6px 20px ${alpha(item.color, active ? 0.4 : 0.15)}`,
-                border: `1px solid ${alpha(item.color, 0.3)}`,
-              },
-              '&::before': {
-                content: '""',
-                position: 'absolute',
-                left: 0,
-                top: 0,
-                bottom: 0,
-                width: 4,
-                background: item.gradient,
-                opacity: active ? 1 : 0,
-                transition: 'opacity 0.3s ease',
-              },
-              '&:hover::before': {
-                opacity: 0.7,
-              },
-              '&::after': active ? {
-                content: '""',
-                position: 'absolute',
-                inset: -2,
-                background: item.gradient,
-                borderRadius: 'inherit',
-                filter: 'blur(10px)',
-                opacity: 0.3,
-                zIndex: -1,
-              } : {},
-            }}
-          >
-            <ListItemIcon
-              sx={{
-                minWidth: 0,
-                mr: 3,
-                color: 'inherit',
-                position: 'relative',
-                zIndex: 1,
-              }}
-            >
-              <Badge 
-                badgeContent={item.badge} 
-                color="error"
-                invisible={!item.badge}
-                sx={{
-                  '& .MuiBadge-badge': {
-                    fontSize: '0.65rem',
-                    minWidth: 18,
-                    height: 18,
-                    fontWeight: 700,
-                    background: active ? 'rgba(255,255,255,0.9)' : '#ef4444',
-                    color: active ? item.color : 'white',
-                    border: active ? `1px solid ${alpha('#ffffff', 0.3)}` : 'none',
-                  }
-                }}
-              >
-                <motion.div
-                  animate={active ? { 
-                    scale: [1, 1.05, 1],
-                  } : {}}
-                  transition={{ 
-                    duration: 2, 
-                    repeat: Infinity, 
-                    repeatType: "reverse" 
-                  }}
-                >
-                  <Box sx={{ fontSize: 24, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    {item.icon}
-                  </Box>
-                </motion.div>
-              </Badge>
-            </ListItemIcon>
-
-            <ListItemText 
-              primary={
-                <Typography
-                  variant="body2"
-                  sx={{
-                    fontWeight: active ? 700 : 600,
-                    fontSize: '0.95rem',
-                    lineHeight: 1.3,
-                  }}
-                >
-                  {item.label}
-                </Typography>
-              }
-              secondary={item.description && (
-                <Typography
-                  variant="caption"
-                  sx={{
-                    color: active ? alpha('#ffffff', 0.8) : alpha('#64748b', 0.7),
-                    fontSize: '0.75rem',
-                    fontWeight: 500,
-                    lineHeight: 1.2,
-                    mt: 0.5,
-                    display: 'block',
-                  }}
-                >
-                  {item.description}
-                </Typography>
-              )}
+        <button
+          onClick={() => handleMenuClick(item)}
+          className={`
+            relative w-full px-4 py-3 rounded-2xl transition-all duration-500 ease-out
+            flex items-center group overflow-hidden min-h-[56px]
+            ${active 
+              ? 'bg-gradient-to-r shadow-2xl text-white' 
+              : 'bg-white/40 hover:bg-white/60 text-slate-600 hover:text-slate-800 border border-slate-200/30 hover:border-slate-300/50'
+            }
+          `}
+          style={{
+            background: active ? item.gradient : undefined,
+            boxShadow: active ? `0 10px 30px ${item.color}30` : undefined,
+          }}
+        >
+          {/* Active indicator */}
+          {active && (
+            <div 
+              className="absolute left-0 top-0 bottom-0 w-1 rounded-r-full"
+              style={{ background: 'rgba(255,255,255,0.8)' }}
             />
-          </ListItemButton>
-        </ListItem>
+          )}
+
+          {/* Glow effect */}
+          {active && (
+            <div 
+              className="absolute inset-0 rounded-2xl opacity-20 blur-xl"
+              style={{ background: item.gradient }}
+            />
+          )}
+
+          {/* Icon */}
+          <div className={`relative z-10 mr-4 flex-shrink-0 ${active ? 'text-white' : ''}`} 
+               style={{ color: !active ? item.color : undefined }}>
+            {item.badge ? (
+              <div className="relative">
+                {item.icon}
+                <div className={`
+                  absolute -top-1 -right-1 min-w-[16px] h-[16px] rounded-full text-[9px] font-bold
+                  flex items-center justify-center px-1
+                  ${active ? 'bg-white/90 text-slate-800' : 'bg-red-500 text-white'}
+                  shadow-lg
+                `}>
+                  {item.badge > 99 ? '99+' : item.badge}
+                </div>
+              </div>
+            ) : (
+              item.icon
+            )}
+          </div>
+
+          {/* Content */}
+          <div className="flex-1 text-left relative z-10">
+            <div className="font-semibold text-base leading-tight">
+              {item.label}
+            </div>
+            {item.description && (
+              <div className={`text-xs mt-1 opacity-80 ${active ? 'text-white/80' : 'text-slate-500'}`}>
+                {item.description}
+              </div>
+            )}
+          </div>
+
+          {/* Hover effect */}
+          <div className="absolute inset-0 rounded-2xl bg-gradient-to-r opacity-0 group-hover:opacity-5 transition-opacity duration-300" 
+               style={{ background: item.gradient }} />
+        </button>
       </motion.div>
     );
   };
 
-  const sidebarContent = (
-    <Box
-      sx={{
-        height: '100vh',
-        display: 'flex',
-        flexDirection: 'column',
-        background: open 
-          ? 'linear-gradient(180deg, #ffffff 0%, #fafbfc 100%)'
-          : 'linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%)',
-        position: 'relative',
-        overflow: 'hidden',
-      }}
+  return (
+    <motion.div
+      animate={{ width: open ? SIDEBAR_WIDTH : SIDEBAR_COLLAPSED_WIDTH }}
+      transition={{ duration: 0.3, ease: "easeInOut" }}
+      className="fixed left-0 top-0 h-full z-50 bg-gradient-to-b from-slate-50/95 via-white/90 to-slate-100/95 backdrop-blur-xl border-r border-slate-200/50 shadow-2xl"
     >
       {/* Background Pattern */}
-      <Box
-        sx={{
-          position: 'absolute',
-          inset: 0,
-          opacity: open ? 0.3 : 0.2,
-          background: open ? `
-            radial-gradient(circle at 25% 25%, ${alpha('#6366f1', 0.08)} 0%, transparent 50%),
-            radial-gradient(circle at 75% 75%, ${alpha('#8b5cf6', 0.08)} 0%, transparent 50%),
-            radial-gradient(circle at 1px 1px, ${alpha('#e2e8f0', 0.6)} 1px, transparent 0)
-          ` : `
-            radial-gradient(circle at 50% 20%, ${alpha('#6366f1', 0.1)} 0%, transparent 40%),
-            radial-gradient(circle at 50% 80%, ${alpha('#8b5cf6', 0.1)} 0%, transparent 40%)
-          `,
-          backgroundSize: open ? '300px 300px, 250px 250px, 20px 20px' : '150px 150px, 120px 120px',
-          animation: 'float 25s ease-in-out infinite',
-          '@keyframes float': {
-            '0%, 100%': { transform: 'translate(0, 0) rotate(0deg)' },
-            '33%': { transform: 'translate(8px, -6px) rotate(0.5deg)' },
-            '66%': { transform: 'translate(-4px, 4px) rotate(-0.5deg)' },
-          },
-        }}
-      />
+      <div className="absolute inset-0 opacity-30">
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-transparent to-purple-50/50" />
+        <div className="absolute top-0 left-1/4 w-32 h-32 bg-blue-400/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-0 right-1/4 w-32 h-32 bg-purple-400/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+      </div>
 
-      {/* Header */}
-      <Box sx={{ p: open ? 3 : 2, position: 'relative', zIndex: 1 }}>
-        <Stack 
-          direction={open ? "row" : "column"} 
-          alignItems="center" 
-          justifyContent={open ? "space-between" : "center"}
-          spacing={open ? 0 : 2}
-        >
-          <AnimatePresence mode="wait">
-            {open ? (
-              <motion.div
-                key="expanded-header"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.3 }}
-              >
-                <Stack direction="row" alignItems="center" spacing={3}>
+      <div className="relative z-10 h-full flex flex-col">
+        {/* Header */}
+        <div className={`${open ? 'p-6' : 'p-4'} border-b border-slate-200/50`}>
+          <div className={`flex items-center ${open ? 'justify-between' : 'justify-center flex-col space-y-4'}`}>
+            <AnimatePresence mode="wait">
+              {open ? (
+                <motion.div
+                  key="expanded-header"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3 }}
+                  className="flex items-center space-x-4"
+                >
                   <motion.div
                     whileHover={{ scale: 1.05, rotate: 5 }}
                     whileTap={{ scale: 0.95 }}
+                    className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg"
                   >
-                    <Avatar
-                      sx={{
-                        width: 48,
-                        height: 48,
-                        background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-                        border: '3px solid rgba(255,255,255,0.9)',
-                        boxShadow: '0 8px 25px rgba(99, 102, 241, 0.25)',
-                        fontSize: 26,
-                        fontWeight: 900,
-                        color: 'white',
-                      }}
-                    >
-                      F
-                    </Avatar>
+                    <Zap className="w-6 h-6 text-white" />
                   </motion.div>
                   
-                  <Box>
-                    <Typography 
-                      variant="h6" 
-                      sx={{ 
-                        fontWeight: 900, 
-                        color: '#0f172a', 
-                        fontSize: '1.2rem',
-                        lineHeight: 1.1,
-                        background: 'linear-gradient(135deg, #0f172a 0%, #334155 100%)',
-                        backgroundClip: 'text',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
-                      }}
-                    >
+                  <div>
+                    <h1 className="text-xl font-black bg-gradient-to-r from-slate-800 to-blue-600 bg-clip-text text-transparent">
                       Fidelitá
-                    </Typography>
-                    <Typography 
-                      variant="caption" 
-                      sx={{ 
-                        color: '#64748b', 
-                        fontWeight: 600,
-                        fontSize: '0.75rem',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.05em',
-                      }}
-                    >
+                    </h1>
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
                       Portal Socio
-                    </Typography>
-                  </Box>
-                </Stack>
-              </motion.div>
-            ) : (
+                    </p>
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="collapsed-header"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <motion.div
+                    whileHover={{ scale: 1.1, rotate: 10 }}
+                    whileTap={{ scale: 0.9 }}
+                    className="w-14 h-14 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-xl"
+                  >
+                    <Zap className="w-7 h-7 text-white" />
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+            
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={onToggle}
+              className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center text-white shadow-lg hover:shadow-xl transition-all duration-300"
+            >
+              {open ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+            </motion.button>
+          </div>
+
+          {/* User Profile - Solo en modo expandido */}
+          <AnimatePresence>
+            {open && (
               <motion.div
-                key="collapsed-header"
+                initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -20, scale: 0.9 }}
+                transition={{ duration: 0.4, delay: 0.1 }}
+                className="mt-6 p-4 bg-gradient-to-br from-white/60 to-slate-50/60 rounded-2xl border border-slate-200/50 backdrop-blur-sm"
+              >
+                <div className="flex items-center space-x-3">
+                  <div className="w-11 h-11 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-lg">
+                    <Activity className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-bold text-slate-800 text-sm truncate">
+                      {user?.nombre || user?.email?.split('@')[0] || 'Socio'}
+                    </div>
+                    <div className="text-xs font-semibold text-slate-500">
+                      Miembro Activo
+                    </div>
+                  </div>
+                  <div className="px-2 py-1 bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-xs font-bold rounded-lg shadow-sm">
+                    ACTIVO
+                  </div>
+                </div>
+
+                {/* Stats compactos */}
+                <div className="flex justify-between mt-4 pt-3 border-t border-slate-200/50">
+                  <div className="text-center">
+                    <div className="font-black text-slate-800 text-base leading-none">
+                      12
+                    </div>
+                    <div className="text-xs font-semibold text-slate-500 mt-1">
+                      Beneficios
+                    </div>
+                  </div>
+                  <div className="w-px bg-slate-200/50" />
+                  <div className="text-center">
+                    <div className="font-black text-emerald-600 text-base leading-none">
+                      8
+                    </div>
+                    <div className="text-xs font-semibold text-slate-500 mt-1">
+                      Usados
+                    </div>
+                  </div>
+                  <div className="w-px bg-slate-200/50" />
+                  <div className="text-center">
+                    <div className="font-black text-amber-600 text-base leading-none">
+                      $450
+                    </div>
+                    <div className="text-xs font-semibold text-slate-500 mt-1">
+                      Ahorrado
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Navigation */}
+        <div className="flex-1 overflow-y-auto overflow-x-hidden py-6 px-4">
+          <div className="space-y-2">
+            {menuItems.map(item => 
+              open ? renderExpandedMenuItem(item) : renderCollapsedMenuItem(item)
+            )}
+          </div>
+        </div>
+
+        {/* Logout Section */}
+        <div className={`border-t border-slate-200/50 ${open ? 'p-6' : 'p-4'}`}>
+          <AnimatePresence mode="wait">
+            {open ? (
+              <motion.button
+                key="expanded-logout"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
+                whileHover={{ x: 4, scale: 1.01 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={onLogoutClick}
+                className="w-full px-4 py-3 bg-gradient-to-r from-red-50 to-rose-50 hover:from-red-100 hover:to-rose-100 border border-red-200/50 hover:border-red-300/50 rounded-2xl flex items-center space-x-3 text-red-600 hover:text-red-700 transition-all duration-300"
+              >
+                <LogOut className="w-5 h-5" />
+                <div className="text-left">
+                  <div className="font-semibold text-sm">
+                    Cerrar Sesión
+                  </div>
+                  <div className="text-xs opacity-70">
+                    Salir del sistema
+                  </div>
+                </div>
+              </motion.button>
+            ) : (
+              <motion.button
+                key="collapsed-logout"
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
                 transition={{ duration: 0.3 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={onLogoutClick}
+                className="w-14 h-14 bg-gradient-to-br from-red-50 to-rose-50 hover:from-red-100 hover:to-rose-100 border border-red-200/50 hover:border-red-300/50 rounded-2xl flex items-center justify-center text-red-600 hover:text-red-700 transition-all duration-300 mx-auto"
               >
-                <motion.div
-                  whileHover={{ scale: 1.1, rotate: 10 }}
-                  whileTap={{ scale: 0.9 }}
-                >
-                  <Avatar
-                    sx={{
-                      width: 52,
-                      height: 52,
-                      background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-                      border: '3px solid rgba(255,255,255,0.9)',
-                      boxShadow: '0 10px 30px rgba(99, 102, 241, 0.3)',
-                      fontSize: 28,
-                      fontWeight: 900,
-                      color: 'white',
-                    }}
-                  >
-                    F
-                  </Avatar>
-                </motion.div>
-              </motion.div>
+                <LogOut className="w-5 h-5" />
+              </motion.button>
             )}
           </AnimatePresence>
-          
-          <motion.div
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-          >
-            <Tooltip title={open ? 'Contraer sidebar' : 'Expandir sidebar'}>
-              <IconButton
-                onClick={onToggle}
-                sx={{
-                  background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-                  color: 'white',
-                  width: 40,
-                  height: 40,
-                  boxShadow: '0 6px 20px rgba(99, 102, 241, 0.3)',
-                  '&:hover': {
-                    background: 'linear-gradient(135deg, #5b21b6 0%, #7c3aed 100%)',
-                    boxShadow: '0 8px 25px rgba(99, 102, 241, 0.4)',
-                    transform: 'translateY(-1px)',
-                  },
-                  transition: 'all 0.3s ease',
-                }}
-              >
-                {open ? <ChevronLeft sx={{ fontSize: 22 }} /> : <ChevronRight sx={{ fontSize: 22 }} />}
-              </IconButton>
-            </Tooltip>
-          </motion.div>
-        </Stack>
-
-        {/* User Profile - Solo en modo expandido */}
-        <AnimatePresence>
-          {open && (
-            <motion.div
-              initial={{ opacity: 0, y: 20, scale: 0.9 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -20, scale: 0.9 }}
-              transition={{ duration: 0.4, delay: 0.1 }}
-            >
-              <Paper
-                elevation={0}
-                sx={{
-                  mt: 3,
-                  p: 3,
-                  background: 'linear-gradient(135deg, #f8fafc 0%, #ffffff 100%)',
-                  border: '1px solid #e2e8f0',
-                  borderRadius: 4,
-                  position: 'relative',
-                  overflow: 'hidden',
-                }}
-              >
-                <Box
-                  sx={{
-                    position: 'absolute',
-                    top: -30,
-                    right: -30,
-                    width: 60,
-                    height: 60,
-                    background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-                    borderRadius: '50%',
-                    opacity: 0.08,
-                  }}
-                />
-                
-                <Stack direction="row" alignItems="center" spacing={3}>
-                  <Avatar
-                    sx={{
-                      width: 44,
-                      height: 44,
-                      background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                      color: 'white',
-                      boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)',
-                    }}
-                  >
-                    <AccountCircle sx={{ fontSize: 24 }} />
-                  </Avatar>
-                  <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography 
-                      variant="body1" 
-                      sx={{ 
-                        fontWeight: 700, 
-                        color: '#1e293b', 
-                        fontSize: '0.95rem',
-                        lineHeight: 1.2,
-                      }}
-                    >
-                      {user?.nombre || user?.email?.split('@')[0] || 'Socio'}
-                    </Typography>
-                    <Typography 
-                      variant="caption" 
-                      sx={{ 
-                        color: '#64748b', 
-                        fontWeight: 600,
-                        fontSize: '0.75rem',
-                      }}
-                    >
-                      Miembro Activo
-                    </Typography>
-                  </Box>
-                  <Chip
-                    label="ACTIVO"
-                    size="small"
-                    sx={{
-                      background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                      color: 'white',
-                      fontWeight: 700,
-                      fontSize: '0.7rem',
-                      height: 26,
-                      boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)',
-                    }}
-                  />
-                </Stack>
-
-                {/* Stats compactos */}
-                <Stack direction="row" spacing={3} sx={{ mt: 3, pt: 2, borderTop: '1px solid #f1f5f9' }}>
-                  <Box sx={{ textAlign: 'center' }}>
-                    <Typography 
-                      variant="h6" 
-                      sx={{ 
-                        fontWeight: 900, 
-                        color: '#1e293b',
-                        fontSize: '1rem',
-                        lineHeight: 1,
-                      }}
-                    >
-                      12
-                    </Typography>
-                    <Typography 
-                      variant="caption" 
-                      sx={{ 
-                        color: '#64748b', 
-                        fontWeight: 600,
-                        fontSize: '0.7rem',
-                      }}
-                    >
-                      Beneficios
-                    </Typography>
-                  </Box>
-                  <Divider orientation="vertical" flexItem sx={{ opacity: 0.3 }} />
-                  <Box sx={{ textAlign: 'center' }}>
-                    <Typography 
-                      variant="h6" 
-                      sx={{ 
-                        fontWeight: 900, 
-                        color: '#10b981',
-                        fontSize: '1rem',
-                        lineHeight: 1,
-                      }}
-                    >
-                      8
-                    </Typography>
-                    <Typography 
-                      variant="caption" 
-                      sx={{ 
-                        color: '#64748b', 
-                        fontWeight: 600,
-                        fontSize: '0.7rem',
-                      }}
-                    >
-                      Usados
-                    </Typography>
-                  </Box>
-                  <Divider orientation="vertical" flexItem sx={{ opacity: 0.3 }} />
-                  <Box sx={{ textAlign: 'center' }}>
-                    <Typography 
-                      variant="h6" 
-                      sx={{ 
-                        fontWeight: 900, 
-                        color: '#f59e0b',
-                        fontSize: '1rem',
-                        lineHeight: 1,
-                      }}
-                    >
-                      $450
-                    </Typography>
-                    <Typography 
-                      variant="caption" 
-                      sx={{ 
-                        color: '#64748b', 
-                        fontWeight: 600,
-                        fontSize: '0.7rem',
-                      }}
-                    >
-                      Ahorrado
-                    </Typography>
-                  </Box>
-                </Stack>
-              </Paper>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </Box>
-
-      <Divider sx={{ mx: open ? 3 : 1.5, opacity: 0.3 }} />
-
-      {/* Navigation */}
-      <Box 
-        sx={{ 
-          flex: 1, 
-          display: 'flex',
-          flexDirection: 'column',
-          py: open ? 2 : 3, 
-          px: open ? 1 : 0.5,
-          position: 'relative', 
-          zIndex: 1,
-          minHeight: 0,
-          overflowY: 'auto',
-          overflowX: 'hidden',
-          '&::-webkit-scrollbar': {
-            width: open ? 6 : 0,
-          },
-          '&::-webkit-scrollbar-track': {
-            background: 'transparent',
-          },
-          '&::-webkit-scrollbar-thumb': {
-            background: alpha('#64748b', 0.3),
-            borderRadius: 3,
-            '&:hover': {
-              background: alpha('#64748b', 0.5),
-            },
-          },
-        }}
-      >
-        <List sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: open ? 0 : 0.5 }}>
-          {menuItems.map(item => 
-            open ? renderExpandedMenuItem(item) : renderCollapsedMenuItem(item)
-          )}
-        </List>
-      </Box>
-
-      <Divider sx={{ mx: open ? 3 : 1.5, opacity: 0.3 }} />
-
-      {/* Logout Section */}
-      <Box sx={{ p: open ? 3 : 2, position: 'relative', zIndex: 1 }}>
-        <AnimatePresence mode="wait">
-          {open ? (
-            <motion.div
-              key="expanded-logout"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-              whileHover={{ scale: 1.01 }}
-              whileTap={{ scale: 0.99 }}
-            >
-              <ListItem disablePadding>
-                <ListItemButton
-                  onClick={handleLogoutClick}
-                  disabled={loggingOut}
-                  sx={{
-                    minHeight: 52,
-                    px: 3,
-                    py: 2,
-                    borderRadius: 3,
-                    color: '#ef4444',
-                    border: '2px solid',
-                    borderColor: alpha('#ef4444', 0.2),
-                    background: alpha('#ef4444', 0.05),
-                    transition: 'all 0.3s ease',
-                    '&:hover': {
-                      bgcolor: alpha('#ef4444', 0.1),
-                      borderColor: '#ef4444',
-                      transform: 'translateX(4px)',
-                      boxShadow: '0 6px 20px rgba(239, 68, 68, 0.2)',
-                    },
-                    '&:disabled': {
-                      opacity: 0.6,
-                      transform: 'none',
-                    },
-                  }}
-                >
-                  <ListItemIcon
-                    sx={{
-                      minWidth: 0,
-                      mr: 3,
-                      color: 'inherit',
-                    }}
-                  >
-                    <Logout sx={{ fontSize: 22 }} />
-                  </ListItemIcon>
-                  <ListItemText 
-                    primary={
-                      <Typography
-                        variant="body2"
-                        sx={{ 
-                          fontWeight: 700, 
-                          fontSize: '0.9rem',
-                        }}
-                      >
-                        {loggingOut ? 'Cerrando...' : 'Cerrar Sesión'}
-                      </Typography>
-                    }
-                    secondary={
-                      <Typography
-                        variant="caption"
-                        sx={{
-                          color: alpha('#ef4444', 0.7),
-                          fontSize: '0.75rem',
-                          fontWeight: 500,
-                        }}
-                      >
-                        Salir del sistema
-                      </Typography>
-                    }
-                  />
-                </ListItemButton>
-              </ListItem>
-            </motion.div>
-          ) : (
-            <motion.div
-              key="collapsed-logout"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              transition={{ duration: 0.3 }}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Tooltip title="Cerrar Sesión" placement="right" arrow>
-                <ListItem disablePadding>
-                  <ListItemButton
-                    onClick={handleLogoutClick}
-                    disabled={loggingOut}
-                    sx={{
-                      minHeight: 60,
-                      width: 60,
-                      borderRadius: 3,
-                      mx: 'auto',
-                      color: '#ef4444',
-                      border: '2px solid',
-                      borderColor: alpha('#ef4444', 0.2),
-                      background: alpha('#ef4444', 0.05),
-                      transition: 'all 0.3s ease',
-                      '&:hover': {
-                        bgcolor: alpha('#ef4444', 0.1),
-                        borderColor: '#ef4444',
-                        transform: 'translateY(-2px)',
-                        boxShadow: '0 8px 25px rgba(239, 68, 68, 0.3)',
-                      },
-                      '&:disabled': {
-                        opacity: 0.6,
-                        transform: 'none',
-                      },
-                    }}
-                  >
-                    <ListItemIcon
-                      sx={{
-                        minWidth: 0,
-                        justifyContent: 'center',
-                        color: 'inherit',
-                      }}
-                    >
-                      <Logout sx={{ fontSize: 24 }} />
-                    </ListItemIcon>
-                  </ListItemButton>
-                </ListItem>
-              </Tooltip>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </Box>
-
-      {/* Member Status - Solo en modo expandido */}
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-          >
-            <Box sx={{ p: 3, pt: 0, position: 'relative', zIndex: 1 }}>
-              <Paper
-                elevation={0}
-                sx={{
-                  p: 3,
-                  background: 'linear-gradient(135deg, #f1f5f9 0%, #ffffff 100%)',
-                  border: '1px solid #e2e8f0',
-                  borderRadius: 3,
-                  position: 'relative',
-                  overflow: 'hidden',
-                }}
-              >
-                <Box
-                  sx={{
-                    position: 'absolute',
-                    top: -25,
-                    left: -25,
-                    width: 50,
-                    height: 50,
-                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                    borderRadius: '50%',
-                    opacity: 0.1,
-                  }}
-                />
-                
-                <Stack direction="row" justifyContent="space-between" alignItems="center">
-                  <Box>
-                    <Typography 
-                      variant="caption" 
-                      sx={{ 
-                        color: '#10b981', 
-                        fontWeight: 700, 
-                        textTransform: 'uppercase', 
-                        letterSpacing: '0.05em',
-                        fontSize: '0.7rem',
-                      }}
-                    >
-                      Socio Activo
-                    </Typography>
-                    <Typography 
-                      variant="body2" 
-                      sx={{ 
-                        fontWeight: 700, 
-                        color: '#1e293b',
-                        fontSize: '0.85rem',
-                        lineHeight: 1.2,
-                      }}
-                    >
-                      Activo
-                    </Typography>
-                  </Box>
-                  <Stack direction="row" alignItems="center" spacing={1}>
-                    <Box
-                      sx={{
-                        width: 12,
-                        height: 12,
-                        bgcolor: '#10b981',
-                        borderRadius: '50%',
-                        boxShadow: '0 0 0 4px rgba(16, 185, 129, 0.2)',
-                        animation: 'pulse 2s ease-in-out infinite',
-                        '@keyframes pulse': {
-                          '0%, 100%': { opacity: 1, transform: 'scale(1)' },
-                          '50%': { opacity: 0.8, transform: 'scale(1.1)' },
-                        },
-                      }}
-                    />
-                    <Typography 
-                      variant="caption" 
-                      sx={{ 
-                        color: '#10b981', 
-                        fontWeight: 600,
-                        fontSize: '0.7rem',
-                      }}
-                    >
-                      Vigente
-                    </Typography>
-                  </Stack>
-                </Stack>
-              </Paper>
-            </Box>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </Box>
-  );
-
-  return (
-    <>
-      <Drawer
-        variant="permanent"
-        open={open}
-        sx={{
-          width: open ? SIDEBAR_WIDTH : SIDEBAR_COLLAPSED_WIDTH,
-          flexShrink: 0,
-          '& .MuiDrawer-paper': {
-            width: open ? SIDEBAR_WIDTH : SIDEBAR_COLLAPSED_WIDTH,
-            boxSizing: 'border-box',
-            transition: theme.transitions.create('width', {
-              easing: theme.transitions.easing.sharp,
-              duration: theme.transitions.duration.enteringScreen,
-            }),
-            overflowX: 'hidden',
-            overflowY: 'hidden',
-            border: 'none',
-            boxShadow: open 
-              ? '0 0 50px rgba(0,0,0,0.08)' 
-              : '0 0 30px rgba(0,0,0,0.12)',
-            backdropFilter: 'blur(10px)',
-          },
-        }}
-      >
-        {sidebarContent}
-      </Drawer>
-
-      {/* Logout Confirmation Dialog */}
-      <Dialog
-        open={logoutDialogOpen}
-        onClose={handleLogoutCancel}
-        maxWidth="sm"
-        fullWidth
-        PaperProps={{
-          sx: {
-            borderRadius: 4,
-            background: 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
-            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.1)',
-            border: '1px solid #e2e8f0',
-          }
-        }}
-      >
-        <DialogTitle sx={{ pb: 2 }}>
-          <Stack direction="row" alignItems="center" spacing={2}>
-            <Avatar
-              sx={{
-                width: 48,
-                height: 48,
-                background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-                color: 'white',
-              }}
-            >
-              <Warning sx={{ fontSize: 24 }} />
-            </Avatar>
-            <Box>
-              <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b' }}>
-                Confirmar Cierre de Sesión
-              </Typography>
-              <Typography variant="body2" sx={{ color: '#64748b', mt: 0.5 }}>
-                ¿Estás seguro de que deseas cerrar tu sesión?
-              </Typography>
-            </Box>
-          </Stack>
-        </DialogTitle>
-        
-        <DialogContent sx={{ py: 2 }}>
-          <Typography variant="body1" sx={{ color: '#475569' }}>
-            Se cerrará tu sesión actual y serás redirigido a la página de inicio de sesión. 
-            Cualquier trabajo no guardado se perderá.
-          </Typography>
-        </DialogContent>
-        
-        <DialogActions sx={{ p: 3, pt: 2 }}>
-          <Button
-            onClick={handleLogoutCancel}
-            variant="outlined"
-            sx={{
-              borderColor: '#e2e8f0',
-              color: '#64748b',
-              '&:hover': {
-                borderColor: '#cbd5e1',
-                bgcolor: '#f8fafc',
-              },
-            }}
-          >
-            Cancelar
-          </Button>
-          <Button
-            onClick={handleLogoutConfirm}
-            variant="contained"
-            disabled={loggingOut}
-            sx={{
-              background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-              color: 'white',
-              '&:hover': {
-                background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',
-              },
-              '&:disabled': {
-                opacity: 0.6,
-              },
-            }}
-          >
-            {loggingOut ? 'Cerrando Sesión...' : 'Cerrar Sesión'}
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </>
+        </div>
+      </div>
+    </motion.div>
   );
 };

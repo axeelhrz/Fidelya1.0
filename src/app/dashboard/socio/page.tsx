@@ -2,8 +2,11 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useRouter } from 'next/navigation';
+import { toast } from 'react-hot-toast';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { SocioSidebar } from '@/components/layout/SocioSidebar';
+import { LogoutModal } from '@/components/ui/LogoutModal';
 import { SocioOverviewDashboard } from '@/components/socio/SocioOverviewDashboard';
 import { ProfileCard } from '@/components/socio/ProfileCard';
 import { AsociacionesList } from '@/components/socio/AsociacionesList';
@@ -17,8 +20,6 @@ import { useBeneficios } from '@/hooks/useBeneficios';
 import { ValidacionesService } from '@/services/validaciones.service';
 import { ValidacionResponse } from '@/types/validacion';
 import { Gift, Zap } from 'lucide-react';
-
-// Función helper para crear timestamps mock que sean compatibles con Firebase
 
 const mockNotifications = [
   {
@@ -47,14 +48,61 @@ const mockNotifications = [
   }
 ];
 
+// Sidebar personalizado que maneja el logout
+const SocioSidebarWithLogout: React.FC<{
+  open: boolean;
+  onToggle: () => void;
+  onMenuClick: (section: string) => void;
+  activeSection: string;
+  onLogoutClick: () => void;
+}> = (props) => {
+  return (
+    <SocioSidebar
+      open={props.open}
+      onToggle={props.onToggle}
+      onMenuClick={props.onMenuClick}
+      onLogoutClick={props.onLogoutClick}
+      activeSection={props.activeSection}
+    />
+  );
+};
+
 export default function SocioDashboard() {
-  const { user } = useAuth();
+  const router = useRouter();
+  const { user, signOut } = useAuth();
   const { beneficios, beneficiosUsados } = useBeneficios();
   const [activeSection, setActiveSection] = useState('dashboard');
   const [benefitsTab, setBenefitsTab] = useState<'disponibles' | 'usados'>('disponibles');
   const [validationResult, setValidationResult] = useState<ValidacionResponse | null>(null);
   const [validationModalOpen, setValidationModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // Estados para el modal de logout
+  const [logoutModalOpen, setLogoutModalOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  const handleLogoutClick = () => {
+    setLogoutModalOpen(true);
+  };
+
+  const handleLogoutConfirm = async () => {
+    setLoggingOut(true);
+    try {
+      await signOut();
+      toast.success('Sesión cerrada correctamente');
+      router.push('/auth/login');
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+      toast.error('Error al cerrar sesión. Inténtalo de nuevo.');
+    } finally {
+      setLoggingOut(false);
+      setLogoutModalOpen(false);
+    }
+  };
+
+  const handleLogoutCancel = () => {
+    setLogoutModalOpen(false);
+  };
 
   // Mock implementation, replace with real API/service call as needed
   const marcarBeneficioComoUsado = async (): Promise<boolean> => {
@@ -245,7 +293,12 @@ export default function SocioDashboard() {
       <DashboardLayout
         activeSection={activeSection}
         onSectionChange={setActiveSection}
-        sidebarComponent={SocioSidebar}
+        sidebarComponent={(props) => (
+          <SocioSidebarWithLogout
+            {...props}
+            onLogoutClick={handleLogoutClick}
+          />
+        )}
       >
         {renderDashboardContent()}
       </DashboardLayout>
@@ -254,6 +307,14 @@ export default function SocioDashboard() {
         open={validationModalOpen}
         onClose={() => setValidationModalOpen(false)}
         result={validationResult}
+      />
+
+      {/* Modal de Logout - Fuera del layout para que aparezca en toda la página */}
+      <LogoutModal
+        isOpen={logoutModalOpen}
+        isLoading={loggingOut}
+        onConfirm={handleLogoutConfirm}
+        onCancel={handleLogoutCancel}
       />
     </>
   );
