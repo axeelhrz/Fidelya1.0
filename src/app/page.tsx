@@ -2,183 +2,245 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Sparkles, Zap, Users, BarChart3, Shield, CheckCircle, Star } from 'lucide-react';
 import Link from 'next/link';
 
 export default function HomePage() {
-  const [isVisible, setIsVisible] = useState(false);
-  const [showSubtext, setShowSubtext] = useState(false);
+  const [typedText, setTypedText] = useState('');
+  const [isTypingComplete, setIsTypingComplete] = useState(false);
+  const fullText = 'Fidelya';
 
   useEffect(() => {
-    setIsVisible(true);
-    const timer = setTimeout(() => {
-      setShowSubtext(true);
-    }, 2500);
-    
-    return () => clearTimeout(timer);
+    let index = 0;
+    const typingInterval = setInterval(() => {
+      if (index < fullText.length) {
+        setTypedText(fullText.slice(0, index + 1));
+        index++;
+      } else {
+        setIsTypingComplete(true);
+        clearInterval(typingInterval);
+      }
+    }, 150);
+
+    return () => clearInterval(typingInterval);
   }, []);
 
-  // Animación de escritura para "Fidelya"
-  const typewriterVariants = {
+  const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.12,
-        delayChildren: 0.3
+        staggerChildren: 0.2,
+        delayChildren: 2
       }
     }
   };
 
-  const letterVariants = {
-    hidden: { opacity: 0, y: 50, scale: 0.8 },
+  const itemVariants = {
+    hidden: { opacity: 0, y: 30 },
     visible: {
       opacity: 1,
       y: 0,
-      scale: 1,
       transition: {
-        duration: 0.6,
-        ease: [0.6, 0.01, -0.05, 0.95]
+        duration: 0.8,
+        ease: "easeOut"
       }
     }
   };
 
-  const fidleyaLetters = "Fidelya".split("");
+  const floatingVariants = {
+    animate: {
+      y: [-10, 10, -10],
+      transition: {
+        duration: 6,
+        repeat: Infinity,
+        ease: "easeInOut"
+      }
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-cyan-50 flex items-center justify-center relative overflow-hidden">
-      {/* Elementos decorativos de fondo */}
-      <div className="absolute inset-0">
-        {/* Gradientes flotantes */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-br from-sky-200/20 to-cyan-200/20 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-gradient-to-br from-cyan-200/15 to-sky-200/15 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-br from-sky-100/10 to-cyan-100/10 rounded-full blur-3xl"></div>
-        
-        {/* Partículas flotantes */}
-        <div className="absolute top-1/3 left-1/5 w-2 h-2 bg-sky-400 rounded-full animate-bounce" style={{ animationDelay: '0.5s' }}></div>
-        <div className="absolute top-2/3 right-1/5 w-1.5 h-1.5 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '1.5s' }}></div>
-        <div className="absolute bottom-1/3 left-1/3 w-1 h-1 bg-sky-300 rounded-full animate-bounce" style={{ animationDelay: '2s' }}></div>
+    <div className="h-screen overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 relative">
+      {/* Animated Background */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-indigo-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-pulse delay-2000"></div>
       </div>
 
-      {/* Contenido principal */}
-      <div className="relative z-10 text-center max-w-6xl mx-auto px-6">
-        {/* Título principal con efecto de escritura */}
-        <motion.div
-          className="mb-12"
-          initial="hidden"
-          animate={isVisible ? "visible" : "hidden"}
-          variants={typewriterVariants}
-        >
-          <div className="flex justify-center items-center mb-8">
-            {fidleyaLetters.map((letter, index) => (
-              <motion.span
-                key={index}
-                variants={letterVariants}
-                className="text-8xl md:text-9xl lg:text-[12rem] font-black bg-gradient-to-r from-sky-400 via-cyan-500 to-sky-600 bg-clip-text text-transparent tracking-tight"
-                style={{
-                  fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
-                  fontWeight: 900,
-                  letterSpacing: '-0.03em',
-                  textShadow: '0 0 40px rgba(14, 165, 233, 0.3)'
-                }}
-              >
-                {letter}
-              </motion.span>
-            ))}
-          </div>
-          
-          {/* Cursor parpadeante */}
-          <motion.div
-            className="inline-block w-1.5 h-20 md:h-24 lg:h-32 bg-gradient-to-b from-sky-500 to-cyan-500 ml-4 rounded-full"
-            animate={{
-              opacity: [1, 0, 1],
-              scale: [1, 0.8, 1]
-            }}
-            transition={{
-              duration: 1.2,
-              repeat: Infinity,
-              ease: "easeInOut",
-              delay: 2.2
-            }}
-          />
-        </motion.div>
+      {/* Floating Elements */}
+      <motion.div
+        variants={floatingVariants}
+        animate="animate"
+        className="absolute top-20 left-20 w-4 h-4 bg-blue-400/60 rounded-full blur-sm"
+      />
+      <motion.div
+        variants={floatingVariants}
+        animate="animate"
+        className="absolute top-40 right-32 w-6 h-6 bg-indigo-400/40 rounded-full blur-sm"
+        style={{ animationDelay: '2s' }}
+      />
+      <motion.div
+        variants={floatingVariants}
+        animate="animate"
+        className="absolute bottom-32 left-40 w-3 h-3 bg-cyan-400/50 rounded-full blur-sm"
+        style={{ animationDelay: '4s' }}
+      />
 
-        {/* Subtexto que aparece después */}
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={showSubtext ? { opacity: 1, y: 0 } : { opacity: 0, y: 40 }}
-          transition={{ duration: 1, ease: "easeOut" }}
-          className="space-y-10"
-        >
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-800 leading-tight mb-6">
-            El futuro de los programas de fidelidad
-          </h2>
+      {/* Header */}
+      <header className="absolute top-0 w-full z-50 px-8 py-6">
+        <div className="flex items-center justify-between max-w-7xl mx-auto">
+          <motion.div 
+            className="flex items-center space-x-3"
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, delay: 3 }}
+          >
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-cyan-400 rounded-xl flex items-center justify-center shadow-lg">
+              <Sparkles className="w-6 h-6 text-white" />
+            </div>
+            <span className="text-2xl font-bold text-white">
+              {typedText}
+              {!isTypingComplete && (
+                <span className="animate-pulse text-blue-400">|</span>
+              )}
+            </span>
+          </motion.div>
           
-          <p className="text-xl md:text-2xl text-gray-600 max-w-4xl mx-auto leading-relaxed font-light">
+          <motion.div
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, delay: 3.2 }}
+          >
+            <Link 
+              href="/auth/login"
+              className="text-white/80 hover:text-white font-medium transition-colors duration-300 px-6 py-2 rounded-full border border-white/20 hover:border-white/40 backdrop-blur-sm"
+            >
+              Ya tengo cuenta
+            </Link>
+          </motion.div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <div className="h-full flex items-center justify-center px-8">
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          className="text-center max-w-6xl mx-auto"
+        >
+          {/* Main Title */}
+          <motion.h1 
+            variants={itemVariants}
+            className="text-6xl md:text-8xl font-bold text-white mb-8 leading-tight"
+          >
+            El futuro de los{' '}
+            <span className="bg-gradient-to-r from-blue-400 via-cyan-400 to-indigo-400 bg-clip-text text-transparent">
+              programas de fidelidad
+            </span>
+          </motion.h1>
+          
+          {/* Subtitle */}
+          <motion.p 
+            variants={itemVariants}
+            className="text-xl md:text-2xl text-white/80 max-w-4xl mx-auto leading-relaxed mb-12"
+          >
             Conecta asociaciones, comercios y socios en un ecosistema inteligente 
             potenciado por IA para maximizar la fidelización y el crecimiento.
-          </p>
+          </motion.p>
 
-          {/* Botones de acción */}
-          <div className="flex flex-col sm:flex-row gap-6 justify-center items-center pt-8">
+          {/* CTA Button */}
+          <motion.div 
+            variants={itemVariants}
+            className="mb-16"
+          >
             <Link href="/auth/register">
               <motion.button
-                whileHover={{ 
-                  scale: 1.05, 
-                  boxShadow: "0 25px 50px rgba(14, 165, 233, 0.4)",
-                  y: -2
-                }}
+                whileHover={{ scale: 1.05, boxShadow: "0 20px 40px rgba(59, 130, 246, 0.3)" }}
                 whileTap={{ scale: 0.95 }}
-                className="group relative bg-gradient-to-r from-sky-500 to-cyan-500 text-white px-12 py-6 rounded-2xl font-bold text-xl shadow-2xl transition-all duration-300 flex items-center space-x-3 overflow-hidden"
+                className="bg-gradient-to-r from-blue-500 via-cyan-500 to-indigo-500 text-white px-12 py-6 rounded-2xl font-bold text-xl shadow-2xl hover:shadow-blue-500/25 transition-all duration-300 flex items-center space-x-3 mx-auto group"
               >
-                {/* Efecto de brillo */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 transform translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
-                
-                <span className="relative z-10">Comenzar Gratis</span>
-                <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform relative z-10" />
+                <span>Comenzar Gratis</span>
+                <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform duration-300" />
               </motion.button>
             </Link>
-            
-            <Link href="/auth/login">
-              <motion.button
+          </motion.div>
+
+          {/* Features Grid */}
+          <motion.div 
+            variants={itemVariants}
+            className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto"
+          >
+            {[
+              {
+                icon: <Zap className="w-8 h-8" />,
+                title: "Sin configuración compleja",
+                description: "Implementación rápida y sencilla"
+              },
+              {
+                icon: <Users className="w-8 h-8" />,
+                title: "Integración en minutos",
+                description: "Conecta tu ecosistema al instante"
+              },
+              {
+                icon: <Shield className="w-8 h-8" />,
+                title: "Soporte 24/7",
+                description: "Asistencia continua garantizada"
+              }
+            ].map((feature, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 3 + index * 0.2 }}
                 whileHover={{ 
-                  scale: 1.02,
-                  y: -1,
-                  backgroundColor: "rgba(255, 255, 255, 0.9)"
+                  y: -10,
+                  transition: { duration: 0.3 }
                 }}
-                whileTap={{ scale: 0.98 }}
-                className="text-sky-600 hover:text-sky-700 font-semibold text-xl px-12 py-6 rounded-2xl border-2 border-sky-200 hover:border-sky-300 transition-all duration-300 bg-white/60 backdrop-blur-sm"
+                className="bg-white/10 backdrop-blur-xl rounded-2xl p-8 border border-white/20 hover:border-white/40 transition-all duration-300 group"
               >
-                Ya tengo cuenta
-              </motion.button>
-            </Link>
-          </div>
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-400/20 to-cyan-400/20 rounded-2xl flex items-center justify-center text-blue-400 mb-6 group-hover:scale-110 transition-transform duration-300">
+                  {feature.icon}
+                </div>
+                <h3 className="font-bold text-white text-xl mb-3">{feature.title}</h3>
+                <p className="text-white/70 leading-relaxed">{feature.description}</p>
+              </motion.div>
+            ))}
+          </motion.div>
         </motion.div>
       </div>
 
-      {/* Efecto de partículas adicional */}
-      <div className="absolute inset-0 pointer-events-none">
-        {[...Array(6)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-1 h-1 bg-sky-400 rounded-full"
-            style={{
-              left: `${20 + i * 15}%`,
-              top: `${30 + i * 10}%`,
-            }}
-            animate={{
-              y: [-20, 20, -20],
-              opacity: [0.3, 1, 0.3],
-              scale: [0.5, 1, 0.5]
-            }}
-            transition={{
-              duration: 3 + i * 0.5,
-              repeat: Infinity,
-              ease: "easeInOut",
-              delay: i * 0.3
-            }}
-          />
-        ))}
+      {/* Bottom Stats */}
+      <motion.div
+        initial={{ opacity: 0, y: 50 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, delay: 4 }}
+        className="absolute bottom-8 left-1/2 transform -translate-x-1/2"
+      >
+        <div className="flex items-center space-x-12 text-white/60">
+          <div className="text-center">
+            <div className="text-2xl font-bold text-white">1000+</div>
+            <div className="text-sm">Comercios</div>
+          </div>
+          <div className="w-px h-8 bg-white/20"></div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-white">50K+</div>
+            <div className="text-sm">Socios</div>
+          </div>
+          <div className="w-px h-8 bg-white/20"></div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-white">99.9%</div>
+            <div className="text-sm">Uptime</div>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Scroll Indicator (Hidden but maintains structure) */}
+      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 opacity-0">
+        <div className="w-6 h-10 border-2 border-white/30 rounded-full flex justify-center">
+          <div className="w-1 h-3 bg-white/50 rounded-full mt-2 animate-bounce"></div>
+        </div>
       </div>
     </div>
   );
