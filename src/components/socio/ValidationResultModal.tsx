@@ -2,8 +2,6 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import styled from '@emotion/styled';
-import { css } from '@emotion/react';
 import { 
   CheckCircle, 
   XCircle, 
@@ -14,6 +12,12 @@ import {
   Store,
   Calendar,
   Share2,
+  Copy,
+  Download,
+  Star,
+  TrendingUp,
+  Award,
+  Info
 } from 'lucide-react';
 import { ValidacionResponse } from '@/types/validacion';
 import { Dialog, DialogContent } from '@/components/ui/Dialog';
@@ -26,347 +30,6 @@ interface ValidationResultModalProps {
   onClose: () => void;
   result: ValidacionResponse | null;
 }
-
-const ModalContainer = styled(motion.div)<{ resultType: string }>`
-  background: white;
-  border-radius: 2rem;
-  overflow: hidden;
-  max-width: 32rem;
-  width: 100%;
-  box-shadow: 0 25px 80px -20px rgba(0, 0, 0, 0.3);
-  position: relative;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 6px;
-    background: ${({ resultType }) => {
-      switch (resultType) {
-        case 'habilitado':
-          return 'linear-gradient(90deg, #10b981, #059669, #047857)';
-        case 'no_habilitado':
-          return 'linear-gradient(90deg, #ef4444, #dc2626, #b91c1c)';
-        case 'vencido':
-          return 'linear-gradient(90deg, #f59e0b, #d97706, #b45309)';
-        case 'suspendido':
-          return 'linear-gradient(90deg, #f97316, #ea580c, #c2410c)';
-        default:
-          return 'linear-gradient(90deg, #6b7280, #4b5563, #374151)';
-      }
-    }};
-  }
-`;
-
-const ResultHeader = styled(motion.div)<{ bgColor: string; borderColor: string }>`
-  padding: 2rem;
-  text-align: center;
-  background: ${({ bgColor }) => bgColor};
-  border-bottom: 1px solid ${({ borderColor }) => borderColor};
-  position: relative;
-  overflow: hidden;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.1), transparent 70%);
-  }
-`;
-
-const ResultIcon = styled(motion.div)<{ color: string; bgColor: string }>`
-  width: 5rem;
-  height: 5rem;
-  background: ${({ bgColor }) => bgColor};
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 1.5rem;
-  color: ${({ color }) => color};
-  box-shadow: 0 12px 32px ${({ color }) => `${color}40`};
-  position: relative;
-  z-index: 2;
-  
-  &::after {
-    content: '';
-    position: absolute;
-    inset: -4px;
-    background: ${({ color }) => `linear-gradient(45deg, ${color}, ${color}80, ${color})`};
-    border-radius: 50%;
-    z-index: -1;
-    animation: pulse 2s ease-in-out infinite;
-  }
-  
-  @keyframes pulse {
-    0%, 100% { transform: scale(1); opacity: 0.7; }
-    50% { transform: scale(1.1); opacity: 0.9; }
-  }
-`;
-
-const ResultTitle = styled(motion.h3)`
-  font-size: 1.75rem;
-  font-weight: 900;
-  color: #1e293b;
-  margin-bottom: 0.75rem;
-  position: relative;
-  z-index: 2;
-`;
-
-const ResultMessage = styled(motion.p)`
-  color: #64748b;
-  font-weight: 600;
-  font-size: 1.125rem;
-  margin-bottom: 1.5rem;
-  position: relative;
-  z-index: 2;
-`;
-
-const ContentSection = styled.div`
-  padding: 0 2rem 2rem;
-`;
-
-const BenefitCard = styled(motion.div)`
-  background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
-  border: 2px solid #e2e8f0;
-  border-radius: 1.5rem;
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
-  position: relative;
-  overflow: hidden;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, #10b981, #059669);
-  }
-`;
-
-const BenefitHeader = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 1rem;
-`;
-
-const BenefitIcon = styled.div`
-  width: 3rem;
-  height: 3rem;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
-  border-radius: 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3);
-`;
-
-const BenefitInfo = styled.div`
-  flex: 1;
-  min-width: 0;
-  
-  .title {
-    font-size: 1.125rem;
-    font-weight: 800;
-    color: #1e293b;
-    margin-bottom: 0.25rem;
-  }
-  
-  .type {
-    font-size: 0.875rem;
-    color: #64748b;
-    font-weight: 600;
-  }
-`;
-
-const DiscountBadge = styled(motion.div)<{ tipo: string }>`
-  background: ${({ tipo }) => {
-    switch (tipo) {
-      case 'porcentaje':
-        return 'linear-gradient(135deg, #10b981, #059669)';
-      case 'monto_fijo':
-        return 'linear-gradient(135deg, #6366f1, #8b5cf6)';
-      case 'producto_gratis':
-        return 'linear-gradient(135deg, #f59e0b, #d97706)';
-      default:
-        return 'linear-gradient(135deg, #6b7280, #4b5563)';
-    }
-  }};
-  color: white;
-  padding: 1rem;
-  border-radius: 1rem;
-  text-align: center;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-  
-  .label {
-    font-size: 0.875rem;
-    font-weight: 600;
-    margin-bottom: 0.25rem;
-    opacity: 0.9;
-  }
-  
-  .value {
-    font-size: 2rem;
-    font-weight: 900;
-    letter-spacing: -0.02em;
-  }
-`;
-
-const SocioCard = styled(motion.div)`
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-  border: 1px solid #e2e8f0;
-  border-radius: 1.5rem;
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
-`;
-
-const SocioHeader = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-`;
-
-const SocioAvatar = styled.div`
-  width: 3rem;
-  height: 3rem;
-  background: linear-gradient(135deg, #94a3b8, #64748b);
-  border-radius: 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-`;
-
-const SocioInfo = styled.div`
-  flex: 1;
-  min-width: 0;
-  
-  .name {
-    font-size: 1.125rem;
-    font-weight: 800;
-    color: #1e293b;
-    margin-bottom: 0.25rem;
-  }
-  
-  .status {
-    font-size: 0.875rem;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-`;
-
-const StatusBadge = styled.span<{ status: string }>`
-  padding: 0.25rem 0.75rem;
-  border-radius: 1rem;
-  font-size: 0.75rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  
-  ${({ status }) => {
-    switch (status) {
-      case 'activo':
-        return css`
-          background: #dcfce7;
-          color: #166534;
-          border: 1px solid #bbf7d0;
-        `;
-      case 'vencido':
-        return css`
-          background: #fee2e2;
-          color: #991b1b;
-          border: 1px solid #fecaca;
-        `;
-      case 'suspendido':
-        return css`
-          background: #fef3c7;
-          color: #92400e;
-          border: 1px solid #fde68a;
-        `;
-      default:
-        return css`
-          background: #f1f5f9;
-          color: #475569;
-          border: 1px solid #e2e8f0;
-        `;
-    }
-  }}
-`;
-
-const ActionsSection = styled(motion.div)`
-  display: flex;
-  gap: 0.75rem;
-  margin-top: 1.5rem;
-`;
-
-const InfoSection = styled(motion.div)`
-  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
-  border: 1px solid #cbd5e1;
-  border-radius: 1rem;
-  padding: 1rem;
-  margin-top: 1rem;
-  
-  .info-text {
-    font-size: 0.875rem;
-    color: #475569;
-    font-weight: 500;
-    line-height: 1.5;
-    text-align: center;
-  }
-`;
-
-const MetaInfo = styled.div`
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
-  margin-top: 1rem;
-`;
-
-const MetaItem = styled.div`
-  text-align: center;
-  padding: 1rem;
-  background: #f8fafc;
-  border-radius: 1rem;
-  border: 1px solid #e2e8f0;
-  
-  .icon {
-    width: 2rem;
-    height: 2rem;
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
-    border-radius: 0.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 0.5rem;
-    color: white;
-  }
-  
-  .label {
-    font-size: 0.75rem;
-    color: #64748b;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-bottom: 0.25rem;
-  }
-  
-  .value {
-    font-size: 0.875rem;
-    color: #1e293b;
-    font-weight: 700;
-  }
-`;
 
 export const ValidationResultModal: React.FC<ValidationResultModalProps> = ({
   open,
@@ -381,19 +44,19 @@ export const ValidationResultModal: React.FC<ValidationResultModalProps> = ({
         return {
           icon: CheckCircle,
           color: '#10b981',
-          bgColor: 'linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%)',
-          borderColor: '#86efac',
+          bgColor: 'from-emerald-50 to-green-50',
+          borderColor: 'border-emerald-200',
           title: '¡Validación Exitosa!',
           message: 'Tu beneficio ha sido validado correctamente',
           buttonText: 'Continuar Comprando',
-          buttonColor: 'bg-green-600 hover:bg-green-700'
+          buttonColor: 'bg-emerald-600 hover:bg-emerald-700'
         };
       case 'no_habilitado':
         return {
           icon: XCircle,
           color: '#ef4444',
-          bgColor: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)',
-          borderColor: '#fca5a5',
+          bgColor: 'from-red-50 to-rose-50',
+          borderColor: 'border-red-200',
           title: 'Acceso Denegado',
           message: result.motivo || 'No tienes acceso a este beneficio',
           buttonText: 'Entendido',
@@ -403,29 +66,39 @@ export const ValidationResultModal: React.FC<ValidationResultModalProps> = ({
         return {
           icon: Clock,
           color: '#f59e0b',
-          bgColor: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
-          borderColor: '#fcd34d',
+          bgColor: 'from-amber-50 to-yellow-50',
+          borderColor: 'border-amber-200',
           title: 'Beneficio Vencido',
           message: result.motivo || 'Este beneficio ya no está disponible',
           buttonText: 'Ver Otros Beneficios',
-          buttonColor: 'bg-yellow-600 hover:bg-yellow-700'
+          buttonColor: 'bg-amber-600 hover:bg-amber-700'
         };
       case 'suspendido':
         return {
           icon: AlertTriangle,
           color: '#f97316',
-          bgColor: 'linear-gradient(135deg, #fed7aa 0%, #fdba74 100%)',
-          borderColor: '#fb923c',
+          bgColor: 'from-orange-50 to-amber-50',
+          borderColor: 'border-orange-200',
           title: 'Cuenta Suspendida',
           message: result.motivo || 'Tu cuenta está temporalmente suspendida',
           buttonText: 'Contactar Soporte',
           buttonColor: 'bg-orange-600 hover:bg-orange-700'
         };
+      default:
+        return {
+          icon: Info,
+          color: '#6b7280',
+          bgColor: 'from-gray-50 to-slate-50',
+          borderColor: 'border-gray-200',
+          title: 'Resultado de Validación',
+          message: result.motivo || 'Estado de validación desconocido',
+          buttonText: 'Cerrar',
+          buttonColor: 'bg-gray-600 hover:bg-gray-700'
+        };
     }
   };
 
   const config = getResultConfig();
-  if (!config) return null;
   const IconComponent = config.icon;
 
   const getDiscountText = (beneficio: ValidacionResponse['beneficio']) => {
@@ -456,22 +129,49 @@ export const ValidationResultModal: React.FC<ValidationResultModalProps> = ({
     }
   };
 
+  const handleShare = async () => {
+    if (navigator.share && result.resultado === 'habilitado') {
+      try {
+        await navigator.share({
+          title: '¡Beneficio Validado!',
+          text: `He validado un beneficio en ${result.beneficio?.comercioNombre}`,
+          url: window.location.href
+        });
+      } catch (error) {
+        console.log('Error sharing:', error);
+      }
+    }
+  };
+
+  const handleCopyCode = async () => {
+    if (result.validacionId) {
+      try {
+        await navigator.clipboard.writeText(result.validacionId);
+        // You could show a toast here
+      } catch (error) {
+        console.log('Error copying:', error);
+      }
+    }
+  };
+
   return (
     <AnimatePresence>
       {open && (
         <Dialog open={open} onClose={onClose}>
           <DialogContent className="max-w-lg p-0 overflow-hidden">
-            <ModalContainer
-              resultType={result.resultado}
+            <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+              className="bg-white rounded-3xl overflow-hidden"
             >
-              <ResultHeader bgColor={config.bgColor} borderColor={config.borderColor}>
-                <ResultIcon
-                  color={config.color}
-                  bgColor="white"
+              {/* Header with gradient background */}
+              <div className={`bg-gradient-to-r ${config.bgColor} ${config.borderColor} border-b p-8 text-center relative overflow-hidden`}>
+                {/* Background decoration */}
+                <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
+                
+                <motion.div
                   initial={{ scale: 0, rotate: -180 }}
                   animate={{ scale: 1, rotate: 0 }}
                   transition={{ 
@@ -480,194 +180,220 @@ export const ValidationResultModal: React.FC<ValidationResultModalProps> = ({
                     damping: 15,
                     delay: 0.1
                   }}
+                  className="relative z-10"
                 >
-                  <IconComponent size={32} />
-                </ResultIcon>
+                  <div 
+                    className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg"
+                    style={{ 
+                      backgroundColor: config.color,
+                      boxShadow: `0 12px 32px ${config.color}40`
+                    }}
+                  >
+                    <IconComponent size={32} className="text-white" />
+                  </div>
+                </motion.div>
 
-                <ResultTitle
+                <motion.h2
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2 }}
+                  className="text-2xl font-bold text-gray-900 mb-3 relative z-10"
                 >
                   {config.title}
-                </ResultTitle>
+                </motion.h2>
 
-                <ResultMessage
+                <motion.p
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
+                  className="text-gray-600 text-lg relative z-10"
                 >
                   {config.message}
-                </ResultMessage>
-              </ResultHeader>
+                </motion.p>
+              </div>
 
-              <ContentSection>
-                {/* Información del beneficio si está habilitado */}
+              <div className="p-8">
+                {/* Benefit Details for successful validation */}
                 {result.resultado === 'habilitado' && result.beneficio && (
-                  <BenefitCard
+                  <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.4 }}
+                    className="mb-8"
                   >
-                    <BenefitHeader>
-                      <BenefitIcon>
-                        <Gift size={20} />
-                      </BenefitIcon>
-                      <BenefitInfo>
-                        <div className="title">{result.beneficio.titulo}</div>
-                        <div className="type">{result.beneficio.comercioNombre}</div>
-                      </BenefitInfo>
-                    </BenefitHeader>
-                    
-                    <DiscountBadge
-                      tipo={result.beneficio.tipo}
-                      initial={{ scale: 0.8, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      transition={{ delay: 0.5, type: "spring", stiffness: 200 }}
-                    >
-                      <div className="label">{getDiscountLabel(result.beneficio)}</div>
-                      <div className="value">
-                        {getDiscountText(result.beneficio)}
-                        {result.beneficio.tipo !== 'producto_gratis' && (
-                          <span style={{ fontSize: '1rem', marginLeft: '0.25rem' }}>
-                            {result.beneficio.tipo === 'porcentaje' ? 'OFF' : 'OFF'}
-                          </span>
-                        )}
-                      </div>
-                    </DiscountBadge>
-
-                    {result.beneficio.descripcion && (
-                      <div style={{ 
-                        marginTop: '1rem', 
-                        padding: '1rem', 
-                        background: '#f8fafc', 
-                        borderRadius: '0.75rem',
-                        border: '1px solid #e2e8f0'
-                      }}>
-                        <div style={{ 
-                          fontSize: '0.875rem', 
-                          color: '#64748b', 
-                          fontWeight: 600,
-                          marginBottom: '0.25rem'
-                        }}>
-                          Descripción
+                    <div className="bg-gradient-to-r from-violet-50 to-purple-50 rounded-2xl p-6 border border-violet-200">
+                      <div className="flex items-center gap-4 mb-4">
+                        <div className="w-12 h-12 bg-gradient-to-r from-violet-500 to-purple-600 rounded-xl flex items-center justify-center">
+                          <Gift size={20} className="text-white" />
                         </div>
-                        <div style={{ 
-                          fontSize: '0.875rem', 
-                          color: '#1e293b', 
-                          lineHeight: 1.5 
-                        }}>
-                          {result.beneficio.descripcion}
+                        <div className="flex-1">
+                          <h3 className="font-bold text-gray-900 text-lg">{result.beneficio.titulo}</h3>
+                          <p className="text-gray-600">{result.beneficio.comercioNombre}</p>
                         </div>
                       </div>
-                    )}
-
-                    <MetaInfo>
-                      <MetaItem>
-                        <div className="icon">
-                          <Calendar size={12} />
-                        </div>
-                        <div className="label">Válido hasta</div>
-                        <div className="value">
-                          {result.beneficio.fechaFin 
-                            ? format(result.beneficio.fechaFin, 'dd/MM/yyyy', { locale: es })
-                            : 'Sin límite'
-                          }
-                        </div>
-                      </MetaItem>
                       
-                      <MetaItem>
-                        <div className="icon">
-                          <Store size={12} />
+                      {/* Discount Badge */}
+                      <div className="bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-xl p-4 text-center mb-4">
+                        <div className="text-sm font-medium opacity-90 mb-1">
+                          {getDiscountLabel(result.beneficio)}
                         </div>
-                        <div className="label">Comercio</div>
-                        <div className="value">{result.beneficio.comercioNombre}</div>
-                      </MetaItem>
-                    </MetaInfo>
-                  </BenefitCard>
+                        <div className="text-3xl font-bold">
+                          {getDiscountText(result.beneficio)}
+                          {result.beneficio.tipo !== 'producto_gratis' && (
+                            <span className="text-lg ml-1">OFF</span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Benefit Description */}
+                      {result.beneficio.descripcion && (
+                        <div className="bg-white rounded-xl p-4 border border-violet-100 mb-4">
+                          <h4 className="font-semibold text-gray-900 mb-2">Descripción</h4>
+                          <p className="text-gray-600 text-sm leading-relaxed">
+                            {result.beneficio.descripcion}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Benefit Meta Info */}
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="bg-white rounded-xl p-3 border border-violet-100 text-center">
+                          <Calendar size={16} className="text-violet-600 mx-auto mb-1" />
+                          <div className="text-xs text-gray-500 mb-1">Válido hasta</div>
+                          <div className="text-sm font-semibold text-gray-900">
+                            {result.beneficio.fechaFin 
+                              ? format(result.beneficio.fechaFin, 'dd/MM/yyyy', { locale: es })
+                              : 'Sin límite'
+                            }
+                          </div>
+                        </div>
+                        
+                        <div className="bg-white rounded-xl p-3 border border-violet-100 text-center">
+                          <Store size={16} className="text-violet-600 mx-auto mb-1" />
+                          <div className="text-xs text-gray-500 mb-1">Comercio</div>
+                          <div className="text-sm font-semibold text-gray-900 truncate">
+                            {result.beneficio.comercioNombre}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
                 )}
 
-                {/* Información del socio */}
-                <SocioCard
+                {/* User Info */}
+                <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: result.resultado === 'habilitado' ? 0.6 : 0.4 }}
+                  className="mb-6"
                 >
-                  <SocioHeader>
-                    <SocioAvatar>
-                      <User size={20} />
-                    </SocioAvatar>
-                    <SocioInfo>
-                      <div className="name">{result.socio.nombre}</div>
-                      <div className="status">
-                        Estado: 
-                        <StatusBadge status={result.socio.estado}>
-                          {result.socio.estado}
-                        </StatusBadge>
+                  <div className="bg-gray-50 rounded-2xl p-4 border border-gray-200">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gradient-to-r from-gray-400 to-gray-600 rounded-xl flex items-center justify-center">
+                        <User size={16} className="text-white" />
                       </div>
-                    </SocioInfo>
-                  </SocioHeader>
-                </SocioCard>
+                      <div className="flex-1">
+                        <div className="font-semibold text-gray-900">{result.socio.nombre}</div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-gray-600">Estado:</span>
+                          <span className={`
+                            text-xs font-bold px-2 py-1 rounded-full
+                            ${result.socio.estado === 'activo' 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-red-100 text-red-800'
+                            }
+                          `}>
+                            {result.socio.estado.toUpperCase()}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
 
-                {/* Botones de acción */}
-                <ActionsSection
+                {/* Action Buttons */}
+                <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: result.resultado === 'habilitado' ? 0.7 : 0.5 }}
+                  className="flex gap-3"
                 >
                   <Button
                     onClick={onClose}
-                    className={config?.buttonColor}
-                    fullWidth
+                    className={`flex-1 ${config.buttonColor}`}
                     size="lg"
                   >
-                    {config?.buttonText}
+                    {config.buttonText}
                   </Button>
                   
                   {result.resultado === 'habilitado' && (
-                    <Button
-                      variant="outline"
-                      leftIcon={<Share2 size={16} />}
-                      size="lg"
-                    >
-                      <span className="sr-only">Compartir</span>
-                    </Button>
+                    <>
+                      <Button
+                        variant="outline"
+                        onClick={handleShare}
+                        leftIcon={<Share2 size={16} />}
+                        size="lg"
+                        className="px-4"
+                      >
+                        <span className="sr-only">Compartir</span>
+                      </Button>
+                      
+                      {result.validacionId && (
+                        <Button
+                          variant="outline"
+                          onClick={handleCopyCode}
+                          leftIcon={<Copy size={16} />}
+                          size="lg"
+                          className="px-4"
+                        >
+                          <span className="sr-only">Copiar código</span>
+                        </Button>
+                      )}
+                    </>
                   )}
-                </ActionsSection>
+                </motion.div>
 
-                {/* Información adicional para casos de error */}
+                {/* Additional Info for failed validations */}
                 {result.resultado !== 'habilitado' && (
-                  <InfoSection
+                  <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.6 }}
+                    className="mt-6 bg-blue-50 border border-blue-200 rounded-xl p-4"
                   >
-                    <div className="info-text">
-                      {result.resultado === 'no_habilitado' && 
-                        'Contacta a tu asociación para regularizar tu situación y acceder a este beneficio.'
-                      }
-                      {result.resultado === 'vencido' && 
-                        'Este beneficio ha expirado. Busca otros beneficios disponibles en tu cuenta.'
-                      }
-                      {result.resultado === 'suspendido' && 
-                        'Tu cuenta está temporalmente suspendida. Ponte en contacto con soporte para resolver esta situación.'
-                      }
+                    <div className="flex items-start gap-3">
+                      <Info size={16} className="text-blue-600 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <h4 className="font-semibold text-blue-900 mb-1">¿Qué puedes hacer?</h4>
+                        <div className="text-sm text-blue-800">
+                          {result.resultado === 'no_habilitado' && (
+                            <p>Contacta a tu asociación para regularizar tu situación y acceder a este beneficio.</p>
+                          )}
+                          {result.resultado === 'vencido' && (
+                            <p>Este beneficio ha expirado. Busca otros beneficios disponibles en tu cuenta.</p>
+                          )}
+                          {result.resultado === 'suspendido' && (
+                            <p>Tu cuenta está temporalmente suspendida. Ponte en contacto con soporte para resolver esta situación.</p>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                  </InfoSection>
+                  </motion.div>
                 )}
 
-                {/* Timestamp de validación */}
-                <div style={{ 
-                  textAlign: 'center', 
-                  marginTop: '1rem',
-                  fontSize: '0.75rem',
-                  color: '#94a3b8',
-                  fontWeight: 500
-                }}>
-                  Validación realizada el {format(new Date(), 'dd/MM/yyyy HH:mm', { locale: es })}
+                {/* Validation Timestamp */}
+                <div className="mt-6 text-center">
+                  <p className="text-xs text-gray-500">
+                    Validación realizada el {format(new Date(), 'dd/MM/yyyy HH:mm', { locale: es })}
+                    {result.validacionId && (
+                      <span className="block mt-1">
+                        ID: {result.validacionId.slice(-8).toUpperCase()}
+                      </span>
+                    )}
+                  </p>
                 </div>
-              </ContentSection>
-            </ModalContainer>
+              </div>
+            </motion.div>
           </DialogContent>
         </Dialog>
       )}
