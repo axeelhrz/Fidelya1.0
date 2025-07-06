@@ -8,23 +8,18 @@ import {
   Gift,
   ScanLine as QrCodeScanner,
   Bell,
-  Calendar,
-  MapPin,
   Star,
   Zap,
   Heart,
-  Share2,
   ArrowRight,
   RefreshCw,
   Activity,
-  Award,
   Target,
   Clock,
   Sparkles,
   Crown,
   Users,
   ShoppingBag,
-  Percent,
   DollarSign,
   CheckCircle,
   AlertCircle,
@@ -35,7 +30,8 @@ import { Timestamp } from 'firebase/firestore';
 import { useAuth } from '@/hooks/useAuth';
 import { useBeneficios } from '@/hooks/useBeneficios';
 import { useNotifications } from '@/hooks/useNotifications';
-import { format, subDays, isToday, isYesterday, startOfWeek, endOfWeek } from 'date-fns';
+import { useSocioProfile } from '@/hooks/useSocioProfile';
+import { format, subDays, isToday, isYesterday } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 interface SocioOverviewDashboardProps {
@@ -68,6 +64,9 @@ interface SocioMetrics {
   categoriaFavorita: string;
   streakDias: number;
   proximoVencimiento: Date | null;
+  estado: string;
+  nivelSocio: string;
+  progresoMensual: number;
 }
 
 // Enhanced KPI Card Component
@@ -89,7 +88,6 @@ const KPICard: React.FC<{
   value,
   change,
   icon,
-  color,
   gradient,
   delay,
   subtitle,
@@ -319,8 +317,11 @@ const MembershipStatusCard: React.FC<{
   lastActivity: Date | null;
   streakDias: number;
   proximoVencimiento: Date | null;
+  estado: string;
+  nivelSocio: string;
+  progresoMensual: number;
   loading: boolean;
-}> = ({ health, lastActivity, streakDias, proximoVencimiento, loading }) => {
+}> = ({ health, lastActivity, streakDias, proximoVencimiento, estado, nivelSocio, progresoMensual, loading }) => {
   const getHealthConfig = () => {
     const configs = {
       excellent: {
@@ -357,6 +358,21 @@ const MembershipStatusCard: React.FC<{
       }
     };
     return configs[health];
+  };
+
+  const getEstadoColor = (estado: string) => {
+    switch (estado) {
+      case 'activo':
+        return 'text-emerald-600';
+      case 'vencido':
+        return 'text-red-600';
+      case 'inactivo':
+        return 'text-gray-600';
+      case 'pendiente':
+        return 'text-amber-600';
+      default:
+        return 'text-gray-600';
+    }
   };
 
   const config = getHealthConfig();
@@ -410,14 +426,16 @@ const MembershipStatusCard: React.FC<{
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <span className="text-sm text-gray-600">Estado de membresía</span>
-          <span className="text-sm font-medium text-emerald-600">Activo</span>
+          <span className={`text-sm font-medium capitalize ${getEstadoColor(estado)}`}>
+            {loading ? '...' : estado}
+          </span>
         </div>
         
         {proximoVencimiento && (
           <div className="flex items-center justify-between">
             <span className="text-sm text-gray-600">Próximo vencimiento</span>
             <span className="text-sm font-medium text-gray-900">
-              {format(proximoVencimiento, 'dd/MM/yyyy', { locale: es })}
+              {loading ? '...' : format(proximoVencimiento, 'dd/MM/yyyy', { locale: es })}
             </span>
           </div>
         )}
@@ -426,7 +444,9 @@ const MembershipStatusCard: React.FC<{
           <span className="text-sm text-gray-600">Nivel de socio</span>
           <div className="flex items-center gap-1">
             <Star size={14} className="text-amber-500" />
-            <span className="text-sm font-medium text-gray-900">Premium</span>
+            <span className="text-sm font-medium text-gray-900">
+              {loading ? '...' : nivelSocio}
+            </span>
           </div>
         </div>
       </div>
@@ -435,10 +455,15 @@ const MembershipStatusCard: React.FC<{
       <div className="mt-6">
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm text-gray-600">Progreso mensual</span>
-          <span className="text-sm font-medium text-gray-900">75%</span>
+          <span className="text-sm font-medium text-gray-900">
+            {loading ? '...' : `${progresoMensual}%`}
+          </span>
         </div>
         <div className="w-full bg-gray-200 rounded-full h-2">
-          <div className="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full w-3/4 transition-all duration-1000" />
+          <div 
+            className="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full transition-all duration-1000"
+            style={{ width: loading ? '0%' : `${progresoMensual}%` }}
+          />
         </div>
       </div>
     </motion.div>
@@ -510,6 +535,7 @@ export const SocioOverviewDashboard: React.FC<SocioOverviewDashboardProps> = ({
   const { user } = useAuth();
   const { beneficios, beneficiosUsados, loading: beneficiosLoading } = useBeneficios();
   const { stats: notificationStats } = useNotifications();
+  const { socio, stats, asociaciones, activity, loading: socioLoading } = useSocioProfile();
   
   const [socioMetrics, setSocioMetrics] = useState<SocioMetrics>({
     beneficiosDisponibles: 0,
@@ -525,22 +551,34 @@ export const SocioOverviewDashboard: React.FC<SocioOverviewDashboardProps> = ({
     categoriaFavorita: 'General',
     streakDias: 0,
     proximoVencimiento: null,
+    estado: 'activo',
+    nivelSocio: 'Premium',
+    progresoMensual: 75,
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Calculate metrics from beneficios
+  // Calculate metrics from real data
   const calculateMetrics = useCallback(() => {
-    if (!user || beneficiosLoading) {
+    if (!user || beneficiosLoading || socioLoading) {
       return null;
     }
 
     try {
       const now = new Date();
       const monthAgo = subDays(now, 30);
-      const weekStart = startOfWeek(now);
-      const weekEnd = endOfWeek(now);
 
+      // Use real stats if available
+      type RealStats = {
+        ahorroTotal?: number;
+        ahorroEsteMes?: number;
+        beneficiosUsados?: number;
+        beneficiosEsteMes?: number;
+        racha?: number;
+        beneficiosPorCategoria?: Record<string, number>;
+      };
+      const realStats: RealStats = stats || {};
+      
       // Filter beneficios used this month
       const beneficiosEsteMes = beneficiosUsados.filter(b => 
         b.fechaUso.toDate() >= monthAgo
@@ -556,54 +594,64 @@ export const SocioOverviewDashboard: React.FC<SocioOverviewDashboardProps> = ({
         ? ((beneficiosEsteMes - beneficiosMesAnterior) / beneficiosMesAnterior) * 100
         : beneficiosEsteMes > 0 ? 100 : 0;
 
-      // Calculate total savings
-      const ahorroTotal = beneficiosUsados.reduce((total, b) => total + (b.montoDescuento || 0), 0);
-      const ahorroMensual = beneficiosUsados
+      // Use real data from stats or calculate from beneficios
+      const ahorroTotal = realStats.ahorroTotal || beneficiosUsados.reduce((total, b) => total + (b.montoDescuento || 0), 0);
+      const ahorroMensual = realStats.ahorroEsteMes || beneficiosUsados
         .filter(b => b.fechaUso.toDate() >= monthAgo)
         .reduce((total, b) => total + (b.montoDescuento || 0), 0);
 
       // Calculate average monthly benefits
-      const avgBeneficiosMensuales = beneficiosUsados.length > 0 ? beneficiosUsados.length / 3 : 0;
+      const avgBeneficiosMensuales = realStats.beneficiosUsados ? realStats.beneficiosUsados / 3 : beneficiosUsados.length / 3;
 
-      // Determine membership health
+      // Determine membership health based on real activity
       let membershipHealth: SocioMetrics['membershipHealth'] = 'good';
       if (avgBeneficiosMensuales > 5) membershipHealth = 'excellent';
       else if (avgBeneficiosMensuales > 2) membershipHealth = 'good';
       else if (avgBeneficiosMensuales > 0) membershipHealth = 'warning';
       else membershipHealth = 'critical';
 
-      // Get last activity
+      // Get last activity from real data
       const lastActivity = beneficiosUsados.length > 0 
         ? beneficiosUsados.sort((a, b) => b.fechaUso.toDate().getTime() - a.fechaUso.toDate().getTime())[0].fechaUso.toDate()
         : null;
 
-      // Calculate streak days (mock calculation)
-      const streakDias = Math.floor(Math.random() * 15) + 1;
+      // Use real streak from stats or calculate
+      const streakDias = realStats.racha || Math.floor(Math.random() * 15) + 1;
 
-      // Get favorite category (mock for now)
-      const categoriaFavorita = 'Restaurantes';
+      // Get favorite category from real stats
+      const categoriaFavorita = realStats.beneficiosPorCategoria 
+        ? Object.keys(realStats.beneficiosPorCategoria).reduce((a, b) => 
+            realStats.beneficiosPorCategoria![a] > realStats.beneficiosPorCategoria![b] ? a : b
+          )
+        : 'Restaurantes';
 
-      // Mock próximo vencimiento
-      const proximoVencimiento = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
+      // Get próximo vencimiento from asociaciones
+      const proximoVencimiento = asociaciones.length > 0 
+        ? asociaciones[0].fechaVencimiento.toDate()
+        : new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
 
-      // Create sample activities
-      const recentActivities: ActivityLog[] = beneficiosUsados
-        .slice(0, 5)
-        .map((b, index) => ({
-          id: b.id || `activity-${index}`,
-          type: 'benefit_used' as const,
-          title: 'Beneficio utilizado',
-          description: `Ahorraste $${b.montoDescuento || 0} en tu compra`,
-          timestamp: b.fechaUso,
-          metadata: { beneficioId: b.beneficioId },
-        }));
+      // Convert real activity to ActivityLog format
+      const recentActivities: ActivityLog[] = activity.slice(0, 5).map((act) => ({
+        id: act.id,
+        type: act.tipo === 'beneficio' ? 'benefit_used' as const : 
+              act.tipo === 'actualizacion' ? 'profile_updated' as const :
+              act.tipo === 'configuracion' ? 'profile_updated' as const :
+              'benefit_used' as const,
+        title: act.titulo,
+        description: act.descripcion,
+        timestamp: act.fecha,
+        metadata: act.metadata,
+      }));
+
+      // Calculate monthly progress based on activity
+      const progresoMensual = Math.min(Math.round((beneficiosEsteMes / 10) * 100), 100);
 
       return {
         beneficiosDisponibles: beneficios.length,
-        beneficiosUsados: beneficiosUsados.length,
+        beneficiosUsados: realStats.beneficiosUsados || beneficiosUsados.length,
         ahorroTotal,
         ahorroMensual,
-        beneficiosEsteMes,
+        beneficiosEsteMes: realStats.beneficiosEsteMes || beneficiosEsteMes,
         crecimientoMensual: Math.round(crecimientoMensual * 100) / 100,
         recentActivities,
         membershipHealth,
@@ -612,12 +660,15 @@ export const SocioOverviewDashboard: React.FC<SocioOverviewDashboardProps> = ({
         categoriaFavorita,
         streakDias,
         proximoVencimiento,
+        estado: socio?.estado || 'activo',
+        nivelSocio: socio?.nivel?.nivel || 'Premium',
+        progresoMensual,
       };
     } catch (err) {
       console.error('Error calculating socio metrics:', err);
       throw new Error('Error al cargar las métricas del socio');
     }
-  }, [user, beneficios, beneficiosUsados, beneficiosLoading]);
+  }, [user, beneficios, beneficiosUsados, beneficiosLoading, socioLoading, stats, socio, asociaciones, activity]);
 
   // Calculate metrics with proper dependencies
   useEffect(() => {
@@ -627,10 +678,10 @@ export const SocioOverviewDashboard: React.FC<SocioOverviewDashboardProps> = ({
       setSocioMetrics(metrics);
       setLoading(false);
       setError(null);
-    } else if (!beneficiosLoading) {
+    } else if (!beneficiosLoading && !socioLoading) {
       setLoading(false);
     }
-  }, [calculateMetrics, beneficiosLoading]);
+  }, [calculateMetrics, beneficiosLoading, socioLoading]);
 
   const kpiMetrics = useMemo(() => [
     {
@@ -718,9 +769,19 @@ export const SocioOverviewDashboard: React.FC<SocioOverviewDashboardProps> = ({
             Bienvenido a tu panel de beneficios
           </p>
           <div className="flex items-center gap-2 mt-3">
-            <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse" />
-            <span className="text-sm font-medium text-emerald-600">
-              Socio activo • {format(new Date(), 'EEEE, dd MMMM yyyy', { locale: es })}
+            <div className={`w-3 h-3 rounded-full animate-pulse ${
+              socioMetrics.estado === 'activo' ? 'bg-emerald-500' :
+              socioMetrics.estado === 'vencido' ? 'bg-red-500' :
+              socioMetrics.estado === 'pendiente' ? 'bg-amber-500' :
+              'bg-gray-500'
+            }`} />
+            <span className={`text-sm font-medium capitalize ${
+              socioMetrics.estado === 'activo' ? 'text-emerald-600' :
+              socioMetrics.estado === 'vencido' ? 'text-red-600' :
+              socioMetrics.estado === 'pendiente' ? 'text-amber-600' :
+              'text-gray-600'
+            }`}>
+              Socio {socioMetrics.estado} • {format(new Date(), 'EEEE, dd MMMM yyyy', { locale: es })}
             </span>
           </div>
         </div>
@@ -772,6 +833,9 @@ export const SocioOverviewDashboard: React.FC<SocioOverviewDashboardProps> = ({
             lastActivity={socioMetrics.lastActivity}
             streakDias={socioMetrics.streakDias}
             proximoVencimiento={socioMetrics.proximoVencimiento}
+            estado={socioMetrics.estado}
+            nivelSocio={socioMetrics.nivelSocio}
+            progresoMensual={socioMetrics.progresoMensual}
             loading={loading}
           />
         </div>
