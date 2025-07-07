@@ -8,6 +8,7 @@
 /* Components */
 @import url('./components/buttons.css');
 @import url('./components/navbar.css');
+@import url('./components/navbar-mobile.css');
 @import url('./components/floating-widget.css');
 
 /* Sections */
@@ -30,3 +31,4 @@
 /* Todas las secciones han sido modularizadas exitosamente */
 /* Correcciones de visibilidad móvil aplicadas */
 /* Corrección de scroll horizontal móvil aplicada */
+/* Navbar móvil independiente agregado */
