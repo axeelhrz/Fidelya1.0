@@ -629,6 +629,16 @@ function setupLanguageToggle() {
                 switchLanguage(selectedLanguage);
             }
         });
+
+        // Mejorar feedback táctil en móvil
+        if (isMobile) {
+            button.addEventListener('touchstart', () => {
+                button.style.transform = 'scale(0.98)';
+            }, { passive: true });
+            button.addEventListener('touchend', () => {
+                button.style.transform = '';
+            }, { passive: true });
+        }
     });
 }
 
@@ -1000,7 +1010,14 @@ function initializeNavigation() {
         }
     });
     
-    if (!isMobile) {
+    // Mejorar el cierre del menú móvil
+    if (isMobile) {
+        document.addEventListener('touchstart', (e) => {
+            if (isMenuOpen && navMenu && !navMenu.contains(e.target) && !navToggle.contains(e.target)) {
+                closeMobileMenu();
+            }
+        }, { passive: true });
+    } else {
         document.addEventListener('click', (e) => {
             if (isMenuOpen && navMenu && !navMenu.contains(e.target) && !navToggle.contains(e.target)) {
                 closeMobileMenu();
@@ -1042,6 +1059,7 @@ function openMobileMenu() {
     navToggle.setAttribute('aria-expanded', 'true');
     navMenu.setAttribute('aria-hidden', 'false');
     
+    // Animaciones mejoradas para móvil
     const navLanguageMobile = navMenu.querySelector('.nav__language-mobile');
     const navLinks = navMenu.querySelectorAll('.nav__link');
     const navCtaMobile = navMenu.querySelector('.nav__cta-mobile');
@@ -1284,8 +1302,8 @@ function updateHeaderOnScroll() {
         header.classList.remove('scrolled');
     }
     
-    // Auto-hide navbar optimizado
-    if (scrollY > lastScrollY && scrollY > threshold && !isMenuOpen) {
+    // Auto-hide navbar optimizado para móvil
+    if (isMobile && scrollY > lastScrollY && scrollY > threshold && !isMenuOpen) {
         if (isNavbarVisible) {
             header.style.transform = 'translateY(-100%)';
             isNavbarVisible = false;
@@ -1863,3 +1881,4 @@ if ('serviceWorker' in navigator && !isMobile && !performanceMode) {
             });
     });
 }
+
