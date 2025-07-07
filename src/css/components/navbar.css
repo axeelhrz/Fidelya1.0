@@ -1965,3 +1965,60 @@ body.no-scroll .nav__logo,
         left: 100%;
     }
 }
+
+/* ===== DRAWER MÓVIL CON NUEVO COLOR AZULADO ===== */
+@media (width <= 1023px) {
+    .nav__menu {
+        background: linear-gradient(135deg,
+            rgba(15, 25, 40, 0.95) 0%,
+            rgba(20, 30, 45, 0.93) 25%,
+            rgba(18, 28, 42, 0.94) 50%,
+            rgba(20, 30, 45, 0.93) 75%,
+            rgba(15, 25, 40, 0.95) 100%
+        );
+        backdrop-filter: blur(40px) saturate(180%);
+        border-right: 1px solid rgba(100, 150, 255, 0.2);
+        box-shadow: 0 0 80px rgba(0, 20, 40, 0.8);
+    }
+    
+    /* ===== HEADER DEL DRAWER CON TONO AZULADO ===== */
+    .nav__menu-header {
+        background: linear-gradient(135deg,
+            rgba(100, 150, 255, 0.08) 0%,
+            rgba(80, 120, 200, 0.05) 100%
+        );
+        border-bottom: 1px solid rgba(100, 150, 255, 0.15);
+    }
+    
+    /* ===== SELECTOR DE IDIOMA MÓVIL CON TONO AZULADO ===== */
+    .nav__language-mobile {
+        border-bottom: 1px solid rgba(100, 150, 255, 0.15);
+    }
+    
+    .nav__language-option {
+        background: rgba(100, 150, 255, 0.08);
+        border: 1px solid rgba(100, 150, 255, 0.15);
+    }
+    
+    .nav__language-option:hover,
+    .nav__language-option:active {
+        background: rgba(100, 150, 255, 0.15);
+        border-color: rgba(100, 150, 255, 0.3);
+    }
+    
+    .nav__language-option.active {
+        background: rgba(100, 150, 255, 0.2);
+        border-color: rgba(100, 150, 255, 0.4);
+        box-shadow: 0 0 20px rgba(100, 150, 255, 0.25);
+    }
+    
+    /* ===== CTA MÓVIL CON TONO AZULADO ===== */
+    .nav__cta-mobile {
+        border-top: 1px solid rgba(100, 150, 255, 0.15);
+        background: linear-gradient(135deg,
+            rgba(100, 150, 255, 0.05) 0%,
+            rgba(80, 120, 200, 0.03) 100%
+        );
+    }
+}
+
