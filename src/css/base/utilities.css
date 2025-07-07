@@ -1,32 +1,32 @@
 /* ===== UTILIDADES DE VISIBILIDAD ===== */
 .mobile-only {
-display: none;
+    display: none;
 }
 
 .desktop-only {
-display: block;
+    display: block;
 }
 
 @media (width <= 1023px) {
-.mobile-only {
-display: block;
-}
-
-.desktop-only {
-display: none;
-}
+    .mobile-only {
+        display: block !important;
+    }
+    
+    .desktop-only {
+        display: none !important;
+    }
 }
 
 /* ===== ACCESIBILIDAD ===== */
 @media (prefers-reduced-motion: reduce) {
-*,
-*::before,
-*::after {
-animation-duration: 0.01ms !important;
-animation-iteration-count: 1 !important;
-transition-duration: 0.01ms !important;
-scroll-behavior: auto !important;
-}
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
 }
 
 /* ===== OPTIMIZACIONES DE RENDIMIENTO ===== */
@@ -34,44 +34,79 @@ scroll-behavior: auto !important;
 .nav__toggle,
 .hero__phone,
 .floating-widget__main-btn {
-contain: layout style paint;
+    contain: layout style paint;
 }
 
-/* ===== MODO PERFORMANCE ===== */
+/* ===== MODO RENDIMIENTO ===== */
 .performance-mode * {
-animation: none !important;
-transition: none !important;
+    animation: none !important;
+    transition: none !important;
 }
 
 .performance-mode .bg-canvas::before,
 .performance-mode .bg-canvas::after {
-display: none !important;
+    display: none !important;
 }
 
-/* ===== SOPORTE PARA TOUCH ===== */
-@media (hover: none) and (pointer: coarse) {
-.nav__link:hover,
-.nav__cta .btn--primary:hover,
-.language-switcher__btn:hover {
-transform: none;
-}
-}
-
-/* ===== TOUCH OPTIMIZATIONS ===== */
+/* ===== OPTIMIZACIONES TÁCTILES ===== */
 .faq__question,
 .faq__search,
 .faq__filter-btn,
 .contact__channel,
 .contact__channel-btn,
 .btn--footer {
-touch-action: manipulation;
--webkit-tap-highlight-color: transparent;
--webkit-touch-callout: none;
-user-select: none;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    user-select: none;
 }
 
 .faq__question-text,
 .faq__answer-text {
-user-select: text;
--webkit-touch-callout: default;
+    user-select: text;
+}
+
+/* ===== CORRECCIONES ESPECÍFICAS PARA MÓVIL ===== */
+@media (width <= 1023px) {
+    /* Asegurar que todas las secciones sean visibles */
+    .features,
+    .videos,
+    .faq,
+    .contact {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        position: relative !important;
+        z-index: auto !important;
+        overflow: visible !important;
+    }
+    
+    /* Corregir cualquier problema de altura */
+    .features,
+    .videos,
+    .faq,
+    .contact {
+        min-height: auto !important;
+        height: auto !important;
+    }
+    
+    /* Asegurar padding visible */
+    .features,
+    .videos,
+    .faq,
+    .contact {
+        padding-top: clamp(2rem, 6vh, 4rem) !important;
+        padding-bottom: clamp(2rem, 6vh, 4rem) !important;
+    }
+}
+
+/* ===== CORRECCIONES PARA MÓVILES PEQUEÑOS ===== */
+@media (width <= 480px) {
+    .features,
+    .videos,
+    .faq,
+    .contact {
+        padding-top: clamp(1.5rem, 4vh, 3rem) !important;
+        padding-bottom: clamp(1.5rem, 4vh, 3rem) !important;
+    }
 }
