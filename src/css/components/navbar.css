@@ -2324,5 +2324,214 @@ body.no-scroll .nav__logo,
         font-size: clamp(0.7rem, 2vw, 0.8rem);
     }
 }
+/* ===== NAVEGACIÓN PRINCIPAL MÓVIL SIN CONTENEDOR OSCURO ===== */
+@media (width <= 1023px) {
+    .nav__list {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        gap: 0;
+        order: 2;
+        padding: clamp(1rem, 3vw, 1.5rem) 0;
+        margin: 0;
+        overflow-y: auto;
+        list-style: none;
+        background: none !important;
+        backdrop-filter: none !important;
+        border: none !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        animation: none !important;
+    }
+    
+    /* ELIMINAR TODOS LOS EFECTOS DEL CONTENEDOR */
+    .nav__list::before,
+    .nav__list::after {
+        display: none !important;
+    }
+    
+    /* ===== ENLACES MODERNOS INTEGRADOS AL NAVBAR ===== */
+    .nav__link {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        min-height: clamp(60px, 15vw, 70px);
+        padding: clamp(1.25rem, 3.5vw, 1.5rem) clamp(2rem, 5vw, 2.5rem);
+        font-family: var(--font-mono);
+        font-size: clamp(0.95rem, 2.8vw, 1.1rem);
+        font-weight: 700;
+        color: rgba(255, 255, 255, 0.7);
+        text-decoration: none;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        background: transparent;
+        border: none;
+        border-left: 3px solid transparent;
+        border-radius: 0;
+        transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        overflow: hidden;
+        -webkit-tap-highlight-color: transparent;
+    }
+    
+    /* Efecto de fondo sutil */
+    .nav__link::before {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 0;
+        height: 100%;
+        content: '';
+        background: linear-gradient(90deg,
+            rgba(100, 150, 255, 0.12) 0%,
+            rgba(255, 69, 105, 0.08) 50%,
+            rgba(100, 150, 255, 0.1) 100%
+        );
+        transition: width 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        z-index: 0;
+    }
+    
+    /* Partícula flotante */
+    .nav__link::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        right: 2rem;
+        width: 4px;
+        height: 4px;
+        background: rgba(100, 150, 255, 0.6);
+        border-radius: 50%;
+        opacity: 0;
+        transform: translateY(-50%) scale(0);
+        transition: all 0.4s ease;
+        z-index: 2;
+    }
+    
+    /* Estados hover y active */
+    .nav__link:hover,
+    .nav__link:active {
+        color: rgba(255, 255, 255, 0.95);
+        border-left-color: rgba(100, 150, 255, 0.8);
+        transform: translateX(12px);
+        text-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
+    }
+    
+    .nav__link:hover::before,
+    .nav__link:active::before {
+        width: 100%;
+    }
+    
+    .nav__link:hover::after,
+    .nav__link:active::after {
+        opacity: 1;
+        transform: translateY(-50%) scale(1);
+        animation: particle-pulse 1.5s ease-in-out infinite;
+    }
+    
+    /* Estado activo con efectos especiales */
+    .nav__link.active {
+        color: #fff;
+        border-left-color: rgba(255, 69, 105, 0.9);
+        background: linear-gradient(90deg,
+            rgba(255, 69, 105, 0.15) 0%,
+            rgba(100, 150, 255, 0.08) 50%,
+            transparent 100%
+        );
+        transform: translateX(15px);
+        text-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
+        box-shadow: inset 0 0 20px rgba(255, 69, 105, 0.1);
+    }
+    
+    .nav__link.active::before {
+        width: 100%;
+        background: linear-gradient(90deg,
+            rgba(255, 69, 105, 0.2) 0%,
+            rgba(100, 150, 255, 0.12) 50%,
+            rgba(255, 69, 105, 0.15) 100%
+        );
+    }
+    
+    .nav__link.active::after {
+        background: rgba(255, 69, 105, 0.8);
+        opacity: 1;
+        transform: translateY(-50%) scale(1.2);
+        animation: particle-active-pulse 2s ease-in-out infinite;
+        box-shadow: 0 0 10px rgba(255, 69, 105, 0.6);
+    }
+    
+    /* Separadores sutiles entre enlaces */
+    .nav__link:not(:last-child) {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    /* Efecto de entrada escalonada para los enlaces */
+    .nav__menu.active .nav__link:nth-child(1) { 
+        animation: linkSlideIn 0.5s ease-out 0.1s both; 
+    }
+    .nav__menu.active .nav__link:nth-child(2) { 
+        animation: linkSlideIn 0.5s ease-out 0.15s both; 
+    }
+    .nav__menu.active .nav__link:nth-child(3) { 
+        animation: linkSlideIn 0.5s ease-out 0.2s both; 
+    }
+    .nav__menu.active .nav__link:nth-child(4) { 
+        animation: linkSlideIn 0.5s ease-out 0.25s both; 
+    }
+    .nav__menu.active .nav__link:nth-child(5) { 
+        animation: linkSlideIn 0.5s ease-out 0.3s both; 
+    }
+}
+
+/* ===== ANIMACIONES PARA LOS ENLACES MODERNOS ===== */
+@keyframes linkSlideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes particle-pulse {
+    0%, 100% {
+        transform: translateY(-50%) scale(1);
+        opacity: 0.6;
+    }
+    50% {
+        transform: translateY(-50%) scale(1.3);
+        opacity: 1;
+    }
+}
+
+@keyframes particle-active-pulse {
+    0%, 100% {
+        transform: translateY(-50%) scale(1.2);
+        opacity: 0.8;
+        box-shadow: 0 0 10px rgba(255, 69, 105, 0.6);
+    }
+    50% {
+        transform: translateY(-50%) scale(1.5);
+        opacity: 1;
+        box-shadow: 0 0 15px rgba(255, 69, 105, 0.8);
+    }
+}
+
+/* ===== AJUSTES PARA PANTALLAS PEQUEÑAS ===== */
+@media (width <= 480px) {
+    .nav__link {
+        min-height: clamp(55px, 13vw, 65px);
+        padding: clamp(1rem, 3vw, 1.25rem) clamp(1.5rem, 4vw, 2rem);
+        font-size: clamp(0.85rem, 2.5vw, 1rem);
+        letter-spacing: 1px;
+    }
+    
+    .nav__link::after {
+        right: 1.5rem;
+        width: 3px;
+        height: 3px;
+    }
+}
 
 
