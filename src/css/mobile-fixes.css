@@ -1,0 +1,191 @@
+/* ===== MOBILE FIXES - SOLO VISIBILIDAD SIN CAMBIOS ===== */
+
+@media (width <= 1023px) {
+    /* FORZAR VISIBILIDAD DE TODAS LAS SECCIONES PRINCIPALES */
+    .features,
+    .videos,
+    .faq,
+    .contact {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    
+    /* FORZAR VISIBILIDAD DE CONTENEDORES PRINCIPALES */
+    .features__header,
+    .features__grid,
+    .videos__header,
+    .videos__main-container,
+    .videos__main-wrapper,
+    .videos__player-container,
+    .videos__player-frame,
+    .videos__player,
+    .videos__play-overlay,
+    .videos__info,
+    .videos__cta,
+    .faq__header,
+    .faq__container,
+    .faq__search-container,
+    .faq__search,
+    .faq__list,
+    .faq__item,
+    .faq__question,
+    .faq__answer,
+    .contact__header,
+    .contact__grid {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    
+    /* MANTENER DISPLAYS ESPECÍFICOS PARA LAYOUTS */
+    .features__grid {
+        display: grid !important;
+    }
+    
+    .feature {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    
+    .feature__phone,
+    .phone,
+    .phone__screen,
+    .phone__content,
+    .phone__app-image {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    
+    .feature__content,
+    .feature__title,
+    .feature__description,
+    .feature__list,
+    .feature__list-item {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    
+    .videos__play-overlay {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    
+    .faq__question {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    
+    .faq__list {
+        display: grid !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    
+    .contact__grid {
+        display: grid !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    
+    .contact__channel {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    
+    .contact__channel-icon,
+    .contact__channel-content,
+    .contact__channel-btn {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    
+    .contact__channel-btn {
+        display: inline-flex !important;
+    }
+    
+    .features__header,
+    .videos__header,
+    .faq__header,
+    .contact__header,
+    .features__title,
+    .videos__title,
+    .faq__title,
+    .contact__title,
+    .features__subtitle,
+    .videos__subtitle,
+    .faq__subtitle,
+    .contact__subtitle {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    
+    /* FORZAR VISIBILIDAD GENERAL DE TODOS LOS ELEMENTOS */
+    .features *,
+    .videos *,
+    .faq *,
+    .contact * {
+        visibility: visible !important;
+    }
+    
+    /* EXCLUIR PSEUDO-ELEMENTOS */
+    .features *::before,
+    .features *::after,
+    .videos *::before,
+    .videos *::after,
+    .faq *::before,
+    .faq *::after,
+    .contact *::before,
+    .contact *::after {
+        visibility: inherit;
+    }
+}
+
+/* ===== CORRECCIONES PARA MODO PERFORMANCE ===== */
+.performance-mode .features,
+.performance-mode .videos,
+.performance-mode .faq,
+.performance-mode .contact {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* ===== CORRECCIONES PARA MODO REDUCIDO DE MOVIMIENTO ===== */
+@media (prefers-reduced-motion: reduce) {
+    .features,
+    .videos,
+    .faq,
+    .contact {
+        opacity: 1 !important;
+        visibility: visible !important;
+        display: block !important;
+    }
+    
+    .features__grid,
+    .contact__grid {
+        display: grid !important;
+    }
+    
+    .feature,
+    .contact__channel {
+        display: flex !important;
+    }
+    
+    .faq__list {
+        display: grid !important;
+    }
+    
+    .faq__question,
+    .videos__play-overlay {
+        display: flex !important;
+    }
+}
