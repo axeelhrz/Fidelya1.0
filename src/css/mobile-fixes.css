@@ -40,11 +40,88 @@
         animation: none !important;
     }
     
-    /* Asegurar que el grid de características funcione en móvil */
+    /* ===== OPTIMIZACIÓN DE ESPACIADO PARA CARACTERÍSTICAS EN MÓVIL ===== */
+    
+    /* Reducir espaciado general de la sección características */
+    .features {
+        padding: clamp(2rem, 4vh, 3rem) var(--section-padding-x) clamp(1rem, 2vh, 1.5rem) !important;
+    }
+    
+    /* Reducir espaciado entre el header y el grid */
+    .features__header {
+        margin-bottom: clamp(1.5rem, 3vh, 2rem) !important;
+    }
+    
+    /* Optimizar espaciado del grid de características */
     .features__grid {
         display: grid !important;
         grid-template-columns: 1fr !important;
-        gap: clamp(2rem, 4vh, 3rem) !important;
+        gap: clamp(1.5rem, 3vh, 2rem) !important; /* Reducido significativamente */
+    }
+    
+    /* Optimizar espaciado individual de cada característica */
+    .feature {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        text-align: center !important;
+        gap: clamp(1rem, 2vh, 1.25rem) !important; /* Reducido el gap interno */
+        padding: clamp(1rem, 2vh, 1.5rem) 0 !important; /* Padding vertical reducido */
+        margin-bottom: 0 !important; /* Eliminar margin bottom adicional */
+    }
+    
+    /* Optimizar el teléfono mockup */
+    .feature__phone {
+        order: 1 !important;
+        width: clamp(180px, 55vw, 240px) !important; /* Ligeramente más pequeño */
+        height: clamp(360px, 110vw, 480px) !important; /* Proporcionalmente más pequeño */
+        margin: 0 auto clamp(0.75rem, 1.5vh, 1rem) auto !important; /* Margin bottom reducido */
+        flex-shrink: 0 !important;
+    }
+    
+    /* Optimizar el contenido de la característica */
+    .feature__content {
+        order: 2 !important;
+        padding: clamp(0.75rem, 1.5vh, 1rem) clamp(1rem, 3vw, 1.5rem) !important; /* Padding reducido */
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    
+    /* Optimizar títulos de características */
+    .feature__title {
+        font-size: clamp(1.4rem, 5vw, 1.8rem) !important;
+        margin-bottom: clamp(0.75rem, 1.5vh, 1rem) !important; /* Margin reducido */
+        line-height: 1.2 !important;
+    }
+    
+    /* Optimizar descripción */
+    .feature__description {
+        font-size: clamp(0.9rem, 2.5vw, 1rem) !important;
+        margin-bottom: clamp(0.75rem, 1.5vh, 1rem) !important; /* Margin reducido */
+        line-height: 1.5 !important;
+        max-width: 100% !important;
+    }
+    
+    /* Optimizar lista de características */
+    .feature__list {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    
+    .feature__list-item {
+        font-size: clamp(0.85rem, 2.2vw, 0.95rem) !important;
+        padding: clamp(0.25rem, 0.5vh, 0.375rem) 0 !important; /* Padding vertical reducido */
+        margin-bottom: clamp(0.25rem, 0.5vh, 0.375rem) !important; /* Margin reducido */
+        line-height: 1.4 !important;
+        gap: clamp(0.5rem, 1vw, 0.75rem) !important;
+    }
+    
+    /* Reducir el tamaño del indicador de lista */
+    .feature__list-item::before {
+        width: 6px !important;
+        height: 6px !important;
+        margin-top: 6px !important;
+        flex-shrink: 0 !important;
     }
     
     /* Asegurar que el grid de contacto funcione en móvil */
@@ -64,27 +141,6 @@
         display: block !important;
         visibility: visible !important;
         opacity: 1 !important;
-    }
-    
-    /* Ajustar layout de características para móvil */
-    .feature {
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: center !important;
-        text-align: center !important;
-        gap: clamp(1.5rem, 3vh, 2rem) !important;
-    }
-    
-    .feature__phone {
-        order: 1 !important;
-        width: clamp(200px, 60vw, 280px) !important;
-        height: clamp(400px, 120vw, 560px) !important;
-        margin: 0 auto var(--space-lg) auto !important;
-    }
-    
-    .feature__content {
-        order: 2 !important;
-        padding: var(--space-lg) !important;
     }
     
     /* Forzar visibilidad de elementos de video */
@@ -158,7 +214,6 @@
     }
     
     /* Forzar padding mínimo para que las secciones sean visibles */
-    .features,
     .videos,
     .faq,
     .contact {
@@ -205,21 +260,144 @@
     }
 }
 
-/* Correcciones específicas para pantallas muy pequeñas */
+/* ===== OPTIMIZACIONES ESPECÍFICAS PARA PANTALLAS MUY PEQUEÑAS ===== */
 @media (width <= 480px) {
-    .features,
-    .videos,
-    .faq,
-    .contact {
-        padding-top: clamp(1.5rem, 4vh, 2.5rem) !important;
-        padding-bottom: clamp(1rem, 3vh, 2rem) !important;
-        padding-left: clamp(1rem, 4vw, 1.5rem) !important;
-        padding-right: clamp(1rem, 4vw, 1.5rem) !important;
+    /* Espaciado aún más compacto para pantallas pequeñas */
+    .features {
+        padding: clamp(1.5rem, 3vh, 2rem) clamp(1rem, 4vw, 1.5rem) clamp(0.75rem, 1.5vh, 1rem) !important;
+    }
+    
+    .features__header {
+        margin-bottom: clamp(1rem, 2vh, 1.5rem) !important;
+    }
+    
+    .features__grid {
+        gap: clamp(1rem, 2vh, 1.5rem) !important; /* Gap aún más reducido */
+    }
+    
+    .feature {
+        gap: clamp(0.75rem, 1.5vh, 1rem) !important;
+        padding: clamp(0.75rem, 1.5vh, 1rem) 0 !important;
     }
     
     .feature__phone {
-        width: clamp(180px, 70vw, 240px) !important;
-        height: clamp(360px, 140vw, 480px) !important;
+        width: clamp(160px, 60vw, 200px) !important;
+        height: clamp(320px, 120vw, 400px) !important;
+        margin: 0 auto clamp(0.5rem, 1vh, 0.75rem) auto !important;
+    }
+    
+    .feature__content {
+        padding: clamp(0.5rem, 1vh, 0.75rem) clamp(0.75rem, 2vw, 1rem) !important;
+    }
+    
+    .feature__title {
+        font-size: clamp(1.2rem, 6vw, 1.6rem) !important;
+        margin-bottom: clamp(0.5rem, 1vh, 0.75rem) !important;
+    }
+    
+    .feature__description {
+        font-size: clamp(0.85rem, 2.8vw, 0.95rem) !important;
+        margin-bottom: clamp(0.5rem, 1vh, 0.75rem) !important;
+        line-height: 1.4 !important;
+    }
+    
+    .feature__list-item {
+        font-size: clamp(0.8rem, 2.5vw, 0.9rem) !important;
+        padding: clamp(0.2rem, 0.4vh, 0.3rem) 0 !important;
+        margin-bottom: clamp(0.2rem, 0.4vh, 0.3rem) !important;
+        gap: clamp(0.4rem, 0.8vw, 0.6rem) !important;
+    }
+    
+    .feature__list-item::before {
+        width: 5px !important;
+        height: 5px !important;
+        margin-top: 5px !important;
+    }
+    
+    /* Optimizar otras secciones para pantallas pequeñas */
+    .videos,
+    .faq,
+    .contact {
+        padding-top: clamp(1.5rem, 3vh, 2rem) !important;
+        padding-bottom: clamp(1rem, 2vh, 1.5rem) !important;
+        padding-left: clamp(1rem, 4vw, 1.5rem) !important;
+        padding-right: clamp(1rem, 4vw, 1.5rem) !important;
+    }
+}
+
+/* ===== OPTIMIZACIONES ADICIONALES PARA MEJORAR LA COMPACIDAD ===== */
+@media (width <= 1023px) {
+    /* Eliminar espacios innecesarios en el contenedor del teléfono */
+    .phone {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    
+    .phone__screen {
+        margin: 8px !important; /* Reducir margin interno */
+        width: calc(100% - 16px) !important;
+        height: calc(100% - 16px) !important;
+    }
+    
+    /* Optimizar el contenido interno del teléfono */
+    .phone__content {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    
+    /* Asegurar que las imágenes del teléfono no tengan espacios extra */
+    .phone__app-image {
+        margin: 0 !important;
+        padding: 0 !important;
+        border-radius: calc(var(--phone-border-radius) - 8px) !important;
+    }
+    
+    /* Eliminar animaciones que puedan crear espacios visuales */
+    .feature,
+    .feature__phone,
+    .feature__content,
+    .phone,
+    .phone__app-image {
+        transition: none !important;
+        animation: none !important;
+        transform: none !important;
+    }
+    
+    /* Optimizar el flujo vertical */
+    .feature__content > * {
+        margin-top: 0 !important;
+    }
+    
+    .feature__content > *:not(:last-child) {
+        margin-bottom: clamp(0.5rem, 1vh, 0.75rem) !important;
+    }
+    
+    /* Asegurar que no hay espacios extra en la lista */
+    .feature__list > li:last-child {
+        margin-bottom: 0 !important;
+        padding-bottom: 0 !important;
+    }
+}
+
+/* Correcciones específicas para pantallas muy pequeñas */
+@media (width <= 375px) {
+    .features__grid {
+        gap: clamp(0.75rem, 1.5vh, 1rem) !important; /* Gap mínimo para pantallas muy pequeñas */
+    }
+    
+    .feature {
+        gap: clamp(0.5rem, 1vh, 0.75rem) !important;
+        padding: clamp(0.5rem, 1vh, 0.75rem) 0 !important;
+    }
+    
+    .feature__phone {
+        width: clamp(140px, 65vw, 180px) !important;
+        height: clamp(280px, 130vw, 360px) !important;
+        margin-bottom: clamp(0.375rem, 0.75vh, 0.5rem) !important;
+    }
+    
+    .feature__content {
+        padding: clamp(0.375rem, 0.75vh, 0.5rem) clamp(0.5rem, 1.5vw, 0.75rem) !important;
     }
 }
 
@@ -311,5 +489,54 @@
     .contact::before,
     .contact::after {
         z-index: -1 !important;
+    }
+}
+
+/* ===== OPTIMIZACIÓN FINAL PARA COMPACIDAD MÁXIMA ===== */
+@media (width <= 1023px) {
+    /* Eliminar cualquier espacio extra que pueda estar creando separación */
+    .feature:not(:last-child)::after {
+        display: none !important;
+    }
+    
+    /* Asegurar que el último elemento no tenga margin bottom */
+    .features__grid .feature:last-child {
+        margin-bottom: 0 !important;
+        padding-bottom: 0 !important;
+    }
+    
+    /* Optimizar el flujo del contenido */
+    .feature__content {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        text-align: center !important;
+    }
+    
+    /* Asegurar que todos los elementos internos estén bien alineados */
+    .feature__title,
+    .feature__description,
+    .feature__list {
+        width: 100% !important;
+        max-width: 100% !important;
+        text-align: center !important;
+    }
+    
+    /* Optimizar la lista para que sea más compacta */
+    .feature__list {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        text-align: left !important;
+        width: 100% !important;
+        max-width: 400px !important;
+        margin: 0 auto !important;
+    }
+    
+    .feature__list-item {
+        width: 100% !important;
+        text-align: left !important;
+        display: flex !important;
+        align-items: flex-start !important;
     }
 }

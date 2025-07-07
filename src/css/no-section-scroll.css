@@ -1,30 +1,40 @@
-/* ===== ELIMINACIÓN DEFINITIVA DE SCROLL EN SECCIONES PARA MÓVILES ===== */
+/* ===== ELIMINACIÓN TOTAL DE SCROLL EN SECCIONES PARA MÓVILES ===== */
 
 /* Solo aplicar en dispositivos móviles */
 @media (width <= 1023px) {
-    /* FORZAR ELIMINACIÓN DE SCROLL EN TODAS LAS SECCIONES PRINCIPALES */
+    
+    /* ===== ELIMINACIÓN RADICAL DE SCROLL EN TODAS LAS SECCIONES ===== */
     .hero,
     .features,
     .videos,
     .faq,
     .contact {
-        overflow: visible !important;
-        overflow-x: hidden !important;
-        overflow-y: visible !important;
-        height: auto !important;
+        overflow: none !important;
+        overflow-x: none !important;
+        overflow-y: none !important;
+        height: none !important;
         max-height: none !important;
-        min-height: auto !important;
+        min-height: none !important;
         position: relative !important;
+        scroll-behavior: none !important;
+        -webkit-overflow-scrolling: none !important;
+        overscroll-behavior: none !important;
+        contain: none !important;
     }
 
-    /* ELIMINAR SCROLL EN TODOS LOS CONTENEDORES */
+    /* ===== ELIMINACIÓN DE SCROLL EN TODOS LOS CONTENEDORES ===== */
     .features__grid,
     .videos__main-container,
     .videos__player-container,
+    .videos__main-wrapper,
     .faq__container,
     .faq__list,
     .contact__grid,
-    .hero__container {
+    .hero__container,
+    .features__header,
+    .videos__header,
+    .faq__header,
+    .contact__header {
         overflow: visible !important;
         overflow-x: hidden !important;
         overflow-y: visible !important;
@@ -32,20 +42,29 @@
         max-height: none !important;
         min-height: auto !important;
         position: relative !important;
+        scroll-behavior: none !important;
+        -webkit-overflow-scrolling: none !important;
+        overscroll-behavior: none !important;
+        contain: none !important;
     }
 
-    /* ELIMINAR SCROLL EN ELEMENTOS INDIVIDUALES */
+    /* ===== ELIMINACIÓN DE SCROLL EN ELEMENTOS INDIVIDUALES ===== */
     .feature,
     .feature__content,
     .feature__phone,
     .faq__item,
     .faq__answer,
     .faq__question,
+    .faq__search-container,
+    .faq__search,
     .contact__channel,
-    .videos__header,
-    .videos__player-frame,
+    .contact__channel-content,
+    .contact__channel-btn,
     .videos__info,
-    .videos__cta {
+    .videos__cta,
+    .videos__cta-content,
+    .videos__progress-indicators,
+    .videos__time-display {
         overflow: visible !important;
         overflow-x: hidden !important;
         overflow-y: visible !important;
@@ -53,35 +72,30 @@
         max-height: none !important;
         min-height: auto !important;
         position: relative !important;
+        scroll-behavior: none !important;
+        -webkit-overflow-scrolling: none !important;
+        overscroll-behavior: none !important;
+        contain: none !important;
     }
 
-    /* CORRECCIÓN ESPECÍFICA PARA FAQ */
+    /* ===== CORRECCIÓN ESPECÍFICA PARA FAQ ===== */
     .faq__answer.active {
         max-height: none !important;
         overflow: visible !important;
+        overflow-y: visible !important;
         height: auto !important;
         transition: none !important;
+        scroll-behavior: none !important;
+        -webkit-overflow-scrolling: none !important;
     }
 
-    .faq__search-container,
-    .faq__search {
+    .faq__answer-content {
         overflow: visible !important;
         height: auto !important;
         max-height: none !important;
     }
 
-    /* CORRECCIÓN ESPECÍFICA PARA HEADERS */
-    .features__header,
-    .videos__header,
-    .faq__header,
-    .contact__header {
-        overflow: visible !important;
-        height: auto !important;
-        max-height: none !important;
-        min-height: auto !important;
-    }
-
-    /* CORRECCIÓN ESPECÍFICA PARA GRIDS */
+    /* ===== CORRECCIÓN ESPECÍFICA PARA GRIDS ===== */
     .features__grid {
         display: grid !important;
         grid-template-columns: 1fr !important;
@@ -89,6 +103,7 @@
         overflow: visible !important;
         height: auto !important;
         max-height: none !important;
+        scroll-behavior: none !important;
     }
 
     .contact__grid {
@@ -98,9 +113,10 @@
         overflow: visible !important;
         height: auto !important;
         max-height: none !important;
+        scroll-behavior: none !important;
     }
 
-    /* CORRECCIÓN ESPECÍFICA PARA FEATURES */
+    /* ===== CORRECCIÓN ESPECÍFICA PARA FEATURES ===== */
     .feature {
         display: flex !important;
         flex-direction: column !important;
@@ -108,6 +124,7 @@
         overflow: visible !important;
         height: auto !important;
         max-height: none !important;
+        scroll-behavior: none !important;
     }
 
     .feature__phone {
@@ -115,21 +132,20 @@
         width: clamp(200px, 60vw, 280px) !important;
         height: clamp(400px, 120vw, 560px) !important;
         max-height: none !important;
+        scroll-behavior: none !important;
     }
 
-    /* MANTENER OVERFLOW HIDDEN SOLO DONDE ES NECESARIO */
+    /* ===== MANTENER OVERFLOW HIDDEN SOLO DONDE ES ABSOLUTAMENTE NECESARIO ===== */
     .phone,
     .phone__screen,
-    .phone__content {
-        overflow: hidden !important;
-    }
-
+    .phone__content,
     .videos__player-frame,
     .videos__player {
         overflow: hidden !important;
+        border-radius: inherit !important;
     }
 
-    /* CORRECCIÓN PARA ELEMENTOS DE CONTACTO */
+    /* ===== CORRECCIÓN PARA ELEMENTOS DE CONTACTO ===== */
     .contact__channel {
         display: flex !important;
         flex-direction: column !important;
@@ -137,29 +153,10 @@
         overflow: visible !important;
         height: auto !important;
         max-height: none !important;
+        scroll-behavior: none !important;
     }
 
-    .contact__channel-content,
-    .contact__channel-btn {
-        overflow: visible !important;
-        height: auto !important;
-        max-height: none !important;
-    }
-
-    /* CORRECCIÓN PARA VIDEOS */
-    .videos__main-wrapper {
-        overflow: visible !important;
-        height: auto !important;
-        max-height: none !important;
-    }
-
-    .videos__progress-indicators,
-    .videos__time-display {
-        overflow: visible !important;
-        height: auto !important;
-    }
-
-    /* ELIMINAR CUALQUIER CONFIGURACIÓN DE VIEWPORT QUE CAUSE SCROLL */
+    /* ===== ELIMINACIÓN DE VIEWPORT CONSTRAINTS ===== */
     .features,
     .videos,
     .faq,
@@ -168,9 +165,12 @@
         min-height: auto !important;
         max-width: 100vw !important;
         box-sizing: border-box !important;
+        scroll-behavior: none !important;
+        -webkit-overflow-scrolling: none !important;
+        overscroll-behavior: none !important;
     }
 
-    /* ASEGURAR QUE HTML Y BODY PERMITAN SCROLL NORMAL */
+    /* ===== ASEGURAR SCROLL NORMAL DE PÁGINA ===== */
     html,
     body {
         overflow-x: hidden !important;
@@ -180,51 +180,114 @@
         height: auto !important;
         min-height: 100vh !important;
         box-sizing: border-box !important;
+        scroll-behavior: smooth !important;
+        -webkit-overflow-scrolling: touch !important;
     }
 
-    /* ELIMINAR CUALQUIER CONFIGURACIÓN QUE CAUSE SCROLL HORIZONTAL */
+    /* ===== ELIMINAR SCROLL HORIZONTAL COMPLETAMENTE ===== */
     * {
         max-width: 100% !important;
         box-sizing: border-box !important;
+        overflow-x: hidden !important;
+        -webkit-overflow-scrolling: auto !important;
     }
 
-    /* CORRECCIÓN PARA NAVEGACIÓN MÓVIL */
+    /* ===== CORRECCIÓN PARA NAVEGACIÓN MÓVIL ===== */
     .nav {
         overflow: visible !important;
+        scroll-behavior: auto !important;
     }
 
     .nav__menu {
         overflow-y: auto !important;
         overflow-x: hidden !important;
         max-height: 100vh !important;
+        -webkit-overflow-scrolling: touch !important;
     }
 
-    /* CORRECCIÓN PARA ELEMENTOS FLOTANTES */
-    .floating-widget {
+    /* ===== CORRECCIÓN PARA ELEMENTOS FLOTANTES ===== */
+    .floating-widget,
+    .floating-widget__menu {
         overflow: visible !important;
+        scroll-behavior: auto !important;
     }
 
-    /* CORRECCIÓN PARA BADGES Y TÍTULOS */
+    /* ===== CORRECCIÓN PARA BADGES Y TÍTULOS ===== */
     .videos__badge,
     .contact__badge,
     .faq__title,
     .videos__title,
     .contact__title,
-    .features__title {
+    .features__title,
+    .hero__title {
         overflow: visible !important;
         height: auto !important;
         max-height: none !important;
+        scroll-behavior: auto !important;
     }
 
-    /* CORRECCIÓN PARA ELEMENTOS CON PSEUDO-ELEMENTOS */
+    /* ===== CORRECCIÓN PARA PSEUDO-ELEMENTOS ===== */
     .contact__title--highlight::after,
     .videos__title--highlight::after,
-    .faq__title::after {
+    .faq__title::after,
+    .hero__title--highlight::after {
         overflow: visible !important;
+    }
+
+    /* ===== CORRECCIÓN PARA BOTONES Y ENLACES ===== */
+    .btn,
+    .btn--cta,
+    .btn--mobile,
+    .btn--footer,
+    .contact__channel-btn,
+    .faq__question {
+        overflow: visible !important;
+        height: auto !important;
+        max-height: none !important;
+        scroll-behavior: auto !important;
+    }
+
+    /* ===== CORRECCIÓN PARA LISTAS ===== */
+    .feature__list,
+    .feature__list-item {
+        overflow: visible !important;
+        height: auto !important;
+        max-height: none !important;
+        scroll-behavior: auto !important;
+    }
+
+    /* ===== CORRECCIÓN PARA IMÁGENES Y VIDEOS ===== */
+    .hero__mobile-video,
+    .hero__mobile-video-player {
+        overflow: visible !important;
+        max-width: 100% !important;
+        height: auto !important;
+        scroll-behavior: auto !important;
+    }
+
+    /* ===== ELIMINAR CUALQUIER CONFIGURACIÓN DE TRANSFORM QUE CAUSE PROBLEMAS ===== */
+    .features,
+    .videos,
+    .faq,
+    .contact {
+        transform: none !important;
+        will-change: auto !important;
+        contain: none !important;
+    }
+
+    /* ===== ASEGURAR QUE NO HAY ELEMENTOS CON POSITION FIXED QUE CAUSEN PROBLEMAS ===== */
+    .hero,
+    .features,
+    .videos,
+    .faq,
+    .contact {
+        position: relative !important;
+        z-index: auto !important;
+        contain: none !important;
     }
 }
 
-/* CORRECCIONES ADICIONALES PARA PANTALLAS MUY PEQUEÑAS */
+/* ===== CORRECCIONES ADICIONALES PARA PANTALLAS MUY PEQUEÑAS ===== */
 @media (width <= 480px) {
     .features,
     .videos,
@@ -235,6 +298,7 @@
         overflow: visible !important;
         height: auto !important;
         max-height: none !important;
+        scroll-behavior: auto !important;
     }
 
     .feature__phone {
@@ -242,6 +306,7 @@
         height: clamp(360px, 140vw, 480px) !important;
         max-width: 90vw !important;
         overflow: visible !important;
+        scroll-behavior: auto !important;
     }
 
     .faq__search,
@@ -250,10 +315,11 @@
         width: 100% !important;
         max-width: 100% !important;
         height: auto !important;
+        scroll-behavior: auto !important;
     }
 }
 
-/* CORRECCIÓN PARA MODO PERFORMANCE */
+/* ===== CORRECCIÓN PARA MODO PERFORMANCE ===== */
 .performance-mode .features,
 .performance-mode .videos,
 .performance-mode .faq,
@@ -261,9 +327,11 @@
     overflow: visible !important;
     height: auto !important;
     max-height: none !important;
+    scroll-behavior: auto !important;
+    contain: none !important;
 }
 
-/* CORRECCIÓN PARA MODO DE MOVIMIENTO REDUCIDO */
+/* ===== CORRECCIÓN PARA MODO DE MOVIMIENTO REDUCIDO ===== */
 @media (prefers-reduced-motion: reduce) {
     @media (width <= 1023px) {
         .features,
@@ -277,11 +345,13 @@
             height: auto !important;
             max-height: none !important;
             min-height: auto !important;
+            scroll-behavior: auto !important;
+            contain: none !important;
         }
     }
 }
 
-/* CORRECCIÓN FINAL PARA ASEGURAR SCROLL NORMAL DE PÁGINA */
+/* ===== CORRECCIÓN FINAL PARA ASEGURAR SCROLL NORMAL DE PÁGINA ===== */
 @media (width <= 1023px) {
     html {
         scroll-behavior: smooth !important;
@@ -289,6 +359,7 @@
         overflow-x: hidden !important;
         height: auto !important;
         min-height: 100vh !important;
+        -webkit-overflow-scrolling: touch !important;
     }
 
     body {
@@ -298,23 +369,45 @@
         min-height: 100vh !important;
         width: 100% !important;
         max-width: 100vw !important;
+        -webkit-overflow-scrolling: touch !important;
     }
 
-    /* ASEGURAR QUE NO HAY ELEMENTOS CON POSITION FIXED QUE CAUSEN PROBLEMAS */
-    .hero,
+    /* ===== ELIMINAR CUALQUIER SCROLL INTERNO EN CONTENEDORES ===== */
+    .features *,
+    .videos *,
+    .faq *,
+    .contact * {
+        overflow-x: hidden !important;
+        scroll-behavior: auto !important;
+        -webkit-overflow-scrolling: auto !important;
+    }
+
+    /* ===== EXCEPCIONES PARA ELEMENTOS QUE NECESITAN SCROLL ===== */
+
+}
+
+/* ===== CORRECCIÓN PARA TABLETS EN ORIENTACIÓN PORTRAIT ===== */
+@media (width <= 1023px) and (orientation: portrait) {
     .features,
     .videos,
     .faq,
     .contact {
-        position: relative !important;
-        z-index: auto !important;
+        overflow: visible !important;
+        height: auto !important;
+        max-height: none !important;
+        scroll-behavior: auto !important;
     }
+}
 
-    /* ELIMINAR CUALQUIER CONFIGURACIÓN DE TRANSFORM QUE CAUSE PROBLEMAS */
+/* ===== CORRECCIÓN PARA TABLETS EN ORIENTACIÓN LANDSCAPE ===== */
+@media (width <= 1023px) and (orientation: landscape) {
     .features,
     .videos,
     .faq,
     .contact {
-        transform: none !important;
+        overflow: visible !important;
+        height: auto !important;
+        max-height: none !important;
+        scroll-behavior: auto !important;
     }
 }
