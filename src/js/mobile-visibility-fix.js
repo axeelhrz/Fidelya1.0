@@ -134,7 +134,8 @@ function checkAndFixVisibility() {
     if (isMobile) {
         const sections = ['features', 'videos', 'faq', 'contact'];
         
-        sections.forEach(sectionName => {
+        for (let i = 0; i < sections.length; i++) {
+            const sectionName = sections[i];
             const section = document.querySelector(`.${sectionName}`);
             if (section) {
                 const computedStyle = window.getComputedStyle(section);
@@ -148,7 +149,7 @@ function checkAndFixVisibility() {
                     break;
                 }
             }
-        });
+        }
     }
 }
 
