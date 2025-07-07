@@ -1,4 +1,4 @@
-/* ===== STARFLEX 2.0 - CSS MODULAR ===== */
+/* ===== STARFLEX 2.0 - CSS MODULAR COMPLETO ===== */
 
 /* Base */
 @import url('./base/variables.css');
@@ -15,9 +15,10 @@
 @import url('./sections/features.css');
 @import url('./sections/videos.css');
 @import url('./sections/faq.css');
+@import url('./sections/contact.css');
 
 /* Animations */
 @import url('./animations/keyframes.css');
 
-/* ===== NOTA: La última sección se importará cuando esté creada ===== */
-/* @import url('./sections/contact.css'); */
+/* ===== SISTEMA CSS MODULAR COMPLETADO ===== */
+/* Todas las secciones han sido modularizadas exitosamente */
