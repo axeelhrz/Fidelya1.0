@@ -6,7 +6,6 @@ left: 0;
 z-index: 0;
 width: 100%;
 height: 100%;
-overflow: hidden;
 pointer-events: none;
 }
 
@@ -50,7 +49,6 @@ width: 100%;
 min-height: 100vh;
 min-height: 100dvh;
 padding: calc(var(--navbar-height) + var(--space-6xl)) var(--section-padding-x) clamp(2rem, 8vh, 4rem);
-overflow: hidden;
 
 /* FONDO BASE NEGRO/AZUL OSCURO CON GRADIENTE SUTIL PARA PROFUNDIDAD */
 background: 
@@ -277,7 +275,6 @@ gap: var(--space-sm);
 align-items: center;
 padding: 6px 16px;
 margin-bottom: clamp(1rem, 3vh, 1.5rem);
-overflow: hidden;
 font-family: Sora, sans-serif;
 font-size: 0.8rem;
 font-weight: 600;
@@ -476,7 +473,6 @@ margin-bottom: var(--space-lg);
 position: relative;
 display: inline-block;
 flex-shrink: 0;
-overflow: visible;
 text-decoration: none;
 cursor: pointer;
 filter: drop-shadow(0 8px 25px rgb(0 0 0 / 30%));
@@ -558,7 +554,6 @@ animation: pulse-gentle 4s infinite;
 width: 100%;
 max-width: 320px;
 margin: var(--space-xl) auto 0;
-overflow: hidden;
 filter: drop-shadow(0 0 20px rgb(255 69 105 / 15%));
 border-radius: 20px;
 box-shadow:
@@ -593,7 +588,6 @@ transform: perspective(1200px) rotateY(-8deg) rotateX(2deg);
 position: relative;
 width: var(--phone-width-desktop);
 height: var(--phone-height-desktop);
-overflow: hidden;
 background: transparent;
 filter: none;
 border: none;
@@ -611,7 +605,6 @@ display: none;
 position: relative;
 width: 100%;
 height: 100%;
-overflow: hidden;
 background: transparent;
 border: none;
 border-radius: var(--phone-border-radius);
@@ -621,7 +614,6 @@ border-radius: var(--phone-border-radius);
 position: relative;
 width: 100%;
 height: 100%;
-overflow: hidden;
 background: transparent;
 border-radius: var(--phone-border-radius);
 }
@@ -728,7 +720,6 @@ display: block !important;
 width: 100% !important;
 max-width: 320px !important;
 margin: var(--space-xl) auto 0 !important;
-overflow: hidden !important;
 visibility: visible !important;
 filter: drop-shadow(0 0 15px rgb(255 69 105 / 10%)) !important;
 border-radius: 12.8% !important;
