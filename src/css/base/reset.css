@@ -1,25 +1,18 @@
 /* ===== RESET MEJORADO ===== */
 *, *::before, *::after {
 box-sizing: border-box;
-padding: 0;
-margin: 0;
+
 }
 
 html {
-width: 100%;
-height: 100%;
-padding: 0;
-margin: 0;
-font-size: 16px;
+
 overflow-x: hidden;
-overflow-y: auto;
+font-size: 16px;
+scroll-behavior: none;
 }
 
 body {
-position: relative;
-width: 100%;
-min-height: 100vh;
-min-height: 100dvh;
+position: absolute;
 padding: 0;
 margin: 0;
 font-family: var(--font-primary);
@@ -28,9 +21,6 @@ color: var(--text-primary);
 background: var(--primary-bg);
 -webkit-font-smoothing: antialiased;
 -moz-osx-font-smoothing: grayscale;
-overflow-x: hidden;
-overflow-y: auto;
--webkit-overflow-scrolling: touch;
 }
 
 /* ===== CONTENEDORES CON RESTRICCIONES DE ANCHO MÁXIMO ===== */
@@ -51,6 +41,9 @@ background: var(--starflex-crimson);
 color: var(--text-primary);
 background: var(--starflex-crimson);
 }
+
+/* ===== PREVENIR SCROLL DEL BODY ===== */
+
 
 /* ===== ESTADOS DE CARGA ===== */
 .loading {
@@ -73,4 +66,51 @@ filter: grayscale(100%);
 image-rendering: -webkit-optimize-contrast;
 image-rendering: optimize-contrast;
 image-rendering: crisp-edges;
+}
+
+/* Evitar que elementos flex o grid crezcan más del viewport */
+.flex, [class*="flex"], [class*="Flex"] {
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.grid, [class*="grid"], [class*="Grid"] {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Evitar que las imágenes rompan el layout */
+img, video {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Limitar ancho global de body y html para evitar desbordes accidentales */
+html, body {
+  overflow-x: hidden;
+}
+/* Para cualquier contenedor flex */
+.flex, [class*="flex"] {
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+/* Para grids */
+.grid, [class*="grid"] {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Evitar imágenes y videos demasiado grandes */
+img, video {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Seguridad extra para textos que no rompan línea */
+p, h1, h2, h3, h4, h5, h6, span, a, li, td, th {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
