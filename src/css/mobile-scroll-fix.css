@@ -1,9 +1,9 @@
 /* ===== CORRECCIÓN ESPECÍFICA DE SCROLL HORIZONTAL PARA MÓVILES ===== */
-/* SOLO previene el scroll horizontal SIN cambiar el diseño visual */
+/* SOLO previene el scroll horizontal - SIN crear scroll vertical en secciones */
 
 /* Aplicar solo en dispositivos móviles */
 @media (width <= 1023px) {
-    /* PREVENIR SCROLL HORIZONTAL GLOBAL - SIN CAMBIAR DISEÑO */
+    /* PREVENIR SOLO SCROLL HORIZONTAL GLOBAL */
     html {
         overflow-x: hidden !important;
     }
@@ -12,7 +12,7 @@
         overflow-x: hidden !important;
     }
     
-    /* CONTENEDORES PRINCIPALES - SOLO PREVENIR DESBORDAMIENTO */
+    /* CONTENEDORES PRINCIPALES - SOLO PREVENIR DESBORDAMIENTO HORIZONTAL */
     .hero,
     .features,
     .videos,
@@ -21,7 +21,7 @@
         overflow-x: hidden !important;
     }
     
-    /* CONTENEDORES INTERNOS - SOLO PREVENIR DESBORDAMIENTO */
+    /* CONTENEDORES INTERNOS - SOLO PREVENIR DESBORDAMIENTO HORIZONTAL */
     .hero__container,
     .features__grid,
     .videos__main-container,
@@ -31,7 +31,7 @@
         overflow-x: hidden !important;
     }
     
-    /* ELEMENTOS DE FONDO QUE PUEDEN EXTENDERSE */
+    /* ELEMENTOS DE FONDO QUE PUEDEN EXTENDERSE HORIZONTALMENTE */
     .bg-canvas,
     .hero::before,
     .hero::after,
@@ -48,7 +48,7 @@
         overflow-x: hidden !important;
     }
     
-    /* ELEMENTOS CON EFECTOS VISUALES QUE PUEDEN DESBORDARSE */
+    /* ELEMENTOS CON EFECTOS VISUALES QUE PUEDEN DESBORDARSE HORIZONTALMENTE */
     .videos__orb,
     .contact__orb,
     .light-blobs,
@@ -57,25 +57,25 @@
         overflow-x: hidden !important;
     }
     
-    /* NAVEGACIÓN MÓVIL - SOLO PREVENIR DESBORDAMIENTO */
+    /* NAVEGACIÓN MÓVIL - SOLO PREVENIR DESBORDAMIENTO HORIZONTAL */
     .nav__menu {
         overflow-x: hidden !important;
     }
     
-    /* ELEMENTOS QUE PUEDEN TENER ANIMACIONES QUE SE EXTIENDAN */
+    /* ELEMENTOS QUE PUEDEN TENER ANIMACIONES QUE SE EXTIENDAN HORIZONTALMENTE */
     .feature,
     .contact__channel,
     .faq__item {
         overflow-x: hidden !important;
     }
     
-    /* REPRODUCTORES DE VIDEO */
+    /* REPRODUCTORES DE VIDEO - SOLO HORIZONTAL */
     .videos__player-container,
     .videos__player-frame {
         overflow-x: hidden !important;
     }
     
-    /* ELEMENTOS CON TRANSFORMACIONES */
+    /* ELEMENTOS CON TRANSFORMACIONES - SOLO HORIZONTAL */
     .hero__phone-container,
     .feature__phone {
         overflow-x: hidden !important;
@@ -89,7 +89,7 @@
         overflow-x: hidden !important;
     }
     
-    /* ASEGURAR QUE LOS CONTENEDORES PRINCIPALES NO DESBORDEN */
+    /* ASEGURAR QUE LOS CONTENEDORES PRINCIPALES NO DESBORDEN HORIZONTALMENTE */
     .hero,
     .features,
     .videos,
