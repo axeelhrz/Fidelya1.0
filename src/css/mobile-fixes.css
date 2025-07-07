@@ -1,0 +1,315 @@
+/* ===== CORRECCIONES PARA VISIBILIDAD EN MÓVIL ===== */
+
+/* Asegurar que todas las secciones principales sean visibles en móvil */
+@media (width <= 1023px) {
+    /* Forzar visibilidad de todas las secciones principales */
+    .features,
+    .videos,
+    .faq,
+    .contact {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        position: relative !important;
+        z-index: 1 !important;
+    }
+    
+    /* Asegurar que los contenedores principales sean visibles */
+    .features__grid,
+    .videos__main-container,
+    .faq__container,
+    .contact__grid {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    
+    /* Forzar visibilidad de elementos individuales */
+    .feature,
+    .videos__header,
+    .videos__player-container,
+    .faq__header,
+    .faq__list,
+    .faq__item,
+    .contact__header,
+    .contact__channel {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        transform: none !important;
+        animation: none !important;
+    }
+    
+    /* Asegurar que el grid de características funcione en móvil */
+    .features__grid {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: clamp(2rem, 4vh, 3rem) !important;
+    }
+    
+    /* Asegurar que el grid de contacto funcione en móvil */
+    .contact__grid {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: var(--space-xl) !important;
+    }
+    
+    /* Forzar visibilidad de elementos de características */
+    .feature__content,
+    .feature__phone,
+    .phone,
+    .phone__screen,
+    .phone__content,
+    .phone__app-image {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    
+    /* Ajustar layout de características para móvil */
+    .feature {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        text-align: center !important;
+        gap: clamp(1.5rem, 3vh, 2rem) !important;
+    }
+    
+    .feature__phone {
+        order: 1 !important;
+        width: clamp(200px, 60vw, 280px) !important;
+        height: clamp(400px, 120vw, 560px) !important;
+        margin: 0 auto var(--space-lg) auto !important;
+    }
+    
+    .feature__content {
+        order: 2 !important;
+        padding: var(--space-lg) !important;
+    }
+    
+    /* Forzar visibilidad de elementos de video */
+    .videos__player-frame,
+    .videos__player,
+    .videos__play-overlay,
+    .videos__info {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    
+    /* Forzar visibilidad de elementos de FAQ */
+    .faq__search-container,
+    .faq__search,
+    .faq__question,
+    .faq__answer {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    
+    /* Asegurar que los botones sean clickeables */
+    .faq__question {
+        display: flex !important;
+        cursor: pointer !important;
+        pointer-events: auto !important;
+    }
+    
+    /* Forzar visibilidad de elementos de contacto */
+    .contact__channel-icon,
+    .contact__channel-content,
+    .contact__channel-btn {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    
+    .contact__channel {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+    }
+    
+    /* Asegurar que los enlaces de contacto funcionen */
+    .contact__channel-btn {
+        display: inline-flex !important;
+        pointer-events: auto !important;
+        cursor: pointer !important;
+    }
+    
+    /* Remover cualquier overflow hidden que pueda ocultar contenido */
+    body,
+    html,
+    .hero,
+    .features,
+    .videos,
+    .faq,
+    .contact {
+        overflow-x: hidden !important;
+        overflow-y: visible !important;
+    }
+    
+    /* Asegurar que no hay elementos con height: 0 */
+    .features,
+    .videos,
+    .faq,
+    .contact {
+        min-height: auto !important;
+        height: auto !important;
+    }
+    
+    /* Forzar padding mínimo para que las secciones sean visibles */
+    .features,
+    .videos,
+    .faq,
+    .contact {
+        padding-top: clamp(2rem, 6vh, 4rem) !important;
+        padding-bottom: clamp(1.5rem, 4vh, 3rem) !important;
+        padding-left: var(--section-padding-x) !important;
+        padding-right: var(--section-padding-x) !important;
+    }
+    
+    /* Asegurar que los headers de sección sean visibles */
+    .features__header,
+    .videos__header,
+    .faq__header,
+    .contact__header {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        margin-bottom: var(--space-4xl) !important;
+        text-align: center !important;
+    }
+    
+    /* Asegurar que los títulos sean visibles */
+    .features__title,
+    .videos__title,
+    .faq__title,
+    .contact__title {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        font-size: clamp(2rem, 8vw, 3rem) !important;
+        margin-bottom: var(--space-lg) !important;
+    }
+    
+    /* Asegurar que los subtítulos sean visibles */
+    .features__subtitle,
+    .videos__subtitle,
+    .faq__subtitle,
+    .contact__subtitle {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        font-size: 1.1rem !important;
+        margin-bottom: var(--space-xl) !important;
+    }
+}
+
+/* Correcciones específicas para pantallas muy pequeñas */
+@media (width <= 480px) {
+    .features,
+    .videos,
+    .faq,
+    .contact {
+        padding-top: clamp(1.5rem, 4vh, 2.5rem) !important;
+        padding-bottom: clamp(1rem, 3vh, 2rem) !important;
+        padding-left: clamp(1rem, 4vw, 1.5rem) !important;
+        padding-right: clamp(1rem, 4vw, 1.5rem) !important;
+    }
+    
+    .feature__phone {
+        width: clamp(180px, 70vw, 240px) !important;
+        height: clamp(360px, 140vw, 480px) !important;
+    }
+}
+
+/* Corrección para el modo performance que podría estar ocultando elementos */
+.performance-mode .features,
+.performance-mode .videos,
+.performance-mode .faq,
+.performance-mode .contact {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* Asegurar que las animaciones no interfieran con la visibilidad */
+@media (prefers-reduced-motion: reduce) {
+    .features,
+    .videos,
+    .faq,
+    .contact,
+    .feature,
+    .contact__channel,
+    .faq__item {
+        animation: none !important;
+        transition: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+        visibility: visible !important;
+        display: block !important;
+    }
+    
+    .features__grid {
+        display: grid !important;
+    }
+    
+    .contact__grid {
+        display: grid !important;
+    }
+    
+    .feature {
+        display: flex !important;
+        flex-direction: column !important;
+    }
+    
+    .contact__channel {
+        display: flex !important;
+        flex-direction: column !important;
+    }
+}
+
+/* Corrección para elementos que podrían estar usando position absolute incorrectamente */
+@media (width <= 1023px) {
+    .features,
+    .videos,
+    .faq,
+    .contact {
+        position: relative !important;
+    }
+    
+    .features__grid,
+    .videos__main-container,
+    .faq__container,
+    .contact__grid {
+        position: relative !important;
+    }
+}
+
+/* Asegurar que no hay z-index negativos que oculten contenido */
+@media (width <= 1023px) {
+    .features,
+    .videos,
+    .faq,
+    .contact {
+        z-index: 1 !important;
+    }
+    
+    .features *,
+    .videos *,
+    .faq *,
+    .contact * {
+        z-index: auto !important;
+    }
+    
+    .features::before,
+    .features::after,
+    .videos::before,
+    .videos::after,
+    .faq::before,
+    .faq::after,
+    .contact::before,
+    .contact::after {
+        z-index: -1 !important;
+    }
+}
