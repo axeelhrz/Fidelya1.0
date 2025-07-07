@@ -35,8 +35,8 @@
 .nav {
     position: relative;
     display: grid;
-    grid-template-columns: auto 1fr auto;
-    grid-template-areas: "logo navigation actions";
+    grid-template-columns: auto 1fr auto auto;
+    grid-template-areas: "logo navigation language actions";
     align-items: center;
     width: 100%;
     max-width: var(--max-content-width);
@@ -406,23 +406,15 @@
     outline-offset: 4px;
 }
 
-/* ===== SECCIÓN DERECHA CON CTA Y SELECTOR DE IDIOMA ===== */
-.nav__right-section {
-    grid-area: actions;
-    display: flex;
-    align-items: center;
-    gap: clamp(0.75rem, 2vw, 1rem);
-    flex-shrink: 0;
-    pointer-events: auto;
-    z-index: calc(var(--navbar-z-index) + 1);
-}
-
-/* ===== SELECTOR DE IDIOMA EN LÍNEA CON EL HEADER ===== */
+/* ===== SELECTOR DE IDIOMA EN EL HEADER ===== */
 .nav__language-switcher {
+    grid-area: language;
     position: relative;
     display: flex;
     align-items: center;
     flex-shrink: 0;
+    pointer-events: auto;
+    z-index: calc(var(--navbar-z-index) + 1);
 }
 
 .nav__language-btn {
@@ -630,8 +622,9 @@
     text-align: left;
 }
 
-/* ===== BOTÓN CTA FLOTANTE MEJORADO PROFESIONAL ===== */
+/* ===== SECCIÓN DERECHA CON CTA ===== */
 .nav__cta {
+    grid-area: actions;
     position: relative;
     display: flex;
     align-items: center;
@@ -639,6 +632,7 @@
     flex-shrink: 0;
     padding: 0;
     margin: 0;
+    pointer-events: auto;
 }
 
 .btn--premium {
@@ -1007,10 +1001,6 @@
         gap: clamp(0.75rem, 2.5vw, 1.5rem);
     }
     
-    .nav__right-section {
-        gap: clamp(0.5rem, 1.5vw, 0.75rem);
-    }
-    
     .btn--premium {
         min-width: clamp(140px, 28vw, 200px);
         padding: clamp(0.625rem, 1.8vw, 0.875rem) clamp(1.25rem, 3.5vw, 1.75rem);
@@ -1060,7 +1050,8 @@
         display: flex;
     }
 
-    .nav__right-section {
+    .nav__language-switcher,
+    .nav__cta {
         display: none;
     }
 
