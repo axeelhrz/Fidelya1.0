@@ -20,13 +20,9 @@
 /* Animations */
 @import url('./animations/keyframes.css');
 
-/* Corrección para eliminar scroll individual en secciones */
-@import url('./no-section-scroll.css');
-
 /* Mobile Fixes - IMPORTANTE: debe ir al final para sobrescribir otros estilos */
 @import url('./mobile-fixes.css');
 
 /* ===== SISTEMA CSS MODULAR COMPLETADO ===== */
 /* Todas las secciones han sido modularizadas exitosamente */
 /* Correcciones de visibilidad móvil aplicadas */
-/* Scroll individual en secciones eliminado */
