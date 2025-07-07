@@ -1,0 +1,568 @@
+/* ===== MOBILE FIXES - CORRECCIONES CRÍTICAS PARA VISIBILIDAD EN MÓVIL ===== */
+
+/* ===== RESET DE VISIBILIDAD FORZADA PARA MÓVIL ===== */
+@media (width <= 1023px) {
+    /* FORZAR VISIBILIDAD DE TODAS LAS SECCIONES PRINCIPALES */
+    .features,
+    .videos,
+    .faq,
+    .contact {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        position: relative !important;
+        z-index: 1 !important;
+        overflow: visible !important;
+        min-height: auto !important;
+        height: auto !important;
+        transform: none !important;
+        animation: none !important;
+    }
+    
+    /* ASEGURAR PADDING MÍNIMO PARA VISIBILIDAD */
+    .features,
+    .videos,
+    .faq,
+    .contact {
+        padding-top: clamp(3rem, 8vh, 5rem) !important;
+        padding-bottom: clamp(2rem, 6vh, 4rem) !important;
+        padding-left: clamp(1rem, 4vw, 2rem) !important;
+        padding-right: clamp(1rem, 4vw, 2rem) !important;
+        margin: 0 !important;
+    }
+    
+    /* FORZAR VISIBILIDAD DE CONTENEDORES PRINCIPALES */
+    .features__header,
+    .features__grid,
+    .videos__header,
+    .videos__main-container,
+    .faq__header,
+    .faq__container,
+    .contact__header,
+    .contact__grid {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        position: relative !important;
+        z-index: auto !important;
+        transform: none !important;
+        animation: none !important;
+    }
+    
+    /* CONFIGURAR GRID DE CARACTERÍSTICAS PARA MÓVIL */
+    .features__grid {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: clamp(2rem, 6vh, 4rem) !important;
+        width: 100% !important;
+        max-width: none !important;
+    }
+    
+    /* CONFIGURAR ELEMENTOS INDIVIDUALES DE CARACTERÍSTICAS */
+    .feature {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        text-align: center !important;
+        gap: clamp(1.5rem, 4vh, 2.5rem) !important;
+        padding: clamp(1.5rem, 4vh, 2.5rem) 0 !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        transform: none !important;
+        animation: none !important;
+    }
+    
+    /* CONFIGURAR TELÉFONOS DE CARACTERÍSTICAS */
+    .feature__phone {
+        order: 1 !important;
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        width: clamp(200px, 60vw, 300px) !important;
+        height: clamp(400px, 120vw, 600px) !important;
+        margin: 0 auto clamp(1rem, 3vh, 2rem) auto !important;
+        transform: none !important;
+        animation: none !important;
+    }
+    
+    .phone,
+    .phone__screen,
+    .phone__content,
+    .phone__app-image {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        width: 100% !important;
+        height: 100% !important;
+        transform: none !important;
+        animation: none !important;
+    }
+    
+    /* CONFIGURAR CONTENIDO DE CARACTERÍSTICAS */
+    .feature__content {
+        order: 2 !important;
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        width: 100% !important;
+        padding: clamp(1rem, 3vh, 2rem) !important;
+        text-align: center !important;
+        transform: none !important;
+        animation: none !important;
+    }
+    
+    /* FORZAR VISIBILIDAD DE ELEMENTOS DE CONTENIDO */
+    .feature__title,
+    .feature__description,
+    .feature__list,
+    .feature__list-item {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        transform: none !important;
+        animation: none !important;
+    }
+    
+    .feature__list {
+        list-style: none !important;
+        padding: 0 !important;
+        margin: clamp(1rem, 3vh, 2rem) 0 0 0 !important;
+    }
+    
+    .feature__list-item {
+        margin-bottom: clamp(0.75rem, 2vh, 1rem) !important;
+        padding: clamp(0.5rem, 1.5vh, 0.75rem) 0 !important;
+    }
+    
+    /* CONFIGURAR SECCIÓN DE VIDEOS */
+    .videos__main-wrapper,
+    .videos__player-container,
+    .videos__player-frame,
+    .videos__player,
+    .videos__play-overlay,
+    .videos__info,
+    .videos__cta {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        transform: none !important;
+        animation: none !important;
+    }
+    
+    .videos__player-frame {
+        width: 100% !important;
+        aspect-ratio: 16/9 !important;
+        margin-bottom: clamp(1rem, 3vh, 2rem) !important;
+    }
+    
+    .videos__play-overlay {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    
+    /* CONFIGURAR SECCIÓN FAQ */
+    .faq__search-container,
+    .faq__search,
+    .faq__list,
+    .faq__item,
+    .faq__question,
+    .faq__answer {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        transform: none !important;
+        animation: none !important;
+    }
+    
+    .faq__question {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        cursor: pointer !important;
+        pointer-events: auto !important;
+    }
+    
+    .faq__list {
+        display: grid !important;
+        gap: clamp(1rem, 3vh, 1.5rem) !important;
+    }
+    
+    /* CONFIGURAR GRID DE CONTACTO */
+    .contact__grid {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: clamp(1.5rem, 4vh, 2rem) !important;
+        width: 100% !important;
+        max-width: none !important;
+    }
+    
+    /* CONFIGURAR CANALES DE CONTACTO */
+    .contact__channel {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        text-align: center !important;
+        padding: clamp(1.5rem, 4vh, 2rem) !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        transform: none !important;
+        animation: none !important;
+    }
+    
+    .contact__channel-icon,
+    .contact__channel-content,
+    .contact__channel-btn {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        transform: none !important;
+        animation: none !important;
+    }
+    
+    .contact__channel-btn {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        pointer-events: auto !important;
+        cursor: pointer !important;
+    }
+    
+    /* CONFIGURAR HEADERS DE SECCIÓN */
+    .features__header,
+    .videos__header,
+    .faq__header,
+    .contact__header {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        text-align: center !important;
+        margin-bottom: clamp(2rem, 6vh, 4rem) !important;
+        padding: 0 clamp(1rem, 4vw, 2rem) !important;
+        transform: none !important;
+        animation: none !important;
+    }
+    
+    /* CONFIGURAR TÍTULOS DE SECCIÓN */
+    .features__title,
+    .videos__title,
+    .faq__title,
+    .contact__title {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        font-size: clamp(2.5rem, 8vw, 4rem) !important;
+        line-height: 1.1 !important;
+        margin-bottom: clamp(1rem, 3vh, 1.5rem) !important;
+        transform: none !important;
+        animation: none !important;
+    }
+    
+    /* CONFIGURAR SUBTÍTULOS DE SECCIÓN */
+    .features__subtitle,
+    .videos__subtitle,
+    .faq__subtitle,
+    .contact__subtitle {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        font-size: clamp(1rem, 3vw, 1.2rem) !important;
+        line-height: 1.6 !important;
+        margin-bottom: clamp(1rem, 3vh, 2rem) !important;
+        max-width: none !important;
+        transform: none !important;
+        animation: none !important;
+    }
+    
+    /* REMOVER CUALQUIER OVERFLOW HIDDEN QUE PUEDA OCULTAR CONTENIDO */
+    body,
+    html,
+    .hero,
+    .features,
+    .videos,
+    .faq,
+    .contact {
+        overflow-x: hidden !important;
+        overflow-y: visible !important;
+    }
+    
+    /* ASEGURAR QUE NO HAY Z-INDEX NEGATIVOS */
+    .features,
+    .videos,
+    .faq,
+    .contact {
+        z-index: 1 !important;
+    }
+    
+    .features *,
+    .videos *,
+    .faq *,
+    .contact * {
+        z-index: auto !important;
+    }
+    
+    /* MANTENER EFECTOS DE FONDO EN Z-INDEX NEGATIVO */
+    .features::before,
+    .features::after,
+    .videos::before,
+    .videos::after,
+    .faq::before,
+    .faq::after,
+    .contact::before,
+    .contact::after {
+        z-index: -1 !important;
+    }
+    
+    /* CONFIGURAR ESPACIADO ESPECÍFICO PARA HERO */
+    .hero {
+        padding-bottom: clamp(1rem, 3vh, 2rem) !important;
+    }
+    
+    /* ASEGURAR QUE LOS BOTONES SEAN CLICKEABLES */
+    .btn,
+    .contact__channel-btn,
+    .faq__question,
+    .videos__play-overlay,
+    .nav__link {
+        pointer-events: auto !important;
+        cursor: pointer !important;
+        touch-action: manipulation !important;
+    }
+}
+
+/* ===== CORRECCIONES ESPECÍFICAS PARA PANTALLAS MUY PEQUEÑAS ===== */
+@media (width <= 480px) {
+    .features,
+    .videos,
+    .faq,
+    .contact {
+        padding-top: clamp(2rem, 6vh, 3rem) !important;
+        padding-bottom: clamp(1.5rem, 4vh, 2.5rem) !important;
+        padding-left: clamp(0.75rem, 3vw, 1.5rem) !important;
+        padding-right: clamp(0.75rem, 3vw, 1.5rem) !important;
+    }
+    
+    .feature__phone {
+        width: clamp(180px, 70vw, 250px) !important;
+        height: clamp(360px, 140vw, 500px) !important;
+    }
+    
+    .features__title,
+    .videos__title,
+    .faq__title,
+    .contact__title {
+        font-size: clamp(2rem, 10vw, 3rem) !important;
+    }
+    
+    .features__subtitle,
+    .videos__subtitle,
+    .faq__subtitle,
+    .contact__subtitle {
+        font-size: clamp(0.9rem, 4vw, 1.1rem) !important;
+    }
+}
+
+/* ===== CORRECCIONES PARA MODO PERFORMANCE ===== */
+.performance-mode .features,
+.performance-mode .videos,
+.performance-mode .faq,
+.performance-mode .contact {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* ===== CORRECCIONES PARA MODO REDUCIDO DE MOVIMIENTO ===== */
+@media (prefers-reduced-motion: reduce) {
+    .features,
+    .videos,
+    .faq,
+    .contact,
+    .feature,
+    .contact__channel,
+    .faq__item {
+        animation: none !important;
+        transition: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+        visibility: visible !important;
+        display: block !important;
+    }
+    
+    .features__grid {
+        display: grid !important;
+    }
+    
+    .contact__grid {
+        display: grid !important;
+    }
+    
+    .feature {
+        display: flex !important;
+        flex-direction: column !important;
+    }
+    
+    .contact__channel {
+        display: flex !important;
+        flex-direction: column !important;
+    }
+}
+
+/* ===== CORRECCIONES ADICIONALES PARA ASEGURAR VISIBILIDAD ===== */
+@media (width <= 1023px) {
+    /* Asegurar que las imágenes de los teléfonos se carguen */
+    .phone__app-image {
+        background-repeat: no-repeat !important;
+        background-position: center !important;
+        background-size: cover !important;
+        border-radius: inherit !important;
+    }
+    
+    /* Configurar imágenes específicas por característica */
+    .feature[data-feature="schedule"] .phone__app-image {
+        background-image: url('../../assets/phones/Horario.avif') !important;
+    }
+    
+    .feature[data-feature="stations"] .phone__app-image {
+        background-image: url('../../assets/phones/Estaciones.avif') !important;
+    }
+    
+    .feature[data-feature="calendar"] .phone__app-image {
+        background-image: url('../../assets/phones/Calendario.avif') !important;
+    }
+    
+    .feature[data-feature="log"] .phone__app-image {
+        background-image: url('../../assets/phones/Registro.avif') !important;
+    }
+    
+    .feature[data-feature="notifications"] .phone__app-image {
+        background-image: url('../../assets/phones/Notificaciones.avif') !important;
+    }
+    
+    .feature[data-feature="referrals"] .phone__app-image {
+        background-image: url('../../assets/phones/Referidos.avif') !important;
+    }
+    
+    /* Asegurar que los videos sean visibles */
+    .videos__player {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
+    }
+    
+    /* Configurar FAQ para móvil */
+    .faq__search {
+        width: 100% !important;
+        margin-bottom: clamp(1.5rem, 4vh, 2rem) !important;
+    }
+    
+    .faq__item {
+        margin-bottom: clamp(1rem, 3vh, 1.5rem) !important;
+    }
+    
+    /* Asegurar que los iconos de contacto sean visibles */
+    .contact__channel-icon {
+        width: clamp(60px, 15vw, 80px) !important;
+        height: clamp(60px, 15vw, 80px) !important;
+        margin-bottom: clamp(1rem, 3vh, 1.5rem) !important;
+    }
+    
+    .contact__channel-icon svg {
+        width: clamp(30px, 8vw, 40px) !important;
+        height: clamp(30px, 8vw, 40px) !important;
+    }
+}
+
+/* ===== CORRECCIÓN FINAL PARA ASEGURAR QUE TODO SEA VISIBLE ===== */
+@media (width <= 1023px) {
+    /* Forzar display block en todos los elementos que podrían estar ocultos */
+    .features *:not(::before):not(::after),
+    .videos *:not(::before):not(::after),
+    .faq *:not(::before):not(::after),
+    .contact *:not(::before):not(::after) {
+        visibility: visible !important;
+    }
+    
+    /* Asegurar que los contenedores principales tengan altura mínima */
+    .features,
+    .videos,
+    .faq,
+    .contact {
+        min-height: 50vh !important;
+    }
+    
+    /* Forzar que los grids funcionen correctamente */
+    .features__grid,
+    .contact__grid {
+        display: grid !important;
+        width: 100% !important;
+    }
+    
+    /* Asegurar que los elementos flex funcionen */
+    .feature,
+    .contact__channel {
+        display: flex !important;
+        width: 100% !important;
+    }
+    
+    /* Corrección final para elementos que podrían tener position absolute */
+    .features,
+    .videos,
+    .faq,
+    .contact {
+        position: relative !important;
+    }
+    
+    /* Asegurar que no hay elementos con width o height 0 */
+    .features *,
+    .videos *,
+    .faq *,
+    .contact * {
+        min-width: 0 !important;
+        min-height: 0 !important;
+    }
+    
+    /* Excluir pseudo-elementos de las reglas anteriores */
+    .features *::before,
+    .features *::after,
+    .videos *::before,
+    .videos *::after,
+    .faq *::before,
+    .faq *::after,
+    .contact *::before,
+    .contact *::after {
+        min-width: auto !important;
+        min-height: auto !important;
+    }
+}
+
+/* ===== CORRECCIÓN DE SCROLL SUAVE PARA NAVEGACIÓN ===== */
+@media (width <= 1023px) {
+    html {
+        scroll-behavior: smooth !important;
+    }
+    
+    /* Asegurar que las secciones sean accesibles por navegación */
+    #features,
+    #videos,
+    #faq,
+    #contact {
+        scroll-margin-top: calc(var(--navbar-height-mobile) + 1rem) !important;
+    }
+}
+
+/* ===== CORRECCIÓN PARA DISPOSITIVOS CON NOTCH ===== */
+@media (width <= 1023px) {
+    .features,
+    .videos,
+    .faq,
+    .contact {
+        padding-left: max(clamp(1rem, 4vw, 2rem), env(safe-area-inset-left)) !important;
+        padding-right: max(clamp(1rem, 4vw, 2rem), env(safe-area-inset-right)) !important;
+    }
+    
+    .contact {
+        padding-bottom: max(clamp(2rem, 6vh, 4rem), calc(env(safe-area-inset-bottom) + 1rem)) !important;
+    }
+}
