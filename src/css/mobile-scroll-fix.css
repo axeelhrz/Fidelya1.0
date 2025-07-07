@@ -13,41 +13,9 @@
     }
     
     /* CONTENEDORES PRINCIPALES - SOLO PREVENIR DESBORDAMIENTO HORIZONTAL */
-    .hero,
-    .features,
-    .videos,
-    .faq,
-    .contact {
-        overflow-x: hidden !important;
-    }
+
     
-    /* CONTENEDORES INTERNOS - SOLO PREVENIR DESBORDAMIENTO HORIZONTAL */
-    .hero__container,
-    .features__grid,
-    .videos__main-container,
-    .videos__main-wrapper,
-    .faq__container,
-    .contact__grid {
-        overflow-x: hidden !important;
-    }
-    
-    /* ELEMENTOS DE FONDO QUE PUEDEN EXTENDERSE HORIZONTALMENTE */
-    .bg-canvas,
-    .hero::before,
-    .hero::after,
-    .features::before,
-    .features::after,
-    .videos::before,
-    .videos::after,
-    .faq::before,
-    .faq::after,
-    .contact::before,
-    .contact::after,
-    .videos__bg-effects,
-    .contact__bg-effects {
-        overflow-x: hidden !important;
-    }
-    
+
     /* ELEMENTOS CON EFECTOS VISUALES QUE PUEDEN DESBORDARSE HORIZONTALMENTE */
     .videos__orb,
     .contact__orb,
@@ -63,12 +31,7 @@
     }
     
     /* ELEMENTOS QUE PUEDEN TENER ANIMACIONES QUE SE EXTIENDAN HORIZONTALMENTE */
-    .feature,
-    .contact__channel,
-    .faq__item {
-        overflow-x: hidden !important;
-    }
-    
+
     /* REPRODUCTORES DE VIDEO - SOLO HORIZONTAL */
     .videos__player-container,
     .videos__player-frame {
@@ -76,10 +39,6 @@
     }
     
     /* ELEMENTOS CON TRANSFORMACIONES - SOLO HORIZONTAL */
-    .hero__phone-container,
-    .feature__phone {
-        overflow-x: hidden !important;
-    }
 }
 
 /* CORRECCIÓN ADICIONAL PARA PANTALLAS MUY PEQUEÑAS */
@@ -90,11 +49,5 @@
     }
     
     /* ASEGURAR QUE LOS CONTENEDORES PRINCIPALES NO DESBORDEN HORIZONTALMENTE */
-    .hero,
-    .features,
-    .videos,
-    .faq,
-    .contact {
-        overflow-x: hidden !important;
-    }
+
 }
