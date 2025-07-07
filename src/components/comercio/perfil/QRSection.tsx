@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Box,
   Card,
@@ -19,8 +19,9 @@ import {
   Tooltip,
   Chip,
   CircularProgress,
-  Tabs,
-  Tab,
+  Grid,
+  useTheme,
+  useMediaQuery,
 } from '@mui/material';
 import {
   QrCode,
@@ -33,9 +34,10 @@ import {
   CheckCircle,
   PictureAsPdf,
   Image as ImageIcon,
-  ExternalLink,
   Smartphone,
   Language,
+  PlayArrow,
+  Info,
 } from '@mui/icons-material';
 import Image from 'next/image';
 import { useComercios } from '@/hooks/useComercios';
@@ -44,6 +46,10 @@ import jsPDF from 'jspdf';
 import toast from 'react-hot-toast';
 
 export const QRSection: React.FC = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isTablet = useMediaQuery(theme.breakpoints.down('lg'));
+  
   const { comercio, generateQRUrl, generateWebUrl } = useComercios();
   const [qrDialogOpen, setQrDialogOpen] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -51,55 +57,54 @@ export const QRSection: React.FC = () => {
   const [webQrDataUrl, setWebQrDataUrl] = useState<string>('');
   const [generating, setGenerating] = useState(false);
   const [downloading, setDownloading] = useState(false);
-  const [activeTab, setActiveTab] = useState(0);
-  const qrRef = useRef<HTMLDivElement>(null);
+  const [activeQRType, setActiveQRType] = useState<'app' | 'web'>('app');
+  const [qrGenerated, setQrGenerated] = useState(false);
 
   // Generate QR validation URLs
   const qrUrl = generateQRUrl(); // fidelya:// protocol for app scanning
   const webUrl = generateWebUrl(); // http:// protocol for web access
 
-  const generateQRCode = React.useCallback(async () => {
+  const generateQRCode = async (type: 'app' | 'web' | 'both' = 'both') => {
     try {
       setGenerating(true);
       
-      // Generate QR for app scanning (fidelya:// protocol)
-      const appQrDataUrl = await QRCode.toDataURL(qrUrl, {
-        width: 400,
-        margin: 2,
-        color: {
-          dark: '#000000',
-          light: '#FFFFFF'
-        },
-        errorCorrectionLevel: 'M'
-      });
-      setQrDataUrl(appQrDataUrl);
+      if (type === 'app' || type === 'both') {
+        // Generate QR for app scanning (fidelya:// protocol)
+        const appQrDataUrl = await QRCode.toDataURL(qrUrl, {
+          width: 400,
+          margin: 2,
+          color: {
+            dark: '#000000',
+            light: '#FFFFFF'
+          },
+          errorCorrectionLevel: 'M'
+        });
+        setQrDataUrl(appQrDataUrl);
+      }
 
-      // Generate QR for web access (http:// protocol) as fallback
-      const webQrDataUrl = await QRCode.toDataURL(webUrl, {
-        width: 400,
-        margin: 2,
-        color: {
-          dark: '#000000',
-          light: '#FFFFFF'
-        },
-        errorCorrectionLevel: 'M'
-      });
-      setWebQrDataUrl(webQrDataUrl);
+      if (type === 'web' || type === 'both') {
+        // Generate QR for web access (http:// protocol) as fallback
+        const webQrDataUrl = await QRCode.toDataURL(webUrl, {
+          width: 400,
+          margin: 2,
+          color: {
+            dark: '#000000',
+            light: '#FFFFFF'
+          },
+          errorCorrectionLevel: 'M'
+        });
+        setWebQrDataUrl(webQrDataUrl);
+      }
       
+      setQrGenerated(true);
+      toast.success('Códigos QR generados correctamente');
     } catch (error) {
       console.error('Error generating QR code:', error);
       toast.error('Error al generar el código QR');
     } finally {
       setGenerating(false);
     }
-  }, [qrUrl, webUrl]);
-
-  // Generate QR code data URL
-  useEffect(() => {
-    if (qrUrl && webUrl) {
-      generateQRCode();
-    }
-  }, [qrUrl, webUrl, generateQRCode]);
+  };
 
   const handleCopyUrl = async (urlType: 'app' | 'web' = 'web') => {
     try {
@@ -115,7 +120,10 @@ export const QRSection: React.FC = () => {
 
   const handleDownloadQR = async (format: 'png' | 'pdf' = 'png', qrType: 'app' | 'web' = 'app') => {
     const dataUrl = qrType === 'app' ? qrDataUrl : webQrDataUrl;
-    if (!dataUrl) return;
+    if (!dataUrl) {
+      toast.error('Primero debes generar el código QR');
+      return;
+    }
 
     try {
       setDownloading(true);
@@ -214,7 +222,10 @@ export const QRSection: React.FC = () => {
 
   const handlePrintQR = (qrType: 'app' | 'web' = 'app') => {
     const dataUrl = qrType === 'app' ? qrDataUrl : webQrDataUrl;
-    if (!dataUrl) return;
+    if (!dataUrl) {
+      toast.error('Primero debes generar el código QR');
+      return;
+    }
 
     const printWindow = window.open('', '_blank');
     if (printWindow) {
@@ -325,6 +336,11 @@ export const QRSection: React.FC = () => {
     const dataUrl = qrType === 'app' ? qrDataUrl : webQrDataUrl;
     const urlToShare = qrType === 'app' ? qrUrl : webUrl;
     
+    if (!dataUrl) {
+      toast.error('Primero debes generar el código QR');
+      return;
+    }
+    
     if (navigator.share && dataUrl) {
       try {
         // Convert data URL to blob for sharing
@@ -359,15 +375,11 @@ export const QRSection: React.FC = () => {
   };
 
   const getCurrentQRData = () => {
-    return activeTab === 0 ? qrDataUrl : webQrDataUrl;
-  };
-
-  const getCurrentQRType = (): 'app' | 'web' => {
-    return activeTab === 0 ? 'app' : 'web';
+    return activeQRType === 'app' ? qrDataUrl : webQrDataUrl;
   };
 
   const getCurrentUrl = () => {
-    return activeTab === 0 ? qrUrl : webUrl;
+    return activeQRType === 'app' ? qrUrl : webUrl;
   };
 
   return (
@@ -388,8 +400,8 @@ export const QRSection: React.FC = () => {
             position: 'absolute',
             bottom: 0,
             right: 0,
-            width: 180,
-            height: 180,
+            width: { xs: 120, md: 180 },
+            height: { xs: 120, md: 180 },
             background: 'linear-gradient(135deg, #ec4899 0%, #be185d 100%)',
             borderRadius: '50%',
             opacity: 0.05,
@@ -397,433 +409,615 @@ export const QRSection: React.FC = () => {
           }}
         />
 
-        <CardContent sx={{ p: 6, position: 'relative', zIndex: 1 }}>
+        <CardContent sx={{ p: { xs: 4, md: 6 }, position: 'relative', zIndex: 1 }}>
           {/* Header */}
-          <Box sx={{ mb: 6 }}>
+          <Box sx={{ mb: { xs: 4, md: 6 } }}>
             <Typography 
-              variant="h4" 
+              variant={isMobile ? "h5" : "h4"}
               sx={{ 
                 fontWeight: 900, 
                 color: '#0f172a',
                 mb: 1,
                 display: 'flex',
                 alignItems: 'center',
-                gap: 2
+                gap: 2,
+                flexDirection: { xs: 'column', sm: 'row' },
+                textAlign: { xs: 'center', sm: 'left' }
               }}
             >
-              <QrCode sx={{ fontSize: 32, color: '#ec4899' }} />
+              <QrCode sx={{ fontSize: { xs: 28, md: 32 }, color: '#ec4899' }} />
               Códigos QR de Validación
             </Typography>
-            <Typography variant="body1" sx={{ color: '#64748b', fontWeight: 500 }}>
+            <Typography 
+              variant="body1" 
+              sx={{ 
+                color: '#64748b', 
+                fontWeight: 500,
+                textAlign: { xs: 'center', sm: 'left' },
+                maxWidth: { xs: '100%', md: '80%' }
+              }}
+            >
               Genera códigos QR para que los socios validen sus beneficios. Disponible en dos formatos: aplicación móvil y acceso web.
             </Typography>
           </Box>
 
-          <Box sx={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'flex-start' }}>
-            {/* QR Preview */}
-            <Box sx={{ flex: 1, minWidth: 300 }}>
-              <Paper
-                elevation={0}
-                sx={{
-                  p: 4,
-                  border: '2px solid #f1f5f9',
-                  borderRadius: 4,
-                  textAlign: 'center',
-                  background: 'linear-gradient(135deg, #fafbfc 0%, #ffffff 100%)',
-                }}
+          {!qrGenerated ? (
+            /* Initial State - Generate QR */
+            <Box sx={{ textAlign: 'center', py: { xs: 4, md: 8 } }}>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
               >
-                {/* QR Type Tabs */}
-                <Tabs
-                  value={activeTab}
-                  onChange={(_, newValue) => setActiveTab(newValue)}
-                  centered
-                  sx={{ mb: 3 }}
+                <Box
+                  sx={{
+                    width: { xs: 150, md: 200 },
+                    height: { xs: 150, md: 200 },
+                    bgcolor: alpha('#ec4899', 0.1),
+                    border: '3px dashed #ec4899',
+                    borderRadius: 4,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    mx: 'auto',
+                    mb: 4,
+                    transition: 'all 0.3s ease',
+                  }}
                 >
-                  <Tab 
-                    icon={<Smartphone />} 
-                    label="Aplicación" 
-                    sx={{ minHeight: 48 }}
-                  />
-                  <Tab 
-                    icon={<Language />} 
-                    label="Web" 
-                    sx={{ minHeight: 48 }}
-                  />
-                </Tabs>
+                  <QrCode sx={{ fontSize: { xs: 60, md: 80 }, color: '#ec4899', opacity: 0.7 }} />
+                </Box>
 
-                <motion.div
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                <Typography 
+                  variant={isMobile ? "h6" : "h5"}
+                  sx={{ fontWeight: 700, color: '#374151', mb: 2 }}
                 >
-                  <Box
-                    ref={qrRef}
+                  Generar Códigos QR
+                </Typography>
+                <Typography 
+                  variant="body1" 
+                  sx={{ 
+                    color: '#64748b', 
+                    mb: 4,
+                    maxWidth: { xs: '100%', md: 500 },
+                    mx: 'auto'
+                  }}
+                >
+                  Crea tus códigos QR personalizados para que los socios puedan validar sus beneficios de forma rápida y segura.
+                </Typography>
+
+                <Button
+                  variant="contained"
+                  size={isMobile ? "medium" : "large"}
+                  startIcon={generating ? <CircularProgress size={20} /> : <PlayArrow />}
+                  onClick={() => generateQRCode()}
+                  disabled={generating}
+                  sx={{
+                    background: 'linear-gradient(135deg, #ec4899 0%, #be185d 100%)',
+                    boxShadow: '0 4px 20px rgba(236, 72, 153, 0.3)',
+                    px: { xs: 3, md: 4 },
+                    py: { xs: 1.5, md: 2 },
+                    fontSize: { xs: '0.9rem', md: '1rem' },
+                    '&:hover': {
+                      background: 'linear-gradient(135deg, #be185d 0%, #9d174d 100%)',
+                      boxShadow: '0 6px 25px rgba(236, 72, 153, 0.4)',
+                    },
+                    '&:disabled': {
+                      background: '#e2e8f0',
+                      color: '#94a3b8',
+                      boxShadow: 'none',
+                    }
+                  }}
+                >
+                  {generating ? 'Generando...' : 'Generar Códigos QR'}
+                </Button>
+
+                {/* Info Cards */}
+                <Grid container spacing={2} sx={{ mt: 4, maxWidth: 600, mx: 'auto' }}>
+                  <Grid item xs={12} sm={6}>
+                    <Paper
+                      elevation={0}
+                      sx={{
+                        p: 3,
+                        border: '1px solid #e2e8f0',
+                        borderRadius: 3,
+                        textAlign: 'center',
+                        height: '100%',
+                      }}
+                    >
+                      <Smartphone sx={{ fontSize: 32, color: '#6366f1', mb: 2 }} />
+                      <Typography variant="h6" sx={{ fontWeight: 700, color: '#374151', mb: 1 }}>
+                        QR Aplicación
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: '#64748b' }}>
+                        Optimizado para la app móvil Fidelitá
+                      </Typography>
+                    </Paper>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <Paper
+                      elevation={0}
+                      sx={{
+                        p: 3,
+                        border: '1px solid #e2e8f0',
+                        borderRadius: 3,
+                        textAlign: 'center',
+                        height: '100%',
+                      }}
+                    >
+                      <Language sx={{ fontSize: 32, color: '#10b981', mb: 2 }} />
+                      <Typography variant="h6" sx={{ fontWeight: 700, color: '#374151', mb: 1 }}>
+                        QR Web
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: '#64748b' }}>
+                        Compatible con cualquier lector QR
+                      </Typography>
+                    </Paper>
+                  </Grid>
+                </Grid>
+              </motion.div>
+            </Box>
+          ) : (
+            /* Generated State - Show QR Codes */
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              {/* QR Type Selector */}
+              <Box sx={{ mb: 4 }}>
+                <Stack 
+                  direction={{ xs: 'column', sm: 'row' }} 
+                  spacing={2} 
+                  justifyContent="center"
+                  alignItems="center"
+                >
+                  <Button
+                    variant={activeQRType === 'app' ? 'contained' : 'outlined'}
+                    startIcon={<Smartphone />}
+                    onClick={() => setActiveQRType('app')}
                     sx={{
-                      width: 200,
-                      height: 200,
-                      bgcolor: '#ffffff',
-                      border: '3px solid #e2e8f0',
-                      borderRadius: 3,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      mx: 'auto',
-                      mb: 3,
-                      position: 'relative',
-                      cursor: 'pointer',
-                      transition: 'all 0.3s ease',
-                      '&:hover': {
-                        borderColor: '#ec4899',
-                        boxShadow: '0 8px 32px rgba(236, 72, 153, 0.2)',
-                      }
+                      minWidth: { xs: '100%', sm: 200 },
+                      ...(activeQRType === 'app' && {
+                        background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                        '&:hover': {
+                          background: 'linear-gradient(135deg, #5b21b6 0%, #7c3aed 100%)',
+                        }
+                      })
                     }}
-                    onClick={() => setQrDialogOpen(true)}
                   >
-                    {generating ? (
-                      <CircularProgress sx={{ color: '#ec4899' }} />
-                    ) : getCurrentQRData() ? (
-                      <Image
-                        src={getCurrentQRData()}
-                        alt="Código QR"
-                        width={180}
-                        height={180}
-                        style={{
-                          width: '90%',
-                          height: '90%',
-                          objectFit: 'contain'
-                        }}
-                        unoptimized
-                        priority
-                      />
-                    ) : (
-                      <QrCode sx={{ fontSize: 60, color: '#ec4899', opacity: 0.5 }} />
-                    )}
-                    
-                    {/* Hover overlay */}
-                    {getCurrentQRData() && (
+                    QR Aplicación
+                  </Button>
+                  <Button
+                    variant={activeQRType === 'web' ? 'contained' : 'outlined'}
+                    startIcon={<Language />}
+                    onClick={() => setActiveQRType('web')}
+                    sx={{
+                      minWidth: { xs: '100%', sm: 200 },
+                      ...(activeQRType === 'web' && {
+                        background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                        '&:hover': {
+                          background: 'linear-gradient(135deg, #047857 0%, #065f46 100%)',
+                        }
+                      })
+                    }}
+                  >
+                    QR Web
+                  </Button>
+                </Stack>
+              </Box>
+
+              <Grid container spacing={{ xs: 3, md: 6 }} alignItems="flex-start">
+                {/* QR Preview */}
+                <Grid item xs={12} lg={6}>
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      p: { xs: 3, md: 4 },
+                      border: '2px solid #f1f5f9',
+                      borderRadius: 4,
+                      textAlign: 'center',
+                      background: 'linear-gradient(135deg, #fafbfc 0%, #ffffff 100%)',
+                    }}
+                  >
+                    <motion.div
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
                       <Box
                         sx={{
-                          position: 'absolute',
-                          inset: 0,
-                          bgcolor: alpha('#ec4899', 0.1),
+                          width: { xs: 180, md: 220 },
+                          height: { xs: 180, md: 220 },
+                          bgcolor: '#ffffff',
+                          border: '3px solid #e2e8f0',
                           borderRadius: 3,
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          opacity: 0,
-                          transition: 'opacity 0.3s ease',
-                          '&:hover': { opacity: 1 },
+                          mx: 'auto',
+                          mb: 3,
+                          position: 'relative',
+                          cursor: 'pointer',
+                          transition: 'all 0.3s ease',
+                          '&:hover': {
+                            borderColor: activeQRType === 'app' ? '#6366f1' : '#10b981',
+                            boxShadow: `0 8px 32px ${alpha(activeQRType === 'app' ? '#6366f1' : '#10b981', 0.2)}`,
+                          }
+                        }}
+                        onClick={() => setQrDialogOpen(true)}
+                      >
+                        {getCurrentQRData() ? (
+                          <Image
+                            src={getCurrentQRData()}
+                            alt="Código QR"
+                            width={isMobile ? 160 : 200}
+                            height={isMobile ? 160 : 200}
+                            style={{
+                              width: '90%',
+                              height: '90%',
+                              objectFit: 'contain'
+                            }}
+                            unoptimized
+                            priority
+                          />
+                        ) : (
+                          <QrCode sx={{ fontSize: { xs: 50, md: 60 }, color: '#9ca3af', opacity: 0.5 }} />
+                        )}
+                        
+                        {/* Hover overlay */}
+                        {getCurrentQRData() && (
+                          <Box
+                            sx={{
+                              position: 'absolute',
+                              inset: 0,
+                              bgcolor: alpha(activeQRType === 'app' ? '#6366f1' : '#10b981', 0.1),
+                              borderRadius: 3,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              opacity: 0,
+                              transition: 'opacity 0.3s ease',
+                              '&:hover': { opacity: 1 },
+                            }}
+                          >
+                            <Visibility sx={{ fontSize: { xs: 24, md: 30 }, color: activeQRType === 'app' ? '#6366f1' : '#10b981' }} />
+                          </Box>
+                        )}
+                      </Box>
+                    </motion.div>
+
+                    <Typography variant="h6" sx={{ fontWeight: 700, color: '#374151', mb: 1 }}>
+                      QR {activeQRType === 'app' ? 'de Aplicación' : 'Web'}
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: '#64748b', mb: 3 }}>
+                      {activeQRType === 'app' 
+                        ? 'Optimizado para la aplicación móvil Fidelitá'
+                        : 'Compatible con cualquier lector QR, redirige a la página de validación web'
+                      }
+                    </Typography>
+
+                    <Stack 
+                      direction="row" 
+                      spacing={1} 
+                      justifyContent="center" 
+                      flexWrap="wrap"
+                      sx={{ gap: 1 }}
+                    >
+                      <Tooltip title="Ver QR completo">
+                        <IconButton
+                          onClick={() => setQrDialogOpen(true)}
+                          disabled={!getCurrentQRData()}
+                          size={isMobile ? "small" : "medium"}
+                          sx={{
+                            bgcolor: alpha('#ec4899', 0.1),
+                            color: '#ec4899',
+                            '&:hover': {
+                              bgcolor: alpha('#ec4899', 0.2),
+                            },
+                            '&:disabled': {
+                              bgcolor: alpha('#9ca3af', 0.1),
+                              color: '#9ca3af',
+                            }
+                          }}
+                        >
+                          <Visibility fontSize={isMobile ? "small" : "medium"} />
+                        </IconButton>
+                      </Tooltip>
+                      
+                      <Tooltip title="Compartir QR">
+                        <IconButton
+                          onClick={() => handleShareQR(activeQRType)}
+                          disabled={!getCurrentQRData()}
+                          size={isMobile ? "small" : "medium"}
+                          sx={{
+                            bgcolor: alpha('#06b6d4', 0.1),
+                            color: '#06b6d4',
+                            '&:hover': {
+                              bgcolor: alpha('#06b6d4', 0.2),
+                            },
+                            '&:disabled': {
+                              bgcolor: alpha('#9ca3af', 0.1),
+                              color: '#9ca3af',
+                            }
+                          }}
+                        >
+                          <Share fontSize={isMobile ? "small" : "medium"} />
+                        </IconButton>
+                      </Tooltip>
+
+                      <Tooltip title="Imprimir QR">
+                        <IconButton
+                          onClick={() => handlePrintQR(activeQRType)}
+                          disabled={!getCurrentQRData()}
+                          size={isMobile ? "small" : "medium"}
+                          sx={{
+                            bgcolor: alpha('#10b981', 0.1),
+                            color: '#10b981',
+                            '&:hover': {
+                              bgcolor: alpha('#10b981', 0.2),
+                            },
+                            '&:disabled': {
+                              bgcolor: alpha('#9ca3af', 0.1),
+                              color: '#9ca3af',
+                            }
+                          }}
+                        >
+                          <Print fontSize={isMobile ? "small" : "medium"} />
+                        </IconButton>
+                      </Tooltip>
+                    </Stack>
+                  </Paper>
+                </Grid>
+
+                {/* Actions and Info */}
+                <Grid item xs={12} lg={6}>
+                  <Stack spacing={3}>
+                    {/* URL Info */}
+                    <Paper
+                      elevation={0}
+                      sx={{
+                        p: { xs: 3, md: 4 },
+                        border: '1px solid #e2e8f0',
+                        borderRadius: 3,
+                        bgcolor: alpha('#f8fafc', 0.5),
+                      }}
+                    >
+                      <Typography variant="h6" sx={{ fontWeight: 700, color: '#374151', mb: 2 }}>
+                        URL de Validación {activeQRType === 'app' ? '(Aplicación)' : '(Web)'}
+                      </Typography>
+                      
+                      <Box
+                        sx={{
+                          p: 2,
+                          bgcolor: '#f1f5f9',
+                          borderRadius: 2,
+                          border: '1px solid #e2e8f0',
+                          mb: 3,
                         }}
                       >
-                        <Visibility sx={{ fontSize: 30, color: '#ec4899' }} />
+                        <Typography 
+                          variant="body2" 
+                          sx={{ 
+                            color: '#475569',
+                            fontFamily: 'monospace',
+                            wordBreak: 'break-all',
+                            fontSize: { xs: '0.75rem', md: '0.85rem' },
+                          }}
+                        >
+                          {getCurrentUrl()}
+                        </Typography>
                       </Box>
-                    )}
-                  </Box>
-                </motion.div>
 
-                <Typography variant="h6" sx={{ fontWeight: 700, color: '#374151', mb: 1 }}>
-                  QR {activeTab === 0 ? 'de Aplicación' : 'Web'}
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#64748b', mb: 3 }}>
-                  {activeTab === 0 
-                    ? 'Optimizado para la aplicación móvil Fidelitá'
-                    : 'Compatible con cualquier lector QR, redirige a la página de validación web'
-                  }
-                </Typography>
-
-                <Stack direction="row" spacing={2} justifyContent="center" flexWrap="wrap">
-                  <Tooltip title="Ver QR completo">
-                    <IconButton
-                      onClick={() => setQrDialogOpen(true)}
-                      disabled={!getCurrentQRData()}
-                      sx={{
-                        bgcolor: alpha('#ec4899', 0.1),
-                        color: '#ec4899',
-                        '&:hover': {
-                          bgcolor: alpha('#ec4899', 0.2),
-                        },
-                        '&:disabled': {
-                          bgcolor: alpha('#9ca3af', 0.1),
-                          color: '#9ca3af',
-                        }
-                      }}
-                    >
-                      <Visibility />
-                    </IconButton>
-                  </Tooltip>
-                  
-                  <Tooltip title="Compartir QR">
-                    <IconButton
-                      onClick={() => handleShareQR(getCurrentQRType())}
-                      disabled={!getCurrentQRData()}
-                      sx={{
-                        bgcolor: alpha('#06b6d4', 0.1),
-                        color: '#06b6d4',
-                        '&:hover': {
-                          bgcolor: alpha('#06b6d4', 0.2),
-                        },
-                        '&:disabled': {
-                          bgcolor: alpha('#9ca3af', 0.1),
-                          color: '#9ca3af',
-                        }
-                      }}
-                    >
-                      <Share />
-                    </IconButton>
-                  </Tooltip>
-
-                  <Tooltip title="Imprimir QR">
-                    <IconButton
-                      onClick={() => handlePrintQR(getCurrentQRType())}
-                      disabled={!getCurrentQRData()}
-                      sx={{
-                        bgcolor: alpha('#10b981', 0.1),
-                        color: '#10b981',
-                        '&:hover': {
-                          bgcolor: alpha('#10b981', 0.2),
-                        },
-                        '&:disabled': {
-                          bgcolor: alpha('#9ca3af', 0.1),
-                          color: '#9ca3af',
-                        }
-                      }}
-                    >
-                      <Print />
-                    </IconButton>
-                  </Tooltip>
-                </Stack>
-              </Paper>
-            </Box>
-
-            {/* Actions and Info */}
-            <Box sx={{ flex: 1, minWidth: 300 }}>
-              <Stack spacing={4}>
-                {/* URL Info */}
-                <Paper
-                  elevation={0}
-                  sx={{
-                    p: 4,
-                    border: '1px solid #e2e8f0',
-                    borderRadius: 3,
-                    bgcolor: alpha('#f8fafc', 0.5),
-                  }}
-                >
-                  <Typography variant="h6" sx={{ fontWeight: 700, color: '#374151', mb: 2 }}>
-                    URL de Validación {activeTab === 0 ? '(Aplicación)' : '(Web)'}
-                  </Typography>
-                  
-                  <Box
-                    sx={{
-                      p: 3,
-                      bgcolor: '#f1f5f9',
-                      borderRadius: 2,
-                      border: '1px solid #e2e8f0',
-                      mb: 3,
-                    }}
-                  >
-                    <Typography 
-                      variant="body2" 
-                      sx={{ 
-                        color: '#475569',
-                        fontFamily: 'monospace',
-                        wordBreak: 'break-all',
-                        fontSize: '0.85rem',
-                      }}
-                    >
-                      {getCurrentUrl()}
-                    </Typography>
-                  </Box>
-
-                  <Button
-                    variant="outlined"
-                    startIcon={copied ? <CheckCircle /> : <ContentCopy />}
-                    onClick={() => handleCopyUrl(getCurrentQRType())}
-                    fullWidth
-                    sx={{
-                      borderColor: copied ? '#10b981' : '#d1d5db',
-                      color: copied ? '#10b981' : '#6b7280',
-                      '&:hover': {
-                        borderColor: copied ? '#10b981' : '#9ca3af',
-                        bgcolor: copied ? alpha('#10b981', 0.1) : alpha('#6b7280', 0.1),
-                      }
-                    }}
-                  >
-                    {copied ? 'Copiado!' : 'Copiar URL'}
-                  </Button>
-                </Paper>
-
-                {/* Download Actions */}
-                <Paper
-                  elevation={0}
-                  sx={{
-                    p: 4,
-                    border: '1px solid #e2e8f0',
-                    borderRadius: 3,
-                  }}
-                >
-                  <Typography variant="h6" sx={{ fontWeight: 700, color: '#374151', mb: 3 }}>
-                    Descargas
-                  </Typography>
-                  
-                  <Stack spacing={2}>
-                    <Button
-                      variant="contained"
-                      startIcon={downloading ? <CircularProgress size={16} /> : <PictureAsPdf />}
-                      onClick={() => handleDownloadQR('pdf', getCurrentQRType())}
-                      disabled={!getCurrentQRData() || downloading}
-                      fullWidth
-                      sx={{
-                        background: 'linear-gradient(135deg, #ec4899 0%, #be185d 100%)',
-                        boxShadow: '0 4px 20px rgba(236, 72, 153, 0.3)',
-                        '&:hover': {
-                          background: 'linear-gradient(135deg, #be185d 0%, #9d174d 100%)',
-                          boxShadow: '0 6px 25px rgba(236, 72, 153, 0.4)',
-                        },
-                        '&:disabled': {
-                          background: '#e2e8f0',
-                          color: '#94a3b8',
-                          boxShadow: 'none',
-                        }
-                      }}
-                    >
-                      {downloading ? 'Generando...' : `Descargar Cartel PDF ${activeTab === 0 ? '(App)' : '(Web)'}`}
-                    </Button>
-                    
-                    <Button
-                      variant="outlined"
-                      startIcon={<ImageIcon />}
-                      onClick={() => handleDownloadQR('png', getCurrentQRType())}
-                      disabled={!getCurrentQRData()}
-                      fullWidth
-                      sx={{
-                        borderColor: '#d1d5db',
-                        color: '#6b7280',
-                        '&:hover': {
-                          borderColor: '#9ca3af',
-                          bgcolor: alpha('#6b7280', 0.1),
-                        },
-                        '&:disabled': {
-                          borderColor: '#e2e8f0',
-                          color: '#94a3b8',
-                        }
-                      }}
-                    >
-                      Descargar QR PNG
-                    </Button>
-                    
-                    <Button
-                      variant="outlined"
-                      startIcon={<Print />}
-                      onClick={() => handlePrintQR(getCurrentQRType())}
-                      disabled={!getCurrentQRData()}
-                      fullWidth
-                      sx={{
-                        borderColor: '#d1d5db',
-                        color: '#6b7280',
-                        '&:hover': {
-                          borderColor: '#9ca3af',
-                          bgcolor: alpha('#6b7280', 0.1),
-                        },
-                        '&:disabled': {
-                          borderColor: '#e2e8f0',
-                          color: '#94a3b8',
-                        }
-                      }}
-                    >
-                      Imprimir QR
-                    </Button>
-                  </Stack>
-                </Paper>
-
-                {/* Status */}
-                <Paper
-                  elevation={0}
-                  sx={{
-                    p: 4,
-                    border: '1px solid #e2e8f0',
-                    borderRadius: 3,
-                    bgcolor: alpha('#10b981', 0.05),
-                  }}
-                >
-                  <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 2 }}>
-                    <CheckCircle sx={{ color: '#10b981', fontSize: 24 }} />
-                    <Typography variant="h6" sx={{ fontWeight: 700, color: '#059669' }}>
-                      QR Activo
-                    </Typography>
-                  </Stack>
-                  
-                  <Typography variant="body2" sx={{ color: '#047857', mb: 3 }}>
-                    Tus códigos QR están funcionando correctamente y listos para recibir validaciones.
-                  </Typography>
-
-                  <Stack direction="row" spacing={1} flexWrap="wrap">
-                    <Chip
-                      label="Comercio Verificado"
-                      size="small"
-                      sx={{
-                        bgcolor: alpha('#10b981', 0.2),
-                        color: '#047857',
-                        fontWeight: 600,
-                      }}
-                    />
-                    <Chip
-                      label="QR Válido"
-                      size="small"
-                      sx={{
-                        bgcolor: alpha('#06b6d4', 0.2),
-                        color: '#0891b2',
-                        fontWeight: 600,
-                      }}
-                    />
-                    {comercio?.visible && (
-                      <Chip
-                        label="Visible para Socios"
-                        size="small"
+                      <Button
+                        variant="outlined"
+                        startIcon={copied ? <CheckCircle /> : <ContentCopy />}
+                        onClick={() => handleCopyUrl(activeQRType)}
+                        fullWidth
+                        size={isMobile ? "medium" : "large"}
                         sx={{
-                          bgcolor: alpha('#8b5cf6', 0.2),
-                          color: '#7c3aed',
-                          fontWeight: 600,
+                          borderColor: copied ? '#10b981' : '#d1d5db',
+                          color: copied ? '#10b981' : '#6b7280',
+                          '&:hover': {
+                            borderColor: copied ? '#10b981' : '#9ca3af',
+                            bgcolor: copied ? alpha('#10b981', 0.1) : alpha('#6b7280', 0.1),
+                          }
                         }}
-                      />
-                    )}
+                      >
+                        {copied ? 'Copiado!' : 'Copiar URL'}
+                      </Button>
+                    </Paper>
+
+                    {/* Download Actions */}
+                    <Paper
+                      elevation={0}
+                      sx={{
+                        p: { xs: 3, md: 4 },
+                        border: '1px solid #e2e8f0',
+                        borderRadius: 3,
+                      }}
+                    >
+                      <Typography variant="h6" sx={{ fontWeight: 700, color: '#374151', mb: 3 }}>
+                        Descargas
+                      </Typography>
+                      
+                      <Stack spacing={2}>
+                        <Button
+                          variant="contained"
+                          startIcon={downloading ? <CircularProgress size={16} /> : <PictureAsPdf />}
+                          onClick={() => handleDownloadQR('pdf', activeQRType)}
+                          disabled={!getCurrentQRData() || downloading}
+                          fullWidth
+                          size={isMobile ? "medium" : "large"}
+                          sx={{
+                            background: 'linear-gradient(135deg, #ec4899 0%, #be185d 100%)',
+                            boxShadow: '0 4px 20px rgba(236, 72, 153, 0.3)',
+                            '&:hover': {
+                              background: 'linear-gradient(135deg, #be185d 0%, #9d174d 100%)',
+                              boxShadow: '0 6px 25px rgba(236, 72, 153, 0.4)',
+                            },
+                            '&:disabled': {
+                              background: '#e2e8f0',
+                              color: '#94a3b8',
+                              boxShadow: 'none',
+                            }
+                          }}
+                        >
+                          {downloading ? 'Generando...' : `Descargar Cartel PDF`}
+                        </Button>
+                        
+                        <Button
+                          variant="outlined"
+                          startIcon={<ImageIcon />}
+                          onClick={() => handleDownloadQR('png', activeQRType)}
+                          disabled={!getCurrentQRData()}
+                          fullWidth
+                          size={isMobile ? "medium" : "large"}
+                          sx={{
+                            borderColor: '#d1d5db',
+                            color: '#6b7280',
+                            '&:hover': {
+                              borderColor: '#9ca3af',
+                              bgcolor: alpha('#6b7280', 0.1),
+                            },
+                            '&:disabled': {
+                              borderColor: '#e2e8f0',
+                              color: '#94a3b8',
+                            }
+                          }}
+                        >
+                          Descargar QR PNG
+                        </Button>
+                      </Stack>
+                    </Paper>
+
+                    {/* Status */}
+                    <Paper
+                      elevation={0}
+                      sx={{
+                        p: { xs: 3, md: 4 },
+                        border: '1px solid #e2e8f0',
+                        borderRadius: 3,
+                        bgcolor: alpha('#10b981', 0.05),
+                      }}
+                    >
+                      <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 2 }}>
+                        <CheckCircle sx={{ color: '#10b981', fontSize: 24 }} />
+                        <Typography variant="h6" sx={{ fontWeight: 700, color: '#059669' }}>
+                          QR Activo
+                        </Typography>
+                      </Stack>
+                      
+                      <Typography variant="body2" sx={{ color: '#047857', mb: 3 }}>
+                        Tus códigos QR están funcionando correctamente y listos para recibir validaciones.
+                      </Typography>
+
+                      <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ gap: 1 }}>
+                        <Chip
+                          label="Comercio Verificado"
+                          size="small"
+                          sx={{
+                            bgcolor: alpha('#10b981', 0.2),
+                            color: '#047857',
+                            fontWeight: 600,
+                          }}
+                        />
+                        <Chip
+                          label="QR Válido"
+                          size="small"
+                          sx={{
+                            bgcolor: alpha('#06b6d4', 0.2),
+                            color: '#0891b2',
+                            fontWeight: 600,
+                          }}
+                        />
+                        {comercio?.visible && (
+                          <Chip
+                            label="Visible para Socios"
+                            size="small"
+                            sx={{
+                              bgcolor: alpha('#8b5cf6', 0.2),
+                              color: '#7c3aed',
+                              fontWeight: 600,
+                            }}
+                          />
+                        )}
+                      </Stack>
+                    </Paper>
+
+                    {/* Regenerate Button */}
+                    <Button
+                      variant="outlined"
+                      startIcon={<QrCode />}
+                      onClick={() => {
+                        setQrGenerated(false);
+                        setQrDataUrl('');
+                        setWebQrDataUrl('');
+                      }}
+                      fullWidth
+                      sx={{
+                        borderColor: '#d1d5db',
+                        color: '#6b7280',
+                        '&:hover': {
+                          borderColor: '#9ca3af',
+                          bgcolor: alpha('#6b7280', 0.1),
+                        }
+                      }}
+                    >
+                      Regenerar Códigos QR
+                    </Button>
                   </Stack>
-                </Paper>
-              </Stack>
-            </Box>
-          </Box>
+                </Grid>
+              </Grid>
+            </motion.div>
+          )}
 
           {/* Instructions */}
-          <Box sx={{ mt: 6 }}>
+          <Box sx={{ mt: { xs: 4, md: 6 } }}>
             <Paper
               elevation={0}
               sx={{
-                p: 4,
+                p: { xs: 3, md: 4 },
                 bgcolor: alpha('#6366f1', 0.05),
                 border: '1px solid',
                 borderColor: alpha('#6366f1', 0.2),
                 borderRadius: 3,
               }}
             >
-              <Typography variant="h6" sx={{ fontWeight: 700, color: '#5b21b6', mb: 2 }}>
-                📋 Instrucciones de Uso
-              </Typography>
-              <Stack spacing={1}>
+              <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 2 }}>
+                <Info sx={{ color: '#5b21b6', fontSize: 24 }} />
+                <Typography variant="h6" sx={{ fontWeight: 700, color: '#5b21b6' }}>
+                  Instrucciones de Uso
+                </Typography>
+              </Stack>
+              <Grid container spacing={2}>
+                <Grid item xs={12} md={6}>
+                  <Typography variant="body2" sx={{ color: '#4c1d95', mb: 1 }}>
+                    <strong>QR de Aplicación:</strong>
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: '#4c1d95', mb: 2 }}>
+                    Optimizado para socios que usan la app móvil Fidelitá
+                  </Typography>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <Typography variant="body2" sx={{ color: '#4c1d95', mb: 1 }}>
+                    <strong>QR Web:</strong>
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: '#4c1d95', mb: 2 }}>
+                    Compatible con cualquier lector QR, redirige a la página web
+                  </Typography>
+                </Grid>
+              </Grid>
+              <Stack spacing={1} sx={{ mt: 2 }}>
                 <Typography variant="body2" sx={{ color: '#4c1d95' }}>
-                  <strong>QR de Aplicación:</strong> Optimizado para socios que usan la app móvil Fidelitá
+                  1. <strong>Genera</strong> tus códigos QR usando el botón correspondiente
                 </Typography>
                 <Typography variant="body2" sx={{ color: '#4c1d95' }}>
-                  <strong>QR Web:</strong> Compatible con cualquier lector QR, redirige a la página web de validación
+                  2. <strong>Descarga</strong> el cartel en formato PDF o imagen PNG
                 </Typography>
                 <Typography variant="body2" sx={{ color: '#4c1d95' }}>
-                  1. <strong>Descarga</strong> el cartel con QR en formato PDF o imprime directamente
+                  3. <strong>Coloca</strong> el cartel en un lugar visible de tu comercio
                 </Typography>
                 <Typography variant="body2" sx={{ color: '#4c1d95' }}>
-                  2. <strong>Coloca</strong> el cartel en un lugar visible y accesible de tu comercio
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#4c1d95' }}>
-                  3. <strong>Los socios</strong> escanearán el QR para validar sus beneficios automáticamente
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#4c1d95' }}>
-                  4. <strong>Mantén</strong> el cartel limpio y sin daños para garantizar una lectura óptima
+                  4. <strong>Los socios</strong> escanearán el QR para validar beneficios automáticamente
                 </Typography>
               </Stack>
             </Paper>
@@ -841,6 +1035,8 @@ export const QRSection: React.FC = () => {
           sx: {
             borderRadius: 4,
             background: 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
+            m: { xs: 2, sm: 4 },
+            maxHeight: { xs: '90vh', sm: 'auto' }
           }
         }}
       >
@@ -848,8 +1044,8 @@ export const QRSection: React.FC = () => {
           <Stack direction="row" alignItems="center" justifyContent="space-between">
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
               <QrCode sx={{ color: '#ec4899', fontSize: 28 }} />
-              <Typography variant="h5" sx={{ fontWeight: 700, color: '#0f172a' }}>
-                Código QR {activeTab === 0 ? 'de Aplicación' : 'Web'}
+              <Typography variant={isMobile ? "h6" : "h5"} sx={{ fontWeight: 700, color: '#0f172a' }}>
+                Código QR {activeQRType === 'app' ? 'de Aplicación' : 'Web'}
               </Typography>
             </Box>
             <IconButton onClick={() => setQrDialogOpen(false)}>
@@ -858,7 +1054,7 @@ export const QRSection: React.FC = () => {
           </Stack>
         </DialogTitle>
         
-        <DialogContent sx={{ textAlign: 'center', py: 4 }}>
+        <DialogContent sx={{ textAlign: 'center', py: { xs: 2, md: 4 } }}>
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -866,8 +1062,8 @@ export const QRSection: React.FC = () => {
           >
             <Box
               sx={{
-                width: 300,
-                height: 300,
+                width: { xs: 250, md: 300 },
+                height: { xs: 250, md: 300 },
                 bgcolor: '#ffffff',
                 border: '4px solid #e2e8f0',
                 borderRadius: 4,
@@ -883,8 +1079,8 @@ export const QRSection: React.FC = () => {
                 <Image
                   src={getCurrentQRData()}
                   alt="Código QR"
-                  width={270}
-                  height={270}
+                  width={isMobile ? 220 : 270}
+                  height={isMobile ? 220 : 270}
                   style={{
                     width: '90%',
                     height: '90%',
@@ -903,7 +1099,7 @@ export const QRSection: React.FC = () => {
             {comercio?.nombreComercio || 'Mi Comercio'}
           </Typography>
           <Typography variant="body1" sx={{ color: '#64748b', mb: 1 }}>
-            {activeTab === 0 ? 'Para aplicación móvil' : 'Para acceso web'}
+            {activeQRType === 'app' ? 'Para aplicación móvil' : 'Para acceso web'}
           </Typography>
           <Typography variant="body2" sx={{ color: '#64748b', mb: 4 }}>
             Escanea este código para validar beneficios
@@ -911,7 +1107,7 @@ export const QRSection: React.FC = () => {
 
           <Box
             sx={{
-              p: 3,
+              p: { xs: 2, md: 3 },
               bgcolor: '#f8fafc',
               borderRadius: 3,
               border: '1px solid #e2e8f0',
@@ -919,51 +1115,60 @@ export const QRSection: React.FC = () => {
           >
             <Typography 
               variant="body2" 
-              sx={{ 
-                color: '#475569',
-                fontFamily: 'monospace',
-                wordBreak: 'break-all',
-                fontSize: '0.8rem',
-              }}
-            >
-              {getCurrentUrl()}
-            </Typography>
-          </Box>
-        </DialogContent>
-        
-        <DialogActions sx={{ p: 3, pt: 0 }}>
-          <Stack direction="row" spacing={2} width="100%">
-            <Button
-              variant="outlined"
-              startIcon={<Share />}
-              onClick={() => handleShareQR(getCurrentQRType())}
-              disabled={!getCurrentQRData()}
-              sx={{ flex: 1 }}
-            >
-              Compartir
-            </Button>
-            <Button
-              variant="contained"
-              startIcon={downloading ? <CircularProgress size={16} /> : <Download />}
-              onClick={() => handleDownloadQR('pdf', getCurrentQRType())}
-              disabled={!getCurrentQRData() || downloading}
-              sx={{
-                flex: 1,
-                background: 'linear-gradient(135deg, #ec4899 0%, #be185d 100%)',
-                '&:hover': {
-                  background: 'linear-gradient(135deg, #be185d 0%, #9d174d 100%)',
-                },
-                '&:disabled': {
-                  background: '#e2e8f0',
-                  color: '#94a3b8',
-                }
-              }}
-            >
-              {downloading ? 'Generando...' : 'Descargar'}
-            </Button>
-          </Stack>
-        </DialogActions>
-      </Dialog>
-    </>
-  );
+              sx={{              color: '#475569',
+              fontFamily: 'monospace',
+              wordBreak: 'break-all',
+              fontSize: { xs: '0.75rem', md: '0.8rem' },
+            }}
+          >
+            {getCurrentUrl()}
+          </Typography>
+        </Box>
+      </DialogContent>
+      
+      <DialogActions sx={{ p: 3, pt: 0 }}>
+        <Stack 
+          direction={{ xs: 'column', sm: 'row' }} 
+          spacing={2} 
+          width="100%"
+          sx={{ gap: 2 }}
+        >
+          <Button
+            variant="outlined"
+            startIcon={<Share />}
+            onClick={() => handleShareQR(activeQRType)}
+            disabled={!getCurrentQRData()}
+            sx={{ 
+              flex: 1,
+              minWidth: { xs: '100%', sm: 'auto' }
+            }}
+          >
+            Compartir
+          </Button>
+          <Button
+            variant="contained"
+            startIcon={downloading ? <CircularProgress size={16} /> : <Download />}
+            onClick={() => handleDownloadQR('pdf', activeQRType)}
+            disabled={!getCurrentQRData() || downloading}
+            sx={{
+              flex: 1,
+              minWidth: { xs: '100%', sm: 'auto' },
+              background: 'linear-gradient(135deg, #ec4899 0%, #be185d 100%)',
+              '&:hover': {
+                background: 'linear-gradient(135deg, #be185d 0%, #9d174d 100%)',
+              },
+              '&:disabled': {
+                background: '#e2e8f0',
+                color: '#94a3b8',
+              }
+            }}
+          >
+            {downloading ? 'Generando...' : 'Descargar'}
+          </Button>
+        </Stack>
+      </DialogActions>
+    </Dialog>
+  </>
+);
 };
+
