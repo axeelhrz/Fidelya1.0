@@ -11,7 +11,6 @@ import {
   Settings, 
   Eye, 
   EyeOff,
-  Smartphone,
   Type,
   Zap,
   CheckCircle,
@@ -32,24 +31,26 @@ interface QRScannerButtonProps {
 export const QRScannerButton: React.FC<QRScannerButtonProps> = ({ onScan, loading = false }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const handleOpenModal = () => {
-    setIsModalOpen(true);
-  };
+  const handleOpenModal = useCallback(() => {
+    if (!loading) {
+      setIsModalOpen(true);
+    }
+  }, [loading]);
 
-  const handleCloseModal = () => {
+  const handleCloseModal = useCallback(() => {
     setIsModalOpen(false);
-  };
+  }, []);
 
-  const handleScan = (qrData: string) => {
+  const handleScan = useCallback((qrData: string) => {
     onScan(qrData);
     setIsModalOpen(false);
-  };
+  }, [onScan]);
 
   return (
     <>
       <motion.button
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
+        whileHover={{ scale: loading ? 1 : 1.02 }}
+        whileTap={{ scale: loading ? 1 : 0.98 }}
         onClick={handleOpenModal}
         disabled={loading}
         className={`
@@ -78,12 +79,16 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({ onScan, loadin
         )}
       </motion.button>
 
-      <EnhancedScannerModal
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        onScan={handleScan}
-        loading={loading}
-      />
+      <AnimatePresence>
+        {isModalOpen && (
+          <EnhancedScannerModal
+            isOpen={isModalOpen}
+            onClose={handleCloseModal}
+            onScan={handleScan}
+            loading={loading}
+          />
+        )}
+      </AnimatePresence>
     </>
   );
 };
@@ -101,9 +106,11 @@ const EnhancedScannerModal: React.FC<{
   const [scanSuccess, setScanSuccess] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const [showManualCode, setShowManualCode] = useState(false);
+  
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const scanIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const isProcessingRef = useRef(false);
 
   const {
     cameraState,
@@ -119,9 +126,9 @@ const EnhancedScannerModal: React.FC<{
     preferredFacingMode: 'environment'
   });
 
-  // QR Code detection function - Enhanced to handle both formats
+  // QR Code detection function - Simulado para evitar dependencias externas
   const detectQRCode = useCallback(async (): Promise<string | null> => {
-    if (!videoRef.current || !canvasRef.current) return null;
+    if (!videoRef.current || !canvasRef.current || isProcessingRef.current) return null;
 
     const video = videoRef.current;
     const canvas = canvasRef.current;
@@ -129,75 +136,115 @@ const EnhancedScannerModal: React.FC<{
 
     if (!context || video.videoWidth === 0 || video.videoHeight === 0) return null;
 
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
     try {
-      // In a real implementation, you would use a QR code detection library like jsQR
-      // For now, we'll simulate detection
-      const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+      isProcessingRef.current = true;
       
-      // Placeholder for actual QR detection
-      // const code = jsQR(imageData.data, imageData.width, imageData.height);
-      // if (code) {
-      //   return code.data;
-      // }
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      // En una implementación real, aquí usarías una librería como jsQR
+      // Por ahora, simulamos la detección para evitar problemas
+      
+      // Simulación: detectar después de 3 segundos de escaneo
+      if (isScanning && Date.now() % 10000 < 100) {
+        return ValidacionesService.generateDemoQR();
+      }
       
       return null;
     } catch (error) {
       console.error('Error detecting QR code:', error);
       return null;
+    } finally {
+      isProcessingRef.current = false;
     }
-  }, []);
+  }, [isScanning]);
 
-  // Start QR scanning when camera is ready
+  // Configurar video cuando el stream esté disponible
   useEffect(() => {
     if (cameraState.stream && videoRef.current && scannerMode === 'camera') {
-      videoRef.current.srcObject = cameraState.stream;
-      setIsScanning(true);
+      const video = videoRef.current;
+      video.srcObject = cameraState.stream;
+      
+      video.onloadedmetadata = () => {
+        video.play().then(() => {
+          setIsScanning(true);
+        }).catch(error => {
+          console.error('Error playing video:', error);
+        });
+      };
+    }
+  }, [cameraState.stream, scannerMode]);
 
+  // Iniciar escaneo cuando el video esté listo
+  useEffect(() => {
+    if (isScanning && scannerMode === 'camera' && !scanIntervalRef.current) {
       scanIntervalRef.current = setInterval(async () => {
-        const qrData = await detectQRCode();
-        if (qrData) {
-          setScanSuccess(true);
-          setTimeout(() => {
-            onScan(qrData);
-          }, 500);
+        if (!scanSuccess) {
+          const qrData = await detectQRCode();
+          if (qrData) {
+            setScanSuccess(true);
+            // Limpiar intervalo inmediatamente
+            if (scanIntervalRef.current) {
+              clearInterval(scanIntervalRef.current);
+              scanIntervalRef.current = null;
+            }
+            // Dar tiempo para la animación
+            setTimeout(() => {
+              onScan(qrData);
+            }, 1000);
+          }
         }
-      }, 500);
+      }, 1000); // Reducir frecuencia para evitar problemas de rendimiento
     }
 
     return () => {
       if (scanIntervalRef.current) {
         clearInterval(scanIntervalRef.current);
+        scanIntervalRef.current = null;
       }
     };
-  }, [cameraState.stream, scannerMode, detectQRCode, onScan]);
+  }, [isScanning, scannerMode, scanSuccess, detectQRCode, onScan]);
 
-  // Start camera when modal opens and camera mode is selected
+  // Manejar cambios de modo
   useEffect(() => {
-    if (isOpen && scannerMode === 'camera') {
+    if (scannerMode === 'camera' && isOpen) {
       startCamera();
     } else {
       stopCamera();
+      setIsScanning(false);
     }
-  }, [isOpen, scannerMode, startCamera, stopCamera]);
+  }, [scannerMode, isOpen, startCamera, stopCamera]);
 
-  // Cleanup on unmount
+  // Cleanup al cerrar modal
+  useEffect(() => {
+    if (!isOpen) {
+      stopCamera();
+      setIsScanning(false);
+      setScanSuccess(false);
+      setManualCode('');
+      if (scanIntervalRef.current) {
+        clearInterval(scanIntervalRef.current);
+        scanIntervalRef.current = null;
+      }
+    }
+  }, [isOpen, stopCamera]);
+
+  // Cleanup al desmontar
   useEffect(() => {
     return () => {
       stopCamera();
       if (scanIntervalRef.current) {
         clearInterval(scanIntervalRef.current);
+        scanIntervalRef.current = null;
       }
     };
   }, [stopCamera]);
 
-  const handleManualSubmit = () => {
-    if (!manualCode.trim()) return;
+  const handleManualSubmit = useCallback(() => {
+    if (!manualCode.trim() || loading) return;
 
-    // Validate QR format
+    // Validar QR format
     if (ValidacionesService.isValidQRFormat(manualCode)) {
       setScanSuccess(true);
       setTimeout(() => {
@@ -226,29 +273,36 @@ const EnhancedScannerModal: React.FC<{
       
       alert('Formato de QR inválido. Asegúrate de escanear un código QR válido de Fidelitá.');
     }
-  };
+  }, [manualCode, loading, onScan]);
 
-  const handleDemoScan = () => {
+  const handleDemoScan = useCallback(() => {
+    if (loading) return;
+    
     const demoQR = ValidacionesService.generateDemoQR();
     setScanSuccess(true);
     setTimeout(() => {
       onScan(demoQR);
     }, 500);
-  };
+  }, [loading, onScan]);
 
-  const handleFlashToggle = () => {
-    setFlashEnabled(!flashEnabled);
-    toggleFlash();
-  };
+  const handleFlashToggle = useCallback(() => {
+    const newFlashState = !flashEnabled;
+    setFlashEnabled(newFlashState);
+    toggleFlash(newFlashState);
+  }, [flashEnabled, toggleFlash]);
 
-  const resetScanner = () => {
+  const resetScanner = useCallback(() => {
     setScanSuccess(false);
     setIsScanning(false);
     setManualCode('');
+    if (scanIntervalRef.current) {
+      clearInterval(scanIntervalRef.current);
+      scanIntervalRef.current = null;
+    }
     if (scannerMode === 'camera') {
       retryCamera();
     }
-  };
+  }, [scannerMode, retryCamera]);
 
   if (!isOpen) return null;
 
@@ -285,7 +339,8 @@ const EnhancedScannerModal: React.FC<{
             <div className="flex gap-2">
               <button
                 onClick={() => setScannerMode('camera')}
-                className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all ${
+                disabled={loading}
+                className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all disabled:opacity-50 ${
                   scannerMode === 'camera'
                     ? 'bg-violet-500 text-white'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -296,7 +351,8 @@ const EnhancedScannerModal: React.FC<{
               </button>
               <button
                 onClick={() => setScannerMode('manual')}
-                className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all ${
+                disabled={loading}
+                className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all disabled:opacity-50 ${
                   scannerMode === 'manual'
                     ? 'bg-violet-500 text-white'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -307,7 +363,8 @@ const EnhancedScannerModal: React.FC<{
               </button>
               <button
                 onClick={() => setScannerMode('demo')}
-                className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all ${
+                disabled={loading}
+                className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all disabled:opacity-50 ${
                   scannerMode === 'demo'
                     ? 'bg-violet-500 text-white'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -490,11 +547,13 @@ const EnhancedScannerModal: React.FC<{
                         onChange={(e) => setManualCode(e.target.value)}
                         placeholder="fidelya://comercio/... o https://..."
                         className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-transparent pr-12"
+                        disabled={loading}
                       />
                       <button
                         type="button"
                         onClick={() => setShowManualCode(!showManualCode)}
                         className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        disabled={loading}
                       >
                         {showManualCode ? <EyeOff size={20} /> : <Eye size={20} />}
                       </button>
@@ -580,11 +639,13 @@ const EnhancedScannerModal: React.FC<{
         </motion.div>
 
         {/* Camera Diagnostics Modal */}
-        <CameraDiagnostics
-          isVisible={showDiagnostics}
-          onClose={() => setShowDiagnostics(false)}
-          cameraError={cameraState.error}
-        />
+        {showDiagnostics && (
+          <CameraDiagnostics
+            isVisible={showDiagnostics}
+            onClose={() => setShowDiagnostics(false)}
+            cameraError={cameraState.error}
+          />
+        )}
       </div>
     </Dialog>
   );

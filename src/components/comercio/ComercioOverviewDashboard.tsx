@@ -764,7 +764,7 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
     };
   }, [user, realTimeStats.validacionesEnTiempoReal]);
 
-  // Calculate metrics from validaciones
+  // Calculate metrics from validaciones - FIXED: Removed circular dependency
   const calculateMetrics = useCallback(() => {
     if (!user || validacionesLoading || beneficiosLoading) {
       return null;
@@ -842,7 +842,6 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
         beneficiosCanjeados: stats.totalValidaciones,
         crecimientoSemanal: Math.round(crecimientoSemanal * 100) / 100,
         crecimientoMensual: Math.round(crecimientoMensual * 100) / 100,
-        recentActivities: comercioMetrics.recentActivities,
         systemHealth,
         lastActivity,
         avgValidacionesDiarias: Math.round(avgValidacionesDiarias * 100) / 100,
@@ -854,9 +853,9 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
       console.error('Error calculating comercio metrics:', err);
       throw new Error('Error al cargar las métricas del comercio');
     }
-  }, [user, validaciones, activeBeneficios, stats, validacionesLoading, beneficiosLoading, comercioMetrics.recentActivities]);
+  }, [user, validaciones, activeBeneficios, stats, validacionesLoading, beneficiosLoading]);
 
-  // Calculate metrics with proper dependencies
+  // Calculate metrics with proper dependencies - FIXED: Removed circular dependency
   useEffect(() => {
     const metrics = calculateMetrics();
     
@@ -864,13 +863,15 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
       setComercioMetrics(prev => ({
         ...prev,
         ...metrics,
+        // Keep existing activities to avoid overwriting them
+        recentActivities: prev.recentActivities,
       }));
       setLoading(false);
       setError(null);
     } else if (!validacionesLoading && !beneficiosLoading) {
       setLoading(false);
     }
-  }, [calculateMetrics, validacionesLoading, beneficiosLoading]);
+  }, [calculateMetrics]);
 
   // Enhanced KPI metrics with real-time values
   const kpiMetrics = useMemo(() => [
@@ -1033,8 +1034,7 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
           className="relative overflow-hidden bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-2xl p-4 md:p-6"
         >
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 to-teal-500"></div>
-          
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-3 md:space-y-0">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-3 md:space-y-0">
             <div className="flex items-center space-x-4">
               <div className="relative">
                 <motion.div 
@@ -1381,3 +1381,4 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
     </div>
   );
 };
+
