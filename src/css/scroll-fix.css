@@ -1,0 +1,69 @@
+/* Corrección de problemas de scroll */
+
+/* Asegurar scroll suave global */
+html {
+    scroll-behavior: smooth;
+    overflow-x: hidden;
+}
+
+body {
+    overflow-x: hidden;
+    /* Remover cualquier configuración de scroll conflictiva */
+}
+
+/* Prevenir scroll horizontal */
+* {
+    max-width: 100%;
+}
+
+/* Corrección para elementos que pueden causar scroll horizontal */
+.container,
+.section,
+.hero,
+.features,
+.videos,
+.faq,
+.contact {
+    overflow-x: hidden;
+}
+
+/* Asegurar que el scroll principal funcione correctamente */
+main {
+    position: relative;
+    z-index: 1;
+}
+
+/* Corrección para elementos fixed que pueden interferir */
+.header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+}
+
+/* Prevenir problemas de scroll en móvil */
+@media (max-width: 768px) {
+    body {
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Asegurar que el menú móvil no interfiera con el scroll */
+    .mobile-menu.active ~ main {
+        overflow: hidden;
+        position: fixed;
+        width: 100%;
+    }
+}
+
+/* Corrección para elementos parallax */
+[data-parallax] {
+    will-change: transform;
+}
+
+/* Optimización de rendimiento para scroll */
+.scroll-optimized {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+}
