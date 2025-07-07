@@ -7,8 +7,8 @@ let currentLanguage = 'es';
 const translations = {};
 // Variables para el botón flotante
 let isFloatingMenuOpen = false;
-// Variables para el selector de idioma flotante
-let isLanguageSwitcherOpen = false;
+// Variables para el selector de idioma en línea
+let isNavLanguageSwitcherOpen = false;
 // Variables para el control del navbar
 let lastScrollY = 0;
 let isScrollingDown = false;
@@ -717,89 +717,89 @@ function updateLanguageButtons() {
         }
     });
     
-    updateLanguageSwitcher();
+    updateNavLanguageSwitcher();
 }
 
-// ===== SELECTOR DE IDIOMA FLOTANTE OPTIMIZADO =====
-function initializeLanguageSwitcher() {
-    const languageSwitcherBtn = document.getElementById('language-switcher-btn');
-    const languageSwitcherDropdown = document.getElementById('language-switcher-dropdown');
-    const languageSwitcher = document.getElementById('language-switcher');
-    const languageOptions = languageSwitcher?.querySelectorAll('.language-switcher__option');
+// ===== SELECTOR DE IDIOMA EN LÍNEA CON EL NAVBAR OPTIMIZADO =====
+function initializeNavLanguageSwitcher() {
+    const navLanguageSwitcherBtn = document.getElementById('nav-language-btn');
+    const navLanguageSwitcherDropdown = document.getElementById('nav-language-dropdown');
+    const navLanguageSwitcher = document.getElementById('nav-language-switcher');
+    const navLanguageOptions = navLanguageSwitcher?.querySelectorAll('.nav__language-option');
     
-    if (!languageSwitcherBtn || !languageSwitcherDropdown || !languageSwitcher) return;
+    if (!navLanguageSwitcherBtn || !navLanguageSwitcherDropdown || !navLanguageSwitcher) return;
     
     if (isMobile) return;
     
-    languageSwitcherBtn.addEventListener('click', (e) => {
+    navLanguageSwitcherBtn.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        toggleLanguageSwitcher();
+        toggleNavLanguageSwitcher();
     });
     
-    languageOptions?.forEach(option => {
+    navLanguageOptions?.forEach(option => {
         option.addEventListener('click', (e) => {
             e.preventDefault();
             const selectedLanguage = option.getAttribute('data-lang');
             if (selectedLanguage && selectedLanguage !== currentLanguage) {
                 switchLanguage(selectedLanguage);
-                closeLanguageSwitcher();
+                closeNavLanguageSwitcher();
             }
         });
     });
     
     document.addEventListener('click', (e) => {
-        if (isLanguageSwitcherOpen && languageSwitcher && !languageSwitcher.contains(e.target)) {
-            closeLanguageSwitcher();
+        if (isNavLanguageSwitcherOpen && navLanguageSwitcher && !navLanguageSwitcher.contains(e.target)) {
+            closeNavLanguageSwitcher();
         }
     });
     
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && isLanguageSwitcherOpen) {
-            closeLanguageSwitcher();
+        if (e.key === 'Escape' && isNavLanguageSwitcherOpen) {
+            closeNavLanguageSwitcher();
         }
     });
 }
 
-function toggleLanguageSwitcher() {
-    if (isLanguageSwitcherOpen) {
-        closeLanguageSwitcher();
+function toggleNavLanguageSwitcher() {
+    if (isNavLanguageSwitcherOpen) {
+        closeNavLanguageSwitcher();
     } else {
-        openLanguageSwitcher();
+        openNavLanguageSwitcher();
     }
 }
 
-function openLanguageSwitcher() {
-    const languageSwitcher = document.getElementById('language-switcher');
-    const languageSwitcherBtn = document.getElementById('language-switcher-btn');
+function openNavLanguageSwitcher() {
+    const navLanguageSwitcher = document.getElementById('nav-language-switcher');
+    const navLanguageSwitcherBtn = document.getElementById('nav-language-btn');
     
-    if (!languageSwitcher || !languageSwitcherBtn) return;
+    if (!navLanguageSwitcher || !navLanguageSwitcherBtn) return;
     
-    isLanguageSwitcherOpen = true;
-    languageSwitcher.classList.add('active');
-    languageSwitcherBtn.setAttribute('aria-expanded', 'true');
+    isNavLanguageSwitcherOpen = true;
+    navLanguageSwitcher.classList.add('active');
+    navLanguageSwitcherBtn.setAttribute('aria-expanded', 'true');
 }
 
-function closeLanguageSwitcher() {
-    const languageSwitcher = document.getElementById('language-switcher');
-    const languageSwitcherBtn = document.getElementById('language-switcher-btn');
+function closeNavLanguageSwitcher() {
+    const navLanguageSwitcher = document.getElementById('nav-language-switcher');
+    const navLanguageSwitcherBtn = document.getElementById('nav-language-btn');
     
-    if (!languageSwitcher || !languageSwitcherBtn) return;
+    if (!navLanguageSwitcher || !navLanguageSwitcherBtn) return;
     
-    isLanguageSwitcherOpen = false;
-    languageSwitcher.classList.remove('active');
-    languageSwitcherBtn.setAttribute('aria-expanded', 'false');
+    isNavLanguageSwitcherOpen = false;
+    navLanguageSwitcher.classList.remove('active');
+    navLanguageSwitcherBtn.setAttribute('aria-expanded', 'false');
 }
 
-function updateLanguageSwitcher() {
-    const languageSwitcherText = document.getElementById('language-switcher-text');
+function updateNavLanguageSwitcher() {
+    const navLanguageSwitcherText = document.getElementById('nav-language-text');
     
-    if (languageSwitcherText) {
-        languageSwitcherText.textContent = currentLanguage.toUpperCase();
+    if (navLanguageSwitcherText) {
+        navLanguageSwitcherText.textContent = currentLanguage.toUpperCase();
     }
     
-    const allOptions = document.querySelectorAll('.language-switcher__option');
-    allOptions.forEach(option => {
+    const allNavOptions = document.querySelectorAll('.nav__language-option');
+    allNavOptions.forEach(option => {
         const optionLang = option.getAttribute('data-lang');
         if (optionLang === currentLanguage) {
             option.classList.add('active');
@@ -1147,10 +1147,22 @@ function initializeKeyboardNavigation() {
     if (!navMenu || !navToggle) return;
     
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && isMenuOpen) {
-            e.preventDefault();
-            closeMobileMenu();
-            return;
+        if (e.key === 'Escape') {
+            if (isMenuOpen) {
+                e.preventDefault();
+                closeMobileMenu();
+                return;
+            }
+            if (isNavLanguageSwitcherOpen) {
+                e.preventDefault();
+                closeNavLanguageSwitcher();
+                return;
+            }
+            if (isFloatingMenuOpen) {
+                e.preventDefault();
+                closeFloatingMenu();
+                return;
+            }
         }
         
         if (e.key === 'Tab' && isMenuOpen && !isMobile) {
@@ -1759,8 +1771,8 @@ function handleResize() {
         closeFloatingMenu();
     }
     
-    if (isLanguageSwitcherOpen) {
-        closeLanguageSwitcher();
+    if (isNavLanguageSwitcherOpen) {
+        closeNavLanguageSwitcher();
     }
 }
 
@@ -1774,8 +1786,8 @@ function initializeAccessibility() {
             if (isFloatingMenuOpen) {
                 closeFloatingMenu();
             }
-            if (isLanguageSwitcherOpen) {
-                closeLanguageSwitcher();
+            if (isNavLanguageSwitcherOpen) {
+                closeNavLanguageSwitcher();
             }
         }
     });
@@ -1804,7 +1816,7 @@ document.addEventListener('DOMContentLoaded', () => {
     imageOptimizer = new UltraOptimizedImageLoader();
     
     initializeLanguageSystem();
-    initializeLanguageSwitcher();
+    initializeNavLanguageSwitcher();
     initializeNavigation();
     initializeScrollEffects();
     initializeVideoPlayer();
