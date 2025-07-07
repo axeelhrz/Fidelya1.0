@@ -1,0 +1,77 @@
+/* ===== UTILIDADES DE VISIBILIDAD ===== */
+.mobile-only {
+display: none;
+}
+
+.desktop-only {
+display: block;
+}
+
+@media (width <= 1023px) {
+.mobile-only {
+display: block;
+}
+
+.desktop-only {
+display: none;
+}
+}
+
+/* ===== ACCESIBILIDAD ===== */
+@media (prefers-reduced-motion: reduce) {
+*,
+*::before,
+*::after {
+animation-duration: 0.01ms !important;
+animation-iteration-count: 1 !important;
+transition-duration: 0.01ms !important;
+scroll-behavior: auto !important;
+}
+}
+
+/* ===== OPTIMIZACIONES DE RENDIMIENTO ===== */
+.nav__logo,
+.nav__toggle,
+.hero__phone,
+.floating-widget__main-btn {
+contain: layout style paint;
+}
+
+/* ===== MODO PERFORMANCE ===== */
+.performance-mode * {
+animation: none !important;
+transition: none !important;
+}
+
+.performance-mode .bg-canvas::before,
+.performance-mode .bg-canvas::after {
+display: none !important;
+}
+
+/* ===== SOPORTE PARA TOUCH ===== */
+@media (hover: none) and (pointer: coarse) {
+.nav__link:hover,
+.nav__cta .btn--primary:hover,
+.language-switcher__btn:hover {
+transform: none;
+}
+}
+
+/* ===== TOUCH OPTIMIZATIONS ===== */
+.faq__question,
+.faq__search,
+.faq__filter-btn,
+.contact__channel,
+.contact__channel-btn,
+.btn--footer {
+touch-action: manipulation;
+-webkit-tap-highlight-color: transparent;
+-webkit-touch-callout: none;
+user-select: none;
+}
+
+.faq__question-text,
+.faq__answer-text {
+user-select: text;
+-webkit-touch-callout: default;
+}

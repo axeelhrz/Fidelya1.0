@@ -1,0 +1,82 @@
+/* ===== RESET MEJORADO ===== */
+*, *::before, *::after {
+box-sizing: border-box;
+padding: 0;
+margin: 0;
+}
+
+html {
+width: 100%;
+height: 100%;
+padding: 0;
+margin: 0;
+overflow-x: hidden;
+font-size: 16px;
+scroll-behavior: smooth;
+}
+
+body {
+position: relative;
+width: 100%;
+min-height: 100vh;
+min-height: 100dvh;
+padding: 0;
+margin: 0;
+overflow-x: hidden;
+font-family: var(--font-primary);
+line-height: 1.5;
+color: var(--text-primary);
+background: var(--primary-bg);
+-webkit-font-smoothing: antialiased;
+-moz-osx-font-smoothing: grayscale;
+}
+
+/* ===== CONTENEDORES CON RESTRICCIONES DE ANCHO MÁXIMO ===== */
+.hero__container {
+width: 100%;
+max-width: var(--max-hero-width);
+margin-right: auto;
+margin-left: auto;
+}
+
+/* ===== SELECCIÓN DE TEXTO ===== */
+::selection {
+color: var(--text-primary);
+background: var(--starflex-crimson);
+}
+
+::-moz-selection {
+color: var(--text-primary);
+background: var(--starflex-crimson);
+}
+
+/* ===== PREVENIR SCROLL DEL BODY ===== */
+body.no-scroll {
+position: fixed;
+width: 100%;
+height: 100%;
+overflow: hidden;
+}
+
+/* ===== ESTADOS DE CARGA ===== */
+.loading {
+opacity: 0.7;
+filter: brightness(0.8);
+}
+
+.loaded {
+opacity: 1;
+filter: none;
+}
+
+.error {
+opacity: 0.5;
+filter: grayscale(100%);
+}
+
+/* ===== IMAGEN OPTIMIZADA ===== */
+.image-optimized {
+image-rendering: -webkit-optimize-contrast;
+image-rendering: optimize-contrast;
+image-rendering: crisp-edges;
+}

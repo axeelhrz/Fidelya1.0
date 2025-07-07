@@ -1,0 +1,23 @@
+/* ===== STARFLEX 2.0 - CSS MODULAR ===== */
+
+/* Base */
+@import url('./base/variables.css');
+@import url('./base/reset.css');
+@import url('./base/utilities.css');
+
+/* Components */
+@import url('./components/buttons.css');
+@import url('./components/navbar.css');
+@import url('./components/floating-widget.css');
+
+/* Sections */
+@import url('./sections/hero.css');
+
+/* Animations */
+@import url('./animations/keyframes.css');
+
+/* ===== NOTA: Las demás secciones se importarán cuando estén creadas ===== */
+/* @import url('./sections/features.css'); */
+/* @import url('./sections/videos.css'); */
+/* @import url('./sections/faq.css'); */
+/* @import url('./sections/contact.css'); */

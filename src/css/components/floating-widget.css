@@ -1,0 +1,115 @@
+/* ===== FLOATING WIDGET ===== */
+.floating-widget {
+position: fixed;
+bottom: 20px;
+right: 20px;
+z-index: 999;
+}
+
+.floating-widget__container {
+position: relative;
+}
+
+.floating-widget__menu {
+position: absolute;
+bottom: 60px;
+right: 0;
+display: flex;
+flex-direction: column;
+gap: var(--space-sm);
+opacity: 0;
+visibility: hidden;
+transition: all var(--transition);
+transform: translateY(10px);
+}
+
+.floating-widget__menu.active {
+opacity: 1;
+visibility: visible;
+transform: translateY(0);
+}
+
+.floating-widget__menu-item {
+display: flex;
+align-items: center;
+justify-content: center;
+width: 48px;
+height: 48px;
+color: #fff;
+text-decoration: none;
+background: var(--starflex-crimson);
+border-radius: 50%;
+box-shadow: 0 4px 15px rgb(255 45 85 / 30%);
+transition: all var(--transition);
+transform: translateY(20px) scale(0.8);
+opacity: 0;
+}
+
+.floating-widget__menu-item:hover {
+background: var(--starflex-crimson-bright);
+box-shadow: 0 6px 20px rgb(255 45 85 / 40%);
+transform: translateY(0) scale(1.1);
+}
+
+.floating-widget__icon {
+width: 20px;
+height: 20px;
+}
+
+.floating-widget__main-btn {
+display: flex;
+align-items: center;
+justify-content: center;
+width: 56px;
+height: 56px;
+color: #fff;
+cursor: pointer;
+background: linear-gradient(135deg,
+var(--starflex-crimson) 0%,
+var(--starflex-crimson-bright) 100%
+);
+border: none;
+border-radius: 50%;
+box-shadow: 0 6px 20px rgb(255 45 85 / 40%);
+transition: all var(--transition);
+}
+
+.floating-widget__main-btn:hover {
+box-shadow: 0 8px 25px rgb(255 45 85 / 50%);
+transform: translateY(-2px) scale(1.05);
+}
+
+.floating-widget__main-btn.active {
+background: var(--starflex-crimson-dark);
+transform: rotate(45deg);
+}
+
+.floating-widget__main-icon {
+width: 24px;
+height: 24px;
+transition: all var(--transition);
+}
+
+.floating-widget__tooltip {
+position: absolute;
+top: 50%;
+right: 60px;
+padding: var(--space-xs) var(--space-sm);
+font-size: 0.8rem;
+color: var(--text-primary);
+white-space: nowrap;
+background: var(--glass-bg);
+backdrop-filter: blur(20px);
+border: 1px solid var(--border-subtle);
+border-radius: 8px;
+opacity: 0;
+visibility: hidden;
+transition: all var(--transition);
+transform: translateY(-50%) translateX(10px);
+}
+
+.floating-widget__menu-item:hover .floating-widget__tooltip {
+opacity: 1;
+visibility: visible;
+transform: translateY(-50%) translateX(0);
+}
