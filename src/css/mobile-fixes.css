@@ -537,21 +537,6 @@
     }
 }
 
-/* ===== CORRECCIÓN DE SCROLL SUAVE PARA NAVEGACIÓN ===== */
-@media (width <= 1023px) {
-    html {
-        scroll-behavior: smooth !important;
-    }
-    
-    /* Asegurar que las secciones sean accesibles por navegación */
-    #features,
-    #videos,
-    #faq,
-    #contact {
-        scroll-margin-top: calc(var(--navbar-height-mobile) + 1rem) !important;
-    }
-}
-
 /* ===== CORRECCIÓN PARA DISPOSITIVOS CON NOTCH ===== */
 @media (width <= 1023px) {
     .features,
