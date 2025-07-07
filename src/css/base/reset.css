@@ -12,6 +12,7 @@ padding: 0;
 margin: 0;
 font-size: 16px;
 overflow-x: hidden;
+overflow-y: auto;
 }
 
 body {
@@ -28,6 +29,8 @@ background: var(--primary-bg);
 -webkit-font-smoothing: antialiased;
 -moz-osx-font-smoothing: grayscale;
 overflow-x: hidden;
+overflow-y: auto;
+-webkit-overflow-scrolling: touch;
 }
 
 /* ===== CONTENEDORES CON RESTRICCIONES DE ANCHO MÁXIMO ===== */
