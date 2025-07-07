@@ -12,12 +12,12 @@
 
 /* Sections */
 @import url('./sections/hero.css');
+@import url('./sections/features.css');
 
 /* Animations */
 @import url('./animations/keyframes.css');
 
 /* ===== NOTA: Las demás secciones se importarán cuando estén creadas ===== */
-/* @import url('./sections/features.css'); */
 /* @import url('./sections/videos.css'); */
 /* @import url('./sections/faq.css'); */
 /* @import url('./sections/contact.css'); */
