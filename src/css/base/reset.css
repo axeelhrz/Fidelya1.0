@@ -11,7 +11,7 @@ height: 100%;
 padding: 0;
 margin: 0;
 font-size: 16px;
-overflow: hidden;
+overflow-x: hidden;
 }
 
 body {
@@ -27,7 +27,7 @@ color: var(--text-primary);
 background: var(--primary-bg);
 -webkit-font-smoothing: antialiased;
 -moz-osx-font-smoothing: grayscale;
-overflow: hidden;
+overflow-x: hidden;
 }
 
 /* ===== CONTENEDORES CON RESTRICCIONES DE ANCHO MÁXIMO ===== */
