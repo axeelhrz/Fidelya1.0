@@ -1,0 +1,184 @@
+/* ===== ELIMINACIÓN DE SCROLL INDIVIDUAL EN SECCIONES ===== */
+
+/* Asegurar que ninguna sección tenga scroll individual */
+.hero,
+.features,
+.videos,
+.faq,
+.contact {
+    overflow: visible !important;
+    overflow-x: hidden !important;
+    overflow-y: visible !important;
+    height: auto !important;
+    max-height: none !important;
+}
+
+/* Eliminar cualquier configuración de scroll en contenedores principales */
+.features__grid,
+.videos__main-container,
+.videos__player-container,
+.faq__container,
+.contact__grid {
+    overflow: visible !important;
+    overflow-x: hidden !important;
+    overflow-y: visible !important;
+    height: auto !important;
+    max-height: none !important;
+}
+
+/* Asegurar que los elementos individuales no tengan scroll */
+.feature,
+.feature__content,
+.feature__phone,
+.videos__header,
+.videos__player-frame,
+.faq__header,
+.faq__list,
+.faq__item,
+.contact__header,
+.contact__channel {
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+}
+
+/* Eliminar scroll en elementos específicos que podrían tenerlo */
+.phone,
+.phone__screen,
+.phone__content {
+    overflow: hidden !important; /* Mantener hidden solo para el teléfono para que la imagen no se salga */
+}
+
+/* Asegurar que el body y html permitan scroll normal */
+html,
+body {
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    height: auto !important;
+    max-height: none !important;
+}
+
+/* Eliminar cualquier configuración de scroll en elementos de video */
+.videos__player-container,
+.videos__player-frame {
+    overflow: hidden !important; /* Mantener hidden solo para el reproductor */
+}
+
+/* Asegurar que las respuestas del FAQ no tengan scroll individual */
+.faq__answer {
+    overflow: visible !important;
+    height: auto !important;
+}
+
+.faq__answer.active {
+    max-height: none !important;
+    overflow: visible !important;
+}
+
+/* Eliminar scroll en elementos de contacto */
+.contact__channel-content,
+.contact__footer {
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+}
+
+/* Correcciones específicas para móvil */
+@media (width <= 1023px) {
+    .hero,
+    .features,
+    .videos,
+    .faq,
+    .contact {
+        overflow-x: hidden !important;
+        overflow-y: visible !important;
+        height: auto !important;
+        max-height: none !important;
+    }
+    
+    /* Asegurar que los grids no tengan scroll */
+    .features__grid,
+    .contact__grid {
+        overflow: visible !important;
+        height: auto !important;
+        max-height: none !important;
+    }
+    
+    /* Eliminar scroll en elementos móviles */
+    .feature,
+    .contact__channel,
+    .faq__item {
+        overflow: visible !important;
+        height: auto !important;
+        max-height: none !important;
+    }
+}
+
+/* Asegurar que no hay elementos con position fixed que causen problemas de scroll */
+.hero,
+.features,
+.videos,
+.faq,
+.contact {
+    position: relative !important;
+}
+
+/* Eliminar cualquier configuración de viewport que cause scroll individual */
+.features,
+.videos,
+.faq,
+.contact {
+    width: 100% !important;
+    min-height: auto !important;
+    max-width: none !important;
+}
+
+/* Corrección para elementos que podrían estar causando scroll horizontal */
+* {
+    box-sizing: border-box !important;
+}
+
+/* Asegurar que los contenedores principales no tengan restricciones de altura */
+.features__header,
+.videos__header,
+.faq__header,
+.contact__header {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+}
+
+/* Eliminar scroll en elementos de navegación que podrían interferir */
+.nav,
+.nav__menu,
+.nav__list {
+    overflow: visible !important;
+}
+
+/* Solo en móvil, el menú de navegación sí debe tener scroll si es necesario */
+@media (width <= 1023px) {
+    .nav__menu {
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+    }
+}
+
+/* Asegurar que los elementos flotantes no causen problemas */
+.floating-widget,
+.language-switcher {
+    overflow: visible !important;
+}
+
+/* Corrección final para asegurar scroll normal de página */
+html {
+    scroll-behavior: smooth !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+}
+
+body {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    height: auto !important;
+    min-height: 100vh !important;
+}
