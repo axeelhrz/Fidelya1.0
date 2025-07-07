@@ -23,6 +23,10 @@
 /* Mobile Fixes - IMPORTANTE: debe ir al final para sobrescribir otros estilos */
 @import url('./mobile-fixes.css');
 
+/* Mobile Scroll Fix - CRÍTICO: debe ir al final para prevenir scroll horizontal */
+@import url('./mobile-scroll-fix.css');
+
 /* ===== SISTEMA CSS MODULAR COMPLETADO ===== */
 /* Todas las secciones han sido modularizadas exitosamente */
 /* Correcciones de visibilidad móvil aplicadas */
+/* Corrección de scroll horizontal móvil aplicada */
