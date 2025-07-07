@@ -36,7 +36,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
     <!-- CSS UNIFICADO - SOLO STYLE.CSS -->
-    <link rel="stylesheet" href="src/css/style.css">
+    <link rel="stylesheet" href="src/css/main.css">
     
     <!-- Optimización para dispositivos móviles -->
     <meta name="theme-color" content="#FF2D55">
@@ -103,7 +103,7 @@
                 </div>
             </div>
             
-            <!-- Selector de idioma desktop (oculto en móvil) -->
+            <!-- Selector de idioma desktop (solo visible en desktop) -->
             <div class="nav__language-switcher" id="language-switcher">
                 <div class="nav__language-btn" id="language-switcher-btn" aria-label="Cambiar idioma" role="button" tabindex="0" aria-expanded="false" aria-haspopup="true">
                     <div class="nav__language-icon">
@@ -131,7 +131,7 @@
                 </div>
             </div>
             
-            <!-- Botón CTA (oculto en móvil) -->
+            <!-- Botón CTA desktop (solo visible en desktop) -->
             <div class="nav__cta">
                 <a href="https://starflex.web.app/" class="btn btn--primary" data-translate="nav-cta" aria-label="Comenzar prueba gratuita de StarFlex">Comienza tu prueba gratuita</a>
             </div>
@@ -147,34 +147,6 @@
             </div>
         </nav>
     </header>
-
-    <!-- Selector de Idioma Flotante -->
-    <div class="language-switcher" id="language-switcher">
-        <div class="language-switcher__btn" id="language-switcher-btn" aria-label="Cambiar idioma" role="button" tabindex="0" aria-expanded="false" aria-haspopup="true">
-            <div class="language-switcher__icon">
-                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                    <path d="M12.87 15.07l-2.54-2.51.03-.03c1.74-1.94 2.98-4.17 3.71-6.53H17V4h-7V2H8v2H1v1.99h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"/>
-                </svg>
-            </div>
-            <span class="language-switcher__text" id="language-switcher-text">ES</span>
-            <div class="language-switcher__arrow">
-                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                    <path d="M7 10l5 5 5-5z"/>
-                </svg>
-            </div>
-        </div>
-        
-        <div class="language-switcher__dropdown" id="language-switcher-dropdown" role="menu" aria-labelledby="language-switcher-btn">
-            <button class="language-switcher__option" data-lang="es" role="menuitem" aria-label="Cambiar idioma a Español">
-                <span class="language-switcher__flag" role="img" aria-label="Bandera de España">🇪🇸</span>
-                <span class="language-switcher__name">Español</span>
-            </button>
-            <button class="language-switcher__option" data-lang="en" role="menuitem" aria-label="Cambiar idioma a Inglés">
-                <span class="language-switcher__flag" role="img" aria-label="Bandera de Estados Unidos">🇺🇸</span>
-                <span class="language-switcher__name">English</span>
-            </button>
-        </div>
-    </div>
 
     <!-- Hero Section - COMPLETAMENTE LIBRE DE RESTRICCIONES -->
     <section class="hero" id="home">
@@ -265,7 +237,7 @@
                                 <div class="hero__phone-app-image image-optimized" role="img" aria-label="Interfaz principal de StarFlex" loading="eager" style="display: none;"></div>
                             </div>
                         </div>
-                             </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -698,7 +670,6 @@
                     <div class="contact__channel-arrow">→</div>
                 </a>
             </div>
-
             <!-- Instagram -->
             <div class="contact__channel" data-channel="instagram">
                 <div class="contact__channel-icon">
@@ -849,5 +820,3 @@
     <script src="src/js/app.js"></script>
 </body>
 </html>
-
-           
