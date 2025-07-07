@@ -15,7 +15,8 @@ import {
   Zap,
   CheckCircle,
   AlertCircle,
-  Info
+  Info,
+  Scan
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Dialog } from '@/components/ui/Dialog';
@@ -105,11 +106,10 @@ const EnhancedScannerModal: React.FC<{
   const [showDiagnostics, setShowDiagnostics] = useState(false);
   const [scanSuccess, setScanSuccess] = useState(false);
   const [showManualCode, setShowManualCode] = useState(false);
-  const [hasScannedRef, setHasScannedRef] = useState(false);
+  const [isProcessingQR, setIsProcessingQR] = useState(false);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const isProcessingRef = useRef(false);
 
   const {
     cameraState,
@@ -125,9 +125,9 @@ const EnhancedScannerModal: React.FC<{
     preferredFacingMode: 'environment'
   });
 
-  // Función simplificada para detectar QR - SIN BUCLE INFINITO
-  const attemptQRDetection = useCallback(async (): Promise<string | null> => {
-    if (!videoRef.current || !canvasRef.current || isProcessingRef.current || hasScannedRef.current) {
+  // Función para detectar QR - SOLO SE EJECUTA CUANDO SE PRESIONA EL BOTÓN
+  const detectQRFromCamera = useCallback(async (): Promise<string | null> => {
+    if (!videoRef.current || !canvasRef.current) {
       return null;
     }
 
@@ -140,30 +140,27 @@ const EnhancedScannerModal: React.FC<{
     }
 
     try {
-      isProcessingRef.current = true;
-      
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-      // En una implementación real, aquí usarías jsQR
+      // En una implementación real, aquí usarías jsQR:
       // const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
       // const code = jsQR(imageData.data, imageData.width, imageData.height);
       // if (code) {
       //   return code.data;
       // }
       
-      // Por ahora, retornamos null para evitar detección automática
-      return null;
+      // Para demo, simular detección exitosa
+      console.log('🔍 Intentando detectar QR...');
+      return ValidacionesService.generateDemoQR();
     } catch (error) {
       console.error('Error detecting QR code:', error);
       return null;
-    } finally {
-      isProcessingRef.current = false;
     }
   }, []);
 
-  // Configurar video cuando el stream esté disponible - SIN ESCANEO AUTOMÁTICO
+  // Configurar video cuando el stream esté disponible
   useEffect(() => {
     if (cameraState.stream && videoRef.current && scannerMode === 'camera') {
       const video = videoRef.current;
@@ -192,8 +189,7 @@ const EnhancedScannerModal: React.FC<{
       stopCamera();
       setScanSuccess(false);
       setManualCode('');
-      hasScannedRef.current = false;
-      isProcessingRef.current = false;
+      setIsProcessingQR(false);
     }
   }, [isOpen, stopCamera]);
 
@@ -201,15 +197,46 @@ const EnhancedScannerModal: React.FC<{
   useEffect(() => {
     return () => {
       stopCamera();
-      hasScannedRef.current = false;
-      isProcessingRef.current = false;
     };
   }, [stopCamera]);
 
-  const handleManualSubmit = useCallback(() => {
-    if (!manualCode.trim() || loading || hasScannedRef.current) return;
+  // FUNCIÓN PRINCIPAL: Generar/Detectar QR cuando el usuario presiona el botón
+  const handleGenerateQR = useCallback(async () => {
+    if (isProcessingQR || scanSuccess) return;
 
-    hasScannedRef.current = true;
+    setIsProcessingQR(true);
+    console.log('🎯 Usuario presionó generar QR');
+
+    try {
+      let qrData: string | null = null;
+
+      if (scannerMode === 'camera') {
+        // Intentar detectar desde la cámara
+        qrData = await detectQRFromCamera();
+      }
+
+      if (qrData) {
+        console.log('✅ QR detectado:', qrData);
+        setScanSuccess(true);
+        setTimeout(() => {
+          onScan(qrData);
+        }, 1000);
+      } else {
+        console.log('❌ No se pudo detectar QR');
+        alert('No se pudo detectar un código QR. Asegúrate de que esté visible en el marco.');
+      }
+    } catch (error) {
+      console.error('Error al generar QR:', error);
+      alert('Error al procesar el código QR. Inténtalo de nuevo.');
+    } finally {
+      setIsProcessingQR(false);
+    }
+  }, [isProcessingQR, scanSuccess, scannerMode, detectQRFromCamera, onScan]);
+
+  const handleManualSubmit = useCallback(() => {
+    if (!manualCode.trim() || loading || isProcessingQR) return;
+
+    setIsProcessingQR(true);
 
     // Validar QR format
     if (ValidacionesService.isValidQRFormat(manualCode)) {
@@ -238,43 +265,21 @@ const EnhancedScannerModal: React.FC<{
         // Not a valid URL
       }
       
-      hasScannedRef.current = false; // Reset para permitir otro intento
+      setIsProcessingQR(false);
       alert('Formato de QR inválido. Asegúrate de escanear un código QR válido de Fidelitá.');
     }
-  }, [manualCode, loading, onScan]);
+  }, [manualCode, loading, isProcessingQR, onScan]);
 
   const handleDemoScan = useCallback(() => {
-    if (loading || hasScannedRef.current) return;
+    if (loading || isProcessingQR) return;
     
-    hasScannedRef.current = true;
+    setIsProcessingQR(true);
     const demoQR = ValidacionesService.generateDemoQR();
     setScanSuccess(true);
     setTimeout(() => {
       onScan(demoQR);
     }, 500);
-  }, [loading, onScan]);
-
-  // Función manual para escanear (botón)
-  const handleManualScanAttempt = useCallback(async () => {
-    if (hasScannedRef.current || scannerMode !== 'camera') return;
-
-    const qrData = await attemptQRDetection();
-    if (qrData) {
-      hasScannedRef.current = true;
-      setScanSuccess(true);
-      setTimeout(() => {
-        onScan(qrData);
-      }, 1000);
-    } else {
-      // Para demo, simular detección exitosa
-      hasScannedRef.current = true;
-      const demoQR = ValidacionesService.generateDemoQR();
-      setScanSuccess(true);
-      setTimeout(() => {
-        onScan(demoQR);
-      }, 1000);
-    }
-  }, [scannerMode, attemptQRDetection, onScan]);
+  }, [loading, isProcessingQR, onScan]);
 
   const handleFlashToggle = useCallback(() => {
     const newFlashState = !flashEnabled;
@@ -285,8 +290,7 @@ const EnhancedScannerModal: React.FC<{
   const resetScanner = useCallback(() => {
     setScanSuccess(false);
     setManualCode('');
-    hasScannedRef.current = false;
-    isProcessingRef.current = false;
+    setIsProcessingQR(false);
     if (scannerMode === 'camera') {
       retryCamera();
     }
@@ -327,7 +331,7 @@ const EnhancedScannerModal: React.FC<{
             <div className="flex gap-2">
               <button
                 onClick={() => setScannerMode('camera')}
-                disabled={loading}
+                disabled={loading || isProcessingQR}
                 className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all disabled:opacity-50 ${
                   scannerMode === 'camera'
                     ? 'bg-violet-500 text-white'
@@ -339,7 +343,7 @@ const EnhancedScannerModal: React.FC<{
               </button>
               <button
                 onClick={() => setScannerMode('manual')}
-                disabled={loading}
+                disabled={loading || isProcessingQR}
                 className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all disabled:opacity-50 ${
                   scannerMode === 'manual'
                     ? 'bg-violet-500 text-white'
@@ -351,7 +355,7 @@ const EnhancedScannerModal: React.FC<{
               </button>
               <button
                 onClick={() => setScannerMode('demo')}
-                disabled={loading}
+                disabled={loading || isProcessingQR}
                 className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all disabled:opacity-50 ${
                   scannerMode === 'demo'
                     ? 'bg-violet-500 text-white'
@@ -388,13 +392,13 @@ const EnhancedScannerModal: React.FC<{
                         />
                         <canvas ref={canvasRef} className="hidden" />
                         
-                        {/* Static Scanning Frame - NO ANIMATION */}
+                        {/* Static Frame - NO ANIMATION */}
                         {!scanSuccess && (
                           <div className="absolute inset-0 flex items-center justify-center">
                             <div className="w-48 h-48 border-2 border-white rounded-2xl relative">
                               <div className="absolute -top-6 left-1/2 transform -translate-x-1/2">
                                 <span className="bg-black/70 text-white px-3 py-1 rounded-full text-sm">
-                                  Apunta al código QR
+                                  Posiciona el QR aquí
                                 </span>
                               </div>
                               {/* Corner indicators */}
@@ -404,6 +408,25 @@ const EnhancedScannerModal: React.FC<{
                               <div className="absolute bottom-2 right-2 w-6 h-6 border-r-4 border-b-4 border-white"></div>
                             </div>
                           </div>
+                        )}
+
+                        {/* Processing Overlay */}
+                        {isProcessingQR && (
+                          <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="absolute inset-0 bg-blue-500/90 flex items-center justify-center"
+                          >
+                            <div className="text-center text-white">
+                              <motion.div
+                                animate={{ rotate: 360 }}
+                                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                              >
+                                <Scan size={48} className="mx-auto mb-2" />
+                              </motion.div>
+                              <p className="font-semibold">Detectando QR...</p>
+                            </div>
+                          </motion.div>
                         )}
 
                         {/* Success Overlay */}
@@ -465,18 +488,34 @@ const EnhancedScannerModal: React.FC<{
                     )}
                   </div>
 
-                  {/* Manual Scan Button */}
+                  {/* BOTÓN PRINCIPAL PARA GENERAR QR */}
                   {cameraState.status === 'active' && !scanSuccess && (
-                    <div className="text-center">
+                    <div className="text-center space-y-3">
                       <Button
-                        onClick={handleManualScanAttempt}
-                        disabled={loading || hasScannedRef.current}
-                        className="bg-violet-500 hover:bg-violet-600 text-white px-8 py-3 rounded-xl font-semibold"
+                        onClick={handleGenerateQR}
+                        disabled={loading || isProcessingQR}
+                        className="bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white px-8 py-4 rounded-xl font-bold text-lg shadow-lg"
                       >
-                        {loading ? 'Procesando...' : 'Escanear Ahora'}
+                        {isProcessingQR ? (
+                          <>
+                            <motion.div
+                              animate={{ rotate: 360 }}
+                              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                              className="inline-block mr-2"
+                            >
+                              <Scan size={20} />
+                            </motion.div>
+                            Detectando...
+                          </>
+                        ) : (
+                          <>
+                            <Scan size={20} className="inline mr-2" />
+                            Detectar Código QR
+                          </>
+                        )}
                       </Button>
-                      <p className="text-sm text-gray-500 mt-2">
-                        Presiona el botón cuando el QR esté visible en el marco
+                      <p className="text-sm text-gray-500">
+                        Posiciona el código QR en el marco y presiona el botón
                       </p>
                     </div>
                   )}
@@ -486,7 +525,8 @@ const EnhancedScannerModal: React.FC<{
                     <div className="flex justify-center gap-4">
                       <button
                         onClick={handleFlashToggle}
-                        className={`p-3 rounded-xl transition-colors ${
+                        disabled={isProcessingQR}
+                        className={`p-3 rounded-xl transition-colors disabled:opacity-50 ${
                           flashEnabled
                             ? 'bg-yellow-500 text-white'
                             : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -496,13 +536,15 @@ const EnhancedScannerModal: React.FC<{
                       </button>
                       <button
                         onClick={resetScanner}
-                        className="p-3 bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-xl transition-colors"
+                        disabled={isProcessingQR}
+                        className="p-3 bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-xl transition-colors disabled:opacity-50"
                       >
                         <RotateCcw size={20} />
                       </button>
                       <button
                         onClick={() => setShowDiagnostics(true)}
-                        className="p-3 bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-xl transition-colors"
+                        disabled={isProcessingQR}
+                        className="p-3 bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-xl transition-colors disabled:opacity-50"
                       >
                         <Settings size={20} />
                       </button>
@@ -517,9 +559,9 @@ const EnhancedScannerModal: React.FC<{
                         <p className="font-medium mb-1">Instrucciones:</p>
                         <ul className="text-sm space-y-1">
                           <li>• Apunta la cámara al código QR del comercio</li>
-                          <li>• Asegúrate de que el QR esté dentro del marco</li>
-                          <li>• Presiona "Escanear Ahora" cuando esté listo</li>
-                          <li>• Mantén el dispositivo estable</li>
+                          <li>• Asegúrate de que el QR esté dentro del marco blanco</li>
+                          <li>• Presiona "Detectar Código QR" para escanear</li>
+                          <li>• Mantén el dispositivo estable durante la detección</li>
                         </ul>
                       </div>
                     </div>
@@ -551,13 +593,13 @@ const EnhancedScannerModal: React.FC<{
                         onChange={(e) => setManualCode(e.target.value)}
                         placeholder="fidelya://comercio/... o https://..."
                         className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-transparent pr-12"
-                        disabled={loading}
+                        disabled={loading || isProcessingQR}
                       />
                       <button
                         type="button"
                         onClick={() => setShowManualCode(!showManualCode)}
                         className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                        disabled={loading}
+                        disabled={loading || isProcessingQR}
                       >
                         {showManualCode ? <EyeOff size={20} /> : <Eye size={20} />}
                       </button>
@@ -565,10 +607,10 @@ const EnhancedScannerModal: React.FC<{
 
                     <Button
                       onClick={handleManualSubmit}
-                      disabled={!manualCode.trim() || loading}
+                      disabled={!manualCode.trim() || loading || isProcessingQR}
                       className="w-full"
                     >
-                      {loading ? 'Validando...' : 'Validar Código'}
+                      {isProcessingQR ? 'Validando...' : 'Validar Código'}
                     </Button>
                   </div>
 
@@ -582,7 +624,7 @@ const EnhancedScannerModal: React.FC<{
                           <li>• Solicita al comercio que muestre su código QR</li>
                           <li>• Copia la URL que aparece debajo del código</li>
                           <li>• Pega la URL completa en el campo de arriba</li>
-                          <li>• Acepta tanto URLs de aplicación como web</li>
+                          <li>• Presiona "Validar Código" para procesar</li>
                         </ul>
                       </div>
                     </div>
@@ -614,10 +656,10 @@ const EnhancedScannerModal: React.FC<{
                     <p className="text-sm text-gray-600 mb-4">Código QR de demostración</p>
                     <Button
                       onClick={handleDemoScan}
-                      disabled={loading}
+                      disabled={loading || isProcessingQR}
                       className="bg-green-500 hover:bg-green-600"
                     >
-                      {loading ? 'Procesando...' : 'Usar Demo'}
+                      {isProcessingQR ? 'Generando...' : 'Generar Demo QR'}
                     </Button>
                   </div>
 
@@ -628,7 +670,7 @@ const EnhancedScannerModal: React.FC<{
                       <div className="text-green-800">
                         <p className="font-medium mb-1">Modo de Prueba:</p>
                         <ul className="text-sm space-y-1">
-                          <li>• Simula un escaneo exitoso</li>
+                          <li>• Genera un QR de demostración al presionar el botón</li>
                           <li>• Usa datos de comercio de ejemplo</li>
                           <li>• Perfecto para probar la funcionalidad</li>
                           <li>• No afecta datos reales</li>
