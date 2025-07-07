@@ -110,7 +110,7 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
       color: '#10b981',
       gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
       description: 'Perfil y configuración',
-      route: '/dashboard/comercio/perfil',
+      route: '/dashboard/comercio',
     },
     {
       id: 'beneficios',
@@ -145,31 +145,21 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
   ];
 
   const handleMenuClick = (item: MenuItem) => {
-    if (item.route) {
-      // Si es una ruta específica, navegar directamente
-      if (item.route !== '/dashboard/comercio') {
-        router.push(item.route);
-      } else {
-        // Si es la ruta principal, navegar y cambiar sección
-        router.push(item.route);
-        if (onMenuClick) {
-          onMenuClick(item.id);
-        }
-      }
-    } else if (onMenuClick) {
+    // Navegar al dashboard principal si no estamos ahí
+    if (pathname !== '/dashboard/comercio') {
+      router.push('/dashboard/comercio');
+    }
+    
+    // Cambiar la sección activa
+    if (onMenuClick) {
       onMenuClick(item.id);
     }
   };
 
   const isActive = (item: MenuItem) => {
-    // Para rutas específicas, verificar la ruta actual
-    if (item.route && item.route !== '/dashboard/comercio') {
-      return pathname === item.route;
-    }
-    
-    // Para secciones del dashboard principal
+    // Solo verificar la sección activa cuando estamos en el dashboard principal
     if (pathname === '/dashboard/comercio') {
-      return activeSection === item.id || (activeSection === 'resumen' && item.id === 'resumen');
+      return activeSection === item.id;
     }
     
     return false;
@@ -222,7 +212,7 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
             {active && (
               <div className="text-xs text-green-300 mt-1 font-medium flex items-center gap-1">
                 <div className="w-2 h-2 bg-green-400 rounded-full" />
-                Página actual
+                Sección actual
               </div>
             )}
             {/* Arrow */}

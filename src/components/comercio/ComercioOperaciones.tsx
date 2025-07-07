@@ -28,10 +28,12 @@ import {
   Refresh,
   CheckCircle,
   TrendingUp,
+  Store,
 } from '@mui/icons-material';
 import { BeneficiosManagement } from './BeneficiosManagement';
 import { QRManagement } from './QRManagement';
 import { ValidacionesHistory } from './ValidacionesHistory';
+import { ComercioProfile } from './ComercioProfile';
 import { useBeneficios } from '@/hooks/useBeneficios';
 import { useValidaciones } from '@/hooks/useValidaciones';
 
@@ -53,6 +55,14 @@ export const ComercioOperaciones: React.FC<ComercioOperacionesProps> = ({ sectio
 
   const getSectionConfig = () => {
     switch (section) {
+      case 'perfil':
+        return {
+          title: 'Mi Comercio',
+          subtitle: 'Gestiona tu perfil y configuración',
+          icon: <Store sx={{ fontSize: 32 }} />,
+          color: '#10b981',
+          gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+        };
       case 'beneficios':
         return {
           title: 'Gestión de Beneficios',
@@ -62,6 +72,7 @@ export const ComercioOperaciones: React.FC<ComercioOperacionesProps> = ({ sectio
           gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
         };
       case 'qr-validacion':
+      case 'validaciones':
         return {
           title: 'Validación QR',
           subtitle: 'Escanea y valida códigos QR',
@@ -463,8 +474,9 @@ export const ComercioOperaciones: React.FC<ComercioOperacionesProps> = ({ sectio
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.2 }}
       >
+        {section === 'perfil' && <ComercioProfile />}
         {section === 'beneficios' && <BeneficiosManagement />}
-        {section === 'qr-validacion' && <QRManagement />}
+        {(section === 'qr-validacion' || section === 'validaciones') && <QRManagement />}
         {section === 'historial-validaciones' && <ValidacionesHistory />}
         {section === 'operaciones' && renderOperationsOverview()}
       </motion.div>
