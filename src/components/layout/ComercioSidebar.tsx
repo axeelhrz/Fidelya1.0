@@ -11,7 +11,6 @@ import { useNotifications } from '@/hooks/useNotifications';
 import { toast } from 'react-hot-toast';
 import {
   LayoutDashboard,
-  BarChart3,
   Store,
   Gift,
   QrCode,
@@ -105,15 +104,6 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
       route: '/dashboard/comercio',
     },
     {
-      id: 'analytics',
-      label: 'Analytics',
-      icon: <BarChart3 className="w-5 h-5" />,
-      color: '#8b5cf6',
-      gradient: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
-      description: 'Métricas y análisis',
-      route: '/dashboard/comercio/analytics',
-    },
-    {
       id: 'perfil',
       label: 'Mi Comercio',
       icon: <Store className="w-5 h-5" />,
@@ -130,6 +120,7 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
       color: '#f59e0b',
       gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
       description: 'Gestión de ofertas',
+      route: '/dashboard/comercio',
     },
     {
       id: 'validaciones',
@@ -139,6 +130,7 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
       color: '#ec4899',
       gradient: 'linear-gradient(135deg, #ec4899 0%, #be185d 100%)',
       description: 'Historial y validar QR',
+      route: '/dashboard/comercio',
     },
     {
       id: 'notificaciones',
@@ -147,23 +139,40 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
       badge: notificationStats.unread || 0,
       color: '#ef4444',
       gradient: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-      description: 'Centro de comunicaciones'
+      description: 'Centro de comunicaciones',
+      route: '/dashboard/comercio',
     }
   ];
 
   const handleMenuClick = (item: MenuItem) => {
     if (item.route) {
-      router.push(item.route);
+      // Si es una ruta específica, navegar directamente
+      if (item.route !== '/dashboard/comercio') {
+        router.push(item.route);
+      } else {
+        // Si es la ruta principal, navegar y cambiar sección
+        router.push(item.route);
+        if (onMenuClick) {
+          onMenuClick(item.id);
+        }
+      }
     } else if (onMenuClick) {
       onMenuClick(item.id);
     }
   };
 
   const isActive = (item: MenuItem) => {
-    if (item.route) {
+    // Para rutas específicas, verificar la ruta actual
+    if (item.route && item.route !== '/dashboard/comercio') {
       return pathname === item.route;
     }
-    return activeSection === item.id;
+    
+    // Para secciones del dashboard principal
+    if (pathname === '/dashboard/comercio') {
+      return activeSection === item.id || (activeSection === 'resumen' && item.id === 'resumen');
+    }
+    
+    return false;
   };
 
   const getUserDisplayName = () => {
