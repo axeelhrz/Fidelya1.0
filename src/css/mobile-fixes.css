@@ -32,7 +32,11 @@
     .faq__question,
     .faq__answer,
     .contact__header,
-    .contact__grid {
+    .contact__grid,
+    .contact__footer,
+    .contact__footer-content,
+    .contact__footer-text,
+    .contact__footer-cta {
         display: block !important;
         visibility: visible !important;
         opacity: 1 !important;
@@ -111,6 +115,55 @@
         display: inline-flex !important;
     }
     
+    /* FORZAR VISIBILIDAD DEL FOOTER EN MÓVIL */
+    .contact__footer {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        transform: none !important;
+        animation: none !important;
+        position: relative !important;
+        z-index: 10 !important;
+    }
+    
+    .contact__footer-content {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        transform: none !important;
+        animation: none !important;
+        flex-direction: column !important;
+        gap: var(--space-xl) !important;
+        text-align: center !important;
+    }
+    
+    .contact__footer-text,
+    .contact__footer-cta {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        transform: none !important;
+        animation: none !important;
+    }
+    
+    .contact__footer-text h3,
+    .contact__footer-text p {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    
+    .btn--footer {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        transform: none !important;
+        animation: none !important;
+        width: 100% !important;
+        max-width: 280px !important;
+        margin: 0 auto !important;
+    }
+    
     .features__header,
     .videos__header,
     .faq__header,
@@ -147,13 +200,26 @@
     .contact *::after {
         visibility: inherit;
     }
+    
+    /* ASEGURAR QUE EL FOOTER TENGA SUFICIENTE ESPACIO */
+    .contact__footer {
+        padding: var(--space-2xl) var(--section-padding-x) !important;
+        margin-top: var(--space-xl) !important;
+        min-height: 120px !important;
+    }
+    
+    /* AJUSTAR PARA DISPOSITIVOS CON NOTCH */
+    .contact__footer {
+        padding-bottom: max(var(--space-2xl), calc(env(safe-area-inset-bottom, 0px) + var(--space-xl))) !important;
+    }
 }
 
 /* ===== CORRECCIONES PARA MODO PERFORMANCE ===== */
 .performance-mode .features,
 .performance-mode .videos,
 .performance-mode .faq,
-.performance-mode .contact {
+.performance-mode .contact,
+.performance-mode .contact__footer {
     display: block !important;
     visibility: visible !important;
     opacity: 1 !important;
@@ -164,10 +230,13 @@
     .features,
     .videos,
     .faq,
-    .contact {
+    .contact,
+    .contact__footer {
         opacity: 1 !important;
         visibility: visible !important;
         display: block !important;
+        transform: none !important;
+        animation: none !important;
     }
     
     .features__grid,
@@ -187,5 +256,64 @@
     .faq__question,
     .videos__play-overlay {
         display: flex !important;
+    }
+    
+    .contact__footer-content {
+        display: flex !important;
+        flex-direction: column !important;
+        text-align: center !important;
+    }
+}
+
+/* ===== CORRECCIONES ESPECÍFICAS PARA PANTALLAS PEQUEÑAS ===== */
+@media (width <= 480px) {
+    .contact__footer {
+        padding: var(--space-xl) var(--space-lg) !important;
+        margin-top: var(--space-lg) !important;
+    }
+    
+    .contact__footer-content {
+        gap: var(--space-lg) !important;
+        padding: 0 !important;
+    }
+    
+    .contact__footer-text h3 {
+        font-size: 1rem !important;
+        margin-bottom: var(--space-xs) !important;
+    }
+    
+    .contact__footer-text p {
+        font-size: 0.9rem !important;
+    }
+    
+    .btn--footer {
+        min-width: 200px !important;
+        padding: var(--space-md) var(--space-lg) !important;
+        font-size: 0.95rem !important;
+    }
+}
+
+/* ===== FALLBACK PARA CASOS EXTREMOS ===== */
+@media (max-width: 1024px) {
+    .contact__footer,
+    .contact__footer-content,
+    .contact__footer-text,
+    .contact__footer-cta,
+    .btn--footer {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        transform: translateY(0) !important;
+        animation: none !important;
+    }
+    
+    .contact__footer-content {
+        display: flex !important;
+        flex-direction: column !important;
+    }
+    
+    .btn--footer {
+        display: flex !important;
+        margin: 0 auto !important;
     }
 }
