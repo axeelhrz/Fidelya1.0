@@ -246,11 +246,7 @@ backdrop-filter: blur(20px) saturate(150%);
 border: 1px solid rgba(255, 255, 255, 0.08);
 border-radius: 20px;
 
-/* Sombras profesionales */
-box-shadow:
-    0 10px 40px rgba(0, 0, 0, 0.2),
-    0 4px 15px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+
 
 animation: faq-item-appear 0.8s ease-out forwards;
 }
