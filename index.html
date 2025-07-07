@@ -71,11 +71,20 @@
             
             <!-- Navegación optimizada para móvil -->
             <div class="nav__menu" id="nav-menu">
-                <!-- Botón de cerrar para móvil (solo visible en móvil) -->
-
-
                 <!-- Selector de idioma móvil (solo visible en móvil) -->
-
+                <div class="nav__language-mobile">
+                    <div class="nav__language-title" data-translate="nav-language-title">Idioma</div>
+                    <div class="nav__language-options">
+                        <button class="nav__language-option language-btn" data-lang="es" role="menuitem" aria-label="Cambiar idioma a Español">
+                            <span class="nav__language-flag" role="img" aria-label="Bandera de España">🇪🇸</span>
+                            <span class="nav__language-name">Español</span>
+                        </button>
+                        <button class="nav__language-option language-btn" data-lang="en" role="menuitem" aria-label="Cambiar idioma a Inglés">
+                            <span class="nav__language-flag" role="img" aria-label="Bandera de Estados Unidos">🇺🇸</span>
+                            <span class="nav__language-name">English</span>
+                        </button>
+                    </div>
+                </div>
 
                 <ul class="nav__list" role="navigation" aria-label="Navegación principal">
                     <li><a href="#home" class="nav__link" data-translate="nav-home" role="menuitem">Inicio</a></li>
@@ -86,7 +95,40 @@
                 </ul>
 
                 <!-- CTA móvil (solo visible en móvil) -->
-
+                <div class="nav__cta-mobile">
+                    <a href="https://starflex.web.app/" class="btn--mobile" aria-label="Comenzar prueba gratuita de 3 días">
+                        <span class="btn--mobile-main" data-translate="hero-cta-main">PRUEBA <strong>GRATUITA</strong></span>
+                        <span class="btn--mobile-trial" data-translate="hero-cta-trial">3 DÍAS GRATIS</span>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Selector de idioma desktop (oculto en móvil) -->
+            <div class="nav__language-switcher" id="language-switcher">
+                <div class="nav__language-btn" id="language-switcher-btn" aria-label="Cambiar idioma" role="button" tabindex="0" aria-expanded="false" aria-haspopup="true">
+                    <div class="nav__language-icon">
+                        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                            <path d="M12.87 15.07l-2.54-2.51.03-.03c1.74-1.94 2.98-4.17 3.71-6.53H17V4h-7V2H8v2H1v1.99h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"/>
+                        </svg>
+                    </div>
+                    <span class="nav__language-text" id="language-switcher-text">ES</span>
+                    <div class="nav__language-arrow">
+                        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                            <path d="M7 10l5 5 5-5z"/>
+                        </svg>
+                    </div>
+                </div>
+                
+                <div class="nav__language-dropdown" id="language-switcher-dropdown" role="menu" aria-labelledby="language-switcher-btn">
+                    <button class="nav__language-option" data-lang="es" role="menuitem" aria-label="Cambiar idioma a Español">
+                        <span class="nav__language-flag" role="img" aria-label="Bandera de España">🇪🇸</span>
+                        <span class="nav__language-name">Español</span>
+                    </button>
+                    <button class="nav__language-option" data-lang="en" role="menuitem" aria-label="Cambiar idioma a Inglés">
+                        <span class="nav__language-flag" role="img" aria-label="Bandera de Estados Unidos">🇺🇸</span>
+                        <span class="nav__language-name">English</span>
+                    </button>
+                </div>
             </div>
             
             <!-- Botón CTA (oculto en móvil) -->
@@ -96,9 +138,12 @@
             
             <!-- Toggle móvil optimizado -->
             <div class="nav__toggle" id="nav-toggle" role="button" tabindex="0" aria-label="Abrir menú de navegación" aria-expanded="false" aria-controls="nav-menu">
-                <span class="nav__toggle-line" aria-hidden="true"></span>
-                <span class="nav__toggle-line" aria-hidden="true"></span>
-                <span class="nav__toggle-line" aria-hidden="true"></span>
+                <div class="nav__toggle-inner">
+                    <span class="nav__toggle-line" aria-hidden="true"></span>
+                    <span class="nav__toggle-line" aria-hidden="true"></span>
+                    <span class="nav__toggle-line" aria-hidden="true"></span>
+                </div>
+                <div class="nav__toggle-glow"></div>
             </div>
         </nav>
     </header>
@@ -220,7 +265,7 @@
                                 <div class="hero__phone-app-image image-optimized" role="img" aria-label="Interfaz principal de StarFlex" loading="eager" style="display: none;"></div>
                             </div>
                         </div>
-                    </div>
+                             </div>
                 </div>
             </div>
         </div>
@@ -804,3 +849,5 @@
     <script src="src/js/app.js"></script>
 </body>
 </html>
+
+           
