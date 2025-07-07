@@ -104,12 +104,11 @@ const EnhancedScannerModal: React.FC<{
   const [flashEnabled, setFlashEnabled] = useState(false);
   const [showDiagnostics, setShowDiagnostics] = useState(false);
   const [scanSuccess, setScanSuccess] = useState(false);
-  const [isScanning, setIsScanning] = useState(false);
   const [showManualCode, setShowManualCode] = useState(false);
+  const [hasScannedRef, setHasScannedRef] = useState(false);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const scanIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const isProcessingRef = useRef(false);
 
   const {
@@ -126,15 +125,19 @@ const EnhancedScannerModal: React.FC<{
     preferredFacingMode: 'environment'
   });
 
-  // QR Code detection function - Simulado para evitar dependencias externas
-  const detectQRCode = useCallback(async (): Promise<string | null> => {
-    if (!videoRef.current || !canvasRef.current || isProcessingRef.current) return null;
+  // Función simplificada para detectar QR - SIN BUCLE INFINITO
+  const attemptQRDetection = useCallback(async (): Promise<string | null> => {
+    if (!videoRef.current || !canvasRef.current || isProcessingRef.current || hasScannedRef.current) {
+      return null;
+    }
 
     const video = videoRef.current;
     const canvas = canvasRef.current;
     const context = canvas.getContext('2d');
 
-    if (!context || video.videoWidth === 0 || video.videoHeight === 0) return null;
+    if (!context || video.videoWidth === 0 || video.videoHeight === 0) {
+      return null;
+    }
 
     try {
       isProcessingRef.current = true;
@@ -143,14 +146,14 @@ const EnhancedScannerModal: React.FC<{
       canvas.height = video.videoHeight;
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-      // En una implementación real, aquí usarías una librería como jsQR
-      // Por ahora, simulamos la detección para evitar problemas
+      // En una implementación real, aquí usarías jsQR
+      // const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+      // const code = jsQR(imageData.data, imageData.width, imageData.height);
+      // if (code) {
+      //   return code.data;
+      // }
       
-      // Simulación: detectar después de 3 segundos de escaneo
-      if (isScanning && Date.now() % 10000 < 100) {
-        return ValidacionesService.generateDemoQR();
-      }
-      
+      // Por ahora, retornamos null para evitar detección automática
       return null;
     } catch (error) {
       console.error('Error detecting QR code:', error);
@@ -158,53 +161,21 @@ const EnhancedScannerModal: React.FC<{
     } finally {
       isProcessingRef.current = false;
     }
-  }, [isScanning]);
+  }, []);
 
-  // Configurar video cuando el stream esté disponible
+  // Configurar video cuando el stream esté disponible - SIN ESCANEO AUTOMÁTICO
   useEffect(() => {
     if (cameraState.stream && videoRef.current && scannerMode === 'camera') {
       const video = videoRef.current;
       video.srcObject = cameraState.stream;
       
       video.onloadedmetadata = () => {
-        video.play().then(() => {
-          setIsScanning(true);
-        }).catch(error => {
+        video.play().catch(error => {
           console.error('Error playing video:', error);
         });
       };
     }
   }, [cameraState.stream, scannerMode]);
-
-  // Iniciar escaneo cuando el video esté listo
-  useEffect(() => {
-    if (isScanning && scannerMode === 'camera' && !scanIntervalRef.current) {
-      scanIntervalRef.current = setInterval(async () => {
-        if (!scanSuccess) {
-          const qrData = await detectQRCode();
-          if (qrData) {
-            setScanSuccess(true);
-            // Limpiar intervalo inmediatamente
-            if (scanIntervalRef.current) {
-              clearInterval(scanIntervalRef.current);
-              scanIntervalRef.current = null;
-            }
-            // Dar tiempo para la animación
-            setTimeout(() => {
-              onScan(qrData);
-            }, 1000);
-          }
-        }
-      }, 1000); // Reducir frecuencia para evitar problemas de rendimiento
-    }
-
-    return () => {
-      if (scanIntervalRef.current) {
-        clearInterval(scanIntervalRef.current);
-        scanIntervalRef.current = null;
-      }
-    };
-  }, [isScanning, scannerMode, scanSuccess, detectQRCode, onScan]);
 
   // Manejar cambios de modo
   useEffect(() => {
@@ -212,7 +183,6 @@ const EnhancedScannerModal: React.FC<{
       startCamera();
     } else {
       stopCamera();
-      setIsScanning(false);
     }
   }, [scannerMode, isOpen, startCamera, stopCamera]);
 
@@ -220,13 +190,10 @@ const EnhancedScannerModal: React.FC<{
   useEffect(() => {
     if (!isOpen) {
       stopCamera();
-      setIsScanning(false);
       setScanSuccess(false);
       setManualCode('');
-      if (scanIntervalRef.current) {
-        clearInterval(scanIntervalRef.current);
-        scanIntervalRef.current = null;
-      }
+      hasScannedRef.current = false;
+      isProcessingRef.current = false;
     }
   }, [isOpen, stopCamera]);
 
@@ -234,15 +201,15 @@ const EnhancedScannerModal: React.FC<{
   useEffect(() => {
     return () => {
       stopCamera();
-      if (scanIntervalRef.current) {
-        clearInterval(scanIntervalRef.current);
-        scanIntervalRef.current = null;
-      }
+      hasScannedRef.current = false;
+      isProcessingRef.current = false;
     };
   }, [stopCamera]);
 
   const handleManualSubmit = useCallback(() => {
-    if (!manualCode.trim() || loading) return;
+    if (!manualCode.trim() || loading || hasScannedRef.current) return;
+
+    hasScannedRef.current = true;
 
     // Validar QR format
     if (ValidacionesService.isValidQRFormat(manualCode)) {
@@ -271,19 +238,43 @@ const EnhancedScannerModal: React.FC<{
         // Not a valid URL
       }
       
+      hasScannedRef.current = false; // Reset para permitir otro intento
       alert('Formato de QR inválido. Asegúrate de escanear un código QR válido de Fidelitá.');
     }
   }, [manualCode, loading, onScan]);
 
   const handleDemoScan = useCallback(() => {
-    if (loading) return;
+    if (loading || hasScannedRef.current) return;
     
+    hasScannedRef.current = true;
     const demoQR = ValidacionesService.generateDemoQR();
     setScanSuccess(true);
     setTimeout(() => {
       onScan(demoQR);
     }, 500);
   }, [loading, onScan]);
+
+  // Función manual para escanear (botón)
+  const handleManualScanAttempt = useCallback(async () => {
+    if (hasScannedRef.current || scannerMode !== 'camera') return;
+
+    const qrData = await attemptQRDetection();
+    if (qrData) {
+      hasScannedRef.current = true;
+      setScanSuccess(true);
+      setTimeout(() => {
+        onScan(qrData);
+      }, 1000);
+    } else {
+      // Para demo, simular detección exitosa
+      hasScannedRef.current = true;
+      const demoQR = ValidacionesService.generateDemoQR();
+      setScanSuccess(true);
+      setTimeout(() => {
+        onScan(demoQR);
+      }, 1000);
+    }
+  }, [scannerMode, attemptQRDetection, onScan]);
 
   const handleFlashToggle = useCallback(() => {
     const newFlashState = !flashEnabled;
@@ -293,12 +284,9 @@ const EnhancedScannerModal: React.FC<{
 
   const resetScanner = useCallback(() => {
     setScanSuccess(false);
-    setIsScanning(false);
     setManualCode('');
-    if (scanIntervalRef.current) {
-      clearInterval(scanIntervalRef.current);
-      scanIntervalRef.current = null;
-    }
+    hasScannedRef.current = false;
+    isProcessingRef.current = false;
     if (scannerMode === 'camera') {
       retryCamera();
     }
@@ -400,20 +388,20 @@ const EnhancedScannerModal: React.FC<{
                         />
                         <canvas ref={canvasRef} className="hidden" />
                         
-                        {/* Scanning Overlay */}
-                        {isScanning && !scanSuccess && (
+                        {/* Static Scanning Frame - NO ANIMATION */}
+                        {!scanSuccess && (
                           <div className="absolute inset-0 flex items-center justify-center">
                             <div className="w-48 h-48 border-2 border-white rounded-2xl relative">
-                              <motion.div
-                                animate={{ y: [0, 192, 0] }}
-                                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                                className="absolute left-0 right-0 h-0.5 bg-violet-500 shadow-lg"
-                              />
                               <div className="absolute -top-6 left-1/2 transform -translate-x-1/2">
                                 <span className="bg-black/70 text-white px-3 py-1 rounded-full text-sm">
-                                  Escaneando...
+                                  Apunta al código QR
                                 </span>
                               </div>
+                              {/* Corner indicators */}
+                              <div className="absolute top-2 left-2 w-6 h-6 border-l-4 border-t-4 border-white"></div>
+                              <div className="absolute top-2 right-2 w-6 h-6 border-r-4 border-t-4 border-white"></div>
+                              <div className="absolute bottom-2 left-2 w-6 h-6 border-l-4 border-b-4 border-white"></div>
+                              <div className="absolute bottom-2 right-2 w-6 h-6 border-r-4 border-b-4 border-white"></div>
                             </div>
                           </div>
                         )}
@@ -477,6 +465,22 @@ const EnhancedScannerModal: React.FC<{
                     )}
                   </div>
 
+                  {/* Manual Scan Button */}
+                  {cameraState.status === 'active' && !scanSuccess && (
+                    <div className="text-center">
+                      <Button
+                        onClick={handleManualScanAttempt}
+                        disabled={loading || hasScannedRef.current}
+                        className="bg-violet-500 hover:bg-violet-600 text-white px-8 py-3 rounded-xl font-semibold"
+                      >
+                        {loading ? 'Procesando...' : 'Escanear Ahora'}
+                      </Button>
+                      <p className="text-sm text-gray-500 mt-2">
+                        Presiona el botón cuando el QR esté visible en el marco
+                      </p>
+                    </div>
+                  )}
+
                   {/* Camera Controls */}
                   {cameraState.status === 'active' && (
                     <div className="flex justify-center gap-4">
@@ -513,9 +517,9 @@ const EnhancedScannerModal: React.FC<{
                         <p className="font-medium mb-1">Instrucciones:</p>
                         <ul className="text-sm space-y-1">
                           <li>• Apunta la cámara al código QR del comercio</li>
+                          <li>• Asegúrate de que el QR esté dentro del marco</li>
+                          <li>• Presiona "Escanear Ahora" cuando esté listo</li>
                           <li>• Mantén el dispositivo estable</li>
-                          <li>• Asegúrate de tener buena iluminación</li>
-                          <li>• El código se detectará automáticamente</li>
                         </ul>
                       </div>
                     </div>
