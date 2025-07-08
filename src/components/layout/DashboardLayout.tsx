@@ -10,6 +10,7 @@ interface SidebarProps {
   onToggle: () => void;
   onMenuClick: (section: string) => void;
   activeSection: string;
+  onLogoutClick?: () => void;
 }
 
 interface DashboardLayoutProps {
@@ -17,6 +18,7 @@ interface DashboardLayoutProps {
   activeSection?: string;
   onSectionChange?: (section: string) => void;
   sidebarComponent?: React.ComponentType<SidebarProps> | ((props: SidebarProps) => React.ReactElement);
+  onLogout?: () => void;
 }
 
 const SIDEBAR_WIDTH = 320;
@@ -26,7 +28,8 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   children,
   activeSection = 'overview',
   onSectionChange,
-  sidebarComponent: SidebarComponent = DashboardSidebar
+  sidebarComponent: SidebarComponent = DashboardSidebar,
+  onLogout
 }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -69,6 +72,15 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     }
   };
 
+  const handleLogout = () => {
+    if (onLogout) {
+      onLogout();
+    } else {
+      // Default logout behavior - redirect to login
+      window.location.href = '/auth/login';
+    }
+  };
+
   // Calculate main content styles based on screen size and sidebar state
   const getMainContentStyles = () => {
     if (isMobile) {
@@ -93,11 +105,12 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
   const mainContentStyles = getMainContentStyles();
 
-  const sidebarProps = {
+  const sidebarProps: SidebarProps = {
     open: isMobile ? true : sidebarOpen,
     onToggle: handleSidebarToggle,
     onMenuClick: handleMenuClick,
     activeSection: activeSection,
+    onLogoutClick: handleLogout,
   };
 
   return (

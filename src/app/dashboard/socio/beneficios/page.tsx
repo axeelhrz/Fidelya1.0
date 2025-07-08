@@ -195,7 +195,7 @@ export default function SocioBeneficiosPage() {
     beneficiosUsados, 
     loading, 
     error, 
-    useBeneficio: applyBenefit
+    aplicarBeneficio: applyBenefit
   } = useBeneficios();
 
   // Local state
