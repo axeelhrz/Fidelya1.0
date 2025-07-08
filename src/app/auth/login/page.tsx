@@ -21,7 +21,10 @@ import {
   AlertCircle,
   Key,
   Sparkles,
-  Star
+  Star,
+  Building2,
+  Store,
+  User
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { loginSchema, type LoginFormData } from '@/lib/validations/auth';
@@ -147,9 +150,30 @@ export default function LoginPage() {
   ];
 
   const demoAccounts = [
-    { role: 'Asociación', email: 'asociacion@demo.com', password: 'demo123', color: 'from-purple-500 to-purple-600', icon: '🏢' },
-    { role: 'Comercio', email: 'comercio@demo.com', password: 'demo123', color: 'from-blue-500 to-blue-600', icon: '🏪' },
-    { role: 'Socio', email: 'socio@demo.com', password: 'demo123', color: 'from-emerald-500 to-emerald-600', icon: '👤' },
+    { 
+      role: 'Asociación', 
+      email: 'asociacion@demo.com', 
+      password: 'demo123', 
+      color: 'from-purple-500 to-purple-600', 
+      icon: Building2,
+      description: 'Panel administrativo'
+    },
+    { 
+      role: 'Comercio', 
+      email: 'comercio@demo.com', 
+      password: 'demo123', 
+      color: 'from-blue-500 to-blue-600', 
+      icon: Store,
+      description: 'Gestión comercial'
+    },
+    { 
+      role: 'Socio', 
+      email: 'socio@demo.com', 
+      password: 'demo123', 
+      color: 'from-emerald-500 to-emerald-600', 
+      icon: User,
+      description: 'Portal del socio'
+    },
   ];
 
   // Floating particles animation
@@ -588,12 +612,12 @@ export default function LoginPage() {
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
-                          <div className={`w-10 h-10 bg-gradient-to-r ${account.color} rounded-xl flex items-center justify-center text-white font-bold shadow-lg`}>
-                            <span className="text-lg">{account.icon}</span>
+                          <div className={`w-10 h-10 bg-gradient-to-r ${account.color} rounded-xl flex items-center justify-center text-white shadow-lg`}>
+                            <account.icon className="w-5 h-5" />
                           </div>
                           <div>
                             <p className="text-sm font-bold text-slate-800">{account.role}</p>
-                            <p className="text-xs text-slate-600">Cuenta de prueba</p>
+                            <p className="text-xs text-slate-600">{account.description}</p>
                           </div>
                         </div>
                         <div className="text-right">
