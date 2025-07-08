@@ -6,16 +6,12 @@ import {
   Box,
   Typography,
   Card,
-  CardContent,
   Button,
   Avatar,
   Chip,
   IconButton,
   Stack,
-  Grid,
-  Divider,
   LinearProgress,
-  Badge,
   Tooltip,
   Tab,
   Tabs,
@@ -34,62 +30,41 @@ import {
   Camera,
   TrendingUp,
   TrendingDown,
-  Star,
-  Award,
-  ShoppingBag,
-  Receipt,
   Timeline,
   Settings,
   Notifications,
   Security,
   Download,
   Share,
-  Print,
   Refresh,
   CheckCircle,
   Warning,
   Error as ErrorIcon,
   Info,
   Badge as BadgeIcon,
-  CreditCard,
-  History,
   Analytics,
   Favorite,
   Store,
   LocalOffer,
   AccountCircle,
-  ContactMail,
-  PhoneAndroid,
-  Home,
   Cake,
   Business,
   Group,
   Schedule,
   MonetizationOn,
   Loyalty,
-  CardGiftcard,
-  Assessment,
   BarChart,
-  PieChart,
-  ShowChart,
-  DataUsage,
   Speed,
   Visibility,
-  VisibilityOff,
-  Lock,
-  LockOpen,
-  VolumeUp,
-  VolumeOff,
   Mail,
   Sms,
   PushPin,
   NotificationsActive,
-  NotificationsOff,
-  Globe,
+  Language,
 } from '@mui/icons-material';
-import { format, differenceInDays, differenceInMonths } from 'date-fns';
+import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Socio, SocioStats, SocioActivity, SocioAsociacion } from '@/types/socio';
+import { Socio, SocioStats, SocioActivity } from '@/types/socio';
 import { socioService } from '@/services/socio.service';
 import toast from 'react-hot-toast';
 
@@ -136,6 +111,8 @@ const StatCard: React.FC<{
       p: 3,
       background: 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
       transition: 'all 0.2s ease',
+      flex: 1,
+      minWidth: { xs: '100%', sm: '250px' },
       '&:hover': {
         transform: 'translateY(-2px)',
         boxShadow: '0 8px 25px rgba(0,0,0,0.1)',
@@ -300,38 +277,35 @@ export const SocioProfileView: React.FC<SocioProfileViewProps> = ({
   const [tabValue, setTabValue] = useState(0);
   const [stats, setStats] = useState<SocioStats | null>(null);
   const [activities, setActivities] = useState<SocioActivity[]>([]);
-  const [asociaciones, setAsociaciones] = useState<SocioAsociacion[]>([]);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
 
   // Cargar datos del perfil
-  useEffect(() => {
-    if (open && socio) {
-      loadProfileData();
-    }
-  }, [open, socio]);
-
-  const loadProfileData = async () => {
+  const loadProfileData = React.useCallback(async () => {
     if (!socio) return;
     
     setLoading(true);
     try {
-      const [statsData, activitiesData, asociacionesData] = await Promise.all([
+      const [statsData, activitiesData] = await Promise.all([
         socioService.getSocioStats(socio.uid),
         socioService.getSocioActivity(socio.uid, { limit: 20 }),
-        socioService.getSocioAsociaciones(socio.uid),
       ]);
       
       setStats(statsData);
       setActivities(activitiesData);
-      setAsociaciones(asociacionesData);
     } catch (error) {
       console.error('Error loading profile data:', error);
       toast.error('Error al cargar los datos del perfil');
     } finally {
       setLoading(false);
     }
-  };
+  }, [socio]);
+
+  useEffect(() => {
+    if (open && socio) {
+      loadProfileData();
+    }
+  }, [open, socio, loadProfileData]);
 
   const handleImageUpload = async (file: File) => {
     if (!socio) return;
@@ -576,49 +550,52 @@ export const SocioProfileView: React.FC<SocioProfileViewProps> = ({
                       />
                     </Box>
 
-                    {/* Quick stats */}
-                    <Grid container spacing={2} sx={{ mt: 1 }}>
-                      <Grid item xs={6} sm={3}>
-                        <Box sx={{ textAlign: 'center' }}>
-                          <Typography variant="h6" sx={{ fontWeight: 800 }}>
-                            {stats?.tiempoComoSocio || 0}
-                          </Typography>
-                          <Typography variant="caption" sx={{ opacity: 0.8 }}>
-                            días como socio
-                          </Typography>
-                        </Box>
-                      </Grid>
-                      <Grid item xs={6} sm={3}>
-                        <Box sx={{ textAlign: 'center' }}>
-                          <Typography variant="h6" sx={{ fontWeight: 800 }}>
-                            {stats?.beneficiosUsados || 0}
-                          </Typography>
-                          <Typography variant="caption" sx={{ opacity: 0.8 }}>
-                            beneficios usados
-                          </Typography>
-                        </Box>
-                      </Grid>
-                      <Grid item xs={6} sm={3}>
-                        <Box sx={{ textAlign: 'center' }}>
-                          <Typography variant="h6" sx={{ fontWeight: 800 }}>
-                            ${stats?.ahorroTotal || 0}
-                          </Typography>
-                          <Typography variant="caption" sx={{ opacity: 0.8 }}>
-                            ahorro total
-                          </Typography>
-                        </Box>
-                      </Grid>
-                      <Grid item xs={6} sm={3}>
-                        <Box sx={{ textAlign: 'center' }}>
-                          <Typography variant="h6" sx={{ fontWeight: 800 }}>
-                            {stats?.racha || 0}
-                          </Typography>
-                          <Typography variant="caption" sx={{ opacity: 0.8 }}>
-                            días de racha
-                          </Typography>
-                        </Box>
-                      </Grid>
-                    </Grid>
+                    {/* Quick stats - Using Flexbox instead of Grid */}
+                    <Box 
+                      sx={{ 
+                        display: 'flex', 
+                        flexWrap: 'wrap', 
+                        gap: 2, 
+                        mt: 1,
+                        '& > *': {
+                          flex: { xs: '1 1 calc(50% - 8px)', sm: '1 1 calc(25% - 12px)' },
+                          minWidth: '120px',
+                        }
+                      }}
+                    >
+                      <Box sx={{ textAlign: 'center' }}>
+                        <Typography variant="h6" sx={{ fontWeight: 800 }}>
+                          {stats?.tiempoComoSocio || 0}
+                        </Typography>
+                        <Typography variant="caption" sx={{ opacity: 0.8 }}>
+                          días como socio
+                        </Typography>
+                      </Box>
+                      <Box sx={{ textAlign: 'center' }}>
+                        <Typography variant="h6" sx={{ fontWeight: 800 }}>
+                          {stats?.beneficiosUsados || 0}
+                        </Typography>
+                        <Typography variant="caption" sx={{ opacity: 0.8 }}>
+                          beneficios usados
+                        </Typography>
+                      </Box>
+                      <Box sx={{ textAlign: 'center' }}>
+                        <Typography variant="h6" sx={{ fontWeight: 800 }}>
+                          ${stats?.ahorroTotal || 0}
+                        </Typography>
+                        <Typography variant="caption" sx={{ opacity: 0.8 }}>
+                          ahorro total
+                        </Typography>
+                      </Box>
+                      <Box sx={{ textAlign: 'center' }}>
+                        <Typography variant="h6" sx={{ fontWeight: 800 }}>
+                          {stats?.racha || 0}
+                        </Typography>
+                        <Typography variant="caption" sx={{ opacity: 0.8 }}>
+                          días de racha
+                        </Typography>
+                      </Box>
+                    </Box>
                   </Box>
                 </Box>
 
@@ -735,9 +712,15 @@ export const SocioProfileView: React.FC<SocioProfileViewProps> = ({
 
               {/* Tab 1: Información Personal */}
               <TabPanel value={tabValue} index={0}>
-                <Grid container spacing={3}>
+                <Box 
+                  sx={{ 
+                    display: 'flex', 
+                    flexDirection: { xs: 'column', md: 'row' },
+                    gap: 3,
+                  }}
+                >
                   {/* Información básica */}
-                  <Grid item xs={12} md={6}>
+                  <Box sx={{ flex: 1 }}>
                     <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 4, p: 3 }}>
                       <Typography variant="h6" sx={{ fontWeight: 700, color: '#0f172a', mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
                         <AccountCircle sx={{ color: '#6366f1' }} />
@@ -826,10 +809,10 @@ export const SocioProfileView: React.FC<SocioProfileViewProps> = ({
                         )}
                       </Stack>
                     </Card>
-                  </Grid>
+                  </Box>
 
                   {/* Información de membresía */}
-                  <Grid item xs={12} md={6}>
+                  <Box sx={{ flex: 1 }}>
                     <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 4, p: 3 }}>
                       <Typography variant="h6" sx={{ fontWeight: 700, color: '#0f172a', mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
                         <Business sx={{ color: '#6366f1' }} />
@@ -920,54 +903,55 @@ export const SocioProfileView: React.FC<SocioProfileViewProps> = ({
                         </Box>
                       </Stack>
                     </Card>
-                  </Grid>
-                </Grid>
+                  </Box>
+                </Box>
               </TabPanel>
 
               {/* Tab 2: Estadísticas */}
               <TabPanel value={tabValue} index={1}>
-                <Grid container spacing={3}>
-                  {/* Stats cards */}
-                  <Grid item xs={12} sm={6} md={3}>
-                    <StatCard
-                      title="Beneficios Usados"
-                      value={stats?.beneficiosUsados || 0}
-                      icon={<LocalOffer />}
-                      color="#8b5cf6"
-                      subtitle="Total de beneficios utilizados"
-                    />
-                  </Grid>
+                <Box 
+                  sx={{ 
+                    display: 'flex', 
+                    flexWrap: 'wrap',
+                    gap: 3,
+                    '& > *': {
+                      flex: { xs: '1 1 100%', sm: '1 1 calc(50% - 12px)', md: '1 1 calc(25% - 18px)' },
+                      minWidth: '250px',
+                    }
+                  }}
+                >
+                  <StatCard
+                    title="Beneficios Usados"
+                    value={stats?.beneficiosUsados || 0}
+                    icon={<LocalOffer />}
+                    color="#8b5cf6"
+                    subtitle="Total de beneficios utilizados"
+                  />
                   
-                  <Grid item xs={12} sm={6} md={3}>
-                    <StatCard
-                      title="Ahorro Total"
-                      value={`$${stats?.ahorroTotal || 0}`}
-                      icon={<MonetizationOn />}
-                      color="#10b981"
-                      subtitle="Dinero ahorrado con beneficios"
-                    />
-                  </Grid>
+                  <StatCard
+                    title="Ahorro Total"
+                    value={`$${stats?.ahorroTotal || 0}`}
+                    icon={<MonetizationOn />}
+                    color="#10b981"
+                    subtitle="Dinero ahorrado con beneficios"
+                  />
                   
-                  <Grid item xs={12} sm={6} md={3}>
-                    <StatCard
-                      title="Comercios Visitados"
-                      value={stats?.comerciosVisitados || 0}
-                      icon={<Store />}
-                      color="#6366f1"
-                      subtitle="Comercios únicos visitados"
-                    />
-                  </Grid>
+                  <StatCard
+                    title="Comercios Visitados"
+                    value={stats?.comerciosVisitados || 0}
+                    icon={<Store />}
+                    color="#6366f1"
+                    subtitle="Comercios únicos visitados"
+                  />
                   
-                  <Grid item xs={12} sm={6} md={3}>
-                    <StatCard
-                      title="Racha Actual"
-                      value={`${stats?.racha || 0} días`}
-                      icon={<Loyalty />}
-                      color="#f59e0b"
-                      subtitle="Días consecutivos con actividad"
-                    />
-                  </Grid>
-                </Grid>
+                  <StatCard
+                    title="Racha Actual"
+                    value={`${stats?.racha || 0} días`}
+                    icon={<Loyalty />}
+                    color="#f59e0b"
+                    subtitle="Días consecutivos con actividad"
+                  />
+                </Box>
               </TabPanel>
 
               {/* Tab 3: Actividad */}
@@ -1025,339 +1009,363 @@ export const SocioProfileView: React.FC<SocioProfileViewProps> = ({
 
               {/* Tab 4: Configuración */}
               <TabPanel value={tabValue} index={3}>
-                <Grid container spacing={3}>
-                  {/* Configuración de notificaciones */}
-                  <Grid item xs={12} md={6}>
-                    <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 4, p: 3 }}>
-                      <Typography variant="h6" sx={{ fontWeight: 700, color: '#0f172a', mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Notifications sx={{ color: '#6366f1' }} />
-                        Configuración de Notificaciones
-                      </Typography>
-                      
-                      <Stack spacing={3}>
-                        {[
-                          {
-                            key: 'notificaciones',
-                            label: 'Notificaciones generales',
-                            description: 'Recibir notificaciones del sistema',
-                            icon: <NotificationsActive />,
-                            enabled: socio.configuracion?.notificaciones ?? true,
-                          },
-                          {
-                            key: 'notificacionesPush',
-                            label: 'Notificaciones push',
-                            description: 'Notificaciones en tiempo real',
-                            icon: <PushPin />,
-                            enabled: socio.configuracion?.notificacionesPush ?? true,
-                          },
-                          {
-                            key: 'notificacionesEmail',
-                            label: 'Notificaciones por email',
-                            description: 'Recibir emails informativos',
-                            icon: <Mail />,
-                            enabled: socio.configuracion?.notificacionesEmail ?? true,
-                          },
-                          {
-                            key: 'notificacionesSMS',
-                            label: 'Notificaciones por SMS',
-                            description: 'Mensajes de texto importantes',
-                            icon: <Sms />,
-                            enabled: socio.configuracion?.notificacionesSMS ?? false,
-                          },
-                        ].map((config) => (
-                          <Box key={config.key} sx={{ display: 'flex', alignItems: 'center', gap: 3, p: 2, bgcolor: '#fafbfc', borderRadius: 3 }}>
+                <Box 
+                  sx={{ 
+                    display: 'flex', 
+                    flexDirection: 'column',
+                    gap: 3,
+                  }}
+                >
+                  {/* First row - Notifications and Privacy */}
+                  <Box 
+                    sx={{ 
+                      display: 'flex', 
+                      flexDirection: { xs: 'column', md: 'row' },
+                      gap: 3,
+                    }}
+                  >
+                    {/* Configuración de notificaciones */}
+                    <Box sx={{ flex: 1 }}>
+                      <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 4, p: 3 }}>
+                        <Typography variant="h6" sx={{ fontWeight: 700, color: '#0f172a', mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Notifications sx={{ color: '#6366f1' }} />
+                          Configuración de Notificaciones
+                        </Typography>
+                        
+                        <Stack spacing={3}>
+                          {[
+                            {
+                              key: 'notificaciones',
+                              label: 'Notificaciones generales',
+                              description: 'Recibir notificaciones del sistema',
+                              icon: <NotificationsActive />,
+                              enabled: socio.configuracion?.notificaciones ?? true,
+                            },
+                            {
+                              key: 'notificacionesPush',
+                              label: 'Notificaciones push',
+                              description: 'Notificaciones en tiempo real',
+                              icon: <PushPin />,
+                              enabled: socio.configuracion?.notificacionesPush ?? true,
+                            },
+                            {
+                              key: 'notificacionesEmail',
+                              label: 'Notificaciones por email',
+                              description: 'Recibir emails informativos',
+                              icon: <Mail />,
+                              enabled: socio.configuracion?.notificacionesEmail ?? true,
+                            },
+                            {
+                              key: 'notificacionesSMS',
+                              label: 'Notificaciones por SMS',
+                              description: 'Mensajes de texto importantes',
+                              icon: <Sms />,
+                              enabled: socio.configuracion?.notificacionesSMS ?? false,
+                            },
+                          ].map((config) => (
+                            <Box key={config.key} sx={{ display: 'flex', alignItems: 'center', gap: 3, p: 2, bgcolor: '#fafbfc', borderRadius: 3 }}>
+                              <Avatar
+                                sx={{
+                                  width: 40,
+                                  height: 40,
+                                  bgcolor: config.enabled ? alpha('#10b981', 0.1) : alpha('#6b7280', 0.1),
+                                  color: config.enabled ? '#10b981' : '#6b7280',
+                                }}
+                              >
+                                {config.icon}
+                              </Avatar>
+                              <Box sx={{ flex: 1 }}>
+                                <Typography variant="body2" sx={{ fontWeight: 600, color: '#0f172a', mb: 0.5 }}>
+                                  {config.label}
+                                </Typography>
+                                <Typography variant="caption" sx={{ color: '#64748b' }}>
+                                  {config.description}
+                                </Typography>
+                              </Box>
+                              <Chip
+                                label={config.enabled ? 'Habilitado' : 'Deshabilitado'}
+                                size="small"
+                                sx={{
+                                  bgcolor: config.enabled ? alpha('#10b981', 0.1) : alpha('#6b7280', 0.1),
+                                  color: config.enabled ? '#10b981' : '#6b7280',
+                                  fontWeight: 600,
+                                }}
+                              />
+                            </Box>
+                          ))}
+                        </Stack>
+                      </Card>
+                    </Box>
+
+                    {/* Configuración de privacidad */}
+                    <Box sx={{ flex: 1 }}>
+                      <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 4, p: 3 }}>
+                        <Typography variant="h6" sx={{ fontWeight: 700, color: '#0f172a', mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Security sx={{ color: '#6366f1' }} />
+                          Configuración de Privacidad
+                        </Typography>
+                        
+                        <Stack spacing={3}>
+                          {[
+                            {
+                              key: 'perfilPublico',
+                              label: 'Perfil público',
+                              description: 'Permitir que otros vean el perfil',
+                              icon: <Visibility />,
+                              enabled: socio.configuracion?.perfilPublico ?? false,
+                            },
+                            {
+                              key: 'mostrarEstadisticas',
+                              label: 'Mostrar estadísticas',
+                              description: 'Compartir estadísticas de uso',
+                              icon: <BarChart />,
+                              enabled: socio.configuracion?.mostrarEstadisticas ?? true,
+                            },
+                            {
+                              key: 'mostrarActividad',
+                              label: 'Mostrar actividad',
+                              description: 'Mostrar actividad reciente',
+                              icon: <Timeline />,
+                              enabled: socio.configuracion?.mostrarActividad ?? true,
+                            },
+                            {
+                              key: 'compartirDatos',
+                              label: 'Compartir datos',
+                              description: 'Permitir análisis de datos',
+                              icon: <Share />,
+                              enabled: socio.configuracion?.compartirDatos ?? false,
+                            },
+                          ].map((config) => (
+                            <Box key={config.key} sx={{ display: 'flex', alignItems: 'center', gap: 3, p: 2, bgcolor: '#fafbfc', borderRadius: 3 }}>
+                              <Avatar
+                                sx={{
+                                  width: 40,
+                                  height: 40,
+                                  bgcolor: config.enabled ? alpha('#6366f1', 0.1) : alpha('#6b7280', 0.1),
+                                  color: config.enabled ? '#6366f1' : '#6b7280',
+                                }}
+                              >
+                                {config.icon}
+                              </Avatar>
+                              <Box sx={{ flex: 1 }}>
+                                <Typography variant="body2" sx={{ fontWeight: 600, color: '#0f172a', mb: 0.5 }}>
+                                  {config.label}
+                                </Typography>
+                                <Typography variant="caption" sx={{ color: '#64748b' }}>
+                                  {config.description}
+                                </Typography>
+                              </Box>
+                              <Chip
+                                label={config.enabled ? 'Habilitado' : 'Deshabilitado'}
+                                size="small"
+                                sx={{
+                                  bgcolor: config.enabled ? alpha('#6366f1', 0.1) : alpha('#6b7280', 0.1),
+                                  color: config.enabled ? '#6366f1' : '#6b7280',
+                                  fontWeight: 600,
+                                }}
+                              />
+                            </Box>
+                          ))}
+                        </Stack>
+                      </Card>
+                    </Box>
+                  </Box>
+
+                  {/* Second row - Appearance and Preferences */}
+                  <Box 
+                    sx={{ 
+                      display: 'flex', 
+                      flexDirection: { xs: 'column', md: 'row' },
+                      gap: 3,
+                    }}
+                  >
+                    {/* Configuración de apariencia */}
+                    <Box sx={{ flex: 1 }}>
+                      <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 4, p: 3 }}>
+                        <Typography variant="h6" sx={{ fontWeight: 700, color: '#0f172a', mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Settings sx={{ color: '#6366f1' }} />
+                          Configuración de Apariencia
+                        </Typography>
+                        
+                        <Stack spacing={3}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, p: 2, bgcolor: '#fafbfc', borderRadius: 3 }}>
                             <Avatar
                               sx={{
                                 width: 40,
                                 height: 40,
-                                bgcolor: config.enabled ? alpha('#10b981', 0.1) : alpha('#6b7280', 0.1),
-                                color: config.enabled ? '#10b981' : '#6b7280',
+                                bgcolor: alpha('#8b5cf6', 0.1),
+                                color: '#8b5cf6',
                               }}
                             >
-                              {config.icon}
+                              <Settings />
                             </Avatar>
                             <Box sx={{ flex: 1 }}>
                               <Typography variant="body2" sx={{ fontWeight: 600, color: '#0f172a', mb: 0.5 }}>
-                                {config.label}
+                                Tema
                               </Typography>
                               <Typography variant="caption" sx={{ color: '#64748b' }}>
-                                {config.description}
+                                {socio.configuracion?.tema || 'light'}
                               </Typography>
                             </Box>
-                            <Chip
-                              label={config.enabled ? 'Habilitado' : 'Deshabilitado'}
-                              size="small"
-                              sx={{
-                                bgcolor: config.enabled ? alpha('#10b981', 0.1) : alpha('#6b7280', 0.1),
-                                color: config.enabled ? '#10b981' : '#6b7280',
-                                fontWeight: 600,
-                              }}
-                            />
                           </Box>
-                        ))}
-                      </Stack>
-                    </Card>
-                  </Grid>
 
-                  {/* Configuración de privacidad */}
-                  <Grid item xs={12} md={6}>
-                    <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 4, p: 3 }}>
-                      <Typography variant="h6" sx={{ fontWeight: 700, color: '#0f172a', mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Security sx={{ color: '#6366f1' }} />
-                        Configuración de Privacidad
-                      </Typography>
-                      
-                      <Stack spacing={3}>
-                        {[
-                          {
-                            key: 'perfilPublico',
-                            label: 'Perfil público',
-                            description: 'Permitir que otros vean el perfil',
-                            icon: <Visibility />,
-                            enabled: socio.configuracion?.perfilPublico ?? false,
-                          },
-                          {
-                            key: 'mostrarEstadisticas',
-                            label: 'Mostrar estadísticas',
-                            description: 'Compartir estadísticas de uso',
-                            icon: <BarChart />,
-                            enabled: socio.configuracion?.mostrarEstadisticas ?? true,
-                          },
-                          {
-                            key: 'mostrarActividad',
-                            label: 'Mostrar actividad',
-                            description: 'Mostrar actividad reciente',
-                            icon: <Timeline />,
-                            enabled: socio.configuracion?.mostrarActividad ?? true,
-                          },
-                          {
-                            key: 'compartirDatos',
-                            label: 'Compartir datos',
-                            description: 'Permitir análisis de datos',
-                            icon: <Share />,
-                            enabled: socio.configuracion?.compartirDatos ?? false,
-                          },
-                        ].map((config) => (
-                          <Box key={config.key} sx={{ display: 'flex', alignItems: 'center', gap: 3, p: 2, bgcolor: '#fafbfc', borderRadius: 3 }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, p: 2, bgcolor: '#fafbfc', borderRadius: 3 }}>
                             <Avatar
                               sx={{
                                 width: 40,
                                 height: 40,
-                                bgcolor: config.enabled ? alpha('#6366f1', 0.1) : alpha('#6b7280', 0.1),
-                                color: config.enabled ? '#6366f1' : '#6b7280',
+                                bgcolor: alpha('#f59e0b', 0.1),
+                                color: '#f59e0b',
                               }}
                             >
-                              {config.icon}
+                              <Language />
                             </Avatar>
                             <Box sx={{ flex: 1 }}>
                               <Typography variant="body2" sx={{ fontWeight: 600, color: '#0f172a', mb: 0.5 }}>
-                                {config.label}
+                                Idioma
                               </Typography>
                               <Typography variant="caption" sx={{ color: '#64748b' }}>
-                                {config.description}
+                                {socio.configuracion?.idioma === 'es' ? 'Español' : 'Inglés'}
                               </Typography>
                             </Box>
-                            <Chip
-                              label={config.enabled ? 'Habilitado' : 'Deshabilitado'}
-                              size="small"
+                          </Box>
+
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, p: 2, bgcolor: '#fafbfc', borderRadius: 3 }}>
+                            <Avatar
                               sx={{
-                                bgcolor: config.enabled ? alpha('#6366f1', 0.1) : alpha('#6b7280', 0.1),
-                                color: config.enabled ? '#6366f1' : '#6b7280',
-                                fontWeight: 600,
+                                width: 40,
+                                height: 40,
+                                bgcolor: alpha('#10b981', 0.1),
+                                color: '#10b981',
                               }}
-                            />
-                          </Box>
-                        ))}
-                      </Stack>
-                    </Card>
-                  </Grid>
-
-                  {/* Configuración de apariencia */}
-                  <Grid item xs={12} md={6}>
-                    <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 4, p: 3 }}>
-                      <Typography variant="h6" sx={{ fontWeight: 700, color: '#0f172a', mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Settings sx={{ color: '#6366f1' }} />
-                        Configuración de Apariencia
-                      </Typography>
-                      
-                      <Stack spacing={3}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, p: 2, bgcolor: '#fafbfc', borderRadius: 3 }}>
-                          <Avatar
-                            sx={{
-                              width: 40,
-                              height: 40,
-                              bgcolor: alpha('#8b5cf6', 0.1),
-                              color: '#8b5cf6',
-                            }}
-                          >
-                            <Settings />
-                          </Avatar>
-                          <Box sx={{ flex: 1 }}>
-                            <Typography variant="body2" sx={{ fontWeight: 600, color: '#0f172a', mb: 0.5 }}>
-                              Tema
-                            </Typography>
-                            <Typography variant="caption" sx={{ color: '#64748b' }}>
-                              {socio.configuracion?.tema || 'light'}
-                            </Typography>
-                          </Box>
-                        </Box>
-
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, p: 2, bgcolor: '#fafbfc', borderRadius: 3 }}>
-                          <Avatar
-                            sx={{
-                              width: 40,
-                              height: 40,
-                              bgcolor: alpha('#f59e0b', 0.1),
-                              color: '#f59e0b',
-                            }}
-                          >
-                            <Globe />
-                          </Avatar>
-                          <Box sx={{ flex: 1 }}>
-                            <Typography variant="body2" sx={{ fontWeight: 600, color: '#0f172a', mb: 0.5 }}>
-                              Idioma
-                            </Typography>
-                            <Typography variant="caption" sx={{ color: '#64748b' }}>
-                              {socio.configuracion?.idioma === 'es' ? 'Español' : 'Inglés'}
-                            </Typography>
-                          </Box>
-                        </Box>
-
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, p: 2, bgcolor: '#fafbfc', borderRadius: 3 }}>
-                          <Avatar
-                            sx={{
-                              width: 40,
-                              height: 40,
-                              bgcolor: alpha('#10b981', 0.1),
-                              color: '#10b981',
-                            }}
-                          >
-                            <MonetizationOn />
-                          </Avatar>
-                          <Box sx={{ flex: 1 }}>
-                            <Typography variant="body2" sx={{ fontWeight: 600, color: '#0f172a', mb: 0.5 }}>
-                              Moneda
-                            </Typography>
-                            <Typography variant="caption" sx={{ color: '#64748b' }}>
-                              {socio.configuracion?.moneda || 'ARS'}
-                            </Typography>
-                          </Box>
-                        </Box>
-
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, p: 2, bgcolor: '#fafbfc', borderRadius: 3 }}>
-                          <Avatar
-                            sx={{
-                              width: 40,
-                              height: 40,
-                              bgcolor: alpha('#06b6d4', 0.1),
-                              color: '#06b6d4',
-                            }}
-                          >
-                            <Schedule />
-                          </Avatar>
-                          <Box sx={{ flex: 1 }}>
-                            <Typography variant="body2" sx={{ fontWeight: 600, color: '#0f172a', mb: 0.5 }}>
-                              Zona horaria
-                            </Typography>
-                            <Typography variant="caption" sx={{ color: '#64748b' }}>
-                              {socio.configuracion?.timezone || 'America/Argentina/Buenos_Aires'}
-                            </Typography>
-                          </Box>
-                        </Box>
-                      </Stack>
-                    </Card>
-                  </Grid>
-
-                  {/* Preferencias */}
-                  <Grid item xs={12} md={6}>
-                    <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 4, p: 3 }}>
-                      <Typography variant="h6" sx={{ fontWeight: 700, color: '#0f172a', mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Favorite sx={{ color: '#6366f1' }} />
-                        Preferencias
-                      </Typography>
-                      
-                      <Stack spacing={3}>
-                        <Box>
-                          <Typography variant="body2" sx={{ fontWeight: 600, color: '#0f172a', mb: 2 }}>
-                            Beneficios Favoritos
-                          </Typography>
-                          {socio.configuracion?.beneficiosFavoritos && socio.configuracion.beneficiosFavoritos.length > 0 ? (
-                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                              {socio.configuracion.beneficiosFavoritos.map((beneficio, index) => (
-                                <Chip
-                                  key={index}
-                                  label={beneficio}
-                                  size="small"
-                                  sx={{
-                                    bgcolor: alpha('#ec4899', 0.1),
-                                    color: '#ec4899',
-                                    fontWeight: 600,
-                                  }}
-                                />
-                              ))}
+                            >
+                              <MonetizationOn />
+                            </Avatar>
+                            <Box sx={{ flex: 1 }}>
+                              <Typography variant="body2" sx={{ fontWeight: 600, color: '#0f172a', mb: 0.5 }}>
+                                Moneda
+                              </Typography>
+                              <Typography variant="caption" sx={{ color: '#64748b' }}>
+                                {socio.configuracion?.moneda || 'ARS'}
+                              </Typography>
                             </Box>
-                          ) : (
-                            <Typography variant="caption" sx={{ color: '#94a3b8' }}>
-                              No hay beneficios favoritos configurados
-                            </Typography>
-                          )}
-                        </Box>
+                          </Box>
 
-                        <Box>
-                          <Typography variant="body2" sx={{ fontWeight: 600, color: '#0f172a', mb: 2 }}>
-                            Comercios Favoritos
-                          </Typography>
-                          {socio.configuracion?.comerciosFavoritos && socio.configuracion.comerciosFavoritos.length > 0 ? (
-                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                              {socio.configuracion.comerciosFavoritos.map((comercio, index) => (
-                                <Chip
-                                  key={index}
-                                  label={comercio}
-                                  size="small"
-                                  sx={{
-                                    bgcolor: alpha('#6366f1', 0.1),
-                                    color: '#6366f1',
-                                    fontWeight: 600,
-                                  }}
-                                />
-                              ))}
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, p: 2, bgcolor: '#fafbfc', borderRadius: 3 }}>
+                            <Avatar
+                              sx={{
+                                width: 40,
+                                height: 40,
+                                bgcolor: alpha('#06b6d4', 0.1),
+                                color: '#06b6d4',
+                              }}
+                            >
+                              <Schedule />
+                            </Avatar>
+                            <Box sx={{ flex: 1 }}>
+                              <Typography variant="body2" sx={{ fontWeight: 600, color: '#0f172a', mb: 0.5 }}>
+                                Zona horaria
+                              </Typography>
+                              <Typography variant="caption" sx={{ color: '#64748b' }}>
+                                {socio.configuracion?.timezone || 'America/Argentina/Buenos_Aires'}
+                              </Typography>
                             </Box>
-                          ) : (
-                            <Typography variant="caption" sx={{ color: '#94a3b8' }}>
-                              No hay comercios favoritos configurados
-                            </Typography>
-                          )}
-                        </Box>
+                          </Box>
+                        </Stack>
+                      </Card>
+                    </Box>
 
-                        <Box>
-                          <Typography variant="body2" sx={{ fontWeight: 600, color: '#0f172a', mb: 2 }}>
-                            Categorías Favoritas
-                          </Typography>
-                          {socio.configuracion?.categoriasFavoritas && socio.configuracion.categoriasFavoritas.length > 0 ? (
-                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                              {socio.configuracion.categoriasFavoritas.map((categoria, index) => (
-                                <Chip
-                                  key={index}
-                                  label={categoria}
-                                  size="small"
-                                  sx={{
-                                    bgcolor: alpha('#10b981', 0.1),
-                                    color: '#10b981',
-                                    fontWeight: 600,
-                                  }}
-                                />
-                              ))}
-                            </Box>
-                          ) : (
-                            <Typography variant="caption" sx={{ color: '#94a3b8' }}>
-                              No hay categorías favoritas configuradas
+                    {/* Preferencias */}
+                    <Box sx={{ flex: 1 }}>
+                      <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 4, p: 3 }}>
+                        <Typography variant="h6" sx={{ fontWeight: 700, color: '#0f172a', mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Favorite sx={{ color: '#6366f1' }} />
+                          Preferencias
+                        </Typography>
+                        
+                        <Stack spacing={3}>
+                          <Box>
+                            <Typography variant="body2" sx={{ fontWeight: 600, color: '#0f172a', mb: 2 }}>
+                              Beneficios Favoritos
                             </Typography>
-                          )}
-                        </Box>
-                      </Stack>
-                    </Card>
-                  </Grid>
-                </Grid>
+                            {socio.configuracion?.beneficiosFavoritos && socio.configuracion.beneficiosFavoritos.length > 0 ? (
+                              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                                {socio.configuracion.beneficiosFavoritos.map((beneficio, index) => (
+                                  <Chip
+                                    key={index}
+                                    label={beneficio}
+                                    size="small"
+                                    sx={{
+                                      bgcolor: alpha('#ec4899', 0.1),
+                                      color: '#ec4899',
+                                      fontWeight: 600,
+                                    }}
+                                  />
+                                ))}
+                              </Box>
+                            ) : (
+                              <Typography variant="caption" sx={{ color: '#94a3b8' }}>
+                                No hay beneficios favoritos configurados
+                              </Typography>
+                            )}
+                          </Box>
+
+                          <Box>
+                            <Typography variant="body2" sx={{ fontWeight: 600, color: '#0f172a', mb: 2 }}>
+                              Comercios Favoritos
+                            </Typography>
+                            {socio.configuracion?.comerciosFavoritos && socio.configuracion.comerciosFavoritos.length > 0 ? (
+                              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                                {socio.configuracion.comerciosFavoritos.map((comercio, index) => (
+                                  <Chip
+                                    key={index}
+                                    label={comercio}
+                                    size="small"
+                                    sx={{
+                                      bgcolor: alpha('#6366f1', 0.1),
+                                      color: '#6366f1',
+                                      fontWeight: 600,
+                                    }}
+                                  />
+                                ))}
+                              </Box>
+                            ) : (
+                              <Typography variant="caption" sx={{ color: '#94a3b8' }}>
+                                No hay comercios favoritos configurados
+                              </Typography>
+                            )}
+                          </Box>
+
+                          <Box>
+                            <Typography variant="body2" sx={{ fontWeight: 600, color: '#0f172a', mb: 2 }}>
+                              Categorías Favoritas
+                            </Typography>
+                            {socio.configuracion?.categoriasFavoritas && socio.configuracion.categoriasFavoritas.length > 0 ? (
+                              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                                {socio.configuracion.categoriasFavoritas.map((categoria, index) => (
+                                  <Chip
+                                    key={index}
+                                    label={categoria}
+                                    size="small"
+                                    sx={{
+                                      bgcolor: alpha('#10b981', 0.1),
+                                      color: '#10b981',
+                                      fontWeight: 600,
+                                    }}
+                                  />
+                                ))}
+                              </Box>
+                            ) : (
+                              <Typography variant="caption" sx={{ color: '#94a3b8' }}>
+                                No hay categorías favoritas configuradas
+                              </Typography>
+                            )}
+                          </Box>
+                        </Stack>
+                      </Card>
+                    </Box>
+                  </Box>
+                </Box>
               </TabPanel>
             </Box>
           </Card>
