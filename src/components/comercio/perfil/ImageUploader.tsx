@@ -75,7 +75,7 @@ export const ImageUploader: React.FC = () => {
       });
 
       return { valid: true, preview };
-    } catch (error) {
+    } catch {
       return { valid: false, error: 'Error al procesar la imagen' };
     }
   }, []);
@@ -107,7 +107,7 @@ export const ImageUploader: React.FC = () => {
           setState(prev => ({ ...prev, preview: null }));
         }, 2000);
       }
-    } catch (error) {
+    } catch {
       setState(prev => ({ ...prev, preview: null }));
     }
   }, [uploadImage, validateAndPreviewFile, clearError]);
@@ -175,7 +175,6 @@ export const ImageUploader: React.FC = () => {
   }> = ({ type, state, currentImage, title, subtitle, icon, color, size }) => {
     const isUploading = uploadProgress.uploading && uploadProgress.type === type;
     const hasImage = currentImage || state.preview;
-    const showProgress = isUploading && uploadProgress.progress > 0;
 
     return (
       <Box sx={{ flex: 1, minWidth: 300 }}>
