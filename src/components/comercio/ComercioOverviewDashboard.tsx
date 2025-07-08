@@ -682,7 +682,7 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
 
   const stats = getStats();
 
-  // Real-time Firebase listeners - FIXED: Removed circular dependency
+  // FIXED: Real-time Firebase listeners with proper dependency management
   useEffect(() => {
     if (!user) return;
 
@@ -765,9 +765,9 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
       unsubscribeValidaciones();
       unsubscribeActivities();
     };
-  }, [user]); // FIXED: Removed realTimeStats.validacionesEnTiempoReal from dependencies
+  }, [user]); // FIXED: Only depend on user
 
-  // Calculate metrics from validaciones - FIXED: Removed circular dependency
+  // FIXED: Calculate metrics with stable dependencies
   const calculateMetrics = useCallback(() => {
     if (!user || validacionesLoading || beneficiosLoading) {
       return null;
@@ -856,25 +856,31 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
       console.error('Error calculating comercio metrics:', err);
       throw new Error('Error al cargar las métricas del comercio');
     }
-  }, [user, validaciones, activeBeneficios, stats, validacionesLoading, beneficiosLoading]);
+  }, [user, validaciones, activeBeneficios, stats.totalValidaciones, validacionesLoading, beneficiosLoading]);
 
-  // Calculate metrics with proper dependencies - FIXED: Removed circular dependency
+  // FIXED: Calculate metrics with proper dependencies
   useEffect(() => {
-    const metrics = calculateMetrics();
-    
-    if (metrics) {
-      setComercioMetrics(prev => ({
-        ...prev,
-        ...metrics,
-        // Keep existing activities to avoid overwriting them
-        recentActivities: prev.recentActivities,
-      }));
-      setLoading(false);
-      setError(null);
-    } else if (!validacionesLoading && !beneficiosLoading) {
-      setLoading(false);
+    if (!validacionesLoading && !beneficiosLoading && user) {
+      try {
+        const metrics = calculateMetrics();
+        
+        if (metrics) {
+          setComercioMetrics(prev => ({
+            ...prev,
+            ...metrics,
+            // Keep existing activities to avoid overwriting them
+            recentActivities: prev.recentActivities,
+          }));
+          setLoading(false);
+          setError(null);
+        }
+      } catch (err) {
+        console.error('Error in metrics calculation:', err);
+        setError(err instanceof Error ? err.message : 'Error al calcular métricas');
+        setLoading(false);
+      }
     }
-  }, [calculateMetrics, beneficiosLoading, validacionesLoading]); // FIXED: Only depend on calculateMetrics and loading states
+  }, [calculateMetrics, validacionesLoading, beneficiosLoading, user]);
 
   // Enhanced KPI metrics with real-time values
   const kpiMetrics = useMemo(() => [
@@ -1015,8 +1021,9 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => onNavigate?.('qr-validacion')}
-              className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center space-x-2 relative overflow-hidden"
-                        >
+              className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex
+              items-center space-x-2 relative overflow-hidden"
+            >
               <motion.div
                 className="absolute inset-0 bg-white/20"
                 initial={{ x: '-100%' }}
@@ -1384,4 +1391,3 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
     </div>
   );
 };
-

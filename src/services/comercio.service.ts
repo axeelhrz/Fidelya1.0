@@ -11,7 +11,7 @@ import {
   Timestamp,
   writeBatch,
 } from 'firebase/firestore';
-import { dbs } from '@/lib/firebase';
+import { db } from '@/lib/firebase';
 import { Comercio, ComercioFormData, ComercioStats, Validacion } from '@/types/comercio';
 import { uploadImage, deleteImage, generateImagePath } from '@/utils/storage/uploadImage';
 
@@ -174,6 +174,12 @@ export class ComercioService {
       );
       
       const snapshot = await getDocs(query_);
+      
+      // FIXED: Early return if no validations
+      if (snapshot.empty) {
+        return undefined;
+      }
+
       const beneficioCount: Record<string, number> = {};
       
       snapshot.docs.forEach(doc => {
@@ -190,6 +196,7 @@ export class ComercioService {
         return undefined;
       }
 
+      // FIXED: Provide initial value to reduce to prevent error
       const mostUsedId = beneficioIds.reduce((a, b) => 
         beneficioCount[a] > beneficioCount[b] ? a : b
       );
