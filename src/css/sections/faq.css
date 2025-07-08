@@ -68,7 +68,7 @@ position: relative;
 margin-bottom: var(--space-2xl);
 font-size: clamp(3rem, 7vw, 5rem);
 font-weight: 800;
-line-height: 0.9;
+line-height: 1.1;
 letter-spacing: -0.02em;
 
 /* Gradiente profesional para FAQ */
@@ -245,8 +245,6 @@ background: linear-gradient(135deg,
 backdrop-filter: blur(20px) saturate(150%);
 border: 1px solid rgba(255, 255, 255, 0.08);
 border-radius: 20px;
-
-
 
 animation: faq-item-appear 0.8s ease-out forwards;
 }
@@ -630,6 +628,7 @@ gap: var(--space-lg);
 @media (width <= 480px) {
 .faq__title {
 font-size: clamp(2.2rem, 8vw, 3.5rem);
+line-height: 1.2;
 }
 
 .faq__subtitle {
