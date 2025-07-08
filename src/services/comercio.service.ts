@@ -39,6 +39,8 @@ export class ComercioService {
         throw new Error('El formato del email no es válido');
       }
 
+      console.log('🏪 Updating comercio profile for user:', userId);
+      
       const comercioRef = doc(db, 'comercios', userId);
       
       // Check if document exists
@@ -71,13 +73,15 @@ export class ComercioService {
       
       if (comercioDoc.exists()) {
         // Document exists, update it
+        console.log('📝 Updating existing comercio document');
         await updateDoc(comercioRef, updateData);
         console.log('✅ Perfil de comercio actualizado exitosamente');
       } else {
         // Document doesn't exist, create it with default values
         console.log('⚠️ Documento de comercio no existe, creando nuevo documento...');
         
-        const newComercioData = {
+        const newComercioData: Partial<Comercio> = {
+          uid: userId,
           ...updateData,
           estado: 'activo',
           asociacionesVinculadas: [],
@@ -104,8 +108,22 @@ export class ComercioService {
     } catch (error) {
       console.error('❌ Error updating comercio profile:', error);
       
+      // Handle specific Firebase errors
       if (error instanceof Error) {
-        throw error; // Re-throw validation errors
+        if (error.message.includes('permission-denied')) {
+          throw new Error('No tienes permisos para actualizar este perfil');
+        }
+        
+        if (error.message.includes('not-found')) {
+          throw new Error('El comercio no fue encontrado');
+        }
+        
+        if (error.message.includes('unavailable')) {
+          throw new Error('Servicio temporalmente no disponible. Intenta nuevamente.');
+        }
+        
+        // Re-throw validation errors
+        throw error;
       }
       
       throw new Error('Error al actualizar el perfil del comercio');
@@ -170,46 +188,9 @@ export class ComercioService {
         await updateDoc(comercioRef, updateData);
       } else {
         // Create document if it doesn't exist
-        const newComercioData = {
-          ...updateData,
-          estado: 'activo',
-          nombre: '',
-          nombreComercio: '',
-          email: '',
-          categoria: '',
-          direccion: '',
-          telefono: '',
-          horario: '',
-          descripcion: '',
-          sitioWeb: '',
-          razonSocial: '',
-          cuit: '',
-          ubicacion: '',
-          emailContacto: '',
-          visible: true,
-          redesSociales: {
-            facebook: '',
-            instagram: '',
-            twitter: '',
-          },
-          asociacionesVinculadas: [],
-          configuracion: {
-            notificacionesEmail: true,
-            notificacionesWhatsApp: false,
-            autoValidacion: false
-          },
-          creadoEn: Timestamp.now(),
-          logoUrl: type === 'logo' ? downloadURL : '',
-          imagenPrincipalUrl: type === 'imagen' ? downloadURL : '',
-          qrCode: '',
-          verificado: false,
-          puntuacion: 0,
-          totalReviews: 0,
-          beneficiosActivos: 0,
-          validacionesTotales: 0
-        };
-        
-        await setDoc(comercioRef, newComercioData);
+        await this.ensureComercioDocument(userId, {
+          [type === 'logo' ? 'logoUrl' : 'imagenPrincipalUrl']: downloadURL
+        });
       }
       
       onProgress?.(98);
@@ -312,7 +293,7 @@ export class ComercioService {
       let validacionesExitosas = 0;
       if (totalResult.status === 'fulfilled') {
         validacionesExitosas = totalResult.value.docs.filter(
-          doc => doc.data().resultado === 'habilitado'
+          doc => doc.data().resultado === 'valido'
         ).length;
       }
 
@@ -362,7 +343,7 @@ export class ComercioService {
       const query_ = query(
         validacionesRef,
         where('comercioId', '==', userId),
-        where('resultado', '==', 'habilitado'),
+        where('resultado', '==', 'valido'),
         orderBy('fechaHora', 'desc'),
         limit(100)
       );
@@ -502,46 +483,7 @@ export class ComercioService {
         });
       } else {
         // Create document if it doesn't exist
-        const newComercioData = {
-          visible,
-          estado: 'activo',
-          nombre: '',
-          nombreComercio: '',
-          email: '',
-          categoria: '',
-          direccion: '',
-          telefono: '',
-          horario: '',
-          descripcion: '',
-          sitioWeb: '',
-          razonSocial: '',
-          cuit: '',
-          ubicacion: '',
-          emailContacto: '',
-          redesSociales: {
-            facebook: '',
-            instagram: '',
-            twitter: '',
-          },
-          asociacionesVinculadas: [],
-          configuracion: {
-            notificacionesEmail: true,
-            notificacionesWhatsApp: false,
-            autoValidacion: false
-          },
-          creadoEn: Timestamp.now(),
-          actualizadoEn: Timestamp.now(),
-          logoUrl: '',
-          imagenPrincipalUrl: '',
-          qrCode: '',
-          verificado: false,
-          puntuacion: 0,
-          totalReviews: 0,
-          beneficiosActivos: 0,
-          validacionesTotales: 0
-        };
-        
-        await setDoc(comercioRef, newComercioData);
+        await this.ensureComercioDocument(userId, { visible });
       }
       
       console.log(`✅ Visibilidad actualizada: ${visible ? 'visible' : 'oculto'}`);
@@ -596,7 +538,8 @@ export class ComercioService {
       if (!comercioDoc.exists()) {
         console.log('⚠️ Creando documento de comercio faltante para usuario:', userId);
         
-        const defaultComercioData = {
+        const defaultComercioData: Partial<Comercio> = {
+          uid: userId,
           estado: 'activo',
           nombre: basicData?.nombre || '',
           nombreComercio: basicData?.nombreComercio || '',
@@ -641,6 +584,87 @@ export class ComercioService {
     } catch (error) {
       console.error('❌ Error ensuring comercio document:', error);
       throw new Error('Error al crear el documento del comercio');
+    }
+  }
+
+  // New method to find comercio by email (useful for debugging)
+  static async findComercioByEmail(email: string): Promise<Comercio | null> {
+    try {
+      const comerciosRef = collection(db, 'comercios');
+      const q = query(comerciosRef, where('email', '==', email.toLowerCase()));
+      const snapshot = await getDocs(q);
+      
+      if (!snapshot.empty) {
+        const doc = snapshot.docs[0];
+        return { uid: doc.id, ...doc.data() } as Comercio;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('❌ Error finding comercio by email:', error);
+      return null;
+    }
+  }
+
+  // New method to sync user authentication with comercio document
+  static async syncUserWithComercio(userId: string, userData: any): Promise<void> {
+    try {
+      console.log('🔄 Syncing user with comercio document:', userId);
+      
+      const comercioRef = doc(db, 'comercios', userId);
+      const comercioDoc = await getDoc(comercioRef);
+      
+      if (!comercioDoc.exists()) {
+        console.log('📝 Creating comercio document from user data');
+        
+        const comercioData: Partial<Comercio> = {
+          uid: userId,
+          nombre: userData.nombre || '',
+          nombreComercio: userData.nombreComercio || userData.nombre || '',
+          email: userData.email || '',
+          categoria: userData.categoria || '',
+          estado: 'activo',
+          direccion: '',
+          telefono: '',
+          horario: '',
+          descripcion: '',
+          sitioWeb: '',
+          razonSocial: userData.nombreComercio || userData.nombre || '',
+          cuit: '',
+          ubicacion: '',
+          emailContacto: userData.email || '',
+          visible: true,
+          redesSociales: {
+            facebook: '',
+            instagram: '',
+            twitter: '',
+          },
+          asociacionesVinculadas: [],
+          configuracion: {
+            notificacionesEmail: true,
+            notificacionesWhatsApp: false,
+            autoValidacion: false
+          },
+          creadoEn: Timestamp.now(),
+          actualizadoEn: Timestamp.now(),
+          logoUrl: '',
+          imagenPrincipalUrl: '',
+          qrCode: '',
+          verificado: false,
+          puntuacion: 0,
+          totalReviews: 0,
+          beneficiosActivos: 0,
+          validacionesTotales: 0
+        };
+        
+        await setDoc(comercioRef, comercioData);
+        console.log('✅ Comercio document created successfully');
+      } else {
+        console.log('✅ Comercio document already exists');
+      }
+    } catch (error) {
+      console.error('❌ Error syncing user with comercio:', error);
+      throw new Error('Error al sincronizar usuario con comercio');
     }
   }
 }

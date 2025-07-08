@@ -32,10 +32,11 @@ interface UseComerciosReturn {
   generateWebUrl: (beneficioId?: string) => string;
   clearError: () => void;
   retryConnection: () => void;
+  syncUserData: () => Promise<void>;
 }
 
 export const useComercios = (): UseComerciosReturn => {
-  const { user } = useAuth();
+  const { user, firebaseUser } = useAuth();
   const [comercio, setComercio] = useState<Comercio | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -47,12 +48,24 @@ export const useComercios = (): UseComerciosReturn => {
   });
 
   // Memoize user ID to prevent unnecessary re-renders
-  const userId = useMemo(() => user?.uid, [user?.uid]);
+  const userId = useMemo(() => firebaseUser?.uid, [firebaseUser?.uid]);
 
   // Clear error function
   const clearError = useCallback(() => {
     setError(null);
   }, []);
+
+  // Sync user data with comercio document
+  const syncUserData = useCallback(async (): Promise<void> => {
+    if (!userId || !user) return;
+
+    try {
+      console.log('🔄 Syncing user data with comercio document');
+      await ComercioService.syncUserWithComercio(userId, user);
+    } catch (error) {
+      console.error('❌ Error syncing user data:', error);
+    }
+  }, [userId, user]);
 
   // Refresh stats function with better error handling
   const refreshStats = useCallback(async (): Promise<void> => {
@@ -107,7 +120,7 @@ export const useComercios = (): UseComerciosReturn => {
       {
         includeMetadataChanges: true
       },
-      (doc) => {
+      async (doc) => {
         try {
           if (doc.exists()) {
             const comercioData = { uid: doc.id, ...doc.data() } as Comercio;
@@ -118,9 +131,23 @@ export const useComercios = (): UseComerciosReturn => {
             const source = doc.metadata.fromCache ? 'cache' : 'server';
             console.log(`📊 Datos de comercio cargados desde: ${source}`);
           } else {
+            console.warn('⚠️ Documento de comercio no existe, intentando crear...');
+            
+            // Try to sync user data and create the document
+            if (user) {
+              try {
+                await ComercioService.syncUserWithComercio(userId, user);
+                // The document creation will trigger this listener again
+                return;
+              } catch (syncError) {
+                console.error('❌ Error creating comercio document:', syncError);
+                setError('Error al crear el perfil del comercio');
+              }
+            } else {
+              setError('Comercio no encontrado y no se pueden obtener datos del usuario');
+            }
+            
             setComercio(null);
-            setError('Comercio no encontrado');
-            console.warn('⚠️ Documento de comercio no existe');
           }
         } catch (docError) {
           console.error('❌ Error procesando documento de comercio:', docError);
@@ -153,7 +180,7 @@ export const useComercios = (): UseComerciosReturn => {
     );
 
     return () => unsubscribe();
-  }, [userId]);
+  }, [userId, user]);
 
   // Load stats when comercio is loaded
   useEffect(() => {
@@ -311,6 +338,7 @@ export const useComercios = (): UseComerciosReturn => {
     generateQRUrl,
     generateWebUrl,
     clearError,
-    retryConnection
+    retryConnection,
+    syncUserData
   };
 };
