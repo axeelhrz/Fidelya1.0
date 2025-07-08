@@ -85,6 +85,7 @@ import {
   PushPin,
   NotificationsActive,
   NotificationsOff,
+  Globe,
 } from '@mui/icons-material';
 import { format, differenceInDays, differenceInMonths } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -920,83 +921,6 @@ export const SocioProfileView: React.FC<SocioProfileViewProps> = ({
                       </Stack>
                     </Card>
                   </Grid>
-
-                  {/* Asociaciones */}
-                  {asociaciones.length > 0 && (
-                    <Grid item xs={12}>
-                      <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 4, p: 3 }}>
-                        <Typography variant="h6" sx={{ fontWeight: 700, color: '#0f172a', mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <CreditCard sx={{ color: '#6366f1' }} />
-                          Asociaciones Activas
-                        </Typography>
-                        
-                        <Grid container spacing={2}>
-                          {asociaciones.map((asociacion) => (
-                            <Grid item xs={12} sm={6} md={4} key={asociacion.id}>
-                              <Card
-                                elevation={0}
-                                sx={{
-                                  border: '1px solid #e2e8f0',
-                                  borderRadius: 3,
-                                  p: 2,
-                                  bgcolor: alpha('#6366f1', 0.02),
-                                }}
-                              >
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                                  <Avatar
-                                    src={asociacion.logo}
-                                    sx={{
-                                      width: 40,
-                                      height: 40,
-                                      bgcolor: alpha('#6366f1', 0.1),
-                                      color: '#6366f1',
-                                    }}
-                                  >
-                                    <Business />
-                                  </Avatar>
-                                  <Box sx={{ flex: 1, minWidth: 0 }}>
-                                    <Typography variant="body2" sx={{ fontWeight: 700, color: '#0f172a' }}>
-                                      {asociacion.nombre}
-                                    </Typography>
-                                    <Typography variant="caption" sx={{ color: '#64748b' }}>
-                                      {asociacion.tipo}
-                                    </Typography>
-                                  </Box>
-                                </Box>
-                                
-                                <Stack spacing={1}>
-                                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                    <Typography variant="caption" sx={{ color: '#64748b' }}>
-                                      Beneficios:
-                                    </Typography>
-                                    <Typography variant="caption" sx={{ color: '#0f172a', fontWeight: 600 }}>
-                                      {asociacion.beneficiosIncluidos}
-                                    </Typography>
-                                  </Box>
-                                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                    <Typography variant="caption" sx={{ color: '#64748b' }}>
-                                      Descuento máx:
-                                    </Typography>
-                                    <Typography variant="caption" sx={{ color: '#0f172a', fontWeight: 600 }}>
-                                      {asociacion.descuentoMaximo}%
-                                    </Typography>
-                                  </Box>
-                                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                    <Typography variant="caption" sx={{ color: '#64748b' }}>
-                                      Vence:
-                                    </Typography>
-                                    <Typography variant="caption" sx={{ color: '#0f172a', fontWeight: 600 }}>
-                                      {format(asociacion.fechaVencimiento.toDate(), 'dd/MM/yyyy', { locale: es })}
-                                    </Typography>
-                                  </Box>
-                                </Stack>
-                              </Card>
-                            </Grid>
-                          ))}
-                        </Grid>
-                      </Card>
-                    </Grid>
-                  )}
                 </Grid>
               </TabPanel>
 
@@ -1043,146 +967,6 @@ export const SocioProfileView: React.FC<SocioProfileViewProps> = ({
                       subtitle="Días consecutivos con actividad"
                     />
                   </Grid>
-
-                  {/* Este mes */}
-                  <Grid item xs={12} sm={6} md={3}>
-                    <StatCard
-                      title="Beneficios Este Mes"
-                      value={stats?.beneficiosEsteMes || 0}
-                      icon={<CardGiftcard />}
-                      color="#ec4899"
-                      subtitle="Beneficios usados este mes"
-                    />
-                  </Grid>
-                  
-                  <Grid item xs={12} sm={6} md={3}>
-                    <StatCard
-                      title="Ahorro Este Mes"
-                      value={`$${stats?.ahorroEsteMes || 0}`}
-                      icon={<Assessment />}
-                      color="#06b6d4"
-                      subtitle="Ahorro acumulado este mes"
-                    />
-                  </Grid>
-                  
-                  <Grid item xs={12} sm={6} md={3}>
-                    <StatCard
-                      title="Descuento Promedio"
-                      value={`$${stats?.descuentoPromedio || 0}`}
-                      icon={<BarChart />}
-                      color="#84cc16"
-                      subtitle="Descuento promedio por beneficio"
-                    />
-                  </Grid>
-                  
-                  <Grid item xs={12} sm={6} md={3}>
-                    <StatCard
-                      title="Tiempo como Socio"
-                      value={`${stats?.tiempoComoSocio || 0} días`}
-                      icon={<Schedule />}
-                      color="#f97316"
-                      subtitle="Días desde el registro"
-                    />
-                  </Grid>
-
-                  {/* Comercios más visitados */}
-                  {stats?.comerciosMasVisitados && stats.comerciosMasVisitados.length > 0 && (
-                    <Grid item xs={12} md={6}>
-                      <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 4, p: 3 }}>
-                        <Typography variant="h6" sx={{ fontWeight: 700, color: '#0f172a', mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Store sx={{ color: '#6366f1' }} />
-                          Comercios Más Visitados
-                        </Typography>
-                        
-                        <Stack spacing={2}>
-                          {stats.comerciosMasVisitados.slice(0, 5).map((comercio, index) => (
-                            <Box key={comercio.id} sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                              <Avatar
-                                sx={{
-                                  width: 32,
-                                  height: 32,
-                                  bgcolor: alpha('#6366f1', 0.1),
-                                  color: '#6366f1',
-                                  fontSize: '0.8rem',
-                                  fontWeight: 700,
-                                }}
-                              >
-                                {index + 1}
-                              </Avatar>
-                              <Box sx={{ flex: 1, minWidth: 0 }}>
-                                <Typography variant="body2" sx={{ fontWeight: 600, color: '#0f172a' }}>
-                                  {comercio.nombre}
-                                </Typography>
-                                <Typography variant="caption" sx={{ color: '#64748b' }}>
-                                  {comercio.visitas} visitas • Última: {format(comercio.ultimaVisita.toDate(), 'dd/MM/yyyy', { locale: es })}
-                                </Typography>
-                              </Box>
-                            </Box>
-                          ))}
-                        </Stack>
-                      </Card>
-                    </Grid>
-                  )}
-
-                  {/* Beneficios por categoría */}
-                  {stats?.beneficiosPorCategoria && Object.keys(stats.beneficiosPorCategoria).length > 0 && (
-                    <Grid item xs={12} md={6}>
-                      <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 4, p: 3 }}>
-                        <Typography variant="h6" sx={{ fontWeight: 700, color: '#0f172a', mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <PieChart sx={{ color: '#6366f1' }} />
-                          Beneficios por Categoría
-                        </Typography>
-                        
-                        <Stack spacing={2}>
-                          {Object.entries(stats.beneficiosPorCategoria)
-                            .sort(([,a], [,b]) => b - a)
-                            .slice(0, 5)
-                            .map(([categoria, cantidad], index) => {
-                              const colors = ['#6366f1','#8b5cf6', '#ec4899', '#10b981', '#f59e0b'];
-                              const color = colors[index % colors.length];
-                              const total = Object.values(stats.beneficiosPorCategoria!).reduce((sum, val) => sum + val, 0);
-                              const percentage = total > 0 ? Math.round((cantidad / total) * 100) : 0;
-                              
-                              return (
-                                <Box key={categoria} sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                  <Box
-                                    sx={{
-                                      width: 12,
-                                      height: 12,
-                                      borderRadius: '50%',
-                                      bgcolor: color,
-                                    }}
-                                  />
-                                  <Box sx={{ flex: 1, minWidth: 0 }}>
-                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
-                                      <Typography variant="body2" sx={{ fontWeight: 600, color: '#0f172a' }}>
-                                        {categoria}
-                                      </Typography>
-                                      <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>
-                                        {cantidad} ({percentage}%)
-                                      </Typography>
-                                    </Box>
-                                    <LinearProgress
-                                      variant="determinate"
-                                      value={percentage}
-                                      sx={{
-                                        height: 4,
-                                        borderRadius: 2,
-                                        bgcolor: alpha(color, 0.1),
-                                        '& .MuiLinearProgress-bar': {
-                                          bgcolor: color,
-                                          borderRadius: 2,
-                                        }
-                                      }}
-                                    />
-                                  </Box>
-                                </Box>
-                              );
-                            })}
-                        </Stack>
-                      </Card>
-                    </Grid>
-                  )}
                 </Grid>
               </TabPanel>
 
@@ -1582,4 +1366,3 @@ export const SocioProfileView: React.FC<SocioProfileViewProps> = ({
     </AnimatePresence>
   );
 };
-
