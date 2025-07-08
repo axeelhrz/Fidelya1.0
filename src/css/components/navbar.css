@@ -48,6 +48,67 @@
     gap: clamp(1rem, 3vw, 2rem);
 }
 
+/* ===== AJUSTES PARA PANTALLAS SUPER ANCHAS ===== */
+@media (width >= 1600px) {
+    .nav {
+        max-width: 1800px;
+        gap: clamp(1.5rem, 2.5vw, 3rem);
+        padding: var(--space-md) clamp(2rem, 4vw, 6rem);
+    }
+    
+    .nav__list {
+        gap: clamp(0.75rem, 1.5vw, 1.5rem);
+        padding: clamp(0.875rem, 1.5vw, 1.25rem) clamp(2rem, 3vw, 3rem);
+    }
+    
+    .nav__link {
+        padding: clamp(0.625rem, 1.2vw, 0.875rem) clamp(1rem, 1.8vw, 1.5rem);
+        font-size: clamp(0.8rem, 1.4vw, 1rem);
+    }
+    
+    .btn--premium {
+        min-width: clamp(200px, 25vw, 280px);
+        padding: clamp(0.875rem, 1.5vw, 1.25rem) clamp(2rem, 3vw, 2.5rem);
+        font-size: clamp(0.8rem, 1.4vw, 0.95rem);
+    }
+    
+    .nav__language-btn {
+        min-width: clamp(80px, 10vw, 100px);
+        padding: clamp(0.625rem, 1.2vw, 0.875rem) clamp(1rem, 1.8vw, 1.25rem);
+        font-size: clamp(0.75rem, 1.3vw, 0.85rem);
+    }
+}
+
+@media (width >= 2000px) {
+    .nav {
+        max-width: 2200px;
+        gap: clamp(2rem, 2vw, 4rem);
+        padding: var(--space-md) clamp(3rem, 5vw, 8rem);
+    }
+    
+    .nav__list {
+        gap: clamp(1rem, 1.2vw, 2rem);
+        padding: clamp(1rem, 1.2vw, 1.5rem) clamp(2.5rem, 2.5vw, 4rem);
+    }
+    
+    .nav__link {
+        padding: clamp(0.75rem, 1vw, 1rem) clamp(1.25rem, 1.5vw, 2rem);
+        font-size: clamp(0.85rem, 1.2vw, 1.1rem);
+    }
+    
+    .btn--premium {
+        min-width: clamp(240px, 20vw, 320px);
+        padding: clamp(1rem, 1.2vw, 1.5rem) clamp(2.5rem, 2.5vw, 3rem);
+        font-size: clamp(0.85rem, 1.2vw, 1rem);
+    }
+    
+    .nav__language-btn {
+        min-width: clamp(90px, 8vw, 120px);
+        padding: clamp(0.75rem, 1vw, 1rem) clamp(1.25rem, 1.5vw, 1.5rem);
+        font-size: clamp(0.8rem, 1.1vw, 0.9rem);
+    }
+}
+
 /* ===== LOGO FLOTANTE OPTIMIZADO MEJORADO ===== */
 .nav__brand {
     grid-area: logo;
