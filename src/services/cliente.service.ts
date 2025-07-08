@@ -10,13 +10,9 @@ import {
   where,
   orderBy,
   limit,
-  startAfter,
   Timestamp,
-  writeBatch,
-  onSnapshot,
-  QueryDocumentSnapshot,
 } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/constants';
 import { handleFirebaseError } from '@/lib/firebase-errors';
@@ -198,14 +194,15 @@ export class ClienteService {
     try {
       const clienteRef = doc(db, this.COLLECTION, clienteId);
       
-      const updateData: any = {
-        ...clienteData,
+      const { fechaNacimiento, ...restClienteData } = clienteData;
+      // Remove fechaNacimiento from restClienteData to avoid type conflict
+      const updateData: Omit<Partial<ClienteFormData>, 'fechaNacimiento'> & { actualizadoEn: Timestamp; fechaNacimiento?: Timestamp } = {
+        ...restClienteData,
         actualizadoEn: Timestamp.now(),
+        ...(fechaNacimiento
+          ? { fechaNacimiento: Timestamp.fromDate(new Date(fechaNacimiento)) }
+          : {}),
       };
-
-      if (clienteData.fechaNacimiento) {
-        updateData.fechaNacimiento = Timestamp.fromDate(new Date(clienteData.fechaNacimiento));
-      }
 
       await updateDoc(clienteRef, updateData);
 
@@ -430,7 +427,7 @@ export class ClienteService {
       const nuevoMontoTotal = cliente.montoTotalGastado + montoCompra;
       const nuevoPromedio = nuevoMontoTotal / nuevasTotalCompras;
 
-      const updateData: any = {
+      const updateData: Partial<Cliente> = {
         totalCompras: nuevasTotalCompras,
         montoTotalGastado: nuevoMontoTotal,
         promedioCompra: nuevoPromedio,
