@@ -4,19 +4,16 @@ import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Bell, 
-  Gift, 
   AlertCircle, 
   Info, 
   CheckCircle, 
   X, 
-  Filter,
   Search,
   MoreVertical,
   Trash2,
   Archive,
   Star,
   Clock,
-  Calendar,
   Tag,
   Eye,
   EyeOff,
@@ -24,7 +21,7 @@ import {
 } from 'lucide-react';
 import { format, isToday, isYesterday } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Notification, NotificationPriority, NotificationCategory } from '@/types/notification';
+import { Notification, NotificationPriority } from '@/types/notification';
 
 interface NotificationsListProps {
   notifications: Notification[];
@@ -315,7 +312,7 @@ export const NotificationsList: React.FC<NotificationsListProps> = ({
           {/* Type Filter */}
           <select
             value={filterType}
-            onChange={(e) => setFilterType(e.target.value as any)}
+            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFilterType(e.target.value as 'all' | 'unread' | 'read')}
             className="px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="all">Todas</option>

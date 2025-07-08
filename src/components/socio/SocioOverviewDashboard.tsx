@@ -8,23 +8,18 @@ import {
   Gift,
   ScanLine as QrCodeScanner,
   Bell,
-  Calendar,
-  MapPin,
   Star,
   Zap,
   Heart,
-  Share2,
   ArrowRight,
   RefreshCw,
   Activity,
-  Award,
   Target,
   Clock,
   Sparkles,
   Crown,
   Users,
   ShoppingBag,
-  Percent,
   DollarSign,
   CheckCircle,
   AlertCircle,
@@ -36,7 +31,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useBeneficios } from '@/hooks/useBeneficios';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useSocioProfile } from '@/hooks/useSocioProfile';
-import { format, subDays, isToday, isYesterday, startOfWeek, endOfWeek, differenceInDays } from 'date-fns';
+import { format, subDays, isToday, isYesterday, differenceInDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 interface SocioOverviewDashboardProps {
@@ -95,7 +90,6 @@ const KPICard: React.FC<{
   value,
   change,
   icon,
-  color,
   gradient,
   delay,
   subtitle,
@@ -681,7 +675,15 @@ export const SocioOverviewDashboard: React.FC<SocioOverviewDashboardProps> = ({
       const monthAgo = subDays(now, 30);
 
       // Use real stats if available
-      const realStats = stats || {};
+      type RealStats = {
+        ahorroTotal?: number;
+        ahorroEsteMes?: number;
+        beneficiosUsados?: number;
+        beneficiosEsteMes?: number;
+        racha?: number;
+        beneficiosPorCategoria?: Record<string, number>;
+      };
+      const realStats: RealStats = stats ?? {};
       
       // Filter beneficios used this month
       const beneficiosEsteMes = beneficiosUsados.filter(b => 
@@ -699,8 +701,8 @@ export const SocioOverviewDashboard: React.FC<SocioOverviewDashboardProps> = ({
         : beneficiosEsteMes > 0 ? 100 : 0;
 
       // Use real data from stats or calculate from beneficios
-      const ahorroTotal = realStats.ahorroTotal || beneficiosUsados.reduce((total, b) => total + (b.montoDescuento || 0), 0);
-      const ahorroMensual = realStats.ahorroEsteMes || beneficiosUsados
+      const ahorroTotal = realStats.ahorroTotal ?? beneficiosUsados.reduce((total, b) => total + (b.montoDescuento || 0), 0);
+      const ahorroMensual = realStats.ahorroEsteMes ?? beneficiosUsados
         .filter(b => b.fechaUso.toDate() >= monthAgo)
         .reduce((total, b) => total + (b.montoDescuento || 0), 0);
 

@@ -17,6 +17,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useNotifications } from '@/hooks/useNotifications';
 import { BeneficiosService } from '@/services/beneficios.service';
 import { ValidacionesService } from '@/services/validaciones.service';
+import Image from 'next/image';
 
 interface SocioSidebarProps {
   open: boolean;
@@ -476,273 +477,274 @@ export const SocioSidebar: React.FC<SocioSidebarProps> = ({
   };
 
   return (
-    <motion.div
-      animate={{ width: open ? SIDEBAR_WIDTH : SIDEBAR_COLLAPSED_WIDTH }}
-      transition={{ duration: 0.3, ease: "easeInOut" }}
-      className="fixed left-0 top-0 h-full z-50 bg-gradient-to-b from-slate-50/95 via-white/90 to-slate-100/95 backdrop-blur-xl border-r border-slate-200/50 shadow-2xl"
-    >
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-30">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-transparent to-purple-50/50" />
-        <div className="absolute top-0 left-1/4 w-32 h-32 bg-blue-400/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-0 right-1/4 w-32 h-32 bg-purple-400/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-      </div>
+    <>
+      <motion.div
+        animate={{ width: open ? SIDEBAR_WIDTH : SIDEBAR_COLLAPSED_WIDTH }}
+        transition={{ duration: 0.3, ease: "easeInOut" }}
+        className="fixed left-0 top-0 h-full z-50 bg-gradient-to-b from-slate-50/95 via-white/90 to-slate-100/95 backdrop-blur-xl border-r border-slate-200/50 shadow-2xl"
+      >
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-30">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-transparent to-purple-50/50" />
+          <div className="absolute top-0 left-1/4 w-32 h-32 bg-blue-400/10 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute bottom-0 right-1/4 w-32 h-32 bg-purple-400/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+        </div>
 
-      <div className="relative z-10 h-full flex flex-col">
-        {/* Header */}
-        <div className={`${open ? 'p-6' : 'p-4'} border-b border-slate-200/50`}>
-          <div className={`flex items-center ${open ? 'justify-between' : 'justify-center flex-col space-y-4'}`}>
+        <div className="relative z-10 h-full flex flex-col">
+          {/* Header */}
+          <div className={`${open ? 'p-6' : 'p-4'} border-b border-slate-200/50`}>
+            <div className={`flex items-center ${open ? 'justify-between' : 'justify-center flex-col space-y-4'}`}>
+              <AnimatePresence mode="wait">
+                {open ? (
+                  <motion.div
+                    key="expanded-header"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.3 }}
+                    className="flex items-center space-x-4"
+                  >
+                    <motion.div
+                      whileHover={{ scale: 1.05, rotate: 5 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg"
+                    >
+                      <Zap className="w-6 h-6 text-white" />
+                    </motion.div>
+                    
+                    <div>
+                      <h1 className="text-xl font-black bg-gradient-to-r from-slate-800 to-blue-600 bg-clip-text text-transparent">
+                        Fidelya
+                      </h1>
+                      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                        Portal Socio
+                      </p>
+                    </div>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="collapsed-header"
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <motion.div
+                      whileHover={{ scale: 1.1, rotate: 10 }}
+                      whileTap={{ scale: 0.9 }}
+                      className="w-14 h-14 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-xl"
+                    >
+                      <Zap className="w-7 h-7 text-white" />
+                    </motion.div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+              
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={onToggle}
+                className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                title={open ? 'Colapsar sidebar' : 'Expandir sidebar'}
+              >
+                {open ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+              </motion.button>
+            </div>
+
+            {/* User Profile - Solo en modo expandido */}
+            <AnimatePresence>
+              {open && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -20, scale: 0.9 }}
+                  transition={{ duration: 0.4, delay: 0.1 }}
+                  className="mt-6 p-4 bg-gradient-to-br from-white/60 to-slate-50/60 rounded-2xl border border-slate-200/50 backdrop-blur-sm"
+                >
+                  <div className="flex items-center space-x-3">
+                    {/* Avatar */}
+                    <div className="relative">
+                        {user?.avatar ? (
+                          <Image
+                            src={user.avatar}
+                            alt="Avatar"
+                            className="w-full h-full rounded-xl object-cover"
+                            width={44}
+                            height={44}
+                          />
+                        ) : (
+                          <span className="text-white font-bold text-sm">
+                            {getUserInitials()}
+                          </span>
+                        )}
+                      {/* Status indicator */}
+                      <div className={`absolute -bottom-1 -right-1 w-4 h-4 ${getStatusColor()} rounded-full border-2 border-white shadow-sm`} />
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="font-bold text-slate-800 text-sm truncate">
+                        {getUserDisplayName()}
+                      </div>
+                      <div className="text-xs font-semibold text-slate-500 flex items-center gap-1">
+                        <Shield className="w-3 h-3" />
+                        Miembro Activo
+                      </div>
+                    </div>
+                    
+                    <div className={`px-2 py-1 ${getStatusColor()} text-white text-xs font-bold rounded-lg shadow-sm`}>
+                      {getStatusText()}
+                    </div>
+                  </div>
+
+                  {/* User Info */}
+                  {user?.asociacionId && (
+                    <div className="mt-3 pt-3 border-t border-slate-200/50">
+                      <div className="flex items-center gap-2 text-xs text-slate-600">
+                        <MapPin className="w-3 h-3" />
+                        <span className="truncate">Asociación ID: {user.asociacionId}</span>
+                      </div>
+                      {user.creadoEn && (
+                        <div className="flex items-center gap-2 text-xs text-slate-500 mt-1">
+                          <Calendar className="w-3 h-3" />
+                          <span>Miembro desde {new Date(user.creadoEn).getFullYear()}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Stats compactos */}
+                  {!loading && (
+                    <div className="flex justify-between mt-4 pt-3 border-t border-slate-200/50">
+                      <div className="text-center">
+                        <div className="font-black text-slate-800 text-base leading-none">
+                          {userStats.beneficiosDisponibles}
+                        </div>
+                        <div className="text-xs font-semibold text-slate-500 mt-1">
+                          Beneficios
+                        </div>
+                      </div>
+                      <div className="w-px bg-slate-200/50" />
+                      <div className="text-center">
+                        <div className="font-black text-emerald-600 text-base leading-none">
+                          {userStats.beneficiosUsados}
+                        </div>
+                        <div className="text-xs font-semibold text-slate-500 mt-1">
+                          Usados
+                        </div>
+                      </div>
+                      <div className="w-px bg-slate-200/50" />
+                      <div className="text-center">
+                        <div className="font-black text-amber-600 text-base leading-none">
+                          {userStats.ahorroTotal > 0 ? formatCurrency(userStats.ahorroTotal) : '$0'}
+                        </div>
+                        <div className="text-xs font-semibold text-slate-500 mt-1">
+                          Ahorrado
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Loading state */}
+                  {loading && (
+                    <div className="flex justify-center mt-4 pt-3 border-t border-slate-200/50">
+                      <div className="flex items-center gap-2 text-xs text-slate-500">
+                        <div className="w-3 h-3 bg-slate-300 rounded-full animate-pulse" />
+                        Cargando estadísticas...
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Quick action for today */}
+                  {userStats.validacionesHoy > 0 && (
+                    <div className="mt-3 p-2 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200/50">
+                      <div className="flex items-center gap-2 text-xs">
+                        <TrendingUp className="w-3 h-3 text-blue-600" />
+                        <span className="text-blue-700 font-medium">
+                          {userStats.validacionesHoy} validación{userStats.validacionesHoy > 1 ? 'es' : ''} hoy
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Navigation */}
+          <div className="flex-1 overflow-y-auto overflow-x-hidden py-6 px-4">
+            <div className="space-y-2">
+              {menuItems.map(item => 
+                open ? renderExpandedMenuItem(item) : renderCollapsedMenuItem(item)
+              )}
+            </div>
+          </div>
+
+          {/* Logout Section */}
+          <div className={`border-t border-slate-200/50 ${open ? 'p-6' : 'p-4'}`}>
             <AnimatePresence mode="wait">
               {open ? (
-                <motion.div
-                  key="expanded-header"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
+                <motion.button
+                  key="expanded-logout"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
                   transition={{ duration: 0.3 }}
-                  className="flex items-center space-x-4"
+                  whileHover={{ x: 4, scale: 1.01 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={onLogoutClick}
+                  className="w-full px-4 py-3 bg-gradient-to-r from-red-50 to-rose-50 hover:from-red-100 hover:to-rose-100 border border-red-200/50 hover:border-red-300/50 rounded-2xl flex items-center space-x-3 text-red-600 hover:text-red-700 transition-all duration-300"
                 >
-                  <motion.div
-                    whileHover={{ scale: 1.05, rotate: 5 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg"
-                  >
-                    <Zap className="w-6 h-6 text-white" />
-                  </motion.div>
-                  
-                  <div>
-                    <h1 className="text-xl font-black bg-gradient-to-r from-slate-800 to-blue-600 bg-clip-text text-transparent">
-                      Fidelya
-                    </h1>
-                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                      Portal Socio
-                    </p>
+                  <LogOut className="w-5 h-5" />
+                  <div className="text-left">
+                    <div className="font-semibold text-sm">
+                      Cerrar Sesión
+                    </div>
+                    <div className="text-xs opacity-70">
+                      {getUserDisplayName()}
+                    </div>
                   </div>
-                </motion.div>
+                </motion.button>
               ) : (
                 <motion.div
-                  key="collapsed-header"
+                  key="collapsed-logout"
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.8 }}
                   transition={{ duration: 0.3 }}
+                  className="text-center"
                 >
-                  <motion.div
-                    whileHover={{ scale: 1.1, rotate: 10 }}
-                    whileTap={{ scale: 0.9 }}
-                    className="w-14 h-14 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-xl"
-                  >
-                    <Zap className="w-7 h-7 text-white" />
-                  </motion.div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-            
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={onToggle}
-              className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center text-white shadow-lg hover:shadow-xl transition-all duration-300"
-              title={open ? 'Colapsar sidebar' : 'Expandir sidebar'}
-            >
-              {open ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
-            </motion.button>
-          </div>
-
-          {/* User Profile - Solo en modo expandido */}
-          <AnimatePresence>
-            {open && (
-              <motion.div
-                initial={{ opacity: 0, y: 20, scale: 0.9 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -20, scale: 0.9 }}
-                transition={{ duration: 0.4, delay: 0.1 }}
-                className="mt-6 p-4 bg-gradient-to-br from-white/60 to-slate-50/60 rounded-2xl border border-slate-200/50 backdrop-blur-sm"
-              >
-                <div className="flex items-center space-x-3">
-                  {/* Avatar */}
-                  <div className="relative">
-                    <div className="w-11 h-11 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-lg">
-                      {user?.avatar ? (
-                        <img 
-                          src={user.avatar} 
-                          alt="Avatar" 
-                          className="w-full h-full rounded-xl object-cover"
-                        />
-                      ) : (
-                        <span className="text-white font-bold text-sm">
-                          {getUserInitials()}
-                        </span>
-                      )}
-                    </div>
-                    {/* Status indicator */}
-                    <div className={`absolute -bottom-1 -right-1 w-4 h-4 ${getStatusColor()} rounded-full border-2 border-white shadow-sm`} />
-                  </div>
-                  
-                  <div className="flex-1 min-w-0">
-                    <div className="font-bold text-slate-800 text-sm truncate">
-                      {getUserDisplayName()}
-                    </div>
-                    <div className="text-xs font-semibold text-slate-500 flex items-center gap-1">
-                      <Shield className="w-3 h-3" />
-                      Miembro {user?.asociacionNombre || 'Activo'}
-                    </div>
-                  </div>
-                  
-                  <div className={`px-2 py-1 ${getStatusColor()} text-white text-xs font-bold rounded-lg shadow-sm`}>
-                    {getStatusText()}
-                  </div>
-                </div>
-
-                {/* User Info */}
-                {user?.asociacionNombre && (
-                  <div className="mt-3 pt-3 border-t border-slate-200/50">
-                    <div className="flex items-center gap-2 text-xs text-slate-600">
-                      <MapPin className="w-3 h-3" />
-                      <span className="truncate">{user.asociacionNombre}</span>
-                    </div>
-                    {user.fechaRegistro && (
-                      <div className="flex items-center gap-2 text-xs text-slate-500 mt-1">
-                        <Calendar className="w-3 h-3" />
-                        <span>Miembro desde {new Date(user.fechaRegistro).getFullYear()}</span>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Stats compactos */}
-                {!loading && (
-                  <div className="flex justify-between mt-4 pt-3 border-t border-slate-200/50">
-                    <div className="text-center">
-                      <div className="font-black text-slate-800 text-base leading-none">
-                        {userStats.beneficiosDisponibles}
-                      </div>
-                      <div className="text-xs font-semibold text-slate-500 mt-1">
-                        Beneficios
-                      </div>
-                    </div>
-                    <div className="w-px bg-slate-200/50" />
-                    <div className="text-center">
-                      <div className="font-black text-emerald-600 text-base leading-none">
-                        {userStats.beneficiosUsados}
-                      </div>
-                      <div className="text-xs font-semibold text-slate-500 mt-1">
-                        Usados
-                      </div>
-                    </div>
-                    <div className="w-px bg-slate-200/50" />
-                    <div className="text-center">
-                      <div className="font-black text-amber-600 text-base leading-none">
-                        {userStats.ahorroTotal > 0 ? formatCurrency(userStats.ahorroTotal) : '$0'}
-                      </div>
-                      <div className="text-xs font-semibold text-slate-500 mt-1">
-                        Ahorrado
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Loading state */}
-                {loading && (
-                  <div className="flex justify-center mt-4 pt-3 border-t border-slate-200/50">
-                    <div className="flex items-center gap-2 text-xs text-slate-500">
-                      <div className="w-3 h-3 bg-slate-300 rounded-full animate-pulse" />
-                      Cargando estadísticas...
-                    </div>
-                  </div>
-                )}
-
-                {/* Quick action for today */}
-                {userStats.validacionesHoy > 0 && (
-                  <div className="mt-3 p-2 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200/50">
-                    <div className="flex items-center gap-2 text-xs">
-                      <TrendingUp className="w-3 h-3 text-blue-600" />
-                      <span className="text-blue-700 font-medium">
-                        {userStats.validacionesHoy} validación{userStats.validacionesHoy > 1 ? 'es' : ''} hoy
-                      </span>
-                    </div>
-                  </div>
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* Navigation */}
-        <div className="flex-1 overflow-y-auto overflow-x-hidden py-6 px-4">
-          <div className="space-y-2">
-            {menuItems.map(item => 
-              open ? renderExpandedMenuItem(item) : renderCollapsedMenuItem(item)
-            )}
-          </div>
-        </div>
-
-        {/* Logout Section */}
-        <div className={`border-t border-slate-200/50 ${open ? 'p-6' : 'p-4'}`}>
-          <AnimatePresence mode="wait">
-            {open ? (
-              <motion.button
-                key="expanded-logout"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
-                whileHover={{ x: 4, scale: 1.01 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={onLogoutClick}
-                className="w-full px-4 py-3 bg-gradient-to-r from-red-50 to-rose-50 hover:from-red-100 hover:to-rose-100 border border-red-200/50 hover:border-red-300/50 rounded-2xl flex items-center space-x-3 text-red-600 hover:text-red-700 transition-all duration-300"
-              >
-                <LogOut className="w-5 h-5" />
-                <div className="text-left">
-                  <div className="font-semibold text-sm">
-                    Cerrar Sesión
-                  </div>
-                  <div className="text-xs opacity-70">
-                    {getUserDisplayName()}
-                  </div>
-                </div>
-              </motion.button>
-            ) : (
-              <motion.div
-                key="collapsed-logout"
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                transition={{ duration: 0.3 }}
-                className="text-center"
-              >
-                {/* User avatar in collapsed mode */}
-                <div className="mb-3">
-                  <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg mx-auto relative">
+                  <div className="relative mx-auto mb-2 w-14 h-14">
                     {user?.avatar ? (
-                      <img 
-                        src={user.avatar} 
-                        alt="Avatar" 
+                      <Image
+                        src={user.avatar}
+                        alt="Avatar"
                         className="w-full h-full rounded-2xl object-cover"
+                        width={48}
+                        height={48}
                       />
                     ) : (
-                      <span className="text-white font-bold text-sm">
+                      <span className="text-white font-bold text-sm flex items-center justify-center w-full h-full">
                         {getUserInitials()}
                       </span>
                     )}
                     <div className={`absolute -bottom-1 -right-1 w-4 h-4 ${getStatusColor()} rounded-full border-2 border-white shadow-sm`} />
                   </div>
-                </div>
-
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={onLogoutClick}
-                  className="w-14 h-14 bg-gradient-to-br from-red-50 to-rose-50 hover:from-red-100 hover:to-rose-100 border border-red-200/50 hover:border-red-300/50 rounded-2xl flex items-center justify-center text-red-600 hover:text-red-700 transition-all duration-300 mx-auto"
-                  title="Cerrar sesión"
-                >
-                  <LogOut className="w-5 h-5" />
-                </motion.button>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={onLogoutClick}
+                    className="w-14 h-14 bg-gradient-to-br from-red-50 to-rose-50 hover:from-red-100 hover:to-rose-100 border border-red-200/50 hover:border-red-300/50 rounded-2xl flex items-center justify-center text-red-600 hover:text-red-700 transition-all duration-300 mx-auto"
+                    title="Cerrar sesión"
+                  >
+                    <LogOut className="w-5 h-5" />
+                  </motion.button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
-      </div>
-    </motion.div>
+      </motion.div>
+    </>
   );
 };
+
