@@ -53,6 +53,7 @@ import { format, isAfter, isBefore, addDays, differenceInDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 import toast from 'react-hot-toast';
 import { cn } from '@/lib/utils';
+import { useDebounce } from '@/hooks/useDebounce';
 
 // Enhanced interfaces
 interface FilterState {
@@ -195,7 +196,8 @@ export default function SocioBeneficiosPage() {
     beneficiosUsados, 
     loading, 
     error, 
-    aplicarBeneficio: applyBenefit
+    aplicarBeneficio: applyBenefit,
+    refreshBeneficios
   } = useBeneficios();
 
   // Local state
@@ -208,6 +210,9 @@ export default function SocioBeneficiosPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
+  // Usar debounce para la búsqueda
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
+
   const [filters, setFilters] = useState<FilterState>({
     search: '',
     categoria: '',
@@ -217,20 +222,20 @@ export default function SocioBeneficiosPage() {
     proximosAVencer: false
   });
 
-  // Debounced search effect
+  // Actualizar filtros cuando cambie el término de búsqueda con debounce
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setFilters(prev => ({ ...prev, search: searchTerm }));
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
+    setFilters(prev => ({ ...prev, search: debouncedSearchTerm }));
+  }, [debouncedSearchTerm]);
 
   // Load favorites from localStorage
   useEffect(() => {
     const savedFavorites = localStorage.getItem('beneficios-favoritos');
     if (savedFavorites) {
-      setFavorites(new Set(JSON.parse(savedFavorites)));
+      try {
+        setFavorites(new Set(JSON.parse(savedFavorites)));
+      } catch (error) {
+        console.error('Error loading favorites:', error);
+      }
     }
   }, []);
 
@@ -239,7 +244,7 @@ export default function SocioBeneficiosPage() {
     localStorage.setItem('beneficios-favoritos', JSON.stringify(Array.from(favorites)));
   }, [favorites]);
 
-  // Calculate stats
+  // Calculate stats - memoizado para evitar recálculos innecesarios
   const stats = useMemo<BenefitStats>(() => {
     const now = new Date();
     const thisMonth = now.getMonth();
@@ -268,7 +273,7 @@ export default function SocioBeneficiosPage() {
     };
   }, [beneficios, beneficiosUsados, favorites.size]);
 
-  // Filter and sort benefits
+  // Filter and sort benefits - memoizado para mejor rendimiento
   const filteredBeneficios = useMemo(() => {
     const filtered = beneficios.filter(beneficio => {
       const matchesSearch = !filters.search || 
@@ -293,31 +298,13 @@ export default function SocioBeneficiosPage() {
               ? b.creadoEn.toDate()
               : b.creadoEn instanceof Date
                 ? b.creadoEn
-                : b.creadoEn instanceof Date
-                  ? b.creadoEn
-                  : typeof b.creadoEn?.toDate === 'function'
-                    ? b.creadoEn.toDate()
-                    : new Date(
-                        typeof b.creadoEn === 'object' && typeof b.creadoEn?.toDate === 'function'
-                          ? b.creadoEn.toDate()
-                          : b.creadoEn instanceof Date
-                            ? b.creadoEn
-                            : new Date(b.creadoEn as unknown as string | number)
-                      )
+                : new Date(b.creadoEn as unknown as string | number)
             ).getTime() -
             (typeof a.creadoEn?.toDate === 'function'
               ? a.creadoEn.toDate()
               : a.creadoEn instanceof Date
                 ? a.creadoEn
-                : typeof a.creadoEn?.toDate === 'function'
-                  ? a.creadoEn.toDate()
-                  : new Date(
-                      typeof a.creadoEn === 'object' && typeof a.creadoEn?.toDate === 'function'
-                        ? a.creadoEn.toDate()
-                        : a.creadoEn instanceof Date
-                          ? a.creadoEn
-                          : new Date(a.creadoEn as unknown as string | number)
-                    )
+                : new Date(a.creadoEn as unknown as string | number)
             ).getTime()
           );
         case 'fecha_asc':
@@ -360,7 +347,7 @@ export default function SocioBeneficiosPage() {
     return filtered;
   }, [beneficios, filters]);
 
-  // Get unique categories
+  // Get unique categories - memoizado
   const categorias = useMemo(() => {
     return Array.from(new Set(beneficios.map(b => b.categoria)));
   }, [beneficios]);
@@ -423,10 +410,19 @@ export default function SocioBeneficiosPage() {
   }, []);
 
   const handleRefresh = useCallback(async () => {
+    if (refreshing) return; // Evitar múltiples refreshes
+    
     setRefreshing(true);
-    // The useBeneficios hook will automatically refresh data
-    setTimeout(() => setRefreshing(false), 1000);
-  }, []);
+    try {
+      await refreshBeneficios();
+      toast.success('Beneficios actualizados');
+    } catch (error) {
+      console.error('Error refreshing:', error);
+      toast.error('Error al actualizar');
+    } finally {
+      setTimeout(() => setRefreshing(false), 1000); // Mínimo 1 segundo para UX
+    }
+  }, [refreshBeneficios, refreshing]);
 
   const clearFilters = useCallback(() => {
     setFilters({
@@ -449,8 +445,6 @@ export default function SocioBeneficiosPage() {
           <SocioSidebar
             {...props}
             onLogoutClick={() => {
-              // Implement logout logic here, or use your existing logout handler
-              // For now, just a placeholder
               window.location.href = '/logout';
             }}
           />
@@ -477,7 +471,6 @@ export default function SocioBeneficiosPage() {
         <SocioSidebar
           {...props}
           onLogoutClick={() => {
-            // Implement logout logic here, or use your existing logout handler
             window.location.href = '/logout';
           }}
         />
@@ -508,7 +501,7 @@ export default function SocioBeneficiosPage() {
                 onClick={handleRefresh}
                 disabled={refreshing}
               >
-                Actualizar
+                {refreshing ? 'Actualizando...' : 'Actualizar'}
               </Button>
               <Button
                 variant="outline"
@@ -908,7 +901,7 @@ export default function SocioBeneficiosPage() {
                       {/* Actions */}
                       <div className="flex gap-2">
                         <Button
-                          variant="outline"
+                                                    variant="outline"
                           size="sm"
                           leftIcon={<Eye size={16} />}
                           onClick={() => handleViewDetails(beneficio)}
@@ -1283,7 +1276,7 @@ export default function SocioBeneficiosPage() {
                     <div className="space-y-3">
                       <div className="flex items-start gap-3">
                         <div className="w-6 h-6 bg-green-600 text-white rounded-full flex items-center justify-center text-xs font-bold">1</div>
-                        <p className="text-green-800">Haz clic en &quot;Usar Beneficio&quot; para activarlo</p>
+                        <p className="text-green-800">Haz clic en "Usar Beneficio" para activarlo</p>
                       </div>
                       <div className="flex items-start gap-3">
                         <div className="w-6 h-6 bg-green-600 text-white rounded-full flex items-center justify-center text-xs font-bold">2</div>
@@ -1389,3 +1382,4 @@ export default function SocioBeneficiosPage() {
     </DashboardLayout>
   );
 }
+
