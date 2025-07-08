@@ -80,7 +80,6 @@ background: linear-gradient(135deg,
 background-clip: text;
 -webkit-background-clip: text;
 -webkit-text-fill-color: transparent;
-filter: drop-shadow(0 0 20px rgba(255, 45, 85, 0.15));
 }
 
 /* Línea decorativa profesional */
@@ -100,7 +99,6 @@ background: linear-gradient(90deg,
 );
 border-radius: 2px;
 transform: translateX(-50%);
-box-shadow: 0 0 15px rgba(255, 45, 85, 0.3);
 }
 
 .features__subtitle {
@@ -292,9 +290,6 @@ background: linear-gradient(135deg,
     var(--starflex-red) 100%
 );
 border-radius: 50%;
-box-shadow: 
-    0 0 10px rgba(255, 45, 85, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
 transition: all 0.4s ease;
 }
 
@@ -323,9 +318,7 @@ background: linear-gradient(135deg,
     var(--starflex-crimson-bright) 0%,
     var(--starflex-crimson-glow) 100%
 );
-box-shadow: 
-    0 0 15px rgba(255, 45, 85, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+
 transform: scale(1.2);
 }
 
@@ -357,11 +350,6 @@ background: linear-gradient(135deg,
 border-radius: var(--phone-border-radius);
 
 /* Sombras profesionales */
-box-shadow:
-    0 25px 80px rgba(0, 0, 0, 0.4),
-    0 10px 40px rgba(0, 0, 0, 0.3),
-    0 0 0 1px rgba(255, 255, 255, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 
 transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 will-change: transform;
@@ -477,29 +465,6 @@ transition-delay: 0.7s;
 }
 
 /* ===== EFECTOS ESPECÍFICOS POR CARACTERÍSTICA ===== */
-.feature[data-feature="schedule"] .phone {
-filter: drop-shadow(0 0 30px rgba(255, 45, 85, 0.15));
-}
-
-.feature[data-feature="stations"] .phone {
-filter: drop-shadow(0 0 30px rgba(255, 107, 53, 0.15));
-}
-
-.feature[data-feature="calendar"] .phone {
-filter: drop-shadow(0 0 30px rgba(255, 23, 68, 0.15));
-}
-
-.feature[data-feature="log"] .phone {
-filter: drop-shadow(0 0 30px rgba(184, 0, 46, 0.15));
-}
-
-.feature[data-feature="notifications"] .phone {
-filter: drop-shadow(0 0 30px rgba(255, 69, 105, 0.15));
-}
-
-.feature[data-feature="referrals"] .phone {
-filter: drop-shadow(0 0 30px rgba(255, 45, 85, 0.18));
-}
 
 /* ===== RESPONSIVE PROFESIONAL PARA MÓVIL ===== */
 @media (width <= 1023px) {
@@ -653,6 +618,5 @@ background:
 
 .feature__list-item::before {
 background: var(--starflex-red);
-box-shadow: 0 0 15px rgba(255, 45, 85, 0.6);
 }
 }
