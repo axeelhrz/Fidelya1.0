@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { 
   ArrowLeft, 
   Building2, 
@@ -14,7 +14,6 @@ import {
   Zap,
   Star,
   Shield,
-  CheckCircle,
   Users
 } from 'lucide-react';
 
@@ -69,25 +68,36 @@ const RegisterPage = () => {
     { icon: Star, text: 'Beneficios únicos', color: 'text-amber-600' },
   ];
 
-  // Floating particles animation
-  const particles = Array.from({ length: 8 }, (_, i) => (
+  // Fixed particle positions and animations to prevent hydration mismatch
+  const particleConfigs = [
+    { left: 15, top: 20, xOffset: 20, duration: 12, delay: 0 },
+    { left: 85, top: 30, xOffset: -15, duration: 14, delay: 1 },
+    { left: 25, top: 70, xOffset: 25, duration: 10, delay: 2 },
+    { left: 75, top: 80, xOffset: -20, duration: 16, delay: 3 },
+    { left: 45, top: 15, xOffset: 10, duration: 13, delay: 4 },
+    { left: 65, top: 55, xOffset: -25, duration: 11, delay: 5 },
+    { left: 5, top: 45, xOffset: 30, duration: 15, delay: 6 },
+    { left: 95, top: 85, xOffset: -10, duration: 9, delay: 7 },
+  ];
+
+  const particles = particleConfigs.map((config, i) => (
     <motion.div
       key={i}
       className="absolute w-1.5 h-1.5 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full opacity-30"
       animate={{
         y: [0, -120, 0],
-        x: [0, Math.random() * 80 - 40, 0],
+        x: [0, config.xOffset, 0],
         opacity: [0.3, 0.8, 0.3],
       }}
       transition={{
-        duration: 10 + Math.random() * 5,
+        duration: config.duration,
         repeat: Infinity,
-        delay: Math.random() * 8,
+        delay: config.delay,
         ease: "easeInOut"
       }}
       style={{
-        left: `${Math.random() * 100}%`,
-        top: `${Math.random() * 100}%`,
+        left: `${config.left}%`,
+        top: `${config.top}%`,
       }}
     />
   ));
