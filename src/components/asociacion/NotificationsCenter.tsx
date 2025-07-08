@@ -23,7 +23,6 @@ import {
   Zoom,
   useTheme,
   useMediaQuery,
-  Grid,
 } from '@mui/material';
 import {
   Notifications,
@@ -425,8 +424,18 @@ export const NotificationsCenter: React.FC<NotificationsCenterProps> = ({
             </Box>
           </Box>
 
-          {/* Enhanced Stats Cards */}
-          <Grid container spacing={{ xs: 2, md: 3 }} sx={{ mb: { xs: 3, md: 4 } }}>
+          {/* Enhanced Stats Cards - Using CSS Grid instead of Material-UI Grid */}
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: {
+                xs: 'repeat(2, 1fr)',
+                sm: 'repeat(4, 1fr)',
+              },
+              gap: { xs: 2, md: 3 },
+              mb: { xs: 3, md: 4 },
+            }}
+          >
             {[
               { 
                 key: 'total',
@@ -465,109 +474,109 @@ export const NotificationsCenter: React.FC<NotificationsCenterProps> = ({
                 gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
               },
             ].map((stat, index) => (
-              <Grid item xs={6} sm={3} key={stat.key}>
-                <Box
-                  component={motion.div}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
+              <Box
+                key={stat.key}
+                component={motion.div}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+              >
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: { xs: 2.5, md: 4 },
+                    border: '1px solid #f1f5f9',
+                    borderRadius: 4,
+                    position: 'relative',
+                    overflow: 'hidden',
+                    transition: 'all 0.3s ease',
+                    height: '100%',
+                    '&:hover': {
+                      borderColor: alpha(stat.color, 0.3),
+                      transform: 'translateY(-4px)',
+                      boxShadow: `0 12px 40px ${alpha(stat.color, 0.15)}`,
+                    }
+                  }}
                 >
-                  <Paper
-                    elevation={0}
+                  {/* Background gradient */}
+                  <Box
                     sx={{
-                      p: { xs: 2.5, md: 4 },
-                      border: '1px solid #f1f5f9',
-                      borderRadius: 4,
-                      position: 'relative',
-                      overflow: 'hidden',
-                      transition: 'all 0.3s ease',
-                      '&:hover': {
-                        borderColor: alpha(stat.color, 0.3),
-                        transform: 'translateY(-4px)',
-                        boxShadow: `0 12px 40px ${alpha(stat.color, 0.15)}`,
-                      }
+                      position: 'absolute',
+                      top: 0,
+                      right: 0,
+                      width: { xs: 80, md: 100 },
+                      height: { xs: 80, md: 100 },
+                      background: `radial-gradient(circle, ${alpha(stat.color, 0.1)} 0%, transparent 70%)`,
                     }}
-                  >
-                    {/* Background gradient */}
-                    <Box
+                  />
+                  
+                  <Box sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'space-between', 
+                    mb: { xs: 1.5, md: 2 },
+                    flexDirection: { xs: 'column', sm: 'row' },
+                    gap: { xs: 1, sm: 0 },
+                  }}>
+                    <Avatar
                       sx={{
-                        position: 'absolute',
-                        top: 0,
-                        right: 0,
-                        width: { xs: 80, md: 100 },
-                        height: { xs: 80, md: 100 },
-                        background: `radial-gradient(circle, ${alpha(stat.color, 0.1)} 0%, transparent 70%)`,
-                      }}
-                    />
-                    
-                    <Box sx={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      justifyContent: 'space-between', 
-                      mb: { xs: 1.5, md: 2 },
-                      flexDirection: { xs: 'column', sm: 'row' },
-                      gap: { xs: 1, sm: 0 },
-                    }}>
-                      <Avatar
-                        sx={{
-                          width: { xs: 40, md: 48 },
-                          height: { xs: 40, md: 48 },
-                          background: stat.gradient,
-                          color: 'white',
-                          order: { xs: 2, sm: 1 },
-                        }}
-                      >
-                        {stat.icon}
-                      </Avatar>
-                      
-                      <Box sx={{ textAlign: { xs: 'center', sm: 'right' }, order: { xs: 1, sm: 2 } }}>
-                        <Typography
-                          variant="h3"
-                          sx={{
-                            fontWeight: 900,
-                            color: stat.color,
-                            lineHeight: 1,
-                            fontSize: { xs: '1.75rem', md: '2.5rem' },
-                          }}
-                        >
-                          {stat.value}
-                        </Typography>
-                        <Typography
-                          variant="caption"
-                          sx={{
-                            color: '#10b981',
-                            fontWeight: 600,
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 0.5,
-                            justifyContent: { xs: 'center', sm: 'flex-end' },
-                            fontSize: { xs: '0.7rem', md: '0.75rem' },
-                          }}
-                        >
-                          <TrendingUp sx={{ fontSize: { xs: 10, md: 12 } }} />
-                          {stat.trend}
-                        </Typography>
-                      </Box>
-                    </Box>
-                    
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        color: '#64748b',
-                        fontWeight: 600,
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.1em',
-                        textAlign: { xs: 'center', sm: 'left' },
-                        fontSize: { xs: '0.7rem', md: '0.75rem' },
+                        width: { xs: 40, md: 48 },
+                        height: { xs: 40, md: 48 },
+                        background: stat.gradient,
+                        color: 'white',
+                        order: { xs: 2, sm: 1 },
                       }}
                     >
-                      {stat.label}
-                    </Typography>
-                  </Paper>
-                </Box>
-              </Grid>
+                      {stat.icon}
+                    </Avatar>
+                    
+                    <Box sx={{ textAlign: { xs: 'center', sm: 'right' }, order: { xs: 1, sm: 2 } }}>
+                      <Typography
+                        variant="h3"
+                        sx={{
+                          fontWeight: 900,
+                          color: stat.color,
+                          lineHeight: 1,
+                          fontSize: { xs: '1.75rem', md: '2.5rem' },
+                        }}
+                      >
+                        {stat.value}
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          color: '#10b981',
+                          fontWeight: 600,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 0.5,
+                          justifyContent: { xs: 'center', sm: 'flex-end' },
+                          fontSize: { xs: '0.7rem', md: '0.75rem' },
+                        }}
+                      >
+                        <TrendingUp sx={{ fontSize: { xs: 10, md: 12 } }} />
+                        {stat.trend}
+                      </Typography>
+                    </Box>
+                  </Box>
+                  
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: '#64748b',
+                      fontWeight: 600,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.1em',
+                      textAlign: { xs: 'center', sm: 'left' },
+                      fontSize: { xs: '0.7rem', md: '0.75rem' },
+                    }}
+                  >
+                    {stat.label}
+                  </Typography>
+                </Paper>
+              </Box>
             ))}
-          </Grid>
+          </Box>
         </Box>
 
         {/* Mobile Controls */}
