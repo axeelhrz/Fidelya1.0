@@ -178,6 +178,74 @@ transform: scaleX(1.05);
 }
 }
 
+/* ===== ANIMACIÓN DE ESTRELLAS GIRATORIAS EN CÍRCULO ===== */
+@keyframes stars-rotate-clockwise {
+0% {
+    transform: rotate(0deg);
+}
+100% {
+    transform: rotate(360deg);
+}
+}
+
+@keyframes stars-rotate-counterclockwise {
+0% {
+    transform: rotate(0deg);
+}
+100% {
+    transform: rotate(-360deg);
+}
+}
+
+@keyframes stars-orbit-1 {
+0% {
+    transform: rotate(0deg) translateX(200px) rotate(0deg);
+}
+100% {
+    transform: rotate(360deg) translateX(200px) rotate(-360deg);
+}
+}
+
+@keyframes stars-orbit-2 {
+0% {
+    transform: rotate(0deg) translateX(300px) rotate(0deg);
+}
+100% {
+    transform: rotate(360deg) translateX(300px) rotate(-360deg);
+}
+}
+
+@keyframes stars-orbit-3 {
+0% {
+    transform: rotate(0deg) translateX(400px) rotate(0deg);
+}
+100% {
+    transform: rotate(360deg) translateX(400px) rotate(-360deg);
+}
+}
+
+@keyframes star-twinkle {
+0%, 100% {
+    opacity: 0.3;
+    transform: scale(0.8);
+}
+50% {
+    opacity: 1;
+    transform: scale(1.2);
+}
+}
+
+@keyframes star-pulse {
+0%, 100% {
+    opacity: 0.6;
+    box-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+}
+50% {
+    opacity: 1;
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.8), 0 0 25px rgba(255, 69, 105, 0.4);
+}
+}
+
 /* ===== ANIMACIONES OPTIMIZADAS PARA MÓVIL ===== */
 /* Versiones móviles más suaves y con menos consumo de recursos */
 @media (width <= 1023px) {
@@ -277,6 +345,63 @@ transform: scaleX(1.05);
         }
     }
     
+    /* Estrellas giratorias optimizadas para móvil */
+    @keyframes stars-rotate-clockwise-mobile {
+        0% {
+            transform: rotate(0deg);
+        }
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+    
+    @keyframes stars-rotate-counterclockwise-mobile {
+        0% {
+            transform: rotate(0deg);
+        }
+        100% {
+            transform: rotate(-360deg);
+        }
+    }
+    
+    @keyframes stars-orbit-1-mobile {
+        0% {
+            transform: rotate(0deg) translateX(100px) rotate(0deg);
+        }
+        100% {
+            transform: rotate(360deg) translateX(100px) rotate(-360deg);
+        }
+    }
+    
+    @keyframes stars-orbit-2-mobile {
+        0% {
+            transform: rotate(0deg) translateX(150px) rotate(0deg);
+        }
+        100% {
+            transform: rotate(360deg) translateX(150px) rotate(-360deg);
+        }
+    }
+    
+    @keyframes stars-orbit-3-mobile {
+        0% {
+            transform: rotate(0deg) translateX(200px) rotate(0deg);
+        }
+        100% {
+            transform: rotate(360deg) translateX(200px) rotate(-360deg);
+        }
+    }
+    
+    @keyframes star-twinkle-mobile {
+        0%, 100% {
+            opacity: 0.2;
+            transform: scale(0.8);
+        }
+        50% {
+            opacity: 0.8;
+            transform: scale(1.1);
+        }
+    }
+    
     /* Animaciones de entrada más suaves para móvil */
     @keyframes fadeInUp-mobile {
         from {
@@ -335,7 +460,12 @@ transform: scaleX(1.05);
     @keyframes depth-shift-2,
     @keyframes sparkle,
     @keyframes float-particles,
-    @keyframes cosmic-particle-drift {
+    @keyframes cosmic-particle-drift,
+    @keyframes stars-rotate-clockwise,
+    @keyframes stars-rotate-counterclockwise,
+    @keyframes stars-orbit-1,
+    @keyframes stars-orbit-2,
+    @keyframes stars-orbit-3 {
         0%, 100% {
             opacity: 0.6;
             transform: scale(1);
