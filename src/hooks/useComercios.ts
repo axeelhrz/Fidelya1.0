@@ -11,18 +11,27 @@ import { ComercioService } from '@/services/comercio.service';
 import { useAuth } from './useAuth';
 import toast from 'react-hot-toast';
 
+interface UploadProgress {
+  uploading: boolean;
+  progress: number;
+  type?: 'logo' | 'imagen';
+}
+
 interface UseComerciosReturn {
   comercio: Comercio | null;
   loading: boolean;
   error: string | null;
   stats: ComercioStats | null;
   statsLoading: boolean;
+  uploadProgress: UploadProgress;
   updateProfile: (data: ComercioFormData) => Promise<boolean>;
   uploadImage: (file: File, type: 'logo' | 'imagen') => Promise<string | null>;
   updateVisibility: (visible: boolean) => Promise<boolean>;
   refreshStats: () => Promise<void>;
   generateQRUrl: (beneficioId?: string) => string;
   generateWebUrl: (beneficioId?: string) => string;
+  clearError: () => void;
+  retryConnection: () => void;
 }
 
 export const useComercios = (): UseComerciosReturn => {
@@ -32,34 +41,59 @@ export const useComercios = (): UseComerciosReturn => {
   const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState<ComercioStats | null>(null);
   const [statsLoading, setStatsLoading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<UploadProgress>({
+    uploading: false,
+    progress: 0
+  });
 
-  // FIXED: Memoize user ID to prevent unnecessary re-renders
+  // Memoize user ID to prevent unnecessary re-renders
   const userId = useMemo(() => user?.uid, [user?.uid]);
 
-  // FIXED: Refresh stats function with stable dependencies
+  // Clear error function
+  const clearError = useCallback(() => {
+    setError(null);
+  }, []);
+
+  // Refresh stats function with better error handling
   const refreshStats = useCallback(async (): Promise<void> => {
     if (!userId) return;
 
     try {
       setStatsLoading(true);
+      setError(null);
+      
       const newStats = await ComercioService.getComercioStats(userId);
       setStats(newStats);
-      setError(null);
+      
+      console.log('✅ Estadísticas actualizadas exitosamente');
     } catch (error) {
-      console.error('Error refreshing stats:', error);
+      console.error('❌ Error refreshing stats:', error);
       const errorMessage = error instanceof Error ? error.message : 'Error al cargar estadísticas';
       setError(errorMessage);
+      
+      // Don't show toast for stats errors, just log them
+      console.warn('⚠️ No se pudieron cargar las estadísticas:', errorMessage);
     } finally {
       setStatsLoading(false);
     }
-  }, [userId]); // FIXED: Only depend on userId
+  }, [userId]);
 
-  // FIXED: Fetch comercio data with stable dependencies
+  // Retry connection function
+  const retryConnection = useCallback(() => {
+    if (userId) {
+      setError(null);
+      setLoading(true);
+      // The useEffect will handle reconnection
+    }
+  }, [userId]);
+
+  // Fetch comercio data with stable dependencies
   useEffect(() => {
     if (!userId) {
       setLoading(false);
       setComercio(null);
       setStats(null);
+      setError(null);
       return;
     }
 
@@ -69,37 +103,66 @@ export const useComercios = (): UseComerciosReturn => {
     const comercioRef = doc(db, 'comercios', userId);
     
     const unsubscribe = onSnapshot(
-      comercioRef, 
+      comercioRef,
+      {
+        includeMetadataChanges: true
+      },
       (doc) => {
-        if (doc.exists()) {
-          const comercioData = { uid: doc.id, ...doc.data() } as Comercio;
-          setComercio(comercioData);
-          setError(null);
-        } else {
-          setComercio(null);
-          setError('Comercio no encontrado');
+        try {
+          if (doc.exists()) {
+            const comercioData = { uid: doc.id, ...doc.data() } as Comercio;
+            setComercio(comercioData);
+            setError(null);
+            
+            // Log connection status
+            const source = doc.metadata.fromCache ? 'cache' : 'server';
+            console.log(`📊 Datos de comercio cargados desde: ${source}`);
+          } else {
+            setComercio(null);
+            setError('Comercio no encontrado');
+            console.warn('⚠️ Documento de comercio no existe');
+          }
+        } catch (docError) {
+          console.error('❌ Error procesando documento de comercio:', docError);
+          setError('Error al procesar los datos del comercio');
+        } finally {
+          setLoading(false);
         }
-        setLoading(false);
       }, 
       (error) => {
-        console.error('Error fetching comercio:', error);
-        setError('Error al cargar los datos del comercio');
+        console.error('❌ Error fetching comercio:', error);
+        
+        let errorMessage = 'Error al cargar los datos del comercio';
+        
+        if (error.code === 'permission-denied') {
+          errorMessage = 'No tienes permisos para acceder a estos datos';
+        } else if (error.code === 'unavailable') {
+          errorMessage = 'Servicio temporalmente no disponible';
+        } else if (error.message.includes('network')) {
+          errorMessage = 'Error de conexión. Verifica tu internet.';
+        }
+        
+        setError(errorMessage);
         setLoading(false);
-        toast.error('Error al cargar los datos del comercio');
+        
+        // Show toast only for critical errors
+        if (error.code === 'permission-denied') {
+          toast.error(errorMessage);
+        }
       }
     );
 
     return () => unsubscribe();
-  }, [userId]); // FIXED: Only depend on userId
+  }, [userId]);
 
-  // FIXED: Load stats only when comercio is loaded and user is available
+  // Load stats when comercio is loaded
   useEffect(() => {
     if (comercio && userId && !statsLoading) {
       refreshStats();
     }
-  }, [comercio, userId, refreshStats, statsLoading]); // FIXED: Added comercio and statsLoading to dependencies
+  }, [comercio, userId, refreshStats, statsLoading]);
 
-  // FIXED: Update comercio profile with stable dependencies
+  // Update comercio profile with better validation
   const updateProfile = useCallback(async (data: ComercioFormData): Promise<boolean> => {
     if (!userId) {
       toast.error('Usuario no autenticado');
@@ -108,12 +171,23 @@ export const useComercios = (): UseComerciosReturn => {
 
     try {
       setLoading(true);
+      setError(null);
+      
       await ComercioService.updateProfile(userId, data);
+      
       toast.success('Perfil actualizado correctamente');
+      console.log('✅ Perfil actualizado exitosamente');
+      
       return true;
     } catch (error) {
-      console.error('Error updating profile:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Error al actualizar el perfil';
+      console.error('❌ Error updating profile:', error);
+      
+      let errorMessage = 'Error al actualizar el perfil';
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      
       toast.error(errorMessage);
       setError(errorMessage);
       return false;
@@ -122,31 +196,77 @@ export const useComercios = (): UseComerciosReturn => {
     }
   }, [userId]);
 
-  // FIXED: Upload image with stable dependencies
-  const uploadImage = useCallback(async (file: File, type: 'logo' | 'imagen'): Promise<string | null> => {
+  // Upload image with progress tracking
+  const uploadImage = useCallback(async (
+    file: File, 
+    type: 'logo' | 'imagen'
+  ): Promise<string | null> => {
     if (!userId) {
       toast.error('Usuario no autenticado');
       return null;
     }
 
     try {
-      const loadingToast = toast.loading(`Subiendo ${type === 'logo' ? 'logo' : 'imagen'}...`);
+      setUploadProgress({
+        uploading: true,
+        progress: 0,
+        type
+      });
       
-      const downloadURL = await ComercioService.uploadComercioImage(userId, file, type);
+      setError(null);
       
-      toast.dismiss(loadingToast);
+      const downloadURL = await ComercioService.uploadComercioImage(
+        userId, 
+        file, 
+        type,
+        (progress) => {
+          setUploadProgress(prev => ({
+            ...prev,
+            progress: Math.round(progress)
+          }));
+        }
+      );
+      
+      setUploadProgress({
+        uploading: false,
+        progress: 100,
+        type
+      });
+      
+      // Reset progress after a delay
+      setTimeout(() => {
+        setUploadProgress({
+          uploading: false,
+          progress: 0
+        });
+      }, 2000);
+      
       toast.success(`${type === 'logo' ? 'Logo' : 'Imagen'} actualizada correctamente`);
+      console.log(`✅ ${type} subida exitosamente`);
       
       return downloadURL;
+      
     } catch (error) {
-      console.error('Error uploading image:', error);
-      const errorMessage = error instanceof Error ? error.message : `Error al subir ${type === 'logo' ? 'el logo' : 'la imagen'}`;
+      console.error(`❌ Error uploading ${type}:`, error);
+      
+      setUploadProgress({
+        uploading: false,
+        progress: 0
+      });
+      
+      let errorMessage = `Error al subir ${type === 'logo' ? 'el logo' : 'la imagen'}`;
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      
       toast.error(errorMessage);
+      setError(errorMessage);
       return null;
     }
   }, [userId]);
 
-  // FIXED: Update visibility with stable dependencies
+  // Update visibility
   const updateVisibility = useCallback(async (visible: boolean): Promise<boolean> => {
     if (!userId) {
       toast.error('Usuario no autenticado');
@@ -158,20 +278,20 @@ export const useComercios = (): UseComerciosReturn => {
       toast.success(`Comercio ${visible ? 'visible' : 'oculto'} para socios`);
       return true;
     } catch (error) {
-      console.error('Error updating visibility:', error);
+      console.error('❌ Error updating visibility:', error);
       const errorMessage = error instanceof Error ? error.message : 'Error al actualizar la visibilidad';
       toast.error(errorMessage);
       return false;
     }
   }, [userId]);
 
-  // FIXED: Generate QR URL with stable dependencies
+  // Generate QR URL
   const generateQRUrl = useCallback((beneficioId?: string): string => {
     if (!userId) return '';
     return ComercioService.generateQRValidationURL(userId, beneficioId);
   }, [userId]);
 
-  // FIXED: Generate web URL with stable dependencies
+  // Generate web URL
   const generateWebUrl = useCallback((beneficioId?: string): string => {
     if (!userId) return '';
     return ComercioService.generateWebValidationURL(userId, beneficioId);
@@ -183,11 +303,14 @@ export const useComercios = (): UseComerciosReturn => {
     error,
     stats,
     statsLoading,
+    uploadProgress,
     updateProfile,
     uploadImage,
     updateVisibility,
     refreshStats,
     generateQRUrl,
-    generateWebUrl
+    generateWebUrl,
+    clearError,
+    retryConnection
   };
 };

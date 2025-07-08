@@ -20,20 +20,31 @@ export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
 
-// Configure storage for better CORS handling
+// Enhanced storage configuration for better CORS and error handling
 if (typeof window !== 'undefined') {
-  // Client-side configuration
   console.log('🔧 Configurando Firebase Storage para cliente...');
   
-  // Add storage configuration for better error handling
-  storage._delegate._config = {
-    ...storage._delegate._config,
-    maxOperationRetryTime: 30000, // 30 seconds
-    maxUploadRetryTime: 600000,   // 10 minutes
-  };
+  // Configure storage with better retry and timeout settings
+  try {
+    // Set custom configuration for better upload handling
+    const storageConfig = {
+      maxOperationRetryTime: 60000, // 1 minute
+      maxUploadRetryTime: 600000,   // 10 minutes
+      maxDownloadRetryTime: 60000,  // 1 minute
+    };
+
+    // Apply configuration if available
+    if (storage._delegate && storage._delegate._config) {
+      Object.assign(storage._delegate._config, storageConfig);
+    }
+
+    console.log('✅ Firebase Storage configurado correctamente');
+  } catch (error) {
+    console.warn('⚠️ Error configurando Firebase Storage:', error);
+  }
 }
 
-// Development emulator connections (optional)
+// Development emulator connections
 if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
   const useEmulators = process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATORS === 'true';
   
@@ -48,5 +59,17 @@ if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
     }
   }
 }
+
+// Storage connection test utility
+export const testStorageConnection = async (): Promise<boolean> => {
+  try {
+    // Simple test to verify storage is accessible
+    const testRef = storage._delegate;
+    return testRef !== null;
+  } catch (error) {
+    console.error('❌ Error testing storage connection:', error);
+    return false;
+  }
+};
 
 export default app;

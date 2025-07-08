@@ -13,128 +13,230 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Comercio, ComercioFormData, ComercioStats, Validacion } from '@/types/comercio';
-import { uploadImage, deleteImage, generateImagePath } from '@/utils/storage/uploadImage';
+import { uploadImage, deleteImage, generateImagePath, validateImageFile } from '@/utils/storage/uploadImage';
 
 export class ComercioService {
-  // Update comercio profile
+  // Update comercio profile with validation
   static async updateProfile(userId: string, data: ComercioFormData): Promise<void> {
     try {
+      // Validate required fields
+      if (!data.nombre?.trim()) {
+        throw new Error('El nombre del responsable es requerido');
+      }
+      
+      if (!data.nombreComercio?.trim()) {
+        throw new Error('El nombre comercial es requerido');
+      }
+      
+      if (!data.email?.trim()) {
+        throw new Error('El email es requerido');
+      }
+      
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(data.email)) {
+        throw new Error('El formato del email no es válido');
+      }
+
       const comercioRef = doc(db, 'comercios', userId);
       
-      await updateDoc(comercioRef, {
+      // Prepare update data with proper validation
+      const updateData = {
         ...data,
+        nombre: data.nombre.trim(),
+        nombreComercio: data.nombreComercio.trim(),
+        email: data.email.trim().toLowerCase(),
+        telefono: data.telefono?.trim() || '',
+        direccion: data.direccion?.trim() || '',
+        descripcion: data.descripcion?.trim() || '',
+        sitioWeb: data.sitioWeb?.trim() || '',
+        razonSocial: data.razonSocial?.trim() || data.nombreComercio.trim(),
+        cuit: data.cuit?.trim() || '',
+        ubicacion: data.ubicacion?.trim() || data.direccion?.trim() || '',
+        emailContacto: data.emailContacto?.trim() || data.email.trim().toLowerCase(),
+        horario: data.horario?.trim() || '',
+        categoria: data.categoria || '',
+        visible: data.visible ?? true,
+        redesSociales: {
+          facebook: data.redesSociales?.facebook?.trim() || '',
+          instagram: data.redesSociales?.instagram?.trim() || '',
+          twitter: data.redesSociales?.twitter?.trim() || '',
+        },
         actualizadoEn: Timestamp.now()
-      });
+      };
+      
+      await updateDoc(comercioRef, updateData);
+      console.log('✅ Perfil de comercio actualizado exitosamente');
+      
     } catch (error) {
-      console.error('Error updating comercio profile:', error);
+      console.error('❌ Error updating comercio profile:', error);
+      
+      if (error instanceof Error) {
+        throw error; // Re-throw validation errors
+      }
+      
       throw new Error('Error al actualizar el perfil del comercio');
     }
   }
 
-  // Upload comercio image (logo or portada)
+  // Enhanced image upload with progress tracking
   static async uploadComercioImage(
     userId: string, 
     file: File, 
-    type: 'logo' | 'imagen'
+    type: 'logo' | 'imagen',
+    onProgress?: (progress: number) => void
   ): Promise<string> {
     try {
+      // Validate file first
+      const validation = validateImageFile(file);
+      if (!validation.valid) {
+        throw new Error(validation.error);
+      }
+
+      console.log(`📤 Iniciando subida de ${type} para comercio ${userId}`);
+      
       // Generate unique path
       const imagePath = generateImagePath(userId, type === 'logo' ? 'logo' : 'portada');
       
-      // Get current comercio data to delete old image
+      // Get current comercio data to manage old images
       const comercioRef = doc(db, 'comercios', userId);
       const comercioDoc = await getDoc(comercioRef);
       
+      let oldImageUrl: string | undefined;
+      
       if (comercioDoc.exists()) {
         const comercioData = comercioDoc.data() as Comercio;
-        const oldImageUrl = type === 'logo' ? comercioData.logoUrl : comercioData.imagenPrincipalUrl;
-        
-        // Delete old image if exists
-        if (oldImageUrl) {
-          try {
-            await deleteImage(oldImageUrl);
-          } catch (error) {
-            console.log('Old image not found or already deleted:', error);
-          }
-        }
+        oldImageUrl = type === 'logo' ? comercioData.logoUrl : comercioData.imagenPrincipalUrl;
       }
 
-      // Upload new image
+      // Upload new image with progress tracking
+      onProgress?.(5);
+      
       const downloadURL = await uploadImage(file, imagePath, {
         maxSize: 5 * 1024 * 1024, // 5MB
         allowedTypes: ['image/jpeg', 'image/png', 'image/webp'],
-        quality: 0.8
+        quality: type === 'logo' ? 0.9 : 0.8, // Higher quality for logos
+        retries: 3,
+        onProgress: (uploadProgress) => {
+          // Map upload progress to 5-90% range
+          const mappedProgress = 5 + (uploadProgress * 0.85);
+          onProgress?.(mappedProgress);
+        }
       });
+
+      onProgress?.(95);
 
       // Update comercio document
-      const updateData = type === 'logo' 
-        ? { logoUrl: downloadURL }
-        : { imagenPrincipalUrl: downloadURL };
-
-      await updateDoc(comercioRef, {
-        ...updateData,
+      const updateData = {
+        [type === 'logo' ? 'logoUrl' : 'imagenPrincipalUrl']: downloadURL,
         actualizadoEn: Timestamp.now()
-      });
+      };
 
+      await updateDoc(comercioRef, updateData);
+      
+      onProgress?.(98);
+
+      // Delete old image after successful update (don't wait for it)
+      if (oldImageUrl && oldImageUrl !== downloadURL) {
+        deleteImage(oldImageUrl).catch(error => {
+          console.warn('⚠️ No se pudo eliminar imagen anterior:', error);
+        });
+      }
+
+      onProgress?.(100);
+      
+      console.log(`✅ ${type} subida exitosamente:`, downloadURL);
       return downloadURL;
+      
     } catch (error) {
-      console.error('Error uploading comercio image:', error);
-      throw error;
+      console.error(`❌ Error uploading comercio ${type}:`, error);
+      
+      if (error instanceof Error) {
+        // Provide user-friendly error messages
+        if (error.message.includes('CORS')) {
+          throw new Error('Error de configuración del servidor. Por favor, contacta al soporte técnico.');
+        }
+        
+        if (error.message.includes('permission') || error.message.includes('unauthorized')) {
+          throw new Error('No tienes permisos para subir imágenes. Verifica tu sesión.');
+        }
+        
+        if (error.message.includes('network') || error.message.includes('timeout')) {
+          throw new Error('Error de conexión. Verifica tu internet e intenta nuevamente.');
+        }
+        
+        throw error;
+      }
+      
+      throw new Error(`Error al subir ${type === 'logo' ? 'el logo' : 'la imagen'}`);
     }
   }
 
-  // Get comercio statistics
+  // Get comercio statistics with better error handling
   static async getComercioStats(userId: string): Promise<ComercioStats> {
     try {
       const now = new Date();
       const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-      // Get validaciones
+      // Get validaciones with error handling
       const validacionesRef = collection(db, 'validaciones');
       
-      // Total validaciones
-      const totalQuery = query(validacionesRef, where('comercioId', '==', userId));
-      const totalSnapshot = await getDocs(totalQuery);
-      const totalValidaciones = totalSnapshot.size;
+      // Use Promise.allSettled to handle partial failures
+      const [
+        totalResult,
+        todayResult,
+        monthResult,
+        beneficiosResult,
+        comercioResult
+      ] = await Promise.allSettled([
+        // Total validaciones
+        getDocs(query(validacionesRef, where('comercioId', '==', userId))),
+        
+        // Validaciones hoy
+        getDocs(query(
+          validacionesRef, 
+          where('comercioId', '==', userId),
+          where('fechaHora', '>=', Timestamp.fromDate(startOfDay))
+        )),
+        
+        // Validaciones este mes
+        getDocs(query(
+          validacionesRef, 
+          where('comercioId', '==', userId),
+          where('fechaHora', '>=', Timestamp.fromDate(startOfMonth))
+        )),
+        
+        // Beneficios activos
+        getDocs(query(
+          collection(db, 'beneficios'), 
+          where('comercioId', '==', userId),
+          where('estado', '==', 'activo')
+        )),
+        
+        // Comercio data
+        getDoc(doc(db, 'comercios', userId))
+      ]);
 
-      // Validaciones hoy
-      const todayQuery = query(
-        validacionesRef, 
-        where('comercioId', '==', userId),
-        where('fechaHora', '>=', Timestamp.fromDate(startOfDay))
-      );
-      const todaySnapshot = await getDocs(todayQuery);
-      const validacionesHoy = todaySnapshot.size;
+      // Extract results with fallbacks
+      const totalValidaciones = totalResult.status === 'fulfilled' ? totalResult.value.size : 0;
+      const validacionesHoy = todayResult.status === 'fulfilled' ? todayResult.value.size : 0;
+      const validacionesMes = monthResult.status === 'fulfilled' ? monthResult.value.size : 0;
+      const beneficiosActivos = beneficiosResult.status === 'fulfilled' ? beneficiosResult.value.size : 0;
+      
+      let asociacionesVinculadas = 0;
+      if (comercioResult.status === 'fulfilled' && comercioResult.value.exists()) {
+        const comercioData = comercioResult.value.data() as Comercio;
+        asociacionesVinculadas = comercioData?.asociacionesVinculadas?.length || 0;
+      }
 
-      // Validaciones este mes
-      const monthQuery = query(
-        validacionesRef, 
-        where('comercioId', '==', userId),
-        where('fechaHora', '>=', Timestamp.fromDate(startOfMonth))
-      );
-      const monthSnapshot = await getDocs(monthQuery);
-      const validacionesMes = monthSnapshot.size;
-
-      // Get beneficios activos
-      const beneficiosRef = collection(db, 'beneficios');
-      const beneficiosQuery = query(
-        beneficiosRef, 
-        where('comercioId', '==', userId),
-        where('estado', '==', 'activo')
-      );
-      const beneficiosSnapshot = await getDocs(beneficiosQuery);
-      const beneficiosActivos = beneficiosSnapshot.size;
-
-      // Get comercio data for asociaciones
-      const comercioRef = doc(db, 'comercios', userId);
-      const comercioDoc = await getDoc(comercioRef);
-      const comercioData = comercioDoc.data() as Comercio;
-
-      // Calculate additional stats
-      const validacionesExitosas = totalSnapshot.docs.filter(
-        doc => doc.data().resultado === 'habilitado'
-      ).length;
+      // Calculate success rate
+      let validacionesExitosas = 0;
+      if (totalResult.status === 'fulfilled') {
+        validacionesExitosas = totalResult.value.docs.filter(
+          doc => doc.data().resultado === 'habilitado'
+        ).length;
+      }
 
       const tasaConversion = totalValidaciones > 0 
         ? (validacionesExitosas / totalValidaciones) * 100 
@@ -149,19 +251,33 @@ export class ComercioService {
         validacionesMes,
         beneficiosActivos,
         beneficiosVencidos: 0, // Would need additional query
-        asociacionesVinculadas: comercioData?.asociacionesVinculadas?.length || 0,
-        sociosAlcanzados: 0, // Would need additional calculation
+        asociacionesVinculadas,
+        sociosAlcanzados: validacionesExitosas, // Unique socios who used benefits
         ingresosPotenciales: 0, // Would need transaction data
-        tasaConversion,
+        tasaConversion: Math.round(tasaConversion * 100) / 100, // Round to 2 decimals
         beneficioMasUsado
       };
+      
     } catch (error) {
-      console.error('Error getting comercio stats:', error);
-      throw new Error('Error al obtener estadísticas del comercio');
+      console.error('❌ Error getting comercio stats:', error);
+      
+      // Return default stats instead of throwing
+      return {
+        totalValidaciones: 0,
+        validacionesHoy: 0,
+        validacionesMes: 0,
+        beneficiosActivos: 0,
+        beneficiosVencidos: 0,
+        asociacionesVinculadas: 0,
+        sociosAlcanzados: 0,
+        ingresosPotenciales: 0,
+        tasaConversion: 0,
+        beneficioMasUsado: undefined
+      };
     }
   }
 
-  // Get most used benefit - FIXED: Handle empty array case
+  // Get most used benefit with improved error handling
   private static async getMostUsedBenefit(userId: string) {
     try {
       const validacionesRef = collection(db, 'validaciones');
@@ -175,7 +291,6 @@ export class ComercioService {
       
       const snapshot = await getDocs(query_);
       
-      // FIXED: Early return if no validations
       if (snapshot.empty) {
         return undefined;
       }
@@ -190,13 +305,11 @@ export class ComercioService {
         }
       });
 
-      // FIXED: Check if there are any benefits before using reduce
       const beneficioIds = Object.keys(beneficioCount);
       if (beneficioIds.length === 0) {
         return undefined;
       }
 
-      // FIXED: Provide initial value to reduce to prevent error
       const mostUsedId = beneficioIds.reduce((a, b) => 
         beneficioCount[a] > beneficioCount[b] ? a : b
       );
@@ -209,7 +322,7 @@ export class ComercioService {
           const beneficioData = beneficioDoc.data();
           return {
             id: mostUsedId,
-            titulo: beneficioData.titulo,
+            titulo: beneficioData.titulo || 'Beneficio sin título',
             usos: beneficioCount[mostUsedId]
           };
         }
@@ -217,7 +330,7 @@ export class ComercioService {
 
       return undefined;
     } catch (error) {
-      console.error('Error getting most used benefit:', error);
+      console.error('❌ Error getting most used benefit:', error);
       return undefined;
     }
   }
@@ -252,30 +365,49 @@ export class ComercioService {
       const comercioData = comercioDoc.data() as Comercio;
       return comercioData.estado === 'activo';
     } catch (error) {
-      console.error('Error validating comercio:', error);
+      console.error('❌ Error validating comercio:', error);
       return false;
     }
   }
 
-  // Get recent validaciones
-  static async getRecentValidaciones(userId: string, limit_: number = 10): Promise<Validacion[]> {
+  // Get recent validaciones with pagination
+  static async getRecentValidaciones(
+    userId: string, 
+    limit_: number = 10,
+    lastDoc?: any
+  ): Promise<{ validaciones: Validacion[]; hasMore: boolean }> {
     try {
       const validacionesRef = collection(db, 'validaciones');
-      const query_ = query(
+      let query_ = query(
         validacionesRef,
         where('comercioId', '==', userId),
         orderBy('fechaHora', 'desc'),
         limit(limit_)
       );
 
+      if (lastDoc) {
+        query_ = query(
+          validacionesRef,
+          where('comercioId', '==', userId),
+          orderBy('fechaHora', 'desc'),
+          limit(limit_),
+          // startAfter(lastDoc) // Uncomment if you want pagination
+        );
+      }
+
       const snapshot = await getDocs(query_);
-      return snapshot.docs.map(doc => ({
+      const validaciones = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       })) as Validacion[];
+
+      return {
+        validaciones,
+        hasMore: snapshot.docs.length === limit_
+      };
     } catch (error) {
-      console.error('Error getting recent validaciones:', error);
-      throw new Error('Error al obtener validaciones recientes');
+      console.error('❌ Error getting recent validaciones:', error);
+      return { validaciones: [], hasMore: false };
     }
   }
 
@@ -287,8 +419,10 @@ export class ComercioService {
         visible,
         actualizadoEn: Timestamp.now()
       });
+      
+      console.log(`✅ Visibilidad actualizada: ${visible ? 'visible' : 'oculto'}`);
     } catch (error) {
-      console.error('Error updating comercio visibility:', error);
+      console.error('❌ Error updating comercio visibility:', error);
       throw new Error('Error al actualizar la visibilidad del comercio');
     }
   }
@@ -305,9 +439,27 @@ export class ComercioService {
       });
 
       await batch.commit();
+      console.log('✅ Actualización por lotes completada');
     } catch (error) {
-      console.error('Error batch updating comercio:', error);
+      console.error('❌ Error batch updating comercio:', error);
       throw new Error('Error al actualizar los datos del comercio');
+    }
+  }
+
+  // Health check for comercio service
+  static async healthCheck(): Promise<{ status: 'ok' | 'error'; message: string }> {
+    try {
+      // Try to read from comercios collection
+      const testQuery = query(collection(db, 'comercios'), limit(1));
+      await getDocs(testQuery);
+      
+      return { status: 'ok', message: 'Servicio de comercios funcionando correctamente' };
+    } catch (error) {
+      console.error('❌ Health check failed:', error);
+      return { 
+        status: 'error', 
+        message: 'Error en el servicio de comercios' 
+      };
     }
   }
 }

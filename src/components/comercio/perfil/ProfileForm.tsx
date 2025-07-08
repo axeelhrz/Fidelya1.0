@@ -21,6 +21,7 @@ import {
   Chip,
   alpha,
   Paper,
+  CircularProgress,
 } from '@mui/material';
 import {
   Store,
@@ -37,6 +38,8 @@ import {
   VisibilityOff,
   Business,
   Category,
+  CheckCircle,
+  Warning,
 } from '@mui/icons-material';
 import { useForm, Controller } from 'react-hook-form';
 import { useComercios } from '@/hooks/useComercios';
@@ -44,9 +47,10 @@ import { ComercioProfileFormData } from '@/lib/validations/comercio';
 import { CATEGORIAS_COMERCIO } from '@/types/comercio';
 
 export const ProfileForm: React.FC = () => {
-  const { comercio, loading, updateProfile } = useComercios();
+  const { comercio, loading, updateProfile, error, clearError } = useComercios();
   const [isEditing, setIsEditing] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
   const {
     control,
@@ -54,6 +58,7 @@ export const ProfileForm: React.FC = () => {
     handleSubmit,
     formState: { errors, isSubmitting, isDirty },
     reset,
+    watch,
   } = useForm<ComercioProfileFormData>({
     defaultValues: {
       nombre: '',
@@ -79,6 +84,8 @@ export const ProfileForm: React.FC = () => {
   });
 
   // Watch for changes
+  const watchedFields = watch();
+  
   useEffect(() => {
     setHasChanges(isDirty);
   }, [isDirty]);
@@ -86,7 +93,7 @@ export const ProfileForm: React.FC = () => {
   // Load comercio data
   useEffect(() => {
     if (comercio) {
-      reset({
+      const formData = {
         nombre: comercio.nombre || '',
         nombreComercio: comercio.nombreComercio || '',
         email: comercio.email || '',
@@ -106,38 +113,57 @@ export const ProfileForm: React.FC = () => {
           instagram: comercio.redesSociales?.instagram || '',
           twitter: comercio.redesSociales?.twitter || '',
         }
-      });
+      };
+      
+      reset(formData);
+      setHasChanges(false);
     }
   }, [comercio, reset]);
 
   const onSubmit = async (data: ComercioProfileFormData) => {
-    const success = await updateProfile({
-      nombre: data.nombre,
-      nombreComercio: data.nombreComercio,
-      email: data.email,
-      categoria: data.categoria,
-      direccion: data.direccion,
-      telefono: data.telefono,
-      horario: data.horario,
-      descripcion: data.descripcion,
-      sitioWeb: data.sitioWeb,
-      razonSocial: data.razonSocial,
-      cuit: data.cuit,
-      ubicacion: data.ubicacion,
-      emailContacto: data.emailContacto,
-      visible: data.visible,
-      redesSociales: data.redesSociales,
-    });
-    
-    if (success) {
-      setIsEditing(false);
-      setHasChanges(false);
+    try {
+      clearError();
+      
+      const success = await updateProfile({
+        nombre: data.nombre.trim(),
+        nombreComercio: data.nombreComercio.trim(),
+        email: data.email.trim().toLowerCase(),
+        categoria: data.categoria,
+        direccion: data.direccion?.trim() || '',
+        telefono: data.telefono?.trim() || '',
+        horario: data.horario?.trim() || '',
+        descripcion: data.descripcion?.trim() || '',
+        sitioWeb: data.sitioWeb?.trim() || '',
+        razonSocial: data.razonSocial?.trim() || data.nombreComercio.trim(),
+        cuit: data.cuit?.trim() || '',
+        ubicacion: data.ubicacion?.trim() || data.direccion?.trim() || '',
+        emailContacto: data.emailContacto?.trim() || data.email.trim().toLowerCase(),
+        visible: data.visible,
+        redesSociales: {
+          facebook: data.redesSociales?.facebook?.trim() || '',
+          instagram: data.redesSociales?.instagram?.trim() || '',
+          twitter: data.redesSociales?.twitter?.trim() || '',
+        },
+      });
+      
+      if (success) {
+        setIsEditing(false);
+        setHasChanges(false);
+        setSaveSuccess(true);
+        
+        // Hide success message after 3 seconds
+        setTimeout(() => {
+          setSaveSuccess(false);
+        }, 3000);
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error);
     }
   };
 
   const handleReset = () => {
     if (comercio) {
-      reset({
+      const formData = {
         nombre: comercio.nombre || '',
         nombreComercio: comercio.nombreComercio || '',
         email: comercio.email || '',
@@ -157,21 +183,39 @@ export const ProfileForm: React.FC = () => {
           instagram: comercio.redesSociales?.instagram || '',
           twitter: comercio.redesSociales?.twitter || '',
         }
-      });
+      };
+      
+      reset(formData);
     }
     setIsEditing(false);
     setHasChanges(false);
+    clearError();
   };
 
-  if (loading) {
+  const handleEditToggle = () => {
+    if (isEditing && hasChanges) {
+      // Show confirmation dialog or handle unsaved changes
+      const confirmDiscard = window.confirm('Tienes cambios sin guardar. ¿Deseas descartarlos?');
+      if (!confirmDiscard) return;
+    }
+    
+    setIsEditing(!isEditing);
+    if (!isEditing) {
+      clearError();
+    } else {
+      handleReset();
+    }
+  };
+
+  if (loading && !comercio) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-        >
-          <Store sx={{ fontSize: 40, color: '#06b6d4' }} />
-        </motion.div>
+        <Stack alignItems="center" spacing={2}>
+          <CircularProgress size={40} sx={{ color: '#06b6d4' }} />
+          <Typography variant="body2" sx={{ color: '#64748b' }}>
+            Cargando información del comercio...
+          </Typography>
+        </Stack>
       </Box>
     );
   }
@@ -230,7 +274,7 @@ export const ProfileForm: React.FC = () => {
               </Typography>
             </Box>
 
-            <Stack direction="row" spacing={2}>
+            <Stack direction="row" spacing={2} alignItems="center">
               <AnimatePresence>
                 {hasChanges && (
                   <motion.div
@@ -239,10 +283,30 @@ export const ProfileForm: React.FC = () => {
                     exit={{ opacity: 0, scale: 0.8 }}
                   >
                     <Chip
+                      icon={<Warning />}
                       label="Cambios sin guardar"
                       color="warning"
                       size="small"
                       sx={{ fontWeight: 600 }}
+                    />
+                  </motion.div>
+                )}
+                
+                {saveSuccess && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                  >
+                    <Chip
+                      icon={<CheckCircle />}
+                      label="Guardado exitosamente"
+                      sx={{ 
+                        bgcolor: '#10b981', 
+                        color: 'white',
+                        fontWeight: 600 
+                      }}
+                      size="small"
                     />
                   </motion.div>
                 )}
@@ -254,6 +318,7 @@ export const ProfileForm: React.FC = () => {
                     variant="outlined"
                     onClick={handleReset}
                     startIcon={<Refresh />}
+                    disabled={isSubmitting}
                     sx={{
                       borderColor: '#d1d5db',
                       color: '#6b7280',
@@ -269,7 +334,7 @@ export const ProfileForm: React.FC = () => {
                     variant="contained"
                     onClick={handleSubmit(onSubmit)}
                     disabled={isSubmitting || !hasChanges}
-                    startIcon={<Save />}
+                    startIcon={isSubmitting ? <CircularProgress size={16} /> : <Save />}
                     sx={{
                       background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
                       boxShadow: '0 4px 20px rgba(99, 102, 241, 0.3)',
@@ -290,7 +355,7 @@ export const ProfileForm: React.FC = () => {
               ) : (
                 <Button
                   variant="contained"
-                  onClick={() => setIsEditing(true)}
+                  onClick={handleEditToggle}
                   startIcon={<Store />}
                   sx={{
                     background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
@@ -306,6 +371,26 @@ export const ProfileForm: React.FC = () => {
               )}
             </Stack>
           </Stack>
+
+          {/* Error Alert */}
+          <AnimatePresence>
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                style={{ marginBottom: 24 }}
+              >
+                <Alert 
+                  severity="error" 
+                  onClose={clearError}
+                  sx={{ borderRadius: 3 }}
+                >
+                  {error}
+                </Alert>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           <form onSubmit={handleSubmit(onSubmit)}>
             <Stack spacing={6}>
@@ -330,7 +415,10 @@ export const ProfileForm: React.FC = () => {
                   <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
                     <Box sx={{ flex: 1, minWidth: 300 }}>
                       <TextField
-                        {...register('nombre')}
+                        {...register('nombre', { 
+                          required: 'El nombre del responsable es requerido',
+                          minLength: { value: 2, message: 'Mínimo 2 caracteres' }
+                        })}
                         label="Nombre del Responsable"
                         fullWidth
                         disabled={!isEditing}
@@ -353,7 +441,10 @@ export const ProfileForm: React.FC = () => {
                     
                     <Box sx={{ flex: 1, minWidth: 300 }}>
                       <TextField
-                        {...register('nombreComercio')}
+                        {...register('nombreComercio', { 
+                          required: 'El nombre comercial es requerido',
+                          minLength: { value: 2, message: 'Mínimo 2 caracteres' }
+                        })}
                         label="Nombre Comercial"
                         fullWidth
                         disabled={!isEditing}
@@ -429,6 +520,7 @@ export const ProfileForm: React.FC = () => {
                       <Controller
                         name="categoria"
                         control={control}
+                        rules={{ required: 'La categoría es requerida' }}
                         render={({ field }) => (
                           <FormControl fullWidth disabled={!isEditing} error={!!errors.categoria}>
                             <InputLabel>Rubro o Categoría</InputLabel>
@@ -532,7 +624,13 @@ export const ProfileForm: React.FC = () => {
                   <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
                     <Box sx={{ flex: 1, minWidth: 300 }}>
                       <TextField
-                        {...register('email')}
+                        {...register('email', { 
+                          required: 'El email es requerido',
+                          pattern: {
+                            value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                            message: 'Formato de email inválido'
+                          }
+                        })}
                         label="Email Principal"
                         type="email"
                         fullWidth
@@ -556,14 +654,19 @@ export const ProfileForm: React.FC = () => {
                     
                     <Box sx={{ flex: 1, minWidth: 300 }}>
                       <TextField
-                        {...register('emailContacto')}
+                        {...register('emailContacto', {
+                          pattern: {
+                            value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                            message: 'Formato de email inválido'
+                          }
+                        })}
                         label="Email de Contacto"
                         type="email"
                         fullWidth
                         disabled={!isEditing}
                         placeholder="contacto@micomercio.com"
                         error={!!errors.emailContacto}
-                        helperText={errors.emailContacto?.message}
+                        helperText={errors.emailContacto?.message || 'Opcional - Se usará el email principal si está vacío'}
                         InputProps={{
                           startAdornment: <Email sx={{ color: '#94a3b8', mr: 1 }} />,
                         }}
@@ -583,7 +686,12 @@ export const ProfileForm: React.FC = () => {
                   <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
                     <Box sx={{ flex: 1, minWidth: 300 }}>
                       <TextField
-                        {...register('telefono')}
+                        {...register('telefono', {
+                          pattern: {
+                            value: /^[\+]?[0-9\s\-\(\)]+$/,
+                            message: 'Formato de teléfono inválido'
+                          }
+                        })}
                         label="Teléfono"
                         fullWidth
                         disabled={!isEditing}
@@ -631,7 +739,9 @@ export const ProfileForm: React.FC = () => {
                   </Box>
 
                   <TextField
-                    {...register('direccion')}
+                    {...register('direccion', {
+                      required: 'La dirección es requerida'
+                    })}
                     label="Dirección Física"
                     fullWidth
                     disabled={!isEditing}
@@ -658,7 +768,7 @@ export const ProfileForm: React.FC = () => {
                     disabled={!isEditing}
                     placeholder="Montevideo, Montevideo"
                     error={!!errors.ubicacion}
-                    helperText={errors.ubicacion?.message}
+                    helperText={errors.ubicacion?.message || 'Se usará la dirección física si está vacío'}
                     InputProps={{
                       startAdornment: <LocationOn sx={{ color: '#94a3b8', mr: 1 }} />,
                     }}
@@ -695,14 +805,19 @@ export const ProfileForm: React.FC = () => {
                 </Typography>
                 
                 <TextField
-                  {...register('descripcion')}
+                  {...register('descripcion', {
+                    maxLength: {
+                      value: 500,
+                      message: 'Máximo 500 caracteres'
+                    }
+                  })}
                   label="Descripción del Comercio"
                   fullWidth
                   multiline
                   rows={4}
                   disabled={!isEditing}
                   placeholder="Describe tu comercio, productos o servicios que ofreces a los socios de Fidelitá..."
-                  helperText="Máximo 500 caracteres. Esta descripción será visible para los socios."
+                  helperText={`${watchedFields.descripcion?.length || 0}/500 caracteres. Esta descripción será visible para los socios.`}
                   error={!!errors.descripcion}
                   sx={{
                     '& .MuiOutlinedInput-root': {
@@ -737,7 +852,12 @@ export const ProfileForm: React.FC = () => {
                 
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                   <TextField
-                    {...register('sitioWeb')}
+                    {...register('sitioWeb', {
+                      pattern: {
+                        value: /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/,
+                        message: 'URL inválida. Ejemplo: https://www.micomercio.com'
+                      }
+                    })}
                     label="Sitio Web"
                     fullWidth
                     disabled={!isEditing}
@@ -829,14 +949,20 @@ export const ProfileForm: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Save Changes Alert */}
+      {/* Floating Save Changes Alert */}
       <AnimatePresence>
-        {hasChanges && (
+        {hasChanges && isEditing && (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 1000 }}
+            initial={{ opacity: 0, y: 20, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.9 }}
+            style={{ 
+              position: 'fixed', 
+              bottom: 24, 
+              right: 24, 
+              zIndex: 1000,
+              maxWidth: 400
+            }}
           >
             <Alert
               severity="warning"
@@ -846,6 +972,7 @@ export const ProfileForm: React.FC = () => {
                     color="inherit"
                     size="small"
                     onClick={handleReset}
+                    disabled={isSubmitting}
                   >
                     Descartar
                   </Button>
@@ -855,18 +982,70 @@ export const ProfileForm: React.FC = () => {
                     variant="outlined"
                     onClick={handleSubmit(onSubmit)}
                     disabled={isSubmitting}
+                    startIcon={isSubmitting ? <CircularProgress size={12} /> : undefined}
                   >
-                    Guardar
+                    {isSubmitting ? 'Guardando...' : 'Guardar'}
                   </Button>
                 </Stack>
               }
               sx={{
                 boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
                 borderRadius: 3,
+                bgcolor: '#fff3cd',
+                border: '1px solid #ffeaa7',
               }}
             >
-              Tienes cambios sin guardar
+              <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                Tienes cambios sin guardar
+              </Typography>
             </Alert>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Loading Overlay */}
+      <AnimatePresence>
+        {isSubmitting && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 9999,
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              style={{
+                backgroundColor: 'white',
+                padding: '2rem',
+                borderRadius: '1rem',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '1rem',
+                boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
+              }}
+            >
+              <CircularProgress size={40} sx={{ color: '#6366f1' }} />
+              <Typography variant="h6" sx={{ fontWeight: 600, color: '#374151' }}>
+                Guardando cambios...
+              </Typography>
+              <Typography variant="body2" sx={{ color: '#64748b', textAlign: 'center' }}>
+                Por favor espera mientras actualizamos tu perfil
+              </Typography>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
