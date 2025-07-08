@@ -14,7 +14,7 @@
     align-items: flex-end;
 }
 
-/* Menú flotante mejorado */
+/* Menú flotante con animación simplificada */
 .floating-widget__menu {
     position: absolute;
     bottom: 70px;
@@ -24,18 +24,18 @@
     gap: 12px;
     opacity: 0;
     visibility: hidden;
-    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    transform: translateY(20px) scale(0.8);
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    transform: translateY(20px);
     transform-origin: bottom right;
 }
 
 .floating-widget__menu.active {
     opacity: 1;
     visibility: visible;
-    transform: translateY(0) scale(1);
+    transform: translateY(0);
 }
 
-/* Items del menú con efectos mejorados */
+/* Items del menú - SIN animaciones JavaScript conflictivas */
 .floating-widget__menu-item {
     position: relative;
     display: flex;
@@ -54,10 +54,11 @@
         var(--neon-shadow-base),
         inset 0 1px 0 rgba(255, 255, 255, 0.1);
     transition: all var(--transition);
-    transform: translateY(30px) scale(0.7);
-    opacity: 0;
     backdrop-filter: blur(10px);
     overflow: hidden;
+    /* Remover las propiedades que causan conflicto */
+    opacity: 1;
+    transform: none;
 }
 
 /* Efecto de brillo interno */
@@ -88,17 +89,17 @@
         var(--neon-shadow-hover),
         0 0 30px rgba(255, 45, 85, 0.6),
         inset 0 1px 0 rgba(255, 255, 255, 0.2);
-    transform: translateY(0) scale(1.1);
+    transform: scale(1.05);
     border-color: var(--starflex-red);
 }
 
-/* Animación de entrada escalonada */
+/* Animación de entrada escalonada - SOLO CSS */
 .floating-widget__menu.active .floating-widget__menu-item:nth-child(1) {
-    animation: slideInUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s forwards;
+    animation: slideInUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s both;
 }
 
 .floating-widget__menu.active .floating-widget__menu-item:nth-child(2) {
-    animation: slideInUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s forwards;
+    animation: slideInUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s both;
 }
 
 /* Iconos mejorados */
@@ -211,11 +212,11 @@
     transform: rotate(-45deg) scale(1.1);
 }
 
-/* Tooltips mejorados */
+/* Tooltips mejorados - POSICIÓN CORREGIDA */
 .floating-widget__tooltip {
     position: absolute;
     top: 50%;
-    right: 65px;
+    right: calc(100% + 15px); /* Posición corregida para evitar cortes */
     padding: 8px 12px;
     font-size: 0.8rem;
     font-weight: 500;
@@ -231,6 +232,9 @@
     transition: all var(--transition);
     transform: translateY(-50%) translateX(10px);
     pointer-events: none;
+    z-index: 1000;
+    /* Asegurar que no se corte */
+    min-width: max-content;
 }
 
 .floating-widget__tooltip::before {
@@ -284,7 +288,7 @@
 @keyframes slideInUp {
     from {
         opacity: 0;
-        transform: translateY(30px) scale(0.7);
+        transform: translateY(30px) scale(0.8);
     }
     to {
         opacity: 1;
@@ -333,7 +337,7 @@
     .floating-widget__tooltip {
         font-size: 0.75rem;
         padding: 6px 10px;
-        right: 60px;
+        right: calc(100% + 12px);
     }
 }
 
