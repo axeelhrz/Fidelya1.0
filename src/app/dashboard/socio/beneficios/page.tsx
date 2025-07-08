@@ -195,7 +195,7 @@ export default function SocioBeneficiosPage() {
     beneficiosUsados, 
     loading, 
     error, 
-    useBeneficio
+    useBeneficio: applyBenefit
   } = useBeneficios();
 
   // Local state
@@ -371,7 +371,7 @@ export default function SocioBeneficiosPage() {
     
     setActionLoading(beneficio.id);
     try {
-      await useBeneficio(beneficio.id, beneficio.comercioId);
+      await applyBenefit(beneficio.id, beneficio.comercioId);
       toast.success('¡Beneficio usado exitosamente!');
       setDetailModalOpen(false);
     } catch {
@@ -379,7 +379,7 @@ export default function SocioBeneficiosPage() {
     } finally {
       setActionLoading(null);
     }
-  }, [user, useBeneficio]);
+  }, [user, applyBenefit]);
 
   const handleViewDetails = useCallback((beneficio: Beneficio) => {
     setSelectedBenefit(beneficio);

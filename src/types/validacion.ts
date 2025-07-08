@@ -53,6 +53,9 @@ export interface ValidacionResponse {
     asociacion: string;
   }
   validacionId?: string;
+  fechaHora: Timestamp | Date;
+  montoDescuento?: number;
+  beneficioTitulo?: string;
 }
 
 export interface QRData {
