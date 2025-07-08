@@ -1,23 +1,15 @@
-/* ===== SECCIÓN HERO CON ESPACIADO ADECUADO ===== */
+/* ===== SECCIÓN HERO ===== */
 .hero {
     position: relative;
-    min-height: calc(100vh - var(--navbar-height));
+    min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: calc(var(--navbar-height) + 3rem) var(--section-padding-x) var(--section-padding-y);
+    padding: calc(var(--navbar-height) + var(--space-6xl)) var(--section-padding-x) var(--section-padding-y);
     overflow: hidden;
     
     /* Fondo base */
     background: var(--bg-primary);
-}
-
-/* Ajustes para móvil */
-@media (max-width: 768px) {
-    .hero {
-        min-height: calc(100vh - var(--mobile-navbar-height, 70px));
-        padding: calc(var(--mobile-navbar-height, 70px) + 2rem) var(--section-padding-x) var(--section-padding-y);
-    }
 }
 
 /* CANVAS DE FONDO CON ESTRELLAS - SOLO HERO */
@@ -70,15 +62,6 @@
 @keyframes float-particles {
     0% { transform: translate(0, 0); }
     100% { transform: translate(-200px, -200px); }
-}
-
-/* Contenido del hero con z-index apropiado */
-.hero__content {
-    position: relative;
-    z-index: 3;
-    text-align: center;
-    max-width: var(--max-hero-width);
-    margin: 0 auto;
 }
 
 /* CAPA DE LUCES NEÓN SUAVES CON EFECTO DIFUSO Y DESENFOCADO */
@@ -254,6 +237,36 @@ background:
     radial-gradient(ellipse 700px 350px at 60% 40%, rgba(255, 23, 68, 0.025) 0%, transparent 60%),
     radial-gradient(ellipse 500px 250px at 40% 80%, rgba(255, 45, 85, 0.02) 0%, transparent 60%);
 animation: depth-shift-2 18s ease-in-out infinite;
+}
+
+/* CONTENIDO DEL HERO CON Z-INDEX APROPIADO PARA ESTAR ENCIMA */
+.hero__container {
+position: relative;
+z-index: 10;
+display: grid;
+grid-template-columns: 1.2fr 1fr;
+gap: var(--space-6xl);
+align-items: center;
+width: 100%;
+max-width: var(--max-hero-width);
+margin: 0 auto;
+}
+
+.hero__content {
+position: relative;
+z-index: 11;
+width: 100%;
+animation: fadeInUp 1s ease-out;
+}
+
+.hero__media {
+position: relative;
+z-index: 11;
+display: flex;
+align-items: center;
+justify-content: center;
+width: 100%;
+animation: fadeInRight 1s ease-out 0.3s both;
 }
 
 /* ===== BOTONES DE ETIQUETAS NO CLICKEABLES ===== */
@@ -682,7 +695,7 @@ display: block;
 
 /* Ajustar padding del hero en móvil */
 .hero {
-padding-top: calc(var(--navbar-height-mobile) + var(--space-5xl));
+padding-top: calc(var(--navbar-height-mobile) + var(--space-6xl));
 padding-bottom: clamp(1.5rem, 6vh, 3rem);
 }
 
@@ -797,14 +810,14 @@ background:
 /* Optimizar espaciado específico del hero */
 @media (width <= 1023px) {
 .hero {
-padding-top: clamp(0.5rem, 2vh, 1rem) !important;
+padding-top: calc(var(--navbar-height-mobile) + var(--space-6xl)) !important;
 padding-bottom: clamp(1rem, 3vh, 1.5rem) !important;
 }
 }
 
 @media (width <= 480px) {
 .hero {
-padding-top: clamp(0.25rem, 1vh, 0.5rem) !important;
+padding-top: calc(var(--navbar-height-mobile) + var(--space-5xl)) !important;
 padding-bottom: clamp(0.75rem, 2vh, 1rem) !important;
 }
 
