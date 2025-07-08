@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { 
   collection, 
   query, 
@@ -11,7 +11,8 @@ import {
   doc, 
   Timestamp,
   orderBy,
-  UpdateData
+  UpdateData,
+  Unsubscribe
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Beneficio, BeneficioFormData, BeneficioUso } from '@/types/beneficio';
@@ -25,42 +26,91 @@ export const useBeneficios = () => {
   const [beneficiosUsados, setBeneficiosUsados] = useState<BeneficioUso[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Referencias para evitar re-renders innecesarios
+  const unsubscribeRef = useRef<Unsubscribe | null>(null);
+  const lastUserRef = useRef<string | null>(null);
+  const isLoadingRef = useRef(false);
 
-  // Fetch beneficios based on user role
+  // Función para limpiar listeners
+  const cleanup = useCallback(() => {
+    if (unsubscribeRef.current) {
+      unsubscribeRef.current();
+      unsubscribeRef.current = null;
+    }
+  }, []);
+
+  // Fetch beneficios based on user role - optimizado para evitar re-renders
   useEffect(() => {
-    if (!user) {
-      setLoading(false);
+    // Evitar ejecutar si no hay usuario o si es el mismo usuario
+    if (!user || lastUserRef.current === user.uid || isLoadingRef.current) {
+      if (!user) {
+        setLoading(false);
+        setBeneficios([]);
+        setBeneficiosUsados([]);
+      }
       return;
     }
 
+    // Limpiar listeners anteriores
+    cleanup();
+    
+    // Marcar como cargando
+    isLoadingRef.current = true;
+    lastUserRef.current = user.uid;
+    setLoading(true);
+    setError(null);
+
     if (user.role === 'comercio') {
-      // Para comercios: obtener sus propios beneficios
-      const beneficiosQuery = query(
-        collection(db, 'beneficios'),
-        where('comercioId', '==', user.uid),
-        orderBy('creadoEn', 'desc')
-      );
+      // Para comercios: obtener sus propios beneficios con listener en tiempo real
+      try {
+        const beneficiosQuery = query(
+          collection(db, 'beneficios'),
+          where('comercioId', '==', user.uid),
+          orderBy('creadoEn', 'desc')
+        );
 
-      const unsubscribe = onSnapshot(beneficiosQuery, (snapshot) => {
-        const beneficiosData = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        })) as Beneficio[];
+        const unsubscribe = onSnapshot(
+          beneficiosQuery, 
+          (snapshot) => {
+            try {
+              const beneficiosData = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+              })) as Beneficio[];
 
-        setBeneficios(beneficiosData);
+              setBeneficios(beneficiosData);
+              setLoading(false);
+              isLoadingRef.current = false;
+              setError(null);
+            } catch (err) {
+              console.error('Error processing beneficios snapshot:', err);
+              setError('Error al procesar los beneficios');
+              setLoading(false);
+              isLoadingRef.current = false;
+            }
+          }, 
+          (error) => {
+            console.error('Error fetching beneficios:', error);
+            setError('Error al cargar los beneficios');
+            setLoading(false);
+            isLoadingRef.current = false;
+          }
+        );
+
+        unsubscribeRef.current = unsubscribe;
+      } catch (err) {
+        console.error('Error setting up beneficios listener:', err);
+        setError('Error al configurar la conexión');
         setLoading(false);
-      }, (error) => {
-        console.error('Error fetching beneficios:', error);
-        setError('Error al cargar los beneficios');
-        setLoading(false);
-      });
+        isLoadingRef.current = false;
+      }
 
-      return () => unsubscribe();
     } else if (user.role === 'socio') {
-      // Para socios: obtener beneficios disponibles y usados
+      // Para socios: obtener beneficios disponibles y usados (sin listener en tiempo real)
       const loadSocioBeneficios = async () => {
         try {
-          setLoading(true);
+          console.log('🎁 Cargando beneficios para socio:', user.uid);
           
           // Obtener beneficios disponibles
           const disponibles = await BeneficiosService.getBeneficiosDisponibles(
@@ -73,15 +123,59 @@ export const useBeneficios = () => {
           const usados = await BeneficiosService.getBeneficiosUsados(user.uid);
           setBeneficiosUsados(usados);
 
+          console.log('✅ Beneficios cargados exitosamente');
         } catch (error) {
-          console.error('Error loading socio beneficios:', error);
+          console.error('❌ Error loading socio beneficios:', error);
           setError('Error al cargar los beneficios');
         } finally {
           setLoading(false);
+          isLoadingRef.current = false;
         }
       };
 
       loadSocioBeneficios();
+    } else {
+      setLoading(false);
+      isLoadingRef.current = false;
+    }
+
+    // Cleanup function
+    return cleanup;
+  }, [user?.uid, user?.role, user?.asociacionId, cleanup]);
+
+  // Cleanup al desmontar
+  useEffect(() => {
+    return cleanup;
+  }, [cleanup]);
+
+  // Función para refrescar datos manualmente (solo para socios)
+  const refreshBeneficios = useCallback(async () => {
+    if (!user || user.role !== 'socio' || isLoadingRef.current) return;
+
+    try {
+      setLoading(true);
+      isLoadingRef.current = true;
+      
+      console.log('🔄 Refrescando beneficios...');
+      
+      // Obtener beneficios disponibles
+      const disponibles = await BeneficiosService.getBeneficiosDisponibles(
+        user.uid, 
+        user.asociacionId || ''
+      );
+      setBeneficios(disponibles);
+
+      // Obtener beneficios usados
+      const usados = await BeneficiosService.getBeneficiosUsados(user.uid);
+      setBeneficiosUsados(usados);
+
+      console.log('✅ Beneficios refrescados');
+    } catch (error) {
+      console.error('❌ Error refreshing beneficios:', error);
+      setError('Error al actualizar los beneficios');
+    } finally {
+      setLoading(false);
+      isLoadingRef.current = false;
     }
   }, [user]);
 
@@ -90,7 +184,7 @@ export const useBeneficios = () => {
     if (!user || user.role !== 'comercio') return false;
 
     try {
-      setLoading(true);
+      console.log('➕ Creando beneficio...');
       
       const beneficioData = {
         ...data,
@@ -106,13 +200,12 @@ export const useBeneficios = () => {
 
       await addDoc(collection(db, 'beneficios'), beneficioData);
       toast.success('Beneficio creado correctamente');
+      console.log('✅ Beneficio creado exitosamente');
       return true;
     } catch (error) {
-      console.error('Error creating beneficio:', error);
+      console.error('❌ Error creating beneficio:', error);
       toast.error('Error al crear el beneficio');
       return false;
-    } finally {
-      setLoading(false);
     }
   }, [user]);
 
@@ -121,7 +214,8 @@ export const useBeneficios = () => {
     if (!user || user.role !== 'comercio') return false;
 
     try {
-      setLoading(true);
+      console.log('📝 Actualizando beneficio:', id);
+      
       const beneficioRef = doc(db, 'beneficios', id);
       
       // Separar las fechas del resto de los datos
@@ -142,13 +236,12 @@ export const useBeneficios = () => {
 
       await updateDoc(beneficioRef, updateData);
       toast.success('Beneficio actualizado correctamente');
+      console.log('✅ Beneficio actualizado exitosamente');
       return true;
     } catch (error) {
-      console.error('Error updating beneficio:', error);
+      console.error('❌ Error updating beneficio:', error);
       toast.error('Error al actualizar el beneficio');
       return false;
-    } finally {
-      setLoading(false);
     }
   }, [user]);
 
@@ -157,7 +250,8 @@ export const useBeneficios = () => {
     if (!user || user.role !== 'comercio') return false;
 
     try {
-      setLoading(true);
+      console.log('🗑️ Eliminando beneficio:', id);
+      
       const beneficioRef = doc(db, 'beneficios', id);
       
       await updateDoc(beneficioRef, {
@@ -166,22 +260,22 @@ export const useBeneficios = () => {
       });
 
       toast.success('Beneficio eliminado correctamente');
+      console.log('✅ Beneficio eliminado exitosamente');
       return true;
     } catch (error) {
-      console.error('Error deleting beneficio:', error);
+      console.error('❌ Error deleting beneficio:', error);
       toast.error('Error al eliminar el beneficio');
       return false;
-    } finally {
-      setLoading(false);
     }
   }, [user]);
 
-  // Apply/Use beneficio (solo para socios) - renamed from useBeneficio to avoid ESLint hook rule
+  // Apply/Use beneficio (solo para socios)
   const aplicarBeneficio = useCallback(async (beneficioId: string, comercioId: string): Promise<boolean> => {
-    if (!user || user.role !== 'socio') return false;
+    if (!user || user.role !== 'socio' || isLoadingRef.current) return false;
 
     try {
-      setLoading(true);
+      console.log('🎯 Usando beneficio:', beneficioId);
+      isLoadingRef.current = true;
       
       await BeneficiosService.usarBeneficio(
         beneficioId,
@@ -192,31 +286,27 @@ export const useBeneficios = () => {
 
       toast.success('Beneficio usado correctamente');
       
-      // Recargar beneficios
-      const disponibles = await BeneficiosService.getBeneficiosDisponibles(
-        user.uid, 
-        user.asociacionId || ''
-      );
-      setBeneficios(disponibles);
-
-      const usados = await BeneficiosService.getBeneficiosUsados(user.uid);
-      setBeneficiosUsados(usados);
-
+      // Recargar beneficios después de usar uno
+      await refreshBeneficios();
+      
+      console.log('✅ Beneficio usado exitosamente');
       return true;
     } catch (error) {
-      console.error('Error using beneficio:', error);
+      console.error('❌ Error using beneficio:', error);
       toast.error('Error al usar el beneficio');
       return false;
     } finally {
-      setLoading(false);
+      isLoadingRef.current = false;
     }
-  }, [user]);
+  }, [user, refreshBeneficios]);
 
   // Toggle beneficio status (solo para comercios)
   const toggleBeneficioStatus = useCallback(async (id: string, newStatus: 'activo' | 'inactivo'): Promise<boolean> => {
     if (!user || user.role !== 'comercio') return false;
 
     try {
+      console.log('🔄 Cambiando estado del beneficio:', id, 'a', newStatus);
+      
       const beneficioRef = doc(db, 'beneficios', id);
       
       await updateDoc(beneficioRef, {
@@ -225,9 +315,10 @@ export const useBeneficios = () => {
       });
 
       toast.success(`Beneficio ${newStatus === 'activo' ? 'activado' : 'desactivado'} correctamente`);
+      console.log('✅ Estado del beneficio cambiado exitosamente');
       return true;
     } catch (error) {
-      console.error('Error toggling beneficio status:', error);
+      console.error('❌ Error toggling beneficio status:', error);
       toast.error('Error al cambiar el estado del beneficio');
       return false;
     }
@@ -250,6 +341,7 @@ export const useBeneficios = () => {
     updateBeneficio,
     deleteBeneficio,
     aplicarBeneficio,
-    toggleBeneficioStatus
+    toggleBeneficioStatus,
+    refreshBeneficios
   };
 };

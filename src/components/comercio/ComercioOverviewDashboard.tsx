@@ -680,11 +680,14 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
   const [error, setError] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
 
+  // FIXED: Memoize user ID to prevent unnecessary re-renders
+  const userId = useMemo(() => user?.uid, [user?.uid]);
+
   const stats = getStats();
 
   // FIXED: Real-time Firebase listeners with proper dependency management
   useEffect(() => {
-    if (!user) return;
+    if (!userId) return;
 
     const validacionesRef = collection(db, 'validaciones');
     const todayStart = startOfDay(new Date());
@@ -692,7 +695,7 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
     // Real-time validaciones listener
     const validacionesQuery = query(
       validacionesRef,
-      where('comercioId', '==', user.uid),
+      where('comercioId', '==', userId),
       where('fechaHora', '>=', Timestamp.fromDate(todayStart)),
       orderBy('fechaHora', 'desc')
     );
@@ -732,7 +735,7 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
     // Real-time activities listener
     const activitiesQuery = query(
       validacionesRef,
-      where('comercioId', '==', user.uid),
+      where('comercioId', '==', userId),
       orderBy('fechaHora', 'desc'),
       limit(10)
     );
@@ -765,11 +768,11 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
       unsubscribeValidaciones();
       unsubscribeActivities();
     };
-  }, [user]); // FIXED: Only depend on user
+  }, [userId]); // FIXED: Only depend on userId
 
   // FIXED: Calculate metrics with stable dependencies
   const calculateMetrics = useCallback(() => {
-    if (!user || validacionesLoading || beneficiosLoading) {
+    if (!userId || validacionesLoading || beneficiosLoading) {
       return null;
     }
 
@@ -856,11 +859,11 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
       console.error('Error calculating comercio metrics:', err);
       throw new Error('Error al cargar las métricas del comercio');
     }
-  }, [user, validaciones, activeBeneficios, stats.totalValidaciones, validacionesLoading, beneficiosLoading]);
+  }, [userId, validaciones, activeBeneficios, stats.totalValidaciones, validacionesLoading, beneficiosLoading]);
 
   // FIXED: Calculate metrics with proper dependencies
   useEffect(() => {
-    if (!validacionesLoading && !beneficiosLoading && user) {
+    if (!validacionesLoading && !beneficiosLoading && userId) {
       try {
         const metrics = calculateMetrics();
         
@@ -880,7 +883,7 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
         setLoading(false);
       }
     }
-  }, [calculateMetrics, validacionesLoading, beneficiosLoading, user]);
+  }, [calculateMetrics, validacionesLoading, beneficiosLoading, userId]);
 
   // Enhanced KPI metrics with real-time values
   const kpiMetrics = useMemo(() => [
@@ -944,7 +947,7 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
     }
   ], [comercioMetrics, realTimeStats, beneficiosLoading, loading, onNavigate]);
 
-  // Pull to refresh functionality
+  // FIXED: Pull to refresh functionality with stable dependencies
   const handleRefresh = useCallback(async () => {
     try {
       await refreshStats();

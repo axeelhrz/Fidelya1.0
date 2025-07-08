@@ -97,7 +97,7 @@ export const useComercios = (): UseComerciosReturn => {
     if (comercio && userId && !statsLoading) {
       refreshStats();
     }
-  }, [comercio?.uid, userId, refreshStats]); // FIXED: Depend on comercio.uid instead of entire comercio object
+  }, [comercio, userId, refreshStats, statsLoading]); // FIXED: Added comercio and statsLoading to dependencies
 
   // FIXED: Update comercio profile with stable dependencies
   const updateProfile = useCallback(async (data: ComercioFormData): Promise<boolean> => {
