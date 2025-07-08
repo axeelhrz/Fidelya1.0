@@ -19,25 +19,12 @@ import {
   Calendar,
   Tag,
   Eye,
-  EyeOff
+  EyeOff,
+  Megaphone
 } from 'lucide-react';
 import { format, isToday, isYesterday } from 'date-fns';
 import { es } from 'date-fns/locale';
-
-interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  type: 'info' | 'success' | 'warning' | 'error';
-  priority: 'low' | 'medium' | 'high';
-  status: 'read' | 'unread';
-  category: 'membership' | 'benefit' | 'payment' | 'system';
-  createdAt: Date;
-  updatedAt: Date;
-  read: boolean;
-  starred?: boolean;
-  actionUrl?: string;
-}
+import { Notification, NotificationPriority, NotificationCategory } from '@/types/notification';
 
 interface NotificationsListProps {
   notifications: Notification[];
@@ -58,7 +45,8 @@ const NotificationCard: React.FC<{
       info: <Info size={20} />,
       success: <CheckCircle size={20} />,
       warning: <AlertCircle size={20} />,
-      error: <X size={20} />
+      error: <X size={20} />,
+      announcement: <Megaphone size={20} />
     };
     return icons[notification.type];
   };
@@ -68,16 +56,18 @@ const NotificationCard: React.FC<{
       info: 'from-blue-500 to-blue-600',
       success: 'from-emerald-500 to-emerald-600',
       warning: 'from-amber-500 to-amber-600',
-      error: 'from-red-500 to-red-600'
+      error: 'from-red-500 to-red-600',
+      announcement: 'from-purple-500 to-purple-600'
     };
     return colors[notification.type];
   };
 
   const getPriorityColor = () => {
-    const colors = {
+    const colors: Record<NotificationPriority, string> = {
       low: 'bg-gray-100 text-gray-600',
       medium: 'bg-amber-100 text-amber-700',
-      high: 'bg-red-100 text-red-700'
+      high: 'bg-red-100 text-red-700',
+      urgent: 'bg-red-200 text-red-800'
     };
     return colors[notification.priority];
   };
@@ -170,8 +160,8 @@ const NotificationCard: React.FC<{
                           }}
                           className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2"
                         >
-                          <Star size={14} className={notification.starred ? 'text-amber-500' : ''} />
-                          {notification.starred ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+                          <Star size={14} className={notification.metadata?.tags?.includes('starred') ? 'text-amber-500' : ''} />
+                          {notification.metadata?.tags?.includes('starred') ? 'Quitar de favoritos' : 'Agregar a favoritos'}
                         </button>
                       )}
                       
@@ -226,7 +216,7 @@ const NotificationCard: React.FC<{
       {/* Action Button */}
       {notification.actionUrl && (
         <button className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-2 rounded-xl font-medium hover:from-blue-600 hover:to-purple-700 transition-all duration-200">
-          Ver detalles
+          {notification.actionLabel || 'Ver detalles'}
         </button>
       )}
 
