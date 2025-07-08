@@ -92,6 +92,7 @@ import { db } from '@/lib/firebase';
 import toast from 'react-hot-toast';
 import { format, isAfter, subDays } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { SocioProfileView } from './SocioProfileView';
 
 interface EnhancedMemberManagementProps {
   socios: Socio[];
@@ -178,6 +179,7 @@ const MobileSocioCard: React.FC<{
   isSelected: boolean;
   onSelect: (checked: boolean) => void;
   onEdit: () => void;
+  onView: () => void;
   onMore: (event: React.MouseEvent<HTMLElement>) => void;
   engagementScore: number;
   engagementLevel: { label: string; color: string; icon: React.ReactElement };
@@ -189,6 +191,7 @@ const MobileSocioCard: React.FC<{
   isSelected,
   onSelect,
   onEdit,
+  onView,
   onMore,
   engagementScore,
   engagementLevel,
@@ -296,6 +299,21 @@ const MobileSocioCard: React.FC<{
           <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
             <Button
               size="small"
+              startIcon={<Visibility />}
+              onClick={onView}
+              sx={{
+                textTransform: 'none',
+                fontWeight: 600,
+                color: '#6366f1',
+                '&:hover': {
+                  bgcolor: alpha('#6366f1', 0.1),
+                }
+              }}
+            >
+              Ver Perfil
+            </Button>
+            <Button
+              size="small"
               startIcon={<Edit />}
               onClick={onEdit}
               sx={{
@@ -308,21 +326,6 @@ const MobileSocioCard: React.FC<{
               }}
             >
               Editar
-            </Button>
-            <Button
-              size="small"
-              startIcon={<Visibility />}
-              onClick={() => toast('Vista de perfil en desarrollo', { icon: '👀' })}
-              sx={{
-                textTransform: 'none',
-                fontWeight: 600,
-                color: '#6366f1',
-                '&:hover': {
-                  bgcolor: alpha('#6366f1', 0.1),
-                }
-              }}
-            >
-              Ver
             </Button>
           </Box>
         </Box>
@@ -360,6 +363,10 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
   const [bulkResultDialog, setBulkResultDialog] = useState(false);
   const [bulkResult, setBulkResult] = useState<BulkActionResult | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  
+  // Profile view state
+  const [profileViewOpen, setProfileViewOpen] = useState(false);
+  const [selectedSocio, setSelectedSocio] = useState<Socio | null>(null);
 
   // Adjust items per page based on screen size
   React.useEffect(() => {
@@ -399,6 +406,17 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
     if (score >= 40) return { label: 'Medio', color: '#6366f1', icon: <Remove /> };
     return { label: 'Bajo', color: '#ef4444', icon: <TrendingDown /> };
   }, []);
+
+  // Handle profile view
+  const handleViewProfile = (socio: Socio) => {
+    setSelectedSocio(socio);
+    setProfileViewOpen(true);
+  };
+
+  const handleCloseProfile = () => {
+    setProfileViewOpen(false);
+    setSelectedSocio(null);
+  };
 
   // Estadísticas calculadas
   const stats = useMemo(() => {
@@ -725,1155 +743,1178 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
   }
 
   return (
-    <Box
-      component={motion.div}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 0.4 }}
-    >
-      <Card
-        elevation={0}
-        sx={{
-          border: '1px solid #f1f5f9',
-          borderRadius: 6,
-          overflow: 'hidden',
-          boxShadow: '0 8px 40px rgba(0,0,0,0.06)',
-          background: 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
-        }}
+    <>
+      <Box
+        component={motion.div}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.4 }}
       >
-        {/* Enhanced Header with Stats */}
-        <CardContent sx={{ p: { xs: 2, md: 4 }, borderBottom: '1px solid #f1f5f9' }}>
-          {/* Stats Cards - Responsive Grid */}
-          <Box sx={{ 
-            display: 'grid', 
-            gridTemplateColumns: { 
-              xs: 'repeat(2, 1fr)', 
-              sm: 'repeat(2, 1fr)', 
-              md: 'repeat(4, 1fr)' 
-            }, 
-            gap: { xs: 1.5, md: 2 }, 
-            mb: { xs: 3, md: 4 } 
-          }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1.5, md: 2 }, p: { xs: 2, md: 3 }, bgcolor: alpha('#10b981', 0.05), borderRadius: 4, border: `1px solid ${alpha('#10b981', 0.1)}` }}>
-              <Avatar sx={{ bgcolor: '#10b981', width: { xs: 40, md: 48 }, height: { xs: 40, md: 48 } }}>
-                <People sx={{ fontSize: { xs: 20, md: 24 } }} />
-              </Avatar>
-              <Box sx={{ minWidth: 0 }}>
-                <Typography variant={isMobile ? "h5" : "h4"} sx={{ fontWeight: 800, color: '#10b981', mb: 0.5, fontSize: { xs: '1.5rem', md: '2rem' } }}>
-                  {stats.total}
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 600, fontSize: { xs: '0.75rem', md: '0.875rem' } }}>
-                  Total
-                </Typography>
+        <Card
+          elevation={0}
+          sx={{
+            border: '1px solid #f1f5f9',
+            borderRadius: 6,
+            overflow: 'hidden',
+            boxShadow: '0 8px 40px rgba(0,0,0,0.06)',
+            background: 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
+          }}
+        >
+          {/* Enhanced Header with Stats */}
+          <CardContent sx={{ p: { xs: 2, md: 4 }, borderBottom: '1px solid #f1f5f9' }}>
+            {/* Stats Cards - Responsive Grid */}
+            <Box sx={{ 
+              display: 'grid', 
+              gridTemplateColumns: { 
+                xs: 'repeat(2, 1fr)', 
+                sm: 'repeat(2, 1fr)', 
+                md: 'repeat(4, 1fr)' 
+              }, 
+              gap: { xs: 1.5, md: 2 }, 
+              mb: { xs: 3, md: 4 } 
+            }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1.5, md: 2 }, p: { xs: 2, md: 3 }, bgcolor: alpha('#10b981', 0.05), borderRadius: 4, border: `1px solid ${alpha('#10b981', 0.1)}` }}>
+                <Avatar sx={{ bgcolor: '#10b981', width: { xs: 40, md: 48 }, height: { xs: 40, md: 48 } }}>
+                  <People sx={{ fontSize: { xs: 20, md: 24 } }} />
+                </Avatar>
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography variant={isMobile ? "h5" : "h4"} sx={{ fontWeight: 800, color: '#10b981', mb: 0.5, fontSize: { xs: '1.5rem', md: '2rem' } }}>
+                    {stats.total}
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 600, fontSize: { xs: '0.75rem', md: '0.875rem' } }}>
+                    Total
+                  </Typography>
+                </Box>
               </Box>
-            </Box>
-            
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1.5, md: 2 }, p: { xs: 2, md: 3 }, bgcolor: alpha('#6366f1', 0.05), borderRadius: 4, border: `1px solid ${alpha('#6366f1', 0.1)}` }}>
-              <Avatar sx={{ bgcolor: '#6366f1', width: { xs: 40, md: 48 }, height: { xs: 40, md: 48 } }}>
-                <CheckCircle sx={{ fontSize: { xs: 20, md: 24 } }} />
-              </Avatar>
-              <Box sx={{ minWidth: 0 }}>
-                <Typography variant={isMobile ? "h5" : "h4"} sx={{ fontWeight: 800, color: '#6366f1', mb: 0.5, fontSize: { xs: '1.5rem', md: '2rem' } }}>
-                  {stats.activos}
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 600, fontSize: { xs: '0.75rem', md: '0.875rem' } }}>
-                  Activos
-                </Typography>
-              </Box>
-            </Box>
-            
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1.5, md: 2 }, p: { xs: 2, md: 3 }, bgcolor: alpha('#f59e0b', 0.05), borderRadius: 4, border: `1px solid ${alpha('#f59e0b', 0.1)}` }}>
-              <Avatar sx={{ bgcolor: '#f59e0b', width: { xs: 40, md: 48 }, height: { xs: 40, md: 48 } }}>
-                <PersonAdd sx={{ fontSize: { xs: 20, md: 24 } }} />
-              </Avatar>
-              <Box sx={{ minWidth: 0 }}>
-                <Typography variant={isMobile ? "h5" : "h4"} sx={{ fontWeight: 800, color: '#f59e0b', mb: 0.5, fontSize: { xs: '1.5rem', md: '2rem' } }}>
-                  {stats.nuevos}
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 600, fontSize: { xs: '0.75rem', md: '0.875rem' } }}>
-                  Nuevos
-                </Typography>
-              </Box>
-            </Box>
-            
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1.5, md: 2 }, p: { xs: 2, md: 3 }, bgcolor: alpha('#8b5cf6', 0.05), borderRadius: 4, border: `1px solid ${alpha('#8b5cf6', 0.1)}` }}>
-              <Avatar sx={{ bgcolor: '#8b5cf6', width: { xs: 40, md: 48 }, height: { xs: 40, md: 48 } }}>
-                <TrendingUp sx={{ fontSize: { xs: 20, md: 24 } }} />
-              </Avatar>
-              <Box sx={{ minWidth: 0 }}>
-                <Typography variant={isMobile ? "h5" : "h4"} sx={{ fontWeight: 800, color: '#8b5cf6', mb: 0.5, fontSize: { xs: '1.5rem', md: '2rem' } }}>
-                  {stats.avgEngagement}%
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 600, fontSize: { xs: '0.75rem', md: '0.875rem' } }}>
-                  Engagement
-                </Typography>
-              </Box>
-            </Box>
-          </Box>
-
-          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { sm: 'center' }, justifyContent: 'space-between', gap: 3, mb: { xs: 3, md: 4 } }}>
-            <Box>
-              <Typography variant="h5" sx={{ fontWeight: 800, color: '#0f172a', mb: 0.5, fontSize: { xs: '1.25rem', md: '1.5rem' } }}>
-                Gestión de Socios
-              </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500 }}>
-                  {filtered.length} socios encontrados
-                </Typography>
-                {selectedMembers.length > 0 && (
-                  <Badge badgeContent={selectedMembers.length} color="primary">
-                    <Chip
-                      label="seleccionados"
-                      size="small"
-                      sx={{
-                        bgcolor: alpha('#6366f1', 0.1),
-                        color: '#6366f1',
-                        fontWeight: 600,
-                      }}
-                    />
-                  </Badge>
-                )}
-              </Box>
-            </Box>
-            
-            <Stack direction="row" spacing={1}>
-              {!isMobile && (
-                <ButtonGroup variant="outlined" size="small">
-                  <Tooltip title="Actualizar datos">
-                    <IconButton
-                      onClick={onRefresh}
-                      disabled={loading}
-                      sx={{
-                        color: '#64748b',
-                        borderColor: '#e2e8f0',
-                        '&:hover': {
-                          bgcolor: alpha('#10b981', 0.05),
-                          borderColor: '#10b981',
-                          color: '#10b981',
-                        }
-                      }}
-                    >
-                      <Refresh />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Exportar datos">
-                    <IconButton
-                      onClick={exportToCSV}
-                      sx={{
-                        color: '#64748b',
-                        borderColor: '#e2e8f0',
-                        '&:hover': {
-                          bgcolor: alpha('#6366f1', 0.05),
-                          borderColor: '#6366f1',
-                          color: '#6366f1',
-                        }
-                      }}
-                    >
-                      <Download />
-                    </IconButton>
-                  </Tooltip>
-                </ButtonGroup>
-              )}
               
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1.5, md: 2 }, p: { xs: 2, md: 3 }, bgcolor: alpha('#6366f1', 0.05), borderRadius: 4, border: `1px solid ${alpha('#6366f1', 0.1)}` }}>
+                <Avatar sx={{ bgcolor: '#6366f1', width: { xs: 40, md: 48 }, height: { xs: 40, md: 48 } }}>
+                  <CheckCircle sx={{ fontSize: { xs: 20, md: 24 } }} />
+                </Avatar>
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography variant={isMobile ? "h5" : "h4"} sx={{ fontWeight: 800, color: '#6366f1', mb: 0.5, fontSize: { xs: '1.5rem', md: '2rem' } }}>
+                    {stats.activos}
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 600, fontSize: { xs: '0.75rem', md: '0.875rem' } }}>
+                    Activos
+                  </Typography>
+                </Box>
+              </Box>
+              
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1.5, md: 2 }, p: { xs: 2, md: 3 }, bgcolor: alpha('#f59e0b', 0.05), borderRadius: 4, border: `1px solid ${alpha('#f59e0b', 0.1)}` }}>
+                <Avatar sx={{ bgcolor: '#f59e0b', width: { xs: 40, md: 48 }, height: { xs: 40, md: 48 } }}>
+                  <PersonAdd sx={{ fontSize: { xs: 20, md: 24 } }} />
+                </Avatar>
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography variant={isMobile ? "h5" : "h4"} sx={{ fontWeight: 800, color: '#f59e0b', mb: 0.5, fontSize: { xs: '1.5rem', md: '2rem' } }}>
+                    {stats.nuevos}
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 600, fontSize: { xs: '0.75rem', md: '0.875rem' } }}>
+                    Nuevos
+                  </Typography>
+                </Box>
+              </Box>
+              
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1.5, md: 2 }, p: { xs: 2, md: 3 }, bgcolor: alpha('#8b5cf6', 0.05), borderRadius: 4, border: `1px solid ${alpha('#8b5cf6', 0.1)}` }}>
+                <Avatar sx={{ bgcolor: '#8b5cf6', width: { xs: 40, md: 48 }, height: { xs: 40, md: 48 } }}>
+                  <TrendingUp sx={{ fontSize: { xs: 20, md: 24 } }} />
+                </Avatar>
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography variant={isMobile ? "h5" : "h4"} sx={{ fontWeight: 800, color: '#8b5cf6', mb: 0.5, fontSize: { xs: '1.5rem', md: '2rem' } }}>
+                    {stats.avgEngagement}%
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 600, fontSize: { xs: '0.75rem', md: '0.875rem' } }}>
+                    Engagement
+                  </Typography>
+                </Box>
+              </Box>
+            </Box>
+
+            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { sm: 'center' }, justifyContent: 'space-between', gap: 3, mb: { xs: 3, md: 4 } }}>
+              <Box>
+                <Typography variant="h5" sx={{ fontWeight: 800, color: '#0f172a', mb: 0.5, fontSize: { xs: '1.25rem', md: '1.5rem' } }}>
+                  Gestión de Socios
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500 }}>
+                    {filtered.length} socios encontrados
+                  </Typography>
+                  {selectedMembers.length > 0 && (
+                    <Badge badgeContent={selectedMembers.length} color="primary">
+                      <Chip
+                        label="seleccionados"
+                        size="small"
+                        sx={{
+                          bgcolor: alpha('#6366f1', 0.1),
+                          color: '#6366f1',
+                          fontWeight: 600,
+                        }}
+                      />
+                    </Badge>
+                  )}
+                </Box>
+              </Box>
+              
+              <Stack direction="row" spacing={1}>
+                {!isMobile && (
+                  <ButtonGroup variant="outlined" size="small">
+                    <Tooltip title="Actualizar datos">
+                      <IconButton
+                        onClick={onRefresh}
+                        disabled={loading}
+                        sx={{
+                          color: '#64748b',
+                          borderColor: '#e2e8f0',
+                          '&:hover': {
+                            bgcolor: alpha('#10b981', 0.05),
+                            borderColor: '#10b981',
+                            color: '#10b981',
+                          }
+                        }}
+                      >
+                        <Refresh />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Exportar datos">
+                      <IconButton
+                        onClick={exportToCSV}
+                        sx={{
+                          color: '#64748b',
+                          borderColor: '#e2e8f0',
+                          '&:hover': {
+                            bgcolor: alpha('#6366f1', 0.05),
+                            borderColor: '#6366f1',
+                            color: '#6366f1',
+                          }
+                        }}
+                      >
+                        <Download />
+                      </IconButton>
+                    </Tooltip>
+                  </ButtonGroup>
+                )}
+                
+                <Button
+                  onClick={onAdd}
+                  variant="contained"
+                  startIcon={<PersonAdd />}
+                  size="medium"
+                  sx={{
+                    py: { xs: 1, md: 1.5 },
+                    px: { xs: 2, md: 4 },
+                    borderRadius: 4,
+                    textTransform: 'none',
+                    fontWeight: 700,
+                    fontSize: { xs: '0.875rem', md: '1rem' },
+                    background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                    boxShadow: '0 4px 20px rgba(99, 102, 241, 0.3)',
+                    '&:hover': {
+                      background: 'linear-gradient(135deg, #5b21b6 0%, #7c3aed 100%)',
+                      transform: 'translateY(-1px)',
+                      boxShadow: '0 6px 25px rgba(99, 102, 241, 0.4)',
+                    },
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  {isMobile ? 'Nuevo' : 'Nuevo Socio'}
+                </Button>
+              </Stack>
+            </Box>
+
+            {/* Mobile Filters Toggle */}
+            {isMobile && (
               <Button
-                onClick={onAdd}
-                variant="contained"
-                startIcon={<PersonAdd />}
-                size="medium"
+                onClick={() => setFiltersOpen(!filtersOpen)}
+                startIcon={<FilterList />}
+                endIcon={filtersOpen ? <ExpandLess /> : <ExpandMore />}
+                fullWidth
+                variant="outlined"
                 sx={{
-                  py: { xs: 1, md: 1.5 },
-                  px: { xs: 2, md: 4 },
+                  mb: 2,
                   borderRadius: 4,
                   textTransform: 'none',
-                  fontWeight: 700,
-                  fontSize: { xs: '0.875rem', md: '1rem' },
-                  background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-                  boxShadow: '0 4px 20px rgba(99, 102, 241, 0.3)',
+                  fontWeight: 600,
+                  borderColor: '#e2e8f0',
+                  color: '#64748b',
                   '&:hover': {
-                    background: 'linear-gradient(135deg, #5b21b6 0%, #7c3aed 100%)',
-                    transform: 'translateY(-1px)',
-                    boxShadow: '0 6px 25px rgba(99, 102, 241, 0.4)',
-                  },
-                  transition: 'all 0.2s ease'
+                    borderColor: '#6366f1',
+                    color: '#6366f1',
+                  }
                 }}
               >
-                {isMobile ? 'Nuevo' : 'Nuevo Socio'}
+                Filtros y Búsqueda
               </Button>
-            </Stack>
-          </Box>
+            )}
 
-          {/* Mobile Filters Toggle */}
-          {isMobile && (
+            {/* Enhanced Filters */}
+            <Collapse in={!isMobile || filtersOpen}>
+              <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{ mb: 3 }}>
+                <TextField
+                  placeholder="Buscar por nombre, email, DNI o teléfono..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  fullWidth
+                  size="medium"
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Search sx={{ color: '#94a3b8', fontSize: '1.3rem' }} />
+                      </InputAdornment>
+                    ),
+                    endAdornment: searchTerm && (
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={() => setSearchTerm('')}
+                          size="small"
+                          sx={{ color: '#94a3b8' }}
+                        >
+                          <Close />
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: 4,
+                      bgcolor: '#fafbfc',
+                      '& fieldset': {
+                        borderColor: '#e2e8f0',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: '#6366f1',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#6366f1',
+                        borderWidth: 2,
+                      },
+                      '&.Mui-focused': {
+                        bgcolor: 'white',
+                      }
+                    },
+                  }}
+                />
+                
+                <FormControl sx={{ minWidth: { xs: '100%', md: 200 } }}>
+                  <InputLabel>Estado</InputLabel>
+                  <Select
+                    value={statusFilter}
+                    onChange={(e: SelectChangeEvent) => setStatusFilter(e.target.value as 'all' | 'activo' | 'vencido' | 'inactivo')}
+                    label="Estado"
+                    size="medium"
+                    startAdornment={<FilterList sx={{ color: '#94a3b8', mr: 1 }} />}
+                    sx={{
+                      borderRadius: 4,
+                      bgcolor: '#fafbfc',
+                      '& fieldset': {
+                        borderColor: '#e2e8f0',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: '#6366f1',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#6366f1',
+                        borderWidth: 2,
+                      },
+                      '&.Mui-focused': {
+                        bgcolor: 'white',
+                      }
+                    }}
+                  >
+                    <MenuItem value="all">
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Info sx={{ fontSize: 16 }} />
+                        Todos ({stats.total})
+                      </Box>
+                    </MenuItem>
+                    <MenuItem value="activo">
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <CheckCircle sx={{ fontSize: 16, color: '#10b981' }} />
+                        Activos ({stats.activos})
+                      </Box>
+                    </MenuItem>
+                    <MenuItem value="vencido">
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Warning sx={{ fontSize: 16, color: '#ef4444' }} />
+                        Vencidos ({stats.vencidos})
+                      </Box>
+                    </MenuItem>
+                    <MenuItem value="inactivo">
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <ErrorIcon sx={{ fontSize: 16, color: '#6b7280' }} />
+                        Inactivos ({stats.inactivos})
+                      </Box>
+                    </MenuItem>
+                  </Select>
+                </FormControl>
+
+                <FormControl sx={{ minWidth: { xs: '100%', md: 150 } }}>
+                  <InputLabel>Mostrar</InputLabel>
+                  <Select
+                    value={itemsPerPage}
+                    onChange={(e) => {
+                      setItemsPerPage(Number(e.target.value));
+                      setCurrentPage(1);
+                    }}
+                    label="Mostrar"
+                    size="medium"
+                    sx={{
+                      borderRadius: 4,
+                      bgcolor: '#fafbfc',
+                      '& fieldset': {
+                        borderColor: '#e2e8f0',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: '#6366f1',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#6366f1',
+                        borderWidth: 2,
+                      },
+                      '&.Mui-focused': {
+                        bgcolor: 'white',
+                      }
+                    }}
+                  >
+                    {ITEMS_PER_PAGE_OPTIONS.map(option => (
+                      <MenuItem key={option} value={option}>
+                        {option} por página
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Stack>
+            </Collapse>
+
+            {/* Bulk Actions */}
+            <AnimatePresence>
+              {selectedMembers.length > 0 && (
+                <Box
+                  component={motion.div}
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      bgcolor: alpha('#6366f1', 0.05),
+                      border: `1px solid ${alpha('#6366f1', 0.2)}`,
+                      borderRadius: 4,
+                      p: { xs: 2, md: 3 },
+                      mb: 3,
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { sm: 'center' }, justifyContent: 'space-between', gap: 2 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <Avatar sx={{ bgcolor: '#6366f1', width: 32, height: 32 }}>
+                          <Typography variant="body2" sx={{ fontWeight: 700, color: 'white' }}>
+                            {selectedMembers.length}
+                          </Typography>
+                        </Avatar>
+                        <Typography variant="body2" sx={{ color: '#6366f1', fontWeight: 600 }}>
+                          socios seleccionados
+                        </Typography>
+                      </Box>
+                      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ width: { xs: '100%', sm: 'auto' } }}>
+                        <Button
+                          size="small"
+                          startIcon={<Email />}
+                          onClick={() => toast('Función de email en desarrollo', { icon: '📧' })}
+                          sx={{ textTransform: 'none', fontWeight: 600, justifyContent: { xs: 'flex-start', sm: 'center' } }}
+                        >
+                          Enviar Email
+                        </Button>
+                        <Button
+                          size="small"
+                          startIcon={<Download />}
+                          onClick={exportToCSV}
+                          sx={{ textTransform: 'none', fontWeight: 600, justifyContent: { xs: 'flex-start', sm: 'center' } }}
+                        >
+                          Exportar
+                        </Button>
+                        <Button
+                          size="small"
+                          startIcon={<MoreVert />}
+                          onClick={(e) => setBulkMenuAnchor(e.currentTarget)}
+                          sx={{ textTransform: 'none', fontWeight: 600, justifyContent: { xs: 'flex-start', sm: 'center' } }}
+                        >
+                          Más acciones
+                        </Button>
+                      </Stack>
+                    </Box>
+                    
+                    {bulkProcessing && (
+                      <Box sx={{ mt: 2 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                          <Typography variant="body2" sx={{ color: '#6366f1', fontWeight: 600 }}>
+                            Procesando...
+                          </Typography>
+                          <Typography variant="body2" sx={{ color: '#6366f1', fontWeight: 600 }}>
+                            {Math.round(bulkProgress)}%
+                          </Typography>
+                        </Box>
+                        <LinearProgress 
+                          variant="determinate" 
+                          value={bulkProgress} 
+                          sx={{ 
+                            borderRadius: 2,
+                            height: 8,
+                            bgcolor: alpha('#6366f1', 0.1),
+                            '& .MuiLinearProgress-bar': {
+                              bgcolor: '#6366f1',
+                              borderRadius: 2,
+                            }
+                          }} 
+                        />
+                      </Box>
+                    )}
+                  </Paper>
+                </Box>
+              )}
+            </AnimatePresence>
+          </CardContent>
+
+          {/* Content - Mobile Cards or Desktop Table */}
+          {paginatedSocios.length === 0 ? (
+            <Box sx={{ p: { xs: 4, md: 8 }, textAlign: 'center' }}>
+              <Avatar
+                sx={{
+                  width: { xs: 60, md: 80 },
+                  height: { xs: 60, md: 80 },
+                  bgcolor: alpha('#6b7280', 0.1),
+                  color: '#6b7280',
+                  mx: 'auto',
+                  mb: 3,
+                }}
+              >
+                <People sx={{ fontSize: { xs: 30, md: 40 } }} />
+              </Avatar>
+              <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', mb: 1, fontSize: { xs: '1.125rem', md: '1.25rem' } }}>
+                No hay socios
+              </Typography>
+              <Typography variant="body1" sx={{ color: '#64748b', mb: 4, maxWidth: 400, mx: 'auto', fontSize: { xs: '0.875rem', md: '1rem' } }}>
+                {searchTerm || statusFilter !== 'all' 
+                  ? 'No se encontraron socios con los filtros aplicados'
+                  : 'Comienza agregando tu primer socio'
+                }
+              </Typography>
+              {(!searchTerm && statusFilter === 'all') && (
+                <Button
+                  onClick={onAdd}
+                  variant="contained"
+                  startIcon={<Add />}
+                  size={isMobile ? "medium" : "medium"}
+                  sx={{
+                    py: { xs: 1, md: 1.5 },
+                    px: { xs: 3, md: 4 },
+                    borderRadius: 4,
+                    textTransform: 'none',
+                    fontWeight: 700,
+                    background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                    boxShadow: '0 4px 20px rgba(99, 102, 241, 0.3)',
+                    '&:hover': {
+                      background: 'linear-gradient(135deg, #5b21b6 0%, #7c3aed 100%)',
+                      transform: 'translateY(-1px)',
+                      boxShadow: '0 6px 25px rgba(99, 102, 241, 0.4)',
+                    },
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  Agregar Primer Socio
+                </Button>
+              )}
+            </Box>
+          ) : (
+            <>
+              {/* Mobile View - Cards */}
+              {isMobile ? (
+                <Box sx={{ p: 2 }}>
+                  {paginatedSocios.map((socio, index) => {
+                    const isSelected = selectedMembers.includes(socio.uid);
+                    const engagementScore = getEngagementScore(socio);
+                    const engagementLevel = getEngagementLevel(engagementScore);
+                    
+                    return (
+                      <Box
+                        key={socio.uid}
+                        component={motion.div}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3, delay: index * 0.05 }}
+                      >
+                        <MobileSocioCard
+                          socio={socio}
+                          isSelected={isSelected}
+                          onSelect={(checked) => handleSelectMember(socio.uid, checked)}
+                          onEdit={() => onEdit(socio)}
+                          onView={() => handleViewProfile(socio)}
+                          onMore={(e) => {
+                            setAnchorEl(e.currentTarget);
+                            setMemberToDelete(socio);
+                          }}
+                          engagementScore={engagementScore}
+                          engagementLevel={engagementLevel}
+                          formatDate={formatDate}
+                          getInitials={getInitials}
+                          getStatusChip={getStatusChip}
+                        />
+                      </Box>
+                    );
+                  })}
+                </Box>
+              ) : (
+                /* Desktop View - Table */
+                <TableContainer>
+                  <Table stickyHeader>
+                    <TableHead>
+                      <TableRow sx={{ bgcolor: '#fafbfc' }}>
+                        <TableCell padding="checkbox">
+                          <Checkbox
+                            indeterminate={selectedMembers.length > 0 && selectedMembers.length < paginatedSocios.length}
+                            checked={paginatedSocios.length > 0 && selectedMembers.length === paginatedSocios.length}
+                            onChange={(e) => handleSelectAll(e.target.checked)}
+                            sx={{
+                              color: '#6366f1',
+                              '&.Mui-checked': {
+                                color: '#6366f1',
+                              },
+                            }}
+                          />
+                        </TableCell>
+                        {columns.slice(1, -1).map((column) => (
+                          !column.hideOnMobile && (
+                            <TableCell
+                              key={column.id}
+                              align={column.align}
+                              sx={{ 
+                                fontWeight: 700, 
+                                color: '#475569', 
+                                fontSize: '0.8rem', 
+                                textTransform: 'uppercase', 
+                                letterSpacing: '0.05em',
+                                cursor: column.sortable ? 'pointer' : 'default',
+                                '&:hover': column.sortable ? { color: '#6366f1' } : {},
+                                display: { xs: column.hideOnMobile ? 'none' : 'table-cell', md: 'table-cell' }
+                              }}
+                              onClick={() => column.sortable && handleSort(column.id)}
+                            >
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                {column.label}
+                                {column.sortable && (
+                                  <Sort 
+                                    sx={{ 
+                                      fontSize: 16, 
+                                      opacity: sortBy === column.id ? 1 : 0.3,
+                                      transform: sortBy === column.id && sortOrder === 'desc' ? 'rotate(180deg)' : 'none',
+                                      transition: 'all 0.2s ease'
+                                    }} 
+                                  />
+                                )}
+                              </Box>
+                            </TableCell>
+                          )
+                        ))}
+                        <TableCell align="right" sx={{ fontWeight: 700, color: '#475569', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                          Acciones
+                        </TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {paginatedSocios.map((socio, index) => {
+                        const isSelected = selectedMembers.includes(socio.uid);
+                        const engagementScore = getEngagementScore(socio);
+                        const engagementLevel = getEngagementLevel(engagementScore);
+                        
+                        return (
+                          <TableRow
+                            key={socio.uid}
+                            component={motion.tr}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.3, delay: index * 0.05 }}
+                            sx={{
+                              bgcolor: isSelected ? alpha('#6366f1', 0.05) : 'transparent',
+                              '&:hover': {
+                                bgcolor: isSelected ? alpha('#6366f1', 0.08) : '#fafbfc',
+                              },
+                              transition: 'background-color 0.2s ease'
+                            }}
+                          >
+                            <TableCell padding="checkbox">
+                              <Checkbox
+                                checked={isSelected}
+                                onChange={(e) => handleSelectMember(socio.uid, e.target.checked)}
+                                sx={{
+                                  color: '#6366f1',
+                                  '&.Mui-checked': {
+                                    color: '#6366f1',
+                                  },
+                                }}
+                              />
+                            </TableCell>
+                            <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
+                              <Avatar
+                                sx={{
+                                  width: 48,
+                                  height: 48,
+                                  bgcolor: alpha('#6366f1', 0.1),
+                                  color: '#6366f1',
+                                  fontWeight: 700,
+                                  fontSize: '1rem',
+                                  borderRadius: 3,
+                                }}
+                              >
+                                {getInitials(socio.nombre)}
+                              </Avatar>
+                            </TableCell>
+                            <TableCell>
+                              <Box>
+                                <Typography variant="body2" sx={{ fontWeight: 700, color: '#0f172a', mb: 0.5 }}>
+                                  {socio.nombre}
+                                </Typography>
+                                {socio.dni && (
+                                  <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 500 }}>
+                                    DNI: {socio.dni}
+                                  </Typography>
+                                )}
+                              </Box>
+                            </TableCell>
+                            <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
+                              <Stack spacing={0.5}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                  <Email sx={{ fontSize: 14, color: '#94a3b8' }} />
+                                  <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 500 }}>
+                                    {socio.email}
+                                  </Typography>
+                                </Box>
+                                {socio.telefono && (
+                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <Phone sx={{ fontSize: 14, color: '#94a3b8' }} />
+                                    <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 500 }}>
+                                      {socio.telefono}
+                                    </Typography>
+                                  </Box>
+                                )}
+                              </Stack>
+                            </TableCell>
+                            <TableCell>
+                              {getStatusChip(socio.estado)}
+                            </TableCell>
+                            <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <CalendarToday sx={{ fontSize: 14, color: '#94a3b8' }} />
+                                <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 500 }}>
+                                  {formatDate(socio.creadoEn)}
+                                </Typography>
+                              </Box>
+                            </TableCell>
+                            <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Box
+                                  sx={{
+                                    width: 8,
+                                    height: 8,
+                                    borderRadius: '50%',
+                                    bgcolor: engagementLevel.color,
+                                  }}
+                                />
+                                <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>
+                                  {engagementLevel.label} ({engagementScore}%)
+                                </Typography>
+                              </Box>
+                            </TableCell>
+                            <TableCell align="right">
+                              <Stack direction="row" spacing={0.5} justifyContent="flex-end">
+                                <Tooltip title="Ver perfil">
+                                  <IconButton
+                                    size="small"
+                                    onClick={() => handleViewProfile(socio)}
+                                    sx={{
+                                      color: '#94a3b8',
+                                      '&:hover': {
+                                        color: '#6366f1',
+                                        bgcolor: alpha('#6366f1', 0.1),
+                                      },
+                                      transition: 'all 0.2s ease'
+                                    }}
+                                  >
+                                    <Visibility sx={{ fontSize: 16 }} />
+                                  </IconButton>
+                                </Tooltip>
+                                <Tooltip title="Editar">
+                                  <IconButton
+                                    onClick={() => onEdit(socio)}
+                                    size="small"
+                                    sx={{
+                                      color: '#94a3b8',
+                                      '&:hover': {
+                                        color: '#f59e0b',
+                                        bgcolor: alpha('#f59e0b', 0.1),
+                                      },
+                                      transition: 'all 0.2s ease'
+                                    }}
+                                  >
+                                    <Edit sx={{ fontSize: 16 }} />
+                                  </IconButton>
+                                </Tooltip>
+                                <Tooltip title="Más opciones">
+                                  <IconButton
+                                    onClick={(e) => {
+                                      setAnchorEl(e.currentTarget);
+                                      setMemberToDelete(socio);
+                                    }}
+                                    size="small"
+                                    sx={{
+                                      color: '#94a3b8',
+                                      '&:hover': {
+                                        color: '#6366f1',
+                                        bgcolor: alpha('#6366f1', 0.1),
+                                      },
+                                      transition: 'all 0.2s ease'
+                                    }}
+                                  >
+                                    <MoreVert sx={{ fontSize: 16 }} />
+                                  </IconButton>
+                                </Tooltip>
+                              </Stack>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              )}
+
+              {/* Enhanced Pagination */}
+              {totalPages > 1 && (
+                <Box sx={{ 
+                  p: { xs: 2, md: 4 }, 
+                  borderTop: '1px solid #f1f5f9', 
+                  display: 'flex', 
+                  flexDirection: { xs: 'column', sm: 'row' },
+                  alignItems: 'center', 
+                  justifyContent: 'space-between',
+                  gap: 2
+                }}>
+                  <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500, fontSize: { xs: '0.75rem', md: '0.875rem' } }}>
+                    Mostrando {startIndex + 1} a {Math.min(startIndex + itemsPerPage, filtered.length)} de {filtered.length} socios
+                  </Typography>
+                  <Pagination
+                    count={totalPages}
+                    page={currentPage}
+                    onChange={(_, page) => setCurrentPage(page)}
+                    color="primary"
+                    size={isMobile ? "medium" : "medium"}
+                    sx={{
+                      '& .MuiPaginationItem-root': {
+                        borderRadius: 3,
+                        fontWeight: 600,
+                        fontSize: { xs: '0.8rem', md: '0.9rem' },
+                        '&.Mui-selected': {
+                          background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                          color: 'white',
+                          '&:hover': {
+                            background: 'linear-gradient(135deg, #5b21b6 0%, #7c3aed 100%)',
+                          }
+                        },
+                        '&:hover': {
+                          bgcolor: alpha('#6366f1', 0.1),
+                        }
+                      }
+                    }}
+                  />
+                </Box>
+              )}
+            </>
+          )}
+        </Card>
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog
+          open={deleteDialogOpen}
+          onClose={() => !deleting && setDeleteDialogOpen(false)}
+          maxWidth="sm"
+          fullWidth
+          fullScreen={isMobile}
+          PaperProps={{
+            sx: {
+              borderRadius: isMobile ? 0 : 4,
+              boxShadow: '0 20px 60px rgba(0,0,0,0.1)',
+              m: isMobile ? 0 : 2,
+            }
+          }}
+        >
+          <DialogTitle sx={{ pb: 2, p: { xs: 2, md: 3 } }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Avatar
+                sx={{
+                  bgcolor: deleteType === 'permanent' ? alpha('#ef4444', 0.1) : alpha('#f59e0b', 0.1),
+                  color: deleteType === 'permanent' ? '#ef4444' : '#f59e0b',
+                  width: { xs: 40, md: 48 },
+                  height: { xs: 40, md: 48 },
+                }}
+              >
+                {deleteType === 'permanent' ? <DeleteForever /> : <Archive />}
+              </Avatar>
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', fontSize: { xs: '1.125rem', md: '1.25rem' } }}>
+                  {deleteType === 'permanent' ? 'Eliminar Permanentemente' : 'Desactivar Socio'}
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#64748b', wordBreak: 'break-word' }}>
+                  {memberToDelete?.nombre}
+                </Typography>
+              </Box>
+              {isMobile && (
+                <IconButton
+                  onClick={() => setDeleteDialogOpen(false)}
+                  sx={{ color: '#64748b' }}
+                >
+                  <Close />
+                </IconButton>
+              )}
+            </Box>
+          </DialogTitle>
+          
+          <DialogContent sx={{ pb: 3, p: { xs: 2, md: 3 } }}>
+            <Alert 
+              severity={deleteType === 'permanent' ? 'error' : 'warning'} 
+              sx={{ mb: 3, borderRadius: 3 }}
+            >
+              {deleteType === 'permanent' 
+                ? 'Esta acción eliminará permanentemente al socio de Firebase. No se puede deshacer.'
+                : 'Esta acción marcará al socio como inactivo. Podrás reactivarlo más tarde.'
+              }
+            </Alert>
+            
+            <Typography variant="body1" sx={{ color: '#475569', mb: 2 }}>
+              ¿Estás seguro de que deseas {deleteType === 'permanent' ? 'eliminar permanentemente' : 'desactivar'} a este socio?
+            </Typography>
+            
+            <Box sx={{ mt: 3, p: { xs: 2, md: 3 }, bgcolor: '#f8fafc', borderRadius: 3, border: '1px solid #e2e8f0' }}>
+              <Typography variant="body2" sx={{ color: '#64748b', mb: 2 }}>
+                <strong>Opciones de eliminación:</strong>
+              </Typography>
+              <Stack spacing={1}>
+                <Button
+                  variant={deleteType === 'soft' ? 'contained' : 'outlined'}
+                  size="small"
+                  startIcon={<Archive />}
+                  onClick={() => setDeleteType('soft')}
+                  fullWidth={isMobile}
+                  sx={{
+                    justifyContent: 'flex-start',
+                    textTransform: 'none',
+                    bgcolor: deleteType === 'soft' ? '#f59e0b' : 'transparent',
+                    borderColor: deleteType === 'soft' ? '#f59e0b' : '#e2e8f0',
+                    color: deleteType === 'soft' ? 'white' : '#64748b',
+                    '&:hover': {
+                      bgcolor: deleteType === 'soft' ? '#d97706' : alpha('#f59e0b', 0.1),
+                      borderColor: '#f59e0b',
+                      color: deleteType === 'soft' ? 'white' : '#f59e0b',
+                    }
+                  }}
+                >
+                  Desactivar (recomendado)
+                </Button>
+                <Button
+                  variant={deleteType === 'permanent' ? 'contained' : 'outlined'}
+                  size="small"
+                  startIcon={<DeleteForever />}
+                  onClick={() => setDeleteType('permanent')}
+                  fullWidth={isMobile}
+                  sx={{
+                    justifyContent: 'flex-start',
+                    textTransform: 'none',
+                    bgcolor: deleteType === 'permanent' ? '#ef4444' : 'transparent',
+                    borderColor: deleteType === 'permanent' ? '#ef4444' : '#e2e8f0',
+                    color: deleteType === 'permanent' ? 'white' : '#64748b',
+                    '&:hover': {
+                      bgcolor: deleteType === 'permanent' ? '#dc2626' : alpha('#ef4444', 0.1),
+                      borderColor: '#ef4444',
+                      color: deleteType === 'permanent' ? 'white' : '#ef4444',
+                    }
+                  }}
+                >
+                  Eliminar permanentemente
+                </Button>
+              </Stack>
+            </Box>
+          </DialogContent>
+          
+          <DialogActions sx={{ p: { xs: 2, md: 3 }, pt: 0, flexDirection: { xs: 'column', sm: 'row' }, gap: { xs: 1, sm: 0 } }}>
             <Button
-              onClick={() => setFiltersOpen(!filtersOpen)}
-              startIcon={<FilterList />}
-              endIcon={filtersOpen ? <ExpandLess /> : <ExpandMore />}
-              fullWidth
-              variant="outlined"
+              onClick={() => setDeleteDialogOpen(false)}
+              disabled={deleting}
+              fullWidth={isMobile}
+              sx={{ textTransform: 'none', fontWeight: 600 }}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleDeleteMember}
+              disabled={deleting}
+              variant="contained"
+              fullWidth={isMobile}
+              startIcon={deleting ? <CircularProgress size={16} /> : (deleteType === 'permanent' ? <DeleteForever /> : <Archive />)}
               sx={{
-                mb: 2,
-                borderRadius: 4,
                 textTransform: 'none',
-                fontWeight: 600,
-                borderColor: '#e2e8f0',
-                color: '#64748b',
+                fontWeight: 700,
+                bgcolor: deleteType === 'permanent' ? '#ef4444' : '#f59e0b',
                 '&:hover': {
-                  borderColor: '#6366f1',
-                  color: '#6366f1',
+                  bgcolor: deleteType === 'permanent' ? '#dc2626' : '#d97706',
                 }
               }}
             >
-              Filtros y Búsqueda
+              {deleting ? 'Procesando...' : (deleteType === 'permanent' ? 'Eliminar Permanentemente' : 'Desactivar')}
             </Button>
-          )}
+          </DialogActions>
+        </Dialog>
 
-          {/* Enhanced Filters */}
-          <Collapse in={!isMobile || filtersOpen}>
-            <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{ mb: 3 }}>
-              <TextField
-                placeholder="Buscar por nombre, email, DNI o teléfono..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                fullWidth
-                size="medium"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Search sx={{ color: '#94a3b8', fontSize: '1.3rem' }} />
-                    </InputAdornment>
-                  ),
-                  endAdornment: searchTerm && (
-                    <InputAdornment position="end">
-                      <IconButton
-                        onClick={() => setSearchTerm('')}
-                        size="small"
-                        sx={{ color: '#94a3b8' }}
-                      >
-                        <Close />
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: 4,
-                    bgcolor: '#fafbfc',
-                    '& fieldset': {
-                      borderColor: '#e2e8f0',
-                    },
-                    '&:hover fieldset': {
-                      borderColor: '#6366f1',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#6366f1',
-                      borderWidth: 2,
-                    },
-                    '&.Mui-focused': {
-                      bgcolor: 'white',
-                    }
-                  },
-                }}
-              />
-              
-              <FormControl sx={{ minWidth: { xs: '100%', md: 200 } }}>
-                <InputLabel>Estado</InputLabel>
-                <Select
-                  value={statusFilter}
-                  onChange={(e: SelectChangeEvent) => setStatusFilter(e.target.value as 'all' | 'activo' | 'vencido' | 'inactivo')}
-                  label="Estado"
-                  size="medium"
-                  startAdornment={<FilterList sx={{ color: '#94a3b8', mr: 1 }} />}
-                  sx={{
-                    borderRadius: 4,
-                    bgcolor: '#fafbfc',
-                    '& fieldset': {
-                      borderColor: '#e2e8f0',
-                    },
-                    '&:hover fieldset': {
-                      borderColor: '#6366f1',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#6366f1',
-                      borderWidth: 2,
-                    },
-                    '&.Mui-focused': {
-                      bgcolor: 'white',
-                    }
-                  }}
-                >
-                  <MenuItem value="all">
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Info sx={{ fontSize: 16 }} />
-                      Todos ({stats.total})
-                    </Box>
-                  </MenuItem>
-                  <MenuItem value="activo">
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <CheckCircle sx={{ fontSize: 16, color: '#10b981' }} />
-                      Activos ({stats.activos})
-                    </Box>
-                  </MenuItem>
-                  <MenuItem value="vencido">
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Warning sx={{ fontSize: 16, color: '#ef4444' }} />
-                      Vencidos ({stats.vencidos})
-                    </Box>
-                  </MenuItem>
-                  <MenuItem value="inactivo">
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <ErrorIcon sx={{ fontSize: 16, color: '#6b7280' }} />
-                      Inactivos ({stats.inactivos})
-                    </Box>
-                  </MenuItem>
-                </Select>
-              </FormControl>
-
-              <FormControl sx={{ minWidth: { xs: '100%', md: 150 } }}>
-                <InputLabel>Mostrar</InputLabel>
-                <Select
-                  value={itemsPerPage}
-                  onChange={(e) => {
-                    setItemsPerPage(Number(e.target.value));
-                    setCurrentPage(1);
-                  }}
-                  label="Mostrar"
-                  size="medium"
-                  sx={{
-                    borderRadius: 4,
-                    bgcolor: '#fafbfc',
-                    '& fieldset': {
-                      borderColor: '#e2e8f0',
-                    },
-                    '&:hover fieldset': {
-                      borderColor: '#6366f1',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#6366f1',
-                      borderWidth: 2,
-                    },
-                    '&.Mui-focused': {
-                      bgcolor: 'white',
-                    }
-                  }}
-                >
-                  {ITEMS_PER_PAGE_OPTIONS.map(option => (
-                    <MenuItem key={option} value={option}>
-                      {option} por página
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Stack>
-          </Collapse>
-
-          {/* Bulk Actions */}
-          <AnimatePresence>
-            {selectedMembers.length > 0 && (
-              <Box
-                component={motion.div}
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                <Paper
-                  elevation={0}
-                  sx={{
-                    bgcolor: alpha('#6366f1', 0.05),
-                    border: `1px solid ${alpha('#6366f1', 0.2)}`,
-                    borderRadius: 4,
-                    p: { xs: 2, md: 3 },
-                    mb: 3,
-                  }}
-                >
-                  <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { sm: 'center' }, justifyContent: 'space-between', gap: 2 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                      <Avatar sx={{ bgcolor: '#6366f1', width: 32, height: 32 }}>
-                        <Typography variant="body2" sx={{ fontWeight: 700, color: 'white' }}>
-                          {selectedMembers.length}
-                        </Typography>
-                      </Avatar>
-                      <Typography variant="body2" sx={{ color: '#6366f1', fontWeight: 600 }}>
-                        socios seleccionados
-                      </Typography>
-                    </Box>
-                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ width: { xs: '100%', sm: 'auto' } }}>
-                      <Button
-                        size="small"
-                        startIcon={<Email />}
-                        onClick={() => toast('Función de email en desarrollo', { icon: '📧' })}
-                        sx={{ textTransform: 'none', fontWeight: 600, justifyContent: { xs: 'flex-start', sm: 'center' } }}
-                      >
-                        Enviar Email
-                      </Button>
-                      <Button
-                        size="small"
-                        startIcon={<Download />}
-                        onClick={exportToCSV}
-                        sx={{ textTransform: 'none', fontWeight: 600, justifyContent: { xs: 'flex-start', sm: 'center' } }}
-                      >
-                        Exportar
-                      </Button>
-                      <Button
-                        size="small"
-                        startIcon={<MoreVert />}
-                        onClick={(e) => setBulkMenuAnchor(e.currentTarget)}
-                        sx={{ textTransform: 'none', fontWeight: 600, justifyContent: { xs: 'flex-start', sm: 'center' } }}
-                      >
-                        Más acciones
-                      </Button>
-                    </Stack>
-                  </Box>
-                  
-                  {bulkProcessing && (
-                    <Box sx={{ mt: 2 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-                        <Typography variant="body2" sx={{ color: '#6366f1', fontWeight: 600 }}>
-                          Procesando...
-                        </Typography>
-                        <Typography variant="body2" sx={{ color: '#6366f1', fontWeight: 600 }}>
-                          {Math.round(bulkProgress)}%
-                        </Typography>
-                      </Box>
-                      <LinearProgress 
-                        variant="determinate" 
-                        value={bulkProgress} 
-                        sx={{ 
-                          borderRadius: 2,
-                          height: 8,
-                          bgcolor: alpha('#6366f1', 0.1),
-                          '& .MuiLinearProgress-bar': {
-                            bgcolor: '#6366f1',
-                            borderRadius: 2,
-                          }
-                        }} 
-                      />
-                    </Box>
-                  )}
-                </Paper>
-              </Box>
-            )}
-          </AnimatePresence>
-        </CardContent>
-
-        {/* Content - Mobile Cards or Desktop Table */}
-        {paginatedSocios.length === 0 ? (
-          <Box sx={{ p: { xs: 4, md: 8 }, textAlign: 'center' }}>
-            <Avatar
-              sx={{
-                width: { xs: 60, md: 80 },
-                height: { xs: 60, md: 80 },
-                bgcolor: alpha('#6b7280', 0.1),
-                color: '#6b7280',
-                mx: 'auto',
-                mb: 3,
-              }}
-            >
-              <People sx={{ fontSize: { xs: 30, md: 40 } }} />
-            </Avatar>
-            <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', mb: 1, fontSize: { xs: '1.125rem', md: '1.25rem' } }}>
-              No hay socios
-            </Typography>
-            <Typography variant="body1" sx={{ color: '#64748b', mb: 4, maxWidth: 400, mx: 'auto', fontSize: { xs: '0.875rem', md: '1rem' } }}>
-              {searchTerm || statusFilter !== 'all' 
-                ? 'No se encontraron socios con los filtros aplicados'
-                : 'Comienza agregando tu primer socio'
-              }
-            </Typography>
-            {(!searchTerm && statusFilter === 'all') && (
-              <Button
-                onClick={onAdd}
-                variant="contained"
-                startIcon={<Add />}
-                size={isMobile ? "medium" : "medium"}
-                sx={{
-                  py: { xs: 1, md: 1.5 },
-                  px: { xs: 3, md: 4 },
-                  borderRadius: 4,
-                  textTransform: 'none',
-                  fontWeight: 700,
-                  background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-                  boxShadow: '0 4px 20px rgba(99, 102, 241, 0.3)',
-                  '&:hover': {
-                    background: 'linear-gradient(135deg, #5b21b6 0%, #7c3aed 100%)',
-                    transform: 'translateY(-1px)',
-                    boxShadow: '0 6px 25px rgba(99, 102, 241, 0.4)',
-                  },
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                Agregar Primer Socio
-              </Button>
-            )}
-          </Box>
-        ) : (
-          <>
-            {/* Mobile View - Cards */}
-            {isMobile ? (
-              <Box sx={{ p: 2 }}>
-                {paginatedSocios.map((socio, index) => {
-                  const isSelected = selectedMembers.includes(socio.uid);
-                  const engagementScore = getEngagementScore(socio);
-                  const engagementLevel = getEngagementLevel(engagementScore);
-                  
-                  return (
-                    <Box
-                      key={socio.uid}
-                      component={motion.div}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3, delay: index * 0.05 }}
-                    >
-                      <MobileSocioCard
-                        socio={socio}
-                        isSelected={isSelected}
-                        onSelect={(checked) => handleSelectMember(socio.uid, checked)}
-                        onEdit={() => onEdit(socio)}
-                        onMore={(e) => {
-                          setAnchorEl(e.currentTarget);
-                          setMemberToDelete(socio);
-                        }}
-                        engagementScore={engagementScore}
-                        engagementLevel={engagementLevel}
-                        formatDate={formatDate}
-                        getInitials={getInitials}
-                        getStatusChip={getStatusChip}
-                      />
-                    </Box>
-                  );
-                })}
-              </Box>
-            ) : (
-              /* Desktop View - Table */
-              <TableContainer>
-                <Table stickyHeader>
-                  <TableHead>
-                    <TableRow sx={{ bgcolor: '#fafbfc' }}>
-                      <TableCell padding="checkbox">
-                        <Checkbox
-                          indeterminate={selectedMembers.length > 0 && selectedMembers.length < paginatedSocios.length}
-                          checked={paginatedSocios.length > 0 && selectedMembers.length === paginatedSocios.length}
-                          onChange={(e) => handleSelectAll(e.target.checked)}
-                          sx={{
-                            color: '#6366f1',
-                            '&.Mui-checked': {
-                              color: '#6366f1',
-                            },
-                          }}
-                        />
-                      </TableCell>
-                      {columns.slice(1, -1).map((column) => (
-                        !column.hideOnMobile && (
-                          <TableCell
-                            key={column.id}
-                            align={column.align}
-                            sx={{ 
-                              fontWeight: 700, 
-                              color: '#475569', 
-                              fontSize: '0.8rem', 
-                              textTransform: 'uppercase', 
-                              letterSpacing: '0.05em',
-                              cursor: column.sortable ? 'pointer' : 'default',
-                              '&:hover': column.sortable ? { color: '#6366f1' } : {},
-                              display: { xs: column.hideOnMobile ? 'none' : 'table-cell', md: 'table-cell' }
-                            }}
-                            onClick={() => column.sortable && handleSort(column.id)}
-                          >
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              {column.label}
-                              {column.sortable && (
-                                <Sort 
-                                  sx={{ 
-                                    fontSize: 16, 
-                                    opacity: sortBy === column.id ? 1 : 0.3,
-                                    transform: sortBy === column.id && sortOrder === 'desc' ? 'rotate(180deg)' : 'none',
-                                    transition: 'all 0.2s ease'
-                                  }} 
-                                />
-                              )}
-                            </Box>
-                          </TableCell>
-                        )
-                      ))}
-                      <TableCell align="right" sx={{ fontWeight: 700, color: '#475569', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                        Acciones
-                      </TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {paginatedSocios.map((socio, index) => {
-                      const isSelected = selectedMembers.includes(socio.uid);
-                      const engagementScore = getEngagementScore(socio);
-                      const engagementLevel = getEngagementLevel(engagementScore);
-                      
-                      return (
-                        <TableRow
-                          key={socio.uid}
-                          component={motion.tr}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.3, delay: index * 0.05 }}
-                          sx={{
-                            bgcolor: isSelected ? alpha('#6366f1', 0.05) : 'transparent',
-                            '&:hover': {
-                              bgcolor: isSelected ? alpha('#6366f1', 0.08) : '#fafbfc',
-                            },
-                            transition: 'background-color 0.2s ease'
-                          }}
-                        >
-                          <TableCell padding="checkbox">
-                            <Checkbox
-                              checked={isSelected}
-                              onChange={(e) => handleSelectMember(socio.uid, e.target.checked)}
-                              sx={{
-                                color: '#6366f1',
-                                '&.Mui-checked': {
-                                  color: '#6366f1',
-                                },
-                              }}
-                            />
-                          </TableCell>
-                          <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
-                            <Avatar
-                              sx={{
-                                width: 48,
-                                height: 48,
-                                bgcolor: alpha('#6366f1', 0.1),
-                                color: '#6366f1',
-                                fontWeight: 700,
-                                fontSize: '1rem',
-                                borderRadius: 3,
-                              }}
-                            >
-                              {getInitials(socio.nombre)}
-                            </Avatar>
-                          </TableCell>
-                          <TableCell>
-                            <Box>
-                              <Typography variant="body2" sx={{ fontWeight: 700, color: '#0f172a', mb: 0.5 }}>
-                                {socio.nombre}
-                              </Typography>
-                              {socio.dni && (
-                                <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 500 }}>
-                                  DNI: {socio.dni}
-                                </Typography>
-                              )}
-                            </Box>
-                          </TableCell>
-                          <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
-                            <Stack spacing={0.5}>
-                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <Email sx={{ fontSize: 14, color: '#94a3b8' }} />
-                                <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 500 }}>
-                                  {socio.email}
-                                </Typography>
-                              </Box>
-                              {socio.telefono && (
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                  <Phone sx={{ fontSize: 14, color: '#94a3b8' }} />
-                                  <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 500 }}>
-                                    {socio.telefono}
-                                  </Typography>
-                                </Box>
-                              )}
-                            </Stack>
-                          </TableCell>
-                          <TableCell>
-                            {getStatusChip(socio.estado)}
-                          </TableCell>
-                          <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <CalendarToday sx={{ fontSize: 14, color: '#94a3b8' }} />
-                              <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 500 }}>
-                                {formatDate(socio.creadoEn)}
-                              </Typography>
-                            </Box>
-                          </TableCell>
-                          <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <Box
-                                sx={{
-                                  width: 8,
-                                  height: 8,
-                                  borderRadius: '50%',
-                                  bgcolor: engagementLevel.color,
-                                }}
-                              />
-                              <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>
-                                {engagementLevel.label} ({engagementScore}%)
-                              </Typography>
-                            </Box>
-                          </TableCell>
-                          <TableCell align="right">
-                            <Stack direction="row" spacing={0.5} justifyContent="flex-end">
-                              <Tooltip title="Ver perfil">
-                                <IconButton
-                                  size="small"
-                                  onClick={() => toast('Vista de perfil en desarrollo', { icon: '👀' })}
-                                  sx={{
-                                    color: '#94a3b8',
-                                    '&:hover': {
-                                      color: '#6366f1',
-                                      bgcolor: alpha('#6366f1', 0.1),
-                                    },
-                                    transition: 'all 0.2s ease'
-                                  }}
-                                >
-                                  <Visibility sx={{ fontSize: 16 }} />
-                                </IconButton>
-                              </Tooltip>
-                              <Tooltip title="Editar">
-                                <IconButton
-                                  onClick={() => onEdit(socio)}
-                                  size="small"
-                                  sx={{
-                                    color: '#94a3b8',
-                                    '&:hover': {
-                                      color: '#f59e0b',
-                                      bgcolor: alpha('#f59e0b', 0.1),
-                                    },
-                                    transition: 'all 0.2s ease'
-                                  }}
-                                >
-                                  <Edit sx={{ fontSize: 16 }} />
-                                </IconButton>
-                              </Tooltip>
-                              <Tooltip title="Más opciones">
-                                <IconButton
-                                  onClick={(e) => {
-                                    setAnchorEl(e.currentTarget);
-                                    setMemberToDelete(socio);
-                                  }}
-                                  size="small"
-                                  sx={{
-                                    color: '#94a3b8',
-                                    '&:hover': {
-                                      color: '#6366f1',
-                                      bgcolor: alpha('#6366f1', 0.1),
-                                    },
-                                    transition: 'all 0.2s ease'
-                                  }}
-                                >
-                                  <MoreVert sx={{ fontSize: 16 }} />
-                                </IconButton>
-                              </Tooltip>
-                            </Stack>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            )}
-
-            {/* Enhanced Pagination */}
-            {totalPages > 1 && (
-              <Box sx={{ 
-                p: { xs: 2, md: 4 }, 
-                borderTop: '1px solid #f1f5f9', 
-                display: 'flex', 
-                flexDirection: { xs: 'column', sm: 'row' },
-                alignItems: 'center', 
-                justifyContent: 'space-between',
-                gap: 2
-              }}>
-                <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500, fontSize: { xs: '0.75rem', md: '0.875rem' } }}>
-                  Mostrando {startIndex + 1} a {Math.min(startIndex + itemsPerPage, filtered.length)} de {filtered.length} socios
-                </Typography>
-                <Pagination
-                  count={totalPages}
-                  page={currentPage}
-                  onChange={(_, page) => setCurrentPage(page)}
-                  color="primary"
-                  size={isMobile ? "medium" : "medium"}
-                  sx={{
-                    '& .MuiPaginationItem-root': {
-                      borderRadius: 3,
-                      fontWeight: 600,
-                      fontSize: { xs: '0.8rem', md: '0.9rem' },
-                      '&.Mui-selected': {
-                        background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-                        color: 'white',
-                        '&:hover': {
-                          background: 'linear-gradient(135deg, #5b21b6 0%, #7c3aed 100%)',
-                        }
-                      },
-                      '&:hover': {
-                        bgcolor: alpha('#6366f1', 0.1),
-                      }
-                    }
-                  }}
-                />
-              </Box>
-            )}
-          </>
-        )}
-      </Card>
-
-      {/* Delete Confirmation Dialog */}
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={() => !deleting && setDeleteDialogOpen(false)}
-        maxWidth="sm"
-        fullWidth
-        fullScreen={isMobile}
-        PaperProps={{
-          sx: {
-            borderRadius: isMobile ? 0 : 4,
-            boxShadow: '0 20px 60px rgba(0,0,0,0.1)',
-            m: isMobile ? 0 : 2,
-          }
-        }}
-      >
-        <DialogTitle sx={{ pb: 2, p: { xs: 2, md: 3 } }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Avatar
-              sx={{
-                bgcolor: deleteType === 'permanent' ? alpha('#ef4444', 0.1) : alpha('#f59e0b', 0.1),
-                color: deleteType === 'permanent' ? '#ef4444' : '#f59e0b',
-                width: { xs: 40, md: 48 },
-                height: { xs: 40, md: 48 },
-              }}
-            >
-              {deleteType === 'permanent' ? <DeleteForever /> : <Archive />}
-            </Avatar>
-            <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', fontSize: { xs: '1.125rem', md: '1.25rem' } }}>
-                {deleteType === 'permanent' ? 'Eliminar Permanentemente' : 'Desactivar Socio'}
-              </Typography>
-              <Typography variant="body2" sx={{ color: '#64748b', wordBreak: 'break-word' }}>
-                {memberToDelete?.nombre}
-              </Typography>
-            </Box>
-            {isMobile && (
-              <IconButton
-                onClick={() => setDeleteDialogOpen(false)}
-                sx={{ color: '#64748b' }}
-              >
-                <Close />
-              </IconButton>
-            )}
-          </Box>
-        </DialogTitle>
-        
-        <DialogContent sx={{ pb: 3, p: { xs: 2, md: 3 } }}>
-          <Alert 
-            severity={deleteType === 'permanent' ? 'error' : 'warning'} 
-            sx={{ mb: 3, borderRadius: 3 }}
-          >
-            {deleteType === 'permanent' 
-              ? 'Esta acción eliminará permanentemente al socio de Firebase. No se puede deshacer.'
-              : 'Esta acción marcará al socio como inactivo. Podrás reactivarlo más tarde.'
+        {/* Bulk Action Result Dialog */}
+        <Dialog
+          open={bulkResultDialog}
+          onClose={() => setBulkResultDialog(false)}
+          maxWidth="sm"
+          fullWidth
+          fullScreen={isMobile}
+          PaperProps={{
+            sx: {
+              borderRadius: isMobile ? 0 : 4,
+              boxShadow: '0 20px 60px rgba(0,0,0,0.1)',
+              m: isMobile ? 0 : 2,
             }
-          </Alert>
-          
-          <Typography variant="body1" sx={{ color: '#475569', mb: 2 }}>
-            ¿Estás seguro de que deseas {deleteType === 'permanent' ? 'eliminar permanentemente' : 'desactivar'} a este socio?
-          </Typography>
-          
-          <Box sx={{ mt: 3, p: { xs: 2, md: 3 }, bgcolor: '#f8fafc', borderRadius: 3, border: '1px solid #e2e8f0' }}>
-            <Typography variant="body2" sx={{ color: '#64748b', mb: 2 }}>
-              <strong>Opciones de eliminación:</strong>
-            </Typography>
-            <Stack spacing={1}>
-              <Button
-                variant={deleteType === 'soft' ? 'contained' : 'outlined'}
-                size="small"
-                startIcon={<Archive />}
-                onClick={() => setDeleteType('soft')}
-                fullWidth={isMobile}
+          }}
+        >
+          <DialogTitle sx={{ pb: 2, p: { xs: 2, md: 3 } }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Avatar
                 sx={{
-                  justifyContent: 'flex-start',
-                  textTransform: 'none',
-                  bgcolor: deleteType === 'soft' ? '#f59e0b' : 'transparent',
-                  borderColor: deleteType === 'soft' ? '#f59e0b' : '#e2e8f0',
-                  color: deleteType === 'soft' ? 'white' : '#64748b',
-                  '&:hover': {
-                    bgcolor: deleteType === 'soft' ? '#d97706' : alpha('#f59e0b', 0.1),
-                    borderColor: '#f59e0b',
-                    color: deleteType === 'soft' ? 'white' : '#f59e0b',
-                  }
+                  bgcolor: bulkResult?.failed === 0 ? alpha('#10b981', 0.1) : alpha('#f59e0b', 0.1),
+                  color: bulkResult?.failed === 0 ? '#10b981' : '#f59e0b',
+                  width: { xs: 40, md: 48 },
+                  height: { xs: 40, md: 48 },
                 }}
               >
-                Desactivar (recomendado)
-              </Button>
-              <Button
-                variant={deleteType === 'permanent' ? 'contained' : 'outlined'}
-                size="small"
-                startIcon={<DeleteForever />}
-                onClick={() => setDeleteType('permanent')}
-                fullWidth={isMobile}
-                sx={{
-                  justifyContent: 'flex-start',
-                  textTransform: 'none',
-                  bgcolor: deleteType === 'permanent' ? '#ef4444' : 'transparent',
-                  borderColor: deleteType === 'permanent' ? '#ef4444' : '#e2e8f0',
-                  color: deleteType === 'permanent' ? 'white' : '#64748b',
-                  '&:hover': {
-                    bgcolor: deleteType === 'permanent' ? '#dc2626' : alpha('#ef4444', 0.1),
-                    borderColor: '#ef4444',
-                    color: deleteType === 'permanent' ? 'white' : '#ef4444',
-                  }
-                }}
-              >
-                Eliminar permanentemente
-              </Button>
-            </Stack>
-          </Box>
-        </DialogContent>
-        
-        <DialogActions sx={{ p: { xs: 2, md: 3 }, pt: 0, flexDirection: { xs: 'column', sm: 'row' }, gap: { xs: 1, sm: 0 } }}>
-          <Button
-            onClick={() => setDeleteDialogOpen(false)}
-            disabled={deleting}
-            fullWidth={isMobile}
-            sx={{ textTransform: 'none', fontWeight: 600 }}
-          >
-            Cancelar
-          </Button>
-          <Button
-            onClick={handleDeleteMember}
-            disabled={deleting}
-            variant="contained"
-            fullWidth={isMobile}
-            startIcon={deleting ? <CircularProgress size={16} /> : (deleteType === 'permanent' ? <DeleteForever /> : <Archive />)}
-            sx={{
-              textTransform: 'none',
-              fontWeight: 700,
-              bgcolor: deleteType === 'permanent' ? '#ef4444' : '#f59e0b',
-              '&:hover': {
-                bgcolor: deleteType === 'permanent' ? '#dc2626' : '#d97706',
-              }
-            }}
-          >
-            {deleting ? 'Procesando...' : (deleteType === 'permanent' ? 'Eliminar Permanentemente' : 'Desactivar')}
-          </Button>
-        </DialogActions>
-      </Dialog>
+                {bulkResult?.failed === 0 ? <CheckCircle /> : <Warning />}
+              </Avatar>
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', fontSize: { xs: '1.125rem', md: '1.25rem' } }}>
+                  Resultado de Acción Masiva
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#64748b' }}>
+                  {bulkResult?.success} exitosos, {bulkResult?.failed} fallidos
+                </Typography>
+              </Box>
+              {isMobile && (
+                <IconButton
+                  onClick={() => setBulkResultDialog(false)}
+                  sx={{ color: '#64748b' }}
+                >
+                  <Close />
+                </IconButton>
+              )}
+            </Box>
+          </DialogTitle>
+          
+          <DialogContent sx={{ pb: 3, p: { xs: 2, md: 3 } }}>
+            {bulkResult && (
+              <Stack spacing={2}>
+                {bulkResult.success > 0 && (
+                  <Alert severity="success" sx={{ borderRadius: 3 }}>
+                    {bulkResult.success} socios procesados correctamente
+                  </Alert>
+                )}
+                
+                {bulkResult.failed > 0 && (
+                  <Alert severity="error" sx={{ borderRadius: 3 }}>
+                    {bulkResult.failed} socios no pudieron ser procesados
+                  </Alert>
+                )}
+                
+                {bulkResult.errors.length > 0 && (
+                  <Box>
+                    <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
+                      Errores detallados:
+                    </Typography>
+                    <Box sx={{ maxHeight: 200, overflow: 'auto' }}>
+                      {bulkResult.errors.map((error, index) => (
+                        <Typography key={index} variant="caption" sx={{ display: 'block', color: '#ef4444', mb: 0.5 }}>
+                          • {error}
+                        </Typography>
+                      ))}
+                    </Box>
+                  </Box>
+                )}
+              </Stack>
+            )}
+          </DialogContent>
+          
+          <DialogActions sx={{ p: { xs: 2, md: 3 }, pt: 0 }}>
+            <Button
+              onClick={() => setBulkResultDialog(false)}
+              variant="contained"
+              fullWidth={isMobile}
+              sx={{ textTransform: 'none', fontWeight: 600 }}
+            >
+              Entendido
+            </Button>
+          </DialogActions>
+        </Dialog>
 
-      {/* Bulk Action Result Dialog */}
-      <Dialog
-        open={bulkResultDialog}
-        onClose={() => setBulkResultDialog(false)}
-        maxWidth="sm"
-        fullWidth
-        fullScreen={isMobile}
-        PaperProps={{
-          sx: {
-            borderRadius: isMobile ? 0 : 4,
-            boxShadow: '0 20px 60px rgba(0,0,0,0.1)',
-            m: isMobile ? 0 : 2,
-          }
-        }}
-      >
-        <DialogTitle sx={{ pb: 2, p: { xs: 2, md: 3 } }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Avatar
+        {/* Context Menus */}
+        <Menu
+          anchorEl={anchorEl}
+          open={Boolean(anchorEl)}
+          onClose={() => setAnchorEl(null)}
+          PaperProps={{
+            sx: {
+              borderRadius: 3,
+              boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
+              border: '1px solid #f1f5f9',
+              minWidth: 200,
+            }
+          }}
+        >
+          <MenuItem onClick={() => {
+            if (memberToDelete) handleViewProfile(memberToDelete);
+            setAnchorEl(null);
+          }}>
+            <ListItemIcon>
+              <Visibility fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>Ver Perfil</ListItemText>
+          </MenuItem>
+          <MenuItem onClick={() => {
+            if (memberToDelete) onEdit(memberToDelete);
+            setAnchorEl(null);
+          }}>
+            <ListItemIcon>
+              <Edit fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>Editar Socio</ListItemText>
+          </MenuItem>
+          <MenuItem onClick={() => {
+            toast('Función de email en desarrollo', { icon: '📧' });
+            setAnchorEl(null);
+          }}>
+            <ListItemIcon>
+              <Email fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>Enviar Email</ListItemText>
+          </MenuItem>
+          <MenuItem onClick={() => {
+            toast('Función de favoritos en desarrollo', { icon: '⭐' });
+            setAnchorEl(null);
+          }}>
+            <ListItemIcon>
+              <Star fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>Marcar Favorito</ListItemText>
+          </MenuItem>
+          <Divider />
+          <MenuItem onClick={() => {
+            setDeleteType('soft');
+            setDeleteDialogOpen(true);
+            setAnchorEl(null);
+          }}>
+            <ListItemIcon>
+              <Archive fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>Desactivar</ListItemText>
+          </MenuItem>
+          <MenuItem onClick={() => {
+            setDeleteType('permanent');
+            setDeleteDialogOpen(true);
+            setAnchorEl(null);
+          }} sx={{ color: '#ef4444' }}>
+            <ListItemIcon>
+              <DeleteForever fontSize="small" sx={{ color: '#ef4444' }} />
+            </ListItemIcon>
+            <ListItemText>Eliminar Permanentemente</ListItemText>
+          </MenuItem>
+        </Menu>
+
+        <Menu
+          anchorEl={bulkMenuAnchor}
+          open={Boolean(bulkMenuAnchor)}
+          onClose={() => setBulkMenuAnchor(null)}
+          PaperProps={{
+            sx: {
+              borderRadius: 3,
+              boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
+              border: '1px solid #f1f5f9',
+              minWidth: 200,
+            }
+          }}
+        >
+          <MenuItem onClick={() => handleBulkAction('deactivate')} disabled={bulkProcessing}>
+            <ListItemIcon>
+              <Archive fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>Desactivar Seleccionados</ListItemText>
+          </MenuItem>
+          <MenuItem onClick={() => handleBulkAction('activate')} disabled={bulkProcessing}>
+            <ListItemIcon>
+              <Restore fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>Activar Seleccionados</ListItemText>
+          </MenuItem>
+          <MenuItem onClick={() => {
+            toast('Función de impresión en desarrollo', { icon: '🖨️' });
+            setBulkMenuAnchor(null);
+          }}>
+            <ListItemIcon>
+              <Print fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>Imprimir Lista</ListItemText>
+          </MenuItem>
+          <Divider />
+          <MenuItem onClick={() => handleBulkAction('delete')} disabled={bulkProcessing} sx={{ color: '#ef4444' }}>
+            <ListItemIcon>
+              <DeleteForever fontSize="small" sx={{ color: '#ef4444' }} />
+            </ListItemIcon>
+            <ListItemText>Eliminar Seleccionados</ListItemText>
+          </MenuItem>
+        </Menu>
+
+        {/* Floating Action Button - Only on Mobile */}
+        {isMobile && (
+          <Zoom in={selectedMembers.length === 0 && !bulkProcessing}>
+            <Fab
+              color="primary"
+              onClick={onAdd}
               sx={{
-                bgcolor: bulkResult?.failed === 0 ? alpha('#10b981', 0.1) : alpha('#f59e0b', 0.1),
-                color: bulkResult?.failed === 0 ? '#10b981' : '#f59e0b',
-                width: { xs: 40, md: 48 },
-                height: { xs: 40, md: 48 },
+                position: 'fixed',
+                bottom: 24,
+                right: 24,
+                background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                boxShadow: '0 8px 32px rgba(99, 102, 241, 0.3)',
+                '&:hover': {
+                  background: 'linear-gradient(135deg, #5b21b6 0%, #7c3aed 100%)',
+                  transform: 'scale(1.1)',
+                  boxShadow: '0 12px 40px rgba(99, 102, 241, 0.4)',
+                },
+                transition: 'all 0.3s ease'
               }}
             >
-              {bulkResult?.failed === 0 ? <CheckCircle /> : <Warning />}
-            </Avatar>
-            <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', fontSize: { xs: '1.125rem', md: '1.25rem' } }}>
-                Resultado de Acción Masiva
-              </Typography>
-              <Typography variant="body2" sx={{ color: '#64748b' }}>
-                {bulkResult?.success} exitosos, {bulkResult?.failed} fallidos
-              </Typography>
-            </Box>
-            {isMobile && (
-              <IconButton
-                onClick={() => setBulkResultDialog(false)}
-                sx={{ color: '#64748b' }}
-              >
-                <Close />
-              </IconButton>
-            )}
-          </Box>
-        </DialogTitle>
-        
-        <DialogContent sx={{ pb: 3, p: { xs: 2, md: 3 } }}>
-          {bulkResult && (
-            <Stack spacing={2}>
-              {bulkResult.success > 0 && (
-                <Alert severity="success" sx={{ borderRadius: 3 }}>
-                  {bulkResult.success} socios procesados correctamente
-                </Alert>
-              )}
-              
-              {bulkResult.failed > 0 && (
-                <Alert severity="error" sx={{ borderRadius: 3 }}>
-                  {bulkResult.failed} socios no pudieron ser procesados
-                </Alert>
-              )}
-              
-              {bulkResult.errors.length > 0 && (
-                <Box>
-                  <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
-                    Errores detallados:
-                  </Typography>
-                  <Box sx={{ maxHeight: 200, overflow: 'auto' }}>
-                    {bulkResult.errors.map((error, index) => (
-                      <Typography key={index} variant="caption" sx={{ display: 'block', color: '#ef4444', mb: 0.5 }}>
-                        • {error}
-                      </Typography>
-                    ))}
-                  </Box>
-                </Box>
-              )}
-            </Stack>
-          )}
-        </DialogContent>
-        
-        <DialogActions sx={{ p: { xs: 2, md: 3 }, pt: 0 }}>
-          <Button
-            onClick={() => setBulkResultDialog(false)}
-            variant="contained"
-            fullWidth={isMobile}
-            sx={{ textTransform: 'none', fontWeight: 600 }}
-          >
-            Entendido
-          </Button>
-        </DialogActions>
-      </Dialog>
+              <Add />
+            </Fab>
+          </Zoom>
+        )}
+      </Box>
 
-      {/* Context Menus */}
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={() => setAnchorEl(null)}
-        PaperProps={{
-          sx: {
-            borderRadius: 3,
-            boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
-            border: '1px solid #f1f5f9',
-            minWidth: 200,
-          }
-        }}
-      >
-        <MenuItem onClick={() => {
-          if (memberToDelete) onEdit(memberToDelete);
-          setAnchorEl(null);
-        }}>
-          <ListItemIcon>
-            <Edit fontSize="small" />
-          </ListItemIcon>
-          <ListItemText>Editar Socio</ListItemText>
-        </MenuItem>
-        <MenuItem onClick={() => {
-          toast('Función de email en desarrollo', { icon: '📧' });
-          setAnchorEl(null);
-        }}>
-          <ListItemIcon>
-            <Email fontSize="small" />
-          </ListItemIcon>
-          <ListItemText>Enviar Email</ListItemText>
-        </MenuItem>
-        <MenuItem onClick={() => {
-          toast('Función de favoritos en desarrollo', { icon: '⭐' });
-          setAnchorEl(null);
-        }}>
-          <ListItemIcon>
-            <Star fontSize="small" />
-          </ListItemIcon>
-          <ListItemText>Marcar Favorito</ListItemText>
-        </MenuItem>
-        <Divider />
-        <MenuItem onClick={() => {
-          setDeleteType('soft');
-          setDeleteDialogOpen(true);
-          setAnchorEl(null);
-        }}>
-          <ListItemIcon>
-            <Archive fontSize="small" />
-          </ListItemIcon>
-          <ListItemText>Desactivar</ListItemText>
-        </MenuItem>
-        <MenuItem onClick={() => {
-          setDeleteType('permanent');
-          setDeleteDialogOpen(true);
-          setAnchorEl(null);
-        }} sx={{ color: '#ef4444' }}>
-          <ListItemIcon>
-            <DeleteForever fontSize="small" sx={{ color: '#ef4444' }} />
-          </ListItemIcon>
-          <ListItemText>Eliminar Permanentemente</ListItemText>
-        </MenuItem>
-      </Menu>
-
-      <Menu
-        anchorEl={bulkMenuAnchor}
-        open={Boolean(bulkMenuAnchor)}
-        onClose={() => setBulkMenuAnchor(null)}
-        PaperProps={{
-          sx: {
-            borderRadius: 3,
-            boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
-            border: '1px solid #f1f5f9',
-            minWidth: 200,
-          }
-        }}
-      >
-        <MenuItem onClick={() => handleBulkAction('deactivate')} disabled={bulkProcessing}>
-          <ListItemIcon>
-            <Archive fontSize="small" />
-          </ListItemIcon>
-          <ListItemText>Desactivar Seleccionados</ListItemText>
-        </MenuItem>
-        <MenuItem onClick={() => handleBulkAction('activate')} disabled={bulkProcessing}>
-          <ListItemIcon>
-            <Restore fontSize="small" />
-          </ListItemIcon>
-          <ListItemText>Activar Seleccionados</ListItemText>
-        </MenuItem>
-        <MenuItem onClick={() => {
-          toast('Función de impresión en desarrollo', { icon: '🖨️' });
-          setBulkMenuAnchor(null);
-        }}>
-          <ListItemIcon>
-            <Print fontSize="small" />
-          </ListItemIcon>
-          <ListItemText>Imprimir Lista</ListItemText>
-        </MenuItem>
-        <Divider />
-        <MenuItem onClick={() => handleBulkAction('delete')} disabled={bulkProcessing} sx={{ color: '#ef4444' }}>
-          <ListItemIcon>
-            <DeleteForever fontSize="small" sx={{ color: '#ef4444' }} />
-          </ListItemIcon>
-          <ListItemText>Eliminar Seleccionados</ListItemText>
-        </MenuItem>
-      </Menu>
-
-      {/* Floating Action Button - Only on Mobile */}
-      {isMobile && (
-        <Zoom in={selectedMembers.length === 0 && !bulkProcessing}>
-          <Fab
-            color="primary"
-            onClick={onAdd}
-            sx={{
-              position: 'fixed',
-              bottom: 24,
-              right: 24,
-              background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-              boxShadow: '0 8px 32px rgba(99, 102, 241, 0.3)',
-              '&:hover': {
-                background: 'linear-gradient(135deg, #5b21b6 0%, #7c3aed 100%)',
-                transform: 'scale(1.1)',
-                boxShadow: '0 12px 40px rgba(99, 102, 241, 0.4)',
-              },
-              transition: 'all 0.3s ease'
-            }}
-          >
-            <Add />
-          </Fab>
-        </Zoom>
+      {/* Profile View Modal */}
+      {selectedSocio && (
+        <SocioProfileView
+          socio={selectedSocio}
+          open={profileViewOpen}
+          onClose={handleCloseProfile}
+          onEdit={onEdit}
+          onRefresh={onRefresh}
+        />
       )}
-    </Box>
+    </>
   );
 };
