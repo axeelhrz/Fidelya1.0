@@ -59,13 +59,28 @@
                     320px 120px, 340px 140px, 310px 110px, 330px 130px, 350px 150px,
                     280px 100px, 300px 120px, 270px 90px, 290px 110px, 320px 140px,
                     260px 80px, 280px 100px, 250px 70px, 270px 90px, 300px 120px;
-    animation: sparkle 20s linear infinite;
+    animation: sparkle-improved 25s linear infinite;
 }
 
-/* ANIMACIÓN DE ESTRELLAS */
-@keyframes sparkle {
-    from { transform: translateX(0); }
-    to { transform: translateX(400px); }
+/* ANIMACIÓN DE ESTRELLAS MEJORADA - MÁS ESTÉTICA */
+@keyframes sparkle-improved {
+    0% { 
+        transform: translateX(0);
+        opacity: 0.6;
+    }
+    25% {
+        opacity: 0.9;
+    }
+    50% {
+        opacity: 1;
+    }
+    75% {
+        opacity: 0.8;
+    }
+    100% { 
+        transform: translateX(400px);
+        opacity: 0.6;
+    }
 }
 
 /* CAPA DE PARTÍCULAS FINAS Y DISPERSAS CON BRILLO TENUE - EXPANDIDA */
@@ -78,28 +93,28 @@
     /* Partículas expandidas para pantallas súper anchas */
     background-image: 
         /* Partículas principales */
-        radial-gradient(1px 1px at 25px 25px, rgba(255,255,255,0.3), transparent),
-        radial-gradient(1px 1px at 75px 75px, rgba(255,255,255,0.2), transparent),
-        radial-gradient(0.5px 0.5px at 125px 25px, rgba(255,255,255,0.4), transparent),
-        radial-gradient(0.5px 0.5px at 175px 125px, rgba(255,255,255,0.1), transparent),
+        radial-gradient(1px 1px at 25px 25px, rgba(255,255,255,0.4), transparent),
+        radial-gradient(1px 1px at 75px 75px, rgba(255,255,255,0.3), transparent),
+        radial-gradient(0.5px 0.5px at 125px 25px, rgba(255,255,255,0.5), transparent),
+        radial-gradient(0.5px 0.5px at 175px 125px, rgba(255,255,255,0.2), transparent),
         
         /* Partículas adicionales para llenar espacios */
-        radial-gradient(1px 1px at 225px 75px, rgba(255,255,255,0.25), transparent),
-        radial-gradient(0.5px 0.5px at 275px 25px, rgba(255,255,255,0.35), transparent),
-        radial-gradient(1px 1px at 325px 125px, rgba(255,255,255,0.15), transparent),
-        radial-gradient(0.5px 0.5px at 375px 75px, rgba(255,255,255,0.3), transparent),
+        radial-gradient(1px 1px at 225px 75px, rgba(255,255,255,0.35), transparent),
+        radial-gradient(0.5px 0.5px at 275px 25px, rgba(255,255,255,0.45), transparent),
+        radial-gradient(1px 1px at 325px 125px, rgba(255,255,255,0.25), transparent),
+        radial-gradient(0.5px 0.5px at 375px 75px, rgba(255,255,255,0.4), transparent),
         
         /* Partículas para pantallas muy anchas */
-        radial-gradient(1px 1px at 425px 25px, rgba(255,255,255,0.2), transparent),
-        radial-gradient(0.5px 0.5px at 475px 125px, rgba(255,255,255,0.4), transparent),
-        radial-gradient(1px 1px at 525px 75px, rgba(255,255,255,0.25), transparent),
-        radial-gradient(0.5px 0.5px at 575px 25px, rgba(255,255,255,0.15), transparent),
+        radial-gradient(1px 1px at 425px 25px, rgba(255,255,255,0.3), transparent),
+        radial-gradient(0.5px 0.5px at 475px 125px, rgba(255,255,255,0.5), transparent),
+        radial-gradient(1px 1px at 525px 75px, rgba(255,255,255,0.35), transparent),
+        radial-gradient(0.5px 0.5px at 575px 25px, rgba(255,255,255,0.25), transparent),
         
         /* Partículas para pantallas ultra anchas */
-        radial-gradient(1px 1px at 625px 125px, rgba(255,255,255,0.3), transparent),
-        radial-gradient(0.5px 0.5px at 675px 75px, rgba(255,255,255,0.2), transparent),
-        radial-gradient(1px 1px at 725px 25px, rgba(255,255,255,0.35), transparent),
-        radial-gradient(0.5px 0.5px at 775px 125px, rgba(255,255,255,0.25), transparent);
+        radial-gradient(1px 1px at 625px 125px, rgba(255,255,255,0.4), transparent),
+        radial-gradient(0.5px 0.5px at 675px 75px, rgba(255,255,255,0.3), transparent),
+        radial-gradient(1px 1px at 725px 25px, rgba(255,255,255,0.45), transparent),
+        radial-gradient(0.5px 0.5px at 775px 125px, rgba(255,255,255,0.35), transparent);
     
     /* Tamaños expandidos para cubrir pantallas súper anchas */
     background-size: 400px 400px, 380px 380px, 420px 420px, 360px 360px,
@@ -107,12 +122,27 @@
                     280px 280px, 300px 300px, 270px 270px, 290px 290px,
                     260px 260px, 280px 280px, 250px 250px, 270px 270px;
     background-repeat: repeat;
-    animation: float-particles 25s linear infinite;
+    animation: float-particles-improved 30s linear infinite;
 }
 
-@keyframes float-particles {
-    0% { transform: translate(0, 0); }
-    100% { transform: translate(-400px, -400px); }
+@keyframes float-particles-improved {
+    0% { 
+        transform: translate(0, 0);
+        opacity: 0.4;
+    }
+    25% {
+        opacity: 0.7;
+    }
+    50% {
+        opacity: 0.9;
+    }
+    75% {
+        opacity: 0.6;
+    }
+    100% { 
+        transform: translate(-400px, -400px);
+        opacity: 0.4;
+    }
 }
 
 /* CAPA DE LUCES NEÓN SUAVES CON EFECTO DIFUSO Y DESENFOCADO */
@@ -704,6 +734,7 @@ display: block;
         radial-gradient(circle at 80% 70%, var(--hero-particle-dim) 1px, transparent 1px),
         radial-gradient(circle at 50% 50%, var(--hero-particle-dim) 0.5px, transparent 0.5px);
     background-size: 150px 150px, 120px 120px, 100px 100px;
+    animation: float-particles-mobile 35s linear infinite;
 }
 
 /* Simplificar estrellas en móvil */
@@ -714,6 +745,48 @@ display: block;
         radial-gradient(1px 1px at 90px 40px, rgba(255,255,255,0.9), transparent),
         #000000;
     background-size: 200px 100px;
+    animation: sparkle-mobile 30s linear infinite;
+}
+
+/* Animaciones móviles mejoradas */
+@keyframes sparkle-mobile {
+    0% { 
+        transform: translateX(0);
+        opacity: 0.5;
+    }
+    25% {
+        opacity: 0.8;
+    }
+    50% {
+        opacity: 1;
+    }
+    75% {
+        opacity: 0.7;
+    }
+    100% { 
+        transform: translateX(200px);
+        opacity: 0.5;
+    }
+}
+
+@keyframes float-particles-mobile {
+    0% { 
+        transform: translate(0, 0);
+        opacity: 0.3;
+    }
+    25% {
+        opacity: 0.6;
+    }
+    50% {
+        opacity: 0.8;
+    }
+    75% {
+        opacity: 0.5;
+    }
+    100% { 
+        transform: translate(-200px, -200px);
+        opacity: 0.3;
+    }
 }
 
 /* MOVER EL HERO MUCHO MÁS ARRIBA EN MÓVIL */
@@ -815,6 +888,14 @@ animation: none !important;
 opacity: 0.6;
 transform: scale(1);
 }
+
+.bg-canvas {
+opacity: 0.8;
+}
+
+.hero::after {
+opacity: 0.6;
+}
 }
 
 /* ===== MODO ALTO CONTRASTE ===== */
@@ -884,14 +965,44 @@ justify-content: center !important;
                     460px 460px, 480px 480px, 450px 450px, 470px 470px;
 }
 
-@keyframes sparkle {
-    from { transform: translateX(0); }
-    to { transform: translateX(600px); }
+@keyframes sparkle-improved {
+    0% { 
+        transform: translateX(0);
+        opacity: 0.6;
+    }
+    25% {
+        opacity: 0.9;
+    }
+    50% {
+        opacity: 1;
+    }
+    75% {
+        opacity: 0.8;
+    }
+    100% { 
+        transform: translateX(600px);
+        opacity: 0.6;
+    }
 }
 
-@keyframes float-particles {
-    0% { transform: translate(0, 0); }
-    100% { transform: translate(-600px, -600px); }
+@keyframes float-particles-improved {
+    0% { 
+        transform: translate(0, 0);
+        opacity: 0.4;
+    }
+    25% {
+        opacity: 0.7;
+    }
+    50% {
+        opacity: 0.9;
+    }
+    75% {
+        opacity: 0.6;
+    }
+    100% { 
+        transform: translate(-600px, -600px);
+        opacity: 0.4;
+    }
 }
 }
 
@@ -911,13 +1022,43 @@ justify-content: center !important;
                     660px 660px, 680px 680px, 650px 650px, 670px 670px;
 }
 
-@keyframes sparkle {
-    from { transform: translateX(0); }
-    to { transform: translateX(800px); }
+@keyframes sparkle-improved {
+    0% { 
+        transform: translateX(0);
+        opacity: 0.6;
+    }
+    25% {
+        opacity: 0.9;
+    }
+    50% {
+        opacity: 1;
+    }
+    75% {
+        opacity: 0.8;
+    }
+    100% { 
+        transform: translateX(800px);
+        opacity: 0.6;
+    }
 }
 
-@keyframes float-particles {
-    0% { transform: translate(0, 0); }
-    100% { transform: translate(-800px, -800px); }
+@keyframes float-particles-improved {
+    0% { 
+        transform: translate(0, 0);
+        opacity: 0.4;
+    }
+    25% {
+        opacity: 0.7;
+    }
+    50% {
+        opacity: 0.9;
+    }
+    75% {
+        opacity: 0.6;
+    }
+    100% { 
+        transform: translate(-800px, -800px);
+        opacity: 0.4;
+    }
 }
 }
