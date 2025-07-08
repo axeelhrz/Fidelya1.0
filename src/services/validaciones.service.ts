@@ -32,7 +32,7 @@ export class ValidacionesService {
       
       // 2. Verificar estado del socio
       if (socioData.estado !== 'activo') {
-        const validacionId = await this.crearValidacion(request, 'no_habilitado', 'Socio no activo');
+        const validacionId = await ValidacionesService.crearValidacion(request, 'no_habilitado', 'Socio no activo');
         return {
           resultado: 'no_habilitado',
           motivo: 'Tu cuenta no está activa. Contacta a tu asociación.',
@@ -41,7 +41,8 @@ export class ValidacionesService {
             estado: socioData.estado,
             asociacion: socioData.asociacionId
           },
-          validacionId
+          validacionId,
+          fechaHora: new Date()
         };
       }
 
@@ -55,7 +56,7 @@ export class ValidacionesService {
       console.log('🏪 Datos del comercio:', { nombre: comercioData.nombre, estado: comercioData.estado });
 
       if (comercioData.estado !== 'activo') {
-        const validacionId = await this.crearValidacion(request, 'no_habilitado', 'Comercio no activo');
+        const validacionId = await ValidacionesService.crearValidacion(request, 'no_habilitado', 'Comercio no activo');
         return {
           resultado: 'no_habilitado',
           motivo: 'El comercio no está disponible en este momento.',
@@ -64,14 +65,15 @@ export class ValidacionesService {
             estado: socioData.estado,
             asociacion: socioData.asociacionId
           },
-          validacionId
+          validacionId,
+          fechaHora: new Date()
         };
       }
 
       // 4. Verificar asociación
       const asociacionId = socioData.asociacionId;
       if (!asociacionId) {
-        const validacionId = await this.crearValidacion(request, 'no_habilitado', 'Socio sin asociación');
+        const validacionId = await ValidacionesService.crearValidacion(request, 'no_habilitado', 'Socio sin asociación');
         return {
           resultado: 'no_habilitado',
           motivo: 'No tienes una asociación asignada.',
@@ -80,7 +82,8 @@ export class ValidacionesService {
             estado: socioData.estado,
             asociacion: asociacionId
           },
-          validacionId
+          validacionId,
+          fechaHora: new Date()
         };
       }
 
@@ -89,9 +92,8 @@ export class ValidacionesService {
       if (request.beneficioId) {
         console.log('🎁 Verificando beneficio:', request.beneficioId);
         beneficio = await BeneficiosService.getBeneficioById(request.beneficioId);
-        
         if (!beneficio) {
-          const validacionId = await this.crearValidacion(request, 'no_habilitado', 'Beneficio no encontrado');
+          const validacionId = await ValidacionesService.crearValidacion(request, 'no_habilitado', 'Beneficio no existe');
           return {
             resultado: 'no_habilitado',
             motivo: 'El beneficio solicitado no existe.',
@@ -100,12 +102,12 @@ export class ValidacionesService {
               estado: socioData.estado,
               asociacion: asociacionId
             },
-            validacionId
+            validacionId,
+            fechaHora: new Date()
           };
         }
-
         if (beneficio.estado !== 'activo') {
-          const validacionId = await this.crearValidacion(request, 'vencido', 'Beneficio no disponible');
+          const validacionId = await ValidacionesService.crearValidacion(request, 'vencido', 'Beneficio vencido');
           return {
             resultado: 'vencido',
             motivo: 'Este beneficio ya no está disponible.',
@@ -114,13 +116,12 @@ export class ValidacionesService {
               estado: socioData.estado,
               asociacion: asociacionId
             },
-            validacionId
+            validacionId,
+            fechaHora: new Date()
           };
         }
-
-        // Verificar si el beneficio está disponible para la asociación del socio
-        if (!beneficio.asociacionesDisponibles?.includes(asociacionId)) {
-          const validacionId = await this.crearValidacion(request, 'no_habilitado', 'Beneficio no disponible para tu asociación');
+        if (beneficio.asociacionId && beneficio.asociacionId !== asociacionId) {
+          const validacionId = await ValidacionesService.crearValidacion(request, 'no_habilitado', 'Beneficio no disponible para tu asociación');
           return {
             resultado: 'no_habilitado',
             motivo: 'Este beneficio no está disponible para tu asociación.',
@@ -129,18 +130,19 @@ export class ValidacionesService {
               estado: socioData.estado,
               asociacion: asociacionId
             },
-            validacionId
+            validacionId,
+            fechaHora: new Date()
           };
         }
-
         // Verificar fecha de vigencia
         if (beneficio.fechaFin) {
-          const fechaFin = beneficio.fechaFin instanceof Date 
-            ? beneficio.fechaFin 
-            : beneficio.fechaFin.toDate();
-          
-          if (fechaFin < new Date()) {
-            const validacionId = await this.crearValidacion(request, 'vencido', 'Beneficio vencido');
+          const fechaFin = beneficio.fechaFin instanceof Date
+            ? beneficio.fechaFin
+            : (typeof beneficio.fechaFin.toDate === 'function'
+                ? beneficio.fechaFin.toDate()
+                : undefined);
+          if (fechaFin && fechaFin < new Date()) {
+            const validacionId = await ValidacionesService.crearValidacion(request, 'vencido', 'Beneficio expirado');
             return {
               resultado: 'vencido',
               motivo: 'Este beneficio ha expirado.',
@@ -149,16 +151,16 @@ export class ValidacionesService {
                 estado: socioData.estado,
                 asociacion: asociacionId
               },
-              validacionId
+              validacionId,
+              fechaHora: new Date()
             };
           }
         }
-
-        // Verificar límites de uso si existen
+        // Verificar límite de usos por socio
         if (beneficio.limitePorSocio) {
-          const usosActuales = await this.getUsosCount(request.beneficioId, request.socioId);
-          if (usosActuales >= beneficio.limitePorSocio) {
-            const validacionId = await this.crearValidacion(request, 'no_habilitado', 'Límite de usos alcanzado');
+          const usos = await this.getUsosCount(beneficio.id, request.socioId);
+          if (usos >= beneficio.limitePorSocio) {
+            const validacionId = await ValidacionesService.crearValidacion(request, 'no_habilitado', 'Límite de usos alcanzado');
             return {
               resultado: 'no_habilitado',
               motivo: `Has alcanzado el límite de ${beneficio.limitePorSocio} usos para este beneficio.`,
@@ -167,32 +169,30 @@ export class ValidacionesService {
                 estado: socioData.estado,
                 asociacion: asociacionId
               },
-              validacionId
+              validacionId,
+              fechaHora: new Date()
             };
           }
         }
+        // Verificar que el comercio esté vinculado al beneficio
+        if (beneficio.comercioId && beneficio.comercioId !== request.comercioId) {
+          const validacionId = await ValidacionesService.crearValidacion(request, 'no_habilitado', 'Comercio no vinculado al beneficio');
+          return {
+            resultado: 'no_habilitado',
+            motivo: 'Este comercio no está vinculado a tu asociación.',
+            socio: {
+              nombre: socioData.nombre,
+              estado: socioData.estado,
+              asociacion: asociacionId
+            },
+            validacionId,
+            fechaHora: new Date()
+          };
+        }
       }
 
-      // 6. Verificar que el comercio esté vinculado a la asociación del socio
-      const comercioAsociaciones = comercioData.asociacionesVinculadas || [];
-      if (!comercioAsociaciones.includes(asociacionId)) {
-        const validacionId = await this.crearValidacion(request, 'no_habilitado', 'Comercio no vinculado a tu asociación');
-        return {
-          resultado: 'no_habilitado',
-          motivo: 'Este comercio no está vinculado a tu asociación.',
-          socio: {
-            nombre: socioData.nombre,
-            estado: socioData.estado,
-            asociacion: asociacionId
-          },
-          validacionId
-        };
-      }
-
-      // 7. Todo OK - crear validación exitosa
-      console.log('✅ Validación exitosa');
-      const validacionId = await this.crearValidacion(request, 'habilitado', 'Acceso autorizado');
-
+      // Si todo está bien, registrar validación exitosa
+      const validacionId = await ValidacionesService.crearValidacion(request, 'habilitado', 'Validación exitosa');
       return {
         resultado: 'habilitado',
         motivo: 'Validación exitosa',
@@ -216,7 +216,8 @@ export class ValidacionesService {
           estado: socioData.estado,
           asociacion: asociacionId
         },
-        validacionId
+        validacionId,
+        fechaHora: new Date()
       };
 
     } catch (error) {
@@ -298,7 +299,7 @@ export class ValidacionesService {
     }
   }
 
-  private static async crearValidacion(
+  public static async crearValidacion(
     request: ValidacionRequest, 
     resultado: ValidacionResponse['resultado'], 
     motivo?: string

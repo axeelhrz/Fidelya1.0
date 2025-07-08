@@ -30,6 +30,7 @@ export interface Beneficio {
     fechaActualizacion: Timestamp;
   }[];
   destacado?: boolean;
+  asociacionId?: string; // ID de la asociación que creó el beneficio
 
 }
 

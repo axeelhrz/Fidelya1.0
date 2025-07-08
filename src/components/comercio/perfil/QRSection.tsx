@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   Box,
   Card,
@@ -19,7 +19,6 @@ import {
   Tooltip,
   Chip,
   CircularProgress,
-  Grid,
   useTheme,
   useMediaQuery,
 } from '@mui/material';
@@ -48,7 +47,6 @@ import toast from 'react-hot-toast';
 export const QRSection: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const isTablet = useMediaQuery(theme.breakpoints.down('lg'));
   
   const { comercio, generateQRUrl, generateWebUrl } = useComercios();
   const [qrDialogOpen, setQrDialogOpen] = useState(false);
@@ -511,49 +509,55 @@ export const QRSection: React.FC = () => {
                   {generating ? 'Generando...' : 'Generar Códigos QR'}
                 </Button>
 
-                {/* Info Cards */}
-                <Grid container spacing={2} sx={{ mt: 4, maxWidth: 600, mx: 'auto' }}>
-                  <Grid item xs={12} sm={6}>
-                    <Paper
-                      elevation={0}
-                      sx={{
-                        p: 3,
-                        border: '1px solid #e2e8f0',
-                        borderRadius: 3,
-                        textAlign: 'center',
-                        height: '100%',
-                      }}
-                    >
-                      <Smartphone sx={{ fontSize: 32, color: '#6366f1', mb: 2 }} />
-                      <Typography variant="h6" sx={{ fontWeight: 700, color: '#374151', mb: 1 }}>
-                        QR Aplicación
-                      </Typography>
-                      <Typography variant="body2" sx={{ color: '#64748b' }}>
-                        Optimizado para la app móvil Fidelitá
-                      </Typography>
-                    </Paper>
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <Paper
-                      elevation={0}
-                      sx={{
-                        p: 3,
-                        border: '1px solid #e2e8f0',
-                        borderRadius: 3,
-                        textAlign: 'center',
-                        height: '100%',
-                      }}
-                    >
-                      <Language sx={{ fontSize: 32, color: '#10b981', mb: 2 }} />
-                      <Typography variant="h6" sx={{ fontWeight: 700, color: '#374151', mb: 1 }}>
-                        QR Web
-                      </Typography>
-                      <Typography variant="body2" sx={{ color: '#64748b' }}>
-                        Compatible con cualquier lector QR
-                      </Typography>
-                    </Paper>
-                  </Grid>
-                </Grid>
+                {/* Info Cards - Replaced Grid with Stack */}
+                <Stack 
+                  direction={{ xs: 'column', sm: 'row' }} 
+                  spacing={2} 
+                  sx={{ 
+                    mt: 4, 
+                    maxWidth: 600, 
+                    mx: 'auto',
+                    alignItems: 'stretch'
+                  }}
+                >
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      p: 3,
+                      border: '1px solid #e2e8f0',
+                      borderRadius: 3,
+                      textAlign: 'center',
+                      flex: 1,
+                    }}
+                  >
+                    <Smartphone sx={{ fontSize: 32, color: '#6366f1', mb: 2 }} />
+                    <Typography variant="h6" sx={{ fontWeight: 700, color: '#374151', mb: 1 }}>
+                      QR Aplicación
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: '#64748b' }}>
+                      Optimizado para la app móvil Fidelitá
+                    </Typography>
+                  </Paper>
+                  
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      p: 3,
+                      border: '1px solid #e2e8f0',
+                      borderRadius: 3,
+                      textAlign: 'center',
+                      flex: 1,
+                    }}
+                  >
+                    <Language sx={{ fontSize: 32, color: '#10b981', mb: 2 }} />
+                    <Typography variant="h6" sx={{ fontWeight: 700, color: '#374151', mb: 1 }}>
+                      QR Web
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: '#64748b' }}>
+                      Compatible con cualquier lector QR
+                    </Typography>
+                  </Paper>
+                </Stack>
               </motion.div>
             </Box>
           ) : (
@@ -606,9 +610,14 @@ export const QRSection: React.FC = () => {
                 </Stack>
               </Box>
 
-              <Grid container spacing={{ xs: 3, md: 6 }} alignItems="flex-start">
+              {/* Main Content - Replaced Grid with Stack */}
+              <Stack 
+                direction={{ xs: 'column', lg: 'row' }} 
+                spacing={{ xs: 3, md: 6 }} 
+                alignItems="flex-start"
+              >
                 {/* QR Preview */}
-                <Grid item xs={12} lg={6}>
+                <Box sx={{ flex: 1, width: '100%' }}>
                   <Paper
                     elevation={0}
                     sx={{
@@ -766,10 +775,10 @@ export const QRSection: React.FC = () => {
                       </Tooltip>
                     </Stack>
                   </Paper>
-                </Grid>
+                </Box>
 
                 {/* Actions and Info */}
-                <Grid item xs={12} lg={6}>
+                <Box sx={{ flex: 1, width: '100%' }}>
                   <Stack spacing={3}>
                     {/* URL Info */}
                     <Paper
@@ -965,8 +974,8 @@ export const QRSection: React.FC = () => {
                       Regenerar Códigos QR
                     </Button>
                   </Stack>
-                </Grid>
-              </Grid>
+                </Box>
+              </Stack>
             </motion.div>
           )}
 
@@ -988,24 +997,31 @@ export const QRSection: React.FC = () => {
                   Instrucciones de Uso
                 </Typography>
               </Stack>
-              <Grid container spacing={2}>
-                <Grid item xs={12} md={6}>
+              
+              {/* Instructions Content - Replaced Grid with Stack */}
+              <Stack 
+                direction={{ xs: 'column', md: 'row' }} 
+                spacing={2} 
+                sx={{ mb: 2 }}
+              >
+                <Box sx={{ flex: 1 }}>
                   <Typography variant="body2" sx={{ color: '#4c1d95', mb: 1 }}>
                     <strong>QR de Aplicación:</strong>
                   </Typography>
                   <Typography variant="body2" sx={{ color: '#4c1d95', mb: 2 }}>
                     Optimizado para socios que usan la app móvil Fidelitá
                   </Typography>
-                </Grid>
-                <Grid item xs={12} md={6}>
+                </Box>
+                <Box sx={{ flex: 1 }}>
                   <Typography variant="body2" sx={{ color: '#4c1d95', mb: 1 }}>
                     <strong>QR Web:</strong>
                   </Typography>
                   <Typography variant="body2" sx={{ color: '#4c1d95', mb: 2 }}>
                     Compatible con cualquier lector QR, redirige a la página web
                   </Typography>
-                </Grid>
-              </Grid>
+                </Box>
+              </Stack>
+              
               <Stack spacing={1} sx={{ mt: 2 }}>
                 <Typography variant="body2" sx={{ color: '#4c1d95' }}>
                   1. <strong>Genera</strong> tus códigos QR usando el botón correspondiente
@@ -1101,7 +1117,7 @@ export const QRSection: React.FC = () => {
           <Typography variant="body1" sx={{ color: '#64748b', mb: 1 }}>
             {activeQRType === 'app' ? 'Para aplicación móvil' : 'Para acceso web'}
           </Typography>
-          <Typography variant="body2" sx={{ color: '#64748b', mb: 4 }}>
+                    <Typography variant="body2" sx={{ color: '#64748b', mb: 4 }}>
             Escanea este código para validar beneficios
           </Typography>
 
@@ -1115,60 +1131,61 @@ export const QRSection: React.FC = () => {
           >
             <Typography 
               variant="body2" 
-              sx={{              color: '#475569',
-              fontFamily: 'monospace',
-              wordBreak: 'break-all',
-              fontSize: { xs: '0.75rem', md: '0.8rem' },
-            }}
+              sx={{
+                color: '#475569',
+                fontFamily: 'monospace',
+                wordBreak: 'break-all',
+                fontSize: { xs: '0.75rem', md: '0.8rem' },
+              }}
+            >
+              {getCurrentUrl()}
+            </Typography>
+          </Box>
+        </DialogContent>
+        
+        <DialogActions sx={{ p: 3, pt: 0 }}>
+          <Stack 
+            direction={{ xs: 'column', sm: 'row' }} 
+            spacing={2} 
+            width="100%"
+            sx={{ gap: 2 }}
           >
-            {getCurrentUrl()}
-          </Typography>
-        </Box>
-      </DialogContent>
-      
-      <DialogActions sx={{ p: 3, pt: 0 }}>
-        <Stack 
-          direction={{ xs: 'column', sm: 'row' }} 
-          spacing={2} 
-          width="100%"
-          sx={{ gap: 2 }}
-        >
-          <Button
-            variant="outlined"
-            startIcon={<Share />}
-            onClick={() => handleShareQR(activeQRType)}
-            disabled={!getCurrentQRData()}
-            sx={{ 
-              flex: 1,
-              minWidth: { xs: '100%', sm: 'auto' }
-            }}
-          >
-            Compartir
-          </Button>
-          <Button
-            variant="contained"
-            startIcon={downloading ? <CircularProgress size={16} /> : <Download />}
-            onClick={() => handleDownloadQR('pdf', activeQRType)}
-            disabled={!getCurrentQRData() || downloading}
-            sx={{
-              flex: 1,
-              minWidth: { xs: '100%', sm: 'auto' },
-              background: 'linear-gradient(135deg, #ec4899 0%, #be185d 100%)',
-              '&:hover': {
-                background: 'linear-gradient(135deg, #be185d 0%, #9d174d 100%)',
-              },
-              '&:disabled': {
-                background: '#e2e8f0',
-                color: '#94a3b8',
-              }
-            }}
-          >
-            {downloading ? 'Generando...' : 'Descargar'}
-          </Button>
-        </Stack>
-      </DialogActions>
-    </Dialog>
-  </>
-);
+            <Button
+              variant="outlined"
+              startIcon={<Share />}
+              onClick={() => handleShareQR(activeQRType)}
+              disabled={!getCurrentQRData()}
+              sx={{ 
+                flex: 1,
+                minWidth: { xs: '100%', sm: 'auto' }
+              }}
+            >
+              Compartir
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={downloading ? <CircularProgress size={16} /> : <Download />}
+              onClick={() => handleDownloadQR('pdf', activeQRType)}
+              disabled={!getCurrentQRData() || downloading}
+              sx={{
+                flex: 1,
+                minWidth: { xs: '100%', sm: 'auto' },
+                background: 'linear-gradient(135deg, #ec4899 0%, #be185d 100%)',
+                '&:hover': {
+                  background: 'linear-gradient(135deg, #be185d 0%, #9d174d 100%)',
+                },
+                '&:disabled': {
+                  background: '#e2e8f0',
+                  color: '#94a3b8',
+                }
+              }}
+            >
+              {downloading ? 'Generando...' : 'Descargar'}
+            </Button>
+          </Stack>
+        </DialogActions>
+      </Dialog>
+    </>
+  );
 };
 
