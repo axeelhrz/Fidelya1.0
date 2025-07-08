@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { 
   User, 
   Edit3, 
@@ -9,8 +9,6 @@ import {
   Phone, 
   Calendar, 
   Settings,
-  Save,
-  X,
   RefreshCw,
   Building2,
   CheckCircle,
@@ -40,13 +38,8 @@ import {
   Sun,
   Moon,
   Laptop,
-  Languages,
   DollarSign,
   Clock3,
-  Eye,
-  EyeOff,
-  Trash2,
-  AlertCircle,
   Zap,
   Sparkles,
   Diamond,
@@ -57,11 +50,9 @@ import {
   MapPin,
   ShoppingBag,
   Percent,
-  Timer,
   Users,
   Store,
   ArrowUpRight,
-  ArrowDownRight,
   Flame,
   Calendar as CalendarIcon,
   ChevronRight,
@@ -78,19 +69,10 @@ import { Input } from '@/components/ui/Input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/Dialog';
 import { useSocioProfile } from '@/hooks/useSocioProfile';
 import { useAuth } from '@/hooks/useAuth';
-import { SocioConfiguration } from '@/types/socio';
-import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns';
+import { Socio, SocioConfiguration, SocioStats } from '@/types/socio';
+import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import toast from 'react-hot-toast';
-
-// Interfaces
-interface ProfileFormData {
-  nombre: string;
-  telefono: string;
-  dni: string;
-  direccion: string;
-  fechaNacimiento: string;
-}
 
 // Enhanced Futuristic Profile Image Uploader
 const FuturisticProfileImageUploader: React.FC<{
@@ -343,12 +325,12 @@ const StatsCard: React.FC<{
   </div>
 );
 
-// Enhanced Detailed Stats Modal Component - MUCH LARGER AND BETTER ORGANIZED
+// Enhanced Detailed Stats Modal Component - FIXED TO HANDLE NULL STATS
 const DetailedStatsModal: React.FC<{
   isOpen: boolean;
   onClose: () => void;
-  stats: any;
-  socio: any;
+  stats: SocioStats | null; // Changed to allow null
+  socio: Socio | null;
 }> = ({ isOpen, onClose, stats, socio }) => {
   const [activeTab, setActiveTab] = useState<'overview' | 'trends' | 'categories' | 'merchants'>('overview');
 
@@ -367,16 +349,19 @@ const DetailedStatsModal: React.FC<{
       Math.floor((new Date().getTime() - socio.creadoEn.toDate().getTime()) / (1000 * 60 * 60 * 24)) : 0;
     
     const avgBenefitsPerMonth = totalDays > 0 ? 
-      Math.round((stats.beneficiosUsados / totalDays) * 30) : 0;
+      Math.round(((stats.beneficiosUsados ?? 0) / totalDays) * 30) : 0;
     
-    const avgSavingsPerBenefit = stats.beneficiosUsados > 0 ? 
-      Math.round(stats.ahorroTotal / stats.beneficiosUsados) : 0;
+    const avgSavingsPerBenefit = (stats.beneficiosUsados ?? 0) > 0 ? 
+      Math.round((stats.ahorroTotal ?? 0) / (stats.beneficiosUsados ?? 1)) : 0;
 
     const efficiencyScore = stats.validacionesExitosas || 0;
 
     // Calculate growth rate (benefits this month vs last month)
-    const growthRate = stats.beneficiosEsteMes > 0 && stats.beneficiosUsados > stats.beneficiosEsteMes ?
-      Math.round(((stats.beneficiosEsteMes / (stats.beneficiosUsados - stats.beneficiosEsteMes)) - 1) * 100) : 0;
+    const beneficiosEsteMes = stats.beneficiosEsteMes ?? 0;
+    const beneficiosUsados = stats.beneficiosUsados ?? 0;
+    const growthRate = beneficiosEsteMes > 0 && beneficiosUsados > beneficiosEsteMes
+      ? Math.round(((beneficiosEsteMes / (beneficiosUsados - beneficiosEsteMes)) - 1) * 100)
+      : 0;
 
     return {
       totalDays,
@@ -446,7 +431,13 @@ const DetailedStatsModal: React.FC<{
       return [];
     }
 
-    return stats.comerciosMasVisitados.map((merchant: any, index: number) => ({
+    type Merchant = {
+      nombre: string;
+      visitas: number;
+      ultimaVisita: Date | { toDate: () => Date };
+    };
+
+    return stats.comerciosMasVisitados.map((merchant: Merchant, index: number) => ({
       name: merchant.nombre,
       visits: merchant.visitas,
       savings: merchant.visitas * additionalMetrics.avgSavingsPerBenefit,
@@ -541,7 +532,7 @@ const DetailedStatsModal: React.FC<{
             ].map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
+                onClick={() => setActiveTab(tab.id as 'overview' | 'trends' | 'categories' | 'merchants')}
                 className={`flex-1 flex flex-col items-center gap-2 px-6 py-4 rounded-xl text-sm font-medium transition-all duration-300 ${
                   activeTab === tab.id
                     ? `bg-gradient-to-r ${tab.color} text-white shadow-lg transform scale-105`
@@ -935,6 +926,7 @@ const DetailedStatsModal: React.FC<{
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: index * 0.1 }}
                           >
+                            
                             <div className="flex items-center justify-between mb-4">
                               <div className="flex items-center gap-4">
                                 <div 
@@ -1212,9 +1204,18 @@ const DetailedStatsModal: React.FC<{
   );
 };
 
+// Interfaces
+interface ProfileFormData {
+  nombre: string;
+  telefono: string;
+  dni: string;
+  direccion: string;
+  fechaNacimiento: string;
+}
+
 // Main Component
 export default function CleanSocioPerfilPage() {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const { 
     socio, 
     stats, 
@@ -1348,14 +1349,14 @@ export default function CleanSocioPerfilPage() {
         return;
       }
 
-      const updateData: any = {
+      const updateData: Partial<ProfileFormData> = {
         nombre: formData.nombre.trim(),
       };
 
       if (formData.telefono.trim()) updateData.telefono = formData.telefono.trim();
       if (formData.dni.trim()) updateData.dni = formData.dni.trim();
       if (formData.direccion.trim()) updateData.direccion = formData.direccion.trim();
-      if (formData.fechaNacimiento) updateData.fechaNacimiento = new Date(formData.fechaNacimiento);
+      if (formData.fechaNacimiento) updateData.fechaNacimiento = formData.fechaNacimiento;
 
       await updateProfile(updateData);
       setEditModalOpen(false);
@@ -1410,6 +1411,16 @@ export default function CleanSocioPerfilPage() {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      toast.success('Sesión cerrada correctamente');
+    } catch (error) {
+      console.error('Error during logout:', error);
+      toast.error('Error al cerrar sesión');
+    }
+  };
+
   // Utility functions
   const getStatusColor = (estado: string) => {
     switch (estado) {
@@ -1444,7 +1455,13 @@ export default function CleanSocioPerfilPage() {
 
   if (loading) {
     return (
-      <DashboardLayout activeSection="perfil" sidebarComponent={SocioSidebar}>
+      <DashboardLayout
+        activeSection="perfil"
+        sidebarComponent={(props) => (
+          <SocioSidebar {...props} onLogoutClick={handleLogout} />
+        )}
+        onLogout={handleLogout}
+      >
         <div className="p-6 max-w-6xl mx-auto">
           <div className="animate-pulse space-y-6">
             <div className="h-8 bg-gray-200 rounded w-1/4"></div>
@@ -1465,7 +1482,13 @@ export default function CleanSocioPerfilPage() {
   }
 
   return (
-    <DashboardLayout activeSection="perfil" sidebarComponent={SocioSidebar}>
+    <DashboardLayout 
+      activeSection="perfil" 
+      sidebarComponent={(props) => (
+        <SocioSidebar {...props} onLogoutClick={handleLogout} />
+      )}
+      onLogout={handleLogout}
+    >
       <div className="min-h-screen bg-gray-50">
         {/* Header */}
         <div className="bg-white border-b border-gray-200">
@@ -1823,8 +1846,7 @@ export default function CleanSocioPerfilPage() {
                         <div className="flex items-center justify-between mb-2">
                           <h4 className="font-medium text-gray-900">{asociacion.nombre}</h4>
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            asociacion.estado === 'activo' 
-                              ? 'bg-green-100 text-green-800' 
+                            asociacion.estado === 'activo'                              ? 'bg-green-100 text-green-800' 
                               : 'bg-red-100 text-red-800'
                           }`}>
                             {asociacion.estado}
@@ -1847,7 +1869,7 @@ export default function CleanSocioPerfilPage() {
           </div>
         </div>
 
-        {/* Enhanced Detailed Stats Modal */}
+        {/* Enhanced Detailed Stats Modal - FIXED TO HANDLE NULL STATS */}
         <DetailedStatsModal
           isOpen={detailsModalOpen}
           onClose={() => setDetailsModalOpen(false)}
@@ -1855,7 +1877,6 @@ export default function CleanSocioPerfilPage() {
           socio={socio}
         />
 
-        {/* Rest of modals remain the same... */}
         {/* Edit Profile Modal */}
         <Dialog open={editModalOpen} onClose={() => setEditModalOpen(false)}>
           <DialogContent className="max-w-md">
@@ -1933,7 +1954,7 @@ export default function CleanSocioPerfilPage() {
                 ].map((tab) => (
                   <button
                     key={tab.id}
-                    onClick={() => setActiveConfigTab(tab.id as any)}
+                    onClick={() => setActiveConfigTab(tab.id as 'general' | 'notifications' | 'privacy')}
                     className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                       activeConfigTab === tab.id
                         ? 'bg-white text-blue-600 shadow-sm'
@@ -1972,7 +1993,7 @@ export default function CleanSocioPerfilPage() {
                       </label>
                       <select
                         value={configuracion.moneda}
-                        onChange={(e) => setConfiguracion(prev => ({ ...prev, moneda: e.target.value as any }))}
+                        onChange={(e) => setConfiguracion(prev => ({ ...prev, moneda: e.target.value as 'ARS' | 'USD' | 'EUR' }))}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       >
                         <option value="ARS">Peso Argentino (ARS)</option>
@@ -1994,7 +2015,7 @@ export default function CleanSocioPerfilPage() {
                       ].map((tema) => (
                         <button
                           key={tema.value}
-                          onClick={() => setConfiguracion(prev => ({ ...prev, tema: tema.value as any }))}
+                          onClick={() => setConfiguracion(prev => ({ ...prev, tema: tema.value as 'light' | 'dark' | 'auto' }))}
                           className={`flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-colors ${
                             configuracion.tema === tema.value
                               ? 'border-blue-500 bg-blue-50'
@@ -2146,3 +2167,4 @@ export default function CleanSocioPerfilPage() {
     </DashboardLayout>
   );
 }
+

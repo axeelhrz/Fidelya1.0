@@ -189,11 +189,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               }}
             >
               <div className="h-full bg-white/90 backdrop-blur-xl border-r border-white/20 shadow-2xl">
-                {typeof SidebarComponent === 'function' ? (
-                  <SidebarComponent {...sidebarProps} />
-                ) : (
-                  <SidebarComponent {...sidebarProps} />
-                )}
+                {React.createElement(SidebarComponent, sidebarProps)}
               </div>
             </motion.div>
           </>
