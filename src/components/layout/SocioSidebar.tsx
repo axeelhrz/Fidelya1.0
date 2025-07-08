@@ -8,9 +8,6 @@ import {
   ChevronRight, 
   LogOut,
   Zap,
-  Activity,
-  User,
-  Award,
   TrendingUp,
   Calendar,
   MapPin,
@@ -129,7 +126,9 @@ export const SocioSidebar: React.FC<SocioSidebarProps> = ({
         
         const validacionesHoy = historial.filter(v => {
           try {
-            const validationDate = v.fechaHora?.toDate ? v.fechaHora.toDate() : new Date(v.fechaHora);
+            const validationDate = v.fechaHora && typeof v.fechaHora.toDate === 'function'
+              ? v.fechaHora.toDate()
+              : new Date(v.fechaHora as unknown as string | number | Date);
             validationDate.setHours(0, 0, 0, 0);
             return validationDate.getTime() === today.getTime();
           } catch {
@@ -144,7 +143,9 @@ export const SocioSidebar: React.FC<SocioSidebarProps> = ({
           .reduce((total, v) => total + (v.montoDescuento || 0), 0);
 
         const ultimaValidacion = historial.length > 0 && historial[0].fechaHora 
-          ? (historial[0].fechaHora.toDate ? historial[0].fechaHora.toDate() : new Date(historial[0].fechaHora))
+          ? (historial[0].fechaHora && typeof (historial[0].fechaHora as { toDate: () => Date }).toDate === 'function'
+              ? (historial[0].fechaHora as { toDate: () => Date }).toDate()
+              : new Date(historial[0].fechaHora as unknown as string | number | Date))
           : null;
 
         setUserStats({
@@ -562,9 +563,9 @@ export const SocioSidebar: React.FC<SocioSidebarProps> = ({
                   {/* Avatar */}
                   <div className="relative">
                     <div className="w-11 h-11 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-lg">
-                      {user?.photoURL ? (
+                      {user?.avatar ? (
                         <img 
-                          src={user.photoURL} 
+                          src={user.avatar} 
                           alt="Avatar" 
                           className="w-full h-full rounded-xl object-cover"
                         />
@@ -713,9 +714,9 @@ export const SocioSidebar: React.FC<SocioSidebarProps> = ({
                 {/* User avatar in collapsed mode */}
                 <div className="mb-3">
                   <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg mx-auto relative">
-                    {user?.photoURL ? (
+                    {user?.avatar ? (
                       <img 
-                        src={user.photoURL} 
+                        src={user.avatar} 
                         alt="Avatar" 
                         className="w-full h-full rounded-2xl object-cover"
                       />
