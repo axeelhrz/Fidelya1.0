@@ -10,13 +10,14 @@ import {
   limit,
   Timestamp,
   writeBatch,
+  setDoc,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Comercio, ComercioFormData, ComercioStats, Validacion } from '@/types/comercio';
 import { uploadImage, deleteImage, generateImagePath, validateImageFile } from '@/utils/storage/uploadImage';
 
 export class ComercioService {
-  // Update comercio profile with validation
+  // Update comercio profile with validation and document creation if needed
   static async updateProfile(userId: string, data: ComercioFormData): Promise<void> {
     try {
       // Validate required fields
@@ -39,6 +40,9 @@ export class ComercioService {
       }
 
       const comercioRef = doc(db, 'comercios', userId);
+      
+      // Check if document exists
+      const comercioDoc = await getDoc(comercioRef);
       
       // Prepare update data with proper validation
       const updateData = {
@@ -65,8 +69,37 @@ export class ComercioService {
         actualizadoEn: Timestamp.now()
       };
       
-      await updateDoc(comercioRef, updateData);
-      console.log('✅ Perfil de comercio actualizado exitosamente');
+      if (comercioDoc.exists()) {
+        // Document exists, update it
+        await updateDoc(comercioRef, updateData);
+        console.log('✅ Perfil de comercio actualizado exitosamente');
+      } else {
+        // Document doesn't exist, create it with default values
+        console.log('⚠️ Documento de comercio no existe, creando nuevo documento...');
+        
+        const newComercioData = {
+          ...updateData,
+          estado: 'activo',
+          asociacionesVinculadas: [],
+          configuracion: {
+            notificacionesEmail: true,
+            notificacionesWhatsApp: false,
+            autoValidacion: false
+          },
+          creadoEn: Timestamp.now(),
+          logoUrl: '',
+          imagenPrincipalUrl: '',
+          qrCode: '',
+          verificado: false,
+          puntuacion: 0,
+          totalReviews: 0,
+          beneficiosActivos: 0,
+          validacionesTotales: 0
+        };
+        
+        await setDoc(comercioRef, newComercioData);
+        console.log('✅ Nuevo documento de comercio creado exitosamente');
+      }
       
     } catch (error) {
       console.error('❌ Error updating comercio profile:', error);
@@ -132,7 +165,52 @@ export class ComercioService {
         actualizadoEn: Timestamp.now()
       };
 
-      await updateDoc(comercioRef, updateData);
+      // Check if document exists before updating
+      if (comercioDoc.exists()) {
+        await updateDoc(comercioRef, updateData);
+      } else {
+        // Create document if it doesn't exist
+        const newComercioData = {
+          ...updateData,
+          estado: 'activo',
+          nombre: '',
+          nombreComercio: '',
+          email: '',
+          categoria: '',
+          direccion: '',
+          telefono: '',
+          horario: '',
+          descripcion: '',
+          sitioWeb: '',
+          razonSocial: '',
+          cuit: '',
+          ubicacion: '',
+          emailContacto: '',
+          visible: true,
+          redesSociales: {
+            facebook: '',
+            instagram: '',
+            twitter: '',
+          },
+          asociacionesVinculadas: [],
+          configuracion: {
+            notificacionesEmail: true,
+            notificacionesWhatsApp: false,
+            autoValidacion: false
+          },
+          creadoEn: Timestamp.now(),
+          logoUrl: type === 'logo' ? downloadURL : '',
+          imagenPrincipalUrl: type === 'imagen' ? downloadURL : '',
+          qrCode: '',
+          verificado: false,
+          puntuacion: 0,
+          totalReviews: 0,
+          beneficiosActivos: 0,
+          validacionesTotales: 0
+        };
+        
+        await setDoc(comercioRef, newComercioData);
+      }
       
       onProgress?.(98);
 
@@ -411,14 +489,60 @@ export class ComercioService {
     }
   }
 
-  // Update comercio visibility
+  // Update comercio visibility with document existence check
   static async updateVisibility(userId: string, visible: boolean): Promise<void> {
     try {
       const comercioRef = doc(db, 'comercios', userId);
-      await updateDoc(comercioRef, {
-        visible,
-        actualizadoEn: Timestamp.now()
-      });
+      const comercioDoc = await getDoc(comercioRef);
+      
+      if (comercioDoc.exists()) {
+        await updateDoc(comercioRef, {
+          visible,
+          actualizadoEn: Timestamp.now()
+        });
+      } else {
+        // Create document if it doesn't exist
+        const newComercioData = {
+          visible,
+          estado: 'activo',
+          nombre: '',
+          nombreComercio: '',
+          email: '',
+          categoria: '',
+          direccion: '',
+          telefono: '',
+          horario: '',
+          descripcion: '',
+          sitioWeb: '',
+          razonSocial: '',
+          cuit: '',
+          ubicacion: '',
+          emailContacto: '',
+          redesSociales: {
+            facebook: '',
+            instagram: '',
+            twitter: '',
+          },
+          asociacionesVinculadas: [],
+          configuracion: {
+            notificacionesEmail: true,
+            notificacionesWhatsApp: false,
+            autoValidacion: false
+          },
+          creadoEn: Timestamp.now(),
+          actualizadoEn: Timestamp.now(),
+          logoUrl: '',
+          imagenPrincipalUrl: '',
+          qrCode: '',
+          verificado: false,
+          puntuacion: 0,
+          totalReviews: 0,
+          beneficiosActivos: 0,
+          validacionesTotales: 0
+        };
+        
+        await setDoc(comercioRef, newComercioData);
+      }
       
       console.log(`✅ Visibilidad actualizada: ${visible ? 'visible' : 'oculto'}`);
     } catch (error) {
@@ -460,6 +584,63 @@ export class ComercioService {
         status: 'error', 
         message: 'Error en el servicio de comercios' 
       };
+    }
+  }
+
+  // Helper method to create a comercio document if it doesn't exist
+  static async ensureComercioDocument(userId: string, basicData?: Partial<Comercio>): Promise<void> {
+    try {
+      const comercioRef = doc(db, 'comercios', userId);
+      const comercioDoc = await getDoc(comercioRef);
+      
+      if (!comercioDoc.exists()) {
+        console.log('⚠️ Creando documento de comercio faltante para usuario:', userId);
+        
+        const defaultComercioData = {
+          estado: 'activo',
+          nombre: basicData?.nombre || '',
+          nombreComercio: basicData?.nombreComercio || '',
+          email: basicData?.email || '',
+          categoria: basicData?.categoria || '',
+          direccion: basicData?.direccion || '',
+          telefono: basicData?.telefono || '',
+          horario: basicData?.horario || '',
+          descripcion: basicData?.descripcion || '',
+          sitioWeb: basicData?.sitioWeb || '',
+          razonSocial: basicData?.razonSocial || '',
+          cuit: basicData?.cuit || '',
+          ubicacion: basicData?.ubicacion || '',
+          emailContacto: basicData?.emailContacto || '',
+          visible: basicData?.visible ?? true,
+          redesSociales: basicData?.redesSociales || {
+            facebook: '',
+            instagram: '',
+            twitter: '',
+          },
+          asociacionesVinculadas: basicData?.asociacionesVinculadas || [],
+          configuracion: basicData?.configuracion || {
+            notificacionesEmail: true,
+            notificacionesWhatsApp: false,
+            autoValidacion: false
+          },
+          creadoEn: Timestamp.now(),
+          actualizadoEn: Timestamp.now(),
+          logoUrl: basicData?.logoUrl || '',
+          imagenPrincipalUrl: basicData?.imagenPrincipalUrl || '',
+          qrCode: basicData?.qrCode || '',
+          verificado: basicData?.verificado ?? false,
+          puntuacion: basicData?.puntuacion ?? 0,
+          totalReviews: basicData?.totalReviews ?? 0,
+          beneficiosActivos: basicData?.beneficiosActivos ?? 0,
+          validacionesTotales: basicData?.validacionesTotales ?? 0
+        };
+        
+        await setDoc(comercioRef, defaultComercioData);
+        console.log('✅ Documento de comercio creado exitosamente');
+      }
+    } catch (error) {
+      console.error('❌ Error ensuring comercio document:', error);
+      throw new Error('Error al crear el documento del comercio');
     }
   }
 }
