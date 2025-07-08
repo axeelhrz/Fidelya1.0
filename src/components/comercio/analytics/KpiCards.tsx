@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { Box } from '@mui/material';
 import {
   CheckCircle,
   CalendarToday,
@@ -191,57 +190,43 @@ export const KpiCards: React.FC<KpiCardsProps> = ({ data, loading = false }) => 
   ];
 
   return (
-    <Box sx={{ width: '100%' }}>
+    <div className="w-full">
       {/* Métricas principales - tamaño grande */}
-      <Box sx={{ 
-        display: 'flex', 
-        flexWrap: 'wrap', 
-        gap: 4, 
-        mb: 5,
-        '& > *': {
-          flex: { xs: '1 1 100%', sm: '1 1 calc(50% - 16px)', lg: '1 1 calc(25% - 24px)' },
-          minWidth: '280px'
-        }
-      }}>
+      <div className="flex flex-wrap gap-4 mb-8">
         {kpiData.map((kpi, index) => (
-          <UnifiedMetricsCard
+          <div
             key={index}
-            {...kpi}
-            loading={loading}
-            size="large" // Tamaño grande para métricas principales
-            variant="detailed"
-            showProgress={true}
-            delay={index * 0.1}
-          />
+            className="flex-1 min-w-[280px] basis-full sm:basis-[calc(50%-16px)] lg:basis-[calc(25%-24px)]"
+          >
+            <UnifiedMetricsCard
+              {...kpi}
+              loading={loading}
+              size="large" // Tamaño grande para métricas principales
+              variant="detailed"
+              showProgress={true}
+              delay={index * 0.1}
+            />
+          </div>
         ))}
-      </Box>
+      </div>
 
       {/* Métricas secundarias - tamaño medio */}
-      <Box sx={{ 
-        display: 'flex', 
-        flexWrap: 'wrap', 
-        gap: 4,
-        '& > *': {
-          flex: { 
-            xs: '1 1 100%', 
-            sm: '1 1 calc(50% - 16px)', 
-            md: '1 1 calc(33.333% - 21.33px)', 
-            lg: '1 1 calc(16.666% - 26.67px)' 
-          },
-          minWidth: '240px'
-        }
-      }}>
+      <div className="flex flex-wrap gap-4">
         {additionalMetrics.map((metric, index) => (
-          <UnifiedMetricsCard
+          <div
             key={index}
-            {...metric}
-            loading={loading}
-            size="medium" // Tamaño medio para métricas secundarias
-            variant="detailed"
-            delay={(index + 4) * 0.1}
-          />
+            className="flex-1 min-w-[240px] basis-full sm:basis-[calc(50%-16px)] md:basis-[calc(33.333%-21.33px)] lg:basis-[calc(16.666%-26.67px)]"
+          >
+            <UnifiedMetricsCard
+              {...metric}
+              loading={loading}
+              size="medium" // Tamaño medio para métricas secundarias
+              variant="detailed"
+              delay={(index + 4) * 0.1}
+            />
+          </div>
         ))}
-      </Box>
-    </Box>
+      </div>
+    </div>
   );
 };
