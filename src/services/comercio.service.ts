@@ -11,7 +11,7 @@ import {
   Timestamp,
   writeBatch,
 } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { dbs } from '@/lib/firebase';
 import { Comercio, ComercioFormData, ComercioStats, Validacion } from '@/types/comercio';
 import { uploadImage, deleteImage, generateImagePath } from '@/utils/storage/uploadImage';
 
@@ -161,7 +161,7 @@ export class ComercioService {
     }
   }
 
-  // Get most used benefit
+  // Get most used benefit - FIXED: Handle empty array case
   private static async getMostUsedBenefit(userId: string) {
     try {
       const validacionesRef = collection(db, 'validaciones');
@@ -184,7 +184,13 @@ export class ComercioService {
         }
       });
 
-      const mostUsedId = Object.keys(beneficioCount).reduce((a, b) => 
+      // FIXED: Check if there are any benefits before using reduce
+      const beneficioIds = Object.keys(beneficioCount);
+      if (beneficioIds.length === 0) {
+        return undefined;
+      }
+
+      const mostUsedId = beneficioIds.reduce((a, b) => 
         beneficioCount[a] > beneficioCount[b] ? a : b
       );
 
