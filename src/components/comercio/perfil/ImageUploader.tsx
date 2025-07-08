@@ -16,6 +16,7 @@ import {
   IconButton,
   Tooltip,
   Chip,
+  Alert,
 } from '@mui/material';
 import {
   Store,
@@ -25,139 +26,105 @@ import {
   Visibility,
   DragIndicator,
   ErrorOutline,
+  CheckCircle,
+  Refresh,
+  Delete,
 } from '@mui/icons-material';
 import { useComercios } from '@/hooks/useComercios';
+import { validateImageFile } from '@/utils/storage/uploadImage';
 import toast from 'react-hot-toast';
 
 interface ImageUploadState {
-  uploading: boolean;
-  progress: number;
   preview: string | null;
   error: string | null;
+  dragOver: boolean;
 }
 
 export const ImageUploader: React.FC = () => {
-  const { comercio, uploadImage } = useComercios();
+  const { comercio, uploadImage, uploadProgress, error: comercioError, clearError } = useComercios();
+  
   const [logoState, setLogoState] = useState<ImageUploadState>({
-    uploading: false,
-    progress: 0,
     preview: null,
-    error: null
+    error: null,
+    dragOver: false
   });
+  
   const [portadaState, setPortadaState] = useState<ImageUploadState>({
-    uploading: false,
-    progress: 0,
     preview: null,
-    error: null
+    error: null,
+    dragOver: false
   });
   
   const logoInputRef = useRef<HTMLInputElement>(null);
   const portadaInputRef = useRef<HTMLInputElement>(null);
-  const [dragOver, setDragOver] = useState<'logo' | 'portada' | null>(null);
 
-  const validateFile = useCallback((file: File): string | null => {
-    if (!file.type.startsWith('image/')) {
-      return 'Por favor selecciona un archivo de imagen válido';
+  const validateAndPreviewFile = useCallback(async (file: File): Promise<{ valid: boolean; preview?: string; error?: string }> => {
+    // Validate file
+    const validation = validateImageFile(file);
+    if (!validation.valid) {
+      return { valid: false, error: validation.error };
     }
-    if (file.size > 5 * 1024 * 1024) {
-      return 'La imagen debe ser menor a 5MB';
+
+    // Create preview
+    try {
+      const preview = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target?.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      return { valid: true, preview };
+    } catch (error) {
+      return { valid: false, error: 'Error al procesar la imagen' };
     }
-    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
-      return 'Solo se permiten archivos JPG, PNG o WebP';
-    }
-    return null;
   }, []);
 
-  const createPreview = useCallback((file: File): Promise<string> => {
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onload = (e) => resolve(e.target?.result as string);
-      reader.readAsDataURL(file);
-    });
-  }, []);
+  const handleImageUpload = useCallback(async (file: File, type: 'logo' | 'imagen') => {
+    const setState = type === 'logo' ? setLogoState : setPortadaState;
+    
+    // Clear any previous errors
+    clearError();
+    setState(prev => ({ ...prev, error: null }));
 
-  const simulateProgress = useCallback((setState: React.Dispatch<React.SetStateAction<ImageUploadState>>) => {
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress += Math.random() * 15;
-      if (progress >= 90) {
-        clearInterval(interval);
-        progress = 90;
-      }
-      setState(prev => ({ ...prev, progress }));
-    }, 200);
-    return interval;
-  }, []);
+    // Validate and preview file
+    const validation = await validateAndPreviewFile(file);
+    if (!validation.valid) {
+      setState(prev => ({ ...prev, error: validation.error || 'Error de validación' }));
+      toast.error(validation.error || 'Error de validación');
+      return;
+    }
 
-  const handleImageUpload = useCallback(
-    async (file: File, type: 'logo' | 'imagen') => {
-      const setState = type === 'logo' ? setLogoState : setPortadaState;
+    // Set preview
+    setState(prev => ({ ...prev, preview: validation.preview || null, error: null }));
+
+    try {
+      const downloadURL = await uploadImage(file, type);
       
-      // Validate file
-      const validationError = validateFile(file);
-      if (validationError) {
-        setState(prev => ({ ...prev, error: validationError }));
-        toast.error(validationError);
-        return;
+      if (downloadURL) {
+        // Clear preview after successful upload
+        setTimeout(() => {
+          setState(prev => ({ ...prev, preview: null }));
+        }, 2000);
       }
+    } catch (error) {
+      setState(prev => ({ ...prev, preview: null }));
+    }
+  }, [uploadImage, validateAndPreviewFile, clearError]);
 
-      // Create preview
-      const preview = await createPreview(file);
-      
-      setState(prev => ({ 
-        ...prev, 
-        uploading: true, 
-        progress: 0, 
-        preview, 
-        error: null 
-      }));
-
-      // Simulate progress
-      const progressInterval = simulateProgress(setState);
-
-      try {
-        const downloadURL = await uploadImage(file, type);
-        
-        if (downloadURL) {
-          clearInterval(progressInterval);
-          setState(prev => ({ 
-            ...prev, 
-            progress: 100, 
-            uploading: false,
-            preview: null 
-          }));
-          
-          // Reset after success animation
-          setTimeout(() => {
-            setState(prev => ({ ...prev, progress: 0 }));
-          }, 2000);
-        }
-      } catch (error) {
-        clearInterval(progressInterval);
-        const errorMessage = error instanceof Error ? error.message : 'Error al subir la imagen';
-        setState(prev => ({ 
-          ...prev, 
-          uploading: false, 
-          progress: 0, 
-          error: errorMessage,
-          preview: null 
-        }));
-      }
-    },
-    [uploadImage, validateFile, createPreview, simulateProgress]
-  );
-
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'imagen') => {
+  const handleFileSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'imagen') => {
     const file = event.target.files?.[0];
     if (file) {
       handleImageUpload(file, type);
     }
+    // Reset input value to allow selecting the same file again
     event.target.value = '';
-  };
+  }, [handleImageUpload]);
 
   const handleDrop = useCallback((event: React.DragEvent, type: 'logo' | 'imagen') => {
     event.preventDefault();
-    setDragOver(null);
+    const setState = type === 'logo' ? setLogoState : setPortadaState;
+    setState(prev => ({ ...prev, dragOver: false }));
     
     const files = Array.from(event.dataTransfer.files);
     const imageFile = files.find(file => file.type.startsWith('image/'));
@@ -165,42 +132,50 @@ export const ImageUploader: React.FC = () => {
     if (imageFile) {
       handleImageUpload(imageFile, type);
     } else {
-      toast.error('Por favor arrastra un archivo de imagen');
+      toast.error('Por favor arrastra un archivo de imagen válido');
     }
   }, [handleImageUpload]);
 
-  const handleDragOver = useCallback((event: React.DragEvent, type: 'logo' | 'portada') => {
+  const handleDragOver = useCallback((event: React.DragEvent, type: 'logo' | 'imagen') => {
     event.preventDefault();
-    setDragOver(type);
+    const setState = type === 'logo' ? setLogoState : setPortadaState;
+    setState(prev => ({ ...prev, dragOver: true }));
   }, []);
 
-  const handleDragLeave = useCallback((event: React.DragEvent) => {
+  const handleDragLeave = useCallback((event: React.DragEvent, type: 'logo' | 'imagen') => {
     event.preventDefault();
-    setDragOver(null);
+    const setState = type === 'logo' ? setLogoState : setPortadaState;
+    setState(prev => ({ ...prev, dragOver: false }));
   }, []);
 
-  const triggerFileInput = (type: 'logo' | 'portada') => {
-    if (type === 'logo' && !logoState.uploading) {
+  const triggerFileInput = useCallback((type: 'logo' | 'imagen') => {
+    if (uploadProgress.uploading) return;
+    
+    if (type === 'logo') {
       logoInputRef.current?.click();
-    } else if (type === 'portada' && !portadaState.uploading) {
+    } else {
       portadaInputRef.current?.click();
     }
-  };
+  }, [uploadProgress.uploading]);
+
+  const clearPreview = useCallback((type: 'logo' | 'imagen') => {
+    const setState = type === 'logo' ? setLogoState : setPortadaState;
+    setState(prev => ({ ...prev, preview: null, error: null }));
+  }, []);
 
   const ImageUploadCard: React.FC<{
-    type: 'logo' | 'portada';
+    type: 'logo' | 'imagen';
     state: ImageUploadState;
     currentImage?: string;
     title: string;
     subtitle: string;
     icon: React.ReactNode;
     color: string;
-    aspectRatio: string;
     size: { width: number; height: number };
   }> = ({ type, state, currentImage, title, subtitle, icon, color, size }) => {
-    const isDragging = dragOver === type;
+    const isUploading = uploadProgress.uploading && uploadProgress.type === type;
     const hasImage = currentImage || state.preview;
-    const isUploading = state.uploading;
+    const showProgress = isUploading && uploadProgress.progress > 0;
 
     return (
       <Box sx={{ flex: 1, minWidth: 300 }}>
@@ -223,22 +198,22 @@ export const ImageUploader: React.FC = () => {
           elevation={0}
           sx={{
             p: 4,
-            border: `2px dashed ${isDragging ? color : '#d1d5db'}`,
+            border: `2px dashed ${state.dragOver ? color : state.error ? '#ef4444' : '#d1d5db'}`,
             borderRadius: 4,
             textAlign: 'center',
             position: 'relative',
             transition: 'all 0.3s ease',
             cursor: isUploading ? 'not-allowed' : 'pointer',
-            bgcolor: isDragging ? alpha(color, 0.05) : 'transparent',
+            bgcolor: state.dragOver ? alpha(color, 0.05) : state.error ? alpha('#ef4444', 0.05) : 'transparent',
             '&:hover': {
-              borderColor: isUploading ? '#d1d5db' : color,
+              borderColor: isUploading ? (state.error ? '#ef4444' : '#d1d5db') : color,
               bgcolor: isUploading ? 'transparent' : alpha(color, 0.05),
             },
           }}
           onClick={() => !isUploading && triggerFileInput(type)}
-          onDrop={(e) => handleDrop(e, type === 'logo' ? 'logo' : 'imagen')}
+          onDrop={(e) => handleDrop(e, type)}
           onDragOver={(e) => handleDragOver(e, type)}
-          onDragLeave={handleDragLeave}
+          onDragLeave={(e) => handleDragLeave(e, type)}
         >
           <Stack spacing={3} alignItems="center">
             {/* Image Preview */}
@@ -261,7 +236,7 @@ export const ImageUploader: React.FC = () => {
                     {!hasImage && <Store sx={{ fontSize: 40, color }} />}
                   </Avatar>
                   
-                  {hasImage && (
+                  {hasImage && !isUploading && (
                     <Box
                       sx={{
                         position: 'absolute',
@@ -278,6 +253,28 @@ export const ImageUploader: React.FC = () => {
                     >
                       <Edit sx={{ fontSize: 24, color: 'white' }} />
                     </Box>
+                  )}
+
+                  {state.preview && (
+                    <IconButton
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        clearPreview(type);
+                      }}
+                      sx={{
+                        position: 'absolute',
+                        top: -8,
+                        right: -8,
+                        bgcolor: '#ef4444',
+                        color: 'white',
+                        '&:hover': { bgcolor: '#dc2626' },
+                        width: 24,
+                        height: 24,
+                      }}
+                    >
+                      <Delete sx={{ fontSize: 14 }} />
+                    </IconButton>
                   )}
                 </Box>
               ) : (
@@ -301,7 +298,7 @@ export const ImageUploader: React.FC = () => {
                 >
                   {!hasImage && <ImageIcon sx={{ fontSize: 50, color }} />}
                   
-                  {hasImage && (
+                  {hasImage && !isUploading && (
                     <Box
                       sx={{
                         position: 'absolute',
@@ -317,6 +314,28 @@ export const ImageUploader: React.FC = () => {
                     >
                       <Edit sx={{ fontSize: 30, color: 'white' }} />
                     </Box>
+                  )}
+
+                  {state.preview && (
+                    <IconButton
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        clearPreview(type);
+                      }}
+                      sx={{
+                        position: 'absolute',
+                        top: 8,
+                        right: 8,
+                        bgcolor: alpha('#ef4444', 0.9),
+                        color: 'white',
+                        '&:hover': { bgcolor: '#dc2626' },
+                        width: 32,
+                        height: 32,
+                      }}
+                    >
+                      <Delete sx={{ fontSize: 18 }} />
+                    </IconButton>
                   )}
                 </Paper>
               )}
@@ -357,7 +376,7 @@ export const ImageUploader: React.FC = () => {
                   <Box sx={{ width: '100%', mb: 2 }}>
                     <LinearProgress 
                       variant="determinate" 
-                      value={state.progress}
+                      value={uploadProgress.progress}
                       sx={{
                         height: 8,
                         borderRadius: 4,
@@ -370,7 +389,7 @@ export const ImageUploader: React.FC = () => {
                     />
                   </Box>
                   <Typography variant="body2" sx={{ color, fontWeight: 600 }}>
-                    {state.progress === 100 ? 'Completado!' : `Subiendo... ${Math.round(state.progress)}%`}
+                    {uploadProgress.progress === 100 ? 'Completado!' : `Subiendo... ${uploadProgress.progress}%`}
                   </Typography>
                 </motion.div>
               ) : state.error ? (
@@ -380,10 +399,35 @@ export const ImageUploader: React.FC = () => {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                 >
-                  <Stack direction="row" alignItems="center" spacing={1} sx={{ color: '#ef4444' }}>
+                  <Stack direction="row" alignItems="center" spacing={1} sx={{ color: '#ef4444', mb: 2 }}>
                     <ErrorOutline fontSize="small" />
                     <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                      Error al subir
+                      {state.error}
+                    </Typography>
+                  </Stack>
+                  <Button
+                    size="small"
+                    startIcon={<Refresh />}
+                    onClick={() => {
+                      const setState = type === 'logo' ? setLogoState : setPortadaState;
+                      setState(prev => ({ ...prev, error: null }));
+                    }}
+                    sx={{ color: '#ef4444' }}
+                  >
+                    Reintentar
+                  </Button>
+                </motion.div>
+              ) : uploadProgress.progress === 100 && uploadProgress.type === type ? (
+                <motion.div
+                  key="success"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                >
+                  <Stack direction="row" alignItems="center" spacing={1} sx={{ color: '#10b981' }}>
+                    <CheckCircle fontSize="small" />
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                      ¡Subida exitosa!
                     </Typography>
                   </Stack>
                 </motion.div>
@@ -395,7 +439,7 @@ export const ImageUploader: React.FC = () => {
                   exit={{ opacity: 0, y: -10 }}
                 >
                   <Stack direction="row" spacing={2} alignItems="center">
-                    {isDragging ? (
+                    {state.dragOver ? (
                       <Chip
                         icon={<DragIndicator />}
                         label="Suelta aquí"
@@ -409,12 +453,18 @@ export const ImageUploader: React.FC = () => {
                       <Button
                         variant="contained"
                         startIcon={<CloudUpload />}
+                        disabled={isUploading}
                         sx={{
                           background: `linear-gradient(135deg, ${color} 0%, ${color}dd 100%)`,
                           boxShadow: `0 4px 20px ${alpha(color, 0.3)}`,
                           '&:hover': {
                             background: `linear-gradient(135deg, ${color}dd 0%, ${color}bb 100%)`,
                             boxShadow: `0 6px 25px ${alpha(color, 0.4)}`,
+                          },
+                          '&:disabled': {
+                            background: '#e2e8f0',
+                            color: '#94a3b8',
+                            boxShadow: 'none',
                           }
                         }}
                       >
@@ -427,7 +477,7 @@ export const ImageUploader: React.FC = () => {
             </AnimatePresence>
 
             {/* Drag & Drop Hint */}
-            {!isUploading && (
+            {!isUploading && !state.error && (
               <Typography variant="caption" sx={{ color: '#9ca3af', fontStyle: 'italic' }}>
                 O arrastra y suelta una imagen aquí
               </Typography>
@@ -439,14 +489,14 @@ export const ImageUploader: React.FC = () => {
             ref={type === 'logo' ? logoInputRef : portadaInputRef}
             type="file"
             hidden
-            accept="image/*"
-            onChange={(e) => handleFileSelect(e, type === 'logo' ? 'logo' : 'imagen')}
+            accept="image/jpeg,image/png,image/webp"
+            onChange={(e) => handleFileSelect(e, type)}
             disabled={isUploading}
           />
         </Paper>
 
         {/* Image Actions */}
-        {hasImage && !isUploading && (
+        {hasImage && !isUploading && !state.preview && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -458,7 +508,7 @@ export const ImageUploader: React.FC = () => {
                   size="small"
                   onClick={(e) => {
                     e.stopPropagation();
-                    window.open(currentImage || state.preview || '', '_blank');
+                    window.open(currentImage || '', '_blank');
                   }}
                   sx={{
                     bgcolor: alpha('#06b6d4', 0.1),
@@ -524,6 +574,26 @@ export const ImageUploader: React.FC = () => {
           </Typography>
         </Box>
 
+        {/* Global Error Alert */}
+        <AnimatePresence>
+          {comercioError && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              style={{ marginBottom: 24 }}
+            >
+              <Alert 
+                severity="error" 
+                onClose={clearError}
+                sx={{ borderRadius: 3 }}
+              >
+                {comercioError}
+              </Alert>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <Box sx={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
           {/* Logo Upload */}
           <ImageUploadCard
@@ -534,20 +604,18 @@ export const ImageUploader: React.FC = () => {
             subtitle="Tamaño recomendado: 300x300px"
             icon={<Store sx={{ fontSize: 20, color: '#10b981' }} />}
             color="#10b981"
-            aspectRatio="1:1"
             size={{ width: 120, height: 120 }}
           />
 
           {/* Portada Upload */}
           <ImageUploadCard
-            type="portada"
+            type="imagen"
             state={portadaState}
             currentImage={comercio?.imagenPrincipalUrl}
             title="Imagen de Portada"
             subtitle="Tamaño recomendado: 1200x600px"
             icon={<ImageIcon sx={{ fontSize: 20, color: '#6366f1' }} />}
             color="#6366f1"
-            aspectRatio="2:1"
             size={{ width: 240, height: 140 }}
           />
         </Box>
