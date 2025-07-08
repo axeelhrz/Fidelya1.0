@@ -21,12 +21,8 @@ import {
   LinearProgress,
   Fab,
   Zoom,
-  Stack,
-  Card,
-  CardContent,
   useTheme,
   useMediaQuery,
-  Chip,
   Grid,
 } from '@mui/material';
 import {
@@ -45,18 +41,6 @@ import {
   VolumeUp,
   VolumeOff,
   FilterList,
-  Search,
-  Send,
-  Schedule,
-  Group,
-  Star,
-  Warning,
-  Error as ErrorIcon,
-  Info,
-  Campaign,
-  Clear,
-  Visibility,
-  VisibilityOff,
 } from '@mui/icons-material';
 import toast from 'react-hot-toast';
 import { useNotifications } from '@/hooks/useNotifications';
@@ -101,7 +85,6 @@ export const NotificationsCenter: React.FC<NotificationsCenterProps> = ({
   const [bulkMenuAnchor, setBulkMenuAnchor] = useState<null | HTMLElement>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const [showFilters, setShowFilters] = useState(false);
 
   // Auto-refresh stats every 30 seconds

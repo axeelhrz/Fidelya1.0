@@ -46,10 +46,6 @@ import {
   LinearProgress,
   useTheme,
   useMediaQuery,
-  Drawer,
-  List,
-  ListItem,
-  ListItemButton,
   Collapse,
 } from '@mui/material';
 import { SelectChangeEvent } from '@mui/material/Select';
@@ -57,7 +53,6 @@ import {
   Search,
   Add,
   Edit,
-  Delete,
   Email,
   Phone,
   CalendarToday,
@@ -82,7 +77,6 @@ import {
   Error as ErrorIcon,
   Info,
   Close,
-  Menu as MenuIcon,
   ExpandLess,
   ExpandMore,
 } from '@mui/icons-material';
@@ -92,15 +86,11 @@ import {
   deleteDoc, 
   updateDoc, 
   Timestamp,
-  collection,
-  query,
-  where,
-  getDocs,
   writeBatch
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import toast from 'react-hot-toast';
-import { format, isAfter, isBefore, subDays, startOfDay, endOfDay } from 'date-fns';
+import { format, isAfter, subDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 interface EnhancedMemberManagementProps {
@@ -191,7 +181,7 @@ const MobileSocioCard: React.FC<{
   onMore: (event: React.MouseEvent<HTMLElement>) => void;
   engagementScore: number;
   engagementLevel: { label: string; color: string; icon: React.ReactElement };
-  formatDate: (date: any) => string;
+  formatDate: (date: Date | { toDate: () => Date } | string | number | null | undefined) => string;
   getInitials: (name: string) => string;
   getStatusChip: (estado: string) => React.ReactElement;
 }> = ({
@@ -347,12 +337,10 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
   onEdit,
   onDelete,
   onAdd,
-  onBulkAction,
   onRefresh
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const isTablet = useMediaQuery(theme.breakpoints.down('lg'));
   
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'activo' | 'vencido' | 'inactivo'>('all');
@@ -395,7 +383,7 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
     if (socio.creadoEn) {
       const createdDate = socio.creadoEn instanceof Date 
         ? socio.creadoEn 
-        : (socio.creadoEn as any)?.toDate?.() || new Date();
+        : (socio.creadoEn as { toDate?: () => Date })?.toDate?.() || new Date();
       const daysSinceCreation = Math.floor((Date.now() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
       if (daysSinceCreation > 365) score += 15;
       else if (daysSinceCreation > 180) score += 10;
@@ -425,7 +413,7 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
       if (!socio.creadoEn) return false;
       const createdDate = socio.creadoEn instanceof Date 
         ? socio.creadoEn 
-        : (socio.creadoEn as any)?.toDate?.() || new Date();
+        : (socio.creadoEn as { toDate?: () => Date })?.toDate?.() || new Date();
       return isAfter(createdDate, thirtyDaysAgo);
     }).length;
 
@@ -636,6 +624,28 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
     }
   };
 
+  const formatDate = React.useCallback((
+    timestamp: Date | { toDate: () => Date } | string | number | null | undefined
+  ) => {
+    if (!timestamp) return '-';
+    let date: Date;
+    if (
+      timestamp &&
+      typeof timestamp === 'object' &&
+      'toDate' in timestamp &&
+      typeof (timestamp as { toDate: () => Date }).toDate === 'function'
+    ) {
+      date = (timestamp as { toDate: () => Date }).toDate();
+    } else if (timestamp instanceof Date) {
+      date = timestamp;
+    } else if (typeof timestamp === 'string' || typeof timestamp === 'number') {
+      date = new Date(timestamp);
+    } else {
+      return '-';
+    }
+    return format(date, isMobile ? 'dd/MM/yy' : 'dd MMM yyyy', { locale: es });
+  }, [isMobile]);
+
   const exportToCSV = useCallback(() => {
     const selectedSocios = selectedMembers.length > 0 
       ? socios.filter(s => selectedMembers.includes(s.uid))
@@ -666,7 +676,7 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
     
     toast.success(`Exportados ${selectedSocios.length} socios`);
     setSelectedMembers([]);
-  }, [selectedMembers, socios, filtered, getEngagementScore]);
+  }, [selectedMembers, socios, filtered, getEngagementScore, formatDate]);
 
   const getStatusChip = (estado: string) => {
     const config = {
@@ -695,28 +705,6 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
         }}
       />
     );
-  };
-
-  const formatDate = (
-    timestamp: Date | { toDate: () => Date } | string | number | null | undefined
-  ) => {
-    if (!timestamp) return '-';
-    let date: Date;
-    if (
-      timestamp &&
-      typeof timestamp === 'object' &&
-      'toDate' in timestamp &&
-      typeof (timestamp as { toDate: () => Date }).toDate === 'function'
-    ) {
-      date = (timestamp as { toDate: () => Date }).toDate();
-    } else if (timestamp instanceof Date) {
-      date = timestamp;
-    } else if (typeof timestamp === 'string' || typeof timestamp === 'number') {
-      date = new Date(timestamp);
-    } else {
-      return '-';
-    }
-    return format(date, isMobile ? 'dd/MM/yy' : 'dd MMM yyyy', { locale: es });
   };
 
   const getInitials = (name: string) => {
@@ -891,7 +879,7 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
                 onClick={onAdd}
                 variant="contained"
                 startIcon={<PersonAdd />}
-                size={isMobile ? "medium" : "large"}
+                size="medium"
                 sx={{
                   py: { xs: 1, md: 1.5 },
                   px: { xs: 2, md: 4 },
@@ -947,7 +935,7 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 fullWidth
-                size={isMobile ? "medium" : "large"}
+                size="medium"
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -993,7 +981,7 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
                   value={statusFilter}
                   onChange={(e: SelectChangeEvent) => setStatusFilter(e.target.value as 'all' | 'activo' | 'vencido' | 'inactivo')}
                   label="Estado"
-                  size={isMobile ? "medium" : "large"}
+                  size="medium"
                   startAdornment={<FilterList sx={{ color: '#94a3b8', mr: 1 }} />}
                   sx={{
                     borderRadius: 4,
@@ -1049,12 +1037,12 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
                     setCurrentPage(1);
                   }}
                   label="Mostrar"
-                  size={isMobile ? "medium" : "large"}
+                  size="medium"
                   sx={{
                     borderRadius: 4,
                     bgcolor: '#fafbfc',
                     '& fieldset': {
-                      borderColor:                      '#e2e8f0',
+                      borderColor: '#e2e8f0',
                     },
                     '&:hover fieldset': {
                       borderColor: '#6366f1',
@@ -1197,7 +1185,7 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
                 onClick={onAdd}
                 variant="contained"
                 startIcon={<Add />}
-                size={isMobile ? "medium" : "large"}
+                size={isMobile ? "medium" : "medium"}
                 sx={{
                   py: { xs: 1, md: 1.5 },
                   px: { xs: 3, md: 4 },
@@ -1498,7 +1486,7 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
                   page={currentPage}
                   onChange={(_, page) => setCurrentPage(page)}
                   color="primary"
-                  size={isMobile ? "medium" : "large"}
+                  size={isMobile ? "medium" : "medium"}
                   sx={{
                     '& .MuiPaginationItem-root': {
                       borderRadius: 3,
@@ -1889,4 +1877,3 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
     </Box>
   );
 };
-
