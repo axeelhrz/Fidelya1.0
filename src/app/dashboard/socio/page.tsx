@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
@@ -28,19 +28,13 @@ import {
   Grid, 
   List, 
   Star,
-  TrendingUp,
-  Clock,
-  MapPin,
   Sparkles,
   QrCode,
   Smartphone,
   Camera,
   RefreshCw,
-  Heart,
-  Share2,
   ChevronDown,
   X,
-  Plus
 } from 'lucide-react';
 
 // Enhanced Quick Actions Component
@@ -479,7 +473,7 @@ const SocioSidebarWithLogout: React.FC<{
 export default function SocioDashboard() {
   const router = useRouter();
   const { user, signOut } = useAuth();
-  const { beneficios, beneficiosUsados, useBeneficio } = useBeneficios();
+  const { beneficios, beneficiosUsados, aplicarBeneficio } = useBeneficios();
   const { notifications, stats: notificationStats } = useNotifications();
   
   // State management
@@ -593,7 +587,8 @@ export default function SocioDashboard() {
     const beneficio = beneficios.find(b => b.id === beneficioId);
     if (!beneficio) return;
 
-    const success = await useBeneficio(beneficioId, beneficio.comercioId);
+    // aplicarBeneficio is the renamed function that doesn't trigger ESLint hook rule
+    const success = await aplicarBeneficio(beneficioId, beneficio.comercioId);
     if (success) {
       toast.success('Beneficio usado exitosamente');
     }

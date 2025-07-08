@@ -176,8 +176,8 @@ export const useBeneficios = () => {
     }
   }, [user]);
 
-  // Use beneficio (solo para socios)
-  const useBeneficio = useCallback(async (beneficioId: string, comercioId: string): Promise<boolean> => {
+  // Apply/Use beneficio (solo para socios) - renamed from useBeneficio to avoid ESLint hook rule
+  const aplicarBeneficio = useCallback(async (beneficioId: string, comercioId: string): Promise<boolean> => {
     if (!user || user.role !== 'socio') return false;
 
     try {
@@ -249,7 +249,7 @@ export const useBeneficios = () => {
     createBeneficio,
     updateBeneficio,
     deleteBeneficio,
-    useBeneficio,
+    aplicarBeneficio,
     toggleBeneficioStatus
   };
 };
