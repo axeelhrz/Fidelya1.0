@@ -178,6 +178,190 @@ transform: scaleX(1.05);
 }
 }
 
+/* ===== ANIMACIONES OPTIMIZADAS PARA MÓVIL ===== */
+/* Versiones móviles más suaves y con menos consumo de recursos */
+@media (width <= 1023px) {
+    /* Animaciones del Hero optimizadas para móvil */
+    @keyframes hero-neon-breathe-mobile {
+        0%, 100% {
+            opacity: 0.6;
+            transform: scale(1);
+        }
+        50% {
+            opacity: 0.8;
+            transform: scale(1.01);
+        }
+    }
+    
+    @keyframes floating-orb-1-mobile {
+        0%, 100% {
+            opacity: 0.4;
+            transform: translate(0, 0) scale(1);
+        }
+        50% {
+            opacity: 0.6;
+            transform: translate(10px, -8px) scale(1.05);
+        }
+    }
+    
+    @keyframes floating-orb-2-mobile {
+        0%, 100% {
+            opacity: 0.3;
+            transform: translate(0, 0) scale(1);
+        }
+        50% {
+            opacity: 0.5;
+            transform: translate(-12px, 8px) scale(1.08);
+        }
+    }
+    
+    @keyframes floating-orb-3-mobile {
+        0%, 100% {
+            opacity: 0.3;
+            transform: translate(0, 0) scale(1);
+        }
+        50% {
+            opacity: 0.5;
+            transform: translate(5px, -5px) scale(1.1);
+        }
+    }
+    
+    @keyframes ambient-glow-pulse-mobile {
+        0%, 100% {
+            opacity: 0.3;
+            transform: scale(1);
+        }
+        50% {
+            opacity: 0.5;
+            transform: scale(1.02);
+        }
+    }
+    
+    @keyframes depth-shift-1-mobile {
+        0%, 100% {
+            opacity: 0.4;
+            transform: translateX(0) translateY(0);
+        }
+        50% {
+            opacity: 0.6;
+            transform: translateX(5px) translateY(-3px);
+        }
+    }
+    
+    @keyframes depth-shift-2-mobile {
+        0%, 100% {
+            opacity: 0.3;
+            transform: translateX(0) translateY(0);
+        }
+        50% {
+            opacity: 0.5;
+            transform: translateX(-4px) translateY(4px);
+        }
+    }
+    
+    @keyframes sparkle-mobile {
+        from { 
+            transform: translateX(0); 
+        }
+        to { 
+            transform: translateX(200px); 
+        }
+    }
+    
+    @keyframes float-particles-mobile {
+        0% { 
+            transform: translate(0, 0); 
+        }
+        100% { 
+            transform: translate(-200px, -200px); 
+        }
+    }
+    
+    /* Animaciones de entrada más suaves para móvil */
+    @keyframes fadeInUp-mobile {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    @keyframes fadeInRight-mobile {
+        from {
+            opacity: 0;
+            transform: translateX(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+    
+    @keyframes pulse-gentle-mobile {
+        0%, 100% {
+            opacity: 1;
+            transform: scale(1);
+        }
+        50% {
+            opacity: 0.9;
+            transform: scale(1.1);
+        }
+    }
+    
+    @keyframes glow-line-mobile {
+        0%, 100% {
+            opacity: 0.6;
+            transform: scaleX(1);
+        }
+        50% {
+            opacity: 0.8;
+            transform: scaleX(1.02);
+        }
+    }
+}
+
+/* ===== MODO REDUCIDO DE MOVIMIENTO ===== */
+@media (prefers-reduced-motion: reduce) {
+    /* Deshabilitar todas las animaciones complejas */
+    @keyframes hero-neon-breathe,
+    @keyframes floating-orb-1,
+    @keyframes floating-orb-2,
+    @keyframes floating-orb-3,
+    @keyframes ambient-glow-pulse,
+    @keyframes depth-shift-1,
+    @keyframes depth-shift-2,
+    @keyframes sparkle,
+    @keyframes float-particles,
+    @keyframes cosmic-particle-drift {
+        0%, 100% {
+            opacity: 0.6;
+            transform: scale(1);
+        }
+    }
+    
+    /* Mantener solo animaciones básicas de entrada */
+    @keyframes fadeInUp-reduced {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+    
+    @keyframes fadeInRight-reduced {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+}
+
 /* ===== ANIMACIONES ELEGANTES PARA NAVBAR ===== */
 @keyframes border-glow-rotate {
     0% {
