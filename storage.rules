@@ -1,0 +1,70 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    function isValidImageFile() {
+      return request.resource.contentType.matches('image/.*') &&
+             request.resource.size < 5 * 1024 * 1024; // 5MB limit
+    }
+    
+    function isValidDocumentFile() {
+      return request.resource.contentType.matches('application/pdf') ||
+             request.resource.contentType.matches('application/.*sheet.*') ||
+             request.resource.contentType.matches('text/csv');
+    }
+
+    // User profile images
+    match /users/{userId}/profile/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && isOwner(userId) && isValidImageFile();
+    }
+
+    // Comercio images (logos, banners, etc.)
+    match /comercios/{comercioId}/{fileName} {
+      allow read: if true; // Public read for comercio images
+      allow write: if isAuthenticated() && isValidImageFile();
+    }
+
+    // Asociacion images
+    match /asociaciones/{asociacionId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && isValidImageFile();
+    }
+
+    // Beneficio images
+    match /beneficios/{beneficioId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && isValidImageFile();
+    }
+
+    // QR codes (public read)
+    match /qr-codes/{comercioId}/{fileName} {
+      allow read: if true; // Public read for QR codes
+      allow write: if isAuthenticated();
+    }
+
+    // Backup files (restricted access)
+    match /backups/{asociacionId}/{fileName} {
+      allow read, write: if isAuthenticated() && isValidDocumentFile();
+    }
+
+    // Import files (CSV, Excel)
+    match /imports/{asociacionId}/{fileName} {
+      allow read, write: if isAuthenticated() && isValidDocumentFile();
+    }
+
+    // Reports and exports
+    match /exports/{userId}/{fileName} {
+      allow read: if isAuthenticated() && isOwner(userId);
+      allow write: if isAuthenticated() && isOwner(userId);
+    }
+  }
+}

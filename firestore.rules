@@ -1,0 +1,116 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function getUserRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+    
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    function hasRole(role) {
+      return getUserRole() == role;
+    }
+    
+    function isActiveUser() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.estado == 'activo';
+    }
+    
+    function belongsToAssociation(associationId) {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.asociacionId == associationId;
+    }
+
+    // Users collection - base user data
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (isOwner(userId) || hasRole('admin') || hasRole('asociacion'));
+      allow write: if isAuthenticated() && (isOwner(userId) || hasRole('admin'));
+      allow create: if isAuthenticated();
+    }
+
+    // Asociaciones collection
+    match /asociaciones/{associationId} {
+      allow read: if isAuthenticated() && (hasRole('asociacion') || hasRole('admin') || hasRole('comercio'));
+      allow write: if isAuthenticated() && (hasRole('asociacion') && isOwner(associationId)) || hasRole('admin');
+      allow create: if isAuthenticated() && hasRole('asociacion');
+    }
+
+    // Socios collection
+    match /socios/{socioId} {
+      allow read: if isAuthenticated() && (
+        isOwner(socioId) || 
+        hasRole('admin') || 
+        (hasRole('asociacion') && belongsToAssociation(resource.data.asociacionId)) ||
+        hasRole('comercio')
+      );
+      allow write: if isAuthenticated() && (
+        isOwner(socioId) || 
+        hasRole('admin') || 
+        (hasRole('asociacion') && belongsToAssociation(resource.data.asociacionId))
+      );
+      allow create: if isAuthenticated() && (hasRole('asociacion') || hasRole('admin'));
+    }
+
+    // Comercios collection
+    match /comercios/{comercioId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && (isOwner(comercioId) || hasRole('admin') || hasRole('asociacion'));
+      allow create: if isAuthenticated() && (hasRole('comercio') || hasRole('admin') || hasRole('asociacion'));
+    }
+
+    // Beneficios collection
+    match /beneficios/{beneficioId} {
+      allow read: if isAuthenticated() && isActiveUser();
+      allow write: if isAuthenticated() && (hasRole('comercio') || hasRole('admin') || hasRole('asociacion'));
+      allow create: if isAuthenticated() && (hasRole('comercio') || hasRole('admin') || hasRole('asociacion'));
+    }
+
+    // Validaciones collection
+    match /validaciones/{validacionId} {
+      allow read: if isAuthenticated() && (
+        hasRole('admin') || 
+        hasRole('asociacion') || 
+        hasRole('comercio') ||
+        (hasRole('socio') && resource.data.socioId == request.auth.uid)
+      );
+      allow write: if isAuthenticated() && (hasRole('comercio') || hasRole('admin') || hasRole('asociacion'));
+      allow create: if isAuthenticated() && isActiveUser();
+    }
+
+    // Notifications collection
+    match /notifications/{notificationId} {
+      allow read: if isAuthenticated() && (
+        resource.data.recipientId == request.auth.uid ||
+        hasRole('admin') ||
+        hasRole('asociacion')
+      );
+      allow write: if isAuthenticated() && (hasRole('admin') || hasRole('asociacion'));
+      allow create: if isAuthenticated() && (hasRole('admin') || hasRole('asociacion'));
+    }
+
+    // Activities collection (for audit logs)
+    match /activities/{activityId} {
+      allow read: if isAuthenticated() && (hasRole('admin') || hasRole('asociacion'));
+      allow create: if isAuthenticated();
+    }
+
+    // Backups collection
+    match /backups/{backupId} {
+      allow read, write: if isAuthenticated() && (hasRole('admin') || hasRole('asociacion'));
+    }
+
+    // Cliente activities and segments (for comercio analytics)
+    match /cliente_activities/{activityId} {
+      allow read, write: if isAuthenticated() && (hasRole('comercio') || hasRole('admin') || hasRole('asociacion'));
+    }
+
+    match /cliente_segments/{segmentId} {
+      allow read, write: if isAuthenticated() && (hasRole('comercio') || hasRole('admin') || hasRole('asociacion'));
+    }
+  }
+}

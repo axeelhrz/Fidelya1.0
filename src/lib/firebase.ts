@@ -12,6 +12,31 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
 };
 
+// Validate Firebase configuration
+const validateFirebaseConfig = () => {
+  const requiredKeys = [
+    'NEXT_PUBLIC_FIREBASE_API_KEY',
+    'NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN',
+    'NEXT_PUBLIC_FIREBASE_PROJECT_ID',
+    'NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET',
+    'NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID',
+    'NEXT_PUBLIC_FIREBASE_APP_ID'
+  ];
+
+  const missingKeys = requiredKeys.filter(key => !process.env[key]);
+  
+  if (missingKeys.length > 0) {
+    console.error('❌ Missing Firebase configuration keys:', missingKeys);
+    throw new Error(`Missing Firebase configuration: ${missingKeys.join(', ')}`);
+  }
+
+  console.log('✅ Firebase configuration validated successfully');
+  return true;
+};
+
+// Validate configuration before initializing
+validateFirebaseConfig();
+
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
@@ -71,5 +96,49 @@ export const testStorageConnection = async (): Promise<boolean> => {
     return false;
   }
 };
+
+// Enhanced error handling for Firebase operations
+export const handleFirebaseError = (error: any): string => {
+  console.error('Firebase Error:', error);
+  
+  switch (error.code) {
+    case 'auth/user-not-found':
+      return 'Usuario no encontrado';
+    case 'auth/wrong-password':
+      return 'Contraseña incorrecta';
+    case 'auth/email-already-in-use':
+      return 'Este email ya está registrado';
+    case 'auth/weak-password':
+      return 'La contraseña debe tener al menos 6 caracteres';
+    case 'auth/invalid-email':
+      return 'Email inválido';
+    case 'auth/too-many-requests':
+      return 'Demasiados intentos. Intenta más tarde';
+    case 'permission-denied':
+      return 'No tienes permisos para realizar esta acción';
+    case 'unavailable':
+      return 'Servicio temporalmente no disponible';
+    case 'deadline-exceeded':
+      return 'Tiempo de espera agotado. Intenta nuevamente';
+    default:
+      return error.message || 'Ha ocurrido un error inesperado';
+  }
+};
+
+// Connection status monitoring
+export const monitorConnection = () => {
+  if (typeof window !== 'undefined') {
+    window.addEventListener('online', () => {
+      console.log('🌐 Conexión restaurada');
+    });
+    
+    window.addEventListener('offline', () => {
+      console.log('📴 Conexión perdida');
+    });
+  }
+};
+
+// Initialize connection monitoring
+monitorConnection();
 
 export default app;
