@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import {
   Box,
@@ -112,7 +112,7 @@ const MetricCard: React.FC<MetricCardProps> = ({
   progressValue
 }) => {
   // Calcular el valor de progreso basado en el tipo de métrica
-  const getProgressValue = () => {
+  const getProgressValue = useCallback(() => {
     if (progressValue !== undefined) return progressValue;
     
     // Para porcentajes, usar el valor directamente
@@ -132,7 +132,7 @@ const MetricCard: React.FC<MetricCardProps> = ({
     
     // Para cambios, usar el valor absoluto del cambio
     return Math.min(Math.abs(change) * 2, 100);
-  };
+  }, [progressValue, value, title, change]);
 
   return (
     <motion.div
@@ -321,7 +321,7 @@ const ChartCard: React.FC<{
     }
   }, [data, type]);
 
-  const renderChart = () => {
+  const renderChart = useCallback(() => {
     if (loading) {
       return (
         <Box sx={{ 
@@ -543,7 +543,7 @@ const ChartCard: React.FC<{
       default:
         return null;
     }
-  };
+  }, [loading, data, height, color, maxValue, type]);
 
   return (
     <motion.div
@@ -687,9 +687,13 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
   const [dateRange, setDateRange] = useState('30d');
   const [refreshing, setRefreshing] = useState(false);
 
-  // Calculate analytics data from socios
-  useEffect(() => {
-    if (!user || !allSocios) {
+  // Memoize the stats and allSocios to prevent unnecessary recalculations
+  const memoizedStats = useMemo(() => stats, [stats.total, stats.activos, stats.vencidos, stats.inactivos]);
+  const memoizedAllSocios = useMemo(() => allSocios, [allSocios?.length]);
+
+  // Calculate analytics data from socios - Fixed to prevent infinite loop
+  const calculateAnalyticsData = useCallback(() => {
+    if (!user || !memoizedAllSocios) {
       setLoading(false);
       return;
     }
@@ -702,7 +706,7 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
       const startDate = subDays(endDate, dateRange === '7d' ? 7 : dateRange === '30d' ? 30 : 90);
 
       // Filter socios by date range
-      const recentSocios = allSocios.filter(socio => {
+      const recentSocios = memoizedAllSocios.filter(socio => {
         if (!socio.creadoEn) return false;
         const createdDate = socio.creadoEn.toDate();
         return isAfter(createdDate, startDate) && isBefore(createdDate, endDate);
@@ -710,7 +714,7 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
 
       // Calculate growth rate
       const previousPeriodStart = subDays(startDate, dateRange === '7d' ? 7 : dateRange === '30d' ? 30 : 90);
-      const previousSocios = allSocios.filter(socio => {
+      const previousSocios = memoizedAllSocios.filter(socio => {
         if (!socio.creadoEn) return false;
         const createdDate = socio.creadoEn.toDate();
         return isAfter(createdDate, previousPeriodStart) && isBefore(createdDate, startDate);
@@ -721,10 +725,10 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
         : recentSocios.length > 0 ? 100 : 0;
 
       // Calculate retention rate
-      const retentionRate = stats.total > 0 ? (stats.activos / stats.total) * 100 : 0;
+      const retentionRate = memoizedStats.total > 0 ? (memoizedStats.activos / memoizedStats.total) * 100 : 0;
 
       // Calculate average lifetime
-      const activeSocios = allSocios.filter(s => s.estado === 'activo');
+      const activeSocios = memoizedAllSocios.filter(s => s.estado === 'activo');
       const averageLifetime = activeSocios.length > 0 
         ? activeSocios.reduce((acc, socio) => {
             if (!socio.creadoEn) return acc;
@@ -735,8 +739,8 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
 
       // Calculate engagement score
       const engagementScore = Math.min(100, 
-        (stats.activos / Math.max(stats.total, 1)) * 60 + 
-        (recentSocios.length / Math.max(stats.total, 1)) * 40
+        (memoizedStats.activos / Math.max(memoizedStats.total, 1)) * 60 + 
+        (recentSocios.length / Math.max(memoizedStats.total, 1)) * 40
       );
 
       // Generate monthly trends with correct dates
@@ -748,7 +752,7 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
         const monthEnd = endOfMonth(monthDate);
         
         // Count socios created in this month
-        const monthSocios = allSocios.filter(socio => {
+        const monthSocios = memoizedAllSocios.filter(socio => {
           if (!socio.creadoEn) return false;
           const createdDate = socio.creadoEn.toDate();
           return isAfter(createdDate, monthStart) && isBefore(createdDate, monthEnd);
@@ -760,7 +764,7 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
         const prevMonthStart = startOfMonth(prevMonthDate);
         const prevMonthEnd = endOfMonth(prevMonthDate);
         
-        const prevMonthSocios = allSocios.filter(socio => {
+        const prevMonthSocios = memoizedAllSocios.filter(socio => {
           if (!socio.creadoEn) return false;
           const createdDate = socio.creadoEn.toDate();
           return isAfter(createdDate, prevMonthStart) && isBefore(createdDate, prevMonthEnd);
@@ -776,25 +780,25 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
       });
 
       // Status distribution
-      const total = stats.total || 1;
+      const total = memoizedStats.total || 1;
       const statusDistribution = [
         {
           name: 'Activos',
-          value: stats.activos,
+          value: memoizedStats.activos,
           color: '#10b981',
-          percentage: Math.round((stats.activos / total) * 100),
+          percentage: Math.round((memoizedStats.activos / total) * 100),
         },
         {
           name: 'Vencidos',
-          value: stats.vencidos,
+          value: memoizedStats.vencidos,
           color: '#ef4444',
-          percentage: Math.round((stats.vencidos / total) * 100),
+          percentage: Math.round((memoizedStats.vencidos / total) * 100),
         },
         {
           name: 'Inactivos',
-          value: stats.inactivos,
+          value: memoizedStats.inactivos,
           color: '#6b7280',
-          percentage: Math.round((stats.inactivos / total) * 100),
+          percentage: Math.round((memoizedStats.inactivos / total) * 100),
         },
       ].filter(item => item.value > 0);
 
@@ -802,47 +806,47 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
       const engagementLevels = [
         {
           level: 'Muy Alto',
-          count: Math.floor(stats.activos * 0.15),
+          count: Math.floor(memoizedStats.activos * 0.15),
           percentage: 15,
         },
         {
           level: 'Alto',
-          count: Math.floor(stats.activos * 0.25),
+          count: Math.floor(memoizedStats.activos * 0.25),
           percentage: 25,
         },
         {
           level: 'Medio',
-          count: Math.floor(stats.activos * 0.35),
+          count: Math.floor(memoizedStats.activos * 0.35),
           percentage: 35,
         },
         {
           level: 'Bajo',
-          count: Math.floor(stats.activos * 0.25),
+          count: Math.floor(memoizedStats.activos * 0.25),
           percentage: 25,
         },
       ];
 
       // Age distribution
       const ageDistribution = [
-        { range: '18-25', count: Math.floor(stats.total * 0.15), percentage: 15 },
-        { range: '26-35', count: Math.floor(stats.total * 0.30), percentage: 30 },
-        { range: '36-45', count: Math.floor(stats.total * 0.25), percentage: 25 },
-        { range: '46-55', count: Math.floor(stats.total * 0.20), percentage: 20 },
-        { range: '56+', count: Math.floor(stats.total * 0.10), percentage: 10 },
+        { range: '18-25', count: Math.floor(memoizedStats.total * 0.15), percentage: 15 },
+        { range: '26-35', count: Math.floor(memoizedStats.total * 0.30), percentage: 30 },
+        { range: '36-45', count: Math.floor(memoizedStats.total * 0.25), percentage: 25 },
+        { range: '46-55', count: Math.floor(memoizedStats.total * 0.20), percentage: 20 },
+        { range: '56+', count: Math.floor(memoizedStats.total * 0.10), percentage: 10 },
       ].filter(item => item.count > 0);
 
       // Payment analysis
       const paymentAnalysis = [
-        { status: 'Al día', count: stats.activos, amount: stats.activos * 50, percentage: Math.round((stats.activos / total) * 100) },
-        { status: 'Pendiente', count: Math.floor(stats.total * 0.1), amount: Math.floor(stats.total * 0.1) * 50, percentage: 10 },
-        { status: 'Vencido', count: stats.vencidos, amount: 0, percentage: Math.round((stats.vencidos / total) * 100) },
+        { status: 'Al día', count: memoizedStats.activos, amount: memoizedStats.activos * 50, percentage: Math.round((memoizedStats.activos / total) * 100) },
+        { status: 'Pendiente', count: Math.floor(memoizedStats.total * 0.1), amount: Math.floor(memoizedStats.total * 0.1) * 50, percentage: 10 },
+        { status: 'Vencido', count: memoizedStats.vencidos, amount: 0, percentage: Math.round((memoizedStats.vencidos / total) * 100) },
       ].filter(item => item.count > 0);
 
       setAnalyticsData({
-        totalMembers: stats.total,
-        activeMembers: stats.activos,
-        expiredMembers: stats.vencidos,
-        inactiveMembers: stats.inactivos,
+        totalMembers: memoizedStats.total,
+        activeMembers: memoizedStats.activos,
+        expiredMembers: memoizedStats.vencidos,
+        inactiveMembers: memoizedStats.inactivos,
         growthRate: Math.round(growthRate * 100) / 100,
         retentionRate: Math.round(retentionRate * 100) / 100,
         averageLifetime: Math.round(averageLifetime * 100) / 100,
@@ -860,17 +864,26 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
     } finally {
       setLoading(false);
     }
-  }, [user, stats, allSocios, dateRange]);
+  }, [user, memoizedStats, memoizedAllSocios, dateRange]);
 
-  const handleRefresh = async () => {
+  // Use effect with proper dependencies to prevent infinite loop
+  useEffect(() => {
+    calculateAnalyticsData();
+  }, [calculateAnalyticsData]);
+
+  const handleRefresh = useCallback(async () => {
     setRefreshing(true);
-    setTimeout(() => {
-      setRefreshing(false);
-      window.location.reload();
-    }, 1000);
-  };
+    try {
+      calculateAnalyticsData();
+    } catch (error) {
+      console.error('Error refreshing:', error);
+      setError('Error al actualizar los datos');
+    } finally {
+      setTimeout(() => setRefreshing(false), 1000);
+    }
+  }, [calculateAnalyticsData]);
 
-  const handleExport = (chartType: string) => {
+  const handleExport = useCallback((chartType: string) => {
     const csvData = [
       ['Métrica', 'Valor', 'Cambio'],
       ['Total Socios', analyticsData.totalMembers.toString(), `${analyticsData.growthRate}%`],
@@ -889,7 +902,7 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  };
+  }, [analyticsData]);
 
   const metrics = useMemo(() => [
     {
@@ -902,43 +915,43 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
       subtitle: 'Crecimiento total',
       trend: analyticsData.growthRate > 0 ? 'up' as const : analyticsData.growthRate < 0 ? 'down' as const : 'neutral' as const,
       loading: loading || propLoading,
-      progressValue: Math.min((analyticsData.totalMembers / 50) * 100, 100) // Escala basada en 50 socios como máximo esperado
+      progressValue: Math.min((analyticsData.totalMembers / 50) * 100, 100)
     },
     {
       title: 'Tasa de Retención',
       value: `${analyticsData.retentionRate.toFixed(1)}%`,
-      change: analyticsData.retentionRate - 75, // Comparar contra 75% como baseline
+      change: analyticsData.retentionRate - 75,
       icon: <Star sx={{ fontSize: 24 }} />,
       color: '#10b981',
       delay: 0.1,
       subtitle: 'Socios activos',
       trend: analyticsData.retentionRate > 80 ? 'up' as const : analyticsData.retentionRate < 60 ? 'down' as const : 'neutral' as const,
       loading: loading || propLoading,
-      progressValue: analyticsData.retentionRate // Usar directamente el porcentaje
+      progressValue: analyticsData.retentionRate
     },
     {
       title: 'Engagement Score',
       value: `${analyticsData.engagementScore.toFixed(0)}%`,
-      change: analyticsData.engagementScore - 70, // Comparar contra 70% como baseline
+      change: analyticsData.engagementScore - 70,
       icon: <Speed sx={{ fontSize: 24 }} />,
       color: '#f59e0b',
       delay: 0.2,
       subtitle: 'Nivel de participación',
       trend: analyticsData.engagementScore > 75 ? 'up' as const : analyticsData.engagementScore < 50 ? 'down' as const : 'neutral' as const,
       loading: loading || propLoading,
-      progressValue: analyticsData.engagementScore // Usar directamente el porcentaje
+      progressValue: analyticsData.engagementScore
     },
     {
       title: 'Tiempo Promedio',
       value: `${analyticsData.averageLifetime.toFixed(1)}m`,
-      change: analyticsData.averageLifetime - 18, // Comparar contra 18 meses como baseline
+      change: analyticsData.averageLifetime - 18,
       icon: <Schedule sx={{ fontSize: 24 }} />,
       color: '#8b5cf6',
       delay: 0.3,
       subtitle: 'Permanencia media',
       trend: analyticsData.averageLifetime > 20 ? 'up' as const : analyticsData.averageLifetime < 15 ? 'down' as const : 'neutral' as const,
       loading: loading || propLoading,
-      progressValue: Math.min((analyticsData.averageLifetime / 36) * 100, 100) // Escala basada en 36 meses como máximo esperado
+      progressValue: Math.min((analyticsData.averageLifetime / 36) * 100, 100)
     }
   ], [analyticsData, loading, propLoading]);
 
