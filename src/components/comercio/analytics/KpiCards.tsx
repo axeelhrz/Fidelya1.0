@@ -3,16 +3,16 @@
 import React from 'react';
 import {
   CheckCircle,
-  CalendarToday,
-  Business,
-  LocalOffer,
+  Calendar,
+  Building2,
+  Gift,
   TrendingUp,
-  Analytics,
-  Speed,
-  AttachMoney,
-  Group,
+  BarChart3,
+  Gauge,
+  DollarSign,
+  Users,
   Star,
-} from '@mui/icons-material';
+} from 'lucide-react';
 import UnifiedMetricsCard from '@/components/ui/UnifiedMetricsCard';
 
 // Definir la interfaz AnalyticsData aquí ya que no está disponible
@@ -58,7 +58,7 @@ export const KpiCards: React.FC<KpiCardsProps> = ({ data, loading = false }) => 
     {
       title: 'Validaciones Totales',
       value: safeData.totalValidaciones,
-      icon: <CheckCircle />,
+      icon: <CheckCircle className="w-8 h-8" />,
       color: '#06b6d4',
       gradient: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
       change: 12,
@@ -71,7 +71,7 @@ export const KpiCards: React.FC<KpiCardsProps> = ({ data, loading = false }) => 
     {
       title: 'Promedio Diario',
       value: safeData.promedioDiario.toFixed(1),
-      icon: <CalendarToday />,
+      icon: <Calendar className="w-8 h-8" />,
       color: '#10b981',
       gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
       change: 8,
@@ -83,7 +83,7 @@ export const KpiCards: React.FC<KpiCardsProps> = ({ data, loading = false }) => 
     {
       title: 'Asociaciones Activas',
       value: safeData.asociacionesActivas,
-      icon: <Business />,
+      icon: <Building2 className="w-8 h-8" />,
       color: '#8b5cf6',
       gradient: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
       change: 0,
@@ -97,7 +97,7 @@ export const KpiCards: React.FC<KpiCardsProps> = ({ data, loading = false }) => 
       title: 'Beneficio Más Popular',
       value: safeData.beneficioMasUsado?.nombre || 'Sin datos',
       displayValue: safeData.beneficioMasUsado?.usos || 0,
-      icon: <LocalOffer />,
+      icon: <Gift className="w-8 h-8" />,
       color: '#f59e0b',
       gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
       change: 15,
@@ -114,7 +114,7 @@ export const KpiCards: React.FC<KpiCardsProps> = ({ data, loading = false }) => 
     {
       title: 'Tasa de Éxito',
       value: `${safeData.tasaExito.toFixed(1)}%`,
-      icon: <TrendingUp />,
+      icon: <TrendingUp className="w-6 h-6" />,
       color: '#10b981',
       gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
       change: safeData.tasaExito > 80 ? 10 : safeData.tasaExito > 60 ? 5 : -5,
@@ -127,7 +127,7 @@ export const KpiCards: React.FC<KpiCardsProps> = ({ data, loading = false }) => 
     {
       title: 'Crecimiento Mensual',
       value: `${safeData.crecimientoMensual.toFixed(1)}%`,
-      icon: <Analytics />,
+      icon: <BarChart3 className="w-6 h-6" />,
       color: '#ec4899',
       gradient: 'linear-gradient(135deg, #ec4899 0%, #db2777 100%)',
       change: safeData.crecimientoMensual,
@@ -139,7 +139,7 @@ export const KpiCards: React.FC<KpiCardsProps> = ({ data, loading = false }) => 
     {
       title: 'Eficiencia Operativa',
       value: `${safeData.eficienciaOperativa.toFixed(0)}%`,
-      icon: <Speed />,
+      icon: <Gauge className="w-6 h-6" />,
       color: '#6366f1',
       gradient: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
       change: 5,
@@ -152,7 +152,7 @@ export const KpiCards: React.FC<KpiCardsProps> = ({ data, loading = false }) => 
     {
       title: 'Ingresos Generados',
       value: `$${safeData.ingresosTotales.toLocaleString()}`,
-      icon: <AttachMoney />,
+      icon: <DollarSign className="w-6 h-6" />,
       color: '#059669',
       gradient: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
       change: 18,
@@ -165,7 +165,7 @@ export const KpiCards: React.FC<KpiCardsProps> = ({ data, loading = false }) => 
     {
       title: 'Socios Alcanzados',
       value: safeData.sociosAlcanzados,
-      icon: <Group />,
+      icon: <Users className="w-6 h-6" />,
       color: '#7c3aed',
       gradient: 'linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)',
       change: 22,
@@ -177,7 +177,7 @@ export const KpiCards: React.FC<KpiCardsProps> = ({ data, loading = false }) => 
     {
       title: 'Puntuación General',
       value: `${Math.min((safeData.tasaExito + safeData.eficienciaOperativa) / 2, 100).toFixed(0)}%`,
-      icon: <Star />,
+      icon: <Star className="w-6 h-6" />,
       color: '#d97706',
       gradient: 'linear-gradient(135deg, #d97706 0%, #b45309 100%)',
       change: 7,

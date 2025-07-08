@@ -5,8 +5,8 @@ import { motion } from 'framer-motion';
 import {
   TrendingUp,
   TrendingDown,
-  ArrowForward,
-  Remove,
+  ArrowRight,
+  Move,
 } from 'lucide-react';
 
 export interface UnifiedMetricProps {
@@ -98,7 +98,7 @@ const UnifiedMetricsCard: React.FC<UnifiedMetricProps> = ({
       case 'down':
         return <TrendingDown className="w-4 h-4" />;
       default:
-        return <Remove className="w-4 h-4" />;
+        return <Move className="w-4 h-4" />;
     }
   };
 
@@ -308,7 +308,7 @@ const UnifiedMetricsCard: React.FC<UnifiedMetricProps> = ({
                       color: color,
                     }}
                   >
-                    <ArrowForward className="w-5 h-5" />
+                    <ArrowRight className="w-5 h-5" />
                   </button>
                 </div>
               )}
