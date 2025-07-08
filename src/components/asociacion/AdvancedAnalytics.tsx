@@ -687,13 +687,23 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
   const [dateRange, setDateRange] = useState('30d');
   const [refreshing, setRefreshing] = useState(false);
 
-  // Memoize the stats and allSocios to prevent unnecessary recalculations
-  const memoizedStats = useMemo(() => stats, [stats.total, stats.activos, stats.vencidos, stats.inactivos]);
-  const memoizedAllSocios = useMemo(() => allSocios, [allSocios?.length]);
+  // Fixed: Properly memoize stats and allSocios with stable dependencies
+  const memoizedStats = useMemo(() => {
+    return {
+      total: stats?.total || 0,
+      activos: stats?.activos || 0,
+      vencidos: stats?.vencidos || 0,
+      inactivos: stats?.inactivos || 0
+    };
+  }, [stats?.total, stats?.activos, stats?.vencidos, stats?.inactivos]);
 
-  // Calculate analytics data from socios - Fixed to prevent infinite loop
+  const memoizedAllSocios = useMemo(() => {
+    return allSocios || [];
+  }, [allSocios]);
+
+  // Fixed: Calculate analytics data with proper dependencies
   const calculateAnalyticsData = useCallback(() => {
-    if (!user || !memoizedAllSocios) {
+    if (!user || !memoizedAllSocios.length) {
       setLoading(false);
       return;
     }
@@ -866,10 +876,14 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
     }
   }, [user, memoizedStats, memoizedAllSocios, dateRange]);
 
-  // Use effect with proper dependencies to prevent infinite loop
+  // Fixed: Use effect with stable dependencies
   useEffect(() => {
-    calculateAnalyticsData();
-  }, [calculateAnalyticsData]);
+    if (user && memoizedAllSocios.length > 0) {
+      calculateAnalyticsData();
+    } else {
+      setLoading(false);
+    }
+  }, [user, memoizedStats.total, memoizedStats.activos, memoizedStats.vencidos, memoizedStats.inactivos, memoizedAllSocios.length, dateRange, calculateAnalyticsData]);
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);

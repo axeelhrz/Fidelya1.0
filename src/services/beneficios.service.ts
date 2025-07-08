@@ -23,7 +23,7 @@ export class BeneficiosService {
   private static readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
   
   // Cache simple para evitar consultas repetidas
-  private static cache = new Map<string, { data: any; timestamp: number }>();
+  private static cache = new Map<string, { data: unknown; timestamp: number }>();
 
   private static getCacheKey(socioId: string, asociacionId: string): string {
     return `beneficios_${socioId}_${asociacionId}`;
@@ -37,14 +37,14 @@ export class BeneficiosService {
     return (now - cached.timestamp) < this.CACHE_DURATION;
   }
 
-  private static setCache(key: string, data: any): void {
+  private static setCache(key: string, data: unknown): void {
     this.cache.set(key, {
       data,
       timestamp: Date.now()
     });
   }
 
-  private static getCache(key: string): any {
+  private static getCache(key: string): unknown {
     const cached = this.cache.get(key);
     return cached ? cached.data : null;
   }
@@ -61,7 +61,7 @@ export class BeneficiosService {
       const cacheKey = this.getCacheKey(socioId, asociacionId);
       if (useCache && this.isValidCache(cacheKey)) {
         console.log('📦 Usando beneficios desde cache');
-        return this.getCache(cacheKey);
+        return this.getCache(cacheKey) as Beneficio[];
       }
 
       // Consulta optimizada con límite
@@ -163,7 +163,7 @@ export class BeneficiosService {
       const cacheKey = `usos_${socioId}`;
       if (useCache && this.isValidCache(cacheKey)) {
         console.log('📦 Usando beneficios usados desde cache');
-        return this.getCache(cacheKey);
+        return this.getCache(cacheKey) as BeneficioUso[];
       }
       
       const q = query(

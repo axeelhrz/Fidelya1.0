@@ -1276,7 +1276,7 @@ export default function SocioBeneficiosPage() {
                     <div className="space-y-3">
                       <div className="flex items-start gap-3">
                         <div className="w-6 h-6 bg-green-600 text-white rounded-full flex items-center justify-center text-xs font-bold">1</div>
-                        <p className="text-green-800">Haz clic en "Usar Beneficio" para activarlo</p>
+                        <p className="text-green-800">Haz clic en &quot;Usar Beneficio&quot; para activarlo</p>
                       </div>
                       <div className="flex items-start gap-3">
                         <div className="w-6 h-6 bg-green-600 text-white rounded-full flex items-center justify-center text-xs font-bold">2</div>

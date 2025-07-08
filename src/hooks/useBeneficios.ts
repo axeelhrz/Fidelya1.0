@@ -141,7 +141,7 @@ export const useBeneficios = () => {
 
     // Cleanup function
     return cleanup;
-  }, [user?.uid, user?.role, user?.asociacionId, cleanup]);
+  }, [user, user?.uid, user?.role, user?.asociacionId, cleanup]);
 
   // Cleanup al desmontar
   useEffect(() => {
