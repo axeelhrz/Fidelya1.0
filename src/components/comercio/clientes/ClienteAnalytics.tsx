@@ -1,48 +1,38 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import {
   BarChart3,
   PieChart,
   TrendingUp,
-  TrendingDown,
   Users,
   DollarSign,
   ShoppingBag,
-  Calendar,
   Target,
   Award,
   Star,
   Heart,
   Gift,
   Clock,
-  MapPin,
-  Phone,
-  Mail,
-  Filter,
-  Download,
   RefreshCw,
   Eye,
   EyeOff,
-  ChevronDown,
-  ChevronUp,
   ArrowUpRight,
   ArrowDownRight,
-  Percent,
   Hash,
   Activity,
-  Zap,
   Crown,
   Diamond,
-  Gem,
-  Sparkles
+  Trophy,
+  UserPlus,
+  Receipt,
 } from 'lucide-react';
 import { useClientes } from '@/hooks/useClientes';
-import { Cliente, ClienteStats } from '@/types/cliente';
+import { Cliente } from '@/types/cliente';
 import { Button } from '@/components/ui/Button';
-import { format, subDays, startOfMonth, endOfMonth, differenceInDays } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { subDays } from 'date-fns';
 
 // Componente de métrica avanzada
 const AdvancedMetricCard: React.FC<{
@@ -62,7 +52,6 @@ const AdvancedMetricCard: React.FC<{
   icon, 
   color, 
   format = 'number', 
-  trend,
   subtitle,
   onClick 
 }) => {
@@ -316,47 +305,52 @@ const TopClientes: React.FC<{
             transition={{ delay: index * 0.05 }}
             className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
           >
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${getRankBadge(index)}`}>
-              {index < 3 ? getRankIcon(index) : index + 1}
-            </div>
-            
-            <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center overflow-hidden shadow-sm">
-              {cliente.avatar ? (
-                <img
-                  src={cliente.avatar}
-                  alt={cliente.nombre}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <User size={20} className="text-gray-400" />
-              )}
-            </div>
-            
-            <div className="flex-1 min-w-0">
-              <p className="font-medium text-gray-900 truncate">{cliente.nombre}</p>
-              <p className="text-sm text-gray-500 truncate">{cliente.email}</p>
-            </div>
-            
-            <div className="text-right">
-              {sortBy === 'gasto' && (
-                <>
-                  <p className="font-bold text-green-600">${cliente.montoTotalGastado.toLocaleString()}</p>
-                  <p className="text-sm text-gray-500">{cliente.totalCompras} compras</p>
-                </>
-              )}
-              {sortBy === 'compras' && (
-                <>
-                  <p className="font-bold text-blue-600">{cliente.totalCompras} compras</p>
-                  <p className="text-sm text-gray-500">${cliente.montoTotalGastado.toLocaleString()}</p>
-                </>
-              )}
-              {sortBy === 'frecuencia' && (
-                <>
-                  <p className="font-bold text-purple-600">{cliente.frecuenciaVisitas} visitas</p>
-                  <p className="text-sm text-gray-500">${cliente.montoTotalGastado.toLocaleString()}</p>
-                </>
-              )}
-            </div>
+            {/* Parent wrapper for all content */}
+            <>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${getRankBadge(index)}`}>
+                {index < 3 ? getRankIcon(index) : index + 1}
+              </div>
+
+              <div>
+                {cliente.avatar ? (
+                  <Image
+                    src={cliente.avatar}
+                    alt={cliente.nombre}
+                    className="w-full h-full object-cover"
+                    width={48}
+                    height={48}
+                  />
+                ) : (
+                  <Users size={20} className="text-gray-400" />
+                )}
+              </div>
+
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-gray-900 truncate">{cliente.nombre}</p>
+                <p className="text-sm text-gray-500 truncate">{cliente.email}</p>
+              </div>
+
+              <div className="text-right">
+                {sortBy === 'gasto' && (
+                  <>
+                    <p className="font-bold text-green-600">${cliente.montoTotalGastado.toLocaleString()}</p>
+                    <p className="text-sm text-gray-500">{cliente.totalCompras} compras</p>
+                  </>
+                )}
+                {sortBy === 'compras' && (
+                  <>
+                    <p className="font-bold text-blue-600">{cliente.totalCompras} compras</p>
+                    <p className="text-sm text-gray-500">${cliente.montoTotalGastado.toLocaleString()}</p>
+                  </>
+                )}
+                {sortBy === 'frecuencia' && (
+                  <>
+                    <p className="font-bold text-purple-600">{cliente.frecuenciaVisitas} visitas</p>
+                    <p className="text-sm text-gray-500">${cliente.montoTotalGastado.toLocaleString()}</p>
+                  </>
+                )}
+              </div>
+            </>
           </motion.div>
         ))}
       </div>
@@ -366,7 +360,7 @@ const TopClientes: React.FC<{
 
 // Componente principal de analíticas
 export const ClienteAnalytics: React.FC = () => {
-  const { clientes, stats, loading, refreshStats } = useClientes();
+  const { clientes, loading, refreshStats } = useClientes();
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d' | '1y'>('30d');
   const [showAdvanced, setShowAdvanced] = useState(false);
 

@@ -52,6 +52,9 @@ if (typeof window !== 'undefined') {
   // Configure storage with better retry and timeout settings
   try {
     // Set custom configuration for better upload handling
+    // NOTE: There is currently no public API to set retry times directly on FirebaseStorage.
+    // The following code is commented out because accessing private properties like _delegate is not supported.
+    /*
     const storageConfig = {
       maxOperationRetryTime: 60000, // 1 minute
       maxUploadRetryTime: 600000,   // 10 minutes
@@ -62,6 +65,7 @@ if (typeof window !== 'undefined') {
     if (storage._delegate && storage._delegate._config) {
       Object.assign(storage._delegate._config, storageConfig);
     }
+    */
 
     console.log('✅ Firebase Storage configurado correctamente');
   } catch (error) {
@@ -86,11 +90,14 @@ if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
 }
 
 // Storage connection test utility
+import { ref, list } from 'firebase/storage';
+
 export const testStorageConnection = async (): Promise<boolean> => {
   try {
-    // Simple test to verify storage is accessible
-    const testRef = storage._delegate;
-    return testRef !== null;
+    // Try listing the root of the storage bucket to verify accessibility
+    const rootRef = ref(storage);
+    await list(rootRef, { maxResults: 1 });
+    return true;
   } catch (error) {
     console.error('❌ Error testing storage connection:', error);
     return false;
@@ -98,31 +105,38 @@ export const testStorageConnection = async (): Promise<boolean> => {
 };
 
 // Enhanced error handling for Firebase operations
-export const handleFirebaseError = (error: any): string => {
+export const handleFirebaseError = (error: unknown): string => {
   console.error('Firebase Error:', error);
-  
-  switch (error.code) {
-    case 'auth/user-not-found':
-      return 'Usuario no encontrado';
-    case 'auth/wrong-password':
-      return 'Contraseña incorrecta';
-    case 'auth/email-already-in-use':
-      return 'Este email ya está registrado';
-    case 'auth/weak-password':
-      return 'La contraseña debe tener al menos 6 caracteres';
-    case 'auth/invalid-email':
-      return 'Email inválido';
-    case 'auth/too-many-requests':
-      return 'Demasiados intentos. Intenta más tarde';
-    case 'permission-denied':
-      return 'No tienes permisos para realizar esta acción';
-    case 'unavailable':
-      return 'Servicio temporalmente no disponible';
-    case 'deadline-exceeded':
-      return 'Tiempo de espera agotado. Intenta nuevamente';
-    default:
-      return error.message || 'Ha ocurrido un error inesperado';
+
+  if (typeof error === 'object' && error !== null && 'code' in error) {
+    const code = (error as { code?: string }).code;
+    switch (code) {
+      case 'auth/user-not-found':
+        return 'Usuario no encontrado';
+      case 'auth/wrong-password':
+        return 'Contraseña incorrecta';
+      case 'auth/email-already-in-use':
+        return 'Este email ya está registrado';
+      case 'auth/weak-password':
+        return 'La contraseña debe tener al menos 6 caracteres';
+      case 'auth/invalid-email':
+        return 'Email inválido';
+      case 'auth/too-many-requests':
+        return 'Demasiados intentos. Intenta más tarde';
+      case 'permission-denied':
+        return 'No tienes permisos para realizar esta acción';
+      case 'unavailable':
+        return 'Servicio temporalmente no disponible';
+      case 'deadline-exceeded':
+        return 'Tiempo de espera agotado. Intenta nuevamente';
+      default:
+        if ('message' in error && typeof (error as { message?: string }).message === 'string') {
+          return (error as { message: string }).message;
+        }
+        return 'Ha ocurrido un error inesperado';
+    }
   }
+  return 'Ha ocurrido un error inesperado';
 };
 
 // Connection status monitoring

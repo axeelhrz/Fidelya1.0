@@ -4,7 +4,7 @@ import { ERROR_MESSAGES } from './constants';
 export interface AppError {
   code: string;
   message: string;
-  details?: any;
+  details?: unknown;
   timestamp: Date;
   userId?: string;
   action?: string;
@@ -23,7 +23,7 @@ export class ErrorHandler {
     return ErrorHandler.instance;
   }
 
-  public handleError(error: any, context?: string, showToast = true): AppError {
+  public handleError(error: unknown, context?: string, showToast = true): AppError {
     const appError: AppError = {
       code: this.getErrorCode(error),
       message: this.getErrorMessage(error),
@@ -51,37 +51,70 @@ export class ErrorHandler {
     return appError;
   }
 
-  private getErrorCode(error: any): string {
-    if (error?.code) return error.code;
-    if (error?.name) return error.name;
-    if (error?.status) return `HTTP_${error.status}`;
+  private getErrorCode(error: unknown): string {
+    if ((error as { code?: string })?.code) return (error as { code: string }).code;
+    if (typeof error === 'object' && error !== null && 'name' in error && typeof (error as { name: unknown }).name === 'string') {
+      return (error as { name: string }).name;
+    }
+    if (typeof error === 'object' && error !== null && 'status' in error) {
+      return `HTTP_${(error as { status: number }).status}`;
+    }
     return 'UNKNOWN_ERROR';
   }
 
-  private getErrorMessage(error: any): string {
+  private getErrorMessage(error: unknown): string {
     // Firebase Auth errors
-    if (error?.code?.startsWith('auth/')) {
-      return this.getFirebaseAuthErrorMessage(error.code);
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      Object.prototype.hasOwnProperty.call(error, 'code') &&
+      typeof (error as { code?: unknown }).code === 'string' &&
+      ((error as { code: string }).code).startsWith('auth/')
+    ) {
+      return this.getFirebaseAuthErrorMessage((error as { code: string }).code);
     }
 
     // Firebase Firestore errors
-    if (error?.code?.startsWith('firestore/')) {
-      return this.getFirestoreErrorMessage(error.code);
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      typeof (error as { code: unknown }).code === 'string' &&
+      (error as { code: string }).code.startsWith('firestore/')
+    ) {
+      return this.getFirestoreErrorMessage((error as { code: string }).code);
     }
 
     // Network errors
-    if (error?.code === 'NETWORK_ERROR' || !navigator.onLine) {
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      (error as { code?: string }).code === 'NETWORK_ERROR'
+    ) {
+      return ERROR_MESSAGES.NETWORK_ERROR;
+    }
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
       return ERROR_MESSAGES.NETWORK_ERROR;
     }
 
     // HTTP errors
-    if (error?.status) {
-      return this.getHttpErrorMessage(error.status);
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'status' in error
+    ) {
+      return this.getHttpErrorMessage((error as { status: number }).status);
     }
 
     // Custom app errors
-    if (error?.message) {
-      return error.message;
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'message' in error &&
+      typeof (error as { message: unknown }).message === 'string'
+    ) {
+      return (error as { message: string }).message;
     }
 
     return ERROR_MESSAGES.SERVER_ERROR;
@@ -188,7 +221,7 @@ export class ErrorHandler {
 export const errorHandler = ErrorHandler.getInstance();
 
 // Convenience functions
-export const handleError = (error: any, context?: string, showToast = true) =>
+export const handleError = (error: unknown, context?: string, showToast = true) =>
   errorHandler.handleError(error, context, showToast);
 
 export const handleNetworkError = (context?: string) =>

@@ -34,6 +34,12 @@ export interface Comercio {
     autoValidacion: boolean;
   };
   fechaRegistro?: string | Date; // Fecha de registro del comercioß
+  verificado: boolean;
+  puntuacion: number;
+  totalReviews: number;
+  beneficiosActivos: number;
+  validacionesTotales: number;
+
 }
 
 export interface Beneficio {

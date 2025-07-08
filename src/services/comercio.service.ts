@@ -93,7 +93,6 @@ export class ComercioService {
           creadoEn: Timestamp.now(),
           logoUrl: '',
           imagenPrincipalUrl: '',
-          qrCode: '',
           verificado: false,
           puntuacion: 0,
           totalReviews: 0,
@@ -433,7 +432,7 @@ export class ComercioService {
   static async getRecentValidaciones(
     userId: string, 
     limit_: number = 10,
-    lastDoc?: any
+    lastDoc?: import('firebase/firestore').QueryDocumentSnapshot
   ): Promise<{ validaciones: Validacion[]; hasMore: boolean }> {
     try {
       const validacionesRef = collection(db, 'validaciones');
@@ -570,7 +569,6 @@ export class ComercioService {
           actualizadoEn: Timestamp.now(),
           logoUrl: basicData?.logoUrl || '',
           imagenPrincipalUrl: basicData?.imagenPrincipalUrl || '',
-          qrCode: basicData?.qrCode || '',
           verificado: basicData?.verificado ?? false,
           puntuacion: basicData?.puntuacion ?? 0,
           totalReviews: basicData?.totalReviews ?? 0,
@@ -607,7 +605,15 @@ export class ComercioService {
   }
 
   // New method to sync user authentication with comercio document
-  static async syncUserWithComercio(userId: string, userData: any): Promise<void> {
+  static async syncUserWithComercio(
+    userId: string, 
+    userData: { 
+      nombre?: string; 
+      nombreComercio?: string; 
+      email?: string; 
+      categoria?: string; 
+    }
+  ): Promise<void> {
     try {
       console.log('🔄 Syncing user with comercio document:', userId);
       
@@ -649,7 +655,6 @@ export class ComercioService {
           actualizadoEn: Timestamp.now(),
           logoUrl: '',
           imagenPrincipalUrl: '',
-          qrCode: '',
           verificado: false,
           puntuacion: 0,
           totalReviews: 0,
