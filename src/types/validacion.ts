@@ -56,6 +56,8 @@ export interface ValidacionResponse {
   fechaHora: Timestamp | Date;
   montoDescuento?: number;
   beneficioTitulo?: string;
+  id?: string;
+  comercioNombre?: string;
 }
 
 export interface QRData {

@@ -1,28 +1,21 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, Suspense } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import { 
   QrCode,
   Zap, 
-  Shield, 
   CheckCircle, 
   Info,
-  Target,
   Award,
   Clock,
   History,
   TrendingUp,
   AlertCircle,
   RefreshCw,
-  Smartphone,
-  Eye,
   Gift,
-  Star,
-  Calendar,
-  MapPin,
   Users,
   Activity,
   Scan
@@ -37,6 +30,8 @@ import { ValidacionesService } from '@/services/validaciones.service';
 import { ValidacionResponse } from '@/types/validacion';
 import { BeneficiosService } from '@/services/beneficios.service';
 import { Beneficio } from '@/types/beneficio';
+// Import Timestamp if using Firebase
+import { Timestamp } from 'firebase/firestore';
 
 // Sidebar personalizado que maneja el logout
 const SocioSidebarWithLogout: React.FC<{
@@ -87,24 +82,9 @@ const SocioValidarContent: React.FC = () => {
     ultimaValidacion: null,
     beneficiosDisponibles: 0
   });
-  const [recentValidations, setRecentValidations] = useState<any[]>([]);
-  const [beneficiosDisponibles, setBeneficiosDisponibles] = useState<Beneficio[]>([]);
+  const [recentValidations] = useState<ValidacionResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  // Handle QR from URL parameters
-  useEffect(() => {
-    const qrParam = searchParams.get('qr');
-    if (qrParam && user) {
-      try {
-        const decodedQr = decodeURIComponent(qrParam);
-        handleQRScan(decodedQr);
-      } catch (error) {
-        console.error('Error processing QR from URL:', error);
-        toast.error('Error al procesar el código QR de la URL');
-      }
-    }
-  }, [searchParams, user]);
 
   // Cargar datos iniciales con manejo de errores mejorado
   const loadInitialData = useCallback(async () => {
@@ -143,15 +123,14 @@ const SocioValidarContent: React.FC = () => {
       const [beneficios, historial] = await Promise.race([
         Promise.all(dataPromises),
         timeoutPromise
-      ]) as [Beneficio[], any[]];
+      ]) as [Beneficio[], ValidacionResponse[]];
 
       console.log('✅ Datos cargados:', { 
         beneficios: beneficios.length, 
         historial: historial.length 
       });
 
-      setBeneficiosDisponibles(beneficios);
-      setRecentValidations(historial.slice(0, 5)); // Solo las últimas 5
+      // setBeneficiosDisponibles(beneficios); // Removed unused state
 
       // Calcular estadísticas de forma segura
       const today = new Date();
@@ -159,7 +138,15 @@ const SocioValidarContent: React.FC = () => {
       
       const validacionesHoy = historial.filter(v => {
         try {
-          const validationDate = v.fechaHora?.toDate ? v.fechaHora.toDate() : new Date(v.fechaHora);
+          // Use the correct property name for the validation date
+          const validationDateRaw = (v as ValidacionResponse).fechaHora ?? null;
+          if (!validationDateRaw) return false;
+          const validationDate =
+            typeof validationDateRaw === 'object' &&
+            validationDateRaw !== null &&
+            typeof (validationDateRaw as { toDate?: () => Date }).toDate === 'function'
+              ? (validationDateRaw as { toDate: () => Date }).toDate()
+              : new Date(validationDateRaw as Date);
           validationDate.setHours(0, 0, 0, 0);
           return validationDate.getTime() === today.getTime();
         } catch {
@@ -175,7 +162,12 @@ const SocioValidarContent: React.FC = () => {
         .reduce((total, v) => total + (v.montoDescuento || 0), 0);
 
       const ultimaValidacion = historial.length > 0 && historial[0].fechaHora 
-        ? (historial[0].fechaHora.toDate ? historial[0].fechaHora.toDate() : new Date(historial[0].fechaHora))
+        ? (typeof (historial[0].fechaHora) === 'object' &&
+            historial[0].fechaHora !== null &&
+            'toDate' in historial[0].fechaHora &&
+            typeof (historial[0].fechaHora as { toDate?: () => Date }).toDate === 'function'
+            ? (historial[0].fechaHora as Timestamp).toDate()
+            : new Date(historial[0].fechaHora as string | Date))
         : null;
 
       setStats({
@@ -200,12 +192,76 @@ const SocioValidarContent: React.FC = () => {
         ultimaValidacion: null,
         beneficiosDisponibles: 0
       });
-      setBeneficiosDisponibles([]);
-      setRecentValidations([]);
+      // setBeneficiosDisponibles([]); // Removed unused state
     } finally {
       setLoading(false);
     }
   }, [user]);
+
+  // QR Scan handler must be declared before useEffect that uses it
+  // Use useCallback to avoid redeclaration and unnecessary re-renders
+  const handleQRScan = useCallback(
+    async (qrData: string) => {
+      if (!user) {
+        toast.error('Usuario no autenticado');
+        return;
+      }
+
+      setScannerLoading(true);
+      try {
+        console.log('🔍 Procesando QR escaneado:', qrData);
+        
+        // Parse QR data
+        const parsedData = ValidacionesService.parseQRData(qrData);
+        if (!parsedData) {
+          throw new Error('Código QR inválido o formato no reconocido');
+        }
+
+        console.log('✅ QR parseado correctamente:', parsedData);
+
+        // Validate access
+        const result = await ValidacionesService.validarAcceso({
+          socioId: user.uid,
+          comercioId: parsedData.comercioId,
+          beneficioId: parsedData.beneficioId
+        });
+
+        console.log('🎯 Resultado de validación:', result);
+
+        setValidationResult(result);
+        setValidationModalOpen(true);
+        
+        if (result.resultado === 'habilitado') {
+          toast.success('¡Validación exitosa! Beneficio activado');
+          // Recargar datos después de una validación exitosa
+          loadInitialData();
+        } else {
+          toast.error(`Validación fallida: ${result.motivo || 'Error desconocido'}`);
+        }
+      } catch (error) {
+        console.error('❌ Error validating QR:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Error al validar el código QR';
+        toast.error(errorMessage);
+      } finally {
+        setScannerLoading(false);
+      }
+    },
+    [user, setScannerLoading, setValidationResult, setValidationModalOpen, loadInitialData]
+  );
+
+  // Handle QR from URL parameters
+  useEffect(() => {
+    const qrParam = searchParams.get('qr');
+    if (qrParam && user) {
+      try {
+        const decodedQr = decodeURIComponent(qrParam);
+        handleQRScan(decodedQr);
+      } catch (error) {
+        console.error('Error processing QR from URL:', error);
+        toast.error('Error al procesar el código QR de la URL');
+      }
+    }
+  }, [searchParams, user, handleQRScan]);
 
   // Cargar datos iniciales solo cuando el usuario esté disponible
   useEffect(() => {
@@ -243,52 +299,6 @@ const SocioValidarContent: React.FC = () => {
 
   const handleLogoutCancel = () => {
     setLogoutModalOpen(false);
-  };
-
-  const handleQRScan = async (qrData: string) => {
-    if (!user) {
-      toast.error('Usuario no autenticado');
-      return;
-    }
-
-    setScannerLoading(true);
-    try {
-      console.log('🔍 Procesando QR escaneado:', qrData);
-      
-      // Parse QR data
-      const parsedData = ValidacionesService.parseQRData(qrData);
-      if (!parsedData) {
-        throw new Error('Código QR inválido o formato no reconocido');
-      }
-
-      console.log('✅ QR parseado correctamente:', parsedData);
-
-      // Validate access
-      const result = await ValidacionesService.validarAcceso({
-        socioId: user.uid,
-        comercioId: parsedData.comercioId,
-        beneficioId: parsedData.beneficioId
-      });
-
-      console.log('🎯 Resultado de validación:', result);
-
-      setValidationResult(result);
-      setValidationModalOpen(true);
-      
-      if (result.resultado === 'habilitado') {
-        toast.success('¡Validación exitosa! Beneficio activado');
-        // Recargar datos después de una validación exitosa
-        loadInitialData();
-      } else {
-        toast.error(`Validación fallida: ${result.motivo || 'Error desconocido'}`);
-      }
-    } catch (error) {
-      console.error('❌ Error validating QR:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Error al validar el código QR';
-      toast.error(errorMessage);
-    } finally {
-      setScannerLoading(false);
-    }
   };
 
   const handleValidationModalClose = () => {
@@ -532,7 +542,7 @@ const SocioValidarContent: React.FC = () => {
                       <h3 className="font-semibold text-blue-900 mb-2">¿Cómo funciona?</h3>
                       <ul className="text-sm text-blue-800 space-y-1">
                         <li>• Solicita al comercio que muestre su código QR</li>
-                        <li>• Presiona "Escanear Código QR" y permite el acceso a la cámara</li>
+                        <li>• Presiona &quot;Escanear Código QR&quot; y permite el acceso a la cámara</li>
                         <li>• Apunta la cámara al código QR hasta que se detecte</li>
                         <li>• ¡Disfruta tu beneficio validado!</li>
                       </ul>
@@ -574,9 +584,9 @@ const SocioValidarContent: React.FC = () => {
                             </span>
                           </div>
                           <span className="text-xs opacity-75">
-                            {validation.fechaHora?.toDate 
-                              ? formatDate(validation.fechaHora.toDate())
-                              : formatDate(new Date(validation.fechaHora))
+                            {validation.fechaHora && typeof (validation.fechaHora as Timestamp | { toDate?: () => Date }) !== 'string' && typeof (validation.fechaHora as Timestamp | { toDate?: () => Date }).toDate === 'function'
+                              ? formatDate((validation.fechaHora as Timestamp).toDate())
+                              : formatDate(new Date(validation.fechaHora as Date))
                             }
                           </span>
                         </div>

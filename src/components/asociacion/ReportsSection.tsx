@@ -46,7 +46,6 @@ import {
   Close,
   Schedule,
   CheckCircle,
-  Warning,
   TableView,
   InsertChart,
   Description,

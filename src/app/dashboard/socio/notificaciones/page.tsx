@@ -7,9 +7,7 @@ import { toast } from 'react-hot-toast';
 import { 
   Bell,
   BellRing,
-  Filter,
   MoreVertical,
-  Check,
   CheckCheck,
   Trash2,
   Settings,
@@ -24,12 +22,9 @@ import {
   Megaphone,
   CreditCard,
   ExternalLink,
-  Flame,
   MessageCircle,
-  Smartphone,
   Search,
   Archive,
-  Star,
   Eye,
   EyeOff,
   Users,
@@ -44,7 +39,7 @@ import { SocioSidebar } from '@/components/layout/SocioSidebar';
 import { LogoutModal } from '@/components/ui/LogoutModal';
 import { useAuth } from '@/hooks/useAuth';
 import { useNotifications } from '@/hooks/useNotifications';
-import type { Notification, NotificationFilters } from '@/types/notification';
+import type { Notification } from '@/types/notification';
 
 // Sidebar personalizado que maneja el logout
 const SocioSidebarWithLogout: React.FC<{
@@ -316,7 +311,7 @@ const NotificationCard: React.FC<{
 
 export default function SocioNotificacionesPage() {
   const router = useRouter();
-  const { user, signOut } = useAuth();
+  const { signOut } = useAuth();
   
   // Estados para el modal de logout
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
@@ -642,7 +637,7 @@ export default function SocioNotificacionesPage() {
               {/* Status Filter */}
               <select
                 value={filterType}
-                onChange={(e) => setFilterType(e.target.value as any)}
+                onChange={(e) => setFilterType(e.target.value as 'all' | 'unread' | 'read')}
                 className="px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-transparent"
               >
                 <option value="all">Todas</option>
