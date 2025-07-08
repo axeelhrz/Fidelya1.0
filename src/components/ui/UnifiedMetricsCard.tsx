@@ -3,11 +3,23 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import {
+  Box,
+  Typography,
+  Card,
+  CardContent,
+  alpha,
+  Avatar,
+  LinearProgress,
+  IconButton,
+  Chip,
+  CircularProgress,
+} from '@mui/material';
+import {
   TrendingUp,
   TrendingDown,
-  ArrowRight,
-  Move,
-} from 'lucide-react';
+  ArrowForward,
+  Remove,
+} from '@mui/icons-material';
 
 export interface UnifiedMetricProps {
   title: string;
@@ -51,65 +63,66 @@ const UnifiedMetricsCard: React.FC<UnifiedMetricProps> = ({
   // Tamaños más grandes y generosos
   const sizeConfig = {
     small: {
-      cardHeight: 'h-44',
-      iconSize: 'w-12 h-12',
-      titleFontSize: 'text-xs',
-      valueFontSize: 'text-2xl',
-      padding: 'p-3',
-      subtitleFontSize: 'text-sm',
-      descriptionFontSize: 'text-xs',
+      cardHeight: '180px',
+      iconSize: 48,
+      titleFontSize: '0.75rem',
+      valueFontSize: '2rem',
+      padding: 3,
+      subtitleFontSize: '0.85rem',
+      descriptionFontSize: '0.75rem',
     },
     medium: {
-      cardHeight: 'h-56',
-      iconSize: 'w-16 h-16',
-      titleFontSize: 'text-sm',
-      valueFontSize: 'text-3xl',
-      padding: 'p-4',
-      subtitleFontSize: 'text-sm',
-      descriptionFontSize: 'text-sm',
+      cardHeight: '220px',
+      iconSize: 64,
+      titleFontSize: '0.8rem',
+      valueFontSize: '2.5rem',
+      padding: 3.5,
+      subtitleFontSize: '0.9rem',
+      descriptionFontSize: '0.8rem',
     },
     large: {
-      cardHeight: 'h-64',
-      iconSize: 'w-18 h-18',
-      titleFontSize: 'text-sm',
-      valueFontSize: 'text-4xl',
-      padding: 'p-4',
-      subtitleFontSize: 'text-base',
-      descriptionFontSize: 'text-sm',
+      cardHeight: '260px',
+      iconSize: 72,
+      titleFontSize: '0.85rem',
+      valueFontSize: '3rem',
+      padding: 4,
+      subtitleFontSize: '0.95rem',
+      descriptionFontSize: '0.85rem',
     },
     xl: {
-      cardHeight: 'h-72',
-      iconSize: 'w-22 h-22',
-      titleFontSize: 'text-base',
-      valueFontSize: 'text-5xl',
-      padding: 'p-6',
-      subtitleFontSize: 'text-lg',
-      descriptionFontSize: 'text-base',
+      cardHeight: '300px',
+      iconSize: 88,
+      titleFontSize: '0.9rem',
+      valueFontSize: '3.5rem',
+      padding: 5,
+      subtitleFontSize: '1rem',
+      descriptionFontSize: '0.9rem',
     },
   };
 
   const config = sizeConfig[size];
+  const finalGradient = gradient || `linear-gradient(135deg, ${color} 0%, ${alpha(color, 0.8)} 100%)`;
   const calculatedProgressValue = progressValue !== undefined ? progressValue : Math.min(Math.abs(change) * 10, 100);
 
   const getTrendIcon = () => {
     switch (trend) {
       case 'up':
-        return <TrendingUp className="w-4 h-4" />;
+        return <TrendingUp sx={{ fontSize: 18 }} />;
       case 'down':
-        return <TrendingDown className="w-4 h-4" />;
+        return <TrendingDown sx={{ fontSize: 18 }} />;
       default:
-        return <Move className="w-4 h-4" />;
+        return <Remove sx={{ fontSize: 18 }} />;
     }
   };
 
   const getTrendColor = () => {
     switch (trend) {
       case 'up':
-        return 'text-green-600 bg-green-50';
+        return '#10b981';
       case 'down':
-        return 'text-red-600 bg-red-50';
+        return '#ef4444';
       default:
-        return 'text-gray-600 bg-gray-50';
+        return '#6b7280';
     }
   };
 
@@ -123,20 +136,6 @@ const UnifiedMetricsCard: React.FC<UnifiedMetricProps> = ({
       return `${val.substring(0, 22)}...`;
     }
     return val;
-  };
-
-  const hexToRgb = (hex: string) => {
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result ? {
-      r: parseInt(result[1], 16),
-      g: parseInt(result[2], 16),
-      b: parseInt(result[3], 16)
-    } : null;
-  };
-
-  const getColorWithOpacity = (hexColor: string, opacity: number) => {
-    const rgb = hexToRgb(hexColor);
-    return rgb ? `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${opacity})` : hexColor;
   };
 
   return (
@@ -154,168 +153,272 @@ const UnifiedMetricsCard: React.FC<UnifiedMetricProps> = ({
         y: onClick ? -8 : -4,
         transition: { duration: 0.2 }
       }}
-      className="h-full"
+      style={{ height: '100%' }}
     >
-      <div
+      <Card
+        elevation={0}
         onClick={onClick}
-        className={`
-          relative overflow-hidden border border-slate-200 rounded-2xl 
-          bg-gradient-to-br from-white to-slate-50 
-          transition-all duration-300 ease-out
-          ${config.cardHeight} flex flex-col
-          ${onClick ? 'cursor-pointer hover:border-opacity-60 hover:shadow-2xl' : 'cursor-default'}
-          group
-        `}
-        style={{
-          borderColor: onClick ? getColorWithOpacity(color, 0.4) : undefined,
-          boxShadow: onClick ? `0 25px 80px -20px ${getColorWithOpacity(color, 0.3)}` : undefined,
+        sx={{
+          position: 'relative',
+          overflow: 'hidden',
+          border: '1px solid #f1f5f9',
+          borderRadius: 5,
+          background: 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
+          transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+          cursor: onClick ? 'pointer' : 'default',
+          height: config.cardHeight,
+          display: 'flex',
+          flexDirection: 'column',
+          '&:hover': {
+            borderColor: alpha(color, 0.4),
+            boxShadow: `0 25px 80px -20px ${alpha(color, 0.3)}`,
+            '& .metric-icon': {
+              transform: 'scale(1.15) rotate(8deg)',
+              background: finalGradient,
+              color: 'white',
+              boxShadow: `0 12px 32px ${alpha(color, 0.4)}`,
+            },
+            '& .metric-glow': {
+              opacity: 1,
+              height: '4px',
+            },
+            '& .metric-action': {
+              opacity: 1,
+              transform: 'scale(1.1)',
+            }
+          },
         }}
       >
-        {/* Top glow effect */}
-        <div
-          className="absolute top-0 left-0 right-0 h-1 opacity-70 group-hover:opacity-100 group-hover:h-1 transition-all duration-300"
-          style={{ background: gradient || `linear-gradient(135deg, ${color} 0%, ${getColorWithOpacity(color, 0.8)} 100%)` }}
+        {/* Top glow effect más prominente */}
+        <Box
+          className="metric-glow"
+          sx={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: '3px',
+            background: finalGradient,
+            opacity: 0.7,
+            transition: 'all 0.3s ease',
+          }}
         />
 
-        {/* Badge */}
+        {/* Badge más visible */}
         {badge && (
-          <div className="absolute top-4 right-4 z-10">
-            <span
-              className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold"
-              style={{
-                backgroundColor: getColorWithOpacity(color, 0.15),
+          <Box
+            sx={{
+              position: 'absolute',
+              top: 16,
+              right: 16,
+              zIndex: 2,
+            }}
+          >
+            <Chip
+              label={badge}
+              size="small"
+              sx={{
+                bgcolor: alpha(color, 0.15),
                 color: color,
+                fontWeight: 800,
+                fontSize: '0.75rem',
+                height: 24,
+                px: 1,
+                '& .MuiChip-label': {
+                  px: 1.5,
+                }
               }}
-            >
-              {badge}
-            </span>
-          </div>
+            />
+          </Box>
         )}
         
-        <div className={`${config.padding} h-full flex flex-col relative`}>
-          {/* Header Section */}
-          <div className="flex items-start justify-between mb-3">
-            <div
-              className={`
-                ${config.iconSize} rounded-xl flex items-center justify-center
-                transition-all duration-300 ease-out border-2
-                group-hover:scale-110 group-hover:rotate-2
-              `}
-              style={{
-                backgroundColor: getColorWithOpacity(color, 0.12),
+        <CardContent 
+          sx={{ 
+            p: config.padding, 
+            height: '100%', 
+            display: 'flex', 
+            flexDirection: 'column',
+            position: 'relative',
+          }}
+        >
+          {/* Header Section con más espacio */}
+          <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 3 }}>
+            <Avatar
+              className="metric-icon"
+              sx={{
+                width: config.iconSize,
+                height: config.iconSize,
+                bgcolor: alpha(color, 0.12),
                 color: color,
-                borderColor: getColorWithOpacity(color, 0.1),
-                boxShadow: `0 8px 24px ${getColorWithOpacity(color, 0.25)}`,
+                borderRadius: 4,
+                transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                boxShadow: `0 8px 24px ${alpha(color, 0.25)}`,
+                border: `2px solid ${alpha(color, 0.1)}`,
               }}
             >
               {loading ? (
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2" style={{ borderColor: color }} />
+                <CircularProgress size={config.iconSize * 0.4} sx={{ color: 'inherit' }} />
               ) : (
-                <div className="flex items-center justify-center">
-                  {icon}
-                </div>
+                React.cloneElement(icon as React.ReactElement, {
+                })
               )}
-            </div>
+            </Avatar>
             
-            {/* Trend indicator */}
+            {/* Trend indicator más grande */}
             {change !== 0 && (
-              <div className={`flex items-center gap-1 px-2 py-1 rounded-lg ${getTrendColor()}`}>
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: 1,
+                bgcolor: alpha(getTrendColor(), 0.1),
+                px: 1.5,
+                py: 0.5,
+                borderRadius: 2,
+              }}>
                 {getTrendIcon()}
-                <span className="text-sm font-bold">
+                <Typography
+                  variant="body2"
+                  sx={{
+                    fontWeight: 800,
+                    color: getTrendColor(),
+                    fontSize: '0.9rem'
+                  }}
+                >
                   {change > 0 ? '+' : ''}{change}%
-                </span>
-              </div>
+                </Typography>
+              </Box>
             )}
-          </div>
+          </Box>
           
-          {/* Content Section */}
-          <div className="flex-1 flex flex-col justify-between">
-            <div>
-              <div
-                className={`
-                  text-slate-400 font-bold uppercase tracking-wider mb-2 block leading-tight
-                  ${config.titleFontSize}
-                `}
+          {/* Content Section con más espacio */}
+          <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+            <Box>
+              <Typography
+                variant="overline"
+                sx={{
+                  color: '#94a3b8',
+                  fontWeight: 800,
+                  fontSize: config.titleFontSize,
+                  letterSpacing: '0.15em',
+                  textTransform: 'uppercase',
+                  mb: 1.5,
+                  display: 'block',
+                  lineHeight: 1.3,
+                }}
               >
                 {title}
-              </div>
+              </Typography>
               
-              <div
-                className={`
-                  font-black text-slate-900 leading-none mb-2 break-words
-                  ${config.valueFontSize}
-                `}
+              <Typography
+                variant="h3"
+                sx={{
+                  fontWeight: 900,
+                  color: '#0f172a',
+                  fontSize: config.valueFontSize,
+                  letterSpacing: '-0.025em',
+                  lineHeight: 0.9,
+                  mb: subtitle || description ? 1.5 : 0,
+                  wordBreak: 'break-word',
+                }}
                 title={typeof value === 'string' ? value : undefined}
               >
                 {formatValue(value)}
-              </div>
+              </Typography>
               
               {subtitle && (
-                <div
-                  className={`
-                    text-slate-600 font-semibold leading-tight mb-1
-                    ${config.subtitleFontSize}
-                  `}
+                <Typography
+                  variant="body1"
+                  sx={{
+                    color: '#64748b',
+                    fontWeight: 600,
+                    fontSize: config.subtitleFontSize,
+                    mb: description ? 1 : 0,
+                    lineHeight: 1.4,
+                  }}
                 >
                   {subtitle}
-                </div>
+                </Typography>
               )}
 
               {description && variant === 'detailed' && (
-                <div
-                  className={`
-                    text-slate-400 leading-tight font-medium
-                    ${config.descriptionFontSize}
-                  `}
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: '#94a3b8',
+                    fontSize: config.descriptionFontSize,
+                    lineHeight: 1.4,
+                    fontWeight: 500,
+                  }}
                 >
                   {description}
-                </div>
+                </Typography>
               )}
-            </div>
+            </Box>
             
-            {/* Footer Section */}
-            <div className="mt-auto pt-2">
-              {/* Progress indicator */}
+            {/* Footer Section con más espacio */}
+            <Box sx={{ mt: 'auto', pt: 2 }}>
+              {/* Progress indicator más grueso */}
               {showProgress && (
-                <div className={`${onClick ? 'mb-3' : 'mb-0'}`}>
-                  <div className="w-full bg-slate-200 rounded-full h-2">
-                    <div
-                      className="h-2 rounded-full transition-all duration-500"
-                      style={{
-                        width: `${loading ? 0 : calculatedProgressValue}%`,
-                        background: gradient || color,
-                      }}
-                    />
-                  </div>
-                  <div className="text-slate-400 text-xs font-semibold mt-1">
-                    {calculatedProgressValue.toFixed(0)}% completado
-                  </div>
-                </div>
-              )}
-              
-              {/* Action button */}
-              {onClick && (
-                <div className="flex justify-end">
-                  <button
-                    className="
-                      w-11 h-11 rounded-xl flex items-center justify-center
-                      opacity-80 group-hover:opacity-100 group-hover:scale-110
-                      transition-all duration-300 ease-out
-                      hover:shadow-lg
-                    "
-                    style={{
-                      backgroundColor: getColorWithOpacity(color, 0.12),
-                      color: color,
+                <Box sx={{ mb: onClick ? 2.5 : 0 }}>
+                  <LinearProgress
+                    variant="determinate"
+                    value={loading ? 0 : calculatedProgressValue}
+                    sx={{
+                      height: 6,
+                      borderRadius: 3,
+                      bgcolor: alpha(color, 0.12),
+                      '& .MuiLinearProgress-bar': {
+                        bgcolor: color,
+                        borderRadius: 3,
+                        background: finalGradient,
+                      }
+                    }}
+                  />
+                  {/* Mostrar valor del progreso */}
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      color: '#94a3b8',
+                      fontSize: '0.7rem',
+                      fontWeight: 600,
+                      mt: 0.5,
+                      display: 'block',
                     }}
                   >
-                    <ArrowRight className="w-5 h-5" />
-                  </button>
-                </div>
+                    {calculatedProgressValue.toFixed(0)}% completado
+                  </Typography>
+                </Box>
               )}
-            </div>
-          </div>
-        </div>
-      </div>
+              
+              {/* Action button más grande */}
+              {onClick && (
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                  <IconButton
+                    className="metric-action"
+                    size="medium"
+                    sx={{
+                      color: color,
+                      bgcolor: alpha(color, 0.12),
+                      opacity: 0.8,
+                      transform: 'scale(0.95)',
+                      transition: 'all 0.3s ease',
+                      width: 44,
+                      height: 44,
+                      '&:hover': {
+                        bgcolor: alpha(color, 0.2),
+                        transform: 'scale(1.15)',
+                        boxShadow: `0 8px 24px ${alpha(color, 0.3)}`,
+                      },
+                    }}
+                  >
+                    <ArrowForward sx={{ fontSize: 20 }} />
+                  </IconButton>
+                </Box>
+              )}
+            </Box>
+          </Box>
+        </CardContent>
+      </Card>
     </motion.div>
   );
 };

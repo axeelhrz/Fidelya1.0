@@ -1,18 +1,19 @@
 'use client';
 
 import React from 'react';
+import { Box } from '@mui/material';
 import {
   CheckCircle,
-  Calendar,
-  Building2,
-  Gift,
+  CalendarToday,
+  Business,
+  LocalOffer,
   TrendingUp,
-  BarChart3,
-  Gauge,
-  DollarSign,
-  Users,
+  Analytics,
+  Speed,
+  AttachMoney,
+  Group,
   Star,
-} from 'lucide-react';
+} from '@mui/icons-material';
 import UnifiedMetricsCard from '@/components/ui/UnifiedMetricsCard';
 
 // Definir la interfaz AnalyticsData aquí ya que no está disponible
@@ -58,7 +59,7 @@ export const KpiCards: React.FC<KpiCardsProps> = ({ data, loading = false }) => 
     {
       title: 'Validaciones Totales',
       value: safeData.totalValidaciones,
-      icon: <CheckCircle className="w-8 h-8" />,
+      icon: <CheckCircle />,
       color: '#06b6d4',
       gradient: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
       change: 12,
@@ -71,7 +72,7 @@ export const KpiCards: React.FC<KpiCardsProps> = ({ data, loading = false }) => 
     {
       title: 'Promedio Diario',
       value: safeData.promedioDiario.toFixed(1),
-      icon: <Calendar className="w-8 h-8" />,
+      icon: <CalendarToday />,
       color: '#10b981',
       gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
       change: 8,
@@ -83,7 +84,7 @@ export const KpiCards: React.FC<KpiCardsProps> = ({ data, loading = false }) => 
     {
       title: 'Asociaciones Activas',
       value: safeData.asociacionesActivas,
-      icon: <Building2 className="w-8 h-8" />,
+      icon: <Business />,
       color: '#8b5cf6',
       gradient: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
       change: 0,
@@ -97,7 +98,7 @@ export const KpiCards: React.FC<KpiCardsProps> = ({ data, loading = false }) => 
       title: 'Beneficio Más Popular',
       value: safeData.beneficioMasUsado?.nombre || 'Sin datos',
       displayValue: safeData.beneficioMasUsado?.usos || 0,
-      icon: <Gift className="w-8 h-8" />,
+      icon: <LocalOffer />,
       color: '#f59e0b',
       gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
       change: 15,
@@ -114,7 +115,7 @@ export const KpiCards: React.FC<KpiCardsProps> = ({ data, loading = false }) => 
     {
       title: 'Tasa de Éxito',
       value: `${safeData.tasaExito.toFixed(1)}%`,
-      icon: <TrendingUp className="w-6 h-6" />,
+      icon: <TrendingUp />,
       color: '#10b981',
       gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
       change: safeData.tasaExito > 80 ? 10 : safeData.tasaExito > 60 ? 5 : -5,
@@ -127,7 +128,7 @@ export const KpiCards: React.FC<KpiCardsProps> = ({ data, loading = false }) => 
     {
       title: 'Crecimiento Mensual',
       value: `${safeData.crecimientoMensual.toFixed(1)}%`,
-      icon: <BarChart3 className="w-6 h-6" />,
+      icon: <Analytics />,
       color: '#ec4899',
       gradient: 'linear-gradient(135deg, #ec4899 0%, #db2777 100%)',
       change: safeData.crecimientoMensual,
@@ -139,7 +140,7 @@ export const KpiCards: React.FC<KpiCardsProps> = ({ data, loading = false }) => 
     {
       title: 'Eficiencia Operativa',
       value: `${safeData.eficienciaOperativa.toFixed(0)}%`,
-      icon: <Gauge className="w-6 h-6" />,
+      icon: <Speed />,
       color: '#6366f1',
       gradient: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
       change: 5,
@@ -152,7 +153,7 @@ export const KpiCards: React.FC<KpiCardsProps> = ({ data, loading = false }) => 
     {
       title: 'Ingresos Generados',
       value: `$${safeData.ingresosTotales.toLocaleString()}`,
-      icon: <DollarSign className="w-6 h-6" />,
+      icon: <AttachMoney />,
       color: '#059669',
       gradient: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
       change: 18,
@@ -165,7 +166,7 @@ export const KpiCards: React.FC<KpiCardsProps> = ({ data, loading = false }) => 
     {
       title: 'Socios Alcanzados',
       value: safeData.sociosAlcanzados,
-      icon: <Users className="w-6 h-6" />,
+      icon: <Group />,
       color: '#7c3aed',
       gradient: 'linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)',
       change: 22,
@@ -177,7 +178,7 @@ export const KpiCards: React.FC<KpiCardsProps> = ({ data, loading = false }) => 
     {
       title: 'Puntuación General',
       value: `${Math.min((safeData.tasaExito + safeData.eficienciaOperativa) / 2, 100).toFixed(0)}%`,
-      icon: <Star className="w-6 h-6" />,
+      icon: <Star />,
       color: '#d97706',
       gradient: 'linear-gradient(135deg, #d97706 0%, #b45309 100%)',
       change: 7,
@@ -190,43 +191,57 @@ export const KpiCards: React.FC<KpiCardsProps> = ({ data, loading = false }) => 
   ];
 
   return (
-    <div className="w-full">
+    <Box sx={{ width: '100%' }}>
       {/* Métricas principales - tamaño grande */}
-      <div className="flex flex-wrap gap-4 mb-8">
+      <Box sx={{ 
+        display: 'flex', 
+        flexWrap: 'wrap', 
+        gap: 4, 
+        mb: 5,
+        '& > *': {
+          flex: { xs: '1 1 100%', sm: '1 1 calc(50% - 16px)', lg: '1 1 calc(25% - 24px)' },
+          minWidth: '280px'
+        }
+      }}>
         {kpiData.map((kpi, index) => (
-          <div
+          <UnifiedMetricsCard
             key={index}
-            className="flex-1 min-w-[280px] basis-full sm:basis-[calc(50%-16px)] lg:basis-[calc(25%-24px)]"
-          >
-            <UnifiedMetricsCard
-              {...kpi}
-              loading={loading}
-              size="large" // Tamaño grande para métricas principales
-              variant="detailed"
-              showProgress={true}
-              delay={index * 0.1}
-            />
-          </div>
+            {...kpi}
+            loading={loading}
+            size="large" // Tamaño grande para métricas principales
+            variant="detailed"
+            showProgress={true}
+            delay={index * 0.1}
+          />
         ))}
-      </div>
+      </Box>
 
       {/* Métricas secundarias - tamaño medio */}
-      <div className="flex flex-wrap gap-4">
+      <Box sx={{ 
+        display: 'flex', 
+        flexWrap: 'wrap', 
+        gap: 4,
+        '& > *': {
+          flex: { 
+            xs: '1 1 100%', 
+            sm: '1 1 calc(50% - 16px)', 
+            md: '1 1 calc(33.333% - 21.33px)', 
+            lg: '1 1 calc(16.666% - 26.67px)' 
+          },
+          minWidth: '240px'
+        }
+      }}>
         {additionalMetrics.map((metric, index) => (
-          <div
+          <UnifiedMetricsCard
             key={index}
-            className="flex-1 min-w-[240px] basis-full sm:basis-[calc(50%-16px)] md:basis-[calc(33.333%-21.33px)] lg:basis-[calc(16.666%-26.67px)]"
-          >
-            <UnifiedMetricsCard
-              {...metric}
-              loading={loading}
-              size="medium" // Tamaño medio para métricas secundarias
-              variant="detailed"
-              delay={(index + 4) * 0.1}
-            />
-          </div>
+            {...metric}
+            loading={loading}
+            size="medium" // Tamaño medio para métricas secundarias
+            variant="detailed"
+            delay={(index + 4) * 0.1}
+          />
         ))}
-      </div>
-    </div>
+      </Box>
+    </Box>
   );
 };
