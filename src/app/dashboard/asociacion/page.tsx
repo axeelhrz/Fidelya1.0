@@ -168,6 +168,7 @@ const DashboardSection: React.FC<{
   onBulkAction: (action: string, selectedIds: string[]) => void;
   onCsvImport: () => void;
   onNavigate: (section: string) => void;
+  onRefresh: () => void;
 }> = ({ 
   section, 
   socios, 
@@ -176,7 +177,8 @@ const DashboardSection: React.FC<{
   onEditSocio, 
   onDeleteSocio, 
   onBulkAction,
-  onNavigate
+  onNavigate,
+  onRefresh
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -330,6 +332,7 @@ const DashboardSection: React.FC<{
             onEdit={onEditSocio}
             onDelete={onDeleteSocio}
             onBulkAction={onBulkAction}
+            onRefresh={onRefresh}
           />
         </Container>
       );
@@ -390,7 +393,8 @@ export default function AsociacionDashboard() {
     addSocio, 
     updateSocio, 
     deleteSocio, 
-    addMultipleSocios 
+    addMultipleSocios,
+    refreshData
   } = useSocios();
 
   const [activeSection, setActiveSection] = useState('overview');
@@ -449,6 +453,16 @@ export default function AsociacionDashboard() {
     setDeleteDialog({ open: true, socio });
   };
 
+  const handleRefresh = async () => {
+    try {
+      refreshData();
+      toast.success('Datos actualizados correctamente');
+    } catch (error) {
+      console.error('Error refreshing socios:', error);
+      toast.error('Error al actualizar los datos');
+    }
+  };
+
   const handleSaveSocio = async (data: SocioFormData) => {
     setActionLoading(true);
     try {
@@ -485,7 +499,7 @@ export default function AsociacionDashboard() {
   const handleCsvImport = async (sociosData?: SocioFormData[]) => {
     if (sociosData) {
       setActionLoading(true);
-            try {
+      try {
         await addMultipleSocios(sociosData);
         toast.success(`${sociosData.length} socios importados correctamente`);
         setCsvImportOpen(false);
@@ -579,6 +593,7 @@ export default function AsociacionDashboard() {
               onBulkAction={handleBulkAction}
               onCsvImport={() => handleCsvImport()}
               onNavigate={setActiveSection}
+              onRefresh={handleRefresh}
             />
           </motion.div>
         </AnimatePresence>
@@ -618,4 +633,3 @@ export default function AsociacionDashboard() {
     </>
   );
 }
-
