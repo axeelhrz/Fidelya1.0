@@ -693,10 +693,13 @@ display: block;
     background-size: 150px 150px, 120px 120px, 100px 100px;
 }
 
-/* Ajustar padding del hero en móvil */
+/* MOVER EL HERO MUCHO MÁS ARRIBA EN MÓVIL */
 .hero {
-padding-top: calc(var(--navbar-height-mobile) + var(--space-6xl));
-padding-bottom: clamp(1.5rem, 6vh, 3rem);
+    padding-top: calc(var(--navbar-height-mobile) + var(--space-lg)) !important;
+    padding-bottom: clamp(0.5rem, 2vh, 1rem) !important;
+    min-height: calc(100vh - var(--space-6xl)) !important;
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
 }
 
 /* ===== HERO MÓVIL - OCULTAR TELÉFONO DESKTOP ===== */
@@ -743,8 +746,9 @@ border-radius: 12.8% !important;
 
 .hero__container {
 grid-template-columns: 1fr !important;
-gap: var(--space-3xl) !important;
+gap: var(--space-2xl) !important;
 text-align: center !important;
+padding-top: var(--space-lg) !important;
 }
 
 .hero__content {
@@ -757,15 +761,15 @@ order: 2 !important;
 .hero__company-description,
 .hero__subtitle,
 .hero__cta-group {
-margin-bottom: clamp(0.75rem, 2vh, 1rem) !important;
+margin-bottom: clamp(0.5rem, 1.5vh, 0.75rem) !important;
 }
 
 .hero__company-description {
-padding: clamp(0.75rem, 2vh, 1rem) !important;
+padding: clamp(0.5rem, 1.5vh, 0.75rem) !important;
 }
 
 .hero__cta-group {
-gap: clamp(0.5rem, 1.5vh, 0.75rem) !important;
+gap: clamp(0.25rem, 1vh, 0.5rem) !important;
 }
 }
 
@@ -807,18 +811,17 @@ background:
 }
 }
 
-/* Optimizar espaciado específico del hero */
-@media (width <= 1023px) {
-.hero {
-padding-top: calc(var(--navbar-height-mobile) + var(--space-6xl)) !important;
-padding-bottom: clamp(1rem, 3vh, 1.5rem) !important;
-}
-}
-
+/* AJUSTES ESPECÍFICOS PARA PANTALLAS PEQUEÑAS */
 @media (width <= 480px) {
 .hero {
-padding-top: calc(var(--navbar-height-mobile) + var(--space-5xl)) !important;
-padding-bottom: clamp(0.75rem, 2vh, 1rem) !important;
+    padding-top: calc(var(--navbar-height-mobile) + var(--space-md)) !important;
+    padding-bottom: clamp(0.25rem, 1vh, 0.5rem) !important;
+    min-height: calc(100vh - var(--space-7xl)) !important;
+}
+
+.hero__container {
+    padding-top: var(--space-md) !important;
+    gap: var(--space-lg) !important;
 }
 
 /* Ocultar nombres de idioma en pantallas muy pequeñas */
