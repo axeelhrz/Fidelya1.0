@@ -682,7 +682,7 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
 
   const stats = getStats();
 
-  // Real-time Firebase listeners
+  // Real-time Firebase listeners - FIXED: Removed circular dependency
   useEffect(() => {
     if (!user) return;
 
@@ -703,19 +703,23 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
         const todayValidaciones = snapshot.docs.length;
         const latestValidacion = snapshot.docs[0]?.data();
         
-        setRealTimeStats(prev => ({
-          ...prev,
-          validacionesEnTiempoReal: todayValidaciones,
-          ultimaValidacion: latestValidacion?.fechaHora?.toDate() || null,
-        }));
+        setRealTimeStats(prev => {
+          const newStats = {
+            ...prev,
+            validacionesEnTiempoReal: todayValidaciones,
+            ultimaValidacion: latestValidacion?.fechaHora?.toDate() || null,
+          };
 
-        // Show toast for new validations
-        if (todayValidaciones > realTimeStats.validacionesEnTiempoReal) {
-          toast.success('¡Nueva validación recibida!', {
-            icon: '🎉',
-            duration: 3000,
-          });
-        }
+          // Show toast for new validations only if there's an increase
+          if (todayValidaciones > prev.validacionesEnTiempoReal && prev.validacionesEnTiempoReal > 0) {
+            toast.success('¡Nueva validación recibida!', {
+              icon: '🎉',
+              duration: 3000,
+            });
+          }
+
+          return newStats;
+        });
 
         setLastUpdate(new Date());
       },
@@ -761,7 +765,7 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
       unsubscribeValidaciones();
       unsubscribeActivities();
     };
-  }, [user, realTimeStats.validacionesEnTiempoReal]);
+  }, [user]); // FIXED: Removed realTimeStats.validacionesEnTiempoReal from dependencies
 
   // Calculate metrics from validaciones - FIXED: Removed circular dependency
   const calculateMetrics = useCallback(() => {
@@ -870,7 +874,7 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
     } else if (!validacionesLoading && !beneficiosLoading) {
       setLoading(false);
     }
-  }, [calculateMetrics, beneficiosLoading, validacionesLoading]);
+  }, [calculateMetrics, beneficiosLoading, validacionesLoading]); // FIXED: Only depend on calculateMetrics and loading states
 
   // Enhanced KPI metrics with real-time values
   const kpiMetrics = useMemo(() => [
@@ -1012,7 +1016,7 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
               whileTap={{ scale: 0.95 }}
               onClick={() => onNavigate?.('qr-validacion')}
               className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center space-x-2 relative overflow-hidden"
-            >
+                        >
               <motion.div
                 className="absolute inset-0 bg-white/20"
                 initial={{ x: '-100%' }}
@@ -1033,7 +1037,7 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
           className="relative overflow-hidden bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-2xl p-4 md:p-6"
         >
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 to-teal-500"></div>
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-3 md:space-y-0">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-3 md:space-y-0">
             <div className="flex items-center space-x-4">
               <div className="relative">
                 <motion.div 
