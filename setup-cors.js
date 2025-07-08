@@ -1,4 +1,4 @@
-const { Storage } = require('@google-cloud/storage');
+import { Storage } from '@google-cloud/storage';
 
 async function setCorsConfiguration() {
   try {

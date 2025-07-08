@@ -1,5 +1,4 @@
-const https = require('https');
-const http = require('http');
+import https from 'https';
 
 function checkCORS() {
   console.log('🔍 Verificando configuración CORS de Firebase Storage...\n');
