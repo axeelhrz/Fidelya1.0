@@ -1,8 +1,6 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { onSnapshot, collection, query, where, orderBy, limit } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import { useAuth } from './useAuth';
 import { ClienteService } from '@/services/cliente.service';
 import {
@@ -11,7 +9,6 @@ import {
   ClienteStats,
   ClienteActivity,
   ClienteFilter,
-  ClienteExport,
 } from '@/types/cliente';
 import toast from 'react-hot-toast';
 
@@ -70,7 +67,7 @@ export const useClientes = (): UseClientesReturn => {
   
   // Filtros
   const [filtros, setFiltros] = useState<ClienteFilter>({
-    ordenarPor: 'creadoEn',
+    ordenarPor: 'fechaCreacion',
     orden: 'desc',
     limite: 20,
   });
@@ -132,6 +129,26 @@ export const useClientes = (): UseClientesReturn => {
     }
   }, [comercioId, filtros, clientes.length, hasMore, loading]);
 
+
+
+
+
+  /**
+   * Cargar actividades del cliente
+   */
+  const loadClienteActivities = useCallback(async (clienteId: string) => {
+    try {
+      setLoadingActivities(true);
+      const clienteActivities = await ClienteService.getClienteActivities(clienteId);
+      setActivities(clienteActivities);
+    } catch (error) {
+      console.error('Error loading cliente activities:', error);
+      setActivities([]);
+    } finally {
+      setLoadingActivities(false);
+    }
+  }, []);
+
   /**
    * Seleccionar cliente y cargar detalles
    */
@@ -153,7 +170,7 @@ export const useClientes = (): UseClientesReturn => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [loadClienteActivities]);
 
   /**
    * Crear nuevo cliente
@@ -419,7 +436,7 @@ export const useClientes = (): UseClientesReturn => {
    */
   const clearFiltros = useCallback(() => {
     setFiltros({
-      ordenarPor: 'creadoEn',
+      ordenarPor: 'fechaCreacion',
       orden: 'desc',
       limite: 20,
     });

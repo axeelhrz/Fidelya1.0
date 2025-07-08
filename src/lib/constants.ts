@@ -9,7 +9,9 @@ export const COLLECTIONS = {
   NOTIFICATIONS: 'notifications',
   BACKUPS: 'backups',
   BACKUP_CONFIGS: 'backupConfigs',
-  ACTIVITIES: 'activities'
+  ACTIVITIES: 'activities',
+  CLIENTE_ACTIVITIES: 'cliente_activities',
+  CLIENTE_SEGMENTS: 'cliente_segments',
 } as const;
 
 // Export type for collection names
