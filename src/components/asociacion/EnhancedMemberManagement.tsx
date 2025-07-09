@@ -71,8 +71,10 @@ export const EnhancedMemberManagement: React.FC<MemberManagementProps> = () => {
   // Helper function to prepare socio data for editing
   const prepareSocioForEdit = (socio: Socio): Socio => {
     // Helper function to ensure we have a proper Timestamp
-    const ensureTimestamp = (value: any): Timestamp => {
-      if (value && typeof value.toDate === 'function') {
+    const ensureTimestamp = (
+      value: Timestamp | Date | string | { seconds: number; nanoseconds?: number } | undefined | null
+    ): Timestamp => {
+      if (value && typeof (value as Timestamp).toDate === 'function') {
         // Already a Timestamp
         return value as Timestamp;
       } else if (value instanceof Date) {
@@ -81,7 +83,7 @@ export const EnhancedMemberManagement: React.FC<MemberManagementProps> = () => {
       } else if (typeof value === 'string') {
         // Convert string to Timestamp
         return Timestamp.fromDate(new Date(value));
-      } else if (value && typeof value === 'object' && value.seconds) {
+      } else if (value && typeof value === 'object' && 'seconds' in value && value.seconds) {
         // Handle Firestore timestamp-like objects
         return new Timestamp(value.seconds, value.nanoseconds || 0);
       } else {
@@ -92,18 +94,14 @@ export const EnhancedMemberManagement: React.FC<MemberManagementProps> = () => {
 
     return {
       ...socio,
-      uid: socio.uid,
+      uid: socio.uid || socio.id,
       asociacion: socio.asociacion || socio.asociacionId || '',
-      estado: socio.estado,
+      estado: socio.estado === 'suspendido' ? 'inactivo' : socio.estado,
       creadoEn: ensureTimestamp(socio.creadoEn),
       actualizadoEn: socio.actualizadoEn ? ensureTimestamp(socio.actualizadoEn) : undefined,
-      fechaNacimiento: socio.fechaNacimiento ? 
-        (typeof socio.fechaNacimiento.toDate === 'function' ? 
-          socio.fechaNacimiento.toDate() : 
-          socio.fechaNacimiento instanceof Date ? 
-            socio.fechaNacimiento : 
-            new Date(socio.fechaNacimiento)
-        ) : undefined
+      fechaNacimiento: socio.fechaNacimiento
+        ? ensureTimestamp(socio.fechaNacimiento)
+        : undefined
     };
   };
 
@@ -126,7 +124,8 @@ export const EnhancedMemberManagement: React.FC<MemberManagementProps> = () => {
 
   // Handle socio editing
   const handleEditSocio = (socio: Socio) => {
-    setSelectedSocio(socio);
+    const preparedSocio = prepareSocioForEdit(socio);
+    setSelectedSocio(preparedSocio);
     setSocioDialogOpen(true);
   };
 
@@ -666,7 +665,7 @@ export const EnhancedMemberManagement: React.FC<MemberManagementProps> = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex items-center space-x-2">
                           <button
-                            onClick={() => handleEditSocio(prepareSocioForEdit(socio))}
+                            onClick={() => handleEditSocio(socio)}
                             className="text-blue-600 hover:text-blue-900"
                             title="Editar"
                           >
@@ -763,7 +762,7 @@ export const EnhancedMemberManagement: React.FC<MemberManagementProps> = () => {
                         
                         <div className="flex items-center space-x-2">
                           <button
-                            onClick={() => handleEditSocio(prepareSocioForEdit(socio))}
+                            onClick={() => handleEditSocio(socio)}
                             className="text-blue-600 hover:text-blue-900"
                           >
                             <Edit size={16} />

@@ -91,7 +91,7 @@ export interface Socio {
   uid: string;
   nombre: string;
   email: string;
-  estado: 'activo' | 'vencido' | 'inactivo' | 'pendiente';
+  estado: 'activo' | 'inactivo' | 'pendiente' | 'vencido' | 'suspendido';
   asociacionId: string;
   creadoEn: Timestamp;
   actualizadoEn?: Timestamp;
