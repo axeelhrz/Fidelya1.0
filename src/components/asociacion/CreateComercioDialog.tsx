@@ -42,6 +42,9 @@ const CATEGORIAS_COMERCIO = [
   'Otros'
 ];
 
+// Define the configuration type explicitly
+type ConfiguracionKeys = 'notificacionesEmail' | 'notificacionesWhatsApp' | 'autoValidacion' | 'requiereAprobacion';
+
 export const CreateComercioDialog: React.FC<CreateComercioDialogProps> = ({
   open,
   onClose,
@@ -156,11 +159,15 @@ export const CreateComercioDialog: React.FC<CreateComercioDialogProps> = ({
     }
   };
 
-  const handleConfigChange = (field: keyof ComercioFormData['configuracion'], value: boolean) => {
+  const handleConfigChange = (field: ConfiguracionKeys, value: boolean) => {
     setFormData(prev => ({
       ...prev,
       configuracion: {
-        ...prev.configuracion!,
+        notificacionesEmail: false,
+        notificacionesWhatsApp: false,
+        autoValidacion: false,
+        requiereAprobacion: false,
+        ...prev.configuracion,
         [field]: value
       }
     }));
@@ -583,7 +590,7 @@ export const CreateComercioDialog: React.FC<CreateComercioDialogProps> = ({
                       </>
                     ) : (
                       <>
-                        <Check className="w-4 h-4 h-4 mr-2" />
+                        <Check className="w-4 h-4 mr-2" />
                         Crear Comercio
                       </>
                     )}
@@ -597,4 +604,3 @@ export const CreateComercioDialog: React.FC<CreateComercioDialogProps> = ({
     </div>
   );
 };
-
