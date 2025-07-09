@@ -8,7 +8,6 @@ import {
   QrCode, 
   Bell, 
   History,
-  ChevronDown,
   Crown,
   ArrowUpRight,
   LogOut
@@ -207,7 +206,7 @@ export const SocioSidebar: React.FC<SocioSidebarProps> = ({
               initial="hidden"
               animate="visible"
             >
-              {menuItems.map((item, index) => (
+              {menuItems.map((item) => (
                 <motion.div key={item.id} variants={itemVariants}>
                   <motion.button
                     onClick={() => handleMenuClick(item.id, item.href)}

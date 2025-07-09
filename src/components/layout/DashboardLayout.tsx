@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DashboardSidebar } from './DashboardSidebar';
-import { Menu, X, ArrowUp, Sparkles } from 'lucide-react';
+import { Menu, X, ArrowUp } from 'lucide-react';
 
 interface SidebarProps {
   open: boolean;
