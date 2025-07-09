@@ -9,13 +9,7 @@ import {
   Filter,
   Download,
   Upload,
-  Mail,
-  Phone,
-  Calendar,
-  MapPin,
-  Star,
   Check,
-  X,
   AlertTriangle,
   TrendingUp,
   Store,
@@ -37,7 +31,6 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
   const { socios, stats, loading, createSocio } = useSocios();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedEstado, setSelectedEstado] = useState('');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
   const [showFilters, setShowFilters] = useState(false);
   const [socioDialogOpen, setSocioDialogOpen] = useState(false);
   const [selectedSocio, setSelectedSocio] = useState(null);
@@ -58,8 +51,10 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
     try {
       const success = await createSocio({
         ...data,
+        dni: data.dni ?? '',
         fechaNacimiento: new Date(), // Default date
         montoCuota: 0, // Default amount
+        numeroSocio: String(data.numeroSocio), // Ensure string type
       });
       
       if (success) {
@@ -353,17 +348,17 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                         socio.estado === 'activo' 
                           ? 'bg-green-100 text-green-800' 
-                          : socio.estado === 'vencido'
+                          : socio.estado === 'suspendido'
                           ? 'bg-red-100 text-red-800'
                           : 'bg-gray-100 text-gray-800'
                       }`}>
                         {socio.estado === 'activo' ? 'Activo' : 
-                         socio.estado === 'vencido' ? 'Vencido' : 'Inactivo'}
+                         socio.estado === 'suspendido' ? 'Suspendido' : 'Inactivo'}
                       </span>
                     </td>
                     
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {socio.creadoEn.toDate().toLocaleDateString()}
+                      {socio.creadoEn.toLocaleDateString()}
                     </td>
                     
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">

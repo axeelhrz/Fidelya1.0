@@ -131,6 +131,7 @@ export interface Socio {
   };
 }
 
+// Tipo simplificado para el formulario de creación/edición de socios
 export interface SocioFormData {
   nombre: string;
   email: string;
@@ -138,13 +139,10 @@ export interface SocioFormData {
   telefono?: string;
   dni?: string;
   direccion?: string;
-  fechaNacimiento?: Date;
-  montoCuota?: number; // Monto de la cuota mensual
-  estadoMembresia?: string; // Estado de la membresía (ej. "activa", "pendiente", "cancelada")
-  fechaIngreso?: Date | Timestamp; // Fecha de ingreso a la asociación
-  numeroSocio: number;
-  fechaVencimiento?: Date | Timestamp; // Fecha de vencimiento de la membresía
-  ultimoPago?: Date | Timestamp; // Fecha del último pago realizado
+  fechaNacimiento?: Date | Timestamp;
+  montoCuota?: number;
+  fechaVencimiento?: Date | Timestamp;
+  numeroSocio?: string;
 }
 
 export interface SocioStats {
