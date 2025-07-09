@@ -17,49 +17,62 @@ import {
   ArrowRight,
   Eye,
   Edit,
-  Trash2
+  Trash2,
+  UserPlus,
+  UserX,
+  RefreshCw,
 } from 'lucide-react';
 import { useSocios } from '@/hooks/useSocios';
 import { SocioDialog } from './SocioDialog';
-import { SocioFormData } from '@/types/socio';
+import { AddRegisteredSocioDialog } from './AddRegisteredSocioDialog';
+import { SocioProfileView } from './SocioProfileView';
+import { DeleteConfirmDialog } from './DeleteConfirmDialog';
+import { SocioFormData, Socio } from '@/types/socio';
 
 interface EnhancedMemberManagementProps {
   onNavigate?: (section: string) => void;
 }
 
 export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> = ({ onNavigate }) => {
-  const { socios, stats, loading, createSocio } = useSocios();
+  const { socios, stats, loading, createSocio, updateSocio, deleteSocio, updateMembershipStatus } = useSocios();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedEstado, setSelectedEstado] = useState('');
+  const [selectedEstadoMembresia, setSelectedEstadoMembresia] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [socioDialogOpen, setSocioDialogOpen] = useState(false);
-  const [selectedSocio, setSelectedSocio] = useState(null);
+  const [addRegisteredDialogOpen, setAddRegisteredDialogOpen] = useState(false);
+  const [profileViewOpen, setProfileViewOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedSocio, setSelectedSocio] = useState<Socio | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
 
   // Filtrar socios
   const sociosFiltrados = socios.filter(socio => {
     const matchesSearch = !searchTerm || 
       socio.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
       socio.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      socio.dni?.toLowerCase().includes(searchTerm.toLowerCase());
+      socio.dni?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      socio.numeroSocio?.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesEstado = !selectedEstado || socio.estado === selectedEstado;
+    const matchesEstadoMembresia = !selectedEstadoMembresia || socio.estadoMembresia === selectedEstadoMembresia;
     
-    return matchesSearch && matchesEstado;
+    return matchesSearch && matchesEstado && matchesEstadoMembresia;
   });
 
   const handleCreateSocio = async (data: SocioFormData) => {
     try {
-      // Clean the data to remove undefined values and provide defaults
       const cleanData = {
         nombre: data.nombre,
         email: data.email,
         estado: data.estado,
         dni: data.dni || '',
         telefono: data.telefono || '',
-        direccion: '', // Provide empty string instead of undefined
-        fechaNacimiento: new Date(), // Default date
-        montoCuota: 0, // Default amount
-        numeroSocio: '', // Let the service generate it
+        direccion: '',
+        fechaNacimiento: data.fechaNacimiento || new Date(),
+        montoCuota: data.montoCuota || 0,
+        numeroSocio: data.numeroSocio || '',
+        fechaVencimiento: data.fechaVencimiento,
       };
       
       const success = await createSocio(cleanData);
@@ -67,15 +80,119 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
       if (success) {
         setSocioDialogOpen(false);
         setSelectedSocio(null);
+        setIsEditing(false);
       }
     } catch (error) {
       console.error('Error creating socio:', error);
     }
   };
 
+  const handleUpdateSocio = async (data: SocioFormData) => {
+    if (!selectedSocio) return;
+    
+    try {
+      const success = await updateSocio(selectedSocio.id, data);
+      
+      if (success) {
+        setSocioDialogOpen(false);
+        setSelectedSocio(null);
+        setIsEditing(false);
+      }
+    } catch (error) {
+      console.error('Error updating socio:', error);
+    }
+  };
+
+  const handleAddRegisteredSocio = async (userData: {
+    nombre: string;
+    email: string;
+    telefono?: string;
+    dni?: string;
+    estado: 'activo' | 'vencido';
+  }) => {
+    try {
+      const socioData = {
+        nombre: userData.nombre,
+        email: userData.email,
+        estado: userData.estado,
+        dni: userData.dni || '',
+        telefono: userData.telefono || '',
+        direccion: '',
+        fechaNacimiento: new Date(),
+        montoCuota: 0,
+        numeroSocio: '',
+      };
+      
+      const success = await createSocio(socioData);
+      
+      if (success) {
+        setAddRegisteredDialogOpen(false);
+      }
+      
+      return success;
+    } catch (error) {
+      console.error('Error adding registered socio:', error);
+      return false;
+    }
+  };
+
   const handleOpenDialog = () => {
     setSelectedSocio(null);
+    setIsEditing(false);
     setSocioDialogOpen(true);
+  };
+
+  const handleEditSocio = (socio: Socio) => {
+    setSelectedSocio(socio);
+    setIsEditing(true);
+    setSocioDialogOpen(true);
+  };
+
+  const handleViewSocio = (socio: Socio) => {
+    setSelectedSocio(socio);
+    setProfileViewOpen(true);
+  };
+
+  const handleDeleteSocio = (socio: Socio) => {
+    setSelectedSocio(socio);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!selectedSocio) return;
+    
+    try {
+      const success = await deleteSocio(selectedSocio.id);
+      
+      if (success) {
+        setDeleteDialogOpen(false);
+        setSelectedSocio(null);
+      }
+    } catch (error) {
+      console.error('Error deleting socio:', error);
+    }
+  };
+
+  const handleToggleStatus = async (socio: Socio) => {
+    const newStatus = socio.estado === 'activo' ? 'inactivo' : 'activo';
+    
+    try {
+      const success = await updateSocio(socio.id, { estado: newStatus } as Partial<SocioFormData>);
+      
+      if (success) {
+        // Refresh will happen automatically through the hook
+      }
+    } catch (error) {
+      console.error('Error toggling socio status:', error);
+    }
+  };
+
+  const handleUpdateMembershipStatuses = async () => {
+    try {
+      await updateMembershipStatus();
+    } catch (error) {
+      console.error('Error updating membership statuses:', error);
+    }
   };
 
   return (
@@ -90,7 +207,6 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
         </div>
         
         <div className="flex items-center space-x-3">
-          {/* Botón de navegación rápida a comercios */}
           {onNavigate && (
             <button
               onClick={() => onNavigate('comercios')}
@@ -101,6 +217,22 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
               <ArrowRight className="w-4 h-4 ml-2" />
             </button>
           )}
+          
+          <button
+            onClick={handleUpdateMembershipStatuses}
+            className="inline-flex items-center px-4 py-2 bg-orange-50 border border-orange-200 rounded-lg text-sm font-medium text-orange-700 hover:bg-orange-100 transition-colors"
+          >
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Actualizar Estados
+          </button>
+          
+          <button
+            onClick={() => setAddRegisteredDialogOpen(true)}
+            className="inline-flex items-center px-4 py-2 bg-emerald-50 border border-emerald-200 rounded-lg text-sm font-medium text-emerald-700 hover:bg-emerald-100 transition-colors"
+          >
+            <UserPlus className="w-4 h-4 mr-2" />
+            Agregar Registrado
+          </button>
           
           <button
             onClick={handleOpenDialog}
@@ -141,7 +273,7 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Socios Vencidos</p>
+              <p className="text-sm font-medium text-gray-600">Membresías Vencidas</p>
               <p className="text-2xl font-bold text-red-600">{stats.vencidos}</p>
             </div>
             <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
@@ -168,7 +300,6 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
       {/* Search and Filters */}
       <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
-          {/* Search */}
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
             <input
@@ -180,7 +311,6 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
             />
           </div>
 
-          {/* Actions */}
           <div className="flex items-center space-x-3">
             <button
               onClick={() => setShowFilters(!showFilters)}
@@ -224,7 +354,7 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Estado
+                    Estado del Socio
                   </label>
                   <select
                     value={selectedEstado}
@@ -233,8 +363,25 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
                   >
                     <option value="">Todos los estados</option>
                     <option value="activo">Activo</option>
-                    <option value="vencido">Vencido</option>
                     <option value="inactivo">Inactivo</option>
+                    <option value="suspendido">Suspendido</option>
+                    <option value="pendiente">Pendiente</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Estado de Membresía
+                  </label>
+                  <select
+                    value={selectedEstadoMembresia}
+                    onChange={(e) => setSelectedEstadoMembresia(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">Todos los estados</option>
+                    <option value="al_dia">Al día</option>
+                    <option value="vencido">Vencido</option>
+                    <option value="pendiente">Pendiente</option>
                   </select>
                 </div>
               </div>
@@ -243,6 +390,7 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
                   onClick={() => {
                     setSearchTerm('');
                     setSelectedEstado('');
+                    setSelectedEstadoMembresia('');
                   }}
                   className="text-sm text-gray-600 hover:text-gray-800"
                 >
@@ -275,24 +423,23 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
             </p>
             {socios.length === 0 && (
               <div className="mt-6 space-y-3">
-                <button
-                  onClick={handleOpenDialog}
-                  className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Agregar Primer Socio
-                </button>
-                {onNavigate && (
-                  <div>
-                    <button
-                      onClick={() => onNavigate('comercios')}
-                      className="inline-flex items-center px-4 py-2 border border-green-300 shadow-sm text-sm font-medium rounded-md text-green-700 bg-green-50 hover:bg-green-100"
-                    >
-                      <Store className="w-4 h-4 mr-2" />
-                      Ver Gestión de Comercios
-                    </button>
-                  </div>
-                )}
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <button
+                    onClick={handleOpenDialog}
+                    className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Crear Nuevo Socio
+                  </button>
+                  
+                  <button
+                    onClick={() => setAddRegisteredDialogOpen(true)}
+                    className="inline-flex items-center px-4 py-2 border border-emerald-300 shadow-sm text-sm font-medium rounded-md text-emerald-700 bg-emerald-50 hover:bg-emerald-100"
+                  >
+                    <UserPlus className="w-4 h-4 mr-2" />
+                    Agregar Usuario Registrado
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -309,6 +456,9 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Estado
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Membresía
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Fecha Ingreso
@@ -338,7 +488,7 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
                             {socio.nombre}
                           </div>
                           <div className="text-sm text-gray-500">
-                            DNI: {socio.dni || 'No especificado'}
+                            {socio.numeroSocio ? `#${socio.numeroSocio}` : 'Sin número'}
                           </div>
                         </div>
                       </div>
@@ -355,12 +505,28 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                         socio.estado === 'activo' 
                           ? 'bg-green-100 text-green-800' 
+                          : socio.estado === 'inactivo'
+                          ? 'bg-gray-100 text-gray-800'
                           : socio.estado === 'suspendido'
                           ? 'bg-red-100 text-red-800'
-                          : 'bg-gray-100 text-gray-800'
+                          : 'bg-yellow-100 text-yellow-800'
                       }`}>
                         {socio.estado === 'activo' ? 'Activo' : 
-                         socio.estado === 'suspendido' ? 'Suspendido' : 'Inactivo'}
+                         socio.estado === 'inactivo' ? 'Inactivo' :
+                         socio.estado === 'suspendido' ? 'Suspendido' : 'Pendiente'}
+                      </span>
+                    </td>
+
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        socio.estadoMembresia === 'al_dia' 
+                          ? 'bg-green-100 text-green-800' 
+                          : socio.estadoMembresia === 'vencido'
+                          ? 'bg-red-100 text-red-800'
+                          : 'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {socio.estadoMembresia === 'al_dia' ? 'Al día' : 
+                         socio.estadoMembresia === 'vencido' ? 'Vencido' : 'Pendiente'}
                       </span>
                     </td>
                     
@@ -371,25 +537,37 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center space-x-2">
                         <button
-                          onClick={() => {/* Ver detalles */}}
+                          onClick={() => handleViewSocio(socio)}
                           className="text-blue-600 hover:text-blue-900"
-                          title="Ver detalles"
+                          title="Ver perfil completo"
                         >
                           <Eye size={16} />
                         </button>
                         
                         <button
-                          onClick={() => {/* Editar */}}
+                          onClick={() => handleEditSocio(socio)}
                           className="text-indigo-600 hover:text-indigo-900"
-                          title="Editar"
+                          title="Editar socio"
                         >
                           <Edit size={16} />
                         </button>
                         
                         <button
-                          onClick={() => {/* Eliminar */}}
+                          onClick={() => handleToggleStatus(socio)}
+                          className={`${
+                            socio.estado === 'activo' 
+                              ? 'text-orange-600 hover:text-orange-900' 
+                              : 'text-green-600 hover:text-green-900'
+                          }`}
+                          title={socio.estado === 'activo' ? 'Desactivar socio' : 'Activar socio'}
+                        >
+                          {socio.estado === 'activo' ? <UserX size={16} /> : <UserPlus size={16} />}
+                        </button>
+                        
+                        <button
+                          onClick={() => handleDeleteSocio(socio)}
                           className="text-red-600 hover:text-red-900"
-                          title="Eliminar"
+                          title="Eliminar socio"
                         >
                           <Trash2 size={16} />
                         </button>
@@ -416,33 +594,33 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
             </div>
             <div className="text-left">
               <div className="text-sm font-medium text-gray-900">Nuevo Socio</div>
-              <div className="text-xs text-gray-500">Agregar miembro</div>
+              <div className="text-xs text-gray-500">Crear desde cero</div>
             </div>
           </button>
 
           <button
-            onClick={() => onNavigate?.('socios-importar')}
-            className="flex items-center p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow border border-gray-200"
-          >
-            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mr-3">
-              <Upload className="w-5 h-5 text-green-600" />
-            </div>
-            <div className="text-left">
-              <div className="text-sm font-medium text-gray-900">Importar CSV</div>
-              <div className="text-xs text-gray-500">Carga masiva</div>
-            </div>
-          </button>
-
-          <button
-            onClick={() => onNavigate?.('comercios')}
+            onClick={() => setAddRegisteredDialogOpen(true)}
             className="flex items-center p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow border border-gray-200"
           >
             <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center mr-3">
-              <Store className="w-5 h-5 text-emerald-600" />
+              <UserPlus className="w-5 h-5 text-emerald-600" />
             </div>
             <div className="text-left">
-              <div className="text-sm font-medium text-gray-900">Ver Comercios</div>
-              <div className="text-xs text-gray-500">Gestionar afiliados</div>
+              <div className="text-sm font-medium text-gray-900">Agregar Registrado</div>
+              <div className="text-xs text-gray-500">Usuario existente</div>
+            </div>
+          </button>
+
+          <button
+            onClick={handleUpdateMembershipStatuses}
+            className="flex items-center p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow border border-gray-200"
+          >
+            <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center mr-3">
+              <RefreshCw className="w-5 h-5 text-orange-600" />
+            </div>
+            <div className="text-left">
+              <div className="text-sm font-medium text-gray-900">Actualizar Estados</div>
+              <div className="text-xs text-gray-500">Membresías vencidas</div>
             </div>
           </button>
 
@@ -461,12 +639,50 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
         </div>
       </div>
 
-      {/* Socio Dialog */}
+      {/* Dialogs */}
       <SocioDialog
         open={socioDialogOpen}
-        onClose={() => setSocioDialogOpen(false)}
-        onSave={handleCreateSocio}
-        socio={selectedSocio}
+        onClose={() => {
+          setSocioDialogOpen(false);
+          setSelectedSocio(null);
+          setIsEditing(false);
+        }}
+        onSave={isEditing ? handleUpdateSocio : handleCreateSocio}
+        socio={isEditing ? selectedSocio : null}
+      />
+
+      <AddRegisteredSocioDialog
+        open={addRegisteredDialogOpen}
+        onClose={() => setAddRegisteredDialogOpen(false)}
+        onAddSocio={handleAddRegisteredSocio}
+      />
+
+      {selectedSocio && (
+        <SocioProfileView
+          socio={selectedSocio}
+          open={profileViewOpen}
+          onClose={() => {
+            setProfileViewOpen(false);
+            setSelectedSocio(null);
+          }}
+          onEdit={handleEditSocio}
+          onRefresh={() => {
+            // Refresh will happen automatically through the hook
+          }}
+        />
+      )}
+
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onClose={() => {
+          setDeleteDialogOpen(false);
+          setSelectedSocio(null);
+        }}
+        onConfirm={handleConfirmDelete}
+        title="Eliminar Socio"
+        message={`¿Estás seguro de que deseas eliminar al socio "${selectedSocio?.nombre}"? Esta acción marcará al socio como inactivo.`}
+        confirmText="Eliminar"
+        cancelText="Cancelar"
       />
     </div>
   );

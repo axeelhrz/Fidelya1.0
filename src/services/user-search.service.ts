@@ -5,7 +5,6 @@ import {
   getDocs,
   limit,
   orderBy,
-  Timestamp,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/constants';
@@ -55,7 +54,7 @@ class UserSearchService {
       const existingSociosEmails = await this.getExistingSociosEmails(filters.excludeAsociacionId);
 
       // Build query for users
-      let q = query(
+      const q = query(
         collection(db, this.usersCollection),
         where('estado', '==', 'activo'),
         orderBy('nombre', 'asc'),
