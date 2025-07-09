@@ -88,30 +88,28 @@ export interface SocioProfile {
 }
 
 export interface Socio {
+  id: string;
   uid: string;
   nombre: string;
   email: string;
-  estado: 'activo' | 'inactivo' | 'pendiente' | 'vencido' | 'suspendido';
+  dni: string;
+  telefono?: string;
+  direccion?: string;
   asociacionId: string;
+  numeroSocio: string;
+  estado: 'activo' | 'inactivo' | 'pendiente' | 'suspendido' | 'vencido';
+  estadoMembresia: string;
+  montoCuota: number;
+  beneficiosUsados?: number;
+  validacionesRealizadas?: number;
   creadoEn: Timestamp;
   actualizadoEn?: Timestamp;
-  telefono?: string;
-  dni?: string;
-  direccion?: string;
   fechaNacimiento?: Timestamp;
-  pagos?: Pago[];
-  id: string; // ID único del socio, puede ser el UID de Firebase o un ID personalizado
-  numeroSocio: string; // Changed from number to string to match service
-  estadoMembresia: string;
-  montoCuota?: number; // Monto de la cuota mensual
-  beneficiosUsados?: number; // Cantidad de beneficios usados
-  validacionesRealizadas?: number; // Cantidad de validaciones realizadas
-  fechaIngreso?: Timestamp; // Fecha de ingreso a la asociación
-  fechaVencimiento?: Timestamp; // Fecha de vencimiento de la membresía
-  ultimoPago?: Timestamp; // Fecha del último pago
-  metadata?: {
-    [key: string]: string | number | boolean | undefined;
-  };
+  fechaIngreso: Timestamp;
+  fechaVencimiento?: Timestamp;
+  ultimoPago?: Timestamp;
+  metadata?: Record<string, string | number | boolean | undefined>;
+
 
   
   // Nuevos campos
@@ -139,6 +137,11 @@ export interface SocioFormData {
   direccion?: string;
   fechaNacimiento?: Date;
   montoCuota?: number; // Monto de la cuota mensual
+  estadoMembresia?: string; // Estado de la membresía (ej. "activa", "pendiente", "cancelada")
+  fechaIngreso?: Date | Timestamp; // Fecha de ingreso a la asociación
+  numeroSocio: number;
+  fechaVencimiento?: Date | Timestamp; // Fecha de vencimiento de la membresía
+  ultimoPago?: Date | Timestamp; // Fecha del último pago realizado
 }
 
 export interface SocioStats {

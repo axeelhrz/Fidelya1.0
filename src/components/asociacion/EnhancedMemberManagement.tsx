@@ -26,7 +26,8 @@ import {
 import { Timestamp } from 'firebase/firestore';
 import { useSocios } from '@/hooks/useSocios';
 import { Socio as SocioType } from '@/types/socio';
-import { Socio as ServiceSocio, SocioFormData } from '@/services/socio.service';
+import { SocioFormData } from '@/types/socio';
+import { Socio as ServiceSocio } from '@/services/socio.service';
 import { EnhancedSocioDialog } from './EnhancedSocioDialog';
 import { CsvImport } from './CsvImport';
 import { DeleteConfirmDialog } from './DeleteConfirmDialog';
@@ -80,7 +81,7 @@ export const EnhancedMemberManagement: React.FC<MemberManagementProps> = () => {
       direccion: serviceSocio.direccion,
       asociacionId: serviceSocio.asociacionId,
       asociacion: serviceSocio.asociacionId,
-      numeroSocio: serviceSocio.numeroSocio,
+      numeroSocio: serviceSocio.numeroSocio || '', // Keep as string, provide default empty string
       estado: serviceSocio.estado as 'activo' | 'vencido' | 'inactivo' | 'pendiente',
       estadoMembresia: serviceSocio.estadoMembresia,
       montoCuota: serviceSocio.montoCuota,
@@ -92,7 +93,11 @@ export const EnhancedMemberManagement: React.FC<MemberManagementProps> = () => {
       fechaIngreso: serviceSocio.fechaIngreso instanceof Date ? Timestamp.fromDate(serviceSocio.fechaIngreso) : Timestamp.now(),
       fechaVencimiento: serviceSocio.fechaVencimiento instanceof Date ? Timestamp.fromDate(serviceSocio.fechaVencimiento) : undefined,
       ultimoPago: serviceSocio.ultimoPago instanceof Date ? Timestamp.fromDate(serviceSocio.ultimoPago) : undefined,
-      metadata: serviceSocio.metadata,
+      metadata: serviceSocio.metadata
+        ? Object.fromEntries(
+            Object.entries(serviceSocio.metadata).map(([k, v]) => [k, v as string | number | boolean | undefined])
+          )
+        : undefined,
     };
   };
 
@@ -140,7 +145,12 @@ export const EnhancedMemberManagement: React.FC<MemberManagementProps> = () => {
       if (selectedSocio) {
         success = await updateSocio(selectedSocio.id, data);
       } else {
-        success = await createSocio(data);
+        success = await createSocio({ 
+          ...data, 
+          dni: data.dni ?? '', 
+          fechaNacimiento: data.fechaNacimiento ?? new Date(),
+          fechaIngreso: data.fechaIngreso ?? new Date(),
+        });
       }
 
       if (success) {
@@ -824,14 +834,74 @@ export const EnhancedMemberManagement: React.FC<MemberManagementProps> = () => {
           setSelectedSocio(null);
         }}
         onSave={handleSocioSave}
-        socio={selectedSocio}
+        socio={
+          selectedSocio
+            ? {
+                ...selectedSocio,
+                dni: selectedSocio.dni ?? '',
+                fechaNacimiento: selectedSocio.fechaNacimiento
+                                  ? (selectedSocio.fechaNacimiento instanceof Timestamp
+                      ? selectedSocio.fechaNacimiento.toDate()
+                      : selectedSocio.fechaNacimiento)
+                  : new Date(),
+                fechaIngreso: selectedSocio.fechaIngreso
+                  ? (selectedSocio.fechaIngreso instanceof Timestamp
+                      ? selectedSocio.fechaIngreso.toDate()
+                      : selectedSocio.fechaIngreso)
+                  : new Date(),
+                fechaVencimiento: selectedSocio.fechaVencimiento
+                  ? (selectedSocio.fechaVencimiento instanceof Timestamp
+                      ? selectedSocio.fechaVencimiento.toDate()
+                      : selectedSocio.fechaVencimiento)
+                  : new Date(),
+                creadoEn: selectedSocio.creadoEn
+                  ? (selectedSocio.creadoEn instanceof Timestamp
+                      ? selectedSocio.creadoEn.toDate()
+                      : selectedSocio.creadoEn)
+                  : new Date(),
+                actualizadoEn: selectedSocio.actualizadoEn
+                  ? (selectedSocio.actualizadoEn instanceof Timestamp
+                      ? selectedSocio.actualizadoEn.toDate()
+                      : selectedSocio.actualizadoEn)
+                  : new Date(),
+                ultimoPago: selectedSocio.ultimoPago
+                  ? (selectedSocio.ultimoPago instanceof Timestamp
+                      ? selectedSocio.ultimoPago.toDate()
+                      : selectedSocio.ultimoPago)
+                  : new Date(),
+              }
+            : selectedSocio
+        }
         loading={loading}
       />
 
       <CsvImport
         open={importDialogOpen}
         onClose={() => setImportDialogOpen(false)}
-        onImport={importSocios}
+        onImport={async (csvData) => {
+          // Map Record<string, string>[] to SocioFormData[]
+          const sociosFormData: SocioFormData[] = csvData.map(row => {
+            const formData: SocioFormData = {
+              nombre: row.nombre || '',
+              email: row.email || '',
+              dni: row.dni || '',
+              montoCuota: row.montoCuota ? parseFloat(row.montoCuota) : 0,
+              telefono: row.telefono,
+              direccion: row.direccion,
+              numeroSocio: row.numeroSocio,
+              estadoMembresia: row.estadoMembresia,
+              beneficiosUsados: row.beneficiosUsados ? Number(row.beneficiosUsados) : undefined,
+              validacionesRealizadas: row.validacionesRealizadas ? Number(row.validacionesRealizadas) : undefined,
+              metadata: row.metadata ? JSON.parse(row.metadata) : undefined,
+            };
+            if (row.fechaNacimiento) formData.fechaNacimiento = new Date(row.fechaNacimiento);
+            if (row.fechaIngreso) formData.fechaIngreso = new Date(row.fechaIngreso);
+            if (row.fechaVencimiento) formData.fechaVencimiento = new Date(row.fechaVencimiento);
+            if (row.ultimoPago) formData.ultimoPago = new Date(row.ultimoPago);
+            return formData;
+          });
+          return importSocios(sociosFormData);
+        }}
         loading={loading}
       />
 
@@ -842,7 +912,7 @@ export const EnhancedMemberManagement: React.FC<MemberManagementProps> = () => {
           setSocioToDelete(null);
         }}
         onConfirm={handleDeleteConfirm}
-        socio={socioToDelete}
+        socio={socioToDelete ? convertServiceSocioToTypesSocio(socioToDelete) : null}
         loading={loading}
       />
 
@@ -977,3 +1047,4 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({
     </div>
   );
 };
+
