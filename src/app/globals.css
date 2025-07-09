@@ -280,6 +280,27 @@
     animation: gradient-shift 3s ease-in-out infinite;
   }
   
+  /* Nuevas animaciones para entrada más atractiva */
+  .animate-slide-in-left {
+    animation: slideInLeft 0.8s ease-out forwards;
+  }
+  
+  .animate-slide-in-right {
+    animation: slideInRight 0.8s ease-out forwards;
+  }
+  
+  .animate-bounce-in {
+    animation: bounceIn 0.8s ease-out forwards;
+  }
+  
+  .animate-zoom-in {
+    animation: zoomIn 0.6s ease-out forwards;
+  }
+  
+  .animate-rotate-in {
+    animation: rotateIn 0.8s ease-out forwards;
+  }
+  
   /* Utilidades de espaciado */
   .safe-top {
     padding-top: env(safe-area-inset-top);
@@ -370,6 +391,69 @@
   100% {
     opacity: 1;
     transform: scale(1);
+  }
+}
+
+/* Nuevas animaciones más atractivas */
+@keyframes slideInLeft {
+  0% {
+    opacity: 0;
+    transform: translateX(-50px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  0% {
+    opacity: 0;
+    transform: translateX(50px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes zoomIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes rotateIn {
+  0% {
+    opacity: 0;
+    transform: rotate(-200deg);
+  }
+  100% {
+    opacity: 1;
+    transform: rotate(0);
   }
 }
 

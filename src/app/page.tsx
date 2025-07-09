@@ -55,7 +55,7 @@ export default function HomePage() {
       {/* Main content container */}
       <div className="relative z-10 max-w-6xl mx-auto px-6 sm:px-8 lg:px-12 text-center py-20">
         
-        {/* Logo and brand section with enhanced entrance */}
+        {/* Logo and brand section with enhanced entrance and fixed overflow */}
         <div className={`mb-12 transition-all duration-1000 ease-out ${isVisible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-8 scale-95'}`}>
           <div className="flex items-center justify-center space-x-4 mb-6">
             {/* Enhanced logo icon with more dynamic effects */}
@@ -73,17 +73,19 @@ export default function HomePage() {
               <div className="absolute -inset-4 bg-gradient-to-br from-sky-400/20 to-celestial-400/20 rounded-3xl blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
             </div>
             
-            {/* Enhanced brand name with gradient animation */}
-            <h1 className="text-6xl md:text-8xl font-bold gradient-text font-playfair tracking-tight hover:scale-105 transition-transform duration-500">
-              Fidelya
-            </h1>
+            {/* Enhanced brand name with fixed overflow and proper spacing */}
+            <div className="relative overflow-visible">
+              <h1 className="text-6xl md:text-8xl font-bold gradient-text font-playfair tracking-tight hover:scale-105 transition-transform duration-500 leading-none py-4">
+                Fidelya
+              </h1>
+            </div>
           </div>
         </div>
 
         {/* Enhanced typewriter effect section with smaller text */}
         <div className={`mb-16 transition-all duration-1200 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`} style={{ transitionDelay: '0.3s' }}>
           <div className="h-16 flex items-center justify-center">
-            <h2 className="text-2xl md:text-4xl text-slate-700 font-medium font-jakarta relative">
+            <h2 className="text-2xl md:text-4xl text-slate-700 font-medium font-jakarta relative leading-relaxed">
               <span className="inline-block">
                 {currentText}
               </span>
