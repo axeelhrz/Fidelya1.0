@@ -30,7 +30,7 @@
     text-rendering: optimizeLegibility;
     font-feature-settings: 'rlig' 1, 'calt' 1;
     line-height: 1.5;
-    @apply bg-slate-50 text-slate-900;
+    @apply bg-sky-50 text-slate-900;
   }
   
   /* Dark mode */
@@ -40,21 +40,21 @@
   
   /* Selección de texto mejorada */
   ::selection {
-    @apply bg-gradient-to-r from-blue-200 to-cyan-200 text-blue-900;
+    @apply bg-gradient-to-r from-sky-200 to-celestial-200 text-sky-900;
   }
   
   .dark ::selection {
-    @apply bg-gradient-to-r from-blue-800 to-cyan-800 text-blue-100;
+    @apply bg-gradient-to-r from-sky-800 to-celestial-800 text-sky-100;
   }
   
   /* Scrollbar personalizado mejorado */
   ::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
+    width: 12px;
+    height: 12px;
   }
   
   ::-webkit-scrollbar-track {
-    @apply bg-slate-100 rounded-full;
+    @apply bg-sky-100 rounded-full;
   }
   
   .dark ::-webkit-scrollbar-track {
@@ -62,11 +62,11 @@
   }
   
   ::-webkit-scrollbar-thumb {
-    @apply bg-gradient-to-b from-blue-500 to-cyan-500 rounded-full shadow-lg;
+    @apply bg-gradient-to-b from-sky-400 to-celestial-500 rounded-full shadow-lg;
   }
   
   ::-webkit-scrollbar-thumb:hover {
-    @apply from-blue-600 to-cyan-600 shadow-xl;
+    @apply from-sky-500 to-celestial-600 shadow-xl;
   }
   
   /* Inputs numéricos */
@@ -97,12 +97,12 @@
 @layer components {
   /* Botones premium */
   .btn-primary {
-    @apply inline-flex items-center justify-center px-8 py-4 text-base font-semibold text-white bg-gradient-to-r from-blue-600 via-cyan-600 to-indigo-600 rounded-2xl shadow-2xl hover:shadow-blue-500/25 transform hover:-translate-y-1 hover:scale-105 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 relative overflow-hidden;
+    @apply inline-flex items-center justify-center px-8 py-4 text-base font-semibold text-white bg-gradient-to-r from-sky-500 via-celestial-500 to-sky-600 rounded-2xl shadow-2xl hover:shadow-sky-500/25 transform hover:-translate-y-1 hover:scale-105 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 relative overflow-hidden;
   }
   
   .btn-primary::before {
     content: '';
-    @apply absolute inset-0 bg-gradient-to-r from-blue-700 via-cyan-700 to-indigo-700 opacity-0 transition-opacity duration-300;
+    @apply absolute inset-0 bg-gradient-to-r from-sky-600 via-celestial-600 to-sky-700 opacity-0 transition-opacity duration-300;
   }
   
   .btn-primary:hover::before {
@@ -110,7 +110,7 @@
   }
   
   .btn-secondary {
-    @apply inline-flex items-center justify-center px-8 py-4 text-base font-semibold text-slate-700 bg-white/80 backdrop-blur-sm border border-slate-300/50 rounded-2xl shadow-lg hover:shadow-xl hover:bg-white transform hover:-translate-y-1 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
+    @apply inline-flex items-center justify-center px-8 py-4 text-base font-semibold text-slate-700 bg-white/80 backdrop-blur-sm border border-sky-300/50 rounded-2xl shadow-lg hover:shadow-xl hover:bg-white transform hover:-translate-y-1 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2;
   }
   
   .dark .btn-secondary {
@@ -141,7 +141,7 @@
   
   /* Loading skeleton mejorado */
   .loading-skeleton {
-    @apply bg-gradient-to-r from-slate-200 via-slate-300 to-slate-200 animate-shimmer rounded-2xl;
+    @apply bg-gradient-to-r from-sky-200 via-sky-300 to-sky-200 animate-shimmer rounded-2xl;
     background-size: 200% 100%;
   }
   
@@ -155,7 +155,7 @@
   }
   
   .hover-glow {
-    @apply hover:shadow-glow-lg transition-all duration-300;
+    @apply hover:shadow-sky-glow transition-all duration-300;
   }
 
   /* Typing effect */
@@ -179,15 +179,15 @@
   /* Patrón de grid de fondo mejorado */
   .bg-grid {
     background-image: 
-      radial-gradient(circle at 1px 1px, rgba(59, 130, 246, 0.15) 1px, transparent 0),
-      radial-gradient(circle at 20px 20px, rgba(99, 102, 241, 0.1) 1px, transparent 0);
+      radial-gradient(circle at 1px 1px, rgba(135, 206, 235, 0.15) 1px, transparent 0),
+      radial-gradient(circle at 20px 20px, rgba(135, 206, 235, 0.1) 1px, transparent 0);
     background-size: 20px 20px, 40px 40px;
   }
   
   .dark .bg-grid {
     background-image: 
-      radial-gradient(circle at 1px 1px, rgba(59, 130, 246, 0.1) 1px, transparent 0),
-      radial-gradient(circle at 20px 20px, rgba(99, 102, 241, 0.05) 1px, transparent 0);
+      radial-gradient(circle at 1px 1px, rgba(135, 206, 235, 0.1) 1px, transparent 0),
+      radial-gradient(circle at 20px 20px, rgba(135, 206, 235, 0.05) 1px, transparent 0);
   }
   
   /* Efectos glass mejorados */
@@ -217,20 +217,20 @@
   }
   
   .glow-xl {
-    box-shadow: 0 0 60px rgba(59, 130, 246, 0.3);
+    box-shadow: 0 0 60px rgba(135, 206, 235, 0.4);
   }
   
   .text-glow {
-    text-shadow: 0 0 30px rgba(147, 197, 253, 0.6);
+    text-shadow: 0 0 30px rgba(135, 206, 235, 0.6);
   }
   
   .dark .text-glow {
-    text-shadow: 0 0 30px rgba(147, 197, 253, 0.4);
+    text-shadow: 0 0 30px rgba(135, 206, 235, 0.4);
   }
   
   /* Texto con gradiente mejorado */
   .gradient-text {
-    @apply bg-gradient-to-r from-blue-600 via-cyan-600 to-indigo-600 bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-sky-500 via-celestial-500 to-sky-600 bg-clip-text text-transparent;
     background-size: 200% 100%;
     animation: gradient-shift 3s ease-in-out infinite;
   }
@@ -247,7 +247,7 @@
   
   /* Contenedores principales mejorados */
   .dashboard-container {
-    @apply min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50;
+    @apply min-h-screen bg-gradient-to-br from-sky-50 via-celestial-50/30 to-sky-100/50;
   }
   
   .dark .dashboard-container {
@@ -320,14 +320,22 @@
   }
 
   /* Utilidades específicas para páginas */
-  .homepage-no-scroll {
-    overflow: hidden;
-    height: 100vh;
+  .homepage-container {
+    min-height: 100vh;
+    overflow-y: auto;
   }
   
   .page-with-scroll {
     overflow-y: auto;
     min-height: 100vh;
+  }
+  
+  /* Contenedor con scroll suave */
+  .scrollable-container {
+    overflow-y: auto;
+    scroll-behavior: smooth;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(135, 206, 235, 0.5) transparent;
   }
 }
 
@@ -478,10 +486,10 @@
 
 @keyframes pulse-glow {
   0%, 100% {
-    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+    box-shadow: 0 0 20px rgba(135, 206, 235, 0.4);
   }
   50% {
-    box-shadow: 0 0 40px rgba(59, 130, 246, 0.6);
+    box-shadow: 0 0 40px rgba(135, 206, 235, 0.7);
   }
 }
 
@@ -572,10 +580,11 @@
   animation-delay: calc(var(--stagger-delay, 0) * 100ms);
 }
 
-/* Efectos específicos para la homepage */
+/* Efectos específicos para la homepage con scroll */
 .homepage-container {
-  height: 100vh;
-  overflow: hidden;
+  min-height: 100vh;
+  overflow-y: auto;
+  scroll-behavior: smooth;
 }
 
 .typing-effect {
@@ -586,4 +595,9 @@
 
 .cursor-effect {
   animation: cursor-blink 1s infinite;
+}
+
+/* Smooth scroll para toda la página */
+.smooth-scroll {
+  scroll-behavior: smooth;
 }
