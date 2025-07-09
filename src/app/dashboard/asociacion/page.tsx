@@ -174,11 +174,7 @@ const DashboardSection: React.FC<{
   socios, 
   loading, 
   onAddSocio, 
-  onEditSocio, 
-  onDeleteSocio, 
-  onBulkAction,
   onNavigate,
-  onRefresh
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -443,11 +439,11 @@ export default function AsociacionDashboard() {
     socios, 
     loading, 
     stats, 
-    addSocio, 
+    createSocio, 
     updateSocio, 
     deleteSocio, 
-    addMultipleSocios,
-    refreshData
+    importSocios,
+    refreshStats
   } = useSocios();
 
   const [activeSection, setActiveSection] = useState('overview');
@@ -508,7 +504,7 @@ export default function AsociacionDashboard() {
 
   const handleRefresh = async () => {
     try {
-      refreshData();
+      await refreshStats();
       toast.success('Datos actualizados correctamente');
     } catch (error) {
       console.error('Error refreshing socios:', error);
@@ -520,10 +516,10 @@ export default function AsociacionDashboard() {
     setActionLoading(true);
     try {
       if (socioDialog.socio) {
-        await updateSocio(socioDialog.socio.uid, data);
+        await updateSocio(socioDialog.socio.id, data);
         toast.success('Socio actualizado correctamente');
       } else {
-        await addSocio(data);
+        await createSocio(data);
         toast.success('Socio agregado correctamente');
       }
       setSocioDialog({ open: false });
@@ -539,7 +535,7 @@ export default function AsociacionDashboard() {
     
     setActionLoading(true);
     try {
-      await deleteSocio(deleteDialog.socio.uid);
+      await deleteSocio(deleteDialog.socio.id);
       toast.success('Socio eliminado correctamente');
       setDeleteDialog({ open: false });
     } catch (error) {
@@ -553,7 +549,7 @@ export default function AsociacionDashboard() {
     if (sociosData) {
       setActionLoading(true);
       try {
-        await addMultipleSocios(sociosData);
+        await importSocios(sociosData);
         toast.success(`${sociosData.length} socios importados correctamente`);
         setCsvImportOpen(false);
       } catch (error) {
