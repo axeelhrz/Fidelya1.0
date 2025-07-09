@@ -9,7 +9,6 @@ import {
   Zap, 
   CheckCircle, 
   Info,
-  Award,
   Clock,
   History,
   TrendingUp,
@@ -19,14 +18,12 @@ import {
   Users,
   Activity,
   Scan,
-  Camera,
   Star,
   Target,
   DollarSign,
   Calendar,
   Sparkles,
   ArrowRight,
-  Eye,
   Shield
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -35,7 +32,7 @@ import { LogoutModal } from '@/components/ui/LogoutModal';
 import { QRScannerButton } from '@/components/socio/QRScannerButton';
 import { ValidationResultModal } from '@/components/socio/ValidationResultModal';
 import { useAuth } from '@/hooks/useAuth';
-import { ValidacionesService } from '@/services/validaciones.service';
+import { validacionesService as ValidacionesService } from '@/services/validaciones.service';
 import { ValidacionResponse } from '@/types/validacion';
 import { BeneficiosService } from '@/services/beneficios.service';
 import { Beneficio } from '@/types/beneficio';
@@ -80,11 +77,6 @@ interface StatsCardProps {
   change?: number;
   subtitle?: string;
   onClick?: () => void;
-}
-
-// Extend ValidacionResponse to ensure proper typing
-interface ExtendedValidacionResponse extends Omit<ValidacionResponse, 'resultado'> {
-  resultado: 'habilitado' | 'no_habilitado' | 'vencido' | 'suspendido';
 }
 
 // Animation variants
@@ -165,7 +157,7 @@ const SocioValidarContent: React.FC = () => {
   const [loggingOut, setLoggingOut] = useState(false);
 
   // Estados para validación - Fixed typing
-  const [validationResult, setValidationResult] = useState<ExtendedValidacionResponse | null>(null);
+  const [validationResult, setValidationResult] = useState<ValidacionResponse | null>(null);
   const [validationModalOpen, setValidationModalOpen] = useState(false);
   const [scannerLoading, setScannerLoading] = useState(false);
   
@@ -179,7 +171,7 @@ const SocioValidarContent: React.FC = () => {
     rachaActual: 0,
     promedioAhorro: 0
   });
-  const [recentValidations, setRecentValidations] = useState<ExtendedValidacionResponse[]>([]);
+  const [recentValidations, setRecentValidations] = useState<ValidacionResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -243,6 +235,7 @@ const SocioValidarContent: React.FC = () => {
         try {
           const validationDateRaw = v.fechaHora ?? null;
           if (!validationDateRaw) return false;
+          
           const validationDate =
             typeof validationDateRaw === 'object' &&
             validationDateRaw !== null &&
@@ -311,12 +304,12 @@ const SocioValidarContent: React.FC = () => {
   }, [user]);
 
   // Función para calcular racha actual
-  const calculateCurrentStreak = (validations: ExtendedValidacionResponse[]): number => {
+  const calculateCurrentStreak = (validations: ValidacionResponse[]): number => {
     if (validations.length === 0) return 0;
     
     const today = new Date();
     let streak = 0;
-    let currentDate = new Date(today);
+    const currentDate = new Date(today);
     
     for (let i = 0; i < 30; i++) { // Revisar últimos 30 días
       const hasValidationOnDate = validations.some(v => {
@@ -378,9 +371,11 @@ const SocioValidarContent: React.FC = () => {
         console.log('🎯 Resultado de validación:', result);
 
         // Cast result to ExtendedValidacionResponse for type safety
-        const typedResult: ExtendedValidacionResponse = {
+        const typedResult: ValidacionResponse = {
           ...result,
-          resultado: result.resultado as 'habilitado' | 'no_habilitado' | 'vencido' | 'suspendido'
+          resultado: ((result as unknown) as ValidacionResponse).resultado as 'habilitado' | 'no_habilitado' | 'vencido' | 'suspendido',
+          socio: (result as unknown as ValidacionResponse).socio ?? (result as { data?: { socio?: ValidacionResponse['socio'] } }).data?.socio ?? null,
+          fechaHora: (result as unknown as ValidacionResponse).fechaHora ?? (result as { data?: { validacion?: { fechaHora?: ValidacionResponse['fechaHora'] } } }).data?.validacion?.fechaHora ?? new Date(),
         };
 
         setValidationResult(typedResult);
@@ -929,7 +924,15 @@ const SocioValidarContent: React.FC = () => {
       <ValidationResultModal
         open={validationModalOpen}
         onClose={handleValidationModalClose}
-        result={validationResult}
+        result={
+          validationResult
+            ? {
+                ...validationResult,
+                success: (validationResult as { success?: boolean }).success ?? true,
+                message: (validationResult as { message?: string }).message ?? '',
+              }
+            : null
+        }
       />
     </>
   );
