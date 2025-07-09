@@ -18,15 +18,6 @@ import {
   alpha,
   useTheme,
   useMediaQuery,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Divider,
-  Grid,
 } from '@mui/material';
 import {
   Person,
@@ -38,8 +29,6 @@ import {
   Close,
   Camera,
   TrendingUp,
-  TrendingDown,
-  Timeline,
   Settings,
   Notifications,
   Security,
@@ -49,10 +38,8 @@ import {
   CheckCircle,
   Warning,
   Error as ErrorIcon,
-  Info,
   Badge as BadgeIcon,
   Analytics,
-  Favorite,
   Store,
   LocalOffer,
   AccountCircle,
@@ -66,20 +53,17 @@ import {
   Visibility,
   Mail,
   Sms,
-  PushPin,
   NotificationsActive,
-  Language,
   History,
   Receipt,
-  ArrowBack,
 } from '@mui/icons-material';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Socio, SocioStats, SocioActivity } from '@/types/socio';
+import { Socio, SocioStats } from '@/types/socio';
 import { HistorialValidacion } from '@/services/validaciones.service';
 import { socioService } from '@/services/socio.service';
 import { validacionesService } from '@/services/validaciones.service';
-import { safeTimestampToDate, safeFormatTimestamp } from '@/lib/utils';
+import { safeFormatTimestamp } from '@/lib/utils';
 import toast from 'react-hot-toast';
 
 interface SocioProfileViewProps {
@@ -124,6 +108,8 @@ const CompactStatCard: React.FC<{
       p: 2,
       background: 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
       transition: 'all 0.2s ease',
+      flex: 1,
+      minWidth: 120,
       '&:hover': {
         transform: 'translateY(-1px)',
         boxShadow: '0 4px 15px rgba(0,0,0,0.08)',
@@ -192,7 +178,6 @@ export const SocioProfileView: React.FC<SocioProfileViewProps> = ({
   
   const [tabValue, setTabValue] = useState(0);
   const [stats, setStats] = useState<SocioStats | null>(null);
-  const [activities, setActivities] = useState<SocioActivity[]>([]);
   const [validaciones, setValidaciones] = useState<HistorialValidacion[]>([]);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -203,14 +188,13 @@ export const SocioProfileView: React.FC<SocioProfileViewProps> = ({
     
     setLoading(true);
     try {
-      const [statsData, activitiesData, validacionesData] = await Promise.all([
+      const [statsData, , validacionesData] = await Promise.all([
         socioService.getSocioStats?.(socio.uid) || Promise.resolve(null),
         socioService.getSocioActivity?.() || Promise.resolve([]),
         validacionesService.getHistorialValidaciones(socio.uid, 20),
       ]);
       
       setStats(statsData);
-      setActivities(activitiesData);
       setValidaciones(validacionesData.validaciones);
     } catch (error) {
       console.error('Error loading profile data:', error);
@@ -601,9 +585,9 @@ export const SocioProfileView: React.FC<SocioProfileViewProps> = ({
 
             {/* Tab 1: Información Personal */}
             <TabPanel value={tabValue} index={0}>
-              <Grid container spacing={2}>
+              <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2 }}>
                 {/* Información básica */}
-                <Grid item xs={12} md={6}>
+                <Box sx={{ flex: 1 }}>
                   <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 3, p: 2 }}>
                     <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#0f172a', mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
                       <AccountCircle sx={{ color: '#6366f1', fontSize: 20 }} />
@@ -656,10 +640,10 @@ export const SocioProfileView: React.FC<SocioProfileViewProps> = ({
                       )}
                     </Stack>
                   </Card>
-                </Grid>
+                </Box>
 
                 {/* Información de membresía */}
-                <Grid item xs={12} md={6}>
+                <Box sx={{ flex: 1 }}>
                   <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 3, p: 2 }}>
                     <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#0f172a', mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
                       <Business sx={{ color: '#6366f1', fontSize: 20 }} />
@@ -740,73 +724,61 @@ export const SocioProfileView: React.FC<SocioProfileViewProps> = ({
                       </Box>
                     </Stack>
                   </Card>
-                </Grid>
-              </Grid>
+                </Box>
+              </Box>
             </TabPanel>
 
             {/* Tab 2: Estadísticas */}
             <TabPanel value={tabValue} index={1}>
-              <Grid container spacing={2}>
-                <Grid item xs={6} sm={4}>
-                  <CompactStatCard
-                    title="Beneficios Usados"
-                    value={stats?.beneficiosUsados || 0}
-                    icon={<LocalOffer sx={{ fontSize: 20 }} />}
-                    color="#8b5cf6"
-                    subtitle="Total utilizados"
-                  />
-                </Grid>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+                <CompactStatCard
+                  title="Beneficios Usados"
+                  value={stats?.beneficiosUsados || 0}
+                  icon={<LocalOffer sx={{ fontSize: 20 }} />}
+                  color="#8b5cf6"
+                  subtitle="Total utilizados"
+                />
                 
-                <Grid item xs={6} sm={4}>
-                  <CompactStatCard
-                    title="Ahorro Total"
-                    value={`$${stats?.ahorroTotal || 0}`}
-                    icon={<MonetizationOn sx={{ fontSize: 20 }} />}
-                    color="#10b981"
-                    subtitle="Dinero ahorrado"
-                  />
-                </Grid>
+                <CompactStatCard
+                  title="Ahorro Total"
+                  value={`$${stats?.ahorroTotal || 0}`}
+                  icon={<MonetizationOn sx={{ fontSize: 20 }} />}
+                  color="#10b981"
+                  subtitle="Dinero ahorrado"
+                />
                 
-                <Grid item xs={6} sm={4}>
-                  <CompactStatCard
-                    title="Comercios"
-                    value={stats?.comerciosVisitados || 0}
-                    icon={<Store sx={{ fontSize: 20 }} />}
-                    color="#6366f1"
-                    subtitle="Únicos visitados"
-                  />
-                </Grid>
+                <CompactStatCard
+                  title="Comercios"
+                  value={stats?.comerciosVisitados || 0}
+                  icon={<Store sx={{ fontSize: 20 }} />}
+                  color="#6366f1"
+                  subtitle="Únicos visitados"
+                />
                 
-                <Grid item xs={6} sm={4}>
-                  <CompactStatCard
-                    title="Validaciones"
-                    value={validaciones.filter(v => v.estado === 'exitosa').length}
-                    icon={<CheckCircle sx={{ fontSize: 20 }} />}
-                    color="#10b981"
-                    subtitle="Exitosas"
-                  />
-                </Grid>
+                <CompactStatCard
+                  title="Validaciones"
+                  value={validaciones.filter(v => v.estado === 'exitosa').length}
+                  icon={<CheckCircle sx={{ fontSize: 20 }} />}
+                  color="#10b981"
+                  subtitle="Exitosas"
+                />
                 
-                <Grid item xs={6} sm={4}>
-                  <CompactStatCard
-                    title="Racha"
-                    value={`${stats?.racha || 0} días`}
-                    icon={<Loyalty sx={{ fontSize: 20 }} />}
-                    color="#f59e0b"
-                    subtitle="Consecutivos"
-                  />
-                </Grid>
+                <CompactStatCard
+                  title="Racha"
+                  value={`${stats?.racha || 0} días`}
+                  icon={<Loyalty sx={{ fontSize: 20 }} />}
+                  color="#f59e0b"
+                  subtitle="Consecutivos"
+                />
 
-                <Grid item xs={6} sm={4}>
-                  <CompactStatCard
-                    title="Promedio"
-                    value={`$${Math.round((stats?.ahorroTotal || 0) / Math.max(1, stats?.tiempoComoSocio || 1) * 30)}`}
-                    icon={<TrendingUp sx={{ fontSize: 20 }} />}
-                    color="#ec4899"
-                    subtitle="Mensual"
-                  />
-                </Grid>
-              </Grid>
+                <CompactStatCard
+                  title="Promedio"
+                  value={`$${Math.round((stats?.ahorroTotal || 0) / Math.max(1, stats?.tiempoComoSocio || 1) * 30)}`}
+                  icon={<TrendingUp sx={{ fontSize: 20 }} />}
+                  color="#ec4899"
+                  subtitle="Mensual"
+                />
+              </Box>
             </TabPanel>
 
             {/* Tab 3: Historial de Validaciones */}
@@ -889,9 +861,9 @@ export const SocioProfileView: React.FC<SocioProfileViewProps> = ({
 
             {/* Tab 4: Configuración */}
             <TabPanel value={tabValue} index={3}>
-              <Grid container spacing={2}>
+              <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2 }}>
                 {/* Configuración de notificaciones */}
-                <Grid item xs={12} md={6}>
+                <Box sx={{ flex: 1 }}>
                   <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 3, p: 2 }}>
                     <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#0f172a', mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
                       <Notifications sx={{ color: '#6366f1', fontSize: 20 }} />
@@ -943,10 +915,10 @@ export const SocioProfileView: React.FC<SocioProfileViewProps> = ({
                       ))}
                     </Stack>
                   </Card>
-                </Grid>
+                </Box>
 
                 {/* Configuración de privacidad */}
-                <Grid item xs={12} md={6}>
+                <Box sx={{ flex: 1 }}>
                   <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 3, p: 2 }}>
                     <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#0f172a', mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
                       <Security sx={{ color: '#6366f1', fontSize: 20 }} />
@@ -998,8 +970,8 @@ export const SocioProfileView: React.FC<SocioProfileViewProps> = ({
                       ))}
                     </Stack>
                   </Card>
-                </Grid>
-              </Grid>
+                </Box>
+              </Box>
             </TabPanel>
           </Box>
         </motion.div>
