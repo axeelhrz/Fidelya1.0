@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useContext, createContext, ReactNode } from 'react';
+import React, { useState, useEffect, useContext, createContext, ReactNode } from 'react';
 import { User, onAuthStateChanged } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { auth } from '@/lib/firebase';
@@ -9,13 +9,19 @@ import { UserData } from '@/types/auth';
 import { handleError } from '@/lib/error-handler';
 import { toast } from 'react-hot-toast';
 
+interface SignUpData {
+  email: string;
+  password: string;
+  [key: string]: unknown; // Add other fields as needed
+}
+
 interface AuthContextType {
   user: UserData | null;
   firebaseUser: User | null;
   loading: boolean;
   error: string | null;
   signIn: (email: string, password: string, rememberMe?: boolean) => Promise<AuthResponse>;
-  signUp: (data: any) => Promise<AuthResponse>;
+  signUp: (data: SignUpData & { nombre: string; role: string }) => Promise<AuthResponse>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<AuthResponse>;
   resendEmailVerification: (email: string) => Promise<AuthResponse>;
@@ -121,13 +127,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   // Sign up function
-  const signUp = async (data: any): Promise<AuthResponse> => {
+  const signUp = async (data: SignUpData & { nombre: string; role: string }): Promise<AuthResponse> => {
     try {
       setLoading(true);
       setError(null);
 
-      const response = await authService.register(data);
-      
+      // Ensure required fields are present
+      const { email, password, nombre, role, ...rest } = data;
+      const allowedRoles = ['comercio', 'socio', 'asociacion'] as const;
+      if (!allowedRoles.includes(role as typeof allowedRoles[number])) {
+        throw new Error('Rol inválido');
+      }
+      const registerData = { email, password, nombre, role: role as typeof allowedRoles[number], ...rest };
+
+      const response = await authService.register(registerData);
+
       if (!response.success) {
         setError(response.error || 'Error al registrarse');
       } else if (response.requiresEmailVerification) {
@@ -263,10 +277,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
     isEmailVerified,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
+  return React.createElement(
+    AuthContext.Provider,
+    { value },
+    children
   );
 }
 
