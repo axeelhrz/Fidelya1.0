@@ -1,24 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Box,
-  Typography,
-  Card,
-  Button,
-  Avatar,
-  Chip,
-  IconButton,
-  Stack,
-  LinearProgress,
-  Tooltip,
-  Tab,
-  Tabs,
-  alpha,
-  useTheme,
-  useMediaQuery,
-} from '@mui/material';
+import Image from 'next/image';
 import {
   Person,
   Email,
@@ -29,8 +12,6 @@ import {
   Close,
   Camera,
   TrendingUp,
-  TrendingDown,
-  Timeline,
   Settings,
   Notifications,
   Security,
@@ -38,12 +19,8 @@ import {
   Share,
   Refresh,
   CheckCircle,
-  Warning,
-  Error as ErrorIcon,
-  Info,
   Badge as BadgeIcon,
   Analytics,
-  Favorite,
   Store,
   LocalOffer,
   AccountCircle,
@@ -57,20 +34,17 @@ import {
   Visibility,
   Mail,
   Sms,
-  PushPin,
   NotificationsActive,
-  Language,
   History,
   Receipt,
-  ArrowBack,
 } from '@mui/icons-material';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Socio, SocioStats, SocioActivity } from '@/types/socio';
+import { Socio, SocioStats } from '@/types/socio';
 import { HistorialValidacion } from '@/services/validaciones.service';
 import { socioService } from '@/services/socio.service';
 import { validacionesService } from '@/services/validaciones.service';
-import { safeTimestampToDate, safeFormatTimestamp } from '@/lib/utils';
+import { safeFormatTimestamp } from '@/lib/utils';
 import toast from 'react-hot-toast';
 
 interface SocioProfileViewProps {
@@ -95,7 +69,7 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, value, index, ...other })
     aria-labelledby={`profile-tab-${index}`}
     {...other}
   >
-    {value === index && <Box sx={{ py: 2 }}>{children}</Box>}
+    {value === index && <div className="p-6 space-y-6">{children}</div>}
   </div>
 );
 
@@ -107,48 +81,22 @@ const CompactStatCard: React.FC<{
   color: string;
   subtitle?: string;
 }> = ({ title, value, icon, color, subtitle }) => (
-  <Card
-    elevation={0}
-    sx={{
-      border: '1px solid #f1f5f9',
-      borderRadius: 3,
-      p: 2,
-      background: 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
-      transition: 'all 0.2s ease',
-      flex: 1,
-      minWidth: 120,
-      '&:hover': {
-        transform: 'translateY(-1px)',
-        boxShadow: '0 4px 15px rgba(0,0,0,0.08)',
-      }
-    }}
-  >
-    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-      <Avatar
-        sx={{
-          bgcolor: alpha(color, 0.1),
-          color: color,
-          width: 36,
-          height: 36,
-        }}
-      >
+  <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-all duration-200 flex-1 min-w-[120px]">
+    <div className="flex items-center gap-3">
+      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${color}`}>
         {icon}
-      </Avatar>
-      <Box sx={{ flex: 1, minWidth: 0 }}>
-        <Typography variant="h6" sx={{ fontWeight: 700, color: '#0f172a', fontSize: '1.1rem' }}>
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="text-lg font-bold text-gray-900">
           {typeof value === 'number' ? value.toLocaleString() : value}
-        </Typography>
-        <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>
-          {title}
-        </Typography>
+        </div>
+        <div className="text-sm text-gray-600 font-medium">{title}</div>
         {subtitle && (
-          <Typography variant="caption" sx={{ color: '#94a3b8', display: 'block' }}>
-            {subtitle}
-          </Typography>
+          <div className="text-xs text-gray-500">{subtitle}</div>
         )}
-      </Box>
-    </Box>
-  </Card>
+      </div>
+    </div>
+  </div>
 );
 
 // Componente de información compacta
@@ -156,21 +104,17 @@ const InfoItem: React.FC<{
   icon: React.ReactNode;
   label: string;
   value: string;
-  color?: string;
-}> = ({ icon, label, value, color = '#94a3b8' }) => (
-  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, py: 1 }}>
-    <Box sx={{ color, fontSize: 18 }}>
+  iconColor?: string;
+}> = ({ icon, label, value, iconColor = 'text-gray-400' }) => (
+  <div className="flex items-center gap-3 py-2">
+    <div className={`${iconColor} w-5 h-5`}>
       {icon}
-    </Box>
-    <Box sx={{ flex: 1, minWidth: 0 }}>
-      <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600, display: 'block' }}>
-        {label}
-      </Typography>
-      <Typography variant="body2" sx={{ color: '#0f172a', fontWeight: 600 }}>
-        {value}
-      </Typography>
-    </Box>
-  </Box>
+    </div>
+    <div className="flex-1 min-w-0">
+      <div className="text-sm font-medium text-gray-700">{label}</div>
+      <div className="text-sm text-gray-900 font-semibold">{value}</div>
+    </div>
+  </div>
 );
 
 export const SocioProfileView: React.FC<SocioProfileViewProps> = ({
@@ -180,15 +124,10 @@ export const SocioProfileView: React.FC<SocioProfileViewProps> = ({
   onEdit,
   onRefresh,
 }) => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  
-  const [tabValue, setTabValue] = useState(0);
+  const [activeTab, setActiveTab] = useState(0);
   const [stats, setStats] = useState<SocioStats | null>(null);
-  const [activities, setActivities] = useState<SocioActivity[]>([]);
   const [validaciones, setValidaciones] = useState<HistorialValidacion[]>([]);
   const [loading, setLoading] = useState(false);
-  const [uploading, setUploading] = useState(false);
 
   // Cargar datos del perfil
   const loadProfileData = React.useCallback(async () => {
@@ -196,18 +135,14 @@ export const SocioProfileView: React.FC<SocioProfileViewProps> = ({
     
     setLoading(true);
     try {
-      const [statsData, activitiesData, validacionesData] = await Promise.all([
+      const [statsData, , validacionesData] = await Promise.all([
         socioService.getSocioStats?.(socio.uid) || Promise.resolve(null),
         socioService.getSocioActivity?.() || Promise.resolve([]),
         validacionesService.getHistorialValidaciones(socio.uid, 20),
       ]);
       
       setStats(statsData);
-      setActivities(activitiesData);
       setValidaciones(validacionesData.validaciones);
-    } catch (error) {
-      console.error('Error loading profile data:', error);
-      toast.error('Error al cargar los datos del perfil');
     } finally {
       setLoading(false);
     }
@@ -222,7 +157,6 @@ export const SocioProfileView: React.FC<SocioProfileViewProps> = ({
   const handleImageUpload = async (file: File) => {
     if (!socio) return;
     
-    setUploading(true);
     try {
       await socioService.uploadProfileImage?.(socio.uid, file);
       toast.success('Imagen de perfil actualizada');
@@ -230,8 +164,6 @@ export const SocioProfileView: React.FC<SocioProfileViewProps> = ({
     } catch (error) {
       console.error('Error uploading image:', error);
       toast.error('Error al subir la imagen');
-    } finally {
-      setUploading(false);
     }
   };
 
@@ -264,63 +196,43 @@ export const SocioProfileView: React.FC<SocioProfileViewProps> = ({
 
   const getStatusChip = (estado: string) => {
     const config = {
-      activo: { color: '#10b981', bgcolor: alpha('#10b981', 0.1), label: 'Activo', icon: <CheckCircle /> },
-      vencido: { color: '#ef4444', bgcolor: alpha('#ef4444', 0.1), label: 'Vencido', icon: <Warning /> },
-      inactivo: { color: '#6b7280', bgcolor: alpha('#6b7280', 0.1), label: 'Inactivo', icon: <ErrorIcon /> },
-      pendiente: { color: '#f59e0b', bgcolor: alpha('#f59e0b', 0.1), label: 'Pendiente', icon: <Schedule /> },
-      suspendido: { color: '#ef4444', bgcolor: alpha('#ef4444', 0.1), label: 'Suspendido', icon: <ErrorIcon /> },
+      activo: { color: 'bg-green-100 text-green-800', label: 'Activo' },
+      vencido: { color: 'bg-red-100 text-red-800', label: 'Vencido' },
+      inactivo: { color: 'bg-gray-100 text-gray-800', label: 'Inactivo' },
+      pendiente: { color: 'bg-yellow-100 text-yellow-800', label: 'Pendiente' },
+      suspendido: { color: 'bg-red-100 text-red-800', label: 'Suspendido' },
     };
 
-    const { color, bgcolor, label, icon } = config[estado as keyof typeof config] || config.inactivo;
+    const { color, label } = config[estado as keyof typeof config] || config.inactivo;
 
     return (
-      <Chip
-        label={label}
-        icon={React.cloneElement(icon, { sx: { fontSize: '0.8rem !important' } })}
-        size="small"
-        sx={{
-          bgcolor,
-          color,
-          fontWeight: 600,
-          fontSize: '0.75rem',
-          height: 24,
-          '& .MuiChip-icon': {
-            fontSize: '0.8rem',
-          }
-        }}
-      />
+      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${color}`}>
+        {label}
+      </span>
     );
   };
 
   const getValidationStatusChip = (estado: string) => {
     const config = {
-      exitoso: { color: '#10b981', bgcolor: alpha('#10b981', 0.1), label: 'Exitoso' },
-      fallido: { color: '#ef4444', bgcolor: alpha('#ef4444', 0.1), label: 'Fallido' },
-      pendiente: { color: '#f59e0b', bgcolor: alpha('#f59e0b', 0.1), label: 'Pendiente' },
+      exitoso: { color: 'bg-green-100 text-green-800', label: 'Exitoso' },
+      fallido: { color: 'bg-red-100 text-red-800', label: 'Fallido' },
+      pendiente: { color: 'bg-yellow-100 text-yellow-800', label: 'Pendiente' },
     };
 
-    const { color, bgcolor, label } = config[estado as keyof typeof config] || config.pendiente;
+    const { color, label } = config[estado as keyof typeof config] || config.pendiente;
 
     return (
-      <Chip
-        label={label}
-        size="small"
-        sx={{
-          bgcolor,
-          color,
-          fontWeight: 600,
-          fontSize: '0.7rem',
-          height: 20,
-        }}
-      />
+      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${color}`}>
+        {label}
+      </span>
     );
   };
 
   const getEngagementLevel = (score: number) => {
-    if (score >= 80) return { label: 'Muy Alto', color: '#10b981' };
-    if (score >= 60) return { label: 'Alto', color: '#f59e0b' };
-    if (score >= 40) return { label: 'Medio', color: '#6366f1' };
-    return { label: 'Bajo', color: '#ef4444' };
+    if (score >= 80) return { label: 'Muy Alto', color: 'text-green-600' };
+    if (score >= 60) return { label: 'Alto', color: 'text-yellow-600' };
+    if (score >= 40) return { label: 'Medio', color: 'text-blue-600' };
+    return { label: 'Bajo', color: 'text-red-600' };
   };
 
   const calculateEngagementScore = () => {
@@ -338,658 +250,522 @@ export const SocioProfileView: React.FC<SocioProfileViewProps> = ({
   const engagementScore = calculateEngagementScore();
   const engagementLevel = getEngagementLevel(engagementScore);
 
-  if (!socio || !open) return null;
+  const tabs = [
+    { id: 0, label: 'Información', icon: Person },
+    { id: 1, label: 'Estadísticas', icon: Analytics },
+    { id: 2, label: 'Historial', icon: History },
+    { id: 3, label: 'Configuración', icon: Settings },
+  ];
+
+  if (!socio || !open) {
+    return null;
+  }
 
   return (
-    <AnimatePresence>
-      <Box
-        component={motion.div}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        sx={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.4)',
-          backdropFilter: 'blur(4px)',
-          zIndex: 9999, // Z-index muy alto para estar sobre todo
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          p: { xs: 1, md: 3 },
-        }}
-        onClick={onClose}
-      >
-        <Box
-          component={motion.div}
-          initial={{ scale: 0.95, opacity: 0, y: 20 }}
-          animate={{ scale: 1, opacity: 1, y: 0 }}
-          exit={{ scale: 0.95, opacity: 0, y: 20 }}
-          onClick={(e) => e.stopPropagation()}
-          sx={{
-            width: '100%',
-            maxWidth: { xs: '100%', sm: '95%', md: 900 },
-            maxHeight: { xs: '100%', md: '90vh' },
-            backgroundColor: 'white',
-            borderRadius: { xs: 0, md: 6 },
-            overflow: 'hidden',
-            display: 'flex',
-            flexDirection: 'column',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-            position: 'relative',
-            zIndex: 10000, // Z-index adicional para el contenido
-          }}
-        >
-          {/* Header Compacto */}
-          <Box
-            sx={{
-              background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%)',
-              color: 'white',
-              p: 3,
-              position: 'relative',
-              overflow: 'hidden',
-            }}
-          >
-            {/* Elementos decorativos */}
-            <Box
-              sx={{
-                position: 'absolute',
-                top: -20,
-                right: -20,
-                width: 60,
-                height: 60,
-                borderRadius: '50%',
-                bgcolor: alpha('#ffffff', 0.1),
-              }}
-            />
+    <div className="fixed inset-0 z-50 overflow-y-auto">
+      <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        {/* Background overlay */}
+        <div 
+          className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+          onClick={onClose}
+        />
 
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', zIndex: 1 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1, minWidth: 0 }}>
-                {/* Avatar */}
-                <Box sx={{ position: 'relative' }}>
-                  <Avatar
-                    src={socio.avatar ?? undefined}
-                    sx={{
-                      width: 60,
-                      height: 60,
-                      bgcolor: alpha('#ffffff', 0.2),
-                      fontSize: '1.5rem',
-                      fontWeight: 700,
-                      border: '3px solid rgba(255, 255, 255, 0.2)',
-                    }}
-                  >
-                    {socio.nombre.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
-                  </Avatar>
-                  
-                  <Tooltip title="Cambiar imagen">
-                    <IconButton
-                      component="label"
-                      disabled={uploading}
-                      sx={{
-                        position: 'absolute',
-                        bottom: -4,
-                        right: -4,
-                        bgcolor: 'white',
-                        color: '#6366f1',
-                        width: 24,
-                        height: 24,
-                        '&:hover': {
-                          bgcolor: '#f8fafc',
-                        },
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-                      }}
-                    >
-                      <Camera sx={{ fontSize: 12 }} />
-                      <input
-                        type="file"
-                        hidden
-                        accept="image/*"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) handleImageUpload(file);
-                        }}
-                      />
-                    </IconButton>
-                  </Tooltip>
-                </Box>
-
-                {/* Info */}
-                <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5, wordBreak: 'break-word' }}>
-                    {socio.nombre}
-                  </Typography>
-                  <Typography variant="body2" sx={{ opacity: 0.9, mb: 1, wordBreak: 'break-all', fontSize: '0.85rem' }}>
-                    {socio.email}
-                  </Typography>
-                  
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                    {getStatusChip(socio.estado)}
-                    <Chip
-                      label={`${engagementLevel.label} (${engagementScore}%)`}
-                      size="small"
-                      sx={{
-                        bgcolor: alpha(engagementLevel.color, 0.2),
-                        color: 'white',
-                        fontWeight: 600,
-                        fontSize: '0.7rem',
-                        height: 24,
+        {/* Dialog */}
+        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="relative">
+                  {socio.avatar ? (
+                    <Image
+                      src={socio.avatar}
+                      alt={socio.nombre}
+                      width={48}
+                      height={48}
+                      className="w-12 h-12 rounded-lg object-cover"
+                      style={{ objectFit: 'cover', borderRadius: '0.5rem' }}
+                      priority
+                    />
+                  ) : (
+                    <span className="text-white font-bold text-lg">
+                      {socio.nombre.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                    </span>
+                  )}
+                  <label className="absolute -bottom-1 -right-1 w-6 h-6 bg-white rounded-full flex items-center justify-center cursor-pointer hover:bg-gray-50 transition-colors shadow-sm">
+                    <Camera className="w-3 h-3 text-blue-600" />
+                    <input
+                      type="file"
+                      hidden
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleImageUpload(file);
                       }}
                     />
-                  </Box>
-                </Box>
-              </Box>
-
-              {/* Actions */}
-              <Box sx={{ display: 'flex', gap: 1 }}>
-                <Tooltip title="Actualizar">
-                  <IconButton
-                    onClick={() => {
-                      loadProfileData();
-                      if (onRefresh) onRefresh();
-                    }}
-                    disabled={loading}
-                    size="small"
-                    sx={{
-                      color: 'white',
-                      bgcolor: alpha('#ffffff', 0.1),
-                      '&:hover': {
-                        bgcolor: alpha('#ffffff', 0.2),
-                      }
-                    }}
-                  >
-                    <Refresh sx={{ fontSize: 18 }} />
-                  </IconButton>
-                </Tooltip>
+                  </label>
+                </div>
+                
+                <div>
+                  <h3 className="text-lg font-semibold text-white">
+                    Perfil de {socio.nombre}
+                  </h3>
+                  <p className="text-blue-100 text-sm">
+                    {socio.email}
+                  </p>
+                  <div className="flex items-center space-x-2 mt-1">
+                    {getStatusChip(socio.estado)}
+                    <span className={`text-xs font-medium ${engagementLevel.color}`}>
+                      {engagementLevel.label} ({engagementScore}%)
+                    </span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => {
+                    loadProfileData();
+                    if (onRefresh) onRefresh();
+                  }}
+                  disabled={loading}
+                  className="text-white hover:text-gray-200 transition-colors p-1"
+                  title="Actualizar"
+                >
+                  <Refresh className="w-5 h-5" />
+                </button>
                 
                 {onEdit && (
-                  <Tooltip title="Editar">
-                    <IconButton
-                      onClick={() => onEdit(socio)}
-                      size="small"
-                      sx={{
-                        color: 'white',
-                        bgcolor: alpha('#ffffff', 0.1),
-                        '&:hover': {
-                          bgcolor: alpha('#ffffff', 0.2),
-                        }
-                      }}
-                    >
-                      <Edit sx={{ fontSize: 18 }} />
-                    </IconButton>
-                  </Tooltip>
+                  <button
+                    onClick={() => onEdit(socio)}
+                    className="text-white hover:text-gray-200 transition-colors p-1"
+                    title="Editar"
+                  >
+                    <Edit className="w-5 h-5" />
+                  </button>
                 )}
                 
-                <Tooltip title="Exportar datos">
-                  <IconButton
-                    onClick={handleExportData}
-                    size="small"
-                    sx={{
-                      color: 'white',
-                      bgcolor: alpha('#ffffff', 0.1),
-                      '&:hover': {
-                        bgcolor: alpha('#ffffff', 0.2),
-                      }
-                    }}
-                  >
-                    <Download sx={{ fontSize: 18 }} />
-                  </IconButton>
-                </Tooltip>
+                <button
+                  onClick={handleExportData}
+                  className="text-white hover:text-gray-200 transition-colors p-1"
+                  title="Exportar datos"
+                >
+                  <Download className="w-5 h-5" />
+                </button>
                 
-                <Tooltip title="Cerrar">
-                  <IconButton
-                    onClick={onClose}
-                    size="small"
-                    sx={{
-                      color: 'white',
-                      bgcolor: alpha('#ffffff', 0.1),
-                      '&:hover': {
-                        bgcolor: alpha('#ffffff', 0.2),
-                      }
-                    }}
-                  >
-                    <Close sx={{ fontSize: 18 }} />
-                  </IconButton>
-                </Tooltip>
-              </Box>
-            </Box>
-          </Box>
+                <button
+                  onClick={onClose}
+                  className="text-white hover:text-gray-200 transition-colors p-1"
+                  title="Cerrar"
+                >
+                  <Close className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          </div>
 
-          {/* Tabs Compactos */}
-          <Box sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: '#fafbfc' }}>
-            <Tabs
-              value={tabValue}
-              onChange={(_, newValue) => setTabValue(newValue)}
-              variant="scrollable"
-              scrollButtons="auto"
-              sx={{
-                px: 2,
-                '& .MuiTab-root': {
-                  textTransform: 'none',
-                  fontWeight: 600,
-                  fontSize: '0.85rem',
-                  minHeight: 40,
-                  py: 1,
-                },
-                '& .Mui-selected': {
-                  color: '#6366f1',
-                },
-                '& .MuiTabs-indicator': {
-                  backgroundColor: '#6366f1',
-                  height: 2,
-                },
-              }}
-            >
-              <Tab icon={<Person sx={{ fontSize: 16 }} />} label="Info" iconPosition="start" />
-              <Tab icon={<Analytics sx={{ fontSize: 16 }} />} label="Stats" iconPosition="start" />
-              <Tab icon={<History sx={{ fontSize: 16 }} />} label="Historial" iconPosition="start" />
-              <Tab icon={<Settings sx={{ fontSize: 16 }} />} label="Config" iconPosition="start" />
-            </Tabs>
-          </Box>
+          {/* Tabs */}
+          <div className="border-b border-gray-200">
+            <nav className="flex space-x-8 px-6" aria-label="Tabs">
+              {tabs.map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${
+                      activeTab === tab.id
+                        ? 'border-blue-500 text-blue-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    <span>{tab.label}</span>
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
 
           {/* Content */}
-          <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
+          <div className="max-h-96 overflow-y-auto">
             {loading && (
-              <Box sx={{ mb: 2 }}>
-                <LinearProgress sx={{ borderRadius: 1 }} />
-              </Box>
+              <div className="p-4">
+                <div className="animate-pulse flex space-x-4">
+                  <div className="rounded-full bg-gray-200 h-10 w-10"></div>
+                  <div className="flex-1 space-y-2 py-1">
+                    <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                  </div>
+                </div>
+              </div>
             )}
 
             {/* Tab 1: Información Personal */}
-            <TabPanel value={tabValue} index={0}>
-              <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2 }}>
+            <TabPanel value={activeTab} index={0}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Información básica */}
-                <Box sx={{ flex: 1 }}>
-                  <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 3, p: 2 }}>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#0f172a', mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <AccountCircle sx={{ color: '#6366f1', fontSize: 20 }} />
-                      Información Personal
-                    </Typography>
-                    
-                    <Stack spacing={1}>
+                <div>
+                  <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                    <AccountCircle className="w-5 h-5 mr-2 text-blue-600" />
+                    Información Personal
+                  </h4>
+                  
+                  <div className="space-y-3">
+                    <InfoItem
+                      icon={<Person />}
+                      label="Nombre completo"
+                      value={socio.nombre}
+                    />
+
+                    <InfoItem
+                      icon={<Email />}
+                      label="Correo electrónico"
+                      value={socio.email}
+                    />
+
+                    {socio.telefono && (
                       <InfoItem
-                        icon={<Person />}
-                        label="Nombre completo"
-                        value={socio.nombre}
+                        icon={<Phone />}
+                        label="Teléfono"
+                        value={socio.telefono}
                       />
+                    )}
 
+                    {socio.dni && (
                       <InfoItem
-                        icon={<Email />}
-                        label="Correo electrónico"
-                        value={socio.email}
+                        icon={<BadgeIcon />}
+                        label="DNI"
+                        value={socio.dni}
                       />
+                    )}
 
-                      {socio.telefono && (
-                        <InfoItem
-                          icon={<Phone />}
-                          label="Teléfono"
-                          value={socio.telefono}
-                        />
-                      )}
+                    {socio.direccion && (
+                      <InfoItem
+                        icon={<LocationOn />}
+                        label="Dirección"
+                        value={socio.direccion}
+                      />
+                    )}
 
-                      {socio.dni && (
-                        <InfoItem
-                          icon={<BadgeIcon />}
-                          label="DNI"
-                          value={socio.dni}
-                        />
-                      )}
-
-                      {socio.direccion && (
-                        <InfoItem
-                          icon={<LocationOn />}
-                          label="Dirección"
-                          value={socio.direccion}
-                        />
-                      )}
-
-                      {socio.fechaNacimiento && (
-                        <InfoItem
-                          icon={<Cake />}
-                          label="Fecha de nacimiento"
-                          value={safeFormatTimestamp(socio.fechaNacimiento, 'dd MMMM yyyy', { locale: es })}
-                        />
-                      )}
-                    </Stack>
-                  </Card>
-                </Box>
+                    {socio.fechaNacimiento && (
+                      <InfoItem
+                        icon={<Cake />}
+                        label="Fecha de nacimiento"
+                        value={safeFormatTimestamp(socio.fechaNacimiento, 'dd MMMM yyyy', { locale: es })}
+                      />
+                    )}
+                  </div>
+                </div>
 
                 {/* Información de membresía */}
-                <Box sx={{ flex: 1 }}>
-                  <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 3, p: 2 }}>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#0f172a', mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Business sx={{ color: '#6366f1', fontSize: 20 }} />
-                      Membresía
-                    </Typography>
-                    
-                    <Stack spacing={1}>
+                <div>
+                  <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                    <Business className="w-5 h-5 mr-2 text-green-600" />
+                    Información de Membresía
+                  </h4>
+                  
+                  <div className="space-y-3">
+                    <InfoItem
+                      icon={<CalendarToday />}
+                      label="Fecha de registro"
+                      value={safeFormatTimestamp(socio.creadoEn, 'dd MMMM yyyy', { locale: es })}
+                    />
+
+                    <div className="flex items-center gap-3 py-2">
+                      <CheckCircle className="text-gray-400 w-5 h-5" />
+                      <div className="flex-1">
+                        <div className="text-sm font-medium text-gray-700">Estado actual</div>
+                        <div className="mt-1">
+                          {getStatusChip(socio.estado)}
+                        </div>
+                      </div>
+                    </div>
+
+                    {socio.numeroSocio && (
                       <InfoItem
-                        icon={<CalendarToday />}
-                        label="Fecha de registro"
-                        value={safeFormatTimestamp(socio.creadoEn, 'dd MMMM yyyy', { locale: es })}
+                        icon={<BadgeIcon />}
+                        label="Número de socio"
+                        value={`#${socio.numeroSocio}`}
                       />
+                    )}
 
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, py: 1 }}>
-                        <CheckCircle sx={{ color: '#94a3b8', fontSize: 18 }} />
-                        <Box sx={{ flex: 1 }}>
-                          <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600, display: 'block' }}>
-                            Estado actual
-                          </Typography>
-                          <Box sx={{ mt: 0.5 }}>
-                            {getStatusChip(socio.estado)}
-                          </Box>
-                        </Box>
-                      </Box>
+                    <InfoItem
+                      icon={<MonetizationOn />}
+                      label="Cuota mensual"
+                      value={`$${socio.montoCuota || 0}`}
+                    />
 
-                      {socio.numeroSocio && (
-                        <InfoItem
-                          icon={<BadgeIcon />}
-                          label="Número de socio"
-                          value={`#${socio.numeroSocio}`}
-                        />
-                      )}
-
+                    {socio.ultimoAcceso && (
                       <InfoItem
-                        icon={<MonetizationOn />}
-                        label="Cuota mensual"
-                        value={`$${socio.montoCuota || 0}`}
+                        icon={<Schedule />}
+                        label="Último acceso"
+                        value={safeFormatTimestamp(socio.ultimoAcceso, 'dd MMM yyyy, HH:mm', { locale: es })}
                       />
+                    )}
 
-                      {socio.ultimoAcceso && (
-                        <InfoItem
-                          icon={<Schedule />}
-                          label="Último acceso"
-                          value={safeFormatTimestamp(socio.ultimoAcceso, 'dd MMM yyyy, HH:mm', { locale: es })}
-                        />
-                      )}
-
-                      {/* Engagement score */}
-                      <Box sx={{ py: 1 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
-                          <Speed sx={{ color: '#94a3b8', fontSize: 18 }} />
-                          <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>
-                            Nivel de engagement
-                          </Typography>
-                        </Box>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                          <LinearProgress
-                            variant="determinate"
-                            value={engagementScore}
-                            sx={{
-                              flex: 1,
-                              height: 6,
-                              borderRadius: 3,
-                              bgcolor: alpha(engagementLevel.color, 0.1),
-                              '& .MuiLinearProgress-bar': {
-                                bgcolor: engagementLevel.color,
-                                borderRadius: 3,
-                              }
-                            }}
+                    {/* Engagement score */}
+                    <div className="py-2">
+                      <div className="flex items-center gap-3 mb-2">
+                        <Speed className="text-gray-400 w-5 h-5" />
+                        <div className="text-sm font-medium text-gray-700">Nivel de engagement</div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="flex-1 bg-gray-200 rounded-full h-2">
+                          <div 
+                            className={`h-2 rounded-full ${
+                              engagementScore >= 80 ? 'bg-green-500' :
+                              engagementScore >= 60 ? 'bg-yellow-500' :
+                              engagementScore >= 40 ? 'bg-blue-500' : 'bg-red-500'
+                            }`}
+                            style={{ width: `${engagementScore}%` }}
                           />
-                          <Typography variant="caption" sx={{ color: engagementLevel.color, fontWeight: 700, minWidth: 'fit-content' }}>
-                            {engagementScore}%
-                          </Typography>
-                        </Box>
-                        <Typography variant="caption" sx={{ color: engagementLevel.color, fontWeight: 600 }}>
-                          {engagementLevel.label}
-                        </Typography>
-                      </Box>
-                    </Stack>
-                  </Card>
-                </Box>
-              </Box>
+                        </div>
+                        <span className={`text-sm font-bold ${engagementLevel.color}`}>
+                          {engagementScore}%
+                        </span>
+                      </div>
+                      <div className={`text-sm font-medium ${engagementLevel.color} mt-1`}>
+                        {engagementLevel.label}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </TabPanel>
 
             {/* Tab 2: Estadísticas */}
-            <TabPanel value={tabValue} index={1}>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+            <TabPanel value={activeTab} index={1}>
+              <div className="flex flex-wrap gap-4">
                 <CompactStatCard
                   title="Beneficios Usados"
                   value={stats?.beneficiosUsados || 0}
-                  icon={<LocalOffer sx={{ fontSize: 20 }} />}
-                  color="#8b5cf6"
+                  icon={<LocalOffer className="w-5 h-5 text-white" />}
+                  color="bg-purple-500"
                   subtitle="Total utilizados"
                 />
                 
                 <CompactStatCard
                   title="Ahorro Total"
                   value={`$${stats?.ahorroTotal || 0}`}
-                  icon={<MonetizationOn sx={{ fontSize: 20 }} />}
-                  color="#10b981"
+                  icon={<MonetizationOn className="w-5 h-5 text-white" />}
+                  color="bg-green-500"
                   subtitle="Dinero ahorrado"
                 />
                 
                 <CompactStatCard
                   title="Comercios"
                   value={stats?.comerciosVisitados || 0}
-                  icon={<Store sx={{ fontSize: 20 }} />}
-                  color="#6366f1"
+                  icon={<Store className="w-5 h-5 text-white" />}
+                  color="bg-blue-500"
                   subtitle="Únicos visitados"
                 />
                 
                 <CompactStatCard
                   title="Validaciones"
                   value={validaciones.filter(v => v.estado === 'exitosa').length}
-                  icon={<CheckCircle sx={{ fontSize: 20 }} />}
-                  color="#10b981"
+                  icon={<CheckCircle className="w-5 h-5 text-white" />}
+                  color="bg-green-500"
                   subtitle="Exitosas"
                 />
                 
                 <CompactStatCard
                   title="Racha"
                   value={`${stats?.racha || 0} días`}
-                  icon={<Loyalty sx={{ fontSize: 20 }} />}
-                  color="#f59e0b"
+                  icon={<Loyalty className="w-5 h-5 text-white" />}
+                  color="bg-yellow-500"
                   subtitle="Consecutivos"
                 />
 
                 <CompactStatCard
                   title="Promedio"
                   value={`$${Math.round((stats?.ahorroTotal || 0) / Math.max(1, stats?.tiempoComoSocio || 1) * 30)}`}
-                  icon={<TrendingUp sx={{ fontSize: 20 }} />}
-                  color="#ec4899"
+                  icon={<TrendingUp className="w-5 h-5 text-white" />}
+                  color="bg-pink-500"
                   subtitle="Mensual"
                 />
-              </Box>
+              </div>
             </TabPanel>
 
             {/* Tab 3: Historial de Validaciones */}
-            <TabPanel value={tabValue} index={2}>
-              <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 3 }}>
-                <Box sx={{ p: 2, borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Receipt sx={{ color: '#6366f1', fontSize: 20 }} />
+            <TabPanel value={activeTab} index={2}>
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="text-lg font-medium text-gray-900 flex items-center">
+                    <Receipt className="w-5 h-5 mr-2 text-blue-600" />
                     Historial de Validaciones
-                  </Typography>
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    startIcon={<Refresh sx={{ fontSize: 16 }} />}
+                  </h4>
+                  <button
                     onClick={loadProfileData}
                     disabled={loading}
-                    sx={{
-                      borderColor: '#e2e8f0',
-                      color: '#64748b',
-                      fontSize: '0.75rem',
-                      py: 0.5,
-                      px: 1.5,
-                      '&:hover': {
-                        borderColor: '#6366f1',
-                        color: '#6366f1',
-                      }
-                    }}
+                    className="px-3 py-1 text-sm border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
                   >
+                    <Refresh className="w-4 h-4 inline mr-1" />
                     Actualizar
-                  </Button>
-                </Box>
+                  </button>
+                </div>
 
                 {validaciones.length > 0 ? (
-                  <Box sx={{ maxHeight: 300, overflow: 'auto' }}>
-                    {validaciones.slice(0, 10).map((validacion, index) => (
-                      <Box 
+                  <div className="space-y-3 max-h-64 overflow-y-auto">
+                    {validaciones.slice(0, 10).map((validacion) => (
+                      <div 
                         key={validacion.id} 
-                        sx={{ 
-                          p: 2, 
-                          borderBottom: index < validaciones.length - 1 ? '1px solid #f1f5f9' : 'none',
-                          '&:hover': { bgcolor: '#fafbfc' }
-                        }}
+                        className="border border-gray-200 rounded-lg p-3 hover:bg-gray-50 transition-colors"
                       >
-                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-                          <Typography variant="body2" sx={{ fontWeight: 600, color: '#0f172a' }}>
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="font-medium text-gray-900">
                             {validacion.beneficioTitulo}
-                          </Typography>
+                          </div>
                           {getValidationStatusChip(validacion.estado)}
-                        </Box>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                          <Typography variant="caption" sx={{ color: '#64748b' }}>
-                            {validacion.comercioNombre}
-                          </Typography>
-                          <Typography variant="caption" sx={{ color: '#10b981', fontWeight: 600 }}>
+                        </div>
+                        <div className="flex items-center gap-4 text-sm text-gray-600">
+                          <span>{validacion.comercioNombre}</span>
+                          <span className="text-green-600 font-medium">
                             {validacion.tipoDescuento === 'porcentaje' 
                               ? `${validacion.descuento}%` 
                               : `$${validacion.descuento}`
                             }
-                          </Typography>
-                          <Typography variant="caption" sx={{ color: '#94a3b8' }}>
+                          </span>
+                          <span className="text-gray-500">
                             {format(validacion.fechaValidacion, 'dd MMM', { locale: es })}
-                          </Typography>
-                        </Box>
-                      </Box>
+                          </span>
+                        </div>
+                      </div>
                     ))}
-                  </Box>
+                  </div>
                 ) : (
-                  <Box sx={{ textAlign: 'center', py: 4 }}>
-                    <Receipt sx={{ fontSize: 32, color: '#e2e8f0', mb: 1 }} />
-                    <Typography variant="body2" sx={{ fontWeight: 600, color: '#64748b', mb: 0.5 }}>
+                  <div className="text-center py-8">
+                    <Receipt className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                    <div className="text-sm font-medium text-gray-600 mb-1">
                       No hay validaciones
-                    </Typography>
-                    <Typography variant="caption" sx={{ color: '#94a3b8' }}>
+                    </div>
+                    <div className="text-xs text-gray-500">
                       Las validaciones aparecerán aquí
-                    </Typography>
-                  </Box>
+                    </div>
+                  </div>
                 )}
-              </Card>
+              </div>
             </TabPanel>
 
             {/* Tab 4: Configuración */}
-            <TabPanel value={tabValue} index={3}>
-              <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2 }}>
+            <TabPanel value={activeTab} index={3}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Configuración de notificaciones */}
-                <Box sx={{ flex: 1 }}>
-                  <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 3, p: 2 }}>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#0f172a', mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Notifications sx={{ color: '#6366f1', fontSize: 20 }} />
-                      Notificaciones
-                    </Typography>
-                    
-                    <Stack spacing={1}>
-                      {[
-                        {
-                          key: 'notificaciones',
-                          label: 'Notificaciones generales',
-                          icon: <NotificationsActive />,
-                          enabled: socio.configuracion?.notificaciones ?? true,
-                        },
-                        {
-                          key: 'notificacionesEmail',
-                          label: 'Notificaciones por email',
-                          icon: <Mail />,
-                          enabled: socio.configuracion?.notificacionesEmail ?? true,
-                        },
-                        {
-                          key: 'notificacionesSMS',
-                          label: 'Notificaciones por SMS',
-                          icon: <Sms />,
-                          enabled: socio.configuracion?.notificacionesSMS ?? false,
-                        },
-                      ].map((config) => (
-                        <Box key={config.key} sx={{ display: 'flex', alignItems: 'center', gap: 2, py: 0.5 }}>
-                          <Box sx={{ color: config.enabled ? '#10b981' : '#6b7280', fontSize: 18 }}>
-                            {config.icon}
-                          </Box>
-                          <Box sx={{ flex: 1 }}>
-                            <Typography variant="body2" sx={{ fontWeight: 600, color: '#0f172a', fontSize: '0.85rem' }}>
-                              {config.label}
-                            </Typography>
-                          </Box>
-                          <Chip
-                            label={config.enabled ? 'On' : 'Off'}
-                            size="small"
-                            sx={{
-                              bgcolor: config.enabled ? alpha('#10b981', 0.1) : alpha('#6b7280', 0.1),
-                              color: config.enabled ? '#10b981' : '#6b7280',
-                              fontWeight: 600,
-                              fontSize: '0.7rem',
-                              height: 20,
-                            }}
-                          />
-                        </Box>
-                      ))}
-                    </Stack>
-                  </Card>
-                </Box>
+                <div>
+                  <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                    <Notifications className="w-5 h-5 mr-2 text-blue-600" />
+                    Notificaciones
+                  </h4>
+                  
+                  <div className="space-y-3">
+                    {[
+                      {
+                        key: 'notificaciones',
+                        label: 'Notificaciones generales',
+                        icon: <NotificationsActive />,
+                        enabled: socio.configuracion?.notificaciones ?? true,
+                      },
+                      {
+                        key: 'notificacionesEmail',
+                        label: 'Notificaciones por email',
+                        icon: <Mail />,
+                        enabled: socio.configuracion?.notificacionesEmail ?? true,
+                      },
+                      {
+                        key: 'notificacionesSMS',
+                        label: 'Notificaciones por SMS',
+                        icon: <Sms />,
+                        enabled: socio.configuracion?.notificacionesSMS ?? false,
+                      },
+                    ].map((config) => (
+                      <div key={config.key} className="flex items-center gap-3 py-2">
+                        <div className={`${config.enabled ? 'text-green-600' : 'text-gray-400'} w-5 h-5`}>
+                          {config.icon}
+                        </div>
+                        <div className="flex-1">
+                          <div className="text-sm font-medium text-gray-900">{config.label}</div>
+                        </div>
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                          config.enabled ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {config.enabled ? 'Activado' : 'Desactivado'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
 
                 {/* Configuración de privacidad */}
-                <Box sx={{ flex: 1 }}>
-                  <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 3, p: 2 }}>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#0f172a', mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Security sx={{ color: '#6366f1', fontSize: 20 }} />
-                      Privacidad
-                    </Typography>
-                    
-                    <Stack spacing={1}>
-                      {[
-                        {
-                          key: 'perfilPublico',
-                          label: 'Perfil público',
-                          icon: <Visibility />,
-                          enabled: socio.configuracion?.perfilPublico ?? false,
-                        },
-                        {
-                          key: 'mostrarEstadisticas',
-                          label: 'Mostrar estadísticas',
-                          icon: <BarChart />,
-                          enabled: socio.configuracion?.mostrarEstadisticas ?? true,
-                        },
-                        {
-                          key: 'compartirDatos',
-                          label: 'Compartir datos',
-                          icon: <Share />,
-                          enabled: socio.configuracion?.compartirDatos ?? false,
-                        },
-                      ].map((config) => (
-                        <Box key={config.key} sx={{ display: 'flex', alignItems: 'center', gap: 2, py: 0.5 }}>
-                          <Box sx={{ color: config.enabled ? '#6366f1' : '#6b7280', fontSize: 18 }}>
-                            {config.icon}
-                          </Box>
-                          <Box sx={{ flex: 1 }}>
-                            <Typography variant="body2" sx={{ fontWeight: 600, color: '#0f172a', fontSize: '0.85rem' }}>
-                              {config.label}
-                            </Typography>
-                          </Box>
-                          <Chip
-                            label={config.enabled ? 'On' : 'Off'}
-                            size="small"
-                            sx={{
-                              bgcolor: config.enabled ? alpha('#6366f1', 0.1) : alpha('#6b7280', 0.1),
-                              color: config.enabled ? '#6366f1' : '#6b7280',
-                              fontWeight: 600,
-                              fontSize: '0.7rem',
-                              height: 20,
-                            }}
-                          />
-                        </Box>
-                      ))}
-                    </Stack>
-                  </Card>
-                </Box>
-              </Box>
+                <div>
+                  <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                    <Security className="w-5 h-5 mr-2 text-green-600" />
+                    Privacidad
+                  </h4>
+                  
+                  <div className="space-y-3">
+                    {[
+                      {
+                        key: 'perfilPublico',
+                        label: 'Perfil público',
+                        icon: <Visibility />,
+                        enabled: socio.configuracion?.perfilPublico ?? false,
+                      },
+                      {
+                        key: 'mostrarEstadisticas',
+                        label: 'Mostrar estadísticas',
+                        icon: <BarChart />,
+                        enabled: socio.configuracion?.mostrarEstadisticas ?? true,
+                      },
+                      {
+                        key: 'compartirDatos',
+                        label: 'Compartir datos',
+                        icon: <Share />,
+                        enabled: socio.configuracion?.compartirDatos ?? false,
+                      },
+                    ].map((config) => (
+                      <div key={config.key} className="flex items-center gap-3 py-2">
+                        <div className={`${config.enabled ? 'text-blue-600' : 'text-gray-400'} w-5 h-5`}>
+                          {config.icon}
+                        </div>
+                        <div className="flex-1">
+                          <div className="text-sm font-medium text-gray-900">{config.label}</div>
+                        </div>
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                          config.enabled ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {config.enabled ? 'Activado' : 'Desactivado'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
             </TabPanel>
-          </Box>
-        </Box>
-      </Box>
-    </AnimatePresence>
+          </div>
+
+          {/* Actions */}
+          <div className="bg-gray-50 px-6 py-4 flex flex-col sm:flex-row gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+              Cerrar
+            </button>
+            
+            {onEdit && (
+              <button
+                type="button"
+                onClick={() => onEdit(socio)}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
+              >
+                <Edit className="w-4 h-4 mr-2" />
+                Editar Socio
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
