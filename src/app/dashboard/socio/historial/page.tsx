@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   History, 
@@ -15,7 +15,6 @@ import {
   XCircle,
   Clock,
   Store,
-  Gift,
   Award,
   BarChart3,
   RefreshCw,
@@ -25,9 +24,6 @@ import {
   Star,
   Zap,
   Target,
-  Flame,
-  Crown,
-  Sparkles
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { SocioSidebar } from '@/components/layout/SocioSidebar';
@@ -40,7 +36,6 @@ import { BeneficioUso } from '@/types/beneficio';
 import { format, isToday, isYesterday, isThisWeek, isThisMonth, startOfMonth, endOfMonth } from 'date-fns';
 import { es } from 'date-fns/locale';
 import toast from 'react-hot-toast';
-import { cn } from '@/lib/utils';
 
 // Interfaces
 interface FilterState {
@@ -143,7 +138,7 @@ HistorialCardSkeleton.displayName = 'HistorialCardSkeleton';
 
 // Main component
 export default function SocioHistorialPage() {
-  const { user, signOut } = useAuth();
+  const { signOut } = useAuth();
   const { beneficiosUsados, loading, error, refreshBeneficios } = useBeneficios();
 
   // Local state
@@ -220,7 +215,6 @@ export default function SocioHistorialPage() {
 
     // Date range filter
     if (filters.dateRange !== 'all') {
-      const now = new Date();
       filtered = filtered.filter(uso => {
         const fechaUso = typeof uso.fechaUso?.toDate === 'function'
           ? uso.fechaUso.toDate()
@@ -243,7 +237,14 @@ export default function SocioHistorialPage() {
 
     // Status filter
     if (filters.status !== 'all') {
-      filtered = filtered.filter(uso => uso.estado === filters.status);
+      // Map UI filter values to actual status values in data
+      const statusMap: Record<string, string[]> = {
+        valid: ['usado'],
+        invalid: ['cancelado'],
+        pendiente: ['pendiente'],
+      };
+      const allowedStatuses = statusMap[filters.status] || [filters.status];
+      filtered = filtered.filter(uso => allowedStatuses.includes(uso.estado));
     }
 
     // Comercio filter

@@ -50,6 +50,7 @@ export interface BeneficioUso {
   validadoPor?: string; // Usuario que validó el uso
   creadoEn: Timestamp;
   actualizadoEn: Timestamp;
+  comercioNombre: string;
 
 }
 
