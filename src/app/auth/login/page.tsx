@@ -20,7 +20,6 @@ import {
   Clock,
   AlertCircle,
   Key,
-  Sparkles,
   Star,
   Building2,
   Store,
@@ -43,6 +42,13 @@ export default function LoginPage() {
   const [isResetting, setIsResetting] = useState(false);
   const [showEmailVerification, setShowEmailVerification] = useState(false);
   const [verificationEmail, setVerificationEmail] = useState('');
+  const [isVisible, setIsVisible] = useState(false);
+
+  // Trigger visibility for staggered animations
+  useEffect(() => {
+    const timer = setTimeout(() => setIsVisible(true), 100);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Check for verification success or reset success from URL params
   useEffect(() => {
@@ -168,9 +174,9 @@ export default function LoginPage() {
   }
 
   const securityFeatures = [
-    { icon: Shield, text: 'Protección SSL', color: 'text-emerald-600', bgColor: 'bg-emerald-50' },
-    { icon: CheckCircle, text: 'Verificado', color: 'text-blue-600', bgColor: 'bg-blue-50' },
-    { icon: Clock, text: 'Acceso 24/7', color: 'text-amber-600', bgColor: 'bg-amber-50' },
+    { icon: Shield, text: 'Protección SSL', color: 'text-sky-600', bgColor: 'bg-sky-50' },
+    { icon: CheckCircle, text: 'Verificado', color: 'text-celestial-600', bgColor: 'bg-celestial-50' },
+    { icon: Clock, text: 'Acceso 24/7', color: 'text-sky-700', bgColor: 'bg-sky-100' },
   ];
 
   const demoAccounts = [
@@ -178,7 +184,7 @@ export default function LoginPage() {
       role: 'Asociación', 
       email: 'asociacion@demo.com', 
       password: 'demo123', 
-      color: 'from-purple-500 to-purple-600', 
+      color: 'from-sky-500 to-celestial-600', 
       icon: Building2,
       description: 'Panel administrativo'
     },
@@ -186,7 +192,7 @@ export default function LoginPage() {
       role: 'Comercio', 
       email: 'comercio@demo.com', 
       password: 'demo123', 
-      color: 'from-blue-500 to-blue-600', 
+      color: 'from-celestial-500 to-sky-600', 
       icon: Store,
       description: 'Gestión comercial'
     },
@@ -194,180 +200,91 @@ export default function LoginPage() {
       role: 'Socio', 
       email: 'socio@demo.com', 
       password: 'demo123', 
-      color: 'from-emerald-500 to-emerald-600', 
+      color: 'from-sky-600 to-celestial-700', 
       icon: User,
       description: 'Portal del socio'
     },
   ];
 
-  // Floating particles animation
-  const particles = Array.from({ length: 6 }, (_, i) => (
-    <motion.div
-      key={i}
-      className="absolute w-2 h-2 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full opacity-20"
-      animate={{
-        y: [0, -100, 0],
-        x: [0, Math.random() * 100 - 50, 0],
-        opacity: [0.2, 0.8, 0.2],
-      }}
-      transition={{
-        duration: 8 + Math.random() * 4,
-        repeat: Infinity,
-        delay: Math.random() * 5,
-        ease: "easeInOut"
-      }}
-      style={{
-        left: `${Math.random() * 100}%`,
-        top: `${Math.random() * 100}%`,
-      }}
-    />
-  ));
-
   return (
-    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50/80 to-indigo-100/60">
-      {/* Enhanced Background Elements */}
-      <div className="absolute inset-0">
-        {/* Animated gradient orbs */}
-        <motion.div
-          className="absolute top-20 left-20 w-96 h-96 bg-gradient-to-br from-blue-200/40 to-cyan-200/40 rounded-full mix-blend-multiply filter blur-3xl"
-          animate={{
-            scale: [1, 1.2, 1],
-            opacity: [0.3, 0.5, 0.3],
-          }}
-          transition={{
-            duration: 8,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-        />
-        <motion.div
-          className="absolute top-40 right-20 w-80 h-80 bg-gradient-to-br from-purple-200/40 to-pink-200/40 rounded-full mix-blend-multiply filter blur-3xl"
-          animate={{
-            scale: [1.2, 1, 1.2],
-            opacity: [0.4, 0.6, 0.4],
-          }}
-          transition={{
-            duration: 10,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: 2
-          }}
-        />
-        <motion.div
-          className="absolute -bottom-20 left-1/2 transform -translate-x-1/2 w-96 h-96 bg-gradient-to-br from-indigo-200/40 to-blue-200/40 rounded-full mix-blend-multiply filter blur-3xl"
-          animate={{
-            scale: [1, 1.3, 1],
-            opacity: [0.3, 0.4, 0.3],
-          }}
-          transition={{
-            duration: 12,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: 4
-          }}
-        />
-        
-        {/* Floating particles */}
-        {particles}
-        
-        {/* Grid pattern */}
-        <div className="absolute inset-0 bg-grid opacity-20" />
-      </div>
+    <div className="scrollable-container bg-gradient-to-br from-sky-50 via-celestial-50 to-sky-100 min-h-screen relative overflow-hidden">
+      {/* Enhanced animated background elements - matching homepage */}
+      <div className="absolute inset-0 bg-grid opacity-30"></div>
+      
+      {/* More dynamic floating geometric shapes */}
+      <div className="absolute top-20 left-20 w-32 h-32 bg-gradient-to-br from-sky-200/40 to-celestial-200/40 rounded-full blur-xl animate-float-gentle"></div>
+      <div className="absolute bottom-32 right-32 w-48 h-48 bg-gradient-to-br from-celestial-200/30 to-sky-300/30 rounded-full blur-2xl animate-float-delay"></div>
+      <div className="absolute top-1/2 left-10 w-24 h-24 bg-gradient-to-br from-sky-300/35 to-celestial-300/35 rounded-full blur-lg animate-float"></div>
+      <div className="absolute top-1/4 right-20 w-16 h-16 bg-gradient-to-br from-celestial-400/40 to-sky-400/40 rounded-full blur-md animate-pulse-glow"></div>
+      <div className="absolute bottom-1/4 left-1/3 w-20 h-20 bg-gradient-to-br from-sky-300/30 to-celestial-400/30 rounded-full blur-lg animate-bounce-slow"></div>
 
       <div className="relative z-10 min-h-screen flex items-center justify-center py-8 px-4">
         <div className="w-full max-w-md">
           {/* Enhanced Back Button */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6 }}
-            className="mb-8"
-          >
+          <div className={`mb-8 transition-all duration-1000 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             <Link
               href="/"
-              className="group inline-flex items-center justify-center w-12 h-12 bg-white/90 backdrop-blur-xl rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 border border-white/20 hover:bg-white"
+              className="group inline-flex items-center justify-center w-12 h-12 bg-white/90 backdrop-blur-xl rounded-2xl shadow-lg hover:shadow-xl transition-all duration-500 hover:scale-110 border border-white/20 hover:bg-white"
             >
-              <ArrowLeft className="w-5 h-5 text-slate-600 group-hover:text-slate-800 transition-colors" />
+              <ArrowLeft className="w-5 h-5 text-slate-600 group-hover:text-slate-800 transition-colors duration-300" />
             </Link>
-          </motion.div>
+          </div>
 
           {/* Enhanced Header */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-center mb-8"
-          >
-            {/* Enhanced Logo */}
+          <div className={`text-center mb-8 transition-all duration-1200 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '0.2s' }}>
+            {/* Enhanced Logo - matching homepage style */}
             <Link href="/" className="inline-block mb-6 group">
-              <motion.div 
-                className="relative"
-                whileHover={{ scale: 1.05 }}
-                transition={{ duration: 0.2 }}
-              >
-                <div className="flex items-center justify-center space-x-3">
-                  <div className="relative">
-                    <div className="w-14 h-14 bg-gradient-to-br from-blue-600 via-cyan-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-2xl shadow-blue-500/25 group-hover:shadow-blue-500/40 transition-all duration-300">
-                      <Zap className="w-7 h-7 text-white" />
+              <div className="relative">
+                <div className="flex items-center justify-center space-x-4">
+                  <div className="relative group">
+                    <div className="w-16 h-16 bg-gradient-to-br from-sky-500 via-celestial-500 to-sky-600 rounded-3xl flex items-center justify-center shadow-2xl transform rotate-12 group-hover:rotate-0 transition-all duration-700 hover:scale-110">
+                      <Zap className="w-8 h-8 text-white transition-transform duration-500 group-hover:scale-110" />
                     </div>
-                    {/* Sparkle effect */}
-                    <motion.div
-                      className="absolute -top-1 -right-1"
-                      animate={{ rotate: [0, 360] }}
-                      transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
-                    >
-                      <Sparkles className="w-4 h-4 text-yellow-400" />
-                    </motion.div>
+                    <div className="absolute -inset-2 bg-gradient-to-br from-sky-500/30 to-celestial-500/30 rounded-3xl blur-lg animate-pulse-glow"></div>
+                    <div className="absolute -inset-4 bg-gradient-to-br from-sky-400/20 to-celestial-400/20 rounded-3xl blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
                   </div>
-                  <span className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-cyan-600 to-indigo-600 bg-clip-text text-transparent">
-                    Fidelya
-                  </span>
+                  
+                  {/* Enhanced brand name with fixed overflow and proper spacing */}
+                  <div className="relative overflow-visible">
+                    <h1 className="text-4xl md:text-5xl font-bold gradient-text font-playfair tracking-tight hover:scale-105 transition-transform duration-500 leading-none py-2">
+                      Fidelya
+                    </h1>
+                  </div>
                 </div>
-              </motion.div>
+              </div>
             </Link>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-            >
-              <h1 className="text-3xl font-bold text-slate-800 mb-2 font-display">
+            <div className={`transition-all duration-1000 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`} style={{ transitionDelay: '0.4s' }}>
+              <h2 className="text-3xl font-bold text-slate-800 mb-2 font-jakarta">
                 Bienvenido de vuelta
-              </h1>
-              <p className="text-slate-600 text-base leading-relaxed">
+              </h2>
+              <p className="text-slate-600 text-base leading-relaxed font-jakarta">
                 Accede a tu cuenta y gestiona tu programa de fidelización
               </p>
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
 
           {/* Enhanced Login Form */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.3 }}
-            className="relative"
-          >
-            {/* Glass effect background */}
-            <div className="absolute inset-0 bg-white/70 backdrop-blur-2xl rounded-3xl shadow-2xl border border-white/20" />
-            
-            <div className="relative bg-white/40 backdrop-blur-sm rounded-3xl p-8 shadow-xl border border-white/30">
+          <div className={`relative transition-all duration-1200 ease-out ${isVisible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-8 scale-95'}`} style={{ transitionDelay: '0.6s' }}>
+            {/* Glass effect background - matching homepage style */}
+            <div className="glass-card p-8 hover:scale-105 transition-all duration-500">
               <form onSubmit={handleSubmit(handleLogin)} className="space-y-6">
                 {/* Enhanced Email Field */}
                 <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  <label className="block text-sm font-semibold text-slate-700 mb-2 font-jakarta">
                     Correo electrónico
                   </label>
                   <div className="relative group">
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-sky-500/20 to-celestial-500/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm" />
                     <div className="relative">
-                      <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+                      <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-sky-500 transition-colors duration-300" />
                       <input
                         {...register('email')}
                         type="email"
                         placeholder="tu@email.com"
                         disabled={loading}
-                        className={`w-full pl-12 pr-4 py-4 border-2 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 bg-white/80 backdrop-blur-sm text-slate-800 placeholder-slate-400 font-medium ${
-                          errors.email ? 'border-red-300 focus:ring-red-500/20 focus:border-red-500' : 'border-slate-200 hover:border-slate-300'
+                        className={`w-full pl-12 pr-4 py-4 border-2 rounded-xl focus:ring-4 focus:ring-sky-500/20 focus:border-sky-500 transition-all duration-300 bg-white/80 backdrop-blur-sm text-slate-800 placeholder-slate-400 font-medium hover:border-sky-300 hover:shadow-lg ${
+                          errors.email ? 'border-red-300 focus:ring-red-500/20 focus:border-red-500' : 'border-slate-200'
                         }`}
                       />
                     </div>
@@ -386,27 +303,27 @@ export default function LoginPage() {
 
                 {/* Enhanced Password Field */}
                 <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  <label className="block text-sm font-semibold text-slate-700 mb-2 font-jakarta">
                     Contraseña
                   </label>
                   <div className="relative group">
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-sky-500/20 to-celestial-500/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm" />
                     <div className="relative">
-                      <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+                      <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-sky-500 transition-colors duration-300" />
                       <input
                         {...register('password')}
                         type={showPassword ? 'text' : 'password'}
                         placeholder="Tu contraseña"
                         disabled={loading}
-                        className={`w-full pl-12 pr-12 py-4 border-2 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 bg-white/80 backdrop-blur-sm text-slate-800 placeholder-slate-400 font-medium ${
-                          errors.password ? 'border-red-300 focus:ring-red-500/20 focus:border-red-500' : 'border-slate-200 hover:border-slate-300'
+                        className={`w-full pl-12 pr-12 py-4 border-2 rounded-xl focus:ring-4 focus:ring-sky-500/20 focus:border-sky-500 transition-all duration-300 bg-white/80 backdrop-blur-sm text-slate-800 placeholder-slate-400 font-medium hover:border-sky-300 hover:shadow-lg ${
+                          errors.password ? 'border-red-300 focus:ring-red-500/20 focus:border-red-500' : 'border-slate-200'
                         }`}
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
                         disabled={loading}
-                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors p-1 rounded-lg hover:bg-slate-100"
+                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors duration-300 p-1 rounded-lg hover:bg-slate-100"
                       >
                         {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                       </button>
@@ -426,20 +343,20 @@ export default function LoginPage() {
 
                 {/* Remember Me Checkbox */}
                 <div className="flex items-center justify-between">
-                  <label className="flex items-center space-x-2 cursor-pointer">
+                  <label className="flex items-center space-x-2 cursor-pointer group">
                     <input
                       {...register('rememberMe')}
                       type="checkbox"
-                      className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                      className="w-4 h-4 text-sky-600 bg-gray-100 border-gray-300 rounded focus:ring-sky-500 focus:ring-2 transition-all duration-300"
                     />
-                    <span className="text-sm text-slate-600">Recordarme</span>
+                    <span className="text-sm text-slate-600 group-hover:text-slate-800 transition-colors duration-300 font-jakarta">Recordarme</span>
                   </label>
 
                   <button
                     type="button"
                     onClick={() => setShowForgotPassword(!showForgotPassword)}
                     disabled={loading}
-                    className="text-blue-600 hover:text-blue-700 font-semibold text-sm transition-colors hover:underline"
+                    className="text-sky-600 hover:text-sky-700 font-semibold text-sm transition-colors duration-300 hover:underline font-jakarta"
                   >
                     ¿Olvidaste tu contraseña?
                   </button>
@@ -453,15 +370,15 @@ export default function LoginPage() {
                       animate={{ opacity: 1, height: 'auto', scale: 1 }}
                       exit={{ opacity: 0, height: 0, scale: 0.95 }}
                       transition={{ duration: 0.3 }}
-                      className="p-5 bg-blue-50/80 backdrop-blur-sm border border-blue-200/50 rounded-2xl shadow-lg"
+                      className="p-5 bg-sky-50/80 backdrop-blur-sm border border-sky-200/50 rounded-2xl shadow-lg"
                     >
                       <div className="flex items-center space-x-3 mb-3">
-                        <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
-                          <Key className="w-5 h-5 text-blue-600" />
+                        <div className="w-10 h-10 bg-sky-100 rounded-xl flex items-center justify-center">
+                          <Key className="w-5 h-5 text-sky-600" />
                         </div>
                         <div>
-                          <h3 className="font-semibold text-blue-900 text-sm">Recuperar Contraseña</h3>
-                          <p className="text-blue-700 text-xs">Te enviaremos un enlace de recuperación</p>
+                          <h3 className="font-semibold text-sky-900 text-sm font-jakarta">Recuperar Contraseña</h3>
+                          <p className="text-sky-700 text-xs font-jakarta">Te enviaremos un enlace de recuperación</p>
                         </div>
                       </div>
                       <div className="space-y-3">
@@ -473,7 +390,7 @@ export default function LoginPage() {
                             value={resetEmail}
                             onChange={(e) => setResetEmail(e.target.value)}
                             disabled={loading}
-                            className="w-full pl-10 pr-4 py-3 border border-blue-300/50 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 bg-white/90 text-sm font-medium"
+                            className="w-full pl-10 pr-4 py-3 border border-sky-300/50 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all duration-300 bg-white/90 text-sm font-medium"
                           />
                         </div>
                         <div className="flex space-x-3">
@@ -481,7 +398,7 @@ export default function LoginPage() {
                             type="button"
                             onClick={handlePasswordReset}
                             disabled={isResetting || !resetEmail || loading}
-                            className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-2.5 px-4 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 disabled:hover:scale-100"
+                            className="flex-1 bg-gradient-to-r from-sky-600 to-celestial-600 text-white py-2.5 px-4 rounded-xl hover:from-sky-700 hover:to-celestial-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 disabled:hover:scale-100"
                           >
                             {isResetting ? (
                               <div className="flex items-center justify-center space-x-2">
@@ -498,7 +415,7 @@ export default function LoginPage() {
                               setShowForgotPassword(false);
                               setResetEmail('');
                             }}
-                            className="px-4 py-2.5 text-slate-600 hover:text-slate-800 transition-colors text-sm font-medium hover:bg-white/50 rounded-xl"
+                            className="px-4 py-2.5 text-slate-600 hover:text-slate-800 transition-colors duration-300 text-sm font-medium hover:bg-white/50 rounded-xl"
                           >
                             Cancelar
                           </button>
@@ -520,36 +437,37 @@ export default function LoginPage() {
                       <div className="flex-shrink-0 w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center">
                         <AlertCircle className="w-5 h-5 text-red-600" />
                       </div>
-                      <p className="text-red-800 font-medium text-sm">
+                      <p className="text-red-800 font-medium text-sm font-jakarta">
                         {errors.root?.message || error}
                       </p>
                     </motion.div>
                   )}
                 </AnimatePresence>
 
-                {/* Enhanced Submit Button */}
-                <motion.button
+                {/* Enhanced Submit Button - matching homepage style */}
+                <button
                   type="submit"
                   disabled={isSubmitting || loading}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="w-full bg-gradient-to-r from-blue-600 via-cyan-600 to-indigo-600 text-white py-4 px-6 rounded-2xl font-semibold text-base shadow-2xl shadow-blue-500/25 hover:shadow-blue-500/40 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center space-x-3 relative overflow-hidden group"
+                  className="w-full bg-gradient-to-r from-sky-500 via-celestial-500 to-sky-600 text-white py-4 px-6 rounded-2xl font-semibold text-base shadow-2xl hover:shadow-sky-500/40 transition-all duration-500 disabled:opacity-50 disabled:cursor-not-allowed transform hover:-translate-y-2 hover:scale-105 disabled:hover:scale-100 disabled:hover:translate-y-0 flex items-center justify-center space-x-3 relative overflow-hidden group"
                 >
                   {/* Button shine effect */}
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-sky-600 via-celestial-600 to-sky-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   
-                  {(isSubmitting || loading) ? (
-                    <div className="flex items-center space-x-3">
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      <span>Iniciando sesión...</span>
-                    </div>
-                  ) : (
-                    <>
-                      <LogIn className="w-5 h-5" />
-                      <span>Iniciar sesión</span>
-                    </>
-                  )}
-                </motion.button>
+                  <span className="relative z-10">
+                    {(isSubmitting || loading) ? (
+                      <div className="flex items-center space-x-3">
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <span>Iniciando sesión...</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center space-x-3">
+                        <LogIn className="w-5 h-5" />
+                        <span>Iniciar sesión</span>
+                      </div>
+                    )}
+                  </span>
+                </button>
 
                 {/* Enhanced Divider */}
                 <div className="relative my-6">
@@ -557,7 +475,7 @@ export default function LoginPage() {
                     <div className="w-full border-t border-slate-300" />
                   </div>
                   <div className="relative flex justify-center">
-                    <span className="px-4 bg-white/80 backdrop-blur-sm text-slate-500 font-semibold text-sm rounded-full border border-slate-200">
+                    <span className="px-4 bg-white/80 backdrop-blur-sm text-slate-500 font-semibold text-sm rounded-full border border-slate-200 font-jakarta">
                       ¿No tienes cuenta?
                     </span>
                   </div>
@@ -565,75 +483,67 @@ export default function LoginPage() {
 
                 {/* Enhanced Register Button */}
                 <Link href="/auth/register">
-                  <motion.button
+                  <button
                     type="button"
                     disabled={loading}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="w-full border-2 border-slate-300 text-slate-700 py-4 px-6 rounded-2xl font-semibold text-base hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50/50 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center space-x-3 bg-white/60 backdrop-blur-sm shadow-lg hover:shadow-xl"
+                    className="w-full border-2 border-sky-300/50 text-slate-700 py-4 px-6 rounded-2xl font-semibold text-base hover:border-sky-400 hover:text-sky-600 hover:bg-sky-50/50 transition-all duration-500 disabled:opacity-50 disabled:cursor-not-allowed transform hover:-translate-y-1 hover:scale-105 disabled:hover:scale-100 disabled:hover:translate-y-0 flex items-center justify-center space-x-3 bg-white/80 backdrop-blur-sm shadow-lg hover:shadow-xl"
                   >
                     <UserPlus className="w-5 h-5" />
                     <span>Crear cuenta nueva</span>
-                  </motion.button>
+                  </button>
                 </Link>
               </form>
 
               {/* Enhanced Security Features */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.6 }}
-                className="mt-8 p-5 bg-slate-50/80 backdrop-blur-sm rounded-2xl border border-slate-200/50"
-              >
+              <div className={`mt-8 p-5 bg-slate-50/80 backdrop-blur-sm rounded-2xl border border-slate-200/50 transition-all duration-1000 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`} style={{ transitionDelay: '0.8s' }}>
                 <div className="flex justify-around items-center">
                   {securityFeatures.map((feature, index) => (
-                    <motion.div
+                    <div
                       key={index}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.5, delay: 0.8 + index * 0.1 }}
                       className="text-center group"
+                      style={{ 
+                        opacity: isVisible ? 1 : 0,
+                        transform: isVisible ? 'translateY(0)' : 'translateY(20px)',
+                        transition: `all 0.5s ease-out ${1 + index * 0.1}s`
+                      }}
                     >
                       <div className={`w-12 h-12 rounded-2xl ${feature.bgColor} flex items-center justify-center mb-2 mx-auto shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110`}>
                         <feature.icon className={`w-5 h-5 ${feature.color}`} />
                       </div>
-                      <p className="text-xs text-slate-600 font-semibold">{feature.text}</p>
-                    </motion.div>
+                      <p className="text-xs text-slate-600 font-semibold font-jakarta">{feature.text}</p>
+                    </div>
                   ))}
                 </div>
-              </motion.div>
+              </div>
 
               {/* Enhanced Demo Accounts */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.8 }}
-                className="mt-6 p-5 bg-gradient-to-br from-amber-50/90 to-orange-50/90 backdrop-blur-sm border border-amber-200/50 rounded-2xl shadow-lg"
-              >
+              <div className={`mt-6 p-5 bg-gradient-to-br from-sky-50/90 to-celestial-50/90 backdrop-blur-sm border border-sky-200/50 rounded-2xl shadow-lg transition-all duration-1200 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '1s' }}>
                 <div className="flex items-center justify-center space-x-2 mb-4">
-                  <Star className="w-5 h-5 text-amber-600" />
-                  <h3 className="font-bold text-amber-800 text-center">
+                  <Star className="w-5 h-5 text-sky-600" />
+                  <h3 className="font-bold text-sky-800 text-center font-jakarta">
                     Cuentas de Demostración
                   </h3>
-                  <Star className="w-5 h-5 text-amber-600" />
+                  <Star className="w-5 h-5 text-sky-600" />
                 </div>
                 <div className="space-y-3">
                   {demoAccounts.map((account, index) => (
-                    <motion.div
+                    <div
                       key={index}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.5, delay: 1 + index * 0.1 }}
-                      className="group p-3 bg-white/80 backdrop-blur-sm rounded-xl shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105 border border-white/50"
+                      className="group p-3 bg-white/80 backdrop-blur-sm rounded-xl shadow-md hover:shadow-lg transition-all duration-500 hover:scale-105 border border-white/50"
+                      style={{ 
+                        opacity: isVisible ? 1 : 0,
+                        transform: isVisible ? 'translateX(0)' : 'translateX(-20px)',
+                        transition: `all 0.5s ease-out ${1.2 + index * 0.1}s`
+                      }}
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
-                          <div className={`w-10 h-10 bg-gradient-to-r ${account.color} rounded-xl flex items-center justify-center text-white shadow-lg`}>
+                          <div className={`w-10 h-10 bg-gradient-to-r ${account.color} rounded-xl flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform duration-300`}>
                             <account.icon className="w-5 h-5" />
                           </div>
                           <div>
-                            <p className="text-sm font-bold text-slate-800">{account.role}</p>
-                            <p className="text-xs text-slate-600">{account.description}</p>
+                            <p className="text-sm font-bold text-slate-800 font-jakarta">{account.role}</p>
+                            <p className="text-xs text-slate-600 font-jakarta">{account.description}</p>
                           </div>
                         </div>
                         <div className="text-right">
@@ -645,14 +555,15 @@ export default function LoginPage() {
                           </p>
                         </div>
                       </div>
-                    </motion.div>
+                    </div>
                   ))}
                 </div>
-              </motion.div>
+              </div>
             </div>
-          </motion.div>
+          </div>
         </div>
       </div>
     </div>
   );
 }
+
