@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Users, 
@@ -15,18 +15,17 @@ import {
   Calendar,
   Mail,
   Phone,
-  MapPin,
   CheckCircle,
   XCircle,
   Clock,
   AlertTriangle,
   FileText,
-  Eye,
   ChevronDown,
   X
 } from 'lucide-react';
 import { useSocios } from '@/hooks/useSocios';
-import { Socio, SocioFormData } from '@/services/socio.service';
+import { Socio } from '@/types/socio';
+import { SocioFormData } from '@/services/socio.service';
 import { EnhancedSocioDialog } from './EnhancedSocioDialog';
 import { CsvImport } from './CsvImport';
 import { DeleteConfirmDialog } from './DeleteConfirmDialog';
@@ -36,7 +35,7 @@ interface MemberManagementProps {
   onNavigate?: (section: string) => void;
 }
 
-export const EnhancedMemberManagement: React.FC<MemberManagementProps> = ({ onNavigate }) => {
+export const EnhancedMemberManagement: React.FC<MemberManagementProps> = () => {
   const {
     socios,
     stats,
@@ -68,7 +67,6 @@ export const EnhancedMemberManagement: React.FC<MemberManagementProps> = ({ onNa
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [socioForPayment, setSocioForPayment] = useState<Socio | null>(null);
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Handle search
   const handleSearch = (term: string) => {
@@ -171,7 +169,7 @@ export const EnhancedMemberManagement: React.FC<MemberManagementProps> = ({ onNa
   // Handle bulk actions
   const handleBulkAction = async (action: string) => {
     if (selectedSocios.size === 0) {
-      toast.warning('Selecciona al menos un socio');
+      toast.error('Selecciona al menos un socio');
       return;
     }
 
@@ -629,7 +627,25 @@ export const EnhancedMemberManagement: React.FC<MemberManagementProps> = ({ onNa
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex items-center space-x-2">
                           <button
-                            onClick={() => handleEditSocio(socio)}
+                            onClick={() => handleEditSocio({
+                              ...socio,
+                              uid: socio.uid, // Ensure uid is present
+                              asociacion: socio.asociacion || socio.asociacionId || '',
+                              estado: socio.estado === 'suspendido' ? 'inactivo' : socio.estado, // Map "suspendido" to a valid value
+                              creadoEn: (socio.creadoEn && typeof socio.creadoEn.toDate === 'function')
+                                ? socio.creadoEn
+                                : typeof window !== 'undefined' && (window as any).firebase?.firestore?.Timestamp
+                                  ? (window as any).firebase.firestore.Timestamp.fromDate(socio.creadoEn)
+                                  : socio.creadoEn, // fallback, ideally import Timestamp and use Timestamp.fromDate
+                              actualizadoEn: (socio.actualizadoEn && typeof socio.actualizadoEn.toDate === 'function')
+                                ? socio.actualizadoEn
+                                : typeof window !== 'undefined' && (window as any).firebase?.firestore?.Timestamp
+                                  ? (window as any).firebase.firestore.Timestamp.fromDate(socio.actualizadoEn)
+                                  : socio.actualizadoEn, // fallback, ideally import Timestamp and use Timestamp.fromDate
+                              fechaNacimiento: (socio.fechaNacimiento && typeof (socio.fechaNacimiento as any).toDate === 'function')
+                                ? (socio.fechaNacimiento as any).toDate()
+                                : socio.fechaNacimiento // fallback, use as Date if not Firestore Timestamp
+                            })}
                             className="text-blue-600 hover:text-blue-900"
                             title="Editar"
                           >
@@ -726,7 +742,7 @@ export const EnhancedMemberManagement: React.FC<MemberManagementProps> = ({ onNa
                         
                         <div className="flex items-center space-x-2">
                           <button
-                            onClick={() => handleEditSocio(socio)}
+                            onClick={() => handleEditSocio(socioWithRequiredFields)}
                             className="text-blue-600 hover:text-blue-900"
                           >
                             <Edit size={16} />
@@ -815,8 +831,7 @@ export const EnhancedMemberManagement: React.FC<MemberManagementProps> = ({ onNa
           setSocioToDelete(null);
         }}
         onConfirm={handleDeleteConfirm}
-        title="Eliminar Socio"
-        message={`¿Estás seguro de que deseas eliminar a ${socioToDelete?.nombre}? Esta acción no se puede deshacer.`}
+        socio={socioToDelete}
         loading={loading}
       />
 

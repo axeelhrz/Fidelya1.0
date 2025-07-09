@@ -100,6 +100,7 @@ export interface Socio {
   direccion?: string;
   fechaNacimiento?: Timestamp;
   pagos?: Pago[];
+  id: string; // ID único del socio, puede ser el UID de Firebase o un ID personalizado
   
   // Nuevos campos
   avatar?: string;

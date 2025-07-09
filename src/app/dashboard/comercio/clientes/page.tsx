@@ -21,7 +21,11 @@ export default function ClientesPage() {
     <DashboardLayout
       activeSection="clientes"
       sidebarComponent={(props) => (
-        <ComercioSidebar {...props} onLogoutClick={handleLogout} />
+        <ComercioSidebar
+          isCollapsed={!props.open}
+          onToggle={props.onToggle}
+          onLogoutClick={handleLogout}
+        />
       )}
       onLogout={handleLogout}
     >

@@ -9,7 +9,6 @@ import {
   Flashlight,
   FlashlightOff,
   RotateCcw,
-  Settings
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
@@ -25,14 +24,14 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
   disabled = false 
 }) => {
   const [isScanning, setIsScanning] = useState(false);
-  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [flashEnabled, setFlashEnabled] = useState(false);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
-  
+  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
+
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const scannerRef = useRef<any>(null);
+  const scannerRef = useRef<import('@zxing/library').BrowserQRCodeReader | null>(null);
 
   // Initialize QR scanner when component mounts
   useEffect(() => {
@@ -52,6 +51,7 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
     return () => {
       stopScanning();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const requestCameraPermission = async (): Promise<boolean> => {
@@ -70,7 +70,6 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
       return true;
     } catch (error) {
       console.error('Camera permission denied:', error);
-      setHasPermission(false);
       setError('Se requiere acceso a la cámara para escanear códigos QR');
       return false;
     }
@@ -167,7 +166,7 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
         const videoTrack = streamRef.current.getVideoTracks()[0];
         if (videoTrack && 'torch' in videoTrack.getCapabilities()) {
           await videoTrack.applyConstraints({
-            advanced: [{ torch: !flashEnabled } as any]
+            advanced: [{ torch: !flashEnabled }] as MediaTrackConstraintSet[]
           });
           setFlashEnabled(!flashEnabled);
         } else {
