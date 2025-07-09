@@ -1,7 +1,5 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import { 
   X, 
   Home, 
@@ -25,11 +23,8 @@ import {
   LogOut,
   ChevronDown,
   Plus,
-  Search,
   Filter,
   Link as LinkIcon,
-  Eye,
-  Unlink,
   Target,
   PieChart,
   Activity,
@@ -59,7 +54,6 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
   activeSection
 }) => {
   const { user } = useAuth();
-  const pathname = usePathname();
 
   const menuItems = [
     {
@@ -200,7 +194,29 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
     }
   ];
 
-  const [expandedItems, setExpandedItems] = React.useState<Set<string>>(new Set(['dashboard']));
+  // Función para determinar qué elementos deben estar expandidos
+  const getInitialExpandedItems = React.useCallback(() => {
+    const expanded = new Set<string>();
+    
+    // Siempre expandir dashboard por defecto
+    expanded.add('dashboard');
+    
+    // Expandir automáticamente el menú padre si hay una sección activa
+    menuItems.forEach(item => {
+      if (item.submenu && activeSection.startsWith(item.id + '-')) {
+        expanded.add(item.id);
+      }
+    });
+    
+    return expanded;
+  }, [activeSection]);
+
+  const [expandedItems, setExpandedItems] = React.useState<Set<string>>(getInitialExpandedItems());
+
+  // Actualizar elementos expandidos cuando cambie la sección activa
+  React.useEffect(() => {
+    setExpandedItems(getInitialExpandedItems());
+  }, [getInitialExpandedItems]);
 
   const toggleExpanded = (itemId: string) => {
     const newExpanded = new Set(expandedItems);
@@ -224,7 +240,7 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
     return activeSection === itemId || activeSection.startsWith(itemId + '-');
   };
 
-  const getItemBadge = (item: any) => {
+  const getItemBadge = (item: { badge?: string }) => {
     if (item.badge) {
       return (
         <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
