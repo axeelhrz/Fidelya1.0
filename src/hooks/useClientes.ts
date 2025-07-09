@@ -129,10 +129,6 @@ export const useClientes = (): UseClientesReturn => {
     }
   }, [comercioId, filtros, clientes.length, hasMore, loading]);
 
-
-
-
-
   /**
    * Cargar actividades del cliente
    */
@@ -384,22 +380,6 @@ export const useClientes = (): UseClientesReturn => {
       setLoadingStats(false);
     }
   }, [comercioId]);
-
-  /**
-   * Cargar actividades del cliente
-   */
-  const loadClienteActivities = useCallback(async (clienteId: string) => {
-    try {
-      setLoadingActivities(true);
-      const clienteActivities = await ClienteService.getClienteActivities(clienteId);
-      setActivities(clienteActivities);
-    } catch (error) {
-      console.error('Error loading cliente activities:', error);
-      setActivities([]);
-    } finally {
-      setLoadingActivities(false);
-    }
-  }, []);
 
   /**
    * Actualizar compra del cliente

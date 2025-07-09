@@ -34,9 +34,28 @@ import {
   LocalOffer,
 } from '@mui/icons-material';
 import Link from 'next/link';
-import { baseRegisterSchema, type BaseRegisterFormData } from '@/lib/validations/auth';
 import { authService } from '@/services/auth.service';
 import { getDashboardRoute } from '@/lib/auth';
+import { z } from 'zod';
+
+// Define the form data type
+type BaseRegisterFormData = {
+  nombre: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+};
+
+// Zod schema for form validation
+const baseRegisterSchema = z.object({
+  nombre: z.string().min(2, 'El nombre es obligatorio'),
+  email: z.string().email('Correo electrónico inválido'),
+  password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
+  confirmPassword: z.string().min(6, 'Confirma tu contraseña'),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: 'Las contraseñas no coinciden',
+  path: ['confirmPassword'],
+});
 
 const SocioRegisterPage = () => {
   const router = useRouter();
