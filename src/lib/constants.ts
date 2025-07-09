@@ -12,6 +12,7 @@ export const COLLECTIONS = {
   ACTIVITIES: 'activities',
   CLIENTE_ACTIVITIES: 'cliente_activities',
   CLIENTE_SEGMENTS: 'cliente_segments',
+  SOLICITUDES_ADHESION: 'solicitudes_adhesion', // Nueva colección
 } as const;
 
 // Export type for collection names
@@ -200,3 +201,12 @@ export const RATE_LIMITS = {
     windowMs: 60 * 1000, // 1 minute
   },
 } as const;
+
+// Adhesion states
+export const ESTADOS_ADHESION = {
+  PENDIENTE: 'pendiente',
+  APROBADA: 'aprobada',
+  RECHAZADA: 'rechazada',
+} as const;
+
+export type EstadoAdhesion = typeof ESTADOS_ADHESION[keyof typeof ESTADOS_ADHESION];

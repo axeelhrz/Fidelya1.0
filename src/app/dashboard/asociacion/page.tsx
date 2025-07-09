@@ -17,6 +17,7 @@ import {
   Security,
   Analytics,
   Group,
+  Store,
 } from '@mui/icons-material';
 import { toast } from 'react-hot-toast';
 import { useSocios } from '@/hooks/useSocios';
@@ -38,13 +39,13 @@ import { LogoutModal } from '@/components/ui/LogoutModal';
 import { OverviewDashboard } from '@/components/asociacion/OverviewDashboard';
 import { AdvancedAnalytics } from '@/components/asociacion/AdvancedAnalytics';
 import { EnhancedMemberManagement } from '@/components/asociacion/EnhancedMemberManagement';
+import { ComercioManagement } from '@/components/asociacion/ComercioManagement';
 import { NotificationsCenter } from '@/components/asociacion/NotificationsCenter';
 import { SocioDialog } from '@/components/asociacion/SocioDialog';
 import { DeleteConfirmDialog } from '@/components/asociacion/DeleteConfirmDialog';
 import { CsvImport } from '@/components/asociacion/CsvImport';
 
 const LoadingScreen: React.FC<{ message: string }> = ({ message }) => {
-
   return (
     <Box 
       sx={{ 
@@ -101,7 +102,6 @@ const LoadingScreen: React.FC<{ message: string }> = ({ message }) => {
 };
 
 const AccessDeniedScreen: React.FC = () => {
-
   return (
     <Box 
       sx={{ 
@@ -185,6 +185,7 @@ const DashboardSection: React.FC<{
   
   switch (section) {
     case 'overview':
+    case 'dashboard':
       return (
         <OverviewDashboard
           onNavigate={onNavigate}
@@ -250,6 +251,8 @@ const DashboardSection: React.FC<{
       );
 
     case 'members':
+    case 'socios':
+    case 'socios-lista':
       return (
         <Container maxWidth="xl" sx={{ py: { xs: 2, md: 4 } }}>
           <motion.div
@@ -337,7 +340,63 @@ const DashboardSection: React.FC<{
         </Container>
       );
 
+    case 'comercios':
+    case 'comercios-lista':
+    case 'comercios-vincular':
+    case 'comercios-beneficios':
+      return (
+        <Container maxWidth="xl" sx={{ py: { xs: 2, md: 4 } }}>
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <Box sx={{ mb: { xs: 4, md: 6 } }}>
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: { xs: 2, md: 3 }, 
+                mb: { xs: 3, md: 4 },
+                flexDirection: { xs: 'column', md: 'row' },
+                textAlign: { xs: 'center', md: 'left' }
+              }}>
+                <Avatar
+                  sx={{
+                    width: { xs: 56, md: 64 },
+                    height: { xs: 56, md: 64 },
+                    borderRadius: 4,
+                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                    boxShadow: '0 12px 40px rgba(16, 185, 129, 0.3)',
+                  }}
+                >
+                  <Store sx={{ fontSize: { xs: 28, md: 32 } }} />
+                </Avatar>
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="h3" sx={{ 
+                    fontWeight: 900, 
+                    color: '#0f172a', 
+                    mb: 1,
+                    fontSize: { xs: '2rem', md: '3rem' }
+                  }}>
+                    Gestión de Comercios
+                  </Typography>
+                  <Typography variant="h6" sx={{ 
+                    color: '#64748b', 
+                    fontWeight: 600,
+                    fontSize: { xs: '1rem', md: '1.25rem' }
+                  }}>
+                    Administra los comercios vinculados
+                  </Typography>
+                </Box>
+              </Box>
+            </Box>
+          </motion.div>
+          <ComercioManagement onNavigate={onNavigate} />
+        </Container>
+      );
+
     case 'notifications':
+    case 'notificaciones':
       return <NotificationsCenter loading={loading} />;
 
     default:
