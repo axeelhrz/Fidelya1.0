@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 import { 
   X, 
   Home, 
@@ -12,19 +13,11 @@ import {
   Gift,
   LogOut,
   ChevronDown,
-  Plus,
   UserCheck,
   Building2,
   Activity,
-  TrendingUp,
-  Eye,
-  UserPlus,
-  Link as LinkIcon,
   Sparkles,
   Crown,
-  Target,
-  Zap,
-  Calendar,
   Clock,
   CheckCircle,
   AlertCircle
@@ -59,22 +52,54 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
   onLogoutClick,
   activeSection
 }) => {
+  const router = useRouter();
   const { user } = useAuth();
   const { stats } = useSocios();
   const { stats: notificationStats } = useNotifications();
   
   // Real-time stats state
   const [realtimeStats, setRealtimeStats] = useState<RealtimeStats>({
-    totalSocios: 0,
-    sociosActivos: 0,
-    sociosVencidos: 0,
+    totalSocios: stats?.total || 0,
+    sociosActivos: stats?.activos || 0,
+    sociosVencidos: stats?.vencidos || 0,
     totalComercios: 0,
-    notificacionesPendientes: 0,
+    notificacionesPendientes: notificationStats?.unread || 0,
     actividadReciente: 0
   });
 
+  // Update stats when hooks change
+  useEffect(() => {
+    setRealtimeStats(prev => ({
+      ...prev,
+      totalSocios: stats?.total || 0,
+      sociosActivos: stats?.activos || 0,
+      sociosVencidos: stats?.vencidos || 0,
+      notificacionesPendientes: notificationStats?.unread || 0
+    }));
+  }, [stats, notificationStats]);
+
+  // Submenu item type
+  type SubmenuItem = {
+    id: string;
+    label: string;
+    icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+    route: string;
+    count?: number;
+    urgent?: boolean;
+  };
+  
   // Simplified menu structure
-  const menuItems = [
+  const menuItems: Array<{
+    id: string;
+    label: string;
+    icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+    description: string;
+    gradient: string;
+    route: string;
+    badge?: number;
+    urgent?: boolean;
+    submenu?: SubmenuItem[];
+  }> = [
     {
       id: 'dashboard',
       label: 'Vista General',
@@ -96,25 +121,23 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
           id: 'socios-lista', 
           label: 'Lista de Socios', 
           icon: Users,
-          count: realtimeStats.totalSocios
-        },
-        { 
-          id: 'socios-nuevo', 
-          label: 'Agregar Socio', 
-          icon: UserPlus
+          count: realtimeStats.totalSocios,
+          route: '/dashboard/asociacion/socios'
         },
         { 
           id: 'socios-activos', 
           label: 'Socios Activos', 
           icon: CheckCircle,
-          count: realtimeStats.sociosActivos
+          count: realtimeStats.sociosActivos,
+          route: '/dashboard/asociacion/socios?filter=activos'
         },
         { 
           id: 'socios-vencidos', 
           label: 'Socios Vencidos', 
           icon: AlertCircle,
           count: realtimeStats.sociosVencidos,
-          urgent: realtimeStats.sociosVencidos > 0
+          urgent: realtimeStats.sociosVencidos > 0,
+          route: '/dashboard/asociacion/socios?filter=vencidos'
         }
       ]
     },
@@ -131,23 +154,21 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
           id: 'comercios-lista', 
           label: 'Comercios Vinculados', 
           icon: Store,
-          count: realtimeStats.totalComercios
-        },
-        { 
-          id: 'comercios-vincular', 
-          label: 'Vincular Comercio', 
-          icon: LinkIcon
+          count: realtimeStats.totalComercios,
+          route: '/dashboard/asociacion/comercios'
         },
         { 
           id: 'comercios-solicitudes', 
           label: 'Solicitudes Pendientes', 
           icon: Clock,
-          urgent: true
+          urgent: true,
+          route: '/dashboard/asociacion/comercios?tab=solicitudes'
         },
         { 
           id: 'comercios-beneficios', 
           label: 'Beneficios por Comercio', 
-          icon: Gift
+          icon: Gift,
+          route: '/dashboard/asociacion/comercios?tab=beneficios'
         }
       ]
     },
@@ -162,22 +183,20 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
         { 
           id: 'beneficios-lista', 
           label: 'Todos los Beneficios', 
-          icon: Gift
-        },
-        { 
-          id: 'beneficios-crear', 
-          label: 'Crear Beneficio', 
-          icon: Plus
+          icon: Gift,
+          route: '/dashboard/asociacion/beneficios'
         },
         { 
           id: 'beneficios-validaciones', 
           label: 'Validaciones', 
-          icon: UserCheck
+          icon: UserCheck,
+          route: '/dashboard/asociacion/beneficios?tab=validaciones'
         },
         { 
           id: 'beneficios-destacados', 
           label: 'Beneficios Destacados', 
-          icon: Crown
+          icon: Crown,
+          route: '/dashboard/asociacion/beneficios?tab=destacados'
         }
       ]
     },
@@ -204,17 +223,14 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
           label: 'Centro de Notificaciones', 
           icon: Bell,
           count: realtimeStats.notificacionesPendientes,
-          urgent: realtimeStats.notificacionesPendientes > 0
-        },
-        { 
-          id: 'notificaciones-crear', 
-          label: 'Crear Notificación', 
-          icon: Plus
+          urgent: realtimeStats.notificacionesPendientes > 0,
+          route: '/dashboard/asociacion/notificaciones'
         },
         { 
           id: 'notificaciones-plantillas', 
           label: 'Plantillas', 
-          icon: Sparkles
+          icon: Sparkles,
+          route: '/dashboard/asociacion/notificaciones?tab=plantillas'
         }
       ]
     }
@@ -228,68 +244,82 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
 
     const unsubscribers: (() => void)[] = [];
 
-    // Listen to socios collection
-    const sociosRef = collection(db, 'socios');
-    const sociosQuery = query(sociosRef, where('asociacionId', '==', user.uid));
-    
-    const unsubscribeSocios = onSnapshot(sociosQuery, (snapshot) => {
-      const socios = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      const activos = socios.filter(s => s.estado === 'activo').length;
-      const vencidos = socios.filter(s => s.estado === 'vencido').length;
+    try {
+      // Listen to socios collection
+      const sociosRef = collection(db, 'socios');
+      const sociosQuery = query(sociosRef, where('asociacionId', '==', user.uid));
       
-      setRealtimeStats(prev => ({
-        ...prev,
-        totalSocios: socios.length,
-        sociosActivos: activos,
-        sociosVencidos: vencidos
-      }));
-    });
-    unsubscribers.push(unsubscribeSocios);
+      const unsubscribeSocios = onSnapshot(sociosQuery, (snapshot) => {
+        type SocioDoc = { id: string; estado?: string };
+        const socios: SocioDoc[] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const activos = socios.filter(s => s.estado === 'activo').length;
+        const vencidos = socios.filter(s => s.estado === 'vencido').length;
+        
+        setRealtimeStats(prev => ({
+          ...prev,
+          totalSocios: socios.length,
+          sociosActivos: activos,
+          sociosVencidos: vencidos
+        }));
+      }, (error) => {
+        console.error('Error listening to socios:', error);
+      });
+      unsubscribers.push(unsubscribeSocios);
 
-    // Listen to comercios collection
-    const comerciosRef = collection(db, 'comercios');
-    const comerciosQuery = query(comerciosRef, where('asociacionId', '==', user.uid));
-    
-    const unsubscribeComercios = onSnapshot(comerciosQuery, (snapshot) => {
-      setRealtimeStats(prev => ({
-        ...prev,
-        totalComercios: snapshot.docs.length
-      }));
-    });
-    unsubscribers.push(unsubscribeComercios);
+      // Listen to comercios collection
+      const comerciosRef = collection(db, 'comercios');
+      const comerciosQuery = query(comerciosRef, where('asociacionId', '==', user.uid));
+      
+      const unsubscribeComercios = onSnapshot(comerciosQuery, (snapshot) => {
+        setRealtimeStats(prev => ({
+          ...prev,
+          totalComercios: snapshot.docs.length
+        }));
+      }, (error) => {
+        console.error('Error listening to comercios:', error);
+      });
+      unsubscribers.push(unsubscribeComercios);
 
-    // Listen to notifications collection
-    const notificationsRef = collection(db, 'notifications');
-    const notificationsQuery = query(
-      notificationsRef, 
-      where('asociacionId', '==', user.uid),
-      where('leida', '==', false)
-    );
-    
-    const unsubscribeNotifications = onSnapshot(notificationsQuery, (snapshot) => {
-      setRealtimeStats(prev => ({
-        ...prev,
-        notificacionesPendientes: snapshot.docs.length
-      }));
-    });
-    unsubscribers.push(unsubscribeNotifications);
+      // Listen to notifications collection
+      const notificationsRef = collection(db, 'notifications');
+      const notificationsQuery = query(
+        notificationsRef, 
+        where('asociacionId', '==', user.uid),
+        where('leida', '==', false)
+      );
+      
+      const unsubscribeNotifications = onSnapshot(notificationsQuery, (snapshot) => {
+        setRealtimeStats(prev => ({
+          ...prev,
+          notificacionesPendientes: snapshot.docs.length
+        }));
+      }, (error) => {
+        console.error('Error listening to notifications:', error);
+      });
+      unsubscribers.push(unsubscribeNotifications);
 
-    // Listen to recent activity
-    const activityRef = collection(db, 'activities');
-    const activityQuery = query(
-      activityRef,
-      where('asociacionId', '==', user.uid),
-      orderBy('timestamp', 'desc'),
-      limit(10)
-    );
-    
-    const unsubscribeActivity = onSnapshot(activityQuery, (snapshot) => {
-      setRealtimeStats(prev => ({
-        ...prev,
-        actividadReciente: snapshot.docs.length
-      }));
-    });
-    unsubscribers.push(unsubscribeActivity);
+      // Listen to recent activity
+      const activityRef = collection(db, 'activities');
+      const activityQuery = query(
+        activityRef,
+        where('asociacionId', '==', user.uid),
+        orderBy('timestamp', 'desc'),
+        limit(10)
+      );
+      
+      const unsubscribeActivity = onSnapshot(activityQuery, (snapshot) => {
+        setRealtimeStats(prev => ({
+          ...prev,
+          actividadReciente: snapshot.docs.length
+        }));
+      }, (error) => {
+        console.error('Error listening to activity:', error);
+      });
+      unsubscribers.push(unsubscribeActivity);
+
+    } catch (error) {
+      console.error('Error setting up Firebase listeners:', error);
+    }
 
     return () => {
       unsubscribers.forEach(unsubscribe => unsubscribe());
@@ -309,6 +339,8 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
   const handleMenuClick = (itemId: string, hasSubmenu: boolean = false, route?: string) => {
     if (hasSubmenu) {
       toggleExpanded(itemId);
+    } else if (route) {
+      router.push(route);
     } else {
       onMenuClick(itemId);
     }
@@ -493,7 +525,7 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
                         {item.submenu.map((subItem) => (
                           <motion.button
                             key={subItem.id}
-                            onClick={() => handleMenuClick(subItem.id)}
+                            onClick={() => handleMenuClick(subItem.id, false, subItem.route)}
                             className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left transition-all duration-200 group ${
                               activeSection === subItem.id
                                 ? 'bg-gradient-to-r from-gray-50 to-white text-gray-900 border border-gray-200 shadow-sm'
