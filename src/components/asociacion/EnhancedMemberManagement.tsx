@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -24,17 +26,21 @@ import {
   Trash2
 } from 'lucide-react';
 import { useSocios } from '@/hooks/useSocios';
+import { SocioDialog } from './SocioDialog';
+import { SocioFormData } from '@/types/socio';
 
 interface EnhancedMemberManagementProps {
   onNavigate?: (section: string) => void;
 }
 
 export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> = ({ onNavigate }) => {
-  const { socios, stats, loading } = useSocios();
+  const { socios, stats, loading, createSocio } = useSocios();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedEstado, setSelectedEstado] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
   const [showFilters, setShowFilters] = useState(false);
+  const [socioDialogOpen, setSocioDialogOpen] = useState(false);
+  const [selectedSocio, setSelectedSocio] = useState(null);
 
   // Filtrar socios
   const sociosFiltrados = socios.filter(socio => {
@@ -47,6 +53,28 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
     
     return matchesSearch && matchesEstado;
   });
+
+  const handleCreateSocio = async (data: SocioFormData) => {
+    try {
+      const success = await createSocio({
+        ...data,
+        fechaNacimiento: new Date(), // Default date
+        montoCuota: 0, // Default amount
+      });
+      
+      if (success) {
+        setSocioDialogOpen(false);
+        setSelectedSocio(null);
+      }
+    } catch (error) {
+      console.error('Error creating socio:', error);
+    }
+  };
+
+  const handleOpenDialog = () => {
+    setSelectedSocio(null);
+    setSocioDialogOpen(true);
+  };
 
   return (
     <div className="space-y-6">
@@ -73,8 +101,8 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
           )}
           
           <button
-            onClick={() => onNavigate?.('socios-nuevo')}
-            className="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-lg text-sm font-medium text-white hover:bg-blue-700"
+            onClick={handleOpenDialog}
+            className="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-lg text-sm font-medium text-white hover:bg-blue-700 transition-colors"
           >
             <Plus className="w-4 h-4 mr-2" />
             Nuevo Socio
@@ -246,7 +274,7 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
             {socios.length === 0 && (
               <div className="mt-6 space-y-3">
                 <button
-                  onClick={() => onNavigate?.('socios-nuevo')}
+                  onClick={handleOpenDialog}
                   className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
                 >
                   <Plus className="w-4 h-4 mr-2" />
@@ -378,7 +406,7 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Acciones Rápidas</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <button
-            onClick={() => onNavigate?.('socios-nuevo')}
+            onClick={handleOpenDialog}
             className="flex items-center p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow border border-gray-200"
           >
             <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
@@ -430,6 +458,15 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
           </button>
         </div>
       </div>
+
+      {/* Socio Dialog */}
+      <SocioDialog
+        open={socioDialogOpen}
+        onClose={() => setSocioDialogOpen(false)}
+        onSave={handleCreateSocio}
+        socio={selectedSocio}
+        loading={loading}
+      />
     </div>
   );
 };
