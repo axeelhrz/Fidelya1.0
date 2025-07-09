@@ -23,7 +23,9 @@ import { toast } from 'react-hot-toast';
 import { useSocios } from '@/hooks/useSocios';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
-import { Socio, SocioFormData } from '@/services/socio.service';
+import { Socio as ServiceSocio, SocioFormData } from '@/services/socio.service';
+import { Socio as TypesSocio } from '@/types/socio';
+import { Timestamp } from 'firebase/firestore';
 
 type Stats = {
   total: number;
@@ -44,6 +46,25 @@ import { NotificationsCenter } from '@/components/asociacion/NotificationsCenter
 import { SocioDialog } from '@/components/asociacion/SocioDialog';
 import { DeleteConfirmDialog } from '@/components/asociacion/DeleteConfirmDialog';
 import { CsvImport } from '@/components/asociacion/CsvImport';
+
+// Type adapter function to convert service Socio to types Socio
+const adaptServiceSocioToTypesSocio = (serviceSocio: ServiceSocio): TypesSocio => {
+  return {
+    uid: serviceSocio.id, // Map id to uid
+    id: serviceSocio.id,
+    nombre: serviceSocio.nombre,
+    email: serviceSocio.email,
+    estado: serviceSocio.estado as 'activo' | 'vencido' | 'inactivo' | 'pendiente',
+    asociacionId: serviceSocio.asociacionId,
+    asociacion: serviceSocio.asociacionId, // Map asociacionId to asociacion
+    creadoEn: Timestamp.fromDate(serviceSocio.creadoEn),
+    actualizadoEn: serviceSocio.actualizadoEn ? Timestamp.fromDate(serviceSocio.actualizadoEn) : undefined,
+    telefono: serviceSocio.telefono,
+    dni: serviceSocio.dni,
+    direccion: serviceSocio.direccion,
+    fechaNacimiento: serviceSocio.fechaNacimiento ? Timestamp.fromDate(serviceSocio.fechaNacimiento) : undefined,
+  };
+};
 
 const LoadingScreen: React.FC<{ message: string }> = ({ message }) => {
   return (
@@ -159,12 +180,12 @@ const AccessDeniedScreen: React.FC = () => {
 // Componente para cada sección del dashboard
 const DashboardSection: React.FC<{ 
   section: string; 
-  socios: Socio[];
+  socios: ServiceSocio[];
   stats: Stats;
   loading: boolean;
   onAddSocio: () => void;
-  onEditSocio: (socio: Socio) => void;
-  onDeleteSocio: (socio: Socio) => void;
+  onEditSocio: (socio: ServiceSocio) => void;
+  onDeleteSocio: (socio: ServiceSocio) => void;
   onBulkAction: (action: string, selectedIds: string[]) => void;
   onCsvImport: () => void;
   onNavigate: (section: string) => void;
@@ -449,11 +470,11 @@ export default function AsociacionDashboard() {
   const [activeSection, setActiveSection] = useState('overview');
   const [socioDialog, setSocioDialog] = useState<{
     open: boolean;
-    socio?: Socio | null;
+    socio?: TypesSocio | null;
   }>({ open: false });
   const [deleteDialog, setDeleteDialog] = useState<{
     open: boolean;
-    socio?: Socio | null;
+    socio?: ServiceSocio | null;
   }>({ open: false });
   const [csvImportOpen, setCsvImportOpen] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
@@ -494,11 +515,13 @@ export default function AsociacionDashboard() {
     setSocioDialog({ open: true, socio: null });
   };
 
-  const handleEditSocio = (socio: Socio) => {
-    setSocioDialog({ open: true, socio });
+  const handleEditSocio = (socio: ServiceSocio) => {
+    // Convert service socio to types socio for the dialog
+    const adaptedSocio = adaptServiceSocioToTypesSocio(socio);
+    setSocioDialog({ open: true, socio: adaptedSocio });
   };
 
-  const handleDeleteSocio = (socio: Socio) => {
+  const handleDeleteSocio = (socio: ServiceSocio) => {
     setDeleteDialog({ open: true, socio });
   };
 
@@ -534,8 +557,12 @@ export default function AsociacionDashboard() {
       };
 
       if (socioDialog.socio) {
-        await updateSocio(socioDialog.socio.id, serviceData);
-        toast.success('Socio actualizado correctamente');
+        // Use the original service socio ID for updates
+        const originalServiceSocio = socios.find(s => s.id === socioDialog.socio?.uid);
+        if (originalServiceSocio) {
+          await updateSocio(originalServiceSocio.id, serviceData);
+          toast.success('Socio actualizado correctamente');
+        }
       } else {
         await createSocio(serviceData);
         toast.success('Socio agregado correctamente');
