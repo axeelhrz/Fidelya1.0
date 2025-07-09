@@ -18,8 +18,7 @@ import { NotificationsList } from '@/components/socio/NotificationsList';
 import { useAuth } from '@/hooks/useAuth';
 import { useBeneficios } from '@/hooks/useBeneficios';
 import { useNotifications } from '@/hooks/useNotifications';
-import { ValidacionesService } from '@/services/validaciones.service';
-import { ValidacionResponse } from '@/types/validacion';
+import { validacionesService, ValidacionResponse } from '@/services/validaciones.service';
 import { 
   Gift, 
   Zap, 
@@ -561,12 +560,12 @@ export default function SocioDashboard() {
   const handleQRScan = async (qrData: string) => {
     setLoading(true);
     try {
-      const parsedData = ValidacionesService.parseQRData(qrData);
+      const parsedData = validacionesService.parseQRData(qrData);
       if (!parsedData) {
         throw new Error('Código QR inválido');
       }
 
-      const result = await ValidacionesService.validarAcceso({
+      const result = await validacionesService.validarAcceso({
         socioId: user?.uid || '',
         comercioId: parsedData.comercioId,
         beneficioId: parsedData.beneficioId
