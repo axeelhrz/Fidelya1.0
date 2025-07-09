@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
 import {
   X,
   Search,
@@ -35,29 +36,30 @@ export const VincularComercioDialog: React.FC<VincularComercioDialogProps> = ({
   const [selectedCategoria, setSelectedCategoria] = useState('');
   const [comercios, setComercios] = useState<ComercioDisponible[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
-  const [selectedComercio, setSelectedComercio] = useState<ComercioDisponible | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [vinculando, setVinculando] = useState<string | null>(null);
 
   // Buscar comercios
-  const handleSearch = async (termino: string) => {
-    if (!termino.trim()) {
-      setComercios([]);
-      return;
-    }
+  const handleSearch = React.useCallback(
+    async (termino: string) => {
+      if (!termino.trim()) {
+        setComercios([]);
+        return;
+      }
 
-    setSearchLoading(true);
-    try {
-      const resultados = await onBuscar(termino);
-      setComercios(resultados);
-    } catch (error) {
-      console.error('Error searching comercios:', error);
-    } finally {
-      setSearchLoading(false);
-    }
-  };
+      setSearchLoading(true);
+      try {
+        const resultados = await onBuscar(termino);
+        setComercios(resultados);
+      } catch (error) {
+        console.error('Error searching comercios:', error);
+      } finally {
+        setSearchLoading(false);
+      }
+    },
+    [onBuscar]
+  );
 
-  // Manejar cambio en búsqueda
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       if (searchTerm) {
@@ -68,7 +70,7 @@ export const VincularComercioDialog: React.FC<VincularComercioDialogProps> = ({
     }, 300);
 
     return () => clearTimeout(timeoutId);
-  }, [searchTerm]);
+  }, [searchTerm, handleSearch]);
 
   // Filtrar por categoría
   const comerciosFiltrados = selectedCategoria
@@ -89,19 +91,18 @@ export const VincularComercioDialog: React.FC<VincularComercioDialogProps> = ({
   };
 
   // Reset al cerrar
+  // Reset al cerrar
   const handleClose = () => {
     setSearchTerm('');
     setSelectedCategoria('');
     setComercios([]);
-    setSelectedComercio(null);
     setShowFilters(false);
     onClose();
   };
-
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
+    <div className="fixed inset-0 z-[60] overflow-y-auto">
       <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
         {/* Backdrop */}
         <motion.div
@@ -117,7 +118,7 @@ export const VincularComercioDialog: React.FC<VincularComercioDialogProps> = ({
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full"
+          className="inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full relative z-10"
         >
           {/* Header */}
           <div className="bg-white px-6 py-4 border-b border-gray-200">
@@ -155,7 +156,7 @@ export const VincularComercioDialog: React.FC<VincularComercioDialogProps> = ({
                   placeholder="Buscar por nombre, email o categoría..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                 />
                 {searchLoading && (
                   <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
@@ -174,7 +175,6 @@ export const VincularComercioDialog: React.FC<VincularComercioDialogProps> = ({
                   Filtros
                   <ChevronDown className={`w-4 h-4 ml-2 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
                 </button>
-                
                 {comerciosFiltrados.length > 0 && (
                   <span className="text-sm text-gray-500">
                     {comerciosFiltrados.length} comercio(s) encontrado(s)
@@ -198,7 +198,7 @@ export const VincularComercioDialog: React.FC<VincularComercioDialogProps> = ({
                       <select
                         value={selectedCategoria}
                         onChange={(e) => setSelectedCategoria(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                       >
                         <option value="">Todas las categorías</option>
                         {CATEGORIAS_COMERCIO.map(categoria => (
@@ -248,18 +248,17 @@ export const VincularComercioDialog: React.FC<VincularComercioDialogProps> = ({
                     <div className="flex items-start justify-between">
                       <div className="flex items-start space-x-4 flex-1">
                         {/* Logo */}
-                        <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                          {comercio.logoUrl ? (
-                            <img
-                              src={comercio.logoUrl}
-                              alt={comercio.nombreComercio}
-                              className="w-8 h-8 rounded object-cover"
-                            />
-                          ) : (
-                            <Store className="w-6 h-6 text-gray-400" />
-                          )}
-                        </div>
-
+                        {comercio.logoUrl ? (
+                          <Image
+                            src={comercio.logoUrl}
+                            alt={comercio.nombreComercio}
+                            width={32}
+                            height={32}
+                            className="w-8 h-8 rounded object-cover"
+                          />
+                        ) : (
+                          <Store className="w-6 h-6 text-gray-400" />
+                        )}
                         {/* Info */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center space-x-2 mb-1">
@@ -272,33 +271,28 @@ export const VincularComercioDialog: React.FC<VincularComercioDialogProps> = ({
                               </div>
                             )}
                           </div>
-
                           <div className="space-y-1">
                             <div className="flex items-center text-sm text-gray-600">
                               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                                 {comercio.categoria}
                               </span>
                             </div>
-
                             <div className="flex items-center text-sm text-gray-600">
                               <Mail className="w-4 h-4 mr-1" />
                               {comercio.email}
                             </div>
-
                             {comercio.telefono && (
                               <div className="flex items-center text-sm text-gray-600">
                                 <Phone className="w-4 h-4 mr-1" />
                                 {comercio.telefono}
                               </div>
                             )}
-
                             {comercio.direccion && (
                               <div className="flex items-center text-sm text-gray-600">
                                 <MapPin className="w-4 h-4 mr-1" />
                                 {comercio.direccion}
                               </div>
                             )}
-
                             {comercio.puntuacion > 0 && (
                               <div className="flex items-center text-sm text-gray-600">
                                 <Star className="w-4 h-4 mr-1 text-yellow-400 fill-current" />
@@ -306,7 +300,6 @@ export const VincularComercioDialog: React.FC<VincularComercioDialogProps> = ({
                               </div>
                             )}
                           </div>
-
                           {/* Status */}
                           <div className="mt-2">
                             {comercio.asociacionesVinculadas.length > 0 ? (
@@ -323,7 +316,6 @@ export const VincularComercioDialog: React.FC<VincularComercioDialogProps> = ({
                           </div>
                         </div>
                       </div>
-
                       {/* Action Button */}
                       <div className="ml-4">
                         <button
