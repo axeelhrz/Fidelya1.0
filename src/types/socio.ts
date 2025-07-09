@@ -109,14 +109,9 @@ export interface Socio {
   fechaVencimiento?: Timestamp;
   ultimoPago?: Timestamp;
   metadata?: Record<string, string | number | boolean | undefined>;
-
-
-  
-  // Nuevos campos
-  avatar?: string;
+  avatar?: string | null;
   avatarThumbnail?: string;
   configuracion?: SocioConfiguration;
-  nivel?: SocioLevel;
   ultimoAcceso?: Timestamp;
   dispositivosConectados?: string[];
   ubicacionActual?: {
@@ -126,6 +121,14 @@ export interface Socio {
     provincia: string;
   };
   asociacion: string;
+  nivel?: {
+    nivel: 'Bronze' | 'Silver' | 'Gold' | 'Platinum' | 'Diamond';
+    puntos: number;
+    puntosParaProximoNivel: number;
+    proximoNivel: string;
+    beneficiosDesbloqueados: string[];
+    descuentoAdicional: number;
+  };
 }
 
 export interface SocioFormData {
