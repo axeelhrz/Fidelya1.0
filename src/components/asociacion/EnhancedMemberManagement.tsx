@@ -34,7 +34,14 @@ interface EnhancedMemberManagementProps {
 }
 
 export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> = ({ onNavigate }) => {
-  const { socios, stats, loading, createSocio, updateSocio, deleteSocio, updateMembershipStatus } = useSocios();
+  // Ensure socios are typed as '@/types/socio' Socio
+  const { socios: rawSocios, stats, loading, createSocio, updateSocio, deleteSocio, updateMembershipStatus } = useSocios();
+  // Map socios to ensure they have uid and asociacion (add defaults if missing)
+  const socios: Socio[] = ((rawSocios as unknown) as Socio[]).map((socio) => ({
+    ...socio,
+    uid: socio.uid ?? '',
+    asociacion: socio.asociacion ?? '',
+  }));
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedEstado, setSelectedEstado] = useState('');
   const [selectedEstadoMembresia, setSelectedEstadoMembresia] = useState('');
@@ -531,7 +538,10 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
                     </td>
                     
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {socio.creadoEn.toLocaleDateString()}
+                      {(socio.creadoEn instanceof Date
+                        ? socio.creadoEn
+                        : socio.creadoEn.toDate()
+                      ).toLocaleDateString()}
                     </td>
                     
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -680,9 +690,9 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
         }}
         onConfirm={handleConfirmDelete}
         title="Eliminar Socio"
-        message={`¿Estás seguro de que deseas eliminar al socio "${selectedSocio?.nombre}"? Esta acción marcará al socio como inactivo.`}
         confirmText="Eliminar"
         cancelText="Cancelar"
+        message={`¿Estás seguro de que deseas eliminar al socio "${selectedSocio?.nombre}"? Esta acción marcará al socio como inactivo.`}
       />
     </div>
   );
