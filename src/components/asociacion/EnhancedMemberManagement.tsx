@@ -49,13 +49,20 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
 
   const handleCreateSocio = async (data: SocioFormData) => {
     try {
-      const success = await createSocio({
-        ...data,
-        dni: data.dni ?? '',
+      // Clean the data to remove undefined values and provide defaults
+      const cleanData = {
+        nombre: data.nombre,
+        email: data.email,
+        estado: data.estado,
+        dni: data.dni || '',
+        telefono: data.telefono || '',
+        direccion: '', // Provide empty string instead of undefined
         fechaNacimiento: new Date(), // Default date
         montoCuota: 0, // Default amount
-        numeroSocio: String(data.numeroSocio), // Ensure string type
-      });
+        numeroSocio: '', // Let the service generate it
+      };
+      
+      const success = await createSocio(cleanData);
       
       if (success) {
         setSocioDialogOpen(false);
@@ -460,7 +467,6 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
         onClose={() => setSocioDialogOpen(false)}
         onSave={handleCreateSocio}
         socio={selectedSocio}
-        loading={loading}
       />
     </div>
   );
