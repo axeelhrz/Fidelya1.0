@@ -8,7 +8,6 @@ import {
   Filter,
   MoreVertical,
   Unlink,
-  Eye,
   Mail,
   Phone,
   MapPin,
@@ -24,13 +23,13 @@ import {
   Trash2,
   QrCode,
   FileText,
-  Download,
   Power,
   PowerOff,
   Pause
 } from 'lucide-react';
 import { useComercios } from '@/hooks/useComercios';
 import { ComercioDisponible } from '@/services/adhesion.service';
+import type { Comercio } from '@/services/comercio.service';
 import { VincularComercioDialog } from './VincularComercioDialog';
 import { CreateComercioDialog } from './CreateComercioDialog';
 import { EditComercioDialog } from './EditComercioDialog';
@@ -56,7 +55,6 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({ onNaviga
     generateQRCode,
     generateBatchQRCodes,
     getComercioValidations,
-    getActiveBenefits,
     clearError
   } = useComercios();
 
@@ -64,7 +62,7 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({ onNaviga
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [validationsDialogOpen, setValidationsDialogOpen] = useState(false);
-  const [selectedComercio, setSelectedComercio] = useState<ComercioDisponible | null>(null);
+  const [selectedComercio, setSelectedComercio] = useState<Comercio | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategoria, setSelectedCategoria] = useState('');
   const [selectedEstado, setSelectedEstado] = useState('');
@@ -113,13 +111,81 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({ onNaviga
 
   // Manejar edición
   const handleEdit = (comercio: ComercioDisponible) => {
-    setSelectedComercio(comercio);
+    // Convert ComercioDisponible to Comercio for the edit dialog
+    const comercioForEdit: Comercio = {
+      id: comercio.id,
+      nombreComercio: comercio.nombreComercio,
+      categoria: comercio.categoria,
+      descripcion: '',
+      direccion: comercio.direccion || '',
+      telefono: comercio.telefono || '',
+      email: comercio.email,
+      sitioWeb: '',
+      horario: '',
+      cuit: '',
+      logo: comercio.logoUrl,
+      banner: '',
+      estado: comercio.estado,
+      visible: comercio.estado === 'activo',
+      asociacionesVinculadas: comercio.asociacionesVinculadas,
+      qrCode: '',
+      qrCodeUrl: '',
+      beneficiosActivos: 0,
+      validacionesRealizadas: 0,
+      clientesAtendidos: 0,
+      ingresosMensuales: 0,
+      rating: comercio.puntuacion,
+      configuracion: {
+        notificacionesEmail: true,
+        notificacionesWhatsApp: false,
+        autoValidacion: false,
+        requiereAprobacion: true,
+      },
+      creadoEn: comercio.creadoEn.toDate(),
+      actualizadoEn: new Date(),
+      metadata: {}
+    };
+    setSelectedComercio(comercioForEdit);
     setEditDialogOpen(true);
   };
 
   // Manejar ver validaciones
   const handleViewValidations = (comercio: ComercioDisponible) => {
-    setSelectedComercio(comercio);
+    // Convert ComercioDisponible to Comercio for the validations dialog
+    const comercioForValidations: Comercio = {
+      id: comercio.id,
+      nombreComercio: comercio.nombreComercio,
+      categoria: comercio.categoria,
+      descripcion: '',
+      direccion: comercio.direccion || '',
+      telefono: comercio.telefono || '',
+      email: comercio.email,
+      sitioWeb: '',
+      horario: '',
+      cuit: '',
+      logo: comercio.logoUrl,
+      banner: '',
+      estado: comercio.estado,
+      visible: comercio.estado === 'activo',
+      asociacionesVinculadas: comercio.asociacionesVinculadas,
+      qrCode: '',
+      qrCodeUrl: '',
+      beneficiosActivos: 0,
+      validacionesRealizadas: 0,
+      clientesAtendidos: 0,
+      ingresosMensuales: 0,
+      rating: comercio.puntuacion,
+      configuracion: {
+        notificacionesEmail: true,
+        notificacionesWhatsApp: false,
+        autoValidacion: false,
+        requiereAprobacion: true,
+      },
+      creadoEn: comercio.creadoEn.toDate(),
+      actualizadoEn: new Date(),
+      metadata: {}
+    };
+    setSelectedComercio(comercioForValidations);
     setValidationsDialogOpen(true);
   };
 
@@ -145,7 +211,7 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({ onNaviga
       results.forEach(result => {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
-        const img = new Image();
+        const img = new window.Image();
         
         img.onload = () => {
           canvas.width = img.width;
@@ -840,7 +906,7 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({ onNaviga
                         )}
                         
                         <button
-                          onClick={() => setComercioToUnlink(comercio)}
+                                          onClick={() => setComercioToUnlink(comercio)}
                           className="text-orange-600 hover:text-orange-900"
                           title="Desvincular"
                         >
@@ -899,7 +965,17 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({ onNaviga
           setValidationsDialogOpen(false);
           setSelectedComercio(null);
         }}
-        onLoadValidations={getComercioValidations}
+        onLoadValidations={(
+          comercioId,
+          filters,
+          pageSize,
+          lastDoc
+        ) => getComercioValidations(
+          comercioId,
+          filters,
+          pageSize,
+          lastDoc as import('firebase/firestore').QueryDocumentSnapshot // Cast to the expected Firestore type
+        )}
       />
 
       {/* Unlink Confirmation Dialog */}
@@ -996,3 +1072,4 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({ onNaviga
     </div>
   );
 };
+          

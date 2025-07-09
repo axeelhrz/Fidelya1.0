@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { 
@@ -7,9 +7,11 @@ import {
   RefreshCw, 
   Printer, 
   Copy,
-  Palette
+  Palette,
+  AlertCircle,
+  CheckCircle
 } from 'lucide-react';
-import { useComercios } from '@/hooks/useComercios';
+import { useComercio } from '@/hooks/useComercio';
 import { toast } from 'react-hot-toast';
 
 interface QRManagementProps {
@@ -17,9 +19,10 @@ interface QRManagementProps {
 }
 
 export const QRManagement: React.FC<QRManagementProps> = ({}) => {
-  const { comercio, generateQRCode, loading } = useComercios();
+  const { comercio, generateQRCode, loading } = useComercio();
   const [qrStyle, setQrStyle] = useState('default');
   const [showCustomization, setShowCustomization] = useState(false);
+  const [downloadLoading, setDownloadLoading] = useState(false);
 
   const handleGenerateQR = async () => {
     const success = await generateQRCode();
@@ -28,26 +31,54 @@ export const QRManagement: React.FC<QRManagementProps> = ({}) => {
     }
   };
 
-  const handleDownloadQR = () => {
-    if (!comercio?.qrCode) return;
+  const handleDownloadQR = useCallback(async () => {
+    if (!comercio?.qrCode) {
+      toast.error('No hay código QR para descargar');
+      return;
+    }
 
-    const link = document.createElement('a');
-    link.href = comercio.qrCode;
-    link.download = `qr-${comercio.nombreComercio.replace(/\s+/g, '-').toLowerCase()}.png`;
-    link.click();
-    
-    toast.success('QR descargado exitosamente');
-  };
+    setDownloadLoading(true);
+    try {
+      // Use the data URL directly instead of the Firebase Storage URL to avoid CORS
+      const dataUrl = comercio.qrCode;
+      
+      // Create download link
+      const link = document.createElement('a');
+      link.href = dataUrl;
+      link.download = `qr-${comercio.nombreComercio.replace(/\s+/g, '-').toLowerCase()}.png`;
+      
+      // Trigger download
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast.success('QR descargado exitosamente');
+    } catch (error) {
+      console.error('Error downloading QR:', error);
+      toast.error('Error al descargar el código QR');
+    } finally {
+      setDownloadLoading(false);
+    }
+  }, [comercio]);
 
-  const handleCopyQRUrl = () => {
-    if (!comercio?.qrCodeUrl) return;
+  const generateValidationUrl = useCallback(() => {
+    if (!comercio) return '';
+    return `${window.location.origin}/validar-beneficio?comercio=${comercio.id}`;
+  }, [comercio]);
 
-    navigator.clipboard.writeText(comercio.qrCodeUrl);
-    toast.success('URL del QR copiada al portapapeles');
-  };
+  const handleCopyQRUrl = useCallback(() => {
+    if (!comercio) return;
 
-  const handlePrintQR = () => {
-    if (!comercio?.qrCode) return;
+    const validationUrl = generateValidationUrl();
+    navigator.clipboard.writeText(validationUrl);
+    toast.success('URL de validación copiada al portapapeles');
+  }, [comercio, generateValidationUrl]);
+
+  const handlePrintQR = useCallback(() => {
+    if (!comercio?.qrCode) {
+      toast.error('No hay código QR para imprimir');
+      return;
+    }
 
     const printWindow = window.open('', '_blank');
     if (printWindow) {
@@ -73,6 +104,7 @@ export const QRManagement: React.FC<QRManagementProps> = ({}) => {
                 width: 200px;
                 height: 200px;
                 margin: 20px auto;
+                display: block;
               }
               .instructions {
                 margin-top: 20px;
@@ -94,6 +126,7 @@ export const QRManagement: React.FC<QRManagementProps> = ({}) => {
                 <p>1. Escanea este código QR con tu teléfono</p>
                 <p>2. Inicia sesión en tu cuenta de socio</p>
                 <p>3. Valida tu beneficio y disfrútalo</p>
+                <p><strong>URL:</strong> ${generateValidationUrl()}</p>
               </div>
             </div>
           </body>
@@ -102,12 +135,31 @@ export const QRManagement: React.FC<QRManagementProps> = ({}) => {
       printWindow.document.close();
       printWindow.print();
     }
-  };
+  }, [comercio, generateValidationUrl]);
 
-  const generateValidationUrl = () => {
-    if (!comercio) return '';
-    return `${window.location.origin}/validar-beneficio?comercio=${comercio.id}`;
-  };
+  // Show loading state while comercio data is being fetched
+  if (!comercio && loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <RefreshCw className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-4" />
+          <p className="text-gray-600">Cargando información del comercio...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state if comercio is not found
+  if (!comercio && !loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <AlertCircle className="w-8 h-8 text-red-600 mx-auto mb-4" />
+          <p className="text-gray-600">No se pudo cargar la información del comercio</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -122,7 +174,7 @@ export const QRManagement: React.FC<QRManagementProps> = ({}) => {
         
         <button
           onClick={() => setShowCustomization(!showCustomization)}
-          className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+          className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
         >
           <Palette className="w-4 h-4 mr-2" />
           Personalizar
@@ -143,13 +195,21 @@ export const QRManagement: React.FC<QRManagementProps> = ({}) => {
             
             {comercio?.qrCode ? (
               <div className="space-y-6">
-                <Image
-                  src={comercio.qrCode}
-                  alt="QR Code"
-                  width={192}
-                  height={192}
-                  className="w-48 h-48 mx-auto"
-                />
+                {/* QR Code Image - Using data URL to avoid CORS */}
+                <div className="relative">
+                  <Image
+                    src={comercio.qrCode}
+                    alt="QR Code"
+                    width={192}
+                    height={192}
+                    className="w-48 h-48 mx-auto border border-gray-200 rounded-lg"
+                    unoptimized // Important: prevents Next.js optimization that might cause CORS issues
+                  />
+                  <div className="absolute top-2 right-2">
+                    <CheckCircle className="w-6 h-6 text-green-600" />
+                  </div>
+                </div>
+
                 <div className="text-sm text-gray-600">
                   <p className="mb-2">
                     <strong>Comercio:</strong> {comercio.nombreComercio}
@@ -166,9 +226,14 @@ export const QRManagement: React.FC<QRManagementProps> = ({}) => {
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     onClick={handleDownloadQR}
-                    className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+                    disabled={downloadLoading}
+                    className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
                   >
-                    <Download className="w-4 h-4 mr-2" />
+                    {downloadLoading ? (
+                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Download className="w-4 h-4 mr-2" />
+                    )}
                     Descargar
                   </button>
                   
@@ -383,14 +448,14 @@ export const QRManagement: React.FC<QRManagementProps> = ({}) => {
           <div className="mt-6 flex justify-end space-x-3">
             <button
               onClick={() => setShowCustomization(false)}
-              className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
+              className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
             >
               Cancelar
             </button>
             <button
               onClick={handleGenerateQR}
               disabled={loading}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
             >
               Aplicar Cambios
             </button>
