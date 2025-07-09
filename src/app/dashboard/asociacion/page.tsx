@@ -329,13 +329,7 @@ const DashboardSection: React.FC<{
             </Box>
           </motion.div>
           <EnhancedMemberManagement
-            socios={socios}
-            loading={loading}
-            onAdd={onAddSocio}
-            onEdit={onEditSocio}
-            onDelete={onDeleteSocio}
-            onBulkAction={onBulkAction}
-            onRefresh={onRefresh}
+            onNavigate={onNavigate}
           />
         </Container>
       );
