@@ -23,8 +23,7 @@ import { toast } from 'react-hot-toast';
 import { useSocios } from '@/hooks/useSocios';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
-import { Socio } from '@/types/socio';
-import { SocioFormData } from '@/services/socio.service';
+import { Socio, SocioFormData } from '@/services/socio.service';
 
 type Stats = {
   total: number;
