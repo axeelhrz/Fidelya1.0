@@ -1,210 +1,208 @@
 import { z } from 'zod';
 
-export const comercioProfileSchema = z.object({
-  nombre: z
-    .string()
-    .min(1, 'El nombre es requerido')
-    .min(2, 'El nombre debe tener al menos 2 caracteres')
-    .max(100, 'El nombre no puede exceder 100 caracteres'),
+export const comercioFormSchema = z.object({
   nombreComercio: z
     .string()
-    .min(1, 'El nombre del comercio es requerido')
-    .min(3, 'El nombre debe tener al menos 3 caracteres')
-    .max(100, 'El nombre no puede exceder 100 caracteres'),
+    .min(2, 'El nombre del comercio debe tener al menos 2 caracteres')
+    .max(100, 'El nombre del comercio no puede exceder 100 caracteres')
+    .trim(),
+  
   email: z
     .string()
-    .min(1, 'El email es requerido')
-    .email('Formato de email inválido'),
+    .email('Debe ser un email válido')
+    .min(1, 'El email es obligatorio'),
+  
   categoria: z
     .string()
-    .min(1, 'La categoría es requerida'),
+    .min(1, 'La categoría es obligatoria'),
+  
+  telefono: z
+    .string()
+    .regex(/^\+?[\d\s\-\(\)]+$/, 'El teléfono no es válido')
+    .optional()
+    .or(z.literal('')),
+  
   direccion: z
     .string()
     .max(200, 'La dirección no puede exceder 200 caracteres')
-    .optional(),
-  telefono: z
-    .string()
     .optional()
-    .refine((val) => !val || val.length >= 8, {
-      message: 'El teléfono debe tener al menos 8 dígitos'
-    }),
-  horario: z
-    .string()
-    .max(100, 'El horario no puede exceder 100 caracteres')
-    .optional(),
+    .or(z.literal('')),
+  
   descripcion: z
     .string()
     .max(500, 'La descripción no puede exceder 500 caracteres')
-    .optional(),
-  sitioWeb: z
-    .string()
-    .optional()
-    .refine((val) => !val || val.startsWith('http'), {
-      message: 'El sitio web debe comenzar con http:// o https://'
-    }),
-  razonSocial: z
-    .string()
-    .max(150, 'La razón social no puede exceder 150 caracteres')
-    .optional(),
-  cuit: z
-    .string()
-    .optional()
-    .refine((val) => !val || /^\d{2}-\d{8}-\d{1}$/.test(val), {
-      message: 'El formato del CUIT debe ser XX-XXXXXXXX-X'
-    }),
-  ubicacion: z
-    .string()
-    .max(100, 'La ubicación no puede exceder 100 caracteres')
-    .optional(),
-  emailContacto: z
-    .string()
-    .email('Formato de email inválido')
     .optional()
     .or(z.literal('')),
-  visible: z
-    .boolean()
-    .default(true),
-  redesSociales: z.object({
-    facebook: z
-      .string()
-      .optional()
-      .refine((val) => !val || val.startsWith('@') || val.includes('facebook.com'), {
-        message: 'Debe ser un usuario (@usuario) o URL de Facebook'
-      }),
-    instagram: z
-      .string()
-      .optional()
-      .refine((val) => !val || val.startsWith('@') || val.includes('instagram.com'), {
-        message: 'Debe ser un usuario (@usuario) o URL de Instagram'
-      }),
-    twitter: z
-      .string()
-      .optional()
-      .refine((val) => !val || val.startsWith('@') || val.includes('twitter.com'), {
-        message: 'Debe ser un usuario (@usuario) o URL de Twitter'
-      }),
-  }).optional()
-});
-
-export const beneficioSchema = z.object({
-  titulo: z
+  
+  sitioWeb: z
     .string()
-    .min(1, 'El título es requerido')
-    .min(3, 'El título debe tener al menos 3 caracteres')
-    .max(100, 'El título no puede exceder 100 caracteres'),
-  descripcion: z
-    .string()
-    .min(1, 'La descripción es requerida')
-    .min(10, 'La descripción debe tener al menos 10 caracteres')
-    .max(500, 'La descripción no puede exceder 500 caracteres'),
-  tipo: z.enum(['descuento_porcentaje', 'descuento_fijo', '2x1', 'envio_gratis', 'regalo', 'puntos']),
-  valor: z
-    .number()
-    .min(0, 'El valor debe ser mayor a 0'),
-  asociacionesVinculadas: z
-    .array(z.string())
-    .min(1, 'Debe seleccionar al menos una asociación'),
-  fechaInicio: z
-    .date()
-    .refine((date) => date >= new Date(), {
-      message: 'La fecha de inicio debe ser hoy o posterior'
-    }),
-  fechaFin: z
-    .date(),
-  diasValidez: z
-    .array(z.string())
-    .optional(),
-  horariosValidez: z.object({
-    inicio: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Formato de hora inválido'),
-    fin: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Formato de hora inválido')
-  }).optional(),
-  mediosPagoHabilitados: z
-    .array(z.string())
-    .optional(),
-  limitePorSocio: z
-    .number()
-    .min(1, 'El límite por socio debe ser mayor a 0')
-    .optional(),
-  limiteTotal: z
-    .number()
-    .min(1, 'El límite total debe ser mayor a 0')
-    .optional(),
-  condiciones: z
-    .string()
-    .max(300, 'Las condiciones no pueden exceder 300 caracteres')
+    .url('Debe ser una URL válida')
     .optional()
-}).refine((data) => data.fechaFin > data.fechaInicio, {
-  message: 'La fecha de fin debe ser posterior a la fecha de inicio',
-  path: ['fechaFin']
-}).refine((data) => {
-  if (data.tipo === 'descuento_porcentaje' && data.valor > 100) {
-    return false;
-  }
-  return true;
-}, {
-  message: 'El porcentaje no puede ser mayor a 100%',
-  path: ['valor']
+    .or(z.literal('')),
+  
+  horario: z
+    .string()
+    .max(100, 'El horario no puede exceder 100 caracteres')
+    .optional()
+    .or(z.literal('')),
+  
+  cuit: z
+    .string()
+    .regex(/^\d{2}-\d{8}-\d{1}$/, 'El CUIT debe tener el formato XX-XXXXXXXX-X')
+    .optional()
+    .or(z.literal('')),
+  
+  configuracion: z.object({
+    notificacionesEmail: z.boolean().default(true),
+    notificacionesWhatsApp: z.boolean().default(false),
+    autoValidacion: z.boolean().default(false),
+    requiereAprobacion: z.boolean().default(true),
+  }).optional(),
 });
 
-// Schema para validación de imágenes
-export const imageUploadSchema = z.object({
-  file: z
-    .instanceof(File)
-    .refine((file) => file.size <= 5 * 1024 * 1024, {
-      message: 'El archivo debe ser menor a 5MB'
-    })
-    .refine((file) => ['image/jpeg', 'image/png', 'image/webp'].includes(file.type), {
-      message: 'Solo se permiten archivos JPG, PNG o WebP'
-    }),
-  type: z.enum(['logo', 'portada'])
+export const comercioUpdateSchema = comercioFormSchema.partial();
+
+export const comercioStatusSchema = z.object({
+  estado: z.enum(['activo', 'inactivo', 'suspendido']),
 });
 
-// Schema para configuración de comercio
-export const comercioConfigSchema = z.object({
-  notificacionesEmail: z.boolean().default(true),
-  notificacionesWhatsApp: z.boolean().default(false),
-  autoValidacion: z.boolean().default(false),
-  visible: z.boolean().default(true),
-  horarioAtencion: z.object({
-    lunes: z.object({
-      activo: z.boolean(),
-      inicio: z.string().optional(),
-      fin: z.string().optional()
-    }).optional(),
-    martes: z.object({
-      activo: z.boolean(),
-      inicio: z.string().optional(),
-      fin: z.string().optional()
-    }).optional(),
-    miercoles: z.object({
-      activo: z.boolean(),
-      inicio: z.string().optional(),
-      fin: z.string().optional()
-    }).optional(),
-    jueves: z.object({
-      activo: z.boolean(),
-      inicio: z.string().optional(),
-      fin: z.string().optional()
-    }).optional(),
-    viernes: z.object({
-      activo: z.boolean(),
-      inicio: z.string().optional(),
-      fin: z.string().optional()
-    }).optional(),
-    sabado: z.object({
-      activo: z.boolean(),
-      inicio: z.string().optional(),
-      fin: z.string().optional()
-    }).optional(),
-    domingo: z.object({
-      activo: z.boolean(),
-      inicio: z.string().optional(),
-      fin: z.string().optional()
-    }).optional()
-  }).optional()
+export const comercioSearchSchema = z.object({
+  termino: z.string().min(1, 'El término de búsqueda es obligatorio'),
+  categoria: z.string().optional(),
+  estado: z.enum(['activo', 'inactivo', 'suspendido']).optional(),
+  soloActivos: z.boolean().optional(),
 });
 
-export type ComercioProfileFormData = z.infer<typeof comercioProfileSchema>;
-export type BeneficioFormData = z.infer<typeof beneficioSchema>;
-export type ImageUploadFormData = z.infer<typeof imageUploadSchema>;
-export type ComercioConfigFormData = z.infer<typeof comercioConfigSchema>;
+export const comercioFiltersSchema = z.object({
+  estado: z.enum(['activo', 'inactivo', 'suspendido']).optional(),
+  categoria: z.string().optional(),
+  busqueda: z.string().optional(),
+  soloActivos: z.boolean().optional(),
+  fechaDesde: z.date().optional(),
+  fechaHasta: z.date().optional(),
+});
+
+export const qrGenerationSchema = z.object({
+  comercioId: z.string().min(1, 'El ID del comercio es obligatorio'),
+  beneficioId: z.string().optional(),
+  tipo: z.enum(['individual', 'masivo']).default('individual'),
+});
+
+export const validationFiltersSchema = z.object({
+  fechaDesde: z.date().optional(),
+  fechaHasta: z.date().optional(),
+  estado: z.enum(['exitosa', 'fallida', 'pendiente']).optional(),
+  beneficioId: z.string().optional(),
+  socioId: z.string().optional(),
+  pageSize: z.number().min(1).max(100).default(20),
+});
+
+// Validation helper functions
+export const validateComercioForm = (data: unknown) => {
+  return comercioFormSchema.safeParse(data);
+};
+
+export const validateComercioUpdate = (data: unknown) => {
+  return comercioUpdateSchema.safeParse(data);
+};
+
+export const validateComercioStatus = (data: unknown) => {
+  return comercioStatusSchema.safeParse(data);
+};
+
+export const validateComercioSearch = (data: unknown) => {
+  return comercioSearchSchema.safeParse(data);
+};
+
+export const validateComercioFilters = (data: unknown) => {
+  return comercioFiltersSchema.safeParse(data);
+};
+
+export const validateQRGeneration = (data: unknown) => {
+  return qrGenerationSchema.safeParse(data);
+};
+
+export const validateValidationFilters = (data: unknown) => {
+  return validationFiltersSchema.safeParse(data);
+};
+
+// Error messages in Spanish
+export const comercioErrorMessages = {
+  nombreComercio: {
+    required: 'El nombre del comercio es obligatorio',
+    minLength: 'El nombre debe tener al menos 2 caracteres',
+    maxLength: 'El nombre no puede exceder 100 caracteres',
+  },
+  email: {
+    required: 'El email es obligatorio',
+    invalid: 'Debe ser un email válido',
+    exists: 'Ya existe un comercio con este email',
+  },
+  categoria: {
+    required: 'La categoría es obligatoria',
+    invalid: 'Categoría no válida',
+  },
+  telefono: {
+    invalid: 'El teléfono no es válido',
+  },
+  direccion: {
+    maxLength: 'La dirección no puede exceder 200 caracteres',
+  },
+  descripcion: {
+    maxLength: 'La descripción no puede exceder 500 caracteres',
+  },
+  sitioWeb: {
+    invalid: 'Debe ser una URL válida',
+  },
+  horario: {
+    maxLength: 'El horario no puede exceder 100 caracteres',
+  },
+  cuit: {
+    invalid: 'El CUIT debe tener el formato XX-XXXXXXXX-X',
+  },
+  general: {
+    required: 'Este campo es obligatorio',
+    invalid: 'Valor no válido',
+    networkError: 'Error de conexión. Inténtalo de nuevo.',
+    serverError: 'Error del servidor. Inténtalo más tarde.',
+  },
+};
+
+// Categories for comercios
+export const CATEGORIAS_COMERCIO = [
+  'Alimentación',
+  'Librería y Papelería',
+  'Farmacia y Salud',
+  'Restaurantes y Gastronomía',
+  'Retail y Moda',
+  'Salud y Belleza',
+  'Deportes y Fitness',
+  'Tecnología',
+  'Hogar y Decoración',
+  'Automotriz',
+  'Educación',
+  'Entretenimiento',
+  'Servicios Profesionales',
+  'Turismo y Viajes',
+  'Otros'
+] as const;
+
+export type CategoriaComercio = typeof CATEGORIAS_COMERCIO[number];
+
+// Status options
+export const ESTADOS_COMERCIO = [
+  { value: 'activo', label: 'Activo', color: 'green' },
+  { value: 'inactivo', label: 'Inactivo', color: 'red' },
+  { value: 'suspendido', label: 'Suspendido', color: 'yellow' },
+] as const;
+
+export type EstadoComercio = typeof ESTADOS_COMERCIO[number]['value'];
+
+// Validation status options
+export const ESTADOS_VALIDACION = [
+  { value: 'exitosa', label: 'Exitosa', color: 'green' },
+  { value: 'fallida', label: 'Fallida', color: 'red' },
+  { value: 'pendiente', label: 'Pendiente', color: 'yellow' },
+] as const;
+
+export type EstadoValidacion = typeof ESTADOS_VALIDACION[number]['value'];

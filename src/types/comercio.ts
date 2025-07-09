@@ -24,7 +24,7 @@ export interface Comercio {
     instagram?: string;
     twitter?: string;
   };
-  estado: 'activo' | 'inactivo' | 'pendiente';
+  estado: 'activo' | 'inactivo' | 'pendiente' | 'suspendido';
   asociacionesVinculadas: string[];
   creadoEn: Timestamp;
   actualizadoEn: Timestamp;
@@ -32,14 +32,24 @@ export interface Comercio {
     notificacionesEmail: boolean;
     notificacionesWhatsApp: boolean;
     autoValidacion: boolean;
+    requiereAprobacion: boolean;
   };
-  fechaRegistro?: string | Date; // Fecha de registro del comercioß
+  fechaRegistro?: string | Date;
   verificado: boolean;
   puntuacion: number;
   totalReviews: number;
   beneficiosActivos: number;
   validacionesTotales: number;
-
+  // QR Code fields
+  qrCode?: string;
+  qrCodeUrl?: string;
+  // Statistics
+  validacionesRealizadas: number;
+  clientesAtendidos: number;
+  ingresosMensuales: number;
+  rating: number;
+  // Metadata
+  metadata?: Record<string, unknown>;
 }
 
 export interface Beneficio {
@@ -93,7 +103,7 @@ export interface Validacion {
 }
 
 export interface ComercioFormData {
-  nombre: string;
+  nombre?: string;
   nombreComercio: string;
   email: string;
   categoria: string;
@@ -112,6 +122,12 @@ export interface ComercioFormData {
     facebook?: string;
     instagram?: string;
     twitter?: string;
+  };
+  configuracion?: {
+    notificacionesEmail: boolean;
+    notificacionesWhatsApp: boolean;
+    autoValidacion: boolean;
+    requiereAprobacion: boolean;
   };
 }
 
@@ -149,6 +165,12 @@ export interface ComercioStats {
     titulo: string;
     usos: number;
   };
+  // New analytics fields
+  clientesUnicos: number;
+  ingresosMensuales: number;
+  promedioValidacionesDiarias: number;
+  crecimientoMensual: number;
+  totalBeneficios: number;
 }
 
 export interface ValidacionStats {
@@ -165,6 +187,69 @@ export interface QRData {
   comercioId: string;
   timestamp: number;
   signature: string;
+  beneficioId?: string;
+  version?: string;
+}
+
+// Enhanced interfaces for management
+export interface ComercioManagementData extends Comercio {
+  activeBenefits?: Array<{
+    id: string;
+    titulo: string;
+    descripcion: string;
+    descuento: number;
+    tipo: string;
+    fechaFin: Date;
+    usosActuales: number;
+    limiteTotal?: number;
+  }>;
+  recentValidations?: Array<{
+    id: string;
+    socioNombre: string;
+    beneficioTitulo: string;
+    fechaValidacion: Date;
+    montoDescuento: number;
+    estado: string;
+  }>;
+  stats?: ComercioStats;
+}
+
+export interface ComercioFilters {
+  estado?: 'activo' | 'inactivo' | 'suspendido';
+  categoria?: string;
+  busqueda?: string;
+  soloActivos?: boolean;
+  fechaDesde?: Date;
+  fechaHasta?: Date;
+  asociacionId?: string;
+}
+
+export interface ValidationFilters {
+  fechaDesde?: Date;
+  fechaHasta?: Date;
+  estado?: 'exitosa' | 'fallida' | 'pendiente';
+  beneficioId?: string;
+  socioId?: string;
+  comercioId?: string;
+  asociacionId?: string;
+}
+
+export interface QRGenerationOptions {
+  comercioId: string;
+  beneficioId?: string;
+  tipo: 'individual' | 'masivo';
+  formato?: 'png' | 'svg' | 'pdf';
+  tamaño?: 'pequeño' | 'mediano' | 'grande';
+  incluirLogo?: boolean;
+  incluirTexto?: boolean;
+}
+
+export interface BatchQRResult {
+  comercioId: string;
+  nombreComercio: string;
+  qrCodeDataURL: string;
+  success: boolean;
+  error?: string;
 }
 
 // Categorías predefinidas para comercios
@@ -258,7 +343,171 @@ export const ESTADOS_COMERCIO = {
     label: 'Pendiente',
     color: '#f59e0b',
     description: 'Esperando verificación o aprobación'
+  },
+  suspendido: {
+    label: 'Suspendido',
+    color: '#f97316',
+    description: 'Comercio suspendido por incumplimiento'
   }
 } as const;
 
 export type EstadoComercio = keyof typeof ESTADOS_COMERCIO;
+
+// Estados de validación
+export const ESTADOS_VALIDACION = {
+  exitosa: {
+    label: 'Exitosa',
+    color: '#10b981',
+    description: 'Validación completada correctamente'
+  },
+  fallida: {
+    label: 'Fallida',
+    color: '#ef4444',
+    description: 'Validación falló por algún motivo'
+  },
+  pendiente: {
+    label: 'Pendiente',
+    color: '#f59e0b',
+    description: 'Validación en proceso'
+  }
+} as const;
+
+export type EstadoValidacion = keyof typeof ESTADOS_VALIDACION;
+
+// Métodos de pago
+export const METODOS_PAGO = [
+  'efectivo',
+  'tarjeta_debito',
+  'tarjeta_credito',
+  'transferencia',
+  'mercado_pago',
+  'paypal',
+  'crypto',
+  'otro'
+] as const;
+
+export type MetodoPago = typeof METODOS_PAGO[number];
+
+// Días de la semana
+export const DIAS_SEMANA = [
+  'lunes',
+  'martes',
+  'miercoles',
+  'jueves',
+  'viernes',
+  'sabado',
+  'domingo'
+] as const;
+
+export type DiaSemana = typeof DIAS_SEMANA[number];
+
+// Configuración de QR
+export interface QRConfig {
+  size: number;
+  margin: number;
+  color: {
+    dark: string;
+    light: string;
+  };
+  errorCorrectionLevel: 'L' | 'M' | 'Q' | 'H';
+  baseUrl: string;
+  validationPath: string;
+}
+
+// Analytics data structures
+export interface AnalyticsData {
+  validacionesPorDia: Array<{
+    fecha: string;
+    validaciones: number;
+    ingresos: number;
+  }>;
+  beneficiosMasUsados: Array<{
+    beneficioId: string;
+    titulo: string;
+    usos: number;
+  }>;
+  clientesPorAsociacion: Array<{
+    asociacionId: string;
+    nombre: string;
+    clientes: number;
+  }>;
+  horariosActividad: Array<{
+    hora: number;
+    validaciones: number;
+  }>;
+}
+
+// Export and import structures
+export interface ComercioExportData {
+  comercios: Comercio[];
+  beneficios: Beneficio[];
+  validaciones: Validacion[];
+  stats: ComercioStats;
+  exportDate: Date;
+  asociacionId: string;
+  totalRecords: number;
+}
+
+export interface ComercioImportData {
+  comercios: Partial<ComercioFormData>[];
+  validateData?: boolean;
+  skipDuplicates?: boolean;
+  updateExisting?: boolean;
+}
+
+// Pagination and sorting
+export interface PaginationOptions {
+  page: number;
+  pageSize: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+}
+
+export interface SortOptions {
+  field: 'nombreComercio' | 'categoria' | 'estado' | 'creadoEn' | 'validacionesRealizadas';
+  order: 'asc' | 'desc';
+}
+
+// API Response types
+export interface ComercioResponse {
+  comercios: Comercio[];
+  total: number;
+  hasMore: boolean;
+  lastDoc?: unknown;
+  page: number;
+  pageSize: number;
+}
+
+export interface ValidationResponse {
+  validaciones: Validacion[];
+  total: number;
+  hasMore: boolean;
+  lastDoc?: unknown;
+  page: number;
+  pageSize: number;
+}
+
+// Error types
+export interface ComercioError {
+  code: string;
+  message: string;
+  field?: string;
+  details?: Record<string, unknown>;
+}
+
+// Success response
+export interface ComercioSuccessResponse<T = unknown> {
+  success: true;
+  data: T;
+  message?: string;
+}
+
+// Error response
+export interface ComercioErrorResponse {
+  success: false;
+  error: ComercioError;
+  message: string;
+}
+
+export type ComercioApiResponse<T = unknown> = ComercioSuccessResponse<T> | ComercioErrorResponse;
+

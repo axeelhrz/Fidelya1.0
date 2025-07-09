@@ -3,6 +3,7 @@ import {
   doc,
   getDoc,
   getDocs,
+  addDoc,
   updateDoc,
   query,
   where,
@@ -58,6 +59,7 @@ export interface ComercioFormData {
   descripcion?: string;
   direccion?: string;
   telefono?: string;
+  email: string;
   sitioWeb?: string;
   horario?: string;
   cuit?: string;
@@ -103,6 +105,58 @@ export interface QRCodeData {
 class ComercioService {
   private readonly collection = COLLECTIONS.COMERCIOS;
   private readonly validacionesCollection = COLLECTIONS.VALIDACIONES;
+  private readonly beneficiosCollection = COLLECTIONS.BENEFICIOS;
+
+  /**
+   * Create new comercio
+   */
+  async createComercio(data: ComercioFormData, asociacionId: string): Promise<string | null> {
+    try {
+      // Validate required fields
+      if (!data.nombreComercio || !data.email || !data.categoria) {
+        throw new Error('Faltan campos obligatorios');
+      }
+
+      // Check if email already exists
+      const existingQuery = query(
+        collection(db, this.collection),
+        where('email', '==', data.email)
+      );
+      const existingSnapshot = await getDocs(existingQuery);
+      
+      if (!existingSnapshot.empty) {
+        throw new Error('Ya existe un comercio con este email');
+      }
+
+      const comercioData = {
+        ...data,
+        estado: 'pendiente' as const,
+        visible: true,
+        asociacionesVinculadas: [asociacionId],
+        beneficiosActivos: 0,
+        validacionesRealizadas: 0,
+        clientesAtendidos: 0,
+        ingresosMensuales: 0,
+        rating: 0,
+        configuracion: data.configuracion || {
+          notificacionesEmail: true,
+          notificacionesWhatsApp: false,
+          autoValidacion: false,
+          requiereAprobacion: true,
+        },
+        creadoEn: serverTimestamp(),
+        actualizadoEn: serverTimestamp(),
+      };
+
+      const docRef = await addDoc(collection(db, this.collection), comercioData);
+      
+      console.log('✅ Comercio created successfully:', docRef.id);
+      return docRef.id;
+    } catch (error) {
+      handleError(error, 'Create Comercio');
+      return null;
+    }
+  }
 
   /**
    * Get comercio by ID
@@ -129,6 +183,91 @@ class ComercioService {
   }
 
   /**
+   * Get comercios by association with filters
+   */
+  async getComerciosByAsociacion(
+    asociacionId: string,
+    filters: {
+      estado?: string;
+      categoria?: string;
+      busqueda?: string;
+      soloActivos?: boolean;
+    } = {},
+    pageSize = 20,
+    lastDoc?: import('firebase/firestore').QueryDocumentSnapshot<import('firebase/firestore').DocumentData> | null
+  ): Promise<{
+    comercios: Comercio[];
+    hasMore: boolean;
+    lastDoc: import('firebase/firestore').QueryDocumentSnapshot<import('firebase/firestore').DocumentData> | null;
+  }> {
+    try {
+      let q = query(
+        collection(db, this.collection),
+        where('asociacionesVinculadas', 'array-contains', asociacionId),
+        orderBy('creadoEn', 'desc')
+      );
+
+      // Apply filters
+      if (filters.estado) {
+        q = query(q, where('estado', '==', filters.estado));
+      }
+
+      if (filters.categoria) {
+        q = query(q, where('categoria', '==', filters.categoria));
+      }
+
+      if (filters.soloActivos) {
+        q = query(q, where('estado', '==', 'activo'));
+      }
+
+      // Add pagination
+      if (lastDoc) {
+        q = query(q, startAfter(lastDoc));
+      }
+
+      q = query(q, limit(pageSize + 1));
+
+      const snapshot = await getDocs(q);
+      const docs = snapshot.docs;
+      const hasMore = docs.length > pageSize;
+
+      if (hasMore) {
+        docs.pop();
+      }
+
+      let comercios = docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          creadoEn: data.creadoEn?.toDate() || new Date(),
+          actualizadoEn: data.actualizadoEn?.toDate() || new Date(),
+        } as Comercio;
+      });
+
+      // Apply client-side search filter
+      if (filters.busqueda) {
+        const searchTerm = filters.busqueda.toLowerCase();
+        comercios = comercios.filter(comercio =>
+          comercio.nombreComercio.toLowerCase().includes(searchTerm) ||
+          comercio.email.toLowerCase().includes(searchTerm) ||
+          comercio.categoria.toLowerCase().includes(searchTerm) ||
+          (comercio.direccion && comercio.direccion.toLowerCase().includes(searchTerm))
+        );
+      }
+
+      return {
+        comercios,
+        hasMore,
+        lastDoc: docs.length > 0 ? docs[docs.length - 1] : null
+      };
+    } catch (error) {
+      handleError(error, 'Get Comercios By Asociacion');
+      return { comercios: [], hasMore: false, lastDoc: null };
+    }
+  }
+
+  /**
    * Update comercio profile
    */
   async updateComercio(id: string, data: Partial<ComercioFormData>): Promise<boolean> {
@@ -145,6 +284,86 @@ class ComercioService {
     } catch (error) {
       handleError(error, 'Update Comercio');
       return false;
+    }
+  }
+
+  /**
+   * Delete comercio (logical delete)
+   */
+  async deleteComercio(id: string): Promise<boolean> {
+    try {
+      await updateDoc(doc(db, this.collection, id), {
+        estado: 'inactivo',
+        visible: false,
+        actualizadoEn: serverTimestamp(),
+      });
+
+      console.log('✅ Comercio deleted successfully:', id);
+      return true;
+    } catch (error) {
+      handleError(error, 'Delete Comercio');
+      return false;
+    }
+  }
+
+  /**
+   * Change comercio status
+   */
+  async changeComercioStatus(id: string, estado: 'activo' | 'inactivo' | 'suspendido'): Promise<boolean> {
+    try {
+      await updateDoc(doc(db, this.collection, id), {
+        estado,
+        visible: estado === 'activo',
+        actualizadoEn: serverTimestamp(),
+      });
+
+      console.log('✅ Comercio status changed successfully:', id, estado);
+      return true;
+    } catch (error) {
+      handleError(error, 'Change Comercio Status');
+      return false;
+    }
+  }
+
+  /**
+   * Get active benefits for comercio
+   */
+  async getActiveBenefits(comercioId: string): Promise<Array<{
+    id: string;
+    titulo: string;
+    descripcion: string;
+    descuento: number;
+    tipo: string;
+    fechaFin: Date;
+    usosActuales: number;
+    limiteTotal?: number;
+  }>> {
+    try {
+      const q = query(
+        collection(db, this.beneficiosCollection),
+        where('comercioId', '==', comercioId),
+        where('estado', '==', 'activo'),
+        orderBy('creadoEn', 'desc')
+      );
+
+      const snapshot = await getDocs(q);
+      
+      return snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          titulo: data.titulo,
+          descripcion: data.descripcion,
+          descuento: data.descuento,
+          tipo: data.tipo,
+          fechaFin: data.fechaFin?.toDate() || new Date(),
+          usosActuales: data.usosActuales || 0,
+          limiteTotal: data.limiteTotal,
+        };
+      });
+    } catch (error) {
+      handleError(error, 'Get Active Benefits');
+      return [];
     }
   }
 
@@ -179,7 +398,6 @@ class ComercioService {
    */
   async generateQRCode(comercioId: string, beneficioId?: string): Promise<string | null> {
     try {
-
       // Create validation URL
       const baseUrl = QR_CONFIG.baseUrl;
       const validationUrl = `${baseUrl}${QR_CONFIG.validationPath}?comercio=${comercioId}${beneficioId ? `&beneficio=${beneficioId}` : ''}`;
@@ -214,6 +432,39 @@ class ComercioService {
     } catch (error) {
       handleError(error, 'Generate QR Code');
       return null;
+    }
+  }
+
+  /**
+   * Generate multiple QR codes for batch download
+   */
+  async generateBatchQRCodes(comercioIds: string[]): Promise<Array<{
+    comercioId: string;
+    nombreComercio: string;
+    qrCodeDataURL: string;
+  }>> {
+    try {
+      const results = [];
+
+      for (const comercioId of comercioIds) {
+        const comercio = await this.getComercioById(comercioId);
+        if (!comercio) continue;
+
+        const qrCodeDataURL = await this.generateQRCode(comercioId);
+        if (qrCodeDataURL) {
+          results.push({
+            comercioId,
+            nombreComercio: comercio.nombreComercio,
+            qrCodeDataURL,
+          });
+        }
+      }
+
+      console.log('✅ Batch QR codes generated successfully');
+      return results;
+    } catch (error) {
+      handleError(error, 'Generate Batch QR Codes');
+      return [];
     }
   }
 
@@ -702,4 +953,3 @@ class ComercioService {
 // Export singleton instance
 export const comercioService = new ComercioService();
 export default comercioService;
-
