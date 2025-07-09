@@ -1,272 +1,324 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { onAuthStateChanged, User } from 'firebase/auth';
+import { useState, useEffect, useContext, createContext, ReactNode } from 'react';
+import { User, onAuthStateChanged } from 'firebase/auth';
+import { useRouter } from 'next/navigation';
 import { auth } from '@/lib/firebase';
-import { authService, LoginCredentials, RegisterData, AuthResponse } from '@/services/auth.service';
+import { authService, AuthResponse } from '@/services/auth.service';
 import { UserData } from '@/types/auth';
-import { logAuthError } from '@/lib/firebase-errors';
+import { handleError } from '@/lib/error-handler';
+import { toast } from 'react-hot-toast';
 
-interface AuthState {
+interface AuthContextType {
   user: UserData | null;
   firebaseUser: User | null;
   loading: boolean;
   error: string | null;
-  isAuthenticated: boolean;
-}
-
-interface AuthActions {
-  signIn: (credentials: LoginCredentials) => Promise<AuthResponse>;
-  register: (data: RegisterData) => Promise<AuthResponse>;
+  signIn: (email: string, password: string, rememberMe?: boolean) => Promise<AuthResponse>;
+  signUp: (data: any) => Promise<AuthResponse>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<AuthResponse>;
-  updatePassword: (newPassword: string) => Promise<AuthResponse>;
+  resendEmailVerification: (email: string) => Promise<AuthResponse>;
+  updateProfile: (data: Partial<UserData>) => Promise<AuthResponse>;
   clearError: () => void;
   refreshUser: () => Promise<void>;
+  isEmailVerified: boolean;
 }
 
-export const useAuth = (): AuthState & AuthActions => {
-  const [state, setState] = useState<AuthState>({
-    user: null,
-    firebaseUser: null,
-    loading: true,
-    error: null,
-    isAuthenticated: false
-  });
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+export function AuthProvider({ children }: AuthProviderProps) {
+  const [user, setUser] = useState<UserData | null>(null);
+  const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
+  const router = useRouter();
 
   // Initialize auth state listener
   useEffect(() => {
-    console.log('🔐 Initializing auth state listener...');
-    
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       try {
-        console.log('🔐 Auth state changed:', firebaseUser ? 'User signed in' : 'User signed out');
-        
+        setLoading(true);
+        setFirebaseUser(firebaseUser);
+
         if (firebaseUser) {
-          // User is signed in
-          console.log('🔐 Fetching user data for UID:', firebaseUser.uid);
-          const userData = await authService.getUserData(firebaseUser.uid);
+          console.log('🔐 Firebase user detected:', firebaseUser.email);
           
-          if (userData) {
-            console.log('🔐 User data loaded successfully:', userData.nombre);
-            setState(prev => ({
-              ...prev,
-              user: userData,
-              firebaseUser,
-              loading: false,
-              isAuthenticated: true,
-              error: null
-            }));
+          // Check email verification
+          setIsEmailVerified(firebaseUser.emailVerified);
+
+          if (firebaseUser.emailVerified) {
+            // Get user data from Firestore
+            const userData = await authService.getUserData(firebaseUser.uid);
+            
+            if (userData) {
+              // Complete email verification if user was pending
+              if (userData.estado === 'pendiente') {
+                const verificationResult = await authService.completeEmailVerification(firebaseUser);
+                if (verificationResult.success && verificationResult.user) {
+                  setUser(verificationResult.user);
+                } else {
+                  setUser(userData);
+                }
+              } else {
+                setUser(userData);
+              }
+            } else {
+              console.warn('🔐 User data not found in Firestore');
+              setUser(null);
+            }
           } else {
-            console.warn('🔐 User data not found in Firestore');
-            setState(prev => ({
-              ...prev,
-              user: null,
-              firebaseUser,
-              loading: false,
-              isAuthenticated: false,
-              error: 'Datos de usuario no encontrados'
-            }));
+            console.log('🔐 Email not verified, user data not loaded');
+            setUser(null);
           }
         } else {
-          // User is signed out
-          console.log('🔐 User signed out, clearing state');
-          setState(prev => ({
-            ...prev,
-            user: null,
-            firebaseUser: null,
-            loading: false,
-            isAuthenticated: false,
-            error: null
-          }));
+          console.log('🔐 No Firebase user');
+          setUser(null);
+          setIsEmailVerified(false);
         }
       } catch (error) {
-        logAuthError(error, 'Auth State Change');
-        setState(prev => ({
-          ...prev,
-          user: null,
-          firebaseUser: null,
-          loading: false,
-          isAuthenticated: false,
-          error: 'Error al cargar los datos del usuario'
-        }));
+        console.error('🔐 Error in auth state change:', error);
+        handleError(error, 'Auth State Change');
+        setUser(null);
+      } finally {
+        setLoading(false);
       }
     });
 
-    return () => {
-      console.log('🔐 Cleaning up auth state listener');
-      unsubscribe();
-    };
+    return unsubscribe;
   }, []);
 
-  // Sign in
-  const signIn = useCallback(async (credentials: LoginCredentials): Promise<AuthResponse> => {
-    console.log('🔐 useAuth: Sign in attempt');
-    setState(prev => ({ ...prev, loading: true, error: null }));
-    
+  // Sign in function
+  const signIn = async (email: string, password: string, rememberMe = false): Promise<AuthResponse> => {
     try {
-      const response = await authService.signIn(credentials);
+      setLoading(true);
+      setError(null);
+
+      const response = await authService.signIn({ email, password, rememberMe });
       
       if (!response.success) {
-        setState(prev => ({ 
-          ...prev, 
-          loading: false, 
-          error: response.error || 'Error al iniciar sesión' 
-        }));
-      } else {
-        // Success state will be handled by onAuthStateChanged
-        setState(prev => ({ ...prev, loading: false, error: null }));
+        setError(response.error || 'Error al iniciar sesión');
+        
+        if (response.requiresEmailVerification) {
+          // Don't show error toast for email verification requirement
+          return response;
+        }
       }
-      
+
       return response;
     } catch (error) {
-      logAuthError(error, 'useAuth Sign In');
-      const errorMessage = 'Error inesperado al iniciar sesión';
-      setState(prev => ({ 
-        ...prev, 
-        loading: false, 
-        error: errorMessage 
-      }));
+      const errorMessage = handleError(error, 'Sign In', false).message;
+      setError(errorMessage);
       return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
     }
-  }, []);
+  };
 
-  // Register
-  const register = useCallback(async (data: RegisterData): Promise<AuthResponse> => {
-    console.log('🔐 useAuth: Registration attempt');
-    setState(prev => ({ ...prev, loading: true, error: null }));
-    
+  // Sign up function
+  const signUp = async (data: any): Promise<AuthResponse> => {
     try {
+      setLoading(true);
+      setError(null);
+
       const response = await authService.register(data);
       
       if (!response.success) {
-        setState(prev => ({ 
-          ...prev, 
-          loading: false, 
-          error: response.error || 'Error al registrar usuario' 
-        }));
-      } else {
-        // Success state will be handled by onAuthStateChanged
-        setState(prev => ({ ...prev, loading: false, error: null }));
+        setError(response.error || 'Error al registrarse');
+      } else if (response.requiresEmailVerification) {
+        toast.success('¡Registro exitoso! Revisa tu email para verificar tu cuenta.');
       }
-      
+
       return response;
     } catch (error) {
-      logAuthError(error, 'useAuth Register');
-      const errorMessage = 'Error inesperado al registrar usuario';
-      setState(prev => ({ 
-        ...prev, 
-        loading: false, 
-        error: errorMessage 
-      }));
+      const errorMessage = handleError(error, 'Sign Up', false).message;
+      setError(errorMessage);
       return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
     }
-  }, []);
+  };
 
-  // Sign out
-  const signOut = useCallback(async (): Promise<void> => {
-    console.log('🔐 useAuth: Sign out attempt');
-    setState(prev => ({ ...prev, loading: true, error: null }));
-    
+  // Sign out function
+  const signOut = async (): Promise<void> => {
     try {
+      setLoading(true);
       await authService.signOut();
-      // State will be updated by onAuthStateChanged
+      setUser(null);
+      setFirebaseUser(null);
+      setIsEmailVerified(false);
+      router.push('/auth/login');
     } catch (error) {
-      logAuthError(error, 'useAuth Sign Out');
-      setState(prev => ({ 
-        ...prev, 
-        loading: false, 
-        error: 'Error al cerrar sesión' 
-      }));
-      throw error;
+      handleError(error, 'Sign Out');
+    } finally {
+      setLoading(false);
     }
-  }, []);
+  };
 
-  // Reset password
-  const resetPassword = useCallback(async (email: string): Promise<AuthResponse> => {
-    console.log('🔐 useAuth: Password reset attempt');
-    setState(prev => ({ ...prev, error: null }));
-    
+  // Reset password function
+  const resetPassword = async (email: string): Promise<AuthResponse> => {
     try {
+      setError(null);
       const response = await authService.resetPassword(email);
       
       if (!response.success) {
-        setState(prev => ({ 
-          ...prev, 
-          error: response.error || 'Error al enviar email de recuperación' 
-        }));
+        setError(response.error || 'Error al enviar email de recuperación');
       }
-      
+
       return response;
     } catch (error) {
-      logAuthError(error, 'useAuth Reset Password');
-      const errorMessage = 'Error inesperado al enviar email de recuperación';
-      setState(prev => ({ 
-        ...prev, 
-        error: errorMessage 
-      }));
+      const errorMessage = handleError(error, 'Reset Password', false).message;
+      setError(errorMessage);
       return { success: false, error: errorMessage };
     }
-  }, []);
+  };
 
-  // Update password
-  const updatePassword = useCallback(async (newPassword: string): Promise<AuthResponse> => {
-    console.log('🔐 useAuth: Password update attempt');
-    setState(prev => ({ ...prev, error: null }));
-    
+  // Resend email verification
+  const resendEmailVerification = async (email: string): Promise<AuthResponse> => {
     try {
-      const response = await authService.updateUserPassword(newPassword);
+      setError(null);
+      const response = await authService.resendEmailVerification(email);
       
       if (!response.success) {
-        setState(prev => ({ 
-          ...prev, 
-          error: response.error || 'Error al actualizar contraseña' 
-        }));
+        setError(response.error || 'Error al reenviar email de verificación');
+      } else {
+        toast.success('Email de verificación reenviado');
       }
-      
+
       return response;
     } catch (error) {
-      logAuthError(error, 'useAuth Update Password');
-      const errorMessage = 'Error inesperado al actualizar contraseña';
-      setState(prev => ({ 
-        ...prev, 
-        error: errorMessage 
-      }));
+      const errorMessage = handleError(error, 'Resend Email Verification', false).message;
+      setError(errorMessage);
       return { success: false, error: errorMessage };
     }
-  }, []);
+  };
 
-  // Clear error
-  const clearError = useCallback((): void => {
-    console.log('🔐 useAuth: Clearing error');
-    setState(prev => ({ ...prev, error: null }));
-  }, []);
+  // Update profile function
+  const updateProfile = async (data: Partial<UserData>): Promise<AuthResponse> => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      if (!user) {
+        throw new Error('No hay usuario autenticado');
+      }
+
+      const response = await authService.updateUserProfile(user.uid, data);
+      
+      if (response.success) {
+        // Update local user state
+        setUser(prev => prev ? { ...prev, ...data } : null);
+        toast.success('Perfil actualizado exitosamente');
+      } else {
+        setError(response.error || 'Error al actualizar perfil');
+      }
+
+      return response;
+    } catch (error) {
+      const errorMessage = handleError(error, 'Update Profile', false).message;
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Refresh user data
-  const refreshUser = useCallback(async (): Promise<void> => {
-    if (state.firebaseUser) {
-      try {
-        console.log('🔐 useAuth: Refreshing user data');
-        const userData = await authService.getUserData(state.firebaseUser.uid);
-        setState(prev => ({
-          ...prev,
-          user: userData,
-          isAuthenticated: !!userData
-        }));
-      } catch (error) {
-        logAuthError(error, 'useAuth Refresh User');
+  const refreshUser = async (): Promise<void> => {
+    try {
+      if (firebaseUser && user) {
+        const userData = await authService.getUserData(firebaseUser.uid);
+        if (userData) {
+          setUser(userData);
+        }
       }
+    } catch (error) {
+      handleError(error, 'Refresh User');
     }
-  }, [state.firebaseUser]);
+  };
 
-  return {
-    ...state,
+  // Clear error function
+  const clearError = (): void => {
+    setError(null);
+  };
+
+  const value: AuthContextType = {
+    user,
+    firebaseUser,
+    loading,
+    error,
     signIn,
-    register,
+    signUp,
     signOut,
     resetPassword,
-    updatePassword,
+    resendEmailVerification,
+    updateProfile,
     clearError,
-    refreshUser
+    refreshUser,
+    isEmailVerified,
   };
-};
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+// Hook to use auth context
+export function useAuth(): AuthContextType {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+}
+
+// Hook for protected routes
+export function useRequireAuth(redirectTo = '/auth/login') {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push(redirectTo);
+    }
+  }, [user, loading, router, redirectTo]);
+
+  return { user, loading };
+}
+
+// Hook for role-based access
+export function useRequireRole(allowedRoles: string[], redirectTo = '/') {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && (!user || !allowedRoles.includes(user.role))) {
+      router.push(redirectTo);
+    }
+  }, [user, loading, allowedRoles, router, redirectTo]);
+
+  return { user, loading, hasAccess: user && allowedRoles.includes(user.role) };
+}
+
+// Hook for email verification check
+export function useEmailVerification() {
+  const { firebaseUser, isEmailVerified, resendEmailVerification } = useAuth();
+  
+  return {
+    isEmailVerified,
+    email: firebaseUser?.email || '',
+    resendVerification: () => {
+      if (firebaseUser?.email) {
+        return resendEmailVerification(firebaseUser.email);
+      }
+      return Promise.resolve({ success: false, error: 'No email found' });
+    }
+  };
+}

@@ -3,33 +3,42 @@ import {
   createUserWithEmailAndPassword,
   signOut,
   sendPasswordResetEmail,
+  sendEmailVerification,
   updatePassword,
   updateProfile,
   User,
   UserCredential,
+  reload,
 } from 'firebase/auth';
 import {
   doc,
   setDoc,
   getDoc,
   updateDoc,
-  serverTimestamp
+  serverTimestamp,
+  collection,
+  query,
+  where,
+  getDocs,
 } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import { UserData } from '@/types/auth';
-import { COLLECTIONS } from '@/lib/constants';
-import { logAuthError, getFirebaseErrorMessage } from '@/lib/firebase-errors';
+import { COLLECTIONS, USER_STATES, DASHBOARD_ROUTES } from '@/lib/constants';
+import { handleError } from '@/lib/error-handler';
+import { configService } from '@/lib/config';
 
 export interface LoginCredentials {
   email: string;
   password: string;
+  rememberMe?: boolean;
 }
 
 export interface RegisterData {
   email: string;
   password: string;
   nombre: string;
-  role: 'comercio' | 'socio' | 'asociacion' | 'admin';
+  role: 'comercio' | 'socio' | 'asociacion';
+  telefono?: string;
   additionalData?: Record<string, unknown>;
 }
 
@@ -37,32 +46,30 @@ export interface AuthResponse {
   success: boolean;
   user?: UserData;
   error?: string;
+  requiresEmailVerification?: boolean;
 }
 
 class AuthService {
+  private readonly maxLoginAttempts = 5;
+  private readonly lockoutDuration = 15 * 60 * 1000; // 15 minutes
+  private loginAttempts = new Map<string, { count: number; lastAttempt: number }>();
+
   /**
    * Sign in user with email and password
    */
   async signIn(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
-      console.log('🔐 Starting sign in process for:', credentials.email);
-      
       const { email, password } = credentials;
       
+      // Check rate limiting
+      if (this.isRateLimited(email)) {
+        throw new Error('Demasiados intentos de inicio de sesión. Intenta más tarde.');
+      }
+
       // Validate inputs
-      if (!email || !password) {
-        throw new Error('Email y contraseña son requeridos');
-      }
+      this.validateLoginInputs(email, password);
 
-      if (!email.includes('@')) {
-        throw new Error('Formato de email inválido');
-      }
-
-      if (password.length < 6) {
-        throw new Error('La contraseña debe tener al menos 6 caracteres');
-      }
-
-      console.log('🔐 Attempting Firebase authentication...');
+      console.log('🔐 Starting sign in process for:', email);
       
       const userCredential: UserCredential = await signInWithEmailAndPassword(
         auth, 
@@ -70,27 +77,43 @@ class AuthService {
         password
       );
 
-      console.log('🔐 Firebase authentication successful, fetching user data...');
+      // Check email verification
+      if (!userCredential.user.emailVerified) {
+        console.warn('🔐 Email not verified for user:', email);
+        await this.signOut();
+        return {
+          success: false,
+          requiresEmailVerification: true,
+          error: 'Debes verificar tu email antes de iniciar sesión. Revisa tu bandeja de entrada.'
+        };
+      }
 
       const userData = await this.getUserData(userCredential.user.uid);
       
       if (!userData) {
         console.error('🔐 User data not found in Firestore');
+        await this.signOut();
         throw new Error('Datos de usuario no encontrados. Contacta al administrador.');
       }
 
-      console.log('🔐 User data retrieved:', { uid: userData.uid, role: userData.role, estado: userData.estado });
-
-      // Check if user is active
-      if (userData.estado === 'inactivo') {
-        console.warn('🔐 User account is inactive');
+      // Check user status
+      if (userData.estado !== USER_STATES.ACTIVO) {
+        console.warn('🔐 User account is not active:', userData.estado);
         await this.signOut();
-        throw new Error('Tu cuenta está desactivada. Contacta al administrador.');
+        throw new Error(this.getInactiveAccountMessage(userData.estado));
       }
 
+      // Clear login attempts on successful login
+      this.clearLoginAttempts(email);
+
       // Update last login
-      console.log('🔐 Updating last login timestamp...');
       await this.updateLastLogin(userCredential.user.uid);
+
+      // Set remember me persistence
+      if (credentials.rememberMe) {
+        // Firebase handles persistence automatically
+        console.log('🔐 Remember me enabled');
+      }
 
       console.log('🔐 Sign in process completed successfully');
 
@@ -99,27 +122,30 @@ class AuthService {
         user: userData
       };
     } catch (error) {
-      logAuthError(error, 'Sign In');
-      
+      this.recordFailedLogin(credentials.email);
       return {
         success: false,
-        error: getFirebaseErrorMessage(error)
+        error: handleError(error, 'Sign In', false).message
       };
     }
   }
 
   /**
-   * Register new user
+   * Register new user with email verification
    */
   async register(data: RegisterData): Promise<AuthResponse> {
     try {
       console.log('🔐 Starting registration process for:', data.email);
       
-      const { email, password, nombre, role, additionalData } = data;
+      const { email, password, nombre, role, telefono, additionalData } = data;
 
       // Validate inputs
-      if (!email || !password || !nombre || !role) {
-        throw new Error('Todos los campos son requeridos');
+      this.validateRegisterInputs(data);
+
+      // Check if email already exists
+      const existingUser = await this.checkEmailExists(email);
+      if (existingUser) {
+        throw new Error('Este email ya está registrado');
       }
 
       console.log('🔐 Creating Firebase Auth user...');
@@ -131,11 +157,17 @@ class AuthService {
         password
       );
 
-      console.log('🔐 Firebase user created, updating profile...');
+      console.log('🔐 Updating profile and sending verification email...');
 
       // Update display name
       await updateProfile(userCredential.user, {
         displayName: nombre
+      });
+
+      // Send email verification
+      await sendEmailVerification(userCredential.user, {
+        url: `${configService.getAppUrl()}/auth/login?verified=true`,
+        handleCodeInApp: false,
       });
 
       console.log('🔐 Creating user document in Firestore...');
@@ -145,10 +177,15 @@ class AuthService {
         email: email.trim().toLowerCase(),
         nombre,
         role,
-        estado: 'activo',
+        estado: USER_STATES.PENDIENTE, // Pending until email verification
+        telefono,
         creadoEn: new Date(),
         actualizadoEn: new Date(),
-        ultimoAcceso: new Date(),
+        configuracion: {
+          notificaciones: true,
+          tema: 'light',
+          idioma: 'es',
+        },
         ...additionalData
       };
 
@@ -158,38 +195,101 @@ class AuthService {
           ...userData,
           creadoEn: serverTimestamp(),
           actualizadoEn: serverTimestamp(),
-          ultimoAcceso: serverTimestamp()
         }
       );
 
       console.log('🔐 Creating role-specific document...');
 
-      // Create role-specific document (skip for admin role)
-      if (role !== 'admin') {
-        await this.createRoleDocument(userCredential.user.uid, role, {
-          nombre,
-          email: email.trim().toLowerCase(),
-          ...additionalData
-        });
-      }
+      // Create role-specific document
+      await this.createRoleDocument(userCredential.user.uid, role, {
+        nombre,
+        email: email.trim().toLowerCase(),
+        telefono,
+        ...additionalData
+      });
 
-      const fullUserData: UserData = {
-        uid: userCredential.user.uid,
-        ...userData
-      };
+      // Sign out user until email verification
+      await this.signOut();
 
       console.log('🔐 Registration completed successfully');
 
       return {
         success: true,
-        user: fullUserData
+        requiresEmailVerification: true,
       };
     } catch (error: unknown) {
-      logAuthError(error, 'Registration');
-      
       return {
         success: false,
-        error: getFirebaseErrorMessage(error)
+        error: handleError(error, 'Registration', false).message
+      };
+    }
+  }
+
+  /**
+   * Resend email verification
+   */
+  async resendEmailVerification(email: string): Promise<AuthResponse> {
+    try {
+      // First, try to sign in to get the user
+      const tempCredential = await signInWithEmailAndPassword(auth, email, 'temp');
+      
+      if (tempCredential.user.emailVerified) {
+        await this.signOut();
+        return {
+          success: false,
+          error: 'El email ya está verificado'
+        };
+      }
+
+      await sendEmailVerification(tempCredential.user, {
+        url: `${configService.getAppUrl()}/auth/login?verified=true`,
+        handleCodeInApp: false,
+      });
+
+      await this.signOut();
+
+      return {
+        success: true,
+      };
+    } catch {
+      return {
+        success: false,
+        error: 'No se pudo reenviar el email de verificación'
+      };
+    }
+  }
+
+  /**
+   * Complete email verification process
+   */
+  async completeEmailVerification(user: User): Promise<AuthResponse> {
+    try {
+      // Reload user to get updated emailVerified status
+      await reload(user);
+
+      if (!user.emailVerified) {
+        return {
+          success: false,
+          error: 'Email aún no verificado'
+        };
+      }
+
+      // Update user status to active
+      await updateDoc(doc(db, COLLECTIONS.USERS, user.uid), {
+        estado: USER_STATES.ACTIVO,
+        actualizadoEn: serverTimestamp(),
+      });
+
+      const userData = await this.getUserData(user.uid);
+
+      return {
+        success: true,
+        user: userData || undefined
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: handleError(error, 'Email Verification', false).message
       };
     }
   }
@@ -203,7 +303,7 @@ class AuthService {
       await signOut(auth);
       console.log('🔐 Sign out successful');
     } catch (error) {
-      logAuthError(error, 'Sign Out');
+      handleError(error, 'Sign Out');
       throw error;
     }
   }
@@ -219,7 +319,10 @@ class AuthService {
         throw new Error('Email válido es requerido');
       }
 
-      await sendPasswordResetEmail(auth, email.trim().toLowerCase());
+      await sendPasswordResetEmail(auth, email.trim().toLowerCase(), {
+        url: `${configService.getAppUrl()}/auth/login?reset=true`,
+        handleCodeInApp: false,
+      });
       
       console.log('🔐 Password reset email sent successfully');
       
@@ -227,11 +330,9 @@ class AuthService {
         success: true
       };
     } catch (error: unknown) {
-      logAuthError(error, 'Password Reset');
-      
       return {
         success: false,
-        error: getFirebaseErrorMessage(error)
+        error: handleError(error, 'Password Reset', false).message
       };
     }
   }
@@ -260,11 +361,9 @@ class AuthService {
         success: true
       };
     } catch (error: unknown) {
-      logAuthError(error, 'Password Update');
-      
       return {
         success: false,
-        error: getFirebaseErrorMessage(error)
+        error: handleError(error, 'Password Update', false).message
       };
     }
   }
@@ -295,7 +394,11 @@ class AuthService {
         ultimoAcceso: data.ultimoAcceso?.toDate() || new Date(),
         telefono: data.telefono,
         avatar: data.avatar,
-        configuracion: data.configuracion,
+        configuracion: data.configuracion || {
+          notificaciones: true,
+          tema: 'light',
+          idioma: 'es',
+        },
         metadata: data.metadata,
         asociacionId: data.asociacionId
       };
@@ -303,7 +406,7 @@ class AuthService {
       console.log('🔐 User data retrieved successfully');
       return userData;
     } catch (error) {
-      logAuthError(error, 'Get User Data');
+      handleError(error, 'Get User Data');
       return null;
     }
   }
@@ -335,12 +438,105 @@ class AuthService {
         success: true
       };
     } catch (error: unknown) {
-      logAuthError(error, 'Update Profile');
-      
       return {
         success: false,
-        error: getFirebaseErrorMessage(error)
+        error: handleError(error, 'Update Profile', false).message
       };
+    }
+  }
+
+  /**
+   * Check if email already exists
+   */
+  private async checkEmailExists(email: string): Promise<boolean> {
+    try {
+      const usersRef = collection(db, COLLECTIONS.USERS);
+      const q = query(usersRef, where('email', '==', email.trim().toLowerCase()));
+      const querySnapshot = await getDocs(q);
+      return !querySnapshot.empty;
+    } catch (error) {
+      console.warn('Error checking email existence:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Rate limiting for login attempts
+   */
+  private isRateLimited(email: string): boolean {
+    const attempts = this.loginAttempts.get(email);
+    if (!attempts) return false;
+
+    const now = Date.now();
+    if (now - attempts.lastAttempt > this.lockoutDuration) {
+      this.loginAttempts.delete(email);
+      return false;
+    }
+
+    return attempts.count >= this.maxLoginAttempts;
+  }
+
+  private recordFailedLogin(email: string): void {
+    const attempts = this.loginAttempts.get(email) || { count: 0, lastAttempt: 0 };
+    attempts.count += 1;
+    attempts.lastAttempt = Date.now();
+    this.loginAttempts.set(email, attempts);
+  }
+
+  private clearLoginAttempts(email: string): void {
+    this.loginAttempts.delete(email);
+  }
+
+  /**
+   * Input validation
+   */
+  private validateLoginInputs(email: string, password: string): void {
+    if (!email || !password) {
+      throw new Error('Email y contraseña son requeridos');
+    }
+
+    if (!email.includes('@')) {
+      throw new Error('Formato de email inválido');
+    }
+
+    if (password.length < 6) {
+      throw new Error('La contraseña debe tener al menos 6 caracteres');
+    }
+  }
+
+  private validateRegisterInputs(data: RegisterData): void {
+    const { email, password, nombre, role } = data;
+
+    if (!email || !password || !nombre || !role) {
+      throw new Error('Todos los campos son requeridos');
+    }
+
+    if (!email.includes('@')) {
+      throw new Error('Formato de email inválido');
+    }
+
+    if (password.length < 6) {
+      throw new Error('La contraseña debe tener al menos 6 caracteres');
+    }
+
+    if (nombre.length < 2) {
+      throw new Error('El nombre debe tener al menos 2 caracteres');
+    }
+  }
+
+  /**
+   * Get inactive account message
+   */
+  private getInactiveAccountMessage(estado: string): string {
+    switch (estado) {
+      case USER_STATES.INACTIVO:
+        return 'Tu cuenta está desactivada. Contacta al administrador.';
+      case USER_STATES.PENDIENTE:
+        return 'Tu cuenta está pendiente de verificación. Revisa tu email.';
+      case USER_STATES.SUSPENDIDO:
+        return 'Tu cuenta ha sido suspendida. Contacta al administrador.';
+      default:
+        return 'Tu cuenta no está activa. Contacta al administrador.';
     }
   }
 
@@ -354,7 +550,6 @@ class AuthService {
         ultimoAcceso: serverTimestamp()
       });
     } catch (error) {
-      // Don't throw error for last login update failure
       console.warn('🔐 Failed to update last login:', error);
     }
   }
@@ -373,7 +568,6 @@ class AuthService {
                         role === 'asociacion' ? COLLECTIONS.ASOCIACIONES :
                         null;
 
-      // Skip role document creation for admin or unknown roles
       if (!collection) {
         console.log('🔐 Skipping role document creation for role:', role);
         return;
@@ -381,7 +575,7 @@ class AuthService {
 
       const roleData: Record<string, unknown> = {
         ...data,
-        estado: 'activo',
+        estado: USER_STATES.PENDIENTE, // Will be activated after email verification
         creadoEn: serverTimestamp(),
         actualizadoEn: serverTimestamp()
       };
@@ -395,13 +589,30 @@ class AuthService {
           notificacionesWhatsApp: false,
           autoValidacion: false
         };
+      } else if (role === 'socio') {
+        roleData.asociacionesVinculadas = [];
+        roleData.estadoMembresia = 'pendiente';
+      } else if (role === 'asociacion') {
+        roleData.configuracion = {
+          notificacionesEmail: true,
+          notificacionesWhatsApp: false,
+          autoAprobacionSocios: false,
+          requiereAprobacionComercios: true
+        };
       }
 
       await setDoc(doc(db, collection, uid), roleData);
     } catch (error) {
-      logAuthError(error, 'Create Role Document');
+      handleError(error, 'Create Role Document');
       throw error;
     }
+  }
+
+  /**
+   * Get dashboard route for user role
+   */
+  getDashboardRoute(role: string): string {
+    return DASHBOARD_ROUTES[role as keyof typeof DASHBOARD_ROUTES] || '/dashboard';
   }
 
   /**
@@ -412,7 +623,7 @@ class AuthService {
       const userData = await this.getUserData(uid);
       return userData?.role === role;
     } catch (error) {
-      logAuthError(error, 'Check Role');
+      handleError(error, 'Check Role');
       return false;
     }
   }
@@ -436,18 +647,10 @@ class AuthService {
    */
   validateFirebaseConfig(): boolean {
     try {
-      const config = {
-        apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-        authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-        projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-        storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-        messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-        appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
-      };
-
-      const missingKeys = Object.entries(config)
-        .filter(([, value]) => !value)
-        .map(([key]) => key);
+      const config = configService.getFirebaseConfig();
+      
+      const requiredKeys = ['apiKey', 'authDomain', 'projectId', 'storageBucket', 'messagingSenderId', 'appId'];
+      const missingKeys = requiredKeys.filter(key => !config[key as keyof typeof config]);
 
       if (missingKeys.length > 0) {
         console.error('🔐 Missing Firebase configuration keys:', missingKeys);

@@ -4,712 +4,679 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import {
-  Box,
-  Container,
-  Typography,
-  TextField,
-  Button,
-  Card,
-  CardContent,
-  Stack,
-  IconButton,
-  Alert,
-  InputAdornment,
-  alpha,
-  Paper,
-} from '@mui/material';
-import {
-  Person,
-  Email,
-  Lock,
-  ArrowBack,
-  Visibility,
-  VisibilityOff,
-  ArrowForward,
-  Business,
-  Groups,
-  ManageAccounts,
-  Analytics,
-  Settings,
-  Support,
-} from '@mui/icons-material';
+import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import { asociacionRegisterSchema, type AsociacionRegisterFormData } from '@/lib/validations/auth';
-import { createUser, getDashboardRoute } from '@/lib/auth';
+import { 
+  ArrowLeft, 
+  Building2, 
+  Mail, 
+  Lock, 
+  User, 
+  Phone, 
+  MapPin, 
+  Globe, 
+  FileText, 
+  Eye, 
+  EyeOff, 
+  CheckCircle,
+  AlertCircle,
+  Sparkles,
+} from 'lucide-react';
+import { toast } from 'react-hot-toast';
+import { asociacionRegisterSchema, type AsociacionRegisterData } from '@/lib/validations/auth';
+import { useAuth } from '@/hooks/useAuth';
+import { EmailVerification } from '@/components/auth/EmailVerification';
 
-const AsociacionRegisterPage = () => {
+export default function AsociacionRegisterPage() {
   const router = useRouter();
+  const { signUp, loading } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showEmailVerification, setShowEmailVerification] = useState(false);
+  const [registrationEmail, setRegistrationEmail] = useState('');
 
   const {
     register,
     handleSubmit,
     formState: { errors },
+    watch,
     setError,
-  } = useForm<AsociacionRegisterFormData>({
+    clearErrors,
+  } = useForm<AsociacionRegisterData>({
     resolver: zodResolver(asociacionRegisterSchema),
+    defaultValues: {
+      role: 'asociacion',
+      acceptTerms: false,
+    }
   });
 
-  const handleRegister = async (data: AsociacionRegisterFormData) => {
+  const password = watch('password');
+
+  const handleRegister = async (data: AsociacionRegisterData) => {
     try {
       setIsSubmitting(true);
-      const userData = await createUser(data.email, data.password, {
-        nombre: data.nombre,
+      clearErrors();
+
+      console.log('🔐 Asociacion registration attempt for:', data.email);
+
+      const response = await signUp({
         email: data.email,
+        password: data.password,
+        nombre: data.nombre,
         role: 'asociacion',
-        estado: 'activo',
+        telefono: data.telefono,
+        additionalData: {
+          nombreAsociacion: data.nombreAsociacion,
+          descripcion: data.descripcion,
+          direccion: data.direccion,
+          sitioWeb: data.sitioWeb,
+          tipoAsociacion: data.tipoAsociacion,
+        }
       });
+
+      if (!response.success) {
+        setError('root', { message: response.error || 'Error al registrarse' });
+        return;
+      }
+
+      if (response.requiresEmailVerification) {
+        setRegistrationEmail(data.email);
+        setShowEmailVerification(true);
+        return;
+      }
+
+      console.log('🔐 Registration successful');
+      toast.success('¡Registro exitoso! Bienvenido a Fidelya.');
+      router.push('/dashboard/asociacion');
       
-      const dashboardRoute = getDashboardRoute(userData.role);
-      router.push(dashboardRoute);
     } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : 'Ha ocurrido un error. Inténtalo de nuevo.';
-      setError('root', {
-        message: errorMessage,
-      });
+      console.error('🔐 Registration error:', error);
+      
+      let message = 'Ha ocurrido un error inesperado. Intenta nuevamente.';
+      
+      if (error && typeof error === 'object' && 'message' in error) {
+        message = (error as { message: string }).message;
+      }
+      
+      setError('root', { message });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const features = [
-    { icon: <ManageAccounts />, text: 'Gestión centralizada' },
-    { icon: <Groups />, text: 'Múltiples comercios' },
-    { icon: <Analytics />, text: 'Reportes avanzados' },
-    { icon: <Support />, text: 'Soporte especializado' },
+  // Show email verification screen
+  if (showEmailVerification) {
+    return (
+      <EmailVerification 
+        email={registrationEmail}
+        onBack={() => setShowEmailVerification(false)}
+      />
+    );
+  }
+
+  const tiposAsociacion = [
+    { value: 'sindical', label: 'Sindical' },
+    { value: 'profesional', label: 'Profesional' },
+    { value: 'deportiva', label: 'Deportiva' },
+    { value: 'cultural', label: 'Cultural' },
+    { value: 'otra', label: 'Otra' },
   ];
 
   return (
-    <Box 
-      sx={{ 
-        minHeight: '100vh',
-        bgcolor: '#fafbfc',
-        background: 'linear-gradient(135deg, #fafbfc 0%, #f8fafc 100%)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        py: 4
-      }}
-    >
-      <Container maxWidth="sm">
-        {/* Header */}
-        <Box sx={{ textAlign: 'center', mb: 5 }}>
-          <IconButton
-            component={Link}
-            href="/auth/register"
-            sx={{ 
-              position: 'absolute',
-              top: 24,
-              left: 24,
-              bgcolor: 'white',
-              boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
-              '&:hover': { 
-                bgcolor: '#f8fafc',
-                transform: 'translateY(-1px)',
-                boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
-              },
-              transition: 'all 0.2s ease'
-            }}
-          >
-            <ArrowBack />
-          </IconButton>
-
-          {/* Logo & Brand */}
-          <Box sx={{ mb: 4 }}>
-            <Box
-              component={Link}
-              href="/"
-              sx={{
-                display: 'inline-flex',
-                width: 72,
-                height: 72,
-                borderRadius: 4,
-                background: 'linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%)',
-                color: 'white',
-                textDecoration: 'none',
-                fontSize: '2.2rem',
-                fontWeight: 900,
-                mb: 3,
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 12px 40px rgba(14, 165, 233, 0.3)',
-                letterSpacing: '-0.02em',
-                '&:hover': {
-                  transform: 'translateY(-3px)',
-                  boxShadow: '0 16px 50px rgba(14, 165, 233, 0.4)',
-                },
-                transition: 'all 0.3s ease'
-              }}
-            >
-              F
-            </Box>
-
-            <Typography
-              variant="h6"
-              sx={{
-                fontWeight: 700,
-                color: '#1e293b',
-                fontSize: '1.1rem',
-                letterSpacing: '-0.01em'
-              }}
-            >
-              Fidelya
-            </Typography>
-          </Box>
-
-          {/* Organization Badge */}
-          <Paper
-            elevation={0}
-            sx={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 1.5,
-              px: 3,
-              py: 1.5,
-              mb: 4,
-              borderRadius: 4,
-              bgcolor: alpha('#0ea5e9', 0.08),
-              border: `1px solid ${alpha('#0ea5e9', 0.15)}`,
-              position: 'relative',
-              overflow: 'hidden',
-              '&::before': {
-                content: '""',
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                height: '2px',
-                background: 'linear-gradient(90deg, #0ea5e9, #3b82f6)',
-              }
-            }}
-          >
-            <Box
-              sx={{
-                width: 32,
-                height: 32,
-                borderRadius: 2,
-                bgcolor: alpha('#0ea5e9', 0.15),
-                color: '#0ea5e9',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Business sx={{ fontSize: '1.2rem' }} />
-            </Box>
-            <Box>
-              <Typography
-                variant="body2"
-                sx={{
-                  fontWeight: 700,
-                  color: '#0ea5e9',
-                  fontSize: '0.9rem',
-                  lineHeight: 1.2
-                }}
-              >
-                Cuenta Asociación
-              </Typography>
-              <Typography
-                variant="caption"
-                sx={{
-                  color: alpha('#0ea5e9', 0.8),
-                  fontSize: '0.75rem',
-                  fontWeight: 500
-                }}
-              >
-                Para organizaciones
-              </Typography>
-            </Box>
-          </Paper>
-
-          <Typography
-            variant="h3"
-            sx={{
-              fontWeight: 900,
-              mb: 1,
-              fontSize: { xs: '2.2rem', md: '2.8rem' },
-              background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 30%, #0ea5e9 100%)',
-              backgroundClip: 'text',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              letterSpacing: '-0.03em',
-              lineHeight: 0.95,
-            }}
-          >
-            Crear Cuenta
-          </Typography>
-          
-          <Typography
-            variant="body1"
-            sx={{ 
-              color: '#64748b', 
-              fontWeight: 500,
-              fontSize: '1.05rem',
-              maxWidth: 420,
-              mx: 'auto',
-              lineHeight: 1.5
-            }}
-          >
-            Gestiona programas de fidelidad para tu organización y conecta múltiples comercios
-          </Typography>
-        </Box>
-
-        <Card
-          elevation={0}
-          sx={{
-            borderRadius: 5,
-            border: '1px solid #e2e8f0',
-            bgcolor: 'white',
-            boxShadow: '0 8px 40px rgba(0,0,0,0.06)',
-            overflow: 'hidden'
-          }}
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50">
+      <div className="container mx-auto px-4 py-8 max-w-2xl">
+        {/* Back Button */}
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.6 }}
+          className="mb-8"
         >
-          <CardContent sx={{ p: 5 }}>
-            {/* Features Section - Replaced Grid with Flexbox */}
-            <Paper
-              elevation={0}
-              sx={{
-                bgcolor: alpha('#0ea5e9', 0.05),
-                border: `1px solid ${alpha('#0ea5e9', 0.1)}`,
-                borderRadius: 4,
-                p: 3,
-                mb: 4,
-                position: 'relative',
-                overflow: 'hidden',
-                '&::before': {
-                  content: '""',
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  height: '2px',
-                  background: 'linear-gradient(90deg, #0ea5e9, #3b82f6)',
-                }
-              }}
+          <Link
+            href="/auth/register"
+            className="group inline-flex items-center justify-center w-12 h-12 bg-white/90 backdrop-blur-xl rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 border border-white/20 hover:bg-white"
+          >
+            <ArrowLeft className="w-5 h-5 text-slate-600 group-hover:text-slate-800 transition-colors" />
+          </Link>
+        </motion.div>
+
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="text-center mb-8"
+        >
+          {/* Logo */}
+          <Link href="/" className="inline-block mb-6 group">
+            <motion.div 
+              className="relative"
+              whileHover={{ scale: 1.05 }}
+              transition={{ duration: 0.2 }}
             >
-              <Typography
-                variant="h6"
-                sx={{
-                  fontWeight: 700,
-                  color: '#0ea5e9',
-                  mb: 2,
-                  textAlign: 'center',
-                  fontSize: '1.1rem'
-                }}
-              >
-                Herramientas para organizaciones
-              </Typography>
-              
-              <Box 
-                sx={{ 
-                  display: 'flex',
-                  flexWrap: 'wrap',
-                  gap: 2,
-                  justifyContent: 'space-between'
-                }}
-              >
-                {features.map((feature, index) => (
-                  <Box 
-                    key={index} 
-                    sx={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      gap: 1,
-                      flex: '1 1 calc(50% - 8px)',
-                      minWidth: 'calc(50% - 8px)'
-                    }}
+              <div className="flex items-center justify-center space-x-3">
+                <div className="relative">
+                  <div className="w-14 h-14 bg-gradient-to-br from-emerald-600 via-teal-600 to-green-600 rounded-2xl flex items-center justify-center shadow-2xl shadow-emerald-500/25 group-hover:shadow-emerald-500/40 transition-all duration-300">
+                    <Building2 className="w-7 h-7 text-white" />
+                  </div>
+                  <motion.div
+                    className="absolute -top-1 -right-1"
+                    animate={{ rotate: [0, 360] }}
+                    transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
                   >
-                    <Box sx={{ color: '#0ea5e9', fontSize: '1rem' }}>
-                      {feature.icon}
-                    </Box>
-                    <Typography
-                      variant="body2"
-                      sx={{ color: '#0ea5e9', fontWeight: 600, fontSize: '0.85rem' }}
+                    <Sparkles className="w-4 h-4 text-yellow-400" />
+                  </motion.div>
+                </div>
+                <span className="text-4xl font-bold bg-gradient-to-r from-emerald-600 via-teal-600 to-green-600 bg-clip-text text-transparent">
+                  Fidelya
+                </span>
+              </div>
+            </motion.div>
+          </Link>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+          >
+            <h1 className="text-3xl font-bold text-slate-800 mb-2">
+              Registro de Asociación
+            </h1>
+            <p className="text-slate-600 text-lg leading-relaxed">
+              Crea tu cuenta y comienza a gestionar tu programa de beneficios
+            </p>
+          </motion.div>
+        </motion.div>
+
+        {/* Registration Form */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.3 }}
+          className="relative"
+        >
+          {/* Glass effect background */}
+          <div className="absolute inset-0 bg-white/70 backdrop-blur-2xl rounded-3xl shadow-2xl border border-white/20" />
+          
+          <div className="relative bg-white/40 backdrop-blur-sm rounded-3xl p-8 shadow-xl border border-white/30">
+            <form onSubmit={handleSubmit(handleRegister)} className="space-y-6">
+              {/* Personal Information Section */}
+              <div className="space-y-6">
+                <div className="flex items-center space-x-2 mb-4">
+                  <User className="w-5 h-5 text-emerald-600" />
+                  <h3 className="text-lg font-semibold text-slate-800">Información Personal</h3>
+                </div>
+
+                {/* Name and Email Row */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Name Field */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-slate-700">
+                      Nombre Completo *
+                    </label>
+                    <div className="relative group">
+                      <User className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
+                      <input
+                        {...register('nombre')}
+                        type="text"
+                        placeholder="Tu nombre completo"
+                        disabled={loading}
+                        className={`w-full pl-12 pr-4 py-3 border-2 rounded-xl focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-300 bg-white/80 backdrop-blur-sm text-slate-800 placeholder-slate-400 font-medium ${
+                          errors.nombre ? 'border-red-300 focus:ring-red-500/20 focus:border-red-500' : 'border-slate-200 hover:border-slate-300'
+                        }`}
+                      />
+                    </div>
+                    {errors.nombre && (
+                      <motion.p 
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-red-600 text-sm font-medium flex items-center space-x-1"
+                      >
+                        <AlertCircle className="w-4 h-4" />
+                        <span>{errors.nombre.message}</span>
+                      </motion.p>
+                    )}
+                  </div>
+
+                  {/* Email Field */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-slate-700">
+                      Correo Electrónico *
+                    </label>
+                    <div className="relative group">
+                      <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
+                      <input
+                        {...register('email')}
+                        type="email"
+                        placeholder="tu@email.com"
+                        disabled={loading}
+                        className={`w-full pl-12 pr-4 py-3 border-2 rounded-xl focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-300 bg-white/80 backdrop-blur-sm text-slate-800 placeholder-slate-400 font-medium ${
+                          errors.email ? 'border-red-300 focus:ring-red-500/20 focus:border-red-500' : 'border-slate-200 hover:border-slate-300'
+                        }`}
+                      />
+                    </div>
+                    {errors.email && (
+                      <motion.p 
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-red-600 text-sm font-medium flex items-center space-x-1"
+                      >
+                        <AlertCircle className="w-4 h-4" />
+                        <span>{errors.email.message}</span>
+                      </motion.p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Phone Field */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-slate-700">
+                    Teléfono
+                  </label>
+                  <div className="relative group">
+                    <Phone className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
+                    <input
+                      {...register('telefono')}
+                      type="tel"
+                      placeholder="+54 9 11 1234-5678"
+                      disabled={loading}
+                      className={`w-full pl-12 pr-4 py-3 border-2 rounded-xl focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-300 bg-white/80 backdrop-blur-sm text-slate-800 placeholder-slate-400 font-medium ${
+                        errors.telefono ? 'border-red-300 focus:ring-red-500/20 focus:border-red-500' : 'border-slate-200 hover:border-slate-300'
+                      }`}
+                    />
+                  </div>
+                  {errors.telefono && (
+                    <motion.p 
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="text-red-600 text-sm font-medium flex items-center space-x-1"
                     >
-                      {feature.text}
-                    </Typography>
-                  </Box>
-                ))}
-              </Box>
-            </Paper>
+                      <AlertCircle className="w-4 h-4" />
+                      <span>{errors.telefono.message}</span>
+                    </motion.p>
+                  )}
+                </div>
+              </div>
 
-            <Box component="form" onSubmit={handleSubmit(handleRegister)}>
-              <Stack spacing={4}>
-                {/* Personal Info Section */}
-                <Box>
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      fontWeight: 700,
-                      color: '#1e293b',
-                      mb: 3,
-                      fontSize: '1.1rem',
-                      letterSpacing: '-0.01em'
-                    }}
-                  >
-                    Información del Responsable
-                  </Typography>
-                  
-                  <TextField
-                    {...register('nombre')}
-                    label="Nombre del responsable"
-                    placeholder="Tu nombre completo"
-                    fullWidth
-                    error={!!errors.nombre}
-                    helperText={errors.nombre?.message}
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <Person sx={{ color: '#94a3b8', fontSize: '1.3rem' }} />
-                        </InputAdornment>
-                      ),
-                    }}
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: 3,
-                        bgcolor: '#fafbfc',
-                        '& fieldset': {
-                          borderColor: '#e2e8f0',
-                        },
-                        '&:hover fieldset': {
-                          borderColor: '#0ea5e9',
-                        },
-                        '&.Mui-focused fieldset': {
-                          borderColor: '#0ea5e9',
-                          borderWidth: 2,
-                        },
-                        '&.Mui-focused': {
-                          bgcolor: 'white',
-                        }
-                      },
-                      '& .MuiInputLabel-root.Mui-focused': {
-                        color: '#0ea5e9',
-                      },
-                    }}
-                  />
-                </Box>
+              {/* Association Information Section */}
+              <div className="space-y-6">
+                <div className="flex items-center space-x-2 mb-4">
+                  <Building2 className="w-5 h-5 text-emerald-600" />
+                  <h3 className="text-lg font-semibold text-slate-800">Información de la Asociación</h3>
+                </div>
 
-                {/* Organization Info Section */}
-                <Box>
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      fontWeight: 700,
-                      color: '#1e293b',
-                      mb: 3,
-                      fontSize: '1.1rem',
-                      letterSpacing: '-0.01em'
-                    }}
-                  >
-                    Información de la Organización
-                  </Typography>
-                  
-                  <TextField
-                    {...register('nombreAsociacion')}
-                    label="Nombre de la asociación"
-                    placeholder="Nombre de tu asociación u organización"
-                    fullWidth
-                    error={!!errors.nombreAsociacion}
-                    helperText={errors.nombreAsociacion?.message}
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <Business sx={{ color: '#94a3b8', fontSize: '1.3rem' }} />
-                        </InputAdornment>
-                      ),
-                    }}
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: 3,
-                        bgcolor: '#fafbfc',
-                        '& fieldset': {
-                          borderColor: '#e2e8f0',
-                        },
-                        '&:hover fieldset': {
-                          borderColor: '#0ea5e9',
-                        },
-                        '&.Mui-focused fieldset': {
-                          borderColor: '#0ea5e9',
-                          borderWidth: 2,
-                        },
-                        '&.Mui-focused': {
-                          bgcolor: 'white',
-                        }
-                      },
-                      '& .MuiInputLabel-root.Mui-focused': {
-                        color: '#0ea5e9',
-                      },
-                    }}
-                  />
-                </Box>
+                {/* Association Name and Type Row */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Association Name */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-slate-700">
+                      Nombre de la Asociación *
+                    </label>
+                    <div className="relative group">
+                      <Building2 className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
+                      <input
+                        {...register('nombreAsociacion')}
+                        type="text"
+                        placeholder="Nombre de tu asociación"
+                        disabled={loading}
+                        className={`w-full pl-12 pr-4 py-3 border-2 rounded-xl focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-300 bg-white/80 backdrop-blur-sm text-slate-800 placeholder-slate-400 font-medium ${
+                          errors.nombreAsociacion ? 'border-red-300 focus:ring-red-500/20 focus:border-red-500' : 'border-slate-200 hover:border-slate-300'
+                        }`}
+                      />
+                    </div>
+                    {errors.nombreAsociacion && (
+                      <motion.p 
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-red-600 text-sm font-medium flex items-center space-x-1"
+                      >
+                        <AlertCircle className="w-4 h-4" />
+                        <span>{errors.nombreAsociacion.message}</span>
+                      </motion.p>
+                    )}
+                  </div>
 
-                {/* Account Info Section */}
-                <Box>
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      fontWeight: 700,
-                      color: '#1e293b',
-                      mb: 3,
-                      fontSize: '1.1rem',
-                      letterSpacing: '-0.01em'
-                    }}
-                  >
-                    Información de la Cuenta
-                  </Typography>
-                  
-                  <Stack spacing={3}>
-                    <TextField
-                      {...register('email')}
-                      label="Correo electrónico"
-                      placeholder="tu@email.com"
-                      type="email"
-                      fullWidth
-                      error={!!errors.email}
-                      helperText={errors.email?.message}
-                      InputProps={{
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <Email sx={{ color: '#94a3b8', fontSize: '1.3rem' }} />
-                          </InputAdornment>
-                        ),
-                      }}
-                      sx={{
-                        '& .MuiOutlinedInput-root': {
-                          borderRadius: 3,
-                          bgcolor: '#fafbfc',
-                          '& fieldset': {
-                            borderColor: '#e2e8f0',
-                          },
-                          '&:hover fieldset': {
-                            borderColor: '#0ea5e9',
-                          },
-                          '&.Mui-focused fieldset': {
-                            borderColor: '#0ea5e9',
-                            borderWidth: 2,
-                          },
-                          '&.Mui-focused': {
-                            bgcolor: 'white',
-                          }
-                        },
-                        '& .MuiInputLabel-root.Mui-focused': {
-                          color: '#0ea5e9',
-                        },
-                      }}
+                  {/* Association Type */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-slate-700">
+                      Tipo de Asociación *
+                    </label>
+                    <div className="relative">
+                      <select
+                        {...register('tipoAsociacion')}
+                        disabled={loading}
+                        className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-300 bg-white/80 backdrop-blur-sm text-slate-800 font-medium appearance-none ${
+                          errors.tipoAsociacion ? 'border-red-300 focus:ring-red-500/20 focus:border-red-500' : 'border-slate-200 hover:border-slate-300'
+                        }`}
+                      >
+                        <option value="">Selecciona un tipo</option>
+                        {tiposAsociacion.map(tipo => (
+                          <option key={tipo.value} value={tipo.value}>
+                            {tipo.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    {errors.tipoAsociacion && (
+                      <motion.p 
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-red-600 text-sm font-medium flex items-center space-x-1"
+                      >
+                        <AlertCircle className="w-4 h-4" />
+                        <span>{errors.tipoAsociacion.message}</span>
+                      </motion.p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Description */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-slate-700">
+                    Descripción
+                  </label>
+                  <div className="relative group">
+                    <FileText className="absolute left-4 top-4 w-5 h-5 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
+                    <textarea
+                      {...register('descripcion')}
+                      rows={3}
+                      placeholder="Describe brevemente tu asociación..."
+                      disabled={loading}
+                      className={`w-full pl-12 pr-4 py-3 border-2 rounded-xl focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-300 bg-white/80 backdrop-blur-sm text-slate-800 placeholder-slate-400 font-medium resize-none ${
+                        errors.descripcion ? 'border-red-300 focus:ring-red-500/20 focus:border-red-500' : 'border-slate-200 hover:border-slate-300'
+                      }`}
                     />
+                  </div>
+                  {errors.descripcion && (
+                    <motion.p 
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="text-red-600 text-sm font-medium flex items-center space-x-1"
+                    >
+                      <AlertCircle className="w-4 h-4" />
+                      <span>{errors.descripcion.message}</span>
+                    </motion.p>
+                  )}
+                </div>
 
-                    <TextField
-                      {...register('password')}
-                      label="Contraseña"
-                      placeholder="Mínimo 6 caracteres"
-                      type={showPassword ? 'text' : 'password'}
-                      fullWidth
-                      error={!!errors.password}
-                      helperText={errors.password?.message}
-                      InputProps={{
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <Lock sx={{ color: '#94a3b8', fontSize: '1.3rem' }} />
-                          </InputAdornment>
-                        ),
-                        endAdornment: (
-                          <InputAdornment position="end">
-                            <IconButton
-                              onClick={() => setShowPassword(!showPassword)}
-                              edge="end"
-                              sx={{ color: '#94a3b8' }}
-                            >
-                              {showPassword ? <VisibilityOff /> : <Visibility />}
-                            </IconButton>
-                          </InputAdornment>
-                        ),
-                      }}
-                      sx={{
-                        '& .MuiOutlinedInput-root': {
-                          borderRadius: 3,
-                          bgcolor: '#fafbfc',
-                          '& fieldset': {
-                            borderColor: '#e2e8f0',
-                          },
-                          '&:hover fieldset': {
-                            borderColor: '#0ea5e9',
-                          },
-                          '&.Mui-focused fieldset': {
-                            borderColor: '#0ea5e9',
-                            borderWidth: 2,
-                          },
-                          '&.Mui-focused': {
-                            bgcolor: 'white',
-                          }
-                        },
-                        '& .MuiInputLabel-root.Mui-focused': {
-                          color: '#0ea5e9',
-                        },
-                      }}
-                    />
+                {/* Address and Website Row */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Address */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-slate-700">
+                      Dirección
+                    </label>
+                    <div className="relative group">
+                      <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
+                      <input
+                        {...register('direccion')}
+                        type="text"
+                        placeholder="Dirección de la asociación"
+                        disabled={loading}
+                        className={`w-full pl-12 pr-4 py-3 border-2 rounded-xl focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-300 bg-white/80 backdrop-blur-sm text-slate-800 placeholder-slate-400 font-medium ${
+                          errors.direccion ? 'border-red-300 focus:ring-red-500/20 focus:border-red-500' : 'border-slate-200 hover:border-slate-300'
+                        }`}
+                      />
+                    </div>
+                    {errors.direccion && (
+                      <motion.p 
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-red-600 text-sm font-medium flex items-center space-x-1"
+                      >
+                        <AlertCircle className="w-4 h-4" />
+                        <span>{errors.direccion.message}</span>
+                      </motion.p>
+                    )}
+                  </div>
 
-                    <TextField
-                      {...register('confirmPassword')}
-                      label="Confirmar contraseña"
-                      placeholder="Confirma tu contraseña"
-                      type={showConfirmPassword ? 'text' : 'password'}
-                      fullWidth
-                      error={!!errors.confirmPassword}
-                      helperText={errors.confirmPassword?.message}
-                      InputProps={{
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <Lock sx={{ color: '#94a3b8', fontSize: '1.3rem' }} />
-                          </InputAdornment>
-                        ),
-                        endAdornment: (
-                          <InputAdornment position="end">
-                            <IconButton
-                              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                              edge="end"
-                              sx={{ color: '#94a3b8' }}
-                            >
-                              {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
-                            </IconButton>
-                          </InputAdornment>
-                        ),
-                      }}
-                      sx={{
-                        '& .MuiOutlinedInput-root': {
-                          borderRadius: 3,
-                          bgcolor: '#fafbfc',
-                          '& fieldset': {
-                            borderColor: '#e2e8f0',
-                          },
-                          '&:hover fieldset': {
-                            borderColor: '#0ea5e9',
-                          },
-                          '&.Mui-focused fieldset': {
-                            borderColor: '#0ea5e9',
-                            borderWidth: 2,
-                          },
-                          '&.Mui-focused': {
-                            bgcolor: 'white',
-                          }
-                        },
-                        '& .MuiInputLabel-root.Mui-focused': {
-                          color: '#0ea5e9',
-                        },
-                      }}
-                    />
-                  </Stack>
-                </Box>
+                  {/* Website */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-slate-700">
+                      Sitio Web
+                    </label>
+                    <div className="relative group">
+                      <Globe className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
+                      <input
+                        {...register('sitioWeb')}
+                        type="url"
+                        placeholder="https://tuasociacion.com"
+                        disabled={loading}
+                        className={`w-full pl-12 pr-4 py-3 border-2 rounded-xl focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-300 bg-white/80 backdrop-blur-sm text-slate-800 placeholder-slate-400 font-medium ${
+                          errors.sitioWeb ? 'border-red-300 focus:ring-red-500/20 focus:border-red-500' : 'border-slate-200 hover:border-slate-300'
+                        }`}
+                      />
+                    </div>
+                    {errors.sitioWeb && (
+                      <motion.p 
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-red-600 text-sm font-medium flex items-center space-x-1"
+                      >
+                        <AlertCircle className="w-4 h-4" />
+                        <span>{errors.sitioWeb.message}</span>
+                      </motion.p>
+                    )}
+                  </div>
+                </div>
+              </div>
 
-                {/* Error Alert */}
-                {errors.root && (
-                  <Alert 
-                    severity="error" 
-                    sx={{ 
-                      borderRadius: 3,
-                      bgcolor: alpha('#ef4444', 0.05),
-                      border: `1px solid ${alpha('#ef4444', 0.2)}`,
-                    }}
+              {/* Password Section */}
+              <div className="space-y-6">
+                <div className="flex items-center space-x-2 mb-4">
+                  <Lock className="w-5 h-5 text-emerald-600" />
+                  <h3 className="text-lg font-semibold text-slate-800">Seguridad</h3>
+                </div>
+
+                {/* Password Row */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Password Field */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-slate-700">
+                      Contraseña *
+                    </label>
+                    <div className="relative group">
+                      <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
+                      <input
+                        {...register('password')}
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="Tu contraseña"
+                        disabled={loading}
+                        className={`w-full pl-12 pr-12 py-3 border-2 rounded-xl focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-300 bg-white/80 backdrop-blur-sm text-slate-800 placeholder-slate-400 font-medium ${
+                          errors.password ? 'border-red-300 focus:ring-red-500/20 focus:border-red-500' : 'border-slate-200 hover:border-slate-300'
+                        }`}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        disabled={loading}
+                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors p-1 rounded-lg hover:bg-slate-100"
+                      >
+                        {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                      </button>
+                    </div>
+                    {errors.password && (
+                      <motion.p 
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-red-600 text-sm font-medium flex items-center space-x-1"
+                      >
+                        <AlertCircle className="w-4 h-4" />
+                        <span>{errors.password.message}</span>
+                      </motion.p>
+                    )}
+                  </div>
+
+                  {/* Confirm Password Field */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-slate-700">
+                      Confirmar Contraseña *
+                    </label>
+                    <div className="relative group">
+                      <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
+                      <input
+                        {...register('confirmPassword')}
+                        type={showConfirmPassword ? 'text' : 'password'}
+                        placeholder="Confirma tu contraseña"
+                        disabled={loading}
+                        className={`w-full pl-12 pr-12 py-3 border-2 rounded-xl focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-300 bg-white/80 backdrop-blur-sm text-slate-800 placeholder-slate-400 font-medium ${
+                          errors.confirmPassword ? 'border-red-300 focus:ring-red-500/20 focus:border-red-500' : 'border-slate-200 hover:border-slate-300'
+                        }`}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        disabled={loading}
+                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors p-1 rounded-lg hover:bg-slate-100"
+                      >
+                        {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                      </button>
+                    </div>
+                    {errors.confirmPassword && (
+                      <motion.p 
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-red-600 text-sm font-medium flex items-center space-x-1"
+                      >
+                        <AlertCircle className="w-4 h-4" />
+                        <span>{errors.confirmPassword.message}</span>
+                      </motion.p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Password Strength Indicator */}
+                {password && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    className="p-4 bg-slate-50 rounded-xl border border-slate-200"
                   >
-                    {errors.root.message}
-                  </Alert>
+                    <p className="text-sm font-medium text-slate-700 mb-2">Fortaleza de la contraseña:</p>
+                    <div className="space-y-2">
+                      <div className="flex space-x-1">
+                        {[1, 2, 3, 4].map((level) => (
+                          <div
+                            key={level}
+                            className={`h-2 flex-1 rounded-full ${
+                              password.length >= level * 2
+                                ? level <= 2 ? 'bg-red-400' : level === 3 ? 'bg-yellow-400' : 'bg-green-400'
+                                : 'bg-gray-200'
+                            }`}
+                          />
+                        ))}
+                      </div>
+                      <div className="text-xs text-slate-600 space-y-1">
+                        <div className={`flex items-center space-x-2 ${password.length >= 8 ? 'text-green-600' : ''}`}>
+                          {password.length >= 8 ? <CheckCircle className="w-3 h-3" /> : <div className="w-3 h-3 border border-slate-300 rounded-full" />}
+                          <span>Al menos 8 caracteres</span>
+                        </div>
+                        <div className={`flex items-center space-x-2 ${/[A-Z]/.test(password) ? 'text-green-600' : ''}`}>
+                          {/[A-Z]/.test(password) ? <CheckCircle className="w-3 h-3" /> : <div className="w-3 h-3 border border-slate-300 rounded-full" />}
+                          <span>Una letra mayúscula</span>
+                        </div>
+                        <div className={`flex items-center space-x-2 ${/[a-z]/.test(password) ? 'text-green-600' : ''}`}>
+                          {/[a-z]/.test(password) ? <CheckCircle className="w-3 h-3" /> : <div className="w-3 h-3 border border-slate-300 rounded-full" />}
+                          <span>Una letra minúscula</span>
+                        </div>
+                        <div className={`flex items-center space-x-2 ${/\d/.test(password) ? 'text-green-600' : ''}`}>
+                          {/\d/.test(password) ? <CheckCircle className="w-3 h-3" /> : <div className="w-3 h-3 border border-slate-300 rounded-full" />}
+                          <span>Un número</span>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
                 )}
+              </div>
 
-                {/* Submit Button */}
-                <Button
-                  type="submit"
-                  variant="contained"
-                  fullWidth
-                  disabled={isSubmitting}
-                  endIcon={isSubmitting ? null : <ArrowForward />}
-                  sx={{
-                    py: 2.5,
-                    borderRadius: 4,
-                    textTransform: 'none',
-                    fontWeight: 700,
-                    fontSize: '1.1rem',
-                    background: 'linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%)',
-                    boxShadow: '0 8px 32px rgba(14, 165, 233, 0.3)',
-                    letterSpacing: '-0.01em',
-                    '&:hover': {
-                      background: 'linear-gradient(135deg, #0284c7 0%, #2563eb 100%)',
-                      transform: 'translateY(-2px)',
-                      boxShadow: '0 12px 40px rgba(14, 165, 233, 0.4)',
-                    },
-                    '&:disabled': {
-                      background: '#e2e8f0',
-                      color: '#94a3b8',
-                      transform: 'none',
-                      boxShadow: 'none',
-                    },
-                    transition: 'all 0.3s ease'
-                  }}
-                >
-                  {isSubmitting ? 'Creando cuenta...' : 'Crear cuenta'}
-                </Button>
-
-                {/* Login Link */}
-                <Box sx={{ textAlign: 'center', pt: 2 }}>
-                  <Typography variant="body2" sx={{ color: '#64748b', fontSize: '0.95rem' }}>
-                    ¿Ya tienes cuenta?{' '}
-                    <Box
-                      component={Link}
-                      href="/auth/login"
-                      sx={{
-                        color: '#0ea5e9',
-                        textDecoration: 'none',
-                        fontWeight: 600,
-                        '&:hover': {
-                          textDecoration: 'underline',
-                        },
-                      }}
-                    >
-                      Iniciar sesión
-                    </Box>
-                  </Typography>
-                </Box>
-
-                {/* Enterprise Note */}
-                <Paper
-                  elevation={0}
-                  sx={{
-                    bgcolor: '#f8fafc',
-                    border: '1px solid #e2e8f0',
-                    borderRadius: 3,
-                    p: 3,
-                    textAlign: 'center',
-                    mt: 2
-                  }}
-                >
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 1 }}>
-                    <Settings sx={{ fontSize: '1.2rem', color: '#64748b' }} />
-                  </Box>
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      color: '#64748b',
-                      fontSize: '0.9rem',
-                      lineHeight: 1.4
-                    }}
+              {/* Terms and Conditions */}
+              <div className="space-y-4">
+                <label className="flex items-start space-x-3 cursor-pointer">
+                  <input
+                    {...register('acceptTerms')}
+                    type="checkbox"
+                    disabled={loading}
+                    className="w-5 h-5 text-emerald-600 bg-gray-100 border-gray-300 rounded focus:ring-emerald-500 focus:ring-2 mt-0.5"
+                  />
+                  <span className="text-sm text-slate-600 leading-relaxed">
+                    Acepto los{' '}
+                    <Link href="/terms" className="text-emerald-600 hover:text-emerald-700 font-medium underline">
+                      términos y condiciones
+                    </Link>
+                    {' '}y la{' '}
+                    <Link href="/privacy" className="text-emerald-600 hover:text-emerald-700 font-medium underline">
+                      política de privacidad
+                    </Link>
+                    {' '}de Fidelya
+                  </span>
+                </label>
+                {errors.acceptTerms && (
+                  <motion.p 
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-red-600 text-sm font-medium flex items-center space-x-1"
                   >
-                    <Box component="span" sx={{ fontWeight: 700, color: '#1e293b' }}>
-                      Solución empresarial:
-                    </Box>{' '}
-                    Herramientas avanzadas para gestionar múltiples comercios y programas de fidelidad.
-                  </Typography>
-                </Paper>
-              </Stack>
-            </Box>
-          </CardContent>
-        </Card>
-      </Container>
-    </Box>
-  );
-};
+                    <AlertCircle className="w-4 h-4" />
+                    <span>{errors.acceptTerms.message}</span>
+                  </motion.p>
+                )}
+              </div>
 
-export default AsociacionRegisterPage;
+              {/* Error Alert */}
+              <AnimatePresence>
+                {errors.root && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                    className="p-4 bg-red-50/90 backdrop-blur-sm border border-red-200/50 rounded-2xl flex items-center space-x-3 shadow-lg"
+                  >
+                    <div className="flex-shrink-0 w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center">
+                      <AlertCircle className="w-5 h-5 text-red-600" />
+                    </div>
+                    <p className="text-red-800 font-medium text-sm">{errors.root.message}</p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Submit Button */}
+              <motion.button
+                type="submit"
+                disabled={isSubmitting || loading}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="w-full bg-gradient-to-r from-emerald-600 via-teal-600 to-green-600 text-white py-4 px-6 rounded-2xl font-semibold text-base shadow-2xl shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center space-x-3 relative overflow-hidden group"
+              >
+                {/* Button shine effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                
+                {(isSubmitting || loading) ? (
+                  <div className="flex items-center space-x-3">
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Creando cuenta...</span>
+                  </div>
+                ) : (
+                  <>
+                    <Building2 className="w-5 h-5" />
+                    <span>Crear Cuenta de Asociación</span>
+                  </>
+                )}
+              </motion.button>
+
+              {/* Login Link */}
+              <div className="text-center">
+                <p className="text-slate-600">
+                  ¿Ya tienes cuenta?{' '}
+                  <Link href="/auth/login" className="text-emerald-600 hover:text-emerald-700 font-semibold transition-colors">
+                    Inicia sesión aquí
+                  </Link>
+                </p>
+              </div>
+            </form>
+          </div>
+        </motion.div>
+      </div>
+    </div>
+  );
+}

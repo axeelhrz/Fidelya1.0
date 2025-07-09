@@ -2,20 +2,23 @@
 
 import { useEffect } from 'react';
 import { Toaster } from 'react-hot-toast';
-import { initializeClientNotifications } from '@/lib/notification-init';
+import { AuthProvider } from '@/hooks/useAuth';
+import { ToastProvider } from '@/components/providers/ToastProvider';
 
-export function ClientLayout({
-  children,
-}: {
+interface ClientLayoutProps {
   children: React.ReactNode;
-}) {
+}
+
+export function ClientLayout({ children }: ClientLayoutProps) {
+  // Initialize any client-side configurations
   useEffect(() => {
-    // Inicializar notificaciones del cliente
-    initializeClientNotifications();
+    // Set up any global client configurations here
+    console.log('🚀 Fidelya Client initialized');
   }, []);
 
   return (
-    <>
+    <AuthProvider>
+      <ToastProvider />
       {children}
       <Toaster
         position="top-right"
@@ -30,22 +33,19 @@ export function ClientLayout({
             fontWeight: '500',
           },
           success: {
-            style: {
-              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+            iconTheme: {
+              primary: '#10b981',
+              secondary: '#fff',
             },
           },
           error: {
-            style: {
-              background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-            },
-          },
-          loading: {
-            style: {
-              background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+            iconTheme: {
+              primary: '#ef4444',
+              secondary: '#fff',
             },
           },
         }}
       />
-    </>
+    </AuthProvider>
   );
 }

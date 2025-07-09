@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -28,17 +28,35 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { loginSchema, type LoginFormData } from '@/lib/validations/auth';
-import { authService } from '@/services/auth.service';
-import { getDashboardRoute } from '@/lib/auth';
+import { useAuth } from '@/hooks/useAuth';
+import { EmailVerification } from '@/components/auth/EmailVerification';
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { signIn, loading, error, clearError, resetPassword } = useAuth();
+  
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
   const [isResetting, setIsResetting] = useState(false);
-  const [configValid, setConfigValid] = useState(true);
+  const [showEmailVerification, setShowEmailVerification] = useState(false);
+  const [verificationEmail, setVerificationEmail] = useState('');
+
+  // Check for verification success or reset success from URL params
+  useEffect(() => {
+    const verified = searchParams.get('verified');
+    const reset = searchParams.get('reset');
+    
+    if (verified === 'true') {
+      toast.success('¡Email verificado exitosamente! Ya puedes iniciar sesión.');
+    }
+    
+    if (reset === 'true') {
+      toast.success('Contraseña restablecida exitosamente. Inicia sesión con tu nueva contraseña.');
+    }
+  }, [searchParams]);
 
   const {
     register,
@@ -50,41 +68,28 @@ export default function LoginPage() {
     resolver: zodResolver(loginSchema),
   });
 
-  // Validate Firebase configuration on component mount
-  useEffect(() => {
-    const isValid = authService.validateFirebaseConfig();
-    setConfigValid(isValid);
-    
-    if (!isValid) {
-      toast.error('Error de configuración. Contacta al administrador.');
-    }
-  }, []);
-
   const handleLogin = async (data: LoginFormData) => {
     try {
       setIsSubmitting(true);
       clearErrors();
+      clearError();
 
       console.log('🔐 Login attempt for:', data.email);
 
-      // Validate Firebase configuration before attempting login
-      if (!configValid) {
-        throw new Error('Error de configuración del sistema. Contacta al administrador.');
-      }
-
-      const response = await authService.signIn({
-        email: data.email.trim().toLowerCase(),
-        password: data.password
-      });
+      const response = await signIn(data.email, data.password, data.rememberMe);
 
       if (!response.success) {
-        console.error('🔐 Login failed:', response.error);
+        if (response.requiresEmailVerification) {
+          setVerificationEmail(data.email);
+          setShowEmailVerification(true);
+          return;
+        }
+        
         setError('root', { message: response.error || 'Error al iniciar sesión' });
         return;
       }
 
       if (!response.user) {
-        console.error('🔐 Login succeeded but no user data returned');
         setError('root', { message: 'Error al obtener datos del usuario' });
         return;
       }
@@ -92,7 +97,15 @@ export default function LoginPage() {
       console.log('🔐 Login successful for user:', response.user.nombre);
       toast.success(`¡Bienvenido, ${response.user.nombre}!`);
       
-      const dashboardRoute = getDashboardRoute(response.user.role);
+      // Redirect based on role
+      const dashboardRoutes = {
+        admin: '/dashboard/admin',
+        asociacion: '/dashboard/asociacion',
+        comercio: '/dashboard/comercio',
+        socio: '/dashboard/socio',
+      };
+      
+      const dashboardRoute = dashboardRoutes[response.user.role as keyof typeof dashboardRoutes] || '/dashboard';
       console.log('🔐 Redirecting to:', dashboardRoute);
       router.push(dashboardRoute);
       
@@ -126,7 +139,8 @@ export default function LoginPage() {
     try {
       console.log('🔐 Password reset attempt for:', resetEmail);
       
-      const response = await authService.resetPassword(resetEmail.trim().toLowerCase());
+      // Use the resetPassword method from useAuth hook
+      const response = await resetPassword(resetEmail.trim().toLowerCase());
       
       if (response.success) {
         toast.success('Enlace de recuperación enviado a tu email');
@@ -142,6 +156,16 @@ export default function LoginPage() {
       setIsResetting(false);
     }
   };
+
+  // Show email verification screen
+  if (showEmailVerification) {
+    return (
+      <EmailVerification 
+        email={verificationEmail}
+        onBack={() => setShowEmailVerification(false)}
+      />
+    );
+  }
 
   const securityFeatures = [
     { icon: Shield, text: 'Protección SSL', color: 'text-emerald-600', bgColor: 'bg-emerald-50' },
@@ -267,26 +291,6 @@ export default function LoginPage() {
             </Link>
           </motion.div>
 
-          {/* Configuration Error Alert */}
-          <AnimatePresence>
-            {!configValid && (
-              <motion.div
-                initial={{ opacity: 0, y: -20, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -20, scale: 0.95 }}
-                className="mb-6 p-4 bg-red-50/90 backdrop-blur-sm border border-red-200/50 rounded-2xl flex items-center space-x-3 shadow-lg"
-              >
-                <div className="flex-shrink-0 w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center">
-                  <AlertCircle className="w-5 h-5 text-red-600" />
-                </div>
-                <div>
-                  <p className="text-red-800 font-medium text-sm">Error de configuración</p>
-                  <p className="text-red-600 text-xs">Contacta al administrador del sistema</p>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
           {/* Enhanced Header */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -361,7 +365,7 @@ export default function LoginPage() {
                         {...register('email')}
                         type="email"
                         placeholder="tu@email.com"
-                        disabled={!configValid}
+                        disabled={loading}
                         className={`w-full pl-12 pr-4 py-4 border-2 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 bg-white/80 backdrop-blur-sm text-slate-800 placeholder-slate-400 font-medium ${
                           errors.email ? 'border-red-300 focus:ring-red-500/20 focus:border-red-500' : 'border-slate-200 hover:border-slate-300'
                         }`}
@@ -393,7 +397,7 @@ export default function LoginPage() {
                         {...register('password')}
                         type={showPassword ? 'text' : 'password'}
                         placeholder="Tu contraseña"
-                        disabled={!configValid}
+                        disabled={loading}
                         className={`w-full pl-12 pr-12 py-4 border-2 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 bg-white/80 backdrop-blur-sm text-slate-800 placeholder-slate-400 font-medium ${
                           errors.password ? 'border-red-300 focus:ring-red-500/20 focus:border-red-500' : 'border-slate-200 hover:border-slate-300'
                         }`}
@@ -401,7 +405,7 @@ export default function LoginPage() {
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        disabled={!configValid}
+                        disabled={loading}
                         className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors p-1 rounded-lg hover:bg-slate-100"
                       >
                         {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -420,83 +424,93 @@ export default function LoginPage() {
                   )}
                 </div>
 
-                {/* Enhanced Forgot Password */}
-                <div className="text-center">
+                {/* Remember Me Checkbox */}
+                <div className="flex items-center justify-between">
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      {...register('rememberMe')}
+                      type="checkbox"
+                      className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                    />
+                    <span className="text-sm text-slate-600">Recordarme</span>
+                  </label>
+
                   <button
                     type="button"
                     onClick={() => setShowForgotPassword(!showForgotPassword)}
-                    disabled={!configValid}
+                    disabled={loading}
                     className="text-blue-600 hover:text-blue-700 font-semibold text-sm transition-colors hover:underline"
                   >
                     ¿Olvidaste tu contraseña?
                   </button>
-
-                  <AnimatePresence>
-                    {showForgotPassword && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, height: 'auto', scale: 1 }}
-                        exit={{ opacity: 0, height: 0, scale: 0.95 }}
-                        transition={{ duration: 0.3 }}
-                        className="mt-4 p-5 bg-blue-50/80 backdrop-blur-sm border border-blue-200/50 rounded-2xl shadow-lg"
-                      >
-                        <div className="flex items-center space-x-3 mb-3">
-                          <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
-                            <Key className="w-5 h-5 text-blue-600" />
-                          </div>
-                          <div>
-                            <h3 className="font-semibold text-blue-900 text-sm">Recuperar Contraseña</h3>
-                            <p className="text-blue-700 text-xs">Te enviaremos un enlace de recuperación</p>
-                          </div>
-                        </div>
-                        <div className="space-y-3">
-                          <div className="relative">
-                            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
-                            <input
-                              type="email"
-                              placeholder="tu@email.com"
-                              value={resetEmail}
-                              onChange={(e) => setResetEmail(e.target.value)}
-                              disabled={!configValid}
-                              className="w-full pl-10 pr-4 py-3 border border-blue-300/50 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 bg-white/90 text-sm font-medium"
-                            />
-                          </div>
-                          <div className="flex space-x-3">
-                            <button
-                              type="button"
-                              onClick={handlePasswordReset}
-                              disabled={isResetting || !resetEmail || !configValid}
-                              className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-2.5 px-4 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 disabled:hover:scale-100"
-                            >
-                              {isResetting ? (
-                                <div className="flex items-center justify-center space-x-2">
-                                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                  <span>Enviando...</span>
-                                </div>
-                              ) : (
-                                'Enviar enlace'
-                              )}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setShowForgotPassword(false);
-                                setResetEmail('');
-                              }}
-                              className="px-4 py-2.5 text-slate-600 hover:text-slate-800 transition-colors text-sm font-medium hover:bg-white/50 rounded-xl"
-                            >
-                              Cancelar
-                            </button>
-                          </div>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
                 </div>
+
+                {/* Enhanced Forgot Password */}
+                <AnimatePresence>
+                  {showForgotPassword && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, height: 'auto', scale: 1 }}
+                      exit={{ opacity: 0, height: 0, scale: 0.95 }}
+                      transition={{ duration: 0.3 }}
+                      className="p-5 bg-blue-50/80 backdrop-blur-sm border border-blue-200/50 rounded-2xl shadow-lg"
+                    >
+                      <div className="flex items-center space-x-3 mb-3">
+                        <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+                          <Key className="w-5 h-5 text-blue-600" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-blue-900 text-sm">Recuperar Contraseña</h3>
+                          <p className="text-blue-700 text-xs">Te enviaremos un enlace de recuperación</p>
+                        </div>
+                      </div>
+                      <div className="space-y-3">
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+                          <input
+                            type="email"
+                            placeholder="tu@email.com"
+                            value={resetEmail}
+                            onChange={(e) => setResetEmail(e.target.value)}
+                            disabled={loading}
+                            className="w-full pl-10 pr-4 py-3 border border-blue-300/50 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 bg-white/90 text-sm font-medium"
+                          />
+                        </div>
+                        <div className="flex space-x-3">
+                          <button
+                            type="button"
+                            onClick={handlePasswordReset}
+                            disabled={isResetting || !resetEmail || loading}
+                            className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-2.5 px-4 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 disabled:hover:scale-100"
+                          >
+                            {isResetting ? (
+                              <div className="flex items-center justify-center space-x-2">
+                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                <span>Enviando...</span>
+                              </div>
+                            ) : (
+                              'Enviar enlace'
+                            )}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowForgotPassword(false);
+                              setResetEmail('');
+                            }}
+                            className="px-4 py-2.5 text-slate-600 hover:text-slate-800 transition-colors text-sm font-medium hover:bg-white/50 rounded-xl"
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
                 {/* Enhanced Error Alert */}
                 <AnimatePresence>
-                  {errors.root && (
+                  {(errors.root || error) && (
                     <motion.div
                       initial={{ opacity: 0, y: -10, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -506,7 +520,9 @@ export default function LoginPage() {
                       <div className="flex-shrink-0 w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center">
                         <AlertCircle className="w-5 h-5 text-red-600" />
                       </div>
-                      <p className="text-red-800 font-medium text-sm">{errors.root.message}</p>
+                      <p className="text-red-800 font-medium text-sm">
+                        {errors.root?.message || error}
+                      </p>
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -514,7 +530,7 @@ export default function LoginPage() {
                 {/* Enhanced Submit Button */}
                 <motion.button
                   type="submit"
-                  disabled={isSubmitting || !configValid}
+                  disabled={isSubmitting || loading}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   className="w-full bg-gradient-to-r from-blue-600 via-cyan-600 to-indigo-600 text-white py-4 px-6 rounded-2xl font-semibold text-base shadow-2xl shadow-blue-500/25 hover:shadow-blue-500/40 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center space-x-3 relative overflow-hidden group"
@@ -522,7 +538,7 @@ export default function LoginPage() {
                   {/* Button shine effect */}
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                   
-                  {isSubmitting ? (
+                  {(isSubmitting || loading) ? (
                     <div className="flex items-center space-x-3">
                       <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                       <span>Iniciando sesión...</span>
@@ -551,7 +567,7 @@ export default function LoginPage() {
                 <Link href="/auth/register">
                   <motion.button
                     type="button"
-                    disabled={!configValid}
+                    disabled={loading}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     className="w-full border-2 border-slate-300 text-slate-700 py-4 px-6 rounded-2xl font-semibold text-base hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50/50 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center space-x-3 bg-white/60 backdrop-blur-sm shadow-lg hover:shadow-xl"
