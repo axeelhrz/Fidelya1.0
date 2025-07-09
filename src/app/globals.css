@@ -228,11 +228,16 @@
     text-shadow: 0 0 30px rgba(135, 206, 235, 0.4);
   }
   
-  /* Texto con gradiente mejorado */
+  /* Texto con gradiente mejorado - FIX PARA EVITAR CORTE */
   .gradient-text {
     @apply bg-gradient-to-r from-sky-500 via-celestial-500 to-sky-600 bg-clip-text text-transparent;
     background-size: 200% 100%;
     animation: gradient-shift 3s ease-in-out infinite;
+    /* Asegurar que el texto no se corte */
+    line-height: 1.1;
+    padding-bottom: 0.1em;
+    overflow: visible;
+    display: inline-block;
   }
   
   .gradient-text-light {
@@ -357,6 +362,14 @@
     scroll-behavior: smooth;
     scrollbar-width: thin;
     scrollbar-color: rgba(135, 206, 235, 0.5) transparent;
+  }
+
+  /* Clase específica para el título principal - EVITAR CORTE */
+  .main-title {
+    overflow: visible !important;
+    line-height: 1.1 !important;
+    padding: 0.2em 0 !important;
+    margin: 0.1em 0 !important;
   }
 }
 
@@ -685,3 +698,52 @@
 .smooth-scroll {
   scroll-behavior: smooth;
 }
+
+/* Estilos específicos para evitar el corte del texto Fidelya */
+.brand-title-container {
+  overflow: visible !important;
+  padding: 0.5rem 0 !important;
+  margin: 0.25rem 0 !important;
+}
+
+.brand-title-container h1 {
+  line-height: 0.9 !important;
+  padding-bottom: 0.15em !important;
+  margin-bottom: 0.1em !important;
+  overflow: visible !important;
+}
+
+/* Asegurar que los descendentes de las fuentes no se corten */
+.font-playfair {
+  line-height: 0.95 !important;
+  padding-bottom: 0.1em !important;
+}
+
+/* Contenedor específico para títulos con gradiente */
+.gradient-title-wrapper {
+  overflow: visible !important;
+  padding: 0.2em 0 0.3em 0 !important;
+  line-height: 1 !important;
+}
+
+/* Ajustes específicos para Playfair Display */
+.playfair-title {
+  font-family: 'Playfair Display', Georgia, serif !important;
+  line-height: 0.9 !important;
+  padding-bottom: 0.2em !important;
+  margin-bottom: 0.1em !important;
+  overflow: visible !important;
+  display: inline-block !important;
+}
+
+/* Mejoras adicionales para evitar cortes en textos grandes */
+.large-text-container {
+  overflow: visible !important;
+  padding: 0.1em 0 0.2em 0 !important;
+}
+
+.large-text-container * {
+  overflow: visible !important;
+  line-height: 1.1 !important;
+}
+
