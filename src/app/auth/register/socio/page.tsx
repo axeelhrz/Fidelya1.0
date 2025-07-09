@@ -16,12 +16,6 @@ import {
   CheckCircle,
   AlertCircle,
   Sparkles,
-  Zap,
-  Star,
-  Shield,
-  Gift,
-  Award,
-  Percent
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { z } from 'zod';
@@ -140,13 +134,6 @@ export default function SocioRegisterPage() {
     );
   }
 
-  const benefits = [
-    { icon: Percent, text: 'Descuentos exclusivos', color: 'text-celestial-600' },
-    { icon: Star, text: 'Puntos de fidelidad', color: 'text-sky-600' },
-    { icon: Gift, text: 'Ofertas especiales', color: 'text-celestial-700' },
-    { icon: Award, text: 'Acceso premium', color: 'text-sky-700' },
-  ];
-
   return (
     <div className="scrollable-container bg-gradient-to-br from-sky-50 via-celestial-50 to-sky-100 min-h-screen relative overflow-hidden">
       {/* Enhanced animated background elements - matching homepage */}
@@ -159,7 +146,7 @@ export default function SocioRegisterPage() {
       <div className="absolute top-1/4 right-20 w-16 h-16 bg-gradient-to-br from-celestial-400/40 to-sky-400/40 rounded-full blur-md animate-pulse-glow"></div>
       <div className="absolute bottom-1/4 left-1/3 w-20 h-20 bg-gradient-to-br from-sky-300/30 to-celestial-400/30 rounded-full blur-lg animate-bounce-slow"></div>
 
-      <div className="container mx-auto px-4 py-8 max-w-lg">
+      <div className="container mx-auto px-4 py-8 max-w-2xl">
         {/* Enhanced Back Button */}
         <div className={`mb-8 transition-all duration-1000 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
           <Link
@@ -177,10 +164,10 @@ export default function SocioRegisterPage() {
             <div className="relative">
               <div className="flex items-center justify-center space-x-3">
                 <div className="relative group">
-                  <div className="w-14 h-14 bg-gradient-to-br from-celestial-500 via-sky-500 to-celestial-600 rounded-3xl flex items-center justify-center shadow-2xl transform rotate-12 group-hover:rotate-0 transition-all duration-700 hover:scale-110">
+                  <div className="w-14 h-14 bg-gradient-to-br from-sky-500 via-celestial-500 to-sky-600 rounded-3xl flex items-center justify-center shadow-2xl transform rotate-12 group-hover:rotate-0 transition-all duration-700 hover:scale-110">
                     <User className="w-7 h-7 text-white transition-transform duration-500 group-hover:scale-110" />
                   </div>
-                  <div className="absolute -inset-2 bg-gradient-to-br from-celestial-500/30 to-sky-500/30 rounded-3xl blur-lg animate-pulse-glow"></div>
+                  <div className="absolute -inset-2 bg-gradient-to-br from-sky-500/30 to-celestial-500/30 rounded-3xl blur-lg animate-pulse-glow"></div>
                   <div className="absolute -top-1 -right-1">
                     <motion.div
                       animate={{ rotate: [0, 360] }}
@@ -201,26 +188,12 @@ export default function SocioRegisterPage() {
             </div>
           </Link>
 
-          {/* Premium Badge */}
-          <div className={`inline-flex items-center gap-3 px-4 py-2 mb-6 bg-gradient-to-r from-celestial-50/90 to-sky-50/90 backdrop-blur-sm border border-celestial-200/50 rounded-2xl shadow-lg transition-all duration-1000 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`} style={{ transitionDelay: '0.3s' }}>
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-r from-celestial-500 to-sky-500 flex items-center justify-center">
-              <Star className="w-4 h-4 text-white" />
-            </div>
-            <div>
-              <div className="flex items-center gap-1">
-                <span className="text-sm font-bold text-celestial-700">Cuenta Premium</span>
-                <Star className="w-3 h-3 text-celestial-600" />
-              </div>
-              <span className="text-xs text-celestial-600">Beneficios exclusivos</span>
-            </div>
-          </div>
-
           <div className={`transition-all duration-1000 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`} style={{ transitionDelay: '0.4s' }}>
             <h2 className="text-3xl font-bold text-slate-800 mb-2 font-jakarta">
-              Crear Cuenta Premium
+              Registro de Socio
             </h2>
             <p className="text-slate-600 text-lg leading-relaxed font-jakarta">
-              Únete a la comunidad premium y disfruta de beneficios exclusivos
+              Crea tu cuenta y comienza a disfrutar de beneficios exclusivos
             </p>
           </div>
         </div>
@@ -229,113 +202,90 @@ export default function SocioRegisterPage() {
         <div className={`relative transition-all duration-1200 ease-out ${isVisible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-8 scale-95'}`} style={{ transitionDelay: '0.6s' }}>
           {/* Glass effect background - matching homepage style */}
           <div className="glass-card p-8 hover:scale-105 transition-all duration-500">
-            
-            {/* Benefits Section */}
-            <div className="mb-8 p-5 bg-gradient-to-r from-celestial-50/90 to-sky-50/90 backdrop-blur-sm border border-celestial-200/50 rounded-2xl shadow-lg">
-              <h3 className="text-lg font-bold text-celestial-700 mb-4 text-center font-jakarta">
-                ¿Qué incluye tu cuenta premium?
-              </h3>
-              <div className="grid grid-cols-2 gap-3">
-                {benefits.map((benefit, index) => (
-                  <div 
-                    key={index} 
-                    className="flex items-center gap-2 group"
-                    style={{ 
-                      opacity: isVisible ? 1 : 0,
-                      transform: isVisible ? 'translateY(0)' : 'translateY(10px)',
-                      transition: `all 0.5s ease-out ${0.8 + index * 0.1}s`
-                    }}
-                  >
-                    <div className="w-6 h-6 rounded-lg bg-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform duration-300">
-                      <benefit.icon className={`w-4 h-4 ${benefit.color}`} />
-                    </div>
-                    <span className="text-sm font-semibold text-celestial-700 font-jakarta">{benefit.text}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
             <form onSubmit={handleSubmit(handleRegister)} className="space-y-6">
               {/* Personal Information Section */}
               <div className="space-y-6">
                 <div className="flex items-center space-x-2 mb-4">
-                  <User className="w-5 h-5 text-celestial-600" />
+                  <User className="w-5 h-5 text-sky-600" />
                   <h3 className="text-lg font-semibold text-slate-800 font-jakarta">Información Personal</h3>
                 </div>
 
-                {/* Name Field */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-slate-700 font-jakarta">
-                    Nombre Completo *
-                  </label>
-                  <div className="relative group">
-                    <div className="absolute inset-0 bg-gradient-to-r from-celestial-500/20 to-sky-500/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm" />
-                    <div className="relative">
-                      <User className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-celestial-500 transition-colors duration-300" />
-                      <input
-                        {...register('nombre')}
-                        type="text"
-                        placeholder="Tu nombre completo"
-                        disabled={loading}
-                        className={`w-full pl-12 pr-4 py-3 border-2 rounded-xl focus:ring-4 focus:ring-celestial-500/20 focus:border-celestial-500 transition-all duration-300 bg-white/80 backdrop-blur-sm text-slate-800 placeholder-slate-400 font-medium hover:border-celestial-300 hover:shadow-lg ${
-                          errors.nombre ? 'border-red-300 focus:ring-red-500/20 focus:border-red-500' : 'border-slate-200'
-                        }`}
-                      />
+                {/* Name and Email Row */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Name Field */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-slate-700 font-jakarta">
+                      Nombre Completo *
+                    </label>
+                    <div className="relative group">
+                      <div className="absolute inset-0 bg-gradient-to-r from-sky-500/20 to-celestial-500/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm" />
+                      <div className="relative">
+                        <User className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-sky-500 transition-colors duration-300" />
+                        <input
+                          {...register('nombre')}
+                          type="text"
+                          placeholder="Tu nombre completo"
+                          disabled={loading}
+                          className={`w-full pl-12 pr-4 py-3 border-2 rounded-xl focus:ring-4 focus:ring-sky-500/20 focus:border-sky-500 transition-all duration-300 bg-white/80 backdrop-blur-sm text-slate-800 placeholder-slate-400 font-medium hover:border-sky-300 hover:shadow-lg ${
+                            errors.nombre ? 'border-red-300 focus:ring-red-500/20 focus:border-red-500' : 'border-slate-200'
+                          }`}
+                        />
+                      </div>
                     </div>
+                    {errors.nombre && (
+                      <motion.p 
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-red-600 text-sm font-medium flex items-center space-x-1"
+                      >
+                        <AlertCircle className="w-4 h-4" />
+                        <span>{errors.nombre.message}</span>
+                      </motion.p>
+                    )}
                   </div>
-                  {errors.nombre && (
-                    <motion.p 
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="text-red-600 text-sm font-medium flex items-center space-x-1"
-                    >
-                      <AlertCircle className="w-4 h-4" />
-                      <span>{errors.nombre.message}</span>
-                    </motion.p>
-                  )}
+
+                  {/* Email Field */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-slate-700 font-jakarta">
+                      Correo Electrónico *
+                    </label>
+                    <div className="relative group">
+                      <div className="absolute inset-0 bg-gradient-to-r from-sky-500/20 to-celestial-500/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm" />
+                      <div className="relative">
+                        <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-sky-500 transition-colors duration-300" />
+                        <input
+                          {...register('email')}
+                          type="email"
+                          placeholder="tu@email.com"
+                          disabled={loading}
+                          className={`w-full pl-12 pr-4 py-3 border-2 rounded-xl focus:ring-4 focus:ring-sky-500/20 focus:border-sky-500 transition-all duration-300 bg-white/80 backdrop-blur-sm text-slate-800 placeholder-slate-400 font-medium hover:border-sky-300 hover:shadow-lg ${
+                            errors.email ? 'border-red-300 focus:ring-red-500/20 focus:border-red-500' : 'border-slate-200'
+                          }`}
+                        />
+                      </div>
+                    </div>
+                    {errors.email && (
+                      <motion.p 
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-red-600 text-sm font-medium flex items-center space-x-1"
+                      >
+                        <AlertCircle className="w-4 h-4" />
+                        <span>{errors.email.message}</span>
+                      </motion.p>
+                    )}
+                  </div>
                 </div>
               </div>
 
-              {/* Account Information Section */}
+              {/* Password Section */}
               <div className="space-y-6">
                 <div className="flex items-center space-x-2 mb-4">
-                  <Mail className="w-5 h-5 text-celestial-600" />
-                  <h3 className="text-lg font-semibold text-slate-800 font-jakarta">Información de la Cuenta</h3>
+                  <Lock className="w-5 h-5 text-sky-600" />
+                  <h3 className="text-lg font-semibold text-slate-800 font-jakarta">Seguridad</h3>
                 </div>
 
-                {/* Email Field */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-slate-700 font-jakarta">
-                    Correo Electrónico *
-                  </label>
-                  <div className="relative group">
-                    <div className="absolute inset-0 bg-gradient-to-r from-celestial-500/20 to-sky-500/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm" />
-                    <div className="relative">
-                      <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-celestial-500 transition-colors duration-300" />
-                      <input
-                        {...register('email')}
-                        type="email"
-                        placeholder="tu@email.com"
-                        disabled={loading}
-                        className={`w-full pl-12 pr-4 py-3 border-2 rounded-xl focus:ring-4 focus:ring-celestial-500/20 focus:border-celestial-500 transition-all duration-300 bg-white/80 backdrop-blur-sm text-slate-800 placeholder-slate-400 font-medium hover:border-celestial-300 hover:shadow-lg ${
-                          errors.email ? 'border-red-300 focus:ring-red-500/20 focus:border-red-500' : 'border-slate-200'
-                        }`}
-                      />
-                    </div>
-                  </div>
-                  {errors.email && (
-                    <motion.p 
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="text-red-600 text-sm font-medium flex items-center space-x-1"
-                    >
-                      <AlertCircle className="w-4 h-4" />
-                      <span>{errors.email.message}</span>
-                    </motion.p>
-                  )}
-                </div>
-
-                {/* Password Fields */}
+                {/* Password Row */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Password Field */}
                   <div className="space-y-2">
@@ -343,15 +293,15 @@ export default function SocioRegisterPage() {
                       Contraseña *
                     </label>
                     <div className="relative group">
-                      <div className="absolute inset-0 bg-gradient-to-r from-celestial-500/20 to-sky-500/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm" />
+                      <div className="absolute inset-0 bg-gradient-to-r from-sky-500/20 to-celestial-500/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm" />
                       <div className="relative">
-                        <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-celestial-500 transition-colors duration-300" />
+                        <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-sky-500 transition-colors duration-300" />
                         <input
                           {...register('password')}
                           type={showPassword ? 'text' : 'password'}
-                          placeholder="Mínimo 6 caracteres"
+                          placeholder="Tu contraseña"
                           disabled={loading}
-                          className={`w-full pl-12 pr-12 py-3 border-2 rounded-xl focus:ring-4 focus:ring-celestial-500/20 focus:border-celestial-500 transition-all duration-300 bg-white/80 backdrop-blur-sm text-slate-800 placeholder-slate-400 font-medium hover:border-celestial-300 hover:shadow-lg ${
+                          className={`w-full pl-12 pr-12 py-3 border-2 rounded-xl focus:ring-4 focus:ring-sky-500/20 focus:border-sky-500 transition-all duration-300 bg-white/80 backdrop-blur-sm text-slate-800 placeholder-slate-400 font-medium hover:border-sky-300 hover:shadow-lg ${
                             errors.password ? 'border-red-300 focus:ring-red-500/20 focus:border-red-500' : 'border-slate-200'
                           }`}
                         />
@@ -383,15 +333,15 @@ export default function SocioRegisterPage() {
                       Confirmar Contraseña *
                     </label>
                     <div className="relative group">
-                      <div className="absolute inset-0 bg-gradient-to-r from-celestial-500/20 to-sky-500/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm" />
+                      <div className="absolute inset-0 bg-gradient-to-r from-sky-500/20 to-celestial-500/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm" />
                       <div className="relative">
-                        <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-celestial-500 transition-colors duration-300" />
+                        <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-sky-500 transition-colors duration-300" />
                         <input
                           {...register('confirmPassword')}
                           type={showConfirmPassword ? 'text' : 'password'}
                           placeholder="Confirma tu contraseña"
                           disabled={loading}
-                          className={`w-full pl-12 pr-12 py-3 border-2 rounded-xl focus:ring-4 focus:ring-celestial-500/20 focus:border-celestial-500 transition-all duration-300 bg-white/80 backdrop-blur-sm text-slate-800 placeholder-slate-400 font-medium hover:border-celestial-300 hover:shadow-lg ${
+                          className={`w-full pl-12 pr-12 py-3 border-2 rounded-xl focus:ring-4 focus:ring-sky-500/20 focus:border-sky-500 transition-all duration-300 bg-white/80 backdrop-blur-sm text-slate-800 placeholder-slate-400 font-medium hover:border-sky-300 hover:shadow-lg ${
                             errors.confirmPassword ? 'border-red-300 focus:ring-red-500/20 focus:border-red-500' : 'border-slate-200'
                           }`}
                         />
@@ -423,7 +373,7 @@ export default function SocioRegisterPage() {
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
-                    className="p-4 bg-celestial-50/80 backdrop-blur-sm rounded-xl border border-celestial-200/50"
+                    className="p-4 bg-sky-50/80 backdrop-blur-sm rounded-xl border border-sky-200/50"
                   >
                     <p className="text-sm font-medium text-slate-700 mb-2 font-jakarta">Fortaleza de la contraseña:</p>
                     <div className="space-y-2">
@@ -433,26 +383,26 @@ export default function SocioRegisterPage() {
                             key={level}
                             className={`h-2 flex-1 rounded-full transition-all duration-300 ${
                               password.length >= level * 2
-                                ? level <= 2 ? 'bg-red-400' : level === 3 ? 'bg-yellow-400' : 'bg-celestial-400'
+                                ? level <= 2 ? 'bg-red-400' : level === 3 ? 'bg-yellow-400' : 'bg-sky-400'
                                 : 'bg-gray-200'
                             }`}
                           />
                         ))}
                       </div>
                       <div className="text-xs text-slate-600 space-y-1">
-                        <div className={`flex items-center space-x-2 transition-colors duration-300 ${password.length >= 6 ? 'text-celestial-600' : ''}`}>
+                        <div className={`flex items-center space-x-2 transition-colors duration-300 ${password.length >= 6 ? 'text-sky-600' : ''}`}>
                           {password.length >= 6 ? <CheckCircle className="w-3 h-3" /> : <div className="w-3 h-3 border border-slate-300 rounded-full" />}
                           <span>Al menos 6 caracteres</span>
                         </div>
-                        <div className={`flex items-center space-x-2 transition-colors duration-300 ${/[A-Z]/.test(password) ? 'text-celestial-600' : ''}`}>
+                        <div className={`flex items-center space-x-2 transition-colors duration-300 ${/[A-Z]/.test(password) ? 'text-sky-600' : ''}`}>
                           {/[A-Z]/.test(password) ? <CheckCircle className="w-3 h-3" /> : <div className="w-3 h-3 border border-slate-300 rounded-full" />}
                           <span>Una letra mayúscula</span>
                         </div>
-                        <div className={`flex items-center space-x-2 transition-colors duration-300 ${/[a-z]/.test(password) ? 'text-celestial-600' : ''}`}>
+                        <div className={`flex items-center space-x-2 transition-colors duration-300 ${/[a-z]/.test(password) ? 'text-sky-600' : ''}`}>
                           {/[a-z]/.test(password) ? <CheckCircle className="w-3 h-3" /> : <div className="w-3 h-3 border border-slate-300 rounded-full" />}
                           <span>Una letra minúscula</span>
                         </div>
-                        <div className={`flex items-center space-x-2 transition-colors duration-300 ${/\d/.test(password) ? 'text-celestial-600' : ''}`}>
+                        <div className={`flex items-center space-x-2 transition-colors duration-300 ${/\d/.test(password) ? 'text-sky-600' : ''}`}>
                           {/\d/.test(password) ? <CheckCircle className="w-3 h-3" /> : <div className="w-3 h-3 border border-slate-300 rounded-full" />}
                           <span>Un número</span>
                         </div>
@@ -469,15 +419,15 @@ export default function SocioRegisterPage() {
                     {...register('acceptTerms')}
                     type="checkbox"
                     disabled={loading}
-                    className="w-5 h-5 text-celestial-600 bg-gray-100 border-gray-300 rounded focus:ring-celestial-500 focus:ring-2 mt-0.5 transition-all duration-300"
+                    className="w-5 h-5 text-sky-600 bg-gray-100 border-gray-300 rounded focus:ring-sky-500 focus:ring-2 mt-0.5 transition-all duration-300"
                   />
                   <span className="text-sm text-slate-600 leading-relaxed font-jakarta group-hover:text-slate-700 transition-colors duration-300">
                     Acepto los{' '}
-                    <Link href="/terms" className="text-celestial-600 hover:text-celestial-700 font-medium underline transition-colors duration-300">
+                    <Link href="/terms" className="text-sky-600 hover:text-sky-700 font-medium underline transition-colors duration-300">
                       términos y condiciones
                     </Link>
                     {' '}y la{' '}
-                    <Link href="/privacy" className="text-celestial-600 hover:text-celestial-700 font-medium underline transition-colors duration-300">
+                    <Link href="/privacy" className="text-sky-600 hover:text-sky-700 font-medium underline transition-colors duration-300">
                       política de privacidad
                     </Link>
                     {' '}de Fidelya
@@ -516,22 +466,22 @@ export default function SocioRegisterPage() {
               <button
                 type="submit"
                 disabled={isSubmitting || loading}
-                className="w-full bg-gradient-to-r from-celestial-500 via-sky-500 to-celestial-600 text-white py-4 px-6 rounded-2xl font-semibold text-base shadow-2xl hover:shadow-celestial-500/40 transition-all duration-500 disabled:opacity-50 disabled:cursor-not-allowed transform hover:-translate-y-2 hover:scale-105 disabled:hover:scale-100 disabled:hover:translate-y-0 flex items-center justify-center space-x-3 relative overflow-hidden group font-jakarta"
+                className="w-full bg-gradient-to-r from-sky-500 via-celestial-500 to-sky-600 text-white py-4 px-6 rounded-2xl font-semibold text-base shadow-2xl hover:shadow-sky-500/40 transition-all duration-500 disabled:opacity-50 disabled:cursor-not-allowed transform hover:-translate-y-2 hover:scale-105 disabled:hover:scale-100 disabled:hover:translate-y-0 flex items-center justify-center space-x-3 relative overflow-hidden group font-jakarta"
               >
                 {/* Button shine effect */}
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-                <div className="absolute inset-0 bg-gradient-to-r from-celestial-600 via-sky-600 to-celestial-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-sky-600 via-celestial-600 to-sky-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 
                 <span className="relative z-10">
                   {(isSubmitting || loading) ? (
                     <div className="flex items-center space-x-3">
                       <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      <span>Creando cuenta premium...</span>
+                      <span>Creando cuenta...</span>
                     </div>
                   ) : (
                     <div className="flex items-center space-x-3">
-                      <Star className="w-5 h-5" />
-                      <span>Crear cuenta premium</span>
+                      <User className="w-5 h-5" />
+                      <span>Crear Cuenta de Socio</span>
                     </div>
                   )}
                 </span>
@@ -541,20 +491,9 @@ export default function SocioRegisterPage() {
               <div className="text-center">
                 <p className="text-slate-600 font-jakarta">
                   ¿Ya tienes cuenta?{' '}
-                  <Link href="/auth/login" className="text-celestial-600 hover:text-celestial-700 font-semibold transition-colors duration-300 hover:underline">
-                    Iniciar sesión aquí
+                  <Link href="/auth/login" className="text-sky-600 hover:text-sky-700 font-semibold transition-colors duration-300 hover:underline">
+                    Inicia sesión aquí
                   </Link>
-                </p>
-              </div>
-
-              {/* Guarantee Section */}
-              <div className="p-4 bg-slate-50/80 backdrop-blur-sm border border-slate-200/50 rounded-2xl text-center">
-                <div className="flex items-center justify-center mb-2">
-                  <Shield className="w-5 h-5 text-slate-600" />
-                </div>
-                <p className="text-sm text-slate-600 font-jakarta">
-                  <span className="font-bold text-slate-800">Garantía de satisfacción:</span>{' '}
-                  Cancela cuando quieras. Sin compromisos a largo plazo.
                 </p>
               </div>
             </form>
