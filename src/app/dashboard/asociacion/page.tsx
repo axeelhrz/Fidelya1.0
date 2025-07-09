@@ -1,442 +1,129 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Box,
-  Container,
-  Typography,
-  Button,
-  Avatar,
-  alpha,
-  useTheme,
-  useMediaQuery,
-} from '@mui/material';
-import {
-  PersonAdd,
-  Security,
-  Analytics,
-  Group,
-  Store,
-} from '@mui/icons-material';
-import { toast } from 'react-hot-toast';
-import { useSocios } from '@/hooks/useSocios';
-import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
-import { Socio as ServiceSocio } from '@/services/socio.service';
-import { Socio as TypesSocio, SocioFormData } from '@/types/socio';
-import { Timestamp } from 'firebase/firestore';
-import type { ImportResult } from '@/services/socio.service';
-
-type Stats = {
-  total: number;
-  activos: number;
-  vencidos: number;
-  inactivos: number;
-  [key: string]: number | undefined;
-};
-
+import { toast } from 'react-hot-toast';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { AsociacionSidebar } from '@/components/layout/AsociacionSidebar';
 import { LogoutModal } from '@/components/ui/LogoutModal';
 import { OverviewDashboard } from '@/components/asociacion/OverviewDashboard';
-import { AdvancedAnalytics } from '@/components/asociacion/AdvancedAnalytics';
-import { EnhancedMemberManagement } from '@/components/asociacion/EnhancedMemberManagement';
-import { ComercioManagement } from '@/components/asociacion/ComercioManagement';
-import { NotificationsCenter } from '@/components/asociacion/NotificationsCenter';
-import { SocioDialog } from '@/components/asociacion/SocioDialog';
-import { DeleteConfirmDialog } from '@/components/asociacion/DeleteConfirmDialog';
-import { CsvImport } from '@/components/asociacion/CsvImport';
-import { SectionTabs } from '@/components/asociacion/SectionTabs';
+import { useAuth } from '@/hooks/useAuth';
+import { 
+  Store, 
+  BarChart3, 
+  Bell, 
+  Plus,
+  Building2,
+} from 'lucide-react';
 
-// Type adapter function to convert service Socio to types Socio
-const adaptServiceSocioToTypesSocio = (serviceSocio: ServiceSocio): TypesSocio => {
-  return {
-    uid: serviceSocio.id, // Map id to uid
-    id: serviceSocio.id,
-    nombre: serviceSocio.nombre,
-    email: serviceSocio.email,
-    estado: serviceSocio.estado as 'activo' | 'vencido' | 'inactivo' | 'pendiente',
-    asociacionId: serviceSocio.asociacionId,
-    asociacion: serviceSocio.asociacionId, // Map asociacionId to asociacion
-    creadoEn: Timestamp.fromDate(serviceSocio.creadoEn),
-    actualizadoEn: serviceSocio.actualizadoEn ? Timestamp.fromDate(serviceSocio.actualizadoEn) : undefined,
-    telefono: serviceSocio.telefono,
-    dni: serviceSocio.dni,
-    direccion: serviceSocio.direccion,
-    fechaNacimiento: serviceSocio.fechaNacimiento ? Timestamp.fromDate(serviceSocio.fechaNacimiento) : undefined,
-  };
-};
-
-const LoadingScreen: React.FC<{ message: string }> = ({ message }) => {
-  return (
-    <Box 
-      sx={{ 
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        p: { xs: 2, md: 4 }
-      }}
-    >
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5 }}
-      >
-        <Box sx={{ textAlign: 'center' }}>
-          <Box sx={{ position: 'relative', mb: 4 }}>
-            <Box
-              sx={{
-                width: { xs: 64, md: 80 },
-                height: { xs: 64, md: 80 },
-                border: '6px solid #e2e8f0',
-                borderRadius: '50%',
-                borderTopColor: '#6366f1',
-                borderRightColor: '#8b5cf6',
-                animation: 'spin 1.5s linear infinite',
-                mx: 'auto',
-                '@keyframes spin': {
-                  '0%': { transform: 'rotate(0deg)' },
-                  '100%': { transform: 'rotate(360deg)' },
-                },
-              }}
-            />
-          </Box>
-          <Typography variant="h4" sx={{ 
-            fontWeight: 900, 
-            color: '#0f172a', 
-            mb: 2,
-            fontSize: { xs: '1.5rem', md: '2rem' }
-          }}>
-            Cargando Dashboard Ejecutivo
-          </Typography>
-          <Typography variant="h6" sx={{ 
-            color: '#64748b', 
-            fontWeight: 500,
-            fontSize: { xs: '1rem', md: '1.25rem' }
-          }}>
-            {message}
-          </Typography>
-        </Box>
-      </motion.div>
-    </Box>
-  );
-};
-
-const AccessDeniedScreen: React.FC = () => {
-  return (
-    <Box 
-      sx={{ 
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        p: { xs: 2, md: 4 }
-      }}
-    >
-      <Container maxWidth="sm">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          <Box sx={{ textAlign: 'center' }}>
-            <Avatar
-              sx={{
-                width: { xs: 80, md: 100 },
-                height: { xs: 80, md: 100 },
-                bgcolor: alpha('#ef4444', 0.1),
-                color: '#ef4444',
-                mx: 'auto',
-                mb: 4,
-              }}
-            >
-              <Security sx={{ fontSize: { xs: 40, md: 50 } }} />
-            </Avatar>
-            
-            <Typography variant="h3" sx={{ 
-              fontWeight: 900, 
-              color: '#0f172a', 
-              mb: 2,
-              fontSize: { xs: '2rem', md: '3rem' }
-            }}>
-              Acceso Restringido
-            </Typography>
-            <Typography variant="h6" sx={{ 
-              color: '#64748b', 
-              mb: 4, 
-              maxWidth: 400, 
-              mx: 'auto',
-              fontSize: { xs: '1rem', md: '1.25rem' }
-            }}>
-              Necesitas permisos de asociación para acceder a este dashboard ejecutivo.
-            </Typography>
-          </Box>
-        </motion.div>
-      </Container>
-    </Box>
-  );
-};
-
-// Componente para cada sección del dashboard
-const DashboardSection: React.FC<{ 
-  section: string; 
-  socios: ServiceSocio[];
-  stats: Stats;
-  loading: boolean;
-  onAddSocio: () => void;
-  onEditSocio: (socio: ServiceSocio) => void;
-  onDeleteSocio: (socio: ServiceSocio) => void;
-  onBulkAction: (action: string, selectedIds: string[]) => void;
-  onCsvImport: () => void;
+// Enhanced Quick Actions Component with modern design
+const QuickActions: React.FC<{
   onNavigate: (section: string) => void;
-  onRefresh: () => void;
-}> = ({ 
-  section, 
-  socios, 
-  loading, 
-  onAddSocio, 
-  onNavigate,
-}) => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  
-  switch (section) {
-    case 'overview':
-    case 'dashboard':
-      return (
-        <OverviewDashboard
-          onNavigate={onNavigate}
-          onAddMember={onAddSocio}
-        />
-      );
+  isVisible: boolean;
+}> = ({ onNavigate, isVisible }) => {
+  const quickActions = [
+    {
+      id: 'add-member',
+      label: 'Nuevo Socio',
+      icon: <Plus size={24} />,
+      gradient: 'from-emerald-500 via-teal-500 to-emerald-600',
+      onClick: () => onNavigate('socios'),
+      description: 'Agregar miembro',
+      delay: 0
+    },
+    {
+      id: 'analytics',
+      label: 'Analytics',
+      icon: <BarChart3 size={24} />,
+      gradient: 'from-violet-500 via-purple-500 to-violet-600',
+      onClick: () => onNavigate('analytics'),
+      description: 'Ver métricas',
+      delay: 0.1
+    },
+    {
+      id: 'comercios',
+      label: 'Comercios',
+      icon: <Store size={24} />,
+      gradient: 'from-blue-500 via-indigo-500 to-blue-600',
+      onClick: () => onNavigate('comercios'),
+      description: 'Gestionar red',
+      delay: 0.2
+    },
+    {
+      id: 'notifications',
+      label: 'Notificaciones',
+      icon: <Bell size={24} />,
+      gradient: 'from-amber-500 via-orange-500 to-amber-600',
+      onClick: () => onNavigate('notificaciones'),
+      description: 'Centro de mensajes',
+      delay: 0.3
+    }
+  ];
 
-    case 'analytics':
-      return (
-        <Box sx={{ 
-          maxWidth: '100%',
-          overflow: 'hidden',
-          px: { xs: 0, sm: 2, md: 4 },
-          py: { xs: 2, md: 4 }
-        }}>
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <Box sx={{ mb: { xs: 4, md: 6 } }}>
-              <Box sx={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: { xs: 2, md: 3 }, 
-                mb: { xs: 3, md: 4 },
-                flexDirection: { xs: 'column', sm: 'row' },
-                textAlign: { xs: 'center', sm: 'left' }
-              }}>
-                <Avatar
-                  sx={{
-                    width: { xs: 56, md: 64 },
-                    height: { xs: 56, md: 64 },
-                    borderRadius: 4,
-                    background: 'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)',
-                    boxShadow: '0 12px 40px rgba(139, 92, 246, 0.3)',
-                  }}
-                >
-                  <Analytics sx={{ fontSize: { xs: 28, md: 32 } }} />
-                </Avatar>
-                <Box>
-                  <Typography variant="h3" sx={{ 
-                    fontWeight: 900, 
-                    color: '#0f172a', 
-                    mb: 1,
-                    fontSize: { xs: '2rem', md: '3rem' }
-                  }}>
-                    Analytics Avanzado
-                  </Typography>
-                  <Typography variant="h6" sx={{ 
-                    color: '#64748b', 
-                    fontWeight: 600,
-                    fontSize: { xs: '1rem', md: '1.25rem' }
-                  }}>
-                    Métricas y análisis profundo
-                  </Typography>
-                </Box>
-              </Box>
-            </Box>
-          </motion.div>
-          <AdvancedAnalytics loading={loading} />
-        </Box>
-      );
+  return (
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+      {quickActions.map((action) => (
+        <motion.button
+          key={action.id}
+          initial={{ opacity: 0, y: 30, scale: 0.9 }}
+          animate={{ 
+            opacity: isVisible ? 1 : 0, 
+            y: isVisible ? 0 : 30, 
+            scale: isVisible ? 1 : 0.9 
+          }}
+          transition={{ 
+            duration: 0.8, 
+            delay: action.delay,
+            type: "spring",
+            stiffness: 100,
+            damping: 15
+          }}
+          whileHover={{ 
+            scale: 1.05, 
+            y: -8,
+            transition: { duration: 0.3 }
+          }}
+          whileTap={{ scale: 0.95 }}
+          onClick={action.onClick}
+          className={`
+            relative p-8 rounded-3xl bg-gradient-to-br ${action.gradient} 
+            text-white shadow-2xl hover:shadow-3xl transition-all duration-500
+            group overflow-hidden backdrop-blur-xl border border-white/20
+          `}
+        >
+          {/* Enhanced Background Pattern */}
+          <div className="absolute inset-0 opacity-20">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-white/20 rounded-full -translate-y-12 translate-x-12" />
+            <div className="absolute bottom-0 left-0 w-20 h-20 bg-white/15 rounded-full translate-y-10 -translate-x-10" />
+            <div className="absolute top-1/2 left-1/2 w-16 h-16 bg-white/10 rounded-full -translate-x-8 -translate-y-8" />
+          </div>
 
-    case 'members':
-    case 'socios':
-    case 'socios-lista':
-      return (
-        <Container maxWidth="xl" sx={{ py: { xs: 2, md: 4 } }}>
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <Box sx={{ mb: { xs: 4, md: 6 } }}>
-              <Box sx={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: { xs: 2, md: 3 }, 
-                mb: { xs: 3, md: 4 },
-                flexDirection: { xs: 'column', md: 'row' },
-                textAlign: { xs: 'center', md: 'left' }
-              }}>
-                <Avatar
-                  sx={{
-                    width: { xs: 56, md: 64 },
-                    height: { xs: 56, md: 64 },
-                    borderRadius: 4,
-                    background: 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)',
-                    boxShadow: '0 12px 40px rgba(6, 182, 212, 0.3)',
-                  }}
-                >
-                  <Group sx={{ fontSize: { xs: 28, md: 32 } }} />
-                </Avatar>
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant="h3" sx={{ 
-                    fontWeight: 900, 
-                    color: '#0f172a', 
-                    mb: 1,
-                    fontSize: { xs: '2rem', md: '3rem' }
-                  }}>
-                    Gestión de Socios
-                  </Typography>
-                  <Typography variant="h6" sx={{ 
-                    color: '#64748b', 
-                    fontWeight: 600,
-                    fontSize: { xs: '1rem', md: '1.25rem' }
-                  }}>
-                    {socios.length} socios encontrados
-                  </Typography>
-                </Box>
-                <Box sx={{ 
-                  ml: { xs: 0, md: 'auto' },
-                  width: { xs: '100%', md: 'auto' }
-                }}>
-                  <Button
-                    onClick={onAddSocio}
-                    variant="contained"
-                    startIcon={<PersonAdd />}
-                    size={isMobile ? "medium" : "large"}
-                    sx={{
-                      py: { xs: 1.5, md: 2 },
-                      px: { xs: 3, md: 4 },
-                      borderRadius: 4,
-                      textTransform: 'none',
-                      fontWeight: 700,
-                      background: 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)',
-                      boxShadow: '0 8px 32px rgba(6, 182, 212, 0.3)',
-                      width: { xs: '100%', md: 'auto' },
-                      '&:hover': {
-                        transform: 'translateY(-2px)',
-                        boxShadow: '0 12px 40px rgba(6, 182, 212, 0.4)',
-                      },
-                      transition: 'all 0.3s ease'
-                    }}
-                  >
-                    Nuevo Socio
-                  </Button>
-                </Box>
-              </Box>
-            </Box>
-          </motion.div>
-          <EnhancedMemberManagement
-            onNavigate={onNavigate}
-          />
-        </Container>
-      );
+          {/* Shine Effect */}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
 
-    case 'comercios':
-    case 'comercios-lista':
-    case 'comercios-vincular':
-    case 'comercios-beneficios':
-      return (
-        <Container maxWidth="xl" sx={{ py: { xs: 2, md: 4 } }}>
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <Box sx={{ mb: { xs: 4, md: 6 } }}>
-              <Box sx={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: { xs: 2, md: 3 }, 
-                mb: { xs: 3, md: 4 },
-                flexDirection: { xs: 'column', md: 'row' },
-                textAlign: { xs: 'center', md: 'left' }
-              }}>
-                <Avatar
-                  sx={{
-                    width: { xs: 56, md: 64 },
-                    height: { xs: 56, md: 64 },
-                    borderRadius: 4,
-                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                    boxShadow: '0 12px 40px rgba(16, 185, 129, 0.3)',
-                  }}
-                >
-                  <Store sx={{ fontSize: { xs: 28, md: 32 } }} />
-                </Avatar>
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant="h3" sx={{ 
-                    fontWeight: 900, 
-                    color: '#0f172a', 
-                    mb: 1,
-                    fontSize: { xs: '2rem', md: '3rem' }
-                  }}>
-                    Gestión de Comercios
-                  </Typography>
-                  <Typography variant="h6" sx={{ 
-                    color: '#64748b', 
-                    fontWeight: 600,
-                    fontSize: { xs: '1rem', md: '1.25rem' }
-                  }}>
-                    Administra los comercios vinculados
-                  </Typography>
-                </Box>
-              </Box>
-            </Box>
-          </motion.div>
-          <ComercioManagement onNavigate={onNavigate} />
-        </Container>
-      );
+          {/* Content */}
+          <div className="relative z-10 text-center">
+            <div className="flex items-center justify-center w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl mb-6 mx-auto group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-lg">
+              {action.icon}
+            </div>
+            <h3 className="font-bold text-xl mb-2 group-hover:scale-105 transition-transform duration-300">
+              {action.label}
+            </h3>
+            <p className="text-sm opacity-90 group-hover:opacity-100 transition-opacity duration-300">
+              {action.description}
+            </p>
+          </div>
 
-    case 'notifications':
-    case 'notificaciones':
-      return <NotificationsCenter loading={loading} />;
-
-    default:
-      return (
-        <Container maxWidth="xl" sx={{ py: { xs: 2, md: 4 } }}>
-          <Box sx={{ textAlign: 'center', py: { xs: 6, md: 8 } }}>
-            <Typography variant="h4" sx={{ 
-              fontWeight: 700, 
-              color: '#1e293b', 
-              mb: 2,
-              fontSize: { xs: '1.5rem', md: '2rem' }
-            }}>
-              Sección en Desarrollo
-            </Typography>
-            <Typography variant="body1" sx={{ 
-              color: '#64748b',
-              fontSize: { xs: '0.9rem', md: '1rem' }
-            }}>
-              Esta funcionalidad estará disponible próximamente.
-            </Typography>
-          </Box>
-        </Container>
-      );
-  }
+          {/* Hover Glow Effect */}
+          <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl" />
+        </motion.button>
+      ))}
+    </div>
+  );
 };
 
-// Sidebar personalizado que maneja el logout
+// Enhanced Sidebar with logout functionality
 const AsociacionSidebarWithLogout: React.FC<{
   open: boolean;
   onToggle: () => void;
@@ -458,39 +145,26 @@ const AsociacionSidebarWithLogout: React.FC<{
 export default function AsociacionDashboard() {
   const router = useRouter();
   const { user, loading: authLoading, signOut } = useAuth();
-  const { 
-    socios, 
-    loading, 
-    stats, 
-    createSocio, 
-    updateSocio, 
-    deleteSocio, 
-    importSocios,
-    refreshStats
-  } = useSocios();
-
-  const [activeSection, setActiveSection] = useState('overview');
-  const [socioDialog, setSocioDialog] = useState<{
-    open: boolean;
-    socio?: TypesSocio | null;
-  }>({ open: false });
-  const [deleteDialog, setDeleteDialog] = useState<{
-    open: boolean;
-    socio?: TypesSocio | null;
-    originalServiceSocio?: ServiceSocio | null;
-  }>({ open: false });
-  const [csvImportOpen, setCsvImportOpen] = useState(false);
-  const [actionLoading, setActionLoading] = useState(false);
   
-  // Estados para el modal de logout
+  // State management
+  const [activeSection, setActiveSection] = useState('dashboard');
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
 
-  // Redirect if not authenticated
-  if (!authLoading && !user) {
-    return <AccessDeniedScreen />;
+  // Trigger visibility for staggered animations
+  useEffect(() => {
+    const timer = setTimeout(() => setIsVisible(true), 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Redirect if not authenticated or not association
+  if (!authLoading && (!user || user.role !== 'asociacion')) {
+    router.push('/auth/login');
+    return null;
   }
 
+  // Logout handlers
   const handleLogoutClick = () => {
     setLogoutModalOpen(true);
   };
@@ -514,204 +188,120 @@ export default function AsociacionDashboard() {
     setLogoutModalOpen(false);
   };
 
-  const handleAddSocio = () => {
-    setSocioDialog({ open: true, socio: null });
-  };
+  // Navigation handlers
+  const handleNavigate = (section: string) => {
+    // Map sections to their respective pages
+    const sectionRoutes: Record<string, string> = {
+      'dashboard': '/dashboard/asociacion',
+      'socios': '/dashboard/asociacion/socios',
+      'comercios': '/dashboard/asociacion/comercios',
+      'analytics': '/dashboard/asociacion/analytics',
+      'notificaciones': '/dashboard/asociacion/notificaciones',
+      'reportes': '/dashboard/asociacion/reportes',
+      'configuracion': '/dashboard/asociacion/configuracion',
+      'beneficios': '/dashboard/asociacion/beneficios',
+      'pagos': '/dashboard/asociacion/pagos'
+    };
 
-  const handleEditSocio = (socio: ServiceSocio) => {
-    // Convert service socio to types socio for the dialog
-    const adaptedSocio = adaptServiceSocioToTypesSocio(socio);
-    setSocioDialog({ open: true, socio: adaptedSocio });
-  };
-
-  const handleDeleteSocio = (socio: ServiceSocio) => {
-    // Convert service socio to types socio for the dialog, but keep reference to original
-    const adaptedSocio = adaptServiceSocioToTypesSocio(socio);
-    setDeleteDialog({ 
-      open: true, 
-      socio: adaptedSocio,
-      originalServiceSocio: socio
-    });
-  };
-
-  const handleRefresh = async () => {
-    try {
-      await refreshStats();
-      toast.success('Datos actualizados correctamente');
-    } catch (error) {
-      console.error('Error refreshing socios:', error);
-      toast.error('Error al actualizar los datos');
+    const route = sectionRoutes[section];
+    if (route && route !== '/dashboard/asociacion') {
+      router.push(route);
+    } else {
+      setActiveSection(section);
     }
   };
 
-  const handleSaveSocio = async (data: SocioFormData) => {
-    setActionLoading(true);
-    try {
-      // Validate and transform data to match service requirements
-      if (!data.dni) {
-        toast.error('El DNI es requerido');
-        return;
-      }
-
-      // Ensure dni is always a string
-      const safeDni = data.dni ?? '';
-
-      const serviceData = {
-        ...data,
-        dni: safeDni,
-        fechaNacimiento: data.fechaNacimiento || new Date(),
-        montoCuota: data.montoCuota || 0,
-      };
-
-      if (socioDialog.socio) {
-        // Use the original service socio ID for updates
-        const originalServiceSocio = socios.find(s => s.id === socioDialog.socio?.uid);
-        if (originalServiceSocio) {
-          await updateSocio(originalServiceSocio.id, serviceData);
-          toast.success('Socio actualizado correctamente');
-        }
-      } else {
-        await createSocio(serviceData);
-        toast.success('Socio agregado correctamente');
-      }
-      setSocioDialog({ open: false });
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Error al guardar el socio');
-    } finally {
-      setActionLoading(false);
-    }
+  const handleAddMember = () => {
+    router.push('/dashboard/asociacion/socios');
   };
 
-  const handleConfirmDelete = async () => {
-    if (!deleteDialog.originalServiceSocio) return;
-    
-    setActionLoading(true);
-    try {
-      await deleteSocio(deleteDialog.originalServiceSocio.id);
-      toast.success('Socio eliminado correctamente');
-      setDeleteDialog({ open: false });
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Error al eliminar el socio');
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleCsvImport = async (csvData: Record<string, string>[]): Promise<ImportResult> => {
-    setActionLoading(true);
-    setActionLoading(true);
-    try {
-      // Map CSV data to SocioFormData[]
-      const sociosData: SocioFormData[] = csvData.map((row) => {
-        // Only allow 'activo' or 'vencido' for estado
-        const allowedEstado = (row.estado === 'activo' || row.estado === 'vencido') ? row.estado : 'activo';
-        return {
-          nombre: row.nombre || '',
-          email: row.email || '',
-          dni: row.dni !== undefined && row.dni !== null ? String(row.dni) : '', // Always a string, never undefined
-          telefono: row.telefono || '',
-          fechaNacimiento: row.fechaNacimiento ? new Date(row.fechaNacimiento) : new Date(),
-          direccion: row.direccion || '',
-          montoCuota: row.montoCuota ? Number(row.montoCuota) : 0,
-          estado: allowedEstado as 'activo' | 'vencido',
-        };
-      }).map((socio) => ({
-        ...socio,
-        dni: socio.dni ?? '', // Ensure dni is always a string, never undefined
-        fechaNacimiento: socio.fechaNacimiento ?? new Date(), // Ensure fechaNacimiento is never undefined
-      }));
-
-      // Validate required fields
-      const errors: Array<{ row: number; error: string; data: Record<string, unknown> }> = [];
-      sociosData.forEach((socio, idx) => {
-        if (!socio.dni) {
-          errors.push({
-            row: idx + 1,
-            error: `DNI requerido para el socio: ${socio.nombre || 'Sin nombre'}`,
-            data: socio as unknown as Record<string, unknown>,
-          });
-        }
-      });
-
-      if (errors.length > 0) {
-        toast.error(errors[0].error);
-        return { success: false, imported: 0, errors, duplicates: 0 };
-      }
-
-      // Ensure all dni are strings, fechaNacimiento is Date, and montoCuota is number (never undefined)
-      const sociosDataWithDni = sociosData.map(socio => ({
-        ...socio,
-        dni: socio.dni ?? '',
-        fechaNacimiento: socio.fechaNacimiento ?? new Date(),
-        montoCuota: typeof socio.montoCuota === 'number' ? socio.montoCuota : 0,
-      }));
-      await importSocios(sociosDataWithDni);
-      toast.success(`${sociosData.length} socios importados correctamente`);
-      setCsvImportOpen(false);
-      return { success: true, imported: sociosData.length, errors: [], duplicates: 0 };
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Error al importar los socios');
-      return { 
-        success: false, 
-        imported: 0, 
-        errors: [
-          {
-            row: 0,
-            error: error instanceof Error ? error.message : 'Error desconocido',
-            data: {},
-          }
-        ],
-        duplicates: 0
-      };
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleBulkAction = async (action: string, selectedIds: string[]) => {
-    setActionLoading(true);
-    try {
-      switch (action) {
-        case 'export':
-          toast.success('Función de exportación en desarrollo');
-          break;
-        case 'email':
-          toast.success(`Email enviado a ${selectedIds.length} socios`);
-          break;
-        case 'activate':
-          for (const id of selectedIds) {
-            await updateSocio(id, { estado: 'activo' } as Partial<SocioFormData>);
-          }
-          toast.success(`${selectedIds.length} socios activados`);
-          break;
-        case 'archive':
-          for (const id of selectedIds) {
-            await updateSocio(id, { estado: 'vencido' } as Partial<SocioFormData>);
-          }
-          toast.success(`${selectedIds.length} socios archivados`);
-          break;
-        case 'delete':
-          for (const id of selectedIds) {
-            await deleteSocio(id);
-          }
-          toast.success(`${selectedIds.length} socios eliminados`);
-          break;
-        case 'print':
-          toast('Función de impresión en desarrollo');
-          break;
-        default:
-          toast(`Acción "${action}" aplicada a ${selectedIds.length} socios`);
-      }
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Error al ejecutar la acción');
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  if (authLoading || loading) {
-    return <LoadingScreen message="Preparando tu centro de control ejecutivo..." />;
+  // Loading state
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-sky-50/50 via-white to-celestial-50/30 flex items-center justify-center">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          <div className="text-center">
+            <div className="relative mb-4">
+              <div className="w-16 h-16 border-4 border-sky-200 border-t-sky-500 rounded-full animate-spin mx-auto" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              Cargando Dashboard Ejecutivo
+            </h2>
+            <p className="text-gray-600">
+              Preparando tu centro de control...
+            </p>
+          </div>
+        </motion.div>
+      </div>
+    );
   }
+  // Render dashboard content
+  const renderDashboardContent = () => {
+    return (
+      <div className="dashboard-container min-h-screen">
+        {/* Enhanced animated background elements */}
+        <div className="absolute inset-0 bg-grid opacity-30"></div>
+        
+        {/* Dynamic floating geometric shapes */}
+        <div className="absolute top-20 left-20 w-32 h-32 bg-gradient-to-br from-sky-200/40 to-celestial-200/40 rounded-full blur-xl animate-float-gentle"></div>
+        <div className="absolute bottom-32 right-32 w-48 h-48 bg-gradient-to-br from-celestial-200/30 to-sky-300/30 rounded-full blur-2xl animate-float-delay"></div>
+        <div className="absolute top-1/2 left-10 w-24 h-24 bg-gradient-to-br from-sky-300/35 to-celestial-300/35 rounded-full blur-lg animate-float"></div>
+        <div className="absolute top-1/4 right-20 w-16 h-16 bg-gradient-to-br from-celestial-400/40 to-sky-400/40 rounded-full blur-md animate-pulse-glow"></div>
+        <div className="absolute bottom-1/4 left-1/3 w-20 h-20 bg-gradient-to-br from-sky-300/30 to-celestial-400/30 rounded-full blur-lg animate-bounce-slow"></div>
+
+        <div className="relative z-10 p-8 space-y-12">
+          {/* Enhanced Header */}
+          <motion.div
+            initial={{ opacity: 0, y: -30 }}
+            animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : -30 }}
+            transition={{ duration: 0.8, delay: 0.1 }}
+            className="text-center mb-12"
+          >
+            <div className="flex items-center justify-center space-x-4 mb-6">
+              {/* Enhanced logo icon */}
+              <div className="relative group">
+                <div className="w-20 h-20 bg-gradient-to-br from-sky-500 via-celestial-500 to-sky-600 rounded-3xl flex items-center justify-center shadow-2xl transform rotate-12 group-hover:rotate-0 transition-all duration-700 hover:scale-110">
+                  <Building2 className="w-10 h-10 text-white transition-transform duration-500 group-hover:scale-110" />
+                </div>
+                <div className="absolute -inset-2 bg-gradient-to-br from-sky-500/30 to-celestial-500/30 rounded-3xl blur-lg animate-pulse-glow"></div>
+              </div>
+              
+              <div className="text-left">
+                <h1 className="text-5xl md:text-6xl font-bold gradient-text font-playfair tracking-tight leading-none py-2">
+                  ¡Hola, {user?.nombre || 'Administrador'}!
+                </h1>
+                <p className="text-xl text-slate-600 font-jakarta mt-2">
+                  Bienvenido a tu panel ejecutivo
+                </p>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Quick Actions */}
+          <QuickActions
+            onNavigate={handleNavigate}
+            isVisible={isVisible}
+          />
+
+          {/* Main Dashboard */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : 30 }}
+            transition={{ duration: 0.8, delay: 0.5 }}
+          >
+            <OverviewDashboard
+              onNavigate={handleNavigate}
+              onAddMember={handleAddMember}
+            />
+          </motion.div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <>
@@ -725,12 +315,6 @@ export default function AsociacionDashboard() {
           />
         )}
       >
-        {/* Section Tabs - Nueva funcionalidad */}
-        <SectionTabs 
-          activeSection={activeSection}
-          onSectionChange={setActiveSection}
-        />
-
         <AnimatePresence mode="wait">
           <motion.div
             key={activeSection}
@@ -739,58 +323,39 @@ export default function AsociacionDashboard() {
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.3 }}
           >
-            <DashboardSection
-              section={activeSection}
-              socios={socios}
-              stats={Object.fromEntries(
-                Object.entries(stats).filter(
-                  ([, value]) => typeof value === 'number' || typeof value === 'undefined'
-                )
-              ) as Stats}
-              loading={loading}
-              onAddSocio={handleAddSocio}
-              onEditSocio={handleEditSocio}
-              onDeleteSocio={handleDeleteSocio}
-              onBulkAction={handleBulkAction}
-              onCsvImport={() => setCsvImportOpen(true)}
-              onNavigate={setActiveSection}
-              onRefresh={handleRefresh}
-            />
+            {renderDashboardContent()}
           </motion.div>
         </AnimatePresence>
-
-        {/* Dialogs */}
-        <SocioDialog
-          open={socioDialog.open}
-          onClose={() => setSocioDialog({ open: false })}
-          onSave={handleSaveSocio}
-          socio={socioDialog.socio}
-          loading={actionLoading}
-        />
-
-        <DeleteConfirmDialog
-          open={deleteDialog.open}
-          onClose={() => setDeleteDialog({ open: false })}
-          onConfirm={handleConfirmDelete}
-          socio={deleteDialog.socio ?? null}
-          loading={actionLoading}
-        />
-
-        <CsvImport
-          open={csvImportOpen}
-          onClose={() => setCsvImportOpen(false)}
-          onImport={handleCsvImport}
-          loading={actionLoading}
-        />
       </DashboardLayout>
 
-      {/* Modal de Logout - Fuera del layout para que aparezca en toda la página */}
+      {/* Enhanced Modal de Logout */}
       <LogoutModal
         isOpen={logoutModalOpen}
         isLoading={loggingOut}
         onConfirm={handleLogoutConfirm}
         onCancel={handleLogoutCancel}
       />
+
+      {/* Enhanced scroll to top button */}
+      <motion.div 
+        initial={{ opacity: 0, scale: 0 }}
+        animate={{ opacity: isVisible ? 1 : 0, scale: isVisible ? 1 : 0 }}
+        transition={{ duration: 0.6, delay: 1 }}
+        className="fixed bottom-8 right-8 z-50"
+      >
+        <button 
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          className="bg-gradient-to-r from-sky-500 to-celestial-500 text-white p-4 rounded-full shadow-2xl hover:shadow-sky-500/40 transform hover:-translate-y-2 hover:scale-110 transition-all duration-500 group relative overflow-hidden"
+        >
+          <svg className="w-6 h-6 relative z-10 group-hover:scale-110 transition-transform duration-300" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/>
+          </svg>
+          <div className="absolute inset-0 bg-gradient-to-r from-sky-600 to-celestial-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full"></div>
+          
+          {/* Shine effect */}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 rounded-full" />
+        </button>
+      </motion.div>
     </>
   );
 }
