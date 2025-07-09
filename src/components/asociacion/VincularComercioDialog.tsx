@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X,
@@ -8,16 +9,12 @@ import {
   Phone,
   Mail,
   Star,
-  Check,
   AlertCircle,
   Filter,
   ChevronDown,
   Eye,
   Users,
-  TrendingUp,
-  Award,
   Clock,
-  Globe,
   Zap,
   ArrowRight,
   Sparkles,
@@ -58,7 +55,6 @@ export const VincularComercioDialog: React.FC<VincularComercioDialogProps> = ({
   const [minPuntuacion, setMinPuntuacion] = useState(0);
   const [comercios, setComercios] = useState<ComercioDisponible[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
-  const [selectedComercio, setSelectedComercio] = useState<ComercioDisponible | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [vinculando, setVinculando] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<SortOption>('nombre');
@@ -68,23 +64,24 @@ export const VincularComercioDialog: React.FC<VincularComercioDialogProps> = ({
   const [previewComercio, setPreviewComercio] = useState<ComercioDisponible | null>(null);
 
   // Debounced search
-  const debouncedSearch = useCallback(
-    debounce(async (termino: string) => {
-      if (!termino.trim()) {
-        setComercios([]);
-        return;
-      }
+  const debouncedSearch = useMemo(
+    () =>
+      debounce<[string]>(async (termino: string) => {
+        if (!termino.trim()) {
+          setComercios([]);
+          return;
+        }
 
-      setSearchLoading(true);
-      try {
-        const resultados = await onBuscar(termino);
-        setComercios(resultados);
-      } catch (error) {
-        console.error('Error searching comercios:', error);
-      } finally {
-        setSearchLoading(false);
-      }
-    }, 300),
+        setSearchLoading(true);
+        try {
+          const resultados = await onBuscar(termino);
+          setComercios(resultados);
+        } catch (error) {
+          console.error('Error searching comercios:', error);
+        } finally {
+          setSearchLoading(false);
+        }
+      }, 300),
     [onBuscar]
   );
 
@@ -95,7 +92,7 @@ export const VincularComercioDialog: React.FC<VincularComercioDialogProps> = ({
 
   // Filter and sort comercios
   const comerciosFiltrados = useMemo(() => {
-    let filtered = comercios.filter(comercio => {
+    const filtered = comercios.filter(comercio => {
       const matchesCategoria = !selectedCategoria || comercio.categoria === selectedCategoria;
       const matchesEstado = !selectedEstado || comercio.estado === selectedEstado;
       const matchesPuntuacion = comercio.puntuacion >= minPuntuacion;
@@ -105,7 +102,7 @@ export const VincularComercioDialog: React.FC<VincularComercioDialogProps> = ({
 
     // Sort
     filtered.sort((a, b) => {
-      let aValue: any, bValue: any;
+      let aValue: string | number | Date, bValue: string | number | Date;
       
       switch (sortBy) {
         case 'nombre':
@@ -164,8 +161,6 @@ export const VincularComercioDialog: React.FC<VincularComercioDialogProps> = ({
     setSelectedEstado('');
     setMinPuntuacion(0);
     setComercios([]);
-    setSelectedComercio(null);
-    setShowFilters(false);
     setShowPreview(false);
     setPreviewComercio(null);
     onClose();
@@ -441,25 +436,25 @@ export const VincularComercioDialog: React.FC<VincularComercioDialogProps> = ({
                     {/* Header */}
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center space-x-3 flex-1 min-w-0">
-                        <div className="w-14 h-14 bg-gradient-to-br from-blue-100 to-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                          {comercio.logoUrl ? (
-                            <img
-                              src={comercio.logoUrl}
-                              alt={comercio.nombreComercio}
-                              className="w-10 h-10 rounded-lg object-cover"
-                            />
-                          ) : (
-                            <Store className="w-7 h-7 text-blue-600" />
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="text-lg font-bold text-gray-900 truncate group-hover:text-blue-600 transition-colors">
-                            {comercio.nombreComercio}
-                          </h4>
-                          <p className="text-sm text-gray-500 truncate">{comercio.nombre}</p>
-                        </div>
+                        {comercio.logoUrl ? (
+                          <Image
+                            src={comercio.logoUrl}
+                            alt={comercio.nombreComercio}
+                            width={40}
+                            height={40}
+                            className="w-10 h-10 rounded-lg object-cover"
+                            style={{ objectFit: 'cover' }}
+                          />
+                        ) : (
+                          <Store className="w-7 h-7 text-blue-600" />
+                        )}
                       </div>
-                      
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-lg font-bold text-gray-900 truncate group-hover:text-blue-600 transition-colors">
+                          {comercio.nombreComercio}
+                        </h4>
+                        <p className="text-sm text-gray-500 truncate">{comercio.nombre}</p>
+                      </div>
                       {comercio.verificado && (
                         <div className="flex items-center text-green-600 bg-green-50 px-2 py-1 rounded-full">
                           <Verified className="w-4 h-4" />
@@ -583,65 +578,63 @@ export const VincularComercioDialog: React.FC<VincularComercioDialogProps> = ({
                     animate={{ opacity: 1, x: 0 }}
                     className="bg-white border-2 border-gray-200 rounded-xl p-6 hover:border-blue-300 hover:shadow-md transition-all"
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4 flex-1">
-                        {/* Logo */}
-                        <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                          {comercio.logoUrl ? (
-                            <img
-                              src={comercio.logoUrl}
-                              alt={comercio.nombreComercio}
-                              className="w-12 h-12 rounded-lg object-cover"
-                            />
-                          ) : (
-                            <Store className="w-8 h-8 text-blue-600" />
-                          )}
-                        </div>
-
-                        {/* Info */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center space-x-3 mb-2">
-                            <h4 className="text-xl font-bold text-gray-900 truncate">
-                              {comercio.nombreComercio}
-                            </h4>
-                            {comercio.verificado && (
-                              <Verified className="w-5 h-5 text-green-600" />
-                            )}
-                            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                              {comercio.categoria}
-                            </span>
-                          </div>
-
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
-                            <div className="flex items-center">
-                              <Mail className="w-4 h-4 mr-2" />
-                              {comercio.email}
-                            </div>
-                            
-                            {comercio.telefono && (
-                              <div className="flex items-center">
-                                <Phone className="w-4 h-4 mr-2" />
-                                {comercio.telefono}
-                              </div>
-                            )}
-                            
-                            {comercio.puntuacion > 0 && (
-                              <div className="flex items-center">
-                                <Star className="w-4 h-4 mr-2 text-yellow-400 fill-current" />
-                                {comercio.puntuacion.toFixed(1)} ({comercio.totalReviews} reseñas)
-                              </div>
-                            )}
-                          </div>
-
-                          {comercio.direccion && (
-                            <div className="flex items-center text-sm text-gray-600 mt-2">
-                              <MapPin className="w-4 h-4 mr-2" />
-                              {comercio.direccion}
-                            </div>
-                          )}
-                        </div>
+                    <div className="flex items-start space-x-6">
+                      <div>
+                        {comercio.logoUrl ? (
+                          <Image
+                            src={comercio.logoUrl}
+                            alt={comercio.nombreComercio}
+                            width={48}
+                            height={48}
+                            className="w-12 h-12 rounded-lg object-cover"
+                            style={{ objectFit: 'cover' }}
+                          />
+                        ) : (
+                          <Store className="w-8 h-8 text-blue-600" />
+                        )}
                       </div>
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center space-x-3 mb-2">
+                          <h4 className="text-xl font-bold text-gray-900 truncate">
+                            {comercio.nombreComercio}
+                          </h4>
+                          {comercio.verificado && (
+                            <Verified className="w-5 h-5 text-green-600" />
+                          )}
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            {comercio.categoria}
+                          </span>
+                        </div>
 
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
+                          <div className="flex items-center">
+                            <Mail className="w-4 h-4 mr-2" />
+                            {comercio.email}
+                          </div>
+                          
+                          {comercio.telefono && (
+                            <div className="flex items-center">
+                              <Phone className="w-4 h-4 mr-2" />
+                              {comercio.telefono}
+                            </div>
+                          )}
+                          
+                          {comercio.puntuacion > 0 && (
+                            <div className="flex items-center">
+                              <Star className="w-4 h-4 mr-2 text-yellow-400 fill-current" />
+                              {comercio.puntuacion.toFixed(1)} ({comercio.totalReviews} reseñas)
+                            </div>
+                          )}
+                        </div>
+
+                        {comercio.direccion && (
+                          <div className="flex items-center text-sm text-gray-600 mt-2">
+                            <MapPin className="w-4 h-4 mr-2" />
+                            {comercio.direccion}
+                          </div>
+                        )}
+                      </div>
                       {/* Actions */}
                       <div className="flex items-center space-x-3 ml-6">
                         <button
@@ -735,21 +728,20 @@ export const VincularComercioDialog: React.FC<VincularComercioDialogProps> = ({
                     </button>
                   </div>
                 </div>
-
-                {/* Preview Content */}
                 <div className="p-6">
-                  <div className="flex items-start space-x-4 mb-6">
-                    <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                      {previewComercio.logoUrl ? (
-                        <img
-                          src={previewComercio.logoUrl}
-                          alt={previewComercio.nombreComercio}
-                          className="w-16 h-16 rounded-lg object-cover"
-                        />
-                      ) : (
-                        <Store className="w-10 h-10 text-blue-600" />
-                      )}
-                    </div>
+                  <div className="flex items-start space-x-6 mb-6">
+                    {previewComercio.logoUrl ? (
+                      <Image
+                        src={previewComercio.logoUrl}
+                        alt={previewComercio.nombreComercio}
+                        width={64}
+                        height={64}
+                        className="w-16 h-16 rounded-lg object-cover"
+                        style={{ objectFit: 'cover' }}
+                      />
+                    ) : (
+                      <Store className="w-10 h-10 text-blue-600" />
+                    )}
                     <div className="flex-1">
                       <div className="flex items-center space-x-3 mb-2">
                         <h4 className="text-2xl font-bold text-gray-900">
@@ -763,13 +755,7 @@ export const VincularComercioDialog: React.FC<VincularComercioDialogProps> = ({
                       <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
                         {previewComercio.categoria}
                       </span>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    <div className="space-y-4">
-                      <h5 className="font-semibold text-gray-900">Información de Contacto</h5>
-                      <div className="space-y-3">
+                      <div className="mt-4 space-y-2">
                         <div className="flex items-center text-gray-600">
                           <Mail className="w-5 h-5 mr-3 text-gray-400" />
                           {previewComercio.email}
@@ -788,31 +774,31 @@ export const VincularComercioDialog: React.FC<VincularComercioDialogProps> = ({
                         )}
                       </div>
                     </div>
+                  </div>
 
-                    <div className="space-y-4">
-                      <h5 className="font-semibold text-gray-900">Estadísticas</h5>
-                      <div className="space-y-3">
-                        {previewComercio.puntuacion > 0 && (
-                          <div className="flex items-center">
-                            <Star className="w-5 h-5 mr-3 text-yellow-400 fill-current" />
-                            <span className="font-medium">{previewComercio.puntuacion.toFixed(1)}</span>
-                            <span className="text-gray-500 ml-2">({previewComercio.totalReviews} reseñas)</span>
-                          </div>
-                        )}
-                        <div className="flex items-center text-gray-600">
-                          <Clock className="w-5 h-5 mr-3 text-gray-400" />
-                          Registrado: {previewComercio.creadoEn.toDate().toLocaleDateString()}
+                  <div className="space-y-4">
+                    <h5 className="font-semibold text-gray-900">Estadísticas</h5>
+                    <div className="space-y-3">
+                      {previewComercio.puntuacion > 0 && (
+                        <div className="flex items-center">
+                          <Star className="w-5 h-5 mr-3 text-yellow-400 fill-current" />
+                          <span className="font-medium">{previewComercio.puntuacion.toFixed(1)}</span>
+                          <span className="text-gray-500 ml-2">({previewComercio.totalReviews} reseñas)</span>
                         </div>
-                        <div className="flex items-center text-gray-600">
-                          <Users className="w-5 h-5 mr-3 text-gray-400" />
-                          {previewComercio.asociacionesVinculadas.length} asociación(es) vinculada(s)
-                        </div>
+                      )}
+                      <div className="flex items-center text-gray-600">
+                        <Clock className="w-5 h-5 mr-3 text-gray-400" />
+                        Registrado: {previewComercio.creadoEn.toDate().toLocaleDateString()}
+                      </div>
+                      <div className="flex items-center text-gray-600">
+                        <Users className="w-5 h-5 mr-3 text-gray-400" />
+                        {previewComercio.asociacionesVinculadas.length} asociación(es) vinculada(s)
                       </div>
                     </div>
                   </div>
 
                   {/* Status */}
-                  <div className="mb-6">
+                  <div className="mb-6 mt-6">
                     {previewComercio.asociacionesVinculadas.length > 0 ? (
                       <div className="flex items-center text-amber-600 bg-amber-50 px-4 py-3 rounded-lg">
                         <AlertCircle className="w-5 h-5 mr-3" />
@@ -873,12 +859,12 @@ export const VincularComercioDialog: React.FC<VincularComercioDialogProps> = ({
 };
 
 // Debounce utility function
-function debounce<T extends (...args: any[]) => any>(
-  func: T,
+function debounce<A extends unknown[]>(
+  func: (...args: A) => unknown,
   wait: number
-): (...args: Parameters<T>) => void {
+): (...args: A) => void {
   let timeout: NodeJS.Timeout;
-  return (...args: Parameters<T>) => {
+  return (...args: A) => {
     clearTimeout(timeout);
     timeout = setTimeout(() => func(...args), wait);
   };
