@@ -23,9 +23,10 @@ import { toast } from 'react-hot-toast';
 import { useSocios } from '@/hooks/useSocios';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
-import { Socio as ServiceSocio, SocioFormData } from '@/services/socio.service';
-import { Socio as TypesSocio } from '@/types/socio';
+import { Socio as ServiceSocio } from '@/services/socio.service';
+import { Socio as TypesSocio, SocioFormData } from '@/types/socio';
 import { Timestamp } from 'firebase/firestore';
+import type { ImportResult } from '@/services/socio.service';
 
 type Stats = {
   total: number;
@@ -474,7 +475,8 @@ export default function AsociacionDashboard() {
   }>({ open: false });
   const [deleteDialog, setDeleteDialog] = useState<{
     open: boolean;
-    socio?: ServiceSocio | null;
+    socio?: TypesSocio | null;
+    originalServiceSocio?: ServiceSocio | null;
   }>({ open: false });
   const [csvImportOpen, setCsvImportOpen] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
@@ -522,7 +524,13 @@ export default function AsociacionDashboard() {
   };
 
   const handleDeleteSocio = (socio: ServiceSocio) => {
-    setDeleteDialog({ open: true, socio });
+    // Convert service socio to types socio for the dialog, but keep reference to original
+    const adaptedSocio = adaptServiceSocioToTypesSocio(socio);
+    setDeleteDialog({ 
+      open: true, 
+      socio: adaptedSocio,
+      originalServiceSocio: socio
+    });
   };
 
   const handleRefresh = async () => {
@@ -535,7 +543,7 @@ export default function AsociacionDashboard() {
     }
   };
 
-  const handleSaveSocio = async (data: any) => {
+  const handleSaveSocio = async (data: SocioFormData) => {
     setActionLoading(true);
     try {
       // Validate and transform data to match service requirements
@@ -544,16 +552,14 @@ export default function AsociacionDashboard() {
         return;
       }
 
-      const serviceData: SocioFormData = {
-        nombre: data.nombre,
-        email: data.email,
-        dni: data.dni,
-        telefono: data.telefono,
+      // Ensure dni is always a string
+      const safeDni = data.dni ?? '';
+
+      const serviceData = {
+        ...data,
+        dni: safeDni,
         fechaNacimiento: data.fechaNacimiento || new Date(),
-        direccion: data.direccion,
-        numeroSocio: data.numeroSocio,
         montoCuota: data.montoCuota || 0,
-        fechaVencimiento: data.fechaVencimiento,
       };
 
       if (socioDialog.socio) {
@@ -576,11 +582,11 @@ export default function AsociacionDashboard() {
   };
 
   const handleConfirmDelete = async () => {
-    if (!deleteDialog.socio) return;
+    if (!deleteDialog.originalServiceSocio) return;
     
     setActionLoading(true);
     try {
-      await deleteSocio(deleteDialog.socio.id);
+      await deleteSocio(deleteDialog.originalServiceSocio.id);
       toast.success('Socio eliminado correctamente');
       setDeleteDialog({ open: false });
     } catch (error) {
@@ -590,38 +596,74 @@ export default function AsociacionDashboard() {
     }
   };
 
-  const handleCsvImport = async (sociosData?: any[]) => {
-    if (sociosData) {
-      setActionLoading(true);
-      try {
-        // Validate and transform data for each socio
-        const validatedData = sociosData.map(socio => {
-          if (!socio.dni) {
-            throw new Error(`DNI requerido para el socio: ${socio.nombre || 'Sin nombre'}`);
-          }
-          return {
-            nombre: socio.nombre,
-            email: socio.email,
-            dni: socio.dni,
-            telefono: socio.telefono,
-            fechaNacimiento: socio.fechaNacimiento || new Date(),
-            direccion: socio.direccion,
-            numeroSocio: socio.numeroSocio,
-            montoCuota: socio.montoCuota || 0,
-            fechaVencimiento: socio.fechaVencimiento,
-          };
-        });
+  const handleCsvImport = async (csvData: Record<string, string>[]): Promise<ImportResult> => {
+    setActionLoading(true);
+    setActionLoading(true);
+    try {
+      // Map CSV data to SocioFormData[]
+      const sociosData: SocioFormData[] = csvData.map((row) => {
+        // Only allow 'activo' or 'vencido' for estado
+        const allowedEstado = (row.estado === 'activo' || row.estado === 'vencido') ? row.estado : 'activo';
+        return {
+          nombre: row.nombre || '',
+          email: row.email || '',
+          dni: row.dni !== undefined && row.dni !== null ? String(row.dni) : '', // Always a string, never undefined
+          telefono: row.telefono || '',
+          fechaNacimiento: row.fechaNacimiento ? new Date(row.fechaNacimiento) : new Date(),
+          direccion: row.direccion || '',
+          montoCuota: row.montoCuota ? Number(row.montoCuota) : 0,
+          estado: allowedEstado as 'activo' | 'vencido',
+        };
+      }).map((socio) => ({
+        ...socio,
+        dni: socio.dni ?? '', // Ensure dni is always a string, never undefined
+        fechaNacimiento: socio.fechaNacimiento ?? new Date(), // Ensure fechaNacimiento is never undefined
+      }));
 
-        await importSocios(validatedData);
-        toast.success(`${validatedData.length} socios importados correctamente`);
-        setCsvImportOpen(false);
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : 'Error al importar los socios');
-      } finally {
-        setActionLoading(false);
+      // Validate required fields
+      const errors: Array<{ row: number; error: string; data: Record<string, unknown> }> = [];
+      sociosData.forEach((socio, idx) => {
+        if (!socio.dni) {
+          errors.push({
+            row: idx + 1,
+            error: `DNI requerido para el socio: ${socio.nombre || 'Sin nombre'}`,
+            data: socio as unknown as Record<string, unknown>,
+          });
+        }
+      });
+
+      if (errors.length > 0) {
+        toast.error(errors[0].error);
+        return { success: false, imported: 0, errors, duplicates: 0 };
       }
-    } else {
-      setCsvImportOpen(true);
+
+      // Ensure all dni are strings, fechaNacimiento is Date, and montoCuota is number (never undefined)
+      const sociosDataWithDni = sociosData.map(socio => ({
+        ...socio,
+        dni: socio.dni ?? '',
+        fechaNacimiento: socio.fechaNacimiento ?? new Date(),
+        montoCuota: typeof socio.montoCuota === 'number' ? socio.montoCuota : 0,
+      }));
+      await importSocios(sociosDataWithDni);
+      toast.success(`${sociosData.length} socios importados correctamente`);
+      setCsvImportOpen(false);
+      return { success: true, imported: sociosData.length, errors: [], duplicates: 0 };
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Error al importar los socios');
+      return { 
+        success: false, 
+        imported: 0, 
+        errors: [
+          {
+            row: 0,
+            error: error instanceof Error ? error.message : 'Error desconocido',
+            data: {},
+          }
+        ],
+        duplicates: 0
+      };
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -637,13 +679,13 @@ export default function AsociacionDashboard() {
           break;
         case 'activate':
           for (const id of selectedIds) {
-            await updateSocio(id, { estado: 'activo' } as any);
+            await updateSocio(id, { estado: 'activo' } as Partial<SocioFormData>);
           }
           toast.success(`${selectedIds.length} socios activados`);
           break;
         case 'archive':
           for (const id of selectedIds) {
-            await updateSocio(id, { estado: 'vencido' } as any);
+            await updateSocio(id, { estado: 'vencido' } as Partial<SocioFormData>);
           }
           toast.success(`${selectedIds.length} socios archivados`);
           break;
@@ -703,7 +745,7 @@ export default function AsociacionDashboard() {
               onEditSocio={handleEditSocio}
               onDeleteSocio={handleDeleteSocio}
               onBulkAction={handleBulkAction}
-              onCsvImport={() => handleCsvImport()}
+              onCsvImport={() => setCsvImportOpen(true)}
               onNavigate={setActiveSection}
               onRefresh={handleRefresh}
             />
