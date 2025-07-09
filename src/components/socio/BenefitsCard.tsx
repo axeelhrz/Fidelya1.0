@@ -1,9 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import styled from '@emotion/styled';
-import { motion } from 'framer-motion';
-import { css } from '@emotion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Store, 
   Calendar, 
@@ -21,11 +19,14 @@ import {
   DollarSign,
   Percent,
   Gift,
-  X
+  X,
+  Clock,
+  Users,
+  TrendingUp,
+  Award,
+  ShoppingBag
 } from 'lucide-react';
 import { Beneficio, BeneficioUso } from '@/types/beneficio';
-import { Button } from '@/components/ui/Button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/Dialog';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -37,247 +38,6 @@ interface BenefitsCardProps {
   view?: 'grid' | 'list';
 }
 
-const CardContainer = styled(motion.div)<{ 
-  tipo: 'disponible' | 'usado'; 
-  featured?: boolean;
-  view: 'grid' | 'list';
-}>`
-  background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
-  border-radius: 2rem;
-  border: 1px solid #f1f5f9;
-  box-shadow: 0 20px 60px -15px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  position: relative;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  
-  ${({ view }) => view === 'list' && css`
-    display: flex;
-    align-items: stretch;
-  `}
-  
-  ${({ tipo }) => tipo === 'usado' && css`
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-    border-color: #e2e8f0;
-  `}
-  
-  ${({ featured }) => featured && css`
-    border: 2px solid #fbbf24;
-    box-shadow: 0 25px 80px -20px rgba(251, 191, 36, 0.3);
-    
-    &::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 4px;
-      background: linear-gradient(90deg, #fbbf24, #f59e0b, #d97706);
-      z-index: 1;
-    }
-  `}
-  
-  &:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 25px 80px -20px rgba(0, 0, 0, 0.15);
-    border-color: rgba(99, 102, 241, 0.3);
-  }
-`;
-
-const CardHeader = styled.div<{ view: 'grid' | 'list'; tipo: 'disponible' | 'usado' }>`
-  ${({ view }) => view === 'grid' ? css`
-    padding: 1.5rem 1.5rem 0;
-  ` : css`
-    padding: 1.5rem;
-    flex: 1;
-    min-width: 0;
-  `}
-  
-  ${({ tipo }) => tipo === 'usado' && css`
-    opacity: 0.8;
-  `}
-`;
-
-const BadgesContainer = styled.div`
-  display: flex;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-  flex-wrap: wrap;
-  position: relative;
-  z-index: 2;
-`;
-
-const Badge = styled.span<{ variant: 'category' | 'discount' | 'featured' | 'new' | 'ending' | 'used' }>`
-  padding: 0.5rem 1rem;
-  border-radius: 1rem;
-  font-size: 0.75rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  
-  ${({ variant }) => {
-    switch (variant) {
-      case 'category':
-        return css`
-          background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
-          color: #3730a3;
-          border: 1px solid #a5b4fc;
-        `;
-      case 'discount':
-        return css`
-          background: linear-gradient(135deg, #10b981, #059669);
-          color: white;
-          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-        `;
-      case 'featured':
-        return css`
-          background: linear-gradient(135deg, #fbbf24, #f59e0b);
-          color: white;
-          box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
-        `;
-      case 'new':
-        return css`
-          background: linear-gradient(135deg, #ef4444, #dc2626);
-          color: white;
-          box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
-        `;
-      case 'ending':
-        return css`
-          background: linear-gradient(135deg, #f97316, #ea580c);
-          color: white;
-          box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
-        `;
-      case 'used':
-        return css`
-          background: linear-gradient(135deg, #6b7280, #4b5563);
-          color: white;
-          box-shadow: 0 4px 12px rgba(107, 114, 128, 0.3);
-        `;
-      default:
-        return css`
-          background: #f1f5f9;
-          color: #64748b;
-        `;
-    }
-  }}
-`;
-
-const CardTitle = styled.h3<{ tipo: 'disponible' | 'usado' }>`
-  font-size: 1.25rem;
-  font-weight: 800;
-  color: ${({ tipo }) => tipo === 'disponible' ? '#1e293b' : '#64748b'};
-  margin-bottom: 0.75rem;
-  line-height: 1.3;
-`;
-
-const CardDescription = styled.p<{ tipo: 'disponible' | 'usado' }>`
-  color: ${({ tipo }) => tipo === 'disponible' ? '#64748b' : '#94a3b8'};
-  font-weight: 500;
-  line-height: 1.5;
-  margin-bottom: 1rem;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-`;
-
-const MetaInfo = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-  flex-wrap: wrap;
-`;
-
-const MetaItem = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.875rem;
-  color: #64748b;
-  font-weight: 600;
-  
-  .icon {
-    color: #94a3b8;
-  }
-`;
-
-const CardContent = styled.div<{ view: 'grid' | 'list' }>`
-  ${({ view }) => view === 'grid' ? css`
-    padding: 0 1.5rem 1.5rem;
-  ` : css`
-    padding: 1.5rem;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-  `}
-`;
-
-const ActionsContainer = styled.div<{ view: 'grid' | 'list' }>`
-  display: flex;
-  gap: 0.75rem;
-  
-  ${({ view }) => view === 'list' && css`
-    flex-direction: column;
-    min-width: 200px;
-  `}
-`;
-
-const ComercioSection = styled.div<{ view: 'grid' | 'list' }>`
-  ${({ view }) => view === 'grid' && css`
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 1rem 1.5rem;
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-    border-top: 1px solid #e2e8f0;
-    margin-top: auto;
-  `}
-`;
-
-const ComercioLogo = styled.div<{ color: string }>`
-  width: 3rem;
-  height: 3rem;
-  border-radius: 1rem;
-  background: ${({ color }) => `linear-gradient(135deg, ${color}, ${color}dd)`};
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-weight: 800;
-  font-size: 1.25rem;
-  box-shadow: 0 4px 12px ${({ color }) => `${color}40`};
-`;
-
-const ComercioInfo = styled.div`
-  flex: 1;
-  min-width: 0;
-  
-  .name {
-    font-weight: 700;
-    color: #1e293b;
-    margin-bottom: 0.25rem;
-  }
-  
-  .location {
-    font-size: 0.875rem;
-    color: #64748b;
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-  }
-`;
-
-const FeaturedBadge = styled(motion.div)`
-  position: absolute;
-  top: 1rem;
-  left: 1rem;
-  z-index: 10;
-`;
-
 export const BenefitsCard: React.FC<BenefitsCardProps> = ({
   beneficio,
   beneficioUso,
@@ -287,6 +47,7 @@ export const BenefitsCard: React.FC<BenefitsCardProps> = ({
 }) => {
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
 
   // Para beneficios usados, necesitamos obtener la info del beneficio
   const data = beneficio || (beneficioUso ? {
@@ -319,16 +80,26 @@ export const BenefitsCard: React.FC<BenefitsCardProps> = ({
 
   const getCategoryIcon = (categoria: string) => {
     const icons: Record<string, React.ReactNode> = {
-      'Retail': <Store size={14} />,
-      'Restaurantes': <Gift size={14} />,
-      'Servicios': <Zap size={14} />,
-      'Entretenimiento': <Sparkles size={14} />
+      'Retail': <ShoppingBag className="w-4 h-4" />,
+      'Restaurantes': <Gift className="w-4 h-4" />,
+      'Servicios': <Zap className="w-4 h-4" />,
+      'Entretenimiento': <Sparkles className="w-4 h-4" />
     };
-    return icons[categoria] || <Store size={14} />;
+    return icons[categoria] || <Store className="w-4 h-4" />;
+  };
+
+  const getCategoryGradient = (categoria: string) => {
+    const gradients: Record<string, string> = {
+      'Retail': 'from-sky-500 to-blue-600',
+      'Restaurantes': 'from-emerald-500 to-teal-600',
+      'Servicios': 'from-purple-500 to-indigo-600',
+      'Entretenimiento': 'from-pink-500 to-rose-600'
+    };
+    return gradients[categoria] || 'from-gray-500 to-gray-600';
   };
 
   const getComercioColor = (comercioNombre: string) => {
-    const colors = ['#6366f1', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#ef4444', '#06b6d4'];
+    const colors = ['#0ea5e9', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#ef4444', '#06b6d4'];
     const index = comercioNombre.length % colors.length;
     return colors[index];
   };
@@ -364,230 +135,439 @@ export const BenefitsCard: React.FC<BenefitsCardProps> = ({
     }
   };
 
+  const cardVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 },
+    hover: { y: -8, scale: 1.02 }
+  };
+
+  const shineVariants = {
+    initial: { x: '-100%' },
+    animate: { x: '100%' }
+  };
+
   return (
     <>
-      <CardContainer
-        tipo={tipo}
-        featured={beneficio?.destacado}
-        view={view}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        whileHover={{ y: -8 }}
+      <motion.div
+        className={`group relative overflow-hidden ${
+          view === 'list' ? 'flex items-stretch' : ''
+        }`}
+        variants={cardVariants}
+        initial="hidden"
+        animate="visible"
+        whileHover="hover"
         transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
       >
+        {/* Background and Glass Effect */}
+        <div className="absolute inset-0 bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-white/20"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-gray-50/30 rounded-3xl"></div>
+        
+        {/* Shine Effect */}
+        <div className="absolute inset-0 overflow-hidden rounded-3xl">
+          <motion.div
+            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+            variants={shineVariants}
+            initial="initial"
+            whileHover="animate"
+            transition={{ duration: 0.6, ease: "easeInOut" }}
+          />
+        </div>
+
+        {/* Featured Badge */}
         {beneficio?.destacado && (
-          <FeaturedBadge
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.2 }}
+          <motion.div
+            className="absolute top-4 left-4 z-20"
+            initial={{ opacity: 0, scale: 0.8, rotate: -10 }}
+            animate={{ opacity: 1, scale: 1, rotate: 0 }}
+            transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
           >
-            <Badge variant="featured">
-              <Crown size={12} />
-              Destacado
-            </Badge>
-          </FeaturedBadge>
+            <div className="bg-gradient-to-r from-amber-400 to-orange-500 text-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center space-x-1 shadow-lg">
+              <Crown className="w-3 h-3" />
+              <span>DESTACADO</span>
+            </div>
+          </motion.div>
         )}
 
-        <CardHeader view={view} tipo={tipo}>
-          <BadgesContainer>
-            <Badge variant="category">
-              {getCategoryIcon(data.categoria)}
-              {data.categoria}
-            </Badge>
-            
-            {isDisponible ? (
-              <Badge variant="discount">
-                {data.tipo === 'porcentaje' && <Percent size={12} />}
-                {data.tipo === 'monto_fijo' && <DollarSign size={12} />}
-                {data.tipo === 'producto_gratis' && <Gift size={12} />}
-                {getDiscountText()}
-              </Badge>
-            ) : (
-              <Badge variant="used">
-                <CheckCircle size={12} />
-                Usado
-              </Badge>
-            )}
-            
-            {beneficio && isNew(beneficio.creadoEn) && (
-              <Badge variant="new">
-                <Sparkles size={12} />
-                Nuevo
-              </Badge>
-            )}
-            
-            {beneficio && isEndingSoon(beneficio.fechaFin) && (
-              <Badge variant="ending">
-                <Flame size={12} />
-                Por vencer
-              </Badge>
-            )}
-          </BadgesContainer>
+        {/* Status Badge */}
+        <motion.div
+          className="absolute top-4 right-4 z-20"
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.3 }}
+        >
+          {isDisponible ? (
+            <div className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center space-x-1 shadow-lg">
+              <Zap className="w-3 h-3" />
+              <span>DISPONIBLE</span>
+            </div>
+          ) : (
+            <div className="bg-gradient-to-r from-gray-500 to-gray-600 text-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center space-x-1 shadow-lg">
+              <CheckCircle className="w-3 h-3" />
+              <span>USADO</span>
+            </div>
+          )}
+        </motion.div>
 
-          <CardTitle tipo={tipo}>{data.titulo}</CardTitle>
-          <CardDescription tipo={tipo}>{data.descripcion}</CardDescription>
+        <div className={`relative z-10 ${view === 'list' ? 'flex w-full' : ''}`}>
+          {/* Main Content */}
+          <div className={`${view === 'list' ? 'flex-1 flex' : ''}`}>
+            {/* Header Section */}
+            <div className={`${view === 'grid' ? 'p-6 pb-4' : 'p-6 flex-1'}`}>
+              {/* Category and Discount Badges */}
+              <div className="flex flex-wrap gap-2 mb-4 mt-8">
+                <motion.div
+                  className={`bg-gradient-to-r ${getCategoryGradient(data.categoria)} text-white px-3 py-1.5 rounded-xl text-xs font-bold flex items-center space-x-1.5 shadow-lg`}
+                  whileHover={{ scale: 1.05 }}
+                >
+                  {getCategoryIcon(data.categoria)}
+                  <span>{data.categoria}</span>
+                </motion.div>
+                
+                <motion.div
+                  className={`${
+                    isDisponible 
+                      ? 'bg-gradient-to-r from-sky-500 to-blue-600' 
+                      : 'bg-gradient-to-r from-gray-400 to-gray-500'
+                  } text-white px-3 py-1.5 rounded-xl text-xs font-bold flex items-center space-x-1.5 shadow-lg`}
+                  whileHover={{ scale: 1.05 }}
+                >
+                  {data.tipo === 'porcentaje' && <Percent className="w-3 h-3" />}
+                  {data.tipo === 'monto_fijo' && <DollarSign className="w-3 h-3" />}
+                  {data.tipo === 'producto_gratis' && <Gift className="w-3 h-3" />}
+                  <span>{getDiscountText()}</span>
+                </motion.div>
 
-          <MetaInfo>
-            <MetaItem>
-              <Calendar size={16} className="icon" />
-              {isDisponible && fechaVencimiento ? (
-                <span>Vence: {format(fechaVencimiento, 'dd/MM/yyyy', { locale: es })}</span>
-              ) : fechaUso ? (
-                <span>Usado: {format(fechaUso, 'dd/MM/yyyy', { locale: es })}</span>
-              ) : null}
-            </MetaItem>
-            
-            {beneficio?.usosActuales && (
-              <MetaItem>
-                <Eye size={16} className="icon" />
-                <span>{beneficio.usosActuales} usos</span>
-              </MetaItem>
-            )}
-            
-            {beneficioUso?.montoDescuento && beneficioUso.montoDescuento > 0 && (
-              <MetaItem>
-                <Tag size={16} className="icon" />
-                <span>Ahorraste: ${beneficioUso.montoDescuento}</span>
-              </MetaItem>
-            )}
-          </MetaInfo>
-        </CardHeader>
+                {/* Additional Badges */}
+                {beneficio && isNew(beneficio.creadoEn) && (
+                  <motion.div
+                    className="bg-gradient-to-r from-red-500 to-pink-600 text-white px-3 py-1.5 rounded-xl text-xs font-bold flex items-center space-x-1.5 shadow-lg"
+                    whileHover={{ scale: 1.05 }}
+                    animate={{ 
+                      boxShadow: [
+                        '0 4px 12px rgba(239, 68, 68, 0.3)',
+                        '0 4px 20px rgba(239, 68, 68, 0.5)',
+                        '0 4px 12px rgba(239, 68, 68, 0.3)'
+                      ]
+                    }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  >
+                    <Sparkles className="w-3 h-3" />
+                    <span>NUEVO</span>
+                  </motion.div>
+                )}
+                
+                {beneficio && isEndingSoon(beneficio.fechaFin) && (
+                  <motion.div
+                    className="bg-gradient-to-r from-orange-500 to-red-600 text-white px-3 py-1.5 rounded-xl text-xs font-bold flex items-center space-x-1.5 shadow-lg"
+                    whileHover={{ scale: 1.05 }}
+                    animate={{ 
+                      boxShadow: [
+                        '0 4px 12px rgba(249, 115, 22, 0.3)',
+                        '0 4px 20px rgba(249, 115, 22, 0.5)',
+                        '0 4px 12px rgba(249, 115, 22, 0.3)'
+                      ]
+                    }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                  >
+                    <Flame className="w-3 h-3" />
+                    <span>POR VENCER</span>
+                  </motion.div>
+                )}
+              </div>
 
-        <CardContent view={view}>
-          <ActionsContainer view={view}>
-            <Button
-              variant="outline"
-              size="sm"
-              leftIcon={<Eye size={16} />}
-              onClick={() => setDetailModalOpen(true)}
-            >
-              Ver Detalles
-            </Button>
-            
-            {isDisponible && onUse && (
-              <Button
-                size="sm"
-                leftIcon={<Zap size={16} />}
-                onClick={handleUse}
-                loading={loading}
+              {/* Title and Description */}
+              <motion.h3 
+                className={`text-xl font-bold mb-3 ${
+                  isDisponible ? 'text-gray-900' : 'text-gray-600'
+                } line-clamp-2`}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.1 }}
               >
-                Usar Ahora
-              </Button>
-            )}
-            
-            {!isDisponible && (
-              <Button
-                variant="outline"
-                size="sm"
-                leftIcon={<Share2 size={16} />}
+                {data.titulo}
+              </motion.h3>
+              
+              <motion.p 
+                className={`${
+                  isDisponible ? 'text-gray-600' : 'text-gray-500'
+                } text-sm leading-relaxed mb-4 line-clamp-2`}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.2 }}
               >
-                Compartir
-              </Button>
-            )}
-            
-            <Button
-              variant="ghost"
-              size="sm"
-              leftIcon={<Heart size={16} />}
-            >
-              <span className="sr-only">Favorito</span>
-            </Button>
-          </ActionsContainer>
-        </CardContent>
+                {data.descripcion}
+              </motion.p>
 
-        {view === 'grid' && isDisponible && (
-          <ComercioSection view={view}>
-            <ComercioLogo color={getComercioColor(data.comercioNombre)}>
-              {data.comercioNombre.charAt(0)}
-            </ComercioLogo>
-            <ComercioInfo>
-              <div className="name">{data.comercioNombre}</div>
-              <div className="location">
-                <MapPin size={14} />
-                Centro Comercial
-              </div>
-            </ComercioInfo>
-            <Button
-              variant="ghost"
-              size="sm"
-              leftIcon={<ArrowUpRight size={16} />}
-            >
-              <span className="sr-only">Ver comercio</span>
-            </Button>
-          </ComercioSection>
-        )}
-      </CardContainer>
-
-      {/* Modal de detalles */}
-      <Dialog open={detailModalOpen} onClose={() => setDetailModalOpen(false)}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-3">
-              {getCategoryIcon(data.categoria)}
-              {data.titulo}
-            </DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl">
-              <ComercioLogo color={getComercioColor(data.comercioNombre)}>
-                {data.comercioNombre.charAt(0)}
-              </ComercioLogo>
-              <div>
-                <h4 className="font-semibold text-gray-900">{data.comercioNombre}</h4>
-                <p className="text-sm text-gray-500">{data.categoria}</p>
+              {/* Meta Information */}
+              <div className="flex flex-wrap gap-4 mb-4">
+                <div className="flex items-center space-x-2 text-sm text-gray-500">
+                  <Calendar className="w-4 h-4" />
+                  <span>
+                    {isDisponible && fechaVencimiento ? (
+                      `Vence: ${format(fechaVencimiento, 'dd/MM/yyyy', { locale: es })}`
+                    ) : fechaUso ? (
+                      `Usado: ${format(fechaUso, 'dd/MM/yyyy', { locale: es })}`
+                    ) : 'Sin fecha'}
+                  </span>
+                </div>
+                
+                {beneficio?.usosActuales && (
+                  <div className="flex items-center space-x-2 text-sm text-gray-500">
+                    <Users className="w-4 h-4" />
+                    <span>{beneficio.usosActuales} usos</span>
+                  </div>
+                )}
+                
+                {beneficioUso?.montoDescuento && beneficioUso.montoDescuento > 0 && (
+                  <div className="flex items-center space-x-2 text-sm text-emerald-600 font-medium">
+                    <TrendingUp className="w-4 h-4" />
+                    <span>Ahorraste: ${beneficioUso.montoDescuento}</span>
+                  </div>
+                )}
               </div>
             </div>
 
-            <div>
-              <h5 className="font-medium text-gray-900 mb-2">Descripción</h5>
-              <p className="text-sm text-gray-600">{data.descripcion}</p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <h5 className="font-medium text-gray-900 mb-1">Descuento</h5>
-                <p className="text-lg font-bold text-emerald-600">{getDiscountText()}</p>
-              </div>
-              <div>
-                <h5 className="font-medium text-gray-900 mb-1">Estado</h5>
-                <p className={`text-sm font-medium ${isDisponible ? 'text-green-600' : 'text-gray-600'}`}>
-                  {isDisponible ? 'Disponible' : 'Usado'}
-                </p>
-              </div>
-            </div>
-
-            {beneficio?.condiciones && (
-              <div>
-                <h5 className="font-medium text-gray-900 mb-2">Condiciones</h5>
-                <p className="text-sm text-gray-600">{beneficio.condiciones}</p>
+            {/* Commerce Section for Grid View */}
+            {view === 'grid' && isDisponible && (
+              <div className="px-6 pb-4">
+                <motion.div 
+                  className="bg-gradient-to-r from-gray-50/80 to-white/80 backdrop-blur-sm rounded-2xl p-4 border border-gray-100/50"
+                  whileHover={{ scale: 1.02 }}
+                >
+                  <div className="flex items-center space-x-3">
+                    <div 
+                      className="w-12 h-12 rounded-2xl flex items-center justify-center text-white font-bold text-lg shadow-lg"
+                      style={{ 
+                        background: `linear-gradient(135deg, ${getComercioColor(data.comercioNombre)}, ${getComercioColor(data.comercioNombre)}dd)` 
+                      }}
+                    >
+                      {data.comercioNombre.charAt(0)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-bold text-gray-900 truncate">{data.comercioNombre}</h4>
+                      <div className="flex items-center space-x-1 text-sm text-gray-500">
+                        <MapPin className="w-3 h-3" />
+                        <span>Centro Comercial</span>
+                      </div>
+                    </div>
+                    <motion.button
+                      className="w-8 h-8 bg-white/80 backdrop-blur-sm rounded-xl flex items-center justify-center text-gray-600 hover:text-sky-600 border border-gray-200/50"
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <ArrowUpRight className="w-4 h-4" />
+                    </motion.button>
+                  </div>
+                </motion.div>
               </div>
             )}
           </div>
 
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setDetailModalOpen(false)}
-              leftIcon={<X size={16} />}
-            >
-              Cerrar
-            </Button>
-            {isDisponible && onUse && (
-              <Button
-                onClick={() => {
-                  handleUse();
-                  setDetailModalOpen(false);
-                }}
-                loading={loading}
-                leftIcon={<Zap size={16} />}
+          {/* Actions Section */}
+          <div className={`${
+            view === 'grid' 
+              ? 'px-6 pb-6' 
+              : 'p-6 flex flex-col justify-center min-w-[200px]'
+          }`}>
+            <div className={`flex gap-3 ${view === 'list' ? 'flex-col' : ''}`}>
+              <motion.button
+                className="flex-1 bg-white/80 backdrop-blur-sm border border-gray-200/50 text-gray-700 px-4 py-2.5 rounded-xl font-medium text-sm flex items-center justify-center space-x-2 hover:bg-gray-50/80 hover:border-gray-300/50 transition-all duration-200"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setDetailModalOpen(true)}
               >
-                Usar Beneficio
-              </Button>
-            )}
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+                <Eye className="w-4 h-4" />
+                <span>Ver Detalles</span>
+              </motion.button>
+              
+              {isDisponible && onUse && (
+                <motion.button
+                  className="flex-1 bg-gradient-to-r from-sky-500 to-blue-600 text-white px-4 py-2.5 rounded-xl font-bold text-sm flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={handleUse}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <Zap className="w-4 h-4" />
+                  )}
+                  <span>{loading ? 'Usando...' : 'Usar Ahora'}</span>
+                </motion.button>
+              )}
+              
+              <div className="flex gap-2">
+                <motion.button
+                  className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 ${
+                    isFavorite 
+                      ? 'bg-gradient-to-r from-pink-500 to-rose-600 text-white shadow-lg' 
+                      : 'bg-white/80 backdrop-blur-sm border border-gray-200/50 text-gray-600 hover:text-pink-500'
+                  }`}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setIsFavorite(!isFavorite)}
+                >
+                  <Heart className={`w-4 h-4 ${isFavorite ? 'fill-current' : ''}`} />
+                </motion.button>
+                
+                <motion.button
+                  className="w-10 h-10 bg-white/80 backdrop-blur-sm border border-gray-200/50 text-gray-600 rounded-xl flex items-center justify-center hover:text-sky-600 transition-all duration-200"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Share2 className="w-4 h-4" />
+                </motion.button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Detail Modal */}
+      <AnimatePresence>
+        {detailModalOpen && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            {/* Backdrop */}
+            <motion.div
+              className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setDetailModalOpen(false)}
+            />
+            
+            {/* Modal Content */}
+            <motion.div
+              className="relative bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 max-w-md w-full max-h-[90vh] overflow-hidden"
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            >
+              {/* Modal Header */}
+              <div className="p-6 border-b border-gray-100/50">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    {getCategoryIcon(data.categoria)}
+                    <h3 className="text-xl font-bold text-gray-900">{data.titulo}</h3>
+                  </div>
+                  <motion.button
+                    className="w-8 h-8 bg-gray-100/80 backdrop-blur-sm rounded-xl flex items-center justify-center text-gray-600 hover:text-gray-900"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setDetailModalOpen(false)}
+                  >
+                    <X className="w-4 h-4" />
+                  </motion.button>
+                </div>
+              </div>
+
+              {/* Modal Body */}
+              <div className="p-6 space-y-6 max-h-[60vh] overflow-y-auto">
+                {/* Commerce Info */}
+                <div className="bg-gradient-to-r from-gray-50/80 to-white/80 backdrop-blur-sm rounded-2xl p-4 border border-gray-100/50">
+                  <div className="flex items-center space-x-3">
+                    <div 
+                      className="w-12 h-12 rounded-2xl flex items-center justify-center text-white font-bold text-lg shadow-lg"
+                      style={{ 
+                        background: `linear-gradient(135deg, ${getComercioColor(data.comercioNombre)}, ${getComercioColor(data.comercioNombre)}dd)` 
+                      }}
+                    >
+                      {data.comercioNombre.charAt(0)}
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-gray-900">{data.comercioNombre}</h4>
+                      <p className="text-sm text-gray-500">{data.categoria}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Description */}
+                <div>
+                  <h5 className="font-semibold text-gray-900 mb-2 flex items-center space-x-2">
+                    <Award className="w-4 h-4" />
+                    <span>Descripción</span>
+                  </h5>
+                  <p className="text-gray-600 leading-relaxed">{data.descripcion}</p>
+                </div>
+
+                {/* Details Grid */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-4 border border-emerald-100/50">
+                    <h5 className="font-semibold text-emerald-900 mb-1 flex items-center space-x-1">
+                      <Tag className="w-4 h-4" />
+                      <span>Descuento</span>
+                    </h5>
+                    <p className="text-2xl font-bold text-emerald-600">{getDiscountText()}</p>
+                  </div>
+                  <div className="bg-gradient-to-br from-sky-50 to-blue-50 rounded-2xl p-4 border border-sky-100/50">
+                    <h5 className="font-semibold text-sky-900 mb-1 flex items-center space-x-1">
+                      <Clock className="w-4 h-4" />
+                      <span>Estado</span>
+                    </h5>
+                    <p className={`text-lg font-bold ${isDisponible ? 'text-emerald-600' : 'text-gray-600'}`}>
+                      {isDisponible ? 'Disponible' : 'Usado'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Conditions */}
+                {beneficio?.condiciones && (
+                  <div>
+                    <h5 className="font-semibold text-gray-900 mb-2 flex items-center space-x-2">
+                      <Sparkles className="w-4 h-4" />
+                      <span>Condiciones</span>
+                    </h5>
+                    <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-4 border border-amber-100/50">
+                      <p className="text-amber-900 text-sm leading-relaxed">{beneficio.condiciones}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Modal Footer */}
+              <div className="p-6 border-t border-gray-100/50 bg-gradient-to-r from-gray-50/50 to-white/50">
+                <div className="flex gap-3">
+                  <motion.button
+                    className="flex-1 bg-white/80 backdrop-blur-sm border border-gray-200/50 text-gray-700 px-4 py-2.5 rounded-xl font-medium flex items-center justify-center space-x-2 hover:bg-gray-50/80"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setDetailModalOpen(false)}
+                  >
+                    <X className="w-4 h-4" />
+                    <span>Cerrar</span>
+                  </motion.button>
+                  {isDisponible && onUse && (
+                    <motion.button
+                      className="flex-1 bg-gradient-to-r from-sky-500 to-blue-600 text-white px-4 py-2.5 rounded-xl font-bold flex items-center justify-center space-x-2 shadow-lg disabled:opacity-50"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => {
+                        handleUse();
+                        setDetailModalOpen(false);
+                      }}
+                      disabled={loading}
+                    >
+                      {loading ? (
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      ) : (
+                        <Zap className="w-4 h-4" />
+                      )}
+                      <span>{loading ? 'Usando...' : 'Usar Beneficio'}</span>
+                    </motion.button>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 };
