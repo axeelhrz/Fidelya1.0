@@ -1,7 +1,5 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import { 
   X, 
   Home, 
@@ -23,7 +21,6 @@ import {
   Upload,
   Palette,
   Shield,
-  Mail,
   LogOut,
   ChevronDown,
   Target,
@@ -48,7 +45,6 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
   activeSection
 }) => {
   const { user } = useAuth();
-  const pathname = usePathname();
 
   const menuItems = [
     {

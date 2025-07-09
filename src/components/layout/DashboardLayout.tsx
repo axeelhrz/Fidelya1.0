@@ -10,7 +10,7 @@ interface SidebarProps {
   onToggle: () => void;
   onMenuClick: (section: string) => void;
   activeSection: string;
-  onLogoutClick?: () => void;
+  onLogoutClick: () => void;
 }
 
 interface DashboardLayoutProps {

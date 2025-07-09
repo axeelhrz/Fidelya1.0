@@ -1,7 +1,5 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import { 
   X, 
   Home, 
@@ -14,7 +12,6 @@ import {
   Calendar,
   Award,
   CreditCard,
-  Users,
   Building2,
   Heart,
   History,
@@ -22,10 +19,7 @@ import {
   Target,
   TrendingUp,
   Eye,
-  Download,
-  Share2,
   Shield,
-  Mail,
   LogOut,
   ChevronDown,
   Smartphone,
@@ -50,7 +44,6 @@ export const SocioSidebar: React.FC<SocioSidebarProps> = ({
   activeSection
 }) => {
   const { user } = useAuth();
-  const pathname = usePathname();
 
   const menuItems = [
     {

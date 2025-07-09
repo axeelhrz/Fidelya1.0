@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Store,
@@ -17,19 +18,17 @@ import {
   AlertTriangle,
   TrendingUp,
   Users,
-  Gift,
   BarChart3
 } from 'lucide-react';
 import { useComercios } from '@/hooks/useComercios';
 import { ComercioDisponible } from '@/services/adhesion.service';
 import { VincularComercioDialog } from './VincularComercioDialog';
-import { toast } from 'react-hot-toast';
 
 interface ComercioManagementProps {
   onNavigate?: (section: string) => void;
 }
 
-export const ComercioManagement: React.FC<ComercioManagementProps> = ({ onNavigate }) => {
+export const ComercioManagement: React.FC<ComercioManagementProps> = ({}) => {
   const {
     comerciosVinculados,
     stats,
@@ -38,7 +37,6 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({ onNaviga
     buscarComercios,
     vincularComercio,
     desvincularComercio,
-    refreshStats,
     clearError
   } = useComercios();
 
@@ -306,9 +304,11 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({ onNaviga
                     <div className="flex items-center space-x-3">
                       <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
                         {comercio.logoUrl ? (
-                          <img
+                          <Image
                             src={comercio.logoUrl}
                             alt={comercio.nombreComercio}
+                            width={32}
+                            height={32}
                             className="w-8 h-8 rounded object-cover"
                           />
                         ) : (
@@ -432,19 +432,17 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({ onNaviga
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <div className="flex-shrink-0 h-10 w-10">
-                          <div className="h-10 w-10 rounded-lg bg-gray-100 flex items-center justify-center">
-                            {comercio.logoUrl ? (
-                              <img
-                                src={comercio.logoUrl}
-                                alt={comercio.nombreComercio}
-                                className="w-6 h-6 rounded object-cover"
-                              />
-                            ) : (
-                              <Store className="w-5 h-5 text-gray-400" />
-                            )}
-                          </div>
-                        </div>
+                        {comercio.logoUrl ? (
+                          <Image
+                            src={comercio.logoUrl}
+                            alt={comercio.nombreComercio}
+                            width={24}
+                            height={24}
+                            className="w-6 h-6 rounded object-cover"
+                          />
+                        ) : (
+                          <Store className="w-5 h-5 text-gray-400" />
+                        )}
                         <div className="ml-4">
                           <div className="text-sm font-medium text-gray-900">
                             {comercio.nombreComercio}
