@@ -127,7 +127,7 @@
   }
   
   .card-hover {
-    @apply card hover:shadow-3xl hover:-translate-y-2 transition-all duration-500;
+    @apply card hover:shadow-2xl hover:-translate-y-2 transition-all duration-500;
   }
   
   /* Glass effect cards mejorados */
@@ -166,6 +166,11 @@
 
 /* Utilidades personalizadas mejoradas */
 @layer utilities {
+  /* Custom shadow utilities */
+  .shadow-3xl {
+    box-shadow: 0 35px 60px -12px rgba(0, 0, 0, 0.25);
+  }
+  
   /* Texto balanceado */
   .text-balance {
     text-wrap: balance;

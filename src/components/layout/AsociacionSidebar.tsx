@@ -55,13 +55,19 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
 }) => {
   const { user } = useAuth();
 
+  // Menú simplificado pero completo
   const menuItems = [
     {
       id: 'dashboard',
-      label: 'Dashboard Principal',
+      label: 'Vista General',
       icon: Home,
-      description: 'Vista general y métricas',
-      badge: 'Inicio'
+      description: 'Dashboard principal'
+    },
+    {
+      id: 'analytics',
+      label: 'Analytics Avanzado',
+      icon: BarChart3,
+      description: 'Métricas y análisis'
     },
     {
       id: 'socios',
@@ -69,10 +75,10 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
       icon: Users,
       description: 'Administrar miembros',
       submenu: [
-        { id: 'socios-lista', label: 'Lista de Socios', icon: Users, description: 'Ver todos los socios' },
-        { id: 'socios-nuevo', label: 'Agregar Socio', icon: Plus, description: 'Registrar nuevo socio' },
-        { id: 'socios-importar', label: 'Importar CSV', icon: Upload, description: 'Importación masiva' },
-        { id: 'socios-exportar', label: 'Exportar Datos', icon: Download, description: 'Descargar información' }
+        { id: 'socios-lista', label: 'Lista de Socios', icon: Users },
+        { id: 'socios-nuevo', label: 'Agregar Socio', icon: Plus },
+        { id: 'socios-importar', label: 'Importar CSV', icon: Upload },
+        { id: 'socios-exportar', label: 'Exportar Datos', icon: Download }
       ]
     },
     {
@@ -81,11 +87,11 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
       icon: Store,
       description: 'Red de comercios afiliados',
       submenu: [
-        { id: 'comercios-lista', label: 'Comercios Vinculados', icon: Store, description: 'Ver comercios activos' },
-        { id: 'comercios-vincular', label: 'Vincular Comercio', icon: LinkIcon, description: 'Agregar nuevo comercio' },
-        { id: 'comercios-solicitudes', label: 'Solicitudes', icon: UserCheck, description: 'Revisar solicitudes' },
-        { id: 'comercios-beneficios', label: 'Beneficios por Comercio', icon: Gift, description: 'Gestionar ofertas' },
-        { id: 'comercios-analytics', label: 'Analytics de Comercios', icon: TrendingUp, description: 'Métricas detalladas' }
+        { id: 'comercios-lista', label: 'Comercios Vinculados', icon: Store },
+        { id: 'comercios-vincular', label: 'Vincular Comercio', icon: LinkIcon },
+        { id: 'comercios-solicitudes', label: 'Solicitudes', icon: UserCheck },
+        { id: 'comercios-beneficios', label: 'Beneficios por Comercio', icon: Gift },
+        { id: 'comercios-analytics', label: 'Analytics de Comercios', icon: TrendingUp }
       ]
     },
     {
@@ -94,10 +100,10 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
       icon: Gift,
       description: 'Ofertas y promociones',
       submenu: [
-        { id: 'beneficios-lista', label: 'Todos los Beneficios', icon: Gift, description: 'Ver beneficios activos' },
-        { id: 'beneficios-crear', label: 'Crear Beneficio', icon: Plus, description: 'Nueva promoción' },
-        { id: 'beneficios-categorias', label: 'Categorías', icon: Filter, description: 'Organizar por tipo' },
-        { id: 'beneficios-validaciones', label: 'Validaciones', icon: UserCheck, description: 'Historial de uso' }
+        { id: 'beneficios-lista', label: 'Todos los Beneficios', icon: Gift },
+        { id: 'beneficios-crear', label: 'Crear Beneficio', icon: Plus },
+        { id: 'beneficios-categorias', label: 'Categorías', icon: Filter },
+        { id: 'beneficios-validaciones', label: 'Validaciones', icon: UserCheck }
       ]
     },
     {
@@ -106,37 +112,22 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
       icon: CreditCard,
       description: 'Pagos y facturación',
       submenu: [
-        { id: 'pagos-registrar', label: 'Registrar Pago', icon: Plus, description: 'Nuevo pago de cuota' },
-        { id: 'pagos-historial', label: 'Historial de Pagos', icon: Calendar, description: 'Ver transacciones' },
-        { id: 'pagos-vencimientos', label: 'Próximos Vencimientos', icon: UserCheck, description: 'Cuotas pendientes' },
-        { id: 'pagos-reportes', label: 'Reportes Financieros', icon: PieChart, description: 'Análisis de ingresos' }
+        { id: 'pagos-registrar', label: 'Registrar Pago', icon: Plus },
+        { id: 'pagos-historial', label: 'Historial de Pagos', icon: Calendar },
+        { id: 'pagos-vencimientos', label: 'Próximos Vencimientos', icon: UserCheck },
+        { id: 'pagos-reportes', label: 'Reportes Financieros', icon: PieChart }
       ]
     },
     {
-      id: 'analytics',
-      label: 'Analytics Avanzado',
-      icon: BarChart3,
-      description: 'Inteligencia de negocio',
-      submenu: [
-        { id: 'analytics-general', label: 'Dashboard Ejecutivo', icon: TrendingUp, description: 'KPIs principales' },
-        { id: 'analytics-socios', label: 'Análisis de Socios', icon: Users, description: 'Comportamiento de miembros' },
-        { id: 'analytics-comercios', label: 'Performance Comercios', icon: Store, description: 'Métricas de afiliados' },
-        { id: 'analytics-beneficios', label: 'ROI de Beneficios', icon: Gift, description: 'Efectividad de ofertas' },
-        { id: 'analytics-predictivo', label: 'Análisis Predictivo', icon: Target, description: 'Tendencias futuras' }
-      ]
-    },
-    {
-      id: 'comunicacion',
+      id: 'notificaciones',
       label: 'Centro de Comunicación',
       icon: Bell,
       description: 'Notificaciones y mensajería',
       submenu: [
-        { id: 'notificaciones-centro', label: 'Centro de Notificaciones', icon: Bell, description: 'Bandeja de entrada' },
-        { id: 'notificaciones-crear', label: 'Crear Campaña', icon: Plus, description: 'Nueva comunicación' },
-        { id: 'notificaciones-plantillas', label: 'Plantillas', icon: Mail, description: 'Mensajes predefinidos' },
-        { id: 'notificaciones-push', label: 'Notificaciones Push', icon: Smartphone, description: 'Mensajes móviles' },
-        { id: 'notificaciones-email', label: 'Email Marketing', icon: Mail, description: 'Campañas por correo' },
-        { id: 'notificaciones-sms', label: 'SMS Masivos', icon: MessageSquare, description: 'Mensajes de texto' }
+        { id: 'notificaciones-centro', label: 'Centro de Notificaciones', icon: Bell },
+        { id: 'notificaciones-crear', label: 'Crear Campaña', icon: Plus },
+        { id: 'notificaciones-plantillas', label: 'Plantillas', icon: Mail },
+        { id: 'notificaciones-push', label: 'Notificaciones Push', icon: Smartphone }
       ]
     },
     {
@@ -145,25 +136,10 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
       icon: FileText,
       description: 'Informes detallados',
       submenu: [
-        { id: 'reportes-ejecutivo', label: 'Reporte Ejecutivo', icon: Briefcase, description: 'Resumen gerencial' },
-        { id: 'reportes-socios', label: 'Reporte de Socios', icon: Users, description: 'Estado de membresías' },
-        { id: 'reportes-comercios', label: 'Reporte de Comercios', icon: Store, description: 'Performance de afiliados' },
-        { id: 'reportes-validaciones', label: 'Validaciones y Uso', icon: UserCheck, description: 'Actividad de beneficios' },
-        { id: 'reportes-financiero', label: 'Reporte Financiero', icon: CreditCard, description: 'Análisis de ingresos' },
-        { id: 'reportes-personalizado', label: 'Reportes Personalizados', icon: Filter, description: 'Crear informes a medida' }
-      ]
-    },
-    {
-      id: 'operaciones',
-      label: 'Operaciones y Mantenimiento',
-      icon: Database,
-      description: 'Gestión del sistema',
-      submenu: [
-        { id: 'backup-crear', label: 'Crear Respaldo', icon: Plus, description: 'Backup manual' },
-        { id: 'backup-historial', label: 'Historial de Respaldos', icon: Calendar, description: 'Ver backups anteriores' },
-        { id: 'backup-restaurar', label: 'Restaurar Sistema', icon: Upload, description: 'Recuperar datos' },
-        { id: 'backup-automatico', label: 'Respaldos Automáticos', icon: Zap, description: 'Configurar programación' },
-        { id: 'sistema-logs', label: 'Logs del Sistema', icon: Activity, description: 'Monitoreo de actividad' }
+        { id: 'reportes-ejecutivo', label: 'Reporte Ejecutivo', icon: Briefcase },
+        { id: 'reportes-socios', label: 'Reporte de Socios', icon: Users },
+        { id: 'reportes-comercios', label: 'Reporte de Comercios', icon: Store },
+        { id: 'reportes-validaciones', label: 'Validaciones y Uso', icon: UserCheck }
       ]
     },
     {
@@ -172,51 +148,15 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
       icon: Settings,
       description: 'Ajustes del sistema',
       submenu: [
-        { id: 'configuracion-perfil', label: 'Perfil de Asociación', icon: Building2, description: 'Datos institucionales' },
-        { id: 'configuracion-usuarios', label: 'Gestión de Usuarios', icon: Users, description: 'Administradores' },
-        { id: 'configuracion-seguridad', label: 'Seguridad y Acceso', icon: Shield, description: 'Permisos y roles' },
-        { id: 'configuracion-integraciones', label: 'Integraciones', icon: Globe, description: 'APIs y servicios' },
-        { id: 'configuracion-notificaciones', label: 'Configurar Notificaciones', icon: Bell, description: 'Preferencias de comunicación' },
-        { id: 'configuracion-general', label: 'Configuración General', icon: Settings, description: 'Ajustes del sistema' }
-      ]
-    },
-    {
-      id: 'soporte',
-      label: 'Ayuda y Soporte',
-      icon: HelpCircle,
-      description: 'Asistencia técnica',
-      submenu: [
-        { id: 'soporte-documentacion', label: 'Documentación', icon: BookOpen, description: 'Guías y manuales' },
-        { id: 'soporte-contacto', label: 'Contactar Soporte', icon: MessageSquare, description: 'Asistencia técnica' },
-        { id: 'soporte-faq', label: 'Preguntas Frecuentes', icon: HelpCircle, description: 'Respuestas rápidas' },
-        { id: 'soporte-tutoriales', label: 'Tutoriales', icon: BookOpen, description: 'Videos explicativos' }
+        { id: 'configuracion-perfil', label: 'Perfil de Asociación', icon: Building2 },
+        { id: 'configuracion-usuarios', label: 'Gestión de Usuarios', icon: Users },
+        { id: 'configuracion-seguridad', label: 'Seguridad y Acceso', icon: Shield },
+        { id: 'configuracion-general', label: 'Configuración General', icon: Settings }
       ]
     }
   ];
 
-  // Función para determinar qué elementos deben estar expandidos
-  const getInitialExpandedItems = React.useCallback(() => {
-    const expanded = new Set<string>();
-    
-    // Siempre expandir dashboard por defecto
-    expanded.add('dashboard');
-    
-    // Expandir automáticamente el menú padre si hay una sección activa
-    menuItems.forEach(item => {
-      if (item.submenu && activeSection.startsWith(item.id + '-')) {
-        expanded.add(item.id);
-      }
-    });
-    
-    return expanded;
-  }, [activeSection]);
-
-  const [expandedItems, setExpandedItems] = React.useState<Set<string>>(getInitialExpandedItems());
-
-  // Actualizar elementos expandidos cuando cambie la sección activa
-  React.useEffect(() => {
-    setExpandedItems(getInitialExpandedItems());
-  }, [getInitialExpandedItems]);
+  const [expandedItems, setExpandedItems] = React.useState<Set<string>>(new Set(['dashboard', 'comercios']));
 
   const toggleExpanded = (itemId: string) => {
     const newExpanded = new Set(expandedItems);
@@ -238,17 +178,6 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
 
   const isActive = (itemId: string) => {
     return activeSection === itemId || activeSection.startsWith(itemId + '-');
-  };
-
-  const getItemBadge = (item: { badge?: string }) => {
-    if (item.badge) {
-      return (
-        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-          {item.badge}
-        </span>
-      );
-    }
-    return null;
   };
 
   return (
@@ -332,10 +261,7 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
                         <item.icon className="w-4 h-4" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center space-x-2">
-                          <span className="font-medium text-sm truncate">{item.label}</span>
-                          {getItemBadge(item)}
-                        </div>
+                        <span className="font-medium text-sm truncate">{item.label}</span>
                         <p className="text-xs text-gray-500 mt-0.5 truncate">{item.description}</p>
                       </div>
                     </div>
@@ -374,10 +300,7 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
                             }`}>
                               <subItem.icon className="w-3 h-3" />
                             </div>
-                            <div className="flex-1 min-w-0">
-                              <span className="text-sm font-medium truncate">{subItem.label}</span>
-                              <p className="text-xs text-gray-500 truncate">{subItem.description}</p>
-                            </div>
+                            <span className="text-sm font-medium truncate">{subItem.label}</span>
                           </button>
                         ))}
                       </motion.div>
