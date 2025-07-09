@@ -29,6 +29,8 @@ import {
   Close,
   Camera,
   TrendingUp,
+  TrendingDown,
+  Timeline,
   Settings,
   Notifications,
   Security,
@@ -38,8 +40,10 @@ import {
   CheckCircle,
   Warning,
   Error as ErrorIcon,
+  Info,
   Badge as BadgeIcon,
   Analytics,
+  Favorite,
   Store,
   LocalOffer,
   AccountCircle,
@@ -53,17 +57,20 @@ import {
   Visibility,
   Mail,
   Sms,
+  PushPin,
   NotificationsActive,
+  Language,
   History,
   Receipt,
+  ArrowBack,
 } from '@mui/icons-material';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Socio, SocioStats } from '@/types/socio';
+import { Socio, SocioStats, SocioActivity } from '@/types/socio';
 import { HistorialValidacion } from '@/services/validaciones.service';
 import { socioService } from '@/services/socio.service';
 import { validacionesService } from '@/services/validaciones.service';
-import { safeFormatTimestamp } from '@/lib/utils';
+import { safeTimestampToDate, safeFormatTimestamp } from '@/lib/utils';
 import toast from 'react-hot-toast';
 
 interface SocioProfileViewProps {
@@ -178,6 +185,7 @@ export const SocioProfileView: React.FC<SocioProfileViewProps> = ({
   
   const [tabValue, setTabValue] = useState(0);
   const [stats, setStats] = useState<SocioStats | null>(null);
+  const [activities, setActivities] = useState<SocioActivity[]>([]);
   const [validaciones, setValidaciones] = useState<HistorialValidacion[]>([]);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -188,13 +196,14 @@ export const SocioProfileView: React.FC<SocioProfileViewProps> = ({
     
     setLoading(true);
     try {
-      const [statsData, , validacionesData] = await Promise.all([
+      const [statsData, activitiesData, validacionesData] = await Promise.all([
         socioService.getSocioStats?.(socio.uid) || Promise.resolve(null),
         socioService.getSocioActivity?.() || Promise.resolve([]),
         validacionesService.getHistorialValidaciones(socio.uid, 20),
       ]);
       
       setStats(statsData);
+      setActivities(activitiesData);
       setValidaciones(validacionesData.validaciones);
     } catch (error) {
       console.error('Error loading profile data:', error);
@@ -333,40 +342,45 @@ export const SocioProfileView: React.FC<SocioProfileViewProps> = ({
 
   return (
     <AnimatePresence>
-      <motion.div
+      <Box
+        component={motion.div}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        style={{
+        sx={{
           position: 'fixed',
           top: 0,
           left: 0,
           right: 0,
           bottom: 0,
           backgroundColor: 'rgba(0, 0, 0, 0.4)',
-          zIndex: 1300,
+          backdropFilter: 'blur(4px)',
+          zIndex: 9999, // Z-index muy alto para estar sobre todo
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: isMobile ? 8 : 24,
+          p: { xs: 1, md: 3 },
         }}
         onClick={onClose}
       >
-        <motion.div
-          initial={{ scale: 0.95, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.95, opacity: 0 }}
+        <Box
+          component={motion.div}
+          initial={{ scale: 0.95, opacity: 0, y: 20 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          exit={{ scale: 0.95, opacity: 0, y: 20 }}
           onClick={(e) => e.stopPropagation()}
-          style={{
+          sx={{
             width: '100%',
-            maxWidth: isMobile ? '100%' : 900,
-            maxHeight: isMobile ? '100%' : '90vh',
+            maxWidth: { xs: '100%', sm: '95%', md: 900 },
+            maxHeight: { xs: '100%', md: '90vh' },
             backgroundColor: 'white',
-            borderRadius: isMobile ? 0 : 24,
+            borderRadius: { xs: 0, md: 6 },
             overflow: 'hidden',
             display: 'flex',
             flexDirection: 'column',
             boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+            position: 'relative',
+            zIndex: 10000, // Z-index adicional para el contenido
           }}
         >
           {/* Header Compacto */}
@@ -974,8 +988,8 @@ export const SocioProfileView: React.FC<SocioProfileViewProps> = ({
               </Box>
             </TabPanel>
           </Box>
-        </motion.div>
-      </motion.div>
+        </Box>
+      </Box>
     </AnimatePresence>
   );
 };
