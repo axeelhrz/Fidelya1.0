@@ -23,6 +23,7 @@ import {
   ChevronDown,
   X
 } from 'lucide-react';
+import { Timestamp } from 'firebase/firestore';
 import { useSocios } from '@/hooks/useSocios';
 import { Socio } from '@/types/socio';
 import { SocioFormData } from '@/services/socio.service';
@@ -67,6 +68,44 @@ export const EnhancedMemberManagement: React.FC<MemberManagementProps> = () => {
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [socioForPayment, setSocioForPayment] = useState<Socio | null>(null);
 
+  // Helper function to prepare socio data for editing
+  const prepareSocioForEdit = (socio: Socio): Socio => {
+    // Helper function to ensure we have a proper Timestamp
+    const ensureTimestamp = (value: any): Timestamp => {
+      if (value && typeof value.toDate === 'function') {
+        // Already a Timestamp
+        return value as Timestamp;
+      } else if (value instanceof Date) {
+        // Convert Date to Timestamp
+        return Timestamp.fromDate(value);
+      } else if (typeof value === 'string') {
+        // Convert string to Timestamp
+        return Timestamp.fromDate(new Date(value));
+      } else if (value && typeof value === 'object' && value.seconds) {
+        // Handle Firestore timestamp-like objects
+        return new Timestamp(value.seconds, value.nanoseconds || 0);
+      } else {
+        // Default to current timestamp
+        return Timestamp.now();
+      }
+    };
+
+    return {
+      ...socio,
+      uid: socio.uid,
+      asociacion: socio.asociacion || socio.asociacionId || '',
+      estado: socio.estado,
+      creadoEn: ensureTimestamp(socio.creadoEn),
+      actualizadoEn: socio.actualizadoEn ? ensureTimestamp(socio.actualizadoEn) : undefined,
+      fechaNacimiento: socio.fechaNacimiento ? 
+        (typeof socio.fechaNacimiento.toDate === 'function' ? 
+          socio.fechaNacimiento.toDate() : 
+          socio.fechaNacimiento instanceof Date ? 
+            socio.fechaNacimiento : 
+            new Date(socio.fechaNacimiento)
+        ) : undefined
+    };
+  };
 
   // Handle search
   const handleSearch = (term: string) => {
@@ -627,25 +666,7 @@ export const EnhancedMemberManagement: React.FC<MemberManagementProps> = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex items-center space-x-2">
                           <button
-                            onClick={() => handleEditSocio({
-                              ...socio,
-                              uid: socio.uid, // Ensure uid is present
-                              asociacion: socio.asociacion || socio.asociacionId || '',
-                              estado: socio.estado === 'suspendido' ? 'inactivo' : socio.estado, // Map "suspendido" to a valid value
-                              creadoEn: (socio.creadoEn && typeof socio.creadoEn.toDate === 'function')
-                                ? socio.creadoEn
-                                : typeof window !== 'undefined' && (window as any).firebase?.firestore?.Timestamp
-                                  ? (window as any).firebase.firestore.Timestamp.fromDate(socio.creadoEn)
-                                  : socio.creadoEn, // fallback, ideally import Timestamp and use Timestamp.fromDate
-                              actualizadoEn: (socio.actualizadoEn && typeof socio.actualizadoEn.toDate === 'function')
-                                ? socio.actualizadoEn
-                                : typeof window !== 'undefined' && (window as any).firebase?.firestore?.Timestamp
-                                  ? (window as any).firebase.firestore.Timestamp.fromDate(socio.actualizadoEn)
-                                  : socio.actualizadoEn, // fallback, ideally import Timestamp and use Timestamp.fromDate
-                              fechaNacimiento: (socio.fechaNacimiento && typeof (socio.fechaNacimiento as any).toDate === 'function')
-                                ? (socio.fechaNacimiento as any).toDate()
-                                : socio.fechaNacimiento // fallback, use as Date if not Firestore Timestamp
-                            })}
+                            onClick={() => handleEditSocio(prepareSocioForEdit(socio))}
                             className="text-blue-600 hover:text-blue-900"
                             title="Editar"
                           >
@@ -742,7 +763,7 @@ export const EnhancedMemberManagement: React.FC<MemberManagementProps> = () => {
                         
                         <div className="flex items-center space-x-2">
                           <button
-                            onClick={() => handleEditSocio(socioWithRequiredFields)}
+                            onClick={() => handleEditSocio(prepareSocioForEdit(socio))}
                             className="text-blue-600 hover:text-blue-900"
                           >
                             <Edit size={16} />

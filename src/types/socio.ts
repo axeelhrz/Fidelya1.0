@@ -126,6 +126,7 @@ export interface SocioFormData {
   dni?: string;
   direccion?: string;
   fechaNacimiento?: Date;
+  montoCuota?: number; // Monto de la cuota mensual
 }
 
 export interface SocioStats {
