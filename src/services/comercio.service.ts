@@ -15,7 +15,7 @@ import {
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '@/lib/firebase';
-import { COLLECTIONS, QR_CONFIG } from '@/lib/constants';
+import { COLLECTIONS, QR_CONFIG, STORAGE_CONFIG, ERROR_MESSAGES } from '@/lib/constants';
 import { handleError } from '@/lib/error-handler';
 import QRCode from 'qrcode';
 
@@ -35,8 +35,8 @@ export interface Comercio {
   estado: 'activo' | 'inactivo' | 'pendiente' | 'suspendido';
   visible: boolean;
   asociacionesVinculadas: string[];
-  qrCode?: string;
-  qrCodeUrl?: string;
+  qrCode?: string; // Data URL for direct use (avoids CORS)
+  qrCodeUrl?: string; // Firebase Storage URL for backup
   beneficiosActivos: number;
   validacionesRealizadas: number;
   clientesAtendidos: number;
@@ -368,7 +368,7 @@ class ComercioService {
   }
 
   /**
-   * Upload comercio logo
+   * Upload comercio logo with CORS handling
    */
   async uploadLogo(comercioId: string, file: File): Promise<string | null> {
     try {
@@ -388,13 +388,28 @@ class ComercioService {
       console.log('✅ Logo uploaded successfully');
       return downloadURL;
     } catch (error) {
-      handleError(error, 'Upload Logo');
-      return null;
+      console.warn('⚠️ CORS error uploading logo, trying fallback method:', error);
+      
+      // Fallback: Convert to base64 and store directly
+      try {
+        const base64Logo = await this.convertFileToBase64(file);
+        
+        await updateDoc(doc(db, this.collection, comercioId), {
+          logo: base64Logo,
+          actualizadoEn: serverTimestamp(),
+        });
+
+        console.log('✅ Logo uploaded successfully using fallback method');
+        return base64Logo;
+      } catch (fallbackError) {
+        handleError(fallbackError, 'Upload Logo Fallback');
+        return null;
+      }
     }
   }
 
   /**
-   * Generate QR Code for comercio
+   * Generate QR Code for comercio - Enhanced CORS handling
    */
   async generateQRCode(comercioId: string, beneficioId?: string): Promise<string | null> {
     try {
@@ -402,41 +417,112 @@ class ComercioService {
       const baseUrl = QR_CONFIG.baseUrl;
       const validationUrl = `${baseUrl}${QR_CONFIG.validationPath}?comercio=${comercioId}${beneficioId ? `&beneficio=${beneficioId}` : ''}`;
 
-      // Generate QR code
+      // Generate QR code as data URL (primary method - avoids CORS issues)
       const qrCodeDataURL = await QRCode.toDataURL(validationUrl, {
         width: QR_CONFIG.size,
         margin: QR_CONFIG.margin,
         color: QR_CONFIG.color,
         errorCorrectionLevel: QR_CONFIG.errorCorrectionLevel,
+        quality: QR_CONFIG.quality,
+        rendererOpts: QR_CONFIG.rendererOpts,
       });
 
-      // Convert data URL to blob and upload to storage
-      const response = await fetch(qrCodeDataURL);
-      const blob = await response.blob();
-      
-      const fileName = `qr_${comercioId}_${Date.now()}.png`;
-      const storageRef = ref(storage, `qr-codes/${comercioId}/${fileName}`);
-      
-      const snapshot = await uploadBytes(storageRef, blob);
-      const downloadURL = await getDownloadURL(snapshot.ref);
+      console.log('✅ QR Code generated as data URL successfully');
 
-      // Update comercio with QR code URL
-      await updateDoc(doc(db, this.collection, comercioId), {
-        qrCode: qrCodeDataURL,
-        qrCodeUrl: downloadURL,
+      // Try to upload to Firebase Storage as backup (optional)
+      let storageUrl: string | null = null;
+      
+      if (STORAGE_CONFIG.enableStorageBackup) {
+        try {
+          storageUrl = await this.uploadQRToStorage(comercioId, qrCodeDataURL);
+          console.log('✅ QR Code also uploaded to Firebase Storage');
+        } catch (storageError) {
+          console.warn('⚠️ Could not upload QR to storage (CORS issue), using data URL only:', storageError);
+          
+          // Log specific CORS error for debugging
+          if (storageError instanceof Error && storageError.message.includes('CORS')) {
+            console.warn('🔧 CORS Configuration needed for Firebase Storage. See cors.json file.');
+          }
+        }
+      }
+
+      // Update comercio with QR code data
+      const updateData: any = {
+        qrCode: qrCodeDataURL, // Primary: data URL (no CORS issues)
         actualizadoEn: serverTimestamp(),
-      });
+      };
 
-      console.log('✅ QR Code generated successfully');
+      if (storageUrl) {
+        updateData.qrCodeUrl = storageUrl; // Secondary: storage URL (may have CORS issues)
+      }
+
+      await updateDoc(doc(db, this.collection, comercioId), updateData);
+
+      console.log('✅ QR Code data saved to Firestore successfully');
       return qrCodeDataURL;
     } catch (error) {
+      console.error('❌ Error generating QR Code:', error);
       handleError(error, 'Generate QR Code');
       return null;
     }
   }
 
   /**
-   * Generate multiple QR codes for batch download
+   * Upload QR code to Firebase Storage with retry logic
+   */
+  private async uploadQRToStorage(comercioId: string, qrCodeDataURL: string): Promise<string | null> {
+    let retries = 0;
+    const maxRetries = STORAGE_CONFIG.maxRetries;
+
+    while (retries < maxRetries) {
+      try {
+        // Convert data URL to blob
+        const response = await fetch(qrCodeDataURL);
+        const blob = await response.blob();
+        
+        const fileName = `qr_${comercioId}_${Date.now()}.png`;
+        const storageRef = ref(storage, `qr-codes/${comercioId}/${fileName}`);
+        
+        // Upload with timeout
+        const uploadPromise = uploadBytes(storageRef, blob);
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Upload timeout')), 10000)
+        );
+        
+        const snapshot = await Promise.race([uploadPromise, timeoutPromise]) as any;
+        const downloadURL = await getDownloadURL(snapshot.ref);
+        
+        return downloadURL;
+      } catch (error) {
+        retries++;
+        console.warn(`⚠️ Upload attempt ${retries}/${maxRetries} failed:`, error);
+        
+        if (retries >= maxRetries) {
+          throw error;
+        }
+        
+        // Wait before retry
+        await new Promise(resolve => setTimeout(resolve, STORAGE_CONFIG.retryDelay * retries));
+      }
+    }
+    
+    return null;
+  }
+
+  /**
+   * Convert file to base64 for fallback storage
+   */
+  private convertFileToBase64(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  /**
+   * Generate multiple QR codes for batch download - Enhanced
    */
   async generateBatchQRCodes(comercioIds: string[]): Promise<Array<{
     comercioId: string;
@@ -445,18 +531,37 @@ class ComercioService {
   }>> {
     try {
       const results = [];
+      const batchSize = 5; // Process in batches to avoid overwhelming the system
 
-      for (const comercioId of comercioIds) {
-        const comercio = await this.getComercioById(comercioId);
-        if (!comercio) continue;
+      for (let i = 0; i < comercioIds.length; i += batchSize) {
+        const batch = comercioIds.slice(i, i + batchSize);
+        
+        const batchPromises = batch.map(async (comercioId) => {
+          try {
+            const comercio = await this.getComercioById(comercioId);
+            if (!comercio) return null;
 
-        const qrCodeDataURL = await this.generateQRCode(comercioId);
-        if (qrCodeDataURL) {
-          results.push({
-            comercioId,
-            nombreComercio: comercio.nombreComercio,
-            qrCodeDataURL,
-          });
+            const qrCodeDataURL = await this.generateQRCode(comercioId);
+            if (qrCodeDataURL) {
+              return {
+                comercioId,
+                nombreComercio: comercio.nombreComercio,
+                qrCodeDataURL,
+              };
+            }
+            return null;
+          } catch (error) {
+            console.warn(`⚠️ Failed to generate QR for comercio ${comercioId}:`, error);
+            return null;
+          }
+        });
+
+        const batchResults = await Promise.all(batchPromises);
+        results.push(...batchResults.filter(Boolean));
+
+        // Small delay between batches
+        if (i + batchSize < comercioIds.length) {
+          await new Promise(resolve => setTimeout(resolve, 500));
         }
       }
 

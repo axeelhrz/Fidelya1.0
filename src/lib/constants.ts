@@ -30,7 +30,7 @@ export const APP_CONFIG = {
   allowedDocumentTypes: ['application/pdf', 'text/csv', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
 } as const;
 
-// CORS and Storage configuration
+// CORS and Storage configuration - Enhanced for better CORS handling
 export const STORAGE_CONFIG = {
   maxRetries: 3,
   retryDelay: 1000,
@@ -41,8 +41,16 @@ export const STORAGE_CONFIG = {
     'http://localhost:3001',
     'https://localhost:3000',
     'https://localhost:3001',
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:3001',
+    'https://127.0.0.1:3000',
+    'https://127.0.0.1:3001',
     process.env.NEXT_PUBLIC_APP_URL,
+    process.env.NEXT_PUBLIC_VERCEL_URL ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}` : null,
   ].filter(Boolean),
+  // Fallback strategy for CORS issues
+  useDataUrlFallback: true,
+  enableStorageBackup: true,
 } as const;
 
 // User roles and permissions
@@ -97,7 +105,7 @@ export const DASHBOARD_ROUTES = {
   [USER_ROLES.SOCIO]: '/dashboard/socio',
 } as const;
 
-// QR Code configuration
+// QR Code configuration - Enhanced for better CORS handling
 export const QR_CONFIG = {
   size: 256,
   margin: 2,
@@ -106,8 +114,14 @@ export const QR_CONFIG = {
     light: '#FFFFFF',
   },
   errorCorrectionLevel: 'M' as const,
-  baseUrl: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+  baseUrl: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001', // Updated to match current port
   validationPath: '/validar-beneficio',
+  // Enhanced QR options
+  quality: 0.92,
+  type: 'image/png' as const,
+  rendererOpts: {
+    quality: 0.92,
+  },
 } as const;
 
 // Pagination defaults
@@ -142,7 +156,7 @@ export const VALIDATION_RULES = {
   },
 } as const;
 
-// Error messages
+// Error messages - Enhanced with CORS-specific messages
 export const ERROR_MESSAGES = {
   NETWORK_ERROR: 'Error de conexión. Verifica tu internet.',
   UNAUTHORIZED: 'No tienes permisos para realizar esta acción.',
@@ -151,6 +165,8 @@ export const ERROR_MESSAGES = {
   SERVER_ERROR: 'Error interno del servidor. Intenta más tarde.',
   FILE_TOO_LARGE: `El archivo es muy grande. Máximo ${APP_CONFIG.maxFileSize / 1024 / 1024}MB.`,
   INVALID_FILE_TYPE: 'Tipo de archivo no permitido.',
+  CORS_ERROR: 'Error de configuración CORS. Usando método alternativo.',
+  STORAGE_ERROR: 'Error al acceder al almacenamiento. Usando método local.',
 } as const;
 
 // Success messages
@@ -177,6 +193,7 @@ export const FEATURES = {
   ENABLE_DARK_MODE: true,
   ENABLE_PWA: true,
   ENABLE_OFFLINE_MODE: false, // Future feature
+  ENABLE_CORS_FALLBACK: true, // New: Enable CORS fallback strategies
 } as const;
 
 // Cache configuration
