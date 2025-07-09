@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { socioService, Socio, SocioFormData, SocioFilters, SocioStats, ImportResult } from '@/services/socio.service';
+import { socioService, Socio, SocioFormData, SocioFilters, ImportResult, SocioStats } from '@/services/socio.service';
 import { useAuth } from './useAuth';
 import { toast } from 'react-hot-toast';
 
@@ -16,6 +16,7 @@ interface UseSociosReturn {
   createSocio: (data: SocioFormData) => Promise<boolean>;
   updateSocio: (id: string, data: Partial<SocioFormData>) => Promise<boolean>;
   deleteSocio: (id: string) => Promise<boolean>;
+  toggleSocioStatus: (id: string, currentStatus: string) => Promise<boolean>;
   importSocios: (csvData: SocioFormData[]) => Promise<ImportResult>;
   registerPayment: (socioId: string, amount: number, months?: number) => Promise<boolean>;
   updateMembershipStatus: () => Promise<number>;
@@ -153,7 +154,7 @@ export function useSocios(): UseSociosReturn {
     }
   }, [loadSocios, refreshStats]);
 
-  // Delete socio
+  // Delete socio (soft delete)
   const deleteSocio = useCallback(async (id: string): Promise<boolean> => {
     try {
       setLoading(true);
@@ -171,6 +172,33 @@ export function useSocios(): UseSociosReturn {
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Error al eliminar socio';
+      setError(errorMessage);
+      toast.error(errorMessage);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [loadSocios, refreshStats]);
+
+  // Toggle socio status (activate/deactivate)
+  const toggleSocioStatus = useCallback(async (id: string, currentStatus: string): Promise<boolean> => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const newStatus = currentStatus === 'activo' ? 'inactivo' : 'activo';
+      const success = await socioService.updateSocio(id, { estado: newStatus });
+      
+      if (success) {
+        toast.success(`Socio ${newStatus === 'activo' ? 'activado' : 'desactivado'} exitosamente`);
+        await loadSocios(); // Refresh list
+        await refreshStats(); // Refresh stats
+        return true;
+      } else {
+        throw new Error('Error al cambiar estado del socio');
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Error al cambiar estado del socio';
       setError(errorMessage);
       toast.error(errorMessage);
       return false;
@@ -268,6 +296,8 @@ export function useSocios(): UseSociosReturn {
         toast.success(`${updatedCount} membresías actualizadas`);
         await loadSocios(); // Refresh list
         await refreshStats(); // Refresh stats
+      } else {
+        toast('No hay membresías que actualizar', { icon: 'ℹ️' });
       }
       return updatedCount;
     } catch (error) {
@@ -313,6 +343,7 @@ export function useSocios(): UseSociosReturn {
     createSocio,
     updateSocio,
     deleteSocio,
+    toggleSocioStatus,
     importSocios,
     registerPayment,
     updateMembershipStatus,

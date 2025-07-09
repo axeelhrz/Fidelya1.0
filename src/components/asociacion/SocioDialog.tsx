@@ -60,18 +60,22 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
     if (open) {
       if (socio) {
         // Convert Timestamp to Date if needed
-        const fechaNacimiento = socio.fechaNacimiento 
-          ? (typeof socio.fechaNacimiento.toDate === 'function' 
-              ? socio.fechaNacimiento.toDate() 
-              : new Date(socio.fechaNacimiento))
-          : new Date();
-
-        const fechaVencimiento = socio.fechaVencimiento 
-          ? (typeof socio.fechaVencimiento.toDate === 'function' 
-              ? socio.fechaVencimiento.toDate() 
-              : new Date(socio.fechaVencimiento))
-          : undefined;
-
+        function toDateOrUndefined(value: unknown): Date | undefined {
+          if (!value) return undefined;
+          if (value instanceof Date) return value;
+          if (typeof value === 'object' && value !== null && typeof (value as { toDate?: () => Date }).toDate === 'function') {
+            return (value as { toDate: () => Date }).toDate();
+          }
+          if (typeof value === 'string' || typeof value === 'number') {
+            const d = new Date(value);
+            return isNaN(d.getTime()) ? undefined : d;
+          }
+          return undefined;
+        }
+        
+        const fechaNacimiento = toDateOrUndefined(socio.fechaNacimiento) ?? new Date();
+        const fechaVencimiento = toDateOrUndefined(socio.fechaVencimiento);
+        
         reset({
           nombre: socio.nombre,
           email: socio.email,

@@ -18,6 +18,13 @@ import {
   alpha,
   useTheme,
   useMediaQuery,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
 } from '@mui/material';
 import {
   Person,
@@ -49,7 +56,6 @@ import {
   AccountCircle,
   Cake,
   Business,
-  Group,
   Schedule,
   MonetizationOn,
   Loyalty,
@@ -61,11 +67,15 @@ import {
   PushPin,
   NotificationsActive,
   Language,
+  History,
+  Receipt,
 } from '@mui/icons-material';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Socio, SocioStats, SocioActivity } from '@/types/socio';
+import { HistorialValidacion } from '@/services/validaciones.service';
 import { socioService } from '@/services/socio.service';
+import { validacionesService } from '@/services/validaciones.service';
 import toast from 'react-hot-toast';
 
 interface SocioProfileViewProps {
@@ -277,6 +287,7 @@ export const SocioProfileView: React.FC<SocioProfileViewProps> = ({
   const [tabValue, setTabValue] = useState(0);
   const [stats, setStats] = useState<SocioStats | null>(null);
   const [activities, setActivities] = useState<SocioActivity[]>([]);
+  const [validaciones, setValidaciones] = useState<HistorialValidacion[]>([]);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
 
@@ -286,13 +297,15 @@ export const SocioProfileView: React.FC<SocioProfileViewProps> = ({
     
     setLoading(true);
     try {
-      const [statsData, activitiesData] = await Promise.all([
-        socioService.getSocioStats(socio.uid),
-        socioService.getSocioActivity(socio.uid, { limit: 20 }),
+      const [statsData, activitiesData, validacionesData] = await Promise.all([
+        socioService.getSocioStats?.(socio.uid) || Promise.resolve(null),
+        socioService.getSocioActivity?.() || Promise.resolve([]),
+        validacionesService.getHistorialValidaciones(socio.uid, 50),
       ]);
       
       setStats(statsData);
       setActivities(activitiesData);
+      setValidaciones(validacionesData.validaciones);
     } catch (error) {
       console.error('Error loading profile data:', error);
       toast.error('Error al cargar los datos del perfil');
@@ -312,7 +325,7 @@ export const SocioProfileView: React.FC<SocioProfileViewProps> = ({
     
     setUploading(true);
     try {
-      await socioService.uploadProfileImage(socio.uid, file);
+      await socioService.uploadProfileImage?.(socio.uid, file);
       toast.success('Imagen de perfil actualizada');
       if (onRefresh) onRefresh();
     } catch (error) {
@@ -327,22 +340,24 @@ export const SocioProfileView: React.FC<SocioProfileViewProps> = ({
     if (!socio) return;
     
     try {
-      const exportData = await socioService.exportSocioData(socio.uid);
+      const exportData = await socioService.exportSocioData?.(socio.uid);
       
-      // Crear y descargar archivo JSON
-      const blob = new Blob([JSON.stringify(exportData, null, 2)], {
-        type: 'application/json',
-      });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `perfil_${socio.nombre.replace(/\s+/g, '_')}_${format(new Date(), 'yyyy-MM-dd')}.json`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-      
-      toast.success('Datos exportados correctamente');
+      if (exportData) {
+        // Crear y descargar archivo JSON
+        const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+          type: 'application/json',
+        });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `perfil_${socio.nombre.replace(/\s+/g, '_')}_${format(new Date(), 'yyyy-MM-dd')}.json`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        
+        toast.success('Datos exportados correctamente');
+      }
     } catch (error) {
       console.error('Error exporting data:', error);
       toast.error('Error al exportar los datos');
@@ -355,6 +370,7 @@ export const SocioProfileView: React.FC<SocioProfileViewProps> = ({
       vencido: { color: '#ef4444', bgcolor: alpha('#ef4444', 0.1), label: 'Vencido', icon: <Warning /> },
       inactivo: { color: '#6b7280', bgcolor: alpha('#6b7280', 0.1), label: 'Inactivo', icon: <ErrorIcon /> },
       pendiente: { color: '#f59e0b', bgcolor: alpha('#f59e0b', 0.1), label: 'Pendiente', icon: <Schedule /> },
+      suspendido: { color: '#ef4444', bgcolor: alpha('#ef4444', 0.1), label: 'Suspendido', icon: <ErrorIcon /> },
     };
 
     const { color, bgcolor, label, icon } = config[estado as keyof typeof config] || config.inactivo;
@@ -373,6 +389,30 @@ export const SocioProfileView: React.FC<SocioProfileViewProps> = ({
           '& .MuiChip-icon': {
             fontSize: '0.9rem',
           }
+        }}
+      />
+    );
+  };
+
+  const getValidationStatusChip = (estado: string) => {
+    const config = {
+      exitoso: { color: '#10b981', bgcolor: alpha('#10b981', 0.1), label: 'Exitoso' },
+      fallido: { color: '#ef4444', bgcolor: alpha('#ef4444', 0.1), label: 'Fallido' },
+      pendiente: { color: '#f59e0b', bgcolor: alpha('#f59e0b', 0.1), label: 'Pendiente' },
+    };
+
+    const { color, bgcolor, label } = config[estado as keyof typeof config] || config.pendiente;
+
+    return (
+      <Chip
+        label={label}
+        size="small"
+        sx={{
+          bgcolor,
+          color,
+          fontWeight: 600,
+          fontSize: '0.75rem',
+          height: 24,
         }}
       />
     );
@@ -480,7 +520,7 @@ export const SocioProfileView: React.FC<SocioProfileViewProps> = ({
                   {/* Avatar */}
                   <Box sx={{ position: 'relative' }}>
                     <Avatar
-                      src={socio.avatar}
+                      src={socio.avatar ?? undefined}
                       sx={{
                         width: { xs: 80, md: 100 },
                         height: { xs: 80, md: 100 },
@@ -550,7 +590,7 @@ export const SocioProfileView: React.FC<SocioProfileViewProps> = ({
                       />
                     </Box>
 
-                    {/* Quick stats - Using Flexbox instead of Grid */}
+                    {/* Quick stats */}
                     <Box 
                       sx={{ 
                         display: 'flex', 
@@ -589,10 +629,10 @@ export const SocioProfileView: React.FC<SocioProfileViewProps> = ({
                       </Box>
                       <Box sx={{ textAlign: 'center' }}>
                         <Typography variant="h6" sx={{ fontWeight: 800 }}>
-                          {stats?.racha || 0}
+                          {validaciones.length}
                         </Typography>
                         <Typography variant="caption" sx={{ opacity: 0.8 }}>
-                          días de racha
+                          validaciones
                         </Typography>
                       </Box>
                     </Box>
@@ -697,6 +737,7 @@ export const SocioProfileView: React.FC<SocioProfileViewProps> = ({
               >
                 <Tab icon={<Person />} label="Información" />
                 <Tab icon={<Analytics />} label="Estadísticas" />
+                <Tab icon={<History />} label="Historial" />
                 <Tab icon={<Timeline />} label="Actividad" />
                 <Tab icon={<Settings />} label="Configuración" />
               </Tabs>
@@ -844,6 +885,57 @@ export const SocioProfileView: React.FC<SocioProfileViewProps> = ({
                           </Box>
                         </Box>
 
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                          <Schedule sx={{ color: '#94a3b8', fontSize: 20 }} />
+                          <Box>
+                            <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>
+                              Estado de membresía
+                            </Typography>
+                            <Box sx={{ mt: 0.5 }}>
+                              <Chip
+                                label={socio.estadoMembresia === 'al_dia' ? 'Al día' : 
+                                       socio.estadoMembresia === 'vencido' ? 'Vencido' : 'Pendiente'}
+                                size="small"
+                                sx={{
+                                  bgcolor: socio.estadoMembresia === 'al_dia' ? alpha('#10b981', 0.1) : 
+                                          socio.estadoMembresia === 'vencido' ? alpha('#ef4444', 0.1) : alpha('#f59e0b', 0.1),
+                                  color: socio.estadoMembresia === 'al_dia' ? '#10b981' : 
+                                        socio.estadoMembresia === 'vencido' ? '#ef4444' : '#f59e0b',
+                                  fontWeight: 600,
+                                  fontSize: '0.75rem',
+                                  height: 24,
+                                }}
+                              />
+                            </Box>
+                          </Box>
+                        </Box>
+
+                        {socio.numeroSocio && (
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <BadgeIcon sx={{ color: '#94a3b8', fontSize: 20 }} />
+                            <Box>
+                              <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>
+                                Número de socio
+                              </Typography>
+                              <Typography variant="body2" sx={{ color: '#0f172a', fontWeight: 600 }}>
+                                #{socio.numeroSocio}
+                              </Typography>
+                            </Box>
+                          </Box>
+                        )}
+
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                          <MonetizationOn sx={{ color: '#94a3b8', fontSize: 20 }} />
+                          <Box>
+                            <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>
+                              Cuota mensual
+                            </Typography>
+                            <Typography variant="body2" sx={{ color: '#0f172a', fontWeight: 600 }}>
+                              ${socio.montoCuota || 0}
+                            </Typography>
+                          </Box>
+                        </Box>
+
                         {socio.ultimoAcceso && (
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                             <Schedule sx={{ color: '#94a3b8', fontSize: 20 }} />
@@ -857,18 +949,6 @@ export const SocioProfileView: React.FC<SocioProfileViewProps> = ({
                             </Box>
                           </Box>
                         )}
-
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                          <Group sx={{ color: '#94a3b8', fontSize: 20 }} />
-                          <Box>
-                            <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>
-                              Asociación
-                            </Typography>
-                            <Typography variant="body2" sx={{ color: '#0f172a', fontWeight: 600 }}>
-                              {socio.asociacion || 'No especificada'}
-                            </Typography>
-                          </Box>
-                        </Box>
 
                         {/* Engagement score */}
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -945,17 +1025,160 @@ export const SocioProfileView: React.FC<SocioProfileViewProps> = ({
                   />
                   
                   <StatCard
+                    title="Validaciones Exitosas"
+                    value={validaciones.filter(v => v.estado === 'exitosa').length}
+                    icon={<CheckCircle />}
+                    color="#10b981"
+                    subtitle="Validaciones completadas con éxito"
+                  />
+                  
+                  <StatCard
                     title="Racha Actual"
                     value={`${stats?.racha || 0} días`}
                     icon={<Loyalty />}
                     color="#f59e0b"
                     subtitle="Días consecutivos con actividad"
                   />
+
+                  <StatCard
+                    title="Promedio Mensual"
+                    value={`$${Math.round((stats?.ahorroTotal || 0) / Math.max(1, stats?.tiempoComoSocio || 1) * 30)}`}
+                    icon={<TrendingUp />}
+                    color="#ec4899"
+                    subtitle="Ahorro promedio por mes"
+                  />
                 </Box>
               </TabPanel>
 
-              {/* Tab 3: Actividad */}
+              {/* Tab 3: Historial de Validaciones */}
               <TabPanel value={tabValue} index={2}>
+                <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 4, p: 3 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+                    <Typography variant="h6" sx={{ fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Receipt sx={{ color: '#6366f1' }} />
+                      Historial de Validaciones
+                    </Typography>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      startIcon={<Refresh />}
+                      onClick={loadProfileData}
+                      disabled={loading}
+                      sx={{
+                        borderColor: '#e2e8f0',
+                        color: '#64748b',
+                        '&:hover': {
+                          borderColor: '#6366f1',
+                          color: '#6366f1',
+                        }
+                      }}
+                    >
+                      Actualizar
+                    </Button>
+                  </Box>
+
+                  {validaciones.length > 0 ? (
+                    <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 3 }}>
+                      <Table>
+                        <TableHead>
+                          <TableRow sx={{ bgcolor: '#fafbfc' }}>
+                            <TableCell sx={{ fontWeight: 700, color: '#475569', fontSize: '0.75rem', textTransform: 'uppercase' }}>
+                              Fecha
+                            </TableCell>
+                            <TableCell sx={{ fontWeight: 700, color: '#475569', fontSize: '0.75rem', textTransform: 'uppercase' }}>
+                              Comercio
+                            </TableCell>
+                            <TableCell sx={{ fontWeight: 700, color: '#475569', fontSize: '0.75rem', textTransform: 'uppercase' }}>
+                              Beneficio
+                            </TableCell>
+                            <TableCell sx={{ fontWeight: 700, color: '#475569', fontSize: '0.75rem', textTransform: 'uppercase' }}>
+                              Descuento
+                            </TableCell>
+                            <TableCell sx={{ fontWeight: 700, color: '#475569', fontSize: '0.75rem', textTransform: 'uppercase' }}>
+                              Estado
+                            </TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {validaciones.slice(0, 20).map((validacion, index) => (
+                            <TableRow 
+                              key={validacion.id} 
+                              sx={{ 
+                                '&:hover': { bgcolor: '#fafbfc' },
+                                borderBottom: index === validaciones.length - 1 ? 'none' : '1px solid #f1f5f9'
+                              }}
+                            >
+                              <TableCell>
+                                <Typography variant="body2" sx={{ fontWeight: 600, color: '#0f172a', mb: 0.5 }}>
+                                  {format(validacion.fechaValidacion, 'dd MMM yyyy', { locale: es })}
+                                </Typography>
+                                <Typography variant="caption" sx={{ color: '#64748b' }}>
+                                  {format(validacion.fechaValidacion, 'HH:mm', { locale: es })}
+                                </Typography>
+                              </TableCell>
+                              <TableCell>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                  {validacion.comercioLogo ? (
+                                    <Avatar src={validacion.comercioLogo} sx={{ width: 32, height: 32 }}>
+                                      <Store />
+                                    </Avatar>
+                                  ) : (
+                                    <Avatar sx={{ width: 32, height: 32, bgcolor: alpha('#6366f1', 0.1), color: '#6366f1' }}>
+                                      <Store />
+                                    </Avatar>
+                                  )}
+                                  <Typography variant="body2" sx={{ fontWeight: 600, color: '#0f172a' }}>
+                                    {validacion.comercioNombre}
+                                  </Typography>
+                                </Box>
+                              </TableCell>
+                              <TableCell>
+                                <Typography variant="body2" sx={{ fontWeight: 600, color: '#0f172a', mb: 0.5 }}>
+                                  {validacion.beneficioTitulo}
+                                </Typography>
+                                {validacion.beneficioDescripcion && (
+                                  <Typography variant="caption" sx={{ color: '#64748b' }}>
+                                    {validacion.beneficioDescripcion.substring(0, 50)}...
+                                  </Typography>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                <Typography variant="body2" sx={{ fontWeight: 700, color: '#10b981' }}>
+                                  {validacion.tipoDescuento === 'porcentaje' 
+                                    ? `${validacion.descuento}%` 
+                                    : `$${validacion.descuento}`
+                                  }
+                                </Typography>
+                                {validacion.montoDescuento && (
+                                  <Typography variant="caption" sx={{ color: '#64748b' }}>
+                                    Ahorró: ${validacion.montoDescuento}
+                                  </Typography>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                {getValidationStatusChip(validacion.estado)}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  ) : (
+                    <Box sx={{ textAlign: 'center', py: 8 }}>
+                      <Receipt sx={{ fontSize: 48, color: '#e2e8f0', mb: 2 }} />
+                      <Typography variant="h6" sx={{ fontWeight: 600, color: '#64748b', mb: 1 }}>
+                        No hay validaciones registradas
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: '#94a3b8' }}>
+                        Las validaciones del socio aparecerán aquí cuando comience a usar beneficios
+                      </Typography>
+                    </Box>
+                  )}
+                </Card>
+              </TabPanel>
+
+              {/* Tab 4: Actividad */}
+              <TabPanel value={tabValue} index={3}>
                 <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 4, p: 3 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
                     <Typography variant="h6" sx={{ fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -1007,8 +1230,8 @@ export const SocioProfileView: React.FC<SocioProfileViewProps> = ({
                 </Card>
               </TabPanel>
 
-              {/* Tab 4: Configuración */}
-              <TabPanel value={tabValue} index={3}>
+              {/* Tab 5: Configuración */}
+              <TabPanel value={tabValue} index={4}>
                 <Box 
                   sx={{ 
                     display: 'flex', 
@@ -1016,7 +1239,7 @@ export const SocioProfileView: React.FC<SocioProfileViewProps> = ({
                     gap: 3,
                   }}
                 >
-                  {/* First row - Notifications and Privacy */}
+                  {/* Configuración de notificaciones y privacidad */}
                   <Box 
                     sx={{ 
                       display: 'flex', 
@@ -1171,7 +1394,7 @@ export const SocioProfileView: React.FC<SocioProfileViewProps> = ({
                     </Box>
                   </Box>
 
-                  {/* Second row - Appearance and Preferences */}
+                  {/* Configuración de apariencia y preferencias */}
                   <Box 
                     sx={{ 
                       display: 'flex', 
@@ -1247,27 +1470,6 @@ export const SocioProfileView: React.FC<SocioProfileViewProps> = ({
                               </Typography>
                               <Typography variant="caption" sx={{ color: '#64748b' }}>
                                 {socio.configuracion?.moneda || 'ARS'}
-                              </Typography>
-                            </Box>
-                          </Box>
-
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, p: 2, bgcolor: '#fafbfc', borderRadius: 3 }}>
-                            <Avatar
-                              sx={{
-                                width: 40,
-                                height: 40,
-                                bgcolor: alpha('#06b6d4', 0.1),
-                                color: '#06b6d4',
-                              }}
-                            >
-                              <Schedule />
-                            </Avatar>
-                            <Box sx={{ flex: 1 }}>
-                              <Typography variant="body2" sx={{ fontWeight: 600, color: '#0f172a', mb: 0.5 }}>
-                                Zona horaria
-                              </Typography>
-                              <Typography variant="caption" sx={{ color: '#64748b' }}>
-                                {socio.configuracion?.timezone || 'America/Argentina/Buenos_Aires'}
                               </Typography>
                             </Box>
                           </Box>

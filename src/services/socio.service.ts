@@ -17,6 +17,7 @@ import {
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/constants';
 import { handleError } from '@/lib/error-handler';
+import { SocioStats, SocioActivity } from '@/types/socio';
 
 export interface Socio {
   id: string;
@@ -28,7 +29,7 @@ export interface Socio {
   direccion?: string;
   asociacionId: string;
   numeroSocio?: string;
-  estado: 'activo' | 'inactivo' | 'pendiente' | 'suspendido';
+  estado: 'activo' | 'inactivo' | 'pendiente' | 'suspendido' | 'vencido';
   estadoMembresia: 'al_dia' | 'vencido' | 'pendiente';
   fechaIngreso: Date;
   fechaVencimiento?: Date;
@@ -39,6 +40,10 @@ export interface Socio {
   creadoEn: Date;
   actualizadoEn: Date;
   metadata?: Record<string, unknown>;
+  avatar?: string;
+  configuracion?: Record<string, unknown>;
+  ultimoAcceso?: Date;
+  uid: string;
 }
 
 export interface SocioFormData {
@@ -51,6 +56,7 @@ export interface SocioFormData {
   numeroSocio?: string;
   montoCuota: number;
   fechaVencimiento?: Date | Timestamp;
+  estado: 'activo' | 'inactivo' | 'pendiente' | 'suspendido' | 'vencido';
 }
 
 export interface SocioFilters {
@@ -59,17 +65,6 @@ export interface SocioFilters {
   search?: string;
   fechaDesde?: Date;
   fechaHasta?: Date;
-}
-
-export interface SocioStats {
-  total: number;
-  activos: number;
-  inactivos: number;
-  alDia: number;
-  vencidos: number;
-  pendientes: number;
-  ingresosMensuales: number;
-  beneficiosUsados: number;
 }
 
 export interface ImportResult {
@@ -96,11 +91,13 @@ class SocioService {
       const data = socioDoc.data();
       return {
         id: socioDoc.id,
+        uid: socioDoc.id,
         ...data,
         fechaNacimiento: data.fechaNacimiento?.toDate() || new Date(),
         fechaIngreso: data.fechaIngreso?.toDate() || new Date(),
         fechaVencimiento: data.fechaVencimiento?.toDate(),
         ultimoPago: data.ultimoPago?.toDate(),
+        ultimoAcceso: data.ultimoAcceso?.toDate(),
         creadoEn: data.creadoEn?.toDate() || new Date(),
         actualizadoEn: data.actualizadoEn?.toDate() || new Date(),
       } as Socio;
@@ -154,11 +151,13 @@ class SocioService {
         const data = doc.data();
         return {
           id: doc.id,
+          uid: doc.id,
           ...data,
           fechaNacimiento: data.fechaNacimiento?.toDate() || new Date(),
           fechaIngreso: data.fechaIngreso?.toDate() || new Date(),
           fechaVencimiento: data.fechaVencimiento?.toDate(),
           ultimoPago: data.ultimoPago?.toDate(),
+          ultimoAcceso: data.ultimoAcceso?.toDate(),
           creadoEn: data.creadoEn?.toDate() || new Date(),
           actualizadoEn: data.actualizadoEn?.toDate() || new Date(),
         } as Socio;
@@ -233,10 +232,10 @@ class SocioService {
         dni: data.dni,
         asociacionId,
         numeroSocio,
-        estado: 'activo',
+        estado: data.estado || 'activo',
         estadoMembresia: data.fechaVencimiento && data.fechaVencimiento > new Date() ? 'al_dia' : 'pendiente',
         fechaIngreso: serverTimestamp(),
-        montoCuota: data.montoCuota,
+        montoCuota: data.montoCuota || 0,
         beneficiosUsados: 0,
         validacionesRealizadas: 0,
         creadoEn: serverTimestamp(),
@@ -296,6 +295,7 @@ class SocioService {
       if (data.direccion) updateData.direccion = data.direccion;
       if (data.numeroSocio) updateData.numeroSocio = data.numeroSocio;
       if (data.montoCuota !== undefined) updateData.montoCuota = data.montoCuota;
+      if (data.estado) updateData.estado = data.estado;
 
       // Convert dates to Timestamps
       if (data.fechaNacimiento) {
@@ -350,6 +350,90 @@ class SocioService {
     } catch (error) {
       handleError(error, 'Delete Socio');
       return false;
+    }
+  }
+
+  /**
+   * Get socio statistics
+   */
+  async getSocioStats(socioId: string): Promise<SocioStats | null> {
+    try {
+      // This would typically aggregate data from validaciones and other collections
+      // For now, return mock data structure
+      const socio = await this.getSocioById(socioId);
+      if (!socio) return null;
+
+      const stats: SocioStats = {
+        total: 1,
+        activos: socio.estado === 'activo' ? 1 : 0,
+        vencidos: socio.estadoMembresia === 'vencido' ? 1 : 0,
+        inactivos: socio.estado === 'inactivo' ? 1 : 0,
+        beneficiosUsados: socio.beneficiosUsados || 0,
+        ahorroTotal: 0, // Would be calculated from validaciones
+        comerciosVisitados: 0, // Would be calculated from validaciones
+        racha: 0, // Would be calculated based on activity
+        tiempoComoSocio: Math.floor((new Date().getTime() - socio.fechaIngreso.getTime()) / (1000 * 60 * 60 * 24)),
+      };
+
+      return stats;
+    } catch (error) {
+      handleError(error, 'Get Socio Stats');
+      return null;
+    }
+  }
+
+  /**
+   * Get socio activity
+   */
+  async getSocioActivity(): Promise<SocioActivity[]> {
+    try {
+      // This would typically query from an activities collection using socioId and options
+      // For now, return empty array as placeholder
+      return [];
+    } catch (error) {
+      handleError(error, 'Get Socio Activity');
+      return [];
+    }
+  }
+
+  /**
+   * Upload profile image
+   */
+  async uploadProfileImage(socioId: string, file: File): Promise<string | null> {
+    try {
+      // This would typically upload to Firebase Storage
+      // For now, return placeholder URL
+      console.log('Upload profile image for socio:', socioId, file.name);
+      return 'https://placeholder-image-url.com';
+    } catch (error) {
+      handleError(error, 'Upload Profile Image');
+      return null;
+    }
+  }
+
+  /**
+   * Export socio data
+   */
+  async exportSocioData(socioId: string): Promise<{
+    perfil: Socio | null;
+    estadisticas: SocioStats | null;
+    actividad: SocioActivity[];
+    fechaExportacion: string;
+  } | null> {
+    try {
+      const socio = await this.getSocioById(socioId);
+      const stats = await this.getSocioStats(socioId);
+      const activity = await this.getSocioActivity();
+
+      return {
+        perfil: socio,
+        estadisticas: stats,
+        actividad: activity,
+        fechaExportacion: new Date().toISOString(),
+      };
+    } catch (error) {
+      handleError(error, 'Export Socio Data');
+      return null;
     }
   }
 
