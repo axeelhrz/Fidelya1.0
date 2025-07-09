@@ -25,8 +25,8 @@ import {
 } from 'lucide-react';
 import { Timestamp } from 'firebase/firestore';
 import { useSocios } from '@/hooks/useSocios';
-import { Socio } from '@/types/socio';
-import { SocioFormData } from '@/services/socio.service';
+import { Socio as SocioType } from '@/types/socio';
+import { Socio as ServiceSocio, SocioFormData } from '@/services/socio.service';
 import { EnhancedSocioDialog } from './EnhancedSocioDialog';
 import { CsvImport } from './CsvImport';
 import { DeleteConfirmDialog } from './DeleteConfirmDialog';
@@ -56,52 +56,43 @@ export const EnhancedMemberManagement: React.FC<MemberManagementProps> = () => {
   } = useSocios();
 
   // State management
-  const [selectedSocio, setSelectedSocio] = useState<Socio | null>(null);
+  const [selectedSocio, setSelectedSocio] = useState<SocioType | null>(null);
   const [socioDialogOpen, setSocioDialogOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [socioToDelete, setSocioToDelete] = useState<Socio | null>(null);
+  const [socioToDelete, setSocioToDelete] = useState<ServiceSocio | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('table');
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [selectedSocios, setSelectedSocios] = useState<Set<string>>(new Set());
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
-  const [socioForPayment, setSocioForPayment] = useState<Socio | null>(null);
+  const [socioForPayment, setSocioForPayment] = useState<ServiceSocio | null>(null);
 
-  // Helper function to prepare socio data for editing
-  const prepareSocioForEdit = (socio: Socio): Socio => {
-    // Helper function to ensure we have a proper Timestamp
-    const ensureTimestamp = (
-      value: Timestamp | Date | string | { seconds: number; nanoseconds?: number } | undefined | null
-    ): Timestamp => {
-      if (value && typeof (value as Timestamp).toDate === 'function') {
-        // Already a Timestamp
-        return value as Timestamp;
-      } else if (value instanceof Date) {
-        // Convert Date to Timestamp
-        return Timestamp.fromDate(value);
-      } else if (typeof value === 'string') {
-        // Convert string to Timestamp
-        return Timestamp.fromDate(new Date(value));
-      } else if (value && typeof value === 'object' && 'seconds' in value && value.seconds) {
-        // Handle Firestore timestamp-like objects
-        return new Timestamp(value.seconds, value.nanoseconds || 0);
-      } else {
-        // Default to current timestamp
-        return Timestamp.now();
-      }
-    };
-
+  // Helper function to convert service socio to types socio
+  const convertServiceSocioToTypesSocio = (serviceSocio: ServiceSocio): SocioType => {
     return {
-      ...socio,
-      uid: socio.uid || socio.id,
-      asociacion: socio.asociacion || socio.asociacionId || '',
-      estado: socio.estado === 'suspendido' ? 'inactivo' : socio.estado,
-      creadoEn: ensureTimestamp(socio.creadoEn),
-      actualizadoEn: socio.actualizadoEn ? ensureTimestamp(socio.actualizadoEn) : undefined,
-      fechaNacimiento: socio.fechaNacimiento
-        ? ensureTimestamp(socio.fechaNacimiento)
-        : undefined
+      uid: serviceSocio.id,
+      id: serviceSocio.id,
+      nombre: serviceSocio.nombre,
+      email: serviceSocio.email,
+      dni: serviceSocio.dni,
+      telefono: serviceSocio.telefono,
+      direccion: serviceSocio.direccion,
+      asociacionId: serviceSocio.asociacionId,
+      asociacion: serviceSocio.asociacionId,
+      numeroSocio: serviceSocio.numeroSocio,
+      estado: serviceSocio.estado as 'activo' | 'vencido' | 'inactivo' | 'pendiente',
+      estadoMembresia: serviceSocio.estadoMembresia,
+      montoCuota: serviceSocio.montoCuota,
+      beneficiosUsados: serviceSocio.beneficiosUsados,
+      validacionesRealizadas: serviceSocio.validacionesRealizadas,
+      creadoEn: serviceSocio.creadoEn instanceof Date ? Timestamp.fromDate(serviceSocio.creadoEn) : Timestamp.now(),
+      actualizadoEn: serviceSocio.actualizadoEn instanceof Date ? Timestamp.fromDate(serviceSocio.actualizadoEn) : undefined,
+      fechaNacimiento: serviceSocio.fechaNacimiento instanceof Date ? Timestamp.fromDate(serviceSocio.fechaNacimiento) : undefined,
+      fechaIngreso: serviceSocio.fechaIngreso instanceof Date ? Timestamp.fromDate(serviceSocio.fechaIngreso) : Timestamp.now(),
+      fechaVencimiento: serviceSocio.fechaVencimiento instanceof Date ? Timestamp.fromDate(serviceSocio.fechaVencimiento) : undefined,
+      ultimoPago: serviceSocio.ultimoPago instanceof Date ? Timestamp.fromDate(serviceSocio.ultimoPago) : undefined,
+      metadata: serviceSocio.metadata,
     };
   };
 
@@ -123,20 +114,20 @@ export const EnhancedMemberManagement: React.FC<MemberManagementProps> = () => {
   };
 
   // Handle socio editing
-  const handleEditSocio = (socio: Socio) => {
-    const preparedSocio = prepareSocioForEdit(socio);
-    setSelectedSocio(preparedSocio);
+  const handleEditSocio = (serviceSocio: ServiceSocio) => {
+    const typesSocio = convertServiceSocioToTypesSocio(serviceSocio);
+    setSelectedSocio(typesSocio);
     setSocioDialogOpen(true);
   };
 
   // Handle socio deletion
-  const handleDeleteSocio = (socio: Socio) => {
+  const handleDeleteSocio = (socio: ServiceSocio) => {
     setSocioToDelete(socio);
     setDeleteDialogOpen(true);
   };
 
   // Handle payment registration
-  const handleRegisterPayment = (socio: Socio) => {
+  const handleRegisterPayment = (socio: ServiceSocio) => {
     setSocioForPayment(socio);
     setPaymentDialogOpen(true);
   };
@@ -876,7 +867,7 @@ export const EnhancedMemberManagement: React.FC<MemberManagementProps> = () => {
 interface PaymentDialogProps {
   open: boolean;
   onClose: () => void;
-  socio: Socio;
+  socio: ServiceSocio;
   onRegisterPayment: (socioId: string, amount: number, months: number) => Promise<boolean>;
   loading: boolean;
 }

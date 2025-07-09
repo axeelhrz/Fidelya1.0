@@ -101,6 +101,18 @@ export interface Socio {
   fechaNacimiento?: Timestamp;
   pagos?: Pago[];
   id: string; // ID único del socio, puede ser el UID de Firebase o un ID personalizado
+  numeroSocio: string; // Changed from number to string to match service
+  estadoMembresia: string;
+  montoCuota?: number; // Monto de la cuota mensual
+  beneficiosUsados?: number; // Cantidad de beneficios usados
+  validacionesRealizadas?: number; // Cantidad de validaciones realizadas
+  fechaIngreso?: Timestamp; // Fecha de ingreso a la asociación
+  fechaVencimiento?: Timestamp; // Fecha de vencimiento de la membresía
+  ultimoPago?: Timestamp; // Fecha del último pago
+  metadata?: {
+    [key: string]: string | number | boolean | undefined;
+  };
+
   
   // Nuevos campos
   avatar?: string;
