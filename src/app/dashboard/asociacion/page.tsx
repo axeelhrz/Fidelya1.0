@@ -23,7 +23,8 @@ import { toast } from 'react-hot-toast';
 import { useSocios } from '@/hooks/useSocios';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
-import { Socio, SocioFormData } from '@/types/socio';
+import { Socio } from '@/types/socio';
+import { SocioFormData } from '@/services/socio.service';
 
 type Stats = {
   total: number;
@@ -512,14 +513,32 @@ export default function AsociacionDashboard() {
     }
   };
 
-  const handleSaveSocio = async (data: SocioFormData) => {
+  const handleSaveSocio = async (data: any) => {
     setActionLoading(true);
     try {
+      // Validate and transform data to match service requirements
+      if (!data.dni) {
+        toast.error('El DNI es requerido');
+        return;
+      }
+
+      const serviceData: SocioFormData = {
+        nombre: data.nombre,
+        email: data.email,
+        dni: data.dni,
+        telefono: data.telefono,
+        fechaNacimiento: data.fechaNacimiento || new Date(),
+        direccion: data.direccion,
+        numeroSocio: data.numeroSocio,
+        montoCuota: data.montoCuota || 0,
+        fechaVencimiento: data.fechaVencimiento,
+      };
+
       if (socioDialog.socio) {
-        await updateSocio(socioDialog.socio.id, data);
+        await updateSocio(socioDialog.socio.id, serviceData);
         toast.success('Socio actualizado correctamente');
       } else {
-        await createSocio(data);
+        await createSocio(serviceData);
         toast.success('Socio agregado correctamente');
       }
       setSocioDialog({ open: false });
@@ -545,12 +564,30 @@ export default function AsociacionDashboard() {
     }
   };
 
-  const handleCsvImport = async (sociosData?: SocioFormData[]) => {
+  const handleCsvImport = async (sociosData?: any[]) => {
     if (sociosData) {
       setActionLoading(true);
       try {
-        await importSocios(sociosData);
-        toast.success(`${sociosData.length} socios importados correctamente`);
+        // Validate and transform data for each socio
+        const validatedData = sociosData.map(socio => {
+          if (!socio.dni) {
+            throw new Error(`DNI requerido para el socio: ${socio.nombre || 'Sin nombre'}`);
+          }
+          return {
+            nombre: socio.nombre,
+            email: socio.email,
+            dni: socio.dni,
+            telefono: socio.telefono,
+            fechaNacimiento: socio.fechaNacimiento || new Date(),
+            direccion: socio.direccion,
+            numeroSocio: socio.numeroSocio,
+            montoCuota: socio.montoCuota || 0,
+            fechaVencimiento: socio.fechaVencimiento,
+          };
+        });
+
+        await importSocios(validatedData);
+        toast.success(`${validatedData.length} socios importados correctamente`);
         setCsvImportOpen(false);
       } catch (error) {
         toast.error(error instanceof Error ? error.message : 'Error al importar los socios');
@@ -574,13 +611,13 @@ export default function AsociacionDashboard() {
           break;
         case 'activate':
           for (const id of selectedIds) {
-            await updateSocio(id, { estado: 'activo' });
+            await updateSocio(id, { estado: 'activo' } as any);
           }
           toast.success(`${selectedIds.length} socios activados`);
           break;
         case 'archive':
           for (const id of selectedIds) {
-            await updateSocio(id, { estado: 'vencido' });
+            await updateSocio(id, { estado: 'vencido' } as any);
           }
           toast.success(`${selectedIds.length} socios archivados`);
           break;
