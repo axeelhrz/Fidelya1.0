@@ -76,6 +76,7 @@ import { Socio, SocioStats, SocioActivity } from '@/types/socio';
 import { HistorialValidacion } from '@/services/validaciones.service';
 import { socioService } from '@/services/socio.service';
 import { validacionesService } from '@/services/validaciones.service';
+import { safeFormatTimestamp } from '@/lib/utils';
 import toast from 'react-hot-toast';
 
 interface SocioProfileViewProps {
@@ -237,7 +238,7 @@ const ActivityItem: React.FC<{
           {activity.descripcion}
         </Typography>
         <Typography variant="caption" sx={{ color: '#94a3b8' }}>
-          {format(activity.fecha.toDate(), 'dd MMM yyyy, HH:mm', { locale: es })}
+          {safeFormatTimestamp(activity.fecha, 'dd MMM yyyy, HH:mm', { locale: es })}
         </Typography>
         
         {/* Metadata */}
@@ -843,7 +844,7 @@ export const SocioProfileView: React.FC<SocioProfileViewProps> = ({
                                 Fecha de nacimiento
                               </Typography>
                               <Typography variant="body2" sx={{ color: '#0f172a', fontWeight: 600 }}>
-                                {format(socio.fechaNacimiento.toDate(), 'dd MMMM yyyy', { locale: es })}
+                                {safeFormatTimestamp(socio.fechaNacimiento, 'dd MMMM yyyy', { locale: es })}
                               </Typography>
                             </Box>
                           </Box>
@@ -868,7 +869,7 @@ export const SocioProfileView: React.FC<SocioProfileViewProps> = ({
                               Fecha de registro
                             </Typography>
                             <Typography variant="body2" sx={{ color: '#0f172a', fontWeight: 600 }}>
-                              {format(socio.creadoEn.toDate(), 'dd MMMM yyyy', { locale: es })}
+                              {safeFormatTimestamp(socio.creadoEn, 'dd MMMM yyyy', { locale: es })}
                             </Typography>
                           </Box>
                         </Box>
@@ -944,7 +945,7 @@ export const SocioProfileView: React.FC<SocioProfileViewProps> = ({
                                 Último acceso
                               </Typography>
                               <Typography variant="body2" sx={{ color: '#0f172a', fontWeight: 600 }}>
-                                {format(socio.ultimoAcceso.toDate(), 'dd MMM yyyy, HH:mm', { locale: es })}
+                                {safeFormatTimestamp(socio.ultimoAcceso, 'dd MMM yyyy, HH:mm', { locale: es })}
                               </Typography>
                             </Box>
                           </Box>
