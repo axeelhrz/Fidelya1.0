@@ -1,236 +1,323 @@
-'use client';
-
 import { useState, useEffect, useCallback } from 'react';
-import { 
-  collection, 
-  query, 
-  where, 
-  onSnapshot, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc,
-  doc, 
-  Timestamp,
-  orderBy
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import { Socio, SocioStats, SocioFormData } from '@/types/socio';
+import { socioService, Socio, SocioFormData, SocioFilters, SocioStats, ImportResult } from '@/services/socio.service';
 import { useAuth } from './useAuth';
-import toast from 'react-hot-toast';
+import { toast } from 'react-hot-toast';
 
-export const useSocios = () => {
+interface UseSociosReturn {
+  socios: Socio[];
+  stats: SocioStats;
+  loading: boolean;
+  error: string | null;
+  hasMore: boolean;
+  filters: SocioFilters;
+  setFilters: (filters: SocioFilters) => void;
+  loadSocios: () => Promise<void>;
+  loadMoreSocios: () => Promise<void>;
+  createSocio: (data: SocioFormData) => Promise<boolean>;
+  updateSocio: (id: string, data: Partial<SocioFormData>) => Promise<boolean>;
+  deleteSocio: (id: string) => Promise<boolean>;
+  importSocios: (csvData: any[]) => Promise<ImportResult>;
+  registerPayment: (socioId: string, amount: number, months?: number) => Promise<boolean>;
+  updateMembershipStatus: () => Promise<number>;
+  refreshStats: () => Promise<void>;
+  clearError: () => void;
+}
+
+export function useSocios(): UseSociosReturn {
   const { user } = useAuth();
   const [socios, setSocios] = useState<Socio[]>([]);
-  const [allSocios, setAllSocios] = useState<Socio[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState<SocioStats>({
+    total: 0,
+    activos: 0,
+    inactivos: 0,
+    alDia: 0,
+    vencidos: 0,
+    pendientes: 0,
+    ingresosMensuales: 0,
+    beneficiosUsados: 0,
+  });
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(false);
+  const [lastDoc, setLastDoc] = useState<any>(null);
+  const [filters, setFilters] = useState<SocioFilters>({});
 
-  const fetchSocios = useCallback(() => {
-    if (!user) {
+  const asociacionId = user?.uid || '';
+
+  // Load socios with filters
+  const loadSocios = useCallback(async () => {
+    if (!asociacionId) return;
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      const result = await socioService.getSociosByAsociacion(asociacionId, filters, 20);
+      
+      setSocios(result.socios);
+      setHasMore(result.hasMore);
+      setLastDoc(result.lastDoc);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Error al cargar socios';
+      setError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
       setLoading(false);
-      return;
     }
+  }, [asociacionId, filters]);
 
-    const sociosRef = collection(db, 'socios');
-    const q = query(
-      sociosRef, 
-      where('asociacionId', '==', user.uid),
-      orderBy('creadoEn', 'desc')
-    );
-
-    const unsubscribe = onSnapshot(q, 
-      (snapshot) => {
-        const sociosData = snapshot.docs.map(doc => ({
-          uid: doc.id,
-          ...doc.data()
-        })) as Socio[];
-        
-        setAllSocios(sociosData);
-        // Filtrar solo los activos para la vista principal
-        setSocios(sociosData.filter(s => s.estado !== 'inactivo'));
-        setLoading(false);
-        setError(null);
-      },
-      (err) => {
-        console.error('Error fetching socios:', err);
-        setError('Error al cargar los socios');
-        setLoading(false);
-      }
-    );
-
-    return unsubscribe;
-  }, [user]);
-
-  useEffect(() => {
-    const unsubscribe = fetchSocios();
-    return unsubscribe;
-  }, [fetchSocios]);
-
-  const addSocio = async (socioData: SocioFormData): Promise<void> => {
-    if (!user) throw new Error('Usuario no autenticado');
+  // Load more socios (pagination)
+  const loadMoreSocios = useCallback(async () => {
+    if (!asociacionId || !hasMore || loading) return;
 
     try {
-      const sociosRef = collection(db, 'socios');
-      await addDoc(sociosRef, {
-        ...socioData,
-        asociacionId: user.uid,
-        creadoEn: Timestamp.now(),
-        pagos: []
-      });
-      toast.success('Socio agregado exitosamente');
-    } catch (err) {
-      console.error('Error adding socio:', err);
-      toast.error('Error al agregar el socio');
-      throw new Error('Error al agregar el socio');
-    }
-  };
+      setLoading(true);
 
-  const updateSocio = async (uid: string, socioData: Partial<SocioFormData>): Promise<void> => {
-    try {
-      const socioRef = doc(db, 'socios', uid);
-      await updateDoc(socioRef, {
-        ...socioData,
-        actualizadoEn: Timestamp.now()
-      });
-      toast.success('Socio actualizado exitosamente');
-    } catch (err) {
-      console.error('Error updating socio:', err);
-      toast.error('Error al actualizar el socio');
-      throw new Error('Error al actualizar el socio');
+      const result = await socioService.getSociosByAsociacion(asociacionId, filters, 20, lastDoc);
+      
+      setSocios(prev => [...prev, ...result.socios]);
+      setHasMore(result.hasMore);
+      setLastDoc(result.lastDoc);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Error al cargar más socios';
+      setError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [asociacionId, filters, hasMore, loading, lastDoc]);
 
-  const deleteSocio = async (uid: string, permanent: boolean = false): Promise<void> => {
+  // Create new socio
+  const createSocio = useCallback(async (data: SocioFormData): Promise<boolean> => {
+    if (!asociacionId) return false;
+
     try {
-      if (permanent) {
-        // Eliminación permanente
-        const socioRef = doc(db, 'socios', uid);
-        await deleteDoc(socioRef);
-        toast.success('Socio eliminado permanentemente');
+      setLoading(true);
+      setError(null);
+
+      const socioId = await socioService.createSocio(asociacionId, data);
+      
+      if (socioId) {
+        toast.success('Socio creado exitosamente');
+        await loadSocios(); // Refresh list
+        await refreshStats(); // Refresh stats
+        return true;
       } else {
-        // Eliminación suave (marcar como inactivo)
-        const socioRef = doc(db, 'socios', uid);
-        await updateDoc(socioRef, { 
-          estado: 'inactivo',
-          actualizadoEn: Timestamp.now()
-        });
-        toast.success('Socio desactivado exitosamente');
+        throw new Error('Error al crear socio');
       }
-    } catch (err) {
-      console.error('Error deleting socio:', err);
-      toast.error('Error al eliminar el socio');
-      throw new Error('Error al eliminar el socio');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Error al crear socio';
+      setError(errorMessage);
+      toast.error(errorMessage);
+      return false;
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [asociacionId, loadSocios]);
 
-  const restoreSocio = async (uid: string): Promise<void> => {
+  // Update socio
+  const updateSocio = useCallback(async (id: string, data: Partial<SocioFormData>): Promise<boolean> => {
     try {
-      const socioRef = doc(db, 'socios', uid);
-      await updateDoc(socioRef, { 
-        estado: 'activo',
-        actualizadoEn: Timestamp.now()
-      });
-      toast.success('Socio restaurado exitosamente');
-    } catch (err) {
-      console.error('Error restoring socio:', err);
-      toast.error('Error al restaurar el socio');
-      throw new Error('Error al restaurar el socio');
-    }
-  };
+      setLoading(true);
+      setError(null);
 
-  const addMultipleSocios = async (sociosData: SocioFormData[]): Promise<void> => {
-    if (!user) throw new Error('Usuario no autenticado');
-
-    try {
-      const sociosRef = collection(db, 'socios');
-      const promises = sociosData.map(socioData => 
-        addDoc(sociosRef, {
-          ...socioData,
-          asociacionId: user.uid,
-          creadoEn: Timestamp.now(),
-          pagos: []
-        })
-      );
+      const success = await socioService.updateSocio(id, data);
       
-      await Promise.all(promises);
-      toast.success(`${sociosData.length} socios importados exitosamente`);
-    } catch (err) {
-      console.error('Error adding multiple socios:', err);
-      toast.error('Error al importar los socios');
-      throw new Error('Error al importar los socios');
+      if (success) {
+        toast.success('Socio actualizado exitosamente');
+        await loadSocios(); // Refresh list
+        await refreshStats(); // Refresh stats
+        return true;
+      } else {
+        throw new Error('Error al actualizar socio');
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Error al actualizar socio';
+      setError(errorMessage);
+      toast.error(errorMessage);
+      return false;
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [loadSocios]);
 
-  const bulkUpdateSocios = async (uids: string[], updates: Partial<SocioFormData>): Promise<void> => {
+  // Delete socio
+  const deleteSocio = useCallback(async (id: string): Promise<boolean> => {
     try {
-      const promises = uids.map(uid => {
-        const socioRef = doc(db, 'socios', uid);
-        return updateDoc(socioRef, {
-          ...updates,
-          actualizadoEn: Timestamp.now()
-        });
-      });
+      setLoading(true);
+      setError(null);
+
+      const success = await socioService.deleteSocio(id);
       
-      await Promise.all(promises);
-      toast.success(`${uids.length} socios actualizados exitosamente`);
-    } catch (err) {
-      console.error('Error bulk updating socios:', err);
-      toast.error('Error al actualizar los socios');
-      throw new Error('Error al actualizar los socios');
+      if (success) {
+        toast.success('Socio eliminado exitosamente');
+        await loadSocios(); // Refresh list
+        await refreshStats(); // Refresh stats
+        return true;
+      } else {
+        throw new Error('Error al eliminar socio');
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Error al eliminar socio';
+      setError(errorMessage);
+      toast.error(errorMessage);
+      return false;
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [loadSocios]);
 
-  const bulkDeleteSocios = async (uids: string[], permanent: boolean = false): Promise<void> => {
+  // Import socios from CSV
+  const importSocios = useCallback(async (csvData: any[]): Promise<ImportResult> => {
+    if (!asociacionId) {
+      return {
+        success: false,
+        imported: 0,
+        errors: [{ row: 0, error: 'No hay asociación seleccionada', data: {} }],
+        duplicates: 0,
+      };
+    }
+
     try {
-      const promises = uids.map(uid => {
-        const socioRef = doc(db, 'socios', uid);
-        if (permanent) {
-          return deleteDoc(socioRef);
-        } else {
-          return updateDoc(socioRef, { 
-            estado: 'inactivo',
-            actualizadoEn: Timestamp.now()
-          });
+      setLoading(true);
+      setError(null);
+
+      const result = await socioService.importSocios(asociacionId, csvData);
+      
+      if (result.success) {
+        toast.success(`${result.imported} socios importados exitosamente`);
+        if (result.duplicates > 0) {
+          toast.info(`${result.duplicates} socios duplicados omitidos`);
         }
-      });
+        if (result.errors.length > 0) {
+          toast.warning(`${result.errors.length} errores encontrados`);
+        }
+        
+        await loadSocios(); // Refresh list
+        await refreshStats(); // Refresh stats
+      } else {
+        toast.error('Error en la importación');
+      }
+
+      return result;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Error al importar socios';
+      setError(errorMessage);
+      toast.error(errorMessage);
       
-      await Promise.all(promises);
-      const action = permanent ? 'eliminados permanentemente' : 'desactivados';
-      toast.success(`${uids.length} socios ${action} exitosamente`);
-    } catch (err) {
-      console.error('Error bulk deleting socios:', err);
-      toast.error('Error al procesar los socios');
-      throw new Error('Error al procesar los socios');
+      return {
+        success: false,
+        imported: 0,
+        errors: [{ row: 0, error: errorMessage, data: {} }],
+        duplicates: 0,
+      };
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [asociacionId, loadSocios]);
 
-  const getStats = (): SocioStats => {
-    return {
-      total: allSocios.filter(s => s.estado !== 'inactivo').length,
-      activos: allSocios.filter(s => s.estado === 'activo').length,
-      vencidos: allSocios.filter(s => s.estado === 'vencido').length,
-      inactivos: allSocios.filter(s => s.estado === 'inactivo').length
-    };
-  };
+  // Register payment
+  const registerPayment = useCallback(async (socioId: string, amount: number, months = 1): Promise<boolean> => {
+    try {
+      setLoading(true);
+      setError(null);
 
-  const refreshData = useCallback(() => {
-    setLoading(true);
-    fetchSocios();
-  }, [fetchSocios]);
+      const success = await socioService.registerPayment(socioId, amount, months);
+      
+      if (success) {
+        toast.success('Pago registrado exitosamente');
+        await loadSocios(); // Refresh list
+        await refreshStats(); // Refresh stats
+        return true;
+      } else {
+        throw new Error('Error al registrar pago');
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Error al registrar pago';
+      setError(errorMessage);
+      toast.error(errorMessage);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [loadSocios]);
+
+  // Update membership status
+  const updateMembershipStatus = useCallback(async (): Promise<number> => {
+    if (!asociacionId) return 0;
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      const updatedCount = await socioService.updateMembershipStatus(asociacionId);
+      
+      if (updatedCount > 0) {
+        toast.success(`${updatedCount} membresías actualizadas`);
+        await loadSocios(); // Refresh list
+        await refreshStats(); // Refresh stats
+      }
+
+      return updatedCount;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Error al actualizar membresías';
+      setError(errorMessage);
+      toast.error(errorMessage);
+      return 0;
+    } finally {
+      setLoading(false);
+    }
+  }, [asociacionId, loadSocios]);
+
+  // Refresh stats
+  const refreshStats = useCallback(async () => {
+    if (!asociacionId) return;
+
+    try {
+      const newStats = await socioService.getAsociacionStats(asociacionId);
+      setStats(newStats);
+    } catch (error) {
+      console.error('Error refreshing stats:', error);
+    }
+  }, [asociacionId]);
+
+  // Clear error
+  const clearError = useCallback(() => {
+    setError(null);
+  }, []);
+
+  // Load initial data
+  useEffect(() => {
+    if (asociacionId) {
+      loadSocios();
+      refreshStats();
+    }
+  }, [asociacionId, loadSocios, refreshStats]);
+
+  // Reload when filters change
+  useEffect(() => {
+    if (asociacionId) {
+      loadSocios();
+    }
+  }, [filters, loadSocios]);
 
   return {
-    socios, // Solo activos y vencidos
-    allSocios, // Incluye todos los estados
+    socios,
+    stats,
     loading,
     error,
-    addSocio,
+    hasMore,
+    filters,
+    setFilters,
+    loadSocios,
+    loadMoreSocios,
+    createSocio,
     updateSocio,
     deleteSocio,
-    restoreSocio,
-    addMultipleSocios,
-    bulkUpdateSocios,
-    bulkDeleteSocios,
-    refreshData,
-    stats: getStats()
+    importSocios,
+    registerPayment,
+    updateMembershipStatus,
+    refreshStats,
+    clearError,
   };
-};
+}

@@ -1,51 +1,36 @@
-'use client';
-
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  TextField,
-  Box,
-  Typography,
-  Stack,
-  InputAdornment,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Select,
-  FormHelperText,
-  alpha,
-  Avatar,
-  Stepper,
-  Step,
-  StepLabel,
-  StepContent,
-  Paper,
-  Chip,
-  IconButton,
-  LinearProgress,
-} from '@mui/material';
-import {
-  Person,
-  Email,
-  Phone,
-  Close,
+import { z } from 'zod';
+import { 
+  X, 
+  User, 
+  Mail, 
+  Phone, 
+  MapPin, 
+  Calendar, 
+  CreditCard, 
+  Hash,
+  AlertCircle,
   Save,
-  PersonAdd,
-  CheckCircle,
-  ArrowForward,
-  ArrowBack,
-  ContactMail,
-  Badge,
-} from '@mui/icons-material';
-import { Socio, SocioFormData } from '@/types/socio';
-import { socioSchema } from '@/lib/validations/socio';
+  Loader2
+} from 'lucide-react';
+import { Socio, SocioFormData } from '@/services/socio.service';
+
+const socioSchema = z.object({
+  nombre: z.string().min(2, 'Nombre debe tener al menos 2 caracteres'),
+  email: z.string().email('Email inválido'),
+  dni: z.string().min(7, 'DNI debe tener al menos 7 caracteres'),
+  telefono: z.string().optional(),
+  fechaNacimiento: z.date({
+    required_error: 'Fecha de nacimiento es requerida',
+  }),
+  direccion: z.string().optional(),
+  numeroSocio: z.string().optional(),
+  montoCuota: z.number().min(0, 'La cuota debe ser mayor a 0'),
+  fechaVencimiento: z.date().optional(),
+});
 
 interface EnhancedSocioDialogProps {
   open: boolean;
@@ -55,807 +40,418 @@ interface EnhancedSocioDialogProps {
   loading?: boolean;
 }
 
-const steps = [
-  {
-    label: 'Información Personal',
-    description: 'Datos básicos del socio',
-    icon: <Person />,
-  },
-  {
-    label: 'Contacto',
-    description: 'Información de contacto',
-    icon: <ContactMail />,
-  },
-  {
-    label: 'Verificación',
-    description: 'Revisión y confirmación',
-    icon: <CheckCircle />,
-  },
-];
-
 export const EnhancedSocioDialog: React.FC<EnhancedSocioDialogProps> = ({
   open,
   onClose,
   onSave,
   socio,
+  loading = false
 }) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const isEditing = !!socio;
-  const [activeStep, setActiveStep] = useState(0);
-  const [completedSteps, setCompletedSteps] = useState<number[]>([]);
 
   const {
     register,
     handleSubmit,
+    formState: { errors },
     reset,
-    formState: { errors, isSubmitting },
-    watch,
-    trigger,
+    setValue,
+    watch
   } = useForm<SocioFormData>({
     resolver: zodResolver(socioSchema),
     defaultValues: {
-      nombre: '',
-      email: '',
-      estado: 'activo',
-      telefono: '',
-      dni: ''
+      montoCuota: 0,
     }
   });
 
-  const watchedValues = watch();
-
+  // Reset form when dialog opens/closes or socio changes
   useEffect(() => {
     if (open) {
       if (socio) {
+        // Populate form with existing socio data
         reset({
           nombre: socio.nombre,
           email: socio.email,
-          estado: socio.estado === 'inactivo'
-            ? 'activo'
-            : (socio.estado === 'activo' || socio.estado === 'vencido'
-                ? socio.estado
-                : 'activo'),
+          dni: socio.dni,
           telefono: socio.telefono || '',
-          dni: socio.dni || ''
+          fechaNacimiento: socio.fechaNacimiento,
+          direccion: socio.direccion || '',
+          numeroSocio: socio.numeroSocio || '',
+          montoCuota: socio.montoCuota,
+          fechaVencimiento: socio.fechaVencimiento,
         });
-        setCompletedSteps([0, 1, 2]);
-        setActiveStep(2);
       } else {
+        // Reset form for new socio
         reset({
           nombre: '',
           email: '',
-          estado: 'activo',
+          dni: '',
           telefono: '',
-          dni: ''
+          fechaNacimiento: new Date(),
+          direccion: '',
+          numeroSocio: '',
+          montoCuota: 0,
+          fechaVencimiento: undefined,
         });
-        setCompletedSteps([]);
-        setActiveStep(0);
       }
     }
   }, [open, socio, reset]);
 
-  const validateStep = async (step: number) => {
-    const fieldsToValidate = {
-      0: ['nombre'],
-      1: ['email'],
-      2: []
-    };
-
-    const fields = fieldsToValidate[step as keyof typeof fieldsToValidate];
-    if (fields.length > 0) {
-      const isValid = await trigger(fields as (keyof SocioFormData)[]);
-      return isValid;
-    }
-    return true;
-  };
-
-  const handleNext = async () => {
-    const isValid = await validateStep(activeStep);
-    if (isValid) {
-      if (!completedSteps.includes(activeStep)) {
-        setCompletedSteps([...completedSteps, activeStep]);
-      }
-      setActiveStep((prevActiveStep) => prevActiveStep + 1);
-    }
-  };
-
-  const handleBack = () => {
-    setActiveStep((prevActiveStep) => prevActiveStep - 1);
-  };
-
-  const handleStepClick = async (step: number) => {
-    if (step <= activeStep || completedSteps.includes(step)) {
-      setActiveStep(step);
-    }
-  };
-
-  const onSubmit = async (data: SocioFormData) => {
+  const handleFormSubmit = async (data: SocioFormData) => {
     try {
+      setIsSubmitting(true);
       await onSave(data);
-      onClose();
     } catch (error) {
       console.error('Error saving socio:', error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleClose = () => {
-    if (!isSubmitting) {
-      setActiveStep(0);
-      setCompletedSteps([]);
+    if (!isSubmitting && !loading) {
       onClose();
     }
   };
 
-  const getStepContent = (step: number) => {
-    switch (step) {
-      case 0:
-        return (
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.3 }}
-          >
-            <Stack spacing={4}>
-              <Box sx={{ textAlign: 'center', mb: 2 }}>
-                <Avatar
-                  sx={{
-                    width: 80,
-                    height: 80,
-                    bgcolor: alpha('#6366f1', 0.1),
-                    color: '#6366f1',
-                    mx: 'auto',
-                    mb: 2,
-                  }}
-                >
-                  <Person sx={{ fontSize: 40 }} />
-                </Avatar>
-                <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b' }}>
-                  Información Personal
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#64748b' }}>
-                  Ingresa los datos básicos del socio
-                </Typography>
-              </Box>
-
-              <TextField
-                {...register('nombre')}
-                label="Nombre completo"
-                placeholder="Ingresa el nombre completo"
-                fullWidth
-                error={!!errors.nombre}
-                helperText={errors.nombre?.message}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Person sx={{ color: '#94a3b8', fontSize: '1.3rem' }} />
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: 4,
-                    bgcolor: '#fafbfc',
-                    '& fieldset': {
-                      borderColor: '#e2e8f0',
-                    },
-                    '&:hover fieldset': {
-                      borderColor: '#6366f1',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#6366f1',
-                      borderWidth: 2,
-                    },
-                    '&.Mui-focused': {
-                      bgcolor: 'white',
-                    }
-                  },
-                  '& .MuiInputLabel-root.Mui-focused': {
-                    color: '#6366f1',
-                  },
-                }}
-              />
-
-              <TextField
-                {...register('dni')}
-                label="DNI / Documento de Identidad"
-                placeholder="Número de documento"
-                fullWidth
-                error={!!errors.dni}
-                helperText={errors.dni?.message}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Badge sx={{ color: '#94a3b8', fontSize: '1.3rem' }} />
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: 4,
-                    bgcolor: '#fafbfc',
-                    '& fieldset': {
-                      borderColor: '#e2e8f0',
-                    },
-                    '&:hover fieldset': {
-                      borderColor: '#6366f1',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#6366f1',
-                      borderWidth: 2,
-                    },
-                    '&.Mui-focused': {
-                      bgcolor: 'white',
-                    }
-                  },
-                  '& .MuiInputLabel-root.Mui-focused': {
-                    color: '#6366f1',
-                  },
-                }}
-              />
-            </Stack>
-          </motion.div>
-        );
-
-      case 1:
-        return (
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.3 }}
-          >
-            <Stack spacing={4}>
-              <Box sx={{ textAlign: 'center', mb: 2 }}>
-                <Avatar
-                  sx={{
-                    width: 80,
-                    height: 80,
-                    bgcolor: alpha('#10b981', 0.1),
-                    color: '#10b981',
-                    mx: 'auto',
-                    mb: 2,
-                  }}
-                >
-                  <ContactMail sx={{ fontSize: 40 }} />
-                </Avatar>
-                <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b' }}>
-                  Información de Contacto
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#64748b' }}>
-                  Datos para comunicación y notificaciones
-                </Typography>
-              </Box>
-
-              <TextField
-                {...register('email')}
-                label="Correo electrónico"
-                type="email"
-                placeholder="socio@email.com"
-                fullWidth
-                error={!!errors.email}
-                helperText={errors.email?.message}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Email sx={{ color: '#94a3b8', fontSize: '1.3rem' }} />
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: 4,
-                    bgcolor: '#fafbfc',
-                    '& fieldset': {
-                      borderColor: '#e2e8f0',
-                    },
-                    '&:hover fieldset': {
-                      borderColor: '#6366f1',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#6366f1',
-                      borderWidth: 2,
-                    },
-                    '&.Mui-focused': {
-                      bgcolor: 'white',
-                    }
-                  },
-                  '& .MuiInputLabel-root.Mui-focused': {
-                    color: '#6366f1',
-                  },
-                }}
-              />
-
-              <TextField
-                {...register('telefono')}
-                label="Teléfono"
-                placeholder="Número de teléfono"
-                fullWidth
-                error={!!errors.telefono}
-                helperText={errors.telefono?.message}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Phone sx={{ color: '#94a3b8', fontSize: '1.3rem' }} />
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: 4,
-                    bgcolor: '#fafbfc',
-                    '& fieldset': {
-                      borderColor: '#e2e8f0',
-                    },
-                    '&:hover fieldset': {
-                      borderColor: '#6366f1',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#6366f1',
-                      borderWidth: 2,
-                    },
-                    '&.Mui-focused': {
-                      bgcolor: 'white',
-                    }
-                  },
-                  '& .MuiInputLabel-root.Mui-focused': {
-                    color: '#6366f1',
-                  },
-                }}
-              />
-
-              <FormControl 
-                fullWidth 
-                error={!!errors.estado}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: 4,
-                    bgcolor: '#fafbfc',
-                    '& fieldset': {
-                      borderColor: '#e2e8f0',
-                    },
-                    '&:hover fieldset': {
-                      borderColor: '#6366f1',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#6366f1',
-                      borderWidth: 2,
-                    },
-                    '&.Mui-focused': {
-                      bgcolor: 'white',
-                    }
-                  },
-                  '& .MuiInputLabel-root.Mui-focused': {
-                    color: '#6366f1',
-                  },
-                }}
-              >
-                <InputLabel>Estado del socio</InputLabel>
-                <Select
-                  {...register('estado')}
-                  label="Estado del socio"
-                  defaultValue="activo"
-                >
-                  <MenuItem value="activo">
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                      <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#10b981' }} />
-                      Activo
-                    </Box>
-                  </MenuItem>
-                  <MenuItem value="vencido">
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                      <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#ef4444' }} />
-                      Vencido
-                    </Box>
-                  </MenuItem>
-                </Select>
-                {errors.estado && (
-                  <FormHelperText>{errors.estado.message}</FormHelperText>
-                )}
-              </FormControl>
-            </Stack>
-          </motion.div>
-        );
-
-      case 2:
-        return (
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.3 }}
-          >
-            <Stack spacing={4}>
-              <Box sx={{ textAlign: 'center', mb: 2 }}>
-                <Avatar
-                  sx={{
-                    width: 80,
-                    height: 80,
-                    bgcolor: alpha('#8b5cf6', 0.1),
-                    color: '#8b5cf6',
-                    mx: 'auto',
-                    mb: 2,
-                  }}
-                >
-                  <CheckCircle sx={{ fontSize: 40 }} />
-                </Avatar>
-                <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b' }}>
-                  Verificación de Datos
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#64748b' }}>
-                  Revisa la información antes de guardar
-                </Typography>
-              </Box>
-
-              <Paper
-                elevation={0}
-                sx={{
-                  bgcolor: alpha('#6366f1', 0.05),
-                  border: `1px solid ${alpha('#6366f1', 0.15)}`,
-                  borderRadius: 4,
-                  p: 3,
-                }}
-              >
-                <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#6366f1', mb: 2 }}>
-                  Resumen del Socio
-                </Typography>
-                
-                <Stack spacing={2}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 600 }}>
-                      Nombre:
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: '#1e293b', fontWeight: 700 }}>
-                      {watchedValues.nombre || 'No especificado'}
-                    </Typography>
-                  </Box>
-                  
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 600 }}>
-                      Email:
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: '#1e293b', fontWeight: 700 }}>
-                      {watchedValues.email || 'No especificado'}
-                    </Typography>
-                  </Box>
-                  
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 600 }}>
-                      Teléfono:
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: '#1e293b', fontWeight: 700 }}>
-                      {watchedValues.telefono || 'No especificado'}
-                    </Typography>
-                  </Box>
-                  
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 600 }}>
-                      DNI:
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: '#1e293b', fontWeight: 700 }}>
-                      {watchedValues.dni || 'No especificado'}
-                    </Typography>
-                  </Box>
-                  
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 600 }}>
-                      Estado:
-                    </Typography>
-                    <Chip
-                      label={watchedValues.estado === 'activo' ? 'Activo' : 'Vencido'}
-                      size="small"
-                      sx={{
-                        bgcolor: watchedValues.estado === 'activo' ? alpha('#10b981', 0.1) : alpha('#ef4444', 0.1),
-                        color: watchedValues.estado === 'activo' ? '#10b981' : '#ef4444',
-                        fontWeight: 600,
-                      }}
-                    />
-                  </Box>
-                </Stack>
-              </Paper>
-            </Stack>
-          </motion.div>
-        );
-
-      default:
-        return null;
-    }
-  };
-
-  const progress = ((activeStep + 1) / steps.length) * 100;
+  if (!open) return null;
 
   return (
-    <Dialog
-      open={open}
-      onClose={handleClose}
-      maxWidth="md"
-      fullWidth
-      PaperProps={{
-        sx: {
-          borderRadius: 6,
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-          overflow: 'hidden',
-          minHeight: 600,
-        }
-      }}
-    >
-      {/* Enhanced Header */}
-      <DialogTitle
-        sx={{
-          p: 0,
-          background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%)',
-          color: 'white',
-          position: 'relative',
-          overflow: 'hidden'
-        }}
-      >
-        <Box sx={{ p: 4, position: 'relative', zIndex: 1 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-              <Avatar
-                sx={{
-                  width: 64,
-                  height: 64,
-                  bgcolor: alpha('#ffffff', 0.2),
-                  color: 'white',
-                }}
-              >
-                {isEditing ? <Person sx={{ fontSize: 32 }} /> : <PersonAdd sx={{ fontSize: 32 }} />}
-              </Avatar>
-              <Box>
-                <Typography variant="h4" sx={{ fontWeight: 900, mb: 0.5 }}>
-                  {isEditing ? 'Editar Socio' : 'Nuevo Socio'}
-                </Typography>
-                <Typography variant="body1" sx={{ opacity: 0.9 }}>
-                  {isEditing ? 'Actualiza la información del socio' : 'Registro completo paso a paso'}
-                </Typography>
-              </Box>
-            </Box>
-            
-            <IconButton
-              onClick={handleClose}
-              sx={{
-                color: 'white',
-                bgcolor: alpha('#ffffff', 0.1),
-                '&:hover': {
-                  bgcolor: alpha('#ffffff', 0.2),
-                }
-              }}
-            >
-              <Close />
-            </IconButton>
-          </Box>
-          
-          {/* Progress bar */}
-          <Box sx={{ mb: 2 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-              <Typography variant="body2" sx={{ opacity: 0.9, fontWeight: 600 }}>
-                Progreso del registro
-              </Typography>
-              <Typography variant="body2" sx={{ opacity: 0.9, fontWeight: 700 }}>
-                {Math.round(progress)}%
-              </Typography>
-            </Box>
-            <LinearProgress
-              variant="determinate"
-              value={progress}
-              sx={{
-                height: 6,
-                borderRadius: 3,
-                bgcolor: alpha('#ffffff', 0.2),
-                '& .MuiLinearProgress-bar': {
-                  bgcolor: 'white',
-                  borderRadius: 3,
-                }
-              }}
-            />
-          </Box>
-        </Box>
-        
-        {/* Decorative elements */}
-        <Box
-          sx={{
-            position: 'absolute',
-            top: -50,
-            right: -50,
-            width: 100,
-            height: 100,
-            borderRadius: '50%',
-            bgcolor: alpha('#ffffff', 0.1),
-          }}
+    <div className="fixed inset-0 z-50 overflow-y-auto">
+      <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        {/* Backdrop */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+          onClick={handleClose}
         />
-        <Box
-          sx={{
-            position: 'absolute',
-            bottom: -30,
-            left: -30,
-            width: 60,
-            height: 60,
-            borderRadius: '50%',
-            bgcolor: alpha('#ffffff', 0.1),
-          }}
-        />
-      </DialogTitle>
 
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <DialogContent sx={{ p: 0 }}>
-          <Box sx={{ display: 'flex', minHeight: 400 }}>
-            {/* Stepper Sidebar */}
-            <Box
-              sx={{
-                width: 280,
-                bgcolor: '#fafbfc',
-                borderRight: '1px solid #f1f5f9',
-                p: 3,
-              }}
-            >
-              <Stepper activeStep={activeStep} orientation="vertical">
-                {steps.map((step, index) => (
-                  <Step key={step.label} completed={completedSteps.includes(index)}>
-                    <StepLabel
-                      onClick={() => handleStepClick(index)}
-                      sx={{
-                        cursor: index <= activeStep || completedSteps.includes(index) ? 'pointer' : 'default',
-                        '& .MuiStepLabel-label': {
-                          fontWeight: 600,
-                          fontSize: '0.9rem',
-                        },
-                        '& .MuiStepLabel-label.Mui-active': {
-                          color: '#6366f1',
-                          fontWeight: 700,
-                        },
-                        '& .MuiStepLabel-label.Mui-completed': {
-                          color: '#10b981',
-                          fontWeight: 700,
-                        },
-                      }}
-                      icon={
-                        <Avatar
-                          sx={{
-                            width: 32,
-                            height: 32,
-                            bgcolor: completedSteps.includes(index) ? '#10b981' : 
-                                     index === activeStep ? '#6366f1' : '#e2e8f0',
-                            color: completedSteps.includes(index) || index === activeStep ? 'white' : '#94a3b8',
-                            fontSize: '0.8rem',
-                          }}
-                        >
-                          {completedSteps.includes(index) ? <CheckCircle sx={{ fontSize: 18 }} /> : index + 1}
-                        </Avatar>
-                      }
-                    >
-                      {step.label}
-                    </StepLabel>
-                    <StepContent>
-                      <Typography variant="body2" sx={{ color: '#64748b', fontSize: '0.8rem' }}>
-                        {step.description}
-                      </Typography>
-                    </StepContent>
-                  </Step>
-                ))}
-              </Stepper>
-            </Box>
+        {/* Dialog */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: 20 }}
+          className="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full"
+        >
+          <form onSubmit={handleSubmit(handleFormSubmit)}>
+            {/* Header */}
+            <div className="bg-white px-6 pt-6 pb-4 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+                    <User className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      {isEditing ? 'Editar Socio' : 'Nuevo Socio'}
+                    </h3>
+                    <p className="text-sm text-gray-500">
+                      {isEditing ? 'Modifica los datos del socio' : 'Completa la información del nuevo socio'}
+                    </p>
+                  </div>
+                </div>
+                
+                <button
+                  type="button"
+                  onClick={handleClose}
+                  disabled={isSubmitting || loading}
+                  className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-lg"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
 
-            {/* Content Area */}
-            <Box sx={{ flex: 1, p: 4 }}>
-              <AnimatePresence mode="wait">
-                {getStepContent(activeStep)}
-              </AnimatePresence>
-            </Box>
-          </Box>
-        </DialogContent>
+            {/* Form Content */}
+            <div className="bg-white px-6 py-6 max-h-96 overflow-y-auto">
+              <div className="space-y-6">
+                {/* Personal Information Section */}
+                <div>
+                  <h4 className="text-sm font-medium text-gray-900 mb-4 flex items-center">
+                    <User className="w-4 h-4 mr-2 text-gray-500" />
+                    Información Personal
+                  </h4>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Name */}
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Nombre Completo *
+                      </label>
+                      <div className="relative">
+                        <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <input
+                          {...register('nombre')}
+                          type="text"
+                          placeholder="Nombre completo del socio"
+                          disabled={isSubmitting || loading}
+                          className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+                            errors.nombre ? 'border-red-300' : 'border-gray-300'
+                          }`}
+                        />
+                      </div>
+                      {errors.nombre && (
+                        <p className="mt-1 text-sm text-red-600 flex items-center">
+                          <AlertCircle className="w-4 h-4 mr-1" />
+                          {errors.nombre.message}
+                        </p>
+                      )}
+                    </div>
 
-        <DialogActions sx={{ p: 4, borderTop: '1px solid #f1f5f9' }}>
-          <Stack direction="row" spacing={2} sx={{ width: '100%' }}>
-            <Button
-              onClick={handleClose}
-              disabled={isSubmitting}
-              variant="outlined"
-              startIcon={<Close />}
-              sx={{
-                py: 1.5,
-                px: 3,
-                borderRadius: 3,
-                textTransform: 'none',
-                fontWeight: 700,
-                borderColor: '#e2e8f0',
-                color: '#475569',
-                borderWidth: 2,
-                '&:hover': {
-                  borderColor: '#6366f1',
-                  bgcolor: alpha('#6366f1', 0.03),
-                  color: '#6366f1',
-                },
-                transition: 'all 0.2s ease'
-              }}
-            >
-              Cancelar
-            </Button>
-            
-            {activeStep > 0 && (
-              <Button
-                onClick={handleBack}
-                variant="outlined"
-                startIcon={<ArrowBack />}
-                sx={{
-                  py: 1.5,
-                  px: 3,
-                  borderRadius: 3,
-                  textTransform: 'none',
-                  fontWeight: 700,
-                  borderColor: '#e2e8f0',
-                  color: '#475569',
-                  borderWidth: 2,
-                  '&:hover': {
-                    borderColor: '#6366f1',
-                    bgcolor: alpha('#6366f1', 0.03),
-                    color: '#6366f1',
-                  },
-                  transition: 'all 0.2s ease'
-                }}
+                    {/* Email */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Email *
+                      </label>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <input
+                          {...register('email')}
+                          type="email"
+                          placeholder="email@ejemplo.com"
+                          disabled={isSubmitting || loading}
+                          className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+                            errors.email ? 'border-red-300' : 'border-gray-300'
+                          }`}
+                        />
+                      </div>
+                      {errors.email && (
+                        <p className="mt-1 text-sm text-red-600 flex items-center">
+                          <AlertCircle className="w-4 h-4 mr-1" />
+                          {errors.email.message}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* DNI */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        DNI *
+                      </label>
+                      <div className="relative">
+                        <CreditCard className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <input
+                          {...register('dni')}
+                          type="text"
+                          placeholder="12345678"
+                          disabled={isSubmitting || loading}
+                          className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+                            errors.dni ? 'border-red-300' : 'border-gray-300'
+                          }`}
+                        />
+                      </div>
+                      {errors.dni && (
+                        <p className="mt-1 text-sm text-red-600 flex items-center">
+                          <AlertCircle className="w-4 h-4 mr-1" />
+                          {errors.dni.message}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Phone */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Teléfono
+                      </label>
+                      <div className="relative">
+                        <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <input
+                          {...register('telefono')}
+                          type="tel"
+                          placeholder="+54 9 11 1234-5678"
+                          disabled={isSubmitting || loading}
+                          className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+                            errors.telefono ? 'border-red-300' : 'border-gray-300'
+                          }`}
+                        />
+                      </div>
+                      {errors.telefono && (
+                        <p className="mt-1 text-sm text-red-600 flex items-center">
+                          <AlertCircle className="w-4 h-4 mr-1" />
+                          {errors.telefono.message}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Birth Date */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Fecha de Nacimiento *
+                      </label>
+                      <div className="relative">
+                        <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <input
+                          {...register('fechaNacimiento', {
+                            valueAsDate: true,
+                          })}
+                          type="date"
+                          disabled={isSubmitting || loading}
+                          className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+                            errors.fechaNacimiento ? 'border-red-300' : 'border-gray-300'
+                          }`}
+                        />
+                      </div>
+                      {errors.fechaNacimiento && (
+                        <p className="mt-1 text-sm text-red-600 flex items-center">
+                          <AlertCircle className="w-4 h-4 mr-1" />
+                          {errors.fechaNacimiento.message}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Address */}
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Dirección
+                      </label>
+                      <div className="relative">
+                        <MapPin className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                        <textarea
+                          {...register('direccion')}
+                          rows={2}
+                          placeholder="Dirección completa"
+                          disabled={isSubmitting || loading}
+                          className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors resize-none ${
+                            errors.direccion ? 'border-red-300' : 'border-gray-300'
+                          }`}
+                        />
+                      </div>
+                      {errors.direccion && (
+                        <p className="mt-1 text-sm text-red-600 flex items-center">
+                          <AlertCircle className="w-4 h-4 mr-1" />
+                          {errors.direccion.message}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Membership Information Section */}
+                <div>
+                  <h4 className="text-sm font-medium text-gray-900 mb-4 flex items-center">
+                    <CreditCard className="w-4 h-4 mr-2 text-gray-500" />
+                    Información de Membresía
+                  </h4>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* Member Number */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Número de Socio
+                      </label>
+                      <div className="relative">
+                        <Hash className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <input
+                          {...register('numeroSocio')}
+                          type="text"
+                          placeholder="Auto-generado"
+                          disabled={isSubmitting || loading}
+                          className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+                            errors.numeroSocio ? 'border-red-300' : 'border-gray-300'
+                          }`}
+                        />
+                      </div>
+                      {errors.numeroSocio && (
+                        <p className="mt-1 text-sm text-red-600 flex items-center">
+                          <AlertCircle className="w-4 h-4 mr-1" />
+                          {errors.numeroSocio.message}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Monthly Fee */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Cuota Mensual *
+                      </label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">$</span>
+                        <input
+                          {...register('montoCuota', {
+                            valueAsNumber: true,
+                          })}
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          placeholder="0.00"
+                          disabled={isSubmitting || loading}
+                          className={`w-full pl-8 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+                            errors.montoCuota ? 'border-red-300' : 'border-gray-300'
+                          }`}
+                        />
+                      </div>
+                      {errors.montoCuota && (
+                        <p className="mt-1 text-sm text-red-600 flex items-center">
+                          <AlertCircle className="w-4 h-4 mr-1" />
+                          {errors.montoCuota.message}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Expiration Date */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Fecha de Vencimiento
+                      </label>
+                      <div className="relative">
+                        <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <input
+                          {...register('fechaVencimiento', {
+                            valueAsDate: true,
+                          })}
+                          type="date"
+                          disabled={isSubmitting || loading}
+                          className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+                            errors.fechaVencimiento ? 'border-red-300' : 'border-gray-300'
+                          }`}
+                        />
+                      </div>
+                      {errors.fechaVencimiento && (
+                        <p className="mt-1 text-sm text-red-600 flex items-center">
+                          <AlertCircle className="w-4 h-4 mr-1" />
+                          {errors.fechaVencimiento.message}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="bg-gray-50 px-6 py-4 flex items-center justify-end space-x-3">
+              <button
+                type="button"
+                onClick={handleClose}
+                disabled={isSubmitting || loading}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Anterior
-              </Button>
-            )}
-            
-            <Box sx={{ flex: 1 }} />
-            
-            {activeStep < steps.length - 1 ? (
-              <Button
-                onClick={handleNext}
-                variant="contained"
-                endIcon={<ArrowForward />}
-                sx={{
-                  py: 1.5,
-                  px: 4,
-                  borderRadius: 3,
-                  textTransform: 'none',
-                  fontWeight: 700,
-                  background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-                  boxShadow: '0 4px 20px rgba(99, 102, 241, 0.3)',
-                  '&:hover': {
-                    background: 'linear-gradient(135deg, #5b21b6 0%, #7c3aed 100%)',
-                    transform: 'translateY(-1px)',
-                    boxShadow: '0 6px 25px rgba(99, 102, 241, 0.4)',
-                  },
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                Siguiente
-              </Button>
-            ) : (
-              <Button
+                Cancelar
+              </button>
+              
+              <button
                 type="submit"
-                disabled={isSubmitting}
-                variant="contained"
-                startIcon={<Save />}
-                sx={{
-                  py: 1.5,
-                  px: 4,
-                  borderRadius: 3,
-                  textTransform: 'none',
-                  fontWeight: 700,
-                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                  boxShadow: '0 4px 20px rgba(16, 185, 129, 0.3)',
-                  '&:hover': {
-                    background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
-                    transform: 'translateY(-1px)',
-                    boxShadow: '0 6px 25px rgba(16, 185, 129, 0.4)',
-                  },
-                  '&:disabled': {
-                    background: '#e2e8f0',
-                    color: '#94a3b8',
-                    transform: 'none',
-                    boxShadow: 'none',
-                  },
-                  transition: 'all 0.2s ease'
-                }}
+                disabled={isSubmitting || loading}
+                className="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isSubmitting ? 'Guardando...' : (isEditing ? 'Actualizar' : 'Crear')} Socio
-              </Button>
-            )}
-          </Stack>
-        </DialogActions>
-      </form>
-    </Dialog>
+                {isSubmitting || loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    {isEditing ? 'Actualizando...' : 'Creando...'}
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4 mr-2" />
+                    {isEditing ? 'Actualizar Socio' : 'Crear Socio'}
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        </motion.div>
+      </div>
+    </div>
   );
 };

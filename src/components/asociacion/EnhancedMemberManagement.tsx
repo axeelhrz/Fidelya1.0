@@ -1,1920 +1,953 @@
-'use client';
-
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Box,
-  Typography,
-  Card,
-  CardContent,
-  Button,
-  TextField,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Chip,
-  IconButton,
-  InputAdornment,
-  MenuItem,
-  Select,
-  FormControl,
-  InputLabel,
-  Pagination,
-  Stack,
-  Avatar,
-  alpha,
-  Divider,
-  Checkbox,
-  Menu,
-  ListItemIcon,
-  ListItemText,
-  Tooltip,
-  ButtonGroup,
-  Fab,
-  Zoom,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Alert,
-  CircularProgress,
-  Badge,
-  LinearProgress,
-  useTheme,
-  useMediaQuery,
-  Collapse,
-} from '@mui/material';
-import { SelectChangeEvent } from '@mui/material/Select';
-import {
-  Search,
-  Add,
-  Edit,
-  Email,
-  Phone,
-  CalendarToday,
-  People,
-  FilterList,
-  MoreVert,
-  Download,
-  Visibility,
-  Archive,
-  Restore,
-  Star,
-  Sort,
-  Refresh,
-  PersonAdd,
-  Print,
-  DeleteForever,
-  TrendingUp,
-  TrendingDown,
-  Remove,
-  CheckCircle,
-  Warning,
-  Error as ErrorIcon,
-  Info,
-  Close,
-  ExpandLess,
-  ExpandMore,
-} from '@mui/icons-material';
-import { Socio } from '@/types/socio';
 import { 
-  doc, 
-  deleteDoc, 
-  updateDoc, 
-  Timestamp,
-  writeBatch
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import toast from 'react-hot-toast';
-import { format, isAfter, subDays } from 'date-fns';
-import { es } from 'date-fns/locale';
-import { SocioProfileView } from './SocioProfileView';
+  Users, 
+  Plus, 
+  Search, 
+  Filter, 
+  Download, 
+  Upload, 
+  RefreshCw,
+  MoreVertical,
+  Edit,
+  Trash2,
+  DollarSign,
+  Calendar,
+  Mail,
+  Phone,
+  MapPin,
+  CheckCircle,
+  XCircle,
+  Clock,
+  AlertTriangle,
+  FileText,
+  Eye,
+  ChevronDown,
+  X
+} from 'lucide-react';
+import { useSocios } from '@/hooks/useSocios';
+import { Socio, SocioFormData } from '@/services/socio.service';
+import { EnhancedSocioDialog } from './EnhancedSocioDialog';
+import { CsvImport } from './CsvImport';
+import { DeleteConfirmDialog } from './DeleteConfirmDialog';
+import { toast } from 'react-hot-toast';
 
-interface EnhancedMemberManagementProps {
-  socios: Socio[];
-  loading: boolean;
-  onEdit: (socio: Socio) => void;
-  onDelete: (socio: Socio) => void;
-  onAdd: () => void;
-  onBulkAction?: (action: string, selectedIds: string[]) => void;
-  onRefresh?: () => void;
+interface MemberManagementProps {
+  onNavigate?: (section: string) => void;
 }
 
-interface TableColumn {
-  id: string;
-  label: string;
-  minWidth?: number;
-  align?: 'right' | 'left' | 'center';
-  format?: (value: unknown) => string;
-  sortable?: boolean;
-  hideOnMobile?: boolean;
-}
+export const EnhancedMemberManagement: React.FC<MemberManagementProps> = ({ onNavigate }) => {
+  const {
+    socios,
+    stats,
+    loading,
+    error,
+    hasMore,
+    filters,
+    setFilters,
+    loadMoreSocios,
+    createSocio,
+    updateSocio,
+    deleteSocio,
+    importSocios,
+    registerPayment,
+    updateMembershipStatus,
+    clearError
+  } = useSocios();
 
-interface BulkActionResult {
-  success: number;
-  failed: number;
-  errors: string[];
-}
+  // State management
+  const [selectedSocio, setSelectedSocio] = useState<Socio | null>(null);
+  const [socioDialogOpen, setSocioDialogOpen] = useState(false);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [socioToDelete, setSocioToDelete] = useState<Socio | null>(null);
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>('table');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+  const [selectedSocios, setSelectedSocios] = useState<Set<string>>(new Set());
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [socioForPayment, setSocioForPayment] = useState<Socio | null>(null);
 
-const ITEMS_PER_PAGE_OPTIONS = [10, 25, 50, 100];
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-const columns: TableColumn[] = [
-  { id: 'select', label: '', minWidth: 50 },
-  { id: 'avatar', label: '', minWidth: 60, hideOnMobile: true },
-  { id: 'nombre', label: 'Socio', minWidth: 200, sortable: true },
-  { id: 'email', label: 'Contacto', minWidth: 250, sortable: true, hideOnMobile: true },
-  { id: 'estado', label: 'Estado', minWidth: 120, sortable: true },
-  { id: 'creadoEn', label: 'Fecha', minWidth: 150, sortable: true, hideOnMobile: true },
-  { id: 'engagement', label: 'Engagement', minWidth: 120, hideOnMobile: true },
-  { id: 'actions', label: 'Acciones', minWidth: 150, align: 'right' },
-];
+  // Handle search
+  const handleSearch = (term: string) => {
+    setSearchTerm(term);
+    setFilters({ ...filters, search: term });
+  };
 
-const TableSkeleton: React.FC = () => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  // Handle filter changes
+  const handleFilterChange = (key: string, value: string) => {
+    setFilters({ ...filters, [key]: value || undefined });
+  };
+
+  // Handle socio creation
+  const handleCreateSocio = () => {
+    setSelectedSocio(null);
+    setSocioDialogOpen(true);
+  };
+
+  // Handle socio editing
+  const handleEditSocio = (socio: Socio) => {
+    setSelectedSocio(socio);
+    setSocioDialogOpen(true);
+  };
+
+  // Handle socio deletion
+  const handleDeleteSocio = (socio: Socio) => {
+    setSocioToDelete(socio);
+    setDeleteDialogOpen(true);
+  };
+
+  // Handle payment registration
+  const handleRegisterPayment = (socio: Socio) => {
+    setSocioForPayment(socio);
+    setPaymentDialogOpen(true);
+  };
+
+  // Handle socio save
+  const handleSocioSave = async (data: SocioFormData) => {
+    try {
+      let success = false;
+      
+      if (selectedSocio) {
+        success = await updateSocio(selectedSocio.id, data);
+      } else {
+        success = await createSocio(data);
+      }
+
+      if (success) {
+        setSocioDialogOpen(false);
+        setSelectedSocio(null);
+      }
+    } catch (error) {
+      console.error('Error saving socio:', error);
+    }
+  };
+
+  // Handle socio deletion confirmation
+  const handleDeleteConfirm = async () => {
+    if (!socioToDelete) return;
+
+    const success = await deleteSocio(socioToDelete.id);
+    if (success) {
+      setDeleteDialogOpen(false);
+      setSocioToDelete(null);
+    }
+  };
+
+  // Handle CSV export
+  const handleExportCSV = () => {
+    const csvData = socios.map(socio => ({
+      'Número': socio.numeroSocio,
+      'Nombre': socio.nombre,
+      'Email': socio.email,
+      'DNI': socio.dni,
+      'Teléfono': socio.telefono || '',
+      'Estado': socio.estado,
+      'Membresía': socio.estadoMembresia,
+      'Fecha Ingreso': socio.fechaIngreso.toLocaleDateString(),
+      'Fecha Vencimiento': socio.fechaVencimiento?.toLocaleDateString() || '',
+      'Cuota': socio.montoCuota,
+      'Beneficios Usados': socio.beneficiosUsados,
+    }));
+
+    const csv = [
+      Object.keys(csvData[0]).join(','),
+      ...csvData.map(row => Object.values(row).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `socios_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+
+    toast.success('Archivo CSV descargado');
+  };
+
+  // Handle bulk actions
+  const handleBulkAction = async (action: string) => {
+    if (selectedSocios.size === 0) {
+      toast.warning('Selecciona al menos un socio');
+      return;
+    }
+
+    switch (action) {
+      case 'delete':
+        // Implement bulk delete
+        break;
+      case 'activate':
+        // Implement bulk activate
+        break;
+      case 'deactivate':
+        // Implement bulk deactivate
+        break;
+    }
+  };
+
+  // Get status display
+  const getStatusDisplay = (estado: string) => {
+    const statusMap = {
+      activo: { label: 'Activo', color: 'text-green-700', bgColor: 'bg-green-100', icon: CheckCircle },
+      inactivo: { label: 'Inactivo', color: 'text-gray-700', bgColor: 'bg-gray-100', icon: XCircle },
+      pendiente: { label: 'Pendiente', color: 'text-yellow-700', bgColor: 'bg-yellow-100', icon: Clock },
+      suspendido: { label: 'Suspendido', color: 'text-red-700', bgColor: 'bg-red-100', icon: AlertTriangle },
+    };
+    return statusMap[estado as keyof typeof statusMap] || statusMap.inactivo;
+  };
+
+  // Get membership status display
+  const getMembershipStatusDisplay = (estadoMembresia: string) => {
+    const statusMap = {
+      al_dia: { label: 'Al día', color: 'text-green-700', bgColor: 'bg-green-100' },
+      vencido: { label: 'Vencido', color: 'text-red-700', bgColor: 'bg-red-100' },
+      pendiente: { label: 'Pendiente', color: 'text-yellow-700', bgColor: 'bg-yellow-100' },
+    };
+    return statusMap[estadoMembresia as keyof typeof statusMap] || statusMap.pendiente;
+  };
 
   return (
-    <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 6 }}>
-      <CardContent sx={{ p: 0 }}>
-        <Box sx={{ p: { xs: 2, md: 4 }, borderBottom: '1px solid #f1f5f9' }}>
-          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { sm: 'center' }, gap: 2, mb: 3 }}>
-            <Box>
-              <Box sx={{ width: { xs: 150, sm: 200 }, height: 28, bgcolor: '#f1f5f9', borderRadius: 2, mb: 1 }} />
-              <Box sx={{ width: { xs: 100, sm: 150 }, height: 20, bgcolor: '#f1f5f9', borderRadius: 1 }} />
-            </Box>
-            <Box sx={{ width: { xs: '100%', sm: 140 }, height: 44, bgcolor: '#f1f5f9', borderRadius: 3 }} />
-          </Box>
-          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2 }}>
-            <Box sx={{ flex: 1, height: 56, bgcolor: '#f1f5f9', borderRadius: 4 }} />
-            <Box sx={{ width: { xs: '100%', md: 200 }, height: 56, bgcolor: '#f1f5f9', borderRadius: 4 }} />
-            <Box sx={{ width: { xs: '100%', md: 120 }, height: 56, bgcolor: '#f1f5f9', borderRadius: 4 }} />
-          </Box>
-        </Box>
-        <Box sx={{ p: { xs: 2, md: 4 } }}>
-          {Array.from({ length: isMobile ? 4 : 8 }).map((_, index) => (
-            <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: { xs: 2, md: 3 }, py: { xs: 2, md: 3 }, borderBottom: index < (isMobile ? 3 : 7) ? '1px solid #f1f5f9' : 'none' }}>
-              <Box sx={{ width: 24, height: 24, bgcolor: '#f1f5f9', borderRadius: 1 }} />
-              {!isMobile && <Box sx={{ width: 48, height: 48, bgcolor: '#f1f5f9', borderRadius: '50%' }} />}
-              <Box sx={{ flex: 1 }}>
-                <Box sx={{ width: '70%', height: 20, bgcolor: '#f1f5f9', borderRadius: 1, mb: 1 }} />
-                <Box sx={{ width: '50%', height: 16, bgcolor: '#f1f5f9', borderRadius: 1 }} />
-              </Box>
-              <Box sx={{ width: { xs: 60, md: 100 }, height: 28, bgcolor: '#f1f5f9', borderRadius: 2 }} />
-              <Box sx={{ width: { xs: 40, md: 80 }, height: 36, bgcolor: '#f1f5f9', borderRadius: 2 }} />
-            </Box>
-          ))}
-        </Box>
-      </CardContent>
-    </Card>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Gestión de Socios</h1>
+          <p className="text-gray-600 mt-2">
+            Administra los socios de tu asociación
+          </p>
+        </div>
+        
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={() => updateMembershipStatus()}
+            disabled={loading}
+            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+          >
+            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Actualizar Estados
+          </button>
+          
+          <button
+            onClick={handleExportCSV}
+            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Exportar
+          </button>
+          
+          <button
+            onClick={() => setImportDialogOpen(true)}
+            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+          >
+            <Upload className="w-4 h-4 mr-2" />
+            Importar
+          </button>
+          
+          <button
+            onClick={handleCreateSocio}
+            className="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-lg text-sm font-medium text-white hover:bg-blue-700"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Nuevo Socio
+          </button>
+        </div>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Total Socios</p>
+              <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+            </div>
+            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+              <Users className="w-6 h-6 text-blue-600" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Activos</p>
+              <p className="text-2xl font-bold text-green-600">{stats.activos}</p>
+            </div>
+            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+              <CheckCircle className="w-6 h-6 text-green-600" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Al Día</p>
+              <p className="text-2xl font-bold text-blue-600">{stats.alDia}</p>
+            </div>
+            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+              <Calendar className="w-6 h-6 text-blue-600" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Ingresos Mensuales</p>
+              <p className="text-2xl font-bold text-emerald-600">${stats.ingresosMensuales.toLocaleString()}</p>
+            </div>
+            <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
+              <DollarSign className="w-6 h-6 text-emerald-600" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Search and Filters */}
+      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+          {/* Search */}
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+            <input
+              type="text"
+              placeholder="Buscar socios..."
+              value={searchTerm}
+              onChange={(e) => handleSearch(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            {searchTerm && (
+              <button
+                onClick={() => handleSearch('')}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                <X size={16} />
+              </button>
+            )}
+          </div>
+
+          {/* Filters */}
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={`inline-flex items-center px-3 py-2 border rounded-lg text-sm font-medium transition-colors ${
+                showFilters 
+                  ? 'bg-blue-50 border-blue-200 text-blue-700' 
+                  : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              <Filter className="w-4 h-4 mr-2" />
+              Filtros
+              <ChevronDown className={`w-4 h-4 ml-2 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+            </button>
+
+            {/* View Mode Toggle */}
+            <div className="flex items-center bg-gray-100 rounded-lg p-1">
+              <button
+                onClick={() => setViewMode('table')}
+                className={`p-2 rounded-md transition-colors ${
+                  viewMode === 'table' 
+                    ? 'bg-white shadow-sm text-blue-600' 
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <FileText size={16} />
+              </button>
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`p-2 rounded-md transition-colors ${
+                  viewMode === 'grid' 
+                    ? 'bg-white shadow-sm text-blue-600' 
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <Users size={16} />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Advanced Filters */}
+        <AnimatePresence>
+          {showFilters && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mt-4 pt-4 border-t border-gray-200"
+            >
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Estado
+                  </label>
+                  <select
+                    value={filters.estado || ''}
+                    onChange={(e) => handleFilterChange('estado', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">Todos</option>
+                    <option value="activo">Activo</option>
+                    <option value="inactivo">Inactivo</option>
+                    <option value="pendiente">Pendiente</option>
+                    <option value="suspendido">Suspendido</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Estado Membresía
+                  </label>
+                  <select
+                    value={filters.estadoMembresia || ''}
+                    onChange={(e) => handleFilterChange('estadoMembresia', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">Todos</option>
+                    <option value="al_dia">Al día</option>
+                    <option value="vencido">Vencido</option>
+                    <option value="pendiente">Pendiente</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Fecha Desde
+                  </label>
+                  <input
+                    type="date"
+                    value={filters.fechaDesde?.toISOString().split('T')[0] || ''}
+                    onChange={(e) => handleFilterChange('fechaDesde', e.target.value ? new Date(e.target.value).toISOString() : '')}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Fecha Hasta
+                  </label>
+                  <input
+                    type="date"
+                    value={filters.fechaHasta?.toISOString().split('T')[0] || ''}
+                    onChange={(e) => handleFilterChange('fechaHasta', e.target.value ? new Date(e.target.value).toISOString() : '')}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+
+              {/* Clear Filters */}
+              <div className="mt-4 flex justify-end">
+                <button
+                  onClick={() => setFilters({})}
+                  className="text-sm text-gray-600 hover:text-gray-800"
+                >
+                  Limpiar filtros
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Error Display */}
+      {error && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center justify-between"
+        >
+          <div className="flex items-center">
+            <AlertTriangle className="w-5 h-5 text-red-600 mr-3" />
+            <span className="text-red-800">{error}</span>
+          </div>
+          <button
+            onClick={clearError}
+            className="text-red-600 hover:text-red-800"
+          >
+            <X size={16} />
+          </button>
+        </motion.div>
+      )}
+
+      {/* Bulk Actions */}
+      {selectedSocios.size > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center justify-between"
+        >
+          <span className="text-blue-800 font-medium">
+            {selectedSocios.size} socio(s) seleccionado(s)
+          </span>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => handleBulkAction('activate')}
+              className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700"
+            >
+              Activar
+            </button>
+            <button
+              onClick={() => handleBulkAction('deactivate')}
+              className="px-3 py-1 bg-gray-600 text-white rounded text-sm hover:bg-gray-700"
+            >
+              Desactivar
+            </button>
+            <button
+              onClick={() => handleBulkAction('delete')}
+              className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
+            >
+              Eliminar
+            </button>
+            <button
+              onClick={() => setSelectedSocios(new Set())}
+              className="px-3 py-1 border border-gray-300 text-gray-700 rounded text-sm hover:bg-gray-50"
+            >
+              Cancelar
+            </button>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Socios List */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+        {viewMode === 'table' ? (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <input
+                      type="checkbox"
+                      checked={selectedSocios.size === socios.length && socios.length > 0}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedSocios(new Set(socios.map(s => s.id)));
+                        } else {
+                          setSelectedSocios(new Set());
+                        }
+                      }}
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Socio
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Contacto
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Estado
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Membresía
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Cuota
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Acciones
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {socios.map((socio) => {
+                  const statusDisplay = getStatusDisplay(socio.estado);
+                  const membershipDisplay = getMembershipStatusDisplay(socio.estadoMembresia);
+                  const StatusIcon = statusDisplay.icon;
+
+                  return (
+                    <motion.tr
+                      key={socio.id}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="hover:bg-gray-50"
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <input
+                          type="checkbox"
+                          checked={selectedSocios.has(socio.id)}
+                          onChange={(e) => {
+                            const newSelected = new Set(selectedSocios);
+                            if (e.target.checked) {
+                              newSelected.add(socio.id);
+                            } else {
+                              newSelected.delete(socio.id);
+                            }
+                            setSelectedSocios(newSelected);
+                          }}
+                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                      </td>
+                      
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="flex-shrink-0 h-10 w-10">
+                            <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                              <span className="text-sm font-medium text-gray-700">
+                                {socio.nombre.charAt(0).toUpperCase()}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="ml-4">
+                            <div className="text-sm font-medium text-gray-900">{socio.nombre}</div>
+                            <div className="text-sm text-gray-500">#{socio.numeroSocio}</div>
+                          </div>
+                        </div>
+                      </td>
+                      
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">{socio.email}</div>
+                        <div className="text-sm text-gray-500">{socio.telefono || 'Sin teléfono'}</div>
+                      </td>
+                      
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusDisplay.bgColor} ${statusDisplay.color}`}>
+                          <StatusIcon className="w-3 h-3 mr-1" />
+                          {statusDisplay.label}
+                        </span>
+                      </td>
+                      
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${membershipDisplay.bgColor} ${membershipDisplay.color}`}>
+                          {membershipDisplay.label}
+                        </span>
+                        {socio.fechaVencimiento && (
+                          <div className="text-xs text-gray-500 mt-1">
+                            Vence: {socio.fechaVencimiento.toLocaleDateString()}
+                          </div>
+                        )}
+                      </td>
+                      
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${socio.montoCuota.toLocaleString()}
+                      </td>
+                      
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={() => handleEditSocio(socio)}
+                            className="text-blue-600 hover:text-blue-900"
+                            title="Editar"
+                          >
+                            <Edit size={16} />
+                          </button>
+                          
+                          <button
+                            onClick={() => handleRegisterPayment(socio)}
+                            className="text-green-600 hover:text-green-900"
+                            title="Registrar Pago"
+                          >
+                            <DollarSign size={16} />
+                          </button>
+                          
+                          <button
+                            onClick={() => handleDeleteSocio(socio)}
+                            className="text-red-600 hover:text-red-900"
+                            title="Eliminar"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </motion.tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          /* Grid View */
+          <div className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {socios.map((socio) => {
+                const statusDisplay = getStatusDisplay(socio.estado);
+                const membershipDisplay = getMembershipStatusDisplay(socio.estadoMembresia);
+                const StatusIcon = statusDisplay.icon;
+
+                return (
+                  <motion.div
+                    key={socio.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow"
+                  >
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center">
+                        <div className="h-12 w-12 rounded-full bg-gray-200 flex items-center justify-center">
+                          <span className="text-lg font-medium text-gray-700">
+                            {socio.nombre.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                        <div className="ml-3">
+                          <h3 className="text-lg font-medium text-gray-900">{socio.nombre}</h3>
+                          <p className="text-sm text-gray-500">#{socio.numeroSocio}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="relative">
+                        <button className="text-gray-400 hover:text-gray-600">
+                          <MoreVertical size={20} />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="flex items-center text-sm text-gray-600">
+                        <Mail className="w-4 h-4 mr-2" />
+                        {socio.email}
+                      </div>
+                      
+                      {socio.telefono && (
+                        <div className="flex items-center text-sm text-gray-600">
+                          <Phone className="w-4 h-4 mr-2" />
+                          {socio.telefono}
+                        </div>
+                      )}
+                      
+                      <div className="flex items-center justify-between">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusDisplay.bgColor} ${statusDisplay.color}`}>
+                          <StatusIcon className="w-3 h-3 mr-1" />
+                          {statusDisplay.label}
+                        </span>
+                        
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${membershipDisplay.bgColor} ${membershipDisplay.color}`}>
+                          {membershipDisplay.label}
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-center justify-between pt-3 border-t border-gray-200">
+                        <span className="text-sm font-medium text-gray-900">
+                          ${socio.montoCuota.toLocaleString()}
+                        </span>
+                        
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={() => handleEditSocio(socio)}
+                            className="text-blue-600 hover:text-blue-900"
+                          >
+                            <Edit size={16} />
+                          </button>
+                          
+                          <button
+                            onClick={() => handleRegisterPayment(socio)}
+                            className="text-green-600 hover:text-green-900"
+                          >
+                            <DollarSign size={16} />
+                          </button>
+                          
+                          <button
+                            onClick={() => handleDeleteSocio(socio)}
+                            className="text-red-600 hover:text-red-900"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Load More */}
+        {hasMore && (
+          <div className="px-6 py-4 border-t border-gray-200">
+            <button
+              onClick={loadMoreSocios}
+              disabled={loading}
+              className="w-full py-2 px-4 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+            >
+              {loading ? 'Cargando...' : 'Cargar más socios'}
+            </button>
+          </div>
+        )}
+
+        {/* Empty State */}
+        {socios.length === 0 && !loading && (
+          <div className="text-center py-12">
+            <Users className="mx-auto h-12 w-12 text-gray-400" />
+            <h3 className="mt-2 text-sm font-medium text-gray-900">No hay socios</h3>
+            <p className="mt-1 text-sm text-gray-500">
+              Comienza agregando tu primer socio.
+            </p>
+            <div className="mt-6">
+              <button
+                onClick={handleCreateSocio}
+                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Agregar Socio
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Dialogs */}
+      <EnhancedSocioDialog
+        open={socioDialogOpen}
+        onClose={() => {
+          setSocioDialogOpen(false);
+          setSelectedSocio(null);
+        }}
+        onSave={handleSocioSave}
+        socio={selectedSocio}
+        loading={loading}
+      />
+
+      <CsvImport
+        open={importDialogOpen}
+        onClose={() => setImportDialogOpen(false)}
+        onImport={importSocios}
+        loading={loading}
+      />
+
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onClose={() => {
+          setDeleteDialogOpen(false);
+          setSocioToDelete(null);
+        }}
+        onConfirm={handleDeleteConfirm}
+        title="Eliminar Socio"
+        message={`¿Estás seguro de que deseas eliminar a ${socioToDelete?.nombre}? Esta acción no se puede deshacer.`}
+        loading={loading}
+      />
+
+      {/* Payment Dialog */}
+      {paymentDialogOpen && socioForPayment && (
+        <PaymentDialog
+          open={paymentDialogOpen}
+          onClose={() => {
+            setPaymentDialogOpen(false);
+            setSocioForPayment(null);
+          }}
+          socio={socioForPayment}
+          onRegisterPayment={registerPayment}
+          loading={loading}
+        />
+      )}
+    </div>
   );
 };
 
-// Mobile Card Component for responsive design
-const MobileSocioCard: React.FC<{
+// Payment Dialog Component
+interface PaymentDialogProps {
+  open: boolean;
+  onClose: () => void;
   socio: Socio;
-  isSelected: boolean;
-  onSelect: (checked: boolean) => void;
-  onEdit: () => void;
-  onView: () => void;
-  onMore: (event: React.MouseEvent<HTMLElement>) => void;
-  engagementScore: number;
-  engagementLevel: { label: string; color: string; icon: React.ReactElement };
-  formatDate: (date: Date | { toDate: () => Date } | string | number | null | undefined) => string;
-  getInitials: (name: string) => string;
-  getStatusChip: (estado: string) => React.ReactElement;
-}> = ({
+  onRegisterPayment: (socioId: string, amount: number, months: number) => Promise<boolean>;
+  loading: boolean;
+}
+
+const PaymentDialog: React.FC<PaymentDialogProps> = ({
+  open,
+  onClose,
   socio,
-  isSelected,
-  onSelect,
-  onEdit,
-  onView,
-  onMore,
-  engagementScore,
-  engagementLevel,
-  formatDate,
-  getInitials,
-  getStatusChip
-}) => (
-  <Card
-    elevation={0}
-    sx={{
-      border: '1px solid #f1f5f9',
-      borderRadius: 4,
-      mb: 2,
-      bgcolor: isSelected ? alpha('#6366f1', 0.05) : 'white',
-      borderColor: isSelected ? '#6366f1' : '#f1f5f9',
-      transition: 'all 0.2s ease'
-    }}
-  >
-    <CardContent sx={{ p: 3 }}>
-      <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
-        <Checkbox
-          checked={isSelected}
-          onChange={(e) => onSelect(e.target.checked)}
-          sx={{
-            color: '#6366f1',
-            '&.Mui-checked': { color: '#6366f1' },
-            mt: -1
-          }}
-        />
-        
-        <Avatar
-          sx={{
-            width: 48,
-            height: 48,
-            bgcolor: alpha('#6366f1', 0.1),
-            color: '#6366f1',
-            fontWeight: 700,
-            fontSize: '1rem',
-            borderRadius: 3,
-          }}
-        >
-          {getInitials(socio.nombre)}
-        </Avatar>
-        
-        <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 1 }}>
-            <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Typography variant="body1" sx={{ fontWeight: 700, color: '#0f172a', mb: 0.5, wordBreak: 'break-word' }}>
-                {socio.nombre}
-              </Typography>
-              <Typography variant="body2" sx={{ color: '#64748b', mb: 1, wordBreak: 'break-all' }}>
-                {socio.email}
-              </Typography>
-            </Box>
-            
-            <IconButton
-              onClick={onMore}
-              size="small"
-              sx={{
-                color: '#94a3b8',
-                '&:hover': {
-                  color: '#6366f1',
-                  bgcolor: alpha('#6366f1', 0.1),
-                },
-                ml: 1
-              }}
-            >
-              <MoreVert />
-            </IconButton>
-          </Box>
-          
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
-            {getStatusChip(socio.estado)}
-            <Chip
-              label={`${engagementLevel.label} (${engagementScore}%)`}
-              size="small"
-              sx={{
-                bgcolor: alpha(engagementLevel.color, 0.1),
-                color: engagementLevel.color,
-                fontWeight: 600,
-                fontSize: '0.75rem',
-                height: 28,
-                borderRadius: 2,
-              }}
-            />
-          </Box>
-          
-          <Stack spacing={1}>
-            {socio.telefono && (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Phone sx={{ fontSize: 14, color: '#94a3b8' }} />
-                <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 500 }}>
-                  {socio.telefono}
-                </Typography>
-              </Box>
-            )}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <CalendarToday sx={{ fontSize: 14, color: '#94a3b8' }} />
-              <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 500 }}>
-                {formatDate(socio.creadoEn)}
-              </Typography>
-            </Box>
-          </Stack>
-          
-          <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
-            <Button
-              size="small"
-              startIcon={<Visibility />}
-              onClick={onView}
-              sx={{
-                textTransform: 'none',
-                fontWeight: 600,
-                color: '#6366f1',
-                '&:hover': {
-                  bgcolor: alpha('#6366f1', 0.1),
-                }
-              }}
-            >
-              Ver Perfil
-            </Button>
-            <Button
-              size="small"
-              startIcon={<Edit />}
-              onClick={onEdit}
-              sx={{
-                textTransform: 'none',
-                fontWeight: 600,
-                color: '#f59e0b',
-                '&:hover': {
-                  bgcolor: alpha('#f59e0b', 0.1),
-                }
-              }}
-            >
-              Editar
-            </Button>
-          </Box>
-        </Box>
-      </Box>
-    </CardContent>
-  </Card>
-);
-
-export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> = ({
-  socios,
-  loading,
-  onEdit,
-  onDelete,
-  onAdd,
-  onRefresh
+  onRegisterPayment,
+  loading
 }) => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'activo' | 'vencido' | 'inactivo'>('all');
-  const [sortBy, setSortBy] = useState<string>('creadoEn');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(isMobile ? 10 : ITEMS_PER_PAGE_OPTIONS[0]);
-  const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [bulkMenuAnchor, setBulkMenuAnchor] = useState<null | HTMLElement>(null);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [memberToDelete, setMemberToDelete] = useState<Socio | null>(null);
-  const [deleteType, setDeleteType] = useState<'soft' | 'permanent'>('soft');
-  const [deleting, setDeleting] = useState(false);
-  const [bulkProcessing, setBulkProcessing] = useState(false);
-  const [bulkProgress, setBulkProgress] = useState(0);
-  const [bulkResultDialog, setBulkResultDialog] = useState(false);
-  const [bulkResult, setBulkResult] = useState<BulkActionResult | null>(null);
-  const [filtersOpen, setFiltersOpen] = useState(false);
-  
-  // Profile view state
-  const [profileViewOpen, setProfileViewOpen] = useState(false);
-  const [selectedSocio, setSelectedSocio] = useState<Socio | null>(null);
+  const [amount, setAmount] = useState(socio.montoCuota);
+  const [months, setMonths] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Adjust items per page based on screen size
-  React.useEffect(() => {
-    if (isMobile && itemsPerPage > 10) {
-      setItemsPerPage(10);
-      setCurrentPage(1);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    const success = await onRegisterPayment(socio.id, amount, months);
+    if (success) {
+      onClose();
     }
-  }, [isMobile, itemsPerPage]);
 
-  // Cálculo de engagement score basado en datos reales
-  const getEngagementScore = useCallback((socio: Socio) => {
-    let score = 50; // Base score
-    
-    // Factores que aumentan el engagement
-    if (socio.estado === 'activo') score += 30;
-    if (socio.telefono) score += 10;
-    if (socio.fechaNacimiento) score += 5;
-    if (socio.direccion) score += 5;
-    
-    // Factor temporal - socios más antiguos tienen más engagement
-    if (socio.creadoEn) {
-      const createdDate = socio.creadoEn instanceof Date 
-        ? socio.creadoEn 
-        : (socio.creadoEn as { toDate?: () => Date })?.toDate?.() || new Date();
-      const daysSinceCreation = Math.floor((Date.now() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
-      if (daysSinceCreation > 365) score += 15;
-      else if (daysSinceCreation > 180) score += 10;
-      else if (daysSinceCreation > 90) score += 5;
-    }
-    
-    return Math.min(100, Math.max(0, score));
-  }, []);
-
-  const getEngagementLevel = useCallback((score: number) => {
-    if (score >= 80) return { label: 'Muy Alto', color: '#10b981', icon: <TrendingUp /> };
-    if (score >= 60) return { label: 'Alto', color: '#f59e0b', icon: <TrendingUp /> };
-    if (score >= 40) return { label: 'Medio', color: '#6366f1', icon: <Remove /> };
-    return { label: 'Bajo', color: '#ef4444', icon: <TrendingDown /> };
-  }, []);
-
-  // Handle profile view
-  const handleViewProfile = (socio: Socio) => {
-    setSelectedSocio(socio);
-    setProfileViewOpen(true);
+    setIsSubmitting(false);
   };
 
-  const handleCloseProfile = () => {
-    setProfileViewOpen(false);
-    setSelectedSocio(null);
-  };
-
-  // Estadísticas calculadas
-  const stats = useMemo(() => {
-    const total = socios.length;
-    const activos = socios.filter(s => s.estado === 'activo').length;
-    const vencidos = socios.filter(s => s.estado === 'vencido').length;
-    const inactivos = socios.filter(s => s.estado === 'inactivo').length;
-    
-    // Nuevos socios en los últimos 30 días
-    const thirtyDaysAgo = subDays(new Date(), 30);
-    const nuevos = socios.filter(socio => {
-      if (!socio.creadoEn) return false;
-      const createdDate = socio.creadoEn instanceof Date 
-        ? socio.creadoEn 
-        : (socio.creadoEn as { toDate?: () => Date })?.toDate?.() || new Date();
-      return isAfter(createdDate, thirtyDaysAgo);
-    }).length;
-
-    const avgEngagement = socios.length > 0 
-      ? socios.reduce((sum, socio) => sum + getEngagementScore(socio), 0) / socios.length 
-      : 0;
-
-    return {
-      total,
-      activos,
-      vencidos,
-      inactivos,
-      nuevos,
-      avgEngagement: Math.round(avgEngagement)
-    };
-  }, [socios, getEngagementScore]);
-
-  const filtered = useMemo(() => {
-    return socios.filter(socio => {
-      const matchesSearch = 
-        socio.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        socio.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        socio.dni?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        socio.telefono?.includes(searchTerm);
-
-      const matchesStatus = statusFilter === 'all' || socio.estado === statusFilter;
-
-      return matchesSearch && matchesStatus;
-    }).sort((a, b) => {
-      let aValue: string | number | Date | undefined = a[sortBy as keyof Socio] as string | number | Date | undefined;
-      let bValue: string | number | Date | undefined = b[sortBy as keyof Socio] as string | number | Date | undefined;
-
-      if (sortBy === 'creadoEn') {
-        if (
-          aValue &&
-          typeof aValue === 'object' &&
-          'toDate' in aValue &&
-          typeof (aValue as { toDate: () => Date }).toDate === 'function'
-        ) {
-          aValue = (aValue as { toDate: () => Date }).toDate();
-        }
-        if (
-          bValue &&
-          typeof bValue === 'object' &&
-          'toDate' in bValue &&
-          typeof (bValue as { toDate: () => Date }).toDate === 'function'
-        ) {
-          bValue = (bValue as { toDate: () => Date }).toDate();
-        }
-      }
-
-      if (sortBy === 'engagement') {
-        aValue = getEngagementScore(a);
-        bValue = getEngagementScore(b);
-      }
-
-      if (sortOrder === 'asc') {
-        if (aValue === undefined && bValue === undefined) return 0;
-        if (aValue === undefined) return 1;
-        if (bValue === undefined) return -1;
-        return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
-      } else {
-        if (aValue === undefined && bValue === undefined) return 0;
-        if (aValue === undefined) return 1;
-        if (bValue === undefined) return -1;
-        return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
-      }
-    });
-  }, [socios, searchTerm, statusFilter, sortBy, sortOrder, getEngagementScore]);
-
-  const totalPages = Math.ceil(filtered.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedSocios = filtered.slice(startIndex, startIndex + itemsPerPage);
-
-  const handleSort = (column: string) => {
-    if (sortBy === column) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortBy(column);
-      setSortOrder('asc');
-    }
-  };
-
-  const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      setSelectedMembers(paginatedSocios.map(socio => socio.uid));
-    } else {
-      setSelectedMembers([]);
-    }
-  };
-
-  const handleSelectMember = (uid: string, checked: boolean) => {
-    if (checked) {
-      setSelectedMembers([...selectedMembers, uid]);
-    } else {
-      setSelectedMembers(selectedMembers.filter(id => id !== uid));
-    }
-  };
-
-  const handleBulkAction = async (action: string) => {
-    if (selectedMembers.length === 0) return;
-    
-    setBulkProcessing(true);
-    setBulkProgress(0);
-    
-    const batch = writeBatch(db);
-    const result: BulkActionResult = { success: 0, failed: 0, errors: [] };
-    
-    try {
-      for (let i = 0; i < selectedMembers.length; i++) {
-        const uid = selectedMembers[i];
-        const socio = socios.find(s => s.uid === uid);
-        
-        if (!socio) {
-          result.failed++;
-          result.errors.push(`Socio con ID ${uid} no encontrado`);
-          continue;
-        }
-
-        try {
-          const docRef = doc(db, 'socios', uid);
-          
-          switch (action) {
-            case 'activate':
-              batch.update(docRef, { 
-                estado: 'activo', 
-                actualizadoEn: Timestamp.now() 
-              });
-              break;
-            case 'deactivate':
-              batch.update(docRef, { 
-                estado: 'inactivo', 
-                actualizadoEn: Timestamp.now() 
-              });
-              break;
-            case 'delete':
-              batch.delete(docRef);
-              break;
-            default:
-              result.failed++;
-              result.errors.push(`Acción desconocida: ${action}`);
-              continue;
-          }
-          
-          result.success++;
-        } catch (error) {
-          result.failed++;
-          result.errors.push(`Error con ${socio.nombre}: ${error}`);
-        }
-        
-        setBulkProgress(((i + 1) / selectedMembers.length) * 100);
-      }
-      
-      if (result.success > 0) {
-        await batch.commit();
-        toast.success(`${result.success} socios procesados correctamente`);
-      }
-      
-      if (result.failed > 0) {
-        toast.error(`${result.failed} socios no pudieron ser procesados`);
-      }
-      
-    } catch (error) {
-      console.error('Error en acción masiva:', error);
-      toast.error('Error al procesar la acción masiva');
-    } finally {
-      setBulkProcessing(false);
-      setBulkProgress(0);
-      setSelectedMembers([]);
-      setBulkMenuAnchor(null);
-      setBulkResult(result);
-      setBulkResultDialog(true);
-      
-      if (onRefresh) {
-        onRefresh();
-      }
-    }
-  };
-
-  const handleDeleteMember = async () => {
-    if (!memberToDelete) return;
-    
-    setDeleting(true);
-    try {
-      if (deleteType === 'permanent') {
-        await deleteDoc(doc(db, 'socios', memberToDelete.uid));
-        toast.success('Socio eliminado permanentemente');
-      } else {
-        await updateDoc(doc(db, 'socios', memberToDelete.uid), {
-          estado: 'inactivo',
-          actualizadoEn: Timestamp.now()
-        });
-        toast.success('Socio marcado como inactivo');
-      }
-      
-      onDelete(memberToDelete);
-      if (onRefresh) {
-        onRefresh();
-      }
-    } catch (error) {
-      console.error('Error al eliminar socio:', error);
-      toast.error('Error al eliminar el socio');
-    } finally {
-      setDeleting(false);
-      setDeleteDialogOpen(false);
-      setMemberToDelete(null);
-      setAnchorEl(null);
-    }
-  };
-
-  const formatDate = React.useCallback((
-    timestamp: Date | { toDate: () => Date } | string | number | null | undefined
-  ) => {
-    if (!timestamp) return '-';
-    let date: Date;
-    if (
-      timestamp &&
-      typeof timestamp === 'object' &&
-      'toDate' in timestamp &&
-      typeof (timestamp as { toDate: () => Date }).toDate === 'function'
-    ) {
-      date = (timestamp as { toDate: () => Date }).toDate();
-    } else if (timestamp instanceof Date) {
-      date = timestamp;
-    } else if (typeof timestamp === 'string' || typeof timestamp === 'number') {
-      date = new Date(timestamp);
-    } else {
-      return '-';
-    }
-    return format(date, isMobile ? 'dd/MM/yy' : 'dd MMM yyyy', { locale: es });
-  }, [isMobile]);
-
-  const exportToCSV = useCallback(() => {
-    const selectedSocios = selectedMembers.length > 0 
-      ? socios.filter(s => selectedMembers.includes(s.uid))
-      : filtered;
-    
-    const csvContent = [
-      ['Nombre', 'Email', 'DNI', 'Teléfono', 'Estado', 'Fecha de Alta', 'Engagement'].join(','),
-      ...selectedSocios.map(socio => [
-        socio.nombre,
-        socio.email,
-        socio.dni || '',
-        socio.telefono || '',
-        socio.estado,
-        formatDate(socio.creadoEn),
-        getEngagementScore(socio)
-      ].join(','))
-    ].join('\n');
-    
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `socios_${format(new Date(), 'yyyy-MM-dd')}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    toast.success(`Exportados ${selectedSocios.length} socios`);
-    setSelectedMembers([]);
-  }, [selectedMembers, socios, filtered, getEngagementScore, formatDate]);
-
-  const getStatusChip = (estado: string) => {
-    const config = {
-      activo: { color: '#10b981', bgcolor: alpha('#10b981', 0.1), label: 'Activo', icon: <CheckCircle /> },
-      vencido: { color: '#ef4444', bgcolor: alpha('#ef4444', 0.1), label: 'Vencido', icon: <Warning /> },
-      inactivo: { color: '#6b7280', bgcolor: alpha('#6b7280', 0.1), label: 'Inactivo', icon: <ErrorIcon /> }
-    };
-
-    const { color, bgcolor, label, icon } = config[estado as keyof typeof config] || config.inactivo;
-
-    return (
-      <Chip
-        label={label}
-        icon={React.cloneElement(icon, { sx: { fontSize: '0.9rem !important' } })}
-        size="small"
-        sx={{
-          bgcolor,
-          color,
-          fontWeight: 600,
-          fontSize: '0.75rem',
-          height: 28,
-          borderRadius: 2,
-          '& .MuiChip-icon': {
-            fontSize: '0.9rem',
-          }
-        }}
-      />
-    );
-  };
-
-  const getInitials = (name: string) => {
-    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-  };
-
-  if (loading) {
-    return (
-      <Box
-        component={motion.div}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.4 }}
-      >
-        <TableSkeleton />
-      </Box>
-    );
-  }
+  if (!open) return null;
 
   return (
-    <>
-      <Box
-        component={motion.div}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.4 }}
-      >
-        <Card
-          elevation={0}
-          sx={{
-            border: '1px solid #f1f5f9',
-            borderRadius: 6,
-            overflow: 'hidden',
-            boxShadow: '0 8px 40px rgba(0,0,0,0.06)',
-            background: 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
-          }}
-        >
-          {/* Enhanced Header with Stats */}
-          <CardContent sx={{ p: { xs: 2, md: 4 }, borderBottom: '1px solid #f1f5f9' }}>
-            {/* Stats Cards - Responsive Grid */}
-            <Box sx={{ 
-              display: 'grid', 
-              gridTemplateColumns: { 
-                xs: 'repeat(2, 1fr)', 
-                sm: 'repeat(2, 1fr)', 
-                md: 'repeat(4, 1fr)' 
-              }, 
-              gap: { xs: 1.5, md: 2 }, 
-              mb: { xs: 3, md: 4 } 
-            }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1.5, md: 2 }, p: { xs: 2, md: 3 }, bgcolor: alpha('#10b981', 0.05), borderRadius: 4, border: `1px solid ${alpha('#10b981', 0.1)}` }}>
-                <Avatar sx={{ bgcolor: '#10b981', width: { xs: 40, md: 48 }, height: { xs: 40, md: 48 } }}>
-                  <People sx={{ fontSize: { xs: 20, md: 24 } }} />
-                </Avatar>
-                <Box sx={{ minWidth: 0 }}>
-                  <Typography variant={isMobile ? "h5" : "h4"} sx={{ fontWeight: 800, color: '#10b981', mb: 0.5, fontSize: { xs: '1.5rem', md: '2rem' } }}>
-                    {stats.total}
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 600, fontSize: { xs: '0.75rem', md: '0.875rem' } }}>
-                    Total
-                  </Typography>
-                </Box>
-              </Box>
-              
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1.5, md: 2 }, p: { xs: 2, md: 3 }, bgcolor: alpha('#6366f1', 0.05), borderRadius: 4, border: `1px solid ${alpha('#6366f1', 0.1)}` }}>
-                <Avatar sx={{ bgcolor: '#6366f1', width: { xs: 40, md: 48 }, height: { xs: 40, md: 48 } }}>
-                  <CheckCircle sx={{ fontSize: { xs: 20, md: 24 } }} />
-                </Avatar>
-                <Box sx={{ minWidth: 0 }}>
-                  <Typography variant={isMobile ? "h5" : "h4"} sx={{ fontWeight: 800, color: '#6366f1', mb: 0.5, fontSize: { xs: '1.5rem', md: '2rem' } }}>
-                    {stats.activos}
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 600, fontSize: { xs: '0.75rem', md: '0.875rem' } }}>
-                    Activos
-                  </Typography>
-                </Box>
-              </Box>
-              
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1.5, md: 2 }, p: { xs: 2, md: 3 }, bgcolor: alpha('#f59e0b', 0.05), borderRadius: 4, border: `1px solid ${alpha('#f59e0b', 0.1)}` }}>
-                <Avatar sx={{ bgcolor: '#f59e0b', width: { xs: 40, md: 48 }, height: { xs: 40, md: 48 } }}>
-                  <PersonAdd sx={{ fontSize: { xs: 20, md: 24 } }} />
-                </Avatar>
-                <Box sx={{ minWidth: 0 }}>
-                  <Typography variant={isMobile ? "h5" : "h4"} sx={{ fontWeight: 800, color: '#f59e0b', mb: 0.5, fontSize: { xs: '1.5rem', md: '2rem' } }}>
-                    {stats.nuevos}
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 600, fontSize: { xs: '0.75rem', md: '0.875rem' } }}>
-                    Nuevos
-                  </Typography>
-                </Box>
-              </Box>
-              
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1.5, md: 2 }, p: { xs: 2, md: 3 }, bgcolor: alpha('#8b5cf6', 0.05), borderRadius: 4, border: `1px solid ${alpha('#8b5cf6', 0.1)}` }}>
-                <Avatar sx={{ bgcolor: '#8b5cf6', width: { xs: 40, md: 48 }, height: { xs: 40, md: 48 } }}>
-                  <TrendingUp sx={{ fontSize: { xs: 20, md: 24 } }} />
-                </Avatar>
-                <Box sx={{ minWidth: 0 }}>
-                  <Typography variant={isMobile ? "h5" : "h4"} sx={{ fontWeight: 800, color: '#8b5cf6', mb: 0.5, fontSize: { xs: '1.5rem', md: '2rem' } }}>
-                    {stats.avgEngagement}%
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 600, fontSize: { xs: '0.75rem', md: '0.875rem' } }}>
-                    Engagement
-                  </Typography>
-                </Box>
-              </Box>
-            </Box>
+    <div className="fixed inset-0 z-50 overflow-y-auto">
+      <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={onClose} />
 
-            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { sm: 'center' }, justifyContent: 'space-between', gap: 3, mb: { xs: 3, md: 4 } }}>
-              <Box>
-                <Typography variant="h5" sx={{ fontWeight: 800, color: '#0f172a', mb: 0.5, fontSize: { xs: '1.25rem', md: '1.5rem' } }}>
-                  Gestión de Socios
-                </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500 }}>
-                    {filtered.length} socios encontrados
-                  </Typography>
-                  {selectedMembers.length > 0 && (
-                    <Badge badgeContent={selectedMembers.length} color="primary">
-                      <Chip
-                        label="seleccionados"
-                        size="small"
-                        sx={{
-                          bgcolor: alpha('#6366f1', 0.1),
-                          color: '#6366f1',
-                          fontWeight: 600,
-                        }}
+        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+          <form onSubmit={handleSubmit}>
+            <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+              <div className="sm:flex sm:items-start">
+                <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-green-100 sm:mx-0 sm:h-10 sm:w-10">
+                  <DollarSign className="h-6 w-6 text-green-600" />
+                </div>
+                <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                  <h3 className="text-lg leading-6 font-medium text-gray-900">
+                    Registrar Pago
+                  </h3>
+                  <div className="mt-2">
+                    <p className="text-sm text-gray-500">
+                      Registrar pago para {socio.nombre}
+                    </p>
+                  </div>
+
+                  <div className="mt-4 space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Monto
+                      </label>
+                      <input
+                        type="number"
+                        value={amount}
+                        onChange={(e) => setAmount(parseFloat(e.target.value))}
+                        min="0"
+                        step="0.01"
+                        required
+                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                       />
-                    </Badge>
-                  )}
-                </Box>
-              </Box>
-              
-              <Stack direction="row" spacing={1}>
-                {!isMobile && (
-                  <ButtonGroup variant="outlined" size="small">
-                    <Tooltip title="Actualizar datos">
-                      <IconButton
-                        onClick={onRefresh}
-                        disabled={loading}
-                        sx={{
-                          color: '#64748b',
-                          borderColor: '#e2e8f0',
-                          '&:hover': {
-                            bgcolor: alpha('#10b981', 0.05),
-                            borderColor: '#10b981',
-                            color: '#10b981',
-                          }
-                        }}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Meses
+                      </label>
+                      <select
+                        value={months}
+                        onChange={(e) => setMonths(parseInt(e.target.value))}
+                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                       >
-                        <Refresh />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Exportar datos">
-                      <IconButton
-                        onClick={exportToCSV}
-                        sx={{
-                          color: '#64748b',
-                          borderColor: '#e2e8f0',
-                          '&:hover': {
-                            bgcolor: alpha('#6366f1', 0.05),
-                            borderColor: '#6366f1',
-                            color: '#6366f1',
-                          }
-                        }}
-                      >
-                        <Download />
-                      </IconButton>
-                    </Tooltip>
-                  </ButtonGroup>
-                )}
-                
-                <Button
-                  onClick={onAdd}
-                  variant="contained"
-                  startIcon={<PersonAdd />}
-                  size="medium"
-                  sx={{
-                    py: { xs: 1, md: 1.5 },
-                    px: { xs: 2, md: 4 },
-                    borderRadius: 4,
-                    textTransform: 'none',
-                    fontWeight: 700,
-                    fontSize: { xs: '0.875rem', md: '1rem' },
-                    background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-                    boxShadow: '0 4px 20px rgba(99, 102, 241, 0.3)',
-                    '&:hover': {
-                      background: 'linear-gradient(135deg, #5b21b6 0%, #7c3aed 100%)',
-                      transform: 'translateY(-1px)',
-                      boxShadow: '0 6px 25px rgba(99, 102, 241, 0.4)',
-                    },
-                    transition: 'all 0.2s ease'
-                  }}
-                >
-                  {isMobile ? 'Nuevo' : 'Nuevo Socio'}
-                </Button>
-              </Stack>
-            </Box>
-
-            {/* Mobile Filters Toggle */}
-            {isMobile && (
-              <Button
-                onClick={() => setFiltersOpen(!filtersOpen)}
-                startIcon={<FilterList />}
-                endIcon={filtersOpen ? <ExpandLess /> : <ExpandMore />}
-                fullWidth
-                variant="outlined"
-                sx={{
-                  mb: 2,
-                  borderRadius: 4,
-                  textTransform: 'none',
-                  fontWeight: 600,
-                  borderColor: '#e2e8f0',
-                  color: '#64748b',
-                  '&:hover': {
-                    borderColor: '#6366f1',
-                    color: '#6366f1',
-                  }
-                }}
-              >
-                Filtros y Búsqueda
-              </Button>
-            )}
-
-            {/* Enhanced Filters */}
-            <Collapse in={!isMobile || filtersOpen}>
-              <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{ mb: 3 }}>
-                <TextField
-                  placeholder="Buscar por nombre, email, DNI o teléfono..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  fullWidth
-                  size="medium"
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Search sx={{ color: '#94a3b8', fontSize: '1.3rem' }} />
-                      </InputAdornment>
-                    ),
-                    endAdornment: searchTerm && (
-                      <InputAdornment position="end">
-                        <IconButton
-                          onClick={() => setSearchTerm('')}
-                          size="small"
-                          sx={{ color: '#94a3b8' }}
-                        >
-                          <Close />
-                        </IconButton>
-                      </InputAdornment>
-                    ),
-                  }}
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: 4,
-                      bgcolor: '#fafbfc',
-                      '& fieldset': {
-                        borderColor: '#e2e8f0',
-                      },
-                      '&:hover fieldset': {
-                        borderColor: '#6366f1',
-                      },
-                      '&.Mui-focused fieldset': {
-                        borderColor: '#6366f1',
-                        borderWidth: 2,
-                      },
-                      '&.Mui-focused': {
-                        bgcolor: 'white',
-                      }
-                    },
-                  }}
-                />
-                
-                <FormControl sx={{ minWidth: { xs: '100%', md: 200 } }}>
-                  <InputLabel>Estado</InputLabel>
-                  <Select
-                    value={statusFilter}
-                    onChange={(e: SelectChangeEvent) => setStatusFilter(e.target.value as 'all' | 'activo' | 'vencido' | 'inactivo')}
-                    label="Estado"
-                    size="medium"
-                    startAdornment={<FilterList sx={{ color: '#94a3b8', mr: 1 }} />}
-                    sx={{
-                      borderRadius: 4,
-                      bgcolor: '#fafbfc',
-                      '& fieldset': {
-                        borderColor: '#e2e8f0',
-                      },
-                      '&:hover fieldset': {
-                        borderColor: '#6366f1',
-                      },
-                      '&.Mui-focused fieldset': {
-                        borderColor: '#6366f1',
-                        borderWidth: 2,
-                      },
-                      '&.Mui-focused': {
-                        bgcolor: 'white',
-                      }
-                    }}
-                  >
-                    <MenuItem value="all">
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Info sx={{ fontSize: 16 }} />
-                        Todos ({stats.total})
-                      </Box>
-                    </MenuItem>
-                    <MenuItem value="activo">
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <CheckCircle sx={{ fontSize: 16, color: '#10b981' }} />
-                        Activos ({stats.activos})
-                      </Box>
-                    </MenuItem>
-                    <MenuItem value="vencido">
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Warning sx={{ fontSize: 16, color: '#ef4444' }} />
-                        Vencidos ({stats.vencidos})
-                      </Box>
-                    </MenuItem>
-                    <MenuItem value="inactivo">
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <ErrorIcon sx={{ fontSize: 16, color: '#6b7280' }} />
-                        Inactivos ({stats.inactivos})
-                      </Box>
-                    </MenuItem>
-                  </Select>
-                </FormControl>
-
-                <FormControl sx={{ minWidth: { xs: '100%', md: 150 } }}>
-                  <InputLabel>Mostrar</InputLabel>
-                  <Select
-                    value={itemsPerPage}
-                    onChange={(e) => {
-                      setItemsPerPage(Number(e.target.value));
-                      setCurrentPage(1);
-                    }}
-                    label="Mostrar"
-                    size="medium"
-                    sx={{
-                      borderRadius: 4,
-                      bgcolor: '#fafbfc',
-                      '& fieldset': {
-                        borderColor: '#e2e8f0',
-                      },
-                      '&:hover fieldset': {
-                        borderColor: '#6366f1',
-                      },
-                      '&.Mui-focused fieldset': {
-                        borderColor: '#6366f1',
-                        borderWidth: 2,
-                      },
-                      '&.Mui-focused': {
-                        bgcolor: 'white',
-                      }
-                    }}
-                  >
-                    {ITEMS_PER_PAGE_OPTIONS.map(option => (
-                      <MenuItem key={option} value={option}>
-                        {option} por página
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Stack>
-            </Collapse>
-
-            {/* Bulk Actions */}
-            <AnimatePresence>
-              {selectedMembers.length > 0 && (
-                <Box
-                  component={motion.div}
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <Paper
-                    elevation={0}
-                    sx={{
-                      bgcolor: alpha('#6366f1', 0.05),
-                      border: `1px solid ${alpha('#6366f1', 0.2)}`,
-                      borderRadius: 4,
-                      p: { xs: 2, md: 3 },
-                      mb: 3,
-                    }}
-                  >
-                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { sm: 'center' }, justifyContent: 'space-between', gap: 2 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <Avatar sx={{ bgcolor: '#6366f1', width: 32, height: 32 }}>
-                          <Typography variant="body2" sx={{ fontWeight: 700, color: 'white' }}>
-                            {selectedMembers.length}
-                          </Typography>
-                        </Avatar>
-                        <Typography variant="body2" sx={{ color: '#6366f1', fontWeight: 600 }}>
-                          socios seleccionados
-                        </Typography>
-                      </Box>
-                      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ width: { xs: '100%', sm: 'auto' } }}>
-                        <Button
-                          size="small"
-                          startIcon={<Email />}
-                          onClick={() => toast('Función de email en desarrollo', { icon: '📧' })}
-                          sx={{ textTransform: 'none', fontWeight: 600, justifyContent: { xs: 'flex-start', sm: 'center' } }}
-                        >
-                          Enviar Email
-                        </Button>
-                        <Button
-                          size="small"
-                          startIcon={<Download />}
-                          onClick={exportToCSV}
-                          sx={{ textTransform: 'none', fontWeight: 600, justifyContent: { xs: 'flex-start', sm: 'center' } }}
-                        >
-                          Exportar
-                        </Button>
-                        <Button
-                          size="small"
-                          startIcon={<MoreVert />}
-                          onClick={(e) => setBulkMenuAnchor(e.currentTarget)}
-                          sx={{ textTransform: 'none', fontWeight: 600, justifyContent: { xs: 'flex-start', sm: 'center' } }}
-                        >
-                          Más acciones
-                        </Button>
-                      </Stack>
-                    </Box>
-                    
-                    {bulkProcessing && (
-                      <Box sx={{ mt: 2 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-                          <Typography variant="body2" sx={{ color: '#6366f1', fontWeight: 600 }}>
-                            Procesando...
-                          </Typography>
-                          <Typography variant="body2" sx={{ color: '#6366f1', fontWeight: 600 }}>
-                            {Math.round(bulkProgress)}%
-                          </Typography>
-                        </Box>
-                        <LinearProgress 
-                          variant="determinate" 
-                          value={bulkProgress} 
-                          sx={{ 
-                            borderRadius: 2,
-                            height: 8,
-                            bgcolor: alpha('#6366f1', 0.1),
-                            '& .MuiLinearProgress-bar': {
-                              bgcolor: '#6366f1',
-                              borderRadius: 2,
-                            }
-                          }} 
-                        />
-                      </Box>
-                    )}
-                  </Paper>
-                </Box>
-              )}
-            </AnimatePresence>
-          </CardContent>
-
-          {/* Content - Mobile Cards or Desktop Table */}
-          {paginatedSocios.length === 0 ? (
-            <Box sx={{ p: { xs: 4, md: 8 }, textAlign: 'center' }}>
-              <Avatar
-                sx={{
-                  width: { xs: 60, md: 80 },
-                  height: { xs: 60, md: 80 },
-                  bgcolor: alpha('#6b7280', 0.1),
-                  color: '#6b7280',
-                  mx: 'auto',
-                  mb: 3,
-                }}
-              >
-                <People sx={{ fontSize: { xs: 30, md: 40 } }} />
-              </Avatar>
-              <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', mb: 1, fontSize: { xs: '1.125rem', md: '1.25rem' } }}>
-                No hay socios
-              </Typography>
-              <Typography variant="body1" sx={{ color: '#64748b', mb: 4, maxWidth: 400, mx: 'auto', fontSize: { xs: '0.875rem', md: '1rem' } }}>
-                {searchTerm || statusFilter !== 'all' 
-                  ? 'No se encontraron socios con los filtros aplicados'
-                  : 'Comienza agregando tu primer socio'
-                }
-              </Typography>
-              {(!searchTerm && statusFilter === 'all') && (
-                <Button
-                  onClick={onAdd}
-                  variant="contained"
-                  startIcon={<Add />}
-                  size={isMobile ? "medium" : "medium"}
-                  sx={{
-                    py: { xs: 1, md: 1.5 },
-                    px: { xs: 3, md: 4 },
-                    borderRadius: 4,
-                    textTransform: 'none',
-                    fontWeight: 700,
-                    background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-                    boxShadow: '0 4px 20px rgba(99, 102, 241, 0.3)',
-                    '&:hover': {
-                      background: 'linear-gradient(135deg, #5b21b6 0%, #7c3aed 100%)',
-                      transform: 'translateY(-1px)',
-                      boxShadow: '0 6px 25px rgba(99, 102, 241, 0.4)',
-                    },
-                    transition: 'all 0.2s ease'
-                  }}
-                >
-                  Agregar Primer Socio
-                </Button>
-              )}
-            </Box>
-          ) : (
-            <>
-              {/* Mobile View - Cards */}
-              {isMobile ? (
-                <Box sx={{ p: 2 }}>
-                  {paginatedSocios.map((socio, index) => {
-                    const isSelected = selectedMembers.includes(socio.uid);
-                    const engagementScore = getEngagementScore(socio);
-                    const engagementLevel = getEngagementLevel(engagementScore);
-                    
-                    return (
-                      <Box
-                        key={socio.uid}
-                        component={motion.div}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3, delay: index * 0.05 }}
-                      >
-                        <MobileSocioCard
-                          socio={socio}
-                          isSelected={isSelected}
-                          onSelect={(checked) => handleSelectMember(socio.uid, checked)}
-                          onEdit={() => onEdit(socio)}
-                          onView={() => handleViewProfile(socio)}
-                          onMore={(e) => {
-                            setAnchorEl(e.currentTarget);
-                            setMemberToDelete(socio);
-                          }}
-                          engagementScore={engagementScore}
-                          engagementLevel={engagementLevel}
-                          formatDate={formatDate}
-                          getInitials={getInitials}
-                          getStatusChip={getStatusChip}
-                        />
-                      </Box>
-                    );
-                  })}
-                </Box>
-              ) : (
-                /* Desktop View - Table */
-                <TableContainer>
-                  <Table stickyHeader>
-                    <TableHead>
-                      <TableRow sx={{ bgcolor: '#fafbfc' }}>
-                        <TableCell padding="checkbox">
-                          <Checkbox
-                            indeterminate={selectedMembers.length > 0 && selectedMembers.length < paginatedSocios.length}
-                            checked={paginatedSocios.length > 0 && selectedMembers.length === paginatedSocios.length}
-                            onChange={(e) => handleSelectAll(e.target.checked)}
-                            sx={{
-                              color: '#6366f1',
-                              '&.Mui-checked': {
-                                color: '#6366f1',
-                              },
-                            }}
-                          />
-                        </TableCell>
-                        {columns.slice(1, -1).map((column) => (
-                          !column.hideOnMobile && (
-                            <TableCell
-                              key={column.id}
-                              align={column.align}
-                              sx={{ 
-                                fontWeight: 700, 
-                                color: '#475569', 
-                                fontSize: '0.8rem', 
-                                textTransform: 'uppercase', 
-                                letterSpacing: '0.05em',
-                                cursor: column.sortable ? 'pointer' : 'default',
-                                '&:hover': column.sortable ? { color: '#6366f1' } : {},
-                                display: { xs: column.hideOnMobile ? 'none' : 'table-cell', md: 'table-cell' }
-                              }}
-                              onClick={() => column.sortable && handleSort(column.id)}
-                            >
-                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                {column.label}
-                                {column.sortable && (
-                                  <Sort 
-                                    sx={{ 
-                                      fontSize: 16, 
-                                      opacity: sortBy === column.id ? 1 : 0.3,
-                                      transform: sortBy === column.id && sortOrder === 'desc' ? 'rotate(180deg)' : 'none',
-                                      transition: 'all 0.2s ease'
-                                    }} 
-                                  />
-                                )}
-                              </Box>
-                            </TableCell>
-                          )
+                        {[1, 2, 3, 6, 12].map(month => (
+                          <option key={month} value={month}>
+                            {month} {month === 1 ? 'mes' : 'meses'}
+                          </option>
                         ))}
-                        <TableCell align="right" sx={{ fontWeight: 700, color: '#475569', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                          Acciones
-                        </TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {paginatedSocios.map((socio, index) => {
-                        const isSelected = selectedMembers.includes(socio.uid);
-                        const engagementScore = getEngagementScore(socio);
-                        const engagementLevel = getEngagementLevel(engagementScore);
-                        
-                        return (
-                          <TableRow
-                            key={socio.uid}
-                            component={motion.tr}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.3, delay: index * 0.05 }}
-                            sx={{
-                              bgcolor: isSelected ? alpha('#6366f1', 0.05) : 'transparent',
-                              '&:hover': {
-                                bgcolor: isSelected ? alpha('#6366f1', 0.08) : '#fafbfc',
-                              },
-                              transition: 'background-color 0.2s ease'
-                            }}
-                          >
-                            <TableCell padding="checkbox">
-                              <Checkbox
-                                checked={isSelected}
-                                onChange={(e) => handleSelectMember(socio.uid, e.target.checked)}
-                                sx={{
-                                  color: '#6366f1',
-                                  '&.Mui-checked': {
-                                    color: '#6366f1',
-                                  },
-                                }}
-                              />
-                            </TableCell>
-                            <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
-                              <Avatar
-                                sx={{
-                                  width: 48,
-                                  height: 48,
-                                  bgcolor: alpha('#6366f1', 0.1),
-                                  color: '#6366f1',
-                                  fontWeight: 700,
-                                  fontSize: '1rem',
-                                  borderRadius: 3,
-                                }}
-                              >
-                                {getInitials(socio.nombre)}
-                              </Avatar>
-                            </TableCell>
-                            <TableCell>
-                              <Box>
-                                <Typography variant="body2" sx={{ fontWeight: 700, color: '#0f172a', mb: 0.5 }}>
-                                  {socio.nombre}
-                                </Typography>
-                                {socio.dni && (
-                                  <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 500 }}>
-                                    DNI: {socio.dni}
-                                  </Typography>
-                                )}
-                              </Box>
-                            </TableCell>
-                            <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
-                              <Stack spacing={0.5}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                  <Email sx={{ fontSize: 14, color: '#94a3b8' }} />
-                                  <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 500 }}>
-                                    {socio.email}
-                                  </Typography>
-                                </Box>
-                                {socio.telefono && (
-                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    <Phone sx={{ fontSize: 14, color: '#94a3b8' }} />
-                                    <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 500 }}>
-                                      {socio.telefono}
-                                    </Typography>
-                                  </Box>
-                                )}
-                              </Stack>
-                            </TableCell>
-                            <TableCell>
-                              {getStatusChip(socio.estado)}
-                            </TableCell>
-                            <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
-                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <CalendarToday sx={{ fontSize: 14, color: '#94a3b8' }} />
-                                <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 500 }}>
-                                  {formatDate(socio.creadoEn)}
-                                </Typography>
-                              </Box>
-                            </TableCell>
-                            <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
-                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <Box
-                                  sx={{
-                                    width: 8,
-                                    height: 8,
-                                    borderRadius: '50%',
-                                    bgcolor: engagementLevel.color,
-                                  }}
-                                />
-                                <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>
-                                  {engagementLevel.label} ({engagementScore}%)
-                                </Typography>
-                              </Box>
-                            </TableCell>
-                            <TableCell align="right">
-                              <Stack direction="row" spacing={0.5} justifyContent="flex-end">
-                                <Tooltip title="Ver perfil">
-                                  <IconButton
-                                    size="small"
-                                    onClick={() => handleViewProfile(socio)}
-                                    sx={{
-                                      color: '#94a3b8',
-                                      '&:hover': {
-                                        color: '#6366f1',
-                                        bgcolor: alpha('#6366f1', 0.1),
-                                      },
-                                      transition: 'all 0.2s ease'
-                                    }}
-                                  >
-                                    <Visibility sx={{ fontSize: 16 }} />
-                                  </IconButton>
-                                </Tooltip>
-                                <Tooltip title="Editar">
-                                  <IconButton
-                                    onClick={() => onEdit(socio)}
-                                    size="small"
-                                    sx={{
-                                      color: '#94a3b8',
-                                      '&:hover': {
-                                        color: '#f59e0b',
-                                        bgcolor: alpha('#f59e0b', 0.1),
-                                      },
-                                      transition: 'all 0.2s ease'
-                                    }}
-                                  >
-                                    <Edit sx={{ fontSize: 16 }} />
-                                  </IconButton>
-                                </Tooltip>
-                                <Tooltip title="Más opciones">
-                                  <IconButton
-                                    onClick={(e) => {
-                                      setAnchorEl(e.currentTarget);
-                                      setMemberToDelete(socio);
-                                    }}
-                                    size="small"
-                                    sx={{
-                                      color: '#94a3b8',
-                                      '&:hover': {
-                                        color: '#6366f1',
-                                        bgcolor: alpha('#6366f1', 0.1),
-                                      },
-                                      transition: 'all 0.2s ease'
-                                    }}
-                                  >
-                                    <MoreVert sx={{ fontSize: 16 }} />
-                                  </IconButton>
-                                </Tooltip>
-                              </Stack>
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              )}
-
-              {/* Enhanced Pagination */}
-              {totalPages > 1 && (
-                <Box sx={{ 
-                  p: { xs: 2, md: 4 }, 
-                  borderTop: '1px solid #f1f5f9', 
-                  display: 'flex', 
-                  flexDirection: { xs: 'column', sm: 'row' },
-                  alignItems: 'center', 
-                  justifyContent: 'space-between',
-                  gap: 2
-                }}>
-                  <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500, fontSize: { xs: '0.75rem', md: '0.875rem' } }}>
-                    Mostrando {startIndex + 1} a {Math.min(startIndex + itemsPerPage, filtered.length)} de {filtered.length} socios
-                  </Typography>
-                  <Pagination
-                    count={totalPages}
-                    page={currentPage}
-                    onChange={(_, page) => setCurrentPage(page)}
-                    color="primary"
-                    size={isMobile ? "medium" : "medium"}
-                    sx={{
-                      '& .MuiPaginationItem-root': {
-                        borderRadius: 3,
-                        fontWeight: 600,
-                        fontSize: { xs: '0.8rem', md: '0.9rem' },
-                        '&.Mui-selected': {
-                          background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-                          color: 'white',
-                          '&:hover': {
-                            background: 'linear-gradient(135deg, #5b21b6 0%, #7c3aed 100%)',
-                          }
-                        },
-                        '&:hover': {
-                          bgcolor: alpha('#6366f1', 0.1),
-                        }
-                      }
-                    }}
-                  />
-                </Box>
-              )}
-            </>
-          )}
-        </Card>
-
-        {/* Delete Confirmation Dialog */}
-        <Dialog
-          open={deleteDialogOpen}
-          onClose={() => !deleting && setDeleteDialogOpen(false)}
-          maxWidth="sm"
-          fullWidth
-          fullScreen={isMobile}
-          PaperProps={{
-            sx: {
-              borderRadius: isMobile ? 0 : 4,
-              boxShadow: '0 20px 60px rgba(0,0,0,0.1)',
-              m: isMobile ? 0 : 2,
-            }
-          }}
-        >
-          <DialogTitle sx={{ pb: 2, p: { xs: 2, md: 3 } }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Avatar
-                sx={{
-                  bgcolor: deleteType === 'permanent' ? alpha('#ef4444', 0.1) : alpha('#f59e0b', 0.1),
-                  color: deleteType === 'permanent' ? '#ef4444' : '#f59e0b',
-                  width: { xs: 40, md: 48 },
-                  height: { xs: 40, md: 48 },
-                }}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+              <button
+                type="submit"
+                disabled={isSubmitting || loading}
+                className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50"
               >
-                {deleteType === 'permanent' ? <DeleteForever /> : <Archive />}
-              </Avatar>
-              <Box sx={{ flex: 1, minWidth: 0 }}>
-                <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', fontSize: { xs: '1.125rem', md: '1.25rem' } }}>
-                  {deleteType === 'permanent' ? 'Eliminar Permanentemente' : 'Desactivar Socio'}
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#64748b', wordBreak: 'break-word' }}>
-                  {memberToDelete?.nombre}
-                </Typography>
-              </Box>
-              {isMobile && (
-                <IconButton
-                  onClick={() => setDeleteDialogOpen(false)}
-                  sx={{ color: '#64748b' }}
-                >
-                  <Close />
-                </IconButton>
-              )}
-            </Box>
-          </DialogTitle>
-          
-          <DialogContent sx={{ pb: 3, p: { xs: 2, md: 3 } }}>
-            <Alert 
-              severity={deleteType === 'permanent' ? 'error' : 'warning'} 
-              sx={{ mb: 3, borderRadius: 3 }}
-            >
-              {deleteType === 'permanent' 
-                ? 'Esta acción eliminará permanentemente al socio de Firebase. No se puede deshacer.'
-                : 'Esta acción marcará al socio como inactivo. Podrás reactivarlo más tarde.'
-              }
-            </Alert>
-            
-            <Typography variant="body1" sx={{ color: '#475569', mb: 2 }}>
-              ¿Estás seguro de que deseas {deleteType === 'permanent' ? 'eliminar permanentemente' : 'desactivar'} a este socio?
-            </Typography>
-            
-            <Box sx={{ mt: 3, p: { xs: 2, md: 3 }, bgcolor: '#f8fafc', borderRadius: 3, border: '1px solid #e2e8f0' }}>
-              <Typography variant="body2" sx={{ color: '#64748b', mb: 2 }}>
-                <strong>Opciones de eliminación:</strong>
-              </Typography>
-              <Stack spacing={1}>
-                <Button
-                  variant={deleteType === 'soft' ? 'contained' : 'outlined'}
-                  size="small"
-                  startIcon={<Archive />}
-                  onClick={() => setDeleteType('soft')}
-                  fullWidth={isMobile}
-                  sx={{
-                    justifyContent: 'flex-start',
-                    textTransform: 'none',
-                    bgcolor: deleteType === 'soft' ? '#f59e0b' : 'transparent',
-                    borderColor: deleteType === 'soft' ? '#f59e0b' : '#e2e8f0',
-                    color: deleteType === 'soft' ? 'white' : '#64748b',
-                    '&:hover': {
-                      bgcolor: deleteType === 'soft' ? '#d97706' : alpha('#f59e0b', 0.1),
-                      borderColor: '#f59e0b',
-                      color: deleteType === 'soft' ? 'white' : '#f59e0b',
-                    }
-                  }}
-                >
-                  Desactivar (recomendado)
-                </Button>
-                <Button
-                  variant={deleteType === 'permanent' ? 'contained' : 'outlined'}
-                  size="small"
-                  startIcon={<DeleteForever />}
-                  onClick={() => setDeleteType('permanent')}
-                  fullWidth={isMobile}
-                  sx={{
-                    justifyContent: 'flex-start',
-                    textTransform: 'none',
-                    bgcolor: deleteType === 'permanent' ? '#ef4444' : 'transparent',
-                    borderColor: deleteType === 'permanent' ? '#ef4444' : '#e2e8f0',
-                    color: deleteType === 'permanent' ? 'white' : '#64748b',
-                    '&:hover': {
-                      bgcolor: deleteType === 'permanent' ? '#dc2626' : alpha('#ef4444', 0.1),
-                      borderColor: '#ef4444',
-                      color: deleteType === 'permanent' ? 'white' : '#ef4444',
-                    }
-                  }}
-                >
-                  Eliminar permanentemente
-                </Button>
-              </Stack>
-            </Box>
-          </DialogContent>
-          
-          <DialogActions sx={{ p: { xs: 2, md: 3 }, pt: 0, flexDirection: { xs: 'column', sm: 'row' }, gap: { xs: 1, sm: 0 } }}>
-            <Button
-              onClick={() => setDeleteDialogOpen(false)}
-              disabled={deleting}
-              fullWidth={isMobile}
-              sx={{ textTransform: 'none', fontWeight: 600 }}
-            >
-              Cancelar
-            </Button>
-            <Button
-              onClick={handleDeleteMember}
-              disabled={deleting}
-              variant="contained"
-              fullWidth={isMobile}
-              startIcon={deleting ? <CircularProgress size={16} /> : (deleteType === 'permanent' ? <DeleteForever /> : <Archive />)}
-              sx={{
-                textTransform: 'none',
-                fontWeight: 700,
-                bgcolor: deleteType === 'permanent' ? '#ef4444' : '#f59e0b',
-                '&:hover': {
-                  bgcolor: deleteType === 'permanent' ? '#dc2626' : '#d97706',
-                }
-              }}
-            >
-              {deleting ? 'Procesando...' : (deleteType === 'permanent' ? 'Eliminar Permanentemente' : 'Desactivar')}
-            </Button>
-          </DialogActions>
-        </Dialog>
-
-        {/* Bulk Action Result Dialog */}
-        <Dialog
-          open={bulkResultDialog}
-          onClose={() => setBulkResultDialog(false)}
-          maxWidth="sm"
-          fullWidth
-          fullScreen={isMobile}
-          PaperProps={{
-            sx: {
-              borderRadius: isMobile ? 0 : 4,
-              boxShadow: '0 20px 60px rgba(0,0,0,0.1)',
-              m: isMobile ? 0 : 2,
-            }
-          }}
-        >
-          <DialogTitle sx={{ pb: 2, p: { xs: 2, md: 3 } }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Avatar
-                sx={{
-                  bgcolor: bulkResult?.failed === 0 ? alpha('#10b981', 0.1) : alpha('#f59e0b', 0.1),
-                  color: bulkResult?.failed === 0 ? '#10b981' : '#f59e0b',
-                  width: { xs: 40, md: 48 },
-                  height: { xs: 40, md: 48 },
-                }}
+                {isSubmitting ? 'Registrando...' : 'Registrar Pago'}
+              </button>
+              <button
+                type="button"
+                onClick={onClose}
+                className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
               >
-                {bulkResult?.failed === 0 ? <CheckCircle /> : <Warning />}
-              </Avatar>
-              <Box sx={{ flex: 1, minWidth: 0 }}>
-                <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', fontSize: { xs: '1.125rem', md: '1.25rem' } }}>
-                  Resultado de Acción Masiva
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#64748b' }}>
-                  {bulkResult?.success} exitosos, {bulkResult?.failed} fallidos
-                </Typography>
-              </Box>
-              {isMobile && (
-                <IconButton
-                  onClick={() => setBulkResultDialog(false)}
-                  sx={{ color: '#64748b' }}
-                >
-                  <Close />
-                </IconButton>
-              )}
-            </Box>
-          </DialogTitle>
-          
-          <DialogContent sx={{ pb: 3, p: { xs: 2, md: 3 } }}>
-            {bulkResult && (
-              <Stack spacing={2}>
-                {bulkResult.success > 0 && (
-                  <Alert severity="success" sx={{ borderRadius: 3 }}>
-                    {bulkResult.success} socios procesados correctamente
-                  </Alert>
-                )}
-                
-                {bulkResult.failed > 0 && (
-                  <Alert severity="error" sx={{ borderRadius: 3 }}>
-                    {bulkResult.failed} socios no pudieron ser procesados
-                  </Alert>
-                )}
-                
-                {bulkResult.errors.length > 0 && (
-                  <Box>
-                    <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
-                      Errores detallados:
-                    </Typography>
-                    <Box sx={{ maxHeight: 200, overflow: 'auto' }}>
-                      {bulkResult.errors.map((error, index) => (
-                        <Typography key={index} variant="caption" sx={{ display: 'block', color: '#ef4444', mb: 0.5 }}>
-                          • {error}
-                        </Typography>
-                      ))}
-                    </Box>
-                  </Box>
-                )}
-              </Stack>
-            )}
-          </DialogContent>
-          
-          <DialogActions sx={{ p: { xs: 2, md: 3 }, pt: 0 }}>
-            <Button
-              onClick={() => setBulkResultDialog(false)}
-              variant="contained"
-              fullWidth={isMobile}
-              sx={{ textTransform: 'none', fontWeight: 600 }}
-            >
-              Entendido
-            </Button>
-          </DialogActions>
-        </Dialog>
-
-        {/* Context Menus */}
-        <Menu
-          anchorEl={anchorEl}
-          open={Boolean(anchorEl)}
-          onClose={() => setAnchorEl(null)}
-          PaperProps={{
-            sx: {
-              borderRadius: 3,
-              boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
-              border: '1px solid #f1f5f9',
-              minWidth: 200,
-            }
-          }}
-        >
-          <MenuItem onClick={() => {
-            if (memberToDelete) handleViewProfile(memberToDelete);
-            setAnchorEl(null);
-          }}>
-            <ListItemIcon>
-              <Visibility fontSize="small" />
-            </ListItemIcon>
-            <ListItemText>Ver Perfil</ListItemText>
-          </MenuItem>
-          <MenuItem onClick={() => {
-            if (memberToDelete) onEdit(memberToDelete);
-            setAnchorEl(null);
-          }}>
-            <ListItemIcon>
-              <Edit fontSize="small" />
-            </ListItemIcon>
-            <ListItemText>Editar Socio</ListItemText>
-          </MenuItem>
-          <MenuItem onClick={() => {
-            toast('Función de email en desarrollo', { icon: '📧' });
-            setAnchorEl(null);
-          }}>
-            <ListItemIcon>
-              <Email fontSize="small" />
-            </ListItemIcon>
-            <ListItemText>Enviar Email</ListItemText>
-          </MenuItem>
-          <MenuItem onClick={() => {
-            toast('Función de favoritos en desarrollo', { icon: '⭐' });
-            setAnchorEl(null);
-          }}>
-            <ListItemIcon>
-              <Star fontSize="small" />
-            </ListItemIcon>
-            <ListItemText>Marcar Favorito</ListItemText>
-          </MenuItem>
-          <Divider />
-          <MenuItem onClick={() => {
-            setDeleteType('soft');
-            setDeleteDialogOpen(true);
-            setAnchorEl(null);
-          }}>
-            <ListItemIcon>
-              <Archive fontSize="small" />
-            </ListItemIcon>
-            <ListItemText>Desactivar</ListItemText>
-          </MenuItem>
-          <MenuItem onClick={() => {
-            setDeleteType('permanent');
-            setDeleteDialogOpen(true);
-            setAnchorEl(null);
-          }} sx={{ color: '#ef4444' }}>
-            <ListItemIcon>
-              <DeleteForever fontSize="small" sx={{ color: '#ef4444' }} />
-            </ListItemIcon>
-            <ListItemText>Eliminar Permanentemente</ListItemText>
-          </MenuItem>
-        </Menu>
-
-        <Menu
-          anchorEl={bulkMenuAnchor}
-          open={Boolean(bulkMenuAnchor)}
-          onClose={() => setBulkMenuAnchor(null)}
-          PaperProps={{
-            sx: {
-              borderRadius: 3,
-              boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
-              border: '1px solid #f1f5f9',
-              minWidth: 200,
-            }
-          }}
-        >
-          <MenuItem onClick={() => handleBulkAction('deactivate')} disabled={bulkProcessing}>
-            <ListItemIcon>
-              <Archive fontSize="small" />
-            </ListItemIcon>
-            <ListItemText>Desactivar Seleccionados</ListItemText>
-          </MenuItem>
-          <MenuItem onClick={() => handleBulkAction('activate')} disabled={bulkProcessing}>
-            <ListItemIcon>
-              <Restore fontSize="small" />
-            </ListItemIcon>
-            <ListItemText>Activar Seleccionados</ListItemText>
-          </MenuItem>
-          <MenuItem onClick={() => {
-            toast('Función de impresión en desarrollo', { icon: '🖨️' });
-            setBulkMenuAnchor(null);
-          }}>
-            <ListItemIcon>
-              <Print fontSize="small" />
-            </ListItemIcon>
-            <ListItemText>Imprimir Lista</ListItemText>
-          </MenuItem>
-          <Divider />
-          <MenuItem onClick={() => handleBulkAction('delete')} disabled={bulkProcessing} sx={{ color: '#ef4444' }}>
-            <ListItemIcon>
-              <DeleteForever fontSize="small" sx={{ color: '#ef4444' }} />
-            </ListItemIcon>
-            <ListItemText>Eliminar Seleccionados</ListItemText>
-          </MenuItem>
-        </Menu>
-
-        {/* Floating Action Button - Only on Mobile */}
-        {isMobile && (
-          <Zoom in={selectedMembers.length === 0 && !bulkProcessing}>
-            <Fab
-              color="primary"
-              onClick={onAdd}
-              sx={{
-                position: 'fixed',
-                bottom: 24,
-                right: 24,
-                background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-                boxShadow: '0 8px 32px rgba(99, 102, 241, 0.3)',
-                '&:hover': {
-                  background: 'linear-gradient(135deg, #5b21b6 0%, #7c3aed 100%)',
-                  transform: 'scale(1.1)',
-                  boxShadow: '0 12px 40px rgba(99, 102, 241, 0.4)',
-                },
-                transition: 'all 0.3s ease'
-              }}
-            >
-              <Add />
-            </Fab>
-          </Zoom>
-        )}
-      </Box>
-
-      {/* Profile View Modal */}
-      {selectedSocio && (
-        <SocioProfileView
-          socio={selectedSocio}
-          open={profileViewOpen}
-          onClose={handleCloseProfile}
-          onEdit={onEdit}
-          onRefresh={onRefresh}
-        />
-      )}
-    </>
+                Cancelar
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
   );
 };

@@ -665,7 +665,7 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
   loading: propLoading = false
 }) => {
   const { user } = useAuth();
-  const { stats, allSocios } = useSocios();
+  const { stats, socios } = useSocios();
   
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData>({
     totalMembers: 0,
@@ -698,8 +698,8 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
   }, [stats?.total, stats?.activos, stats?.vencidos, stats?.inactivos]);
 
   const memoizedAllSocios = useMemo(() => {
-    return allSocios || [];
-  }, [allSocios]);
+    return socios || [];
+  }, [socios]);
 
   // Fixed: Calculate analytics data with proper dependencies
   const calculateAnalyticsData = useCallback(() => {
@@ -718,7 +718,7 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
       // Filter socios by date range
       const recentSocios = memoizedAllSocios.filter(socio => {
         if (!socio.creadoEn) return false;
-        const createdDate = socio.creadoEn.toDate();
+        const createdDate = socio.creadoEn;
         return isAfter(createdDate, startDate) && isBefore(createdDate, endDate);
       });
 
@@ -726,7 +726,7 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
       const previousPeriodStart = subDays(startDate, dateRange === '7d' ? 7 : dateRange === '30d' ? 30 : 90);
       const previousSocios = memoizedAllSocios.filter(socio => {
         if (!socio.creadoEn) return false;
-        const createdDate = socio.creadoEn.toDate();
+        const createdDate = socio.creadoEn;
         return isAfter(createdDate, previousPeriodStart) && isBefore(createdDate, startDate);
       });
 
@@ -742,7 +742,7 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
       const averageLifetime = activeSocios.length > 0 
         ? activeSocios.reduce((acc, socio) => {
             if (!socio.creadoEn) return acc;
-            const monthsActive = Math.max(1, Math.floor((endDate.getTime() - socio.creadoEn.toDate().getTime()) / (1000 * 60 * 60 * 24 * 30)));
+            const monthsActive = Math.max(1, Math.floor((endDate.getTime() - socio.creadoEn.getTime()) / (1000 * 60 * 60 * 24 * 30)));
             return acc + monthsActive;
           }, 0) / activeSocios.length
         : 0;
@@ -764,7 +764,7 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
         // Count socios created in this month
         const monthSocios = memoizedAllSocios.filter(socio => {
           if (!socio.creadoEn) return false;
-          const createdDate = socio.creadoEn.toDate();
+          const createdDate = socio.creadoEn;
           return isAfter(createdDate, monthStart) && isBefore(createdDate, monthEnd);
         }).length;
 
@@ -776,7 +776,7 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
         
         const prevMonthSocios = memoizedAllSocios.filter(socio => {
           if (!socio.creadoEn) return false;
-          const createdDate = socio.creadoEn.toDate();
+          const createdDate = socio.creadoEn;
           return isAfter(createdDate, prevMonthStart) && isBefore(createdDate, prevMonthEnd);
         }).length;
 
