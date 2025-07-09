@@ -226,35 +226,49 @@ class SocioService {
 
       const socioId = doc(collection(db, this.collection)).id;
       
-      const socioData = {
+      // Clean data to remove undefined values
+      const socioData: Record<string, unknown> = {
         nombre: data.nombre,
         email: data.email.toLowerCase(),
         dni: data.dni,
-        telefono: data.telefono,
-        fechaNacimiento: Timestamp.fromDate(
-          data.fechaNacimiento instanceof Date
-            ? data.fechaNacimiento
-            : data.fechaNacimiento.toDate()
-        ),
-        direccion: data.direccion,
         asociacionId,
         numeroSocio,
         estado: 'activo',
         estadoMembresia: data.fechaVencimiento && data.fechaVencimiento > new Date() ? 'al_dia' : 'pendiente',
         fechaIngreso: serverTimestamp(),
-        fechaVencimiento: data.fechaVencimiento
-          ? Timestamp.fromDate(
-              data.fechaVencimiento instanceof Date
-                ? data.fechaVencimiento
-                : data.fechaVencimiento.toDate()
-            )
-          : null,
         montoCuota: data.montoCuota,
         beneficiosUsados: 0,
         validacionesRealizadas: 0,
         creadoEn: serverTimestamp(),
         actualizadoEn: serverTimestamp(),
       };
+
+      // Only add optional fields if they have values
+      if (data.telefono) {
+        socioData.telefono = data.telefono;
+      }
+
+      if (data.direccion) {
+        socioData.direccion = data.direccion;
+      }
+
+      // Handle fechaNacimiento
+      if (data.fechaNacimiento) {
+        socioData.fechaNacimiento = Timestamp.fromDate(
+          data.fechaNacimiento instanceof Date
+            ? data.fechaNacimiento
+            : data.fechaNacimiento.toDate()
+        );
+      }
+
+      // Handle fechaVencimiento
+      if (data.fechaVencimiento) {
+        socioData.fechaVencimiento = Timestamp.fromDate(
+          data.fechaVencimiento instanceof Date
+            ? data.fechaVencimiento
+            : data.fechaVencimiento.toDate()
+        );
+      }
 
       await setDoc(doc(db, this.collection, socioId), socioData);
 
@@ -271,10 +285,17 @@ class SocioService {
    */
   async updateSocio(id: string, data: Partial<SocioFormData>): Promise<boolean> {
     try {
-      const updateData: Partial<SocioFormData> & { actualizadoEn: unknown; estadoMembresia?: 'al_dia' | 'vencido' | 'pendiente' } = {
-        ...data,
+      const updateData: Record<string, unknown> = {
         actualizadoEn: serverTimestamp(),
       };
+
+      // Only add fields that have values
+      if (data.nombre) updateData.nombre = data.nombre;
+      if (data.dni) updateData.dni = data.dni;
+      if (data.telefono) updateData.telefono = data.telefono;
+      if (data.direccion) updateData.direccion = data.direccion;
+      if (data.numeroSocio) updateData.numeroSocio = data.numeroSocio;
+      if (data.montoCuota !== undefined) updateData.montoCuota = data.montoCuota;
 
       // Convert dates to Timestamps
       if (data.fechaNacimiento) {
@@ -301,7 +322,10 @@ class SocioService {
         updateData.email = data.email.toLowerCase();
       }
 
-      await updateDoc(doc(db, this.collection, id), updateData);
+      await updateDoc(
+        doc(db, this.collection, id),
+        updateData as Partial<SocioFormData> & { actualizadoEn: import('firebase/firestore').FieldValue; estadoMembresia?: string }
+      );
 
       console.log('✅ Socio updated successfully:', id);
       return true;
@@ -372,23 +396,12 @@ class SocioService {
           // Generate numero de socio
           const numeroSocio = row.numeroSocio || await this.generateNumeroSocio(asociacionId);
 
-          // Prepare socio data
+          // Prepare socio data - clean to avoid undefined values
           const socioId = doc(collection(db, this.collection)).id;
-          const socioData = {
+          const socioData: Record<string, unknown> = {
             nombre: row.nombre,
             email: typeof row.email === 'string' ? row.email.toLowerCase() : '',
             dni: row.dni,
-            telefono: row.telefono || '',
-            fechaNacimiento: row.fechaNacimiento
-              ? Timestamp.fromDate(
-                  typeof row.fechaNacimiento === 'string' || typeof row.fechaNacimiento === 'number'
-                    ? new Date(row.fechaNacimiento)
-                    : row.fechaNacimiento instanceof Date
-                      ? row.fechaNacimiento
-                      : new Date()
-                )
-              : Timestamp.fromDate(new Date()),
-            direccion: row.direccion || '',
             asociacionId,
             numeroSocio,
             estado: 'activo',
@@ -400,6 +413,25 @@ class SocioService {
             creadoEn: serverTimestamp(),
             actualizadoEn: serverTimestamp(),
           };
+
+          // Only add optional fields if they have values
+          if (row.telefono) {
+            socioData.telefono = row.telefono;
+          }
+
+          if (row.direccion) {
+            socioData.direccion = row.direccion;
+          }
+
+          if (row.fechaNacimiento) {
+            socioData.fechaNacimiento = Timestamp.fromDate(
+              typeof row.fechaNacimiento === 'string' || typeof row.fechaNacimiento === 'number'
+                ? new Date(row.fechaNacimiento)
+                : row.fechaNacimiento instanceof Date
+                  ? row.fechaNacimiento
+                  : new Date()
+            );
+          }
 
           batch.set(doc(db, this.collection, socioId), socioData);
           batchCount++;
