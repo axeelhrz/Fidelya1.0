@@ -135,7 +135,7 @@ export interface Socio {
 export interface SocioFormData {
   nombre: string;
   email: string;
-  estado: 'activo' | 'vencido';
+  estado: 'activo' | 'inactivo' | 'suspendido' | 'pendiente' | 'vencido';
   telefono?: string;
   dni?: string;
   direccion?: string;
