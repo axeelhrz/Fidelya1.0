@@ -82,6 +82,11 @@ interface StatsCardProps {
   onClick?: () => void;
 }
 
+// Extend ValidacionResponse to ensure proper typing
+interface ExtendedValidacionResponse extends Omit<ValidacionResponse, 'resultado'> {
+  resultado: 'habilitado' | 'no_habilitado' | 'vencido' | 'suspendido';
+}
+
 // Animation variants
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -121,7 +126,7 @@ const StatsCard: React.FC<StatsCardProps> = ({
     <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-5 group-hover:opacity-10 transition-opacity duration-300`}></div>
     
     {/* Shine effect */}
-    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 transform -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%]"></div>
+    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 transform -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%]"></div>
     
     <div className="relative z-10">
       <div className="flex items-center justify-between mb-4">
@@ -159,8 +164,8 @@ const SocioValidarContent: React.FC = () => {
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
 
-  // Estados para validación
-  const [validationResult, setValidationResult] = useState<ValidacionResponse | null>(null);
+  // Estados para validación - Fixed typing
+  const [validationResult, setValidationResult] = useState<ExtendedValidacionResponse | null>(null);
   const [validationModalOpen, setValidationModalOpen] = useState(false);
   const [scannerLoading, setScannerLoading] = useState(false);
   
@@ -174,7 +179,7 @@ const SocioValidarContent: React.FC = () => {
     rachaActual: 0,
     promedioAhorro: 0
   });
-  const [recentValidations, setRecentValidations] = useState<ValidacionResponse[]>([]);
+  const [recentValidations, setRecentValidations] = useState<ExtendedValidacionResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -222,23 +227,28 @@ const SocioValidarContent: React.FC = () => {
         historial: historial.length 
       });
 
-      setRecentValidations(historial.slice(0, 5)); // Mostrar solo las 5 más recientes
+      // Cast historial to ExtendedValidacionResponse for type safety
+      const typedHistorial = historial.map(v => ({
+        ...v,
+        resultado: v.resultado as 'habilitado' | 'no_habilitado' | 'vencido' | 'suspendido'
+      }));
+
+      setRecentValidations(typedHistorial.slice(0, 5)); // Mostrar solo las 5 más recientes
 
       // Calcular estadísticas de forma segura
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       
-      const validacionesHoy = historial.filter(v => {
+      const validacionesHoy = typedHistorial.filter(v => {
         try {
-          const validationDateRaw = (v as ValidacionResponse).fechaHora ?? null;
+          const validationDateRaw = v.fechaHora ?? null;
           if (!validationDateRaw) return false;
-          
-          const validationDate = typeof validationDateRaw === 'object' &&
+          const validationDate =
+            typeof validationDateRaw === 'object' &&
             validationDateRaw !== null &&
             typeof (validationDateRaw as { toDate?: () => Date }).toDate === 'function'
-            ? (validationDateRaw as { toDate: () => Date }).toDate()
-            : new Date(validationDateRaw as Date);
-            
+              ? (validationDateRaw as { toDate: () => Date }).toDate()
+              : new Date(validationDateRaw as Date);
           validationDate.setHours(0, 0, 0, 0);
           return validationDate.getTime() === today.getTime();
         } catch {
@@ -246,24 +256,24 @@ const SocioValidarContent: React.FC = () => {
         }
       }).length;
 
-      const validacionesExitosas = historial.filter(v => v.resultado === 'habilitado').length;
+      const validacionesExitosas = typedHistorial.filter(v => v.resultado === 'habilitado').length;
       
       // Calcular ahorro total de forma segura
-      const ahorroTotal = historial
+      const ahorroTotal = typedHistorial
         .filter(v => v.resultado === 'habilitado')
         .reduce((total, v) => total + (v.montoDescuento || 0), 0);
 
-      const ultimaValidacion = historial.length > 0 && historial[0].fechaHora 
-        ? (typeof (historial[0].fechaHora) === 'object' &&
-            historial[0].fechaHora !== null &&
-            'toDate' in historial[0].fechaHora &&
-            typeof (historial[0].fechaHora as { toDate?: () => Date }).toDate === 'function'
-            ? (historial[0].fechaHora as Timestamp).toDate()
-            : new Date(historial[0].fechaHora as string | Date))
+      const ultimaValidacion = typedHistorial.length > 0 && typedHistorial[0].fechaHora 
+        ? (typeof (typedHistorial[0].fechaHora) === 'object' &&
+            typedHistorial[0].fechaHora !== null &&
+            'toDate' in typedHistorial[0].fechaHora &&
+            typeof (typedHistorial[0].fechaHora as { toDate?: () => Date }).toDate === 'function'
+            ? (typedHistorial[0].fechaHora as Timestamp).toDate()
+            : new Date(typedHistorial[0].fechaHora as string | Date))
         : null;
 
       // Calcular racha actual (días consecutivos con validaciones)
-      const rachaActual = calculateCurrentStreak(historial);
+      const rachaActual = calculateCurrentStreak(typedHistorial);
       
       // Calcular promedio de ahorro
       const promedioAhorro = validacionesExitosas > 0 ? ahorroTotal / validacionesExitosas : 0;
@@ -301,7 +311,7 @@ const SocioValidarContent: React.FC = () => {
   }, [user]);
 
   // Función para calcular racha actual
-  const calculateCurrentStreak = (validations: ValidacionResponse[]): number => {
+  const calculateCurrentStreak = (validations: ExtendedValidacionResponse[]): number => {
     if (validations.length === 0) return 0;
     
     const today = new Date();
@@ -367,15 +377,21 @@ const SocioValidarContent: React.FC = () => {
 
         console.log('🎯 Resultado de validación:', result);
 
-        setValidationResult(result);
+        // Cast result to ExtendedValidacionResponse for type safety
+        const typedResult: ExtendedValidacionResponse = {
+          ...result,
+          resultado: result.resultado as 'habilitado' | 'no_habilitado' | 'vencido' | 'suspendido'
+        };
+
+        setValidationResult(typedResult);
         setValidationModalOpen(true);
         
-        if (result.resultado === 'habilitado') {
+        if (typedResult.resultado === 'habilitado') {
           toast.success('¡Validación exitosa! Beneficio activado');
           // Recargar datos después de una validación exitosa
           loadInitialData();
         } else {
-          toast.error(`Validación fallida: ${result.motivo || 'Error desconocido'}`);
+          toast.error(`Validación fallida: ${typedResult.motivo || 'Error desconocido'}`);
         }
       } catch (error) {
         console.error('❌ Error validating QR:', error);
@@ -716,7 +732,7 @@ const SocioValidarContent: React.FC = () => {
                         </li>
                         <li className="flex items-center gap-2">
                           <div className="w-1.5 h-1.5 bg-violet-500 rounded-full"></div>
-                          Presiona "Escanear Código QR" y permite el acceso a la cámara
+                          Presiona &quot;Escanear Código QR&quot; y permite el acceso a la cámara
                         </li>
                         <li className="flex items-center gap-2">
                           <div className="w-1.5 h-1.5 bg-purple-500 rounded-full"></div>
@@ -791,7 +807,7 @@ const SocioValidarContent: React.FC = () => {
                   <div className="space-y-3">
                     {recentValidations.map((validation, index) => (
                       <motion.div
-                        key={validation.id}
+                        key={validation.id || index}
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.4 + index * 0.1 }}

@@ -36,7 +36,7 @@ export interface ValidacionRequest {
 }
 
 export interface ValidacionResponse {
-  resultado: string;
+  resultado: 'habilitado' | 'no_habilitado' | 'vencido' | 'suspendido';
   motivo?: string;
   beneficio?: {
     id: string;
@@ -51,7 +51,7 @@ export interface ValidacionResponse {
     nombre: string;
     estado: string;
     asociacion: string;
-  }
+  };
   validacionId?: string;
   fechaHora: Timestamp | Date;
   montoDescuento?: number;
