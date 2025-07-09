@@ -1,687 +1,566 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import {
-  Box,
-  Container,
-  Typography,
-  TextField,
-  Button,
-  Card,
-  CardContent,
-  Stack,
-  IconButton,
-  Alert,
-  InputAdornment,
-  alpha,
-  Paper,
-} from '@mui/material';
-import {
-  Person,
-  Email,
-  Lock,
-  ArrowBack,
-  Visibility,
-  VisibilityOff,
-  ArrowForward,
-  People,
-  Star,
-  Security,
-  Verified,
-  LocalOffer,
-} from '@mui/icons-material';
+import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import { authService } from '@/services/auth.service';
-import { getDashboardRoute } from '@/lib/auth';
+import { 
+  ArrowLeft, 
+  User, 
+  Mail, 
+  Lock, 
+  Eye, 
+  EyeOff, 
+  CheckCircle,
+  AlertCircle,
+  Sparkles,
+  Zap,
+  Star,
+  Shield,
+  Gift,
+  Award,
+  Percent
+} from 'lucide-react';
+import { toast } from 'react-hot-toast';
 import { z } from 'zod';
+import { useAuth } from '@/hooks/useAuth';
+import { EmailVerification } from '@/components/auth/EmailVerification';
 
 // Define the form data type
-type BaseRegisterFormData = {
+type SocioRegisterFormData = {
   nombre: string;
   email: string;
   password: string;
   confirmPassword: string;
+  acceptTerms: boolean;
+  role: 'socio';
 };
 
 // Zod schema for form validation
-const baseRegisterSchema = z.object({
+const socioRegisterSchema = z.object({
   nombre: z.string().min(2, 'El nombre es obligatorio'),
   email: z.string().email('Correo electrónico inválido'),
   password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
   confirmPassword: z.string().min(6, 'Confirma tu contraseña'),
+  acceptTerms: z.boolean().refine(val => val === true, {
+    message: 'Debes aceptar los términos y condiciones'
+  }),
+  role: z.literal('socio'),
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'Las contraseñas no coinciden',
   path: ['confirmPassword'],
 });
 
-const SocioRegisterPage = () => {
+export default function SocioRegisterPage() {
   const router = useRouter();
+  const { signUp, loading } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showEmailVerification, setShowEmailVerification] = useState(false);
+  const [registrationEmail, setRegistrationEmail] = useState('');
+  const [isVisible, setIsVisible] = useState(false);
+
+  // Trigger visibility for staggered animations
+  useEffect(() => {
+    const timer = setTimeout(() => setIsVisible(true), 100);
+    return () => clearTimeout(timer);
+  }, []);
 
   const {
     register,
     handleSubmit,
     formState: { errors },
+    watch,
     setError,
-  } = useForm<BaseRegisterFormData>({
-    resolver: zodResolver(baseRegisterSchema),
+    clearErrors,
+  } = useForm<SocioRegisterFormData>({
+    resolver: zodResolver(socioRegisterSchema),
+    defaultValues: {
+      role: 'socio',
+      acceptTerms: false,
+    }
   });
 
-  const handleRegister = async (data: BaseRegisterFormData) => {
+  const password = watch('password');
+
+  const handleRegister = async (data: SocioRegisterFormData) => {
     try {
       setIsSubmitting(true);
-      
-      const response = await authService.register({
+      clearErrors();
+
+      console.log('🔐 Socio registration attempt for:', data.email);
+
+      const response = await signUp({
         email: data.email,
         password: data.password,
         nombre: data.nombre,
-        role: 'socio'
+        role: 'socio',
       });
-      
-      if (response.success && response.user) {
-        const dashboardRoute = getDashboardRoute(response.user.role);
-        router.push(dashboardRoute);
-      } else {
-        setError('root', {
-          message: response.error || 'Error al crear la cuenta. Inténtalo de nuevo.',
-        });
+
+      if (!response.success) {
+        setError('root', { message: response.error || 'Error al registrarse' });
+        return;
       }
+
+      if (response.requiresEmailVerification) {
+        setRegistrationEmail(data.email);
+        setShowEmailVerification(true);
+        return;
+      }
+
+      console.log('🔐 Registration successful');
+      toast.success('¡Registro exitoso! Bienvenido a Fidelya.');
+      router.push('/dashboard/socio');
+      
     } catch (error: unknown) {
-      console.error('Registration error:', error);
-      setError('root', {
-        message: 'Ha ocurrido un error inesperado. Inténtalo de nuevo.',
-      });
+      console.error('🔐 Registration error:', error);
+      
+      let message = 'Ha ocurrido un error inesperado. Intenta nuevamente.';
+      
+      if (error && typeof error === 'object' && 'message' in error) {
+        message = (error as { message: string }).message;
+      }
+      
+      setError('root', { message });
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // Show email verification screen
+  if (showEmailVerification) {
+    return (
+      <EmailVerification 
+        email={registrationEmail}
+        onBack={() => setShowEmailVerification(false)}
+      />
+    );
+  }
+
   const benefits = [
-    { icon: <LocalOffer />, text: 'Descuentos exclusivos' },
-    { icon: <Star />, text: 'Puntos de fidelidad' },
-    { icon: <Security />, text: 'Soporte prioritario' },
-    { icon: <Verified />, text: 'Acceso premium' },
+    { icon: Percent, text: 'Descuentos exclusivos', color: 'text-celestial-600' },
+    { icon: Star, text: 'Puntos de fidelidad', color: 'text-sky-600' },
+    { icon: Gift, text: 'Ofertas especiales', color: 'text-celestial-700' },
+    { icon: Award, text: 'Acceso premium', color: 'text-sky-700' },
   ];
 
   return (
-    <Box 
-      sx={{ 
-        minHeight: '100vh',
-        bgcolor: '#fafbfc',
-        background: 'linear-gradient(135deg, #fafbfc 0%, #f8fafc 100%)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        py: 4
-      }}
-    >
-      <Container maxWidth="sm">
-        {/* Header */}
-        <Box sx={{ textAlign: 'center', mb: 5 }}>
-          <IconButton
-            component={Link}
+    <div className="scrollable-container bg-gradient-to-br from-sky-50 via-celestial-50 to-sky-100 min-h-screen relative overflow-hidden">
+      {/* Enhanced animated background elements - matching homepage */}
+      <div className="absolute inset-0 bg-grid opacity-30"></div>
+      
+      {/* More dynamic floating geometric shapes */}
+      <div className="absolute top-20 left-20 w-32 h-32 bg-gradient-to-br from-sky-200/40 to-celestial-200/40 rounded-full blur-xl animate-float-gentle"></div>
+      <div className="absolute bottom-32 right-32 w-48 h-48 bg-gradient-to-br from-celestial-200/30 to-sky-300/30 rounded-full blur-2xl animate-float-delay"></div>
+      <div className="absolute top-1/2 left-10 w-24 h-24 bg-gradient-to-br from-sky-300/35 to-celestial-300/35 rounded-full blur-lg animate-float"></div>
+      <div className="absolute top-1/4 right-20 w-16 h-16 bg-gradient-to-br from-celestial-400/40 to-sky-400/40 rounded-full blur-md animate-pulse-glow"></div>
+      <div className="absolute bottom-1/4 left-1/3 w-20 h-20 bg-gradient-to-br from-sky-300/30 to-celestial-400/30 rounded-full blur-lg animate-bounce-slow"></div>
+
+      <div className="container mx-auto px-4 py-8 max-w-lg">
+        {/* Enhanced Back Button */}
+        <div className={`mb-8 transition-all duration-1000 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+          <Link
             href="/auth/register"
-            sx={{ 
-              position: 'absolute',
-              top: 24,
-              left: 24,
-              bgcolor: 'white',
-              boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
-              '&:hover': { 
-                bgcolor: '#f8fafc',
-                transform: 'translateY(-1px)',
-                boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
-              },
-              transition: 'all 0.2s ease'
-            }}
+            className="group inline-flex items-center justify-center w-12 h-12 bg-white/90 backdrop-blur-xl rounded-2xl shadow-lg hover:shadow-xl transition-all duration-500 hover:scale-110 border border-white/20 hover:bg-white"
           >
-            <ArrowBack />
-          </IconButton>
+            <ArrowLeft className="w-5 h-5 text-slate-600 group-hover:text-slate-800 transition-colors duration-300" />
+          </Link>
+        </div>
 
-          {/* Logo & Brand */}
-          <Box sx={{ mb: 4 }}>
-            <Box
-              component={Link}
-              href="/"
-              sx={{
-                display: 'inline-flex',
-                width: 72,
-                height: 72,
-                borderRadius: 4,
-                background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-                color: 'white',
-                textDecoration: 'none',
-                fontSize: '2.2rem',
-                fontWeight: 900,
-                mb: 3,
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 12px 40px rgba(99, 102, 241, 0.3)',
-                letterSpacing: '-0.02em',
-                '&:hover': {
-                  transform: 'translateY(-3px)',
-                  boxShadow: '0 16px 50px rgba(99, 102, 241, 0.4)',
-                },
-                transition: 'all 0.3s ease'
-              }}
-            >
-              F
-            </Box>
-
-            <Typography
-              variant="h6"
-              sx={{
-                fontWeight: 700,
-                color: '#1e293b',
-                fontSize: '1.1rem',
-                letterSpacing: '-0.01em'
-              }}
-            >
-              Fidelya
-            </Typography>
-          </Box>
+        {/* Enhanced Header */}
+        <div className={`text-center mb-8 transition-all duration-1200 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '0.2s' }}>
+          {/* Enhanced Logo - matching homepage style */}
+          <Link href="/" className="inline-block mb-6 group">
+            <div className="relative">
+              <div className="flex items-center justify-center space-x-3">
+                <div className="relative group">
+                  <div className="w-14 h-14 bg-gradient-to-br from-celestial-500 via-sky-500 to-celestial-600 rounded-3xl flex items-center justify-center shadow-2xl transform rotate-12 group-hover:rotate-0 transition-all duration-700 hover:scale-110">
+                    <User className="w-7 h-7 text-white transition-transform duration-500 group-hover:scale-110" />
+                  </div>
+                  <div className="absolute -inset-2 bg-gradient-to-br from-celestial-500/30 to-sky-500/30 rounded-3xl blur-lg animate-pulse-glow"></div>
+                  <div className="absolute -top-1 -right-1">
+                    <motion.div
+                      animate={{ rotate: [0, 360] }}
+                      transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
+                    >
+                      <Sparkles className="w-4 h-4 text-yellow-400" />
+                    </motion.div>
+                  </div>
+                </div>
+                
+                {/* Enhanced brand name with fixed overflow and proper spacing */}
+                <div className="relative overflow-visible">
+                  <h1 className="text-4xl md:text-5xl font-bold gradient-text font-playfair tracking-tight hover:scale-105 transition-transform duration-500 leading-none py-2">
+                    Fidelya
+                  </h1>
+                </div>
+              </div>
+            </div>
+          </Link>
 
           {/* Premium Badge */}
-          <Paper
-            elevation={0}
-            sx={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 1.5,
-              px: 3,
-              py: 1.5,
-              mb: 4,
-              borderRadius: 4,
-              bgcolor: alpha('#10b981', 0.08),
-              border: `1px solid ${alpha('#10b981', 0.15)}`,
-              position: 'relative',
-              overflow: 'hidden',
-              '&::before': {
-                content: '""',
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                height: '2px',
-                background: 'linear-gradient(90deg, #10b981, #059669)',
-              }
-            }}
-          >
-            <Box
-              sx={{
-                width: 32,
-                height: 32,
-                borderRadius: 2,
-                bgcolor: alpha('#10b981', 0.15),
-                color: '#10b981',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <People sx={{ fontSize: '1.2rem' }} />
-            </Box>
-            <Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <Typography
-                  variant="body2"
-                  sx={{
-                    fontWeight: 700,
-                    color: '#10b981',
-                    fontSize: '0.9rem',
-                    lineHeight: 1.2
-                  }}
-                >
-                  Cuenta Premium
-                </Typography>
-                <Star sx={{ fontSize: '0.9rem', color: '#10b981' }} />
-              </Box>
-              <Typography
-                variant="caption"
-                sx={{
-                  color: alpha('#10b981', 0.8),
-                  fontSize: '0.75rem',
-                  fontWeight: 500
-                }}
-              >
-                Beneficios exclusivos
-              </Typography>
-            </Box>
-          </Paper>
+          <div className={`inline-flex items-center gap-3 px-4 py-2 mb-6 bg-gradient-to-r from-celestial-50/90 to-sky-50/90 backdrop-blur-sm border border-celestial-200/50 rounded-2xl shadow-lg transition-all duration-1000 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`} style={{ transitionDelay: '0.3s' }}>
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-r from-celestial-500 to-sky-500 flex items-center justify-center">
+              <Star className="w-4 h-4 text-white" />
+            </div>
+            <div>
+              <div className="flex items-center gap-1">
+                <span className="text-sm font-bold text-celestial-700">Cuenta Premium</span>
+                <Star className="w-3 h-3 text-celestial-600" />
+              </div>
+              <span className="text-xs text-celestial-600">Beneficios exclusivos</span>
+            </div>
+          </div>
 
-          <Typography
-            variant="h3"
-            sx={{
-              fontWeight: 900,
-              mb: 1,
-              fontSize: { xs: '2.2rem', md: '2.8rem' },
-              background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 30%, #10b981 100%)',
-              backgroundClip: 'text',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              letterSpacing: '-0.03em',
-              lineHeight: 0.95,
-            }}
-          >
-            Crear Cuenta
-          </Typography>
-          
-          <Typography
-            variant="body1"
-            sx={{ 
-              color: '#64748b', 
-              fontWeight: 500,
-              fontSize: '1.05rem',
-              maxWidth: 420,
-              mx: 'auto',
-              lineHeight: 1.5
-            }}
-          >
-            Únete a la comunidad premium y disfruta de beneficios exclusivos
-          </Typography>
-        </Box>
+          <div className={`transition-all duration-1000 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`} style={{ transitionDelay: '0.4s' }}>
+            <h2 className="text-3xl font-bold text-slate-800 mb-2 font-jakarta">
+              Crear Cuenta Premium
+            </h2>
+            <p className="text-slate-600 text-lg leading-relaxed font-jakarta">
+              Únete a la comunidad premium y disfruta de beneficios exclusivos
+            </p>
+          </div>
+        </div>
 
-        <Card
-          elevation={0}
-          sx={{
-            borderRadius: 5,
-            border: '1px solid #e2e8f0',
-            bgcolor: 'white',
-            boxShadow: '0 8px 40px rgba(0,0,0,0.06)',
-            overflow: 'hidden'
-          }}
-        >
-          <CardContent sx={{ p: 5 }}>
-            {/* Benefits Section - Replaced Grid with Flexbox */}
-            <Paper
-              elevation={0}
-              sx={{
-                bgcolor: alpha('#10b981', 0.05),
-                border: `1px solid ${alpha('#10b981', 0.1)}`,
-                borderRadius: 4,
-                p: 3,
-                mb: 4,
-                position: 'relative',
-                overflow: 'hidden',
-                '&::before': {
-                  content: '""',
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  height: '2px',
-                  background: 'linear-gradient(90deg, #10b981, #059669)',
-                }
-              }}
-            >
-              <Typography
-                variant="h6"
-                sx={{
-                  fontWeight: 700,
-                  color: '#10b981',
-                  mb: 2,
-                  textAlign: 'center',
-                  fontSize: '1.1rem'
-                }}
-              >
+        {/* Enhanced Registration Form */}
+        <div className={`relative transition-all duration-1200 ease-out ${isVisible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-8 scale-95'}`} style={{ transitionDelay: '0.6s' }}>
+          {/* Glass effect background - matching homepage style */}
+          <div className="glass-card p-8 hover:scale-105 transition-all duration-500">
+            
+            {/* Benefits Section */}
+            <div className="mb-8 p-5 bg-gradient-to-r from-celestial-50/90 to-sky-50/90 backdrop-blur-sm border border-celestial-200/50 rounded-2xl shadow-lg">
+              <h3 className="text-lg font-bold text-celestial-700 mb-4 text-center font-jakarta">
                 ¿Qué incluye tu cuenta premium?
-              </Typography>
-              
-              <Box 
-                sx={{ 
-                  display: 'flex',
-                  flexWrap: 'wrap',
-                  gap: 2,
-                  justifyContent: 'space-between'
-                }}
-              >
+              </h3>
+              <div className="grid grid-cols-2 gap-3">
                 {benefits.map((benefit, index) => (
-                  <Box 
+                  <div 
                     key={index} 
-                    sx={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      gap: 1,
-                      flex: '1 1 calc(50% - 8px)',
-                      minWidth: 'calc(50% - 8px)'
+                    className="flex items-center gap-2 group"
+                    style={{ 
+                      opacity: isVisible ? 1 : 0,
+                      transform: isVisible ? 'translateY(0)' : 'translateY(10px)',
+                      transition: `all 0.5s ease-out ${0.8 + index * 0.1}s`
                     }}
                   >
-                    <Box sx={{ color: '#10b981', fontSize: '1rem' }}>
-                      {benefit.icon}
-                    </Box>
-                    <Typography
-                      variant="body2"
-                      sx={{ color: '#10b981', fontWeight: 600, fontSize: '0.85rem' }}
-                    >
-                      {benefit.text}
-                    </Typography>
-                  </Box>
+                    <div className="w-6 h-6 rounded-lg bg-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform duration-300">
+                      <benefit.icon className={`w-4 h-4 ${benefit.color}`} />
+                    </div>
+                    <span className="text-sm font-semibold text-celestial-700 font-jakarta">{benefit.text}</span>
+                  </div>
                 ))}
-              </Box>
-            </Paper>
+              </div>
+            </div>
 
-            <Box component="form" onSubmit={handleSubmit(handleRegister)}>
-              <Stack spacing={4}>
-                {/* Personal Info Section */}
-                <Box>
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      fontWeight: 700,
-                      color: '#1e293b',
-                      mb: 3,
-                      fontSize: '1.1rem',
-                      letterSpacing: '-0.01em'
-                    }}
-                  >
-                    Información Personal
-                  </Typography>
-                  
-                  <TextField
-                    {...register('nombre')}
-                    label="Nombre completo"
-                    placeholder="Tu nombre completo"
-                    fullWidth
-                    error={!!errors.nombre}
-                    helperText={errors.nombre?.message}
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <Person sx={{ color: '#94a3b8', fontSize: '1.3rem' }} />
-                        </InputAdornment>
-                      ),
-                    }}
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: 3,
-                        bgcolor: '#fafbfc',
-                        '& fieldset': {
-                          borderColor: '#e2e8f0',
-                        },
-                        '&:hover fieldset': {
-                          borderColor: '#10b981',
-                        },
-                        '&.Mui-focused fieldset': {
-                          borderColor: '#10b981',
-                          borderWidth: 2,
-                        },
-                        '&.Mui-focused': {
-                          bgcolor: 'white',
-                        }
-                      },
-                      '& .MuiInputLabel-root.Mui-focused': {
-                        color: '#10b981',
-                      },
-                    }}
-                  />
-                </Box>
+            <form onSubmit={handleSubmit(handleRegister)} className="space-y-6">
+              {/* Personal Information Section */}
+              <div className="space-y-6">
+                <div className="flex items-center space-x-2 mb-4">
+                  <User className="w-5 h-5 text-celestial-600" />
+                  <h3 className="text-lg font-semibold text-slate-800 font-jakarta">Información Personal</h3>
+                </div>
 
-                {/* Account Info Section */}
-                <Box>
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      fontWeight: 700,
-                      color: '#1e293b',
-                      mb: 3,
-                      fontSize: '1.1rem',
-                      letterSpacing: '-0.01em'
-                    }}
-                  >
-                    Información de la Cuenta
-                  </Typography>
-                  
-                  <Stack spacing={3}>
-                    <TextField
-                      {...register('email')}
-                      label="Correo electrónico"
-                      placeholder="tu@email.com"
-                      type="email"
-                      fullWidth
-                      error={!!errors.email}
-                      helperText={errors.email?.message}
-                      InputProps={{
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <Email sx={{ color: '#94a3b8', fontSize: '1.3rem' }} />
-                          </InputAdornment>
-                        ),
-                      }}
-                      sx={{
-                        '& .MuiOutlinedInput-root': {
-                          borderRadius: 3,
-                          bgcolor: '#fafbfc',
-                          '& fieldset': {
-                            borderColor: '#e2e8f0',
-                          },
-                          '&:hover fieldset': {
-                            borderColor: '#10b981',
-                          },
-                          '&.Mui-focused fieldset': {
-                            borderColor: '#10b981',
-                            borderWidth: 2,
-                          },
-                          '&.Mui-focused': {
-                            bgcolor: 'white',
-                          }
-                        },
-                        '& .MuiInputLabel-root.Mui-focused': {
-                          color: '#10b981',
-                        },
-                      }}
-                    />
-
-                    <TextField
-                      {...register('password')}
-                      label="Contraseña"
-                      placeholder="Mínimo 6 caracteres"
-                      type={showPassword ? 'text' : 'password'}
-                      fullWidth
-                      error={!!errors.password}
-                      helperText={errors.password?.message}
-                      InputProps={{
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <Lock sx={{ color: '#94a3b8', fontSize: '1.3rem' }} />
-                          </InputAdornment>
-                        ),
-                        endAdornment: (
-                          <InputAdornment position="end">
-                            <IconButton
-                              onClick={() => setShowPassword(!showPassword)}
-                              edge="end"
-                              sx={{ color: '#94a3b8' }}
-                            >
-                              {showPassword ? <VisibilityOff /> : <Visibility />}
-                            </IconButton>
-                          </InputAdornment>
-                        ),
-                      }}
-                      sx={{
-                        '& .MuiOutlinedInput-root': {
-                          borderRadius: 3,
-                          bgcolor: '#fafbfc',
-                          '& fieldset': {
-                            borderColor: '#e2e8f0',
-                          },
-                          '&:hover fieldset': {
-                            borderColor: '#10b981',
-                          },
-                          '&.Mui-focused fieldset': {
-                            borderColor: '#10b981',
-                            borderWidth: 2,
-                          },
-                          '&.Mui-focused': {
-                            bgcolor: 'white',
-                          }
-                        },
-                        '& .MuiInputLabel-root.Mui-focused': {
-                          color: '#10b981',
-                        },
-                      }}
-                    />
-
-                    <TextField
-                      {...register('confirmPassword')}
-                      label="Confirmar contraseña"
-                      placeholder="Confirma tu contraseña"
-                      type={showConfirmPassword ? 'text' : 'password'}
-                      fullWidth
-                      error={!!errors.confirmPassword}
-                      helperText={errors.confirmPassword?.message}
-                      InputProps={{
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <Lock sx={{ color: '#94a3b8', fontSize: '1.3rem' }} />
-                          </InputAdornment>
-                        ),
-                        endAdornment: (
-                          <InputAdornment position="end">
-                            <IconButton
-                              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                              edge="end"
-                              sx={{ color: '#94a3b8' }}
-                            >
-                              {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
-                            </IconButton>
-                          </InputAdornment>
-                        ),
-                      }}
-                      sx={{
-                        '& .MuiOutlinedInput-root': {
-                          borderRadius: 3,
-                          bgcolor: '#fafbfc',
-                          '& fieldset': {
-                            borderColor: '#e2e8f0',
-                          },
-                          '&:hover fieldset': {
-                            borderColor: '#10b981',
-                          },
-                          '&.Mui-focused fieldset': {
-                            borderColor: '#10b981',
-                            borderWidth: 2,
-                          },
-                          '&.Mui-focused': {
-                            bgcolor: 'white',
-                          }
-                        },
-                        '& .MuiInputLabel-root.Mui-focused': {
-                          color: '#10b981',
-                        },
-                      }}
-                    />
-                  </Stack>
-                </Box>
-
-                {/* Error Alert */}
-                {errors.root && (
-                  <Alert 
-                    severity="error" 
-                    sx={{ 
-                      borderRadius: 3,
-                      bgcolor: alpha('#ef4444', 0.05),
-                      border: `1px solid ${alpha('#ef4444', 0.2)}`,
-                    }}
-                  >
-                    {errors.root.message}
-                  </Alert>
-                )}
-
-                {/* Submit Button */}
-                <Button
-                  type="submit"
-                  variant="contained"
-                  fullWidth
-                  disabled={isSubmitting}
-                  endIcon={isSubmitting ? null : <ArrowForward />}
-                  sx={{
-                    py: 2.5,
-                    borderRadius: 4,
-                    textTransform: 'none',
-                    fontWeight: 700,
-                    fontSize: '1.1rem',
-                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                    boxShadow: '0 8px 32px rgba(16, 185, 129, 0.3)',
-                    letterSpacing: '-0.01em',
-                    '&:hover': {
-                      background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
-                      transform: 'translateY(-2px)',
-                      boxShadow: '0 12px 40px rgba(16, 185, 129, 0.4)',
-                    },
-                    '&:disabled': {
-                      background: '#e2e8f0',
-                      color: '#94a3b8',
-                      transform: 'none',
-                      boxShadow: 'none',
-                    },
-                    transition: 'all 0.3s ease'
-                  }}
-                >
-                  {isSubmitting ? 'Creando cuenta premium...' : 'Crear cuenta premium'}
-                </Button>
-
-                {/* Login Link */}
-                <Box sx={{ textAlign: 'center', pt: 2 }}>
-                  <Typography variant="body2" sx={{ color: '#64748b', fontSize: '0.95rem' }}>
-                    ¿Ya tienes cuenta?{' '}
-                    <Box
-                      component={Link}
-                      href="/auth/login"
-                      sx={{
-                        color: '#10b981',
-                        textDecoration: 'none',
-                        fontWeight: 600,
-                        '&:hover': {
-                          textDecoration: 'underline',
-                        },
-                      }}
+                {/* Name Field */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-slate-700 font-jakarta">
+                    Nombre Completo *
+                  </label>
+                  <div className="relative group">
+                    <div className="absolute inset-0 bg-gradient-to-r from-celestial-500/20 to-sky-500/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm" />
+                    <div className="relative">
+                      <User className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-celestial-500 transition-colors duration-300" />
+                      <input
+                        {...register('nombre')}
+                        type="text"
+                        placeholder="Tu nombre completo"
+                        disabled={loading}
+                        className={`w-full pl-12 pr-4 py-3 border-2 rounded-xl focus:ring-4 focus:ring-celestial-500/20 focus:border-celestial-500 transition-all duration-300 bg-white/80 backdrop-blur-sm text-slate-800 placeholder-slate-400 font-medium hover:border-celestial-300 hover:shadow-lg ${
+                          errors.nombre ? 'border-red-300 focus:ring-red-500/20 focus:border-red-500' : 'border-slate-200'
+                        }`}
+                      />
+                    </div>
+                  </div>
+                  {errors.nombre && (
+                    <motion.p 
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="text-red-600 text-sm font-medium flex items-center space-x-1"
                     >
-                      Iniciar sesión
-                    </Box>
-                  </Typography>
-                </Box>
+                      <AlertCircle className="w-4 h-4" />
+                      <span>{errors.nombre.message}</span>
+                    </motion.p>
+                  )}
+                </div>
+              </div>
 
-                {/* Guarantee */}
-                <Paper
-                  elevation={0}
-                  sx={{
-                    bgcolor: '#f8fafc',
-                    border: '1px solid #e2e8f0',
-                    borderRadius: 3,
-                    p: 3,
-                    textAlign: 'center',
-                    mt: 2
-                  }}
-                >
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 1 }}>
-                    <Security sx={{ fontSize: '1.2rem', color: '#64748b' }} />
-                  </Box>
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      color: '#64748b',
-                      fontSize: '0.9rem',
-                      lineHeight: 1.4
-                    }}
+              {/* Account Information Section */}
+              <div className="space-y-6">
+                <div className="flex items-center space-x-2 mb-4">
+                  <Mail className="w-5 h-5 text-celestial-600" />
+                  <h3 className="text-lg font-semibold text-slate-800 font-jakarta">Información de la Cuenta</h3>
+                </div>
+
+                {/* Email Field */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-slate-700 font-jakarta">
+                    Correo Electrónico *
+                  </label>
+                  <div className="relative group">
+                    <div className="absolute inset-0 bg-gradient-to-r from-celestial-500/20 to-sky-500/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm" />
+                    <div className="relative">
+                      <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-celestial-500 transition-colors duration-300" />
+                      <input
+                        {...register('email')}
+                        type="email"
+                        placeholder="tu@email.com"
+                        disabled={loading}
+                        className={`w-full pl-12 pr-4 py-3 border-2 rounded-xl focus:ring-4 focus:ring-celestial-500/20 focus:border-celestial-500 transition-all duration-300 bg-white/80 backdrop-blur-sm text-slate-800 placeholder-slate-400 font-medium hover:border-celestial-300 hover:shadow-lg ${
+                          errors.email ? 'border-red-300 focus:ring-red-500/20 focus:border-red-500' : 'border-slate-200'
+                        }`}
+                      />
+                    </div>
+                  </div>
+                  {errors.email && (
+                    <motion.p 
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="text-red-600 text-sm font-medium flex items-center space-x-1"
+                    >
+                      <AlertCircle className="w-4 h-4" />
+                      <span>{errors.email.message}</span>
+                    </motion.p>
+                  )}
+                </div>
+
+                {/* Password Fields */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Password Field */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-slate-700 font-jakarta">
+                      Contraseña *
+                    </label>
+                    <div className="relative group">
+                      <div className="absolute inset-0 bg-gradient-to-r from-celestial-500/20 to-sky-500/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm" />
+                      <div className="relative">
+                        <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-celestial-500 transition-colors duration-300" />
+                        <input
+                          {...register('password')}
+                          type={showPassword ? 'text' : 'password'}
+                          placeholder="Mínimo 6 caracteres"
+                          disabled={loading}
+                          className={`w-full pl-12 pr-12 py-3 border-2 rounded-xl focus:ring-4 focus:ring-celestial-500/20 focus:border-celestial-500 transition-all duration-300 bg-white/80 backdrop-blur-sm text-slate-800 placeholder-slate-400 font-medium hover:border-celestial-300 hover:shadow-lg ${
+                            errors.password ? 'border-red-300 focus:ring-red-500/20 focus:border-red-500' : 'border-slate-200'
+                          }`}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          disabled={loading}
+                          className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors duration-300 p-1 rounded-lg hover:bg-slate-100"
+                        >
+                          {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                        </button>
+                      </div>
+                    </div>
+                    {errors.password && (
+                      <motion.p 
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-red-600 text-sm font-medium flex items-center space-x-1"
+                      >
+                        <AlertCircle className="w-4 h-4" />
+                        <span>{errors.password.message}</span>
+                      </motion.p>
+                    )}
+                  </div>
+
+                  {/* Confirm Password Field */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-slate-700 font-jakarta">
+                      Confirmar Contraseña *
+                    </label>
+                    <div className="relative group">
+                      <div className="absolute inset-0 bg-gradient-to-r from-celestial-500/20 to-sky-500/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm" />
+                      <div className="relative">
+                        <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-celestial-500 transition-colors duration-300" />
+                        <input
+                          {...register('confirmPassword')}
+                          type={showConfirmPassword ? 'text' : 'password'}
+                          placeholder="Confirma tu contraseña"
+                          disabled={loading}
+                          className={`w-full pl-12 pr-12 py-3 border-2 rounded-xl focus:ring-4 focus:ring-celestial-500/20 focus:border-celestial-500 transition-all duration-300 bg-white/80 backdrop-blur-sm text-slate-800 placeholder-slate-400 font-medium hover:border-celestial-300 hover:shadow-lg ${
+                            errors.confirmPassword ? 'border-red-300 focus:ring-red-500/20 focus:border-red-500' : 'border-slate-200'
+                          }`}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          disabled={loading}
+                          className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors duration-300 p-1 rounded-lg hover:bg-slate-100"
+                        >
+                          {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                        </button>
+                      </div>
+                    </div>
+                    {errors.confirmPassword && (
+                      <motion.p 
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-red-600 text-sm font-medium flex items-center space-x-1"
+                      >
+                        <AlertCircle className="w-4 h-4" />
+                        <span>{errors.confirmPassword.message}</span>
+                      </motion.p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Enhanced Password Strength Indicator */}
+                {password && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    className="p-4 bg-celestial-50/80 backdrop-blur-sm rounded-xl border border-celestial-200/50"
                   >
-                    <Box component="span" sx={{ fontWeight: 700, color: '#1e293b' }}>
-                      Garantía de satisfacción:
-                    </Box>{' '}
-                    Cancela cuando quieras. Sin compromisos a largo plazo.
-                  </Typography>
-                </Paper>
-              </Stack>
-            </Box>
-          </CardContent>
-        </Card>
-      </Container>
-    </Box>
-  );
-};
+                    <p className="text-sm font-medium text-slate-700 mb-2 font-jakarta">Fortaleza de la contraseña:</p>
+                    <div className="space-y-2">
+                      <div className="flex space-x-1">
+                        {[1, 2, 3, 4].map((level) => (
+                          <div
+                            key={level}
+                            className={`h-2 flex-1 rounded-full transition-all duration-300 ${
+                              password.length >= level * 2
+                                ? level <= 2 ? 'bg-red-400' : level === 3 ? 'bg-yellow-400' : 'bg-celestial-400'
+                                : 'bg-gray-200'
+                            }`}
+                          />
+                        ))}
+                      </div>
+                      <div className="text-xs text-slate-600 space-y-1">
+                        <div className={`flex items-center space-x-2 transition-colors duration-300 ${password.length >= 6 ? 'text-celestial-600' : ''}`}>
+                          {password.length >= 6 ? <CheckCircle className="w-3 h-3" /> : <div className="w-3 h-3 border border-slate-300 rounded-full" />}
+                          <span>Al menos 6 caracteres</span>
+                        </div>
+                        <div className={`flex items-center space-x-2 transition-colors duration-300 ${/[A-Z]/.test(password) ? 'text-celestial-600' : ''}`}>
+                          {/[A-Z]/.test(password) ? <CheckCircle className="w-3 h-3" /> : <div className="w-3 h-3 border border-slate-300 rounded-full" />}
+                          <span>Una letra mayúscula</span>
+                        </div>
+                        <div className={`flex items-center space-x-2 transition-colors duration-300 ${/[a-z]/.test(password) ? 'text-celestial-600' : ''}`}>
+                          {/[a-z]/.test(password) ? <CheckCircle className="w-3 h-3" /> : <div className="w-3 h-3 border border-slate-300 rounded-full" />}
+                          <span>Una letra minúscula</span>
+                        </div>
+                        <div className={`flex items-center space-x-2 transition-colors duration-300 ${/\d/.test(password) ? 'text-celestial-600' : ''}`}>
+                          {/\d/.test(password) ? <CheckCircle className="w-3 h-3" /> : <div className="w-3 h-3 border border-slate-300 rounded-full" />}
+                          <span>Un número</span>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </div>
 
-export default SocioRegisterPage;
+              {/* Terms and Conditions */}
+              <div className="space-y-4">
+                <label className="flex items-start space-x-3 cursor-pointer group">
+                  <input
+                    {...register('acceptTerms')}
+                    type="checkbox"
+                    disabled={loading}
+                    className="w-5 h-5 text-celestial-600 bg-gray-100 border-gray-300 rounded focus:ring-celestial-500 focus:ring-2 mt-0.5 transition-all duration-300"
+                  />
+                  <span className="text-sm text-slate-600 leading-relaxed font-jakarta group-hover:text-slate-700 transition-colors duration-300">
+                    Acepto los{' '}
+                    <Link href="/terms" className="text-celestial-600 hover:text-celestial-700 font-medium underline transition-colors duration-300">
+                      términos y condiciones
+                    </Link>
+                    {' '}y la{' '}
+                    <Link href="/privacy" className="text-celestial-600 hover:text-celestial-700 font-medium underline transition-colors duration-300">
+                      política de privacidad
+                    </Link>
+                    {' '}de Fidelya
+                  </span>
+                </label>
+                {errors.acceptTerms && (
+                  <motion.p 
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-red-600 text-sm font-medium flex items-center space-x-1"
+                  >
+                    <AlertCircle className="w-4 h-4" />
+                    <span>{errors.acceptTerms.message}</span>
+                  </motion.p>
+                )}
+              </div>
+
+              {/* Enhanced Error Alert */}
+              <AnimatePresence>
+                {errors.root && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                    className="p-4 bg-red-50/90 backdrop-blur-sm border border-red-200/50 rounded-2xl flex items-center space-x-3 shadow-lg"
+                  >
+                    <div className="flex-shrink-0 w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center">
+                      <AlertCircle className="w-5 h-5 text-red-600" />
+                    </div>
+                    <p className="text-red-800 font-medium text-sm font-jakarta">{errors.root.message}</p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Enhanced Submit Button - matching homepage style */}
+              <button
+                type="submit"
+                disabled={isSubmitting || loading}
+                className="w-full bg-gradient-to-r from-celestial-500 via-sky-500 to-celestial-600 text-white py-4 px-6 rounded-2xl font-semibold text-base shadow-2xl hover:shadow-celestial-500/40 transition-all duration-500 disabled:opacity-50 disabled:cursor-not-allowed transform hover:-translate-y-2 hover:scale-105 disabled:hover:scale-100 disabled:hover:translate-y-0 flex items-center justify-center space-x-3 relative overflow-hidden group font-jakarta"
+              >
+                {/* Button shine effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                <div className="absolute inset-0 bg-gradient-to-r from-celestial-600 via-sky-600 to-celestial-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                
+                <span className="relative z-10">
+                  {(isSubmitting || loading) ? (
+                    <div className="flex items-center space-x-3">
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span>Creando cuenta premium...</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center space-x-3">
+                      <Star className="w-5 h-5" />
+                      <span>Crear cuenta premium</span>
+                    </div>
+                  )}
+                </span>
+              </button>
+
+              {/* Enhanced Login Link */}
+              <div className="text-center">
+                <p className="text-slate-600 font-jakarta">
+                  ¿Ya tienes cuenta?{' '}
+                  <Link href="/auth/login" className="text-celestial-600 hover:text-celestial-700 font-semibold transition-colors duration-300 hover:underline">
+                    Iniciar sesión aquí
+                  </Link>
+                </p>
+              </div>
+
+              {/* Guarantee Section */}
+              <div className="p-4 bg-slate-50/80 backdrop-blur-sm border border-slate-200/50 rounded-2xl text-center">
+                <div className="flex items-center justify-center mb-2">
+                  <Shield className="w-5 h-5 text-slate-600" />
+                </div>
+                <p className="text-sm text-slate-600 font-jakarta">
+                  <span className="font-bold text-slate-800">Garantía de satisfacción:</span>{' '}
+                  Cancela cuando quieras. Sin compromisos a largo plazo.
+                </p>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
