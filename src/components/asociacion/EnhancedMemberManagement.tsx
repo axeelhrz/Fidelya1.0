@@ -143,13 +143,16 @@ export const EnhancedMemberManagement: React.FC<MemberManagementProps> = () => {
       let success = false;
       
       if (selectedSocio) {
-        success = await updateSocio(selectedSocio.id, data);
+        success = await updateSocio(selectedSocio.id, {
+          ...data,
+          numeroSocio: data.numeroSocio !== undefined && data.numeroSocio !== null ? String(data.numeroSocio) : '',
+        });
       } else {
         success = await createSocio({ 
           ...data, 
           dni: data.dni ?? '', 
           fechaNacimiento: data.fechaNacimiento ?? new Date(),
-          fechaIngreso: data.fechaIngreso ?? new Date(),
+          numeroSocio: data.numeroSocio !== undefined && data.numeroSocio !== null ? String(data.numeroSocio) : '',
         });
       }
 
