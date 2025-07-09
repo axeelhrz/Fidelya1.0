@@ -47,6 +47,7 @@ import { NotificationsCenter } from '@/components/asociacion/NotificationsCenter
 import { SocioDialog } from '@/components/asociacion/SocioDialog';
 import { DeleteConfirmDialog } from '@/components/asociacion/DeleteConfirmDialog';
 import { CsvImport } from '@/components/asociacion/CsvImport';
+import { SectionTabs } from '@/components/asociacion/SectionTabs';
 
 // Type adapter function to convert service Socio to types Socio
 const adaptServiceSocioToTypesSocio = (serviceSocio: ServiceSocio): TypesSocio => {
@@ -724,6 +725,12 @@ export default function AsociacionDashboard() {
           />
         )}
       >
+        {/* Section Tabs - Nueva funcionalidad */}
+        <SectionTabs 
+          activeSection={activeSection}
+          onSectionChange={setActiveSection}
+        />
+
         <AnimatePresence mode="wait">
           <motion.div
             key={activeSection}

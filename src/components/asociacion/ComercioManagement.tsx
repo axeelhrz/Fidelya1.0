@@ -18,7 +18,8 @@ import {
   AlertTriangle,
   TrendingUp,
   Users,
-  BarChart3
+  BarChart3,
+  ArrowRight
 } from 'lucide-react';
 import { useComercios } from '@/hooks/useComercios';
 import { ComercioDisponible } from '@/services/adhesion.service';
@@ -28,7 +29,7 @@ interface ComercioManagementProps {
   onNavigate?: (section: string) => void;
 }
 
-export const ComercioManagement: React.FC<ComercioManagementProps> = ({}) => {
+export const ComercioManagement: React.FC<ComercioManagementProps> = ({ onNavigate }) => {
   const {
     comerciosVinculados,
     stats,
@@ -72,7 +73,7 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({}) => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Header con navegación rápida */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Gestión de Comercios</h1>
@@ -81,13 +82,27 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({}) => {
           </p>
         </div>
         
-        <button
-          onClick={() => setVincularDialogOpen(true)}
-          className="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-lg text-sm font-medium text-white hover:bg-blue-700"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Vincular Comercio
-        </button>
+        <div className="flex items-center space-x-3">
+          {/* Botón de navegación rápida a socios */}
+          {onNavigate && (
+            <button
+              onClick={() => onNavigate('socios')}
+              className="inline-flex items-center px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg text-sm font-medium text-blue-700 hover:bg-blue-100 transition-colors"
+            >
+              <Users className="w-4 h-4 mr-2" />
+              Ir a Socios
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </button>
+          )}
+          
+          <button
+            onClick={() => setVincularDialogOpen(true)}
+            className="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-lg text-sm font-medium text-white hover:bg-green-700"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Vincular Comercio
+          </button>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -279,14 +294,25 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({}) => {
               }
             </p>
             {comerciosVinculados.length === 0 && (
-              <div className="mt-6">
+              <div className="mt-6 space-y-3">
                 <button
                   onClick={() => setVincularDialogOpen(true)}
-                  className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+                  className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Vincular Comercio
                 </button>
+                {onNavigate && (
+                  <div>
+                    <button
+                      onClick={() => onNavigate('socios')}
+                      className="inline-flex items-center px-4 py-2 border border-blue-300 shadow-sm text-sm font-medium rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100"
+                    >
+                      <Users className="w-4 h-4 mr-2" />
+                      Ver Gestión de Socios
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -578,6 +604,3 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({}) => {
     </div>
   );
 };
-                
-
-              
