@@ -27,6 +27,18 @@ interface UseSocioProfileReturn {
   updateProfile: (data: Partial<Socio>) => Promise<boolean>;
   refreshData: () => Promise<void>;
   clearError: () => void;
+  asociacionesList?: Socio[];
+  stats?: {
+    totalAsociaciones: number;
+    totalActivas: number;
+    totalVencidas: number;
+    totalPendientes: number;
+  };
+  asociaciones: Socio[];
+  activity: {
+    totalValidaciones: number;
+    totalAhorro: number;    
+  };
 }
 
 export function useSocioProfile(): UseSocioProfileReturn {
@@ -197,5 +209,10 @@ export function useSocioProfile(): UseSocioProfileReturn {
     updateProfile,
     refreshData,
     clearError,
+    asociaciones: [], // Default empty array, adjust as needed
+    activity: {
+      totalValidaciones: estadisticas.totalValidaciones,
+      totalAhorro: estadisticas.ahorroTotal,
+    },
   };
 }
