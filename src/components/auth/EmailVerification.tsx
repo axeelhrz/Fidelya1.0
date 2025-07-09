@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Mail, RefreshCw, CheckCircle, AlertCircle, ArrowLeft } from 'lucide-react';
+import { Mail, RefreshCw, CheckCircle, AlertCircle, ArrowLeft, Sparkles } from 'lucide-react';
 import { useEmailVerification } from '@/hooks/useAuth';
 import { toast } from 'react-hot-toast';
+import Link from 'next/link';
 
 interface EmailVerificationProps {
   onBack?: () => void;
@@ -16,8 +17,15 @@ export const EmailVerification: React.FC<EmailVerificationProps> = ({
   const { email, resendVerification } = useEmailVerification();
   const [isResending, setIsResending] = useState(false);
   const [lastSent, setLastSent] = useState<Date | null>(null);
+  const [isVisible, setIsVisible] = useState(false);
 
   const displayEmail = propEmail || email;
+
+  // Trigger visibility for staggered animations
+  useEffect(() => {
+    const timer = setTimeout(() => setIsVisible(true), 100);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleResendVerification = async () => {
     if (isResending) return;
@@ -42,150 +50,211 @@ export const EmailVerification: React.FC<EmailVerificationProps> = ({
   const canResend = !lastSent || (Date.now() - lastSent.getTime()) > 60000; // 1 minute
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center p-4">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="max-w-md w-full"
-      >
-        {/* Back Button */}
-        {onBack && (
-          <motion.button
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            onClick={onBack}
-            className="mb-6 inline-flex items-center justify-center w-10 h-10 bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 text-gray-600 hover:text-gray-800"
-          >
-            <ArrowLeft size={20} />
-          </motion.button>
-        )}
+    <div className="scrollable-container bg-gradient-to-br from-sky-50 via-celestial-50 to-sky-100 min-h-screen relative overflow-hidden">
+      {/* Enhanced animated background elements - matching homepage */}
+      <div className="absolute inset-0 bg-grid opacity-30"></div>
+      
+      {/* More dynamic floating geometric shapes */}
+      <div className="absolute top-20 left-20 w-32 h-32 bg-gradient-to-br from-sky-200/40 to-celestial-200/40 rounded-full blur-xl animate-float-gentle"></div>
+      <div className="absolute bottom-32 right-32 w-48 h-48 bg-gradient-to-br from-celestial-200/30 to-sky-300/30 rounded-full blur-2xl animate-float-delay"></div>
+      <div className="absolute top-1/2 left-10 w-24 h-24 bg-gradient-to-br from-sky-300/35 to-celestial-300/35 rounded-full blur-lg animate-float"></div>
+      <div className="absolute top-1/4 right-20 w-16 h-16 bg-gradient-to-br from-celestial-400/40 to-sky-400/40 rounded-full blur-md animate-pulse-glow"></div>
+      <div className="absolute bottom-1/4 left-1/3 w-20 h-20 bg-gradient-to-br from-sky-300/30 to-celestial-400/30 rounded-full blur-lg animate-bounce-slow"></div>
 
-        {/* Main Card */}
-        <div className="bg-white rounded-3xl p-8 shadow-xl border border-gray-100">
-          {/* Icon */}
-          <div className="text-center mb-8">
-            <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
-              <Mail size={32} className="text-white" />
+      <div className="relative z-10 min-h-screen flex items-center justify-center py-8 px-4">
+        <div className="w-full max-w-md">
+          {/* Enhanced Back Button */}
+          {onBack && (
+            <div className={`mb-8 transition-all duration-1000 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+              <button
+                onClick={onBack}
+                className="group inline-flex items-center justify-center w-12 h-12 bg-white/90 backdrop-blur-xl rounded-2xl shadow-lg hover:shadow-xl transition-all duration-500 hover:scale-110 border border-white/20 hover:bg-white"
+              >
+                <ArrowLeft className="w-5 h-5 text-slate-600 group-hover:text-slate-800 transition-colors duration-300" />
+              </button>
             </div>
-            
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">
-              Verifica tu email
-            </h1>
-            
-            <p className="text-gray-600 leading-relaxed">
-              Hemos enviado un enlace de verificación a tu correo electrónico. 
-              Haz clic en el enlace para activar tu cuenta.
-            </p>
-          </div>
-
-          {/* Email Display */}
-          <div className="bg-gray-50 rounded-xl p-4 mb-6">
-            <div className="flex items-center justify-center space-x-2">
-              <Mail size={16} className="text-gray-400" />
-              <span className="text-gray-700 font-medium">{displayEmail}</span>
-            </div>
-          </div>
-
-          {/* Instructions */}
-          <div className="space-y-4 mb-8">
-            <div className="flex items-start space-x-3">
-              <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                <span className="text-blue-600 text-xs font-bold">1</span>
-              </div>
-              <p className="text-sm text-gray-600">
-                Revisa tu bandeja de entrada y la carpeta de spam
-              </p>
-            </div>
-            
-            <div className="flex items-start space-x-3">
-              <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                <span className="text-blue-600 text-xs font-bold">2</span>
-              </div>
-              <p className="text-sm text-gray-600">
-                Haz clic en el enlace &quot;Verificar email&quot; en el mensaje
-              </p>
-            </div>
-            
-            <div className="flex items-start space-x-3">
-              <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                <span className="text-blue-600 text-xs font-bold">3</span>
-              </div>
-              <p className="text-sm text-gray-600">
-                Regresa aquí e inicia sesión con tu cuenta verificada
-              </p>
-            </div>
-          </div>
-
-          {/* Resend Button */}
-          <div className="text-center mb-6">
-            <p className="text-sm text-gray-600 mb-4">
-              ¿No recibiste el email?
-            </p>
-            
-            <button
-              onClick={handleResendVerification}
-              disabled={isResending || !canResend}
-              className={`
-                inline-flex items-center justify-center space-x-2 px-6 py-3 rounded-xl font-semibold transition-all duration-200
-                ${canResend && !isResending
-                  ? 'bg-blue-500 hover:bg-blue-600 text-white shadow-lg hover:shadow-xl'
-                  : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                }
-              `}
-            >
-              {isResending ? (
-                <>
-                  <RefreshCw size={16} className="animate-spin" />
-                  <span>Enviando...</span>
-                </>
-              ) : (
-                <>
-                  <Mail size={16} />
-                  <span>Reenviar email</span>
-                </>
-              )}
-            </button>
-            
-            {!canResend && lastSent && (
-              <p className="text-xs text-gray-500 mt-2">
-                Puedes reenviar en {60 - Math.floor((Date.now() - lastSent.getTime()) / 1000)} segundos
-              </p>
-            )}
-          </div>
-
-          {/* Success/Error States */}
-          {lastSent && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="p-4 bg-green-50 border border-green-200 rounded-xl flex items-center space-x-3"
-            >
-              <CheckCircle size={20} className="text-green-600 flex-shrink-0" />
-              <div>
-                <p className="text-green-800 font-medium text-sm">Email enviado</p>
-                <p className="text-green-600 text-xs">
-                  Revisa tu bandeja de entrada
-                </p>
-              </div>
-            </motion.div>
           )}
 
-          {/* Help Text */}
-          <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-xl">
-            <div className="flex items-start space-x-3">
-              <AlertCircle size={16} className="text-amber-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="text-amber-800 font-medium text-sm mb-1">
-                  ¿Problemas con la verificación?
+          {/* Enhanced Header */}
+          <div className={`text-center mb-8 transition-all duration-1200 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '0.2s' }}>
+            {/* Enhanced Logo - matching homepage style */}
+            <Link href="/" className="inline-block mb-6 group">
+              <div className="relative">
+                <div className="flex items-center justify-center space-x-3">
+                  <div className="relative group">
+                    <div className="w-16 h-16 bg-gradient-to-br from-sky-500 via-celestial-500 to-sky-600 rounded-3xl flex items-center justify-center shadow-2xl transform rotate-12 group-hover:rotate-0 transition-all duration-700 hover:scale-110">
+                      <Mail className="w-8 h-8 text-white transition-transform duration-500 group-hover:scale-110" />
+                    </div>
+                    <div className="absolute -inset-2 bg-gradient-to-br from-sky-500/30 to-celestial-500/30 rounded-3xl blur-lg animate-pulse-glow"></div>
+                    <div className="absolute -top-1 -right-1">
+                      <motion.div
+                        animate={{ rotate: [0, 360] }}
+                        transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
+                      >
+                        <Sparkles className="w-5 h-5 text-yellow-400" />
+                      </motion.div>
+                    </div>
+                  </div>
+                  
+                  {/* Enhanced brand name with fixed overflow and proper spacing */}
+                  <div className="relative overflow-visible">
+                    <h1 className="text-4xl md:text-5xl font-bold gradient-text font-playfair tracking-tight hover:scale-105 transition-transform duration-500 leading-none py-2">
+                      Fidelya
+                    </h1>
+                  </div>
+                </div>
+              </div>
+            </Link>
+
+            <div className={`transition-all duration-1000 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`} style={{ transitionDelay: '0.4s' }}>
+              <h2 className="text-3xl font-bold text-slate-800 mb-2 font-jakarta">
+                Verifica tu email
+              </h2>
+              <p className="text-slate-600 text-lg leading-relaxed font-jakarta">
+                Hemos enviado un enlace de verificación a tu correo electrónico
+              </p>
+            </div>
+          </div>
+
+          {/* Enhanced Main Card */}
+          <div className={`relative transition-all duration-1200 ease-out ${isVisible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-8 scale-95'}`} style={{ transitionDelay: '0.6s' }}>
+            {/* Glass effect background - matching homepage style */}
+            <div className="glass-card p-8 hover:scale-105 transition-all duration-500">
+              
+              {/* Email Display */}
+              <div className="mb-8 p-5 bg-sky-50/80 backdrop-blur-sm rounded-2xl border border-sky-200/50 shadow-lg">
+                <div className="flex items-center justify-center space-x-3">
+                  <div className="w-10 h-10 bg-gradient-to-r from-sky-500 to-celestial-500 rounded-xl flex items-center justify-center">
+                    <Mail className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-sky-700 font-jakarta">Email enviado a:</p>
+                    <p className="text-sky-800 font-bold font-jakarta">{displayEmail}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Enhanced Instructions */}
+              <div className="space-y-4 mb-8">
+                <h3 className="text-lg font-semibold text-slate-800 mb-4 font-jakarta">Sigue estos pasos:</h3>
+                
+                {[
+                  { step: 1, text: 'Revisa tu bandeja de entrada y la carpeta de spam' },
+                  { step: 2, text: 'Haz clic en el enlace "Verificar email" en el mensaje' },
+                  { step: 3, text: 'Regresa aquí e inicia sesión con tu cuenta verificada' }
+                ].map((instruction, index) => (
+                  <div 
+                    key={instruction.step}
+                    className="flex items-start space-x-4 group"
+                    style={{ 
+                      opacity: isVisible ? 1 : 0,
+                      transform: isVisible ? 'translateY(0)' : 'translateY(10px)',
+                      transition: `all 0.5s ease-out ${0.8 + index * 0.1}s`
+                    }}
+                  >
+                    <div className="w-8 h-8 bg-gradient-to-r from-sky-500 to-celestial-500 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+                      <span className="text-white text-sm font-bold">{instruction.step}</span>
+                    </div>
+                    <p className="text-slate-600 font-jakarta group-hover:text-slate-700 transition-colors duration-300 pt-1">
+                      {instruction.text}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Enhanced Resend Section */}
+              <div className="text-center mb-6">
+                <p className="text-slate-600 mb-4 font-jakarta">
+                  ¿No recibiste el email?
                 </p>
-                <p className="text-amber-700 text-xs">
-                  Contacta a soporte en soporte@fidelya.com si no recibes el email después de varios intentos.
+                
+                <button
+                  onClick={handleResendVerification}
+                  disabled={isResending || !canResend}
+                  className={`
+                    inline-flex items-center justify-center space-x-3 px-8 py-4 rounded-2xl font-semibold text-base transition-all duration-500 transform hover:scale-105 disabled:hover:scale-100 shadow-lg hover:shadow-xl font-jakarta
+                    ${canResend && !isResending
+                      ? 'bg-gradient-to-r from-sky-500 via-celestial-500 to-sky-600 text-white hover:shadow-sky-500/40 hover:-translate-y-1'
+                      : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
+                    }
+                  `}
+                >
+                  {isResending ? (
+                    <>
+                      <RefreshCw className="w-5 h-5 animate-spin" />
+                      <span>Enviando...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Mail className="w-5 h-5" />
+                      <span>Reenviar email</span>
+                    </>
+                  )}
+                </button>
+                
+                {!canResend && lastSent && (
+                  <p className="text-sm text-slate-500 mt-3 font-jakarta">
+                    Puedes reenviar en {60 - Math.floor((Date.now() - lastSent.getTime()) / 1000)} segundos
+                  </p>
+                )}
+              </div>
+
+              {/* Enhanced Success State */}
+              {lastSent && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  className="p-4 bg-green-50/90 backdrop-blur-sm border border-green-200/50 rounded-2xl flex items-center space-x-3 shadow-lg mb-6"
+                >
+                  <div className="flex-shrink-0 w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
+                    <CheckCircle className="w-5 h-5 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="text-green-800 font-semibold text-sm font-jakarta">Email enviado exitosamente</p>
+                    <p className="text-green-600 text-sm font-jakarta">
+                      Revisa tu bandeja de entrada
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Enhanced Help Section */}
+              <div className="p-5 bg-sky-50/80 backdrop-blur-sm border border-sky-200/50 rounded-2xl shadow-lg">
+                <div className="flex items-start space-x-3">
+                  <div className="flex-shrink-0 w-10 h-10 bg-sky-100 rounded-xl flex items-center justify-center">
+                    <AlertCircle className="w-5 h-5 text-sky-600" />
+                  </div>
+                  <div>
+                    <p className="text-sky-800 font-semibold text-sm mb-2 font-jakarta">
+                      ¿Problemas con la verificación?
+                    </p>
+                    <p className="text-sky-700 text-sm font-jakarta leading-relaxed">
+                      Contacta a soporte en{' '}
+                      <a 
+                        href="mailto:soporte@fidelya.com" 
+                        className="font-semibold text-sky-600 hover:text-sky-700 underline transition-colors duration-300"
+                      >
+                        soporte@fidelya.com
+                      </a>
+                      {' '}si no recibes el email después de varios intentos.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Enhanced Login Link */}
+              <div className="text-center mt-6">
+                <p className="text-slate-600 font-jakarta">
+                  ¿Ya verificaste tu email?{' '}
+                  <Link href="/auth/login" className="text-sky-600 hover:text-sky-700 font-semibold transition-colors duration-300 hover:underline">
+                    Inicia sesión aquí
+                  </Link>
                 </p>
               </div>
             </div>
           </div>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 };

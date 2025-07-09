@@ -55,6 +55,21 @@ class AuthService {
   private loginAttempts = new Map<string, { count: number; lastAttempt: number }>();
 
   /**
+   * Remove undefined values from an object
+   */
+  private removeUndefinedValues(obj: Record<string, unknown>): Record<string, unknown> {
+    const cleaned: Record<string, unknown> = {};
+    
+    for (const [key, value] of Object.entries(obj)) {
+      if (value !== undefined && value !== null && value !== '') {
+        cleaned[key] = value;
+      }
+    }
+    
+    return cleaned;
+  }
+
+  /**
    * Sign in user with email and password
    */
   async signIn(credentials: LoginCredentials): Promise<AuthResponse> {
@@ -173,40 +188,54 @@ class AuthService {
       console.log('🔐 Creating user document in Firestore...');
 
       // Create user document in Firestore
-      const userData: Omit<UserData, 'uid'> = {
+      const userData: Record<string, unknown> = {
         email: email.trim().toLowerCase(),
         nombre,
         role,
         estado: USER_STATES.PENDIENTE, // Pending until email verification
-        telefono,
-        creadoEn: new Date(),
-        actualizadoEn: new Date(),
+        creadoEn: serverTimestamp(),
+        actualizadoEn: serverTimestamp(),
         configuracion: {
           notificaciones: true,
           tema: 'light',
           idioma: 'es',
         },
-        ...additionalData
       };
+
+      // Only add telefono if it has a value
+      if (telefono && telefono.trim() !== '') {
+        userData.telefono = telefono.trim();
+      }
+
+      // Add additional data if provided
+      if (additionalData) {
+        Object.assign(userData, this.removeUndefinedValues(additionalData));
+      }
 
       await setDoc(
         doc(db, COLLECTIONS.USERS, userCredential.user.uid),
-        {
-          ...userData,
-          creadoEn: serverTimestamp(),
-          actualizadoEn: serverTimestamp(),
-        }
+        userData
       );
 
       console.log('🔐 Creating role-specific document...');
 
       // Create role-specific document
-      await this.createRoleDocument(userCredential.user.uid, role, {
+      const roleDocumentData: Record<string, unknown> = {
         nombre,
         email: email.trim().toLowerCase(),
-        telefono,
-        ...additionalData
-      });
+      };
+
+      // Only add telefono if it has a value
+      if (telefono && telefono.trim() !== '') {
+        roleDocumentData.telefono = telefono.trim();
+      }
+
+      // Add additional data if provided
+      if (additionalData) {
+        Object.assign(roleDocumentData, this.removeUndefinedValues(additionalData));
+      }
+
+      await this.createRoleDocument(userCredential.user.uid, role, roleDocumentData);
 
       // Sign out user until email verification
       await this.signOut();
@@ -420,8 +449,11 @@ class AuthService {
       
       const userRef = doc(db, COLLECTIONS.USERS, uid);
       
+      // Remove undefined values from updates
+      const cleanUpdates = this.removeUndefinedValues(updates as Record<string, unknown>);
+      
       await updateDoc(userRef, {
-        ...updates,
+        ...cleanUpdates,
         actualizadoEn: serverTimestamp()
       });
 
@@ -574,7 +606,7 @@ class AuthService {
       }
 
       const roleData: Record<string, unknown> = {
-        ...data,
+        ...this.removeUndefinedValues(data),
         estado: USER_STATES.PENDIENTE, // Will be activated after email verification
         creadoEn: serverTimestamp(),
         actualizadoEn: serverTimestamp()
