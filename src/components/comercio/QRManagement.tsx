@@ -1,606 +1,402 @@
-'use client';
-
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  Stack,
-  Paper,
-  Avatar,
-  alpha,
-  Divider,
-  IconButton,
-  Tooltip,
-} from '@mui/material';
-import {
-  QrCode,
-  Download,
-  Print,
-  Share,
-  Store,
-  Info,
-  CheckCircle,
-  ContentCopy,
-  Refresh,
-} from '@mui/icons-material';
-import { useComercios } from '@/hooks/useComercios';
-import QRCodeLib from 'qrcode';
-import toast from 'react-hot-toast';
 import Image from 'next/image';
+import { 
+  QrCode, 
+  Download, 
+  RefreshCw, 
+  Printer, 
+  Copy,
+  Palette
+} from 'lucide-react';
+import { useComercios } from '@/hooks/useComercios';
+import { toast } from 'react-hot-toast';
 
-export const QRManagement: React.FC = () => {
-  const { comercio } = useComercios();
-  const [qrDataUrl, setQrDataUrl] = useState<string>('');
-  const [loading, setLoading] = useState(false);
+interface QRManagementProps {
+  onNavigate?: (section: string) => void;
+}
 
-  const qrUrl = comercio ? `${window.location.origin}/validar-beneficio?comercio=${comercio.uid}` : '';
+export const QRManagement: React.FC<QRManagementProps> = ({}) => {
+  const { comercio, generateQRCode, loading } = useComercios();
+  const [qrStyle, setQrStyle] = useState('default');
+  const [showCustomization, setShowCustomization] = useState(false);
 
-  const generateQR = React.useCallback(async () => {
-    if (!comercio) return;
-
-    try {
-      setLoading(true);
-      const qrData = {
-        comercioId: comercio.uid,
-        timestamp: Date.now(),
-        signature: btoa(`${comercio.uid}-${Date.now()}`) // Simple signature
-      };
-
-      const qrString = JSON.stringify(qrData);
-      const dataUrl = await QRCodeLib.toDataURL(qrString, {
-        width: 300,
-        margin: 2,
-        color: {
-          dark: '#1e293b',
-          light: '#ffffff'
-        },
-        errorCorrectionLevel: 'M'
-      });
-
-      setQrDataUrl(dataUrl);
-    } catch (error) {
-      console.error('Error generating QR:', error);
-      toast.error('Error al generar el código QR');
-    } finally {
-      setLoading(false);
+  const handleGenerateQR = async () => {
+    const success = await generateQRCode();
+    if (success) {
+      toast.success('Código QR generado exitosamente');
     }
-  }, [comercio]);
+  };
 
-  React.useEffect(() => {
-    if (comercio) {
-      generateQR();
-    }
-  }, [comercio, generateQR]);
+  const handleDownloadQR = () => {
+    if (!comercio?.qrCode) return;
 
-  const downloadQR = async (format: 'png' | 'pdf') => {
-    if (!qrDataUrl || !comercio) return;
+    const link = document.createElement('a');
+    link.href = comercio.qrCode;
+    link.download = `qr-${comercio.nombreComercio.replace(/\s+/g, '-').toLowerCase()}.png`;
+    link.click();
+    
+    toast.success('QR descargado exitosamente');
+  };
 
-    try {
-      if (format === 'png') {
-        const link = document.createElement('a');
-        link.download = `qr-${comercio.nombreComercio.replace(/\s+/g, '-').toLowerCase()}.png`;
-        link.href = qrDataUrl;
-        link.click();
-      } else if (format === 'pdf') {
-        // Create a printable PDF layout
-        const printWindow = window.open('', '_blank');
-        if (printWindow) {
-          printWindow.document.write(`
-            <!DOCTYPE html>
-            <html>
-            <head>
-              <title>QR Code - ${comercio.nombreComercio}</title>
-              <style>
-                body {
-                  font-family: 'Arial', sans-serif;
-                  margin: 0;
-                  padding: 40px;
-                  background: white;
-                  display: flex;
-                  justify-content: center;
-                  align-items: center;
-                  min-height: 100vh;
-                }
-                .qr-container {
-                  text-align: center;
-                  max-width: 400px;
-                  border: 2px solid #06b6d4;
-                  border-radius: 20px;
-                  padding: 40px;
-                  background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
-                }
-                .logo {
-                  width: 80px;
-                  height: 80px;
-                  border-radius: 50%;
-                  margin: 0 auto 20px;
-                  background: #06b6d4;
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                  color: white;
-                  font-size: 32px;
-                }
-                .title {
-                  font-size: 24px;
-                  font-weight: bold;
-                  color: #1e293b;
-                  margin-bottom: 10px;
-                }
-                .subtitle {
-                  font-size: 16px;
-                  color: #64748b;
-                  margin-bottom: 30px;
-                }
-                .qr-code {
-                  margin: 30px 0;
-                  padding: 20px;
-                  background: white;
-                  border-radius: 15px;
-                  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-                }
-                .instructions {
-                  font-size: 14px;
-                  color: #64748b;
-                  line-height: 1.6;
-                  margin-top: 20px;
-                }
-                .footer {
-                  margin-top: 30px;
-                  padding-top: 20px;
-                  border-top: 1px solid #e2e8f0;
-                  font-size: 12px;
-                  color: #94a3b8;
-                }
-                @media print {
-                  body { margin: 0; padding: 20px; }
-                  .qr-container { border: 2px solid #06b6d4; }
-                }
-              </style>
-            </head>
-            <body>
-              <div class="qr-container">
-                <div class="logo">🏪</div>
-                <div class="title">${comercio.nombreComercio}</div>
-                <div class="subtitle">${comercio.categoria}</div>
-                <div class="qr-code">
-                  <img src="${qrDataUrl}" alt="QR Code" style="width: 200px; height: 200px;" />
-                </div>
-                <div class="instructions">
-                  <strong>Instrucciones:</strong><br>
-                  1. El socio debe escanear este código QR<br>
-                  2. Seleccionar el beneficio a utilizar<br>
-                  3. Confirmar la validación en pantalla<br>
-                  4. Aplicar el descuento correspondiente
-                </div>
-                <div class="footer">
-                  Powered by Fidelitá - Sistema de Fidelización
-                </div>
+  const handleCopyQRUrl = () => {
+    if (!comercio?.qrCodeUrl) return;
+
+    navigator.clipboard.writeText(comercio.qrCodeUrl);
+    toast.success('URL del QR copiada al portapapeles');
+  };
+
+  const handlePrintQR = () => {
+    if (!comercio?.qrCode) return;
+
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Código QR - ${comercio.nombreComercio}</title>
+            <style>
+              body { 
+                font-family: Arial, sans-serif; 
+                text-align: center; 
+                padding: 20px;
+                margin: 0;
+              }
+              .qr-container {
+                max-width: 400px;
+                margin: 0 auto;
+                padding: 20px;
+                border: 2px solid #e5e7eb;
+                border-radius: 12px;
+              }
+              .qr-image {
+                width: 200px;
+                height: 200px;
+                margin: 20px auto;
+              }
+              .instructions {
+                margin-top: 20px;
+                font-size: 14px;
+                color: #6b7280;
+              }
+              @media print {
+                body { margin: 0; }
+                .qr-container { border: 1px solid #000; }
+              }
+            </style>
+          </head>
+          <body>
+            <div class="qr-container">
+              <h2>${comercio.nombreComercio}</h2>
+              <img src="${comercio.qrCode}" alt="QR Code" class="qr-image" />
+              <div class="instructions">
+                <p><strong>Instrucciones para socios:</strong></p>
+                <p>1. Escanea este código QR con tu teléfono</p>
+                <p>2. Inicia sesión en tu cuenta de socio</p>
+                <p>3. Valida tu beneficio y disfrútalo</p>
               </div>
-            </body>
-            </html>
-          `);
-          printWindow.document.close();
-          printWindow.print();
-        }
-      }
-      toast.success(`QR descargado en formato ${format.toUpperCase()}`);
-    } catch (error) {
-      console.error('Error downloading QR:', error);
-      toast.error('Error al descargar el QR');
+            </div>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+      printWindow.print();
     }
   };
 
-  const copyQRUrl = () => {
-    navigator.clipboard.writeText(qrUrl);
-    toast.success('URL copiada al portapapeles');
+  const generateValidationUrl = () => {
+    if (!comercio) return '';
+    return `${window.location.origin}/validar-beneficio?comercio=${comercio.id}`;
   };
-
-  const shareQR = async () => {
-    if (navigator.share && qrDataUrl) {
-      try {
-        // Convert data URL to blob
-        const response = await fetch(qrDataUrl);
-        const blob = await response.blob();
-        const file = new File([blob], `qr-${comercio?.nombreComercio}.png`, { type: 'image/png' });
-
-        await navigator.share({
-          title: `QR Code - ${comercio?.nombreComercio}`,
-          text: 'Escanea este código QR para acceder a nuestros beneficios',
-          files: [file]
-        });
-      } catch (error) {
-        console.error('Error sharing:', error);
-        copyQRUrl();
-      }
-    } else {
-      copyQRUrl();
-    }
-  };
-
-  if (!comercio) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-        <Typography variant="h6" sx={{ color: '#64748b' }}>
-          Cargando información del comercio...
-        </Typography>
-      </Box>
-    );
-  }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-    >
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: { xs: 'column', md: 'row' },
-          gap: 4,
-          width: '100%',
-        }}
-      >
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Gestión de Código QR</h1>
+          <p className="text-gray-600 mt-2">
+            Administra tu código QR para validación de beneficios
+          </p>
+        </div>
+        
+        <button
+          onClick={() => setShowCustomization(!showCustomization)}
+          className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+        >
+          <Palette className="w-4 h-4 mr-2" />
+          Personalizar
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* QR Code Display */}
-        <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 50%' } }}>
-          <Card
-            elevation={0}
-            sx={{
-              background: 'white',
-              border: '1px solid #f1f5f9',
-              borderRadius: 3,
-              height: 'fit-content',
-            }}
-          >
-            <CardContent sx={{ p: 4 }}>
-              <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
-                <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b' }}>
-                  Código QR de Validación
-                </Typography>
-                <Tooltip title="Regenerar QR">
-                  <IconButton
-                    onClick={generateQR}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white rounded-xl p-6 shadow-sm border border-gray-200"
+        >
+          <div className="text-center">
+            <h3 className="text-lg font-semibold text-gray-900 mb-6">
+              Tu Código QR Actual
+            </h3>
+            
+            {comercio?.qrCode ? (
+              <div className="space-y-6">
+                <Image
+                  src={comercio.qrCode}
+                  alt="QR Code"
+                  width={192}
+                  height={192}
+                  className="w-48 h-48 mx-auto"
+                />
+                <div className="text-sm text-gray-600">
+                  <p className="mb-2">
+                    <strong>Comercio:</strong> {comercio.nombreComercio}
+                  </p>
+                  <p>
+                    <strong>URL de validación:</strong>
+                  </p>
+                  <div className="mt-2 p-2 bg-gray-100 rounded-lg font-mono text-xs break-all">
+                    {generateValidationUrl()}
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={handleDownloadQR}
+                    className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Descargar
+                  </button>
+                  
+                  <button
+                    onClick={handlePrintQR}
+                    className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
+                  >
+                    <Printer className="w-4 h-4 mr-2" />
+                    Imprimir
+                  </button>
+                  
+                  <button
+                    onClick={handleCopyQRUrl}
+                    className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
+                  >
+                    <Copy className="w-4 h-4 mr-2" />
+                    Copiar URL
+                  </button>
+                  
+                  <button
+                    onClick={handleGenerateQR}
                     disabled={loading}
-                    sx={{
-                      bgcolor: alpha('#06b6d4', 0.1),
-                      color: '#06b6d4',
-                      '&:hover': {
-                        bgcolor: alpha('#06b6d4', 0.2),
-                      }
-                    }}
+                    className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors disabled:opacity-50"
                   >
-                    <Refresh />
-                  </IconButton>
-                </Tooltip>
-              </Stack>
-
-              <Box sx={{ textAlign: 'center', mb: 4 }}>
-                {loading ? (
-                  <Box sx={{ py: 8 }}>
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                    >
-                      <Avatar sx={{ width: 60, height: 60, bgcolor: '#06b6d4', mx: 'auto' }}>
-                        <QrCode sx={{ fontSize: 30 }} />
-                      </Avatar>
-                    </motion.div>
-                  </Box>
-                ) : qrDataUrl ? (
-                  <motion.div
-                    initial={{ scale: 0.8, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ duration: 0.5 }}
+                    <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                    Regenerar
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                <div className="w-48 h-48 bg-gray-100 rounded-xl flex items-center justify-center mx-auto">
+                  <QrCode className="w-16 h-16 text-gray-400" />
+                </div>
+                
+                <div>
+                  <p className="text-gray-600 mb-4">
+                    Aún no tienes un código QR generado
+                  </p>
+                  
+                  <button
+                    onClick={handleGenerateQR}
+                    disabled={loading}
+                    className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
                   >
-                    <Paper
-                      elevation={0}
-                      sx={{
-                        p: 3,
-                        bgcolor: '#fafbfc',
-                        border: '2px solid #06b6d4',
-                        borderRadius: 3,
-                        display: 'inline-block',
-                      }}
-                    >
-                      <Image
-                        src={qrDataUrl}
-                        alt="QR Code"
-                        width={250}
-                        height={250}
-                        style={{
-                          width: 250,
-                          height: 250,
-                          display: 'block',
-                        }}
-                        unoptimized
-                        priority
-                      />
-                    </Paper>
-                  </motion.div>
-                ) : (
-                  <Box sx={{ py: 8 }}>
-                    <Avatar sx={{ width: 80, height: 80, bgcolor: alpha('#ef4444', 0.1), color: '#ef4444', mx: 'auto', mb: 2 }}>
-                      <QrCode sx={{ fontSize: 40 }} />
-                    </Avatar>
-                    <Typography variant="body2" sx={{ color: '#64748b' }}>
-                      Error al generar el código QR
-                    </Typography>
-                  </Box>
-                )}
-              </Box>
+                    {loading ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                        Generando...
+                      </>
+                    ) : (
+                      <>
+                        <QrCode className="w-4 h-4 mr-2" />
+                        Generar Código QR
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </motion.div>
 
-              {/* Action Buttons */}
-              <Stack spacing={2}>
-                <Button
-                  variant="contained"
-                  startIcon={<Download />}
-                  onClick={() => downloadQR('png')}
-                  disabled={!qrDataUrl}
-                  fullWidth
-                  sx={{
-                    bgcolor: '#06b6d4',
-                    '&:hover': { bgcolor: '#0891b2' },
-                    borderRadius: 2,
-                    py: 1.5,
-                  }}
-                >
-                  Descargar PNG
-                </Button>
+        {/* Instructions and Tips */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="space-y-6"
+        >
+          {/* How it Works */}
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              ¿Cómo funciona?
+            </h3>
+            
+            <div className="space-y-4">
+              <div className="flex items-start space-x-3">
+                <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <span className="text-xs font-bold text-blue-600">1</span>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-900">Coloca el QR visible</p>
+                  <p className="text-xs text-gray-600">Imprime y coloca el código QR en un lugar visible de tu comercio</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start space-x-3">
+                <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <span className="text-xs font-bold text-blue-600">2</span>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-900">El socio escanea</p>
+                  <p className="text-xs text-gray-600">Los socios escanean el código con su teléfono</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start space-x-3">
+                <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <span className="text-xs font-bold text-blue-600">3</span>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-900">Validación automática</p>
+                  <p className="text-xs text-gray-600">El sistema valida automáticamente si el socio puede usar beneficios</p>
+                </div>
+              </div>
+            </div>
+          </div>
 
-                <Button
-                  variant="outlined"
-                  startIcon={<Print />}
-                  onClick={() => downloadQR('pdf')}
-                  disabled={!qrDataUrl}
-                  fullWidth
-                  sx={{
-                    borderColor: '#06b6d4',
-                    color: '#06b6d4',
-                    '&:hover': {
-                      borderColor: '#0891b2',
-                      bgcolor: alpha('#06b6d4', 0.1),
-                    },
-                    borderRadius: 2,
-                    py: 1.5,
-                  }}
-                >
-                  Imprimir Cartel
-                </Button>
+          {/* Best Practices */}
+          <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 border border-green-200">
+            <h3 className="text-lg font-semibold text-green-900 mb-4">
+              Mejores Prácticas
+            </h3>
+            
+            <div className="space-y-3 text-sm text-green-800">
+              <div className="flex items-center space-x-2">
+                <div className="w-1.5 h-1.5 bg-green-600 rounded-full"></div>
+                <span>Coloca el QR a la altura de los ojos</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="w-1.5 h-1.5 bg-green-600 rounded-full"></div>
+                <span>Asegúrate de que haya buena iluminación</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="w-1.5 h-1.5 bg-green-600 rounded-full"></div>
+                <span>Mantén el código limpio y sin daños</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="w-1.5 h-1.5 bg-green-600 rounded-full"></div>
+                <span>Incluye instrucciones claras para los socios</span>
+              </div>
+            </div>
+          </div>
 
-                <Button
-                  variant="outlined"
-                  startIcon={<Share />}
-                  onClick={shareQR}
-                  disabled={!qrDataUrl}
-                  fullWidth
-                  sx={{
-                    borderColor: '#10b981',
-                    color: '#10b981',
-                    '&:hover': {
-                      borderColor: '#059669',
-                      bgcolor: alpha('#10b981', 0.1),
-                    },
-                    borderRadius: 2,
-                    py: 1.5,
-                  }}
-                >
-                  Compartir
-                </Button>
-              </Stack>
-            </CardContent>
-          </Card>
-        </Box>
+          {/* Statistics */}
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Estadísticas de Uso
+            </h3>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="text-center p-3 bg-gray-50 rounded-lg">
+                <p className="text-2xl font-bold text-blue-600">
+                  {comercio?.validacionesRealizadas || 0}
+                </p>
+                <p className="text-xs text-gray-600">Validaciones totales</p>
+              </div>
+              
+              <div className="text-center p-3 bg-gray-50 rounded-lg">
+                <p className="text-2xl font-bold text-green-600">
+                  {comercio?.clientesAtendidos || 0}
+                </p>
+                <p className="text-xs text-gray-600">Clientes únicos</p>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      </div>
 
-        {/* Instructions and Info */}
-        <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 50%' } }}>
-          <Stack spacing={3}>
-            {/* Commerce Info */}
-            <Card
-              elevation={0}
-              sx={{
-                background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
-                color: 'white',
-                borderRadius: 3,
-              }}
+      {/* Customization Panel */}
+      {showCustomization && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          exit={{ opacity: 0, height: 0 }}
+          className="bg-white rounded-xl p-6 shadow-sm border border-gray-200"
+        >
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            Personalización del QR
+          </h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Estilo del QR
+              </label>
+              <select
+                value={qrStyle}
+                onChange={(e) => setQrStyle(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="default">Estándar</option>
+                <option value="rounded">Esquinas redondeadas</option>
+                <option value="dots">Puntos circulares</option>
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Color principal
+              </label>
+              <input
+                type="color"
+                defaultValue="#000000"
+                className="w-full h-10 border border-gray-300 rounded-lg"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Tamaño
+              </label>
+              <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <option value="small">Pequeño (128px)</option>
+                <option value="medium">Mediano (256px)</option>
+                <option value="large">Grande (512px)</option>
+              </select>
+            </div>
+          </div>
+          
+          <div className="mt-6 flex justify-end space-x-3">
+            <button
+              onClick={() => setShowCustomization(false)}
+              className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
             >
-              <CardContent sx={{ p: 4 }}>
-                <Stack direction="row" spacing={3} alignItems="center">
-                  <Avatar
-                    src={comercio.logoUrl}
-                    sx={{
-                      width: 80,
-                      height: 80,
-                      bgcolor: alpha('#ffffff', 0.2),
-                      border: '3px solid rgba(255,255,255,0.3)',
-                    }}
-                  >
-                    <Store sx={{ fontSize: 40 }} />
-                  </Avatar>
-                  <Box>
-                    <Typography variant="h5" sx={{ fontWeight: 700, mb: 1 }}>
-                      {comercio.nombreComercio}
-                    </Typography>
-                    <Typography variant="body1" sx={{ opacity: 0.9, mb: 2 }}>
-                      {comercio.categoria}
-                    </Typography>
-                    <Typography variant="body2" sx={{ opacity: 0.8 }}>
-                      ID: {comercio.uid.substring(0, 8)}...
-                    </Typography>
-                  </Box>
-                </Stack>
-              </CardContent>
-            </Card>
-
-            {/* QR URL */}
-            <Card
-              elevation={0}
-              sx={{
-                background: 'white',
-                border: '1px solid #f1f5f9',
-                borderRadius: 3,
-              }}
+              Cancelar
+            </button>
+            <button
+              onClick={handleGenerateQR}
+              disabled={loading}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
             >
-              <CardContent sx={{ p: 4 }}>
-                <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', mb: 2 }}>
-                  URL de Validación
-                </Typography>
-                <Paper
-                  elevation={0}
-                  sx={{
-                    p: 2,
-                    bgcolor: '#fafbfc',
-                    border: '1px solid #e2e8f0',
-                    borderRadius: 2,
-                    mb: 2,
-                  }}
-                >
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      color: '#64748b',
-                      wordBreak: 'break-all',
-                      fontFamily: 'monospace',
-                    }}
-                  >
-                    {qrUrl}
-                  </Typography>
-                </Paper>
-                <Button
-                  startIcon={<ContentCopy />}
-                  onClick={copyQRUrl}
-                  size="small"
-                  sx={{
-                    color: '#06b6d4',
-                    '&:hover': {
-                      bgcolor: alpha('#06b6d4', 0.1),
-                    }
-                  }}
-                >
-                  Copiar URL
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Instructions */}
-            <Card
-              elevation={0}
-              sx={{
-                background: 'white',
-                border: '1px solid #f1f5f9',
-                borderRadius: 3,
-              }}
-            >
-              <CardContent sx={{ p: 4 }}>
-                <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 3 }}>
-                  <Avatar
-                    sx={{
-                      bgcolor: alpha('#10b981', 0.1),
-                      color: '#10b981',
-                      width: 40,
-                      height: 40,
-                    }}
-                  >
-                    <Info />
-                  </Avatar>
-                  <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b' }}>
-                    Instrucciones de Uso
-                  </Typography>
-                </Stack>
-
-                <Stack spacing={3}>
-                  {[
-                    {
-                      step: '1',
-                      title: 'Mostrar el QR',
-                      description: 'Coloca el código QR en un lugar visible de tu comercio o muéstralo en tu dispositivo.',
-                      icon: <QrCode />,
-                    },
-                    {
-                      step: '2',
-                      title: 'Cliente escanea',
-                      description: 'El socio escanea el código QR con su teléfono para acceder a los beneficios disponibles.',
-                      icon: <Store />,
-                    },
-                    {
-                      step: '3',
-                      title: 'Validar beneficio',
-                      description: 'El socio selecciona el beneficio y tú confirmas la validación en tu pantalla.',
-                      icon: <CheckCircle />,
-                    },
-                  ].map((instruction, index) => (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.3, delay: index * 0.1 }}
-                    >
-                      <Stack direction="row" spacing={3} alignItems="flex-start">
-                        <Avatar
-                          sx={{
-                            bgcolor: alpha('#06b6d4', 0.1),
-                            color: '#06b6d4',
-                            width: 40,
-                            height: 40,
-                            fontWeight: 700,
-                          }}
-                        >
-                          {instruction.step}
-                        </Avatar>
-                        <Box sx={{ flex: 1 }}>
-                          <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#1e293b', mb: 1 }}>
-                            {instruction.title}
-                          </Typography>
-                          <Typography variant="body2" sx={{ color: '#64748b', lineHeight: 1.6 }}>
-                            {instruction.description}
-                          </Typography>
-                        </Box>
-                      </Stack>
-                    </motion.div>
-                  ))}
-                </Stack>
-
-                <Divider sx={{ my: 3 }} />
-
-                <Box
-                  sx={{
-                    p: 3,
-                    bgcolor: alpha('#f59e0b', 0.1),
-                    borderRadius: 2,
-                    border: '1px solid',
-                    borderColor: alpha('#f59e0b', 0.2),
-                  }}
-                >
-                  <Stack direction="row" spacing={2} alignItems="center">
-                    <Avatar
-                      sx={{
-                        bgcolor: alpha('#f59e0b', 0.2),
-                        color: '#f59e0b',
-                        width: 32,
-                        height: 32,
-                      }}
-                    >
-                      <Info sx={{ fontSize: 18 }} />
-                    </Avatar>
-                    <Box>
-                      <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#92400e', mb: 1 }}>
-                        Importante
-                      </Typography>
-                      <Typography variant="body2" sx={{ color: '#92400e' }}>
-                        Mantén este código QR seguro y no lo compartas públicamente. Solo debe ser visible en tu establecimiento.
-                      </Typography>
-                    </Box>
-                  </Stack>
-                </Box>
-              </CardContent>
-            </Card>
-          </Stack>
-        </Box>
-      </Box>
-    </motion.div>
+              Aplicar Cambios
+            </button>
+          </div>
+        </motion.div>
+      )}
+    </div>
   );
 };

@@ -16,7 +16,7 @@ interface UseSociosReturn {
   createSocio: (data: SocioFormData) => Promise<boolean>;
   updateSocio: (id: string, data: Partial<SocioFormData>) => Promise<boolean>;
   deleteSocio: (id: string) => Promise<boolean>;
-  importSocios: (csvData: any[]) => Promise<ImportResult>;
+  importSocios: (csvData: SocioFormData[]) => Promise<ImportResult>;
   registerPayment: (socioId: string, amount: number, months?: number) => Promise<boolean>;
   updateMembershipStatus: () => Promise<number>;
   refreshStats: () => Promise<void>;
@@ -39,7 +39,7 @@ export function useSocios(): UseSociosReturn {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(false);
-  const [lastDoc, setLastDoc] = useState<any>(null);
+  const [lastDoc, setLastDoc] = useState<import('firebase/firestore').QueryDocumentSnapshot<import('firebase/firestore').DocumentData> | null>(null);
   const [filters, setFilters] = useState<SocioFilters>({});
 
   const asociacionId = user?.uid || '';
@@ -87,6 +87,18 @@ export function useSocios(): UseSociosReturn {
     }
   }, [asociacionId, filters, hasMore, loading, lastDoc]);
 
+  // Refresh stats
+  const refreshStats = useCallback(async () => {
+    if (!asociacionId) return;
+
+    try {
+      const newStats = await socioService.getAsociacionStats(asociacionId);
+      setStats(newStats);
+    } catch (error) {
+      console.error('Error refreshing stats:', error);
+    }
+  }, [asociacionId]);
+
   // Create new socio
   const createSocio = useCallback(async (data: SocioFormData): Promise<boolean> => {
     if (!asociacionId) return false;
@@ -113,7 +125,7 @@ export function useSocios(): UseSociosReturn {
     } finally {
       setLoading(false);
     }
-  }, [asociacionId, loadSocios]);
+  }, [asociacionId, loadSocios, refreshStats]);
 
   // Update socio
   const updateSocio = useCallback(async (id: string, data: Partial<SocioFormData>): Promise<boolean> => {
@@ -139,7 +151,7 @@ export function useSocios(): UseSociosReturn {
     } finally {
       setLoading(false);
     }
-  }, [loadSocios]);
+  }, [loadSocios, refreshStats]);
 
   // Delete socio
   const deleteSocio = useCallback(async (id: string): Promise<boolean> => {
@@ -165,10 +177,10 @@ export function useSocios(): UseSociosReturn {
     } finally {
       setLoading(false);
     }
-  }, [loadSocios]);
+  }, [loadSocios, refreshStats]);
 
   // Import socios from CSV
-  const importSocios = useCallback(async (csvData: any[]): Promise<ImportResult> => {
+  const importSocios = useCallback(async (csvData: SocioFormData[]): Promise<ImportResult> => {
     if (!asociacionId) {
       return {
         success: false,
@@ -182,15 +194,15 @@ export function useSocios(): UseSociosReturn {
       setLoading(true);
       setError(null);
 
-      const result = await socioService.importSocios(asociacionId, csvData);
+      const result = await socioService.importSocios(asociacionId, csvData as unknown as Record<string, unknown>[]);
       
       if (result.success) {
         toast.success(`${result.imported} socios importados exitosamente`);
         if (result.duplicates > 0) {
-          toast.info(`${result.duplicates} socios duplicados omitidos`);
+          toast(`${result.duplicates} socios duplicados omitidos`);
         }
         if (result.errors.length > 0) {
-          toast.warning(`${result.errors.length} errores encontrados`);
+          toast(`${result.errors.length} errores encontrados`, { icon: '⚠️' });
         }
         
         await loadSocios(); // Refresh list
@@ -214,7 +226,7 @@ export function useSocios(): UseSociosReturn {
     } finally {
       setLoading(false);
     }
-  }, [asociacionId, loadSocios]);
+  }, [asociacionId, loadSocios, refreshStats]);
 
   // Register payment
   const registerPayment = useCallback(async (socioId: string, amount: number, months = 1): Promise<boolean> => {
@@ -240,7 +252,7 @@ export function useSocios(): UseSociosReturn {
     } finally {
       setLoading(false);
     }
-  }, [loadSocios]);
+  }, [loadSocios, refreshStats]);
 
   // Update membership status
   const updateMembershipStatus = useCallback(async (): Promise<number> => {
@@ -257,7 +269,6 @@ export function useSocios(): UseSociosReturn {
         await loadSocios(); // Refresh list
         await refreshStats(); // Refresh stats
       }
-
       return updatedCount;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Error al actualizar membresías';
@@ -267,19 +278,7 @@ export function useSocios(): UseSociosReturn {
     } finally {
       setLoading(false);
     }
-  }, [asociacionId, loadSocios]);
-
-  // Refresh stats
-  const refreshStats = useCallback(async () => {
-    if (!asociacionId) return;
-
-    try {
-      const newStats = await socioService.getAsociacionStats(asociacionId);
-      setStats(newStats);
-    } catch (error) {
-      console.error('Error refreshing stats:', error);
-    }
-  }, [asociacionId]);
+  }, [asociacionId, loadSocios, refreshStats]);
 
   // Clear error
   const clearError = useCallback(() => {
@@ -299,7 +298,7 @@ export function useSocios(): UseSociosReturn {
     if (asociacionId) {
       loadSocios();
     }
-  }, [filters, loadSocios]);
+  }, [asociacionId, filters, loadSocios]);
 
   return {
     socios,

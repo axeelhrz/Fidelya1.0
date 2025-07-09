@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -55,8 +55,6 @@ export const EnhancedSocioDialog: React.FC<EnhancedSocioDialogProps> = ({
     handleSubmit,
     formState: { errors },
     reset,
-    setValue,
-    watch
   } = useForm<SocioFormData>({
     resolver: zodResolver(socioSchema),
     defaultValues: {

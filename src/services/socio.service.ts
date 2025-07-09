@@ -5,7 +5,6 @@ import {
   getDoc,
   getDocs,
   updateDoc,
-  deleteDoc,
   query,
   where,
   orderBy,
@@ -47,11 +46,11 @@ export interface SocioFormData {
   email: string;
   dni: string;
   telefono?: string;
-  fechaNacimiento: Date;
+  fechaNacimiento: Date | Timestamp;
   direccion?: string;
   numeroSocio?: string;
   montoCuota: number;
-  fechaVencimiento?: Date;
+  fechaVencimiento?: Date | Timestamp;
 }
 
 export interface SocioFilters {
@@ -76,7 +75,7 @@ export interface SocioStats {
 export interface ImportResult {
   success: boolean;
   imported: number;
-  errors: Array<{ row: number; error: string; data: any }>;
+  errors: Array<{ row: number; error: string; data: Record<string, unknown> }>;
   duplicates: number;
 }
 
@@ -118,8 +117,8 @@ class SocioService {
     asociacionId: string,
     filters: SocioFilters = {},
     pageSize = 20,
-    lastDoc?: any
-  ): Promise<{ socios: Socio[]; hasMore: boolean; lastDoc: any }> {
+    lastDoc?: import('firebase/firestore').QueryDocumentSnapshot<import('firebase/firestore').DocumentData> | null
+  ): Promise<{ socios: Socio[]; hasMore: boolean; lastDoc: import('firebase/firestore').QueryDocumentSnapshot<import('firebase/firestore').DocumentData> | null }> {
     try {
       let q = query(
         collection(db, this.collection),
@@ -232,14 +231,24 @@ class SocioService {
         email: data.email.toLowerCase(),
         dni: data.dni,
         telefono: data.telefono,
-        fechaNacimiento: Timestamp.fromDate(data.fechaNacimiento),
+        fechaNacimiento: Timestamp.fromDate(
+          data.fechaNacimiento instanceof Date
+            ? data.fechaNacimiento
+            : data.fechaNacimiento.toDate()
+        ),
         direccion: data.direccion,
         asociacionId,
         numeroSocio,
         estado: 'activo',
         estadoMembresia: data.fechaVencimiento && data.fechaVencimiento > new Date() ? 'al_dia' : 'pendiente',
         fechaIngreso: serverTimestamp(),
-        fechaVencimiento: data.fechaVencimiento ? Timestamp.fromDate(data.fechaVencimiento) : null,
+        fechaVencimiento: data.fechaVencimiento
+          ? Timestamp.fromDate(
+              data.fechaVencimiento instanceof Date
+                ? data.fechaVencimiento
+                : data.fechaVencimiento.toDate()
+            )
+          : null,
         montoCuota: data.montoCuota,
         beneficiosUsados: 0,
         validacionesRealizadas: 0,
@@ -262,20 +271,30 @@ class SocioService {
    */
   async updateSocio(id: string, data: Partial<SocioFormData>): Promise<boolean> {
     try {
-      const updateData: any = {
+      const updateData: Partial<SocioFormData> & { actualizadoEn: unknown; estadoMembresia?: 'al_dia' | 'vencido' | 'pendiente' } = {
         ...data,
         actualizadoEn: serverTimestamp(),
       };
 
       // Convert dates to Timestamps
       if (data.fechaNacimiento) {
-        updateData.fechaNacimiento = Timestamp.fromDate(data.fechaNacimiento);
+        updateData.fechaNacimiento = Timestamp.fromDate(
+          data.fechaNacimiento instanceof Date
+            ? data.fechaNacimiento
+            : data.fechaNacimiento.toDate()
+        );
       }
 
       if (data.fechaVencimiento) {
-        updateData.fechaVencimiento = Timestamp.fromDate(data.fechaVencimiento);
+        updateData.fechaVencimiento = Timestamp.fromDate(
+          data.fechaVencimiento instanceof Date
+            ? data.fechaVencimiento
+            : data.fechaVencimiento.toDate()
+        );
         // Update membership status based on expiration date
-        updateData.estadoMembresia = data.fechaVencimiento > new Date() ? 'al_dia' : 'vencido';
+        updateData.estadoMembresia = (data.fechaVencimiento instanceof Date
+          ? data.fechaVencimiento
+          : data.fechaVencimiento.toDate()) > new Date() ? 'al_dia' : 'vencido';
       }
 
       if (data.email) {
@@ -313,7 +332,7 @@ class SocioService {
   /**
    * Bulk import socios from CSV data
    */
-  async importSocios(asociacionId: string, csvData: any[]): Promise<ImportResult> {
+  async importSocios(asociacionId: string, csvData: Record<string, unknown>[]): Promise<ImportResult> {
     const result: ImportResult = {
       success: false,
       imported: 0,
@@ -342,8 +361,8 @@ class SocioService {
           }
 
           // Check for duplicates
-          const existingDni = await this.checkDniExists(row.dni);
-          const existingEmail = await this.checkEmailExists(row.email);
+          const existingDni = await this.checkDniExists(String(row.dni));
+          const existingEmail = await this.checkEmailExists(String(row.email));
           
           if (existingDni || existingEmail) {
             result.duplicates++;
@@ -357,17 +376,25 @@ class SocioService {
           const socioId = doc(collection(db, this.collection)).id;
           const socioData = {
             nombre: row.nombre,
-            email: row.email.toLowerCase(),
+            email: typeof row.email === 'string' ? row.email.toLowerCase() : '',
             dni: row.dni,
             telefono: row.telefono || '',
-            fechaNacimiento: row.fechaNacimiento ? Timestamp.fromDate(new Date(row.fechaNacimiento)) : Timestamp.fromDate(new Date()),
+            fechaNacimiento: row.fechaNacimiento
+              ? Timestamp.fromDate(
+                  typeof row.fechaNacimiento === 'string' || typeof row.fechaNacimiento === 'number'
+                    ? new Date(row.fechaNacimiento)
+                    : row.fechaNacimiento instanceof Date
+                      ? row.fechaNacimiento
+                      : new Date()
+                )
+              : Timestamp.fromDate(new Date()),
             direccion: row.direccion || '',
             asociacionId,
             numeroSocio,
             estado: 'activo',
             estadoMembresia: 'pendiente',
             fechaIngreso: serverTimestamp(),
-            montoCuota: parseFloat(row.montoCuota) || 0,
+            montoCuota: parseFloat(String(row.montoCuota)) || 0,
             beneficiosUsados: 0,
             validacionesRealizadas: 0,
             creadoEn: serverTimestamp(),
@@ -541,7 +568,7 @@ class SocioService {
       const q = query(collection(db, this.collection), where('dni', '==', dni));
       const snapshot = await getDocs(q);
       return !snapshot.empty;
-    } catch (error) {
+    } catch {
       return false;
     }
   }
@@ -551,7 +578,7 @@ class SocioService {
       const q = query(collection(db, this.collection), where('email', '==', email.toLowerCase()));
       const snapshot = await getDocs(q);
       return !snapshot.empty;
-    } catch (error) {
+    } catch {
       return false;
     }
   }
@@ -565,7 +592,7 @@ class SocioService {
       );
       const snapshot = await getDocs(q);
       return !snapshot.empty;
-    } catch (error) {
+    } catch {
       return false;
     }
   }
@@ -590,7 +617,7 @@ class SocioService {
       const newNumber = lastNumber + 1;
       
       return newNumber.toString().padStart(3, '0');
-    } catch (error) {
+    } catch {
       // Fallback to timestamp-based number
       return Date.now().toString().slice(-6);
     }
