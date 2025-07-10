@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, RefreshCw, Download, Edit, Trash2, ToggleLeft, ToggleRight } from 'lucide-react';
+import { Plus, RefreshCw, Download, Edit, ToggleRight } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { ComercioSidebar } from '@/components/layout/ComercioSidebar';
 import { BeneficiosList } from '@/components/beneficios/BeneficiosList';
@@ -10,12 +10,10 @@ import { BeneficioForm } from '@/components/beneficios/BeneficioForm';
 import { BeneficiosStats } from '@/components/beneficios/BeneficiosStats';
 import { Button } from '@/components/ui/Button';
 import { useBeneficiosComercios } from '@/hooks/useBeneficios';
-import { useAuth } from '@/hooks/useAuth';
-import { Beneficio } from '@/types/beneficio';
+import { Beneficio, BeneficioFormData } from '@/types/beneficio';
 import toast from 'react-hot-toast';
 
 export default function ComercioBeneficiosPage() {
-  const { user } = useAuth();
   const {
     beneficios,
     stats,
@@ -64,13 +62,30 @@ export default function ComercioBeneficiosPage() {
     }
   };
 
-  const handleFormSubmit = async (data: any) => {
+  const handleFormSubmit = async (data: BeneficioFormData) => {
     try {
       if (editingBeneficio) {
-        await actualizarBeneficio(editingBeneficio.id, data);
+        // Crear un objeto con los tipos correctos para la actualización
+        const updateData: Partial<BeneficioFormData> = {
+          titulo: data.titulo,
+          descripcion: data.descripcion,
+          tipo: data.tipo,
+          descuento: data.descuento,
+          fechaInicio: data.fechaInicio,
+          fechaFin: data.fechaFin,
+          limitePorSocio: data.limitePorSocio,
+          limiteTotal: data.limiteTotal,
+          condiciones: data.condiciones,
+          categoria: data.categoria,
+          tags: data.tags,
+          destacado: data.destacado,
+          asociacionesDisponibles: data.asociacionesDisponibles
+        };
+
+        await actualizarBeneficio(editingBeneficio.id, updateData);
         toast.success('Beneficio actualizado exitosamente');
       } else {
-        await crearBeneficio(data);
+        await crearBeneficio();
         toast.success('Beneficio creado exitosamente');
       }
       return true;
