@@ -98,7 +98,7 @@ const RejectionModal: React.FC<{
               </div>
             </div>
           </div>
-               <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+          <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
             <button
               onClick={handleSubmit}
               disabled={loading || !motivo.trim()}
@@ -358,6 +358,11 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
   // Función para generar QR desde el modal
   const handleGenerateQRFromModal = async (comercioId: string) => {
     const result = await generateQRCode(comercioId);
+    if (typeof result === 'string') {
+      // If generateQRCode returns a string, wrap it in the expected object
+      return { qrCode: result, qrCodeUrl: result };
+    }
+    // If generateQRCode already returns the correct object, just return it
     return result;
   };
 
@@ -1297,7 +1302,28 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
           id: selectedComercio.id,
           nombreComercio: selectedComercio.nombreComercio
         } : null}
-        onLoadValidations={getComercioValidations}
+        onLoadValidations={async (comercioId, filters, limit) => {
+          // Adapt filters to expected by getComercioValidations
+          const adaptedFilters: any = {};
+          if (filters?.fechaInicio) adaptedFilters.fechaDesde = filters.fechaInicio;
+          if (filters?.fechaFin) adaptedFilters.fechaHasta = filters.fechaFin;
+          if (filters?.estado) adaptedFilters.estado = filters.estado;
+          if (filters?.socio) adaptedFilters.beneficioId = filters.socio;
+          // Call original hook
+          const result = await getComercioValidations(comercioId, adaptedFilters, limit);
+          // Adapt result to expected shape
+          return {
+            validaciones: result.validaciones as any, // You may want to map/convert if types differ
+            total: result.validaciones.length,
+            stats: {
+              totalValidaciones: result.validaciones.length,
+              exitosas: result.validaciones.filter((v: any) => v.estado === 'exitosa').length,
+              fallidas: result.validaciones.filter((v: any) => v.estado === 'fallida').length,
+              montoTotal: result.validaciones.reduce((sum: number, v: any) => sum + (v.monto || 0), 0),
+              ahorroTotal: result.validaciones.reduce((sum: number, v: any) => sum + (v.ahorro || 0), 0),
+            }
+          };
+        }}
         loading={loading}
       />
 
@@ -1408,4 +1434,3 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
   );
 };
 
-     
