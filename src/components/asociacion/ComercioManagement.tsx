@@ -35,7 +35,8 @@ import type { Comercio } from '@/services/comercio.service';
 import { VincularComercioDialog } from './VincularComercioDialog';
 import { CreateComercioDialog } from './CreateComercioDialog';
 import { EditComercioDialog } from './EditComercioDialog';
-import { ComercioValidationsHistory } from './ComercioValidationsHistory';
+import { QRGeneratorModal } from './QRGeneratorModal';
+import { ComercioValidationsModal } from './ComercioValidationsModal';
 
 interface ComercioManagementProps {
   onNavigate?: (section: string) => void;
@@ -97,7 +98,7 @@ const RejectionModal: React.FC<{
               </div>
             </div>
           </div>
-          <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+               <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
             <button
               onClick={handleSubmit}
               disabled={loading || !motivo.trim()}
@@ -146,9 +147,16 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
   const [vincularDialogOpen, setVincularDialogOpen] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [validationsDialogOpen, setValidationsDialogOpen] = useState(false);
+  const [qrModalOpen, setQrModalOpen] = useState(false);
+  const [validationsModalOpen, setValidationsModalOpen] = useState(false);
   const [rejectionModalOpen, setRejectionModalOpen] = useState(false);
   const [selectedComercio, setSelectedComercio] = useState<Comercio | null>(null);
+  const [selectedComercioForQR, setSelectedComercioForQR] = useState<{
+    id: string;
+    nombreComercio: string;
+    qrCode?: string;
+    qrCodeUrl?: string;
+  } | null>(null);
   const [selectedSolicitud, setSelectedSolicitud] = useState<SolicitudAdhesion | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategoria, setSelectedCategoria] = useState('');
@@ -333,12 +341,24 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
       metadata: {}
     };
     setSelectedComercio(comercioForValidations);
-    setValidationsDialogOpen(true);
+    setValidationsModalOpen(true);
   };
 
   // Manejar generación de QR individual
   const handleGenerateQR = async (comercio: ComercioDisponible) => {
-    await generateQRCode(comercio.id);
+    setSelectedComercioForQR({
+      id: comercio.id,
+      nombreComercio: comercio.nombreComercio,
+      qrCode: comercio.qrCode,
+      qrCodeUrl: comercio.qrCodeUrl
+    });
+    setQrModalOpen(true);
+  };
+
+  // Función para generar QR desde el modal
+  const handleGenerateQRFromModal = async (comercioId: string) => {
+    const result = await generateQRCode(comercioId);
+    return result;
   };
 
   // Manejar generación de QR masiva
@@ -1176,7 +1196,8 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
                           >
                             <QrCode size={16} />
                           </button>
-                                                    <button
+                          
+                          <button
                             onClick={() => handleEdit(comercio)}
                             className="text-blue-600 hover:text-blue-900"
                             title="Editar"
@@ -1255,25 +1276,29 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
         loading={loading}
       />
 
-      <ComercioValidationsHistory
-        open={validationsDialogOpen}
-        comercioId={selectedComercio?.id || ''}
-        comercioNombre={selectedComercio?.nombreComercio || ''}
+      <QRGeneratorModal
+        open={qrModalOpen}
         onClose={() => {
-          setValidationsDialogOpen(false);
+          setQrModalOpen(false);
+          setSelectedComercioForQR(null);
+        }}
+        comercio={selectedComercioForQR}
+        onGenerateQR={handleGenerateQRFromModal}
+        loading={loading}
+      />
+
+      <ComercioValidationsModal
+        open={validationsModalOpen}
+        onClose={() => {
+          setValidationsModalOpen(false);
           setSelectedComercio(null);
         }}
-        onLoadValidations={(
-          comercioId,
-          filters,
-          pageSize,
-          lastDoc
-        ) => getComercioValidations(
-          comercioId,
-          filters,
-          pageSize,
-          lastDoc as import('firebase/firestore').QueryDocumentSnapshot
-        )}
+        comercio={selectedComercio ? {
+          id: selectedComercio.id,
+          nombreComercio: selectedComercio.nombreComercio
+        } : null}
+        onLoadValidations={getComercioValidations}
+        loading={loading}
       />
 
       {/* Rejection Modal */}
@@ -1383,3 +1408,4 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
   );
 };
 
+     
