@@ -117,12 +117,12 @@ export const useBeneficios = (options: UseBeneficiosOptions = {}) => {
     if (!user) return;
 
     try {
-      const filtros: BeneficioFilter = {};
+      const filtros: { comercioId?: string; asociacionId?: string } = {};
       
       if (user.role === 'comercio') {
-        filtros.comercio = user.uid;
+        filtros.comercioId = user.uid;
       } else if (user.role === 'asociacion') {
-        filtros.asociacion = user.uid;
+        filtros.asociacionId = user.uid;
       }
 
       const estadisticas = await BeneficiosService.obtenerEstadisticas(filtros);
