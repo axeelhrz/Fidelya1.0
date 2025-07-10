@@ -15,7 +15,6 @@ import {
   UserCheck,
   Building2,
   Activity,
-  Crown,
   Clock,
   CheckCircle,
   AlertCircle
@@ -190,12 +189,6 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
           label: 'Validaciones', 
           icon: UserCheck,
           route: '/dashboard/asociacion/beneficios?tab=validaciones'
-        },
-        { 
-          id: 'beneficios-destacados', 
-          label: 'Beneficios Destacados', 
-          icon: Crown,
-          route: '/dashboard/asociacion/beneficios?tab=destacados'
         }
       ]
     },
