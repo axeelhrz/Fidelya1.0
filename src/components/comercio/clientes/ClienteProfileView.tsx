@@ -1,17 +1,15 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Users,
   Search,
   Filter,
-  Plus,
   Download,
   Edit3,
   Trash2,
   Eye,
-  EyeOff,
   Mail,
   Phone,
   MapPin,
@@ -19,451 +17,34 @@ import {
   DollarSign,
   ShoppingBag,
   TrendingUp,
-  Award,
-  Clock,
   User,
   Camera,
-  Save,
-  X,
   MoreVertical,
-  Star,
   Tag,
   Activity,
-  BarChart3,
-  PieChart,
   RefreshCw,
-  FileText,
-  Settings,
   AlertCircle,
   CheckCircle,
   XCircle,
   Pause,
   Play,
   UserPlus,
-  UserCheck,
-  UserX,
-  Zap,
-  Target,
-  Heart,
   Gift,
-  CreditCard,
-  Smartphone,
-  Globe,
-  MessageSquare,
-  Bell,
-  Shield,
-  Lock,
-  Unlock,
-  Archive,
-  RotateCcw,
-  ExternalLink,
-  Copy,
-  Share2,
-  Bookmark,
-  Flag,
-  Info,
-  HelpCircle,
-  ChevronDown,
-  ChevronRight,
-  ChevronLeft,
-  ArrowUpRight,
-  ArrowDownRight,
-  Percent,
-  Hash,
-  Layers,
   Grid,
   List,
-  Table,
-  Upload,
-  Link,
-  Paperclip,
-  FileImage,
-  FilePlus,
-  FolderOpen,
-  Folder,
-  Database,
-  Server,
-  Cloud,
-  CloudUpload,
-  CloudDownload,
-  Wifi,
-  WifiOff,
-  Signal,
-  Battery,
-  Power,
-  Cpu,
-  HardDrive,
-  Monitor,
-  Printer,
-  Scanner,
-  Keyboard,
-  Mouse,
-  Headphones,
-  Mic,
-  Video,
-  Radio,
-  Tv,
-  Speaker,
-  Volume2,
-  VolumeX,
-  Music,
-  Disc,
-  Volume1,
-  Volume,
-  VolumeOff,
-  Bluetooth,
-  Usb,
-  Ethernet,
-  Router,
-  Modem,
-  Antenna,
-  Satellite,
-  Tower,
-  Radar,
-  Navigation,
-  Compass,
-  Map,
-  Route,
-  Car,
-  Truck,
-  Bus,
-  Train,
-  Plane,
-  Ship,
-  Bike,
-  Scooter,
-  Motorcycle,
-  Taxi,
-  Ambulance,
-  Construction,
-  Crane,
-  Forklift,
-  Excavator,
-  Bulldozer,
-  Hammer,
-  Saw,
-  Wrench,
-  Screwdriver,
-  Pliers,
-  Scissors,
-  Knife,
-  Axe,
-  Shovel,
-  Rake,
-  Hoe,
-  Pickaxe,
-  Sledgehammer,
-  Crowbar,
-  Chisel,
-  Brush,
-  Spray,
-  Bucket,
-  Ladder,
-  Rope,
-  Chain,
-  Hook,
-  Pulley,
-  Winch,
-  Jack,
-  Clamp,
-  Vise,
-  Anvil,
-  Forge,
-  Bellows,
-  Tongs,
-  Crucible,
-  Mold,
-  Ladle,
-  Furnace,
-  Kiln,
-  Oven,
-  Stove,
-  Grill,
-  Barbecue,
-  Smoker,
-  Fryer,
-  Steamer,
-  Boiler,
-  Kettle,
-  Pot,
-  Pan,
-  Skillet,
-  Wok,
-  Griddle,
-  Plate,
-  Bowl,
-  Cup,
-  Mug,
-  Glass,
-  Bottle,
-  Jar,
-  Can,
-  Box,
-  Bag,
-  Basket,
-  Crate,
-  Barrel,
-  Tank,
-  Container,
-  Package,
-  Parcel,
-  Envelope,
-  Letter,
-  Postcard,
-  Stamp,
-  Mailbox,
-  Delivery,
-  Shipping,
-  Logistics,
-  Warehouse,
-  Inventory,
-  Stock,
-  Supply,
-  Demand,
-  Order,
-  Invoice,
-  Receipt,
-  Bill,
-  Wallet,
-  Banknote,
-  Coins
+  Bell,
+  MessageSquare,
+  Settings,
+  Clock
 } from 'lucide-react';
 import Image from 'next/image';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useClientes } from '@/hooks/useClientes';
-import { Cliente, ClienteFormData, ClienteFilter } from '@/types/cliente';
+import { Cliente, ClienteFormData } from '@/types/cliente';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/Dialog';
-import { LoadingSkeleton } from '@/components/ui/LoadingSkeleton';
-import toast from 'react-hot-toast';
-
-// Componente de tarjeta de estadística
-const StatsCard: React.FC<{
-  title: string;
-  value: string | number;
-  icon: React.ReactNode;
-  color: string;
-  change?: number;
-  onClick?: () => void;
-}> = ({ title, value, icon, color, change, onClick }) => (
-  <motion.div
-    whileHover={{ scale: 1.02 }}
-    className={`bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-all duration-200 ${
-      onClick ? 'cursor-pointer' : ''
-    }`}
-    onClick={onClick}
-  >
-    <div className="flex items-center justify-between mb-4">
-      <div 
-        className="w-12 h-12 rounded-lg flex items-center justify-center text-white"
-        style={{ backgroundColor: color }}
-      >
-        {icon}
-      </div>
-      {change !== undefined && (
-        <div className={`flex items-center gap-1 text-sm font-medium ${
-          change >= 0 ? 'text-green-600' : 'text-red-600'
-        }`}>
-          {change >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
-          {change > 0 ? '+' : ''}{change}%
-        </div>
-      )}
-    </div>
-    <div>
-      <p className="text-sm text-gray-600 mb-1">{title}</p>
-      <p className="text-2xl font-bold text-gray-900">
-        {typeof value === 'number' ? value.toLocaleString() : value}
-      </p>
-    </div>
-  </motion.div>
-);
-
-// Componente de filtros avanzados
-const ClienteFilters: React.FC<{
-  filtros: ClienteFilter;
-  onFiltrosChange: (filtros: ClienteFilter) => void;
-  onClearFiltros: () => void;
-}> = ({ filtros, onFiltrosChange, onClearFiltros }) => {
-  const [isOpen, setIsOpen] = useState(false);
-
-  return (
-    <div className="relative">
-      <Button
-        variant="outline"
-        leftIcon={<Filter size={16} />}
-        onClick={() => setIsOpen(!isOpen)}
-        className={`${Object.keys(filtros).length > 3 ? 'border-blue-500 text-blue-600' : ''}`}
-      >
-        Filtros
-        {Object.keys(filtros).length > 3 && (
-          <span className="ml-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
-            {Object.keys(filtros).length - 3}
-          </span>
-        )}
-      </Button>
-
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="absolute top-full left-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-200 p-6 z-50"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Filtros Avanzados</h3>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onClearFiltros}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                Limpiar
-              </Button>
-            </div>
-
-            <div className="space-y-4">
-              {/* Estado */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Estado
-                </label>
-                <select
-                  value={filtros.estado || ''}
-                  onChange={(e) => onFiltrosChange({
-                    ...filtros,
-                    estado: e.target.value as 'activo' | 'inactivo' | 'suspendido' | undefined
-                  })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">Todos los estados</option>
-                  <option value="activo">Activo</option>
-                  <option value="inactivo">Inactivo</option>
-                  <option value="suspendido">Suspendido</option>
-                </select>
-              </div>
-
-              {/* Rango de fechas */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Desde
-                  </label>
-                  <input
-                    type="date"
-                    value={filtros.fechaDesde ? format(filtros.fechaDesde, 'yyyy-MM-dd') : ''}
-                    onChange={(e) => onFiltrosChange({
-                      ...filtros,
-                      fechaDesde: e.target.value ? new Date(e.target.value) : undefined
-                    })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Hasta
-                  </label>
-                  <input
-                    type="date"
-                    value={filtros.fechaHasta ? format(filtros.fechaHasta, 'yyyy-MM-dd') : ''}
-                    onChange={(e) => onFiltrosChange({
-                      ...filtros,
-                      fechaHasta: e.target.value ? new Date(e.target.value) : undefined
-                    })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-              </div>
-
-              {/* Rango de montos */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Monto mínimo
-                  </label>
-                  <input
-                    type="number"
-                    placeholder="$0"
-                    value={filtros.montoMinimo || ''}
-                    onChange={(e) => onFiltrosChange({
-                      ...filtros,
-                      montoMinimo: e.target.value ? Number(e.target.value) : undefined
-                    })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Monto máximo
-                  </label>
-                  <input
-                    type="number"
-                    placeholder="$999999"
-                    value={filtros.montoMaximo || ''}
-                    onChange={(e) => onFiltrosChange({
-                      ...filtros,
-                      montoMaximo: e.target.value ? Number(e.target.value) : undefined
-                    })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-              </div>
-
-              {/* Ordenamiento */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Ordenar por
-                  </label>
-                  <select
-                    value={filtros.ordenarPor || 'creadoEn'}
-                    onChange={(e) => onFiltrosChange({
-                      ...filtros,
-                      ordenarPor: e.target.value as 'nombre' | 'fechaCreacion' | 'ultimaCompra' | 'totalGastado'
-                    })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="creadoEn">Fecha de registro</option>
-                    <option value="nombre">Nombre</option>
-                    <option value="ultimaCompra">Última compra</option>
-                    <option value="totalGastado">Total gastado</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Orden
-                  </label>
-                  <select
-                    value={filtros.orden || 'desc'}
-                    onChange={(e) => onFiltrosChange({
-                      ...filtros,
-                      orden: e.target.value as 'asc' | 'desc'
-                    })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="desc">Descendente</option>
-                    <option value="asc">Ascendente</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-6 flex justify-end">
-              <Button
-                onClick={() => setIsOpen(false)}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                Aplicar Filtros
-              </Button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-};
 
 // Componente de tarjeta de cliente
 const ClienteCard: React.FC<{
@@ -477,10 +58,10 @@ const ClienteCard: React.FC<{
 
   const getEstadoColor = (estado: string) => {
     switch (estado) {
-      case 'activo': return 'bg-green-100 text-green-800 border-green-200';
-      case 'inactivo': return 'bg-gray-100 text-gray-800 border-gray-200';
-      case 'suspendido': return 'bg-red-100 text-red-800 border-red-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'activo': return 'text-emerald-600 bg-emerald-100 border-emerald-200';
+      case 'inactivo': return 'text-slate-600 bg-slate-100 border-slate-200';
+      case 'suspendido': return 'text-red-600 bg-red-100 border-red-200';
+      default: return 'text-slate-600 bg-slate-100 border-slate-200';
     }
   };
 
@@ -497,20 +78,18 @@ const ClienteCard: React.FC<{
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -2 }}
-      className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-all duration-200 relative"
+      whileHover={{ y: -2, boxShadow: '0 8px 30px rgba(0,0,0,0.1)' }}
+      className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm transition-all duration-200 relative"
     >
       {/* Menú de acciones */}
       <div className="absolute top-4 right-4">
         <div className="relative">
-          <Button
-            variant="ghost"
-            size="sm"
+          <button
             onClick={() => setShowActions(!showActions)}
-            className="p-2"
+            className="p-2 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-colors"
           >
             <MoreVertical size={16} />
-          </Button>
+          </button>
 
           <AnimatePresence>
             {showActions && (
@@ -518,14 +97,14 @@ const ClienteCard: React.FC<{
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="absolute top-full right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-10"
+                className="absolute top-full right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-200 py-2 z-10"
               >
                 <button
                   onClick={() => {
                     onSelect(cliente);
                     setShowActions(false);
                   }}
-                  className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                  className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
                 >
                   <Eye size={14} />
                   Ver detalles
@@ -535,7 +114,7 @@ const ClienteCard: React.FC<{
                     onEdit(cliente);
                     setShowActions(false);
                   }}
-                  className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                  className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
                 >
                   <Edit3 size={14} />
                   Editar
@@ -545,7 +124,7 @@ const ClienteCard: React.FC<{
                     onToggleEstado(cliente);
                     setShowActions(false);
                   }}
-                  className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                  className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
                 >
                   {cliente.estado === 'activo' ? <Pause size={14} /> : <Play size={14} />}
                   {cliente.estado === 'activo' ? 'Desactivar' : 'Activar'}
@@ -570,7 +149,7 @@ const ClienteCard: React.FC<{
       {/* Avatar y información básica */}
       <div className="flex items-start gap-4 mb-4">
         <div className="relative">
-          <div className="w-16 h-16 bg-gray-100 rounded-xl flex items-center justify-center overflow-hidden">
+          <div className="w-16 h-16 bg-slate-100 rounded-xl flex items-center justify-center overflow-hidden">
             {cliente.avatar ? (
               <Image
                 src={cliente.avatar}
@@ -580,22 +159,22 @@ const ClienteCard: React.FC<{
                 height={64}
               />
             ) : (
-              <User size={24} className="text-gray-400" />
+              <User size={24} className="text-slate-400" />
             )}
           </div>
           <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-white flex items-center justify-center ${
-            cliente.estado === 'activo' ? 'bg-green-500' : 
-            cliente.estado === 'suspendido' ? 'bg-red-500' : 'bg-gray-500'
+            cliente.estado === 'activo' ? 'bg-emerald-500' : 
+            cliente.estado === 'suspendido' ? 'bg-red-500' : 'bg-slate-500'
           }`}>
-            {getEstadoIcon(cliente.estado)}
+            <div className="w-2 h-2 bg-white rounded-full"></div>
           </div>
         </div>
 
         <div className="flex-1 min-w-0">
-          <h3 className="text-lg font-semibold text-gray-900 truncate">
+          <h3 className="text-lg font-bold text-slate-900 truncate">
             {cliente.nombre}
           </h3>
-          <p className="text-sm text-gray-600 truncate">{cliente.email}</p>
+          <p className="text-sm text-slate-600 truncate">{cliente.email}</p>
           <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border mt-2 ${getEstadoColor(cliente.estado)}`}>
             {getEstadoIcon(cliente.estado)}
             {cliente.estado.charAt(0).toUpperCase() + cliente.estado.slice(1)}
@@ -606,36 +185,36 @@ const ClienteCard: React.FC<{
       {/* Información de contacto */}
       <div className="space-y-2 mb-4">
         {cliente.telefono && (
-          <div className="flex items-center gap-2 text-sm text-gray-600">
+          <div className="flex items-center gap-2 text-sm text-slate-600">
             <Phone size={14} />
             <span>{cliente.telefono}</span>
           </div>
         )}
         {cliente.direccion && (
-          <div className="flex items-center gap-2 text-sm text-gray-600">
+          <div className="flex items-center gap-2 text-sm text-slate-600">
             <MapPin size={14} />
             <span className="truncate">{cliente.direccion}</span>
           </div>
         )}
-        <div className="flex items-center gap-2 text-sm text-gray-600">
+        <div className="flex items-center gap-2 text-sm text-slate-600">
           <Calendar size={14} />
           <span>Cliente desde {format(cliente.creadoEn.toDate(), 'MMM yyyy', { locale: es })}</span>
         </div>
       </div>
 
       {/* Estadísticas rápidas */}
-      <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-100">
+      <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-100">
         <div className="text-center">
           <div className="text-lg font-bold text-blue-600">
             {cliente.totalCompras}
           </div>
-          <div className="text-xs text-gray-500">Compras</div>
+          <div className="text-xs text-slate-500">Compras</div>
         </div>
         <div className="text-center">
-          <div className="text-lg font-bold text-green-600">
+          <div className="text-lg font-bold text-emerald-600">
             ${cliente.montoTotalGastado.toLocaleString()}
           </div>
-          <div className="text-xs text-gray-500">Total gastado</div>
+          <div className="text-xs text-slate-500">Total gastado</div>
         </div>
       </div>
 
@@ -652,7 +231,7 @@ const ClienteCard: React.FC<{
             </span>
           ))}
           {cliente.tags.length > 3 && (
-            <span className="inline-flex items-center px-2 py-1 bg-gray-50 text-gray-500 text-xs rounded-full">
+            <span className="inline-flex items-center px-2 py-1 bg-slate-50 text-slate-500 text-xs rounded-full">
               +{cliente.tags.length - 3}
             </span>
           )}
@@ -665,7 +244,7 @@ const ClienteCard: React.FC<{
           variant="outline"
           fullWidth
           onClick={() => onSelect(cliente)}
-          className="justify-center"
+          className="justify-center border-slate-300 text-slate-700 hover:bg-slate-50"
         >
           Ver Perfil Completo
         </Button>
@@ -679,10 +258,9 @@ export const ClienteProfileView: React.FC = () => {
   const {
     clientes,
     clienteSeleccionado,
-    stats,
     activities,
     loading,
-    loadingStats,
+    loadingActivities,
     error,
     hasMore,
     total,
@@ -696,8 +274,8 @@ export const ClienteProfileView: React.FC = () => {
     uploadClienteImage,
     searchClientes,
     exportData,
-    refreshStats,
     updateClienteCompra,
+    loadClienteActivities,
     filtros,
     setFiltros,
     clearFiltros,
@@ -711,6 +289,7 @@ export const ClienteProfileView: React.FC = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showCompraModal, setShowCompraModal] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
   const [selectedCliente, setSelectedCliente] = useState<Cliente | null>(null);
   const [searchResults, setSearchResults] = useState<Cliente[]>([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
@@ -876,282 +455,291 @@ export const ClienteProfileView: React.FC = () => {
     setShowEditModal(true);
   };
 
-  // Estadísticas mejoradas
-  const enhancedStats = useMemo(() => {
-    if (!stats) return null;
-
-    return {
-      totalClientes: stats.totalClientes,
-      clientesActivos: stats.clientesActivos,
-      clientesNuevos: stats.clientesNuevos,
-      valorVidaPromedio: stats.valorVidaPromedio,
-      retencionClientes: stats.retencionClientes,
-      crecimientoMensual: stats.crecimientoMensual,
-    };
-  }, [stats]);
-
   if (loading && clientes.length === 0) {
     return (
-      <div className="p-6">
-        <LoadingSkeleton className="h-96" />
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
+        <div className="flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-16 h-16 mx-auto mb-6 bg-gradient-to-br from-purple-500 to-violet-600 rounded-2xl flex items-center justify-center shadow-lg">
+              <RefreshCw size={32} className="text-white animate-spin" />
+            </div>
+            <h3 className="text-xl font-bold text-slate-900 mb-2">
+              Cargando clientes...
+            </h3>
+            <p className="text-slate-600">Obteniendo información de clientes</p>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-6 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-                <Users className="text-blue-600" size={28} />
-                Gestión de Clientes
-              </h1>
-              <p className="text-gray-600 mt-1">
-                Administra y gestiona los perfiles de tus clientes
-              </p>
-            </div>
+    <div className="space-y-6">
+      {/* Search and Filters */}
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-4">
+          {/* Search */}
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
+            <input
+              type="text"
+              placeholder="Buscar clientes por nombre, email, teléfono..."
+              value={searchTerm}
+              onChange={(e) => handleSearch(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+            />
+
+            {/* Resultados de búsqueda */}
+            <AnimatePresence>
+              {showSearchResults && searchResults.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-lg border border-slate-200 max-h-64 overflow-y-auto z-50"
+                >
+                  {searchResults.map((cliente) => (
+                    <div
+                      key={cliente.id}
+                      onClick={() => handleSelectCliente(cliente)}
+                      className="p-3 hover:bg-slate-50 cursor-pointer border-b border-slate-100 last:border-b-0"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center">
+                          {cliente.avatar ? (
+                            <Image
+                              src={cliente.avatar}
+                              alt={cliente.nombre}
+                              className="w-full h-full object-cover rounded-full"
+                              width={32}
+                              height={32}
+                            />
+                          ) : (
+                            <User size={16} className="text-slate-400" />
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-medium text-slate-900">{cliente.nombre}</p>
+                          <p className="text-sm text-slate-500">{cliente.email}</p>
+                        </div>
+                        <div className="text-sm text-slate-400">
+                          ${cliente.montoTotalGastado.toLocaleString()}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={`flex items-center gap-2 px-4 py-3 rounded-xl border transition-all ${
+                showFilters 
+                  ? 'bg-purple-50 border-purple-200 text-purple-700' 
+                  : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'
+              }`}
+            >
+              <Filter className="w-4 h-4" />
+              Filtros
+            </button>
             
-            <div className="flex items-center gap-3">
-              <Button
-                variant="outline"
-                leftIcon={<Download size={16} />}
-                onClick={exportData}
+            <button
+              onClick={exportData}
+              className="flex items-center gap-2 bg-emerald-500 text-white px-4 py-3 rounded-xl hover:bg-emerald-600 transition-colors shadow-lg shadow-emerald-500/30"
+            >
+              <Download className="w-4 h-4" />
+              Exportar
+            </button>
+
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="flex items-center gap-2 bg-purple-500 text-white px-4 py-3 rounded-xl hover:bg-purple-600 transition-colors shadow-lg shadow-purple-500/30"
+            >
+              <UserPlus className="w-4 h-4" />
+              Nuevo Cliente
+            </button>
+
+            <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-1">
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`p-2 rounded-lg transition-colors ${
+                  viewMode === 'grid' 
+                    ? 'bg-white text-slate-900 shadow-sm' 
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
               >
-                Exportar
-              </Button>
-              
-              <Button
-                variant="outline"
-                leftIcon={<RefreshCw size={16} />}
-                onClick={() => {
-                  loadClientes();
-                  refreshStats();
-                }}
-                loading={loading}
+                <Grid size={16} />
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`p-2 rounded-lg transition-colors ${
+                  viewMode === 'list' 
+                    ? 'bg-white text-slate-900 shadow-sm' 
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
               >
-                Actualizar
-              </Button>
-              
-              <Button
-                leftIcon={<UserPlus size={16} />}
-                onClick={() => setShowCreateModal(true)}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                Nuevo Cliente
-              </Button>
+                <List size={16} />
+              </button>
             </div>
           </div>
         </div>
+
+        {/* Filters Panel */}
+        <AnimatePresence>
+          {showFilters && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="border-t border-slate-200 pt-4"
+            >
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Estado
+                  </label>
+                  <select
+                    value={filtros.estado || ''}
+                    onChange={(e) => setFiltros({
+                      ...filtros,
+                      estado: e.target.value as 'activo' | 'inactivo' | 'suspendido' | undefined
+                    })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  >
+                    <option value="">Todos los estados</option>
+                    <option value="activo">Activo</option>
+                    <option value="inactivo">Inactivo</option>
+                    <option value="suspendido">Suspendido</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Fecha desde
+                  </label>
+                  <input
+                    type="date"
+                    value={filtros.fechaDesde ? format(filtros.fechaDesde, 'yyyy-MM-dd') : ''}
+                    onChange={(e) => setFiltros({
+                      ...filtros,
+                      fechaDesde: e.target.value ? new Date(e.target.value) : undefined
+                    })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Fecha hasta
+                  </label>
+                  <input
+                    type="date"
+                    value={filtros.fechaHasta ? format(filtros.fechaHasta, 'yyyy-MM-dd') : ''}
+                    onChange={(e) => setFiltros({
+                      ...filtros,
+                      fechaHasta: e.target.value ? new Date(e.target.value) : undefined
+                    })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  />
+                </div>
+                
+                <div className="flex items-end">
+                  <button
+                    onClick={clearFiltros}
+                    className="w-full px-4 py-2 text-slate-600 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
+                  >
+                    Limpiar filtros
+                  </button>
+                </div>
+              </div>
+              
+              <div className="mt-4 text-center">
+                <span className="text-sm text-slate-600">
+                  {clientes.length} cliente{clientes.length !== 1 ? 's' : ''} encontrado{clientes.length !== 1 ? 's' : ''}
+                </span>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-6">
-        {/* Estadísticas */}
-        {enhancedStats && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6 mb-8">
-            <StatsCard
-              title="Total Clientes"
-              value={enhancedStats.totalClientes}
-              icon={<Users size={20} />}
-              color="#3b82f6"
-            />
-            <StatsCard
-              title="Clientes Activos"
-              value={enhancedStats.clientesActivos}
-              icon={<UserCheck size={20} />}
-              color="#10b981"
-            />
-            <StatsCard
-              title="Nuevos este mes"
-              value={enhancedStats.clientesNuevos}
-              icon={<UserPlus size={20} />}
-              color="#f59e0b"
-              change={enhancedStats.crecimientoMensual}
-            />
-            <StatsCard
-              title="Valor Vida Promedio"
-              value={`$${enhancedStats.valorVidaPromedio.toLocaleString()}`}
-              icon={<DollarSign size={20} />}
-              color="#8b5cf6"
-            />
-            <StatsCard
-              title="Retención"
-              value={`${enhancedStats.retencionClientes.toFixed(1)}%`}
-              icon={<Target size={20} />}
-              color="#06b6d4"
-            />
-            <StatsCard
-              title="Crecimiento"
-              value={`${enhancedStats.crecimientoMensual.toFixed(1)}%`}
-              icon={<TrendingUp size={20} />}
-              color="#ef4444"
-              change={enhancedStats.crecimientoMensual}
-            />
+      {/* Clientes List */}
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        {error && (
+          <div className="p-6 bg-red-50 border-b border-red-200 flex items-center gap-3">
+            <AlertCircle className="text-red-500" size={20} />
+            <div>
+              <h3 className="font-medium text-red-800">Error al cargar clientes</h3>
+              <p className="text-red-600">{error}</p>
+            </div>
           </div>
         )}
 
-        {/* Barra de búsqueda y filtros */}
-        <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
-          <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
-            <div className="flex-1 max-w-md relative">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-                <input
-                  type="text"
-                  placeholder="Buscar clientes por nombre, email, teléfono..."
-                  value={searchTerm}
-                  onChange={(e) => handleSearch(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        {clientes.length === 0 && !loading ? (
+          <div className="text-center py-12">
+            <div className="w-16 h-16 mx-auto mb-6 bg-gradient-to-br from-slate-100 to-slate-200 rounded-2xl flex items-center justify-center">
+              <Users className="w-8 h-8 text-slate-400" />
+            </div>
+            <h3 className="text-xl font-bold text-slate-900 mb-2">
+              No hay clientes registrados
+            </h3>
+            <p className="text-slate-600 mb-6">
+              Comienza agregando tu primer cliente para gestionar sus perfiles
+            </p>
+            <Button
+              leftIcon={<UserPlus size={16} />}
+              onClick={() => setShowCreateModal(true)}
+              className="bg-purple-600 hover:bg-purple-700 text-white"
+            >
+              Agregar Primer Cliente
+            </Button>
+          </div>
+        ) : (
+          <div className="p-6">
+            <div className={`grid gap-6 ${
+              viewMode === 'grid' 
+                ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
+                : 'grid-cols-1'
+            }`}>
+              {clientes.map((cliente) => (
+                <ClienteCard
+                  key={cliente.id}
+                  cliente={cliente}
+                  onSelect={handleSelectCliente}
+                  onEdit={openEditModal}
+                  onDelete={(cliente) => {
+                    setSelectedCliente(cliente);
+                    setShowDeleteModal(true);
+                  }}
+                  onToggleEstado={handleToggleEstado}
                 />
-              </div>
-
-              {/* Resultados de búsqueda */}
-              <AnimatePresence>
-                {showSearchResults && searchResults.length > 0 && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-lg border border-gray-200 max-h-64 overflow-y-auto z-50"
-                  >
-                    {searchResults.map((cliente) => (
-                      <div
-                        key={cliente.id}
-                        onClick={() => handleSelectCliente(cliente)}
-                        className="p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-                            {cliente.avatar ? (
-                              <Image
-                                src={cliente.avatar}
-                                alt={cliente.nombre}
-                                className="w-full h-full object-cover rounded-full"
-                                width={32}
-                                height={32}
-                              />
-                            ) : (
-                              <User size={16} className="text-gray-400" />
-                            )}
-                          </div>
-                          <div className="flex-1">
-                            <p className="font-medium text-gray-900">{cliente.nombre}</p>
-                            <p className="text-sm text-gray-500">{cliente.email}</p>
-                          </div>
-                          <div className="text-sm text-gray-400">
-                            ${cliente.montoTotalGastado.toLocaleString()}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              ))}
             </div>
 
-            <div className="flex items-center gap-3">
-              <ClienteFilters
-                filtros={filtros}
-                onFiltrosChange={setFiltros}
-                onClearFiltros={clearFiltros}
-              />
-
-              <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+            {/* Load More Button */}
+            {hasMore && (
+              <div className="text-center mt-8">
                 <Button
-                  variant={viewMode === 'grid' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setViewMode('grid')}
-                  className="p-2"
+                  variant="outline"
+                  onClick={loadMoreClientes}
+                  loading={loading}
+                  className="px-8 border-slate-300 text-slate-700 hover:bg-slate-50"
                 >
-                  <Grid size={16} />
-                </Button>
-                <Button
-                  variant={viewMode === 'list' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setViewMode('list')}
-                  className="p-2"
-                >
-                  <List size={16} />
+                  Cargar más clientes
                 </Button>
               </div>
+            )}
+
+            {/* Pagination Info */}
+            <div className="text-center text-sm text-slate-500 mt-4">
+              Mostrando {clientes.length} de {total} clientes
             </div>
           </div>
-        </div>
-
-        {/* Lista de clientes */}
-        <div className="space-y-6">
-          {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center gap-3">
-              <AlertCircle className="text-red-500" size={20} />
-              <div>
-                <h3 className="font-medium text-red-800">Error al cargar clientes</h3>
-                <p className="text-red-600">{error}</p>
-              </div>
-            </div>
-          )}
-
-          {clientes.length === 0 && !loading ? (
-            <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
-              <Users size={48} className="text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                No hay clientes registrados
-              </h3>
-              <p className="text-gray-500 mb-6">
-                Comienza agregando tu primer cliente para gestionar sus perfiles
-              </p>
-              <Button
-                leftIcon={<UserPlus size={16} />}
-                onClick={() => setShowCreateModal(true)}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                Agregar Primer Cliente
-              </Button>
-            </div>
-          ) : (
-            <>
-              <div className={`grid gap-6 ${
-                viewMode === 'grid' 
-                  ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
-                  : 'grid-cols-1'
-              }`}>
-                {clientes.map((cliente) => (
-                  <ClienteCard
-                    key={cliente.id}
-                    cliente={cliente}
-                    onSelect={handleSelectCliente}
-                    onEdit={openEditModal}
-                    onDelete={(cliente) => {
-                      setSelectedCliente(cliente);
-                      setShowDeleteModal(true);
-                    }}
-                    onToggleEstado={handleToggleEstado}
-                  />
-                ))}
-              </div>
-
-              {/* Cargar más */}
-              {hasMore && (
-                <div className="text-center">
-                  <Button
-                    variant="outline"
-                    onClick={loadMoreClientes}
-                    loading={loading}
-                    className="px-8"
-                  >
-                    Cargar más clientes
-                  </Button>
-                </div>
-              )}
-
-              {/* Información de paginación */}
-              <div className="text-center text-sm text-gray-500">
-                Mostrando {clientes.length} de {total} clientes
-              </div>
-            </>
-          )}
-        </div>
+        )}
       </div>
 
       {/* Modal de crear cliente */}
@@ -1213,7 +801,7 @@ export const ClienteProfileView: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-slate-700 mb-2">
                 Notas
               </label>
               <textarea
@@ -1221,12 +809,12 @@ export const ClienteProfileView: React.FC = () => {
                 onChange={(e) => setFormData(prev => ({ ...prev, notas: e.target.value }))}
                 placeholder="Notas adicionales sobre el cliente..."
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
+              <label className="block text-sm font-medium text-slate-700 mb-3">
                 Configuración de comunicación
               </label>
               <div className="space-y-3">
@@ -1237,7 +825,7 @@ export const ClienteProfileView: React.FC = () => {
                   { key: 'recibirSMS', label: 'Comunicación por SMS' },
                 ].map((config) => (
                   <div key={config.key} className="flex items-center justify-between">
-                    <span className="text-sm text-gray-700">{config.label}</span>
+                    <span className="text-sm text-slate-700">{config.label}</span>
                     <button
                       type="button"
                       onClick={() => setFormData(prev => ({
@@ -1249,8 +837,8 @@ export const ClienteProfileView: React.FC = () => {
                       }))}
                       className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                         formData.configuracion[config.key as keyof typeof formData.configuracion]
-                          ? 'bg-blue-600' 
-                          : 'bg-gray-200'
+                          ? 'bg-purple-600' 
+                          : 'bg-slate-200'
                       }`}
                     >
                       <span
@@ -1274,6 +862,7 @@ export const ClienteProfileView: React.FC = () => {
                 setShowCreateModal(false);
                 resetForm();
               }}
+              className="border-slate-300 text-slate-700 hover:bg-slate-50"
             >
               Cancelar
             </Button>
@@ -1281,7 +870,7 @@ export const ClienteProfileView: React.FC = () => {
               onClick={handleCreateCliente}
               loading={loading}
               disabled={!formData.nombre || !formData.email}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              className="bg-purple-600 hover:bg-purple-700 text-white"
             >
               Crear Cliente
             </Button>
@@ -1332,7 +921,7 @@ export const ClienteProfileView: React.FC = () => {
                 placeholder="12345678"
               />
 
-              <Input
+                           <Input
                 label="Fecha de nacimiento"
                 type="date"
                 value={formData.fechaNacimiento}
@@ -1348,7 +937,7 @@ export const ClienteProfileView: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-slate-700 mb-2">
                 Notas
               </label>
               <textarea
@@ -1356,12 +945,12 @@ export const ClienteProfileView: React.FC = () => {
                 onChange={(e) => setFormData(prev => ({ ...prev, notas: e.target.value }))}
                 placeholder="Notas adicionales sobre el cliente..."
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
+              <label className="block text-sm font-medium text-slate-700 mb-3">
                 Configuración de comunicación
               </label>
               <div className="space-y-3">
@@ -1372,7 +961,7 @@ export const ClienteProfileView: React.FC = () => {
                   { key: 'recibirSMS', label: 'Comunicación por SMS' },
                 ].map((config) => (
                   <div key={config.key} className="flex items-center justify-between">
-                    <span className="text-sm text-gray-700">{config.label}</span>
+                    <span className="text-sm text-slate-700">{config.label}</span>
                     <button
                       type="button"
                       onClick={() => setFormData(prev => ({
@@ -1384,8 +973,8 @@ export const ClienteProfileView: React.FC = () => {
                       }))}
                       className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                         formData.configuracion[config.key as keyof typeof formData.configuracion]
-                          ? 'bg-blue-600' 
-                          : 'bg-gray-200'
+                          ? 'bg-purple-600' 
+                          : 'bg-slate-200'
                       }`}
                     >
                       <span
@@ -1409,6 +998,7 @@ export const ClienteProfileView: React.FC = () => {
                 setShowEditModal(false);
                 resetForm();
               }}
+              className="border-slate-300 text-slate-700 hover:bg-slate-50"
             >
               Cancelar
             </Button>
@@ -1416,7 +1006,7 @@ export const ClienteProfileView: React.FC = () => {
               onClick={handleEditCliente}
               loading={loading}
               disabled={!formData.nombre || !formData.email}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              className="bg-purple-600 hover:bg-purple-700 text-white"
             >
               Guardar Cambios
             </Button>
@@ -1448,9 +1038,9 @@ export const ClienteProfileView: React.FC = () => {
             </div>
 
             {selectedCliente && (
-              <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+              <div className="mt-4 p-4 bg-slate-50 rounded-lg">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center">
+                  <div className="w-12 h-12 bg-slate-200 rounded-lg flex items-center justify-center">
                     {selectedCliente.avatar ? (
                       <Image
                         src={selectedCliente.avatar}
@@ -1460,13 +1050,13 @@ export const ClienteProfileView: React.FC = () => {
                         height={48}
                       />
                     ) : (
-                      <User size={20} className="text-gray-400" />
+                      <User size={20} className="text-slate-400" />
                     )}
                   </div>
                   <div>
-                    <p className="font-medium text-gray-900">{selectedCliente.nombre}</p>
-                    <p className="text-sm text-gray-500">{selectedCliente.email}</p>
-                    <p className="text-sm text-gray-500">
+                    <p className="font-medium text-slate-900">{selectedCliente.nombre}</p>
+                    <p className="text-sm text-slate-500">{selectedCliente.email}</p>
+                    <p className="text-sm text-slate-500">
                       {selectedCliente.totalCompras} compras • ${selectedCliente.montoTotalGastado.toLocaleString()}
                     </p>
                   </div>
@@ -1479,6 +1069,7 @@ export const ClienteProfileView: React.FC = () => {
             <Button
               variant="outline"
               onClick={() => setShowDeleteModal(false)}
+              className="border-slate-300 text-slate-700 hover:bg-slate-50"
             >
               Cancelar
             </Button>
@@ -1506,7 +1097,7 @@ export const ClienteProfileView: React.FC = () => {
           {clienteSeleccionado && (
             <div className="space-y-6 overflow-y-auto max-h-[70vh]">
               {/* Header del cliente */}
-              <div className="flex items-start gap-6 p-6 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl">
+              <div className="flex items-start gap-6 p-6 bg-gradient-to-r from-purple-50 to-violet-50 rounded-xl">
                 <div className="relative">
                   <div className="w-24 h-24 bg-white rounded-xl shadow-lg flex items-center justify-center overflow-hidden">
                     {clienteSeleccionado.avatar ? (
@@ -1518,15 +1109,11 @@ export const ClienteProfileView: React.FC = () => {
                         height={96}
                       />
                     ) : (
-                      <User size={32} className="text-gray-400" />
+                      <User size={32} className="text-slate-400" />
                     )}
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="absolute -bottom-2 -right-2 w-8 h-8 p-0 bg-white shadow-lg"
+                  <button
                     onClick={() => {
-                      // Implementar subida de imagen
                       const input = document.createElement('input');
                       input.type = 'file';
                       input.accept = 'image/*';
@@ -1538,26 +1125,27 @@ export const ClienteProfileView: React.FC = () => {
                       };
                       input.click();
                     }}
+                    className="absolute -bottom-2 -right-2 w-8 h-8 bg-white shadow-lg rounded-lg flex items-center justify-center text-slate-600 hover:text-slate-900 transition-colors"
                   >
                     <Camera size={14} />
-                  </Button>
+                  </button>
                 </div>
 
                 <div className="flex-1">
                   <div className="flex items-start justify-between">
                     <div>
-                      <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                      <h2 className="text-2xl font-bold text-slate-900 mb-2">
                         {clienteSeleccionado.nombre}
                       </h2>
-                      <p className="text-gray-600 mb-3">{clienteSeleccionado.email}</p>
+                      <p className="text-slate-600 mb-3">{clienteSeleccionado.email}</p>
                       
                       <div className="flex items-center gap-4 mb-4">
-                        <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${
+                        <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium border ${
                           clienteSeleccionado.estado === 'activo' 
-                            ? 'bg-green-100 text-green-800 border border-green-200'
+                            ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
                             : clienteSeleccionado.estado === 'suspendido'
-                            ? 'bg-red-100 text-red-800 border border-red-200'
-                            : 'bg-gray-100 text-gray-800 border border-gray-200'
+                            ? 'bg-red-100 text-red-800 border-red-200'
+                            : 'bg-slate-100 text-slate-800 border-slate-200'
                         }`}>
                           {clienteSeleccionado.estado === 'activo' && <CheckCircle size={14} />}
                           {clienteSeleccionado.estado === 'suspendido' && <XCircle size={14} />}
@@ -1565,7 +1153,7 @@ export const ClienteProfileView: React.FC = () => {
                           {clienteSeleccionado.estado.charAt(0).toUpperCase() + clienteSeleccionado.estado.slice(1)}
                         </div>
                         
-                        <span className="text-sm text-gray-500">
+                        <span className="text-sm text-slate-500">
                           Cliente desde {format(clienteSeleccionado.creadoEn.toDate(), 'dd/MM/yyyy', { locale: es })}
                         </span>
                       </div>
@@ -1573,19 +1161,19 @@ export const ClienteProfileView: React.FC = () => {
                       {/* Información de contacto */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         {clienteSeleccionado.telefono && (
-                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <div className="flex items-center gap-2 text-sm text-slate-600">
                             <Phone size={14} />
                             <span>{clienteSeleccionado.telefono}</span>
                           </div>
                         )}
                         {clienteSeleccionado.direccion && (
-                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <div className="flex items-center gap-2 text-sm text-slate-600">
                             <MapPin size={14} />
                             <span>{clienteSeleccionado.direccion}</span>
                           </div>
                         )}
                         {clienteSeleccionado.fechaNacimiento && (
-                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <div className="flex items-center gap-2 text-sm text-slate-600">
                             <Calendar size={14} />
                             <span>
                               {format(clienteSeleccionado.fechaNacimiento.toDate(), 'dd/MM/yyyy', { locale: es })}
@@ -1593,7 +1181,7 @@ export const ClienteProfileView: React.FC = () => {
                           </div>
                         )}
                         {clienteSeleccionado.ultimoAcceso && (
-                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <div className="flex items-center gap-2 text-sm text-slate-600">
                             <Clock size={14} />
                             <span>
                               Último acceso: {format(clienteSeleccionado.ultimoAcceso.toDate(), 'dd/MM/yyyy HH:mm', { locale: es })}
@@ -1612,6 +1200,7 @@ export const ClienteProfileView: React.FC = () => {
                           setShowDetailModal(false);
                           openEditModal(clienteSeleccionado);
                         }}
+                        className="border-slate-300 text-slate-700 hover:bg-slate-50"
                       >
                         Editar
                       </Button>
@@ -1620,7 +1209,7 @@ export const ClienteProfileView: React.FC = () => {
                         size="sm"
                         leftIcon={<ShoppingBag size={14} />}
                         onClick={() => setShowCompraModal(true)}
-                        className="bg-green-50 border-green-200 text-green-700 hover:bg-green-100"
+                        className="bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100"
                       >
                         Registrar Compra
                       </Button>
@@ -1631,51 +1220,51 @@ export const ClienteProfileView: React.FC = () => {
 
               {/* Estadísticas del cliente */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-white rounded-lg border border-gray-200 p-4 text-center">
+                <div className="bg-white rounded-xl border border-slate-200 p-4 text-center">
                   <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-3">
                     <ShoppingBag size={20} className="text-blue-600" />
                   </div>
-                  <div className="text-2xl font-bold text-gray-900 mb-1">
+                  <div className="text-2xl font-bold text-slate-900 mb-1">
                     {clienteSeleccionado.totalCompras}
                   </div>
-                  <div className="text-sm text-gray-500">Total Compras</div>
+                  <div className="text-sm text-slate-500">Total Compras</div>
                 </div>
 
-                <div className="bg-white rounded-lg border border-gray-200 p-4 text-center">
-                  <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-                    <DollarSign size={20} className="text-green-600" />
+                <div className="bg-white rounded-xl border border-slate-200 p-4 text-center">
+                  <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                    <DollarSign size={20} className="text-emerald-600" />
                   </div>
-                  <div className="text-2xl font-bold text-gray-900 mb-1">
+                  <div className="text-2xl font-bold text-slate-900 mb-1">
                     ${clienteSeleccionado.montoTotalGastado.toLocaleString()}
                   </div>
-                  <div className="text-sm text-gray-500">Total Gastado</div>
+                  <div className="text-sm text-slate-500">Total Gastado</div>
                 </div>
 
-                <div className="bg-white rounded-lg border border-gray-200 p-4 text-center">
+                <div className="bg-white rounded-xl border border-slate-200 p-4 text-center">
                   <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-3">
                     <Gift size={20} className="text-purple-600" />
                   </div>
-                  <div className="text-2xl font-bold text-gray-900 mb-1">
+                  <div className="text-2xl font-bold text-slate-900 mb-1">
                     {clienteSeleccionado.beneficiosUsados}
                   </div>
-                  <div className="text-sm text-gray-500">Beneficios Usados</div>
+                  <div className="text-sm text-slate-500">Beneficios Usados</div>
                 </div>
 
-                <div className="bg-white rounded-lg border border-gray-200 p-4 text-center">
+                <div className="bg-white rounded-xl border border-slate-200 p-4 text-center">
                   <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center mx-auto mb-3">
                     <TrendingUp size={20} className="text-orange-600" />
                   </div>
-                  <div className="text-2xl font-bold text-gray-900 mb-1">
+                  <div className="text-2xl font-bold text-slate-900 mb-1">
                     ${clienteSeleccionado.promedioCompra.toLocaleString()}
                   </div>
-                  <div className="text-sm text-gray-500">Promedio Compra</div>
+                  <div className="text-sm text-slate-500">Promedio Compra</div>
                 </div>
               </div>
 
               {/* Actividad reciente */}
-              <div className="bg-white rounded-lg border border-gray-200 p-6">
+              <div className="bg-white rounded-xl border border-slate-200 p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                  <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
                     <Activity size={20} />
                     Actividad Reciente
                   </h3>
@@ -1685,6 +1274,7 @@ export const ClienteProfileView: React.FC = () => {
                     leftIcon={<RefreshCw size={14} />}
                     onClick={() => loadClienteActivities(clienteSeleccionado.id)}
                     loading={loadingActivities}
+                    className="border-slate-300 text-slate-700 hover:bg-slate-50"
                   >
                     Actualizar
                   </Button>
@@ -1693,11 +1283,11 @@ export const ClienteProfileView: React.FC = () => {
                 {loadingActivities ? (
                   <div className="space-y-3">
                     {[...Array(3)].map((_, i) => (
-                      <div key={i} className="animate-pulse flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                        <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
+                      <div key={i} className="animate-pulse flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
+                        <div className="w-8 h-8 bg-slate-200 rounded-full"></div>
                         <div className="flex-1">
-                          <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                          <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                          <div className="h-4 bg-slate-200 rounded w-3/4 mb-2"></div>
+                          <div className="h-3 bg-slate-200 rounded w-1/2"></div>
                         </div>
                       </div>
                     ))}
@@ -1705,12 +1295,12 @@ export const ClienteProfileView: React.FC = () => {
                 ) : activities.length > 0 ? (
                   <div className="space-y-3 max-h-64 overflow-y-auto">
                     {activities.map((activity) => (
-                      <div key={activity.id} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                      <div key={activity.id} className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg">
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                          activity.tipo === 'compra' ? 'bg-green-100 text-green-600' :
+                          activity.tipo === 'compra' ? 'bg-emerald-100 text-emerald-600' :
                           activity.tipo === 'beneficio' ? 'bg-purple-100 text-purple-600' :
                           activity.tipo === 'visita' ? 'bg-blue-100 text-blue-600' :
-                          'bg-gray-100 text-gray-600'
+                          'bg-slate-100 text-slate-600'
                         }`}>
                           {activity.tipo === 'compra' && <ShoppingBag size={16} />}
                           {activity.tipo === 'beneficio' && <Gift size={16} />}
@@ -1719,15 +1309,15 @@ export const ClienteProfileView: React.FC = () => {
                           {activity.tipo === 'actualizacion' && <Edit3 size={16} />}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium text-gray-900 text-sm">
+                          <p className="font-medium text-slate-900 text-sm">
                             {activity.descripcion}
                           </p>
                           <div className="flex items-center gap-2 mt-1">
-                            <span className="text-xs text-gray-500">
+                            <span className="text-xs text-slate-500">
                               {format(activity.fecha.toDate(), 'dd/MM/yyyy HH:mm', { locale: es })}
                             </span>
                             {activity.monto && (
-                              <span className="text-xs font-medium text-green-600">
+                              <span className="text-xs font-medium text-emerald-600">
                                 ${activity.monto.toLocaleString()}
                               </span>
                             )}
@@ -1738,23 +1328,23 @@ export const ClienteProfileView: React.FC = () => {
                   </div>
                 ) : (
                   <div className="text-center py-8">
-                    <Activity size={32} className="text-gray-300 mx-auto mb-3" />
-                    <p className="text-gray-500">No hay actividad reciente</p>
+                    <Activity size={32} className="text-slate-300 mx-auto mb-3" />
+                    <p className="text-slate-500">No hay actividad reciente</p>
                   </div>
                 )}
               </div>
 
               {/* Notas y tags */}
               {(clienteSeleccionado.notas || (clienteSeleccionado.tags && clienteSeleccionado.tags.length > 0)) && (
-                <div className="bg-white rounded-lg border border-gray-200 p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                <div className="bg-white rounded-xl border border-slate-200 p-6">
+                  <h3 className="text-lg font-bold text-slate-900 mb-4">
                     Información Adicional
                   </h3>
                   
                   {clienteSeleccionado.notas && (
                     <div className="mb-4">
-                      <h4 className="text-sm font-medium text-gray-700 mb-2">Notas</h4>
-                      <p className="text-gray-600 bg-gray-50 p-3 rounded-lg">
+                      <h4 className="text-sm font-medium text-slate-700 mb-2">Notas</h4>
+                      <p className="text-slate-600 bg-slate-50 p-3 rounded-lg">
                         {clienteSeleccionado.notas}
                       </p>
                     </div>
@@ -1762,7 +1352,7 @@ export const ClienteProfileView: React.FC = () => {
 
                   {clienteSeleccionado.tags && clienteSeleccionado.tags.length > 0 && (
                     <div>
-                      <h4 className="text-sm font-medium text-gray-700 mb-2">Tags</h4>
+                      <h4 className="text-sm font-medium text-slate-700 mb-2">Tags</h4>
                       <div className="flex flex-wrap gap-2">
                         {clienteSeleccionado.tags.map((tag, index) => (
                           <span
@@ -1780,8 +1370,8 @@ export const ClienteProfileView: React.FC = () => {
               )}
 
               {/* Configuración de comunicación */}
-              <div className="bg-white rounded-lg border border-gray-200 p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <div className="bg-white rounded-xl border border-slate-200 p-6">
+                <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
                   <Settings size={20} />
                   Configuración de Comunicación
                 </h3>
@@ -1813,15 +1403,15 @@ export const ClienteProfileView: React.FC = () => {
                       enabled: clienteSeleccionado.configuracion.recibirSMS 
                     },
                   ].map((config) => (
-                    <div key={config.key} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                    <div key={config.key} className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
                       <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                        config.enabled ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'
+                        config.enabled ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-400'
                       }`}>
                         {config.icon}
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-gray-900">{config.label}</p>
-                        <p className={`text-xs ${config.enabled ? 'text-green-600' : 'text-gray-500'}`}>
+                        <p className="text-sm font-medium text-slate-900">{config.label}</p>
+                        <p className={`text-xs ${config.enabled ? 'text-emerald-600' : 'text-slate-500'}`}>
                           {config.enabled ? 'Habilitado' : 'Deshabilitado'}
                         </p>
                       </div>
@@ -1836,6 +1426,7 @@ export const ClienteProfileView: React.FC = () => {
             <Button
               variant="outline"
               onClick={() => setShowDetailModal(false)}
+              className="border-slate-300 text-slate-700 hover:bg-slate-50"
             >
               Cerrar
             </Button>
@@ -1855,14 +1446,14 @@ export const ClienteProfileView: React.FC = () => {
 
           <div className="space-y-4">
             {selectedCliente && (
-              <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <User size={16} className="text-blue-600" />
+                  <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <User size={16} className="text-purple-600" />
                   </div>
                   <div>
-                    <p className="font-medium text-blue-900">{selectedCliente.nombre}</p>
-                    <p className="text-sm text-blue-600">{selectedCliente.email}</p>
+                    <p className="font-medium text-purple-900">{selectedCliente.nombre}</p>
+                    <p className="text-sm text-purple-600">{selectedCliente.email}</p>
                   </div>
                 </div>
               </div>
@@ -1878,7 +1469,7 @@ export const ClienteProfileView: React.FC = () => {
             />
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-slate-700 mb-2">
                 Descripción (opcional)
               </label>
               <textarea
@@ -1886,14 +1477,14 @@ export const ClienteProfileView: React.FC = () => {
                 onChange={(e) => setCompraData(prev => ({ ...prev, descripcion: e.target.value }))}
                 placeholder="Descripción de la compra..."
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               />
             </div>
 
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
               <div className="flex items-center gap-2">
                 <Gift size={16} className="text-purple-600" />
-                <span className="text-sm font-medium text-gray-700">
+                <span className="text-sm font-medium text-slate-700">
                   ¿Se usó un beneficio?
                 </span>
               </div>
@@ -1901,7 +1492,7 @@ export const ClienteProfileView: React.FC = () => {
                 type="button"
                 onClick={() => setCompraData(prev => ({ ...prev, beneficioUsado: !prev.beneficioUsado }))}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  compraData.beneficioUsado ? 'bg-purple-600' : 'bg-gray-200'
+                  compraData.beneficioUsado ? 'bg-purple-600' : 'bg-slate-200'
                 }`}
               >
                 <span
@@ -1920,6 +1511,7 @@ export const ClienteProfileView: React.FC = () => {
                 setShowCompraModal(false);
                 setCompraData({ monto: '', beneficioUsado: false, descripcion: '' });
               }}
+              className="border-slate-300 text-slate-700 hover:bg-slate-50"
             >
               Cancelar
             </Button>
@@ -1927,7 +1519,7 @@ export const ClienteProfileView: React.FC = () => {
               onClick={handleRegistrarCompra}
               loading={loading}
               disabled={!compraData.monto}
-              className="bg-green-600 hover:bg-green-700 text-white"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white"
             >
               Registrar Compra
             </Button>
@@ -1937,3 +1529,4 @@ export const ClienteProfileView: React.FC = () => {
     </div>
   );
 };
+ 
