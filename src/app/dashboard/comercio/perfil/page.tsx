@@ -6,18 +6,13 @@ import { useSearchParams } from 'next/navigation';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { ComercioSidebar } from '@/components/layout/ComercioSidebar';
 import { ProfileForm } from '@/components/comercio/perfil/ProfileForm';
-import { ImageUploader } from '@/components/comercio/perfil/ImageUploader';
 import { QRSection } from '@/components/comercio/perfil/QRSection';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/hooks/useAuth';
 import { useComercios } from '@/hooks/useComercios';
 import { 
   Store, 
-  Upload, 
-  Settings, 
   RefreshCw,
-  Shield,
-  Bell,
   QrCode
 } from 'lucide-react';
 
@@ -44,22 +39,10 @@ export default function ComercioPerfilPage() {
       description: 'Información básica y contacto'
     },
     {
-      id: 'imagenes',
-      label: 'Logo y Banner',
-      icon: Upload,
-      description: 'Imágenes representativas'
-    },
-    {
       id: 'qr',
       label: 'Código QR',
       icon: QrCode,
       description: 'Gestión del código QR'
-    },
-    {
-      id: 'configuracion',
-      label: 'Configuración',
-      icon: Settings,
-      description: 'Preferencias y notificaciones'
     }
   ];
 
@@ -156,95 +139,7 @@ export default function ComercioPerfilPage() {
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
           {activeTab === 'datos' && <ProfileForm />}
 
-          {activeTab === 'imagenes' && <ImageUploader />}
-
           {activeTab === 'qr' && <QRSection />}
-
-          {activeTab === 'configuracion' && (
-            <div className="p-8">
-              <div className="max-w-2xl">
-                <h3 className="text-xl font-bold text-gray-900 mb-6">
-                  Configuración del Comercio
-                </h3>
-
-                <div className="space-y-6">
-                  {/* Notifications */}
-                  <div className="bg-gray-50 rounded-xl p-6">
-                    <div className="flex items-center space-x-3 mb-4">
-                      <Bell className="w-5 h-5 text-gray-600" />
-                      <h4 className="font-semibold text-gray-900">Notificaciones</h4>
-                    </div>
-                    
-                    <div className="space-y-4">
-                      <label className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-gray-700">
-                          Notificaciones por email
-                        </span>
-                        <input
-                          type="checkbox"
-                          defaultChecked={comercio?.configuracion?.notificacionesEmail ?? true}
-                          className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-                        />
-                      </label>
-
-                      <label className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-gray-700">
-                          Notificaciones por WhatsApp
-                        </span>
-                        <input
-                          type="checkbox"
-                          defaultChecked={comercio?.configuracion?.notificacionesWhatsApp ?? false}
-                          className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-                        />
-                      </label>
-                    </div>
-                  </div>
-
-                  {/* Validation Settings */}
-                  <div className="bg-gray-50 rounded-xl p-6">
-                    <div className="flex items-center space-x-3 mb-4">
-                      <Shield className="w-5 h-5 text-gray-600" />
-                      <h4 className="font-semibold text-gray-900">Validaciones</h4>
-                    </div>
-                    
-                    <div className="space-y-4">
-                      <label className="flex items-center justify-between">
-                        <div>
-                          <span className="text-sm font-medium text-gray-700">
-                            Auto-validación
-                          </span>
-                          <p className="text-xs text-gray-500">
-                            Validar automáticamente los beneficios sin confirmación manual
-                          </p>
-                        </div>
-                        <input
-                          type="checkbox"
-                          defaultChecked={comercio?.configuracion?.autoValidacion ?? false}
-                          className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-                        />
-                      </label>
-
-                      <label className="flex items-center justify-between">
-                        <div>
-                          <span className="text-sm font-medium text-gray-700">
-                            Requiere aprobación
-                          </span>
-                          <p className="text-xs text-gray-500">
-                            Solicitar aprobación antes de aplicar beneficios
-                          </p>
-                        </div>
-                        <input
-                          type="checkbox"
-                          defaultChecked={comercio?.configuracion?.requiereAprobacion ?? true}
-                          className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-                        />
-                      </label>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </motion.div>
     </DashboardLayout>
