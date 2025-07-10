@@ -6,7 +6,6 @@ import {
   TrendingDown,
   Users,
   Store,
-  Bell,
   CheckCircle,
   AlertCircle,
   RefreshCw,
@@ -33,7 +32,6 @@ import { db } from '@/lib/firebase';
 import { useAuth } from '@/hooks/useAuth';
 import { useSocios } from '@/hooks/useSocios';
 import { useComercios } from '@/hooks/useComercios';
-import { useNotifications } from '@/hooks/useNotifications';
 import { format, subDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -432,7 +430,6 @@ const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
   const { user } = useAuth();
   const { stats, loading: sociosLoading } = useSocios();
   const { stats: comerciosStats, loading: comerciosLoading } = useComercios();
-  const { stats: notificationStats } = useNotifications();
   
   const [activities, setActivities] = useState<ActivityLog[]>([]);
   const systemHealth = useMemo<SystemHealth>(() => ({
@@ -532,20 +529,8 @@ const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
       trend: stats.vencidos > stats.total * 0.2 ? 'up' as const : 'down' as const,
       onClick: () => onNavigate('socios'),
       loading: sociosLoading
-    },
-    {
-      title: 'Notificaciones',
-      value: notificationStats.unread.toString(),
-      change: notificationStats.unread > 5 ? 25 : 0,
-      icon: <Bell className="w-6 h-6" />,
-      color: 'bg-amber-500',
-      subtitle: 'Sin leer',
-      trend: notificationStats.unread > 3 ? 'up' as const : 'neutral' as const,
-      onClick: () => onNavigate('notificaciones'),
-      loading: false,
-      badge: notificationStats.unread > 0 ? notificationStats.unread.toString() : undefined
     }
-  ], [stats, growthMetrics, notificationStats, sociosLoading, onNavigate]);
+  ], [stats, growthMetrics, sociosLoading, onNavigate]);
 
   const quickActions = [
     {
@@ -613,7 +598,7 @@ const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
       />
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {kpiMetrics.map((metric, index) => (
           <KPICard key={index} {...metric} />
         ))}
