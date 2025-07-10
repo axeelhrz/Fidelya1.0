@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { 
   X, 
   Home, 
@@ -15,15 +15,18 @@ import {
   LogOut,
   ChevronDown,
   Activity,
-  Users,
   Star,
   TrendingUp,
-  Calendar,
-  Award
+  Award,
+  AlertCircle,
+  CheckCircle
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSocioProfile } from '@/hooks/useSocioProfile';
 import { useNotifications } from '@/hooks/useNotifications';
+import { useBeneficiosSocio } from '@/hooks/useBeneficios';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 interface SocioSidebarProps {
   open: boolean;
@@ -37,8 +40,7 @@ interface RealtimeStats {
   totalBeneficios: number;
   beneficiosUsados: number;
   notificacionesPendientes: number;
-  puntosAcumulados: number;
-  nivelSocio: string;
+  ahorroTotal: number;
   estadoMembresia: string;
   actividadReciente: number;
 }
@@ -52,30 +54,70 @@ export const SocioSidebar: React.FC<SocioSidebarProps> = ({
 }) => {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { user } = useAuth();
-  const { socio, estadisticas, activity } = useSocioProfile();
+  const { socio, estadisticas, loading: socioLoading } = useSocioProfile();
   const { notifications } = useNotifications();
+  const { beneficiosActivos, estadisticasRapidas } = useBeneficiosSocio();
   
   // Real-time stats state
   const [realtimeStats, setRealtimeStats] = useState<RealtimeStats>({
     totalBeneficios: 0,
-    beneficiosUsados: estadisticas?.totalValidaciones || 0,
+    beneficiosUsados: 0,
     notificacionesPendientes: 0,
-    puntosAcumulados: 1250,
-    nivelSocio: 'Gold',
-    estadoMembresia: 'activo',
+    ahorroTotal: 0,
+    estadoMembresia: 'pendiente',
     actividadReciente: 0
   });
 
-  // Update stats when hooks change
+  // Update stats when data changes
   useEffect(() => {
     setRealtimeStats(prev => ({
       ...prev,
-      beneficiosUsados: estadisticas?.totalValidaciones || 0,
-      notificacionesPendientes: notifications?.filter(n => !n.leida).length || 0,
-      actividadReciente: activity?.totalValidaciones || 0
+      totalBeneficios: beneficiosActivos?.length || 0,
+      beneficiosUsados: estadisticas?.totalValidaciones || estadisticasRapidas?.usados || 0,
+      notificacionesPendientes: notifications?.filter(n => n.status === 'unread').length || 0,
+      ahorroTotal: estadisticas?.ahorroTotal || estadisticasRapidas?.ahorroTotal || 0,
+      estadoMembresia: socio?.estadoMembresia || 'pendiente',
+      actividadReciente: estadisticas?.totalValidaciones || 0
     }));
-  }, [estadisticas, notifications, activity]);
+  }, [socio, estadisticas, notifications, beneficiosActivos, estadisticasRapidas]);
+
+  // Real-time Firebase listeners for additional data
+  useEffect(() => {
+    if (!user?.uid) return;
+
+    const unsubscribers: (() => void)[] = [];
+
+    try {
+      // Listen to validaciones for real-time activity
+      const validacionesRef = collection(db, 'validaciones');
+      const validacionesQuery = query(validacionesRef, where('socioId', '==', user.uid));
+      
+      const unsubscribeValidaciones = onSnapshot(validacionesQuery, (snapshot) => {
+        const validaciones = snapshot.docs.map(doc => doc.data());
+        const totalValidaciones = validaciones.length;
+        const ahorroCalculado = validaciones.reduce((total, v) => total + (v.montoDescuento || 0), 0);
+        
+        setRealtimeStats(prev => ({
+          ...prev,
+          beneficiosUsados: totalValidaciones,
+          ahorroTotal: ahorroCalculado,
+          actividadReciente: totalValidaciones
+        }));
+      }, (error) => {
+        console.error('Error listening to validaciones:', error);
+      });
+      unsubscribers.push(unsubscribeValidaciones);
+
+    } catch (error) {
+      console.error('Error setting up Firebase listeners:', error);
+    }
+
+    return () => {
+      unsubscribers.forEach(unsubscribe => unsubscribe());
+    };
+  }, [user]);
 
   // Submenu item type
   type SubmenuItem = {
@@ -87,7 +129,7 @@ export const SocioSidebar: React.FC<SocioSidebarProps> = ({
     urgent?: boolean;
   };
   
-  // Enhanced menu structure
+  // Enhanced menu structure with real data
   const menuItems: Array<{
     id: string;
     label: string;
@@ -136,7 +178,7 @@ export const SocioSidebar: React.FC<SocioSidebarProps> = ({
       description: 'Catálogo y ofertas disponibles',
       gradient: 'from-purple-500 to-indigo-600',
       route: '/dashboard/socio/beneficios',
-      badge: realtimeStats.totalBeneficios,
+      badge: realtimeStats.totalBeneficios > 0 ? realtimeStats.totalBeneficios : undefined,
       submenu: [
         { 
           id: 'beneficios-disponibles', 
@@ -168,7 +210,7 @@ export const SocioSidebar: React.FC<SocioSidebarProps> = ({
       description: 'Registro de beneficios usados',
       gradient: 'from-amber-500 to-orange-600',
       route: '/dashboard/socio/historial',
-      badge: realtimeStats.beneficiosUsados,
+      badge: realtimeStats.beneficiosUsados > 0 ? realtimeStats.beneficiosUsados : undefined,
       submenu: [
         { 
           id: 'historial-validaciones', 
@@ -192,7 +234,7 @@ export const SocioSidebar: React.FC<SocioSidebarProps> = ({
       description: 'Avisos y recordatorios',
       gradient: 'from-pink-500 to-rose-600',
       route: '/dashboard/socio/notificaciones',
-      badge: realtimeStats.notificacionesPendientes,
+      badge: realtimeStats.notificacionesPendientes > 0 ? realtimeStats.notificacionesPendientes : undefined,
       urgent: realtimeStats.notificacionesPendientes > 0
     }
   ];
@@ -226,6 +268,7 @@ export const SocioSidebar: React.FC<SocioSidebarProps> = ({
 
   const isSubmenuItemActive = (subItem: SubmenuItem) => {
     const currentPath = pathname;
+    const currentTab = searchParams.get('tab');
     
     // Direct route match
     if (currentPath === subItem.route) {
@@ -238,11 +281,10 @@ export const SocioSidebar: React.FC<SocioSidebarProps> = ({
     
     if (currentPath === routePath) {
       const routeParams = new URLSearchParams(routeParts[1] || '');
-      const currentParams = new URLSearchParams(window.location.search);
       
       // Check if all route parameters match current parameters
       for (const [key, value] of routeParams.entries()) {
-        if (currentParams.get(key) !== value) return false;
+        if (searchParams.get(key) !== value) return false;
       }
       
       return true;
@@ -256,20 +298,37 @@ export const SocioSidebar: React.FC<SocioSidebarProps> = ({
   };
 
   const getMembershipStatus = () => {
-    const estado = socio?.estadoMembresia || realtimeStats.estadoMembresia;
+    const estado = realtimeStats.estadoMembresia;
     switch (estado) {
-      case 'activo':
-        return { color: 'emerald', text: 'Socio Activo', icon: '●' };
+      case 'al_dia':
+        return { color: 'emerald', text: 'Socio Activo', icon: CheckCircle };
       case 'vencido':
-        return { color: 'red', text: 'Membresía Vencida', icon: '●' };
+        return { color: 'red', text: 'Membresía Vencida', icon: AlertCircle };
       case 'pendiente':
-        return { color: 'amber', text: 'Pendiente', icon: '●' };
+        return { color: 'amber', text: 'Pendiente', icon: AlertCircle };
       default:
-        return { color: 'gray', text: 'Estado Desconocido', icon: '●' };
+        return { color: 'gray', text: 'Estado Desconocido', icon: AlertCircle };
     }
   };
 
   const membershipStatus = getMembershipStatus();
+
+  // Show loading state
+  if (socioLoading) {
+    return (
+      <motion.div
+        initial={{ x: -320 }}
+        animate={{ x: open ? 0 : -320 }}
+        transition={{ duration: 0.3, ease: 'easeInOut' }}
+        className="fixed left-0 top-0 h-full w-80 bg-white/95 backdrop-blur-xl shadow-2xl z-50 lg:relative lg:translate-x-0 lg:shadow-xl border-r border-white/20"
+      >
+        <div className="flex flex-col h-full items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500"></div>
+          <p className="mt-4 text-sm text-gray-500">Cargando datos...</p>
+        </div>
+      </motion.div>
+    );
+  }
 
   return (
     <>
@@ -315,7 +374,7 @@ export const SocioSidebar: React.FC<SocioSidebarProps> = ({
                 <div>
                   <h2 className="text-lg font-bold text-white">Portal Socio</h2>
                   <p className="text-sm text-sky-100 truncate max-w-32">
-                    {user?.nombre || socio?.nombre || 'Mi Portal'}
+                    {socio?.nombre || user?.nombre || 'Mi Portal'}
                   </p>
                 </div>
               </div>
@@ -335,7 +394,7 @@ export const SocioSidebar: React.FC<SocioSidebarProps> = ({
             <div className="bg-white rounded-2xl p-3 mb-3 shadow-lg border border-gray-100">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  <div className={`w-3 h-3 bg-${membershipStatus.color}-500 rounded-full animate-pulse`}></div>
+                  <membershipStatus.icon className={`w-3 h-3 text-${membershipStatus.color}-500`} />
                   <span className={`text-sm font-medium text-${membershipStatus.color}-700`}>
                     {membershipStatus.text}
                   </span>
@@ -343,13 +402,13 @@ export const SocioSidebar: React.FC<SocioSidebarProps> = ({
                 <div className="flex items-center space-x-1">
                   <Crown className="w-4 h-4 text-amber-500" />
                   <span className="text-xs font-bold text-amber-600">
-                    {realtimeStats.nivelSocio}
+                    {socio?.numeroSocio || 'N/A'}
                   </span>
                 </div>
               </div>
               <div className="mt-2 flex items-center justify-between text-xs text-gray-600">
-                <span>Puntos: {realtimeStats.puntosAcumulados}</span>
-                <span>Ahorro: ${estadisticas?.ahorroTotal || 0}</span>
+                <span>Ahorro Total: ${realtimeStats.ahorroTotal.toFixed(2)}</span>
+                <span>Usos: {realtimeStats.beneficiosUsados}</span>
               </div>
             </div>
 
@@ -364,9 +423,9 @@ export const SocioSidebar: React.FC<SocioSidebarProps> = ({
                   <div className="w-6 h-6 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center">
                     <Gift className="w-3 h-3 text-white" />
                   </div>
-                  <div className="text-lg font-black text-purple-600">{realtimeStats.beneficiosUsados}</div>
+                  <div className="text-lg font-black text-purple-600">{realtimeStats.totalBeneficios}</div>
                 </div>
-                <div className="text-xs text-gray-600 font-medium">Usados</div>
+                <div className="text-xs text-gray-600 font-medium">Disponibles</div>
               </motion.div>
               
               <motion.div 
@@ -391,7 +450,7 @@ export const SocioSidebar: React.FC<SocioSidebarProps> = ({
               transition={{ duration: 2, repeat: Infinity }}
             >
               <Activity className="w-3 h-3" />
-              <span>Actualización en tiempo real</span>
+              <span>Datos en tiempo real</span>
             </motion.div>
           </div>
 
@@ -522,15 +581,15 @@ export const SocioSidebar: React.FC<SocioSidebarProps> = ({
                 transition={{ duration: 0.2 }}
               >
                 <span className="text-white font-bold text-lg">
-                  {(user?.nombre || socio?.nombre)?.charAt(0).toUpperCase() || 'S'}
+                  {(socio?.nombre || user?.nombre)?.charAt(0).toUpperCase() || 'S'}
                 </span>
               </motion.div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold text-gray-900 truncate">
-                  {user?.nombre || socio?.nombre || 'Socio'}
+                  {socio?.nombre || user?.nombre || 'Socio'}
                 </p>
                 <p className="text-xs text-gray-500 truncate">
-                  {user?.email || socio?.email || 'socio@email.com'}
+                  {socio?.email || user?.email || 'socio@email.com'}
                 </p>
                 <div className="flex items-center space-x-1 mt-1">
                   <div className={`w-2 h-2 bg-${membershipStatus.color}-500 rounded-full animate-pulse`}></div>
