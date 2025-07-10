@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Mail, RefreshCw, CheckCircle, AlertCircle, ArrowLeft, Sparkles } from 'lucide-react';
+import { Mail, RefreshCw, CheckCircle, AlertCircle, ArrowLeft, Sparkles, Eye, EyeOff } from 'lucide-react';
 import { useEmailVerification } from '@/hooks/useAuth';
 import { toast } from 'react-hot-toast';
 import Link from 'next/link';
@@ -18,6 +18,10 @@ export const EmailVerification: React.FC<EmailVerificationProps> = ({
   const [isResending, setIsResending] = useState(false);
   const [lastSent, setLastSent] = useState<Date | null>(null);
   const [isVisible, setIsVisible] = useState(false);
+  const [showPasswordField, setShowPasswordField] = useState(false);
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [needsPassword, setNeedsPassword] = useState(false);
 
   const displayEmail = propEmail || email;
 
@@ -32,10 +36,45 @@ export const EmailVerification: React.FC<EmailVerificationProps> = ({
 
     setIsResending(true);
     try {
-      const response = await resendVerification();
+      // First try without password
+      let response = await resendVerification();
+      
+      // If it requires password, show password field
+      if (!response.success && response.error?.includes('contraseña')) {
+        setNeedsPassword(true);
+        setShowPasswordField(true);
+        setIsResending(false);
+        return;
+      }
       
       if (response.success) {
         setLastSent(new Date());
+        setShowPasswordField(false);
+        setNeedsPassword(false);
+        setPassword('');
+        toast.success('Email de verificación enviado');
+      } else {
+        toast.error(response.error || 'Error al enviar email');
+      }
+    } catch {
+      toast.error('Error al enviar email de verificación');
+    } finally {
+      setIsResending(false);
+    }
+  };
+
+  const handleResendWithPassword = async () => {
+    if (isResending || !password.trim()) return;
+
+    setIsResending(true);
+    try {
+      const response = await resendVerification(password);
+      
+      if (response.success) {
+        setLastSent(new Date());
+        setShowPasswordField(false);
+        setNeedsPassword(false);
+        setPassword('');
         toast.success('Email de verificación enviado');
       } else {
         toast.error(response.error || 'Error al enviar email');
@@ -168,29 +207,103 @@ export const EmailVerification: React.FC<EmailVerificationProps> = ({
                   ¿No recibiste el email?
                 </p>
                 
-                <button
-                  onClick={handleResendVerification}
-                  disabled={isResending || !canResend}
-                  className={`
-                    inline-flex items-center justify-center space-x-3 px-8 py-4 rounded-2xl font-semibold text-base transition-all duration-500 transform hover:scale-105 disabled:hover:scale-100 shadow-lg hover:shadow-xl font-jakarta
-                    ${canResend && !isResending
-                      ? 'bg-gradient-to-r from-sky-500 via-celestial-500 to-sky-600 text-white hover:shadow-sky-500/40 hover:-translate-y-1'
-                      : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
-                    }
-                  `}
-                >
-                  {isResending ? (
-                    <>
-                      <RefreshCw className="w-5 h-5 animate-spin" />
-                      <span>Enviando...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Mail className="w-5 h-5" />
-                      <span>Reenviar email</span>
-                    </>
-                  )}
-                </button>
+                {/* Password Field - Show when needed */}
+                {showPasswordField && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    className="mb-4"
+                  >
+                    <div className="relative">
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Ingresa tu contraseña"
+                        className="w-full px-4 py-3 pr-12 bg-white/90 backdrop-blur-sm border border-sky-200/50 rounded-2xl focus:outline-none focus:ring-2 focus:ring-sky-500/50 focus:border-sky-500 transition-all duration-300 font-jakarta"
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter' && password.trim()) {
+                            handleResendWithPassword();
+                          }
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors duration-300"
+                      >
+                        {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                      </button>
+                    </div>
+                    <p className="text-sm text-slate-500 mt-2 font-jakarta">
+                      Necesitamos tu contraseña para reenviar la verificación
+                    </p>
+                  </motion.div>
+                )}
+                
+                {/* Resend Button */}
+                {!showPasswordField ? (
+                  <button
+                    onClick={handleResendVerification}
+                    disabled={isResending || !canResend}
+                    className={`
+                      inline-flex items-center justify-center space-x-3 px-8 py-4 rounded-2xl font-semibold text-base transition-all duration-500 transform hover:scale-105 disabled:hover:scale-100 shadow-lg hover:shadow-xl font-jakarta
+                      ${canResend && !isResending
+                        ? 'bg-gradient-to-r from-sky-500 via-celestial-500 to-sky-600 text-white hover:shadow-sky-500/40 hover:-translate-y-1'
+                        : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
+                      }
+                    `}
+                  >
+                    {isResending ? (
+                      <>
+                        <RefreshCw className="w-5 h-5 animate-spin" />
+                        <span>Enviando...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Mail className="w-5 h-5" />
+                        <span>Reenviar email</span>
+                      </>
+                    )}
+                  </button>
+                ) : (
+                  <div className="space-y-3">
+                    <button
+                      onClick={handleResendWithPassword}
+                      disabled={isResending || !password.trim()}
+                      className={`
+                        w-full inline-flex items-center justify-center space-x-3 px-8 py-4 rounded-2xl font-semibold text-base transition-all duration-500 transform hover:scale-105 disabled:hover:scale-100 shadow-lg hover:shadow-xl font-jakarta
+                        ${password.trim() && !isResending
+                          ? 'bg-gradient-to-r from-sky-500 via-celestial-500 to-sky-600 text-white hover:shadow-sky-500/40 hover:-translate-y-1'
+                          : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
+                        }
+                      `}
+                    >
+                      {isResending ? (
+                        <>
+                          <RefreshCw className="w-5 h-5 animate-spin" />
+                          <span>Enviando...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Mail className="w-5 h-5" />
+                          <span>Reenviar con contraseña</span>
+                        </>
+                      )}
+                    </button>
+                    
+                    <button
+                      onClick={() => {
+                        setShowPasswordField(false);
+                        setPassword('');
+                        setNeedsPassword(false);
+                      }}
+                      className="text-sm text-slate-500 hover:text-slate-700 transition-colors duration-300 font-jakarta"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                )}
                 
                 {!canResend && lastSent && (
                   <p className="text-sm text-slate-500 mt-3 font-jakarta">
