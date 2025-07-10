@@ -4,68 +4,91 @@ export interface Beneficio {
   id: string;
   titulo: string;
   descripcion: string;
-  descuento: number; // Porcentaje de descuento
+  descuento: number;
   tipo: 'porcentaje' | 'monto_fijo' | 'producto_gratis';
   comercioId: string;
   comercioNombre: string;
   comercioLogo?: string;
+  asociacionId: string;
+  asociacionNombre: string;
   asociacionesDisponibles: string[];
   fechaInicio: Timestamp;
   fechaFin: Timestamp;
-  estado: 'activo' | 'inactivo' | 'vencido';
+  estado: 'activo' | 'inactivo' | 'vencido' | 'agotado';
   limitePorSocio?: number;
   limiteTotal?: number;
   usosActuales: number;
   condiciones?: string;
   categoria: string;
   tags?: string[];
+  destacado?: boolean;
+  imagenUrl?: string;
+  qrCode?: string;
   creadoEn: Timestamp;
   actualizadoEn: Timestamp;
-  asociacionesVinculadas?: {
-    id: string;
-    nombre: string;
-    logo?: string;
-    descripcion?: string;
-    fechaCreacion: Timestamp;
-    fechaActualizacion: Timestamp;
-  }[];
-  destacado?: boolean;
-  asociacionId?: string; // ID de la asociación que creó el beneficio
-
+  creadoPor: string;
 }
 
 export interface BeneficioUso {
   id: string;
   beneficioId: string;
+  beneficioTitulo: string;
   socioId: string;
+  socioNombre: string;
+  socioEmail: string;
   comercioId: string;
+  comercioNombre: string;
   asociacionId: string;
+  asociacionNombre: string;
   fechaUso: Timestamp;
+  montoOriginal?: number;
   montoDescuento: number;
-  estado: 'usado' | 'pendiente' | 'cancelado';
+  montoFinal?: number;
+  estado: 'usado' | 'pendiente' | 'cancelado' | 'validado';
   validacionId?: string;
+  validadoPor?: string;
+  fechaValidacion?: Timestamp;
   notas?: string;
   detalles?: string;
-  destacado?: boolean;
-  validadoPor?: string; // Usuario que validó el uso
+  metodoPago?: string;
+  ubicacion?: {
+    lat: number;
+    lng: number;
+    direccion: string;
+  };
   creadoEn: Timestamp;
   actualizadoEn: Timestamp;
-  comercioNombre: string;
-
 }
 
 export interface BeneficioStats {
-  total: number;
-  disponibles: number;
-  usados: number;
-  vencidos: number;
-  porCategoria: Record<string, number>;
+  totalBeneficios: number;
+  beneficiosActivos: number;
+  beneficiosUsados: number;
+  beneficiosVencidos: number;
   ahorroTotal: number;
-  beneficioMasUsado?: {
+  ahorroEsteMes: number;
+  usosPorMes: Array<{
+    mes: string;
+    usos: number;
+    ahorro: number;
+  }>;
+  topBeneficios: Array<{
     id: string;
     titulo: string;
     usos: number;
-  };
+    ahorro: number;
+  }>;
+  categorias: Array<{
+    nombre: string;
+    cantidad: number;
+    usos: number;
+  }>;
+  comercios: Array<{
+    id: string;
+    nombre: string;
+    beneficios: number;
+    usos: number;
+  }>;
 }
 
 export interface BeneficioFormData {
@@ -80,4 +103,75 @@ export interface BeneficioFormData {
   condiciones?: string;
   categoria: string;
   tags?: string[];
+  destacado?: boolean;
+  asociacionesDisponibles?: string[];
 }
+
+export interface BeneficioFilter {
+  categoria?: string;
+  comercio?: string;
+  asociacion?: string;
+  estado?: string;
+  fechaInicio?: Date;
+  fechaFin?: Date;
+  soloDestacados?: boolean;
+  soloNuevos?: boolean;
+  proximosAVencer?: boolean;
+  busqueda?: string;
+}
+
+export interface BeneficioValidacion {
+  id: string;
+  beneficioId: string;
+  usoId: string;
+  socioId: string;
+  comercioId: string;
+  codigoValidacion: string;
+  qrCode: string;
+  fechaCreacion: Timestamp;
+  fechaExpiracion: Timestamp;
+  fechaUso?: Timestamp;
+  estado: 'activo' | 'usado' | 'expirado';
+  ubicacion?: {
+    lat: number;
+    lng: number;
+  };
+  validadoPor?: string;
+  notas?: string;
+}
+
+// Constantes
+export const CATEGORIAS_BENEFICIOS = [
+  'Alimentación',
+  'Restaurantes',
+  'Retail y Moda',
+  'Salud y Belleza',
+  'Deportes y Fitness',
+  'Tecnología',
+  'Hogar y Decoración',
+  'Automotriz',
+  'Educación',
+  'Entretenimiento',
+  'Servicios Profesionales',
+  'Turismo y Viajes',
+  'Farmacia',
+  'Librería y Papelería',
+  'Otros'
+] as const;
+
+export const ESTADOS_BENEFICIO = [
+  'activo',
+  'inactivo',
+  'vencido',
+  'agotado'
+] as const;
+
+export const TIPOS_BENEFICIO = [
+  'porcentaje',
+  'monto_fijo',
+  'producto_gratis'
+] as const;
+
+export type CategoriaBeneficio = typeof CATEGORIAS_BENEFICIOS[number];
+export type EstadoBeneficio = typeof ESTADOS_BENEFICIO[number];
+export type TipoBeneficio = typeof TIPOS_BENEFICIO[number];
