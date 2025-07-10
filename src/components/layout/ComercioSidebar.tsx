@@ -19,9 +19,7 @@ import {
   CheckCircle,
   AlertCircle,
   Activity,
-  Scan,
-  BarChart3,
-  Bell
+  Scan
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useComercio } from '@/hooks/useComercio';
@@ -44,7 +42,6 @@ interface RealtimeStats {
   qrGenerado: boolean;
   qrEscaneos: number;
   qrEscaneosSemana: number;
-  notificacionesNoLeidas: number;
   actividadReciente: number;
 }
 
@@ -70,7 +67,6 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
     qrGenerado: false,
     qrEscaneos: 0,
     qrEscaneosSemana: 0,
-    notificacionesNoLeidas: 0,
     actividadReciente: 0
   });
 
@@ -246,24 +242,6 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
           route: '/dashboard/comercio/clientes'
         }
       ]
-    },
-    {
-      id: 'analytics',
-      label: 'Analytics',
-      icon: BarChart3,
-      description: 'Métricas y análisis',
-      gradient: 'from-orange-500 to-red-600',
-      route: '/dashboard/comercio/analytics'
-    },
-    {
-      id: 'notificaciones',
-      label: 'Notificaciones',
-      icon: Bell,
-      description: 'Centro de notificaciones',
-      gradient: 'from-pink-500 to-rose-600',
-      route: '/dashboard/comercio/notificaciones',
-      badge: realtimeStats.notificacionesNoLeidas,
-      urgent: realtimeStats.notificacionesNoLeidas > 0
     }
   ];
 
@@ -388,26 +366,6 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
         console.error('Error listening to beneficios:', error);
       });
       unsubscribers.push(unsubscribeBeneficios);
-
-      // Listen to notifications collection
-      const notificationsRef = collection(db, 'notifications');
-      const notificationsQuery = query(
-        notificationsRef,
-        where('comercioId', '==', user.uid),
-        where('leida', '==', false),
-        orderBy('fechaCreacion', 'desc'),
-        limit(50)
-      );
-
-      const unsubscribeNotifications = onSnapshot(notificationsQuery, (snapshot) => {
-        setRealtimeStats(prev => ({
-          ...prev,
-          notificacionesNoLeidas: snapshot.docs.length
-        }));
-      }, (error) => {
-        console.error('Error listening to notifications:', error);
-      });
-      unsubscribers.push(unsubscribeNotifications);
 
       // Listen to recent activity
       const activityRef = collection(db, 'activities');
