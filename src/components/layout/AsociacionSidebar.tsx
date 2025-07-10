@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { 
   X, 
   Home, 
@@ -53,6 +53,8 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
   activeSection
 }) => {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { user } = useAuth();
   const { stats } = useSocios();
   const { stats: notificationStats } = useNotifications();
@@ -346,8 +348,31 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
     }
   };
 
+  // Enhanced active state detection
   const isActive = (itemId: string) => {
     return activeSection === itemId || activeSection.startsWith(itemId + '-');
+  };
+
+  const isSubmenuItemActive = (subItem: SubmenuItem) => {
+    const currentPath = pathname;
+    const currentFilter = searchParams.get('filter');
+    
+    // Check if we're on the socios page
+    if (currentPath === '/dashboard/asociacion/socios') {
+      if (subItem.id === 'socios-lista' && !currentFilter) {
+        return true;
+      }
+      if (subItem.id === 'socios-activos' && currentFilter === 'activos') {
+        return true;
+      }
+      if (subItem.id === 'socios-vencidos' && currentFilter === 'vencidos') {
+        return true;
+      }
+    }
+    
+    // For other submenu items, check if the current path matches the route
+    return currentPath === subItem.route.split('?')[0] && 
+           searchParams.toString() === (subItem.route.split('?')[1] || '');
   };
 
   const getItemGradient = (item: typeof menuItems[0]) => {
@@ -527,7 +552,7 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
                             key={subItem.id}
                             onClick={() => handleMenuClick(subItem.id, false, subItem.route)}
                             className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left transition-all duration-200 group ${
-                              activeSection === subItem.id
+                              isSubmenuItemActive(subItem)
                                 ? 'bg-gradient-to-r from-gray-50 to-white text-gray-900 border border-gray-200 shadow-sm'
                                 : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                             }`}
@@ -539,7 +564,7 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
                           >
                             <div className="flex items-center space-x-3 flex-1">
                               <div className={`p-1.5 rounded-lg transition-all duration-200 ${
-                                activeSection === subItem.id 
+                                isSubmenuItemActive(subItem)
                                   ? `bg-gradient-to-r ${getItemGradient(item)} text-white shadow-md` 
                                   : 'bg-gray-100 text-gray-400 group-hover:bg-gray-200'
                               }`}>
