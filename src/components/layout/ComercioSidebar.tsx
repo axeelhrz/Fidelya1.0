@@ -19,8 +19,6 @@ import {
   Calendar,
   UserCheck,
   Plus,
-  Download,
-  Palette,
   Shield,
   LogOut,
   ChevronDown,
@@ -31,7 +29,8 @@ import {
   CheckCircle,
   AlertCircle,
   Activity,
-  Building2
+  Building2,
+  Scan
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useComercio } from '@/hooks/useComercio';
@@ -54,6 +53,8 @@ interface RealtimeStats {
   clientesUnicos: number;
   notificacionesPendientes: number;
   qrGenerado: boolean;
+  qrEscaneos: number;
+  qrEscaneosSemana: number;
 }
 
 export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
@@ -75,7 +76,9 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
     beneficiosActivos: stats?.beneficiosActivos || 0,
     clientesUnicos: stats?.clientesUnicos || 0,
     notificacionesPendientes: notificationStats?.unread || 0,
-    qrGenerado: false
+    qrGenerado: false,
+    qrEscaneos: 0,
+    qrEscaneosSemana: 0
   });
 
   // Update stats when hooks change
@@ -86,9 +89,10 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
       validacionesMes: stats?.validacionesMes || 0,
       beneficiosActivos: stats?.beneficiosActivos || 0,
       clientesUnicos: stats?.clientesUnicos || 0,
-      notificacionesPendientes: notificationStats?.unread || 0
+      notificacionesPendientes: notificationStats?.unread || 0,
+      qrGenerado: !!comercio?.qrCode
     }));
-  }, [stats, notificationStats]);
+  }, [stats, notificationStats, comercio]);
 
   // Submenu item type
   type SubmenuItem = {
@@ -180,30 +184,20 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
       description: 'Gestión de QR',
       gradient: 'from-emerald-500 to-green-600',
       route: '/dashboard/comercio/qr',
+      badge: realtimeStats.qrEscaneos,
       submenu: [
         { 
           id: 'qr-generar', 
           label: 'Generar QR', 
-          icon: Plus,
-          route: '/dashboard/comercio/qr'
-        },
-        { 
-          id: 'qr-personalizar', 
-          label: 'Personalizar', 
-          icon: Palette,
-          route: '/dashboard/comercio/qr?tab=personalizar'
-        },
-        { 
-          id: 'qr-descargar', 
-          label: 'Descargar', 
-          icon: Download,
-          route: '/dashboard/comercio/qr?tab=descargar'
+          icon: QrCode,
+          route: '/dashboard/comercio/qr/generar'
         },
         { 
           id: 'qr-estadisticas', 
           label: 'Estadísticas de Uso', 
           icon: BarChart3,
-          route: '/dashboard/comercio/qr?tab=estadisticas'
+          count: realtimeStats.qrEscaneos,
+          route: '/dashboard/comercio/qr/estadisticas'
         }
       ]
     },
@@ -399,7 +393,7 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
     }
   ];
 
-  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set(['beneficios']));
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set(['qr']));
 
   // Real-time Firebase listeners
   useEffect(() => {
@@ -448,6 +442,43 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
         console.error('Error listening to validaciones:', error);
       });
       unsubscribers.push(unsubscribeValidaciones);
+
+      // Listen to QR scans collection
+      const qrScansRef = collection(db, 'qr_scans');
+      const qrScansQuery = query(
+        qrScansRef,
+        where('comercioId', '==', user.uid),
+        orderBy('fechaEscaneo', 'desc'),
+        limit(100)
+      );
+
+      const unsubscribeQRScans = onSnapshot(qrScansQuery, (snapshot) => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+        
+        const qrEscaneos = snapshot.docs.filter(doc => {
+          const data = doc.data();
+          const fechaEscaneo = data.fechaEscaneo?.toDate();
+          return fechaEscaneo && fechaEscaneo >= today;
+        }).length;
+
+        const qrEscaneosSemana = snapshot.docs.filter(doc => {
+          const data = doc.data();
+          const fechaEscaneo = data.fechaEscaneo?.toDate();
+          return fechaEscaneo && fechaEscaneo >= weekAgo;
+        }).length;
+
+        setRealtimeStats(prev => ({
+          ...prev,
+          qrEscaneos,
+          qrEscaneosSemana
+        }));
+      }, (error) => {
+        console.error('Error listening to QR scans:', error);
+      });
+      unsubscribers.push(unsubscribeQRScans);
 
       // Listen to beneficios collection
       const beneficiosRef = collection(db, 'beneficios');
@@ -603,12 +634,12 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
                 transition={{ duration: 0.2 }}
               >
                 <div className="flex items-center justify-center space-x-2 mb-1">
-                  <div className="w-6 h-6 bg-gradient-to-r from-purple-500 to-pink-600 rounded-lg flex items-center justify-center">
-                    <Gift className="w-3 h-3 text-white" />
+                  <div className="w-6 h-6 bg-gradient-to-r from-emerald-500 to-green-600 rounded-lg flex items-center justify-center">
+                    <Scan className="w-3 h-3 text-white" />
                   </div>
-                  <div className="text-lg font-black text-purple-600">{realtimeStats.beneficiosActivos}</div>
+                  <div className="text-lg font-black text-emerald-600">{realtimeStats.qrEscaneos}</div>
                 </div>
-                <div className="text-xs text-gray-600 font-medium">Beneficios</div>
+                <div className="text-xs text-gray-600 font-medium">QR Hoy</div>
               </motion.div>
             </div>
             

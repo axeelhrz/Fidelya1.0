@@ -1,20 +1,16 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSearchParams } from 'next/navigation';
 import { 
   Plus, 
   RefreshCw, 
   Download, 
-  Edit, 
-  ToggleRight, 
   Gift,
   CheckCircle,
   Clock,
   AlertCircle,
-  Filter,
-  Search,
   Calendar,
   TrendingUp
 } from 'lucide-react';
