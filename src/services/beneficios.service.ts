@@ -241,6 +241,10 @@ export class BeneficiosService {
         const fechaFin = beneficio.fechaFin.toDate();
         if (fechaFin <= now) return false;
 
+        // Verificar fecha de inicio
+        const fechaInicio = beneficio.fechaInicio.toDate();
+        if (fechaInicio > now) return false;
+
         // Verificar límite total
         if (beneficio.limiteTotal && beneficio.usosActuales >= beneficio.limiteTotal) {
           return false;
@@ -365,6 +369,10 @@ export class BeneficiosService {
       const now = new Date();
       if (beneficio.fechaFin.toDate() <= now) {
         throw new Error('El beneficio ha expirado');
+      }
+
+      if (beneficio.fechaInicio.toDate() > now) {
+        throw new Error('El beneficio aún no está disponible');
       }
 
       if (beneficio.limiteTotal && beneficio.usosActuales >= beneficio.limiteTotal) {
@@ -709,10 +717,12 @@ export class BeneficiosService {
         ...doc.data()
       })) as Beneficio[];
 
-      // Filtrar por fecha de vencimiento
+      // Filtrar por fecha de vencimiento y inicio
       const now = new Date();
       const beneficiosValidos = beneficios.filter(beneficio => {
-        return beneficio.fechaFin.toDate() > now;
+        const fechaFin = beneficio.fechaFin.toDate();
+        const fechaInicio = beneficio.fechaInicio.toDate();
+        return fechaFin > now && fechaInicio <= now;
       });
 
       callback(beneficiosValidos);
