@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { ComercioSidebar } from '@/components/layout/ComercioSidebar';
@@ -8,17 +8,12 @@ import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/hooks/useAuth';
 import { useQRStats } from '@/hooks/useQRStats';
 import { 
-  BarChart3, 
   TrendingUp, 
   Users, 
   Scan,
-  Calendar,
-  Clock,
   MapPin,
-  Smartphone,
   RefreshCw,
   Download,
-  Filter,
   Eye,
   Activity,
   Zap
@@ -125,7 +120,7 @@ export default function EstadisticasQRPage() {
                 variant="outline"
                 size="sm"
                 leftIcon={<RefreshCw size={16} />}
-                onClick={refreshStats}
+                onClick={() => refreshStats()}
               >
                 Actualizar
               </Button>
@@ -308,7 +303,7 @@ export default function EstadisticasQRPage() {
                   paddingAngle={5}
                   dataKey="value"
                 >
-                  {(stats?.deviceStats || []).map((entry, index) => (
+                  {(stats?.deviceStats || []).map((entry: { name: string; value: number }, index: number) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
@@ -316,7 +311,7 @@ export default function EstadisticasQRPage() {
               </PieChart>
             </ResponsiveContainer>
             <div className="mt-4 space-y-2">
-              {(stats?.deviceStats || []).map((device, index) => (
+              {(stats?.deviceStats || []).map((device: { name: string; value: number }, index: number) => (
                 <div key={device.name} className="flex items-center justify-between">
                   <div className="flex items-center">
                     <div 
@@ -338,7 +333,7 @@ export default function EstadisticasQRPage() {
               Ubicaciones Principales
             </h3>
             <div className="space-y-4">
-              {(stats?.topLocations || []).map((location, index) => (
+              {(stats?.topLocations || []).map((location: { city: string; country: string; scans: number }) => (
                 <div key={location.city} className="flex items-center justify-between">
                   <div>
                     <div className="font-medium text-gray-900">{location.city}</div>
@@ -360,24 +355,29 @@ export default function EstadisticasQRPage() {
               Actividad Reciente
             </h3>
             <div className="space-y-4">
-              {(stats?.recentActivity || []).map((activity, index) => (
-                <div key={index} className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                    <Scan className="w-4 h-4 text-blue-600" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="text-sm font-medium text-gray-900">
-                      QR escaneado
+              {(stats?.recentActivity || []).map(
+                (
+                  activity: { time: string; location: string; device: string },
+                  index: number
+                ) => (
+                  <div key={index} className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                      <Scan className="w-4 h-4 text-blue-600" />
                     </div>
-                    <div className="text-xs text-gray-500">
-                      {activity.time} - {activity.location}
+                    <div className="flex-1">
+                      <div className="text-sm font-medium text-gray-900">
+                        QR escaneado
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {activity.time} - {activity.location}
+                      </div>
+                    </div>
+                    <div className="text-xs text-gray-400">
+                      {activity.device}
                     </div>
                   </div>
-                  <div className="text-xs text-gray-400">
-                    {activity.device}
-                  </div>
-                </div>
-              ))}
+                )
+              )}
             </div>
           </div>
         </div>
