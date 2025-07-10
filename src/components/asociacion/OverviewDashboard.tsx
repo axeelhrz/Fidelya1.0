@@ -12,8 +12,6 @@ import {
   RefreshCw,
   UserPlus,
   BarChart3,
-  Settings,
-  FileText,
   Activity,
   Clock,
   DollarSign,
@@ -34,6 +32,7 @@ import {
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/hooks/useAuth';
 import { useSocios } from '@/hooks/useSocios';
+import { useComercios } from '@/hooks/useComercios';
 import { useNotifications } from '@/hooks/useNotifications';
 import { format, subDays } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -163,7 +162,7 @@ const ActivityTimeline: React.FC<{
       member_updated: <Users className="w-4 h-4" />,
       payment_received: <DollarSign className="w-4 h-4" />,
       backup_completed: <Shield className="w-4 h-4" />,
-      import_completed: <FileText className="w-4 h-4" />,
+      import_completed: <Activity className="w-4 h-4" />,
       system_alert: <AlertCircle className="w-4 h-4" />,
     };
     return icons[type] || <Activity className="w-4 h-4" />;
@@ -394,7 +393,7 @@ const QuickStats: React.FC<{
       color: 'bg-emerald-500'
     },
     {
-      label: 'Comercios',
+      label: 'Comercios Activos',
       value: totalComercios,
       icon: <Store className="w-5 h-5" />,
       color: 'bg-purple-500'
@@ -432,6 +431,7 @@ const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
 }) => {
   const { user } = useAuth();
   const { stats, loading: sociosLoading } = useSocios();
+  const { stats: comerciosStats, loading: comerciosLoading } = useComercios();
   const { stats: notificationStats } = useNotifications();
   
   const [activities, setActivities] = useState<ActivityLog[]>([]);
@@ -561,21 +561,7 @@ const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
       icon: <BarChart3 className="w-5 h-5" />,
       color: 'bg-purple-500 hover:bg-purple-600',
       onClick: () => onNavigate('analytics'),
-    },
-    {
-      title: 'Reportes',
-      description: 'Generar informes',
-      icon: <FileText className="w-5 h-5" />,
-      color: 'bg-blue-500 hover:bg-blue-600',
-      onClick: () => onNavigate('reportes'),
-    },
-    {
-      title: 'Configuración',
-      description: 'Ajustes del sistema',
-      icon: <Settings className="w-5 h-5" />,
-      color: 'bg-slate-500 hover:bg-slate-600',
-      onClick: () => onNavigate('configuracion'),
-    },
+    }
   ];
 
   return (
@@ -622,8 +608,8 @@ const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
       <QuickStats
         totalSocios={stats.total}
         activosSocios={stats.activos}
-        totalComercios={0} // TODO: Get from comercios hook
-        loading={sociosLoading}
+        totalComercios={comerciosStats.comerciosActivos}
+        loading={sociosLoading || comerciosLoading}
       />
 
       {/* KPI Cards */}
@@ -653,7 +639,7 @@ const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
       {/* Quick Actions */}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
         <h3 className="text-xl font-semibold text-slate-900 mb-4">Acciones Rápidas</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {quickActions.map((action, index) => (
             <button
               key={index}

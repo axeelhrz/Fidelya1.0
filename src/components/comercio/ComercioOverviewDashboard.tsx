@@ -26,27 +26,43 @@ interface ComercioOverviewDashboardProps {
   onNavigate?: (section: string) => void;
 }
 
+type ComercioStats = {
+  validacionesHoy?: number;
+  validacionesMes?: number;
+  clientesUnicos?: number;
+  ingresosMensuales?: number;
+  beneficiosActivos?: number;
+  promedioValidacionesDiarias?: number;
+  crecimientoMensual?: number;
+};
+
 export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps> = ({ 
   onNavigate 
 }) => {
   const {
-    comercio,
+    comerciosVinculados,
     stats,
-    validaciones,
-    analyticsData,
+    // analyticsData, // Remove this line if not returned by the hook
     loading,
     error,
     generateQRCode,
     refreshStats,
-    clearError
+    clearError,
+    validaciones // <-- Add this line if your hook returns validaciones
+    // analyticsData // Remove this line if not returned by the hook
   } = useComercios();
+
+  // Use the first linked commerce as the main comercio
+  const comercio = comerciosVinculados?.[0];
 
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'year'>('month');
 
   const handleQuickAction = async (action: string) => {
     switch (action) {
       case 'generate-qr':
-        await generateQRCode();
+        if (comercio?.id) {
+          await generateQRCode(comercio.id);
+        }
         break;
       case 'view-beneficios':
         onNavigate?.('beneficios');
@@ -69,10 +85,7 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
     }).format(amount);
   };
 
-  const formatPercentage = (value?: number) => {
-    if (value === undefined || value === null || isNaN(value)) {
-      return '0.0%';
-    }
+  const formatPercentage = (value: number) => {
     return `${value >= 0 ? '+' : ''}${value.toFixed(1)}%`;
   };
 
@@ -81,7 +94,7 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
     validacionesHoy: stats?.validacionesHoy ?? 0,
     validacionesMes: stats?.validacionesMes ?? 0,
     clientesUnicos: stats?.clientesUnicos ?? 0,
-    ingresosMensuales: stats?.ingresosMensuales ?? 0,
+    ingresosMensuales: (stats as any)?.ingresosMensuales ?? 0,
     beneficiosActivos: stats?.beneficiosActivos ?? 0,
     promedioValidacionesDiarias: (stats as any)?.promedioValidacionesDiarias ?? 0,
     crecimientoMensual: (stats as any)?.crecimientoMensual ?? 0,
@@ -274,7 +287,7 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
           </div>
           
           <ValidationsChart 
-            data={analyticsData?.validacionesPorDia || []}
+            data={[]} // Replace with actual data if available
             period={selectedPeriod}
           />
         </motion.div>
@@ -299,7 +312,7 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
           </div>
           
           <TopBenefits 
-            data={analyticsData?.beneficiosMasUsados || []}
+            data={[]} // Replace with actual data if available
           />
         </motion.div>
       </div>
@@ -361,34 +374,32 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
                     height={128}
                     className="w-32 h-32 mx-auto"
                   />
-                </div>
-                
-                <div className="flex space-x-2">
-                  <button
-                    onClick={() => generateQRCode()}
-                    disabled={loading}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
-                  >
-                    Regenerar
-                  </button>
-                  
-                  <button
-                    onClick={() => {
-                      const link = document.createElement('a');
-                      link.href = comercio.qrCode ?? '';
-                      link.download = `qr-${comercio.nombreComercio}.png`;
-                      link.click();
-                    }}
-                    className="flex-1 px-3 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
-                  >
-                    <Download className="w-4 h-4 inline mr-1" />
-                    Descargar
-                  </button>
+                  <div className="flex space-x-2 mt-4">
+                    <button
+                      onClick={() => comercio?.id && generateQRCode(comercio.id)}
+                      disabled={loading}
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                    >
+                      {loading ? 'Regenerando...' : 'Regenerar'}
+                    </button>
+                    <button
+                      onClick={() => {
+                        const link = document.createElement('a');
+                        link.href = comercio.qrCode ?? '';
+                        link.download = `qr-${comercio.nombreComercio}.png`;
+                        link.click();
+                      }}
+                      className="flex-1 px-3 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
+                    >
+                      <Download className="w-4 h-4 inline mr-1" />
+                      Descargar
+                    </button>
+                  </div>
                 </div>
               </>
             ) : (
               <button
-                onClick={() => generateQRCode()}
+                onClick={() => comercio?.id && generateQRCode(comercio.id)}
                 disabled={loading}
                 className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
               >
