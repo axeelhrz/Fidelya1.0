@@ -1,5 +1,8 @@
-import React from 'react';
+'use client';
+
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useRouter, usePathname } from 'next/navigation';
 import { 
   X, 
   Home, 
@@ -9,10 +12,18 @@ import {
   Bell, 
   History,
   Crown,
-  ArrowUpRight,
-  LogOut
+  LogOut,
+  ChevronDown,
+  Activity,
+  Users,
+  Star,
+  TrendingUp,
+  Calendar,
+  Award
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { useSocioProfile } from '@/hooks/useSocioProfile';
+import { useNotifications } from '@/hooks/useNotifications';
 
 interface SocioSidebarProps {
   open: boolean;
@@ -22,6 +33,16 @@ interface SocioSidebarProps {
   activeSection: string;
 }
 
+interface RealtimeStats {
+  totalBeneficios: number;
+  beneficiosUsados: number;
+  notificacionesPendientes: number;
+  puntosAcumulados: number;
+  nivelSocio: string;
+  estadoMembresia: string;
+  actividadReciente: number;
+}
+
 export const SocioSidebar: React.FC<SocioSidebarProps> = ({
   open,
   onToggle,
@@ -29,53 +50,140 @@ export const SocioSidebar: React.FC<SocioSidebarProps> = ({
   onLogoutClick,
   activeSection
 }) => {
+  const router = useRouter();
+  const pathname = usePathname();
   const { user } = useAuth();
+  const { socio, estadisticas, activity } = useSocioProfile();
+  const { notifications } = useNotifications();
+  
+  // Real-time stats state
+  const [realtimeStats, setRealtimeStats] = useState<RealtimeStats>({
+    totalBeneficios: 0,
+    beneficiosUsados: estadisticas?.totalValidaciones || 0,
+    notificacionesPendientes: 0,
+    puntosAcumulados: 1250,
+    nivelSocio: 'Gold',
+    estadoMembresia: 'activo',
+    actividadReciente: 0
+  });
 
-  const menuItems = [
+  // Update stats when hooks change
+  useEffect(() => {
+    setRealtimeStats(prev => ({
+      ...prev,
+      beneficiosUsados: estadisticas?.totalValidaciones || 0,
+      notificacionesPendientes: notifications?.filter(n => !n.leida).length || 0,
+      actividadReciente: activity?.totalValidaciones || 0
+    }));
+  }, [estadisticas, notifications, activity]);
+
+  // Submenu item type
+  type SubmenuItem = {
+    id: string;
+    label: string;
+    icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+    route: string;
+    count?: number;
+    urgent?: boolean;
+  };
+  
+  // Enhanced menu structure
+  const menuItems: Array<{
+    id: string;
+    label: string;
+    icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+    description: string;
+    gradient: string;
+    route: string;
+    badge?: number;
+    urgent?: boolean;
+    submenu?: SubmenuItem[];
+  }> = [
     {
       id: 'dashboard',
-      label: 'Inicio / Dashboard',
+      label: 'Mi Dashboard',
       icon: Home,
-      description: 'Vista general de beneficios y resumen',
+      description: 'Vista general y resumen',
       gradient: 'from-sky-500 to-blue-600',
-      badge: null,
-      href: '/dashboard/socio'
+      route: '/dashboard/socio'
     },
     {
       id: 'perfil',
       label: 'Mi Perfil',
       icon: User,
-      description: 'Datos personales y estado de membresía',
+      description: 'Datos personales y membresía',
       gradient: 'from-emerald-500 to-teal-600',
-      badge: null,
-      href: '/dashboard/socio/perfil'
+      route: '/dashboard/socio/perfil',
+      submenu: [
+        { 
+          id: 'perfil-datos', 
+          label: 'Datos Personales', 
+          icon: User,
+          route: '/dashboard/socio/perfil'
+        },
+        { 
+          id: 'perfil-membresia', 
+          label: 'Estado de Membresía', 
+          icon: Award,
+          route: '/dashboard/socio/perfil?tab=membresia'
+        }
+      ]
     },
     {
       id: 'beneficios',
-      label: 'Beneficios',
+      label: 'Mis Beneficios',
       icon: Gift,
-      description: 'Catálogo con filtros y detalles',
+      description: 'Catálogo y ofertas disponibles',
       gradient: 'from-purple-500 to-indigo-600',
-      badge: '12',
-      href: '/dashboard/socio/beneficios'
-    },
-    {
-      id: 'historial',
-      label: 'Historial de usos',
-      icon: History,
-      description: 'Registro de beneficios canjeados',
-      gradient: 'from-amber-500 to-orange-600',
-      badge: null,
-      href: '/dashboard/socio/historial'
+      route: '/dashboard/socio/beneficios',
+      badge: realtimeStats.totalBeneficios,
+      submenu: [
+        { 
+          id: 'beneficios-disponibles', 
+          label: 'Beneficios Disponibles', 
+          icon: Gift,
+          count: realtimeStats.totalBeneficios,
+          route: '/dashboard/socio/beneficios'
+        },
+        { 
+          id: 'beneficios-favoritos', 
+          label: 'Mis Favoritos', 
+          icon: Star,
+          route: '/dashboard/socio/beneficios?tab=favoritos'
+        }
+      ]
     },
     {
       id: 'validar',
       label: 'Validar Beneficio',
       icon: QrCode,
-      description: 'Escáner QR embebido',
+      description: 'Escáner QR para canjear',
       gradient: 'from-teal-500 to-cyan-600',
-      badge: null,
-      href: '/dashboard/socio/validar'
+      route: '/dashboard/socio/validar'
+    },
+    {
+      id: 'historial',
+      label: 'Mi Historial',
+      icon: History,
+      description: 'Registro de beneficios usados',
+      gradient: 'from-amber-500 to-orange-600',
+      route: '/dashboard/socio/historial',
+      badge: realtimeStats.beneficiosUsados,
+      submenu: [
+        { 
+          id: 'historial-validaciones', 
+          label: 'Validaciones', 
+          icon: History,
+          count: realtimeStats.beneficiosUsados,
+          route: '/dashboard/socio/historial'
+        },
+        { 
+          id: 'historial-estadisticas', 
+          label: 'Mis Estadísticas', 
+          icon: TrendingUp,
+          route: '/dashboard/socio/historial?tab=estadisticas'
+        }
+      ]
     },
     {
       id: 'notificaciones',
@@ -83,37 +191,85 @@ export const SocioSidebar: React.FC<SocioSidebarProps> = ({
       icon: Bell,
       description: 'Avisos y recordatorios',
       gradient: 'from-pink-500 to-rose-600',
-      badge: '3',
-      href: '/dashboard/socio/notificaciones'
+      route: '/dashboard/socio/notificaciones',
+      badge: realtimeStats.notificacionesPendientes,
+      urgent: realtimeStats.notificacionesPendientes > 0
     }
   ];
 
-  const handleMenuClick = (itemId: string, href?: string) => {
-    if (href) {
-      window.location.href = href;
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set(['perfil']));
+
+  const toggleExpanded = (itemId: string) => {
+    const newExpanded = new Set(expandedItems);
+    if (newExpanded.has(itemId)) {
+      newExpanded.delete(itemId);
+    } else {
+      newExpanded.add(itemId);
+    }
+    setExpandedItems(newExpanded);
+  };
+
+  const handleMenuClick = (itemId: string, hasSubmenu: boolean = false, route?: string) => {
+    if (hasSubmenu) {
+      toggleExpanded(itemId);
+    } else if (route) {
+      router.push(route);
     } else {
       onMenuClick(itemId);
     }
   };
 
+  // Enhanced active state detection
   const isActive = (itemId: string) => {
-    return activeSection === itemId || activeSection.startsWith(itemId + '-');
+    return activeSection === itemId || activeSection.startsWith(itemId + '-') || pathname.includes(itemId);
   };
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.05
+  const isSubmenuItemActive = (subItem: SubmenuItem) => {
+    const currentPath = pathname;
+    
+    // Direct route match
+    if (currentPath === subItem.route) {
+      return true;
+    }
+    
+    // Check for tab-based routes
+    const routeParts = subItem.route.split('?');
+    const routePath = routeParts[0];
+    
+    if (currentPath === routePath) {
+      const routeParams = new URLSearchParams(routeParts[1] || '');
+      const currentParams = new URLSearchParams(window.location.search);
+      
+      // Check if all route parameters match current parameters
+      for (const [key, value] of routeParams.entries()) {
+        if (currentParams.get(key) !== value) return false;
       }
+      
+      return true;
+    }
+    
+    return false;
+  };
+
+  const getItemGradient = (item: typeof menuItems[0]) => {
+    return item.gradient || 'from-gray-500 to-gray-600';
+  };
+
+  const getMembershipStatus = () => {
+    const estado = socio?.estadoMembresia || realtimeStats.estadoMembresia;
+    switch (estado) {
+      case 'activo':
+        return { color: 'emerald', text: 'Socio Activo', icon: '●' };
+      case 'vencido':
+        return { color: 'red', text: 'Membresía Vencida', icon: '●' };
+      case 'pendiente':
+        return { color: 'amber', text: 'Pendiente', icon: '●' };
+      default:
+        return { color: 'gray', text: 'Estado Desconocido', icon: '●' };
     }
   };
 
-  const itemVariants = {
-    hidden: { opacity: 0, x: -20 },
-    visible: { opacity: 1, x: 0 }
-  };
+  const membershipStatus = getMembershipStatus();
 
   return (
     <>
@@ -132,147 +288,271 @@ export const SocioSidebar: React.FC<SocioSidebarProps> = ({
 
       {/* Sidebar */}
       <motion.div
-        initial={{ x: -300 }}
-        animate={{ x: open ? 0 : -300 }}
+        initial={{ x: -320 }}
+        animate={{ x: open ? 0 : -320 }}
         transition={{ duration: 0.3, ease: 'easeInOut' }}
-        className="fixed left-0 top-0 h-full w-80 bg-white/95 backdrop-blur-xl shadow-2xl z-50 lg:relative lg:translate-x-0 lg:shadow-none lg:border-r lg:border-white/20"
+        className="fixed left-0 top-0 h-full w-80 bg-white/95 backdrop-blur-xl shadow-2xl z-50 lg:relative lg:translate-x-0 lg:shadow-xl border-r border-white/20"
       >
-        <div className="flex flex-col h-full relative overflow-hidden">
-          {/* Background Elements */}
-          <div className="absolute inset-0 bg-gradient-to-br from-sky-50/50 via-white to-celestial-50/30"></div>
-          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-sky-100/20 to-transparent rounded-full blur-2xl"></div>
-          <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-celestial-100/20 to-transparent rounded-full blur-2xl"></div>
-          
-          {/* Floating Elements */}
-          <div className="absolute top-20 right-8 w-2 h-2 bg-sky-400 rounded-full animate-pulse"></div>
-          <div className="absolute top-40 left-6 w-1 h-1 bg-celestial-400 rounded-full animate-ping"></div>
-          <div className="absolute bottom-32 right-12 w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce"></div>
-
-          {/* Header */}
-          <div className="relative z-10 p-6 border-b border-white/20">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-4">
+        <div className="flex flex-col h-full">
+          {/* Enhanced Header */}
+          <div className="relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-sky-500 via-celestial-500 to-sky-600"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
+            
+            {/* Floating elements */}
+            <div className="absolute top-2 right-4 w-8 h-8 bg-white/20 rounded-full blur-sm animate-pulse"></div>
+            <div className="absolute bottom-4 left-6 w-6 h-6 bg-white/15 rounded-full blur-sm animate-bounce"></div>
+            
+            <div className="relative z-10 flex items-center justify-between p-6">
+              <div className="flex items-center space-x-3">
                 <motion.div 
-                  className="w-14 h-14 bg-gradient-to-br from-sky-500 to-celestial-600 rounded-3xl flex items-center justify-center shadow-lg relative overflow-hidden"
-                  whileHover={{ scale: 1.05 }}
+                  className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-lg"
+                  whileHover={{ scale: 1.1, rotate: 5 }}
+                  transition={{ duration: 0.2 }}
                 >
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse"></div>
-                  <User className="w-7 h-7 text-white relative z-10" />
+                  <User className="w-6 h-6 text-white" />
                 </motion.div>
                 <div>
-                  <h2 className="text-xl font-bold bg-gradient-to-r from-sky-600 via-celestial-600 to-sky-700 bg-clip-text text-transparent">
-                    Portal Socio
-                  </h2>
-                  <p className="text-sm text-gray-600 truncate max-w-32">
-                    {user?.nombre || 'Mi Portal'}
+                  <h2 className="text-lg font-bold text-white">Portal Socio</h2>
+                  <p className="text-sm text-sky-100 truncate max-w-32">
+                    {user?.nombre || socio?.nombre || 'Mi Portal'}
                   </p>
                 </div>
               </div>
               
-              <motion.button
+              <button
                 onClick={onToggle}
-                className="lg:hidden w-10 h-10 bg-white/80 backdrop-blur-sm border border-white/40 rounded-2xl flex items-center justify-center hover:bg-gray-50/80 transition-colors"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
+                className="lg:hidden p-2 rounded-xl hover:bg-white/10 transition-colors"
               >
-                <X className="w-5 h-5 text-gray-600" />
-              </motion.button>
-            </div>
-
-            {/* User Status */}
-            <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-white/40">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse"></div>
-                  <span className="text-sm font-medium text-emerald-700">Socio Activo</span>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <Crown className="w-4 h-4 text-amber-500" />
-                  <span className="text-xs font-bold text-amber-600">Premium</span>
-                </div>
-              </div>
-              <div className="mt-2 flex items-center justify-between text-xs text-gray-600">
-                <span>Nivel: Gold</span>
-                <span>1,250 pts</span>
-              </div>
+                <X className="w-5 h-5 text-white" />
+              </button>
             </div>
           </div>
 
-          {/* Navigation */}
-          <nav className="flex-1 overflow-y-auto py-4 relative z-10">
+          {/* Enhanced Quick Stats */}
+          <div className="p-4 bg-gradient-to-br from-gray-50 to-white border-b border-gray-100">
+            {/* Membership Status */}
+            <div className="bg-white rounded-2xl p-3 mb-3 shadow-lg border border-gray-100">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <div className={`w-3 h-3 bg-${membershipStatus.color}-500 rounded-full animate-pulse`}></div>
+                  <span className={`text-sm font-medium text-${membershipStatus.color}-700`}>
+                    {membershipStatus.text}
+                  </span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <Crown className="w-4 h-4 text-amber-500" />
+                  <span className="text-xs font-bold text-amber-600">
+                    {realtimeStats.nivelSocio}
+                  </span>
+                </div>
+              </div>
+              <div className="mt-2 flex items-center justify-between text-xs text-gray-600">
+                <span>Puntos: {realtimeStats.puntosAcumulados}</span>
+                <span>Ahorro: ${estadisticas?.ahorroTotal || 0}</span>
+              </div>
+            </div>
+
+            {/* Stats Grid */}
+            <div className="grid grid-cols-2 gap-3">
+              <motion.div 
+                className="bg-white rounded-2xl p-3 text-center shadow-lg border border-gray-100"
+                whileHover={{ scale: 1.02, y: -2 }}
+                transition={{ duration: 0.2 }}
+              >
+                <div className="flex items-center justify-center space-x-2 mb-1">
+                  <div className="w-6 h-6 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center">
+                    <Gift className="w-3 h-3 text-white" />
+                  </div>
+                  <div className="text-lg font-black text-purple-600">{realtimeStats.beneficiosUsados}</div>
+                </div>
+                <div className="text-xs text-gray-600 font-medium">Usados</div>
+              </motion.div>
+              
+              <motion.div 
+                className="bg-white rounded-2xl p-3 text-center shadow-lg border border-gray-100"
+                whileHover={{ scale: 1.02, y: -2 }}
+                transition={{ duration: 0.2 }}
+              >
+                <div className="flex items-center justify-center space-x-2 mb-1">
+                  <div className="w-6 h-6 bg-gradient-to-r from-pink-500 to-rose-600 rounded-lg flex items-center justify-center">
+                    <Bell className="w-3 h-3 text-white" />
+                  </div>
+                  <div className="text-lg font-black text-pink-600">{realtimeStats.notificacionesPendientes}</div>
+                </div>
+                <div className="text-xs text-gray-600 font-medium">Avisos</div>
+              </motion.div>
+            </div>
+            
+            {/* Activity indicator */}
             <motion.div 
-              className="px-4 space-y-2"
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
+              className="mt-3 flex items-center justify-center space-x-2 text-xs text-gray-500"
+              animate={{ opacity: [0.5, 1, 0.5] }}
+              transition={{ duration: 2, repeat: Infinity }}
             >
+              <Activity className="w-3 h-3" />
+              <span>Actualización en tiempo real</span>
+            </motion.div>
+          </div>
+
+          {/* Enhanced Navigation */}
+          <nav className="flex-1 overflow-y-auto py-4 px-3">
+            <div className="space-y-2">
               {menuItems.map((item) => (
-                <motion.div key={item.id} variants={itemVariants}>
+                <div key={item.id}>
                   <motion.button
-                    onClick={() => handleMenuClick(item.id, item.href)}
+                    onClick={() => handleMenuClick(item.id, !!item.submenu, item.route)}
                     className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-left transition-all duration-300 group relative overflow-hidden ${
                       isActive(item.id)
-                        ? 'bg-white/80 backdrop-blur-sm shadow-lg border border-white/40'
-                        : 'hover:bg-white/60 hover:backdrop-blur-sm hover:border hover:border-white/30'
+                        ? 'bg-gradient-to-r from-white to-gray-50 text-gray-900 shadow-lg border border-gray-200'
+                        : 'text-gray-700 hover:bg-white/80 hover:shadow-md'
                     }`}
-                    whileHover={{ scale: 1.02, x: 5 }}
+                    whileHover={{ scale: 1.02, x: 4 }}
                     whileTap={{ scale: 0.98 }}
                   >
-                    {/* Shine Effect */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    {/* Background gradient on hover */}
+                    <div className={`absolute inset-0 bg-gradient-to-r ${getItemGradient(item)} opacity-0 group-hover:opacity-5 transition-opacity duration-300 rounded-2xl`}></div>
                     
-                    <div className="flex items-center space-x-3 relative z-10">
-                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg bg-gradient-to-br ${item.gradient} group-hover:scale-110 transition-transform duration-300`}>
-                        <item.icon className="w-6 h-6 text-white" />
+                    <div className="flex items-center space-x-3 flex-1 min-w-0 relative z-10">
+                      <div className={`p-2.5 rounded-xl transition-all duration-300 ${
+                        isActive(item.id) 
+                          ? `bg-gradient-to-r ${getItemGradient(item)} text-white shadow-lg` 
+                          : 'bg-gray-100 text-gray-500 group-hover:bg-gray-200 group-hover:text-gray-700'
+                      }`}>
+                        <item.icon className="w-4 h-4" />
                       </div>
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-2">
-                          <span className={`font-semibold text-sm ${
-                            isActive(item.id) ? 'text-gray-900' : 'text-gray-700 group-hover:text-gray-900'
-                          }`}>
-                            {item.label}
-                          </span>
-                          {item.badge && (
-                            <motion.div
-                              className="bg-gradient-to-r from-red-500 to-pink-600 text-white px-2 py-0.5 rounded-full text-xs font-bold shadow-lg"
-                              animate={{ scale: [1, 1.1, 1] }}
-                              transition={{ duration: 2, repeat: Infinity }}
-                            >
-                              {item.badge}
-                            </motion.div>
-                          )}
-                        </div>
-                        <p className="text-xs text-gray-500 mt-0.5">{item.description}</p>
+                      <div className="flex-1 min-w-0">
+                        <span className="font-semibold text-sm truncate block">{item.label}</span>
+                        <p className="text-xs text-gray-500 mt-0.5 truncate">{item.description}</p>
                       </div>
                     </div>
-
-                    {/* Active Indicator */}
-                    {isActive(item.id) && (
-                      <motion.div
-                        className="absolute right-0 top-1/2 transform -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-sky-500 to-celestial-600 rounded-l-full"
-                        layoutId="activeIndicator"
-                      />
-                    )}
+                    
+                    {/* Badge and indicators */}
+                    <div className="flex items-center space-x-2 relative z-10">
+                      {item.badge !== undefined && item.badge > 0 && (
+                        <motion.div
+                          className={`px-2 py-1 rounded-full text-xs font-bold ${
+                            item.urgent 
+                              ? 'bg-red-500 text-white animate-pulse' 
+                              : 'bg-blue-500 text-white'
+                          }`}
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                        >
+                          {item.badge > 99 ? '99+' : item.badge}
+                        </motion.div>
+                      )}
+                      
+                      {item.submenu && (
+                        <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${
+                          expandedItems.has(item.id) ? 'rotate-180' : ''
+                        } ${isActive(item.id) ? 'text-gray-700' : 'text-gray-400'}`} />
+                      )}
+                    </div>
                   </motion.button>
-                </motion.div>
+
+                  {/* Enhanced Submenu */}
+                  <AnimatePresence>
+                    {item.submenu && expandedItems.has(item.id) && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0, y: -10 }}
+                        animate={{ opacity: 1, height: 'auto', y: 0 }}
+                        exit={{ opacity: 0, height: 0, y: -10 }}
+                        transition={{ duration: 0.3, ease: "easeInOut" }}
+                        className="ml-4 mt-2 space-y-1 border-l-2 border-gradient-to-b from-gray-200 to-transparent pl-4"
+                      >
+                        {item.submenu.map((subItem) => (
+                          <motion.button
+                            key={subItem.id}
+                            onClick={() => handleMenuClick(subItem.id, false, subItem.route)}
+                            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left transition-all duration-200 group ${
+                              isSubmenuItemActive(subItem)
+                                ? 'bg-gradient-to-r from-gray-50 to-white text-gray-900 border border-gray-200 shadow-sm'
+                                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                            }`}
+                            whileHover={{ scale: 1.02, x: 2 }}
+                            whileTap={{ scale: 0.98 }}
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.1 }}
+                          >
+                            <div className="flex items-center space-x-3 flex-1">
+                              <div className={`p-1.5 rounded-lg transition-all duration-200 ${
+                                isSubmenuItemActive(subItem)
+                                  ? `bg-gradient-to-r ${getItemGradient(item)} text-white shadow-md` 
+                                  : 'bg-gray-100 text-gray-400 group-hover:bg-gray-200'
+                              }`}>
+                                <subItem.icon className="w-3 h-3" />
+                              </div>
+                              <span className="text-sm font-medium truncate">{subItem.label}</span>
+                            </div>
+                            
+                            {/* Submenu badges */}
+                            {subItem.count !== undefined && subItem.count > 0 && (
+                              <motion.div
+                                className={`px-2 py-0.5 rounded-full text-xs font-bold ${
+                                  subItem.urgent 
+                                    ? 'bg-red-500 text-white animate-pulse' 
+                                    : 'bg-gray-500 text-white'
+                                }`}
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                transition={{ delay: 0.2 }}
+                              >
+                                {subItem.count}
+                              </motion.div>
+                            )}
+                          </motion.button>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               ))}
-            </motion.div>
+            </div>
           </nav>
 
-          {/* Footer */}
-          <div className="relative z-10 p-4 border-t border-white/20">
+          {/* Enhanced User Info */}
+          <div className="p-4 border-t border-gray-200 bg-gradient-to-br from-gray-50 to-white">
+            <div className="flex items-center space-x-3 mb-4">
+              <motion.div 
+                className="w-12 h-12 bg-gradient-to-r from-sky-500 to-celestial-600 rounded-2xl flex items-center justify-center shadow-lg"
+                whileHover={{ scale: 1.1, rotate: 5 }}
+                transition={{ duration: 0.2 }}
+              >
+                <span className="text-white font-bold text-lg">
+                  {(user?.nombre || socio?.nombre)?.charAt(0).toUpperCase() || 'S'}
+                </span>
+              </motion.div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-gray-900 truncate">
+                  {user?.nombre || socio?.nombre || 'Socio'}
+                </p>
+                <p className="text-xs text-gray-500 truncate">
+                  {user?.email || socio?.email || 'socio@email.com'}
+                </p>
+                <div className="flex items-center space-x-1 mt-1">
+                  <div className={`w-2 h-2 bg-${membershipStatus.color}-500 rounded-full animate-pulse`}></div>
+                  <span className={`text-xs text-${membershipStatus.color}-600 font-medium`}>
+                    {membershipStatus.text}
+                  </span>
+                </div>
+              </div>
+            </div>
+            
             <motion.button
               onClick={onLogoutClick}
-              className="w-full flex items-center space-x-3 px-4 py-3 rounded-2xl text-red-600 hover:bg-red-50/80 hover:backdrop-blur-sm transition-all duration-200 group relative overflow-hidden"
-              whileHover={{ scale: 1.02 }}
+              className="w-full flex items-center space-x-3 px-4 py-3 rounded-2xl text-red-600 hover:bg-red-50 transition-all duration-200 group border border-red-200 hover:border-red-300 hover:shadow-md"
+              whileHover={{ scale: 1.02, y: -1 }}
               whileTap={{ scale: 0.98 }}
             >
-              <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-rose-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                <LogOut className="w-5 h-5 text-white" />
+              <div className="p-2 rounded-xl bg-red-100 text-red-600 group-hover:bg-red-200 transition-colors duration-200">
+                <LogOut className="w-4 h-4" />
               </div>
               <span className="font-semibold text-sm">Cerrar Sesión</span>
-              <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                <ArrowUpRight className="w-4 h-4" />
+              <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                <ChevronDown className="w-4 h-4 -rotate-90" />
               </div>
             </motion.button>
           </div>
@@ -281,3 +561,5 @@ export const SocioSidebar: React.FC<SocioSidebarProps> = ({
     </>
   );
 };
+
+export default SocioSidebar;
