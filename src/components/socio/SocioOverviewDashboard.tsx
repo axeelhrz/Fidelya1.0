@@ -57,7 +57,6 @@ interface SocioMetrics {
   beneficiosEsteMes: number;
   crecimientoMensual: number;
   recentActivities: ActivityLog[];
-  membershipHealth: 'excellent' | 'good' | 'warning' | 'critical';
   lastActivity: Date | null;
   avgBeneficiosMensuales: number;
   categoriaFavorita: string;
@@ -305,235 +304,6 @@ const ActivityTimeline: React.FC<{
   );
 };
 
-// Membership Status Card
-const MembershipStatusCard: React.FC<{
-  health: SocioMetrics['membershipHealth'];
-  lastActivity: Date | null;
-  streakDias: number;
-  proximoVencimiento: Date | null;
-  estado: string;
-  nivelSocio: string;
-  progresoMensual: number;
-  tiempoComoSocio: number;
-  diasHastaVencimiento: number;
-  loading: boolean;
-}> = ({ health, lastActivity, streakDias, proximoVencimiento, estado, nivelSocio, progresoMensual, tiempoComoSocio, diasHastaVencimiento, loading }) => {
-  
-  const getHealthConfig = () => {
-    const configs = {
-      excellent: {
-        color: 'text-emerald-600',
-        gradient: 'from-emerald-500 to-teal-600',
-        icon: <CheckCircle className="w-6 h-6" />,
-        label: 'Excelente',
-        description: 'Socio muy activo y comprometido'
-      },
-      good: {
-        color: 'text-sky-600',
-        gradient: 'from-sky-500 to-blue-600',
-        icon: <Target className="w-6 h-6" />,
-        label: 'Bueno',
-        description: 'Socio activo con buen rendimiento'
-      },
-      warning: {
-        color: 'text-amber-600',
-        gradient: 'from-amber-500 to-orange-600',
-        icon: <Clock className="w-6 h-6" />,
-        label: 'Regular',
-        description: 'Puede mejorar su actividad'
-      },
-      critical: {
-        color: 'text-red-600',
-        gradient: 'from-red-500 to-rose-600',
-        icon: <AlertCircle className="w-6 h-6" />,
-        label: 'Inactivo',
-        description: 'Requiere atención inmediata'
-      }
-    };
-    return configs[health];
-  };
-
-  const getNivelConfig = (nivel: string) => {
-    const configs = {
-      'Bronze': { color: 'text-amber-700', gradient: 'from-amber-600 to-orange-700', stars: 1 },
-      'Silver': { color: 'text-gray-500', gradient: 'from-gray-400 to-gray-600', stars: 2 },
-      'Gold': { color: 'text-yellow-500', gradient: 'from-yellow-400 to-amber-600', stars: 3 },
-      'Platinum': { color: 'text-purple-600', gradient: 'from-purple-500 to-indigo-600', stars: 4 },
-      'Diamond': { color: 'text-blue-600', gradient: 'from-blue-500 to-indigo-600', stars: 5 },
-      'Premium': { color: 'text-violet-600', gradient: 'from-violet-500 to-purple-600', stars: 5 }
-    };
-    return configs[nivel as keyof typeof configs] || { color: 'text-gray-500', gradient: 'from-gray-500 to-gray-600', stars: 1 };
-  };
-
-  const getVencimientoUrgencia = (dias: number) => {
-    if (dias < 0) return { color: 'text-red-600', label: 'Vencido', urgente: true };
-    if (dias <= 7) return { color: 'text-red-600', label: 'Muy urgente', urgente: true };
-    if (dias <= 30) return { color: 'text-amber-600', label: 'Próximo', urgente: false };
-    return { color: 'text-emerald-600', label: 'Vigente', urgente: false };
-  };
-
-  const config = getHealthConfig();
-  const nivelConfig = getNivelConfig(nivelSocio);
-  const vencimientoConfig = getVencimientoUrgencia(diasHastaVencimiento);
-
-  return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center space-x-4">
-          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-lg bg-gradient-to-br ${config.gradient}`}>
-            {loading ? <RefreshCw className="w-6 h-6 animate-spin" /> : config.icon}
-          </div>
-          <div>
-            <h3 className="text-xl font-bold text-gray-900">Estado de Socio</h3>
-            <p className="text-gray-600">{config.description}</p>
-          </div>
-        </div>
-        
-        <div className={`bg-gradient-to-r ${config.gradient} text-white px-4 py-2 rounded-xl text-sm font-bold shadow-lg`}>
-          {config.label}
-        </div>
-      </div>
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        <motion.div 
-          className="bg-gray-50 rounded-xl p-4"
-          whileHover={{ scale: 1.02 }}
-        >
-          <div className="w-8 h-8 bg-gradient-to-br from-sky-500 to-blue-600 rounded-xl flex items-center justify-center mx-auto mb-2 shadow-lg">
-            <Clock className="w-4 h-4 text-white" />
-          </div>
-          <p className="text-xs text-gray-600 mb-1 text-center font-medium">Última actividad</p>
-          <p className="font-bold text-gray-900 text-sm text-center">
-            {loading ? '...' : lastActivity ? format(lastActivity, 'dd/MM', { locale: es }) : 'Sin actividad'}
-          </p>
-        </motion.div>
-
-        <motion.div 
-          className="bg-gray-50 rounded-xl p-4"
-          whileHover={{ scale: 1.02 }}
-        >
-          <div className="w-8 h-8 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl flex items-center justify-center mx-auto mb-2 shadow-lg">
-            <Flame className="w-4 h-4 text-white" />
-          </div>
-          <p className="text-xs text-gray-600 mb-1 text-center font-medium">Racha de días</p>
-          <p className="font-bold text-gray-900 text-sm text-center">
-            {loading ? '...' : `${streakDias} días`}
-          </p>
-        </motion.div>
-      </div>
-
-      {/* Membership Info */}
-      <div className="space-y-4">
-        {/* Tiempo como socio */}
-        <div className="flex items-center justify-between">
-          <span className="text-gray-600 font-medium">Tiempo como socio</span>
-          <div className="text-right">
-            <span className="text-gray-900 font-bold">
-              {loading ? '...' : `${tiempoComoSocio} días`}
-            </span>
-            <p className="text-xs text-gray-500">
-              {loading ? '' : `${Math.floor(tiempoComoSocio / 30)} meses`}
-            </p>
-          </div>
-        </div>
-
-        {/* Próximo vencimiento */}
-        {proximoVencimiento && (
-          <div className="flex items-center justify-between">
-            <span className="text-gray-600 font-medium">Próximo vencimiento</span>
-            <div className="text-right">
-              <div className="text-gray-900 font-bold">
-                {loading ? '...' : format(proximoVencimiento, 'dd/MM/yyyy', { locale: es })}
-              </div>
-              <div className={`text-xs font-medium ${vencimientoConfig.color}`}>
-                {loading ? '' : 
-                  diasHastaVencimiento < 0 ? 
-                    `Vencido hace ${Math.abs(diasHastaVencimiento)} días` :
-                    `${diasHastaVencimiento} días restantes`
-                }
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Nivel de socio */}
-        <div className="flex items-center justify-between">
-          <span className="text-gray-600 font-medium">Nivel de socio</span>
-          <div className="flex items-center space-x-2">
-            <div className="flex space-x-1">
-              {Array.from({ length: nivelConfig.stars }).map((_, i) => (
-                <Star key={i} className={`w-4 h-4 ${nivelConfig.color} fill-current`} />
-              ))}
-            </div>
-            <span className={`font-bold ${nivelConfig.color}`}>
-              {loading ? '...' : nivelSocio}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Progress Section */}
-      <div className="mt-6">
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-gray-600 font-medium">Progreso mensual</span>
-          <span className="text-gray-900 font-bold">
-            {loading ? '...' : `${progresoMensual}%`}
-          </span>
-        </div>
-        <div className="w-full bg-gray-200 rounded-full h-2">
-          <motion.div 
-            className={`h-2 rounded-full bg-gradient-to-r ${config.gradient} shadow-lg`}
-            initial={{ width: 0 }}
-            animate={{ width: loading ? '0%' : `${progresoMensual}%` }}
-            transition={{ duration: 1, delay: 0.5 }}
-          />
-        </div>
-        <div className="flex justify-between text-xs text-gray-500 mt-2">
-          <span>0%</span>
-          <span>Meta: 100%</span>
-        </div>
-      </div>
-
-      {/* Alertas de vencimiento */}
-      {vencimientoConfig.urgente && !loading && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className={`mt-6 p-4 rounded-xl border ${
-            diasHastaVencimiento < 0 ? 
-              'bg-red-50 border-red-200' : 
-              'bg-amber-50 border-amber-200'
-          }`}
-        >
-          <div className="flex items-center space-x-3">
-            <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${
-              diasHastaVencimiento < 0 ? 'bg-red-500' : 'bg-amber-500'
-            }`}>
-              <AlertCircle className="w-4 h-4 text-white" />
-            </div>
-            <div>
-              <span className={`font-bold ${vencimientoConfig.color}`}>
-                {diasHastaVencimiento < 0 ? 
-                  'Membresía vencida' : 
-                  'Membresía por vencer'
-                }
-              </span>
-              <p className="text-sm text-gray-600 mt-1">
-                {diasHastaVencimiento < 0 ? 
-                  'Contacta a tu asociación para renovar tu membresía y seguir disfrutando de los beneficios.' :
-                  'Renueva tu membresía pronto para no perder el acceso a los beneficios exclusivos.'
-                }
-              </p>
-            </div>
-          </div>
-        </motion.div>
-      )}
-    </div>
-  );
-};
-
 // Quick Stats Component
 const QuickStats: React.FC<{
   beneficiosDisponibles: number;
@@ -608,7 +378,6 @@ export const SocioOverviewDashboard: React.FC<SocioOverviewDashboardProps> = ({
     beneficiosEsteMes: 0,
     crecimientoMensual: 0,
     recentActivities: [],
-    membershipHealth: 'good',
     lastActivity: null,
     avgBeneficiosMensuales: 0,
     categoriaFavorita: 'General',
@@ -677,13 +446,6 @@ export const SocioOverviewDashboard: React.FC<SocioOverviewDashboardProps> = ({
       // Calculate average monthly benefits
       const avgBeneficiosMensuales = realStats.beneficiosUsados ? realStats.beneficiosUsados / 3 : beneficiosUsados.length / 3;
 
-      // Determine membership health based on real activity
-      let membershipHealth: SocioMetrics['membershipHealth'] = 'good';
-      if (avgBeneficiosMensuales > 5) membershipHealth = 'excellent';
-      else if (avgBeneficiosMensuales > 2) membershipHealth = 'good';
-      else if (avgBeneficiosMensuales > 0) membershipHealth = 'warning';
-      else membershipHealth = 'critical';
-
       // Get last activity from real data
       const lastActivity = beneficiosUsados.length > 0 
         ? beneficiosUsados.sort((a, b) => b.fechaUso.toDate().getTime() - a.fechaUso.toDate().getTime())[0].fechaUso.toDate()
@@ -748,7 +510,6 @@ export const SocioOverviewDashboard: React.FC<SocioOverviewDashboardProps> = ({
         beneficiosEsteMes: realStats.beneficiosEsteMes || beneficiosEsteMes,
         crecimientoMensual: Math.round(crecimientoMensual * 100) / 100,
         recentActivities,
-        membershipHealth,
         lastActivity,
         avgBeneficiosMensuales: Math.round(avgBeneficiosMensuales * 100) / 100,
         categoriaFavorita,
@@ -930,29 +691,13 @@ export const SocioOverviewDashboard: React.FC<SocioOverviewDashboardProps> = ({
           ))}
         </div>
 
-        {/* Secondary Cards */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2">
-            <ActivityTimeline
-              activities={socioMetrics.recentActivities}
-              loading={loading}
-              onViewAll={() => onNavigate?.('historial')}
-            />
-          </div>
-          <div>
-            <MembershipStatusCard
-              health={socioMetrics.membershipHealth}
-              lastActivity={socioMetrics.lastActivity}
-              streakDias={socioMetrics.streakDias}
-              proximoVencimiento={socioMetrics.proximoVencimiento}
-              estado={socioMetrics.estado}
-              nivelSocio={socioMetrics.nivelSocio}
-              progresoMensual={socioMetrics.progresoMensual}
-              tiempoComoSocio={socioMetrics.tiempoComoSocio}
-              diasHastaVencimiento={socioMetrics.diasHastaVencimiento}
-              loading={loading}
-            />
-          </div>
+        {/* Activity Timeline - Removed Membership Status Card */}
+        <div className="grid grid-cols-1 gap-8">
+          <ActivityTimeline
+            activities={socioMetrics.recentActivities}
+            loading={loading}
+            onViewAll={() => onNavigate?.('historial')}
+          />
         </div>
 
         {/* Achievement Section */}
