@@ -11,7 +11,6 @@ import {
   BeneficioFilter 
 } from '@/types/beneficio';
 import { useAuth } from './useAuth';
-import { useComercio } from './useComercio';
 import toast from 'react-hot-toast';
 
 interface UseBeneficiosOptions {
@@ -475,7 +474,6 @@ export const useBeneficiosSocio = () => {
 
 // Hook especializado para comercios
 export const useBeneficiosComercios = () => {
-  const { comercio } = useComercio();
   
   return useBeneficios({
     autoLoad: true,
