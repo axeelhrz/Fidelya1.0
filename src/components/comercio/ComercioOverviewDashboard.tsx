@@ -69,8 +69,22 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
     }).format(amount);
   };
 
-  const formatPercentage = (value: number) => {
+  const formatPercentage = (value?: number) => {
+    if (value === undefined || value === null || isNaN(value)) {
+      return '0.0%';
+    }
     return `${value >= 0 ? '+' : ''}${value.toFixed(1)}%`;
+  };
+
+  // Safe access to stats properties with fallbacks
+  const safeStats = {
+    validacionesHoy: stats?.validacionesHoy ?? 0,
+    validacionesMes: stats?.validacionesMes ?? 0,
+    clientesUnicos: stats?.clientesUnicos ?? 0,
+    ingresosMensuales: stats?.ingresosMensuales ?? 0,
+    beneficiosActivos: stats?.beneficiosActivos ?? 0,
+    promedioValidacionesDiarias: (stats as any)?.promedioValidacionesDiarias ?? 0,
+    crecimientoMensual: (stats as any)?.crecimientoMensual ?? 0,
   };
 
   if (loading && !comercio) {
@@ -143,17 +157,17 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Validaciones Hoy</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.validacionesHoy}</p>
+              <p className="text-2xl font-bold text-gray-900">{safeStats.validacionesHoy}</p>
               <div className="flex items-center mt-2">
                 <span className={`text-sm font-medium ${
-                  stats.crecimientoMensual >= 0 ? 'text-green-600' : 'text-red-600'
+                  safeStats.crecimientoMensual >= 0 ? 'text-green-600' : 'text-red-600'
                 }`}>
-                  {stats.crecimientoMensual >= 0 ? (
+                  {safeStats.crecimientoMensual >= 0 ? (
                     <ArrowUpRight className="w-4 h-4 inline mr-1" />
                   ) : (
                     <ArrowDownRight className="w-4 h-4 inline mr-1" />
                   )}
-                  {formatPercentage(stats.crecimientoMensual)}
+                  {formatPercentage(safeStats.crecimientoMensual)}
                 </span>
                 <span className="text-sm text-gray-500 ml-2">vs mes anterior</span>
               </div>
@@ -173,10 +187,10 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Validaciones del Mes</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.validacionesMes}</p>
+              <p className="text-2xl font-bold text-gray-900">{safeStats.validacionesMes}</p>
               <div className="flex items-center mt-2">
                 <span className="text-sm text-gray-500">
-                  Promedio diario: {stats.promedioValidacionesDiarias.toFixed(1)}
+                  Promedio diario: {safeStats.promedioValidacionesDiarias.toFixed(1)}
                 </span>
               </div>
             </div>
@@ -195,7 +209,7 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Clientes Únicos</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.clientesUnicos}</p>
+              <p className="text-2xl font-bold text-gray-900">{safeStats.clientesUnicos}</p>
               <div className="flex items-center mt-2">
                 <span className="text-sm text-gray-500">
                   Este mes
@@ -218,7 +232,7 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
             <div>
               <p className="text-sm font-medium text-gray-600">Ingresos del Mes</p>
               <p className="text-2xl font-bold text-gray-900">
-                {formatCurrency(stats.ingresosMensuales)}
+                {formatCurrency(safeStats.ingresosMensuales)}
               </p>
               <div className="flex items-center mt-2">
                 <span className="text-sm text-gray-500">
@@ -312,7 +326,7 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
           </div>
           
           <RecentValidations 
-            validaciones={validaciones.slice(0, 5)}
+            validaciones={validaciones?.slice(0, 5) || []}
             onViewAll={() => onNavigate?.('validaciones')}
           />
         </motion.div>
@@ -411,21 +425,21 @@ export const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps>
             <div className="flex items-center space-x-6">
               <div className="text-center">
                 <p className="text-2xl font-bold text-blue-600">
-                  {stats.beneficiosActivos}
+                  {safeStats.beneficiosActivos}
                 </p>
                 <p className="text-xs text-gray-600">Beneficios Activos</p>
               </div>
               
               <div className="text-center">
                 <p className="text-2xl font-bold text-green-600">
-                  {stats.validacionesMes}
+                  {safeStats.validacionesMes}
                 </p>
                 <p className="text-xs text-gray-600">Validaciones</p>
               </div>
               
               <div className="text-center">
                 <p className="text-2xl font-bold text-purple-600">
-                  {stats.clientesUnicos}
+                  {safeStats.clientesUnicos}
                 </p>
                 <p className="text-xs text-gray-600">Clientes</p>
               </div>
