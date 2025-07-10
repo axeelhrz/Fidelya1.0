@@ -2,10 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { ComercioSidebar } from '@/components/layout/ComercioSidebar';
-import { QRManagement } from '@/components/comercio/QRManagement';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/hooks/useAuth';
 import { useComercios } from '@/hooks/useComercios';
@@ -25,8 +25,9 @@ import {
 import toast from 'react-hot-toast';
 
 export default function ComercioQRPage() {
-  const { user, signOut } = useAuth();
-  const { comercio, loading, generateQRCode, stats } = useComercios();
+  const { signOut } = useAuth();
+  const { comerciosVinculados, loading, generateQRCode, stats } = useComercios();
+  const comercio = comerciosVinculados[0];
   const searchParams = useSearchParams();
   const activeTab = searchParams.get('tab') || 'generar';
 
@@ -293,14 +294,14 @@ export default function ComercioQRPage() {
                     
                     {qrData ? (
                       <div className="space-y-6">
-                        <div className="bg-gray-50 rounded-xl p-8 inline-block">
-                          <img
-                            src={qrData}
-                            alt="Código QR"
-                            className="w-64 h-64 mx-auto"
-                          />
-                        </div>
-                        
+                        <Image
+                          src={qrData}
+                          alt="Código QR"
+                          width={256}
+                          height={256}
+                          className="w-64 h-64 mx-auto"
+                          unoptimized
+                        />
                         <div className="flex flex-wrap gap-3 justify-center">
                           <Button
                             variant="outline"
@@ -455,10 +456,13 @@ export default function ComercioQRPage() {
                             style={{ backgroundColor: customization.backgroundColor }}
                           >
                             {qrData ? (
-                              <img
+                              <Image
                                 src={qrData}
                                 alt="Preview QR"
-                                style={{ 
+                                width={customization.size / 2}
+                                height={customization.size / 2}
+                                unoptimized
+                                style={{
                                   width: customization.size / 2,
                                   height: customization.size / 2
                                 }}
@@ -513,7 +517,7 @@ export default function ComercioQRPage() {
                               leftIcon={<Download size={16} />}
                               onClick={() => {
                                 // SVG download logic would go here
-                                toast.info('Formato SVG próximamente disponible');
+                                toast('Formato SVG próximamente disponible');
                               }}
                             >
                               Descargar SVG (Vector)
@@ -567,10 +571,13 @@ export default function ComercioQRPage() {
 
                       <div className="flex items-center justify-center">
                         <div className="bg-white border-2 border-dashed border-gray-300 rounded-xl p-8 text-center">
-                          <img
+                          <Image
                             src={qrData}
                             alt="Código QR para descargar"
+                            width={192}
+                            height={192}
                             className="w-48 h-48 mx-auto mb-4"
+                            unoptimized
                           />
                           <p className="text-sm text-gray-600">
                             Vista previa del código QR
@@ -611,7 +618,7 @@ export default function ComercioQRPage() {
                         <Eye className="w-6 h-6 text-white" />
                       </div>
                       <div className="text-2xl font-bold text-blue-600 mb-1">
-                        {stats?.validacionesHoy || 0}
+                        {stats?.valiacionesHoy || 0}
                       </div>
                       <div className="text-sm text-blue-600 font-medium">
                         Escaneos Hoy
@@ -699,13 +706,17 @@ export default function ComercioQRPage() {
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">Última actualización:</span>
                   <span className="text-sm text-gray-500">
-                    {comercio?.actualizadoEn ? new Date(comercio.actualizadoEn).toLocaleDateString() : 'N/A'}
+                    {comercio?.actualizadoEn
+                      ? (typeof comercio.actualizadoEn.toDate === 'function'
+                          ? comercio.actualizadoEn.toDate().toLocaleDateString()
+                          : new Date(comercio.actualizadoEn as unknown as string | number | Date).toLocaleDateString())
+                      : 'N/A'}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">Validaciones hoy:</span>
                   <span className="text-sm font-medium text-blue-600">
-                    {stats?.validacionesHoy || 0}
+                    {stats?.valiacionesHoy || 0}
                   </span>
                 </div>
               </div>

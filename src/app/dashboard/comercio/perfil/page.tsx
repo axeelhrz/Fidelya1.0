@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { useSearchParams } from 'next/navigation';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -15,45 +15,24 @@ import {
   Store, 
   Upload, 
   Settings, 
-  Save, 
   RefreshCw,
   Shield,
   Bell,
   QrCode
 } from 'lucide-react';
-import toast from 'react-hot-toast';
 
 export default function ComercioPerfilPage() {
   const { signOut } = useAuth();
-  const { comerciosVinculados, loading, updateComercio, generateQRCode } = useComercios();
+  const { comerciosVinculados, loading } = useComercios();
   const comercio = comerciosVinculados && comerciosVinculados.length > 0 ? comerciosVinculados[0] : null;
   const searchParams = useSearchParams();
   const activeTab = searchParams.get('tab') || 'datos';
-
-  const [uploadingImage, setUploadingImage] = useState(false);
 
   const handleLogout = async () => {
     try {
       await signOut();
     } catch (error) {
       console.error('Error during logout:', error);
-    }
-  };
-
-  const handleImageUpload = async (file: File, type: 'logo' | 'banner') => {
-    if (!comercio) return;
-
-    setUploadingImage(true);
-    try {
-      // Here you would implement the image upload logic
-      // For now, we'll simulate it
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      toast.success(`${type === 'logo' ? 'Logo' : 'Banner'} actualizado exitosamente`);
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      toast.error('Error al subir la imagen');
-    } finally {
-      setUploadingImage(false);
     }
   };
 
@@ -175,24 +154,11 @@ export default function ComercioPerfilPage() {
 
         {/* Tab Content */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
-          {activeTab === 'datos' && (
-            <ProfileForm />
-          )}
+          {activeTab === 'datos' && <ProfileForm />}
 
-          {activeTab === 'imagenes' && (
-            <ImageUploader
-              comercio={comercio}
-              onImageUpload={handleImageUpload}
-              uploading={uploadingImage}
-            />
-          )}
+          {activeTab === 'imagenes' && <ImageUploader />}
 
-          {activeTab === 'qr' && (
-            <QRSection
-              comercio={comercio}
-              onGenerateQR={generateQRCode}
-            />
-          )}
+          {activeTab === 'qr' && <QRSection />}
 
           {activeTab === 'configuracion' && (
             <div className="p-8">
