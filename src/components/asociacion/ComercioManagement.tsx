@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -15,7 +15,6 @@ import {
   Check,
   X,
   AlertTriangle,
-  TrendingUp,
   Users,
   BarChart3,
   ArrowRight,
@@ -25,7 +24,10 @@ import {
   FileText,
   Power,
   PowerOff,
-  Pause
+  Pause,
+  Clock,
+  CheckCircle,
+  XCircle
 } from 'lucide-react';
 import { useComercios } from '@/hooks/useComercios';
 import { ComercioDisponible } from '@/services/adhesion.service';
@@ -37,9 +39,56 @@ import { ComercioValidationsHistory } from './ComercioValidationsHistory';
 
 interface ComercioManagementProps {
   onNavigate?: (section: string) => void;
+  initialFilter?: string | null;
 }
 
-export const ComercioManagement: React.FC<ComercioManagementProps> = ({ onNavigate }) => {
+// Mock data for pending requests - In a real app, this would come from the backend
+const mockPendingRequests = [
+  {
+    id: 'req-1',
+    nombreComercio: 'Panadería San Juan',
+    nombre: 'Juan Carlos Pérez',
+    email: 'juan@panaderiasanjuan.com',
+    telefono: '+54 11 4567-8901',
+    categoria: 'Alimentación',
+    direccion: 'Av. San Juan 1234, CABA',
+    fechaSolicitud: new Date('2024-01-15'),
+    mensaje: 'Somos una panadería familiar con 20 años de experiencia. Nos gustaría formar parte de su red de comercios.',
+    documentos: ['cuit.pdf', 'habilitacion.pdf'],
+    estado: 'pendiente' as const
+  },
+  {
+    id: 'req-2',
+    nombreComercio: 'Farmacia Central',
+    nombre: 'María González',
+    email: 'info@farmaciacentral.com',
+    telefono: '+54 11 4567-8902',
+    categoria: 'Salud',
+    direccion: 'Rivadavia 567, CABA',
+    fechaSolicitud: new Date('2024-01-18'),
+    mensaje: 'Farmacia con amplio stock y atención 24hs. Queremos ofrecer descuentos a los socios de la asociación.',
+    documentos: ['cuit.pdf', 'matricula.pdf', 'habilitacion.pdf'],
+    estado: 'pendiente' as const
+  },
+  {
+    id: 'req-3',
+    nombreComercio: 'Taller Mecánico Rodriguez',
+    nombre: 'Carlos Rodriguez',
+    email: 'carlos@tallerrodriguez.com',
+    telefono: '+54 11 4567-8903',
+    categoria: 'Automotor',
+    direccion: 'Corrientes 890, CABA',
+    fechaSolicitud: new Date('2024-01-20'),
+    mensaje: 'Taller especializado en reparaciones generales y service. Contamos con personal certificado.',
+    documentos: ['cuit.pdf', 'seguro.pdf'],
+    estado: 'pendiente' as const
+  }
+];
+
+export const ComercioManagement: React.FC<ComercioManagementProps> = ({ 
+  onNavigate, 
+  initialFilter 
+}) => {
   const {
     comerciosVinculados,
     stats,
@@ -71,8 +120,18 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({ onNaviga
   const [comercioToUnlink, setComercioToUnlink] = useState<ComercioDisponible | null>(null);
   const [comercioToDelete, setComercioToDelete] = useState<ComercioDisponible | null>(null);
   const [selectedComercios, setSelectedComercios] = useState<string[]>([]);
+  const [currentView, setCurrentView] = useState<'vinculados' | 'solicitudes'>('vinculados');
 
-  // Filtrar comercios
+  // Apply initial filter from URL parameters
+  useEffect(() => {
+    if (initialFilter === 'solicitudes') {
+      setCurrentView('solicitudes');
+    } else {
+      setCurrentView('vinculados');
+    }
+  }, [initialFilter]);
+
+  // Filtrar comercios vinculados
   const comerciosFiltrados = comerciosVinculados.filter(comercio => {
     const matchesSearch = !searchTerm || 
       comercio.nombreComercio.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -85,8 +144,49 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({ onNaviga
     return matchesSearch && matchesCategoria && matchesEstado;
   });
 
+  // Filtrar solicitudes pendientes
+  const solicitudesFiltradas = mockPendingRequests.filter(solicitud => {
+    const matchesSearch = !searchTerm || 
+      solicitud.nombreComercio.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      solicitud.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      solicitud.email.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesCategoria = !selectedCategoria || solicitud.categoria === selectedCategoria;
+    
+    return matchesSearch && matchesCategoria;
+  });
+
   // Obtener categorías únicas
-  const categorias = Array.from(new Set(comerciosVinculados.map(c => c.categoria)));
+  const categorias = Array.from(new Set([
+    ...comerciosVinculados.map(c => c.categoria),
+    ...mockPendingRequests.map(r => r.categoria)
+  ]));
+
+  // Get filtered title based on current view and filters
+  const getFilteredTitle = () => {
+    if (currentView === 'solicitudes') {
+      return 'Solicitudes Pendientes';
+    } else if (selectedEstado || selectedCategoria || searchTerm) {
+      return 'Comercios Filtrados';
+    }
+    return 'Comercios Vinculados';
+  };
+
+  // Handle request approval
+  const handleApproveRequest = async (requestId: string) => {
+    // In a real app, this would call an API to approve the request
+    console.log('Approving request:', requestId);
+    // For now, just show a success message
+    alert('Solicitud aprobada exitosamente');
+  };
+
+  // Handle request rejection
+  const handleRejectRequest = async (requestId: string) => {
+    // In a real app, this would call an API to reject the request
+    console.log('Rejecting request:', requestId);
+    // For now, just show a success message
+    alert('Solicitud rechazada');
+  };
 
   // Manejar desvinculación
   const handleDesvincular = async (comercio: ComercioDisponible) => {
@@ -249,10 +349,12 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({ onNaviga
   };
 
   const handleSelectAll = (selected: boolean) => {
-    if (selected) {
-      setSelectedComercios(comerciosFiltrados.map(c => c.id));
-    } else {
-      setSelectedComercios([]);
+    if (currentView === 'vinculados') {
+      if (selected) {
+        setSelectedComercios(comerciosFiltrados.map(c => c.id));
+      } else {
+        setSelectedComercios([]);
+      }
     }
   };
 
@@ -282,15 +384,141 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({ onNaviga
     }
   };
 
+  // Render pending requests view
+  const renderPendingRequests = () => (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+      {solicitudesFiltradas.length === 0 ? (
+        <div className="text-center py-12">
+          <Clock className="mx-auto h-12 w-12 text-gray-400" />
+          <h3 className="mt-2 text-sm font-medium text-gray-900">
+            No hay solicitudes pendientes
+          </h3>
+          <p className="mt-1 text-sm text-gray-500">
+            Todas las solicitudes han sido procesadas.
+          </p>
+        </div>
+      ) : (
+        <div className="divide-y divide-gray-200">
+          {solicitudesFiltradas.map((solicitud) => (
+            <motion.div
+              key={solicitud.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="p-6 hover:bg-gray-50 transition-colors"
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center space-x-3 mb-3">
+                    <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                      <Store className="w-6 h-6 text-orange-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        {solicitud.nombreComercio}
+                      </h3>
+                      <p className="text-sm text-gray-600">{solicitud.nombre}</p>
+                    </div>
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                      <Clock className="w-3 h-3 mr-1" />
+                      Pendiente
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div className="space-y-2">
+                      <div className="flex items-center text-sm text-gray-600">
+                        <Mail className="w-4 h-4 mr-2" />
+                        {solicitud.email}
+                      </div>
+                      <div className="flex items-center text-sm text-gray-600">
+                        <Phone className="w-4 h-4 mr-2" />
+                        {solicitud.telefono}
+                      </div>
+                      <div className="flex items-center text-sm text-gray-600">
+                        <MapPin className="w-4 h-4 mr-2" />
+                        {solicitud.direccion}
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="text-sm">
+                        <span className="font-medium text-gray-700">Categoría:</span>
+                        <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          {solicitud.categoria}
+                        </span>
+                      </div>
+                      <div className="text-sm">
+                        <span className="font-medium text-gray-700">Fecha de solicitud:</span>
+                        <span className="ml-2 text-gray-600">
+                          {solicitud.fechaSolicitud.toLocaleDateString()}
+                        </span>
+                      </div>
+                      <div className="text-sm">
+                        <span className="font-medium text-gray-700">Documentos:</span>
+                        <span className="ml-2 text-gray-600">
+                          {solicitud.documentos.length} archivo(s)
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mb-4">
+                    <p className="text-sm font-medium text-gray-700 mb-2">Mensaje:</p>
+                    <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
+                      {solicitud.mensaje}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center space-x-3">
+                    <button
+                      onClick={() => handleApproveRequest(solicitud.id)}
+                      className="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-lg text-sm font-medium text-white hover:bg-green-700 transition-colors"
+                    >
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      Aprobar
+                    </button>
+                    <button
+                      onClick={() => handleRejectRequest(solicitud.id)}
+                      className="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-lg text-sm font-medium text-white hover:bg-red-700 transition-colors"
+                    >
+                      <XCircle className="w-4 h-4 mr-2" />
+                      Rechazar
+                    </button>
+                    <button className="inline-flex items-center px-4 py-2 bg-gray-100 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-200 transition-colors">
+                      <FileText className="w-4 h-4 mr-2" />
+                      Ver Documentos
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <div className="space-y-6">
       {/* Header con navegación rápida */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Gestión de Comercios</h1>
+          <h1 className="text-3xl font-bold text-gray-900">{getFilteredTitle()}</h1>
           <p className="text-gray-600 mt-2">
-            Administra los comercios vinculados a tu asociación
+            {currentView === 'solicitudes' 
+              ? 'Revisa y gestiona las solicitudes de vinculación pendientes'
+              : 'Administra los comercios vinculados a tu asociación'
+            }
           </p>
+          {currentView === 'vinculados' && comerciosFiltrados.length !== comerciosVinculados.length && (
+            <p className="text-sm text-blue-600 mt-1">
+              Mostrando {comerciosFiltrados.length} de {comerciosVinculados.length} comercios
+            </p>
+          )}
+          {currentView === 'solicitudes' && (
+            <p className="text-sm text-orange-600 mt-1">
+              {solicitudesFiltradas.length} solicitudes pendientes de revisión
+            </p>
+          )}
         </div>
         
         <div className="flex items-center space-x-3">
@@ -306,21 +534,25 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({ onNaviga
             </button>
           )}
           
-          <button
-            onClick={() => setCreateDialogOpen(true)}
-            className="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-lg text-sm font-medium text-white hover:bg-green-700"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Agregar Comercio
-          </button>
+          {currentView === 'vinculados' && (
+            <>
+              <button
+                onClick={() => setCreateDialogOpen(true)}
+                className="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-lg text-sm font-medium text-white hover:bg-green-700"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Agregar Comercio
+              </button>
 
-          <button
-            onClick={() => setVincularDialogOpen(true)}
-            className="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-lg text-sm font-medium text-white hover:bg-blue-700"
-          >
-            <Store className="w-4 h-4 mr-2" />
-            Vincular Existente
-          </button>
+              <button
+                onClick={() => setVincularDialogOpen(true)}
+                className="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-lg text-sm font-medium text-white hover:bg-blue-700"
+              >
+                <Store className="w-4 h-4 mr-2" />
+                Vincular Existente
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -353,11 +585,11 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({ onNaviga
         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Nuevos Este Mes</p>
-              <p className="text-2xl font-bold text-blue-600">{stats.adhesionesEsteMes}</p>
+              <p className="text-sm font-medium text-gray-600">Solicitudes Pendientes</p>
+              <p className="text-2xl font-bold text-orange-600">{mockPendingRequests.length}</p>
             </div>
-            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-              <TrendingUp className="w-6 h-6 text-blue-600" />
+            <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+              <Clock className="w-6 h-6 text-orange-600" />
             </div>
           </div>
         </div>
@@ -383,7 +615,7 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({ onNaviga
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
             <input
               type="text"
-              placeholder="Buscar comercios..."
+              placeholder={currentView === 'solicitudes' ? "Buscar solicitudes..." : "Buscar comercios..."}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -392,7 +624,7 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({ onNaviga
 
           {/* Actions and View Mode */}
           <div className="flex items-center space-x-3">
-            {selectedComercios.length > 0 && (
+            {currentView === 'vinculados' && selectedComercios.length > 0 && (
               <div className="flex items-center space-x-2">
                 <span className="text-sm text-gray-600">
                   {selectedComercios.length} seleccionados
@@ -419,28 +651,30 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({ onNaviga
               Filtros
             </button>
 
-            <div className="flex items-center bg-gray-100 rounded-lg p-1">
-              <button
-                onClick={() => setViewMode('grid')}
-                className={`p-2 rounded-md transition-colors ${
-                  viewMode === 'grid' 
-                    ? 'bg-white shadow-sm text-blue-600' 
-                    : 'text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                <Store size={16} />
-              </button>
-              <button
-                onClick={() => setViewMode('list')}
-                className={`p-2 rounded-md transition-colors ${
-                  viewMode === 'list' 
-                    ? 'bg-white shadow-sm text-blue-600' 
-                    : 'text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                <Users size={16} />
-              </button>
-            </div>
+            {currentView === 'vinculados' && (
+              <div className="flex items-center bg-gray-100 rounded-lg p-1">
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={`p-2 rounded-md transition-colors ${
+                    viewMode === 'grid' 
+                      ? 'bg-white shadow-sm text-blue-600' 
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  <Store size={16} />
+                </button>
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`p-2 rounded-md transition-colors ${
+                    viewMode === 'list' 
+                      ? 'bg-white shadow-sm text-blue-600' 
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  <Users size={16} />
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
@@ -472,21 +706,23 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({ onNaviga
                   </select>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Estado
-                  </label>
-                  <select
-                    value={selectedEstado}
-                    onChange={(e) => setSelectedEstado(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="">Todos los estados</option>
-                    <option value="activo">Activo</option>
-                    <option value="inactivo">Inactivo</option>
-                    <option value="suspendido">Suspendido</option>
-                  </select>
-                </div>
+                {currentView === 'vinculados' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Estado
+                    </label>
+                    <select
+                      value={selectedEstado}
+                      onChange={(e) => setSelectedEstado(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="">Todos los estados</option>
+                      <option value="activo">Activo</option>
+                      <option value="inactivo">Inactivo</option>
+                      <option value="suspendido">Suspendido</option>
+                    </select>
+                  </div>
+                )}
 
                 <div className="md:col-span-2 flex items-end">
                   <button
@@ -526,409 +762,414 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({ onNaviga
         </motion.div>
       )}
 
-      {/* Comercios List */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-        {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <span className="ml-3 text-gray-600">Cargando comercios...</span>
-          </div>
-        ) : comerciosFiltrados.length === 0 ? (
-          <div className="text-center py-12">
-            <Store className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-2 text-sm font-medium text-gray-900">
-              {comerciosVinculados.length === 0 ? 'No hay comercios vinculados' : 'No se encontraron comercios'}
-            </h3>
-            <p className="mt-1 text-sm text-gray-500">
-              {comerciosVinculados.length === 0 
-                ? 'Comienza agregando tu primer comercio.'
-                : 'Intenta ajustar los filtros de búsqueda.'
-              }
-            </p>
-            {comerciosVinculados.length === 0 && (
-              <div className="mt-6 space-y-3">
-                <button
-                  onClick={() => setCreateDialogOpen(true)}
-                  className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Agregar Comercio
-                </button>
-                <div>
+      {/* Content based on current view */}
+      {currentView === 'solicitudes' ? (
+        renderPendingRequests()
+      ) : (
+        /* Comercios Vinculados List */
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <span className="ml-3 text-gray-600">Cargando comercios...</span>
+            </div>
+          ) : comerciosFiltrados.length === 0 ? (
+            <div className="text-center py-12">
+              <Store className="mx-auto h-12 w-12 text-gray-400" />
+              <h3 className="mt-2 text-sm font-medium text-gray-900">
+                {comerciosVinculados.length === 0 ? 'No hay comercios vinculados' : 'No se encontraron comercios'}
+              </h3>
+              <p className="mt-1 text-sm text-gray-500">
+                {comerciosVinculados.length === 0 
+                  ? 'Comienza agregando tu primer comercio.'
+                  : 'Intenta ajustar los filtros de búsqueda.'
+                }
+              </p>
+              {comerciosVinculados.length === 0 && (
+                <div className="mt-6 space-y-3">
                   <button
-                    onClick={() => setVincularDialogOpen(true)}
-                    className="inline-flex items-center px-4 py-2 border border-blue-300 shadow-sm text-sm font-medium rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100"
+                    onClick={() => setCreateDialogOpen(true)}
+                    className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
                   >
-                    <Store className="w-4 h-4 mr-2" />
-                    Vincular Comercio Existente
+                    <Plus className="w-4 h-4 mr-2" />
+                    Agregar Comercio
                   </button>
-                </div>
-                {onNavigate && (
                   <div>
                     <button
-                      onClick={() => onNavigate('socios')}
-                      className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-gray-50 hover:bg-gray-100"
+                      onClick={() => setVincularDialogOpen(true)}
+                      className="inline-flex items-center px-4 py-2 border border-blue-300 shadow-sm text-sm font-medium rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100"
                     >
-                      <Users className="w-4 h-4 mr-2" />
-                      Ver Gestión de Socios
+                      <Store className="w-4 h-4 mr-2" />
+                      Vincular Comercio Existente
                     </button>
                   </div>
-                )}
+                  {onNavigate && (
+                    <div>
+                      <button
+                        onClick={() => onNavigate('socios')}
+                        className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-gray-50 hover:bg-gray-100"
+                      >
+                        <Users className="w-4 h-4 mr-2" />
+                        Ver Gestión de Socios
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          ) : viewMode === 'grid' ? (
+            <div className="p-6">
+              {/* Select All Checkbox */}
+              <div className="mb-4 flex items-center">
+                <input
+                  type="checkbox"
+                  checked={selectedComercios.length === comerciosFiltrados.length && comerciosFiltrados.length > 0}
+                  onChange={(e) => handleSelectAll(e.target.checked)}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <label className="ml-2 text-sm text-gray-700">
+                  Seleccionar todos ({comerciosFiltrados.length})
+                </label>
               </div>
-            )}
-          </div>
-        ) : viewMode === 'grid' ? (
-          <div className="p-6">
-            {/* Select All Checkbox */}
-            <div className="mb-4 flex items-center">
-              <input
-                type="checkbox"
-                checked={selectedComercios.length === comerciosFiltrados.length && comerciosFiltrados.length > 0}
-                onChange={(e) => handleSelectAll(e.target.checked)}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-              />
-              <label className="ml-2 text-sm text-gray-700">
-                Seleccionar todos ({comerciosFiltrados.length})
-              </label>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {comerciosFiltrados.map((comercio) => (
-                <motion.div
-                  key={comercio.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow"
-                >
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center space-x-3">
-                      <input
-                        type="checkbox"
-                        checked={selectedComercios.includes(comercio.id)}
-                        onChange={(e) => handleSelectComercio(comercio.id, e.target.checked)}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                      />
-                      <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                        {comercio.logoUrl ? (
-                          <Image
-                            src={comercio.logoUrl}
-                            alt={comercio.nombreComercio}
-                            width={32}
-                            height={32}
-                            className="w-8 h-8 rounded object-cover"
-                          />
-                        ) : (
-                          <Store className="w-6 h-6 text-gray-400" />
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-lg font-semibold text-gray-900 truncate">
-                          {comercio.nombreComercio}
-                        </h3>
-                        <p className="text-sm text-gray-500 truncate">{comercio.nombre}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="relative">
-                      <div className="flex items-center space-x-1">
-                        {getStatusIcon(comercio.estado)}
-                        <button className="text-gray-400 hover:text-gray-600">
-                          <MoreVertical size={20} />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(comercio.estado)}`}>
-                        {comercio.estado}
-                      </span>
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        {comercio.categoria}
-                      </span>
-                    </div>
-                    
-                    <div className="flex items-center text-sm text-gray-600">
-                      <Mail className="w-4 h-4 mr-2" />
-                      <span className="truncate">{comercio.email}</span>
-                    </div>
-                    
-                    {comercio.telefono && (
-                      <div className="flex items-center text-sm text-gray-600">
-                        <Phone className="w-4 h-4 mr-2" />
-                        {comercio.telefono}
-                      </div>
-                    )}
-                    
-                    {comercio.direccion && (
-                      <div className="flex items-center text-sm text-gray-600">
-                        <MapPin className="w-4 h-4 mr-2" />
-                        <span className="truncate">{comercio.direccion}</span>
-                      </div>
-                    )}
-                    
-                    {comercio.puntuacion > 0 && (
-                      <div className="flex items-center text-sm text-gray-600">
-                        <Star className="w-4 h-4 mr-2 text-yellow-400 fill-current" />
-                        {comercio.puntuacion.toFixed(1)} ({comercio.totalReviews} reseñas)
-                      </div>
-                    )}
-                    
-                    <div className="flex items-center justify-between pt-3 border-t border-gray-200">
-                      <div className="flex items-center">
-                        {comercio.verificado && (
-                          <div className="flex items-center text-green-600">
-                            <Check className="w-4 h-4 mr-1" />
-                            <span className="text-xs">Verificado</span>
-                          </div>
-                        )}
-                      </div>
-                      
-                      <div className="flex items-center space-x-2">
-                        <button
-                          onClick={() => handleViewValidations(comercio)}
-                          className="text-purple-600 hover:text-purple-900"
-                          title="Ver validaciones"
-                        >
-                          <FileText size={16} />
-                        </button>
-
-                        <button
-                          onClick={() => handleGenerateQR(comercio)}
-                          className="text-indigo-600 hover:text-indigo-900"
-                          title="Generar QR"
-                        >
-                          <QrCode size={16} />
-                        </button>
-                        
-                        <button
-                          onClick={() => handleEdit(comercio)}
-                          className="text-blue-600 hover:text-blue-900"
-                          title="Editar"
-                        >
-                          <Edit size={16} />
-                        </button>
-
-                        {comercio.estado === 'activo' ? (
-                          <button
-                            onClick={() => handleStatusChange(comercio, 'inactivo')}
-                            className="text-red-600 hover:text-red-900"
-                            title="Desactivar"
-                          >
-                            <PowerOff size={16} />
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => handleStatusChange(comercio, 'activo')}
-                            className="text-green-600 hover:text-green-900"
-                            title="Activar"
-                          >
-                            <Power size={16} />
-                          </button>
-                        )}
-                        
-                        <button
-                          onClick={() => setComercioToUnlink(comercio)}
-                          className="text-orange-600 hover:text-orange-900"
-                          title="Desvincular"
-                        >
-                          <Unlink size={16} />
-                        </button>
-
-                        <button
-                          onClick={() => setComercioToDelete(comercio)}
-                          className="text-red-600 hover:text-red-900"
-                          title="Eliminar"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        ) : (
-          /* List View */
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left">
-                    <input
-                      type="checkbox"
-                      checked={selectedComercios.length === comerciosFiltrados.length && comerciosFiltrados.length > 0}
-                      onChange={(e) => handleSelectAll(e.target.checked)}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    />
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Comercio
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Categoría
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Contacto
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Estado
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Puntuación
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Acciones
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {comerciosFiltrados.map((comercio) => (
-                  <motion.tr
+                  <motion.div
                     key={comercio.id}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="hover:bg-gray-50"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow"
                   >
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <input
-                        type="checkbox"
-                        checked={selectedComercios.includes(comercio.id)}
-                        onChange={(e) => handleSelectComercio(comercio.id, e.target.checked)}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                      />
-                    </td>
-                    
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        {comercio.logoUrl ? (
-                          <Image
-                            src={comercio.logoUrl}
-                            alt={comercio.nombreComercio}
-                            width={24}
-                            height={24}
-                            className="w-6 h-6 rounded object-cover"
-                          />
-                        ) : (
-                          <Store className="w-5 h-5 text-gray-400" />
-                        )}
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-center space-x-3">
+                        <input
+                          type="checkbox"
+                          checked={selectedComercios.includes(comercio.id)}
+                          onChange={(e) => handleSelectComercio(comercio.id, e.target.checked)}
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        />
+                        <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                          {comercio.logoUrl ? (
+                            <Image
+                              src={comercio.logoUrl}
+                              alt={comercio.nombreComercio}
+                              width={32}
+                              height={32}
+                              className="w-8 h-8 rounded object-cover"
+                            />
+                          ) : (
+                            <Store className="w-6 h-6 text-gray-400" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-lg font-semibold text-gray-900 truncate">
                             {comercio.nombreComercio}
-                          </div>
-                          <div className="text-sm text-gray-500">{comercio.nombre}</div>
+                          </h3>
+                          <p className="text-sm text-gray-500 truncate">{comercio.nombre}</p>
                         </div>
                       </div>
-                    </td>
-                    
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        {comercio.categoria}
-                      </span>
-                    </td>
-                    
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{comercio.email}</div>
-                      <div className="text-sm text-gray-500">{comercio.telefono || 'Sin teléfono'}</div>
-                    </td>
-                    
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
+                      
+                      <div className="relative">
+                        <div className="flex items-center space-x-1">
+                          {getStatusIcon(comercio.estado)}
+                          <button className="text-gray-400 hover:text-gray-600">
+                            <MoreVertical size={20} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(comercio.estado)}`}>
                           {comercio.estado}
                         </span>
-                        {comercio.verificado && (
-                          <Check className="w-4 h-4 text-green-600 ml-2" />
-                        )}
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          {comercio.categoria}
+                        </span>
                       </div>
-                    </td>
-                    
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {comercio.puntuacion > 0 ? (
-                        <div className="flex items-center">
-                          <Star className="w-4 h-4 text-yellow-400 fill-current mr-1" />
-                          <span className="text-sm text-gray-900">
-                            {comercio.puntuacion.toFixed(1)}
-                          </span>
-                          <span className="text-sm text-gray-500 ml-1">
-                            ({comercio.totalReviews})
-                          </span>
+                      
+                      <div className="flex items-center text-sm text-gray-600">
+                        <Mail className="w-4 h-4 mr-2" />
+                        <span className="truncate">{comercio.email}</span>
+                      </div>
+                      
+                      {comercio.telefono && (
+                        <div className="flex items-center text-sm text-gray-600">
+                          <Phone className="w-4 h-4 mr-2" />
+                          {comercio.telefono}
                         </div>
-                      ) : (
-                        <span className="text-sm text-gray-500">Sin calificar</span>
                       )}
-                    </td>
-                    
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="flex items-center space-x-2">
-                        <button
-                          onClick={() => handleViewValidations(comercio)}
-                          className="text-purple-600 hover:text-purple-900"
-                          title="Ver validaciones"
-                        >
-                          <FileText size={16} />
-                        </button>
-
-                        <button
-                          onClick={() => handleGenerateQR(comercio)}
-                          className="text-indigo-600 hover:text-indigo-900"
-                          title="Generar QR"
-                        >
-                          <QrCode size={16} />
-                        </button>
+                      
+                      {comercio.direccion && (
+                        <div className="flex items-center text-sm text-gray-600">
+                          <MapPin className="w-4 h-4 mr-2" />
+                          <span className="truncate">{comercio.direccion}</span>
+                        </div>
+                      )}
+                      
+                      {comercio.puntuacion > 0 && (
+                        <div className="flex items-center text-sm text-gray-600">
+                          <Star className="w-4 h-4 mr-2 text-yellow-400 fill-current" />
+                          {comercio.puntuacion.toFixed(1)} ({comercio.totalReviews} reseñas)
+                        </div>
+                      )}
+                      
+                      <div className="flex items-center justify-between pt-3 border-t border-gray-200">
+                        <div className="flex items-center">
+                          {comercio.verificado && (
+                            <div className="flex items-center text-green-600">
+                              <Check className="w-4 h-4 mr-1" />
+                              <span className="text-xs">Verificado</span>
+                            </div>
+                          )}
+                        </div>
                         
-                        <button
-                          onClick={() => handleEdit(comercio)}
-                          className="text-blue-600 hover:text-blue-900"
-                          title="Editar"
-                        >
-                          <Edit size={16} />
-                        </button>
-
-                        {comercio.estado === 'activo' ? (
+                        <div className="flex items-center space-x-2">
                           <button
-                            onClick={() => handleStatusChange(comercio, 'inactivo')}
+                            onClick={() => handleViewValidations(comercio)}
+                            className="text-purple-600 hover:text-purple-900"
+                            title="Ver validaciones"
+                          >
+                            <FileText size={16} />
+                          </button>
+
+                          <button
+                            onClick={() => handleGenerateQR(comercio)}
+                            className="text-indigo-600 hover:text-indigo-900"
+                            title="Generar QR"
+                          >
+                            <QrCode size={16} />
+                          </button>
+                          
+                          <button
+                            onClick={() => handleEdit(comercio)}
+                            className="text-blue-600 hover:text-blue-900"
+                            title="Editar"
+                          >
+                            <Edit size={16} />
+                          </button>
+
+                          {comercio.estado === 'activo' ? (
+                            <button
+                              onClick={() => handleStatusChange(comercio, 'inactivo')}
+                              className="text-red-600 hover:text-red-900"
+                              title="Desactivar"
+                            >
+                              <PowerOff size={16} />
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handleStatusChange(comercio, 'activo')}
+                              className="text-green-600 hover:text-green-900"
+                              title="Activar"
+                            >
+                              <Power size={16} />
+                            </button>
+                          )}
+                          
+                          <button
+                            onClick={() => setComercioToUnlink(comercio)}
+                            className="text-orange-600 hover:text-orange-900"
+                            title="Desvincular"
+                          >
+                            <Unlink size={16} />
+                          </button>
+
+                          <button
+                            onClick={() => setComercioToDelete(comercio)}
                             className="text-red-600 hover:text-red-900"
-                            title="Desactivar"
+                            title="Eliminar"
                           >
-                            <PowerOff size={16} />
+                            <Trash2 size={16} />
                           </button>
-                        ) : (
-                          <button
-                            onClick={() => handleStatusChange(comercio, 'activo')}
-                            className="text-green-600 hover:text-green-900"
-                            title="Activar"
-                          >
-                            <Power size={16} />
-                          </button>
-                        )}
-                        
-                        <button
-                                          onClick={() => setComercioToUnlink(comercio)}
-                          className="text-orange-600 hover:text-orange-900"
-                          title="Desvincular"
-                        >
-                          <Unlink size={16} />
-                        </button>
-
-                        <button
-                          onClick={() => setComercioToDelete(comercio)}
-                          className="text-red-600 hover:text-red-900"
-                          title="Eliminar"
-                        >
-                          <Trash2 size={16} />
-                        </button>
+                        </div>
                       </div>
-                    </td>
-                  </motion.tr>
+                    </div>
+                  </motion.div>
                 ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+              </div>
+            </div>
+          ) : (
+            /* List View */
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left">
+                      <input
+                        type="checkbox"
+                        checked={selectedComercios.length === comerciosFiltrados.length && comerciosFiltrados.length > 0}
+                        onChange={(e) => handleSelectAll(e.target.checked)}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      />
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Comercio
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Categoría
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Contacto
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Estado
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Puntuación
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Acciones
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {comerciosFiltrados.map((comercio) => (
+                    <motion.tr
+                      key={comercio.id}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="hover:bg-gray-50"
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <input
+                          type="checkbox"
+                          checked={selectedComercios.includes(comercio.id)}
+                          onChange={(e) => handleSelectComercio(comercio.id, e.target.checked)}
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        />
+                      </td>
+                      
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          {comercio.logoUrl ? (
+                            <Image
+                              src={comercio.logoUrl}
+                              alt={comercio.nombreComercio}
+                              width={24}
+                              height={24}
+                              className="w-6 h-6 rounded object-cover"
+                            />
+                          ) : (
+                            <Store className="w-5 h-5 text-gray-400" />
+                          )}
+                          <div className="ml-4">
+                            <div className="text-sm font-medium text-gray-900">
+                              {comercio.nombreComercio}
+                            </div>
+                            <div className="text-sm text-gray-500">{comercio.nombre}</div>
+                          </div>
+                        </div>
+                      </td>
+                      
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          {comercio.categoria}
+                        </span>
+                      </td>
+                      
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">{comercio.email}</div>
+                        <div className="text-sm text-gray-500">{comercio.telefono || 'Sin teléfono'}</div>
+                      </td>
+                      
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(comercio.estado)}`}>
+                            {comercio.estado}
+                          </span>
+                          {comercio.verificado && (
+                            <Check className="w-4 h-4 text-green-600 ml-2" />
+                          )}
+                        </div>
+                      </td>
+                      
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {comercio.puntuacion > 0 ? (
+                          <div className="flex items-center">
+                            <Star className="w-4 h-4 text-yellow-400 fill-current mr-1" />
+                            <span className="text-sm text-gray-900">
+                              {comercio.puntuacion.toFixed(1)}
+                            </span>
+                            <span className="text-sm text-gray-500 ml-1">
+                              ({comercio.totalReviews})
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-sm text-gray-500">Sin calificar</span>
+                        )}
+                      </td>
+                      
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={() => handleViewValidations(comercio)}
+                            className="text-purple-600 hover:text-purple-900"
+                            title="Ver validaciones"
+                          >
+                            <FileText size={16} />
+                          </button>
+
+                          <button
+                            onClick={() => handleGenerateQR(comercio)}
+                            className="text-indigo-600 hover:text-indigo-900"
+                            title="Generar QR"
+                          >
+                            <QrCode size={16} />
+                          </button>
+                          
+                          <button
+                            onClick={() => handleEdit(comercio)}
+                            className="text-blue-600 hover:text-blue-900"
+                            title="Editar"
+                          >
+                            <Edit size={16} />
+                          </button>
+
+                          {comercio.estado === 'activo' ? (
+                            <button
+                              onClick={() => handleStatusChange(comercio, 'inactivo')}
+                              className="text-red-600 hover:text-red-900"
+                              title="Desactivar"
+                            >
+                              <PowerOff size={16} />
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handleStatusChange(comercio, 'activo')}
+                              className="text-green-600 hover:text-green-900"
+                              title="Activar"
+                            >
+                              <Power size={16} />
+                            </button>
+                          )}
+                          
+                          <button
+                            onClick={() => setComercioToUnlink(comercio)}
+                            className="text-orange-600 hover:text-orange-900"
+                            title="Desvincular"
+                          >
+                            <Unlink size={16} />
+                          </button>
+
+                          <button
+                            onClick={() => setComercioToDelete(comercio)}
+                            className="text-red-600 hover:text-red-900"
+                            title="Eliminar"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </motion.tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Dialogs */}
       <CreateComercioDialog
@@ -974,7 +1215,7 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({ onNaviga
           comercioId,
           filters,
           pageSize,
-          lastDoc as import('firebase/firestore').QueryDocumentSnapshot // Cast to the expected Firestore type
+          lastDoc as import('firebase/firestore').QueryDocumentSnapshot
         )}
       />
 
@@ -1072,4 +1313,3 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({ onNaviga
     </div>
   );
 };
-          
