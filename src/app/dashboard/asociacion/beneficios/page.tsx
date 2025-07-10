@@ -7,8 +7,10 @@ import { toast } from 'react-hot-toast';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { AsociacionSidebar } from '@/components/layout/AsociacionSidebar';
 import { LogoutModal } from '@/components/ui/LogoutModal';
+import { BeneficiosManagement } from '@/components/asociacion/BeneficiosManagement';
+import { ValidacionesHistory } from '@/components/asociacion/ValidacionesHistory';
 import { useAuth } from '@/hooks/useAuth';
-import { Gift, Plus, Eye, Crown, TrendingUp, Store, CheckCircle, BarChart3 } from 'lucide-react';
+import { Gift, CheckCircle, Plus } from 'lucide-react';
 
 // Enhanced Sidebar with logout functionality
 const AsociacionSidebarWithLogout: React.FC<{
@@ -29,156 +31,6 @@ const AsociacionSidebarWithLogout: React.FC<{
   );
 };
 
-// Placeholder component for benefits management
-const BeneficiosManagement: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('todos');
-
-  const tabs = [
-    { id: 'todos', label: 'Todos los Beneficios', icon: Gift, count: 24 },
-    { id: 'destacados', label: 'Destacados', icon: Crown, count: 8 },
-    { id: 'validaciones', label: 'Validaciones', icon: CheckCircle, count: 156 },
-    { id: 'estadisticas', label: 'Estadísticas', icon: BarChart3 }
-  ];
-
-  const stats = [
-    {
-      title: 'Total Beneficios',
-      value: '24',
-      change: '+12%',
-      icon: <Gift className="w-6 h-6" />,
-      gradient: 'from-purple-500 to-pink-600',
-      trend: 'up'
-    },
-    {
-      title: 'Beneficios Activos',
-      value: '18',
-      change: '+8%',
-      icon: <CheckCircle className="w-6 h-6" />,
-      gradient: 'from-emerald-500 to-green-600',
-      trend: 'up'
-    },
-    {
-      title: 'Validaciones Hoy',
-      value: '156',
-      change: '+24%',
-      icon: <TrendingUp className="w-6 h-6" />,
-      gradient: 'from-blue-500 to-indigo-600',
-      trend: 'up'
-    },
-    {
-      title: 'Comercios Participantes',
-      value: '12',
-      change: '+2',
-      icon: <Store className="w-6 h-6" />,
-      gradient: 'from-amber-500 to-orange-600',
-      trend: 'up'
-    }
-  ];
-
-  return (
-    <div className="space-y-8">
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, index) => (
-          <motion.div
-            key={stat.title}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-            className="relative overflow-hidden"
-          >
-            <div className="absolute inset-0 bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20"></div>
-            <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-gray-50/30 rounded-2xl"></div>
-            
-            <div className="relative z-10 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${stat.gradient} flex items-center justify-center text-white shadow-lg`}>
-                  {stat.icon}
-                </div>
-                <div className={`text-sm font-bold ${
-                  stat.trend === 'up' ? 'text-emerald-500' : 'text-red-500'
-                }`}>
-                  {stat.change}
-                </div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-gray-900 mb-1">{stat.value}</div>
-                <div className="text-sm text-gray-600 font-medium">{stat.title}</div>
-              </div>
-            </div>
-          </motion.div>
-        ))}
-      </div>
-
-      {/* Tabs */}
-      <div className="relative">
-        <div className="absolute inset-0 bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20"></div>
-        <div className="relative z-10 p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">Gestión de Beneficios</h2>
-            <div className="flex space-x-3">
-              <button className="bg-gradient-to-r from-purple-500 to-pink-600 text-white px-4 py-2 rounded-xl font-medium text-sm flex items-center space-x-2 shadow-lg hover:shadow-xl transition-all duration-200">
-                <Plus className="w-4 h-4" />
-                <span>Nuevo Beneficio</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Tab Navigation */}
-          <div className="flex space-x-1 bg-gray-100 rounded-xl p-1 mb-6">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium text-sm transition-all ${
-                  activeTab === tab.id
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                <tab.icon className="w-4 h-4" />
-                <span>{tab.label}</span>
-                {tab.count && (
-                  <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
-                    activeTab === tab.id ? 'bg-purple-500 text-white' : 'bg-gray-300 text-gray-600'
-                  }`}>
-                    {tab.count}
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
-
-          {/* Content Area */}
-          <div className="min-h-96 flex items-center justify-center">
-            <div className="text-center">
-              <div className="w-20 h-20 bg-gradient-to-br from-purple-100 to-pink-100 rounded-3xl flex items-center justify-center mx-auto mb-4">
-                <Gift className="w-10 h-10 text-purple-500" />
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">
-                Gestión de Beneficios
-              </h3>
-              <p className="text-gray-600 mb-6 max-w-md">
-                Aquí podrás crear, editar y gestionar todos los beneficios disponibles para tus socios.
-              </p>
-              <div className="flex justify-center space-x-3">
-                <button className="bg-gradient-to-r from-purple-500 to-pink-600 text-white px-6 py-3 rounded-xl font-bold hover:from-purple-600 hover:to-pink-700 transition-all duration-200 flex items-center space-x-2 shadow-lg">
-                  <Plus className="w-5 h-5" />
-                  <span>Crear Primer Beneficio</span>
-                </button>
-                <button className="border border-gray-300 text-gray-700 px-6 py-3 rounded-xl font-medium hover:bg-gray-50 transition-all duration-200 flex items-center space-x-2">
-                  <Eye className="w-5 h-5" />
-                  <span>Ver Ejemplos</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 export default function AsociacionBeneficiosPage() {
   const router = useRouter();
   const { user, loading: authLoading, signOut } = useAuth();
@@ -187,6 +39,7 @@ export default function AsociacionBeneficiosPage() {
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  const [activeTab, setActiveTab] = useState('todos');
 
   // Trigger visibility for staggered animations
   useEffect(() => {
@@ -224,9 +77,27 @@ export default function AsociacionBeneficiosPage() {
     setLogoutModalOpen(false);
   };
 
-  // Navigation handlers
+  // Tab configuration
+  const tabs = [
+    { 
+      id: 'todos', 
+      label: 'Todos los Beneficios', 
+      icon: Gift, 
+      description: 'Gestiona todos los beneficios de tu asociación'
+    },
+    { 
+      id: 'validaciones', 
+      label: 'Validaciones', 
+      icon: CheckCircle, 
+      description: 'Historial de validaciones de beneficios'
+    }
+  ];
 
-  // Loading state
+  // Handle create beneficio (placeholder)
+  const handleCreateBeneficio = () => {
+    toast.success('Funcionalidad de crear beneficio próximamente');
+  };
+
   // Loading state
   if (authLoading) {
     return (
@@ -251,6 +122,7 @@ export default function AsociacionBeneficiosPage() {
       </div>
     );
   }
+
   return (
     <>
       <DashboardLayout 
@@ -302,13 +174,63 @@ export default function AsociacionBeneficiosPage() {
               </div>
             </motion.div>
 
-            {/* Main Content */}
+            {/* Tab Navigation */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : 30 }}
+              transition={{ duration: 0.8, delay: 0.3 }}
+              className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 p-6"
+            >
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
+                <div className="flex space-x-1 bg-gray-100 rounded-xl p-1">
+                  {tabs.map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-medium text-sm transition-all duration-200 ${
+                        activeTab === tab.id
+                          ? 'bg-white text-gray-900 shadow-sm'
+                          : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
+                      }`}
+                    >
+                      <tab.icon className="w-5 h-5" />
+                      <span>{tab.label}</span>
+                    </button>
+                  ))}
+                </div>
+
+                {activeTab === 'todos' && (
+                  <button
+                    onClick={handleCreateBeneficio}
+                    className="flex items-center gap-2 bg-gradient-to-r from-purple-500 to-pink-600 text-white px-6 py-3 rounded-xl font-medium hover:from-purple-600 hover:to-pink-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+                  >
+                    <Plus className="w-5 h-5" />
+                    Nuevo Beneficio
+                  </button>
+                )}
+              </div>
+
+              {/* Tab Description */}
+              <div className="mb-6">
+                <p className="text-gray-600">
+                  {tabs.find(tab => tab.id === activeTab)?.description}
+                </p>
+              </div>
+            </motion.div>
+
+            {/* Tab Content */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : 30 }}
               transition={{ duration: 0.8, delay: 0.5 }}
             >
-              <BeneficiosManagement />
+              {activeTab === 'todos' && (
+                <BeneficiosManagement onCreateBeneficio={handleCreateBeneficio} />
+              )}
+              
+              {activeTab === 'validaciones' && (
+                <ValidacionesHistory />
+              )}
             </motion.div>
           </div>
         </div>
