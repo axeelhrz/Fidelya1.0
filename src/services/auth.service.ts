@@ -9,10 +9,10 @@ import {
   User,
   UserCredential,
   reload,
+  ActionCodeSettings,
 } from 'firebase/auth';
 import {
   doc,
-  setDoc,
   getDoc,
   updateDoc,
   serverTimestamp,
@@ -20,6 +20,7 @@ import {
   query,
   where,
   getDocs,
+  writeBatch,
 } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import { UserData } from '@/types/auth';
@@ -67,6 +68,17 @@ class AuthService {
     }
     
     return cleaned;
+  }
+
+  /**
+   * Get email verification action code settings
+   */
+  private getEmailActionCodeSettings(): ActionCodeSettings {
+    const baseUrl = configService.getAppUrl();
+    return {
+      url: `${baseUrl}/auth/login?verified=true`,
+      handleCodeInApp: false,
+    };
   }
 
   /**
@@ -146,9 +158,12 @@ class AuthService {
   }
 
   /**
-   * Register new user with email verification
+   * Register new user with email verification - Enhanced with better error handling
    */
   async register(data: RegisterData): Promise<AuthResponse> {
+    const batch = writeBatch(db);
+    let userCredential: UserCredential | null = null;
+
     try {
       console.log('🔐 Starting registration process for:', data.email);
       
@@ -166,28 +181,22 @@ class AuthService {
       console.log('🔐 Creating Firebase Auth user...');
 
       // Create Firebase Auth user
-      const userCredential: UserCredential = await createUserWithEmailAndPassword(
+      userCredential = await createUserWithEmailAndPassword(
         auth,
         email.trim().toLowerCase(),
         password
       );
 
-      console.log('🔐 Updating profile and sending verification email...');
+      console.log('🔐 Firebase Auth user created successfully');
 
       // Update display name
       await updateProfile(userCredential.user, {
         displayName: nombre
       });
 
-      // Send email verification
-      await sendEmailVerification(userCredential.user, {
-        url: `${configService.getAppUrl()}/auth/login?verified=true`,
-        handleCodeInApp: false,
-      });
+      console.log('🔐 Profile updated, preparing Firestore documents...');
 
-      console.log('🔐 Creating user document in Firestore...');
-
-      // Create user document in Firestore
+      // Prepare user document data
       const userData: Record<string, unknown> = {
         email: email.trim().toLowerCase(),
         nombre,
@@ -212,17 +221,17 @@ class AuthService {
         Object.assign(userData, this.removeUndefinedValues(additionalData));
       }
 
-      await setDoc(
-        doc(db, COLLECTIONS.USERS, userCredential.user.uid),
-        userData
-      );
+      // Add user document to batch
+      const userDocRef = doc(db, COLLECTIONS.USERS, userCredential.user.uid);
+      batch.set(userDocRef, userData);
 
-      console.log('🔐 Creating role-specific document...');
-
-      // Create role-specific document
+      // Prepare role-specific document data
       const roleDocumentData: Record<string, unknown> = {
         nombre,
         email: email.trim().toLowerCase(),
+        estado: USER_STATES.PENDIENTE,
+        creadoEn: serverTimestamp(),
+        actualizadoEn: serverTimestamp(),
       };
 
       // Only add telefono if it has a value
@@ -235,7 +244,23 @@ class AuthService {
         Object.assign(roleDocumentData, this.removeUndefinedValues(additionalData));
       }
 
-      await this.createRoleDocument(userCredential.user.uid, role, roleDocumentData);
+      // Add role-specific defaults and document to batch
+      const collection = this.getRoleCollection(role);
+      if (collection) {
+        this.addRoleSpecificData(roleDocumentData, role);
+        const roleDocRef = doc(db, collection, userCredential.user.uid);
+        batch.set(roleDocRef, roleDocumentData);
+      }
+
+      console.log('🔐 Committing batch write to Firestore...');
+
+      // Commit the batch write
+      await batch.commit();
+
+      console.log('🔐 Firestore documents created successfully');
+
+      // Send email verification with retry logic
+      await this.sendEmailVerificationWithRetry(userCredential.user);
 
       // Sign out user until email verification
       await this.signOut();
@@ -247,6 +272,18 @@ class AuthService {
         requiresEmailVerification: true,
       };
     } catch (error: unknown) {
+      console.error('🔐 Registration error:', error);
+
+      // If user was created but Firestore failed, clean up
+      if (userCredential?.user) {
+        try {
+          console.log('🔐 Cleaning up Firebase Auth user due to error...');
+          await userCredential.user.delete();
+        } catch (cleanupError) {
+          console.error('🔐 Failed to cleanup Firebase Auth user:', cleanupError);
+        }
+      }
+
       return {
         success: false,
         error: handleError(error, 'Registration', false).message
@@ -255,35 +292,128 @@ class AuthService {
   }
 
   /**
-   * Resend email verification
+   * Send email verification with retry logic
+   */
+  private async sendEmailVerificationWithRetry(user: User, maxRetries = 3): Promise<void> {
+    let lastError: Error | null = null;
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`🔐 Sending email verification (attempt ${attempt}/${maxRetries})...`);
+        
+        await sendEmailVerification(user, this.getEmailActionCodeSettings());
+        
+        console.log('🔐 Email verification sent successfully');
+        return;
+      } catch (error) {
+        lastError = error as Error;
+        console.warn(`🔐 Email verification attempt ${attempt} failed:`, error);
+        
+        if (attempt < maxRetries) {
+          // Wait before retrying (exponential backoff)
+          const delay = Math.pow(2, attempt) * 1000;
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
+      }
+    }
+
+    // If all retries failed, throw the last error
+    throw new Error(`Failed to send email verification after ${maxRetries} attempts: ${lastError?.message}`);
+  }
+
+  /**
+   * Get role collection name
+   */
+  private getRoleCollection(role: string): string | null {
+    switch (role) {
+      case 'comercio':
+        return COLLECTIONS.COMERCIOS;
+      case 'socio':
+        return COLLECTIONS.SOCIOS;
+      case 'asociacion':
+        return COLLECTIONS.ASOCIACIONES;
+      default:
+        return null;
+    }
+  }
+
+  /**
+   * Add role-specific data
+   */
+  private addRoleSpecificData(data: Record<string, unknown>, role: string): void {
+    if (role === 'comercio') {
+      data.asociacionesVinculadas = [];
+      data.visible = true;
+      data.configuracion = {
+        notificacionesEmail: true,
+        notificacionesWhatsApp: false,
+        autoValidacion: false
+      };
+    } else if (role === 'socio') {
+      data.asociacionesVinculadas = [];
+      data.estadoMembresia = 'pendiente';
+    } else if (role === 'asociacion') {
+      data.configuracion = {
+        notificacionesEmail: true,
+        notificacionesWhatsApp: false,
+        autoAprobacionSocios: false,
+        requiereAprobacionComercios: true
+      };
+    }
+  }
+
+  /**
+   * Resend email verification with enhanced error handling
    */
   async resendEmailVerification(email: string): Promise<AuthResponse> {
     try {
-      // First, try to sign in to get the user
-      const tempCredential = await signInWithEmailAndPassword(auth, email, 'temp');
-      
-      if (tempCredential.user.emailVerified) {
-        await this.signOut();
+      console.log('🔐 Attempting to resend email verification for:', email);
+
+      // Check if user exists in our database
+      const userQuery = query(
+        collection(db, COLLECTIONS.USERS),
+        where('email', '==', email.trim().toLowerCase())
+      );
+      const userSnapshot = await getDocs(userQuery);
+
+      if (userSnapshot.empty) {
+        return {
+          success: false,
+          error: 'No se encontró una cuenta con este email'
+        };
+      }
+
+      // Try to get the current user or sign them in temporarily
+      let targetUser: User | null = null;
+
+      if (auth.currentUser && auth.currentUser.email === email.trim().toLowerCase()) {
+        targetUser = auth.currentUser;
+      } else {
+        // We can't resend verification without the user being signed in
+        // This is a Firebase limitation for security reasons
+        return {
+          success: false,
+          error: 'Para reenviar la verificación, primero debes intentar iniciar sesión'
+        };
+      }
+
+      if (targetUser.emailVerified) {
         return {
           success: false,
           error: 'El email ya está verificado'
         };
       }
 
-      await sendEmailVerification(tempCredential.user, {
-        url: `${configService.getAppUrl()}/auth/login?verified=true`,
-        handleCodeInApp: false,
-      });
-
-      await this.signOut();
+      await this.sendEmailVerificationWithRetry(targetUser);
 
       return {
         success: true,
       };
-    } catch {
+    } catch (error) {
+      console.error('🔐 Resend email verification error:', error);
       return {
         success: false,
-        error: 'No se pudo reenviar el email de verificación'
+        error: 'No se pudo reenviar el email de verificación. Intenta iniciar sesión primero.'
       };
     }
   }
@@ -303,17 +433,35 @@ class AuthService {
         };
       }
 
-      // Update user status to active
-      await updateDoc(doc(db, COLLECTIONS.USERS, user.uid), {
+      // Update user status to active using batch write
+      const batch = writeBatch(db);
+      const userDocRef = doc(db, COLLECTIONS.USERS, user.uid);
+      
+      batch.update(userDocRef, {
         estado: USER_STATES.ACTIVO,
         actualizadoEn: serverTimestamp(),
       });
 
+      // Also update role-specific document if it exists
       const userData = await this.getUserData(user.uid);
+      if (userData?.role) {
+        const roleCollection = this.getRoleCollection(userData.role);
+        if (roleCollection) {
+          const roleDocRef = doc(db, roleCollection, user.uid);
+          batch.update(roleDocRef, {
+            estado: USER_STATES.ACTIVO,
+            actualizadoEn: serverTimestamp(),
+          });
+        }
+      }
+
+      await batch.commit();
+
+      const updatedUserData = await this.getUserData(user.uid);
 
       return {
         success: true,
-        user: userData || undefined
+        user: updatedUserData || undefined
       };
     } catch (error) {
       return {
@@ -338,7 +486,7 @@ class AuthService {
   }
 
   /**
-   * Send password reset email
+   * Send password reset email with enhanced settings
    */
   async resetPassword(email: string): Promise<AuthResponse> {
     try {
@@ -348,10 +496,12 @@ class AuthService {
         throw new Error('Email válido es requerido');
       }
 
-      await sendPasswordResetEmail(auth, email.trim().toLowerCase(), {
+      const actionCodeSettings: ActionCodeSettings = {
         url: `${configService.getAppUrl()}/auth/login?reset=true`,
         handleCodeInApp: false,
-      });
+      };
+
+      await sendPasswordResetEmail(auth, email.trim().toLowerCase(), actionCodeSettings);
       
       console.log('🔐 Password reset email sent successfully');
       
@@ -583,60 +733,6 @@ class AuthService {
       });
     } catch (error) {
       console.warn('🔐 Failed to update last login:', error);
-    }
-  }
-
-  /**
-   * Create role-specific document
-   */
-  private async createRoleDocument(
-    uid: string, 
-    role: string, 
-    data: Record<string, unknown>
-  ): Promise<void> {
-    try {
-      const collection = role === 'comercio' ? COLLECTIONS.COMERCIOS :
-                        role === 'socio' ? COLLECTIONS.SOCIOS :
-                        role === 'asociacion' ? COLLECTIONS.ASOCIACIONES :
-                        null;
-
-      if (!collection) {
-        console.log('🔐 Skipping role document creation for role:', role);
-        return;
-      }
-
-      const roleData: Record<string, unknown> = {
-        ...this.removeUndefinedValues(data),
-        estado: USER_STATES.PENDIENTE, // Will be activated after email verification
-        creadoEn: serverTimestamp(),
-        actualizadoEn: serverTimestamp()
-      };
-
-      // Add role-specific defaults
-      if (role === 'comercio') {
-        roleData.asociacionesVinculadas = [];
-        roleData.visible = true;
-        roleData.configuracion = {
-          notificacionesEmail: true,
-          notificacionesWhatsApp: false,
-          autoValidacion: false
-        };
-      } else if (role === 'socio') {
-        roleData.asociacionesVinculadas = [];
-        roleData.estadoMembresia = 'pendiente';
-      } else if (role === 'asociacion') {
-        roleData.configuracion = {
-          notificacionesEmail: true,
-          notificacionesWhatsApp: false,
-          autoAprobacionSocios: false,
-          requiereAprobacionComercios: true
-        };
-      }
-
-      await setDoc(doc(db, collection, uid), roleData);
-    } catch (error) {
-      handleError(error, 'Create Role Document');
-      throw error;
     }
   }
 

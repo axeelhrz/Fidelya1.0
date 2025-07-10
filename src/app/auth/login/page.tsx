@@ -20,10 +20,6 @@ import {
   Clock,
   AlertCircle,
   Key,
-  Star,
-  Building2,
-  Store,
-  User
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { loginSchema, type LoginFormData } from '@/lib/validations/auth';
@@ -179,32 +175,6 @@ export default function LoginPage() {
     { icon: Clock, text: 'Acceso 24/7', color: 'text-sky-700', bgColor: 'bg-sky-100' },
   ];
 
-  const demoAccounts = [
-    { 
-      role: 'Asociación', 
-      email: 'asociacion@demo.com', 
-      password: 'demo123', 
-      color: 'from-sky-500 to-celestial-600', 
-      icon: Building2,
-      description: 'Panel administrativo'
-    },
-    { 
-      role: 'Comercio', 
-      email: 'comercio@demo.com', 
-      password: 'demo123', 
-      color: 'from-celestial-500 to-sky-600', 
-      icon: Store,
-      description: 'Gestión comercial'
-    },
-    { 
-      role: 'Socio', 
-      email: 'socio@demo.com', 
-      password: 'demo123', 
-      color: 'from-sky-600 to-celestial-700', 
-      icon: User,
-      description: 'Portal del socio'
-    },
-  ];
 
   return (
     <div className="scrollable-container bg-gradient-to-br from-sky-50 via-celestial-50 to-sky-100 min-h-screen relative overflow-hidden">
@@ -511,50 +481,6 @@ export default function LoginPage() {
                         <feature.icon className={`w-5 h-5 ${feature.color}`} />
                       </div>
                       <p className="text-xs text-slate-600 font-semibold font-jakarta">{feature.text}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Enhanced Demo Accounts */}
-              <div className={`mt-6 p-5 bg-gradient-to-br from-sky-50/90 to-celestial-50/90 backdrop-blur-sm border border-sky-200/50 rounded-2xl shadow-lg transition-all duration-1200 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '1s' }}>
-                <div className="flex items-center justify-center space-x-2 mb-4">
-                  <Star className="w-5 h-5 text-sky-600" />
-                  <h3 className="font-bold text-sky-800 text-center font-jakarta">
-                    Cuentas de Demostración
-                  </h3>
-                  <Star className="w-5 h-5 text-sky-600" />
-                </div>
-                <div className="space-y-3">
-                  {demoAccounts.map((account, index) => (
-                    <div
-                      key={index}
-                      className="group p-3 bg-white/80 backdrop-blur-sm rounded-xl shadow-md hover:shadow-lg transition-all duration-500 hover:scale-105 border border-white/50"
-                      style={{ 
-                        opacity: isVisible ? 1 : 0,
-                        transform: isVisible ? 'translateX(0)' : 'translateX(-20px)',
-                        transition: `all 0.5s ease-out ${1.2 + index * 0.1}s`
-                      }}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <div className={`w-10 h-10 bg-gradient-to-r ${account.color} rounded-xl flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                            <account.icon className="w-5 h-5" />
-                          </div>
-                          <div>
-                            <p className="text-sm font-bold text-slate-800 font-jakarta">{account.role}</p>
-                            <p className="text-xs text-slate-600 font-jakarta">{account.description}</p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-xs text-slate-700 font-mono bg-slate-100 px-2 py-1 rounded-lg mb-1">
-                            {account.email}
-                          </p>
-                          <p className="text-xs text-slate-700 font-mono bg-slate-100 px-2 py-1 rounded-lg">
-                            {account.password}
-                          </p>
-                        </div>
-                      </div>
                     </div>
                   ))}
                 </div>

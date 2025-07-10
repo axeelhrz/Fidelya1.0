@@ -30,7 +30,7 @@ interface ComercioSidebarProps {
   open: boolean;
   onToggle: () => void;
   onMenuClick: (section: string) => void;
-  onLogoutClick: () => void;
+  onLogoutClick?: () => void;
   activeSection: string;
 }
 
@@ -55,7 +55,7 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const { comercio, stats } = useComercio();
   
   // Real-time stats state
@@ -415,6 +415,15 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
     }
   };
 
+  // Función para manejar el logout
+  const handleLogout = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+    }
+  };
+
   // Enhanced active state detection
   const isActive = (itemId: string) => {
     return activeSection === itemId || activeSection.startsWith(itemId + '-');
@@ -750,7 +759,7 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
             </div>
             
             <motion.button
-              onClick={onLogoutClick}
+              onClick={handleLogout}
               className="w-full flex items-center space-x-3 px-4 py-3 rounded-2xl text-red-600 hover:bg-red-50 transition-all duration-200 group border border-red-200 hover:border-red-300 hover:shadow-md"
               whileHover={{ scale: 1.02, y: -1 }}
               whileTap={{ scale: 0.98 }}
