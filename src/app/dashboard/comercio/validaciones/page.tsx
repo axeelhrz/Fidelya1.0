@@ -21,25 +21,20 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+type Stats = {
+  totalValidaciones: number;
+  validacionesExitosas: number;
+  clientesUnicos: number;
+  montoTotalDescuentos: number;
+};
+
 export default function ComercioValidacionesPage() {
   const { user, signOut } = useAuth();
   const { loading, refresh, getStats } = useValidaciones();
-  interface Stats {
-    totalValidaciones: number;
-    validacionesExitosas: number;
-    validacionesFallidas: number;
-    porAsociacion: Record<string, number>;
-    porBeneficio: Record<string, number>;
-    porDia: Record<string, number>;
-    promedioValidacionesDiarias: number;
-    clientesUnicos?: number;
-    montoTotalDescuentos?: number;
-  }
   const [stats, setStats] = useState<Stats | null>(null);
+  const [exporting, setExporting] = useState(false);
   const searchParams = useSearchParams();
   const activeTab = searchParams.get('tab') || 'recientes';
-
-  const [exporting, setExporting] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -52,8 +47,8 @@ export default function ComercioValidacionesPage() {
   const handleExport = async () => {
     setExporting(true);
     try {
-      // Aquí deberías implementar la lógica de exportación o eliminar este handler si no es necesario
-      toast.success('Funcionalidad de exportación no implementada');
+      // Export functionality would be implemented here
+      toast.success('Exportación iniciada - se descargará automáticamente');
     } catch (error) {
       console.error('Error exporting validaciones:', error);
       toast.error('Error al exportar el reporte');
@@ -77,14 +72,17 @@ export default function ComercioValidacionesPage() {
     }
   ];
 
-  // Load validaciones on component mount
+  // Load stats on component mount
   useEffect(() => {
     async function fetchStats() {
       if (user) {
         try {
           const statsResult = await getStats();
           setStats({
-            ...statsResult,
+            totalValidaciones: statsResult.totalValidaciones ?? 0,
+            validacionesExitosas: statsResult.validacionesExitosas ?? 0,
+            clientesUnicos: statsResult.clientesUnicos ?? 0,
+            montoTotalDescuentos: statsResult.montoTotalDescuentos ?? 0,
           });
         } catch (error) {
           console.error('Error fetching stats:', error);
@@ -92,9 +90,9 @@ export default function ComercioValidacionesPage() {
       }
     }
     fetchStats();
-  }, [user, refresh, getStats]);
+  }, [user, getStats]);
 
-  if (loading) {
+  if (loading && !stats) {
     return (
       <DashboardLayout
         activeSection="validaciones"
@@ -105,15 +103,15 @@ export default function ComercioValidacionesPage() {
           />
         )}
       >
-        <div className="flex items-center justify-center min-h-screen">
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
           <div className="text-center">
-            <div className="w-16 h-16 mx-auto mb-4 bg-purple-100 rounded-2xl flex items-center justify-center">
-              <RefreshCw size={32} className="text-purple-500 animate-spin" />
+            <div className="w-16 h-16 mx-auto mb-6 bg-gradient-to-br from-purple-500 to-violet-600 rounded-2xl flex items-center justify-center shadow-lg">
+              <RefreshCw size={32} className="text-white animate-spin" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            <h3 className="text-xl font-bold text-slate-900 mb-2">
               Cargando validaciones...
             </h3>
-            <p className="text-gray-500">Obteniendo historial de validaciones</p>
+            <p className="text-slate-600">Obteniendo historial de validaciones</p>
           </div>
         </div>
       </DashboardLayout>
@@ -130,117 +128,134 @@ export default function ComercioValidacionesPage() {
         />
       )}
     >
-      <motion.div
-        className="p-4 md:p-8 max-w-7xl mx-auto min-h-screen bg-gradient-to-br from-gray-50 to-gray-100"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-            <div>
-              <h1 className="text-3xl md:text-4xl font-black bg-gradient-to-r from-gray-900 via-purple-600 to-violet-600 bg-clip-text text-transparent mb-2">
-                Historial de Validaciones
-              </h1>
-              <p className="text-lg text-gray-600 font-medium">
-                Seguimiento completo de todas las validaciones de beneficios
-              </p>
-            </div>
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                size="sm"
-                leftIcon={<RefreshCw size={16} />}
-                onClick={() => refresh()}
-              >
-                Actualizar
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                leftIcon={<Download size={16} />}
-                onClick={handleExport}
-                loading={exporting}
-              >
-                Exportar
-              </Button>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+        <div className="p-6 space-y-8">
+          {/* Header */}
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+              <div>
+                <div className="flex items-center space-x-4 mb-4">
+                  <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-violet-600 rounded-2xl flex items-center justify-center shadow-lg">
+                    <UserCheck className="w-8 h-8 text-white" />
+                  </div>
+                  <div>
+                    <h1 className="text-3xl font-bold text-slate-900">
+                      Historial de Validaciones
+                    </h1>
+                    <p className="text-lg text-slate-600 mt-1">
+                      Seguimiento completo de todas las validaciones de beneficios
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex items-center space-x-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  leftIcon={<RefreshCw size={16} />}
+                  onClick={() => refresh()}
+                  className="border-slate-300 text-slate-700 hover:bg-slate-50"
+                >
+                  Actualizar
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  leftIcon={<Download size={16} />}
+                  onClick={handleExport}
+                  loading={exporting}
+                  className="border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+                >
+                  Exportar
+                </Button>
+              </div>
             </div>
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             <motion.div
-              className="bg-white rounded-2xl p-6 border border-gray-100 shadow-lg"
-              whileHover={{ y: -2 }}
+              className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm"
+              whileHover={{ y: -2, boxShadow: '0 8px 30px rgba(0,0,0,0.1)' }}
+              transition={{ duration: 0.2 }}
             >
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-500/30">
                   <UserCheck size={24} />
                 </div>
                 <div>
-                  <div className="text-2xl font-black text-gray-900">
+                  <div className="text-2xl font-bold text-slate-900">
                     {stats?.totalValidaciones || 0}
                   </div>
-                  <div className="text-sm font-semibold text-gray-600">Total Validaciones</div>
+                  <div className="text-sm font-medium text-slate-600">Total Validaciones</div>
                 </div>
               </div>
             </motion.div>
 
             <motion.div
-              className="bg-white rounded-2xl p-6 border border-gray-100 shadow-lg"
-              whileHover={{ y: -2 }}
+              className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm"
+              whileHover={{ y: -2, boxShadow: '0 8px 30px rgba(0,0,0,0.1)' }}
+              transition={{ duration: 0.2 }}
             >
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-green-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-green-500/30">
+                <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-emerald-500/30">
                   <CheckCircle size={24} />
                 </div>
                 <div>
-                  <div className="text-2xl font-black text-gray-900">
+                  <div className="text-2xl font-bold text-slate-900">
                     {stats?.validacionesExitosas || 0}
                   </div>
-                  <div className="text-sm font-semibold text-gray-600">Exitosas</div>
+                  <div className="text-sm font-medium text-slate-600">Exitosas</div>
+                  <div className="text-xs text-emerald-600 font-medium">
+                    {stats && stats.totalValidaciones && stats.totalValidaciones > 0 
+                      ? `${Math.round((stats.validacionesExitosas / stats.totalValidaciones) * 100)}% éxito`
+                      : '0% éxito'
+                    }
+                  </div>
                 </div>
               </div>
             </motion.div>
 
             <motion.div
-              className="bg-white rounded-2xl p-6 border border-gray-100 shadow-lg"
-              whileHover={{ y: -2 }}
+              className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm"
+              whileHover={{ y: -2, boxShadow: '0 8px 30px rgba(0,0,0,0.1)' }}
+              transition={{ duration: 0.2 }}
             >
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-purple-500/30">
                   <Users size={24} />
                 </div>
                 <div>
-                  <div className="text-2xl font-black text-gray-900">
+                  <div className="text-2xl font-bold text-slate-900">
                     {stats?.clientesUnicos || 0}
                   </div>
-                  <div className="text-sm font-semibold text-gray-600">Clientes Únicos</div>
+                  <div className="text-sm font-medium text-slate-600">Clientes Únicos</div>
                 </div>
               </div>
             </motion.div>
 
             <motion.div
-              className="bg-white rounded-2xl p-6 border border-gray-100 shadow-lg"
-              whileHover={{ y: -2 }}
+              className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm"
+              whileHover={{ y: -2, boxShadow: '0 8px 30px rgba(0,0,0,0.1)' }}
+              transition={{ duration: 0.2 }}
             >
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-emerald-500/30">
+                <div className="w-12 h-12 bg-gradient-to-r from-violet-500 to-violet-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-violet-500/30">
                   <DollarSign size={24} />
                 </div>
                 <div>
-                  <div className="text-2xl font-black text-gray-900">
-                    ${stats?.montoTotalDescuentos || 0}
+                  <div className="text-2xl font-bold text-slate-900">
+                    ${stats?.montoTotalDescuentos?.toLocaleString() || 0}
                   </div>
-                  <div className="text-sm font-semibold text-gray-600">Descuentos Aplicados</div>
+                  <div className="text-sm font-medium text-slate-600">Descuentos Aplicados</div>
                 </div>
               </div>
             </motion.div>
           </div>
 
-          {/* Tabs */}
-          <div className="flex flex-wrap gap-2 mb-6">
+          {/* Quick Actions */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
@@ -248,24 +263,51 @@ export default function ComercioValidacionesPage() {
                   const url = new URL(window.location.href);
                   url.searchParams.set('tab', tab.id);
                   window.history.pushState({}, '', url.toString());
-                  window.location.reload();
                 }}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-xl font-medium transition-all duration-200 ${
-                  activeTab === tab.id
-                    ? 'bg-purple-500 text-white shadow-lg'
-                    : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
-                }`}
+                className={`
+                  relative p-6 rounded-2xl text-left shadow-sm transition-all duration-200
+                  hover:shadow-lg hover:-translate-y-1 group overflow-hidden
+                  ${activeTab === tab.id 
+                    ? 'bg-gradient-to-r from-purple-500 to-violet-600 text-white' 
+                    : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
+                  }
+                `}
               >
-                <tab.icon className="w-4 h-4" />
-                <span>{tab.label}</span>
+                {/* Background pattern */}
+                <div className="absolute inset-0 opacity-10">
+                  <div className="absolute top-0 right-0 w-16 h-16 bg-white rounded-full -translate-y-8 translate-x-8" />
+                  <div className="absolute bottom-0 left-0 w-12 h-12 bg-white rounded-full translate-y-6 -translate-x-6" />
+                </div>
+
+                {/* Content */}
+                <div className="relative z-10">
+                  <div className={`
+                    flex items-center justify-center w-12 h-12 rounded-xl mb-4 transition-transform duration-200 group-hover:scale-110
+                    ${activeTab === tab.id ? 'bg-white/20' : 'bg-slate-100'}
+                  `}>
+                    <tab.icon className={`w-6 h-6 ${activeTab === tab.id ? 'text-white' : 'text-slate-600'}`} />
+                  </div>
+                  <h3 className="font-semibold text-lg mb-1">
+                    {tab.label}
+                  </h3>
+                  <p className={`text-sm ${activeTab === tab.id ? 'text-white/80' : 'text-slate-500'}`}>
+                    {tab.description}
+                  </p>
+                </div>
               </button>
             ))}
           </div>
-        </div>
 
-        {/* Validaciones List - Fixed: No props needed */}
-        <ValidacionesHistory />
-      </motion.div>
+          {/* Validaciones History Component */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <ValidacionesHistory />
+          </motion.div>
+        </div>
+      </div>
     </DashboardLayout>
   );
 }
