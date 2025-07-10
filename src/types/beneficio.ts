@@ -111,6 +111,7 @@ export interface BeneficioFormData {
   tags?: string[];
   destacado?: boolean;
   asociacionesDisponibles?: string[];
+  comercioId?: string; // Para cuando las asociaciones crean beneficios
 }
 
 export interface BeneficioFilter {

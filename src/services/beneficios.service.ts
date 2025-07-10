@@ -29,6 +29,8 @@ export class BeneficiosService {
   private static readonly BENEFICIOS_COLLECTION = 'beneficios';
   private static readonly USOS_COLLECTION = 'beneficio_usos';
   private static readonly VALIDACIONES_COLLECTION = 'beneficio_validaciones';
+  private static readonly COMERCIOS_COLLECTION = 'comercios';
+  private static readonly ASOCIACIONES_COLLECTION = 'asociaciones';
   private static readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
 
   // Cache simple
@@ -66,26 +68,127 @@ export class BeneficiosService {
     }
   }
 
+  // Obtener información del comercio
+  private static async obtenerInfoComercio(comercioId: string): Promise<{ nombre: string; logo?: string } | null> {
+    try {
+      const comercioDoc = await getDoc(doc(db, this.COMERCIOS_COLLECTION, comercioId));
+      if (comercioDoc.exists()) {
+        const data = comercioDoc.data();
+        return {
+          nombre: data.nombreComercio || data.nombre || 'Comercio',
+          logo: data.logo || data.logoUrl
+        };
+      }
+      return null;
+    } catch (error) {
+      console.error('Error obteniendo info del comercio:', error);
+      return null;
+    }
+  }
+
+  // Obtener información de la asociación
+  private static async obtenerInfoAsociacion(asociacionId: string): Promise<{ nombre: string; logo?: string } | null> {
+    try {
+      const asociacionDoc = await getDoc(doc(db, this.ASOCIACIONES_COLLECTION, asociacionId));
+      if (asociacionDoc.exists()) {
+        const data = asociacionDoc.data();
+        return {
+          nombre: data.nombre || 'Asociación',
+          logo: data.logo || data.logoUrl
+        };
+      }
+      return null;
+    } catch (error) {
+      console.error('Error obteniendo info de la asociación:', error);
+      return null;
+    }
+  }
+
+  // Obtener asociaciones vinculadas a un comercio
+  private static async obtenerAsociacionesVinculadas(comercioId: string): Promise<string[]> {
+    try {
+      // Buscar en la colección de asociaciones donde el comercio esté vinculado
+      const q = query(
+        collection(db, this.ASOCIACIONES_COLLECTION),
+        where('comerciosVinculados', 'array-contains', comercioId)
+      );
+      
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => doc.id);
+    } catch (error) {
+      console.error('Error obteniendo asociaciones vinculadas:', error);
+      return [];
+    }
+  }
+
   // CRUD Básico
   static async crearBeneficio(data: BeneficioFormData, userId: string, userRole: string): Promise<string> {
     try {
       console.log('🎁 Creando beneficio:', data.titulo);
 
+      let comercioInfo = null;
+      let asociacionInfo = null;
+      let comercioId = '';
+      let asociacionId = '';
+      let asociacionesDisponibles: string[] = [];
+
+      if (userRole === 'comercio') {
+        comercioId = userId;
+        comercioInfo = await this.obtenerInfoComercio(userId);
+        
+        // Para comercios, obtener asociaciones vinculadas automáticamente
+        if (data.asociacionesDisponibles && data.asociacionesDisponibles.length > 0) {
+          asociacionesDisponibles = data.asociacionesDisponibles;
+        } else {
+          // Si no se especifican, obtener todas las asociaciones vinculadas
+          asociacionesDisponibles = await this.obtenerAsociacionesVinculadas(userId);
+        }
+        
+      } else if (userRole === 'asociacion') {
+        asociacionId = userId;
+        asociacionInfo = await this.obtenerInfoAsociacion(userId);
+        asociacionesDisponibles = [userId]; // Solo para esta asociación
+        
+        // Para asociaciones, el comercio debe especificarse
+        if (data.comercioId) {
+          comercioId = data.comercioId;
+          comercioInfo = await this.obtenerInfoComercio(data.comercioId);
+        }
+      }
+
+      // Validaciones
+      if (!comercioInfo && userRole === 'comercio') {
+        throw new Error('No se pudo obtener la información del comercio');
+      }
+
+      if (!asociacionInfo && userRole === 'asociacion') {
+        throw new Error('No se pudo obtener la información de la asociación');
+      }
+
       const beneficioData: Omit<Beneficio, 'id'> = {
-        ...data,
+        titulo: data.titulo,
+        descripcion: data.descripcion,
+        tipo: data.tipo,
+        descuento: data.descuento,
         fechaInicio: Timestamp.fromDate(data.fechaInicio),
         fechaFin: Timestamp.fromDate(data.fechaFin),
+        limitePorSocio: data.limitePorSocio,
+        limiteTotal: data.limiteTotal,
+        condiciones: data.condiciones,
+        categoria: data.categoria,
+        tags: data.tags || [],
+        destacado: data.destacado || false,
         usosActuales: 0,
         estado: 'activo',
         creadoEn: Timestamp.now(),
         actualizadoEn: Timestamp.now(),
         creadoPor: userId,
-        // Estos campos se deben llenar según el contexto del usuario
-        comercioId: userRole === 'comercio' ? userId : '',
-        comercioNombre: '', // Se debe obtener del perfil del usuario
-        asociacionId: userRole === 'asociacion' ? userId : '',
-        asociacionNombre: '', // Se debe obtener del perfil del usuario
-        asociacionesDisponibles: data.asociacionesDisponibles || []
+        comercioId,
+        comercioNombre: comercioInfo?.nombre || 'Comercio',
+        comercioLogo: comercioInfo?.logo,
+        asociacionId,
+        asociacionNombre: asociacionInfo?.nombre || '',
+        asociacionesDisponibles
       };
 
       const docRef = await addDoc(collection(db, this.BENEFICIOS_COLLECTION), beneficioData);
@@ -550,7 +653,8 @@ export class BeneficiosService {
         usosPorMes: this.calcularUsosPorMes(usos),
         topBeneficios: this.calcularTopBeneficios(beneficios, usos),
         categorias: this.calcularEstadisticasCategorias(beneficios, usos),
-        comercios: this.calcularEstadisticasComercios(beneficios, usos)
+        comercios: this.calcularEstadisticasComercios(beneficios, usos),
+        activos: beneficios.filter(b => b.estado === 'activo').length
       };
 
       this.setCache(cacheKey, stats);
@@ -860,6 +964,32 @@ export class BeneficiosService {
       return categoriasArray;
     } catch (error) {
       console.error('❌ Error obteniendo categorías:', error);
+      return [];
+    }
+  }
+
+  // Obtener asociaciones disponibles para un comercio
+  static async obtenerAsociacionesDisponibles(comercioId: string): Promise<Array<{id: string; nombre: string}>> {
+    try {
+      const asociacionesIds = await this.obtenerAsociacionesVinculadas(comercioId);
+      
+      if (asociacionesIds.length === 0) {
+        return [];
+      }
+
+      const asociaciones = await Promise.all(
+        asociacionesIds.map(async (id) => {
+          const info = await this.obtenerInfoAsociacion(id);
+          return {
+            id,
+            nombre: info?.nombre || 'Asociación'
+          };
+        })
+      );
+
+      return asociaciones;
+    } catch (error) {
+      console.error('❌ Error obteniendo asociaciones disponibles:', error);
       return [];
     }
   }

@@ -10,7 +10,8 @@ import {
   Gift,
   AlertCircle,
   Info,
-  Star
+  Star,
+  Building2
 } from 'lucide-react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -19,6 +20,8 @@ import { Beneficio, BeneficioFormData, CATEGORIAS_BENEFICIOS } from '@/types/ben
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/Dialog';
+import { BeneficiosService } from '@/services/beneficios.service';
+import { useAuth } from '@/hooks/useAuth';
 import { format } from 'date-fns';
 
 // Schema de validación
@@ -66,6 +69,9 @@ const beneficioSchema = z.object({
     .optional(),
   destacado: z
     .boolean()
+    .optional(),
+  asociacionesDisponibles: z
+    .array(z.string())
     .optional()
 }).refine((data) => data.fechaFin > data.fechaInicio, {
   message: 'La fecha de fin debe ser posterior a la fecha de inicio',
@@ -94,8 +100,11 @@ export const BeneficioForm: React.FC<BeneficioFormProps> = ({
   onSubmit,
   beneficio,
 }) => {
+  const { user } = useAuth();
   const [tagsInput, setTagsInput] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [asociacionesDisponibles, setAsociacionesDisponibles] = useState<Array<{id: string; nombre: string}>>([]);
+  const [loadingAsociaciones, setLoadingAsociaciones] = useState(false);
 
   const isEditing = !!beneficio;
 
@@ -118,12 +127,33 @@ export const BeneficioForm: React.FC<BeneficioFormProps> = ({
       fechaFin: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 días
       categoria: '',
       tags: [],
-      destacado: false
+      destacado: false,
+      asociacionesDisponibles: []
     }
   });
 
   const selectedTipo = watch('tipo');
   const destacado = watch('destacado');
+  const selectedAsociaciones = watch('asociacionesDisponibles') || [];
+
+  // Cargar asociaciones disponibles para comercios
+  useEffect(() => {
+    const cargarAsociaciones = async () => {
+      if (user?.role === 'comercio' && open) {
+        setLoadingAsociaciones(true);
+        try {
+          const asociaciones = await BeneficiosService.obtenerAsociacionesDisponibles(user.uid);
+          setAsociacionesDisponibles(asociaciones);
+        } catch (error) {
+          console.error('Error cargando asociaciones:', error);
+        } finally {
+          setLoadingAsociaciones(false);
+        }
+      }
+    };
+
+    cargarAsociaciones();
+  }, [user, open]);
 
   // Cargar datos del beneficio al editar
   useEffect(() => {
@@ -140,7 +170,8 @@ export const BeneficioForm: React.FC<BeneficioFormProps> = ({
         condiciones: beneficio.condiciones,
         categoria: beneficio.categoria,
         tags: beneficio.tags || [],
-        destacado: beneficio.destacado || false
+        destacado: beneficio.destacado || false,
+        asociacionesDisponibles: beneficio.asociacionesDisponibles || []
       });
       setTagsInput(beneficio.tags?.join(', ') || '');
     } else if (open && !beneficio) {
@@ -153,7 +184,8 @@ export const BeneficioForm: React.FC<BeneficioFormProps> = ({
         fechaFin: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         categoria: '',
         tags: [],
-        destacado: false
+        destacado: false,
+        asociacionesDisponibles: []
       });
       setTagsInput('');
     }
@@ -164,6 +196,16 @@ export const BeneficioForm: React.FC<BeneficioFormProps> = ({
     setTagsInput(value);
     const tags = value.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
     setValue('tags', tags);
+  };
+
+  // Manejar selección de asociaciones
+  const handleAsociacionToggle = (asociacionId: string) => {
+    const currentSelected = selectedAsociaciones || [];
+    const newSelected = currentSelected.includes(asociacionId)
+      ? currentSelected.filter(id => id !== asociacionId)
+      : [...currentSelected, asociacionId];
+    
+    setValue('asociacionesDisponibles', newSelected);
   };
 
   const handleFormSubmit = async (data: BeneficioFormData) => {
@@ -364,6 +406,59 @@ export const BeneficioForm: React.FC<BeneficioFormProps> = ({
               </div>
             </div>
           </div>
+
+          {/* Asociaciones disponibles - Solo para comercios */}
+          {user?.role === 'comercio' && (
+            <div className="bg-blue-50 rounded-2xl p-6 border border-blue-200">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <Building2 size={20} />
+                Asociaciones Disponibles
+              </h3>
+
+              {loadingAsociaciones ? (
+                <div className="flex items-center justify-center py-4">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600"></div>
+                  <span className="ml-2 text-gray-600">Cargando asociaciones...</span>
+                </div>
+              ) : asociacionesDisponibles.length > 0 ? (
+                <div className="space-y-3">
+                  <p className="text-sm text-gray-600 mb-3">
+                    Selecciona las asociaciones donde estará disponible este beneficio:
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {asociacionesDisponibles.map((asociacion) => (
+                      <label
+                        key={asociacion.id}
+                        className="flex items-center gap-3 p-3 bg-white rounded-xl border border-gray-200 hover:border-indigo-300 cursor-pointer transition-colors"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedAsociaciones.includes(asociacion.id)}
+                          onChange={() => handleAsociacionToggle(asociacion.id)}
+                          className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                        />
+                        <span className="text-sm font-medium text-gray-700">
+                          {asociacion.nombre}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                  {selectedAsociaciones.length === 0 && (
+                    <p className="text-xs text-amber-600 bg-amber-50 p-2 rounded-lg">
+                      Si no seleccionas ninguna asociación, el beneficio estará disponible para todas las asociaciones vinculadas.
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center py-4">
+                  <AlertCircle className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                  <p className="text-sm text-gray-600">
+                    No tienes asociaciones vinculadas. El beneficio estará disponible universalmente.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Período de validez */}
           <div className="bg-blue-50 rounded-2xl p-6 border border-blue-200">
