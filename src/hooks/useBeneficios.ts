@@ -11,6 +11,7 @@ import {
   BeneficioFilter 
 } from '@/types/beneficio';
 import { useAuth } from './useAuth';
+import { useComercio } from './useComercio';
 import toast from 'react-hot-toast';
 
 interface UseBeneficiosOptions {
@@ -189,7 +190,7 @@ export const useBeneficios = (options: UseBeneficiosOptions = {}) => {
   }, [user, autoLoad, useRealtime, cargarBeneficios, cargarHistorialUsos, cargarEstadisticas, configurarRealtime]);
 
   // Funciones de acción
-  const crearBeneficio = useCallback(async (): Promise<boolean> => {
+  const crearBeneficio = useCallback(async (data: BeneficioFormData): Promise<boolean> => {
     if (!user || (user.role !== 'comercio' && user.role !== 'asociacion')) {
       toast.error('No tienes permisos para crear beneficios');
       return false;
@@ -198,6 +199,7 @@ export const useBeneficios = (options: UseBeneficiosOptions = {}) => {
     try {
       setLoading(true);
       
+      await BeneficiosService.crearBeneficio(data, user.uid, user.role);
       toast.success('Beneficio creado exitosamente');
       
       // Recargar datos
@@ -473,6 +475,8 @@ export const useBeneficiosSocio = () => {
 
 // Hook especializado para comercios
 export const useBeneficiosComercios = () => {
+  const { comercio } = useComercio();
+  
   return useBeneficios({
     autoLoad: true,
     useRealtime: true,
