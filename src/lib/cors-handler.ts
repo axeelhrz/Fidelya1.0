@@ -1,4 +1,4 @@
-import { STORAGE_CONFIG, ERROR_MESSAGES, SUCCESS_MESSAGES, CORS_DEBUG } from './constants';
+import { STORAGE_CONFIG, ERROR_MESSAGES, CORS_DEBUG } from './constants';
 
 export interface CorsError extends Error {
   code?: string;
@@ -7,19 +7,19 @@ export interface CorsError extends Error {
 }
 
 export class CorsHandler {
-  private static logError(message: string, error?: any) {
+  private static logError(message: string, error?: unknown) {
     if (CORS_DEBUG.logErrors) {
       console.error(`🚫 CORS Handler: ${message}`, error);
     }
   }
 
-  private static logInfo(message: string, data?: any) {
+  private static logInfo(message: string, data?: unknown) {
     if (CORS_DEBUG.logRequests) {
       console.info(`ℹ️ CORS Handler: ${message}`, data);
     }
   }
 
-  private static logFallback(message: string, data?: any) {
+  private static logFallback(message: string, data?: unknown) {
     if (CORS_DEBUG.logFallbacks) {
       console.warn(`🔄 CORS Fallback: ${message}`, data);
     }
@@ -28,11 +28,26 @@ export class CorsHandler {
   /**
    * Detect if an error is CORS-related
    */
-  static isCorsError(error: any): boolean {
+  static isCorsError(error: unknown): boolean {
     if (!error) return false;
 
-    const errorMessage = error.message?.toLowerCase() || '';
-    const errorString = error.toString?.()?.toLowerCase() || '';
+    interface ErrorWithMessage {
+      message: string;
+      toString(): string;
+    }
+
+    const hasMessage = (err: unknown): err is ErrorWithMessage =>
+      typeof err === 'object' && err !== null && 'message' in err && typeof (err as { message?: unknown }).message === 'string';
+
+    const hasToString = (err: unknown): err is { toString(): string } =>
+      typeof err === 'object' && err !== null && typeof (err as { toString?: unknown }).toString === 'function';
+
+    const errorMessage = hasMessage(error)
+      ? error.message.toLowerCase()
+      : '';
+    const errorString = hasToString(error)
+      ? error.toString().toLowerCase()
+      : '';
 
     const corsIndicators = [
       'cors',
@@ -96,7 +111,7 @@ export class CorsHandler {
     baseDelay: number = STORAGE_CONFIG.retryDelay,
     operationName: string = 'Operation'
   ): Promise<T> {
-    let lastError: any;
+    let lastError: unknown;
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
@@ -144,16 +159,23 @@ export class CorsHandler {
   /**
    * Get user-friendly error message
    */
-  static getUserFriendlyMessage(error: any, operationName: string = 'operación'): string {
+  static getUserFriendlyMessage(error: unknown, operationName: string = 'operación'): string {
+    const getMessage = (err: unknown): string | undefined => {
+      if (typeof err === 'object' && err !== null && 'message' in err && typeof (err as { message?: unknown }).message === 'string') {
+        return (err as { message: string }).message;
+      }
+      return undefined;
+    };
+
     if (!CORS_DEBUG.showUserFriendlyMessages) {
-      return error.message || `Error en ${operationName}`;
+      return getMessage(error) || `Error en ${operationName}`;
     }
 
     if (this.isCorsError(error)) {
       return `Problema de configuración detectado. Se está usando un método alternativo para completar la ${operationName}.`;
     }
 
-    const errorMessage = error.message?.toLowerCase() || '';
+    const errorMessage = getMessage(error)?.toLowerCase() || '';
 
     if (errorMessage.includes('timeout')) {
       return `La ${operationName} está tomando más tiempo del esperado. Por favor, intenta nuevamente.`;
