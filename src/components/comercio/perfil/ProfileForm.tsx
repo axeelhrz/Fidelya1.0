@@ -42,12 +42,12 @@ import {
   Warning,
 } from '@mui/icons-material';
 import { useForm, Controller } from 'react-hook-form';
-import { useComercios } from '@/hooks/useComercios';
+import { useComercio } from '@/hooks/useComercio';
 import { ComercioProfileFormData } from '@/lib/validations/comercio';
 import { CATEGORIAS_COMERCIO } from '@/types/comercio';
 
 export const ProfileForm: React.FC = () => {
-  const { comercio, loading, updateProfile, error, clearError } = useComercios();
+  const { comercio, loading, updateProfile, error, clearError } = useComercio();
   const [isEditing, setIsEditing] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);

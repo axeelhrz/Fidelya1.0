@@ -23,6 +23,9 @@ export interface AnalyticsData {
   } | null;
   totalBeneficios?: number;
   usuariosUnicos?: number;
+  totalViews?: number;
+  clientesUnicos?: number;
+  tasaConversion?: number;
   
   // Additional KPI Data for KpiCards
   tasaExito: number;
