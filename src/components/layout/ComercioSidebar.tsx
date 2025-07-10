@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { 
   X, 
   Home, 
@@ -18,12 +19,15 @@ import {
   CheckCircle,
   AlertCircle,
   Activity,
-  Scan
+  Scan,
+  Building2,
+  BarChart3,
+  Settings,
+  Bell
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useComercio } from '@/hooks/useComercio';
-import { useNotifications } from '@/hooks/useNotifications';
-import { collection, query, where, onSnapshot, orderBy, limit } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, orderBy, limit, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 interface ComercioSidebarProps {
@@ -42,6 +46,8 @@ interface RealtimeStats {
   qrGenerado: boolean;
   qrEscaneos: number;
   qrEscaneosSemana: number;
+  notificacionesNoLeidas: number;
+  actividadReciente: number;
 }
 
 export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
@@ -52,9 +58,10 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
   activeSection
 }) => {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { user } = useAuth();
   const { comercio, stats } = useComercio();
-  const { stats: notificationStats } = useNotifications();
   
   // Real-time stats state
   const [realtimeStats, setRealtimeStats] = useState<RealtimeStats>({
@@ -64,7 +71,9 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
     clientesUnicos: stats?.clientesUnicos || 0,
     qrGenerado: false,
     qrEscaneos: 0,
-    qrEscaneosSemana: 0
+    qrEscaneosSemana: 0,
+    notificacionesNoLeidas: 0,
+    actividadReciente: 0
   });
 
   // Update stats when hooks change
@@ -77,7 +86,7 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
       clientesUnicos: stats?.clientesUnicos || 0,
       qrGenerado: !!comercio?.qrCode
     }));
-  }, [stats, notificationStats, comercio]);
+  }, [stats, comercio]);
 
   // Submenu item type
   type SubmenuItem = {
@@ -89,7 +98,7 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
     urgent?: boolean;
   };
   
-  // Simplified menu structure for Commerce (removed Analytics, Reportes, Notificaciones, Configuración)
+  // Enhanced menu structure for Commerce
   const menuItems: Array<{
     id: string;
     label: string;
@@ -122,6 +131,12 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
           label: 'Datos del Comercio', 
           icon: Store,
           route: '/dashboard/comercio/perfil'
+        },
+        { 
+          id: 'perfil-configuracion', 
+          label: 'Configuración', 
+          icon: Settings,
+          route: '/dashboard/comercio/configuracion'
         }
       ]
     },
@@ -239,6 +254,24 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
           route: '/dashboard/comercio/clientes'
         }
       ]
+    },
+    {
+      id: 'analytics',
+      label: 'Analytics',
+      icon: BarChart3,
+      description: 'Métricas y análisis',
+      gradient: 'from-orange-500 to-red-600',
+      route: '/dashboard/comercio/analytics'
+    },
+    {
+      id: 'notificaciones',
+      label: 'Notificaciones',
+      icon: Bell,
+      description: 'Centro de notificaciones',
+      gradient: 'from-pink-500 to-rose-600',
+      route: '/dashboard/comercio/notificaciones',
+      badge: realtimeStats.notificacionesNoLeidas,
+      urgent: realtimeStats.notificacionesNoLeidas > 0
     }
   ];
 
@@ -256,8 +289,8 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
       const validacionesQuery = query(
         validacionesRef, 
         where('comercioId', '==', user.uid),
-        orderBy('fechaValidacion', 'desc'),
-        limit(50)
+        orderBy('fechaHora', 'desc'),
+        limit(100)
       );
       
       const unsubscribeValidaciones = onSnapshot(validacionesQuery, (snapshot) => {
@@ -266,14 +299,14 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
         
         const validacionesHoy = snapshot.docs.filter(doc => {
           const data = doc.data();
-          const fechaValidacion = data.fechaValidacion?.toDate();
+          const fechaValidacion = data.fechaHora?.toDate();
           return fechaValidacion && fechaValidacion >= today;
         }).length;
 
         const thisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
         const validacionesMes = snapshot.docs.filter(doc => {
           const data = doc.data();
-          const fechaValidacion = data.fechaValidacion?.toDate();
+          const fechaValidacion = data.fechaHora?.toDate();
           return fechaValidacion && fechaValidacion >= thisMonth;
         }).length;
 
@@ -347,6 +380,45 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
       });
       unsubscribers.push(unsubscribeBeneficios);
 
+      // Listen to notifications collection
+      const notificationsRef = collection(db, 'notifications');
+      const notificationsQuery = query(
+        notificationsRef,
+        where('comercioId', '==', user.uid),
+        where('leida', '==', false),
+        orderBy('fechaCreacion', 'desc'),
+        limit(50)
+      );
+
+      const unsubscribeNotifications = onSnapshot(notificationsQuery, (snapshot) => {
+        setRealtimeStats(prev => ({
+          ...prev,
+          notificacionesNoLeidas: snapshot.docs.length
+        }));
+      }, (error) => {
+        console.error('Error listening to notifications:', error);
+      });
+      unsubscribers.push(unsubscribeNotifications);
+
+      // Listen to recent activity
+      const activityRef = collection(db, 'activities');
+      const activityQuery = query(
+        activityRef,
+        where('comercioId', '==', user.uid),
+        orderBy('timestamp', 'desc'),
+        limit(10)
+      );
+      
+      const unsubscribeActivity = onSnapshot(activityQuery, (snapshot) => {
+        setRealtimeStats(prev => ({
+          ...prev,
+          actividadReciente: snapshot.docs.length
+        }));
+      }, (error) => {
+        console.error('Error listening to activity:', error);
+      });
+      unsubscribers.push(unsubscribeActivity);
+
     } catch (error) {
       console.error('Error setting up Firebase listeners:', error);
     }
@@ -376,8 +448,82 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
     }
   };
 
+  // Enhanced active state detection
   const isActive = (itemId: string) => {
     return activeSection === itemId || activeSection.startsWith(itemId + '-');
+  };
+
+  const isSubmenuItemActive = (subItem: SubmenuItem) => {
+    const currentPath = pathname;
+    const currentFilter = searchParams.get('filter');
+    const currentTab = searchParams.get('tab');
+    const currentAction = searchParams.get('action');
+    
+    // Check if we're on the beneficios page
+    if (currentPath === '/dashboard/comercio/beneficios') {
+      if (subItem.id === 'beneficios-lista' && !currentFilter && !currentAction) {
+        return true;
+      }
+      if (subItem.id === 'beneficios-crear' && currentAction === 'crear') {
+        return true;
+      }
+      if (subItem.id === 'beneficios-activos' && currentFilter === 'activos') {
+        return true;
+      }
+      if (subItem.id === 'beneficios-vencidos' && currentFilter === 'vencidos') {
+        return true;
+      }
+    }
+    
+    // Check if we're on the validaciones page
+    if (currentPath === '/dashboard/comercio/validaciones') {
+      if (subItem.id === 'validaciones-recientes' && !currentTab && !currentFilter) {
+        return true;
+      }
+      if (subItem.id === 'validaciones-historial' && currentTab === 'historial') {
+        return true;
+      }
+      if (subItem.id === 'validaciones-exitosas' && currentFilter === 'exitosas') {
+        return true;
+      }
+      if (subItem.id === 'validaciones-fallidas' && currentFilter === 'fallidas') {
+        return true;
+      }
+    }
+
+    // Check if we're on the clientes page
+    if (currentPath === '/dashboard/comercio/clientes') {
+      if (subItem.id === 'clientes-lista') {
+        return true;
+      }
+    }
+
+    // Check if we're on the perfil page
+    if (currentPath === '/dashboard/comercio/perfil') {
+      if (subItem.id === 'perfil-datos') {
+        return true;
+      }
+    }
+
+    if (currentPath === '/dashboard/comercio/configuracion') {
+      if (subItem.id === 'perfil-configuracion') {
+        return true;
+      }
+    }
+    
+    // For other submenu items, check if the current path matches the route
+    const routeParts = subItem.route.split('?');
+    const routePath = routeParts[0];
+    const routeParams = new URLSearchParams(routeParts[1] || '');
+    
+    if (currentPath !== routePath) return false;
+    
+    // Check if all route parameters match current parameters
+    for (const [key, value] of routeParams.entries()) {
+      if (searchParams.get(key) !== value) return false;
+    }
+    
+    return true;
   };
 
   const getItemGradient = (item: typeof menuItems[0]) => {
@@ -386,24 +532,30 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
 
   return (
     <>
-      {/* Backdrop - Solo para móvil */}
-      {open && (
-        <div
-          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden"
-          onClick={onToggle}
-        />
-      )}
+      {/* Backdrop */}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden"
+            onClick={onToggle}
+          />
+        )}
+      </AnimatePresence>
 
-      {/* Sidebar - Estático sin animaciones constantes */}
-      <div
-        className={`fixed left-0 top-0 h-full w-80 bg-white/95 backdrop-blur-xl shadow-2xl z-50 lg:relative lg:translate-x-0 lg:shadow-xl border-r border-white/20 transition-transform duration-300 ease-in-out ${
-          open ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-        }`}
+      {/* Sidebar */}
+      <motion.div
+        initial={{ x: -320 }}
+        animate={{ x: open ? 0 : -320 }}
+        transition={{ duration: 0.3, ease: 'easeInOut' }}
+        className="fixed left-0 top-0 h-full w-80 bg-white/95 backdrop-blur-xl shadow-2xl z-50 lg:relative lg:translate-x-0 lg:shadow-xl border-r border-white/20"
       >
         <div className="flex flex-col h-full">
-          {/* Header */}
+          {/* Enhanced Header */}
           <div className="relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-500 via-violet-500 to-purple-600"></div>
             <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
             
             {/* Floating elements */}
@@ -412,12 +564,16 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
             
             <div className="relative z-10 flex items-center justify-between p-6">
               <div className="flex items-center space-x-3">
-                <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-lg">
+                <motion.div 
+                  className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-lg"
+                  whileHover={{ scale: 1.1, rotate: 5 }}
+                  transition={{ duration: 0.2 }}
+                >
                   <Store className="w-6 h-6 text-white" />
-                </div>
+                </motion.div>
                 <div>
                   <h2 className="text-lg font-bold text-white">Panel Comercial</h2>
-                  <p className="text-sm text-blue-100 truncate max-w-32">
+                  <p className="text-sm text-purple-100 truncate max-w-32">
                     {comercio?.nombreComercio || user?.nombre || 'Comercio'}
                   </p>
                 </div>
@@ -432,20 +588,28 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
             </div>
           </div>
 
-          {/* Quick Stats */}
+          {/* Enhanced Quick Stats */}
           <div className="p-4 bg-gradient-to-br from-gray-50 to-white border-b border-gray-100">
             <div className="grid grid-cols-2 gap-3">
-              <div className="bg-white rounded-2xl p-3 text-center shadow-lg border border-gray-100">
+              <motion.div 
+                className="bg-white rounded-2xl p-3 text-center shadow-lg border border-gray-100"
+                whileHover={{ scale: 1.02, y: -2 }}
+                transition={{ duration: 0.2 }}
+              >
                 <div className="flex items-center justify-center space-x-2 mb-1">
-                  <div className="w-6 h-6 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
+                  <div className="w-6 h-6 bg-gradient-to-r from-purple-500 to-violet-600 rounded-lg flex items-center justify-center">
                     <UserCheck className="w-3 h-3 text-white" />
                   </div>
-                  <div className="text-lg font-black text-blue-600">{realtimeStats.validacionesHoy}</div>
+                  <div className="text-lg font-black text-purple-600">{realtimeStats.validacionesHoy}</div>
                 </div>
                 <div className="text-xs text-gray-600 font-medium">Hoy</div>
-              </div>
+              </motion.div>
               
-              <div className="bg-white rounded-2xl p-3 text-center shadow-lg border border-gray-100">
+              <motion.div 
+                className="bg-white rounded-2xl p-3 text-center shadow-lg border border-gray-100"
+                whileHover={{ scale: 1.02, y: -2 }}
+                transition={{ duration: 0.2 }}
+              >
                 <div className="flex items-center justify-center space-x-2 mb-1">
                   <div className="w-6 h-6 bg-gradient-to-r from-emerald-500 to-green-600 rounded-lg flex items-center justify-center">
                     <Scan className="w-3 h-3 text-white" />
@@ -453,34 +617,40 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
                   <div className="text-lg font-black text-emerald-600">{realtimeStats.qrEscaneos}</div>
                 </div>
                 <div className="text-xs text-gray-600 font-medium">QR Hoy</div>
-              </div>
+              </motion.div>
             </div>
             
             {/* Activity indicator */}
-            <div className="mt-3 flex items-center justify-center space-x-2 text-xs text-gray-500">
+            <motion.div 
+              className="mt-3 flex items-center justify-center space-x-2 text-xs text-gray-500"
+              animate={{ opacity: [0.5, 1, 0.5] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
               <Activity className="w-3 h-3" />
               <span>Actualización en tiempo real</span>
-            </div>
+            </motion.div>
           </div>
 
-          {/* Navigation */}
+          {/* Enhanced Navigation */}
           <nav className="flex-1 overflow-y-auto py-4 px-3">
             <div className="space-y-2">
               {menuItems.map((item) => (
                 <div key={item.id}>
-                  <button
+                  <motion.button
                     onClick={() => handleMenuClick(item.id, !!item.submenu, item.route)}
-                    className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-left transition-all duration-200 group relative overflow-hidden ${
+                    className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-left transition-all duration-300 group relative overflow-hidden ${
                       isActive(item.id)
                         ? 'bg-gradient-to-r from-white to-gray-50 text-gray-900 shadow-lg border border-gray-200'
                         : 'text-gray-700 hover:bg-white/80 hover:shadow-md'
                     }`}
+                    whileHover={{ scale: 1.02, x: 4 }}
+                    whileTap={{ scale: 0.98 }}
                   >
                     {/* Background gradient on hover */}
                     <div className={`absolute inset-0 bg-gradient-to-r ${getItemGradient(item)} opacity-0 group-hover:opacity-5 transition-opacity duration-300 rounded-2xl`}></div>
                     
                     <div className="flex items-center space-x-3 flex-1 min-w-0 relative z-10">
-                      <div className={`p-2.5 rounded-xl transition-all duration-200 ${
+                      <div className={`p-2.5 rounded-xl transition-all duration-300 ${
                         isActive(item.id) 
                           ? `bg-gradient-to-r ${getItemGradient(item)} text-white shadow-lg` 
                           : 'bg-gray-100 text-gray-500 group-hover:bg-gray-200 group-hover:text-gray-700'
@@ -496,78 +666,101 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
                     {/* Badge and indicators */}
                     <div className="flex items-center space-x-2 relative z-10">
                       {item.badge !== undefined && item.badge > 0 && (
-                        <div
+                        <motion.div
                           className={`px-2 py-1 rounded-full text-xs font-bold ${
                             item.urgent 
                               ? 'bg-red-500 text-white animate-pulse' 
-                              : 'bg-blue-500 text-white'
+                              : 'bg-purple-500 text-white'
                           }`}
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{ type: "spring", stiffness: 500, damping: 30 }}
                         >
                           {item.badge > 99 ? '99+' : item.badge}
-                        </div>
+                        </motion.div>
                       )}
                       
                       {item.submenu && (
-                        <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${
+                        <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${
                           expandedItems.has(item.id) ? 'rotate-180' : ''
                         } ${isActive(item.id) ? 'text-gray-700' : 'text-gray-400'}`} />
                       )}
                     </div>
-                  </button>
+                  </motion.button>
 
-                  {/* Submenu */}
-                  {item.submenu && expandedItems.has(item.id) && (
-                    <div className="ml-4 mt-2 space-y-1 border-l-2 border-gray-200 pl-4">
-                      {item.submenu.map((subItem) => (
-                        <button
-                          key={subItem.id}
-                          onClick={() => handleMenuClick(subItem.id, false, subItem.route)}
-                          className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left transition-all duration-200 group ${
-                            activeSection === subItem.id
-                              ? 'bg-gradient-to-r from-gray-50 to-white text-gray-900 border border-gray-200 shadow-sm'
-                              : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                          }`}
-                        >
-                          <div className="flex items-center space-x-3 flex-1">
-                            <div className={`p-1.5 rounded-lg transition-all duration-200 ${
-                              activeSection === subItem.id 
-                                ? `bg-gradient-to-r ${getItemGradient(item)} text-white shadow-md` 
-                                : 'bg-gray-100 text-gray-400 group-hover:bg-gray-200'
-                            }`}>
-                              <subItem.icon className="w-3 h-3" />
+                  {/* Enhanced Submenu */}
+                  <AnimatePresence>
+                    {item.submenu && expandedItems.has(item.id) && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0, y: -10 }}
+                        animate={{ opacity: 1, height: 'auto', y: 0 }}
+                        exit={{ opacity: 0, height: 0, y: -10 }}
+                        transition={{ duration: 0.3, ease: "easeInOut" }}
+                        className="ml-4 mt-2 space-y-1 border-l-2 border-gradient-to-b from-gray-200 to-transparent pl-4"
+                      >
+                        {item.submenu.map((subItem) => (
+                          <motion.button
+                            key={subItem.id}
+                            onClick={() => handleMenuClick(subItem.id, false, subItem.route)}
+                            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left transition-all duration-200 group ${
+                              isSubmenuItemActive(subItem)
+                                ? 'bg-gradient-to-r from-gray-50 to-white text-gray-900 border border-gray-200 shadow-sm'
+                                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                            }`}
+                            whileHover={{ scale: 1.02, x: 2 }}
+                            whileTap={{ scale: 0.98 }}
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.1 }}
+                          >
+                            <div className="flex items-center space-x-3 flex-1">
+                              <div className={`p-1.5 rounded-lg transition-all duration-200 ${
+                                isSubmenuItemActive(subItem)
+                                  ? `bg-gradient-to-r ${getItemGradient(item)} text-white shadow-md` 
+                                  : 'bg-gray-100 text-gray-400 group-hover:bg-gray-200'
+                              }`}>
+                                <subItem.icon className="w-3 h-3" />
+                              </div>
+                              <span className="text-sm font-medium truncate">{subItem.label}</span>
                             </div>
-                            <span className="text-sm font-medium truncate">{subItem.label}</span>
-                          </div>
-                          
-                          {/* Submenu badges */}
-                          {subItem.count !== undefined && subItem.count > 0 && (
-                            <div
-                              className={`px-2 py-0.5 rounded-full text-xs font-bold ${
-                                subItem.urgent 
-                                  ? 'bg-red-500 text-white animate-pulse' 
-                                  : 'bg-gray-500 text-white'
-                              }`}
-                            >
-                              {subItem.count}
-                            </div>
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                            
+                            {/* Submenu badges */}
+                            {subItem.count !== undefined && subItem.count > 0 && (
+                              <motion.div
+                                className={`px-2 py-0.5 rounded-full text-xs font-bold ${
+                                  subItem.urgent 
+                                    ? 'bg-red-500 text-white animate-pulse' 
+                                    : 'bg-gray-500 text-white'
+                                }`}
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                transition={{ delay: 0.2 }}
+                              >
+                                {subItem.count}
+                              </motion.div>
+                            )}
+                          </motion.button>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               ))}
             </div>
           </nav>
 
-          {/* User Info */}
+          {/* Enhanced User Info */}
           <div className="p-4 border-t border-gray-200 bg-gradient-to-br from-gray-50 to-white">
             <div className="flex items-center space-x-3 mb-4">
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
+              <motion.div 
+                className="w-12 h-12 bg-gradient-to-r from-purple-500 to-violet-600 rounded-2xl flex items-center justify-center shadow-lg"
+                whileHover={{ scale: 1.1, rotate: 5 }}
+                transition={{ duration: 0.2 }}
+              >
                 <span className="text-white font-bold text-lg">
                   {comercio?.nombreComercio?.charAt(0).toUpperCase() || user?.nombre?.charAt(0).toUpperCase() || 'C'}
                 </span>
-              </div>
+              </motion.div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold text-gray-900 truncate">
                   {comercio?.nombreComercio || user?.nombre || 'Comercio'}
@@ -582,9 +775,11 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
               </div>
             </div>
             
-            <button
+            <motion.button
               onClick={onLogoutClick}
               className="w-full flex items-center space-x-3 px-4 py-3 rounded-2xl text-red-600 hover:bg-red-50 transition-all duration-200 group border border-red-200 hover:border-red-300 hover:shadow-md"
+              whileHover={{ scale: 1.02, y: -1 }}
+              whileTap={{ scale: 0.98 }}
             >
               <div className="p-2 rounded-xl bg-red-100 text-red-600 group-hover:bg-red-200 transition-colors duration-200">
                 <LogOut className="w-4 h-4" />
@@ -593,10 +788,10 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
               <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                 <ChevronDown className="w-4 h-4 -rotate-90" />
               </div>
-            </button>
+            </motion.button>
           </div>
         </div>
-      </div>
+      </motion.div>
     </>
   );
 };
