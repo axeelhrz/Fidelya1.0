@@ -94,6 +94,7 @@ export interface BeneficioStats {
     beneficios: number;
     usos: number;
   }>;
+  activos: number;
 }
 
 export interface BeneficioFormData {

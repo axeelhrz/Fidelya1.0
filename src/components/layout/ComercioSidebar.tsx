@@ -35,7 +35,7 @@ import {
   Building2
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { useComercios } from '@/hooks/useComercios';
+import { useComercio } from '@/hooks/useComercio';
 import { useNotifications } from '@/hooks/useNotifications';
 import { collection, query, where, onSnapshot, orderBy, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -66,12 +66,12 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
 }) => {
   const router = useRouter();
   const { user } = useAuth();
-  const { stats } = useComercios();
+  const { comercio, stats } = useComercio();
   const { stats: notificationStats } = useNotifications();
   
   // Real-time stats state
   const [realtimeStats, setRealtimeStats] = useState<RealtimeStats>({
-    validacionesHoy: stats?.valiacionesHoy || 0,
+    validacionesHoy: stats?.validacionesHoy || 0,
     validacionesMes: stats?.validacionesMes || 0,
     beneficiosActivos: stats?.beneficiosActivos || 0,
     clientesUnicos: stats?.clientesUnicos || 0,
@@ -134,18 +134,6 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
           label: 'Datos del Comercio', 
           icon: Store,
           route: '/dashboard/comercio/perfil'
-        },
-        { 
-          id: 'perfil-imagenes', 
-          label: 'Logo y Banner', 
-          icon: Upload,
-          route: '/dashboard/comercio/perfil?tab=imagenes'
-        },
-        { 
-          id: 'perfil-configuracion', 
-          label: 'Configuración', 
-          icon: Settings,
-          route: '/dashboard/comercio/perfil?tab=configuracion'
         }
       ]
     },
@@ -579,7 +567,7 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
                 <div>
                   <h2 className="text-lg font-bold text-white">Panel Comercial</h2>
                   <p className="text-sm text-blue-100 truncate max-w-32">
-                    {user?.nombre || 'Comercio'}
+                    {comercio?.nombreComercio || user?.nombre || 'Comercio'}
                   </p>
                 </div>
               </div>
@@ -763,12 +751,12 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
                 transition={{ duration: 0.2 }}
               >
                 <span className="text-white font-bold text-lg">
-                  {user?.nombre?.charAt(0).toUpperCase() || 'C'}
+                  {comercio?.nombreComercio?.charAt(0).toUpperCase() || user?.nombre?.charAt(0).toUpperCase() || 'C'}
                 </span>
               </motion.div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold text-gray-900 truncate">
-                  {user?.nombre || 'Comercio'}
+                  {comercio?.nombreComercio || user?.nombre || 'Comercio'}
                 </p>
                 <p className="text-xs text-gray-500 truncate">
                   {user?.email || 'comercio@email.com'}
