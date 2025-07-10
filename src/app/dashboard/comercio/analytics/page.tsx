@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/hooks/useAuth';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { 
-  BarChart3, 
   TrendingUp, 
   UserCheck, 
   Gift, 
@@ -21,20 +20,37 @@ import {
   Eye,
   Users,
   DollarSign,
-  Clock,
   Target,
-  Zap
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function ComercioAnalyticsPage() {
   const { user, signOut } = useAuth();
-  const { analyticsData, loading, getAnalytics, exportAnalytics } = useAnalytics();
-  const searchParams = useSearchParams();
-  const activeTab = searchParams.get('tab') || 'general';
+  // Calculate date range based on selected period
+  const getDateRange = (period: 'week' | 'month' | 'year') => {
+    const end = new Date();
+    const start = new Date();
+    if (period === 'week') {
+      start.setDate(end.getDate() - 7);
+    } else if (period === 'month') {
+      start.setMonth(end.getMonth() - 1);
+    } else if (period === 'year') {
+      start.setFullYear(end.getFullYear() - 1);
+    }
+    return { startDate: start, endDate: end };
+  };
 
   const [period, setPeriod] = useState<'week' | 'month' | 'year'>('month');
   const [exporting, setExporting] = useState(false);
+
+  const dateRange = getDateRange(period);
+
+  const { analyticsData, loading, exportToCSV, refresh } = useAnalytics({
+    startDate: dateRange.startDate,
+    endDate: dateRange.endDate,
+  });
+  const searchParams = useSearchParams();
+  const activeTab = searchParams.get('tab') || 'general';
 
   const handleLogout = async () => {
     try {
@@ -47,7 +63,7 @@ export default function ComercioAnalyticsPage() {
   const handleExport = async () => {
     setExporting(true);
     try {
-      await exportAnalytics(user?.uid || '', period);
+      await exportToCSV();
       toast.success('Reporte de analytics exportado exitosamente');
     } catch (error) {
       console.error('Error exporting analytics:', error);
@@ -93,9 +109,9 @@ export default function ComercioAnalyticsPage() {
   // Load analytics data
   useEffect(() => {
     if (user) {
-      getAnalytics(user.uid, period);
+      refresh();
     }
-  }, [user, period, getAnalytics]);
+  }, [user, period, refresh]);
 
   if (loading) {
     return (
@@ -164,7 +180,7 @@ export default function ComercioAnalyticsPage() {
                 variant="outline"
                 size="sm"
                 leftIcon={<RefreshCw size={16} />}
-                onClick={() => getAnalytics(user?.uid || '', period)}
+                onClick={refresh}
               >
                 Actualizar
               </Button>
@@ -292,13 +308,8 @@ export default function ComercioAnalyticsPage() {
           </div>
         </div>
 
-        {/* Analytics Content */}
-        <ComercioAnalytics
-          section={activeTab}
-          period={period}
-          data={analyticsData}
-          onPeriodChange={setPeriod}
-        />
+        {/* Analytics Content - Fixed: Only pass the section prop */}
+        <ComercioAnalytics section={activeTab} />
       </motion.div>
     </DashboardLayout>
   );
