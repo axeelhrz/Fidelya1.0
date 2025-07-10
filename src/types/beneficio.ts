@@ -27,6 +27,11 @@ export interface Beneficio {
   creadoEn: Timestamp;
   actualizadoEn: Timestamp;
   creadoPor: string;
+  asociacionesVinculadas?: Array<{
+    id: string;
+    nombre: string;
+    logo?: string;
+  }>;
 }
 
 export interface BeneficioUso {

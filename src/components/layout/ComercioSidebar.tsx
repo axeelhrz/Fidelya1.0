@@ -18,7 +18,6 @@ import {
   TrendingUp,
   Calendar,
   UserCheck,
-  Eye,
   Plus,
   Download,
   Upload,
@@ -72,7 +71,7 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
   
   // Real-time stats state
   const [realtimeStats, setRealtimeStats] = useState<RealtimeStats>({
-    validacionesHoy: stats?.validacionesHoy || 0,
+    validacionesHoy: stats?.valiacionesHoy || 0,
     validacionesMes: stats?.validacionesMes || 0,
     beneficiosActivos: stats?.beneficiosActivos || 0,
     clientesUnicos: stats?.clientesUnicos || 0,

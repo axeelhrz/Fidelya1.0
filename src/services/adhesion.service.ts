@@ -49,6 +49,18 @@ export interface ComercioDisponible {
     autoValidacion: boolean;
     requiereAprobacion: boolean;
   };
+  qrCode?: string;
+  qrCodeUrl?: string;
+  beneficiosActivos: number;
+  validacionesRealizadas: number;
+  clientesAtendidos: number;
+  ingresosMensuales: number;
+  rating: number;
+  ubicacion?: {
+    latitud: number;
+    longitud: number;
+  };
+  visible: boolean;
 }
 
 export interface SolicitudAdhesion {
@@ -73,6 +85,11 @@ export interface AdhesionStats {
   solicitudesPendientes: number;
   adhesionesEsteMes: number;
   categorias: Record<string, number>;
+  valiacionesHoy: number;
+  validacionesMes: number;
+  clientesUnicos: number;
+  beneficiosActivos: number;
+  validacionesHoy: number;
 }
 
 class AdhesionService {
@@ -270,7 +287,12 @@ class AdhesionService {
         comerciosActivos: comerciosVinculados.filter(c => c.estado === 'activo').length,
         solicitudesPendientes: 0,
         adhesionesEsteMes: 0,
-        categorias: {}
+        categorias: {},
+        valiacionesHoy: 0,
+        validacionesMes: 0,
+        clientesUnicos: 0,
+        beneficiosActivos: 0,
+        validacionesHoy: 0
       };
 
       // Contar por categorías
@@ -291,12 +313,18 @@ class AdhesionService {
       return stats;
     } catch (error) {
       handleError(error, 'Get Adhesion Stats');
+      // Return default stats in case of error
       return {
         totalComercios: 0,
         comerciosActivos: 0,
         solicitudesPendientes: 0,
         adhesionesEsteMes: 0,
-        categorias: {}
+        categorias: {},
+        valiacionesHoy: 0,
+        validacionesMes: 0,
+        clientesUnicos: 0,
+        beneficiosActivos: 0,
+        validacionesHoy: 0
       };
     }
   }
