@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSocios } from '@/hooks/useSocios';
+import { useComercios } from '@/hooks/useComercios';
 import { useNotifications } from '@/hooks/useNotifications';
 import { collection, query, where, onSnapshot, orderBy, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -41,6 +42,8 @@ interface RealtimeStats {
   sociosActivos: number;
   sociosVencidos: number;
   totalComercios: number;
+  comerciosActivos: number;
+  solicitudesPendientes: number;
   notificacionesPendientes: number;
   actividadReciente: number;
 }
@@ -57,6 +60,7 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
   const searchParams = useSearchParams();
   const { user } = useAuth();
   const { stats } = useSocios();
+  const { stats: comerciosStats } = useComercios();
   const { stats: notificationStats } = useNotifications();
   
   // Real-time stats state
@@ -64,7 +68,9 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
     totalSocios: stats?.total || 0,
     sociosActivos: stats?.activos || 0,
     sociosVencidos: stats?.vencidos || 0,
-    totalComercios: 0,
+    totalComercios: comerciosStats?.totalComercios || 0,
+    comerciosActivos: comerciosStats?.comerciosActivos || 0,
+    solicitudesPendientes: comerciosStats?.solicitudesPendientes || 0,
     notificacionesPendientes: notificationStats?.unread || 0,
     actividadReciente: 0
   });
@@ -76,9 +82,12 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
       totalSocios: stats?.total || 0,
       sociosActivos: stats?.activos || 0,
       sociosVencidos: stats?.vencidos || 0,
+      totalComercios: comerciosStats?.totalComercios || 0,
+      comerciosActivos: comerciosStats?.comerciosActivos || 0,
+      solicitudesPendientes: comerciosStats?.solicitudesPendientes || 0,
       notificacionesPendientes: notificationStats?.unread || 0
     }));
-  }, [stats, notificationStats]);
+  }, [stats, comerciosStats, notificationStats]);
 
   // Submenu item type
   type SubmenuItem = {
@@ -150,27 +159,22 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
       description: 'Red de comercios afiliados',
       gradient: 'from-emerald-500 to-green-600',
       route: '/dashboard/asociacion/comercios',
-      badge: realtimeStats.totalComercios,
+      badge: realtimeStats.comerciosActivos,
       submenu: [
         { 
-          id: 'comercios-lista', 
+          id: 'comercios-vinculados', 
           label: 'Comercios Vinculados', 
           icon: Store,
-          count: realtimeStats.totalComercios,
+          count: realtimeStats.comerciosActivos,
           route: '/dashboard/asociacion/comercios'
         },
         { 
           id: 'comercios-solicitudes', 
           label: 'Solicitudes Pendientes', 
           icon: Clock,
-          urgent: true,
-          route: '/dashboard/asociacion/comercios?tab=solicitudes'
-        },
-        { 
-          id: 'comercios-beneficios', 
-          label: 'Beneficios por Comercio', 
-          icon: Gift,
-          route: '/dashboard/asociacion/comercios?tab=beneficios'
+          count: realtimeStats.solicitudesPendientes,
+          urgent: realtimeStats.solicitudesPendientes > 0,
+          route: '/dashboard/asociacion/comercios?filter=solicitudes'
         }
       ]
     },
@@ -252,10 +256,10 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
       const sociosQuery = query(sociosRef, where('asociacionId', '==', user.uid));
       
       const unsubscribeSocios = onSnapshot(sociosQuery, (snapshot) => {
-        type SocioDoc = { id: string; estado?: string };
+        type SocioDoc = { id: string; estado?: string; estadoMembresia?: string };
         const socios: SocioDoc[] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         const activos = socios.filter(s => s.estado === 'activo').length;
-        const vencidos = socios.filter(s => s.estado === 'vencido').length;
+        const vencidos = socios.filter(s => s.estadoMembresia === 'vencido').length;
         
         setRealtimeStats(prev => ({
           ...prev,
@@ -273,9 +277,16 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
       const comerciosQuery = query(comerciosRef, where('asociacionId', '==', user.uid));
       
       const unsubscribeComercios = onSnapshot(comerciosQuery, (snapshot) => {
+        type ComercioDoc = { id: string; estado?: string; estadoSolicitud?: string };
+        const comercios: ComercioDoc[] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const activos = comercios.filter(c => c.estado === 'activo').length;
+        const solicitudes = comercios.filter(c => c.estadoSolicitud === 'pendiente').length;
+        
         setRealtimeStats(prev => ({
           ...prev,
-          totalComercios: snapshot.docs.length
+          totalComercios: comercios.length,
+          comerciosActivos: activos,
+          solicitudesPendientes: solicitudes
         }));
       }, (error) => {
         console.error('Error listening to comercios:', error);
@@ -370,9 +381,29 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
       }
     }
     
+    // Check if we're on the comercios page
+    if (currentPath === '/dashboard/asociacion/comercios') {
+      if (subItem.id === 'comercios-vinculados' && !currentFilter) {
+        return true;
+      }
+      if (subItem.id === 'comercios-solicitudes' && currentFilter === 'solicitudes') {
+        return true;
+      }
+    }
+    
     // For other submenu items, check if the current path matches the route
-    return currentPath === subItem.route.split('?')[0] && 
-           searchParams.toString() === (subItem.route.split('?')[1] || '');
+    const routeParts = subItem.route.split('?');
+    const routePath = routeParts[0];
+    const routeParams = new URLSearchParams(routeParts[1] || '');
+    
+    if (currentPath !== routePath) return false;
+    
+    // Check if all route parameters match current parameters
+    for (const [key, value] of routeParams.entries()) {
+      if (searchParams.get(key) !== value) return false;
+    }
+    
+    return true;
   };
 
   const getItemGradient = (item: typeof menuItems[0]) => {
@@ -463,7 +494,7 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
                   <div className="w-6 h-6 bg-gradient-to-r from-emerald-500 to-green-600 rounded-lg flex items-center justify-center">
                     <Store className="w-3 h-3 text-white" />
                   </div>
-                  <div className="text-lg font-black text-emerald-600">{realtimeStats.totalComercios}</div>
+                  <div className="text-lg font-black text-emerald-600">{realtimeStats.comerciosActivos}</div>
                 </div>
                 <div className="text-xs text-gray-600 font-medium">Comercios</div>
               </motion.div>
