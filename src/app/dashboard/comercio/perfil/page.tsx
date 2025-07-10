@@ -17,107 +17,26 @@ import {
   Settings, 
   Save, 
   RefreshCw,
-  User,
-  Mail,
-  Phone,
-  MapPin,
-  Globe,
-  Clock,
-  Building,
-  CreditCard,
   Shield,
   Bell,
-  Palette,
   QrCode
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function ComercioPerfilPage() {
-  const { user, signOut } = useAuth();
-  const { comercio, loading, updateComercio, generateQRCode } = useComercios();
+  const { signOut } = useAuth();
+  const { comerciosVinculados, loading, updateComercio, generateQRCode } = useComercios();
+  const comercio = comerciosVinculados && comerciosVinculados.length > 0 ? comerciosVinculados[0] : null;
   const searchParams = useSearchParams();
   const activeTab = searchParams.get('tab') || 'datos';
 
-  const [formData, setFormData] = useState({
-    nombreComercio: '',
-    email: '',
-    categoria: '',
-    direccion: '',
-    telefono: '',
-    horario: '',
-    descripcion: '',
-    sitioWeb: '',
-    razonSocial: '',
-    cuit: '',
-    emailContacto: '',
-    redesSociales: {
-      facebook: '',
-      instagram: '',
-      twitter: ''
-    },
-    configuracion: {
-      notificacionesEmail: true,
-      notificacionesWhatsApp: false,
-      autoValidacion: false,
-      requiereAprobacion: true
-    }
-  });
-
-  const [saving, setSaving] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
-
-  // Load comercio data
-  useEffect(() => {
-    if (comercio) {
-      setFormData({
-        nombreComercio: comercio.nombreComercio || '',
-        email: comercio.email || '',
-        categoria: comercio.categoria || '',
-        direccion: comercio.direccion || '',
-        telefono: comercio.telefono || '',
-        horario: comercio.horario || '',
-        descripcion: comercio.descripcion || '',
-        sitioWeb: comercio.sitioWeb || '',
-        razonSocial: comercio.razonSocial || '',
-        cuit: comercio.cuit || '',
-        emailContacto: comercio.emailContacto || comercio.email || '',
-        redesSociales: {
-          facebook: comercio.redesSociales?.facebook || '',
-          instagram: comercio.redesSociales?.instagram || '',
-          twitter: comercio.redesSociales?.twitter || ''
-        },
-        configuracion: {
-          notificacionesEmail: comercio.configuracion?.notificacionesEmail ?? true,
-          notificacionesWhatsApp: comercio.configuracion?.notificacionesWhatsApp ?? false,
-          autoValidacion: comercio.configuracion?.autoValidacion ?? false,
-          requiereAprobacion: comercio.configuracion?.requiereAprobacion ?? true
-        }
-      });
-    }
-  }, [comercio]);
 
   const handleLogout = async () => {
     try {
       await signOut();
     } catch (error) {
       console.error('Error during logout:', error);
-    }
-  };
-
-  const handleSave = async () => {
-    if (!comercio) return;
-
-    setSaving(true);
-    try {
-      const success = await updateComercio(comercio.id, formData);
-      if (success) {
-        toast.success('Perfil actualizado exitosamente');
-      }
-    } catch (error) {
-      console.error('Error saving profile:', error);
-      toast.error('Error al guardar el perfil');
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -227,14 +146,6 @@ export default function ComercioPerfilPage() {
               >
                 Actualizar
               </Button>
-              <Button
-                size="sm"
-                leftIcon={<Save size={16} />}
-                onClick={handleSave}
-                loading={saving}
-              >
-                Guardar Cambios
-              </Button>
             </div>
           </div>
 
@@ -265,12 +176,7 @@ export default function ComercioPerfilPage() {
         {/* Tab Content */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
           {activeTab === 'datos' && (
-            <ProfileForm
-              formData={formData}
-              setFormData={setFormData}
-              onSave={handleSave}
-              saving={saving}
-            />
+            <ProfileForm />
           )}
 
           {activeTab === 'imagenes' && (
@@ -310,14 +216,7 @@ export default function ComercioPerfilPage() {
                         </span>
                         <input
                           type="checkbox"
-                          checked={formData.configuracion.notificacionesEmail}
-                          onChange={(e) => setFormData(prev => ({
-                            ...prev,
-                            configuracion: {
-                              ...prev.configuracion,
-                              notificacionesEmail: e.target.checked
-                            }
-                          }))}
+                          defaultChecked={comercio?.configuracion?.notificacionesEmail ?? true}
                           className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
                         />
                       </label>
@@ -328,14 +227,7 @@ export default function ComercioPerfilPage() {
                         </span>
                         <input
                           type="checkbox"
-                          checked={formData.configuracion.notificacionesWhatsApp}
-                          onChange={(e) => setFormData(prev => ({
-                            ...prev,
-                            configuracion: {
-                              ...prev.configuracion,
-                              notificacionesWhatsApp: e.target.checked
-                            }
-                          }))}
+                          defaultChecked={comercio?.configuracion?.notificacionesWhatsApp ?? false}
                           className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
                         />
                       </label>
@@ -361,14 +253,7 @@ export default function ComercioPerfilPage() {
                         </div>
                         <input
                           type="checkbox"
-                          checked={formData.configuracion.autoValidacion}
-                          onChange={(e) => setFormData(prev => ({
-                            ...prev,
-                            configuracion: {
-                              ...prev.configuracion,
-                              autoValidacion: e.target.checked
-                            }
-                          }))}
+                          defaultChecked={comercio?.configuracion?.autoValidacion ?? false}
                           className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
                         />
                       </label>
@@ -384,14 +269,7 @@ export default function ComercioPerfilPage() {
                         </div>
                         <input
                           type="checkbox"
-                          checked={formData.configuracion.requiereAprobacion}
-                          onChange={(e) => setFormData(prev => ({
-                            ...prev,
-                            configuracion: {
-                              ...prev.configuracion,
-                              requiereAprobacion: e.target.checked
-                            }
-                          }))}
+                          defaultChecked={comercio?.configuracion?.requiereAprobacion ?? true}
                           className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
                         />
                       </label>

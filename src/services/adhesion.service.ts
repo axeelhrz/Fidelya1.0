@@ -23,13 +23,32 @@ export interface ComercioDisponible {
   categoria: string;
   direccion?: string;
   telefono?: string;
+  horario?: string;
   logoUrl?: string;
+  imagenPrincipalUrl?: string;
+  descripcion?: string;
+  sitioWeb?: string;
+  razonSocial?: string;
+  cuit?: string;
+  emailContacto?: string;
+  redesSociales?: {
+    facebook?: string;
+    instagram?: string;
+    twitter?: string;
+  };
   estado: 'activo' | 'inactivo' | 'pendiente';
   asociacionesVinculadas: string[];
   creadoEn: Timestamp;
+  actualizadoEn?: Timestamp;
   verificado: boolean;
   puntuacion: number;
   totalReviews: number;
+  configuracion?: {
+    notificacionesEmail: boolean;
+    notificacionesWhatsApp: boolean;
+    autoValidacion: boolean;
+    requiereAprobacion: boolean;
+  };
 }
 
 export interface SolicitudAdhesion {
