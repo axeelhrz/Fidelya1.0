@@ -14,12 +14,8 @@ import {
   Settings, 
   CheckCircle,
   AlertCircle,
-  Info,
-  Zap,
-  Users,
   Gift,
   UserCheck,
-  Calendar
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -29,10 +25,11 @@ export default function ComercioNotificacionesPage() {
     notifications, 
     stats, 
     loading, 
-    getNotifications, 
     markAsRead, 
     markAllAsRead,
-    deleteNotification 
+    deleteNotification,
+    setFilters,
+    refreshStats
   } = useNotifications();
 
   const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all');
@@ -56,6 +53,16 @@ export default function ComercioNotificacionesPage() {
     }
   };
 
+  const handleRefresh = async () => {
+    try {
+      await refreshStats();
+      toast.success('Notificaciones actualizadas');
+    } catch (error) {
+      console.error('Error refreshing notifications:', error);
+      toast.error('Error al actualizar notificaciones');
+    }
+  };
+
   const notificationTypes = [
     { value: 'all', label: 'Todas', icon: Bell, color: 'gray' },
     { value: 'validacion', label: 'Validaciones', icon: UserCheck, color: 'blue' },
@@ -69,12 +76,26 @@ export default function ComercioNotificacionesPage() {
     { value: 'read', label: 'Leídas', count: stats?.read || 0 }
   ];
 
-  // Load notifications on component mount
+  // Update filters when filter or type changes
   useEffect(() => {
-    if (user) {
-      getNotifications(user.uid, { filter, type });
+    const newFilters: any = {};
+    
+    if (filter !== 'all') {
+      newFilters.status = [filter];
     }
-  }, [user, filter, type, getNotifications]);
+    
+    if (type !== 'all') {
+      // Map the type to the notification category
+      const categoryMap: Record<string, string> = {
+        'validacion': 'membership',
+        'beneficio': 'general',
+        'sistema': 'system'
+      };
+      newFilters.category = [categoryMap[type] || type];
+    }
+    
+    setFilters(newFilters);
+  }, [filter, type, setFilters]);
 
   if (loading) {
     return (
@@ -134,7 +155,7 @@ export default function ComercioNotificacionesPage() {
                 variant="outline"
                 size="sm"
                 leftIcon={<RefreshCw size={16} />}
-                onClick={() => getNotifications(user?.uid || '', { filter, type })}
+                onClick={handleRefresh}
               >
                 Actualizar
               </Button>
@@ -258,7 +279,7 @@ export default function ComercioNotificacionesPage() {
           loading={loading}
           onMarkAsRead={markAsRead}
           onDelete={deleteNotification}
-          onRefresh={() => getNotifications(user?.uid || '', { filter, type })}
+          onRefresh={handleRefresh}
           filter={filter}
           type={type}
         />
