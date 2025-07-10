@@ -15,7 +15,7 @@ import {
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '@/lib/firebase';
-import { COLLECTIONS, QR_CONFIG, STORAGE_CONFIG, ERROR_MESSAGES } from '@/lib/constants';
+import { COLLECTIONS, QR_CONFIG, STORAGE_CONFIG } from '@/lib/constants';
 import { handleError } from '@/lib/error-handler';
 import QRCode from 'qrcode';
 
@@ -48,8 +48,8 @@ export interface Comercio {
     autoValidacion: boolean;
     requiereAprobacion: boolean;
   };
-  creadoEn: Date;
-  actualizadoEn: Date;
+  creadoEn: Date | import('firebase/firestore').FieldValue;
+  actualizadoEn: Date | import('firebase/firestore').FieldValue;
   metadata?: Record<string, unknown>;
 }
 
@@ -173,8 +173,16 @@ class ComercioService {
       return {
         id: comercioDoc.id,
         ...data,
-        creadoEn: data.creadoEn?.toDate() || new Date(),
-        actualizadoEn: data.actualizadoEn?.toDate() || new Date(),
+        creadoEn: data.creadoEn && typeof data.creadoEn.toDate === 'function'
+          ? data.creadoEn.toDate()
+          : data.creadoEn instanceof Date
+            ? data.creadoEn
+            : new Date(),
+        actualizadoEn: data.actualizadoEn && typeof data.actualizadoEn.toDate === 'function'
+          ? data.actualizadoEn.toDate()
+          : data.actualizadoEn instanceof Date
+            ? data.actualizadoEn
+            : new Date(),
       } as Comercio;
     } catch (error) {
       handleError(error, 'Get Comercio By ID');
@@ -423,8 +431,6 @@ class ComercioService {
         margin: QR_CONFIG.margin,
         color: QR_CONFIG.color,
         errorCorrectionLevel: QR_CONFIG.errorCorrectionLevel,
-        quality: QR_CONFIG.quality,
-        rendererOpts: QR_CONFIG.rendererOpts,
       });
 
       console.log('✅ QR Code generated as data URL successfully');
@@ -447,7 +453,7 @@ class ComercioService {
       }
 
       // Update comercio with QR code data
-      const updateData: any = {
+      const updateData: Partial<Comercio> = {
         qrCode: qrCodeDataURL, // Primary: data URL (no CORS issues)
         actualizadoEn: serverTimestamp(),
       };
@@ -489,7 +495,7 @@ class ComercioService {
           setTimeout(() => reject(new Error('Upload timeout')), 10000)
         );
         
-        const snapshot = await Promise.race([uploadPromise, timeoutPromise]) as any;
+        const snapshot = await Promise.race([uploadPromise, timeoutPromise]) as import('firebase/storage').UploadResult;
         const downloadURL = await getDownloadURL(snapshot.ref);
         
         return downloadURL;
@@ -566,7 +572,7 @@ class ComercioService {
       }
 
       console.log('✅ Batch QR codes generated successfully');
-      return results;
+      return results.filter((item): item is { comercioId: string; nombreComercio: string; qrCodeDataURL: string } => item !== null);
     } catch (error) {
       handleError(error, 'Generate Batch QR Codes');
       return [];

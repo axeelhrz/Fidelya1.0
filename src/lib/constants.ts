@@ -12,7 +12,7 @@ export const COLLECTIONS = {
   ACTIVITIES: 'activities',
   CLIENTE_ACTIVITIES: 'cliente_activities',
   CLIENTE_SEGMENTS: 'cliente_segments',
-  SOLICITUDES_ADHESION: 'solicitudes_adhesion', // Nueva colección
+  SOLICITUDES_ADHESION: 'solicitudes_adhesion',
 } as const;
 
 // Export type for collection names
@@ -23,14 +23,14 @@ export const APP_CONFIG = {
   name: 'Fidelya',
   version: '1.0.0',
   description: 'Sistema de Gestión de Socios y Beneficios',
-  url: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+  url: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001',
   supportEmail: 'soporte@fidelya.com',
   maxFileSize: 5 * 1024 * 1024, // 5MB
   allowedImageTypes: ['image/jpeg', 'image/png', 'image/webp'],
   allowedDocumentTypes: ['application/pdf', 'text/csv', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
 } as const;
 
-// CORS and Storage configuration - Enhanced for better CORS handling
+// Enhanced CORS and Storage configuration
 export const STORAGE_CONFIG = {
   maxRetries: 3,
   retryDelay: 1000,
@@ -48,9 +48,12 @@ export const STORAGE_CONFIG = {
     process.env.NEXT_PUBLIC_APP_URL,
     process.env.NEXT_PUBLIC_VERCEL_URL ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}` : null,
   ].filter(Boolean),
-  // Fallback strategy for CORS issues
+  // Enhanced fallback strategies for CORS issues
   useDataUrlFallback: true,
   enableStorageBackup: true,
+  uploadTimeout: 10000, // 10 seconds
+  corsRetryAttempts: 3,
+  corsRetryDelay: 2000, // 2 seconds
 } as const;
 
 // User roles and permissions
@@ -105,7 +108,7 @@ export const DASHBOARD_ROUTES = {
   [USER_ROLES.SOCIO]: '/dashboard/socio',
 } as const;
 
-// QR Code configuration - Enhanced for better CORS handling
+// Enhanced QR Code configuration with better CORS handling
 export const QR_CONFIG = {
   size: 256,
   margin: 2,
@@ -114,14 +117,19 @@ export const QR_CONFIG = {
     light: '#FFFFFF',
   },
   errorCorrectionLevel: 'M' as const,
-  baseUrl: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001', // Updated to match current port
+  baseUrl: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001',
   validationPath: '/validar-beneficio',
-  // Enhanced QR options
+  // Enhanced QR options for better quality and CORS handling
   quality: 0.92,
   type: 'image/png' as const,
   rendererOpts: {
     quality: 0.92,
   },
+  // Fallback options
+  useFallbackGeneration: true,
+  enableBatchProcessing: true,
+  batchSize: 5,
+  batchDelay: 500, // milliseconds between batches
 } as const;
 
 // Pagination defaults
@@ -156,7 +164,7 @@ export const VALIDATION_RULES = {
   },
 } as const;
 
-// Error messages - Enhanced with CORS-specific messages
+// Enhanced error messages with CORS-specific handling
 export const ERROR_MESSAGES = {
   NETWORK_ERROR: 'Error de conexión. Verifica tu internet.',
   UNAUTHORIZED: 'No tienes permisos para realizar esta acción.',
@@ -167,6 +175,9 @@ export const ERROR_MESSAGES = {
   INVALID_FILE_TYPE: 'Tipo de archivo no permitido.',
   CORS_ERROR: 'Error de configuración CORS. Usando método alternativo.',
   STORAGE_ERROR: 'Error al acceder al almacenamiento. Usando método local.',
+  UPLOAD_TIMEOUT: 'Tiempo de espera agotado. Reintentando con método alternativo.',
+  STORAGE_QUOTA_EXCEEDED: 'Cuota de almacenamiento excedida.',
+  NETWORK_TIMEOUT: 'Tiempo de espera de red agotado.',
 } as const;
 
 // Success messages
@@ -177,6 +188,9 @@ export const SUCCESS_MESSAGES = {
   SAVED: 'Guardado exitosamente',
   SENT: 'Enviado exitosamente',
   UPLOADED: 'Subido exitosamente',
+  QR_GENERATED: 'Código QR generado exitosamente',
+  BATCH_PROCESSED: 'Procesamiento por lotes completado',
+  FALLBACK_SUCCESS: 'Operación completada usando método alternativo',
 } as const;
 
 // Environment helpers
@@ -185,15 +199,18 @@ export const isProduction = process.env.NODE_ENV === 'production';
 export const isClient = typeof window !== 'undefined';
 export const isServer = typeof window === 'undefined';
 
-// Feature flags
+// Enhanced feature flags
 export const FEATURES = {
   ENABLE_NOTIFICATIONS: true,
   ENABLE_ANALYTICS: true,
   ENABLE_BACKUPS: true,
   ENABLE_DARK_MODE: true,
   ENABLE_PWA: true,
-  ENABLE_OFFLINE_MODE: false, // Future feature
-  ENABLE_CORS_FALLBACK: true, // New: Enable CORS fallback strategies
+  ENABLE_OFFLINE_MODE: false,
+  ENABLE_CORS_FALLBACK: true, // Enable CORS fallback strategies
+  ENABLE_STORAGE_RETRY: true, // Enable retry logic for storage operations
+  ENABLE_BATCH_PROCESSING: true, // Enable batch processing for QR codes
+  ENABLE_DEBUG_LOGGING: isDevelopment, // Enable debug logging in development
 } as const;
 
 // Cache configuration
@@ -217,6 +234,10 @@ export const RATE_LIMITS = {
     files: 10,
     windowMs: 60 * 1000, // 1 minute
   },
+  qrGeneration: {
+    requests: 50,
+    windowMs: 60 * 1000, // 1 minute
+  },
 } as const;
 
 // Adhesion states
@@ -227,3 +248,53 @@ export const ESTADOS_ADHESION = {
 } as const;
 
 export type EstadoAdhesion = typeof ESTADOS_ADHESION[keyof typeof ESTADOS_ADHESION];
+
+// CORS debugging helpers
+export const CORS_DEBUG = {
+  logRequests: isDevelopment,
+  logErrors: true,
+  logFallbacks: true,
+  showUserFriendlyMessages: true,
+} as const;
+
+// Storage bucket helpers
+export const getStorageBucket = () => {
+  const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+  const customBucket = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET;
+  
+  if (customBucket) {
+    return customBucket;
+  }
+  
+  if (projectId) {
+    return `${projectId}.appspot.com`;
+  }
+  
+  console.warn('⚠️ Firebase project ID not found. Storage operations may fail.');
+  return null;
+};
+
+// CORS configuration validation
+export const validateCorsConfig = () => {
+  const bucket = getStorageBucket();
+  const hasValidOrigins = STORAGE_CONFIG.corsOrigins.length > 0;
+  const hasValidBucket = bucket !== null;
+  
+  if (!hasValidBucket) {
+    console.warn('⚠️ Invalid storage bucket configuration');
+  }
+  
+  if (!hasValidOrigins) {
+    console.warn('⚠️ No CORS origins configured');
+  }
+  
+  return {
+    isValid: hasValidBucket && hasValidOrigins,
+    bucket,
+    origins: STORAGE_CONFIG.corsOrigins,
+    recommendations: [
+      !hasValidBucket ? 'Set NEXT_PUBLIC_FIREBASE_PROJECT_ID or NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET' : null,
+      !hasValidOrigins ? 'Configure CORS origins in STORAGE_CONFIG' : null,
+    ].filter(Boolean),
+  };
+};
