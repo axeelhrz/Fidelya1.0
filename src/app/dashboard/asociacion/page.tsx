@@ -12,7 +12,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { 
   Store, 
   BarChart3, 
-  Bell, 
   Plus,
   Building2,
 } from 'lucide-react';
@@ -45,19 +44,11 @@ const QuickActions: React.FC<{
       color: 'bg-blue-500 hover:bg-blue-600',
       onClick: () => onNavigate('comercios'),
       description: 'Gestionar red'
-    },
-    {
-      id: 'notifications',
-      label: 'Notificaciones',
-      icon: <Bell size={20} />,
-      color: 'bg-amber-500 hover:bg-amber-600',
-      onClick: () => onNavigate('notificaciones'),
-      description: 'Centro de mensajes'
     }
   ];
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
       {quickActions.map((action) => (
         <button
           key={action.id}
