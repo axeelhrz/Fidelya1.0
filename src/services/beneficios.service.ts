@@ -14,7 +14,6 @@ import {
   increment,
   onSnapshot,
   Unsubscribe,
-  UpdateData
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import {
@@ -68,6 +67,20 @@ export class BeneficiosService {
     }
   }
 
+  // Función auxiliar para limpiar datos antes de enviar a Firebase
+  private static cleanDataForFirestore(data: Record<string, unknown>): Record<string, unknown> {
+    const cleaned: Record<string, unknown> = {};
+    
+    for (const [key, value] of Object.entries(data)) {
+      // Solo incluir campos que no sean undefined
+      if (value !== undefined) {
+        cleaned[key] = value;
+      }
+    }
+    
+    return cleaned;
+  }
+
   // Obtener información del comercio
   private static async obtenerInfoComercio(comercioId: string): Promise<{ nombre: string; logo?: string } | null> {
     try {
@@ -76,7 +89,7 @@ export class BeneficiosService {
         const data = comercioDoc.data();
         return {
           nombre: data.nombreComercio || data.nombre || 'Comercio',
-          logo: data.logo || data.logoUrl
+          logo: data.logo || data.logoUrl || undefined
         };
       }
       return null;
@@ -94,7 +107,7 @@ export class BeneficiosService {
         const data = asociacionDoc.data();
         return {
           nombre: data.nombre || 'Asociación',
-          logo: data.logo || data.logoUrl
+          logo: data.logo || data.logoUrl || undefined
         };
       }
       return null;
@@ -165,33 +178,58 @@ export class BeneficiosService {
         throw new Error('No se pudo obtener la información de la asociación');
       }
 
-      const beneficioData: Omit<Beneficio, 'id'> = {
+      // Crear el objeto de datos base
+      const beneficioDataBase = {
         titulo: data.titulo,
         descripcion: data.descripcion,
         tipo: data.tipo,
         descuento: data.descuento,
         fechaInicio: Timestamp.fromDate(data.fechaInicio),
         fechaFin: Timestamp.fromDate(data.fechaFin),
-        limitePorSocio: data.limitePorSocio,
-        limiteTotal: data.limiteTotal,
-        condiciones: data.condiciones,
         categoria: data.categoria,
-        tags: data.tags || [],
-        destacado: data.destacado || false,
         usosActuales: 0,
-        estado: 'activo',
+        estado: 'activo' as const,
         creadoEn: Timestamp.now(),
         actualizadoEn: Timestamp.now(),
         creadoPor: userId,
         comercioId,
         comercioNombre: comercioInfo?.nombre || 'Comercio',
-        comercioLogo: comercioInfo?.logo,
         asociacionId,
         asociacionNombre: asociacionInfo?.nombre || '',
         asociacionesDisponibles
       };
 
-      const docRef = await addDoc(collection(db, this.BENEFICIOS_COLLECTION), beneficioData);
+      // Agregar campos opcionales solo si tienen valor
+      const beneficioData: Record<string, unknown> = { ...beneficioDataBase };
+
+      if (data.limitePorSocio !== undefined && data.limitePorSocio > 0) {
+        beneficioData.limitePorSocio = data.limitePorSocio;
+      }
+
+      if (data.limiteTotal !== undefined && data.limiteTotal > 0) {
+        beneficioData.limiteTotal = data.limiteTotal;
+      }
+
+      if (data.condiciones && data.condiciones.trim()) {
+        beneficioData.condiciones = data.condiciones.trim();
+      }
+
+      if (data.tags && data.tags.length > 0) {
+        beneficioData.tags = data.tags;
+      }
+
+      if (data.destacado === true) {
+        beneficioData.destacado = true;
+      }
+
+      if (comercioInfo?.logo) {
+        beneficioData.comercioLogo = comercioInfo.logo;
+      }
+
+      // Limpiar datos antes de enviar a Firebase
+      const cleanedData = this.cleanDataForFirestore(beneficioData);
+
+      const docRef = await addDoc(collection(db, this.BENEFICIOS_COLLECTION), cleanedData);
       
       // Limpiar cache
       this.clearCache('beneficios');
@@ -233,33 +271,65 @@ export class BeneficiosService {
       console.log('📝 Actualizando beneficio:', id);
 
       // Crear el objeto de actualización con tipos correctos
-      const updateData: UpdateData<Beneficio> = {
+      const updateDataBase: Partial<Omit<BeneficioFormData, 'fechaInicio' | 'fechaFin'>>
+        & { fechaInicio?: Timestamp; fechaFin?: Timestamp; actualizadoEn: Timestamp } = {
         actualizadoEn: Timestamp.now()
       };
 
       // Agregar campos que no son fechas
-      if (data.titulo !== undefined) updateData.titulo = data.titulo;
-      if (data.descripcion !== undefined) updateData.descripcion = data.descripcion;
-      if (data.tipo !== undefined) updateData.tipo = data.tipo;
-      if (data.descuento !== undefined) updateData.descuento = data.descuento;
-      if (data.limitePorSocio !== undefined) updateData.limitePorSocio = data.limitePorSocio;
-      if (data.limiteTotal !== undefined) updateData.limiteTotal = data.limiteTotal;
-      if (data.condiciones !== undefined) updateData.condiciones = data.condiciones;
-      if (data.categoria !== undefined) updateData.categoria = data.categoria;
-      if (data.tags !== undefined) updateData.tags = data.tags;
-      if (data.destacado !== undefined) updateData.destacado = data.destacado;
-      if (data.asociacionesDisponibles !== undefined) updateData.asociacionesDisponibles = data.asociacionesDisponibles;
+      if (data.titulo !== undefined) updateDataBase.titulo = data.titulo;
+      if (data.descripcion !== undefined) updateDataBase.descripcion = data.descripcion;
+      if (data.tipo !== undefined) updateDataBase.tipo = data.tipo;
+      if (data.descuento !== undefined) updateDataBase.descuento = data.descuento;
+      if (data.categoria !== undefined) updateDataBase.categoria = data.categoria;
+
+      // Campos opcionales - solo agregar si tienen valor
+      if (data.limitePorSocio !== undefined && data.limitePorSocio > 0) {
+        updateDataBase.limitePorSocio = data.limitePorSocio;
+      }
+
+      if (data.limiteTotal !== undefined && data.limiteTotal > 0) {
+        updateDataBase.limiteTotal = data.limiteTotal;
+      }
+
+      if (data.condiciones !== undefined) {
+        if (data.condiciones.trim()) {
+          updateDataBase.condiciones = data.condiciones.trim();
+        } else {
+          // Si está vacío, eliminar el campo
+          updateDataBase.condiciones = undefined;
+        }
+      }
+
+      if (data.tags !== undefined) {
+        if (data.tags.length > 0) {
+          updateDataBase.tags = data.tags;
+        } else {
+          updateDataBase.tags = undefined;
+        }
+      }
+
+      if (data.destacado !== undefined) {
+        updateDataBase.destacado = data.destacado;
+      }
+
+      if (data.asociacionesDisponibles !== undefined) {
+        updateDataBase.asociacionesDisponibles = data.asociacionesDisponibles;
+      }
 
       // Convertir fechas si están presentes
       if (data.fechaInicio) {
-        updateData.fechaInicio = Timestamp.fromDate(data.fechaInicio);
+        updateDataBase.fechaInicio = Timestamp.fromDate(data.fechaInicio);
       }
       if (data.fechaFin) {
-        updateData.fechaFin = Timestamp.fromDate(data.fechaFin);
+        updateDataBase.fechaFin = Timestamp.fromDate(data.fechaFin);
       }
 
+      // Limpiar datos antes de enviar a Firebase
+      const cleanedUpdateData = this.cleanDataForFirestore(updateDataBase);
+
       const docRef = doc(db, this.BENEFICIOS_COLLECTION, id);
-      await updateDoc(docRef, updateData);
+      await updateDoc(docRef, cleanedUpdateData as Partial<BeneficioFormData>);
 
       // Limpiar cache
       this.clearCache('beneficio');
@@ -504,7 +574,7 @@ export class BeneficiosService {
       const montoFinal = montoOriginal ? Math.max(0, montoOriginal - montoDescuento) : 0;
 
       // Crear registro de uso
-      const usoData: Omit<BeneficioUso, 'id'> = {
+      const usoDataBase = {
         beneficioId,
         beneficioTitulo: beneficio.titulo,
         socioId,
@@ -515,20 +585,32 @@ export class BeneficiosService {
         asociacionId,
         asociacionNombre: beneficio.asociacionNombre,
         fechaUso: Timestamp.now(),
-        montoOriginal,
         montoDescuento,
-        montoFinal,
-        estado: 'usado',
+        estado: 'usado' as const,
         creadoEn: Timestamp.now(),
         actualizadoEn: Timestamp.now()
       };
+
+      // Agregar campos opcionales solo si tienen valor
+      const usoData: Record<string, unknown> = { ...usoDataBase };
+      
+      if (montoOriginal !== undefined) {
+        usoData.montoOriginal = montoOriginal;
+      }
+      
+      if (montoFinal !== undefined) {
+        usoData.montoFinal = montoFinal;
+      }
+
+      // Limpiar datos antes de enviar a Firebase
+      const cleanedUsoData = this.cleanDataForFirestore(usoData);
 
       // Usar batch para operaciones atómicas
       const batch = writeBatch(db);
 
       // Agregar uso
       const usoRef = doc(collection(db, this.USOS_COLLECTION));
-      batch.set(usoRef, usoData);
+      batch.set(usoRef, cleanedUsoData);
 
       // Actualizar contador del beneficio
       const beneficioRef = doc(db, this.BENEFICIOS_COLLECTION, beneficioId);
@@ -547,7 +629,7 @@ export class BeneficiosService {
       // Limpiar cache
       this.clearCache();
 
-      const usoCompleto = { id: usoRef.id, ...usoData };
+      const usoCompleto: BeneficioUso = { id: usoRef.id, ...(cleanedUsoData as Omit<BeneficioUso, 'id'>) };
       console.log('✅ Beneficio usado exitosamente');
       
       return usoCompleto;
