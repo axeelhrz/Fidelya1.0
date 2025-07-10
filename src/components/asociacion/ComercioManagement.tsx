@@ -30,7 +30,7 @@ import {
   XCircle
 } from 'lucide-react';
 import { useComercios } from '@/hooks/useComercios';
-import { ComercioDisponible } from '@/services/adhesion.service';
+import { ComercioDisponible, SolicitudAdhesion } from '@/services/adhesion.service';
 import type { Comercio } from '@/services/comercio.service';
 import { VincularComercioDialog } from './VincularComercioDialog';
 import { CreateComercioDialog } from './CreateComercioDialog';
@@ -42,48 +42,81 @@ interface ComercioManagementProps {
   initialFilter?: string | null;
 }
 
-// Mock data for pending requests - In a real app, this would come from the backend
-const mockPendingRequests = [
-  {
-    id: 'req-1',
-    nombreComercio: 'Panadería San Juan',
-    nombre: 'Juan Carlos Pérez',
-    email: 'juan@panaderiasanjuan.com',
-    telefono: '+54 11 4567-8901',
-    categoria: 'Alimentación',
-    direccion: 'Av. San Juan 1234, CABA',
-    fechaSolicitud: new Date('2024-01-15'),
-    mensaje: 'Somos una panadería familiar con 20 años de experiencia. Nos gustaría formar parte de su red de comercios.',
-    documentos: ['cuit.pdf', 'habilitacion.pdf'],
-    estado: 'pendiente' as const
-  },
-  {
-    id: 'req-2',
-    nombreComercio: 'Farmacia Central',
-    nombre: 'María González',
-    email: 'info@farmaciacentral.com',
-    telefono: '+54 11 4567-8902',
-    categoria: 'Salud',
-    direccion: 'Rivadavia 567, CABA',
-    fechaSolicitud: new Date('2024-01-18'),
-    mensaje: 'Farmacia con amplio stock y atención 24hs. Queremos ofrecer descuentos a los socios de la asociación.',
-    documentos: ['cuit.pdf', 'matricula.pdf', 'habilitacion.pdf'],
-    estado: 'pendiente' as const
-  },
-  {
-    id: 'req-3',
-    nombreComercio: 'Taller Mecánico Rodriguez',
-    nombre: 'Carlos Rodriguez',
-    email: 'carlos@tallerrodriguez.com',
-    telefono: '+54 11 4567-8903',
-    categoria: 'Automotor',
-    direccion: 'Corrientes 890, CABA',
-    fechaSolicitud: new Date('2024-01-20'),
-    mensaje: 'Taller especializado en reparaciones generales y service. Contamos con personal certificado.',
-    documentos: ['cuit.pdf', 'seguro.pdf'],
-    estado: 'pendiente' as const
-  }
-];
+// Rejection Modal Component
+const RejectionModal: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: (motivo: string) => void;
+  solicitudNombre: string;
+  loading: boolean;
+}> = ({ isOpen, onClose, onConfirm, solicitudNombre, loading }) => {
+  const [motivo, setMotivo] = useState('');
+
+  const handleSubmit = () => {
+    if (motivo.trim()) {
+      onConfirm(motivo.trim());
+      setMotivo('');
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 overflow-y-auto">
+      <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
+
+        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+          <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+            <div className="sm:flex sm:items-start">
+              <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                <XCircle className="h-6 w-6 text-red-600" />
+              </div>
+              <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                <h3 className="text-lg leading-6 font-medium text-gray-900">
+                  Rechazar Solicitud
+                </h3>
+                <div className="mt-2">
+                  <p className="text-sm text-gray-500 mb-4">
+                    ¿Estás seguro de que deseas rechazar la solicitud de{' '}
+                    <strong>{solicitudNombre}</strong>?
+                  </p>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Motivo del rechazo (requerido):
+                    </label>
+                    <textarea
+                      value={motivo}
+                      onChange={(e) => setMotivo(e.target.value)}
+                      rows={3}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                      placeholder="Explica el motivo del rechazo..."
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+            <button
+              onClick={handleSubmit}
+              disabled={loading || !motivo.trim()}
+              className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50"
+            >
+              {loading ? 'Rechazando...' : 'Rechazar'}
+            </button>
+            <button
+              onClick={onClose}
+              className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export const ComercioManagement: React.FC<ComercioManagementProps> = ({ 
   onNavigate, 
@@ -91,6 +124,7 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
 }) => {
   const {
     comerciosVinculados,
+    solicitudesPendientes,
     stats,
     loading,
     error,
@@ -98,6 +132,8 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
     updateComercio,
     deleteComercio,
     changeComercioStatus,
+    aprobarSolicitud,
+    rechazarSolicitud,
     buscarComercios,
     vincularComercio,
     desvincularComercio,
@@ -111,7 +147,9 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [validationsDialogOpen, setValidationsDialogOpen] = useState(false);
+  const [rejectionModalOpen, setRejectionModalOpen] = useState(false);
   const [selectedComercio, setSelectedComercio] = useState<Comercio | null>(null);
+  const [selectedSolicitud, setSelectedSolicitud] = useState<SolicitudAdhesion | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategoria, setSelectedCategoria] = useState('');
   const [selectedEstado, setSelectedEstado] = useState('');
@@ -145,7 +183,7 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
   });
 
   // Filtrar solicitudes pendientes
-  const solicitudesFiltradas = mockPendingRequests.filter(solicitud => {
+  const solicitudesFiltradas = solicitudesPendientes.filter(solicitud => {
     const matchesSearch = !searchTerm || 
       solicitud.nombreComercio.toLowerCase().includes(searchTerm.toLowerCase()) ||
       solicitud.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -159,7 +197,7 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
   // Obtener categorías únicas
   const categorias = Array.from(new Set([
     ...comerciosVinculados.map(c => c.categoria),
-    ...mockPendingRequests.map(r => r.categoria)
+    ...solicitudesPendientes.map(r => r.categoria)
   ]));
 
   // Get filtered title based on current view and filters
@@ -173,19 +211,28 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
   };
 
   // Handle request approval
-  const handleApproveRequest = async (requestId: string) => {
-    // In a real app, this would call an API to approve the request
-    console.log('Approving request:', requestId);
-    // For now, just show a success message
-    alert('Solicitud aprobada exitosamente');
+  const handleApproveRequest = async (solicitudId: string) => {
+    const success = await aprobarSolicitud(solicitudId);
+    if (success) {
+      // The hook will automatically update the data through real-time listeners
+    }
   };
 
   // Handle request rejection
-  const handleRejectRequest = async (requestId: string) => {
-    // In a real app, this would call an API to reject the request
-    console.log('Rejecting request:', requestId);
-    // For now, just show a success message
-    alert('Solicitud rechazada');
+  const handleRejectRequest = (solicitud: SolicitudAdhesion) => {
+    setSelectedSolicitud(solicitud);
+    setRejectionModalOpen(true);
+  };
+
+  // Confirm rejection with reason
+  const handleConfirmRejection = async (motivo: string) => {
+    if (!selectedSolicitud) return;
+
+    const success = await rechazarSolicitud(selectedSolicitud.id, motivo);
+    if (success) {
+      setRejectionModalOpen(false);
+      setSelectedSolicitud(null);
+    }
   };
 
   // Manejar desvinculación
@@ -216,33 +263,33 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
       id: comercio.id,
       nombreComercio: comercio.nombreComercio,
       categoria: comercio.categoria,
-      descripcion: '',
+      descripcion: comercio.descripcion || '',
       direccion: comercio.direccion || '',
       telefono: comercio.telefono || '',
       email: comercio.email,
-      sitioWeb: '',
-      horario: '',
-      cuit: '',
+      sitioWeb: comercio.sitioWeb || '',
+      horario: comercio.horario || '',
+      cuit: comercio.cuit || '',
       logo: comercio.logoUrl,
-      banner: '',
+      banner: comercio.imagenPrincipalUrl || '',
       estado: comercio.estado,
-      visible: comercio.estado === 'activo',
+      visible: comercio.visible,
       asociacionesVinculadas: comercio.asociacionesVinculadas,
-      qrCode: '',
-      qrCodeUrl: '',
-      beneficiosActivos: 0,
-      validacionesRealizadas: 0,
-      clientesAtendidos: 0,
-      ingresosMensuales: 0,
-      rating: comercio.puntuacion,
-      configuracion: {
+      qrCode: comercio.qrCode || '',
+      qrCodeUrl: comercio.qrCodeUrl || '',
+      beneficiosActivos: comercio.beneficiosActivos,
+      validacionesRealizadas: comercio.validacionesRealizadas,
+      clientesAtendidos: comercio.clientesAtendidos,
+      ingresosMensuales: comercio.ingresosMensuales,
+      rating: comercio.rating,
+      configuracion: comercio.configuracion || {
         notificacionesEmail: true,
         notificacionesWhatsApp: false,
         autoValidacion: false,
         requiereAprobacion: true,
       },
       creadoEn: comercio.creadoEn.toDate(),
-      actualizadoEn: new Date(),
+      actualizadoEn: comercio.actualizadoEn?.toDate() || new Date(),
       metadata: {}
     };
     setSelectedComercio(comercioForEdit);
@@ -256,33 +303,33 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
       id: comercio.id,
       nombreComercio: comercio.nombreComercio,
       categoria: comercio.categoria,
-      descripcion: '',
+      descripcion: comercio.descripcion || '',
       direccion: comercio.direccion || '',
       telefono: comercio.telefono || '',
       email: comercio.email,
-      sitioWeb: '',
-      horario: '',
-      cuit: '',
+      sitioWeb: comercio.sitioWeb || '',
+      horario: comercio.horario || '',
+      cuit: comercio.cuit || '',
       logo: comercio.logoUrl,
-      banner: '',
+      banner: comercio.imagenPrincipalUrl || '',
       estado: comercio.estado,
-      visible: comercio.estado === 'activo',
+      visible: comercio.visible,
       asociacionesVinculadas: comercio.asociacionesVinculadas,
-      qrCode: '',
-      qrCodeUrl: '',
-      beneficiosActivos: 0,
-      validacionesRealizadas: 0,
-      clientesAtendidos: 0,
-      ingresosMensuales: 0,
-      rating: comercio.puntuacion,
-      configuracion: {
+      qrCode: comercio.qrCode || '',
+      qrCodeUrl: comercio.qrCodeUrl || '',
+      beneficiosActivos: comercio.beneficiosActivos,
+      validacionesRealizadas: comercio.validacionesRealizadas,
+      clientesAtendidos: comercio.clientesAtendidos,
+      ingresosMensuales: comercio.ingresosMensuales,
+      rating: comercio.rating,
+      configuracion: comercio.configuracion || {
         notificacionesEmail: true,
         notificacionesWhatsApp: false,
         autoValidacion: false,
         requiereAprobacion: true,
       },
       creadoEn: comercio.creadoEn.toDate(),
-      actualizadoEn: new Date(),
+      actualizadoEn: comercio.actualizadoEn?.toDate() || new Date(),
       metadata: {}
     };
     setSelectedComercio(comercioForValidations);
@@ -387,7 +434,12 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
   // Render pending requests view
   const renderPendingRequests = () => (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-      {solicitudesFiltradas.length === 0 ? (
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div>
+          <span className="ml-3 text-gray-600">Cargando solicitudes...</span>
+        </div>
+      ) : solicitudesFiltradas.length === 0 ? (
         <div className="text-center py-12">
           <Clock className="mx-auto h-12 w-12 text-gray-400" />
           <h3 className="mt-2 text-sm font-medium text-gray-900">
@@ -430,14 +482,18 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
                         <Mail className="w-4 h-4 mr-2" />
                         {solicitud.email}
                       </div>
-                      <div className="flex items-center text-sm text-gray-600">
-                        <Phone className="w-4 h-4 mr-2" />
-                        {solicitud.telefono}
-                      </div>
-                      <div className="flex items-center text-sm text-gray-600">
-                        <MapPin className="w-4 h-4 mr-2" />
-                        {solicitud.direccion}
-                      </div>
+                      {solicitud.telefono && (
+                        <div className="flex items-center text-sm text-gray-600">
+                          <Phone className="w-4 h-4 mr-2" />
+                          {solicitud.telefono}
+                        </div>
+                      )}
+                      {solicitud.direccion && (
+                        <div className="flex items-center text-sm text-gray-600">
+                          <MapPin className="w-4 h-4 mr-2" />
+                          {solicitud.direccion}
+                        </div>
+                      )}
                     </div>
                     <div className="space-y-2">
                       <div className="text-sm">
@@ -449,7 +505,7 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
                       <div className="text-sm">
                         <span className="font-medium text-gray-700">Fecha de solicitud:</span>
                         <span className="ml-2 text-gray-600">
-                          {solicitud.fechaSolicitud.toLocaleDateString()}
+                          {solicitud.fechaSolicitud.toDate().toLocaleDateString()}
                         </span>
                       </div>
                       <div className="text-sm">
@@ -471,14 +527,16 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
                   <div className="flex items-center space-x-3">
                     <button
                       onClick={() => handleApproveRequest(solicitud.id)}
-                      className="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-lg text-sm font-medium text-white hover:bg-green-700 transition-colors"
+                      disabled={loading}
+                      className="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-lg text-sm font-medium text-white hover:bg-green-700 transition-colors disabled:opacity-50"
                     >
                       <CheckCircle className="w-4 h-4 mr-2" />
                       Aprobar
                     </button>
                     <button
-                      onClick={() => handleRejectRequest(solicitud.id)}
-                      className="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-lg text-sm font-medium text-white hover:bg-red-700 transition-colors"
+                      onClick={() => handleRejectRequest(solicitud)}
+                      disabled={loading}
+                      className="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-lg text-sm font-medium text-white hover:bg-red-700 transition-colors disabled:opacity-50"
                     >
                       <XCircle className="w-4 h-4 mr-2" />
                       Rechazar
@@ -586,7 +644,7 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Solicitudes Pendientes</p>
-              <p className="text-2xl font-bold text-orange-600">{mockPendingRequests.length}</p>
+              <p className="text-2xl font-bold text-orange-600">{stats.solicitudesPendientes}</p>
             </div>
             <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
               <Clock className="w-6 h-6 text-orange-600" />
@@ -766,7 +824,7 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
       {currentView === 'solicitudes' ? (
         renderPendingRequests()
       ) : (
-        /* Comercios Vinculados List */
+        /* Comercios Vinculados List - Same as before but using real data */
         <div className="bg-white rounded-xl shadow-sm border border-gray-200">
           {loading ? (
             <div className="flex items-center justify-center py-12">
@@ -991,7 +1049,7 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
               </div>
             </div>
           ) : (
-            /* List View */
+            /* List View - Same structure but using real data */
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
@@ -1118,8 +1176,7 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
                           >
                             <QrCode size={16} />
                           </button>
-                          
-                          <button
+                                                    <button
                             onClick={() => handleEdit(comercio)}
                             className="text-blue-600 hover:text-blue-900"
                             title="Editar"
@@ -1219,6 +1276,18 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
         )}
       />
 
+      {/* Rejection Modal */}
+      <RejectionModal
+        isOpen={rejectionModalOpen}
+        onClose={() => {
+          setRejectionModalOpen(false);
+          setSelectedSolicitud(null);
+        }}
+        onConfirm={handleConfirmRejection}
+        solicitudNombre={selectedSolicitud?.nombreComercio || ''}
+        loading={loading}
+      />
+
       {/* Unlink Confirmation Dialog */}
       {comercioToUnlink && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
@@ -1313,3 +1382,4 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
     </div>
   );
 };
+

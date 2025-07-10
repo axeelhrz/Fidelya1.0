@@ -3,6 +3,8 @@ import {
   doc,
   getDoc,
   getDocs,
+  addDoc,
+  updateDoc,
   query,
   where,
   orderBy,
@@ -10,6 +12,8 @@ import {
   serverTimestamp,
   writeBatch,
   Timestamp,
+  onSnapshot,
+  deleteDoc,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/constants';
@@ -65,18 +69,28 @@ export interface ComercioDisponible {
 
 export interface SolicitudAdhesion {
   id: string;
-  comercioId: string;
   asociacionId: string;
+  nombreComercio: string;
+  nombre: string;
+  email: string;
+  telefono?: string;
+  categoria: string;
+  direccion?: string;
+  mensaje: string;
+  documentos: string[];
   estado: 'pendiente' | 'aprobada' | 'rechazada';
   fechaSolicitud: Timestamp;
   fechaRespuesta?: Timestamp;
-  motivo?: string;
-  comercioData: {
-    nombreComercio: string;
-    categoria: string;
-    email: string;
-    telefono?: string;
+  motivoRechazo?: string;
+  comercioData?: {
+    cuit?: string;
+    sitioWeb?: string;
+    horario?: string;
+    descripcion?: string;
+    logoUrl?: string;
   };
+  creadoEn: Timestamp;
+  actualizadoEn?: Timestamp;
 }
 
 export interface AdhesionStats {
@@ -168,6 +182,169 @@ class AdhesionService {
     } catch (error) {
       handleError(error, 'Get Comercios Vinculados');
       return [];
+    }
+  }
+
+  /**
+   * Obtener solicitudes de adhesión pendientes
+   */
+  async getSolicitudesPendientes(asociacionId: string): Promise<SolicitudAdhesion[]> {
+    try {
+      const q = query(
+        collection(db, this.solicitudesCollection),
+        where('asociacionId', '==', asociacionId),
+        where('estado', '==', 'pendiente'),
+        orderBy('fechaSolicitud', 'desc')
+      );
+
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as SolicitudAdhesion[];
+    } catch (error) {
+      handleError(error, 'Get Solicitudes Pendientes');
+      return [];
+    }
+  }
+
+  /**
+   * Crear nueva solicitud de adhesión
+   */
+  async crearSolicitudAdhesion(solicitudData: Omit<SolicitudAdhesion, 'id' | 'creadoEn' | 'actualizadoEn'>): Promise<string | null> {
+    try {
+      const docRef = await addDoc(collection(db, this.solicitudesCollection), {
+        ...solicitudData,
+        creadoEn: serverTimestamp(),
+        actualizadoEn: serverTimestamp(),
+      });
+
+      console.log('✅ Solicitud de adhesión creada exitosamente');
+      return docRef.id;
+    } catch (error) {
+      handleError(error, 'Crear Solicitud Adhesion');
+      return null;
+    }
+  }
+
+  /**
+   * Aprobar solicitud de adhesión
+   */
+  async aprobarSolicitud(solicitudId: string): Promise<boolean> {
+    try {
+      const solicitudRef = doc(db, this.solicitudesCollection, solicitudId);
+      const solicitudDoc = await getDoc(solicitudRef);
+
+      if (!solicitudDoc.exists()) {
+        throw new Error('Solicitud no encontrada');
+      }
+
+      const solicitudData = solicitudDoc.data() as SolicitudAdhesion;
+
+      // Crear el comercio en la colección de comercios
+      const comercioData: Omit<ComercioDisponible, 'id'> = {
+        nombreComercio: solicitudData.nombreComercio,
+        nombre: solicitudData.nombre,
+        email: solicitudData.email,
+        telefono: solicitudData.telefono,
+        categoria: solicitudData.categoria,
+        direccion: solicitudData.direccion,
+        descripcion: solicitudData.comercioData?.descripcion || '',
+        sitioWeb: solicitudData.comercioData?.sitioWeb || '',
+        horario: solicitudData.comercioData?.horario || '',
+        logoUrl: solicitudData.comercioData?.logoUrl || '',
+        cuit: solicitudData.comercioData?.cuit || '',
+        estado: 'activo',
+        asociacionesVinculadas: [solicitudData.asociacionId],
+        creadoEn: serverTimestamp() as Timestamp,
+        actualizadoEn: serverTimestamp() as Timestamp,
+        verificado: false,
+        puntuacion: 0,
+        totalReviews: 0,
+        beneficiosActivos: 0,
+        validacionesRealizadas: 0,
+        clientesAtendidos: 0,
+        ingresosMensuales: 0,
+        rating: 0,
+        visible: true,
+        configuracion: {
+          notificacionesEmail: true,
+          notificacionesWhatsApp: false,
+          autoValidacion: false,
+          requiereAprobacion: true,
+        }
+      };
+
+      const batch = writeBatch(db);
+
+      // Crear comercio
+      const comercioRef = doc(collection(db, this.comerciosCollection));
+      batch.set(comercioRef, comercioData);
+
+      // Actualizar solicitud
+      batch.update(solicitudRef, {
+        estado: 'aprobada',
+        fechaRespuesta: serverTimestamp(),
+        actualizadoEn: serverTimestamp(),
+      });
+
+      // Actualizar estadísticas de la asociación
+      const asociacionRef = doc(db, this.asociacionesCollection, solicitudData.asociacionId);
+      const asociacionDoc = await getDoc(asociacionRef);
+
+      if (asociacionDoc.exists()) {
+        const asociacionData = asociacionDoc.data();
+        const comerciosVinculados = (asociacionData.comerciosVinculados || 0) + 1;
+
+        batch.update(asociacionRef, {
+          comerciosVinculados,
+          actualizadoEn: serverTimestamp(),
+        });
+      }
+
+      await batch.commit();
+
+      console.log('✅ Solicitud aprobada y comercio creado exitosamente');
+      return true;
+    } catch (error) {
+      handleError(error, 'Aprobar Solicitud');
+      return false;
+    }
+  }
+
+  /**
+   * Rechazar solicitud de adhesión
+   */
+  async rechazarSolicitud(solicitudId: string, motivoRechazo: string): Promise<boolean> {
+    try {
+      const solicitudRef = doc(db, this.solicitudesCollection, solicitudId);
+      
+      await updateDoc(solicitudRef, {
+        estado: 'rechazada',
+        fechaRespuesta: serverTimestamp(),
+        motivoRechazo,
+        actualizadoEn: serverTimestamp(),
+      });
+
+      console.log('✅ Solicitud rechazada exitosamente');
+      return true;
+    } catch (error) {
+      handleError(error, 'Rechazar Solicitud');
+      return false;
+    }
+  }
+
+  /**
+   * Eliminar solicitud de adhesión
+   */
+  async eliminarSolicitud(solicitudId: string): Promise<boolean> {
+    try {
+      await deleteDoc(doc(db, this.solicitudesCollection, solicitudId));
+      console.log('✅ Solicitud eliminada exitosamente');
+      return true;
+    } catch (error) {
+      handleError(error, 'Eliminar Solicitud');
+      return false;
     }
   }
 
@@ -280,12 +457,15 @@ class AdhesionService {
    */
   async getAdhesionStats(asociacionId: string): Promise<AdhesionStats> {
     try {
-      const comerciosVinculados = await this.getComerciossVinculados(asociacionId);
+      const [comerciosVinculados, solicitudesPendientes] = await Promise.all([
+        this.getComerciossVinculados(asociacionId),
+        this.getSolicitudesPendientes(asociacionId)
+      ]);
       
       const stats: AdhesionStats = {
         totalComercios: comerciosVinculados.length,
         comerciosActivos: comerciosVinculados.filter(c => c.estado === 'activo').length,
-        solicitudesPendientes: 0,
+        solicitudesPendientes: solicitudesPendientes.length,
         adhesionesEsteMes: 0,
         categorias: {},
         valiacionesHoy: 0,
@@ -395,6 +575,59 @@ class AdhesionService {
       handleError(error, 'Validar Vinculacion');
       return { valido: false, motivo: 'Error al validar la vinculación' };
     }
+  }
+
+  /**
+   * Listener en tiempo real para solicitudes pendientes
+   */
+  onSolicitudesPendientesChange(
+    asociacionId: string,
+    callback: (solicitudes: SolicitudAdhesion[]) => void
+  ): () => void {
+    const q = query(
+      collection(db, this.solicitudesCollection),
+      where('asociacionId', '==', asociacionId),
+      where('estado', '==', 'pendiente'),
+      orderBy('fechaSolicitud', 'desc')
+    );
+
+    return onSnapshot(q, (snapshot) => {
+      const solicitudes = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as SolicitudAdhesion[];
+      
+      callback(solicitudes);
+    }, (error) => {
+      handleError(error, 'Solicitudes Pendientes Listener');
+      callback([]);
+    });
+  }
+
+  /**
+   * Listener en tiempo real para comercios vinculados
+   */
+  onComerciosVinculadosChange(
+    asociacionId: string,
+    callback: (comercios: ComercioDisponible[]) => void
+  ): () => void {
+    const q = query(
+      collection(db, this.comerciosCollection),
+      where('asociacionesVinculadas', 'array-contains', asociacionId),
+      orderBy('nombreComercio', 'asc')
+    );
+
+    return onSnapshot(q, (snapshot) => {
+      const comercios = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as ComercioDisponible[];
+      
+      callback(comercios);
+    }, (error) => {
+      handleError(error, 'Comercios Vinculados Listener');
+      callback([]);
+    });
   }
 }
 

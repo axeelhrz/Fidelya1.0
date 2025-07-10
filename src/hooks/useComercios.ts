@@ -1,7 +1,12 @@
 import { useState, useCallback, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { useAuth } from './useAuth';
-import { adhesionService, ComercioDisponible, AdhesionStats } from '@/services/adhesion.service';
+import { 
+  adhesionService, 
+  ComercioDisponible, 
+  AdhesionStats, 
+  SolicitudAdhesion 
+} from '@/services/adhesion.service';
 import { comercioService, ComercioFormData, ValidationData } from '@/services/comercio.service';
 import type { QueryDocumentSnapshot, DocumentData } from 'firebase/firestore';
 
@@ -9,12 +14,18 @@ export const useComercios = () => {
   const { user } = useAuth();
   const [comerciosVinculados, setComerciossVinculados] = useState<ComercioDisponible[]>([]);
   const [comerciosDisponibles, setComerciossDisponibles] = useState<ComercioDisponible[]>([]);
+  const [solicitudesPendientes, setSolicitudesPendientes] = useState<SolicitudAdhesion[]>([]);
   const [stats, setStats] = useState<AdhesionStats>({
     totalComercios: 0,
     comerciosActivos: 0,
     solicitudesPendientes: 0,
     adhesionesEsteMes: 0,
-    categorias: {}
+    categorias: {},
+    valiacionesHoy: 0,
+    validacionesMes: 0,
+    clientesUnicos: 0,
+    beneficiosActivos: 0,
+    validacionesHoy: 0
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
@@ -42,6 +53,20 @@ export const useComercios = () => {
       toast.error(errorMessage);
     } finally {
       setLoading(false);
+    }
+  }, [asociacionId]);
+
+  // Load solicitudes pendientes
+  const loadSolicitudesPendientes = useCallback(async () => {
+    if (!asociacionId) return;
+
+    try {
+      const solicitudes = await adhesionService.getSolicitudesPendientes(asociacionId);
+      setSolicitudesPendientes(solicitudes);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Error al cargar solicitudes';
+      setError(errorMessage);
+      toast.error(errorMessage);
     }
   }, [asociacionId]);
 
@@ -147,6 +172,64 @@ export const useComercios = () => {
     }
   }, [loadComercios]);
 
+  // Approve solicitud
+  const aprobarSolicitud = useCallback(async (solicitudId: string): Promise<boolean> => {
+    if (!asociacionId) {
+      toast.error('No se pudo identificar la asociación');
+      return false;
+    }
+
+    setLoading(true);
+    try {
+      const success = await adhesionService.aprobarSolicitud(solicitudId);
+      
+      if (success) {
+        toast.success('Solicitud aprobada exitosamente');
+        await Promise.all([loadComercios(), loadSolicitudesPendientes()]);
+        return true;
+      } else {
+        toast.error('Error al aprobar la solicitud');
+        return false;
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Error al aprobar solicitud';
+      setError(errorMessage);
+      toast.error(errorMessage);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [asociacionId, loadComercios, loadSolicitudesPendientes]);
+
+  // Reject solicitud
+  const rechazarSolicitud = useCallback(async (solicitudId: string, motivo: string): Promise<boolean> => {
+    if (!asociacionId) {
+      toast.error('No se pudo identificar la asociación');
+      return false;
+    }
+
+    setLoading(true);
+    try {
+      const success = await adhesionService.rechazarSolicitud(solicitudId, motivo);
+      
+      if (success) {
+        toast.success('Solicitud rechazada');
+        await loadSolicitudesPendientes();
+        return true;
+      } else {
+        toast.error('Error al rechazar la solicitud');
+        return false;
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Error al rechazar solicitud';
+      setError(errorMessage);
+      toast.error(errorMessage);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [asociacionId, loadSolicitudesPendientes]);
+
   // Search comercios
   const buscarComercios = useCallback(async (termino: string): Promise<ComercioDisponible[]> => {
     if (!asociacionId) return [];
@@ -173,9 +256,9 @@ export const useComercios = () => {
     setLoading(true);
     try {
       // Validate before linking
-      const canLink = await adhesionService.validarVinculacion(comercioId, asociacionId);
-      if (!canLink) {
-        toast.error('No se puede vincular este comercio');
+      const validation = await adhesionService.validarVinculacion(comercioId, asociacionId);
+      if (!validation.valido) {
+        toast.error(validation.motivo || 'No se puede vincular este comercio');
         return false;
       }
 
@@ -270,6 +353,7 @@ export const useComercios = () => {
       setLoading(false);
     }
   }, []);
+
   // Generate batch QR codes
   const generateBatchQRCodes = useCallback(async (comercioIds: string[]): Promise<Array<{
     comercioId: string;
@@ -350,17 +434,46 @@ export const useComercios = () => {
     setError('');
   }, []);
 
-  // Load initial data
+  // Set up real-time listeners
   useEffect(() => {
-    if (asociacionId) {
-      loadComercios();
-    }
-  }, [asociacionId, loadComercios]);
+    if (!asociacionId) return;
+
+    const unsubscribers: (() => void)[] = [];
+
+    // Listen to comercios vinculados changes
+    const unsubscribeComercios = adhesionService.onComerciosVinculadosChange(
+      asociacionId,
+      (comercios) => {
+        setComerciossVinculados(comercios);
+      }
+    );
+    unsubscribers.push(unsubscribeComercios);
+
+    // Listen to solicitudes pendientes changes
+    const unsubscribeSolicitudes = adhesionService.onSolicitudesPendientesChange(
+      asociacionId,
+      (solicitudes) => {
+        setSolicitudesPendientes(solicitudes);
+        // Update stats when solicitudes change
+        refreshStats();
+      }
+    );
+    unsubscribers.push(unsubscribeSolicitudes);
+
+    // Load initial data
+    loadComercios();
+    loadSolicitudesPendientes();
+
+    return () => {
+      unsubscribers.forEach(unsubscribe => unsubscribe());
+    };
+  }, [asociacionId, loadComercios, loadSolicitudesPendientes, refreshStats]);
 
   return {
     // Data
     comerciosVinculados,
     comerciosDisponibles,
+    solicitudesPendientes,
     stats,
     loading,
     error,
@@ -371,8 +484,13 @@ export const useComercios = () => {
     deleteComercio,
     changeComercioStatus,
     
+    // Solicitudes Actions
+    aprobarSolicitud,
+    rechazarSolicitud,
+    
     // Association Actions
     loadComercios,
+    loadSolicitudesPendientes,
     buscarComercios,
     vincularComercio,
     desvincularComercio,
@@ -391,4 +509,3 @@ export const useComercios = () => {
     clearError
   };
 };
-
