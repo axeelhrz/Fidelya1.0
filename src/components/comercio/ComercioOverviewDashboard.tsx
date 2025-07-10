@@ -5,7 +5,6 @@ import {
   TrendingUp,
   TrendingDown,
   Users,
-  DollarSign,
   CheckCircle,
   AlertCircle,
   RefreshCw,
@@ -35,8 +34,7 @@ import { db } from '@/lib/firebase';
 import { useAuth } from '@/hooks/useAuth';
 import { useComercio } from '@/hooks/useComercio';
 import { useBeneficios } from '@/hooks/useBeneficios';
-import { useValidaciones } from '@/hooks/useValidaciones';
-import { format, subDays } from 'date-fns';
+import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import Image from 'next/image';
 
@@ -259,7 +257,11 @@ const ActivityTimeline: React.FC<{
 const ComercioStatusCard: React.FC<{
   health: ComercioHealth;
   loading: boolean;
-  comercio: any;
+  comercio: {
+    qrCode?: string;
+    nombreComercio?: string;
+    // Add other properties as needed
+  };
   onGenerateQR?: () => void;
 }> = ({ health, loading, comercio, onGenerateQR }) => {
   const getStatusColor = (status: string) => {
@@ -466,7 +468,7 @@ const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps> = ({
 }) => {
   const { user } = useAuth();
   const { comercio, stats, loading: comercioLoading, generateQRCode } = useComercio();
-  const { stats: beneficiosStats, loading: beneficiosLoading } = useBeneficios();
+  const { stats: beneficiosStats } = useBeneficios();
   
   const [activities, setActivities] = useState<ActivityLog[]>([]);
   const [loading, setLoading] = useState(true);
@@ -669,7 +671,7 @@ const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps> = ({
           <ComercioStatusCard
             health={comercioHealth}
             loading={comercioLoading}
-            comercio={comercio}
+            comercio={comercio ?? {}}
             onGenerateQR={handleGenerateQR}
           />
         </div>

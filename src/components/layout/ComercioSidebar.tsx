@@ -20,7 +20,6 @@ import {
   UserCheck,
   Plus,
   Download,
-  Upload,
   Palette,
   Shield,
   LogOut,
