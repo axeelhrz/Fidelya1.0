@@ -20,14 +20,11 @@ import {
 import toast from 'react-hot-toast';
 
 export default function ComercioNotificacionesPage() {
-  const { user, signOut } = useAuth();
+  const { signOut } = useAuth();
   const { 
-    notifications, 
     stats, 
     loading, 
-    markAsRead, 
     markAllAsRead,
-    deleteNotification,
     setFilters,
     refreshStats
   } = useNotifications();
@@ -78,24 +75,28 @@ export default function ComercioNotificacionesPage() {
 
   // Update filters when filter or type changes
   useEffect(() => {
-    const newFilters: any = {};
-    
-    if (filter !== 'all') {
-      newFilters.status = [filter];
-    }
-    
-    if (type !== 'all') {
-      // Map the type to the notification category
-      const categoryMap: Record<string, string> = {
-        'validacion': 'membership',
-        'beneficio': 'general',
-        'sistema': 'system'
-      };
-      newFilters.category = [categoryMap[type] || type];
-    }
-    
-    setFilters(newFilters);
-  }, [filter, type, setFilters]);
+      // Import or define NotificationStatus and NotificationCategory types if not already imported
+      type NotificationStatus = 'unread' | 'read';
+      type NotificationCategory = 'membership' | 'general' | 'system';
+  
+      const newFilters: { status?: NotificationStatus[]; category?: NotificationCategory[] } = {};
+      
+      if (filter !== 'all') {
+        newFilters.status = [filter as NotificationStatus];
+      }
+      
+      if (type !== 'all') {
+        // Map the type to the notification category
+        const categoryMap: Record<string, NotificationCategory> = {
+          'validacion': 'membership',
+          'beneficio': 'general',
+          'sistema': 'system'
+        };
+        newFilters.category = [categoryMap[type as keyof typeof categoryMap]];
+      }
+      
+      setFilters(newFilters);
+    }, [filter, type, setFilters]);
 
   if (loading) {
     return (
@@ -273,16 +274,8 @@ export default function ComercioNotificacionesPage() {
           </div>
         </div>
 
-        {/* Notifications List */}
-        <ComercioNotifications
-          notifications={notifications}
-          loading={loading}
-          onMarkAsRead={markAsRead}
-          onDelete={deleteNotification}
-          onRefresh={handleRefresh}
-          filter={filter}
-          type={type}
-        />
+        {/* Notifications List - Fixed: No props needed */}
+        <ComercioNotifications />
       </motion.div>
     </DashboardLayout>
   );
