@@ -623,8 +623,8 @@ export const SocioOverviewDashboard: React.FC<SocioOverviewDashboardProps> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Calculate metrics from real data
-  const calculateMetrics = useCallback(() => {
+  // Memoize the calculation function to prevent recreating it on every render
+  const calculateMetrics = useMemo(() => {
     if (!user || beneficiosLoading || socioLoading) {
       return null;
     }
@@ -768,18 +768,16 @@ export const SocioOverviewDashboard: React.FC<SocioOverviewDashboardProps> = ({
     }
   }, [user, beneficios, beneficiosUsados, beneficiosLoading, socioLoading, stats, socio, asociaciones, activity]);
 
-  // Calculate metrics with proper dependencies
+  // Simplified useEffect with stable dependencies
   useEffect(() => {
-    const metrics = calculateMetrics();
-    
-    if (metrics) {
-      setSocioMetrics(metrics);
+    if (calculateMetrics) {
+      setSocioMetrics(calculateMetrics);
       setLoading(false);
       setError(null);
-    } else if (!beneficiosLoading && !socioLoading) {
+    } else if (!beneficiosLoading && !socioLoading && user) {
       setLoading(false);
     }
-  }, [calculateMetrics, beneficiosLoading, socioLoading]);
+  }, [calculateMetrics, beneficiosLoading, socioLoading, user]);
 
   const kpiMetrics = useMemo(() => [
     {
