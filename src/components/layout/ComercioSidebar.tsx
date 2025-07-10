@@ -20,14 +20,12 @@ import {
   AlertCircle,
   Activity,
   Scan,
-  Building2,
   BarChart3,
-  Settings,
   Bell
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useComercio } from '@/hooks/useComercio';
-import { collection, query, where, onSnapshot, orderBy, limit, Timestamp } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, orderBy, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 interface ComercioSidebarProps {
@@ -131,12 +129,6 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
           label: 'Datos del Comercio', 
           icon: Store,
           route: '/dashboard/comercio/perfil'
-        },
-        { 
-          id: 'perfil-configuracion', 
-          label: 'Configuración', 
-          icon: Settings,
-          route: '/dashboard/comercio/configuracion'
         }
       ]
     },
@@ -275,7 +267,24 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
     }
   ];
 
-  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set(['qr']));
+  // Auto-expand menu items that have active sub-items
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
+
+  // Update expanded items based on current route
+  useEffect(() => {
+    const newExpanded = new Set<string>();
+    
+    menuItems.forEach(item => {
+      if (item.submenu) {
+        const hasActiveSubItem = item.submenu.some(subItem => isSubmenuItemActive(subItem));
+        if (hasActiveSubItem || isActive(item.id)) {
+          newExpanded.add(item.id);
+        }
+      }
+    });
+    
+    setExpandedItems(newExpanded);
+  }, [pathname, searchParams]);
 
   // Real-time Firebase listeners
   useEffect(() => {
@@ -505,8 +514,15 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
       }
     }
 
-    if (currentPath === '/dashboard/comercio/configuracion') {
-      if (subItem.id === 'perfil-configuracion') {
+    // Check if we're on the QR pages
+    if (currentPath === '/dashboard/comercio/qr/generar') {
+      if (subItem.id === 'qr-generar') {
+        return true;
+      }
+    }
+
+    if (currentPath === '/dashboard/comercio/qr/estadisticas') {
+      if (subItem.id === 'qr-estadisticas') {
         return true;
       }
     }
