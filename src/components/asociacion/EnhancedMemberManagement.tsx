@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Users,
@@ -31,9 +31,13 @@ import { SocioFormData, Socio } from '@/types/socio';
 
 interface EnhancedMemberManagementProps {
   onNavigate?: (section: string) => void;
+  initialFilter?: string | null;
 }
 
-export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> = ({ onNavigate }) => {
+export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> = ({ 
+  onNavigate, 
+  initialFilter 
+}) => {
   // Ensure socios are typed as '@/types/socio' Socio
   const { socios: rawSocios, stats, loading, createSocio, updateSocio, deleteSocio, updateMembershipStatus } = useSocios();
   // Map socios to ensure they have uid and asociacion (add defaults if missing)
@@ -42,6 +46,7 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
     uid: socio.uid ?? '',
     asociacion: socio.asociacion ?? '',
   }));
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedEstado, setSelectedEstado] = useState('');
   const [selectedEstadoMembresia, setSelectedEstadoMembresia] = useState('');
@@ -52,6 +57,26 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedSocio, setSelectedSocio] = useState<Socio | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+
+  // Apply initial filter from URL parameters
+  useEffect(() => {
+    if (initialFilter) {
+      switch (initialFilter) {
+        case 'activos':
+          setSelectedEstado('activo');
+          setSelectedEstadoMembresia('');
+          break;
+        case 'vencidos':
+          setSelectedEstado('');
+          setSelectedEstadoMembresia('vencido');
+          break;
+        default:
+          setSelectedEstado('');
+          setSelectedEstadoMembresia('');
+          break;
+      }
+    }
+  }, [initialFilter]);
 
   // Filtrar socios
   const sociosFiltrados = socios.filter(socio => {
@@ -66,6 +91,18 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
     
     return matchesSearch && matchesEstado && matchesEstadoMembresia;
   });
+
+  // Get filtered title based on current filters
+  const getFilteredTitle = () => {
+    if (selectedEstado === 'activo' && !selectedEstadoMembresia) {
+      return 'Socios Activos';
+    } else if (selectedEstadoMembresia === 'vencido' && !selectedEstado) {
+      return 'Socios Vencidos';
+    } else if (selectedEstado || selectedEstadoMembresia || searchTerm) {
+      return 'Socios Filtrados';
+    }
+    return 'Lista de Socios';
+  };
 
   const handleCreateSocio = async (data: SocioFormData) => {
     try {
@@ -207,10 +244,20 @@ export const EnhancedMemberManagement: React.FC<EnhancedMemberManagementProps> =
       {/* Header con navegación rápida */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Gestión de Socios</h1>
+          <h1 className="text-3xl font-bold text-gray-900">{getFilteredTitle()}</h1>
           <p className="text-gray-600 mt-2">
-            Administra los miembros de tu asociación
+            {initialFilter === 'activos' 
+              ? 'Miembros con estado activo en la asociación'
+              : initialFilter === 'vencidos'
+              ? 'Miembros con membresía vencida que requieren atención'
+              : 'Administra los miembros de tu asociación'
+            }
           </p>
+          {sociosFiltrados.length !== socios.length && (
+            <p className="text-sm text-blue-600 mt-1">
+              Mostrando {sociosFiltrados.length} de {socios.length} socios
+            </p>
+          )}
         </div>
         
         <div className="flex items-center space-x-3">

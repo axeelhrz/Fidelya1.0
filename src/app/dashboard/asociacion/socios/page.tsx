@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { AsociacionSidebar } from '@/components/layout/AsociacionSidebar';
@@ -34,12 +34,16 @@ const AsociacionSidebarWithLogout: React.FC<{
 
 export default function AsociacionSociosPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, loading: authLoading, signOut } = useAuth();
   
   // State management
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+
+  // Get filter from URL parameters
+  const filter = searchParams.get('filter');
 
   // Trigger visibility for staggered animations
   useEffect(() => {
@@ -97,7 +101,30 @@ export default function AsociacionSociosPage() {
     }
   };
 
-  // Loading state
+  // Get page title based on filter
+  const getPageTitle = () => {
+    switch (filter) {
+      case 'activos':
+        return 'Socios Activos';
+      case 'vencidos':
+        return 'Socios Vencidos';
+      default:
+        return 'Gestión de Socios';
+    }
+  };
+
+  // Get page description based on filter
+  const getPageDescription = () => {
+    switch (filter) {
+      case 'activos':
+        return 'Miembros con membresía vigente';
+      case 'vencidos':
+        return 'Miembros con membresía vencida que requieren atención';
+      default:
+        return 'Administra y supervisa tu comunidad de miembros';
+    }
+  };
+
   // Loading state
   if (authLoading) {
     return (
@@ -112,7 +139,7 @@ export default function AsociacionSociosPage() {
               <div className="w-16 h-16 border-4 border-sky-200 border-t-sky-500 rounded-full animate-spin mx-auto" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">
-              Cargando Gestión de Socios
+              Cargando {getPageTitle()}
             </h2>
             <p className="text-gray-600">
               Preparando el panel de administración...
@@ -122,6 +149,7 @@ export default function AsociacionSociosPage() {
       </div>
     );
   }
+
   return (
     <>
       <DashboardLayout 
@@ -164,10 +192,10 @@ export default function AsociacionSociosPage() {
                 
                 <div className="text-left">
                   <h1 className="text-5xl md:text-6xl font-bold gradient-text font-playfair tracking-tight leading-none py-2">
-                    Gestión de Socios
+                    {getPageTitle()}
                   </h1>
                   <p className="text-xl text-slate-600 font-jakarta mt-2">
-                    Administra y supervisa tu comunidad de miembros
+                    {getPageDescription()}
                   </p>
                 </div>
               </div>
@@ -179,7 +207,7 @@ export default function AsociacionSociosPage() {
               animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : 30 }}
               transition={{ duration: 0.8, delay: 0.5 }}
             >
-              <EnhancedMemberManagement onNavigate={handleNavigate} />
+              <EnhancedMemberManagement onNavigate={handleNavigate} initialFilter={filter} />
             </motion.div>
           </div>
         </div>
