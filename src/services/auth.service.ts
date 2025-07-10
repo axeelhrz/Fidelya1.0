@@ -363,9 +363,11 @@ class AuthService {
   }
 
   /**
-   * Resend email verification with enhanced error handling
+   * Resend email verification with enhanced error handling and temporary authentication
    */
-  async resendEmailVerification(email: string): Promise<AuthResponse> {
+  async resendEmailVerification(email: string, password?: string): Promise<AuthResponse> {
+    let tempUserCredential: UserCredential | null = null;
+    
     try {
       console.log('🔐 Attempting to resend email verification for:', email);
 
@@ -383,37 +385,82 @@ class AuthService {
         };
       }
 
-      // Try to get the current user or sign them in temporarily
-      let targetUser: User | null = null;
-
-      if (auth.currentUser && auth.currentUser.email === email.trim().toLowerCase()) {
-        targetUser = auth.currentUser;
-      } else {
-        // We can't resend verification without the user being signed in
-        // This is a Firebase limitation for security reasons
-        return {
-          success: false,
-          error: 'Para reenviar la verificación, primero debes intentar iniciar sesión'
-        };
-      }
-
-      if (targetUser.emailVerified) {
+      const userData = userSnapshot.docs[0].data();
+      
+      // Check if email is already verified
+      if (userData.estado === USER_STATES.ACTIVO) {
         return {
           success: false,
           error: 'El email ya está verificado'
         };
       }
 
+      // Try to get the current user first
+      let targetUser: User | null = auth.currentUser;
+
+      // If no current user or different email, try to authenticate temporarily
+      if (!targetUser || targetUser.email !== email.trim().toLowerCase()) {
+        if (!password) {
+          return {
+            success: false,
+            error: 'Para reenviar la verificación, necesitas proporcionar tu contraseña'
+          };
+        }
+
+        try {
+          // Temporarily sign in the user to send verification
+          tempUserCredential = await signInWithEmailAndPassword(
+            auth,
+            email.trim().toLowerCase(),
+            password
+          );
+          targetUser = tempUserCredential.user;
+        } catch (signInError) {
+          return {
+            success: false,
+            error: 'Credenciales incorrectas. Verifica tu email y contraseña.'
+          };
+        }
+      }
+
+      // Check if email is already verified
+      if (targetUser.emailVerified) {
+        // If we signed in temporarily, sign out
+        if (tempUserCredential) {
+          await this.signOut();
+        }
+        return {
+          success: false,
+          error: 'El email ya está verificado'
+        };
+      }
+
+      // Send verification email
       await this.sendEmailVerificationWithRetry(targetUser);
+
+      // If we signed in temporarily, sign out
+      if (tempUserCredential) {
+        await this.signOut();
+      }
 
       return {
         success: true,
       };
     } catch (error) {
       console.error('🔐 Resend email verification error:', error);
+      
+      // If we signed in temporarily, make sure to sign out
+      if (tempUserCredential) {
+        try {
+          await this.signOut();
+        } catch (signOutError) {
+          console.error('🔐 Error signing out after failed verification resend:', signOutError);
+        }
+      }
+      
       return {
         success: false,
-        error: 'No se pudo reenviar el email de verificación. Intenta iniciar sesión primero.'
+        error: handleError(error, 'Resend Email Verification', false).message
       };
     }
   }

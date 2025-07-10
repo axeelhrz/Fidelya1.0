@@ -24,7 +24,7 @@ interface AuthContextType {
   signUp: (data: SignUpData & { nombre: string; role: string }) => Promise<AuthResponse>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<AuthResponse>;
-  resendEmailVerification: (email: string) => Promise<AuthResponse>;
+  resendEmailVerification: (email: string, password?: string) => Promise<AuthResponse>;
   updateProfile: (data: Partial<UserData>) => Promise<AuthResponse>;
   clearError: () => void;
   refreshUser: () => Promise<void>;
@@ -192,11 +192,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  // Resend email verification
-  const resendEmailVerification = async (email: string): Promise<AuthResponse> => {
+  // Resend email verification with password support
+  const resendEmailVerification = async (email: string, password?: string): Promise<AuthResponse> => {
     try {
       setError(null);
-      const response = await authService.resendEmailVerification(email);
+      const response = await authService.resendEmailVerification(email, password);
       
       if (!response.success) {
         setError(response.error || 'Error al reenviar email de verificación');
@@ -321,16 +321,16 @@ export function useRequireRole(allowedRoles: string[], redirectTo = '/') {
   return { user, loading, hasAccess: user && allowedRoles.includes(user.role) };
 }
 
-// Hook for email verification check
+// Hook for email verification check with password support
 export function useEmailVerification() {
   const { firebaseUser, isEmailVerified, resendEmailVerification } = useAuth();
   
   return {
     isEmailVerified,
     email: firebaseUser?.email || '',
-    resendVerification: () => {
+    resendVerification: (password?: string) => {
       if (firebaseUser?.email) {
-        return resendEmailVerification(firebaseUser.email);
+        return resendEmailVerification(firebaseUser.email, password);
       }
       return Promise.resolve({ success: false, error: 'No email found' });
     }
