@@ -14,7 +14,8 @@ import {
   Gift, 
   User,
   History,
-  Sparkles
+  Star,
+  TrendingUp
 } from 'lucide-react';
 
 // Simplified Quick Actions Component following Asociacion/Comercio style
@@ -44,20 +45,12 @@ const QuickActions: React.FC<{
       icon: <User size={20} />,
       color: 'bg-blue-500 hover:bg-blue-600',
       onClick: () => onNavigate('perfil'),
-      description: 'Editar datos'
-    },
-    {
-      id: 'history',
-      label: 'Mi Historial',
-      icon: <History size={20} />,
-      color: 'bg-amber-500 hover:bg-amber-600',
-      onClick: () => onNavigate('historial'),
-      description: 'Ver usos'
+      description: 'Gestionar datos'
     }
   ];
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
       {quickActions.map((action) => (
         <button
           key={action.id}
