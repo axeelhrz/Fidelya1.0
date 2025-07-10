@@ -25,7 +25,6 @@ import {
 } from '@mui/material';
 import {
   Store,
-  Person,
   Email,
   Phone,
   LocationOn,
@@ -43,7 +42,29 @@ import {
 } from '@mui/icons-material';
 import { useForm, Controller } from 'react-hook-form';
 import { useComercio } from '@/hooks/useComercio';
-import { ComercioProfileFormData } from '@/lib/validations/comercio';
+// TODO: Replace 'ComercioProfileFormData' with the correct type from '@/lib/validations/comercio' if it exists.
+// If it does not exist, define it locally as shown below or import the correct one.
+type ComercioProfileFormData = {
+  nombre: string;
+  nombreComercio: string;
+  email: string;
+  categoria: string;
+  direccion: string;
+  telefono: string;
+  horario: string;
+  descripcion: string;
+  sitioWeb: string;
+  razonSocial: string;
+  cuit: string;
+  ubicacion: string;
+  emailContacto: string;
+  visible: boolean;
+  redesSociales: {
+    facebook: string;
+    instagram: string;
+    twitter: string;
+  };
+};
 import { CATEGORIAS_COMERCIO } from '@/types/comercio';
 
 export const ProfileForm: React.FC = () => {
@@ -94,7 +115,7 @@ export const ProfileForm: React.FC = () => {
   useEffect(() => {
     if (comercio) {
       const formData = {
-        nombre: comercio.nombre || '',
+        nombre: comercio.nombreComercio || '', // Use nombreComercio as the responsible person name
         nombreComercio: comercio.nombreComercio || '',
         email: comercio.email || '',
         categoria: comercio.categoria || '',
@@ -103,15 +124,15 @@ export const ProfileForm: React.FC = () => {
         horario: comercio.horario || '',
         descripcion: comercio.descripcion || '',
         sitioWeb: comercio.sitioWeb || '',
-        razonSocial: comercio.razonSocial || comercio.nombreComercio || '',
+        razonSocial: comercio.nombreComercio || '', // Use nombreComercio as default for razonSocial
         cuit: comercio.cuit || '',
-        ubicacion: comercio.ubicacion || comercio.direccion || '',
-        emailContacto: comercio.emailContacto || comercio.email || '',
+        ubicacion: comercio.direccion || '', // Use direccion as default for ubicacion
+        emailContacto: comercio.email || '', // Use email as default for emailContacto
         visible: comercio.visible ?? true,
         redesSociales: {
-          facebook: comercio.redesSociales?.facebook || '',
-          instagram: comercio.redesSociales?.instagram || '',
-          twitter: comercio.redesSociales?.twitter || '',
+          facebook: '',
+          instagram: '',
+          twitter: '',
         }
       };
       
@@ -125,7 +146,6 @@ export const ProfileForm: React.FC = () => {
       clearError();
       
       const success = await updateProfile({
-        nombre: data.nombre.trim(),
         nombreComercio: data.nombreComercio.trim(),
         email: data.email.trim().toLowerCase(),
         categoria: data.categoria,
@@ -134,15 +154,12 @@ export const ProfileForm: React.FC = () => {
         horario: data.horario?.trim() || '',
         descripcion: data.descripcion?.trim() || '',
         sitioWeb: data.sitioWeb?.trim() || '',
-        razonSocial: data.razonSocial?.trim() || data.nombreComercio.trim(),
         cuit: data.cuit?.trim() || '',
-        ubicacion: data.ubicacion?.trim() || data.direccion?.trim() || '',
-        emailContacto: data.emailContacto?.trim() || data.email.trim().toLowerCase(),
-        visible: data.visible,
-        redesSociales: {
-          facebook: data.redesSociales?.facebook?.trim() || '',
-          instagram: data.redesSociales?.instagram?.trim() || '',
-          twitter: data.redesSociales?.twitter?.trim() || '',
+        configuracion: {
+          notificacionesEmail: true,
+          notificacionesWhatsApp: false,
+          autoValidacion: false,
+          requiereAprobacion: true,
         },
       });
       
@@ -164,7 +181,7 @@ export const ProfileForm: React.FC = () => {
   const handleReset = () => {
     if (comercio) {
       const formData = {
-        nombre: comercio.nombre || '',
+        nombre: comercio.nombreComercio || '',
         nombreComercio: comercio.nombreComercio || '',
         email: comercio.email || '',
         categoria: comercio.categoria || '',
@@ -173,15 +190,15 @@ export const ProfileForm: React.FC = () => {
         horario: comercio.horario || '',
         descripcion: comercio.descripcion || '',
         sitioWeb: comercio.sitioWeb || '',
-        razonSocial: comercio.razonSocial || comercio.nombreComercio || '',
+        razonSocial: comercio.nombreComercio || '',
         cuit: comercio.cuit || '',
-        ubicacion: comercio.ubicacion || comercio.direccion || '',
-        emailContacto: comercio.emailContacto || comercio.email || '',
+        ubicacion: comercio.direccion || '',
+        emailContacto: comercio.email || '',
         visible: comercio.visible ?? true,
         redesSociales: {
-          facebook: comercio.redesSociales?.facebook || '',
-          instagram: comercio.redesSociales?.instagram || '',
-          twitter: comercio.redesSociales?.twitter || '',
+          facebook: '',
+          instagram: '',
+          twitter: '',
         }
       };
       
@@ -415,32 +432,6 @@ export const ProfileForm: React.FC = () => {
                   <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
                     <Box sx={{ flex: 1, minWidth: 300 }}>
                       <TextField
-                        {...register('nombre', { 
-                          required: 'El nombre del responsable es requerido',
-                          minLength: { value: 2, message: 'Mínimo 2 caracteres' }
-                        })}
-                        label="Nombre del Responsable"
-                        fullWidth
-                        disabled={!isEditing}
-                        error={!!errors.nombre}
-                        helperText={errors.nombre?.message}
-                        InputProps={{
-                          startAdornment: <Person sx={{ color: '#94a3b8', mr: 1 }} />,
-                        }}
-                        sx={{
-                          '& .MuiOutlinedInput-root': {
-                            borderRadius: 3,
-                            '&.Mui-focused fieldset': {
-                              borderColor: '#6366f1',
-                              borderWidth: 2,
-                            }
-                          }
-                        }}
-                      />
-                    </Box>
-                    
-                    <Box sx={{ flex: 1, minWidth: 300 }}>
-                      <TextField
                         {...register('nombreComercio', { 
                           required: 'El nombre comercial es requerido',
                           minLength: { value: 2, message: 'Mínimo 2 caracteres' }
@@ -464,58 +455,7 @@ export const ProfileForm: React.FC = () => {
                         }}
                       />
                     </Box>
-                  </Box>
-
-                  <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
-                    <Box sx={{ flex: 1, minWidth: 300 }}>
-                      <TextField
-                        {...register('razonSocial')}
-                        label="Razón Social"
-                        fullWidth
-                        disabled={!isEditing}
-                        error={!!errors.razonSocial}
-                        helperText={errors.razonSocial?.message}
-                        InputProps={{
-                          startAdornment: <Business sx={{ color: '#94a3b8', mr: 1 }} />,
-                        }}
-                        sx={{
-                          '& .MuiOutlinedInput-root': {
-                            borderRadius: 3,
-                            '&.Mui-focused fieldset': {
-                              borderColor: '#6366f1',
-                              borderWidth: 2,
-                            }
-                          }
-                        }}
-                      />
-                    </Box>
                     
-                    <Box sx={{ flex: 1, minWidth: 300 }}>
-                      <TextField
-                        {...register('cuit')}
-                        label="RUT / CUIT"
-                        fullWidth
-                        disabled={!isEditing}
-                        placeholder="12-34567890-1"
-                        error={!!errors.cuit}
-                        helperText={errors.cuit?.message}
-                        InputProps={{
-                          startAdornment: <Description sx={{ color: '#94a3b8', mr: 1 }} />,
-                        }}
-                        sx={{
-                          '& .MuiOutlinedInput-root': {
-                            borderRadius: 3,
-                            '&.Mui-focused fieldset': {
-                              borderColor: '#6366f1',
-                              borderWidth: 2,
-                            }
-                          }
-                        }}
-                      />
-                    </Box>
-                  </Box>
-
-                  <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
                     <Box sx={{ flex: 1, minWidth: 300 }}>
                       <Controller
                         name="categoria"
@@ -549,6 +489,32 @@ export const ProfileForm: React.FC = () => {
                             )}
                           </FormControl>
                         )}
+                      />
+                    </Box>
+                  </Box>
+
+                  <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+                    <Box sx={{ flex: 1, minWidth: 300 }}>
+                      <TextField
+                        {...register('cuit')}
+                        label="RUT / CUIT"
+                        fullWidth
+                        disabled={!isEditing}
+                        placeholder="12-34567890-1"
+                        error={!!errors.cuit}
+                        helperText={errors.cuit?.message}
+                        InputProps={{
+                          startAdornment: <Description sx={{ color: '#94a3b8', mr: 1 }} />,
+                        }}
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            borderRadius: 3,
+                            '&.Mui-focused fieldset': {
+                              borderColor: '#6366f1',
+                              borderWidth: 2,
+                            }
+                          }
+                        }}
                       />
                     </Box>
 
@@ -621,67 +587,33 @@ export const ProfileForm: React.FC = () => {
                 </Typography>
                 
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
-                    <Box sx={{ flex: 1, minWidth: 300 }}>
-                      <TextField
-                        {...register('email', { 
-                          required: 'El email es requerido',
-                          pattern: {
-                            value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                            message: 'Formato de email inválido'
-                          }
-                        })}
-                        label="Email Principal"
-                        type="email"
-                        fullWidth
-                        disabled={!isEditing}
-                        error={!!errors.email}
-                        helperText={errors.email?.message}
-                        InputProps={{
-                          startAdornment: <Email sx={{ color: '#94a3b8', mr: 1 }} />,
-                        }}
-                        sx={{
-                          '& .MuiOutlinedInput-root': {
-                            borderRadius: 3,
-                            '&.Mui-focused fieldset': {
-                              borderColor: '#06b6d4',
-                              borderWidth: 2,
-                            }
-                          }
-                        }}
-                      />
-                    </Box>
-                    
-                    <Box sx={{ flex: 1, minWidth: 300 }}>
-                      <TextField
-                        {...register('emailContacto', {
-                          pattern: {
-                            value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                            message: 'Formato de email inválido'
-                          }
-                        })}
-                        label="Email de Contacto"
-                        type="email"
-                        fullWidth
-                        disabled={!isEditing}
-                        placeholder="contacto@micomercio.com"
-                        error={!!errors.emailContacto}
-                        helperText={errors.emailContacto?.message || 'Opcional - Se usará el email principal si está vacío'}
-                        InputProps={{
-                          startAdornment: <Email sx={{ color: '#94a3b8', mr: 1 }} />,
-                        }}
-                        sx={{
-                          '& .MuiOutlinedInput-root': {
-                            borderRadius: 3,
-                            '&.Mui-focused fieldset': {
-                              borderColor: '#06b6d4',
-                              borderWidth: 2,
-                            }
-                          }
-                        }}
-                      />
-                    </Box>
-                  </Box>
+                  <TextField
+                    {...register('email', { 
+                      required: 'El email es requerido',
+                      pattern: {
+                        value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                        message: 'Formato de email inválido'
+                      }
+                    })}
+                    label="Email Principal"
+                    type="email"
+                    fullWidth
+                    disabled={!isEditing}
+                    error={!!errors.email}
+                    helperText={errors.email?.message}
+                    InputProps={{
+                      startAdornment: <Email sx={{ color: '#94a3b8', mr: 1 }} />,
+                    }}
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: 3,
+                        '&.Mui-focused fieldset': {
+                          borderColor: '#06b6d4',
+                          borderWidth: 2,
+                        }
+                      }
+                    }}
+                  />
 
                   <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
                     <Box sx={{ flex: 1, minWidth: 300 }}>
@@ -747,28 +679,6 @@ export const ProfileForm: React.FC = () => {
                     disabled={!isEditing}
                     error={!!errors.direccion}
                     helperText={errors.direccion?.message}
-                    InputProps={{
-                      startAdornment: <LocationOn sx={{ color: '#94a3b8', mr: 1 }} />,
-                    }}
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: 3,
-                        '&.Mui-focused fieldset': {
-                          borderColor: '#06b6d4',
-                          borderWidth: 2,
-                        }
-                      }
-                    }}
-                  />
-
-                  <TextField
-                    {...register('ubicacion')}
-                    label="Ciudad y Departamento"
-                    fullWidth
-                    disabled={!isEditing}
-                    placeholder="Montevideo, Montevideo"
-                    error={!!errors.ubicacion}
-                    helperText={errors.ubicacion?.message || 'Se usará la dirección física si está vacío'}
                     InputProps={{
                       startAdornment: <LocationOn sx={{ color: '#94a3b8', mr: 1 }} />,
                     }}
@@ -850,99 +760,32 @@ export const ProfileForm: React.FC = () => {
                   Presencia Online
                 </Typography>
                 
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <TextField
-                    {...register('sitioWeb', {
-                      pattern: {
-                        value: /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/,
-                        message: 'URL inválida. Ejemplo: https://www.micomercio.com'
+                <TextField
+                  {...register('sitioWeb', {
+                    pattern: {
+                      value: /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/,
+                      message: 'URL inválida. Ejemplo: https://www.micomercio.com'
+                    }
+                  })}
+                  label="Sitio Web"
+                  fullWidth
+                  disabled={!isEditing}
+                  placeholder="https://www.micomercio.com"
+                  error={!!errors.sitioWeb}
+                  helperText={errors.sitioWeb?.message}
+                  InputProps={{
+                    startAdornment: <Language sx={{ color: '#94a3b8', mr: 1 }} />,
+                  }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: 3,
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#f59e0b',
+                        borderWidth: 2,
                       }
-                    })}
-                    label="Sitio Web"
-                    fullWidth
-                    disabled={!isEditing}
-                    placeholder="https://www.micomercio.com"
-                    error={!!errors.sitioWeb}
-                    helperText={errors.sitioWeb?.message}
-                    InputProps={{
-                      startAdornment: <Language sx={{ color: '#94a3b8', mr: 1 }} />,
-                    }}
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: 3,
-                        '&.Mui-focused fieldset': {
-                          borderColor: '#f59e0b',
-                          borderWidth: 2,
-                        }
-                      }
-                    }}
-                  />
-
-                  <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
-                    <Box sx={{ flex: 1, minWidth: 200 }}>
-                      <TextField
-                        {...register('redesSociales.facebook')}
-                        label="Facebook"
-                        fullWidth
-                        disabled={!isEditing}
-                        placeholder="@micomercio"
-                        error={!!errors.redesSociales?.facebook}
-                        helperText={errors.redesSociales?.facebook?.message}
-                        sx={{
-                          '& .MuiOutlinedInput-root': {
-                            borderRadius: 3,
-                            '&.Mui-focused fieldset': {
-                              borderColor: '#1877f2',
-                              borderWidth: 2,
-                            }
-                          }
-                        }}
-                      />
-                    </Box>
-                    
-                    <Box sx={{ flex: 1, minWidth: 200 }}>
-                      <TextField
-                        {...register('redesSociales.instagram')}
-                        label="Instagram"
-                        fullWidth
-                        disabled={!isEditing}
-                        placeholder="@micomercio"
-                        error={!!errors.redesSociales?.instagram}
-                        helperText={errors.redesSociales?.instagram?.message}
-                        sx={{
-                          '& .MuiOutlinedInput-root': {
-                            borderRadius: 3,
-                            '&.Mui-focused fieldset': {
-                              borderColor: '#e4405f',
-                              borderWidth: 2,
-                            }
-                          }
-                        }}
-                      />
-                    </Box>
-                    
-                    <Box sx={{ flex: 1, minWidth: 200 }}>
-                      <TextField
-                        {...register('redesSociales.twitter')}
-                        label="Twitter"
-                        fullWidth
-                        disabled={!isEditing}
-                        placeholder="@micomercio"
-                        error={!!errors.redesSociales?.twitter}
-                        helperText={errors.redesSociales?.twitter?.message}
-                        sx={{
-                          '& .MuiOutlinedInput-root': {
-                            borderRadius: 3,
-                            '&.Mui-focused fieldset': {
-                              borderColor: '#1da1f2',
-                              borderWidth: 2,
-                            }
-                          }
-                        }}
-                      />
-                    </Box>
-                  </Box>
-                </Box>
+                    }
+                  }}
+                />
               </Box>
             </Stack>
           </form>

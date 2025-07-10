@@ -15,11 +15,7 @@ import {
   FileText, 
   Download, 
   RefreshCw,
-  Filter,
-  Search,
   CheckCircle,
-  AlertCircle,
-  Clock,
   Users,
   DollarSign,
 } from 'lucide-react';
@@ -27,7 +23,7 @@ import toast from 'react-hot-toast';
 
 export default function ComercioValidacionesPage() {
   const { user, signOut } = useAuth();
-  const { validaciones, loading, refresh, getStats } = useValidaciones();
+  const { loading, refresh, getStats } = useValidaciones();
   interface Stats {
     totalValidaciones: number;
     validacionesExitosas: number;
