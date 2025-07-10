@@ -9,7 +9,6 @@ import {
   User, 
   Gift, 
   QrCode, 
-  Bell, 
   History,
   Crown,
   LogOut,
@@ -23,7 +22,6 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSocioProfile } from '@/hooks/useSocioProfile';
-import { useNotifications } from '@/hooks/useNotifications';
 import { useBeneficiosSocio } from '@/hooks/useBeneficios';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -39,7 +37,6 @@ interface SocioSidebarProps {
 interface RealtimeStats {
   totalBeneficios: number;
   beneficiosUsados: number;
-  notificacionesPendientes: number;
   ahorroTotal: number;
   estadoMembresia: string;
   actividadReciente: number;
@@ -57,14 +54,12 @@ export const SocioSidebar: React.FC<SocioSidebarProps> = ({
   const searchParams = useSearchParams();
   const { user } = useAuth();
   const { socio, estadisticas, loading: socioLoading } = useSocioProfile();
-  const { notifications } = useNotifications();
   const { beneficiosActivos, estadisticasRapidas } = useBeneficiosSocio();
   
   // Real-time stats state
   const [realtimeStats, setRealtimeStats] = useState<RealtimeStats>({
     totalBeneficios: 0,
     beneficiosUsados: 0,
-    notificacionesPendientes: 0,
     ahorroTotal: 0,
     estadoMembresia: 'pendiente',
     actividadReciente: 0
@@ -76,12 +71,11 @@ export const SocioSidebar: React.FC<SocioSidebarProps> = ({
       ...prev,
       totalBeneficios: beneficiosActivos?.length || 0,
       beneficiosUsados: estadisticas?.totalValidaciones || estadisticasRapidas?.usados || 0,
-      notificacionesPendientes: notifications?.filter(n => n.status === 'unread').length || 0,
       ahorroTotal: estadisticas?.ahorroTotal || estadisticasRapidas?.ahorroTotal || 0,
       estadoMembresia: socio?.estadoMembresia || 'pendiente',
       actividadReciente: estadisticas?.totalValidaciones || 0
     }));
-  }, [socio, estadisticas, notifications, beneficiosActivos, estadisticasRapidas]);
+  }, [socio, estadisticas, beneficiosActivos, estadisticasRapidas]);
 
   // Real-time Firebase listeners for additional data
   useEffect(() => {
@@ -226,16 +220,6 @@ export const SocioSidebar: React.FC<SocioSidebarProps> = ({
           route: '/dashboard/socio/historial?tab=estadisticas'
         }
       ]
-    },
-    {
-      id: 'notificaciones',
-      label: 'Notificaciones',
-      icon: Bell,
-      description: 'Avisos y recordatorios',
-      gradient: 'from-pink-500 to-rose-600',
-      route: '/dashboard/socio/notificaciones',
-      badge: realtimeStats.notificacionesPendientes > 0 ? realtimeStats.notificacionesPendientes : undefined,
-      urgent: realtimeStats.notificacionesPendientes > 0
     }
   ];
 
@@ -434,12 +418,12 @@ export const SocioSidebar: React.FC<SocioSidebarProps> = ({
                 transition={{ duration: 0.2 }}
               >
                 <div className="flex items-center justify-center space-x-2 mb-1">
-                  <div className="w-6 h-6 bg-gradient-to-r from-pink-500 to-rose-600 rounded-lg flex items-center justify-center">
-                    <Bell className="w-3 h-3 text-white" />
+                  <div className="w-6 h-6 bg-gradient-to-r from-amber-500 to-orange-600 rounded-lg flex items-center justify-center">
+                    <History className="w-3 h-3 text-white" />
                   </div>
-                  <div className="text-lg font-black text-pink-600">{realtimeStats.notificacionesPendientes}</div>
+                  <div className="text-lg font-black text-amber-600">{realtimeStats.beneficiosUsados}</div>
                 </div>
-                <div className="text-xs text-gray-600 font-medium">Avisos</div>
+                <div className="text-xs text-gray-600 font-medium">Usados</div>
               </motion.div>
             </div>
             
