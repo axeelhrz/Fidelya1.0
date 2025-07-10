@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { 
@@ -65,17 +65,29 @@ export const SocioSidebar: React.FC<SocioSidebarProps> = ({
     actividadReciente: 0
   });
 
-  // Update stats when data changes
+  // Memoize the specific values we need to prevent infinite re-renders
+  const memoizedValues = useMemo(() => ({
+    totalBeneficios: beneficiosActivos?.length || 0,
+    beneficiosUsados: estadisticas?.totalValidaciones || estadisticasRapidas?.usados || 0,
+    ahorroTotal: estadisticas?.ahorroTotal || estadisticasRapidas?.ahorroTotal || 0,
+    estadoMembresia: socio?.estadoMembresia || 'pendiente',
+    actividadReciente: estadisticas?.totalValidaciones || 0
+  }), [
+    beneficiosActivos?.length,
+    estadisticas?.totalValidaciones,
+    estadisticas?.ahorroTotal,
+    estadisticasRapidas?.usados,
+    estadisticasRapidas?.ahorroTotal,
+    socio?.estadoMembresia
+  ]);
+
+  // Update stats when memoized values change
   useEffect(() => {
     setRealtimeStats(prev => ({
       ...prev,
-      totalBeneficios: beneficiosActivos?.length || 0,
-      beneficiosUsados: estadisticas?.totalValidaciones || estadisticasRapidas?.usados || 0,
-      ahorroTotal: estadisticas?.ahorroTotal || estadisticasRapidas?.ahorroTotal || 0,
-      estadoMembresia: socio?.estadoMembresia || 'pendiente',
-      actividadReciente: estadisticas?.totalValidaciones || 0
+      ...memoizedValues
     }));
-  }, [socio, estadisticas, beneficiosActivos, estadisticasRapidas]);
+  }, [memoizedValues]);
 
   // Real-time Firebase listeners for additional data
   useEffect(() => {
@@ -111,7 +123,7 @@ export const SocioSidebar: React.FC<SocioSidebarProps> = ({
     return () => {
       unsubscribers.forEach(unsubscribe => unsubscribe());
     };
-  }, [user]);
+  }, [user?.uid]);
 
   // Submenu item type
   type SubmenuItem = {

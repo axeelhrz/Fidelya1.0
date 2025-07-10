@@ -7,7 +7,6 @@ import { toast } from 'react-hot-toast';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { SocioSidebar } from '@/components/layout/SocioSidebar';
 import { LogoutModal } from '@/components/ui/LogoutModal';
-import { SocioOverviewDashboard } from '@/components/socio/SocioOverviewDashboard';
 import { useAuth } from '@/hooks/useAuth';
 import { 
   QrCode, 
@@ -222,10 +221,7 @@ export default function SocioDashboard() {
           <QuickActions onNavigate={handleNavigate} />
 
           {/* Main Dashboard */}
-          <SocioOverviewDashboard
-            onNavigate={handleNavigate}
-            onScanQR={handleQuickScan}
-          />
+
         </div>
       </div>
     );
