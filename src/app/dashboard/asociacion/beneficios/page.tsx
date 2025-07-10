@@ -9,6 +9,7 @@ import { AsociacionSidebar } from '@/components/layout/AsociacionSidebar';
 import { LogoutModal } from '@/components/ui/LogoutModal';
 import { BeneficiosManagement } from '@/components/asociacion/BeneficiosManagement';
 import { ValidacionesHistory } from '@/components/asociacion/ValidacionesHistory';
+import { CreateBeneficioModal } from '@/components/asociacion/CreateBeneficioModal';
 import { useAuth } from '@/hooks/useAuth';
 import { Gift, CheckCircle, Plus } from 'lucide-react';
 
@@ -40,6 +41,8 @@ export default function AsociacionBeneficiosPage() {
   const [loggingOut, setLoggingOut] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [activeTab, setActiveTab] = useState('todos');
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   // Trigger visibility for staggered animations
   useEffect(() => {
@@ -93,9 +96,14 @@ export default function AsociacionBeneficiosPage() {
     }
   ];
 
-  // Handle create beneficio (placeholder)
+  // Handle create beneficio
   const handleCreateBeneficio = () => {
-    toast.success('Funcionalidad de crear beneficio próximamente');
+    setCreateModalOpen(true);
+  };
+
+  // Handle beneficio creation success
+  const handleBeneficioCreated = () => {
+    setRefreshKey(prev => prev + 1);
   };
 
   // Loading state
@@ -220,6 +228,7 @@ export default function AsociacionBeneficiosPage() {
 
             {/* Tab Content */}
             <motion.div
+              key={`${activeTab}-${refreshKey}`}
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : 30 }}
               transition={{ duration: 0.8, delay: 0.5 }}
@@ -235,6 +244,13 @@ export default function AsociacionBeneficiosPage() {
           </div>
         </div>
       </DashboardLayout>
+
+      {/* Create Beneficio Modal */}
+      <CreateBeneficioModal
+        isOpen={createModalOpen}
+        onClose={() => setCreateModalOpen(false)}
+        onSuccess={handleBeneficioCreated}
+      />
 
       {/* Enhanced Modal de Logout */}
       <LogoutModal

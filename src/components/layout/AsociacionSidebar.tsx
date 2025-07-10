@@ -9,14 +9,12 @@ import {
   Users, 
   Store, 
   BarChart3, 
-  Bell, 
   Gift,
   LogOut,
   ChevronDown,
   UserCheck,
   Building2,
   Activity,
-  Sparkles,
   Crown,
   Clock,
   CheckCircle,
@@ -25,7 +23,6 @@ import {
 import { useAuth } from '@/hooks/useAuth';
 import { useSocios } from '@/hooks/useSocios';
 import { useComercios } from '@/hooks/useComercios';
-import { useNotifications } from '@/hooks/useNotifications';
 import { collection, query, where, onSnapshot, orderBy, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
@@ -44,7 +41,6 @@ interface RealtimeStats {
   totalComercios: number;
   comerciosActivos: number;
   solicitudesPendientes: number;
-  notificacionesPendientes: number;
   actividadReciente: number;
 }
 
@@ -61,7 +57,6 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
   const { user } = useAuth();
   const { stats } = useSocios();
   const { stats: comerciosStats } = useComercios();
-  const { stats: notificationStats } = useNotifications();
   
   // Real-time stats state
   const [realtimeStats, setRealtimeStats] = useState<RealtimeStats>({
@@ -71,7 +66,6 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
     totalComercios: comerciosStats?.totalComercios || 0,
     comerciosActivos: comerciosStats?.comerciosActivos || 0,
     solicitudesPendientes: comerciosStats?.solicitudesPendientes || 0,
-    notificacionesPendientes: notificationStats?.unread || 0,
     actividadReciente: 0
   });
 
@@ -84,10 +78,9 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
       sociosVencidos: stats?.vencidos || 0,
       totalComercios: comerciosStats?.totalComercios || 0,
       comerciosActivos: comerciosStats?.comerciosActivos || 0,
-      solicitudesPendientes: comerciosStats?.solicitudesPendientes || 0,
-      notificacionesPendientes: notificationStats?.unread || 0
+      solicitudesPendientes: comerciosStats?.solicitudesPendientes || 0
     }));
-  }, [stats, comerciosStats, notificationStats]);
+  }, [stats, comerciosStats]);
 
   // Submenu item type
   type SubmenuItem = {
@@ -99,7 +92,7 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
     urgent?: boolean;
   };
   
-  // Simplified menu structure
+  // Simplified menu structure without notifications
   const menuItems: Array<{
     id: string;
     label: string;
@@ -213,32 +206,6 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
       description: 'Métricas y análisis',
       gradient: 'from-violet-500 to-purple-600',
       route: '/dashboard/asociacion/analytics'
-    },
-    {
-      id: 'notificaciones',
-      label: 'Centro de Notificaciones',
-      icon: Bell,
-      description: 'Mensajería y comunicación',
-      gradient: 'from-amber-500 to-orange-600',
-      route: '/dashboard/asociacion/notificaciones',
-      badge: realtimeStats.notificacionesPendientes,
-      urgent: realtimeStats.notificacionesPendientes > 0,
-      submenu: [
-        { 
-          id: 'notificaciones-centro', 
-          label: 'Centro de Notificaciones', 
-          icon: Bell,
-          count: realtimeStats.notificacionesPendientes,
-          urgent: realtimeStats.notificacionesPendientes > 0,
-          route: '/dashboard/asociacion/notificaciones'
-        },
-        { 
-          id: 'notificaciones-plantillas', 
-          label: 'Plantillas', 
-          icon: Sparkles,
-          route: '/dashboard/asociacion/notificaciones?tab=plantillas'
-        }
-      ]
     }
   ];
 
@@ -292,24 +259,6 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
         console.error('Error listening to comercios:', error);
       });
       unsubscribers.push(unsubscribeComercios);
-
-      // Listen to notifications collection
-      const notificationsRef = collection(db, 'notifications');
-      const notificationsQuery = query(
-        notificationsRef, 
-        where('asociacionId', '==', user.uid),
-        where('leida', '==', false)
-      );
-      
-      const unsubscribeNotifications = onSnapshot(notificationsQuery, (snapshot) => {
-        setRealtimeStats(prev => ({
-          ...prev,
-          notificacionesPendientes: snapshot.docs.length
-        }));
-      }, (error) => {
-        console.error('Error listening to notifications:', error);
-      });
-      unsubscribers.push(unsubscribeNotifications);
 
       // Listen to recent activity
       const activityRef = collection(db, 'activities');
@@ -367,6 +316,7 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
   const isSubmenuItemActive = (subItem: SubmenuItem) => {
     const currentPath = pathname;
     const currentFilter = searchParams.get('filter');
+    const currentTab = searchParams.get('tab');
     
     // Check if we're on the socios page
     if (currentPath === '/dashboard/asociacion/socios') {
@@ -387,6 +337,19 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
         return true;
       }
       if (subItem.id === 'comercios-solicitudes' && currentFilter === 'solicitudes') {
+        return true;
+      }
+    }
+
+    // Check if we're on the beneficios page
+    if (currentPath === '/dashboard/asociacion/beneficios') {
+      if (subItem.id === 'beneficios-lista' && !currentTab) {
+        return true;
+      }
+      if (subItem.id === 'beneficios-validaciones' && currentTab === 'validaciones') {
+        return true;
+      }
+      if (subItem.id === 'beneficios-destacados' && currentTab === 'destacados') {
         return true;
       }
     }
