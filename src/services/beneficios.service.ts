@@ -5,19 +5,16 @@ import {
   getDoc,
   addDoc,
   updateDoc,
-  deleteDoc,
   query,
   where,
   orderBy,
   limit,
-  startAfter,
   Timestamp,
   writeBatch,
   increment,
-  QueryDocumentSnapshot,
-  DocumentData,
   onSnapshot,
-  Unsubscribe
+  Unsubscribe,
+  UpdateData
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import {
@@ -26,7 +23,6 @@ import {
   BeneficioStats,
   BeneficioFormData,
   BeneficioFilter,
-  BeneficioValidacion
 } from '@/types/beneficio';
 
 export class BeneficiosService {
@@ -36,10 +32,10 @@ export class BeneficiosService {
   private static readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
 
   // Cache simple
-  private static cache = new Map<string, { data: any; timestamp: number }>();
+  private static cache = new Map<string, { data: unknown; timestamp: number }>();
 
   // Métodos de cache
-  private static getCacheKey(key: string, params?: any): string {
+  private static getCacheKey(key: string, params?: Record<string, unknown>): string {
     return params ? `${key}_${JSON.stringify(params)}` : key;
   }
 
@@ -49,11 +45,11 @@ export class BeneficiosService {
     return (Date.now() - cached.timestamp) < this.CACHE_DURATION;
   }
 
-  private static setCache(key: string, data: any): void {
+  private static setCache(key: string, data: unknown): void {
     this.cache.set(key, { data, timestamp: Date.now() });
   }
 
-  private static getCache(key: string): any {
+  private static getCache(key: string): unknown {
     const cached = this.cache.get(key);
     return cached ? cached.data : null;
   }
@@ -110,7 +106,7 @@ export class BeneficiosService {
       const cacheKey = this.getCacheKey('beneficio', { id });
       
       if (this.isValidCache(cacheKey)) {
-        return this.getCache(cacheKey);
+        return this.getCache(cacheKey) as Beneficio;
       }
 
       const docRef = doc(db, this.BENEFICIOS_COLLECTION, id);
@@ -133,10 +129,23 @@ export class BeneficiosService {
     try {
       console.log('📝 Actualizando beneficio:', id);
 
-      const updateData: any = {
-        ...data,
+      // Crear el objeto de actualización con tipos correctos
+      const updateData: UpdateData<Beneficio> = {
         actualizadoEn: Timestamp.now()
       };
+
+      // Agregar campos que no son fechas
+      if (data.titulo !== undefined) updateData.titulo = data.titulo;
+      if (data.descripcion !== undefined) updateData.descripcion = data.descripcion;
+      if (data.tipo !== undefined) updateData.tipo = data.tipo;
+      if (data.descuento !== undefined) updateData.descuento = data.descuento;
+      if (data.limitePorSocio !== undefined) updateData.limitePorSocio = data.limitePorSocio;
+      if (data.limiteTotal !== undefined) updateData.limiteTotal = data.limiteTotal;
+      if (data.condiciones !== undefined) updateData.condiciones = data.condiciones;
+      if (data.categoria !== undefined) updateData.categoria = data.categoria;
+      if (data.tags !== undefined) updateData.tags = data.tags;
+      if (data.destacado !== undefined) updateData.destacado = data.destacado;
+      if (data.asociacionesDisponibles !== undefined) updateData.asociacionesDisponibles = data.asociacionesDisponibles;
 
       // Convertir fechas si están presentes
       if (data.fechaInicio) {
@@ -203,7 +212,7 @@ export class BeneficiosService {
       const cacheKey = this.getCacheKey('beneficios_disponibles', { socioId, asociacionId, filtros, limite });
       
       if (this.isValidCache(cacheKey)) {
-        return this.getCache(cacheKey);
+        return this.getCache(cacheKey) as Beneficio[];
       }
 
       let q = query(
@@ -292,7 +301,7 @@ export class BeneficiosService {
       const cacheKey = this.getCacheKey('beneficios_comercio', { comercioId });
       
       if (this.isValidCache(cacheKey)) {
-        return this.getCache(cacheKey);
+        return this.getCache(cacheKey) as Beneficio[];
       }
 
       const q = query(
@@ -320,7 +329,7 @@ export class BeneficiosService {
       const cacheKey = this.getCacheKey('beneficios_asociacion', { asociacionId });
       
       if (this.isValidCache(cacheKey)) {
-        return this.getCache(cacheKey);
+        return this.getCache(cacheKey) as Beneficio[];
       }
 
       const q = query(
@@ -467,7 +476,7 @@ export class BeneficiosService {
       const cacheKey = this.getCacheKey('historial_usos', { socioId, limite });
       
       if (this.isValidCache(cacheKey)) {
-        return this.getCache(cacheKey);
+        return this.getCache(cacheKey) as BeneficioUso[];
       }
 
       const q = query(
@@ -506,7 +515,7 @@ export class BeneficiosService {
       const cacheKey = this.getCacheKey('estadisticas', filtros);
       
       if (this.isValidCache(cacheKey)) {
-        return this.getCache(cacheKey);
+        return this.getCache(cacheKey) as BeneficioStats;
       }
 
       // Consultas paralelas para mejor rendimiento
@@ -568,7 +577,7 @@ export class BeneficiosService {
     }
   }
 
-  private static async obtenerBeneficiosParaEstadisticas(filtros?: any) {
+  private static async obtenerBeneficiosParaEstadisticas(filtros?: { comercioId?: string; asociacionId?: string }) {
     let q = query(collection(db, this.BENEFICIOS_COLLECTION));
 
     if (filtros?.comercioId) {
@@ -582,7 +591,7 @@ export class BeneficiosService {
     return await getDocs(q);
   }
 
-  private static async obtenerUsosParaEstadisticas(filtros?: any) {
+  private static async obtenerUsosParaEstadisticas(filtros?: { comercioId?: string; asociacionId?: string; fechaInicio?: Date; fechaFin?: Date }) {
     let q = query(collection(db, this.USOS_COLLECTION));
 
     if (filtros?.comercioId) {
@@ -831,7 +840,7 @@ export class BeneficiosService {
       const cacheKey = 'categorias_beneficios';
       
       if (this.isValidCache(cacheKey)) {
-        return this.getCache(cacheKey);
+        return this.getCache(cacheKey) as string[];
       }
 
       const q = query(collection(db, this.BENEFICIOS_COLLECTION));
