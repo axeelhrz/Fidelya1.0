@@ -1091,7 +1091,7 @@ function initializeMobileNavigation() {
     mobileNavLinks.forEach((link, index) => {
         console.log(`🔗 Configurando enlace móvil ${index + 1}: ${link.getAttribute('href')}`);
         
-        // Usar tanto click como touchend para máxima compatibilidad
+        // Función principal de navegación
         const handleNavigation = (e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -1115,19 +1115,26 @@ function initializeMobileNavigation() {
                     console.log(`🚀 Haciendo scroll a: ${targetId}`);
                     smoothScrollToSection(targetSection);
                     updateActiveMobileNavLink(link);
-                }, 100); // Reducido el delay a 100ms para mayor responsividad
+                }, 100);
             } else {
                 console.error(`❌ Sección no encontrada: ${targetId}`);
             }
         };
         
-        // Agregar event listeners
+        // Agregar event listeners para máxima compatibilidad
         link.addEventListener('click', handleNavigation);
-        link.addEventListener('touchend', handleNavigation);
+        link.addEventListener('touchend', (e) => {
+            // Prevenir doble activación
+            if (e.cancelable) {
+                e.preventDefault();
+            }
+            handleNavigation(e);
+        });
         
-        // Efectos táctiles
+        // Efectos táctiles mejorados
         link.addEventListener('touchstart', (e) => {
             link.style.transform = 'scale(0.98)';
+            link.style.transition = 'transform 0.1s ease';
             console.log(`👆 Touch start en: ${link.getAttribute('href')}`);
         }, { passive: true });
         
@@ -1135,15 +1142,17 @@ function initializeMobileNavigation() {
             link.style.transform = '';
         }, { passive: true });
         
-        // Asegurar que el transform se resetee
-        link.addEventListener('touchend', () => {
-            setTimeout(() => {
-                link.style.transform = '';
-            }, 150);
-        }, { passive: true });
+        // Resetear transform después del touch
+        setTimeout(() => {
+            link.addEventListener('touchend', () => {
+                setTimeout(() => {
+                    link.style.transform = '';
+                }, 150);
+            }, { passive: true });
+        }, 100);
     });
     
-    // Cerrar menú tocando fuera
+    // Cerrar menú tocando fuera - mejorado
     document.addEventListener('touchstart', (e) => {
         if (isMobileMenuOpen && mobileNavMenu && !mobileNavMenu.contains(e.target) && !mobileNavToggle.contains(e.target)) {
             console.log('🔄 Touch fuera del menú móvil');
