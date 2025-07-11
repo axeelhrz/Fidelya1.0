@@ -1128,19 +1128,6 @@ function openMobileNavMenu() {
     
     if (!mobileNavToggle || !mobileNavMenu) return;
     
-    // Guardar la posición actual del scroll
-    const scrollPosition = window.scrollY;
-    
-    // Aplicar la posición fija al body con la posición actual
-    body.style.position = 'fixed';
-    body.style.top = `-${scrollPosition}px`;
-    body.style.left = '0';
-    body.style.right = '0';
-    body.style.width = '100%';
-    
-    // Guardar la posición para restaurarla después
-    body.dataset.scrollY = scrollPosition.toString();
-    
     isMobileMenuOpen = true;
     
     mobileNavToggle.classList.add('active');
@@ -1166,18 +1153,6 @@ function closeMobileNavMenu() {
     
     mobileNavToggle.setAttribute('aria-expanded', 'false');
     mobileNavMenu.setAttribute('aria-hidden', 'true');
-    
-    // Restaurar la posición del scroll
-    const scrollY = parseInt(body.dataset.scrollY || '0', 10);
-    body.style.position = '';
-    body.style.top = '';
-    body.style.left = '';
-    body.style.right = '';
-    body.style.width = '';
-    body.dataset.scrollY = '';
-    
-    // Restaurar la posición del scroll
-    window.scrollTo(0, scrollY);
 }
 
 function updateActiveMobileNavLink(activeLink) {
@@ -2042,4 +2017,3 @@ if ('serviceWorker' in navigator && !isMobile && !performanceMode) {
             });
     });
 }
-
