@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Gift, History, RefreshCw, Download, Star, Filter } from 'lucide-react';
+import { Gift, History, RefreshCw, Download, Star, Filter, Building2, Users } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { SocioSidebar } from '@/components/layout/SocioSidebar';
 import { BeneficiosList } from '@/components/beneficios/BeneficiosList';
@@ -40,7 +40,7 @@ export default function SocioBeneficiosPage() {
   const handleExport = () => {
     const data = activeTab === 'disponibles' ? beneficios : beneficiosUsados;
     const csvContent = [
-      ['Título', 'Comercio', 'Categoría', 'Descuento', 'Estado', 'Fecha'],
+      ['Título', 'Comercio', 'Categoría', 'Descuento', 'Estado', 'Fecha', 'Origen'],
       ...data.map(item => [
         'titulo' in item ? item.titulo : (item as any).beneficioTitulo || 'Beneficio Usado',
         item.comercioNombre || 'N/A',
@@ -51,7 +51,10 @@ export default function SocioBeneficiosPage() {
         item.estado,
         'fechaFin' in item
           ? (item as any).fechaFin.toDate().toLocaleDateString()
-          : (item as any).fechaUso.toDate().toLocaleDateString()
+          : (item as any).fechaUso.toDate().toLocaleDateString(),
+        'asociacionNombre' in item && item.asociacionNombre 
+          ? `Asociación: ${item.asociacionNombre}`
+          : 'Comercio Afiliado'
       ])
     ].map(row => row.join(',')).join('\n');
 
@@ -127,7 +130,7 @@ export default function SocioBeneficiosPage() {
                   Mis Beneficios
                 </h1>
                 <p className="text-lg text-slate-600 font-medium">
-                  Descubre y utiliza todos los descuentos y ofertas especiales
+                  Descubre y utiliza todos los descuentos y ofertas especiales de tu asociación y comercios afiliados
                 </p>
               </div>
               <div className="flex gap-3">
@@ -220,6 +223,24 @@ export default function SocioBeneficiosPage() {
                 </div>
               </motion.div>
             </div>
+
+            {/* Información sobre fuentes de beneficios */}
+            <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center text-white">
+                  <Users size={16} />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-blue-900 mb-1">
+                    Fuentes de tus beneficios
+                  </h3>
+                  <p className="text-sm text-blue-700">
+                    Los beneficios mostrados provienen de tu asociación y de los comercios afiliados a ella. 
+                    Esto te da acceso a una amplia variedad de descuentos y ofertas especiales.
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Tabs */}
@@ -299,6 +320,14 @@ export default function SocioBeneficiosPage() {
                             ${uso.montoDescuento} ahorrado
                           </span>
                         )}
+                        {/* Indicador de origen */}
+                        <span className="inline-flex items-center px-2 py-1 rounded-lg text-xs font-bold bg-blue-100 text-blue-800">
+                          {uso.asociacionNombre ? (
+                            <><Users size={12} className="mr-1" /> Asociación</>
+                          ) : (
+                            <><Building2 size={12} className="mr-1" /> Comercio</>
+                          )}
+                        </span>
                       </div>
 
                       <h3 className="text-lg font-bold text-slate-900 mb-2">
@@ -334,6 +363,13 @@ export default function SocioBeneficiosPage() {
                           <div className="flex items-center justify-between">
                             <span>Monto final:</span>
                             <span className="font-medium text-emerald-600">${(uso as any).montoFinal}</span>
+                          </div>
+                        )}
+
+                        {uso.asociacionNombre && (
+                          <div className="flex items-center justify-between">
+                            <span>Asociación:</span>
+                            <span className="font-medium">{uso.asociacionNombre}</span>
                           </div>
                         )}
                       </div>

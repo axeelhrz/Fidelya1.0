@@ -50,7 +50,7 @@ export const useBeneficios = (options: UseBeneficiosOptions = {}) => {
     };
   }, []);
 
-  // Cargar beneficios según el rol del usuario
+  // Cargar beneficios según el rol del usuario - ACTUALIZADO PARA SOCIOS
   const cargarBeneficios = useCallback(async (filtros?: BeneficioFilter) => {
     if (!user || loading) return;
 
@@ -63,11 +63,16 @@ export const useBeneficios = (options: UseBeneficiosOptions = {}) => {
       switch (user.role) {
         case 'socio':
           if (user.asociacionId) {
+            console.log('🔍 Cargando beneficios para socio:', user.uid);
+            // Usar el método actualizado que incluye comercios afiliados
             beneficiosData = await BeneficiosService.obtenerBeneficiosDisponibles(
               user.uid,
               user.asociacionId,
               filtros
             );
+          } else {
+            console.warn('⚠️ Socio sin asociación asignada');
+            setError('No tienes una asociación asignada. Contacta al administrador.');
           }
           break;
 
@@ -85,11 +90,14 @@ export const useBeneficios = (options: UseBeneficiosOptions = {}) => {
 
       if (mountedRef.current) {
         setBeneficios(beneficiosData);
+        console.log(`✅ Se cargaron ${beneficiosData.length} beneficios para ${user.role}`);
       }
     } catch (err) {
       console.error('Error cargando beneficios:', err);
       if (mountedRef.current) {
-        setError(err instanceof Error ? err.message : 'Error al cargar beneficios');
+        const errorMessage = err instanceof Error ? err.message : 'Error al cargar beneficios';
+        setError(errorMessage);
+        toast.error(errorMessage);
       }
     } finally {
       if (mountedRef.current) {
@@ -106,9 +114,13 @@ export const useBeneficios = (options: UseBeneficiosOptions = {}) => {
       const usos = await BeneficiosService.obtenerHistorialUsos(user.uid);
       if (mountedRef.current) {
         setBeneficiosUsados(usos);
+        console.log(`✅ Se cargaron ${usos.length} usos del historial`);
       }
     } catch (err) {
       console.error('Error cargando historial de usos:', err);
+      if (mountedRef.current) {
+        toast.error('Error al cargar el historial de beneficios');
+      }
     }
   }, [user]);
 
@@ -123,6 +135,9 @@ export const useBeneficios = (options: UseBeneficiosOptions = {}) => {
         filtros.comercioId = user.uid;
       } else if (user.role === 'asociacion') {
         filtros.asociacionId = user.uid;
+      } else if (user.role === 'socio' && user.asociacionId) {
+        // Para socios, obtener estadísticas de su asociación
+        filtros.asociacionId = user.asociacionId;
       }
 
       const estadisticas = await BeneficiosService.obtenerEstadisticas(filtros);
@@ -134,7 +149,7 @@ export const useBeneficios = (options: UseBeneficiosOptions = {}) => {
     }
   }, [user]);
 
-  // Configurar listener en tiempo real
+  // Configurar listener en tiempo real - ACTUALIZADO PARA SOCIOS
   const configurarRealtime = useCallback(() => {
     if (!user || !useRealtime) return;
 
@@ -146,12 +161,14 @@ export const useBeneficios = (options: UseBeneficiosOptions = {}) => {
     switch (user.role) {
       case 'socio':
         if (user.asociacionId) {
+          console.log('🔄 Configurando listener en tiempo real para socio');
           unsubscribeRef.current = BeneficiosService.suscribirBeneficiosDisponibles(
             user.uid,
             user.asociacionId,
             (beneficiosData) => {
               if (mountedRef.current) {
                 setBeneficios(beneficiosData);
+                console.log(`🔄 Beneficios actualizados en tiempo real: ${beneficiosData.length}`);
               }
             }
           );
@@ -463,7 +480,7 @@ export const useBeneficios = (options: UseBeneficiosOptions = {}) => {
   };
 };
 
-// Hook especializado para socios
+// Hook especializado para socios - MEJORADO
 export const useBeneficiosSocio = () => {
   return useBeneficios({
     autoLoad: true,

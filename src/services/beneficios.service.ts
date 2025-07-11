@@ -30,6 +30,7 @@ export class BeneficiosService {
   private static readonly VALIDACIONES_COLLECTION = 'beneficio_validaciones';
   private static readonly COMERCIOS_COLLECTION = 'comercios';
   private static readonly ASOCIACIONES_COLLECTION = 'asociaciones';
+  private static readonly SOCIOS_COLLECTION = 'socios';
   private static readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
 
   // Cache simple
@@ -114,6 +115,85 @@ export class BeneficiosService {
     } catch (error) {
       console.error('Error obteniendo info de la asociación:', error);
       return null;
+    }
+  }
+
+  // Obtener información del socio
+  private static async obtenerInfoSocio(socioId: string): Promise<{ asociacionId: string; comerciosAfiliados?: string[] } | null> {
+    try {
+      const socioDoc = await getDoc(doc(db, this.SOCIOS_COLLECTION, socioId));
+      if (socioDoc.exists()) {
+        const data = socioDoc.data();
+        return {
+          asociacionId: data.asociacionId,
+          comerciosAfiliados: data.comerciosAfiliados || []
+        };
+      }
+      return null;
+    } catch (error) {
+      console.error('Error obteniendo info del socio:', error);
+      return null;
+    }
+  }
+
+  // Obtener comercios afiliados a un socio
+  private static async obtenerComerciosAfiliadosSocio(socioId: string): Promise<string[]> {
+    try {
+      const cacheKey = this.getCacheKey('comercios_afiliados_socio', { socioId });
+      
+      if (this.isValidCache(cacheKey)) {
+        return this.getCache(cacheKey) as string[];
+      }
+
+      // Primero obtener la información del socio
+      const socioInfo = await this.obtenerInfoSocio(socioId);
+      if (!socioInfo) {
+        return [];
+      }
+
+      let comerciosAfiliados: string[] = [];
+
+      // 1. Comercios directamente afiliados al socio (si existe esta relación)
+      if (socioInfo.comerciosAfiliados && socioInfo.comerciosAfiliados.length > 0) {
+        comerciosAfiliados = [...socioInfo.comerciosAfiliados];
+      }
+
+      // 2. Comercios vinculados a la asociación del socio
+      if (socioInfo.asociacionId) {
+        const comerciosAsociacion = await this.obtenerComerciosVinculadosAsociacion(socioInfo.asociacionId);
+        comerciosAfiliados = [...new Set([...comerciosAfiliados, ...comerciosAsociacion])];
+      }
+
+      this.setCache(cacheKey, comerciosAfiliados);
+      return comerciosAfiliados;
+    } catch (error) {
+      console.error('Error obteniendo comercios afiliados del socio:', error);
+      return [];
+    }
+  }
+
+  // Obtener comercios vinculados a una asociación
+  private static async obtenerComerciosVinculadosAsociacion(asociacionId: string): Promise<string[]> {
+    try {
+      const cacheKey = this.getCacheKey('comercios_vinculados_asociacion', { asociacionId });
+      
+      if (this.isValidCache(cacheKey)) {
+        return this.getCache(cacheKey) as string[];
+      }
+
+      // Buscar en la colección de asociaciones los comercios vinculados
+      const asociacionDoc = await getDoc(doc(db, this.ASOCIACIONES_COLLECTION, asociacionId));
+      if (asociacionDoc.exists()) {
+        const data = asociacionDoc.data();
+        const comerciosVinculados = data.comerciosVinculados || [];
+        this.setCache(cacheKey, comerciosVinculados);
+        return comerciosVinculados;
+      }
+
+      return [];
+    } catch (error) {
+      console.error('Error obteniendo comercios vinculados a la asociación:', error);
+      return [];
     }
   }
 
@@ -372,7 +452,7 @@ export class BeneficiosService {
     }
   }
 
-  // Consultas avanzadas
+  // Consultas avanzadas - MÉTODO ACTUALIZADO PARA SOCIOS
   static async obtenerBeneficiosDisponibles(
     socioId: string,
     asociacionId: string,
@@ -380,7 +460,7 @@ export class BeneficiosService {
     limite: number = 50
   ): Promise<Beneficio[]> {
     try {
-      console.log('🔍 Obteniendo beneficios disponibles para:', socioId);
+      console.log('🔍 Obteniendo beneficios disponibles para socio:', socioId);
 
       const cacheKey = this.getCacheKey('beneficios_disponibles', { socioId, asociacionId, filtros, limite });
       
@@ -388,7 +468,14 @@ export class BeneficiosService {
         return this.getCache(cacheKey) as Beneficio[];
       }
 
-      let q = query(
+      // Obtener comercios afiliados al socio
+      const comerciosAfiliados = await this.obtenerComerciosAfiliadosSocio(socioId);
+      console.log('🏪 Comercios afiliados encontrados:', comerciosAfiliados.length);
+
+      let beneficios: Beneficio[] = [];
+
+      // 1. Obtener beneficios de la asociación del socio
+      let qAsociacion = query(
         collection(db, this.BENEFICIOS_COLLECTION),
         where('estado', '==', 'activo'),
         where('asociacionesDisponibles', 'array-contains', asociacionId),
@@ -396,24 +483,62 @@ export class BeneficiosService {
         limit(limite)
       );
 
-      // Aplicar filtros adicionales
-      if (filtros?.categoria) {
-        q = query(q, where('categoria', '==', filtros.categoria));
-      }
-
-      if (filtros?.comercio) {
-        q = query(q, where('comercioId', '==', filtros.comercio));
-      }
-
-      if (filtros?.soloDestacados) {
-        q = query(q, where('destacado', '==', true));
-      }
-
-      const snapshot = await getDocs(q);
-      let beneficios = snapshot.docs.map(doc => ({
+      const snapshotAsociacion = await getDocs(qAsociacion);
+      const beneficiosAsociacion = snapshotAsociacion.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       })) as Beneficio[];
+
+      beneficios = [...beneficiosAsociacion];
+
+      // 2. Obtener beneficios de comercios afiliados (si hay comercios afiliados)
+      if (comerciosAfiliados.length > 0) {
+        // Firebase tiene límite de 10 elementos en array-contains-any, así que dividimos en lotes
+        const lotes = [];
+        for (let i = 0; i < comerciosAfiliados.length; i += 10) {
+          lotes.push(comerciosAfiliados.slice(i, i + 10));
+        }
+
+        for (const lote of lotes) {
+          const qComercios = query(
+            collection(db, this.BENEFICIOS_COLLECTION),
+            where('estado', '==', 'activo'),
+            where('comercioId', 'in', lote),
+            orderBy('creadoEn', 'desc')
+          );
+
+          const snapshotComercios = await getDocs(qComercios);
+          const beneficiosComercios = snapshotComercios.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          })) as Beneficio[];
+
+          beneficios = [...beneficios, ...beneficiosComercios];
+        }
+      }
+
+      // Eliminar duplicados (un beneficio puede aparecer tanto por asociación como por comercio)
+      const beneficiosUnicos = beneficios.reduce((acc, beneficio) => {
+        if (!acc.find(b => b.id === beneficio.id)) {
+          acc.push(beneficio);
+        }
+        return acc;
+      }, [] as Beneficio[]);
+
+      // Aplicar filtros adicionales
+      if (filtros?.categoria) {
+        beneficios = beneficiosUnicos.filter(b => b.categoria === filtros.categoria);
+      } else {
+        beneficios = beneficiosUnicos;
+      }
+
+      if (filtros?.comercio) {
+        beneficios = beneficios.filter(b => b.comercioId === filtros.comercio);
+      }
+
+      if (filtros?.soloDestacados) {
+        beneficios = beneficios.filter(b => b.destacado === true);
+      }
 
       // Filtros adicionales en el cliente
       const now = new Date();
@@ -459,8 +584,13 @@ export class BeneficiosService {
         return true;
       });
 
+      // Ordenar por fecha de creación (más recientes primero) y limitar
+      beneficios = beneficios
+        .sort((a, b) => b.creadoEn.toDate().getTime() - a.creadoEn.toDate().getTime())
+        .slice(0, limite);
+
       this.setCache(cacheKey, beneficios);
-      console.log(`✅ Se encontraron ${beneficios.length} beneficios disponibles`);
+      console.log(`✅ Se encontraron ${beneficios.length} beneficios disponibles para el socio`);
       
       return beneficios;
     } catch (error) {
@@ -567,6 +697,16 @@ export class BeneficiosService {
         if (usosDelSocio >= beneficio.limitePorSocio) {
           throw new Error('Has alcanzado el límite de usos para este beneficio');
         }
+      }
+
+      // Verificar que el socio tenga acceso a este beneficio
+      const comerciosAfiliados = await this.obtenerComerciosAfiliadosSocio(socioId);
+      const tieneAcceso = 
+        beneficio.asociacionesDisponibles.includes(asociacionId) ||
+        comerciosAfiliados.includes(beneficio.comercioId);
+
+      if (!tieneAcceso) {
+        throw new Error('No tienes acceso a este beneficio');
       }
 
       // Calcular descuento
@@ -892,12 +1032,14 @@ export class BeneficiosService {
     }));
   }
 
-  // Listeners en tiempo real
+  // Listeners en tiempo real - ACTUALIZADO PARA SOCIOS
   static suscribirBeneficiosDisponibles(
     socioId: string,
     asociacionId: string,
     callback: (beneficios: Beneficio[]) => void
   ): Unsubscribe {
+    // Para tiempo real, usamos una aproximación más simple
+    // En producción, podrías considerar usar Cloud Functions para mantener una vista materializada
     const q = query(
       collection(db, this.BENEFICIOS_COLLECTION),
       where('estado', '==', 'activo'),
@@ -906,21 +1048,64 @@ export class BeneficiosService {
       limit(50)
     );
 
-    return onSnapshot(q, (snapshot) => {
-      const beneficios = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Beneficio[];
+    return onSnapshot(q, async (snapshot) => {
+      try {
+        let beneficios = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        })) as Beneficio[];
 
-      // Filtrar por fecha de vencimiento y inicio
-      const now = new Date();
-      const beneficiosValidos = beneficios.filter(beneficio => {
-        const fechaFin = beneficio.fechaFin.toDate();
-        const fechaInicio = beneficio.fechaInicio.toDate();
-        return fechaFin > now && fechaInicio <= now;
-      });
+        // Obtener también beneficios de comercios afiliados
+        const comerciosAfiliados = await this.obtenerComerciosAfiliadosSocio(socioId);
+        
+        if (comerciosAfiliados.length > 0) {
+          // Obtener beneficios de comercios afiliados (simplificado para tiempo real)
+          const lotes = [];
+          for (let i = 0; i < comerciosAfiliados.length; i += 10) {
+            lotes.push(comerciosAfiliados.slice(i, i + 10));
+          }
 
-      callback(beneficiosValidos);
+          for (const lote of lotes) {
+            const qComercios = query(
+              collection(db, this.BENEFICIOS_COLLECTION),
+              where('estado', '==', 'activo'),
+              where('comercioId', 'in', lote)
+            );
+
+            const snapshotComercios = await getDocs(qComercios);
+            const beneficiosComercios = snapshotComercios.docs.map(doc => ({
+              id: doc.id,
+              ...doc.data()
+            })) as Beneficio[];
+
+            beneficios = [...beneficios, ...beneficiosComercios];
+          }
+        }
+
+        // Eliminar duplicados
+        const beneficiosUnicos = beneficios.reduce((acc, beneficio) => {
+          if (!acc.find(b => b.id === beneficio.id)) {
+            acc.push(beneficio);
+          }
+          return acc;
+        }, [] as Beneficio[]);
+
+        // Filtrar por fecha de vencimiento y inicio
+        const now = new Date();
+        const beneficiosValidos = beneficiosUnicos.filter(beneficio => {
+          const fechaFin = beneficio.fechaFin.toDate();
+          const fechaInicio = beneficio.fechaInicio.toDate();
+          return fechaFin > now && fechaInicio <= now;
+        });
+
+        // Ordenar por fecha de creación
+        beneficiosValidos.sort((a, b) => b.creadoEn.toDate().getTime() - a.creadoEn.toDate().getTime());
+
+        callback(beneficiosValidos);
+      } catch (error) {
+        console.error('Error en listener de beneficios:', error);
+        callback([]);
+      }
     });
   }
 
