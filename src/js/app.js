@@ -1128,6 +1128,10 @@ function openMobileNavMenu() {
     
     if (!mobileNavToggle || !mobileNavMenu) return;
     
+    // Guardar la posición actual del scroll antes de abrir el menú
+    // Esta es la clave para evitar que el scroll se mueva al principio
+    const scrollPosition = window.scrollY;
+    
     isMobileMenuOpen = true;
     
     mobileNavToggle.classList.add('active');
@@ -1136,6 +1140,12 @@ function openMobileNavMenu() {
     
     mobileNavToggle.setAttribute('aria-expanded', 'true');
     mobileNavMenu.setAttribute('aria-hidden', 'false');
+    
+    // Aplicar la posición de scroll guardada para evitar que se mueva al principio
+    // Esto se hace después de que el menú se abre para mantener la posición actual
+    setTimeout(() => {
+        window.scrollTo(0, scrollPosition);
+    }, 10);
 }
 
 function closeMobileNavMenu() {
