@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'react-hot-toast';
@@ -30,7 +30,31 @@ const AsociacionSidebarWithLogout: React.FC<{
   );
 };
 
-export default function AsociacionComerciosPage() {
+// Loading component for Suspense fallback
+const PageLoading = () => (
+  <div className="min-h-screen bg-gradient-to-br from-sky-50/50 via-white to-celestial-50/30 flex items-center justify-center">
+    <motion.div 
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      <div className="text-center">
+        <div className="relative mb-4">
+          <div className="w-16 h-16 border-4 border-sky-200 border-t-sky-500 rounded-full animate-spin mx-auto" />
+        </div>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          Cargando Gestión de Comercios
+        </h2>
+        <p className="text-gray-600">
+          Preparando el panel de administración...
+        </p>
+      </div>
+    </motion.div>
+  </div>
+);
+
+// Main component that uses useSearchParams
+function AsociacionComerciosContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, loading: authLoading, signOut } = useAuth();
@@ -121,27 +145,7 @@ export default function AsociacionComerciosPage() {
 
   // Loading state
   if (authLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-sky-50/50 via-white to-celestial-50/30 flex items-center justify-center">
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5 }}
-        >
-          <div className="text-center">
-            <div className="relative mb-4">
-              <div className="w-16 h-16 border-4 border-sky-200 border-t-sky-500 rounded-full animate-spin mx-auto" />
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">
-              Cargando {getPageTitle()}
-            </h2>
-            <p className="text-gray-600">
-              Preparando el panel de administración...
-            </p>
-          </div>
-        </motion.div>
-      </div>
-    );
+    return <PageLoading />;
   }
 
   return (
@@ -236,5 +240,14 @@ export default function AsociacionComerciosPage() {
         </button>
       </motion.div>
     </>
+  );
+}
+
+// Main exported component with Suspense boundary
+export default function AsociacionComerciosPage() {
+  return (
+    <Suspense fallback={<PageLoading />}>
+      <AsociacionComerciosContent />
+    </Suspense>
   );
 }
