@@ -99,6 +99,46 @@ interface MetricCardProps {
   progressValue?: number;
 }
 
+// Helper function to safely convert Firebase Timestamp to Date
+type FirebaseTimestamp = { toDate: () => Date } | { seconds: number; nanoseconds?: number } | string | number | Date | null | undefined;
+
+const convertToDate = (timestamp: FirebaseTimestamp): Date => {
+  if (!timestamp) return new Date();
+  
+  // If it's already a Date object
+  if (timestamp instanceof Date) {
+    return timestamp;
+  }
+  
+  // If it's a Firebase Timestamp with toDate method
+  if (
+    typeof timestamp === 'object' &&
+    timestamp !== null &&
+    'toDate' in timestamp &&
+    typeof (timestamp as { toDate?: unknown }).toDate === 'function'
+  ) {
+    return (timestamp as { toDate: () => Date }).toDate();
+  }
+  
+  // If it's a timestamp object with seconds and nanoseconds
+  if (
+    typeof timestamp === 'object' &&
+    timestamp !== null &&
+    'seconds' in timestamp &&
+    typeof (timestamp as { seconds: unknown }).seconds === 'number'
+  ) {
+    return new Date((timestamp as { seconds: number }).seconds * 1000);
+  }
+  
+  // If it's a string or number, try to parse it
+  if (typeof timestamp === 'string' || typeof timestamp === 'number') {
+    return new Date(timestamp);
+  }
+  
+  // Fallback to current date
+  return new Date();
+};
+
 const MetricCard: React.FC<MetricCardProps> = ({
   title,
   value,
@@ -715,23 +755,10 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
       const endDate = new Date();
       const startDate = subDays(endDate, dateRange === '7d' ? 7 : dateRange === '30d' ? 30 : 90);
 
-      // Filter socios by date range
+      // Filter socios by date range using the helper function
       const recentSocios = memoizedAllSocios.filter(socio => {
         if (!socio.creadoEn) return false;
-        let createdDate: Date;
-        if (typeof socio.creadoEn.toDate === 'function') {
-          createdDate = socio.creadoEn.toDate();
-        } else if (socio.creadoEn instanceof Date) {
-          createdDate = socio.creadoEn;
-        } else {
-          createdDate = typeof socio.creadoEn.toDate === 'function'
-            ? socio.creadoEn.toDate()
-            : socio.creadoEn instanceof Date
-              ? socio.creadoEn
-              : (socio.creadoEn && typeof socio.creadoEn.toDate === 'function'
-                ? socio.creadoEn.toDate()
-                : new Date(socio.creadoEn));
-        }
+        const createdDate = convertToDate(socio.creadoEn);
         return isAfter(createdDate, startDate) && isBefore(createdDate, endDate);
       });
 
@@ -739,7 +766,7 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
       const previousPeriodStart = subDays(startDate, dateRange === '7d' ? 7 : dateRange === '30d' ? 30 : 90);
       const previousSocios = memoizedAllSocios.filter(socio => {
         if (!socio.creadoEn) return false;
-        const createdDate = socio.creadoEn;
+        const createdDate = convertToDate(socio.creadoEn);
         return isAfter(createdDate, previousPeriodStart) && isBefore(createdDate, startDate);
       });
 
@@ -755,7 +782,8 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
       const averageLifetime = activeSocios.length > 0 
         ? activeSocios.reduce((acc, socio) => {
             if (!socio.creadoEn) return acc;
-            const monthsActive = Math.max(1, Math.floor((endDate.getTime() - socio.creadoEn.getTime()) / (1000 * 60 * 60 * 24 * 30)));
+            const createdDate = convertToDate(socio.creadoEn);
+            const monthsActive = Math.max(1, Math.floor((endDate.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24 * 30)));
             return acc + monthsActive;
           }, 0) / activeSocios.length
         : 0;
@@ -777,7 +805,7 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
         // Count socios created in this month
         const monthSocios = memoizedAllSocios.filter(socio => {
           if (!socio.creadoEn) return false;
-          const createdDate = socio.creadoEn;
+          const createdDate = convertToDate(socio.creadoEn);
           return isAfter(createdDate, monthStart) && isBefore(createdDate, monthEnd);
         }).length;
 
@@ -789,7 +817,7 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
         
         const prevMonthSocios = memoizedAllSocios.filter(socio => {
           if (!socio.creadoEn) return false;
-          const createdDate = socio.creadoEn;
+          const createdDate = convertToDate(socio.creadoEn);
           return isAfter(createdDate, prevMonthStart) && isBefore(createdDate, prevMonthEnd);
         }).length;
 

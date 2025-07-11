@@ -198,12 +198,14 @@ export const useSocioValidaciones = () => {
       setLoading(true);
       const historial = await ValidacionesService.getHistorialValidaciones(user.uid);
       
-      const validacionesData = historial.map(v => ({
+      const validacionesData = historial.map((v: ValidacionResponse) => ({
         id: v.id,
         comercioNombre: v.comercioNombre || 'Comercio',
         beneficioTitulo: v.beneficioTitulo,
         resultado: v.resultado,
-        fechaHora: v.fechaHora.toDate(),
+        fechaHora: (v.fechaHora && typeof (v.fechaHora as { toDate?: () => Date }).toDate === 'function')
+          ? (v.fechaHora as { toDate: () => Date }).toDate()
+          : v.fechaHora,
         montoDescuento: v.montoDescuento,
         motivo: v.motivo
       }));
