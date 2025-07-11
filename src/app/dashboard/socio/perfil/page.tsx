@@ -33,7 +33,9 @@ import {
   CheckCircle,
   Loader2,
   Save,
-  X
+  X,
+  Store,
+  Plus
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { SocioSidebar } from '@/components/layout/SocioSidebar';
@@ -41,6 +43,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/Dialog';
 import { LoadingSkeleton } from '@/components/ui/LoadingSkeleton';
+import { LogoutModal } from '@/components/ui/LogoutModal';
 import { useSocioProfile } from '@/hooks/useSocioProfile';
 import { useAuth } from '@/hooks/useAuth';
 import { SocioConfiguration } from '@/types/socio';
@@ -67,6 +70,73 @@ interface StatsCardProps {
   subtitle?: string;
   onClick?: () => void;
 }
+
+// Quick Actions Component
+const QuickActions: React.FC<{
+  onNavigate: (section: string) => void;
+}> = ({ onNavigate }) => {
+  const quickActions = [
+    {
+      id: 'qr-scanner',
+      label: 'Validar Beneficio',
+      icon: <QrCode size={20} />,
+      color: 'bg-emerald-500 hover:bg-emerald-600',
+      onClick: () => onNavigate('validar'),
+      description: 'Escanear QR'
+    },
+    {
+      id: 'benefits',
+      label: 'Mis Beneficios',
+      icon: <Gift size={20} />,
+      color: 'bg-violet-500 hover:bg-violet-600',
+      onClick: () => onNavigate('beneficios'),
+      description: 'Ver disponibles'
+    },
+    {
+      id: 'history',
+      label: 'Historial',
+      icon: <BarChart3 size={20} />,
+      color: 'bg-blue-500 hover:bg-blue-600',
+      onClick: () => onNavigate('historial'),
+      description: 'Ver actividad'
+    }
+  ];
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+      {quickActions.map((action) => (
+        <button
+          key={action.id}
+          onClick={action.onClick}
+          className={`
+            relative p-6 rounded-2xl text-white shadow-lg transition-all duration-200
+            hover:shadow-xl hover:-translate-y-1 ${action.color}
+            group overflow-hidden
+          `}
+        >
+          {/* Simple background pattern */}
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute top-0 right-0 w-16 h-16 bg-white rounded-full -translate-y-8 translate-x-8" />
+            <div className="absolute bottom-0 left-0 w-12 h-12 bg-white rounded-full translate-y-6 -translate-x-6" />
+          </div>
+
+          {/* Content */}
+          <div className="relative z-10 text-center">
+            <div className="flex items-center justify-center w-12 h-12 bg-white/20 rounded-xl mb-4 mx-auto transition-transform duration-200 group-hover:scale-110">
+              {action.icon}
+            </div>
+            <h3 className="font-semibold text-lg mb-1">
+              {action.label}
+            </h3>
+            <p className="text-sm opacity-90">
+              {action.description}
+            </p>
+          </div>
+        </button>
+      ))}
+    </div>
+  );
+};
 
 // Utility functions
 const getStatusColor = (estado: string) => {
@@ -216,6 +286,25 @@ const ProfileImageUploader: React.FC<{
   );
 };
 
+// Enhanced Sidebar with logout functionality
+const SocioSidebarWithLogout: React.FC<{
+  open: boolean;
+  onToggle: () => void;
+  onMenuClick: (section: string) => void;
+  activeSection: string;
+  onLogoutClick: () => void;
+}> = (props) => {
+  return (
+    <SocioSidebar
+      open={props.open}
+      onToggle={props.onToggle}
+      onMenuClick={props.onMenuClick}
+      onLogoutClick={props.onLogoutClick}
+      activeSection={props.activeSection}
+    />
+  );
+};
+
 // Main component
 export default function SocioPerfilPage() {
   const { user, signOut } = useAuth();
@@ -233,6 +322,7 @@ export default function SocioPerfilPage() {
   const [configModalOpen, setConfigModalOpen] = useState(false);
   const [qrModalOpen, setQrModalOpen] = useState(false);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
+  const [logoutModalOpen, setLogoutModalOpen] = useState(false);
 
   // UI states
   const [refreshing, setRefreshing] = useState(false);
@@ -240,6 +330,7 @@ export default function SocioPerfilPage() {
   const [activeConfigTab, setActiveConfigTab] = useState<'general' | 'notifications' | 'privacy'>('general');
   const [updating, setUpdating] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   // Profile data with safe fallbacks
   const profileData = {
@@ -407,14 +498,43 @@ export default function SocioPerfilPage() {
     }
   }, []);
 
-  const handleLogout = async () => {
+  // Navigation handlers
+  const handleNavigate = (section: string) => {
+    const sectionRoutes: Record<string, string> = {
+      'dashboard': '/dashboard/socio',
+      'validar': '/dashboard/socio/validar',
+      'beneficios': '/dashboard/socio/beneficios',
+      'historial': '/dashboard/socio/historial',
+      'perfil': '/dashboard/socio/perfil'
+    };
+
+    const route = sectionRoutes[section];
+    if (route && route !== '/dashboard/socio/perfil') {
+      window.location.href = route;
+    }
+  };
+
+  // Logout handlers
+  const handleLogoutClick = () => {
+    setLogoutModalOpen(true);
+  };
+
+  const handleLogoutConfirm = async () => {
+    setLoggingOut(true);
     try {
       await signOut();
       toast.success('Sesión cerrada correctamente');
     } catch (error) {
       console.error('Error during logout:', error);
       toast.error('Error al cerrar sesión');
+    } finally {
+      setLoggingOut(false);
+      setLogoutModalOpen(false);
     }
+  };
+
+  const handleLogoutCancel = () => {
+    setLogoutModalOpen(false);
   };
 
   // Loading state
@@ -423,386 +543,374 @@ export default function SocioPerfilPage() {
       <DashboardLayout
         activeSection="perfil"
         sidebarComponent={(props) => (
-          <SocioSidebar
+          <SocioSidebarWithLogout
             {...props}
-            onLogoutClick={handleLogout}
+            onLogoutClick={handleLogoutClick}
           />
         )}
       >
-        <div className="p-4 md:p-8 max-w-7xl mx-auto">
-          <LoadingSkeleton />
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-12 h-12 border-4 border-slate-200 border-t-slate-500 rounded-full animate-spin mx-auto mb-4" />
+            <h2 className="text-xl font-semibold text-slate-900 mb-2">
+              Cargando Perfil
+            </h2>
+            <p className="text-slate-600">
+              Preparando tu información...
+            </p>
+          </div>
         </div>
       </DashboardLayout>
     );
   }
 
   return (
-    <DashboardLayout
-      activeSection="perfil"
-      sidebarComponent={(props) => (
-        <SocioSidebar
-          {...props}
-          onLogoutClick={handleLogout}
-        />
-      )}
-    >
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-        <div className="p-6 space-y-8">
-          {/* Header */}
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-              <div className="flex items-center gap-6">
-                <ProfileImageUploader
-                  currentImage={profileData.avatar || undefined}
-                  onImageUpload={handleImageUpload}
-                  uploading={uploadingImage}
+    <>
+      <DashboardLayout
+        activeSection="perfil"
+        sidebarComponent={(props) => (
+          <SocioSidebarWithLogout
+            {...props}
+            onLogoutClick={handleLogoutClick}
+          />
+        )}
+      >
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.2 }}
+        >
+          <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+            <div className="p-6 space-y-8">
+              {/* Header */}
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+                  <div>
+                    <div className="flex items-center space-x-4 mb-4">
+                      <div className="w-16 h-16 bg-gradient-to-br from-slate-600 to-slate-700 rounded-2xl flex items-center justify-center shadow-lg">
+                        <User className="w-8 h-8 text-white" />
+                      </div>
+                      <div>
+                        <h1 className="text-3xl font-bold text-slate-900">
+                          Hola, {profileData.nombre}
+                        </h1>
+                        <p className="text-lg text-slate-600 mt-1">
+                          Gestiona tu perfil y configuración
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center space-x-4">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      leftIcon={<RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />}
+                      onClick={handleRefresh}
+                      disabled={refreshing}
+                    >
+                      {refreshing ? 'Actualizando...' : 'Actualizar'}
+                    </Button>
+                    <Button
+                      size="sm"
+                      leftIcon={<Edit3 size={16} />}
+                      onClick={() => setEditModalOpen(true)}
+                      className="bg-slate-600 hover:bg-slate-700"
+                    >
+                      Editar Perfil
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick Actions */}
+              <QuickActions onNavigate={handleNavigate} />
+
+              {/* Stats Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 md:gap-6 mb-8">
+                <StatsCard
+                  title="Beneficios Usados"
+                  value={enhancedStats.beneficiosUsados}
+                  icon={<Gift size={24} />}
+                  gradient="from-emerald-500 to-teal-600"
+                  change={enhancedStats.cambiosBeneficios}
+                  subtitle="Este mes"
+                  onClick={() => setDetailsModalOpen(true)}
                 />
                 
-                <div>
-                  <h1 className="text-3xl font-bold text-slate-900 mb-2">
-                    {profileData.nombre}
-                  </h1>
-                  <p className="text-lg text-slate-600 font-medium mb-3">
-                    {profileData.email}
-                  </p>
-                  
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <div className={`
-                      flex items-center gap-2 px-3 py-1 rounded-lg border text-sm font-medium
-                      ${getStatusColor(profileData.estado)}
-                    `}>
-                      <CheckCircle size={16} />
-                      <span className="capitalize">{profileData.estado}</span>
-                    </div>
-                    
-                    <div className={`flex items-center gap-2 px-3 py-1 rounded-lg bg-gradient-to-r ${getNivelGradient(profileData.nivel.nivel)} text-white text-sm font-bold shadow-lg`}>
-                      {getNivelIcon(profileData.nivel.nivel)}
-                      <span>{profileData.nivel.nivel}</span>
-                    </div>
-                    
-                    <button
-                      onClick={handleCopyId}
-                      className="flex items-center gap-2 px-3 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium transition-colors"
-                    >
-                      {copied ? <Check size={16} /> : <Copy size={16} />}
-                      ID: {socio?.id?.slice(-8)}
-                    </button>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="flex gap-3 flex-wrap">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  leftIcon={<RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />}
-                  onClick={handleRefresh}
-                  disabled={refreshing}
-                >
-                  {refreshing ? 'Actualizando...' : 'Actualizar'}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  leftIcon={<Download size={16} />}
-                  onClick={handleExportData}
-                >
-                  Exportar Datos
-                </Button>
-                <Button
-                  size="sm"
-                  leftIcon={<Edit3 size={16} />}
-                  onClick={() => setEditModalOpen(true)}
-                >
-                  Editar Perfil
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          {/* Stats Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 md:gap-6 mb-8">
-            <StatsCard
-              title="Beneficios Usados"
-              value={enhancedStats.beneficiosUsados}
-              icon={<Gift size={24} />}
-              gradient="from-emerald-500 to-teal-600"
-              change={enhancedStats.cambiosBeneficios}
-              subtitle="Este mes"
-              onClick={() => setDetailsModalOpen(true)}
-            />
-            
-            <StatsCard
-              title="Ahorro Total"
-              value={`$${enhancedStats.ahorroTotal.toLocaleString()}`}
-              icon={<DollarSign size={24} />}
-              gradient="from-green-500 to-emerald-600"
-              change={enhancedStats.cambiosAhorro}
-              subtitle="Acumulado"
-              onClick={() => setDetailsModalOpen(true)}
-            />
-            
-            <StatsCard
-              title="Comercios Visitados"
-              value={enhancedStats.comerciosVisitados}
-              icon={<QrCode size={24} />}
-              gradient="from-blue-500 to-indigo-600"
-              change={enhancedStats.cambiosComercios}
-              subtitle="Únicos"
-              onClick={() => setDetailsModalOpen(true)}
-            />
-            
-            <StatsCard
-              title="Racha Actual"
-              value={`${enhancedStats.racha} días`}
-              icon={<Zap size={24} />}
-              gradient="from-orange-500 to-red-600"
-              change={enhancedStats.cambiosRacha}
-              subtitle="Consecutivos"
-              onClick={() => setDetailsModalOpen(true)}
-            />
-            
-            <StatsCard
-              title="Asociaciones"
-              value={enhancedStats.asociacionesActivas}
-              icon={<Award size={24} />}
-              gradient="from-purple-500 to-pink-600"
-              subtitle="Activas"
-            />
-            
-            <StatsCard
-              title="Tiempo como Socio"
-              value={`${enhancedStats.tiempoComoSocio} días`}
-              icon={<Calendar size={24} />}
-              gradient="from-indigo-500 to-purple-600"
-              subtitle="Desde el registro"
-            />
-          </div>
-
-          {/* Main Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
-            {/* Profile Information */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Personal Information Card */}
-              <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-lg">
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gradient-to-r from-slate-600 to-slate-700 rounded-xl flex items-center justify-center text-white">
-                      <User size={20} />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-bold text-gray-900">Información Personal</h3>
-                      <p className="text-sm text-gray-600">Datos básicos de tu perfil</p>
-                    </div>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    leftIcon={<Edit3 size={16} />}
-                    onClick={() => setEditModalOpen(true)}
-                  >
-                    Editar
-                  </Button>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <div>
-                      <label className="text-sm font-semibold text-gray-700 mb-2 block">Nombre Completo</label>
-                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-                        <User size={16} className="text-gray-500" />
-                        <span className="text-gray-900 font-medium">{profileData.nombre || 'No especificado'}</span>
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <label className="text-sm font-semibold text-gray-700 mb-2 block">Email</label>
-                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-                        <Mail size={16} className="text-gray-500" />
-                        <span className="text-gray-900 font-medium">{profileData.email}</span>
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <label className="text-sm font-semibold text-gray-700 mb-2 block">Teléfono</label>
-                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-                        <Phone size={16} className="text-gray-500" />
-                        <span className="text-gray-900 font-medium">{profileData.telefono || 'No especificado'}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div>
-                      <label className="text-sm font-semibold text-gray-700 mb-2 block">DNI</label>
-                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-                        <Shield size={16} className="text-gray-500" />
-                        <span className="text-gray-900 font-medium">{profileData.dni || 'No especificado'}</span>
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <label className="text-sm font-semibold text-gray-700 mb-2 block">Dirección</label>
-                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-                        <MapPin size={16} className="text-gray-500" />
-                        <span className="text-gray-900 font-medium">{profileData.direccion || 'No especificado'}</span>
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <label className="text-sm font-semibold text-gray-700 mb-2 block">Fecha de Nacimiento</label>
-                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-                        <Calendar size={16} className="text-gray-500" />
-                        <span className="text-gray-900 font-medium">
-                          {profileData.fechaNacimiento 
-                            ? format(profileData.fechaNacimiento, 'dd/MM/yyyy', { locale: es })
-                            : 'No especificado'
-                          }
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <StatsCard
+                  title="Ahorro Total"
+                  value={`$${enhancedStats.ahorroTotal.toLocaleString()}`}
+                  icon={<DollarSign size={24} />}
+                  gradient="from-green-500 to-emerald-600"
+                  change={enhancedStats.cambiosAhorro}
+                  subtitle="Acumulado"
+                  onClick={() => setDetailsModalOpen(true)}
+                />
+                
+                <StatsCard
+                  title="Comercios Visitados"
+                  value={enhancedStats.comerciosVisitados}
+                  icon={<Store size={24} />}
+                  gradient="from-blue-500 to-indigo-600"
+                  change={enhancedStats.cambiosComercios}
+                  subtitle="Únicos"
+                  onClick={() => setDetailsModalOpen(true)}
+                />
+                
+                <StatsCard
+                  title="Racha Actual"
+                  value={`${enhancedStats.racha} días`}
+                  icon={<Zap size={24} />}
+                  gradient="from-orange-500 to-red-600"
+                  change={enhancedStats.cambiosRacha}
+                  subtitle="Consecutivos"
+                  onClick={() => setDetailsModalOpen(true)}
+                />
+                
+                <StatsCard
+                  title="Asociaciones"
+                  value={enhancedStats.asociacionesActivas}
+                  icon={<Award size={24} />}
+                  gradient="from-purple-500 to-pink-600"
+                  subtitle="Activas"
+                />
+                
+                <StatsCard
+                  title="Tiempo como Socio"
+                  value={`${enhancedStats.tiempoComoSocio} días`}
+                  icon={<Calendar size={24} />}
+                  gradient="from-indigo-500 to-purple-600"
+                  subtitle="Desde el registro"
+                />
               </div>
 
-              {/* Membership Level Card */}
-              <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-lg">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className={`w-10 h-10 rounded-xl bg-gradient-to-r ${getNivelGradient(profileData.nivel.nivel)} flex items-center justify-center text-white`}>
-                    {getNivelIcon(profileData.nivel.nivel)}
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-gray-900">Nivel de Membresía</h3>
-                    <p className="text-sm text-gray-600">Tu progreso y beneficios desbloqueados</p>
-                  </div>
-                </div>
-
-                <div className="space-y-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-2xl font-black text-gray-900">{profileData.nivel.nivel}</div>
-                      <div className="text-sm text-gray-600">Nivel actual</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-lg font-bold text-slate-600">{profileData.nivel.puntos} pts</div>
-                      <div className="text-sm text-gray-600">Puntos acumulados</div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-semibold text-gray-700">
-                        Progreso a {profileData.nivel.proximoNivel}
-                      </span>
-                      <span className="text-sm text-gray-600">
-                        {profileData.nivel.puntosParaProximoNivel - profileData.nivel.puntos} pts restantes
-                      </span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-3">
-                      <div 
-                        className={`h-3 rounded-full bg-gradient-to-r ${getNivelGradient(profileData.nivel.proximoNivel)} transition-all duration-500`}
-                        style={{ 
-                          width: `${(profileData.nivel.puntos / profileData.nivel.puntosParaProximoNivel) * 100}%` 
-                        }}
-                      ></div>
-                    </div>
-                  </div>
-
-                  {profileData.nivel.descuentoAdicional > 0 && (
-                    <div className="bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl p-4 border border-emerald-200">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Star className="w-5 h-5 text-emerald-600" />
-                        <span className="font-semibold text-emerald-900">Descuento Adicional</span>
-                      </div>
-                      <div className="text-2xl font-bold text-emerald-600">
-                        +{profileData.nivel.descuentoAdicional}%
-                      </div>
-                      <div className="text-sm text-emerald-700">
-                        En todos los beneficios por tu nivel {profileData.nivel.nivel}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Sidebar */}
-            <div className="space-y-6">
-              {/* Quick Actions */}
-              <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-lg">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">Acciones Rápidas</h3>
-                <div className="space-y-3">
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start"
-                    leftIcon={<QrCode size={16} />}
-                    onClick={() => setQrModalOpen(true)}
-                  >
-                    Ver mi QR
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start"
-                    leftIcon={<Settings size={16} />}
-                    onClick={() => setConfigModalOpen(true)}
-                  >
-                    Configuración
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start"
-                    leftIcon={<BarChart3 size={16} />}
-                    onClick={() => setDetailsModalOpen(true)}
-                  >
-                    Estadísticas Detalladas
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start"
-                    leftIcon={<Download size={16} />}
-                    onClick={handleExportData}
-                  >
-                    Exportar Datos
-                  </Button>
-                </div>
-              </div>
-
-              {/* Asociaciones */}
-              <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-lg">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">Mis Asociaciones</h3>
-                {asociaciones && asociaciones.length > 0 ? (
-                  <div className="space-y-3">
-                    {asociaciones.slice(0, 3).map((asociacion) => (
-                      <div key={asociacion.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-                        <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-600 rounded-lg flex items-center justify-center text-white text-sm font-bold">
-                          {asociacion.nombre.charAt(0)}
+              {/* Main Content Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+                {/* Profile Information */}
+                <div className="lg:col-span-2 space-y-6">
+                  {/* Personal Information Card */}
+                  <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-lg">
+                    <div className="flex items-center justify-between mb-6">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-gradient-to-r from-slate-600 to-slate-700 rounded-xl flex items-center justify-center text-white">
+                          <User size={20} />
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="font-semibold text-gray-900 text-sm truncate">{asociacion.nombre}</div>
-                          <div className={`text-xs px-2 py-1 rounded-full inline-block ${getStatusColor(asociacion.estado)}`}>
-                            {asociacion.estado}
+                        <div>
+                          <h3 className="text-lg font-bold text-gray-900">Información Personal</h3>
+                          <p className="text-sm text-gray-600">Datos básicos de tu perfil</p>
+                        </div>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        leftIcon={<Edit3 size={16} />}
+                        onClick={() => setEditModalOpen(true)}
+                      >
+                        Editar
+                      </Button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-4">
+                        <div>
+                          <label className="text-sm font-semibold text-gray-700 mb-2 block">Nombre Completo</label>
+                          <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                            <User size={16} className="text-gray-500" />
+                            <span className="text-gray-900 font-medium">{profileData.nombre || 'No especificado'}</span>
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <label className="text-sm font-semibold text-gray-700 mb-2 block">Email</label>
+                          <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                            <Mail size={16} className="text-gray-500" />
+                            <span className="text-gray-900 font-medium">{profileData.email}</span>
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <label className="text-sm font-semibold text-gray-700 mb-2 block">Teléfono</label>
+                          <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                            <Phone size={16} className="text-gray-500" />
+                            <span className="text-gray-900 font-medium">{profileData.telefono || 'No especificado'}</span>
                           </div>
                         </div>
                       </div>
-                    ))}
-                    {asociaciones.length > 3 && (
-                      <div className="text-center">
-                        <Button variant="outline" size="sm">
-                          Ver todas ({asociaciones.length})
-                        </Button>
+
+                      <div className="space-y-4">
+                        <div>
+                          <label className="text-sm font-semibold text-gray-700 mb-2 block">DNI</label>
+                          <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                            <Shield size={16} className="text-gray-500" />
+                            <span className="text-gray-900 font-medium">{profileData.dni || 'No especificado'}</span>
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <label className="text-sm font-semibold text-gray-700 mb-2 block">Dirección</label>
+                          <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                            <MapPin size={16} className="text-gray-500" />
+                            <span className="text-gray-900 font-medium">{profileData.direccion || 'No especificado'}</span>
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <label className="text-sm font-semibold text-gray-700 mb-2 block">Fecha de Nacimiento</label>
+                          <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                            <Calendar size={16} className="text-gray-500" />
+                            <span className="text-gray-900 font-medium">
+                              {profileData.fechaNacimiento 
+                                ? format(profileData.fechaNacimiento, 'dd/MM/yyyy', { locale: es })
+                                : 'No especificado'
+                              }
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Membership Level Card */}
+                  <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-lg">
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className={`w-10 h-10 rounded-xl bg-gradient-to-r ${getNivelGradient(profileData.nivel.nivel)} flex items-center justify-center text-white`}>
+                        {getNivelIcon(profileData.nivel.nivel)}
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold text-gray-900">Nivel de Membresía</h3>
+                        <p className="text-sm text-gray-600">Tu progreso y beneficios desbloqueados</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="text-2xl font-black text-gray-900">{profileData.nivel.nivel}</div>
+                          <div className="text-sm text-gray-600">Nivel actual</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-lg font-bold text-slate-600">{profileData.nivel.puntos} pts</div>
+                          <div className="text-sm text-gray-600">Puntos acumulados</div>
+                        </div>
+                      </div>
+
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-semibold text-gray-700">
+                            Progreso a {profileData.nivel.proximoNivel}
+                          </span>
+                          <span className="text-sm text-gray-600">
+                            {profileData.nivel.puntosParaProximoNivel - profileData.nivel.puntos} pts restantes
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-3">
+                          <div 
+                            className={`h-3 rounded-full bg-gradient-to-r ${getNivelGradient(profileData.nivel.proximoNivel)} transition-all duration-500`}
+                            style={{ 
+                              width: `${(profileData.nivel.puntos / profileData.nivel.puntosParaProximoNivel) * 100}%` 
+                            }}
+                          ></div>
+                        </div>
+                      </div>
+
+                      {profileData.nivel.descuentoAdicional > 0 && (
+                        <div className="bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl p-4 border border-emerald-200">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Star className="w-5 h-5 text-emerald-600" />
+                            <span className="font-semibold text-emerald-900">Descuento Adicional</span>
+                          </div>
+                          <div className="text-2xl font-bold text-emerald-600">
+                            +{profileData.nivel.descuentoAdicional}%
+                          </div>
+                          <div className="text-sm text-emerald-700">
+                            En todos los beneficios por tu nivel {profileData.nivel.nivel}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Sidebar */}
+                <div className="space-y-6">
+                  {/* Quick Actions */}
+                  <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-lg">
+                    <h3 className="text-lg font-bold text-gray-900 mb-4">Acciones Rápidas</h3>
+                    <div className="space-y-3">
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start"
+                        leftIcon={<QrCode size={16} />}
+                        onClick={() => setQrModalOpen(true)}
+                      >
+                        Ver mi QR
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start"
+                        leftIcon={<Settings size={16} />}
+                        onClick={() => setConfigModalOpen(true)}
+                      >
+                        Configuración
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start"
+                        leftIcon={<BarChart3 size={16} />}
+                        onClick={() => setDetailsModalOpen(true)}
+                      >
+                        Estadísticas Detalladas
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start"
+                        leftIcon={<Download size={16} />}
+                        onClick={handleExportData}
+                      >
+                        Exportar Datos
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Asociaciones */}
+                  <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-lg">
+                    <h3 className="text-lg font-bold text-gray-900 mb-4">Mis Asociaciones</h3>
+                    {asociaciones && asociaciones.length > 0 ? (
+                      <div className="space-y-3">
+                        {asociaciones.slice(0, 3).map((asociacion) => (
+                          <div key={asociacion.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                            <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-600 rounded-lg flex items-center justify-center text-white text-sm font-bold">
+                              {asociacion.nombre.charAt(0)}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="font-semibold text-gray-900 text-sm truncate">{asociacion.nombre}</div>
+                              <div className={`text-xs px-2 py-1 rounded-full inline-block ${getStatusColor(asociacion.estado)}`}>
+                                {asociacion.estado}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                        {asociaciones.length > 3 && (
+                          <div className="text-center">
+                            <Button variant="outline" size="sm">
+                              Ver todas ({asociaciones.length})
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="text-center py-6">
+                        <Award className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                        <p className="text-gray-600 text-sm">No tienes asociaciones activas</p>
                       </div>
                     )}
                   </div>
-                ) : (
-                  <div className="text-center py-6">
-                    <Award className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                    <p className="text-gray-600 text-sm">No tienes asociaciones activas</p>
-                  </div>
-                )}
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Edit Profile Modal */}
         <Dialog open={editModalOpen} onClose={() => setEditModalOpen(false)}>
@@ -1249,7 +1357,7 @@ export default function SocioPerfilPage() {
 
                 <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-4 border border-purple-200">
                   <div className="flex items-center gap-3 mb-2">
-                    <QrCode className="w-8 h-8 text-purple-600" />
+                    <Store className="w-8 h-8 text-purple-600" />
                     <div>
                       <div className="text-2xl font-bold text-purple-700">{enhancedStats.comerciosVisitados}</div>
                       <div className="text-sm text-purple-600">Comercios Únicos</div>
@@ -1329,7 +1437,15 @@ export default function SocioPerfilPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      </div>
-    </DashboardLayout>
+      </DashboardLayout>
+
+      {/* Logout Modal */}
+      <LogoutModal
+        isOpen={logoutModalOpen}
+        isLoading={loggingOut}
+        onConfirm={handleLogoutConfirm}
+        onCancel={handleLogoutCancel}
+      />
+    </>
   );
 }
