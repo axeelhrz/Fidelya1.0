@@ -718,7 +718,20 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
       // Filter socios by date range
       const recentSocios = memoizedAllSocios.filter(socio => {
         if (!socio.creadoEn) return false;
-        const createdDate = socio.creadoEn;
+        let createdDate: Date;
+        if (typeof socio.creadoEn.toDate === 'function') {
+          createdDate = socio.creadoEn.toDate();
+        } else if (socio.creadoEn instanceof Date) {
+          createdDate = socio.creadoEn;
+        } else {
+          createdDate = typeof socio.creadoEn.toDate === 'function'
+            ? socio.creadoEn.toDate()
+            : socio.creadoEn instanceof Date
+              ? socio.creadoEn
+              : (socio.creadoEn && typeof socio.creadoEn.toDate === 'function'
+                ? socio.creadoEn.toDate()
+                : new Date(socio.creadoEn));
+        }
         return isAfter(createdDate, startDate) && isBefore(createdDate, endDate);
       });
 

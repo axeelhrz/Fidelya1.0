@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { socioService, Socio, SocioFormData, SocioFilters, ImportResult } from '@/services/socio.service';
-import { SocioStats } from '@/types/socio';
+import { socioService, SocioFilters, ImportResult } from '@/services/socio.service';
+import { Socio, SocioStats, SocioFormData } from '@/types/socio';
 import { useAuth } from './useAuth';
 import { toast } from 'react-hot-toast';
 
