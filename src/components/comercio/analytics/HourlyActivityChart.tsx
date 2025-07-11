@@ -31,10 +31,22 @@ interface HourlyActivityChartProps {
   }>;
 }
 
-import type { TooltipProps } from 'recharts';
+// Define proper types for the tooltip
+interface TooltipPayload {
+  value: number;
+  name: string;
+  dataKey: string;
+  color: string;
+}
 
-const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
-  if (active && payload && payload.length) {
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: TooltipPayload[];
+  label?: string;
+}
+
+const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, label }) => {
+  if (active && payload && payload.length > 0) {
     return (
       <Box
         sx={{
@@ -54,7 +66,7 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>)
             Validaciones:
           </Typography>
           <Typography variant="caption" sx={{ fontWeight: 600, color: '#1e293b' }}>
-            {payload[0].value}
+            {payload[0]?.value}
           </Typography>
         </Stack>
       </Box>
