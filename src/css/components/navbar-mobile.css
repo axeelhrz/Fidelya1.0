@@ -572,11 +572,11 @@
     transition: all var(--mobile-animation-duration) var(--mobile-animation-easing);
 }
 
-/* ===== NAVEGACIÓN PRINCIPAL MÓVIL - COMPACTA ===== */
+/* ===== NAVEGACIÓN PRINCIPAL MÓVIL - COMPACTA CON ESPACIADO CONTROLADO ===== */
 .mobile-nav__navigation {
     flex: 1;
-    padding: clamp(0.5rem, 1.5vw, 0.75rem) 0;
-    overflow: hidden; /* Sin scroll */
+    padding: clamp(1rem, 2.5vw, 1.5rem) 0;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
 }
@@ -584,20 +584,20 @@
 .mobile-nav__list {
     display: flex;
     flex-direction: column;
-    gap: 0;
+    gap: clamp(0.5rem, 1.5vw, 0.75rem); /* Espaciado controlado entre botones */
     list-style: none;
     margin: 0;
-    padding: 0;
+    padding: 0 clamp(0.5rem, 1.5vw, 0.75rem);
     flex: 1;
-    justify-content: space-evenly; /* Distribuir uniformemente */
+    justify-content: center; /* Centrar verticalmente */
 }
 
 .mobile-nav__link {
     position: relative;
     display: flex;
     align-items: center;
-    min-height: clamp(42px, 9vw, 50px);
-    padding: clamp(0.75rem, 2.5vw, 1rem) clamp(1.25rem, 3.5vw, 1.75rem);
+    min-height: clamp(48px, 10vw, 56px);
+    padding: clamp(0.875rem, 2.5vw, 1.125rem) clamp(1.25rem, 3.5vw, 1.75rem);
     font-family: var(--font-mono);
     font-size: clamp(0.8rem, 2.2vw, 0.9rem);
     font-weight: 700;
@@ -607,6 +607,7 @@
     letter-spacing: 0.8px;
     background: transparent;
     border-left: 3px solid transparent;
+    border-radius: 0 12px 12px 0;
     transition: all var(--mobile-animation-duration) var(--mobile-animation-easing);
     -webkit-tap-highlight-color: transparent;
     overflow: hidden;
@@ -894,9 +895,18 @@
         font-size: clamp(0.65rem, 1.6vw, 0.75rem);
     }
     
+    .mobile-nav__navigation {
+        padding: clamp(0.75rem, 2vw, 1rem) 0;
+    }
+    
+    .mobile-nav__list {
+        gap: clamp(0.375rem, 1.2vw, 0.625rem);
+        padding: 0 clamp(0.375rem, 1.2vw, 0.625rem);
+    }
+    
     .mobile-nav__link {
-        min-height: clamp(38px, 8.5vw, 45px);
-        padding: clamp(0.625rem, 2vw, 0.875rem) clamp(1rem, 3vw, 1.5rem);
+        min-height: clamp(42px, 9vw, 50px);
+        padding: clamp(0.75rem, 2vw, 0.875rem) clamp(1rem, 3vw, 1.5rem);
     }
     
     .mobile-nav__cta {
@@ -1049,7 +1059,7 @@ body.mobile-menu-open {
     }
 }
 
-/* ===== OPTIMIZACIÓN PARA PANTALLAS MUY PEQUEÑAS (< 360px) =====
+/* ===== OPTIMIZACIÓN PARA PANTALLAS MUY PEQUEÑAS (< 360px) ===== */
 @media (max-width: 360px) {
     :root {
         --mobile-menu-width: min(320px, 95vw);
@@ -1095,12 +1105,17 @@ body.mobile-menu-open {
     }
     
     .mobile-nav__navigation {
-        padding: clamp(0.375rem, 1.2vw, 0.625rem) 0;
+        padding: clamp(0.625rem, 1.8vw, 0.875rem) 0;
+    }
+    
+    .mobile-nav__list {
+        gap: clamp(0.25rem, 1vw, 0.5rem);
+        padding: 0 clamp(0.25rem, 1vw, 0.5rem);
     }
     
     .mobile-nav__link {
-        min-height: clamp(36px, 8vw, 42px);
-        padding: clamp(0.5rem, 1.8vw, 0.75rem) clamp(0.875rem, 2.5vw, 1.25rem);
+        min-height: clamp(38px, 8.5vw, 44px);
+        padding: clamp(0.625rem, 1.8vw, 0.75rem) clamp(0.875rem, 2.5vw, 1.25rem);
         font-size: clamp(0.75rem, 2vw, 0.85rem);
         letter-spacing: 0.6px;
     }
@@ -1169,11 +1184,15 @@ body.mobile-menu-open {
     }
     
     .mobile-nav__navigation {
-        padding: clamp(0.375rem, 1.2vw, 0.625rem) 0;
+        padding: clamp(0.5rem, 1.5vw, 0.75rem) 0;
+    }
+    
+    .mobile-nav__list {
+        gap: clamp(0.375rem, 1.2vw, 0.625rem);
     }
     
     .mobile-nav__link {
-        min-height: clamp(36px, 8vw, 44px);
+        min-height: clamp(40px, 8.5vw, 48px);
         padding: clamp(0.625rem, 2vw, 0.875rem) clamp(1rem, 3vw, 1.5rem);
     }
     
@@ -1216,11 +1235,15 @@ body.mobile-menu-open {
     }
     
     .mobile-nav__navigation {
-        padding: clamp(0.25rem, 1vw, 0.5rem) 0;
+        padding: clamp(0.375rem, 1.2vw, 0.625rem) 0;
+    }
+    
+    .mobile-nav__list {
+        gap: clamp(0.25rem, 0.8vw, 0.5rem);
     }
     
     .mobile-nav__link {
-        min-height: clamp(32px, 7vw, 38px);
+        min-height: clamp(36px, 7.5vw, 42px);
         padding: clamp(0.5rem, 1.8vw, 0.75rem) clamp(1rem, 3vw, 1.5rem);
         font-size: clamp(0.7rem, 1.8vw, 0.8rem);
     }
@@ -1274,7 +1297,7 @@ body.mobile-menu-open {
         flex: 1;
         display: flex;
         flex-direction: column;
-        justify-content: space-around;
+        justify-content: center;
         align-items: stretch;
     }
     
@@ -1315,8 +1338,16 @@ body.mobile-menu-open {
         font-size: clamp(0.7rem, 1.8vw, 0.85rem);
     }
     
+    .mobile-nav__navigation {
+        padding: clamp(0.25rem, 1vw, 0.5rem) 0;
+    }
+    
+    .mobile-nav__list {
+        gap: clamp(0.125rem, 0.6vw, 0.375rem);
+    }
+    
     .mobile-nav__link {
-        min-height: clamp(28px, 6vw, 34px);
+        min-height: clamp(32px, 6.5vw, 38px);
         padding: clamp(0.375rem, 1.5vw, 0.625rem) clamp(0.75rem, 2.5vw, 1.25rem);
         font-size: clamp(0.65rem, 1.6vw, 0.75rem);
     }
