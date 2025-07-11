@@ -999,7 +999,7 @@ function initializeDesktopNavigation() {
     initializeActiveSection();
 }
 
-// ===== NAVEGACIÓN MÓVIL INDEPENDIENTE =====
+// ===== NAVEGACIÓN MÓVIL INDEPENDIENTE - CORREGIDA =====
 function initializeMobileNavigation() {
     const mobileNavToggle = document.getElementById('mobile-nav-toggle');
     const mobileNavMenu = document.getElementById('mobile-nav-menu');
@@ -1074,23 +1074,32 @@ function initializeMobileNavigation() {
         });
     }
     
-    // Enlaces de navegación móvil
+    // Enlaces de navegación móvil - CORREGIDO
     mobileNavLinks.forEach(link => {
         link.addEventListener('click', (e) => {
+            // Cerrar el menú primero
             if (isMobileMenuOpen) {
                 closeMobileNavMenu();
             }
             
+            // Prevenir comportamiento por defecto
             e.preventDefault();
+            
+            // Obtener el ID de la sección objetivo
             const targetId = link.getAttribute('href');
             const targetSection = document.querySelector(targetId);
             
+            // Hacer scroll a la sección si existe
             if (targetSection) {
-                smoothScrollToSection(targetSection);
-                updateActiveMobileNavLink(link);
+                // Pequeño delay para que se cierre el menú primero
+                setTimeout(() => {
+                    smoothScrollToSection(targetSection);
+                    updateActiveMobileNavLink(link);
+                }, 300); // Tiempo para que se cierre el menú
             }
         });
 
+        // Efectos táctiles
         link.addEventListener('touchstart', () => {
             link.style.transform = 'scale(0.98)';
         }, { passive: true });
