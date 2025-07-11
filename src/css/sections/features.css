@@ -555,6 +555,18 @@ text-align: center;
 padding: var(--space-lg);
 }
 
+/* CORRECCIÓN: Lista alineada a la izquierda en móvil */
+.feature__list {
+text-align: left;
+max-width: 100%;
+margin: 0 auto;
+}
+
+.feature__list-item {
+justify-content: flex-start;
+text-align: left;
+}
+
 .feature__phone {
 order: 1;
 width: clamp(200px, 60vw, 280px);
@@ -621,6 +633,17 @@ padding: var(--space-md);
 .feature__title::before {
 left: -12px;
 width: 3px;
+}
+
+/* CORRECCIÓN ADICIONAL: Asegurar alineación izquierda en pantallas muy pequeñas */
+.feature__list {
+text-align: left;
+padding-left: 0;
+}
+
+.feature__list-item {
+text-align: left;
+justify-content: flex-start;
 }
 }
 
