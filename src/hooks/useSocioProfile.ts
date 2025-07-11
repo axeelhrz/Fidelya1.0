@@ -163,7 +163,9 @@ export function useSocioProfile(): UseSocioProfileReturn {
         telefono: data.telefono,
         dni: data.dni,
         direccion: data.direccion,
-        fechaNacimiento: data.fechaNacimiento,
+        fechaNacimiento: typeof data.fechaNacimiento === 'string'
+          ? new Date(data.fechaNacimiento)
+          : data.fechaNacimiento,
       };
 
       const success = await socioService.updateSocio(socioId, updateData);

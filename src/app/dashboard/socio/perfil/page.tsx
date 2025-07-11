@@ -116,8 +116,13 @@ const convertToDate = (value: Date | Timestamp | string | undefined): Date | und
   if (value instanceof Date) return value;
   if (value instanceof Timestamp) return value.toDate();
   if (typeof value === 'string') return new Date(value);
-  if (typeof value === 'object' && 'toDate' in value && typeof value.toDate === 'function') {
-    return value.toDate();
+  if (
+    typeof value === 'object' &&
+    value !== null &&
+    'toDate' in value &&
+    typeof (value as { toDate?: unknown }).toDate === 'function'
+  ) {
+    return (value as { toDate: () => Date }).toDate();
   }
   return undefined;
 };
@@ -286,7 +291,10 @@ export default function SocioPerfilPage() {
     setUpdating(true);
     try {
       const updateData = {
-        ...formData,
+        nombre: formData.nombre,
+        telefono: formData.telefono,
+        dni: formData.dni,
+        direccion: formData.direccion,
         fechaNacimiento: formData.fechaNacimiento ? new Date(formData.fechaNacimiento) : undefined
       };
       
