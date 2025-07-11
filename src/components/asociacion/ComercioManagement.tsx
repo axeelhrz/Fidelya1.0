@@ -32,7 +32,6 @@ import {
 import { useComercios } from '@/hooks/useComercios';
 import { ComercioDisponible, SolicitudAdhesion } from '@/services/adhesion.service';
 import type { Comercio } from '@/services/comercio.service';
-import type { Validacion } from '@/types/validacion';
 import { VincularComercioDialog } from './VincularComercioDialog';
 import { CreateComercioDialog } from './CreateComercioDialog';
 import { EditComercioDialog } from './EditComercioDialog';
@@ -977,7 +976,6 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
                         <Mail className="w-4 h-4 mr-2" />
                         <span className="truncate">{comercio.email}</span>
                       </div>
-                      
                       {comercio.telefono && (
                         <div className="flex items-center text-sm text-gray-600">
                           <Phone className="w-4 h-4 mr-2" />
@@ -1304,44 +1302,59 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
           nombreComercio: selectedComercio.nombreComercio
         } : null}
         onLoadValidations={async (comercioId, filters?, limit?) => {
-          // Adapt filters to expected by getComercioValidations
-          const adaptedFilters: Record<string, unknown> = {};
-          if (filters?.fechaInicio) adaptedFilters.fechaDesde = filters.fechaInicio;
-          if (filters?.fechaFin) adaptedFilters.fechaHasta = filters.fechaFin;
-          if (filters?.estado) adaptedFilters.estado = filters.estado;
-          if (filters?.socio) adaptedFilters.beneficioId = filters.socio;
-          // Call original hook
-          const result = await getComercioValidations(comercioId, adaptedFilters, limit);
+          try {
+            // Adapt filters to expected by getComercioValidations
+            const adaptedFilters: Record<string, unknown> = {};
+            if (filters?.fechaInicio) adaptedFilters.fechaDesde = filters.fechaInicio;
+            if (filters?.fechaFin) adaptedFilters.fechaHasta = filters.fechaFin;
+            if (filters?.estado) adaptedFilters.estado = filters.estado;
+            if (filters?.socio) adaptedFilters.beneficioId = filters.socio;
+            
+            // Call original hook
+            const result = await getComercioValidations(comercioId, adaptedFilters, limit);
 
-          // Ensure each validacion has all required Validacion properties
-          // Fill missing properties with default values if necessary
-          const validaciones: Validacion[] = result.validaciones.map((v: any) => ({
-            ...v,
-            socioEmail: v.socioEmail ?? '',
-            beneficioDescripcion: v.beneficioDescripcion ?? '',
-            tipoDescuento: v.tipoDescuento ?? '',
-            descuento: v.descuento ?? 0,
-            monto: v.monto ?? 0,
-            ahorro: v.ahorro ?? 0,
-            fecha: v.fecha ?? new Date(),
-            estado: v.estado ?? '',
-            comercioId: v.comercioId ?? '',
-            socioId: v.socioId ?? '',
-            beneficioId: v.beneficioId ?? '',
-            id: v.id ?? '',
-          }));
+            // Map ValidationData to the expected Validacion interface for the modal
+            const validaciones = result.validaciones.map((validationData) => ({
+              id: validationData.id,
+              socioNombre: validationData.socioNombre,
+              socioEmail: '', // ValidationData doesn't have socioEmail, set empty
+              beneficioTitulo: validationData.beneficioTitulo,
+              beneficioDescripcion: '', // ValidationData doesn't have beneficioDescripcion, set empty
+              tipoDescuento: 'monto_fijo' as const, // Default type since ValidationData doesn't specify
+              descuento: validationData.montoDescuento,
+              montoOriginal: validationData.montoDescuento, // Use same value as approximation
+              montoFinal: 0, // Calculate as original minus discount
+              estado: validationData.estado,
+              fechaValidacion: validationData.fechaValidacion,
+              metodoPago: validationData.metodoPago,
+              notas: validationData.notas,
+            }));
 
-          return {
-            validaciones,
-            total: validaciones.length,
-            stats: {
-              totalValidaciones: validaciones.length,
-              exitosas: validaciones.filter((v: Validacion) => v.estado === 'exitosa').length,
-              fallidas: validaciones.filter((v: Validacion) => v.estado === 'fallida').length,
-              montoTotal: validaciones.reduce((sum: number, v: Validacion) => sum + (v.monto || 0), 0),
-              ahorroTotal: validaciones.reduce((sum: number, v: Validacion) => sum + (v.ahorro || 0), 0),
-            }
-          };
+            return {
+              validaciones,
+              total: validaciones.length,
+              stats: {
+                totalValidaciones: validaciones.length,
+                exitosas: validaciones.filter(v => v.estado === 'exitosa').length,
+                fallidas: validaciones.filter(v => v.estado === 'fallida').length,
+                montoTotal: validaciones.reduce((sum, v) => sum + (v.descuento || 0), 0),
+                ahorroTotal: validaciones.reduce((sum, v) => sum + (v.descuento || 0), 0),
+              }
+            };
+          } catch (error) {
+            console.error('Error loading validations:', error);
+            return {
+              validaciones: [],
+              total: 0,
+              stats: {
+                totalValidaciones: 0,
+                exitosas: 0,
+                fallidas: 0,
+                montoTotal: 0,
+                ahorroTotal: 0,
+              }
+            };
+          }
         }}
         loading={loading}
       />
