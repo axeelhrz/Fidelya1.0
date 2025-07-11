@@ -177,6 +177,8 @@ export interface ValidacionStats {
   totalValidaciones: number;
   validacionesExitosas: number;
   validacionesFallidas: number;
+  clientesUnicos: number;
+  montoTotalDescuentos: number;
   porAsociacion: Record<string, number>;
   porBeneficio: Record<string, number>;
   porDia: Record<string, number>;
@@ -510,4 +512,3 @@ export interface ComercioErrorResponse {
 }
 
 export type ComercioApiResponse<T = unknown> = ComercioSuccessResponse<T> | ComercioErrorResponse;
-

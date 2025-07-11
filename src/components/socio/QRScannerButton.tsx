@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 // Import media types to extend MediaTrackCapabilities
-import '../../../types/media';
+import '../../types/media';
 
 interface QRScannerButtonProps {
   onScan: (qrData: string) => void;

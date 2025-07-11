@@ -112,6 +112,14 @@ export const useValidaciones = () => {
     const validacionesExitosas = validaciones.filter(v => v.resultado === 'valido');
     const validacionesFallidas = validaciones.filter(v => v.resultado !== 'valido');
 
+    // Calculate unique clients (socios)
+    const clientesUnicos = new Set(validaciones.map(v => v.socioId)).size;
+
+    // Calculate total discount amount
+    const montoTotalDescuentos = validaciones.reduce((total, v) => {
+      return total + (v.descuentoAplicado || 0);
+    }, 0);
+
     // Group by association
     const porAsociacion: Record<string, number> = {};
     validaciones.forEach(v => {
@@ -140,6 +148,8 @@ export const useValidaciones = () => {
       totalValidaciones: validaciones.length,
       validacionesExitosas: validacionesExitosas.length,
       validacionesFallidas: validacionesFallidas.length,
+      clientesUnicos,
+      montoTotalDescuentos,
       porAsociacion,
       porBeneficio,
       porDia,
