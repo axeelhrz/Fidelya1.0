@@ -29,7 +29,6 @@ import {
   ResponsiveContainer,
   Legend,
 } from 'recharts';
-import type { TooltipProps } from 'recharts';
 
 interface ValidationsOverTimeProps {
   data: Array<{
@@ -38,6 +37,20 @@ interface ValidationsOverTimeProps {
     exitosas: number;
     fallidas: number;
   }>;
+}
+
+// Define proper types for the tooltip
+interface TooltipPayload {
+  value: number;
+  name: string;
+  dataKey: string;
+  color: string;
+}
+
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: TooltipPayload[];
+  label?: string;
 }
 
 export const ValidationsOverTime: React.FC<ValidationsOverTimeProps> = ({ data }) => {
@@ -51,8 +64,9 @@ export const ValidationsOverTime: React.FC<ValidationsOverTimeProps> = ({ data }
       setChartType(newType);
     }
   };
-  const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
-    if (active && payload && payload.length) {
+
+  const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, label }) => {
+    if (active && payload && payload.length > 0) {
       return (
         <Box
           sx={{
@@ -67,7 +81,7 @@ export const ValidationsOverTime: React.FC<ValidationsOverTimeProps> = ({ data }
           <Typography variant="body2" sx={{ fontWeight: 600, color: '#1e293b', mb: 1 }}>
             {label}
           </Typography>
-          {Array.isArray(payload) && payload.map((entry, index) => (
+          {payload.map((entry, index) => (
             <Stack key={index} direction="row" justifyContent="space-between" alignItems="center">
               <Stack direction="row" alignItems="center" spacing={1}>
                 <Box
