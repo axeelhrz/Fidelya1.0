@@ -29,7 +29,7 @@ export const Alerts: React.FC = () => {
         return b.fechaFin.toDate() < new Date();
       }
       // If it's not a Timestamp, assume it's a string or Date and convert it
-      const fechaFinDate = new Date(b.fechaFin as any);
+      const fechaFinDate = new Date(b.fechaFin as unknown as string | Date);
       return fechaFinDate < new Date();
     }
   );
