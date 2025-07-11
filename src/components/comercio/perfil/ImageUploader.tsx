@@ -126,7 +126,7 @@ export const ImageUploader: React.FC = () => {
 
     try {
       // Generate path for the image
-      const imagePath = generateImagePath(comercio.id, type);
+      const imagePath = generateImagePath(comercio.id, type === 'imagen' ? 'portada' : type);
       
       // Upload image with progress tracking
       const downloadURL = await uploadImage(file, imagePath, {

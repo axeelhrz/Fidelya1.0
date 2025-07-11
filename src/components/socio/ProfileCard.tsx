@@ -204,9 +204,11 @@ export const ProfileCard: React.FC = () => {
                 </div>
                 <span className="text-gray-900">
                   Socio desde {format(
-                    typeof socio.creadoEn?.toDate === 'function'
-                      ? socio.creadoEn.toDate()
-                      : new Date(socio.creadoEn as unknown as string | number | Date),
+                    socio.creadoEn && typeof ((socio.creadoEn as unknown as { toDate?: () => Date }).toDate) === 'function'
+                      ? (socio.creadoEn as unknown as { toDate: () => Date }).toDate()
+                      : socio.creadoEn instanceof Date
+                        ? socio.creadoEn
+                        : new Date(socio.creadoEn as string | number),
                     'MMMM yyyy',
                     { locale: es }
                   )}
@@ -220,19 +222,19 @@ export const ProfileCard: React.FC = () => {
             <div className="grid grid-cols-3 gap-4">
               <div className="text-center">
                 <div className="text-2xl font-bold text-indigo-600">
-                  {stats?.beneficiosUsados || 0}
+                  {stats?.totalAsociaciones || 0}
                 </div>
                 <div className="text-xs text-gray-500">Beneficios Usados</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-emerald-600">
-                  ${stats?.ahorroTotal?.toLocaleString() || '0'}
+                  {stats?.totalActivas || 0}
                 </div>
-                <div className="text-xs text-gray-500">Ahorrado</div>
+                <div className="text-xs text-gray-500">Activas</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-amber-600">
-                  {stats?.beneficiosEsteMes || 0}
+                  {stats?.totalVencidas || 0}
                 </div>
                 <div className="text-xs text-gray-500">Este Mes</div>
               </div>

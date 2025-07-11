@@ -21,9 +21,10 @@ import { useRouter } from 'next/navigation';
 import UnifiedMetricsCard from '@/components/ui/UnifiedMetricsCard';
 
 export const StatsCards: React.FC = () => {
-  const { activeBeneficios, beneficios } = useBeneficios();
+  const { beneficios } = useBeneficios();
+  const activeBeneficios = beneficios.filter(b => b.activo);
   const { validaciones } = useValidaciones();
-  const { comercio } = useComercios();
+  const { comerciosVinculados } = useComercios();
   const router = useRouter();
 
   // Calculate stats
@@ -46,7 +47,8 @@ export const StatsCards: React.FC = () => {
     ? getTimeAgo(ultimaValidacion.fechaHora.toDate())
     : 'Nunca';
 
-  const asociacionesVinculadas = comercio?.asociacionesVinculadas?.length || 0;
+  // Ajusta esta línea según la estructura real de tus comercios vinculados
+  const asociacionesVinculadas = comerciosVinculados?.[0]?.asociacionesVinculadas?.length || 0;
 
   // Calculate growth rates (mock calculations for demo)
   const validacionesAyer = validaciones.filter(v => {

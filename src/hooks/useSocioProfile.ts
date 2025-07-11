@@ -39,6 +39,7 @@ interface UseSocioProfileReturn {
     totalValidaciones: number;
     totalAhorro: number;    
   };
+  updating: boolean;
 }
 
 export function useSocioProfile(): UseSocioProfileReturn {
@@ -59,6 +60,7 @@ export function useSocioProfile(): UseSocioProfileReturn {
     validacionesPorMes: [],
   });
   const [loading, setLoading] = useState(false);
+  const [updating, setUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastValidacionDoc, setLastValidacionDoc] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
   const [hasMoreValidaciones, setHasMoreValidaciones] = useState<boolean>(false);
@@ -147,12 +149,11 @@ export function useSocioProfile(): UseSocioProfileReturn {
     }
   }, [socioId]);
 
-  // Update profile
   const updateProfile = useCallback(async (data: Partial<Socio>): Promise<boolean> => {
     if (!socioId) return false;
 
     try {
-      setLoading(true);
+      setUpdating(true);
       setError(null);
 
       const success = await socioService.updateSocio(socioId, data);
@@ -170,7 +171,7 @@ export function useSocioProfile(): UseSocioProfileReturn {
       toast.error(errorMessage);
       return false;
     } finally {
-      setLoading(false);
+      setUpdating(false);
     }
   }, [socioId, loadSocioProfile]);
 
@@ -194,7 +195,6 @@ export function useSocioProfile(): UseSocioProfileReturn {
       refreshData();
     }
   }, [socioId, refreshData]);
-
   return {
     socio,
     historialValidaciones,
@@ -214,5 +214,6 @@ export function useSocioProfile(): UseSocioProfileReturn {
       totalValidaciones: estadisticas.totalValidaciones,
       totalAhorro: estadisticas.ahorroTotal,
     },
+    updating,
   };
 }
