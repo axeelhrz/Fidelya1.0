@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { validacionesService, HistorialValidacion } from '@/services/validaciones.service';
 import { socioService } from '@/services/socio.service';
-import { Socio } from '@/types/socio';
+import { Socio, UpdateSocioProfileData } from '@/types/socio';
 import { useAuth } from './useAuth';
 import { toast } from 'react-hot-toast';
 import type { QueryDocumentSnapshot, DocumentData } from 'firebase/firestore';
@@ -25,7 +25,7 @@ interface UseSocioProfileReturn {
   loadHistorialValidaciones: () => Promise<void>;
   loadMoreValidaciones: () => Promise<void>;
   loadEstadisticas: () => Promise<void>;
-  updateProfile: (data: Partial<Socio>) => Promise<boolean>;
+  updateProfile: (data: UpdateSocioProfileData) => Promise<boolean>;
   refreshData: () => Promise<void>;
   clearError: () => void;
   asociacionesList?: Socio[];
@@ -150,14 +150,23 @@ export function useSocioProfile(): UseSocioProfileReturn {
     }
   }, [socioId]);
 
-  const updateProfile = useCallback(async (data: Partial<Socio>): Promise<boolean> => {
+  const updateProfile = useCallback(async (data: UpdateSocioProfileData): Promise<boolean> => {
     if (!socioId) return false;
 
     try {
       setUpdating(true);
       setError(null);
 
-      const success = await socioService.updateSocio(socioId, data);
+      // Convert the UpdateSocioProfileData to SocioFormData format
+      const updateData = {
+        nombre: data.nombre,
+        telefono: data.telefono,
+        dni: data.dni,
+        direccion: data.direccion,
+        fechaNacimiento: data.fechaNacimiento,
+      };
+
+      const success = await socioService.updateSocio(socioId, updateData);
       
       if (success) {
         toast.success('Perfil actualizado exitosamente');

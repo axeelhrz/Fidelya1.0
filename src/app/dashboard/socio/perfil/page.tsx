@@ -36,6 +36,7 @@ import { useSocioProfile } from '@/hooks/useSocioProfile';
 import { useAuth } from '@/hooks/useAuth';
 import { format, differenceInDays } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { Timestamp } from 'firebase/firestore';
 import toast from 'react-hot-toast';
 import { cn } from '@/lib/utils';
 
@@ -107,6 +108,18 @@ const getNivelGradient = (nivel: string) => {
     default:
       return 'from-gray-400 to-gray-500';
   }
+};
+
+// Helper function to convert Firebase Timestamp to Date
+const convertToDate = (value: Date | Timestamp | string | undefined): Date | undefined => {
+  if (!value) return undefined;
+  if (value instanceof Date) return value;
+  if (value instanceof Timestamp) return value.toDate();
+  if (typeof value === 'string') return new Date(value);
+  if (typeof value === 'object' && 'toDate' in value && typeof value.toDate === 'function') {
+    return value.toDate();
+  }
+  return undefined;
 };
 
 // Stats Card Component
@@ -189,27 +202,33 @@ export default function SocioPerfilPage() {
   const [loggingOut, setLoggingOut] = useState(false);
 
   // Profile data with safe fallbacks
-  const profileData = useMemo(() => ({
-    nombre: socio?.nombre || user?.nombre || 'Usuario',
-    email: socio?.email || user?.email || '',
-    telefono: socio?.telefono || '',
-    dni: socio?.dni || '',
-    direccion: socio?.direccion || '',
-    fechaNacimiento: socio?.fechaNacimiento,
-    estado: socio?.estado || 'activo',
-    creadoEn: socio?.creadoEn || new Date(),
-    numeroSocio: socio?.numeroSocio || '',
-    nivel: {
-      nivel: 'Bronze' as const,
-      puntos: Math.floor(estadisticas.totalValidaciones * 10),
-      puntosParaProximoNivel: 1000,
-      proximoNivel: 'Silver',
-    }
-  }), [socio, user, estadisticas]);
+  const profileData = useMemo(() => {
+    const fechaNacimientoDate = convertToDate(socio?.fechaNacimiento);
+    const creadoEnDate = convertToDate(socio?.creadoEn) || new Date();
+    
+    return {
+      nombre: socio?.nombre || user?.nombre || 'Usuario',
+      email: socio?.email || user?.email || '',
+      telefono: socio?.telefono || '',
+      dni: socio?.dni || '',
+      direccion: socio?.direccion || '',
+      fechaNacimiento: fechaNacimientoDate,
+      estado: socio?.estado || 'activo',
+      creadoEn: creadoEnDate,
+      numeroSocio: socio?.numeroSocio || '',
+      nivel: {
+        nivel: 'Bronze' as const,
+        puntos: Math.floor(estadisticas.totalValidaciones * 10),
+        puntosParaProximoNivel: 1000,
+        proximoNivel: 'Silver',
+      }
+    };
+  }, [socio, user, estadisticas]);
 
   // Enhanced stats with real Firebase data
   const enhancedStats = useMemo(() => {
-    const tiempoComoSocio = profileData.creadoEn ? differenceInDays(new Date(), profileData.creadoEn) : 0;
+    const creadoEnDate = convertToDate(profileData.creadoEn);
+    const tiempoComoSocio = creadoEnDate ? differenceInDays(new Date(), creadoEnDate) : 0;
     
     return {
       beneficiosUsados: estadisticas.totalValidaciones || 0,
@@ -234,13 +253,14 @@ export default function SocioPerfilPage() {
   // Update form data when socio data changes
   useEffect(() => {
     if (socio) {
+      const fechaNacimientoDate = convertToDate(socio.fechaNacimiento);
       setFormData({
         nombre: socio.nombre || '',
         telefono: socio.telefono || '',
         dni: socio.dni || '',
         direccion: socio.direccion || '',
-        fechaNacimiento: socio.fechaNacimiento 
-          ? format(socio.fechaNacimiento, 'yyyy-MM-dd')
+        fechaNacimiento: fechaNacimientoDate 
+          ? format(fechaNacimientoDate, 'yyyy-MM-dd')
           : ''
       });
     }
