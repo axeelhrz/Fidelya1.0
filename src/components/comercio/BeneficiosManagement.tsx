@@ -163,7 +163,7 @@ type TipoBeneficio = keyof typeof TIPOS_BENEFICIO;
 const MotionTableRow = motion(TableRow);
 
 export const BeneficiosManagement: React.FC = () => {
-  const { beneficios, loading, createBeneficio, updateBeneficio, deleteBeneficio, toggleBeneficioStatus } = useBeneficios();
+  const { beneficios, loading, crearBeneficio, actualizarBeneficio, eliminarBeneficio, cambiarEstadoBeneficio } = useBeneficios();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingBeneficio, setEditingBeneficio] = useState<Beneficio | null>(null);
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
@@ -234,9 +234,9 @@ export const BeneficiosManagement: React.FC = () => {
     let success = false;
 
     if (editingBeneficio) {
-      success = await updateBeneficio(editingBeneficio.id, data);
+      success = await actualizarBeneficio(editingBeneficio.id, data);
     } else {
-      success = await createBeneficio(data);
+      success = await crearBeneficio(data);
     }
 
     if (success) {
@@ -257,7 +257,7 @@ export const BeneficiosManagement: React.FC = () => {
   const handleToggleStatus = async () => {
     if (selectedBeneficio) {
       const newStatus = selectedBeneficio.estado === 'activo' ? 'inactivo' : 'activo';
-      await toggleBeneficioStatus(selectedBeneficio.id, newStatus);
+      await cambiarEstadoBeneficio(selectedBeneficio.id, newStatus);
     }
     handleMenuClose();
   };
@@ -265,7 +265,7 @@ export const BeneficiosManagement: React.FC = () => {
   const handleDelete = async () => {
     if (selectedBeneficio) {
       if (window.confirm(`¿Estás seguro de que quieres eliminar el beneficio "${selectedBeneficio.titulo}"?`)) {
-        await deleteBeneficio(selectedBeneficio.id);
+        await eliminarBeneficio(selectedBeneficio.id);
       }
     }
     handleMenuClose();

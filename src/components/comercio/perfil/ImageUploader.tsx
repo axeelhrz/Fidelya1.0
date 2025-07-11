@@ -30,8 +30,10 @@ import {
   Refresh,
   Delete,
 } from '@mui/icons-material';
-import { useComercios } from '@/hooks/useComercios';
-import { validateImageFile } from '@/utils/storage/uploadImage';
+import { useComercio } from '@/hooks/useComercio';
+import { uploadImage, generateImagePath, validateImageFile } from '@/utils/storage/uploadImage';
+import { updateDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import toast from 'react-hot-toast';
 
 interface ImageUploadState {
@@ -40,8 +42,14 @@ interface ImageUploadState {
   dragOver: boolean;
 }
 
+interface UploadProgress {
+  uploading: boolean;
+  progress: number;
+  type: 'logo' | 'imagen' | null;
+}
+
 export const ImageUploader: React.FC = () => {
-  const { comercio, uploadImage, uploadProgress, error: comercioError, clearError } = useComercios();
+  const { comercio, loading, error: comercioError, clearError } = useComercio();
   
   const [logoState, setLogoState] = useState<ImageUploadState>({
     preview: null,
@@ -53,6 +61,12 @@ export const ImageUploader: React.FC = () => {
     preview: null,
     error: null,
     dragOver: false
+  });
+
+  const [uploadProgress, setUploadProgress] = useState<UploadProgress>({
+    uploading: false,
+    progress: 0,
+    type: null
   });
   
   const logoInputRef = useRef<HTMLInputElement>(null);
@@ -81,6 +95,11 @@ export const ImageUploader: React.FC = () => {
   }, []);
 
   const handleImageUpload = useCallback(async (file: File, type: 'logo' | 'imagen') => {
+    if (!comercio?.id) {
+      toast.error('No se pudo identificar el comercio');
+      return;
+    }
+
     const setState = type === 'logo' ? setLogoState : setPortadaState;
     
     // Clear any previous errors
@@ -98,19 +117,58 @@ export const ImageUploader: React.FC = () => {
     // Set preview
     setState(prev => ({ ...prev, preview: validation.preview || null, error: null }));
 
+    // Set upload progress
+    setUploadProgress({
+      uploading: true,
+      progress: 0,
+      type
+    });
+
     try {
-      const downloadURL = await uploadImage(file, type);
+      // Generate path for the image
+      const imagePath = generateImagePath(comercio.id, type);
       
-      if (downloadURL) {
-        // Clear preview after successful upload
-        setTimeout(() => {
-          setState(prev => ({ ...prev, preview: null }));
-        }, 2000);
-      }
-    } catch {
-      setState(prev => ({ ...prev, preview: null }));
+      // Upload image with progress tracking
+      const downloadURL = await uploadImage(file, imagePath, {
+        onProgress: (progress) => {
+          setUploadProgress(prev => ({ ...prev, progress }));
+        }
+      });
+
+      // Update comercio document with new image URL
+      const fieldName = type === 'logo' ? 'logo' : 'banner';
+      await updateDoc(doc(db, 'comercios', comercio.id), {
+        [fieldName]: downloadURL,
+        actualizadoEn: serverTimestamp(),
+      });
+
+      // Complete upload
+      setUploadProgress(prev => ({ ...prev, progress: 100 }));
+      toast.success(`${type === 'logo' ? 'Logo' : 'Imagen de portada'} subida exitosamente`);
+      
+      // Clear preview after successful upload
+      setTimeout(() => {
+        setState(prev => ({ ...prev, preview: null }));
+        setUploadProgress({
+          uploading: false,
+          progress: 0,
+          type: null
+        });
+      }, 2000);
+
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Error al subir la imagen';
+      setState(prev => ({ ...prev, preview: null, error: errorMessage }));
+      toast.error(errorMessage);
+      
+      setUploadProgress({
+        uploading: false,
+        progress: 0,
+        type: null
+      });
     }
-  }, [uploadImage, validateAndPreviewFile, clearError]);
+  }, [comercio?.id, validateAndPreviewFile, clearError]);
 
   const handleFileSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'imagen') => {
     const file = event.target.files?.[0];
@@ -525,6 +583,22 @@ export const ImageUploader: React.FC = () => {
     );
   };
 
+  if (loading) {
+    return (
+      <Card elevation={0} sx={{ p: 4 }}>
+        <Typography>Cargando información del comercio...</Typography>
+      </Card>
+    );
+  }
+
+  if (!comercio) {
+    return (
+      <Card elevation={0} sx={{ p: 4 }}>
+        <Typography color="error">No se pudo cargar la información del comercio</Typography>
+      </Card>
+    );
+  }
+
   return (
     <Card
       elevation={0}
@@ -598,7 +672,7 @@ export const ImageUploader: React.FC = () => {
           <ImageUploadCard
             type="logo"
             state={logoState}
-            currentImage={comercio?.logoUrl}
+            currentImage={comercio.logo}
             title="Logo del Comercio"
             subtitle="Tamaño recomendado: 300x300px"
             icon={<Store sx={{ fontSize: 20, color: '#10b981' }} />}
@@ -610,7 +684,7 @@ export const ImageUploader: React.FC = () => {
           <ImageUploadCard
             type="imagen"
             state={portadaState}
-            currentImage={comercio?.imagenPrincipalUrl}
+            currentImage={comercio.banner}
             title="Imagen de Portada"
             subtitle="Tamaño recomendado: 1200x600px"
             icon={<ImageIcon sx={{ fontSize: 20, color: '#6366f1' }} />}

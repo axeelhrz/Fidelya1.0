@@ -42,7 +42,8 @@ interface ComercioOperacionesProps {
 }
 
 export const ComercioOperaciones: React.FC<ComercioOperacionesProps> = ({ section }) => {
-  const { activeBeneficios } = useBeneficios();
+  const { beneficios } = useBeneficios();
+  const activeBeneficios = beneficios.filter(b => b.activo);
   const { validaciones, getStats } = useValidaciones();
   const stats = getStats();
 

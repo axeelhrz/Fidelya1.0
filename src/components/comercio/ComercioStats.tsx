@@ -49,7 +49,8 @@ import { es } from 'date-fns/locale';
 const CHART_COLORS = ['#06b6d4', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#ec4899'];
 
 export const ComercioStats: React.FC = () => {
-  const { beneficios, activeBeneficios } = useBeneficios();
+  const { beneficios } = useBeneficios();
+  const activeBeneficios = beneficios.filter(b => b.activo); // Ajusta la condición según tu modelo de datos
   const { validaciones, getStats } = useValidaciones();
   const [selectedPeriod, setSelectedPeriod] = useState<'7d' | '30d' | '90d'>('30d');
   const [refreshing, setRefreshing] = useState(false);

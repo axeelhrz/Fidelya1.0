@@ -457,10 +457,31 @@ export const ComercioAnalytics: React.FC<ComercioAnalyticsProps> = ({ section })
               alignItems: 'stretch'
             }}>
               <Box sx={{ flex: { xs: '1 1 100%', lg: '2 1 0' }, minWidth: '400px' }}>
-                <ValidationsChart />
+                <ValidationsChart
+                  data={analyticsData.dailyValidations.map((item: { fecha: string; validaciones: number; ingresos?: number }) => ({
+                    fecha: item.fecha,
+                    validaciones: item.validaciones,
+                    ingresos: item.ingresos ?? 0,
+                  }))}
+                  period="month"
+                />
               </Box>
               <Box sx={{ flex: { xs: '1 1 100%', lg: '1 1 0' }, minWidth: '320px' }}>
-                <TopBenefits />
+                <TopBenefits
+                  data={analyticsData.topBenefits.map(
+                    (item: {
+                      id: string;
+                      nombre: string;
+                      asociacion: string;
+                      usos: number;
+                      estado: 'activo' | 'inactivo';
+                    }) => ({
+                      beneficioId: item.id,
+                      titulo: item.nombre,
+                      usos: item.usos,
+                    })
+                  )}
+                />
               </Box>
             </Box>
           </Box>

@@ -25,7 +25,8 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
 export const DashboardHeader: React.FC = () => {
-  const { comercio } = useComercios();
+  const { comerciosVinculados } = useComercios();
+  const comercio = comerciosVinculados?.[0];
   const router = useRouter();
   
   const today = format(new Date(), "EEEE, d 'de' MMMM 'de' yyyy", { locale: es });

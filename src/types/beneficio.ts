@@ -33,6 +33,7 @@ export interface Beneficio {
     nombre: string;
     logo?: string;
   }>;
+  activo?: boolean; // Para compatibilidad con el frontend
 }
 
 export interface BeneficioUso {
