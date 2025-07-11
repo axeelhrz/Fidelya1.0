@@ -1128,8 +1128,7 @@ function openMobileNavMenu() {
     
     if (!mobileNavToggle || !mobileNavMenu) return;
     
-    // Guardar la posición actual del scroll antes de abrir el menú
-    // Esta es la clave para evitar que el scroll se mueva al principio
+    // Guardar la posición actual del scroll
     const scrollPosition = window.scrollY;
     
     isMobileMenuOpen = true;
@@ -1141,11 +1140,9 @@ function openMobileNavMenu() {
     mobileNavToggle.setAttribute('aria-expanded', 'true');
     mobileNavMenu.setAttribute('aria-hidden', 'false');
     
-    // Aplicar la posición de scroll guardada para evitar que se mueva al principio
-    // Esto se hace después de que el menú se abre para mantener la posición actual
-    setTimeout(() => {
-        window.scrollTo(0, scrollPosition);
-    }, 10);
+    // Mantener la posición del scroll actual
+    body.style.top = `-${scrollPosition}px`;
+    body.dataset.scrollY = scrollPosition.toString();
 }
 
 function closeMobileNavMenu() {
@@ -1163,6 +1160,12 @@ function closeMobileNavMenu() {
     
     mobileNavToggle.setAttribute('aria-expanded', 'false');
     mobileNavMenu.setAttribute('aria-hidden', 'true');
+    
+    // Restaurar la posición del scroll
+    const scrollY = parseInt(body.dataset.scrollY || '0', 10);
+    body.style.top = '';
+    body.dataset.scrollY = '';
+    window.scrollTo(0, scrollY);
 }
 
 function updateActiveMobileNavLink(activeLink) {
