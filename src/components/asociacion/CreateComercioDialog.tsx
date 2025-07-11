@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X,
@@ -72,6 +72,29 @@ export const CreateComercioDialog: React.FC<CreateComercioDialogProps> = ({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [currentStep, setCurrentStep] = useState(1);
 
+  const handleClose = useCallback(() => {
+    setFormData({
+      nombreComercio: '',
+      categoria: '',
+      email: '',
+      telefono: '',
+      direccion: '',
+      descripcion: '',
+      sitioWeb: '',
+      horario: '',
+      cuit: '',
+      configuracion: {
+        notificacionesEmail: true,
+        notificacionesWhatsApp: false,
+        autoValidacion: false,
+        requiereAprobacion: true,
+      }
+    });
+    setErrors({});
+    setCurrentStep(1);
+    onClose();
+  }, [onClose]);
+
   // Handle ESC key to close modal
   useEffect(() => {
     const handleEscKey = (event: KeyboardEvent) => {
@@ -90,7 +113,7 @@ export const CreateComercioDialog: React.FC<CreateComercioDialogProps> = ({
       document.removeEventListener('keydown', handleEscKey);
       document.body.style.overflow = 'unset';
     };
-  }, [open]);
+  }, [open, handleClose]);
 
   const validateStep = (step: number): boolean => {
     const newErrors: Record<string, string> = {};
@@ -147,29 +170,6 @@ export const CreateComercioDialog: React.FC<CreateComercioDialogProps> = ({
     if (success) {
       handleClose();
     }
-  };
-
-  const handleClose = () => {
-    setFormData({
-      nombreComercio: '',
-      categoria: '',
-      email: '',
-      telefono: '',
-      direccion: '',
-      descripcion: '',
-      sitioWeb: '',
-      horario: '',
-      cuit: '',
-      configuracion: {
-        notificacionesEmail: true,
-        notificacionesWhatsApp: false,
-        autoValidacion: false,
-        requiereAprobacion: true,
-      }
-    });
-    setErrors({});
-    setCurrentStep(1);
-    onClose();
   };
 
   const handleInputChange = (field: keyof ComercioFormData, value: string) => {

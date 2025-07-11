@@ -32,6 +32,7 @@ import {
 import { useComercios } from '@/hooks/useComercios';
 import { ComercioDisponible, SolicitudAdhesion } from '@/services/adhesion.service';
 import type { Comercio } from '@/services/comercio.service';
+import type { Validacion } from '@/types/validacion';
 import { VincularComercioDialog } from './VincularComercioDialog';
 import { CreateComercioDialog } from './CreateComercioDialog';
 import { EditComercioDialog } from './EditComercioDialog';
@@ -1302,25 +1303,43 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
           id: selectedComercio.id,
           nombreComercio: selectedComercio.nombreComercio
         } : null}
-        onLoadValidations={async (comercioId, filters, limit) => {
+        onLoadValidations={async (comercioId, filters?, limit?) => {
           // Adapt filters to expected by getComercioValidations
-          const adaptedFilters: any = {};
+          const adaptedFilters: Record<string, unknown> = {};
           if (filters?.fechaInicio) adaptedFilters.fechaDesde = filters.fechaInicio;
           if (filters?.fechaFin) adaptedFilters.fechaHasta = filters.fechaFin;
           if (filters?.estado) adaptedFilters.estado = filters.estado;
           if (filters?.socio) adaptedFilters.beneficioId = filters.socio;
           // Call original hook
           const result = await getComercioValidations(comercioId, adaptedFilters, limit);
-          // Adapt result to expected shape
+
+          // Ensure each validacion has all required Validacion properties
+          // Fill missing properties with default values if necessary
+          const validaciones: Validacion[] = result.validaciones.map((v: any) => ({
+            ...v,
+            socioEmail: v.socioEmail ?? '',
+            beneficioDescripcion: v.beneficioDescripcion ?? '',
+            tipoDescuento: v.tipoDescuento ?? '',
+            descuento: v.descuento ?? 0,
+            monto: v.monto ?? 0,
+            ahorro: v.ahorro ?? 0,
+            fecha: v.fecha ?? new Date(),
+            estado: v.estado ?? '',
+            comercioId: v.comercioId ?? '',
+            socioId: v.socioId ?? '',
+            beneficioId: v.beneficioId ?? '',
+            id: v.id ?? '',
+          }));
+
           return {
-            validaciones: result.validaciones as any, // You may want to map/convert if types differ
-            total: result.validaciones.length,
+            validaciones,
+            total: validaciones.length,
             stats: {
-              totalValidaciones: result.validaciones.length,
-              exitosas: result.validaciones.filter((v: any) => v.estado === 'exitosa').length,
-              fallidas: result.validaciones.filter((v: any) => v.estado === 'fallida').length,
-              montoTotal: result.validaciones.reduce((sum: number, v: any) => sum + (v.monto || 0), 0),
-              ahorroTotal: result.validaciones.reduce((sum: number, v: any) => sum + (v.ahorro || 0), 0),
+              totalValidaciones: validaciones.length,
+              exitosas: validaciones.filter((v: Validacion) => v.estado === 'exitosa').length,
+              fallidas: validaciones.filter((v: Validacion) => v.estado === 'fallida').length,
+              montoTotal: validaciones.reduce((sum: number, v: Validacion) => sum + (v.monto || 0), 0),
+              ahorroTotal: validaciones.reduce((sum: number, v: Validacion) => sum + (v.ahorro || 0), 0),
             }
           };
         }}
@@ -1433,4 +1452,3 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
     </div>
   );
 };
-
