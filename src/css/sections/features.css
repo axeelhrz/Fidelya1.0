@@ -266,7 +266,7 @@ list-style: none;
 position: relative;
 display: flex;
 gap: var(--space-lg);
-align-items: center;
+align-items: flex-start;
 padding: var(--space-md) 0;
 margin-bottom: var(--space-lg);
 font-size: 1.1rem;
@@ -278,11 +278,12 @@ transform: translateX(-20px);
 transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-/* Icono profesional para lista - ALINEADO CON EL TEXTO */
+/* Icono profesional para lista */
 .feature__list-item::before {
 flex-shrink: 0;
 width: 12px;
 height: 12px;
+margin-top: 6px;
 content: '';
 background: linear-gradient(135deg,
     var(--starflex-crimson-glow) 0%,
@@ -554,31 +555,33 @@ text-align: center;
 padding: var(--space-lg);
 }
 
-/* CORRECCIÓN MÓVIL: Lista alineada a la izquierda con puntos al lado */
+/* CORRECCIÓN MÓVIL: Lista alineada a la izquierda */
 .feature__list {
 text-align: left;
 max-width: 100%;
 margin: 0 auto;
 }
 
+/* PUNTO ROJO MÓVIL: Alineado verticalmente con el texto */
 .feature__list-item {
 display: flex !important;
-flex-direction: row !important;
-align-items: center !important;
+align-items: baseline !important;
 justify-content: flex-start !important;
 text-align: left !important;
 gap: 12px !important;
-padding: 8px 0 !important;
-margin-bottom: 12px !important;
+padding: 4px 0 !important;
+margin-bottom: 8px !important;
+line-height: 1.4 !important;
 }
 
-/* PUNTO ROJO MÓVIL: Perfectamente alineado al lado del texto */
 .feature__list-item::before {
 flex-shrink: 0 !important;
 width: 8px !important;
 height: 8px !important;
-margin: 0 !important;
-align-self: center !important;
+margin-top: 0.35em !important;
+margin-right: 0 !important;
+margin-bottom: 0 !important;
+margin-left: 0 !important;
 }
 
 .feature__phone {
@@ -609,7 +612,6 @@ margin-bottom: var(--space-lg);
 
 .feature__list-item {
 font-size: 0.95rem !important;
-line-height: 1.4 !important;
 }
 
 /* Efectos reducidos en móvil */
@@ -649,7 +651,7 @@ left: -12px;
 width: 3px;
 }
 
-/* REFUERZO MÓVIL PEQUEÑO: Puntos rojos perfectamente alineados */
+/* MÓVIL PEQUEÑO: Punto rojo perfectamente alineado */
 .feature__list {
 text-align: left !important;
 padding-left: 0 !important;
@@ -657,13 +659,12 @@ padding-left: 0 !important;
 
 .feature__list-item {
 display: flex !important;
-flex-direction: row !important;
-align-items: center !important;
+align-items: baseline !important;
 justify-content: flex-start !important;
 text-align: left !important;
 gap: 10px !important;
-padding: 6px 0 !important;
-margin-bottom: 10px !important;
+padding: 3px 0 !important;
+margin-bottom: 6px !important;
 font-size: 0.9rem !important;
 line-height: 1.3 !important;
 }
@@ -672,8 +673,10 @@ line-height: 1.3 !important;
 flex-shrink: 0 !important;
 width: 6px !important;
 height: 6px !important;
-margin: 0 !important;
-align-self: center !important;
+margin-top: 0.4em !important;
+margin-right: 0 !important;
+margin-bottom: 0 !important;
+margin-left: 0 !important;
 }
 }
 
