@@ -17,7 +17,7 @@ import {
   Save,
   Loader2
 } from 'lucide-react';
-import { Socio, SocioFormData } from '@/services/socio.service';
+import { Socio, SocioFormData } from '@/types/socio';
 
 // Create a form-specific interface that matches the Zod schema
 interface SocioFormInputs {
@@ -83,9 +83,6 @@ export const EnhancedSocioDialog: React.FC<EnhancedSocioDialogProps> = ({
     if (timestamp instanceof Timestamp) return timestamp.toDate();
     return undefined;
   };
-
-  // Helper function to format date for input
-
 
   // Reset form when dialog opens/closes or socio changes
   useEffect(() => {
