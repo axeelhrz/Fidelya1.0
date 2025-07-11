@@ -208,7 +208,7 @@ export const ProfileCard: React.FC = () => {
                       ? (socio.creadoEn as unknown as { toDate: () => Date }).toDate()
                       : socio.creadoEn instanceof Date
                         ? socio.creadoEn
-                        : new Date(socio.creadoEn as string | number),
+                        : new Date(socio.creadoEn as unknown as string | number),
                     'MMMM yyyy',
                     { locale: es }
                   )}

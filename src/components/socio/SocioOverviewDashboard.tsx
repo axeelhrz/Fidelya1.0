@@ -497,7 +497,10 @@ const SocioOverviewDashboard: React.FC<SocioOverviewDashboardProps> = ({
 
   // Enhanced stats with real Firebase data
   const enhancedStats = useMemo(() => {
-    const tiempoComoSocio = profileData.creadoEn ? differenceInDays(new Date(), profileData.creadoEn) : 0;
+    const creadoEnDate = profileData.creadoEn instanceof Timestamp
+      ? profileData.creadoEn.toDate()
+      : profileData.creadoEn;
+    const tiempoComoSocio = creadoEnDate ? differenceInDays(new Date(), creadoEnDate) : 0;
     
     return {
       beneficiosUsados: estadisticas.totalValidaciones || 0,

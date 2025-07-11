@@ -76,12 +76,19 @@ export const AsociacionesList: React.FC<AsociacionesListProps> = ({
   const asociacionesToShow = asociacionesFromProfile && asociacionesFromProfile.length > 0 ? asociacionesFromProfile : asociacionesProp;
 
   // Filter associations based on search and status
-  const filteredAsociaciones = asociacionesToShow.filter((asociacion: Asociacion) => {
-    const matchesSearch = asociacion.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (asociacion.descripcion?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false);
-    const matchesStatus = filterStatus === 'all' || asociacion.estado === filterStatus;
-    return matchesSearch && matchesStatus;
-  });
+  const filteredAsociaciones = asociacionesToShow
+    .filter((item): item is Asociacion =>
+      typeof item === 'object' &&
+      item !== null &&
+      'nombre' in item &&
+      'estado' in item
+    )
+    .filter((asociacion) => {
+      const matchesSearch = asociacion.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (asociacion.descripcion?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false);
+      const matchesStatus = filterStatus === 'all' || asociacion.estado === filterStatus;
+      return matchesSearch && matchesStatus;
+    });
 
   const getStatusIcon = (estado: Asociacion['estado']) => {
     switch (estado) {
@@ -472,7 +479,14 @@ export const AsociacionesList: React.FC<AsociacionesListProps> = ({
                     <CheckCircle className="w-8 h-8 text-white" />
                   </div>
                   <div className="text-3xl font-bold text-emerald-600 mb-1">
-                    {asociacionesToShow.filter((a: Asociacion) => a.estado === 'activo').length}
+                    {asociacionesToShow
+                      .filter((item): item is Asociacion =>
+                        typeof item === 'object' &&
+                        item !== null &&
+                        'nombre' in item &&
+                        'estado' in item
+                      )
+                      .filter((a) => a.estado === 'activo').length}
                   </div>
                   <div className="text-sm text-gray-600 font-medium">Activas</div>
                 </div>
@@ -482,7 +496,14 @@ export const AsociacionesList: React.FC<AsociacionesListProps> = ({
                     <XCircle className="w-8 h-8 text-white" />
                   </div>
                   <div className="text-3xl font-bold text-red-600 mb-1">
-                    {asociacionesToShow.filter((a: Asociacion) => a.estado === 'vencido').length}
+                    {asociacionesToShow
+                      .filter((item): item is Asociacion =>
+                        typeof item === 'object' &&
+                        item !== null &&
+                        'nombre' in item &&
+                        'estado' in item
+                      )
+                      .filter((a) => a.estado === 'vencido').length}
                   </div>
                   <div className="text-sm text-gray-600 font-medium">Vencidas</div>
                 </div>
@@ -492,7 +513,14 @@ export const AsociacionesList: React.FC<AsociacionesListProps> = ({
                     <Clock className="w-8 h-8 text-white" />
                   </div>
                   <div className="text-3xl font-bold text-amber-600 mb-1">
-                    {asociacionesToShow.filter((a: Asociacion) => a.estado === 'pendiente').length}
+                    {asociacionesToShow
+                      .filter((item): item is Asociacion =>
+                        typeof item === 'object' &&
+                        item !== null &&
+                        'nombre' in item &&
+                        'estado' in item
+                      )
+                      .filter((a) => a.estado === 'pendiente').length}
                   </div>
                   <div className="text-sm text-gray-600 font-medium">Pendientes</div>
                 </div>

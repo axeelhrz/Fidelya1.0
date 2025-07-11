@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { validacionesService, HistorialValidacion } from '@/services/validaciones.service';
-import { socioService, Socio } from '@/services/socio.service';
+import { socioService } from '@/services/socio.service';
+import { Socio } from '@/types/socio';
 import { useAuth } from './useAuth';
 import { toast } from 'react-hot-toast';
 import type { QueryDocumentSnapshot, DocumentData } from 'firebase/firestore';
