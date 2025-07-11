@@ -12,6 +12,7 @@ export interface Beneficio {
   asociacionId: string;
   asociacionNombre: string;
   asociacionesDisponibles: string[];
+  tipoAcceso?: 'asociacion' | 'publico' | 'directo'; // NEW FIELD
   fechaInicio: Timestamp;
   fechaFin: Timestamp;
   estado: 'activo' | 'inactivo' | 'vencido' | 'agotado';
@@ -43,8 +44,8 @@ export interface BeneficioUso {
   socioEmail: string;
   comercioId: string;
   comercioNombre: string;
-  asociacionId: string;
-  asociacionNombre: string;
+  asociacionId: string | null; // Can be null for independent socios
+  asociacionNombre: string | null; // Can be null for independent socios
   fechaUso: Timestamp;
   montoOriginal?: number;
   montoDescuento: number;
@@ -110,6 +111,7 @@ export interface BeneficioFormData {
   categoria: string;
   tags?: string[];
   destacado?: boolean;
+  tipoAcceso?: 'asociacion' | 'publico' | 'directo'; // NEW FIELD
   asociacionesDisponibles?: string[];
   comercioId?: string; // Para cuando las asociaciones crean beneficios
 }
@@ -125,6 +127,7 @@ export interface BeneficioFilter {
   soloNuevos?: boolean;
   proximosAVencer?: boolean;
   busqueda?: string;
+  tipoAcceso?: 'asociacion' | 'publico' | 'directo'; // NEW FIELD
 }
 
 export interface BeneficioValidacion {
@@ -179,6 +182,13 @@ export const TIPOS_BENEFICIO = [
   'producto_gratis'
 ] as const;
 
+export const TIPOS_ACCESO_BENEFICIO = [
+  'asociacion',
+  'publico',
+  'directo'
+] as const;
+
 export type CategoriaBeneficio = typeof CATEGORIAS_BENEFICIOS[number];
 export type EstadoBeneficio = typeof ESTADOS_BENEFICIO[number];
 export type TipoBeneficio = typeof TIPOS_BENEFICIO[number];
+export type TipoAccesoBeneficio = typeof TIPOS_ACCESO_BENEFICIO[number];

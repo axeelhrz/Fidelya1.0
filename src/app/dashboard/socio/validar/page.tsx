@@ -24,7 +24,8 @@ import {
   Calendar,
   Sparkles,
   ArrowRight,
-  Shield
+  Shield,
+  UserCheck
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { SocioSidebar } from '@/components/layout/SocioSidebar';
@@ -175,16 +176,16 @@ const SocioValidarContent: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Cargar datos iniciales con manejo de errores mejorado
+  // Cargar datos iniciales con manejo de errores mejorado - UPDATED to support socios without association
   const loadInitialData = useCallback(async () => {
-    if (!user || !user.asociacionId) {
-      console.log('❌ Usuario o asociación no disponible');
+    if (!user) {
+      console.log('❌ Usuario no disponible');
       setLoading(false);
       return;
     }
     
     try {
-      console.log('🔄 Cargando datos iniciales para:', user.uid);
+      console.log('🔄 Cargando datos iniciales para:', user.uid, 'asociación:', user.asociacionId || 'independiente');
       setLoading(true);
       setError(null);
       
@@ -194,7 +195,7 @@ const SocioValidarContent: React.FC = () => {
       );
 
       const dataPromises = [
-        // Cargar beneficios disponibles con manejo de errores específico
+        // Cargar beneficios disponibles con manejo de errores específico - UPDATED
         BeneficiosService.getBeneficiosDisponibles(user.uid, user.asociacionId)
           .catch(error => {
             console.warn('⚠️ Error cargando beneficios, usando datos por defecto:', error);
@@ -203,6 +204,7 @@ const SocioValidarContent: React.FC = () => {
         
         // Cargar historial de validaciones con manejo de errores específico
         ValidacionesService.getHistorialValidaciones(user.uid)
+          .then(result => result.validaciones)
           .catch(error => {
             console.warn('⚠️ Error cargando historial, usando datos por defecto:', error);
             return []; // Retornar array vacío en caso de error
@@ -361,11 +363,12 @@ const SocioValidarContent: React.FC = () => {
 
         console.log('✅ QR parseado correctamente:', parsedData);
 
-        // Validate access
+        // Validate access - UPDATED to support socios without association
         const result = await ValidacionesService.validarAcceso({
           socioId: user.uid,
           comercioId: parsedData.comercioId,
-          beneficioId: parsedData.beneficioId
+          beneficioId: parsedData.beneficioId,
+          asociacionId: user.asociacionId // Can be undefined for independent socios
         });
 
         console.log('🎯 Resultado de validación:', result);
@@ -413,18 +416,14 @@ const SocioValidarContent: React.FC = () => {
     }
   }, [searchParams, user, handleQRScan]);
 
-  // Cargar datos iniciales solo cuando el usuario esté disponible
+  // Cargar datos iniciales - UPDATED to support socios without association
   useEffect(() => {
-    if (user && user.role === 'socio' && user.asociacionId) {
+    if (user && user.role === 'socio') {
       loadInitialData();
     } else if (user && user.role !== 'socio') {
       // Redirigir si no es socio
       console.log('❌ Usuario no es socio, redirigiendo...');
       router.push('/dashboard');
-    } else if (user && !user.asociacionId) {
-      // Usuario sin asociación
-      setError('Tu cuenta no tiene una asociación asignada. Contacta al administrador.');
-      setLoading(false);
     }
   }, [user, loadInitialData, router]);
 
@@ -624,9 +623,28 @@ const SocioValidarContent: React.FC = () => {
                   Validar Beneficios
                 </h1>
                 <p className="text-lg text-gray-600 font-medium">
-                  Escanea códigos QR para acceder a tus beneficios exclusivos
+                  Escanea códigos QR para acceder a beneficios {user?.asociacionId ? 'de tu asociación y comercios afiliados' : 'públicos y directos'}
                 </p>
               </div>
+            </div>
+
+            {/* Status indicator for socio type */}
+            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold ${
+              user?.asociacionId 
+                ? 'bg-blue-50 text-blue-700 border border-blue-200' 
+                : 'bg-green-50 text-green-700 border border-green-200'
+            }`}>
+              {user?.asociacionId ? (
+                <>
+                  <Users size={16} />
+                  Socio con Asociación
+                </>
+              ) : (
+                <>
+                  <UserCheck size={16} />
+                  Socio Independiente
+                </>
+              )}
             </div>
           </motion.div>
 
@@ -698,7 +716,7 @@ const SocioValidarContent: React.FC = () => {
                   </div>
                   <h2 className="text-2xl font-bold text-gray-900 mb-3">Escanear Código QR</h2>
                   <p className="text-gray-600 max-w-md mx-auto">
-                    Apunta tu cámara al código QR del comercio para validar y acceder a tus beneficios exclusivos
+                    Apunta tu cámara al código QR del comercio para validar y acceder a tus beneficios {user?.asociacionId ? 'exclusivos' : 'disponibles'}
                   </p>
                 </div>
 
@@ -885,6 +903,16 @@ const SocioValidarContent: React.FC = () => {
                     </div>
                     <span className="text-sm font-bold text-gray-900">
                       {stats.beneficiosDisponibles}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                    <div className="flex items-center gap-3">
+                      {user?.asociacionId ? <Users size={16} className="text-gray-500" /> : <UserCheck size={16} className="text-gray-500" />}
+                      <span className="text-sm font-medium text-gray-700">Tipo de socio</span>
+                    </div>
+                    <span className="text-sm font-bold text-gray-900">
+                      {user?.asociacionId ? 'Con Asociación' : 'Independiente'}
                     </span>
                   </div>
                 </div>

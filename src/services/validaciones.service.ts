@@ -81,7 +81,7 @@ class ValidacionesService {
   private readonly beneficiosCollection = COLLECTIONS.BENEFICIOS;
 
   /**
-   * Validate access for a socio to use benefits
+   * Validate access for a socio to use benefits - UPDATED to support socios without association
    */
   async validarAcceso(request: ValidacionRequest): Promise<ValidacionResponse> {
     try {
@@ -101,16 +101,18 @@ class ValidacionesService {
         
         // Check socio status
         if (socioData.estado !== 'activo') {
-          throw new Error('Tu cuenta de socio no está activa. Contacta a tu asociación.');
+          throw new Error('Tu cuenta de socio no está activa. Contacta al administrador.');
         }
 
-        // Check membership status
-        if (socioData.estadoMembresia === 'vencido') {
-          throw new Error('Tu membresía está vencida. Renueva tu cuota para acceder a beneficios.');
-        }
+        // For socios with association, check membership status
+        if (socioData.asociacionId) {
+          if (socioData.estadoMembresia === 'vencido') {
+            throw new Error('Tu membresía está vencida. Renueva tu cuota para acceder a beneficios.');
+          }
 
-        if (socioData.estadoMembresia === 'pendiente') {
-          throw new Error('Tu membresía está pendiente de activación. Contacta a tu asociación.');
+          if (socioData.estadoMembresia === 'pendiente') {
+            throw new Error('Tu membresía está pendiente de activación. Contacta a tu asociación.');
+          }
         }
 
         // 2. Get and validate comercio
@@ -127,24 +129,47 @@ class ValidacionesService {
           throw new Error('Este comercio no está disponible actualmente');
         }
 
-        // Check if socio's association is linked to this comercio
+        // 3. Get available benefits for this comercio
+        let beneficiosQuery;
         const socioAsociacionId = socioData.asociacionId;
-        if (!comercioData.asociacionesVinculadas?.includes(socioAsociacionId)) {
-          throw new Error('Tu asociación no tiene convenio con este comercio');
-        }
 
-        // 3. Get available benefits for this comercio and association
-        const beneficiosQuery = query(
-          collection(db, this.beneficiosCollection),
-          where('comercioId', '==', request.comercioId),
-          where('estado', '==', 'activo'),
-          where('asociacionesDisponibles', 'array-contains', socioAsociacionId)
-        );
+        if (socioAsociacionId) {
+          // Socio with association: check association link and get association benefits
+          if (!comercioData.asociacionesVinculadas?.includes(socioAsociacionId)) {
+            // If not linked through association, check for direct comercio benefits
+            beneficiosQuery = query(
+              collection(db, this.beneficiosCollection),
+              where('comercioId', '==', request.comercioId),
+              where('estado', '==', 'activo'),
+              where('tipoAcceso', 'in', ['publico', 'directo']) // Allow public and direct access benefits
+            );
+          } else {
+            // Linked through association: get association benefits
+            beneficiosQuery = query(
+              collection(db, this.beneficiosCollection),
+              where('comercioId', '==', request.comercioId),
+              where('estado', '==', 'activo'),
+              where('asociacionesDisponibles', 'array-contains', socioAsociacionId)
+            );
+          }
+        } else {
+          // Socio without association: only direct comercio benefits
+          beneficiosQuery = query(
+            collection(db, this.beneficiosCollection),
+            where('comercioId', '==', request.comercioId),
+            where('estado', '==', 'activo'),
+            where('tipoAcceso', 'in', ['publico', 'directo']) // Only public and direct access benefits
+          );
+        }
 
         const beneficiosSnapshot = await getDocs(beneficiosQuery);
         
         if (beneficiosSnapshot.empty) {
-          throw new Error('No hay beneficios disponibles para tu asociación en este comercio');
+          if (socioAsociacionId) {
+            throw new Error('No hay beneficios disponibles para ti en este comercio');
+          } else {
+            throw new Error('No hay beneficios públicos disponibles en este comercio');
+          }
         }
 
         // 4. Select benefit (if specific benefit requested, validate it; otherwise use first available)
@@ -160,6 +185,7 @@ class ValidacionesService {
           usosActuales?: number;
           limitePorSocio?: number;
           asociacionesDisponibles?: string[];
+          tipoAcceso?: 'asociacion' | 'publico' | 'directo';
         };
 
         let selectedBeneficio: { id: string } & BeneficioData;
@@ -230,8 +256,8 @@ class ValidacionesService {
           socioId: request.socioId,
           socioNombre: socioData.nombre,
           socioNumero: socioData.numeroSocio,
-          asociacionId: socioAsociacionId,
-          asociacionNombre: socioData.asociacionNombre || '',
+          asociacionId: socioAsociacionId || null, // Can be null for independent socios
+          asociacionNombre: socioData.asociacionNombre || null,
           comercioId: request.comercioId,
           comercioNombre: comercioData.nombreComercio,
           beneficioId: selectedBeneficio.id,
@@ -239,6 +265,7 @@ class ValidacionesService {
           beneficioDescripcion: beneficioData.descripcion,
           descuento: beneficioData.descuento,
           tipoDescuento: beneficioData.tipo,
+          tipoAcceso: beneficioData.tipoAcceso || (socioAsociacionId ? 'asociacion' : 'directo'),
           montoDescuento: this.calculateDiscountAmount(beneficioData),
           fechaValidacion: serverTimestamp(),
           estado: 'exitosa',
@@ -305,7 +332,7 @@ class ValidacionesService {
             id: request.socioId,
             nombre: result.socioData.nombre,
             numeroSocio: result.socioData.numeroSocio,
-            estadoMembresia: result.socioData.estadoMembresia,
+            estadoMembresia: result.socioData.estadoMembresia || 'independiente',
           },
           validacion: {
             id: result.validacionId,
@@ -337,7 +364,7 @@ class ValidacionesService {
   }
 
   /**
-   * Get validation history for a socio
+   * Get validation history for a socio - UPDATED to handle socios without association
    */
   async getHistorialValidaciones(
     socioId: string,
@@ -403,7 +430,7 @@ class ValidacionesService {
   }
 
   /**
-   * Get validation statistics for a socio
+   * Get validation statistics for a socio - UPDATED to handle socios without association
    */
   async getEstadisticasSocio(socioId: string): Promise<{
     totalValidaciones: number;

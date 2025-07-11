@@ -197,30 +197,6 @@ export const SocioSidebar: React.FC<SocioSidebarProps> = ({
       gradient: 'from-teal-500 to-cyan-600',
       route: '/dashboard/socio/validar'
     },
-    {
-      id: 'historial',
-      label: 'Mi Historial',
-      icon: History,
-      description: 'Registro de beneficios usados',
-      gradient: 'from-amber-500 to-orange-600',
-      route: '/dashboard/socio/historial',
-      badge: realtimeStats.beneficiosUsados > 0 ? realtimeStats.beneficiosUsados : undefined,
-      submenu: [
-        { 
-          id: 'historial-validaciones', 
-          label: 'Validaciones', 
-          icon: History,
-          count: realtimeStats.beneficiosUsados,
-          route: '/dashboard/socio/historial'
-        },
-        { 
-          id: 'historial-estadisticas', 
-          label: 'Mis Estadísticas', 
-          icon: TrendingUp,
-          route: '/dashboard/socio/historial?tab=estadisticas'
-        }
-      ]
-    }
   ];
 
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set(['perfil']));
