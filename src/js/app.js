@@ -184,7 +184,7 @@ const translationData = {
         'faq-3-question': '¿Es seguro usar StarFlex? ¿Amazon puede detectarlo?',
         'faq-3-answer': 'StarFlex utiliza <span class="faq__answer-highlight">tecnología avanzada de simulación humana</span> que incluye patrones de comportamiento naturales, tiempos de respuesta variables y gestos táctiles realistas. Nuestro enfoque se centra en ayudar a los conductores a brindar un mejor servicio a Amazon y sus clientes, asegurando entregas eficientes y de alta calidad.',
         'faq-4-question': '¿StarFlex funciona en iPhone y Android?',
-        'faq-4-answer': 'Sí, StarFlex está disponible para <span class="faq__answer-highlight">iOS (iPhone 8+) y Android (8.0+)</span>. Hemos desarrollado aplicaciones nativas optimizadas para cada plataforma, garantizando el mejor rendimiento y una experiencia de usuario superior. Ambas versiones incluyen todas las funcionalidades y reciben actualizaciones automáticas.',
+         'faq-4-answer': 'Sí, StarFlex está disponible para <span class="faq__answer-highlight">iOS (iPhone 8+) y Android (8.0+)</span>. Hemos desarrollado aplicaciones nativas optimizadas para cada plataforma, garantizando el mejor rendimiento y una experiencia de usuario superior. Ambas versiones incluyen todas las funcionalidades y reciben actualizaciones automáticas.',
         'faq-5-question': '¿Qué necesito para empezar a usar StarFlex?',
         'faq-5-answer': 'Solo necesitas una <span class="faq__answer-highlight">cuenta activa de Amazon Flex y un dispositivo compatible</span>. Después de descargar la aplicación, el proceso de configuración toma menos de 5 minutos. Nuestro sistema de configuración guiada te ayudará a optimizar tu experiencia desde el primer día.',
         'faq-no-results': 'No se encontraron preguntas que coincidan con tu búsqueda',
@@ -1128,6 +1128,19 @@ function openMobileNavMenu() {
     
     if (!mobileNavToggle || !mobileNavMenu) return;
     
+    // Guardar la posición actual del scroll
+    const scrollPosition = window.scrollY;
+    
+    // Aplicar la posición fija al body con la posición actual
+    body.style.position = 'fixed';
+    body.style.top = `-${scrollPosition}px`;
+    body.style.left = '0';
+    body.style.right = '0';
+    body.style.width = '100%';
+    
+    // Guardar la posición para restaurarla después
+    body.dataset.scrollY = scrollPosition.toString();
+    
     isMobileMenuOpen = true;
     
     mobileNavToggle.classList.add('active');
@@ -1153,6 +1166,18 @@ function closeMobileNavMenu() {
     
     mobileNavToggle.setAttribute('aria-expanded', 'false');
     mobileNavMenu.setAttribute('aria-hidden', 'true');
+    
+    // Restaurar la posición del scroll
+    const scrollY = parseInt(body.dataset.scrollY || '0', 10);
+    body.style.position = '';
+    body.style.top = '';
+    body.style.left = '';
+    body.style.right = '';
+    body.style.width = '';
+    body.dataset.scrollY = '';
+    
+    // Restaurar la posición del scroll
+    window.scrollTo(0, scrollY);
 }
 
 function updateActiveMobileNavLink(activeLink) {
@@ -2017,3 +2042,4 @@ if ('serviceWorker' in navigator && !isMobile && !performanceMode) {
             });
     });
 }
+
