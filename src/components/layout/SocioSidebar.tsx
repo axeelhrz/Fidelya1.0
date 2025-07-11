@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { 
@@ -15,7 +15,8 @@ import {
   ChevronDown,
   Activity,
   AlertCircle,
-  CheckCircle
+  CheckCircle,
+  RefreshCw
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSocioProfile } from '@/hooks/useSocioProfile';
@@ -39,7 +40,75 @@ interface RealtimeStats {
   actividadReciente: number;
 }
 
-export const SocioSidebar: React.FC<SocioSidebarProps> = ({
+// Loading fallback component
+const SocioSidebarSkeleton: React.FC<SocioSidebarProps> = ({
+  open,
+  onToggle,
+}) => {
+  return (
+    <>
+      {/* Backdrop */}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden"
+            onClick={onToggle}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Sidebar */}
+      <motion.div
+        initial={{ x: -320 }}
+        animate={{ x: open ? 0 : -320 }}
+        transition={{ duration: 0.3, ease: 'easeInOut' }}
+        className="fixed left-0 top-0 h-full w-80 bg-white/95 backdrop-blur-xl shadow-2xl z-50 lg:relative lg:translate-x-0 lg:shadow-xl border-r border-white/20"
+      >
+        <div className="flex flex-col h-full">
+          {/* Header Skeleton */}
+          <div className="relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-sky-500 via-celestial-500 to-sky-600"></div>
+            <div className="relative z-10 flex items-center justify-between p-6">
+              <div className="flex items-center space-x-3">
+                <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-lg">
+                  <User className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-white">Portal Socio</h2>
+                  <div className="w-24 h-3 bg-white/20 rounded animate-pulse mt-1"></div>
+                </div>
+              </div>
+              
+              <button
+                onClick={onToggle}
+                className="lg:hidden p-2 rounded-xl hover:bg-white/10 transition-colors"
+              >
+                <X className="w-5 h-5 text-white" />
+              </button>
+            </div>
+          </div>
+
+          {/* Loading Content */}
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-gradient-to-r from-sky-500 to-celestial-600 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+                <RefreshCw size={32} className="text-white animate-spin" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Cargando...</h3>
+              <p className="text-gray-500">Preparando tu panel de socio</p>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    </>
+  );
+};
+
+// Main sidebar content component that uses useSearchParams
+const SocioSidebarContent: React.FC<SocioSidebarProps> = ({
   open,
   onToggle,
   onMenuClick,
@@ -194,6 +263,15 @@ export const SocioSidebar: React.FC<SocioSidebarProps> = ({
       gradient: 'from-teal-500 to-cyan-600',
       route: '/dashboard/socio/validar'
     },
+    {
+      id: 'historial',
+      label: 'Mi Historial',
+      icon: History,
+      description: 'Registro de beneficios usados',
+      gradient: 'from-amber-500 to-orange-600',
+      route: '/dashboard/socio/historial',
+      badge: realtimeStats.beneficiosUsados > 0 ? realtimeStats.beneficiosUsados : undefined
+    }
   ];
 
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set(['perfil']));
@@ -271,19 +349,7 @@ export const SocioSidebar: React.FC<SocioSidebarProps> = ({
 
   // Show loading state
   if (socioLoading) {
-    return (
-      <motion.div
-        initial={{ x: -320 }}
-        animate={{ x: open ? 0 : -320 }}
-        transition={{ duration: 0.3, ease: 'easeInOut' }}
-        className="fixed left-0 top-0 h-full w-80 bg-white/95 backdrop-blur-xl shadow-2xl z-50 lg:relative lg:translate-x-0 lg:shadow-xl border-r border-white/20"
-      >
-        <div className="flex flex-col h-full items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500"></div>
-          <p className="mt-4 text-sm text-gray-500">Cargando datos...</p>
-        </div>
-      </motion.div>
-    );
+    return <SocioSidebarSkeleton {...{ open, onToggle, onMenuClick, onLogoutClick, activeSection }} />;
   }
 
   return (
@@ -574,6 +640,15 @@ export const SocioSidebar: React.FC<SocioSidebarProps> = ({
         </div>
       </motion.div>
     </>
+  );
+};
+
+// Main component with Suspense boundary
+export const SocioSidebar: React.FC<SocioSidebarProps> = (props) => {
+  return (
+    <Suspense fallback={<SocioSidebarSkeleton {...props} />}>
+      <SocioSidebarContent {...props} />
+    </Suspense>
   );
 };
 
