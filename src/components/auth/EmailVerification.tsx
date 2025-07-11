@@ -21,7 +21,6 @@ export const EmailVerification: React.FC<EmailVerificationProps> = ({
   const [showPasswordField, setShowPasswordField] = useState(false);
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [needsPassword, setNeedsPassword] = useState(false);
 
   const displayEmail = propEmail || email;
 
@@ -37,11 +36,10 @@ export const EmailVerification: React.FC<EmailVerificationProps> = ({
     setIsResending(true);
     try {
       // First try without password
-      let response = await resendVerification();
+      const response = await resendVerification();
       
       // If it requires password, show password field
       if (!response.success && response.error?.includes('contraseña')) {
-        setNeedsPassword(true);
         setShowPasswordField(true);
         setIsResending(false);
         return;
@@ -50,7 +48,6 @@ export const EmailVerification: React.FC<EmailVerificationProps> = ({
       if (response.success) {
         setLastSent(new Date());
         setShowPasswordField(false);
-        setNeedsPassword(false);
         setPassword('');
         toast.success('Email de verificación enviado');
       } else {
@@ -73,7 +70,6 @@ export const EmailVerification: React.FC<EmailVerificationProps> = ({
       if (response.success) {
         setLastSent(new Date());
         setShowPasswordField(false);
-        setNeedsPassword(false);
         setPassword('');
         toast.success('Email de verificación enviado');
       } else {
@@ -296,7 +292,6 @@ export const EmailVerification: React.FC<EmailVerificationProps> = ({
                       onClick={() => {
                         setShowPasswordField(false);
                         setPassword('');
-                        setNeedsPassword(false);
                       }}
                       className="text-sm text-slate-500 hover:text-slate-700 transition-colors duration-300 font-jakarta"
                     >
@@ -304,7 +299,7 @@ export const EmailVerification: React.FC<EmailVerificationProps> = ({
                     </button>
                   </div>
                 )}
-                
+
                 {!canResend && lastSent && (
                   <p className="text-sm text-slate-500 mt-3 font-jakarta">
                     Puedes reenviar en {60 - Math.floor((Date.now() - lastSent.getTime()) / 1000)} segundos
