@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   History, 
@@ -136,8 +136,27 @@ const HistorialCardSkeleton = React.memo(() => (
 
 HistorialCardSkeleton.displayName = 'HistorialCardSkeleton';
 
-// Main component
-export default function SocioHistorialPage() {
+// Sidebar personalizado que maneja el logout
+const SocioSidebarWithLogout: React.FC<{
+  open: boolean;
+  onToggle: () => void;
+  onMenuClick: (section: string) => void;
+  activeSection: string;
+  onLogoutClick: () => void;
+}> = (props) => {
+  return (
+    <SocioSidebar
+      open={props.open}
+      onToggle={props.onToggle}
+      onMenuClick={props.onMenuClick}
+      onLogoutClick={props.onLogoutClick}
+      activeSection={props.activeSection}
+    />
+  );
+};
+
+// Main component content
+const SocioHistorialContent: React.FC = () => {
   const { signOut } = useAuth();
   const { beneficiosUsados, loading, error, refrescar } = useBeneficios();
 
@@ -341,7 +360,7 @@ export default function SocioHistorialPage() {
       <DashboardLayout
         activeSection="historial"
         sidebarComponent={(props) => (
-          <SocioSidebar
+          <SocioSidebarWithLogout
             {...props}
             onLogoutClick={handleLogout}
           />
@@ -365,7 +384,7 @@ export default function SocioHistorialPage() {
     <DashboardLayout
       activeSection="historial"
       sidebarComponent={(props) => (
-        <SocioSidebar
+        <SocioSidebarWithLogout
           {...props}
           onLogoutClick={handleLogout}
         />
@@ -842,5 +861,36 @@ export default function SocioHistorialPage() {
         </Dialog>
       </motion.div>
     </DashboardLayout>
+  );
+};
+
+// Main page component with Suspense boundary
+export default function SocioHistorialPage() {
+  return (
+    <Suspense fallback={
+      <DashboardLayout
+        activeSection="historial"
+        sidebarComponent={(props) => (
+          <SocioSidebarWithLogout
+            {...props}
+            onLogoutClick={() => {}}
+          />
+        )}
+      >
+        <div className="p-4 md:p-8 max-w-7xl mx-auto min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <div className="w-20 h-20 bg-gradient-to-r from-gray-500 to-gray-600 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+                <RefreshCw size={32} className="text-white animate-spin" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-3">Cargando historial...</h3>
+              <p className="text-gray-500">Preparando tu historial de beneficios</p>
+            </div>
+          </div>
+        </div>
+      </DashboardLayout>
+    }>
+      <SocioHistorialContent />
+    </Suspense>
   );
 }
