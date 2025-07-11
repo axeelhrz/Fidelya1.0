@@ -31,7 +31,7 @@
     animation: header-glow-line 4s ease-in-out infinite;
 }
 
-/* ===== NAVBAR COMPLETAMENTE ADAPTATIVO ===== */
+/* ===== NAVBAR MÁS GRANDE Y ESPACIOSO ===== */
 .nav {
     position: relative;
     display: grid;
@@ -41,14 +41,14 @@
     width: 100%;
     max-width: none;
     height: 100%;
-    padding: var(--space-md) clamp(0.5rem, 2vw, 2rem);
+    padding: clamp(1rem, 2vw, 1.5rem) clamp(1rem, 3vw, 3rem);
     margin: 0 auto;
     overflow: visible;
     pointer-events: none;
-    gap: clamp(0.5rem, 1.5vw, 1.5rem);
+    gap: clamp(1rem, 2.5vw, 2.5rem);
 }
 
-/* ===== LOGO ADAPTATIVO ===== */
+/* ===== LOGO MÁS GRANDE ===== */
 .nav__brand {
     grid-area: logo;
     z-index: calc(var(--navbar-z-index) + 1);
@@ -59,8 +59,8 @@
 
 .nav__logo-container {
     position: relative;
-    width: clamp(35px, 4vw, 55px);
-    height: clamp(35px, 4vw, 55px);
+    width: clamp(50px, 6vw, 70px);
+    height: clamp(50px, 6vw, 70px);
     cursor: pointer;
     transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
@@ -78,7 +78,7 @@
     background-repeat: no-repeat;
     background-position: center;
     background-size: contain;
-    border-radius: clamp(8px, 1.5vw, 18px);
+    border-radius: clamp(12px, 2vw, 22px);
     transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     transform: translateZ(0);
     backface-visibility: hidden;
@@ -94,7 +94,7 @@
         rgb(255 23 68 / 15%) 75%,
         rgb(255 69 105 / 20%) 100%
     );
-    border-radius: clamp(16px, 2.5vw, 26px);
+    border-radius: clamp(20px, 3vw, 30px);
     opacity: 0;
     filter: blur(12px);
     transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
@@ -104,7 +104,7 @@
 .nav__logo-particles {
     position: absolute;
     inset: 0;
-    border-radius: clamp(8px, 1.5vw, 18px);
+    border-radius: clamp(12px, 2vw, 22px);
     opacity: 0;
     transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     z-index: -1;
@@ -163,7 +163,7 @@
         rgb(255 69 105 / 15%) 50%,
         transparent 100%
     );
-    border-radius: clamp(6px, 1.2vw, 17px);
+    border-radius: clamp(10px, 1.8vw, 20px);
     opacity: 0;
     transition: all var(--transition);
     z-index: -1;
@@ -176,10 +176,10 @@
 .nav__logo:focus {
     outline: 3px solid var(--starflex-red);
     outline-offset: 6px;
-    border-radius: clamp(11px, 2vw, 21px);
+    border-radius: clamp(15px, 2.5vw, 25px);
 }
 
-/* ===== NAVEGACIÓN CENTRADA COMPLETAMENTE ADAPTATIVA ===== */
+/* ===== NAVEGACIÓN CENTRADA MÁS GRANDE ===== */
 .nav__menu {
     grid-area: navigation;
     position: relative;
@@ -196,11 +196,11 @@
 .nav__list {
     position: relative;
     display: flex;
-    gap: clamp(0.25rem, 1vw, 0.75rem);
+    gap: clamp(0.75rem, 1.8vw, 1.5rem);
     align-items: center;
     width: auto;
     max-width: 100%;
-    padding: clamp(0.5rem, 1vw, 0.75rem) clamp(0.75rem, 2vw, 1.5rem);
+    padding: clamp(1rem, 2vw, 1.5rem) clamp(2rem, 4vw, 3rem);
     overflow: hidden;
     white-space: nowrap;
     list-style: none;
@@ -213,7 +213,7 @@
     );
     backdrop-filter: blur(25px) saturate(180%);
     border: 1px solid rgba(255, 69, 105, 0.2);
-    border-radius: clamp(20px, 4vw, 60px);
+    border-radius: clamp(35px, 6vw, 70px);
     box-shadow:
         0 20px 60px rgba(0, 0, 0, 0.4),
         0 8px 30px rgba(0, 0, 0, 0.3),
@@ -239,7 +239,7 @@
         rgba(255, 69, 105, 0.08) 80%,
         transparent 100%
     );
-    border-radius: clamp(20px, 4vw, 60px);
+    border-radius: clamp(35px, 6vw, 70px);
     transition: left 2.5s ease;
 }
 
@@ -259,7 +259,7 @@
         rgba(255, 69, 105, 0.3) 75%,
         transparent 100%
     );
-    border-radius: clamp(21px, 4.2vw, 61px);
+    border-radius: clamp(36px, 6.2vw, 71px);
     opacity: 0;
     filter: blur(1px);
     transition: all 0.6s ease;
@@ -281,7 +281,7 @@
         rgba(255, 69, 105, 0.08) 40%,
         transparent 70%
     );
-    border-radius: clamp(40px, 8vw, 80px);
+    border-radius: clamp(55px, 10vw, 90px);
     opacity: 0;
     filter: blur(15px);
     transition: all 0.6s ease;
@@ -293,22 +293,22 @@
     transform: scale(1.1);
 }
 
-/* ===== ENLACES COMPLETAMENTE ADAPTATIVOS ===== */
+/* ===== ENLACES MÁS GRANDES ===== */
 .nav__link {
     position: relative;
     z-index: 2;
     flex-shrink: 0;
-    padding: clamp(0.375rem, 0.8vw, 0.625rem) clamp(0.5rem, 1.2vw, 1rem);
+    padding: clamp(0.75rem, 1.5vw, 1rem) clamp(1rem, 2vw, 1.5rem);
     overflow: hidden;
     font-family: var(--font-mono);
-    font-size: clamp(0.65rem, 1.1vw, 0.85rem);
+    font-size: clamp(0.85rem, 1.4vw, 1.1rem);
     font-weight: 700;
     color: var(--text-secondary);
     text-decoration: none;
     text-transform: uppercase;
     letter-spacing: 1px;
     white-space: nowrap;
-    border-radius: clamp(10px, 2vw, 30px);
+    border-radius: clamp(18px, 3.5vw, 35px);
     transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
@@ -322,7 +322,7 @@
         rgba(255, 69, 105, 0.1) 0%,
         rgba(255, 69, 105, 0.05) 100%
     );
-    border-radius: clamp(10px, 2vw, 30px);
+    border-radius: clamp(18px, 3.5vw, 35px);
     opacity: 0;
     transform: scale(0.8);
     transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
@@ -399,12 +399,12 @@
 }
 
 .nav__link:focus {
-    border-radius: clamp(8px, 1.8vw, 28px);
+    border-radius: clamp(16px, 3.2vw, 33px);
     outline: 2px solid var(--starflex-red);
     outline-offset: 4px;
 }
 
-/* ===== SELECTOR DE IDIOMA ADAPTATIVO ===== */
+/* ===== SELECTOR DE IDIOMA MÁS GRANDE ===== */
 .nav__language-switcher {
     grid-area: language;
     position: relative;
@@ -418,13 +418,13 @@
 .nav__language-btn {
     position: relative;
     display: flex;
-    gap: clamp(0.25rem, 0.6vw, 0.4rem);
+    gap: clamp(0.5rem, 1vw, 0.75rem);
     align-items: center;
-    min-width: clamp(50px, 7vw, 80px);
-    padding: clamp(0.375rem, 0.8vw, 0.625rem) clamp(0.5rem, 1.2vw, 0.875rem);
+    min-width: clamp(70px, 10vw, 100px);
+    padding: clamp(0.75rem, 1.5vw, 1rem) clamp(1rem, 2vw, 1.5rem);
     overflow: hidden;
     font-family: var(--font-mono);
-    font-size: clamp(0.6rem, 1vw, 0.75rem);
+    font-size: clamp(0.8rem, 1.3vw, 1rem);
     font-weight: 700;
     color: var(--text-primary);
     cursor: pointer;
@@ -435,7 +435,7 @@
     );
     backdrop-filter: blur(30px);
     border: 1px solid var(--border-accent);
-    border-radius: clamp(8px, 1.8vw, 20px);
+    border-radius: clamp(15px, 3vw, 25px);
     box-shadow:
         var(--shadow-lg),
         var(--glow-subtle),
@@ -472,14 +472,14 @@
 }
 
 .nav__language-btn:focus {
-    border-radius: clamp(8px, 1.8vw, 20px);
+    border-radius: clamp(15px, 3vw, 25px);
     outline: 2px solid var(--starflex-crimson-bright);
     outline-offset: 4px;
 }
 
 .nav__language-icon {
-    width: clamp(10px, 1.5vw, 14px);
-    height: clamp(10px, 1.5vw, 14px);
+    width: clamp(14px, 2vw, 18px);
+    height: clamp(14px, 2vw, 18px);
     color: var(--starflex-crimson-bright);
     filter: drop-shadow(0 0 8px rgb(255 69 105 / 35%));
     transition: all var(--transition);
@@ -505,8 +505,8 @@
 }
 
 .nav__language-arrow {
-    width: clamp(8px, 1.2vw, 12px);
-    height: clamp(8px, 1.2vw, 12px);
+    width: clamp(12px, 1.8vw, 16px);
+    height: clamp(12px, 1.8vw, 16px);
     color: var(--text-muted);
     transition: all var(--transition);
     transform-origin: center;
@@ -522,14 +522,14 @@
     transform: rotate(180deg);
 }
 
-/* ===== DROPDOWN DEL SELECTOR DE IDIOMA ===== */
+/* ===== DROPDOWN DEL SELECTOR DE IDIOMA MÁS GRANDE ===== */
 .nav__language-dropdown {
     position: absolute;
     top: calc(100% + 8px);
     right: 0;
     z-index: 10;
-    min-width: clamp(100px, 15vw, 140px);
-    padding: clamp(0.375rem, 0.8vw, 0.625rem);
+    min-width: clamp(140px, 18vw, 180px);
+    padding: clamp(0.75rem, 1.5vw, 1rem);
     visibility: hidden;
     background: linear-gradient(135deg,
         rgb(21 25 34 / 98%) 0%,
@@ -538,7 +538,7 @@
     );
     backdrop-filter: blur(35px);
     border: 1px solid var(--border-accent);
-    border-radius: clamp(6px, 1.2vw, 15px);
+    border-radius: clamp(12px, 2.5vw, 20px);
     box-shadow:
         var(--shadow-2xl),
         var(--glow-medium),
@@ -557,19 +557,19 @@
 .nav__language-option {
     position: relative;
     display: flex;
-    gap: clamp(0.375rem, 0.8vw, 0.625rem);
+    gap: clamp(0.75rem, 1.5vw, 1rem);
     align-items: center;
     width: 100%;
-    padding: clamp(0.375rem, 0.8vw, 0.625rem) clamp(0.5rem, 1.2vw, 0.875rem);
+    padding: clamp(0.75rem, 1.5vw, 1rem) clamp(1rem, 2vw, 1.25rem);
     overflow: hidden;
     font-family: var(--font-primary);
-    font-size: clamp(0.6rem, 1vw, 0.75rem);
+    font-size: clamp(0.8rem, 1.3vw, 1rem);
     font-weight: 600;
     color: var(--text-secondary);
     cursor: pointer;
     background: transparent;
     border: none;
-    border-radius: clamp(4px, 1vw, 12px);
+    border-radius: clamp(8px, 1.8vw, 15px);
     transition: all var(--transition);
 }
 
@@ -581,7 +581,7 @@
         rgb(255 69 105 / 10%) 0%,
         rgb(255 23 68 / 6%) 100%
     );
-    border-radius: clamp(4px, 1vw, 12px);
+    border-radius: clamp(8px, 1.8vw, 15px);
     opacity: 0;
     transition: all var(--transition);
 }
@@ -610,7 +610,7 @@
 }
 
 .nav__language-flag {
-    font-size: clamp(0.7rem, 1.2vw, 0.9rem);
+    font-size: clamp(1rem, 1.6vw, 1.2rem);
     line-height: 1;
 }
 
@@ -620,7 +620,7 @@
     text-align: left;
 }
 
-/* ===== BOTÓN CTA COMPLETAMENTE ADAPTATIVO ===== */
+/* ===== BOTÓN CTA MÁS GRANDE ===== */
 .nav__cta {
     grid-area: actions;
     position: relative;
@@ -635,11 +635,11 @@
 
 .btn--premium {
     position: relative;
-    min-width: clamp(120px, 18vw, 220px);
-    padding: clamp(0.5rem, 1.2vw, 0.875rem) clamp(0.875rem, 2.2vw, 1.75rem);
+    min-width: clamp(180px, 22vw, 280px);
+    padding: clamp(1rem, 2vw, 1.25rem) clamp(1.5rem, 3vw, 2.5rem);
     overflow: hidden;
     font-family: var(--font-mono);
-    font-size: clamp(0.6rem, 1vw, 0.8rem);
+    font-size: clamp(0.85rem, 1.4vw, 1.1rem);
     font-weight: 800;
     color: #fff;
     text-decoration: none;
@@ -647,7 +647,7 @@
     letter-spacing: 1.2px;
     white-space: nowrap;
     border: 2px solid rgb(255 69 105 / 40%);
-    border-radius: clamp(12px, 3vw, 35px);
+    border-radius: clamp(20px, 4vw, 40px);
     transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     transform: translateZ(0);
     will-change: transform, box-shadow;
@@ -677,7 +677,7 @@
     position: absolute;
     inset: 0;
     z-index: 1;
-    border-radius: clamp(10px, 2.8vw, 33px);
+    border-radius: clamp(18px, 3.8vw, 38px);
     overflow: hidden;
 }
 
@@ -726,7 +726,7 @@
         rgb(255 23 68 / 20%) 50%,
         rgb(255 69 105 / 30%) 100%
     );
-    border-radius: clamp(16px, 4vw, 41px);
+    border-radius: clamp(24px, 5vw, 46px);
     opacity: 0;
     filter: blur(15px);
     transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
@@ -736,7 +736,7 @@
     position: absolute;
     inset: 0;
     z-index: 2;
-    border-radius: clamp(10px, 2.8vw, 33px);
+    border-radius: clamp(18px, 3.8vw, 38px);
     opacity: 0;
     transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
@@ -777,7 +777,7 @@
         rgb(255 255 255 / 30%) 50%,
         transparent 100%
     );
-    border-radius: clamp(10px, 2.8vw, 33px);
+    border-radius: clamp(18px, 3.8vw, 38px);
     transition: left 1.2s ease;
 }
 
@@ -826,15 +826,15 @@
     left: 100%;
 }
 
-/* ===== TOGGLE MÓVIL HAMBURGUESA ===== */
+/* ===== TOGGLE MÓVIL HAMBURGUESA MÁS GRANDE ===== */
 .nav__toggle {
     position: relative;
     z-index: calc(var(--navbar-z-index) + 2);
     display: none;
     align-items: center;
     justify-content: center;
-    width: clamp(40px, 6vw, 56px);
-    height: clamp(40px, 6vw, 56px);
+    width: clamp(55px, 8vw, 65px);
+    height: clamp(55px, 8vw, 65px);
     overflow: hidden;
     pointer-events: auto;
     cursor: pointer;
@@ -847,7 +847,7 @@
     );
     backdrop-filter: blur(30px) saturate(180%);
     border: 1px solid rgb(255 69 105 / 25%);
-    border-radius: clamp(10px, 2vw, 20px);
+    border-radius: clamp(16px, 3vw, 22px);
     box-shadow:
         0 12px 35px rgb(0 0 0 / 40%),
         0 0 25px rgb(255 45 85 / 20%),
@@ -863,8 +863,8 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    width: clamp(20px, 3vw, 28px);
-    height: clamp(15px, 2.5vw, 22px);
+    width: clamp(28px, 4.5vw, 32px);
+    height: clamp(22px, 3.5vw, 26px);
 }
 
 .nav__toggle-glow {
@@ -875,7 +875,7 @@
         rgb(255 23 68 / 15%) 50%,
         rgb(255 69 105 / 25%) 100%
     );
-    border-radius: clamp(18px, 3vw, 28px);
+    border-radius: clamp(24px, 4vw, 30px);
     opacity: 0;
     filter: blur(12px);
     transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
@@ -926,7 +926,7 @@
 }
 
 .nav__toggle:focus {
-    border-radius: clamp(10px, 2vw, 20px);
+    border-radius: clamp(16px, 3vw, 22px);
     outline: 2px solid var(--starflex-red);
     outline-offset: 4px;
 }
@@ -935,11 +935,11 @@
     transform: translateY(0) scale(0.96);
 }
 
-/* ===== LÍNEAS DEL HAMBURGUESA ===== */
+/* ===== LÍNEAS DEL HAMBURGUESA MÁS GRANDES ===== */
 .nav__toggle-line {
     position: relative;
-    width: clamp(18px, 3vw, 30px);
-    height: clamp(2px, 0.3vw, 3px);
+    width: clamp(26px, 4.5vw, 32px);
+    height: clamp(3px, 0.4vw, 4px);
     background: linear-gradient(90deg,
         #fff 0%,
         #f1f5f9 50%,
@@ -952,14 +952,14 @@
 }
 
 .nav__toggle-line:not(:last-child) {
-    margin-bottom: clamp(4px, 0.8vw, 8px);
+    margin-bottom: clamp(6px, 1.2vw, 9px);
 }
 
 /* Estados activos del hamburguesa */
 .nav__toggle.active .nav__toggle-line:nth-child(1) {
     background: linear-gradient(90deg, var(--starflex-crimson-bright) 0%, var(--starflex-red-bright) 100%);
     box-shadow: 0 0 15px var(--starflex-crimson-glow);
-    transform: rotate(45deg) translate(clamp(4px, 0.8vw, 7px), clamp(4px, 0.8vw, 7px));
+    transform: rotate(45deg) translate(clamp(6px, 1.2vw, 8px), clamp(6px, 1.2vw, 8px));
 }
 
 .nav__toggle.active .nav__toggle-line:nth-child(2) {
@@ -970,7 +970,7 @@
 .nav__toggle.active .nav__toggle-line:nth-child(3) {
     background: linear-gradient(90deg, var(--starflex-crimson-bright) 0%, var(--starflex-red-bright) 100%);
     box-shadow: 0 0 15px var(--starflex-crimson-glow);
-    transform: rotate(-45deg) translate(clamp(4px, 0.8vw, 7px), clamp(-4px, -0.8vw, -7px));
+    transform: rotate(-45deg) translate(clamp(6px, 1.2vw, 8px), clamp(-6px, -1.2vw, -8px));
 }
 
 .nav__toggle.active {
@@ -998,133 +998,134 @@
     display: none;
 }
 
-/* ===== BREAKPOINTS ESPECÍFICOS PARA EVITAR CORTES ===== */
+/* ===== BREAKPOINTS ESPECÍFICOS PARA NAVBAR MÁS GRANDE ===== */
 
 /* Pantallas muy anchas */
 @media (width >= 1800px) {
     .nav {
-        gap: clamp(1.5rem, 1.5vw, 2rem);
-        padding: var(--space-md) clamp(2rem, 3vw, 4rem);
+        gap: clamp(2rem, 2.2vw, 3rem);
+        padding: clamp(1.25rem, 2.2vw, 1.75rem) clamp(2rem, 3.5vw, 4rem);
     }
     
     .nav__list {
-        gap: clamp(0.75rem, 0.8vw, 1rem);
-        padding: clamp(0.75rem, 0.8vw, 1rem) clamp(1.5rem, 1.8vw, 2rem);
+        gap: clamp(1rem, 1.2vw, 1.5rem);
+        padding: clamp(1.25rem, 1.8vw, 1.75rem) clamp(2.5rem, 3.5vw, 3.5rem);
     }
     
     .nav__link {
-        padding: clamp(0.5rem, 0.6vw, 0.75rem) clamp(0.75rem, 1vw, 1.25rem);
-        font-size: clamp(0.75rem, 0.8vw, 0.9rem);
+        padding: clamp(0.875rem, 1.2vw, 1.125rem) clamp(1.25rem, 1.8vw, 1.75rem);
+        font-size: clamp(1rem, 1.2vw, 1.2rem);
     }
     
     .btn--premium {
-        min-width: clamp(180px, 12vw, 250px);
-        padding: clamp(0.75rem, 0.8vw, 1rem) clamp(1.5rem, 1.8vw, 2rem);
-        font-size: clamp(0.75rem, 0.8vw, 0.9rem);
+        min-width: clamp(220px, 18vw, 320px);
+        padding: clamp(1.125rem, 1.5vw, 1.5rem) clamp(2rem, 2.8vw, 2.75rem);
+        font-size: clamp(1rem, 1.2vw, 1.2rem);
     }
     
     .nav__language-btn {
-        min-width: clamp(70px, 5vw, 90px);
-        padding: clamp(0.5rem, 0.6vw, 0.75rem) clamp(0.75rem, 1vw, 1rem);
-        font-size: clamp(0.7rem, 0.8vw, 0.8rem);
+        min-width: clamp(90px, 8vw, 120px);
+        padding: clamp(0.875rem, 1.2vw, 1.125rem) clamp(1.25rem, 1.8vw, 1.5rem);
+        font-size: clamp(0.9rem, 1.1vw, 1.1rem);
     }
 }
 
 /* Pantallas medianas-grandes */
 @media (width >= 1400px) and (width <= 1799px) {
     .nav {
-        gap: clamp(1rem, 1.2vw, 1.5rem);
+        gap: clamp(1.5rem, 1.8vw, 2.25rem);
     }
     
     .nav__list {
-        gap: clamp(0.5rem, 0.8vw, 0.75rem);
-        padding: clamp(0.625rem, 0.8vw, 0.875rem) clamp(1.25rem, 1.5vw, 1.75rem);
+        gap: clamp(0.875rem, 1.2vw, 1.25rem);
+        padding: clamp(1rem, 1.5vw, 1.5rem) clamp(2rem, 2.8vw, 2.75rem);
     }
     
     .nav__link {
-        padding: clamp(0.4rem, 0.6vw, 0.625rem) clamp(0.625rem, 1vw, 1rem);
-        font-size: clamp(0.7rem, 0.9vw, 0.85rem);
+        padding: clamp(0.75rem, 1.1vw, 1rem) clamp(1rem, 1.5vw, 1.5rem);
+        font-size: clamp(0.9rem, 1.1vw, 1.1rem);
     }
     
     .btn--premium {
-        min-width: clamp(140px, 15vw, 200px);
-        padding: clamp(0.625rem, 0.8vw, 0.875rem) clamp(1.25rem, 1.8vw, 1.75rem);
-        font-size: clamp(0.65rem, 0.9vw, 0.8rem);
+        min-width: clamp(190px, 20vw, 260px);
+        padding: clamp(1rem, 1.3vw, 1.25rem) clamp(1.75rem, 2.5vw, 2.25rem);
+        font-size: clamp(0.9rem, 1.1vw, 1.1rem);
     }
     
     .nav__language-btn {
-        min-width: clamp(60px, 6vw, 80px);
-        padding: clamp(0.4rem, 0.6vw, 0.625rem) clamp(0.625rem, 1vw, 0.875rem);
-        font-size: clamp(0.65rem, 0.9vw, 0.75rem);
+        min-width: clamp(80px, 9vw, 100px);
+        padding: clamp(0.75rem, 1.1vw, 1rem) clamp(1rem, 1.5vw, 1.25rem);
+        font-size: clamp(0.85rem, 1vw, 1rem);
     }
 }
 
 /* Pantallas medianas */
 @media (width >= 1200px) and (width <= 1399px) {
     .nav {
-        gap: clamp(0.75rem, 1vw, 1.25rem);
+        gap: clamp(1.25rem, 1.5vw, 1.75rem);
     }
     
     .nav__list {
-        gap: clamp(0.375rem, 0.6vw, 0.625rem);
-        padding: clamp(0.5rem, 0.7vw, 0.75rem) clamp(1rem, 1.3vw, 1.5rem);
+        gap: clamp(0.75rem, 1vw, 1rem);
+        padding: clamp(0.875rem, 1.3vw, 1.25rem) clamp(1.75rem, 2.5vw, 2.25rem);
     }
     
     .nav__link {
-        padding: clamp(0.375rem, 0.5vw, 0.5rem) clamp(0.5rem, 0.8vw, 0.875rem);
-        font-size: clamp(0.65rem, 0.8vw, 0.8rem);
+        padding: clamp(0.625rem, 1vw, 0.875rem) clamp(0.875rem, 1.3vw, 1.25rem);
+        font-size: clamp(0.8rem, 1vw, 1rem);
     }
     
     .btn--premium {
-        min-width: clamp(120px, 16vw, 180px);
-        padding: clamp(0.5rem, 0.7vw, 0.75rem) clamp(1rem, 1.5vw, 1.5rem);
-        font-size: clamp(0.6rem, 0.8vw, 0.75rem);
+        min-width: clamp(160px, 22vw, 220px);
+        padding: clamp(0.875rem, 1.2vw, 1.125rem) clamp(1.5rem, 2.2vw, 2rem);
+        font-size: clamp(0.8rem, 1vw, 1rem);
     }
     
     .nav__language-btn {
-        min-width: clamp(55px, 7vw, 75px);
-        padding: clamp(0.375rem, 0.5vw, 0.5rem) clamp(0.5rem, 0.8vw, 0.75rem);
-        font-size: clamp(0.6rem, 0.8vw, 0.7rem);
+        min-width: clamp(70px, 10vw, 90px);
+        padding: clamp(0.625rem, 1vw, 0.875rem) clamp(0.875rem, 1.3vw, 1.125rem);
+        font-size: clamp(0.75rem, 0.9vw, 0.9rem);
     }
 }
 
 /* Pantallas pequeñas de escritorio */
 @media (width >= 1024px) and (width <= 1199px) {
     .nav {
-        gap: clamp(0.5rem, 0.8vw, 1rem);
-        padding: var(--space-md) clamp(1rem, 2vw, 1.5rem);
+        gap: clamp(1rem, 1.3vw, 1.5rem);
+        padding: clamp(1rem, 1.8vw, 1.25rem) clamp(1.5rem, 2.5vw, 
+2rem);
     }
     
     .nav__list {
-        gap: clamp(0.25rem, 0.5vw, 0.5rem);
-        padding: clamp(0.4rem, 0.6vw, 0.625rem) clamp(0.75rem, 1.2vw, 1.25rem);
+        gap: clamp(0.625rem, 0.9vw, 0.875rem);
+        padding: clamp(0.75rem, 1.1vw, 1rem) clamp(1.5rem, 2.2vw, 2rem);
     }
     
     .nav__link {
-        padding: clamp(0.3rem, 0.4vw, 0.4rem) clamp(0.4rem, 0.7vw, 0.75rem);
-        font-size: clamp(0.6rem, 0.7vw, 0.75rem);
+        padding: clamp(0.5rem, 0.9vw, 0.75rem) clamp(0.75rem, 1.2vw, 1.125rem);
+        font-size: clamp(0.75rem, 0.9vw, 0.95rem);
     }
     
     .btn--premium {
-        min-width: clamp(100px, 18vw, 160px);
-        padding: clamp(0.4rem, 0.6vw, 0.625rem) clamp(0.75rem, 1.3vw, 1.25rem);
-        font-size: clamp(0.55rem, 0.7vw, 0.7rem);
+        min-width: clamp(140px, 24vw, 200px);
+        padding: clamp(0.75rem, 1.1vw, 1rem) clamp(1.25rem, 2vw, 1.75rem);
+        font-size: clamp(0.75rem, 0.9vw, 0.95rem);
     }
     
     .nav__language-btn {
-        min-width: clamp(45px, 8vw, 65px);
-        padding: clamp(0.3rem, 0.4vw, 0.4rem) clamp(0.4rem, 0.7vw, 0.625rem);
-        font-size: clamp(0.55rem, 0.7vw, 0.65rem);
+        min-width: clamp(60px, 11vw, 80px);
+        padding: clamp(0.5rem, 0.9vw, 0.75rem) clamp(0.75rem, 1.2vw, 1rem);
+        font-size: clamp(0.7rem, 0.85vw, 0.85rem);
     }
     
     .nav__language-icon {
-        width: clamp(8px, 1.2vw, 12px);
-        height: clamp(8px, 1.2vw, 12px);
+        width: clamp(12px, 1.5vw, 16px);
+        height: clamp(12px, 1.5vw, 16px);
     }
     
     .nav__language-arrow {
-        width: clamp(6px, 1vw, 10px);
-        height: clamp(6px, 1vw, 10px);
+        width: clamp(10px, 1.3vw, 14px);
+        height: clamp(10px, 1.3vw, 14px);
     }
 }
 
@@ -1133,8 +1134,8 @@
     .nav {
         grid-template-columns: auto 1fr auto;
         grid-template-areas: "logo . toggle";
-        padding: clamp(0.5rem, 1.5vw, 0.75rem) var(--section-padding-x);
-        gap: clamp(0.75rem, 2.5vw, 1rem);
+        padding: clamp(0.75rem, 2vw, 1rem) var(--section-padding-x);
+        gap: clamp(1rem, 3vw, 1.5rem);
     }
     
     .nav__toggle {
@@ -1159,12 +1160,12 @@
     }
     
     .nav__logo-container {
-        width: clamp(35px, 6vw, 48px);
-        height: clamp(35px, 6vw, 48px);
+        width: clamp(45px, 7vw, 55px);
+        height: clamp(45px, 7vw, 55px);
     }
     
     .nav__logo {
-        border-radius: clamp(8px, 1.5vw, 14px);
+        border-radius: clamp(12px, 2vw, 16px);
     }
     
     /* ===== NAVBAR MÓVIL EXCLUSIVO - DISEÑO COMPLETAMENTE INDEPENDIENTE ===== */
@@ -1241,7 +1242,7 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: clamp(1.5rem, 4vw, 2.5rem) clamp(1.25rem, 3vw, 2rem) clamp(0.875rem, 2.5vw, 1.5rem);
+        padding: clamp(1.75rem, 4.5vw, 2.75rem) clamp(1.5rem, 3.5vw, 2.25rem) clamp(1rem, 2.8vw, 1.75rem);
         border-bottom: 1px solid rgba(255, 255, 255, 0.15);
         background: linear-gradient(135deg,
             rgba(255, 255, 255, 0.08) 0%,
@@ -1271,9 +1272,9 @@
         z-index: 2;
         display: flex;
         align-items: center;
-        gap: clamp(0.625rem, 1.5vw, 1rem);
+        gap: clamp(0.75rem, 1.8vw, 1.25rem);
         font-family: var(--font-mono);
-        font-size: clamp(1rem, 2.8vw, 1.3rem);
+        font-size: clamp(1.2rem, 3.2vw, 1.5rem);
         font-weight: 900;
         color: #fff;
         text-transform: uppercase;
@@ -1282,8 +1283,8 @@
     }
     
     .nav__menu-logo-icon {
-        width: clamp(24px, 5.5vw, 32px);
-        height: clamp(24px, 5.5vw, 32px);
+        width: clamp(32px, 6vw, 38px);
+        height: clamp(32px, 6vw, 38px);
         background: linear-gradient(135deg,
             var(--starflex-crimson-bright) 0%,
             var(--starflex-red) 50%,
@@ -1294,7 +1295,7 @@
         align-items: center;
         justify-content: center;
         color: white;
-        font-size: clamp(12px, 2.8vw, 16px);
+        font-size: clamp(16px, 3.2vw, 18px);
         font-weight: 900;
         box-shadow: 
             0 8px 25px rgba(255, 45, 85, 0.4),
@@ -1307,7 +1308,7 @@
         position: relative;
         flex-shrink: 0;
         order: 1;
-        padding: clamp(1.5rem, 4vw, 2.5rem);
+        padding: clamp(1.75rem, 4.5vw, 2.75rem);
         border-bottom: 1px solid rgba(255, 255, 255, 0.15);
         background: linear-gradient(135deg,
             rgba(255, 69, 105, 0.12) 0%,
@@ -1335,9 +1336,9 @@
     .nav__language-title {
         position: relative;
         z-index: 2;
-        margin-bottom: clamp(1.25rem, 3vw, 2rem);
+        margin-bottom: clamp(1.5rem, 3.5vw, 2.25rem);
         font-family: var(--font-mono);
-        font-size: clamp(0.75rem, 2vw, 0.95rem);
+        font-size: clamp(0.9rem, 2.2vw, 1.1rem);
         font-weight: 800;
         color: rgba(255, 255, 255, 0.9);
         text-transform: uppercase;
@@ -1370,7 +1371,7 @@
         position: relative;
         z-index: 2;
         display: flex;
-        gap: clamp(1rem, 2.8vw, 1.75rem);
+        gap: clamp(1.25rem, 3.2vw, 2rem);
         width: 100%;
         justify-content: center;
     }
@@ -1380,14 +1381,14 @@
         position: relative;
         display: flex;
         flex: 1;
-        max-width: 140px;
+        max-width: 150px;
         gap: 0.75rem;
         align-items: center;
         justify-content: center;
-        min-height: clamp(55px, 12vw, 75px);
-        padding: clamp(1rem, 2.8vw, 1.5rem);
+        min-height: clamp(70px, 14vw, 85px);
+        padding: clamp(1.5rem, 3.2vw, 1.75rem);
         font-family: var(--font-mono);
-        font-size: clamp(0.75rem, 2vw, 0.95rem);
+        font-size: clamp(0.9rem, 2.2vw, 1.1rem);
         font-weight: 700;
         color: rgba(255, 255, 255, 0.8);
         text-transform: uppercase;
@@ -1399,7 +1400,7 @@
             rgba(255, 255, 255, 0.10) 100%
         );
         border: 1px solid rgba(255, 69, 105, 0.3);
-        border-radius: 22px;
+        border-radius: 24px;
         backdrop-filter: blur(25px);
         box-shadow: 
             0 10px 30px rgba(0, 0, 0, 0.4),
@@ -1501,7 +1502,7 @@
     .nav__language-flag {
         position: relative;
         z-index: 2;
-        font-size: clamp(1rem, 2.8vw, 1.4rem);
+        font-size: clamp(1.3rem, 3.2vw, 1.6rem);
         line-height: 1;
         filter: drop-shadow(0 3px 10px rgba(0, 0, 0, 0.4));
         transition: all 0.3s ease;
@@ -1545,7 +1546,7 @@
         flex-direction: column;
         gap: 0;
         order: 2;
-        padding: clamp(1.25rem, 3vw, 2rem) 0;
+        padding: clamp(1.75rem, 3.5vw, 2.25rem) 0;
         margin: 0;
         overflow-y: auto;
         list-style: none;
@@ -1568,10 +1569,10 @@
         display: flex;
         align-items: center;
         justify-content: flex-start;
-        min-height: clamp(50px, 12vw, 70px);
-        padding: clamp(1rem, 2.8vw, 1.5rem) clamp(1.25rem, 3vw, 2rem);
+        min-height: clamp(65px, 14vw, 80px);
+        padding: clamp(1.5rem, 3.2vw, 1.75rem) clamp(1.75rem, 3.5vw, 2.25rem);
         font-family: var(--font-mono);
-        font-size: clamp(0.85rem, 2.2vw, 1.05rem);
+        font-size: clamp(1rem, 2.5vw, 1.2rem);
         font-weight: 700;
         color: rgba(255, 255, 255, 0.8);
         text-decoration: none;
@@ -1647,7 +1648,7 @@
     .nav__cta-mobile {
         flex-shrink: 0;
         order: 3;
-        padding: clamp(1.5rem, 4vw, 2.5rem);
+        padding: clamp(1.75rem, 4.5vw, 2.75rem);
         border-top: 1px solid rgba(255, 255, 255, 0.15);
         background: linear-gradient(135deg,
             rgba(255, 69, 105, 0.15) 0%,
@@ -1679,10 +1680,10 @@
         align-items: center;
         justify-content: center;
         width: 100%;
-        min-height: clamp(50px, 12vw, 70px);
-        padding: clamp(1rem, 2.8vw, 1.5rem) clamp(1.25rem, 3vw, 2rem);
+        min-height: clamp(65px, 14vw, 80px);
+        padding: clamp(1.5rem, 3.2vw, 1.75rem) clamp(1.75rem, 3.5vw, 2.25rem);
         font-family: var(--font-mono);
-        font-size: clamp(0.8rem, 2vw, 1rem);
+        font-size: clamp(1rem, 2.2vw, 1.2rem);
         font-weight: 800;
         color: #fff;
         text-decoration: none;
@@ -1697,7 +1698,7 @@
             var(--starflex-crimson-glow) 100%
         );
         border: 2px solid rgba(255, 69, 105, 0.4);
-        border-radius: 20px;
+        border-radius: 22px;
         box-shadow:
             0 12px 35px rgba(255, 45, 85, 0.4),
             0 0 25px rgba(255, 69, 105, 0.3),
@@ -1719,7 +1720,7 @@
             rgba(255, 255, 255, 0.15) 50%,
             transparent 100%
         );
-        border-radius: 20px;
+        border-radius: 22px;
         transition: left 0.8s ease;
     }
     
@@ -1784,30 +1785,30 @@
 /* ===== AJUSTES PARA PANTALLAS PEQUEÑAS ===== */
 @media (width <= 480px) {
     .nav__menu {
-        width: min(380px, 98vw);
+        width: min(400px, 98vw);
     }
     
     .nav__language-mobile {
-        padding: clamp(1.25rem, 3vw, 2rem);
+        padding: clamp(1.5rem, 3.5vw, 2.25rem);
     }
     
     .nav__language-options {
-        gap: clamp(0.875rem, 2.5vw, 1.25rem);
+        gap: clamp(1rem, 2.8vw, 1.5rem);
     }
     
     .nav__language-option {
-        max-width: 120px;
-        min-height: clamp(50px, 11vw, 70px);
-        padding: clamp(0.875rem, 2.5vw, 1.25rem);
-        border-radius: 18px;
+        max-width: 130px;
+        min-height: clamp(60px, 12vw, 75px);
+        padding: clamp(1.25rem, 2.8vw, 1.5rem);
+        border-radius: 20px;
     }
     
     .nav__language-flag {
-        font-size: clamp(0.95rem, 2.5vw, 1.3rem);
+        font-size: clamp(1.1rem, 2.8vw, 1.4rem);
     }
     
     .nav__language-name {
-        font-size: clamp(0.7rem, 1.8vw, 0.85rem);
+        font-size: clamp(0.8rem, 2vw, 0.95rem);
     }
 }
 
@@ -2021,144 +2022,6 @@ body.no-scroll .nav__logo,
     }
 }
 
-/* ===== AJUSTES ESPECÍFICOS PARA PANTALLAS MUY PEQUEÑAS DE ESCRITORIO ===== */
-@media (width >= 1024px) and (width <= 1100px) {
-    .nav {
-        gap: clamp(0.375rem, 0.6vw, 0.75rem);
-        padding: var(--space-md) clamp(0.75rem, 1.5vw, 1.25rem);
-    }
-    
-    .nav__list {
-        gap: clamp(0.125rem, 0.3vw, 0.375rem);
-        padding: clamp(0.375rem, 0.5vw, 0.5rem) clamp(0.625rem, 1vw, 1rem);
-    }
-    
-    .nav__link {
-        padding: clamp(0.25rem, 0.35vw, 0.375rem) clamp(0.375rem, 0.6vw, 0.625rem);
-        font-size: clamp(0.55rem, 0.65vw, 0.7rem);
-        letter-spacing: 0.5px;
-    }
-    
-    .btn--premium {
-        min-width: clamp(90px, 16vw, 140px);
-        padding: clamp(0.375rem, 0.5vw, 0.5rem) clamp(0.625rem, 1.1vw, 1rem);
-        font-size: clamp(0.5rem, 0.65vw, 0.65rem);
-        letter-spacing: 0.8px;
-    }
-    
-    .nav__language-btn {
-        min-width: clamp(40px, 7vw, 55px);
-        padding: clamp(0.25rem, 0.35vw, 0.375rem) clamp(0.375rem, 0.6vw, 0.5rem);
-        font-size: clamp(0.5rem, 0.65vw, 0.6rem);
-        gap: clamp(0.125rem, 0.4vw, 0.25rem);
-    }
-    
-    .nav__language-icon {
-        width: clamp(7px, 1vw, 10px);
-        height: clamp(7px, 1vw, 10px);
-    }
-    
-    .nav__language-arrow {
-        width: clamp(6px, 0.8vw, 8px);
-        height: clamp(6px, 0.8vw, 8px);
-    }
-    
-    .nav__logo-container {
-        width: clamp(30px, 3.5vw, 40px);
-        height: clamp(30px, 3.5vw, 40px);
-    }
-}
-
-/* ===== AJUSTES PARA PANTALLAS EXTREMADAMENTE PEQUEÑAS DE ESCRITORIO ===== */
-@media (width >= 1024px) and (width <= 1050px) {
-    .nav {
-        gap: clamp(0.25rem, 0.5vw, 0.5rem);
-        padding: var(--space-md) clamp(0.5rem, 1.2vw, 1rem);
-    }
-    
-    .nav__list {
-        gap: clamp(0.0625rem, 0.2vw, 0.25rem);
-        padding: clamp(0.25rem, 0.4vw, 0.375rem) clamp(0.5rem, 0.8vw, 0.75rem);
-        border-radius: clamp(15px, 3vw, 25px);
-    }
-    
-    .nav__link {
-        padding: clamp(0.1875rem, 0.3vw, 0.25rem) clamp(0.25rem, 0.5vw, 0.5rem);
-        font-size: clamp(0.5rem, 0.6vw, 0.65rem);
-        border-radius: clamp(8px, 1.5vw, 15px);
-        letter-spacing: 0.3px;
-    }
-    
-    .btn--premium {
-        min-width: clamp(80px, 14vw, 120px);
-        padding: clamp(0.25rem, 0.4vw, 0.375rem) clamp(0.5rem, 0.9vw, 0.875rem);
-        font-size: clamp(0.45rem, 0.6vw, 0.6rem);
-        border-radius: clamp(10px, 2.5vw, 20px);
-        letter-spacing: 0.6px;
-    }
-    
-    .nav__language-btn {
-        min-width: clamp(35px, 6vw, 45px);
-        padding: clamp(0.1875rem, 0.3vw, 0.25rem) clamp(0.25rem, 0.5vw, 0.375rem);
-        font-size: clamp(0.45rem, 0.6vw, 0.55rem);
-        border-radius: clamp(6px, 1.5vw, 12px);
-        gap: clamp(0.0625rem, 0.3vw, 0.1875rem);
-    }
-    
-    .nav__language-icon {
-        width: clamp(6px, 0.8vw, 8px);
-        height: clamp(6px, 0.8vw, 8px);
-    }
-    
-    .nav__language-arrow {
-        width: clamp(5px, 0.7vw, 7px);
-        height: clamp(5px, 0.7vw, 7px);
-    }
-    
-    .nav__logo-container {
-        width: clamp(28px, 3.2vw, 35px);
-        height: clamp(28px, 3.2vw, 35px);
-    }
-    
-    .nav__logo {
-        border-radius: clamp(6px, 1.2vw, 10px);
-    }
-}
-
-/* ===== FALLBACK PARA PANTALLAS ULTRA PEQUEÑAS DE ESCRITORIO ===== */
-@media (width >= 1024px) and (width <= 1030px) {
-    .nav__link {
-        font-size: clamp(0.45rem, 0.55vw, 0.6rem);
-        padding: clamp(0.125rem, 0.25vw, 0.1875rem) clamp(0.1875rem, 0.4vw, 0.375rem);
-    }
-    
-    .btn--premium {
-        min-width: clamp(70px, 12vw, 100px);
-        font-size: clamp(0.4rem, 0.55vw, 0.55rem);
-        padding: clamp(0.1875rem, 0.35vw, 0.25rem) clamp(0.375rem, 0.7vw, 0.625rem);
-    }
-    
-    .nav__language-btn {
-        min-width: clamp(30px, 5vw, 40px);
-        font-size: clamp(0.4rem, 0.55vw, 0.5rem);
-        padding: clamp(0.125rem, 0.25vw, 0.1875rem) clamp(0.1875rem, 0.4vw, 0.25rem);
-    }
-    
-    .nav__language-text {
-        display: none; /* Ocultar texto en pantallas muy pequeñas */
-    }
-    
-    .nav__language-icon {
-        width: clamp(5px, 0.7vw, 7px);
-        height: clamp(5px, 0.7vw, 7px);
-    }
-    
-    .nav__language-arrow {
-        width: clamp(4px, 0.6vw, 6px);
-        height: clamp(4px, 0.6vw, 6px);
-    }
-}
-
 /* ===== ASEGURAR VISIBILIDAD COMPLETA EN TODAS LAS PANTALLAS ===== */
 @media (width >= 1024px) {
     /* Prevenir cualquier overflow horizontal */
@@ -2206,54 +2069,3 @@ body.no-scroll .nav__logo,
         white-space: nowrap;
     }
 }
-
-/* ===== MODO DE EMERGENCIA PARA PANTALLAS EXTREMAS ===== */
-@media (width >= 1024px) and (width <= 1024px) {
-    /* Modo ultra compacto para 1024px exacto */
-    .nav {
-        gap: 0.25rem;
-        padding: var(--space-md) 0.5rem;
-    }
-    
-    .nav__list {
-        gap: 0.0625rem;
-        padding: 0.1875rem 0.375rem;
-    }
-    
-    .nav__link {
-        padding: 0.0625rem 0.125rem;
-        font-size: 0.4rem;
-        letter-spacing: 0;
-    }
-    
-    .btn--premium {
-        min-width: 60px;
-        padding: 0.125rem 0.25rem;
-        font-size: 0.35rem;
-        letter-spacing: 0;
-    }
-    
-    .nav__language-btn {
-        min-width: 25px;
-        padding: 0.0625rem 0.125rem;
-        font-size: 0.35rem;
-        gap: 0;
-    }
-    
-    .nav__language-text {
-        display: none;
-    }
-    
-    .nav__language-icon,
-    .nav__language-arrow {
-        width: 4px;
-        height: 4px;
-    }
-    
-    .nav__logo-container {
-        width: 25px;
-        height: 25px;
-    }
-}
-
-
