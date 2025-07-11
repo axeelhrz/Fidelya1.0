@@ -10,7 +10,7 @@ import {
   limit,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { ValidacionesService } from '@/services/validaciones.service';
+import { validacionesService } from '@/services/validaciones.service';
 import { ValidacionResponse, ValidacionRequest } from '@/types/validacion';
 import { useAuth } from './useAuth';
 import toast from 'react-hot-toast';
@@ -145,7 +145,7 @@ export const useSocioValidaciones = () => {
     }
 
     try {
-      const parsedData = ValidacionesService.parseQRData(qrData);
+      const parsedData = validacionesService.parseQRData(qrData);
       if (!parsedData) {
         throw new Error('Código QR inválido');
       }
@@ -156,15 +156,46 @@ export const useSocioValidaciones = () => {
         beneficioId: parsedData.beneficioId
       };
 
-      const result = await ValidacionesService.validarAcceso(request);
+      const result = await validacionesService.validarAcceso(request);
       
-      if (result.resultado === 'habilitado') {
+      if (result.success) {
         toast.success('¡Validación exitosa!');
+        // Convert service response to ValidacionResponse format
+        return {
+          resultado: 'habilitado',
+          beneficio: result.data?.beneficio ? {
+            id: result.data.beneficio.id,
+            titulo: result.data.beneficio.titulo,
+            descuento: result.data.beneficio.descuento,
+            tipo: result.data.beneficio.tipo,
+            comercioNombre: result.data.comercio.nombre,
+            descripcion: result.data.beneficio.descripcion
+          } : undefined,
+          socio: {
+            nombre: result.data?.socio.nombre || '',
+            estado: result.data?.socio.estadoMembresia || '',
+            asociacion: ''
+          },
+          validacionId: result.data?.validacion.id,
+          fechaHora: result.data?.validacion.fechaValidacion || new Date(),
+          montoDescuento: result.data?.validacion.montoDescuento,
+          beneficioTitulo: result.data?.beneficio?.titulo,
+          id: result.data?.validacion.id,
+          comercioNombre: result.data?.comercio.nombre
+        };
       } else {
-        toast.error(result.motivo || 'Validación fallida');
+        toast.error(result.message || 'Validación fallida');
+        return {
+          resultado: 'no_habilitado',
+          motivo: result.message,
+          socio: {
+            nombre: '',
+            estado: '',
+            asociacion: ''
+          },
+          fechaHora: new Date()
+        };
       }
-
-      return result;
     } catch (error) {
       console.error('Error validating QR:', error);
       const errorMessage = error instanceof Error ? error.message : 'Error al validar el código QR';
@@ -196,18 +227,16 @@ export const useSocioValidaciones = () => {
 
     try {
       setLoading(true);
-      const historial = await ValidacionesService.getHistorialValidaciones(user.uid);
+      const historialResult = await validacionesService.getHistorialValidaciones(user.uid);
       
-      const validacionesData = historial.map((v: ValidacionResponse) => ({
+      const validacionesData = historialResult.validaciones.map(v => ({
         id: v.id,
         comercioNombre: v.comercioNombre || 'Comercio',
         beneficioTitulo: v.beneficioTitulo,
-        resultado: v.resultado,
-        fechaHora: (v.fechaHora && typeof (v.fechaHora as { toDate?: () => Date }).toDate === 'function')
-          ? (v.fechaHora as { toDate: () => Date }).toDate()
-          : v.fechaHora,
+        resultado: v.estado === 'exitosa' ? 'habilitado' : 'no_habilitado',
+        fechaHora: v.fechaValidacion,
         montoDescuento: v.montoDescuento,
-        motivo: v.motivo
+        motivo: v.estado === 'fallida' ? 'Validación fallida' : undefined
       }));
 
       setValidaciones(validacionesData);
