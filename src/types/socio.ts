@@ -129,6 +129,7 @@ export interface Socio {
     beneficiosDesbloqueados: string[];
     descuentoAdicional: number;
   };
+  pagos?: Pago[];
 }
 
 // Tipo simplificado para el formulario de creación/edición de socios

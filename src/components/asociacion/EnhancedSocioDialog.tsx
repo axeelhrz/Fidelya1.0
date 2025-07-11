@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { Timestamp } from 'firebase/firestore';
 import { 
   X, 
   User, 
@@ -17,6 +18,19 @@ import {
   Loader2
 } from 'lucide-react';
 import { Socio, SocioFormData } from '@/services/socio.service';
+
+// Create a form-specific interface that matches the Zod schema
+interface SocioFormInputs {
+  nombre: string;
+  email: string;
+  dni: string;
+  telefono?: string;
+  fechaNacimiento: Date;
+  direccion?: string;
+  numeroSocio?: string;
+  montoCuota: number;
+  fechaVencimiento?: Date;
+}
 
 const socioSchema = z.object({
   nombre: z.string().min(2, 'Nombre debe tener al menos 2 caracteres'),
@@ -55,12 +69,26 @@ export const EnhancedSocioDialog: React.FC<EnhancedSocioDialogProps> = ({
     handleSubmit,
     formState: { errors },
     reset,
-  } = useForm<SocioFormData>({
+  } = useForm<SocioFormInputs>({
     resolver: zodResolver(socioSchema),
     defaultValues: {
       montoCuota: 0,
     }
   });
+
+  // Helper function to convert Timestamp to Date
+  const timestampToDate = (timestamp: Date | Timestamp | undefined): Date | undefined => {
+    if (!timestamp) return undefined;
+    if (timestamp instanceof Date) return timestamp;
+    if (timestamp instanceof Timestamp) return timestamp.toDate();
+    return undefined;
+  };
+
+  // Helper function to format date for input
+  const formatDateForInput = (date: Date | undefined): string => {
+    if (!date) return '';
+    return date.toISOString().split('T')[0];
+  };
 
   // Reset form when dialog opens/closes or socio changes
   useEffect(() => {
@@ -72,11 +100,11 @@ export const EnhancedSocioDialog: React.FC<EnhancedSocioDialogProps> = ({
           email: socio.email,
           dni: socio.dni,
           telefono: socio.telefono || '',
-          fechaNacimiento: socio.fechaNacimiento,
+          fechaNacimiento: timestampToDate(socio.fechaNacimiento) || new Date(),
           direccion: socio.direccion || '',
           numeroSocio: socio.numeroSocio || '',
           montoCuota: socio.montoCuota,
-          fechaVencimiento: socio.fechaVencimiento,
+          fechaVencimiento: timestampToDate(socio.fechaVencimiento),
         });
       } else {
         // Reset form for new socio
@@ -95,10 +123,25 @@ export const EnhancedSocioDialog: React.FC<EnhancedSocioDialogProps> = ({
     }
   }, [open, socio, reset]);
 
-  const handleFormSubmit = async (data: SocioFormData) => {
+  const handleFormSubmit = async (data: SocioFormInputs) => {
     try {
       setIsSubmitting(true);
-      await onSave(data);
+      
+      // Convert form data to SocioFormData format
+      const socioFormData: SocioFormData = {
+        nombre: data.nombre,
+        email: data.email,
+        dni: data.dni,
+        telefono: data.telefono,
+        fechaNacimiento: data.fechaNacimiento,
+        direccion: data.direccion,
+        numeroSocio: data.numeroSocio,
+        montoCuota: data.montoCuota,
+        fechaVencimiento: data.fechaVencimiento,
+        estado: 'activo', // Default state for new socios
+      };
+      
+      await onSave(socioFormData);
     } catch (error) {
       console.error('Error saving socio:', error);
     } finally {
