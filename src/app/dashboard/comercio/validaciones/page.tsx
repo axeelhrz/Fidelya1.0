@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import { useSearchParams } from 'next/navigation';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -22,7 +22,8 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-export default function ComercioValidacionesPage() {
+// Component that uses useSearchParams - needs to be wrapped in Suspense
+function ComercioValidacionesContent() {
   const { user, signOut } = useAuth();
   const { loading, refresh, getStats } = useValidaciones();
   const [stats, setStats] = useState<ValidacionStats | null>(null);
@@ -298,5 +299,40 @@ export default function ComercioValidacionesPage() {
         </div>
       </div>
     </DashboardLayout>
+  );
+}
+
+// Loading fallback component
+function ComercioValidacionesLoading() {
+  return (
+    <DashboardLayout
+      activeSection="validaciones"
+      sidebarComponent={(props) => (
+        <ComercioSidebar
+          {...props}
+          onLogoutClick={() => {}}
+        />
+      )}
+    >
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 mx-auto mb-6 bg-gradient-to-br from-purple-500 to-violet-600 rounded-2xl flex items-center justify-center shadow-lg">
+            <RefreshCw size={32} className="text-white animate-spin" />
+          </div>
+          <h3 className="text-xl font-bold text-slate-900 mb-2">
+            Cargando validaciones...
+          </h3>
+          <p className="text-slate-600">Obteniendo historial de validaciones</p>
+        </div>
+      </div>
+    </DashboardLayout>
+  );
+}
+
+export default function ComercioValidacionesPage() {
+  return (
+    <Suspense fallback={<ComercioValidacionesLoading />}>
+      <ComercioValidacionesContent />
+    </Suspense>
   );
 }

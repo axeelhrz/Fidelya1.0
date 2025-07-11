@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { ComercioSidebar } from '@/components/layout/ComercioSidebar';
@@ -20,7 +20,27 @@ import {
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
 
-export default function EstadisticasQRPage() {
+// Sidebar personalizado que maneja el logout
+const ComercioSidebarWithLogout: React.FC<{
+  open: boolean;
+  onToggle: () => void;
+  onMenuClick: (section: string) => void;
+  activeSection: string;
+  onLogoutClick: () => void;
+}> = (props) => {
+  return (
+    <ComercioSidebar
+      open={props.open}
+      onToggle={props.onToggle}
+      onMenuClick={props.onMenuClick}
+      onLogoutClick={props.onLogoutClick}
+      activeSection={props.activeSection}
+    />
+  );
+};
+
+// Main component content
+const EstadisticasQRContent: React.FC = () => {
   const { signOut } = useAuth();
   const { stats, loading, refreshStats } = useQRStats();
   
@@ -56,7 +76,7 @@ export default function EstadisticasQRPage() {
       <DashboardLayout
         activeSection="qr-estadisticas"
         sidebarComponent={(props) => (
-          <ComercioSidebar
+          <ComercioSidebarWithLogout
             {...props}
             onLogoutClick={handleLogout}
           />
@@ -81,7 +101,7 @@ export default function EstadisticasQRPage() {
     <DashboardLayout
       activeSection="qr-estadisticas"
       sidebarComponent={(props) => (
-        <ComercioSidebar
+        <ComercioSidebarWithLogout
           {...props}
           onLogoutClick={handleLogout}
         />
@@ -383,5 +403,36 @@ export default function EstadisticasQRPage() {
         </div>
       </motion.div>
     </DashboardLayout>
+  );
+};
+
+// Main page component with Suspense boundary
+export default function EstadisticasQRPage() {
+  return (
+    <Suspense fallback={
+      <DashboardLayout
+        activeSection="qr-estadisticas"
+        sidebarComponent={(props) => (
+          <ComercioSidebarWithLogout
+            {...props}
+            onLogoutClick={() => {}}
+          />
+        )}
+      >
+        <div className="p-4 md:p-8 max-w-7xl mx-auto min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+                <RefreshCw size={32} className="text-white animate-spin" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-3">Cargando estadísticas...</h3>
+              <p className="text-gray-500">Analizando datos de uso del QR</p>
+            </div>
+          </div>
+        </div>
+      </DashboardLayout>
+    }>
+      <EstadisticasQRContent />
+    </Suspense>
   );
 }

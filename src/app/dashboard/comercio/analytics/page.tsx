@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import { useSearchParams } from 'next/navigation';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -24,7 +24,8 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-export default function ComercioAnalyticsPage() {
+// Component that uses useSearchParams - needs to be wrapped in Suspense
+function ComercioAnalyticsContent() {
   const { user, signOut } = useAuth();
   // Calculate date range based on selected period
   const getDateRange = (period: 'week' | 'month' | 'year') => {
@@ -312,5 +313,40 @@ export default function ComercioAnalyticsPage() {
         <ComercioAnalytics section={activeTab} />
       </motion.div>
     </DashboardLayout>
+  );
+}
+
+// Loading fallback component
+function ComercioAnalyticsLoading() {
+  return (
+    <DashboardLayout
+      activeSection="analytics"
+      sidebarComponent={(props) => (
+        <ComercioSidebar
+          {...props}
+          onLogoutClick={() => {}}
+        />
+      )}
+    >
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="w-16 h-16 mx-auto mb-4 bg-orange-100 rounded-2xl flex items-center justify-center">
+            <RefreshCw size={32} className="text-orange-500 animate-spin" />
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            Cargando analytics...
+          </h3>
+          <p className="text-gray-500">Procesando datos analíticos</p>
+        </div>
+      </div>
+    </DashboardLayout>
+  );
+}
+
+export default function ComercioAnalyticsPage() {
+  return (
+    <Suspense fallback={<ComercioAnalyticsLoading />}>
+      <ComercioAnalyticsContent />
+    </Suspense>
   );
 }
