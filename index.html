@@ -619,10 +619,9 @@
                     <div class="videos__grid-overlay"></div>
                 </div>
                 
-                <!-- Nuevo reproductor de video simplificado -->
+                <!-- Nuevo reproductor de video de YouTube embebido -->
                 <div class="videos__player-container">
                     <div class="videos__player-frame">
-                        <!-- Contenedor principal del video con estilo similar a la imagen de referencia -->
                         <div class="video-player-simple">
                             <div class="video-player-simple__header">
                                 <div class="video-player-simple__title">
@@ -634,16 +633,18 @@
                                 <p class="video-player-simple__description">
                                     In the <span class="highlight">Stations</span> section, you can select your preferred stations and assign a minimum price per hour or per block <span class="highlight">individually</span> for each of them. You also have the possibility to define the duration of the blocks for each station and set the Anticipation as the arrival time, allowing you to <span class="highlight">calculate</span> the time needed to arrive at each station on time.
                                 </p>
-                                
-                                <!-- Botón de reproducción con ícono de YouTube -->
-                                <a href="https://www.youtube.com/watch?v=IeKGEAdEtYA" class="video-player-simple__play-button" target="_blank" rel="noopener noreferrer">
-                                    <div class="video-player-simple__play-icon">
-                                        <svg viewBox="0 0 68 48" fill="currentColor">
-                                            <path d="M66.52,7.74c-0.78-2.93-2.49-5.41-5.42-6.19C55.79,.13,34,0,34,0S12.21,.13,6.9,1.55 C3.97,2.33,2.27,4.81,1.48,7.74C0.06,13.05,0,24,0,24s0.06,10.95,1.48,16.26c0.78,2.93,2.49,5.41,5.42,6.19 C12.21,47.87,34,48,34,48s21.79-0.13,27.1-1.55c2.93-0.78,4.64-3.26,5.42-6.19C67.94,34.95,68,24,68,24S67.94,13.05,66.52,7.74z" fill="#f00"></path>
-                                            <path d="M 45,24 27,14 27,34" fill="#fff"></path>
-                                        </svg>
-                                    </div>
-                                </a>
+                            </div>
+                            
+                            <!-- Reproductor de YouTube embebido -->
+                            <div class="video-player-simple__video-container">
+                                <iframe 
+                                    class="video-player-simple__iframe"
+                                    src="https://www.youtube.com/embed/IeKGEAdEtYA?rel=0&modestbranding=1" 
+                                    title="StarFlex - Stations Section" 
+                                    frameborder="0" 
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                    allowfullscreen>
+                                </iframe>
                             </div>
                             
                             <!-- Imagen del teléfono a la derecha -->

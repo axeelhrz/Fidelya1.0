@@ -322,10 +322,11 @@ box-shadow:
     position: relative;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto 1fr auto;
+    grid-template-rows: auto auto 1fr auto;
     grid-template-areas:
         "header header"
-        "content phone"
+        "content content"
+        "video phone"
         "footer footer";
     gap: 1.5rem;
     width: 100%;
@@ -362,13 +363,13 @@ box-shadow:
     display: flex;
     flex-direction: column;
     justify-content: center;
-    padding-right: 2rem;
+    padding: 0 1rem;
 }
 
 .video-player-simple__description {
     font-size: 1.1rem;
     line-height: 1.6;
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;
     color: rgba(255, 255, 255, 0.9);
 }
 
@@ -377,31 +378,26 @@ box-shadow:
     font-weight: 700;
 }
 
-/* Botón de reproducción de YouTube */
-.video-player-simple__play-button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 80px;
-    height: 80px;
-    background: #FF0000;
-    border-radius: 50%;
-    box-shadow: 0 10px 30px rgba(255, 0, 0, 0.4);
-    transition: all 0.3s ease;
-    margin: 0 auto;
+/* Contenedor del video de YouTube */
+.video-player-simple__video-container {
+    grid-area: video;
+    position: relative;
+    width: 100%;
+    padding-bottom: 56.25%; /* Proporción 16:9 */
+    height: 0;
+    overflow: hidden;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    border: 2px solid rgba(255, 45, 85, 0.3);
 }
 
-.video-player-simple__play-button:hover {
-    transform: scale(1.1);
-    box-shadow: 0 15px 40px rgba(255, 0, 0, 0.6);
-}
-
-.video-player-simple__play-icon {
-    width: 68px;
-    height: 48px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.video-player-simple__iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 13px;
 }
 
 /* Teléfono a la derecha */
@@ -474,10 +470,11 @@ box-shadow:
 @media (max-width: 1023px) {
     .video-player-simple {
         grid-template-columns: 1fr;
-        grid-template-rows: auto auto auto auto;
+        grid-template-rows: auto auto auto auto auto;
         grid-template-areas:
             "header"
             "content"
+            "video"
             "phone"
             "footer";
         gap: 1rem;
@@ -518,16 +515,6 @@ box-shadow:
     
     .video-player-simple__description {
         font-size: 0.9rem;
-    }
-    
-    .video-player-simple__play-button {
-        width: 60px;
-        height: 60px;
-    }
-    
-    .video-player-simple__play-icon {
-        width: 48px;
-        height: 34px;
     }
     
     .video-player-simple__phone-image {
@@ -764,4 +751,76 @@ border-color: rgba(255, 69, 105, 0.4);
     font-weight: 800;
     text-decoration: underline;
 }
+}
+
+/* Animaciones para el video */
+@keyframes video-orb-cinematic {
+    0%, 100% {
+        transform: translate(0, 0);
+    }
+    25% {
+        transform: translate(50px, 25px);
+    }
+    50% {
+        transform: translate(0, 50px);
+    }
+    75% {
+        transform: translate(-50px, 25px);
+    }
+}
+
+@keyframes grid-cinematic-drift {
+    0% {
+        background-position: 0 0;
+    }
+    100% {
+        background-position: 1000px 500px;
+    }
+}
+
+@keyframes videos-cinematic-flow {
+    0%, 100% {
+        opacity: 0.6;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.8;
+        transform: scale(1.05);
+    }
+}
+
+@keyframes cinematic-scan {
+    0% {
+        background-position: 0 0;
+    }
+    100% {
+        background-position: 0 1000px;
+    }
+}
+
+@keyframes badge-shimmer {
+    0% {
+        left: -100%;
+    }
+    100% {
+        left: 100%;
+    }
+}
+
+@keyframes title-line-expand {
+    0% {
+        width: 0%;
+    }
+    100% {
+        width: 60%;
+    }
+}
+
+@keyframes cta-shimmer-cinematic {
+    0% {
+        left: -100%;
+    }
+    100% {
+        left: 100%;
+    }
 }
