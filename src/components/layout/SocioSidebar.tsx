@@ -169,12 +169,6 @@ export const SocioSidebar: React.FC<SocioSidebarProps> = ({
           icon: User,
           route: '/dashboard/socio/perfil'
         },
-        { 
-          id: 'perfil-membresia', 
-          label: 'Estado de Membresía', 
-          icon: Award,
-          route: '/dashboard/socio/perfil?tab=membresia'
-        }
       ]
     },
     {
@@ -193,12 +187,6 @@ export const SocioSidebar: React.FC<SocioSidebarProps> = ({
           count: realtimeStats.totalBeneficios,
           route: '/dashboard/socio/beneficios'
         },
-        { 
-          id: 'beneficios-favoritos', 
-          label: 'Mis Favoritos', 
-          icon: Star,
-          route: '/dashboard/socio/beneficios?tab=favoritos'
-        }
       ]
     },
     {
