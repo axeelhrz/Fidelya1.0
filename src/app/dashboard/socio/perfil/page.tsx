@@ -8,7 +8,6 @@ import {
   Phone, 
   MapPin, 
   Calendar, 
-  Settings, 
   Edit3,
   Shield,
   QrCode,
@@ -21,15 +20,11 @@ import {
   Star,
   Crown,
   Sparkles,
-  CheckCircle,
   Loader2,
   Save,
   X,
-  Bell,
-  Download,
   RefreshCw,
-  BarChart3,
-  Palette
+  BarChart3
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { SocioSidebar } from '@/components/layout/SocioSidebar';
@@ -39,7 +34,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { LogoutModal } from '@/components/ui/LogoutModal';
 import { useSocioProfile } from '@/hooks/useSocioProfile';
 import { useAuth } from '@/hooks/useAuth';
-import { SocioConfiguration } from '@/types/socio';
 import { format, differenceInDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 import toast from 'react-hot-toast';
@@ -53,73 +47,6 @@ interface ProfileFormData {
   direccion: string;
   fechaNacimiento: string;
 }
-
-// Quick Actions Component
-const QuickActions: React.FC<{
-  onNavigate: (section: string) => void;
-}> = ({ onNavigate }) => {
-  const quickActions = [
-    {
-      id: 'qr-scanner',
-      label: 'Validar Beneficio',
-      icon: <QrCode size={20} />,
-      color: 'bg-emerald-500 hover:bg-emerald-600',
-      onClick: () => onNavigate('validar'),
-      description: 'Escanear QR'
-    },
-    {
-      id: 'benefits',
-      label: 'Mis Beneficios',
-      icon: <Gift size={20} />,
-      color: 'bg-violet-500 hover:bg-violet-600',
-      onClick: () => onNavigate('beneficios'),
-      description: 'Ver disponibles'
-    },
-    {
-      id: 'history',
-      label: 'Historial',
-      icon: <BarChart3 size={20} />,
-      color: 'bg-blue-500 hover:bg-blue-600',
-      onClick: () => onNavigate('historial'),
-      description: 'Ver actividad'
-    }
-  ];
-
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-      {quickActions.map((action) => (
-        <button
-          key={action.id}
-          onClick={action.onClick}
-          className={`
-            relative p-6 rounded-2xl text-white shadow-lg transition-all duration-200
-            hover:shadow-xl hover:-translate-y-1 ${action.color}
-            group overflow-hidden
-          `}
-        >
-          {/* Simple background pattern */}
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute top-0 right-0 w-16 h-16 bg-white rounded-full -translate-y-8 translate-x-8" />
-            <div className="absolute bottom-0 left-0 w-12 h-12 bg-white rounded-full translate-y-6 -translate-x-6" />
-          </div>
-
-          {/* Content */}
-          <div className="relative z-10 text-center">
-            <div className="flex items-center justify-center w-12 h-12 bg-white/20 rounded-xl mb-4 mx-auto transition-transform duration-200 group-hover:scale-110">
-              {action.icon}
-            </div>
-            <h3 className="font-semibold text-lg mb-1">
-              {action.label}
-            </h3>
-            <p className="text-sm opacity-90">
-              {action.description}
-            </p>
-          </div>
-        </button>
-      ))}
-    </div>
-  );
-};
 
 // Utility functions
 const getStatusColor = (estado: string) => {
@@ -221,58 +148,6 @@ const StatsCard: React.FC<{
   </motion.div>
 );
 
-// Profile Image Uploader Component
-const ProfileImageUploader: React.FC<{
-  currentImage?: string;
-  onImageUpload: (file: File) => void;
-  uploading: boolean;
-}> = ({ currentImage, onImageUpload, uploading }) => {
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      onImageUpload(file);
-    }
-  };
-
-  return (
-    <div className="relative">
-      <div className="relative group w-32 h-32 rounded-full overflow-hidden">
-        {currentImage ? (
-          <Image
-            src={currentImage}
-            alt="Perfil"
-            className="w-full h-full object-cover"
-            fill
-            sizes="128px"
-            style={{ objectFit: 'cover' }}
-            priority
-          />
-        ) : (
-          <div className="flex items-center justify-center w-full h-full bg-gray-100 rounded-full">
-            <User size={48} />
-          </div>
-        )}
-
-        {/* Overlay */}
-        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-          {uploading ? (
-            <Loader2 size={24} className="text-white animate-spin" />
-          ) : (
-            <Camera size={24} className="text-white" />
-          )}
-        </div>
-        <input
-          type="file"
-          accept="image/*"
-          onChange={handleFileChange}
-          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-          disabled={uploading}
-        />
-      </div>
-    </div>
-  );
-};
-
 // Enhanced Sidebar with logout functionality
 const SocioSidebarWithLogout: React.FC<{
   open: boolean;
@@ -298,7 +173,6 @@ export default function SocioPerfilPage() {
   const { 
     socio, 
     estadisticas, 
-    asociaciones, 
     loading, 
     updateProfile, 
     refreshData,
@@ -306,7 +180,6 @@ export default function SocioPerfilPage() {
 
   // Modal states
   const [editModalOpen, setEditModalOpen] = useState(false);
-  const [configModalOpen, setConfigModalOpen] = useState(false);
   const [qrModalOpen, setQrModalOpen] = useState(false);
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
 
@@ -314,7 +187,6 @@ export default function SocioPerfilPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
-  const [activeConfigTab, setActiveConfigTab] = useState<'general' | 'notifications' | 'privacy'>('general');
 
   // Profile data with safe fallbacks
   const profileData = useMemo(() => ({
@@ -348,25 +220,6 @@ export default function SocioPerfilPage() {
       ahorroEsteMes: estadisticas.validacionesPorMes?.[0]?.ahorro || 0,
     };
   }, [estadisticas, profileData.creadoEn]);
-
-  // Configuration state
-  const [configuracion, setConfiguracion] = useState<SocioConfiguration>({
-    notificaciones: true,
-    notificacionesPush: true,
-    notificacionesEmail: true,
-    notificacionesSMS: false,
-    tema: 'light',
-    idioma: 'es',
-    moneda: 'ARS',
-    timezone: 'America/Argentina/Buenos_Aires',
-    perfilPublico: false,
-    mostrarEstadisticas: true,
-    mostrarActividad: true,
-    compartirDatos: false,
-    beneficiosFavoritos: [],
-    comerciosFavoritos: [],
-    categoriasFavoritas: []
-  });
 
   const [formData, setFormData] = useState<ProfileFormData>({
     nombre: profileData.nombre,
@@ -430,74 +283,6 @@ export default function SocioPerfilPage() {
     }
   }, [formData, updateProfile]);
 
-  const handleSaveConfiguration = useCallback(async () => {
-    setUpdating(true);
-    try {
-      console.log('Saving configuration:', configuracion);
-      setConfigModalOpen(false);
-      toast.success('Configuración guardada correctamente');
-    } catch (error) {
-      console.error('Error updating configuration:', error);
-      toast.error('Error al guardar la configuración');
-    } finally {
-      setUpdating(false);
-    }
-  }, [configuracion]);
-
-  const handleImageUpload = useCallback(async (file: File) => {
-    setUploadingImage(true);
-    try {
-      console.log('Uploading image:', file);
-      toast.success('Imagen de perfil actualizada');
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      toast.error('Error al subir la imagen');
-    } finally {
-      setUploadingImage(false);
-    }
-  }, []);
-
-  const handleExportData = useCallback(async () => {
-    try {
-      const data = {
-        perfil: socio,
-        estadisticas: estadisticas,
-        fechaExportacion: new Date().toISOString()
-      };
-      
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `perfil-socio-${profileData.nombre.replace(/\s+/g, '-')}-${format(new Date(), 'yyyy-MM-dd')}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      
-      toast.success('Datos exportados correctamente');
-    } catch (error) {
-      console.error('Error exporting data:', error);
-      toast.error('Error al exportar los datos');
-    }
-  }, [socio, estadisticas, profileData.nombre]);
-
-  // Navigation handlers
-  const handleNavigate = (section: string) => {
-    const sectionRoutes: Record<string, string> = {
-      'dashboard': '/dashboard/socio',
-      'validar': '/dashboard/socio/validar',
-      'beneficios': '/dashboard/socio/beneficios',
-      'historial': '/dashboard/socio/historial',
-      'perfil': '/dashboard/socio/perfil'
-    };
-
-    const route = sectionRoutes[section];
-    if (route && route !== '/dashboard/socio/perfil') {
-      window.location.href = route;
-    }
-  };
-
   // Logout handlers
   const handleLogoutClick = () => {
     setLogoutModalOpen(true);
@@ -533,14 +318,14 @@ export default function SocioPerfilPage() {
           />
         )}
       >
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
           <div className="text-center">
-            <div className="w-12 h-12 border-4 border-slate-200 border-t-slate-500 rounded-full animate-spin mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-slate-900 mb-2">
-              Cargando Perfil
+            <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-gray-400" />
+            <h2 className="text-lg font-medium text-gray-900 mb-2">
+              Cargando perfil
             </h2>
-            <p className="text-slate-600">
-              Preparando tu información...
+            <p className="text-gray-600">
+              Obteniendo tu información...
             </p>
           </div>
         </div>
@@ -559,303 +344,249 @@ export default function SocioPerfilPage() {
           />
         )}
       >
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.2 }}
-        >
-          <div className="min-h-screen bg-gray-50">
-            <div className="max-w-7xl mx-auto p-6 space-y-6">
-              
-              {/* Header Section */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden"
-              >
-                {/* Header Background */}
-                <div className="h-32 bg-gradient-to-r from-blue-600 to-purple-600 relative">
-                  <div className="absolute inset-0 bg-black/10"></div>
-                  <div className="absolute top-4 right-4">
+        <div className="min-h-screen bg-gray-50">
+          <div className="max-w-7xl mx-auto p-6 space-y-6">
+            
+            {/* Header Section */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden"
+            >
+              {/* Header Background */}
+              <div className="h-32 bg-gradient-to-r from-blue-600 to-purple-600 relative">
+                <div className="absolute inset-0 bg-black/10"></div>
+                <div className="absolute top-4 right-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    leftIcon={<RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />}
+                    onClick={handleRefresh}
+                    disabled={refreshing}
+                    className="bg-white/20 border-white/30 text-white hover:bg-white/30"
+                  >
+                    {refreshing ? 'Actualizando...' : 'Actualizar'}
+                  </Button>
+                </div>
+              </div>
+
+              {/* Profile Content */}
+              <div className="px-6 pb-6">
+                <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between -mt-16 mb-6">
+                  <div className="flex items-end space-x-4">
+                    {/* Avatar */}
+                    <div className="relative">
+                      <div className="w-24 h-24 bg-white rounded-2xl shadow-lg flex items-center justify-center border-4 border-white">
+                        <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                          <User size={32} className="text-white" />
+                        </div>
+                      </div>
+                      <div className={`absolute -bottom-1 -right-1 w-6 h-6 ${getStatusColor(profileData.estado)} rounded-full border-2 border-white`}></div>
+                    </div>
+
+                    {/* Profile Info */}
+                    <div className="pb-2">
+                      <h1 className="text-2xl font-bold text-gray-900 mb-1">
+                        {profileData.nombre}
+                      </h1>
+                      <div className="flex items-center space-x-3 mb-2">
+                        <span className="text-sm text-gray-600">
+                          Socio #{profileData.numeroSocio}
+                        </span>
+                        <span className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded-full">
+                          {getStatusText(profileData.estado)}
+                        </span>
+                      </div>
+                      <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-gradient-to-r ${getNivelGradient(profileData.nivel.nivel)} text-white text-sm font-medium shadow-sm`}>
+                        {getNivelIcon(profileData.nivel.nivel)}
+                        <span>{profileData.nivel.nivel}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex space-x-3 mt-4 sm:mt-0">
                     <Button
                       variant="outline"
                       size="sm"
-                      leftIcon={<RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />}
-                      onClick={handleRefresh}
-                      disabled={refreshing}
-                      className="bg-white/20 border-white/30 text-white hover:bg-white/30"
+                      leftIcon={<QrCode size={16} />}
+                      onClick={() => setQrModalOpen(true)}
                     >
-                      {refreshing ? 'Actualizando...' : 'Actualizar'}
+                      Mi QR
                     </Button>
-                  </div>
-                </div>
-
-                {/* Profile Content */}
-                <div className="px-6 pb-6">
-                  <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between -mt-16 mb-6">
-                    <div className="flex items-end space-x-4">
-                      {/* Avatar */}
-                      <div className="relative">
-                        <div className="w-24 h-24 bg-white rounded-2xl shadow-lg flex items-center justify-center border-4 border-white">
-                          <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
-                            <User size={32} className="text-white" />
-                          </div>
-                        </div>
-                        <div className={`absolute -bottom-1 -right-1 w-6 h-6 ${getStatusColor(profileData.estado)} rounded-full border-2 border-white`}></div>
-                      </div>
-
-                      {/* Profile Info */}
-                      <div className="pb-2">
-                        <h1 className="text-2xl font-bold text-gray-900 mb-1">
-                          {profileData.nombre}
-                        </h1>
-                        <div className="flex items-center space-x-3 mb-2">
-                          <span className="text-sm text-gray-600">
-                            Socio #{profileData.numeroSocio}
-                          </span>
-                          <span className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded-full">
-                            {getStatusText(profileData.estado)}
-                          </span>
-                        </div>
-                        <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-gradient-to-r ${getNivelGradient(profileData.nivel.nivel)} text-white text-sm font-medium shadow-sm`}>
-                          {getNivelIcon(profileData.nivel.nivel)}
-                          <span>{profileData.nivel.nivel}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="flex space-x-3 mt-4 sm:mt-0">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        leftIcon={<QrCode size={16} />}
-                        onClick={() => setQrModalOpen(true)}
-                      >
-                        Mi QR
-                      </Button>
-                      <Button
-                        size="sm"
-                        leftIcon={<Edit3 size={16} />}
-                        onClick={() => setEditModalOpen(true)}
-                      >
-                        Editar Perfil
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Level Progress */}
-                  <div className="bg-gray-50 rounded-xl p-4 mb-6">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-gray-700">
-                        Progreso a {profileData.nivel.proximoNivel}
-                      </span>
-                      <span className="text-sm text-gray-600">
-                        {profileData.nivel.puntos} / {profileData.nivel.puntosParaProximoNivel} pts
-                      </span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <motion.div 
-                        className={`h-2 rounded-full bg-gradient-to-r ${getNivelGradient(profileData.nivel.proximoNivel)}`}
-                        initial={{ width: 0 }}
-                        animate={{ 
-                          width: `${(profileData.nivel.puntos / profileData.nivel.puntosParaProximoNivel) * 100}%` 
-                        }}
-                        transition={{ duration: 1, delay: 0.5 }}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Quick Stats */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                    <StatsCard
-                      title="Beneficios Usados"
-                      value={enhancedStats.beneficiosUsados}
-                      icon={<Gift size={20} />}
-                      color="bg-emerald-500"
-                      subtitle="Total"
-                    />
-                    <StatsCard
-                      title="Ahorro Total"
-                      value={`$${enhancedStats.ahorroTotal.toLocaleString()}`}
-                      icon={<DollarSign size={20} />}
-                      color="bg-green-500"
-                      subtitle="Acumulado"
-                    />
-                    <StatsCard
-                      title="Comercios"
-                      value={enhancedStats.comerciosVisitados}
-                      icon={<Store size={20} />}
-                      color="bg-blue-500"
-                      subtitle="Visitados"
-                    />
-                    <StatsCard
-                      title="Días como Socio"
-                      value={enhancedStats.tiempoComoSocio}
-                      icon={<Calendar size={20} />}
-                      color="bg-purple-500"
-                      subtitle="Desde registro"
-                    />
-                  </div>
-                </div>
-              </motion.div>
-
-              {/* Main Content Grid */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                
-                {/* Personal Information */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 }}
-                  className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 p-6"
-                >
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-lg font-semibold text-gray-900">Información Personal</h3>
                     <Button
-                      variant="outline"
                       size="sm"
                       leftIcon={<Edit3 size={16} />}
                       onClick={() => setEditModalOpen(true)}
                     >
-                      Editar
+                      Editar Perfil
                     </Button>
                   </div>
+                </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-4">
-                      <div>
-                        <label className="text-sm font-medium text-gray-700 mb-2 block">Email</label>
-                        <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                          <Mail size={16} className="text-gray-500" />
-                          <span className="text-gray-900">{profileData.email}</span>
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <label className="text-sm font-medium text-gray-700 mb-2 block">Teléfono</label>
-                        <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                          <Phone size={16} className="text-gray-500" />
-                          <span className="text-gray-900">{profileData.telefono || 'No especificado'}</span>
-                        </div>
+                {/* Level Progress */}
+                <div className="bg-gray-50 rounded-xl p-4 mb-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-gray-700">
+                      Progreso a {profileData.nivel.proximoNivel}
+                    </span>
+                    <span className="text-sm text-gray-600">
+                      {profileData.nivel.puntos} / {profileData.nivel.puntosParaProximoNivel} pts
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <motion.div 
+                      className={`h-2 rounded-full bg-gradient-to-r ${getNivelGradient(profileData.nivel.proximoNivel)}`}
+                      initial={{ width: 0 }}
+                      animate={{ 
+                        width: `${(profileData.nivel.puntos / profileData.nivel.puntosParaProximoNivel) * 100}%` 
+                      }}
+                      transition={{ duration: 1, delay: 0.5 }}
+                    />
+                  </div>
+                </div>
+
+                {/* Quick Stats */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  <StatsCard
+                    title="Beneficios Usados"
+                    value={enhancedStats.beneficiosUsados}
+                    icon={<Gift size={20} />}
+                    color="bg-emerald-500"
+                    subtitle="Total"
+                  />
+                  <StatsCard
+                    title="Ahorro Total"
+                    value={`$${enhancedStats.ahorroTotal.toLocaleString()}`}
+                    icon={<DollarSign size={20} />}
+                    color="bg-green-500"
+                    subtitle="Acumulado"
+                  />
+                  <StatsCard
+                    title="Comercios"
+                    value={enhancedStats.comerciosVisitados}
+                    icon={<Store size={20} />}
+                    color="bg-blue-500"
+                    subtitle="Visitados"
+                  />
+                  <StatsCard
+                    title="Días como Socio"
+                    value={enhancedStats.tiempoComoSocio}
+                    icon={<Calendar size={20} />}
+                    color="bg-purple-500"
+                    subtitle="Desde registro"
+                  />
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Main Content Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              
+              {/* Personal Information */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+              >
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900">Información Personal</h3>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    leftIcon={<Edit3 size={16} />}
+                    onClick={() => setEditModalOpen(true)}
+                  >
+                    Editar
+                  </Button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-2 block">Email</label>
+                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                        <Mail size={16} className="text-gray-500" />
+                        <span className="text-gray-900">{profileData.email}</span>
                       </div>
                     </div>
-
-                    <div className="space-y-4">
-                      <div>
-                        <label className="text-sm font-medium text-gray-700 mb-2 block">DNI</label>
-                        <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                          <Shield size={16} className="text-gray-500" />
-                          <span className="text-gray-900">{profileData.dni || 'No especificado'}</span>
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <label className="text-sm font-medium text-gray-700 mb-2 block">Dirección</label>
-                        <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                          <MapPin size={16} className="text-gray-500" />
-                          <span className="text-gray-900">{profileData.direccion || 'No especificado'}</span>
-                        </div>
+                    
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-2 block">Teléfono</label>
+                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                        <Phone size={16} className="text-gray-500" />
+                        <span className="text-gray-900">{profileData.telefono || 'No especificado'}</span>
                       </div>
                     </div>
                   </div>
 
-                  {profileData.fechaNacimiento && (
-                    <div className="mt-4">
-                      <label className="text-sm font-medium text-gray-700 mb-2 block">Fecha de Nacimiento</label>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-2 block">DNI</label>
                       <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                        <Calendar size={16} className="text-gray-500" />
-                        <span className="text-gray-900">
-                          {format(profileData.fechaNacimiento, 'dd/MM/yyyy', { locale: es })}
-                        </span>
+                        <Shield size={16} className="text-gray-500" />
+                        <span className="text-gray-900">{profileData.dni || 'No especificado'}</span>
                       </div>
                     </div>
-                  )}
-                </motion.div>
-
-                {/* Sidebar */}
-                <div className="space-y-6">
-                  
-                  {/* Quick Actions */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 }}
-                    className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
-                  >
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Acciones Rápidas</h3>
-                    <div className="space-y-3">
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start"
-                        leftIcon={<QrCode size={16} />}
-                        onClick={() => setQrModalOpen(true)}
-                      >
-                        Ver mi QR
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start"
-                        leftIcon={<Settings size={16} />}
-                        onClick={() => setConfigModalOpen(true)}
-                      >
-                        Configuración
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start"
-                        leftIcon={<Download size={16} />}
-                        onClick={handleExportData}
-                      >
-                        Exportar Datos
-                      </Button>
-                    </div>
-                  </motion.div>
-
-                  {/* Recent Activity */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 }}
-                    className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
-                  >
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Actividad Reciente</h3>
                     
-                    {asociaciones && asociaciones.length > 0 ? (
-                      <div className="space-y-3">
-                        {asociaciones.slice(0, 3).map((asociacion) => (
-                          <div key={asociacion.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-                            <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-600 rounded-lg flex items-center justify-center text-white text-sm font-bold">
-                              {asociacion.nombre.charAt(0)}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="font-semibold text-gray-900 text-sm truncate">{asociacion.nombre}</div>
-                              <div className={`text-xs px-2 py-1 rounded-full inline-block ${getStatusColor(asociacion.estado)}`}>
-                                {asociacion.estado}
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                        {asociaciones.length > 3 && (
-                          <div className="text-center">
-                            <Button variant="outline" size="sm">
-                              Ver todas ({asociaciones.length})
-                            </Button>
-                          </div>
-                        )}
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-2 block">Dirección</label>
+                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                        <MapPin size={16} className="text-gray-500" />
+                        <span className="text-gray-900">{profileData.direccion || 'No especificado'}</span>
                       </div>
-                    ) : (
-                      <div className="text-center py-6">
-                        <Award className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                        <p className="text-gray-600 text-sm">No tienes asociaciones activas</p>
-                      </div>
-                    )}
-                  </motion.div>
+                    </div>
+                  </div>
                 </div>
-              </div>
+
+                {profileData.fechaNacimiento && (
+                  <div className="mt-4">
+                    <label className="text-sm font-medium text-gray-700 mb-2 block">Fecha de Nacimiento</label>
+                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                      <Calendar size={16} className="text-gray-500" />
+                      <span className="text-gray-900">
+                        {format(profileData.fechaNacimiento, 'dd/MM/yyyy', { locale: es })}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+
+              {/* Sidebar - Activity */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+              >
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Actividad Reciente</h3>
+                
+                {estadisticas.beneficiosMasUsados.length > 0 ? (
+                  <div className="space-y-3">
+                    {estadisticas.beneficiosMasUsados.slice(0, 5).map((beneficio, index) => (
+                      <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                        <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center text-white text-sm font-bold">
+                          {beneficio.usos}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-gray-900 text-sm truncate">{beneficio.titulo}</div>
+                          <div className="text-xs text-gray-500">{beneficio.usos} usos</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <BarChart3 className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                    <p className="text-gray-600 text-sm">No hay actividad reciente</p>
+                    <p className="text-gray-500 text-xs mt-1">Comienza a usar beneficios para ver tu actividad</p>
+                  </div>
+                )}
+              </motion.div>
             </div>
           </div>
-        </motion.div>
+        </div>
 
         {/* Edit Profile Modal */}
         <Dialog open={editModalOpen} onClose={() => setEditModalOpen(false)}>
@@ -958,278 +689,6 @@ export default function SocioPerfilPage() {
                 className="w-full"
               >
                 Cerrar
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Configuration Modal */}
-        <Dialog open={configModalOpen} onClose={() => setConfigModalOpen(false)}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-3">
-                <Settings size={20} />
-                Configuración
-              </DialogTitle>
-            </DialogHeader>
-
-            {/* Configuration Tabs */}
-            <div className="border-b border-gray-200 mb-6">
-              <nav className="flex space-x-8">
-                {[
-                  { id: 'general', label: 'General', icon: Settings },
-                  { id: 'notifications', label: 'Notificaciones', icon: Bell },
-                  { id: 'privacy', label: 'Privacidad', icon: Shield }
-                ].map((tab) => (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveConfigTab(tab.id as 'general' | 'notifications' | 'privacy')}
-                    className={cn(
-                      "flex items-center gap-2 py-2 px-1 border-b-2 font-medium text-sm transition-colors",
-                      activeConfigTab === tab.id
-                        ? "border-slate-500 text-slate-600"
-                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                    )}
-                  >
-                    <tab.icon size={16} />
-                    {tab.label}
-                  </button>
-                ))}
-              </nav>
-            </div>
-
-            {/* Tab Content */}
-            <div className="space-y-6">
-              {activeConfigTab === 'general' && (
-                <div className="space-y-6">
-                  <div>
-                    <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                      <Palette size={20} className="text-slate-600" />
-                      Apariencia
-                    </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">Tema</label>
-                        <select
-                          value={configuracion.tema}
-                          onChange={(e) => setConfiguracion(prev => ({ ...prev, tema: e.target.value as 'light' | 'dark' }))}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500"
-                        >
-                          <option value="light">Claro</option>
-                          <option value="dark">Oscuro</option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">Idioma</label>
-                        <select
-                          value={configuracion.idioma}
-                          onChange={(e) => setConfiguracion(prev => ({ ...prev, idioma: e.target.value as 'es' | 'en' }))}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500"
-                        >
-                          <option value="es">Español</option>
-                          <option value="en">English</option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">Moneda</label>
-                        <select
-                          value={configuracion.moneda}
-                          onChange={(e) => setConfiguracion(prev => ({ ...prev, moneda: e.target.value as 'ARS' | 'USD' | 'EUR' }))}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500"
-                        >
-                          <option value="ARS">Peso Argentino (ARS)</option>
-                          <option value="USD">Dólar (USD)</option>
-                          <option value="EUR">Euro (EUR)</option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">Zona Horaria</label>
-                        <select
-                          value={configuracion.timezone}
-                          onChange={(e) => setConfiguracion(prev => ({ ...prev, timezone: e.target.value }))}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500"
-                        >
-                          <option value="America/Argentina/Buenos_Aires">Buenos Aires (GMT-3)</option>
-                          <option value="America/Argentina/Cordoba">Córdoba (GMT-3)</option>
-                          <option value="America/Argentina/Mendoza">Mendoza (GMT-3)</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {activeConfigTab === 'notifications' && (
-                <div className="space-y-6">
-                  <div>
-                    <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                      <Bell size={20} className="text-slate-600" />
-                      Preferencias de Notificaciones
-                    </h4>
-                    <div className="space-y-4">
-                      {/* Notificaciones Generales */}
-                      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
-                        <div>
-                          <div className="font-semibold text-gray-900">Notificaciones Generales</div>
-                          <div className="text-sm text-gray-600">Recibir notificaciones de la aplicación</div>
-                        </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={configuracion.notificaciones}
-                            onChange={(e) => setConfiguracion(prev => ({ ...prev, notificaciones: e.target.checked }))}
-                            className="sr-only peer"
-                          />
-                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-slate-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-slate-600"></div>
-                        </label>
-                      </div>
-                      {/* Notificaciones Push */}
-                      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
-                        <div>
-                          <div className="font-semibold text-gray-900">Notificaciones Push</div>
-                          <div className="text-sm text-gray-600">Recibir notificaciones push en el navegador</div>
-                        </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={configuracion.notificacionesPush}
-                            onChange={(e) => setConfiguracion(prev => ({ ...prev, notificacionesPush: e.target.checked }))}
-                            className="sr-only peer"
-                          />
-                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-slate-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-slate-600"></div>
-                        </label>
-                      </div>
-                      {/* Notificaciones por Email */}
-                      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
-                        <div>
-                          <div className="font-semibold text-gray-900">Notificaciones por Email</div>
-                          <div className="text-sm text-gray-600">Recibir notificaciones por correo electrónico</div>
-                        </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={configuracion.notificacionesEmail}
-                            onChange={(e) => setConfiguracion(prev => ({ ...prev, notificacionesEmail: e.target.checked }))}
-                            className="sr-only peer"
-                          />
-                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-slate-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-slate-600"></div>
-                        </label>
-                      </div>
-                      {/* Notificaciones SMS */}
-                      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
-                        <div>
-                          <div className="font-semibold text-gray-900">Notificaciones SMS</div>
-                          <div className="text-sm text-gray-600">Recibir notificaciones por mensaje de texto</div>
-                        </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={configuracion.notificacionesSMS}
-                            onChange={(e) => setConfiguracion(prev => ({ ...prev, notificacionesSMS: e.target.checked }))}
-                            className="sr-only peer"
-                          />
-                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-slate-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-slate-600"></div>
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {activeConfigTab === 'privacy' && (
-                <div className="space-y-6">
-                  <div>
-                    <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                      <Shield size={20} className="text-slate-600" />
-                      Configuración de Privacidad
-                    </h4>
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
-                        <div>
-                          <div className="font-semibold text-gray-900">Perfil Público</div>
-                          <div className="text-sm text-gray-600">Permitir que otros vean tu perfil</div>
-                        </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={configuracion.perfilPublico}
-                            onChange={(e) => setConfiguracion(prev => ({ ...prev, perfilPublico: e.target.checked }))}
-                            className="sr-only peer"
-                          />
-                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-slate-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-slate-600"></div>
-                        </label>
-                      </div>
-
-                      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
-                        <div>
-                          <div className="font-semibold text-gray-900">Mostrar Estadísticas</div>
-                          <div className="text-sm text-gray-600">Compartir estadísticas de uso</div>
-                        </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={configuracion.mostrarEstadisticas}
-                            onChange={(e) => setConfiguracion(prev => ({ ...prev, mostrarEstadisticas: e.target.checked }))}
-                            className="sr-only peer"
-                          />
-                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-slate-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-slate-600"></div>
-                        </label>
-                      </div>
-
-                      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
-                        <div>
-                          <div className="font-semibold text-gray-900">Mostrar Actividad</div>
-                          <div className="text-sm text-gray-600">Mostrar actividad reciente</div>
-                        </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={configuracion.mostrarActividad}
-                            onChange={(e) => setConfiguracion(prev => ({ ...prev, mostrarActividad: e.target.checked }))}
-                            className="sr-only peer"
-                          />
-                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-slate-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-slate-600"></div>
-                        </label>
-                      </div>
-
-                      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
-                        <div>
-                          <div className="font-semibold text-gray-900">Compartir Datos</div>
-                          <div className="text-sm text-gray-600">Permitir análisis de datos para mejorar el servicio</div>
-                        </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={configuracion.compartirDatos}
-                            onChange={(e) => setConfiguracion(prev => ({ ...prev, compartirDatos: e.target.checked }))}
-                            className="sr-only peer"
-                          />
-                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-slate-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-slate-600"></div>
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <DialogFooter>
-              <Button 
-                variant="outline" 
-                onClick={() => setConfigModalOpen(false)}
-                leftIcon={<X size={16} />}
-              >
-                Cancelar
-              </Button>
-              <Button 
-                onClick={handleSaveConfiguration}
-                disabled={updating}
-                leftIcon={updating ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-              >
-                {updating ? 'Guardando...' : 'Guardar Configuración'}
               </Button>
             </DialogFooter>
           </DialogContent>
