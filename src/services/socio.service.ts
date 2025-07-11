@@ -17,47 +17,7 @@ import {
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/constants';
 import { handleError } from '@/lib/error-handler';
-import { SocioStats, SocioActivity } from '@/types/socio';
-
-export interface Socio {
-  id: string;
-  nombre: string;
-  email: string;
-  dni: string;
-  telefono?: string;
-  fechaNacimiento: Date;
-  direccion?: string;
-  asociacionId: string;
-  numeroSocio?: string;
-  estado: 'activo' | 'inactivo' | 'pendiente' | 'suspendido' | 'vencido';
-  estadoMembresia: 'al_dia' | 'vencido' | 'pendiente';
-  fechaIngreso: Date;
-  fechaVencimiento?: Date;
-  ultimoPago?: Date;
-  montoCuota: number;
-  beneficiosUsados: number;
-  validacionesRealizadas: number;
-  creadoEn: Date;
-  actualizadoEn: Date;
-  metadata?: Record<string, unknown>;
-  avatar?: string;
-  configuracion?: Record<string, unknown>;
-  ultimoAcceso?: Date;
-  uid: string;
-}
-
-export interface SocioFormData {
-  nombre: string;
-  email: string;
-  dni: string;
-  telefono?: string;
-  fechaNacimiento: Date | Timestamp;
-  direccion?: string;
-  numeroSocio?: string;
-  montoCuota: number;
-  fechaVencimiento?: Date | Timestamp;
-  estado: 'activo' | 'inactivo' | 'pendiente' | 'suspendido' | 'vencido';
-}
+import { Socio, SocioStats, SocioActivity, SocioFormData } from '@/types/socio';
 
 export interface SocioFilters {
   estado?: string;
@@ -93,13 +53,15 @@ class SocioService {
         id: socioDoc.id,
         uid: socioDoc.id,
         ...data,
-        fechaNacimiento: data.fechaNacimiento?.toDate() || new Date(),
-        fechaIngreso: data.fechaIngreso?.toDate() || new Date(),
-        fechaVencimiento: data.fechaVencimiento?.toDate(),
-        ultimoPago: data.ultimoPago?.toDate(),
-        ultimoAcceso: data.ultimoAcceso?.toDate(),
-        creadoEn: data.creadoEn?.toDate() || new Date(),
-        actualizadoEn: data.actualizadoEn?.toDate() || new Date(),
+        fechaNacimiento: data.fechaNacimiento?.toDate() ? Timestamp.fromDate(data.fechaNacimiento.toDate()) : undefined,
+        fechaIngreso: data.fechaIngreso?.toDate() ? Timestamp.fromDate(data.fechaIngreso.toDate()) : Timestamp.now(),
+        fechaVencimiento: data.fechaVencimiento?.toDate() ? Timestamp.fromDate(data.fechaVencimiento.toDate()) : undefined,
+        ultimoPago: data.ultimoPago?.toDate() ? Timestamp.fromDate(data.ultimoPago.toDate()) : undefined,
+        ultimoAcceso: data.ultimoAcceso?.toDate() ? Timestamp.fromDate(data.ultimoAcceso.toDate()) : undefined,
+        creadoEn: data.creadoEn?.toDate() ? Timestamp.fromDate(data.creadoEn.toDate()) : Timestamp.now(),
+        actualizadoEn: data.actualizadoEn?.toDate() ? Timestamp.fromDate(data.actualizadoEn.toDate()) : Timestamp.now(),
+        // Add the missing asociacion property - this should be fetched from asociaciones collection
+        asociacion: data.asociacionNombre || 'Asociación', // Fallback value, should be properly fetched
       } as Socio;
     } catch (error) {
       handleError(error, 'Get Socio By ID');
@@ -147,19 +109,24 @@ class SocioService {
         docs.pop(); // Remove the extra document
       }
 
+      // Get association name for all socios
+      const asociacionName = await this.getAsociacionName(asociacionId);
+
       let socios = docs.map(doc => {
         const data = doc.data();
         return {
           id: doc.id,
           uid: doc.id,
           ...data,
-          fechaNacimiento: data.fechaNacimiento?.toDate() || new Date(),
-          fechaIngreso: data.fechaIngreso?.toDate() || new Date(),
-          fechaVencimiento: data.fechaVencimiento?.toDate(),
-          ultimoPago: data.ultimoPago?.toDate(),
-          ultimoAcceso: data.ultimoAcceso?.toDate(),
-          creadoEn: data.creadoEn?.toDate() || new Date(),
-          actualizadoEn: data.actualizadoEn?.toDate() || new Date(),
+          fechaNacimiento: data.fechaNacimiento?.toDate() ? Timestamp.fromDate(data.fechaNacimiento.toDate()) : undefined,
+          fechaIngreso: data.fechaIngreso?.toDate() ? Timestamp.fromDate(data.fechaIngreso.toDate()) : Timestamp.now(),
+          fechaVencimiento: data.fechaVencimiento?.toDate() ? Timestamp.fromDate(data.fechaVencimiento.toDate()) : undefined,
+          ultimoPago: data.ultimoPago?.toDate() ? Timestamp.fromDate(data.ultimoPago.toDate()) : undefined,
+          ultimoAcceso: data.ultimoAcceso?.toDate() ? Timestamp.fromDate(data.ultimoAcceso.toDate()) : undefined,
+          creadoEn: data.creadoEn?.toDate() ? Timestamp.fromDate(data.creadoEn.toDate()) : Timestamp.now(),
+          actualizadoEn: data.actualizadoEn?.toDate() ? Timestamp.fromDate(data.actualizadoEn.toDate()) : Timestamp.now(),
+          // Add the missing asociacion property
+          asociacion: asociacionName,
         } as Socio;
       });
 
@@ -176,7 +143,7 @@ class SocioService {
 
       if (filters.fechaDesde || filters.fechaHasta) {
         socios = socios.filter(socio => {
-          const fechaIngreso = socio.fechaIngreso;
+          const fechaIngreso = socio.fechaIngreso.toDate();
           if (filters.fechaDesde && fechaIngreso < filters.fechaDesde) return false;
           if (filters.fechaHasta && fechaIngreso > filters.fechaHasta) return false;
           return true;
@@ -195,12 +162,28 @@ class SocioService {
   }
 
   /**
+   * Get association name by ID
+   */
+  private async getAsociacionName(asociacionId: string): Promise<string> {
+    try {
+      const asociacionDoc = await getDoc(doc(db, COLLECTIONS.ASOCIACIONES, asociacionId));
+      if (asociacionDoc.exists()) {
+        return asociacionDoc.data().nombre || 'Asociación';
+      }
+      return 'Asociación';
+    } catch (error) {
+      console.error('Error getting asociacion name:', error);
+      return 'Asociación';
+    }
+  }
+
+  /**
    * Create new socio
    */
   async createSocio(asociacionId: string, data: SocioFormData): Promise<string | null> {
     try {
       // Check if DNI already exists
-      const existingDni = await this.checkDniExists(data.dni);
+      const existingDni = await this.checkDniExists(data.dni || '');
       if (existingDni) {
         throw new Error('Ya existe un socio con este DNI');
       }
@@ -229,7 +212,7 @@ class SocioService {
       const socioData: Record<string, unknown> = {
         nombre: data.nombre,
         email: data.email.toLowerCase(),
-        dni: data.dni,
+        dni: data.dni || '',
         asociacionId,
         numeroSocio,
         estado: data.estado || 'activo',
@@ -372,7 +355,7 @@ class SocioService {
         ahorroTotal: 0, // Would be calculated from validaciones
         comerciosVisitados: 0, // Would be calculated from validaciones
         racha: 0, // Would be calculated based on activity
-        tiempoComoSocio: Math.floor((new Date().getTime() - socio.fechaIngreso.getTime()) / (1000 * 60 * 60 * 24)),
+        tiempoComoSocio: Math.floor((new Date().getTime() - socio.fechaIngreso.toDate().getTime()) / (1000 * 60 * 60 * 24)),
       };
 
       return stats;
