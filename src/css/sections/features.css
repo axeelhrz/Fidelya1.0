@@ -262,13 +262,13 @@ margin: 0;
 list-style: none;
 }
 
+/* NUEVA ESTRUCTURA: Elemento de lista con punto rojo real */
 .feature__list-item {
-position: relative;
 display: flex;
-gap: var(--space-lg);
-align-items: flex-start;
-padding: var(--space-md) 0;
-margin-bottom: var(--space-lg);
+align-items: center;
+gap: 12px;
+padding: 8px 0;
+margin-bottom: 12px;
 font-size: 1.1rem;
 font-weight: 500;
 line-height: 1.6;
@@ -278,19 +278,23 @@ transform: translateX(-20px);
 transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-/* Icono profesional para lista */
-.feature__list-item::before {
-flex-shrink: 0;
+/* Punto rojo como elemento HTML real */
+.feature__bullet {
+display: inline-block;
 width: 12px;
 height: 12px;
-margin-top: 6px;
-content: '';
 background: linear-gradient(135deg,
     var(--starflex-crimson-glow) 0%,
     var(--starflex-red) 100%
 );
 border-radius: 50%;
+flex-shrink: 0;
 transition: all 0.4s ease;
+}
+
+/* Texto de la característica */
+.feature__text {
+flex: 1;
 }
 
 /* Animación de aparición de elementos de lista */
@@ -313,12 +317,11 @@ color: var(--text-primary);
 transform: translateX(8px);
 }
 
-.feature__list-item:hover::before {
+.feature__list-item:hover .feature__bullet {
 background: linear-gradient(135deg,
     var(--starflex-crimson-bright) 0%,
     var(--starflex-crimson-glow) 100%
 );
-
 transform: scale(1.2);
 }
 
@@ -555,40 +558,32 @@ text-align: center;
 padding: var(--space-lg);
 }
 
-/* CORRECCIÓN MÓVIL: Lista alineada a la izquierda */
+/* MÓVIL: Lista alineada a la izquierda */
 .feature__list {
 text-align: left;
 max-width: 100%;
 margin: 0 auto;
 }
 
-/* SOLUCIÓN DEFINITIVA: Punto rojo alineado perfectamente */
+/* MÓVIL: Elementos perfectamente alineados */
 .feature__list-item {
-position: relative !important;
 display: flex !important;
 align-items: center !important;
-justify-content: flex-start !important;
-text-align: left !important;
-gap: 0 !important;
+gap: 12px !important;
 padding: 6px 0 !important;
 margin-bottom: 8px !important;
-line-height: 1.4 !important;
-min-height: 20px !important;
+text-align: left !important;
 }
 
-/* Punto rojo como elemento independiente */
-.feature__list-item::before {
-content: '' !important;
-display: inline-block !important;
+.feature__bullet {
 width: 8px !important;
 height: 8px !important;
-background: linear-gradient(135deg, var(--starflex-crimson-glow) 0%, var(--starflex-red) 100%) !important;
-border-radius: 50% !important;
 flex-shrink: 0 !important;
-margin: 0 12px 0 0 !important;
-position: relative !important;
-top: 0 !important;
-left: 0 !important;
+}
+
+.feature__text {
+flex: 1 !important;
+text-align: left !important;
 }
 
 .feature__phone {
@@ -659,37 +654,16 @@ width: 3px;
 }
 
 /* MÓVIL PEQUEÑO: Refinamiento final */
-.feature__list {
-text-align: left !important;
-padding-left: 0 !important;
-}
-
 .feature__list-item {
-position: relative !important;
-display: flex !important;
-align-items: center !important;
-justify-content: flex-start !important;
-text-align: left !important;
-gap: 0 !important;
+gap: 10px !important;
 padding: 4px 0 !important;
 margin-bottom: 6px !important;
 font-size: 0.9rem !important;
-line-height: 1.3 !important;
-min-height: 18px !important;
 }
 
-.feature__list-item::before {
-content: '' !important;
-display: inline-block !important;
+.feature__bullet {
 width: 6px !important;
 height: 6px !important;
-background: linear-gradient(135deg, var(--starflex-crimson-glow) 0%, var(--starflex-red) 100%) !important;
-border-radius: 50% !important;
-flex-shrink: 0 !important;
-margin: 0 10px 0 0 !important;
-position: relative !important;
-top: 0 !important;
-left: 0 !important;
 }
 }
 
@@ -754,7 +728,7 @@ background:
     radial-gradient(ellipse 500px 250px at 75% 80%, rgba(255, 107, 53, 0.15) 0%, transparent 70%);
 }
 
-.feature__list-item::before {
-background: var(--starflex-red);
+.feature__bullet {
+background: var(--starflex-red) !important;
 }
 }
