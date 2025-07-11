@@ -9,6 +9,7 @@ import { ValidacionesHistory } from '@/components/comercio/ValidacionesHistory';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/hooks/useAuth';
 import { useValidaciones } from '@/hooks/useValidaciones';
+import { ValidacionStats } from '@/types/comercio';
 import { 
   UserCheck, 
   Calendar, 
@@ -21,17 +22,10 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-type Stats = {
-  totalValidaciones: number;
-  validacionesExitosas: number;
-  clientesUnicos: number;
-  montoTotalDescuentos: number;
-};
-
 export default function ComercioValidacionesPage() {
   const { user, signOut } = useAuth();
   const { loading, refresh, getStats } = useValidaciones();
-  const [stats, setStats] = useState<Stats | null>(null);
+  const [stats, setStats] = useState<ValidacionStats | null>(null);
   const [exporting, setExporting] = useState(false);
   const searchParams = useSearchParams();
   const activeTab = searchParams.get('tab') || 'recientes';
@@ -77,13 +71,8 @@ export default function ComercioValidacionesPage() {
     async function fetchStats() {
       if (user) {
         try {
-          const statsResult = await getStats();
-          setStats({
-            totalValidaciones: statsResult.totalValidaciones ?? 0,
-            validacionesExitosas: statsResult.validacionesExitosas ?? 0,
-            clientesUnicos: statsResult.clientesUnicos ?? 0,
-            montoTotalDescuentos: statsResult.montoTotalDescuentos ?? 0,
-          });
+          const statsResult = getStats();
+          setStats(statsResult);
         } catch (error) {
           console.error('Error fetching stats:', error);
         }

@@ -23,6 +23,10 @@ export interface Validacion {
     ip?: string;
     qrData?: string;
   };
+  estado?: 'pendiente' | 'completado' | 'fallido';
+  monto: number;
+  ahorro: number;
+  
 }
 
 export interface ValidacionRequest {
