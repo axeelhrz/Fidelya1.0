@@ -139,7 +139,7 @@ HistorialCardSkeleton.displayName = 'HistorialCardSkeleton';
 // Main component
 export default function SocioHistorialPage() {
   const { signOut } = useAuth();
-  const { beneficiosUsados, loading, error, refreshBeneficios } = useBeneficios();
+  const { beneficiosUsados, loading, error, refrescar } = useBeneficios();
 
   // Local state
   const [selectedUso, setSelectedUso] = useState<BeneficioUso | null>(null);
@@ -300,7 +300,7 @@ export default function SocioHistorialPage() {
     
     setRefreshing(true);
     try {
-      await refreshBeneficios();
+      await refrescar();
       toast.success('Historial actualizado');
     } catch (error) {
       console.error('Error refreshing:', error);
@@ -308,7 +308,7 @@ export default function SocioHistorialPage() {
     } finally {
       setTimeout(() => setRefreshing(false), 1000);
     }
-  }, [refreshBeneficios, refreshing]);
+  }, [refrescar, refreshing]);
 
   const handleExport = useCallback(() => {
     // Implementar exportación
