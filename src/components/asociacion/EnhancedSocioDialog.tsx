@@ -85,10 +85,7 @@ export const EnhancedSocioDialog: React.FC<EnhancedSocioDialogProps> = ({
   };
 
   // Helper function to format date for input
-  const formatDateForInput = (date: Date | undefined): string => {
-    if (!date) return '';
-    return date.toISOString().split('T')[0];
-  };
+
 
   // Reset form when dialog opens/closes or socio changes
   useEffect(() => {

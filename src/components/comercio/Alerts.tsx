@@ -15,9 +15,24 @@ import {
 import { useRouter } from 'next/navigation';
 
 export const Alerts: React.FC = () => {
-  const { comercio } = useComercios();
-  const { expiredBeneficios } = useBeneficios();
+  const { comerciosVinculados } = useComercios();
+  const comercio = comerciosVinculados && comerciosVinculados.length > 0 ? comerciosVinculados[0] : null;
+  const { beneficios } = useBeneficios();
   const router = useRouter();
+
+  // Compute expired beneficios from beneficios array
+  const expiredBeneficios = beneficios.filter(
+    (b) => {
+      if (!b.fechaFin) return false;
+      // Firestore Timestamp has a toDate method
+      if (typeof b.fechaFin === 'object' && typeof b.fechaFin.toDate === 'function') {
+        return b.fechaFin.toDate() < new Date();
+      }
+      // If it's not a Timestamp, assume it's a string or Date and convert it
+      const fechaFinDate = new Date(b.fechaFin as any);
+      return fechaFinDate < new Date();
+    }
+  );
 
   // Check for various alert conditions
   const alerts = [];
