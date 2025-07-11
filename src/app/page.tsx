@@ -5,7 +5,6 @@ import { useState, useEffect } from 'react';
 
 export default function HomePage() {
   const [currentText, setCurrentText] = useState('');
-  const [isTypingComplete, setIsTypingComplete] = useState(false);
   const [showCursor, setShowCursor] = useState(true);
   const [isVisible, setIsVisible] = useState(false);
   
@@ -24,10 +23,9 @@ export default function HomePage() {
         setCurrentText(fullText.slice(0, index + 1));
         index++;
       } else {
-        setIsTypingComplete(true);
         clearInterval(typingInterval);
       }
-    }, 120); // Slightly faster typing
+    }, 120);
 
     return () => clearInterval(typingInterval);
   }, []);

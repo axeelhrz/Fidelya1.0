@@ -9,6 +9,7 @@ import {
   Flashlight,
   FlashlightOff,
   RotateCcw,
+  CheckCircle
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
@@ -28,10 +29,12 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
   const [flashEnabled, setFlashEnabled] = useState(false);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const scannerRef = useRef<import('@zxing/library').BrowserQRCodeReader | null>(null);
+  const scannerRef = useRef<any>(null);
+  const animationFrameRef = useRef<number | null>(null);
 
   // Initialize QR scanner when component mounts
   useEffect(() => {
@@ -40,9 +43,10 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
         // Dynamically import QR scanner library
         const { BrowserQRCodeReader } = await import('@zxing/library');
         scannerRef.current = new BrowserQRCodeReader();
+        console.log('✅ QR Scanner initialized successfully');
       } catch (error) {
-        console.error('Failed to initialize QR scanner:', error);
-        setError('Error al inicializar el escáner');
+        console.error('❌ Failed to initialize QR scanner:', error);
+        setError('Error al inicializar el escáner. Verifica que tu navegador sea compatible.');
       }
     };
 
@@ -56,95 +60,187 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
 
   const requestCameraPermission = async (): Promise<boolean> => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
+      console.log('🎥 Requesting camera permission...');
+      
+      const constraints = {
         video: { 
           facingMode: facingMode,
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
-        } 
-      });
+          width: { ideal: 1280, min: 640 },
+          height: { ideal: 720, min: 480 },
+          aspectRatio: { ideal: 16/9 }
+        }
+      };
+
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
       
-      // Test if we can access the camera
-      stream.getTracks().forEach(track => track.stop());
+      // Store the stream reference
+      streamRef.current = stream;
+      
+      // Set video source
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+      
       setHasPermission(true);
+      console.log('✅ Camera permission granted');
       return true;
-    } catch (error) {
-      console.error('Camera permission denied:', error);
-      setError('Se requiere acceso a la cámara para escanear códigos QR');
+    } catch (error: any) {
+      console.error('❌ Camera permission denied:', error);
+      
+      if (error.name === 'NotAllowedError') {
+        setError('Acceso a la cámara denegado. Por favor, permite el acceso a la cámara en la configuración de tu navegador.');
+      } else if (error.name === 'NotFoundError') {
+        setError('No se encontró una cámara disponible en tu dispositivo.');
+      } else if (error.name === 'NotReadableError') {
+        setError('La cámara está siendo usada por otra aplicación. Cierra otras aplicaciones que puedan estar usando la cámara.');
+      } else if (error.name === 'OverconstrainedError') {
+        setError('La configuración de cámara solicitada no es compatible con tu dispositivo.');
+      } else {
+        setError('Error al acceder a la cámara. Verifica que tu dispositivo tenga una cámara funcional.');
+      }
+      
+      setHasPermission(false);
       return false;
     }
   };
 
   const startScanning = async () => {
     if (!scannerRef.current) {
-      setError('Escáner no inicializado');
+      setError('Escáner no inicializado. Recarga la página e intenta de nuevo.');
       return;
     }
 
     try {
+      console.log('🔍 Starting QR scan...');
       setError(null);
       setIsScanning(true);
+      setIsProcessing(false);
 
-      // Request camera permission
+      // Request camera permission and start stream
       const hasAccess = await requestCameraPermission();
-      if (!hasAccess) return;
+      if (!hasAccess) {
+        setIsScanning(false);
+        return;
+      }
 
-      // Get video element
+      // Wait for video to be ready
       const videoElement = videoRef.current;
       if (!videoElement) {
         throw new Error('Elemento de video no encontrado');
       }
 
-      // Start scanning
-      const result = await scannerRef.current.decodeOnceFromVideoDevice(
-        undefined, // Use default camera
-        videoElement
-      );
+      // Wait for video metadata to load
+      await new Promise<void>((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          reject(new Error('Timeout waiting for video to load'));
+        }, 10000);
 
-      if (result) {
-        const qrText = result.getText();
-        console.log('QR Code detected:', qrText);
-        
-        // Vibrate if supported
-        if (navigator.vibrate) {
-          navigator.vibrate(200);
-        }
+        videoElement.onloadedmetadata = () => {
+          clearTimeout(timeout);
+          resolve();
+        };
 
-        onScan(qrText);
-        stopScanning();
-        toast.success('Código QR escaneado exitosamente');
-      }
-    } catch (error) {
-      console.error('Scanning error:', error);
+        videoElement.onerror = () => {
+          clearTimeout(timeout);
+          reject(new Error('Error loading video'));
+        };
+      });
+
+      console.log('📹 Video ready, starting QR detection...');
+
+      // Start continuous scanning
+      startContinuousScanning();
+
+    } catch (error: any) {
+      console.error('❌ Scanning error:', error);
       
-      if (error instanceof Error) {
-        if (error.message.includes('NotFoundError')) {
-          setError('No se encontró una cámara disponible');
-        } else if (error.message.includes('NotAllowedError')) {
-          setError('Acceso a la cámara denegado');
-        } else if (error.message.includes('NotReadableError')) {
-          setError('La cámara está siendo usada por otra aplicación');
-        } else {
-          setError('Error al escanear código QR');
-        }
+      if (error.message.includes('Timeout')) {
+        setError('Tiempo de espera agotado. Verifica que la cámara esté funcionando correctamente.');
       } else {
-        setError('Error desconocido al escanear');
+        setError('Error al iniciar el escaneo. Intenta de nuevo.');
       }
       
       stopScanning();
     }
   };
 
+  const startContinuousScanning = () => {
+    if (!scannerRef.current || !videoRef.current || !streamRef.current) {
+      return;
+    }
+
+    const scanFrame = async () => {
+      try {
+        if (!isScanning || isProcessing) {
+          return;
+        }
+
+        const result = await scannerRef.current.decodeOnceFromVideoDevice(undefined, videoRef.current);
+        
+        if (result) {
+          const qrText = result.getText();
+          console.log('🎯 QR Code detected:', qrText);
+          
+          setIsProcessing(true);
+          
+          // Vibrate if supported
+          if (navigator.vibrate) {
+            navigator.vibrate([200, 100, 200]);
+          }
+
+          // Show success feedback
+          toast.success('¡Código QR detectado!');
+          
+          // Call the onScan callback
+          onScan(qrText);
+          
+          // Stop scanning after successful detection
+          setTimeout(() => {
+            stopScanning();
+          }, 1000);
+          
+          return;
+        }
+      } catch (error) {
+        // Ignore scanning errors and continue
+        // console.log('Scanning frame, no QR detected');
+      }
+
+      // Continue scanning if still active
+      if (isScanning && !isProcessing) {
+        animationFrameRef.current = requestAnimationFrame(scanFrame);
+      }
+    };
+
+    // Start the scanning loop
+    scanFrame();
+  };
+
   const stopScanning = () => {
     try {
+      console.log('🛑 Stopping QR scan...');
+      
+      // Cancel animation frame
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
+      }
+
       // Stop the scanner
       if (scannerRef.current) {
-        scannerRef.current.reset();
+        try {
+          scannerRef.current.reset();
+        } catch (error) {
+          console.warn('Error resetting scanner:', error);
+        }
       }
 
       // Stop video stream
       if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current.getTracks().forEach(track => {
+          track.stop();
+          console.log('📹 Stopped video track:', track.kind);
+        });
         streamRef.current = null;
       }
 
@@ -154,9 +250,13 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
       }
 
       setIsScanning(false);
+      setIsProcessing(false);
       setFlashEnabled(false);
+      setHasPermission(null);
+      
+      console.log('✅ QR scan stopped successfully');
     } catch (error) {
-      console.error('Error stopping scanner:', error);
+      console.error('❌ Error stopping scanner:', error);
     }
   };
 
@@ -164,11 +264,14 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
     try {
       if (streamRef.current) {
         const videoTrack = streamRef.current.getVideoTracks()[0];
-        if (videoTrack && 'torch' in videoTrack.getCapabilities()) {
+        const capabilities = videoTrack.getCapabilities();
+        
+        if (capabilities.torch) {
           await videoTrack.applyConstraints({
-            advanced: [{ torch: !flashEnabled }] as MediaTrackConstraintSet[]
+            advanced: [{ torch: !flashEnabled } as any]
           });
           setFlashEnabled(!flashEnabled);
+          toast.success(flashEnabled ? 'Flash desactivado' : 'Flash activado');
         } else {
           toast.error('Flash no disponible en este dispositivo');
         }
@@ -187,6 +290,8 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
       stopScanning();
       setTimeout(() => startScanning(), 500);
     }
+    
+    toast.success(`Cambiando a cámara ${newFacingMode === 'user' ? 'frontal' : 'trasera'}`);
   };
 
   const handleRetry = () => {
@@ -231,11 +336,19 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
         className="fixed inset-0 z-50 bg-black"
       >
         {/* Header */}
-        <div className="absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-black/80 to-transparent p-4">
+        <div className="absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-black/80 to-transparent p-4 safe-area-top">
           <div className="flex items-center justify-between text-white">
             <div className="flex items-center space-x-3">
               <Zap className="w-6 h-6 text-violet-400" />
-              <span className="font-semibold">Escanear QR</span>
+              <div>
+                <span className="font-semibold">Escanear QR</span>
+                {isProcessing && (
+                  <div className="flex items-center space-x-2 mt-1">
+                    <CheckCircle className="w-4 h-4 text-green-400" />
+                    <span className="text-sm text-green-400">¡Código detectado!</span>
+                  </div>
+                )}
+              </div>
             </div>
             
             <div className="flex items-center space-x-2">
@@ -243,8 +356,9 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
               <button
                 onClick={toggleFlash}
                 className={`p-2 rounded-lg transition-colors ${
-                  flashEnabled ? 'bg-yellow-500' : 'bg-white/20'
+                  flashEnabled ? 'bg-yellow-500' : 'bg-white/20 hover:bg-white/30'
                 }`}
+                title={flashEnabled ? 'Desactivar flash' : 'Activar flash'}
               >
                 {flashEnabled ? (
                   <Flashlight className="w-5 h-5" />
@@ -257,6 +371,7 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
               <button
                 onClick={switchCamera}
                 className="p-2 rounded-lg bg-white/20 hover:bg-white/30 transition-colors"
+                title="Cambiar cámara"
               >
                 <RotateCcw className="w-5 h-5" />
               </button>
@@ -265,6 +380,7 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
               <button
                 onClick={stopScanning}
                 className="p-2 rounded-lg bg-white/20 hover:bg-white/30 transition-colors"
+                title="Cerrar escáner"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -278,20 +394,21 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="text-center text-white p-8"
+              className="text-center text-white p-8 max-w-md mx-4"
             >
               <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
                 <AlertCircle className="w-8 h-8 text-red-400" />
               </div>
               <h3 className="text-xl font-semibold mb-2">Error de Cámara</h3>
-              <p className="text-gray-300 mb-6 max-w-sm">{error}</p>
+              <p className="text-gray-300 mb-6 text-sm leading-relaxed">{error}</p>
               
               <div className="space-y-3">
                 <button
                   onClick={handleRetry}
-                  className="w-full bg-violet-600 hover:bg-violet-700 text-white py-3 px-6 rounded-lg font-medium transition-colors"
+                  className="w-full bg-violet-600 hover:bg-violet-700 text-white py-3 px-6 rounded-lg font-medium transition-colors flex items-center justify-center space-x-2"
                 >
-                  Intentar de nuevo
+                  <RefreshCw className="w-4 h-4" />
+                  <span>Intentar de nuevo</span>
                 </button>
                 
                 <button
@@ -311,37 +428,65 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
                 autoPlay
                 playsInline
                 muted
+                style={{ transform: facingMode === 'user' ? 'scaleX(-1)' : 'none' }}
               />
               
               {/* Scanning Overlay */}
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="relative">
                   {/* Scanning Frame */}
-                  <div className="w-64 h-64 border-2 border-white/50 rounded-2xl relative">
+                  <div className={`w-64 h-64 border-2 rounded-2xl relative transition-colors duration-300 ${
+                    isProcessing ? 'border-green-400' : 'border-white/50'
+                  }`}>
                     {/* Corner indicators */}
-                    <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-violet-400 rounded-tl-lg" />
-                    <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-violet-400 rounded-tr-lg" />
-                    <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-violet-400 rounded-bl-lg" />
-                    <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-violet-400 rounded-br-lg" />
+                    <div className={`absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 rounded-tl-lg transition-colors duration-300 ${
+                      isProcessing ? 'border-green-400' : 'border-violet-400'
+                    }`} />
+                    <div className={`absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 rounded-tr-lg transition-colors duration-300 ${
+                      isProcessing ? 'border-green-400' : 'border-violet-400'
+                    }`} />
+                    <div className={`absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 rounded-bl-lg transition-colors duration-300 ${
+                      isProcessing ? 'border-green-400' : 'border-violet-400'
+                    }`} />
+                    <div className={`absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 rounded-br-lg transition-colors duration-300 ${
+                      isProcessing ? 'border-green-400' : 'border-violet-400'
+                    }`} />
                     
                     {/* Scanning line animation */}
-                    <motion.div
-                      className="absolute left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-violet-400 to-transparent"
-                      animate={{
-                        y: [0, 256, 0],
-                      }}
-                      transition={{
-                        duration: 2,
-                        repeat: Infinity,
-                        ease: "easeInOut"
-                      }}
-                    />
+                    {!isProcessing && (
+                      <motion.div
+                        className="absolute left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-violet-400 to-transparent"
+                        animate={{
+                          y: [0, 256, 0],
+                        }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          ease: "easeInOut"
+                        }}
+                      />
+                    )}
+
+                    {/* Success indicator */}
+                    {isProcessing && (
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        className="absolute inset-0 flex items-center justify-center"
+                      >
+                        <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center">
+                          <CheckCircle className="w-8 h-8 text-white" />
+                        </div>
+                      </motion.div>
+                    )}
                   </div>
                   
                   {/* Instructions */}
-                  <div className="absolute -bottom-16 left-1/2 transform -translate-x-1/2 text-center">
-                    <p className="text-white text-sm font-medium">
-                      Coloca el código QR dentro del marco
+                  <div className="absolute -bottom-20 left-1/2 transform -translate-x-1/2 text-center">
+                    <p className={`text-white text-sm font-medium transition-colors duration-300 ${
+                      isProcessing ? 'text-green-400' : ''
+                    }`}>
+                      {isProcessing ? '¡Código QR detectado!' : 'Coloca el código QR dentro del marco'}
                     </p>
                   </div>
                 </div>
@@ -351,7 +496,7 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
         </div>
 
         {/* Bottom Instructions */}
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6">
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6 safe-area-bottom">
           <div className="text-center text-white">
             <p className="text-sm opacity-80 mb-2">
               Mantén el teléfono estable y asegúrate de que haya buena iluminación

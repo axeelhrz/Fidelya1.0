@@ -18,8 +18,7 @@ import {
 
 export default function ComercioPerfilPage() {
   const { signOut } = useAuth();
-  const { comerciosVinculados, loading } = useComercios();
-  const comercio = comerciosVinculados && comerciosVinculados.length > 0 ? comerciosVinculados[0] : null;
+  const { loading } = useComercios();
   const searchParams = useSearchParams();
   const activeTab = searchParams.get('tab') || 'datos';
 

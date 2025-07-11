@@ -1,8 +1,21 @@
 'use client';
 
 import React, { useState } from 'react';
+
+// Define the type for BeneficioUsado
+type BeneficioUsado = {
+  id: string;
+  beneficioTitulo?: string;
+  comercioNombre: string;
+  montoDescuento?: number;
+  montoOriginal?: number;
+  montoFinal?: number;
+  asociacionNombre?: string | null;
+  fechaUso: { toDate: () => Date };
+  notas?: string;
+};
 import { motion } from 'framer-motion';
-import { Gift, History, RefreshCw, Download, Star, Filter, Building2, Users } from 'lucide-react';
+import { Gift, History, RefreshCw, Download, Building2, Users } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { SocioSidebar } from '@/components/layout/SocioSidebar';
 import { BeneficiosList } from '@/components/beneficios/BeneficiosList';
@@ -42,16 +55,24 @@ export default function SocioBeneficiosPage() {
     const csvContent = [
       ['Título', 'Comercio', 'Categoría', 'Descuento', 'Estado', 'Fecha', 'Origen'],
       ...data.map(item => [
-        'titulo' in item ? item.titulo : (item as any).beneficioTitulo || 'Beneficio Usado',
+        'titulo' in item
+          ? item.titulo
+          : 'beneficioTitulo' in item
+            ? (item as { beneficioTitulo: string }).beneficioTitulo
+            : 'Beneficio Usado',
         item.comercioNombre || 'N/A',
         'categoria' in item ? item.categoria : 'N/A',
         'descuento' in item
           ? item.descuento.toString()
-          : (item as any).montoDescuento?.toString() || '0',
+          : 'montoDescuento' in item
+            ? (item as { montoDescuento?: number }).montoDescuento?.toString() || '0'
+            : '0',
         item.estado,
         'fechaFin' in item
-          ? (item as any).fechaFin.toDate().toLocaleDateString()
-          : (item as any).fechaUso.toDate().toLocaleDateString(),
+          ? (item as { fechaFin: { toDate: () => Date } }).fechaFin.toDate().toLocaleDateString()
+          : 'fechaUso' in item
+            ? (item as { fechaUso: { toDate: () => Date } }).fechaUso.toDate().toLocaleDateString()
+            : '',
         'asociacionNombre' in item && item.asociacionNombre 
           ? `Asociación: ${item.asociacionNombre}`
           : 'Comercio Afiliado'
@@ -289,20 +310,12 @@ export default function SocioBeneficiosPage() {
               userRole="socio"
               onUse={handleUseBenefit}
               onRefresh={refrescar}
-              onExport={handleExport}
-              showFilters={true}
             />
           ) : (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-slate-900">
-                  Historial de Beneficios Usados ({beneficiosUsados.length})
-                </h2>
-              </div>
-
+            <div>
               {beneficiosUsados.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {beneficiosUsados.map((uso, index) => (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {beneficiosUsados.map((uso: BeneficioUsado, index) => (
                     <motion.div
                       key={uso.id}
                       className="bg-white rounded-2xl border border-slate-200 shadow-lg hover:shadow-xl transition-all duration-300 p-6"
@@ -329,15 +342,15 @@ export default function SocioBeneficiosPage() {
                           )}
                         </span>
                       </div>
-
+                  
                       <h3 className="text-lg font-bold text-slate-900 mb-2">
-                        {(uso as any).beneficioTitulo || 'Beneficio Usado'}
+                        {uso.beneficioTitulo || 'Beneficio Usado'}
                       </h3>
                       
                       <p className="text-slate-600 mb-4">
                         Usado en {uso.comercioNombre}
                       </p>
-
+                  
                       <div className="space-y-2 text-sm text-slate-500">
                         <div className="flex items-center justify-between">
                           <span>Fecha de uso:</span>
@@ -352,20 +365,20 @@ export default function SocioBeneficiosPage() {
                           </span>
                         </div>
                         
-                        {(uso as any).montoOriginal && (
+                        {uso.montoOriginal && (
                           <div className="flex items-center justify-between">
                             <span>Monto original:</span>
-                            <span className="font-medium">${(uso as any).montoOriginal}</span>
+                            <span className="font-medium">${uso.montoOriginal}</span>
                           </div>
                         )}
                         
-                        {(uso as any).montoFinal && (
+                        {uso.montoFinal && (
                           <div className="flex items-center justify-between">
                             <span>Monto final:</span>
-                            <span className="font-medium text-emerald-600">${(uso as any).montoFinal}</span>
+                            <span className="font-medium text-emerald-600">${uso.montoFinal}</span>
                           </div>
                         )}
-
+                  
                         {uso.asociacionNombre && (
                           <div className="flex items-center justify-between">
                             <span>Asociación:</span>
@@ -373,10 +386,10 @@ export default function SocioBeneficiosPage() {
                           </div>
                         )}
                       </div>
-
-                      {(uso as any).notas && (
+                  
+                      {uso.notas && (
                         <div className="mt-4 p-3 bg-slate-50 rounded-lg">
-                          <p className="text-sm text-slate-700">{(uso as any).notas}</p>
+                          <p className="text-sm text-slate-700">{uso.notas}</p>
                         </div>
                       )}
                     </motion.div>

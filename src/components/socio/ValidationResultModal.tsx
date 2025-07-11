@@ -13,14 +13,52 @@ import {
   DollarSign,
   X,
   Share2,
-  Download
+  Download,
+  Store,
+  Clock
 } from 'lucide-react';
-import { ValidacionResponse } from '@/services/validaciones.service';
+
+interface ValidationResult {
+  success: boolean;
+  message: string;
+  resultado?: 'habilitado' | 'no_habilitado' | 'vencido' | 'suspendido';
+  data?: {
+    comercio: {
+      id: string;
+      nombre: string;
+      categoria: string;
+      direccion?: string;
+      logo?: string;
+    };
+    beneficio?: {
+      id: string;
+      titulo: string;
+      descripcion: string;
+      descuento: number;
+      tipo: string;
+      condiciones?: string;
+    };
+    socio: {
+      id: string;
+      nombre: string;
+      numeroSocio: string;
+      estadoMembresia: string;
+    };
+    validacion: {
+      id: string;
+      fechaValidacion: Date;
+      montoDescuento: number;
+      codigoValidacion: string;
+    };
+  };
+  error?: string;
+  motivo?: string;
+}
 
 interface ValidationResultModalProps {
   open: boolean;
   onClose: () => void;
-  result: ValidacionResponse | null;
+  result: ValidationResult | null;
 }
 
 export const ValidationResultModal: React.FC<ValidationResultModalProps> = ({
@@ -30,7 +68,7 @@ export const ValidationResultModal: React.FC<ValidationResultModalProps> = ({
 }) => {
   if (!open || !result) return null;
 
-  const isSuccess = result.success;
+  const isSuccess = result.success && result.resultado === 'habilitado';
   const data = result.data;
 
   const formatCurrency = (amount: number) => {
@@ -61,8 +99,55 @@ export const ValidationResultModal: React.FC<ValidationResultModalProps> = ({
     }
   };
 
+  const getStatusInfo = () => {
+    switch (result.resultado) {
+      case 'habilitado':
+        return {
+          icon: <CheckCircle className="w-6 h-6 text-green-600" />,
+          title: '¡Beneficio Validado!',
+          bgColor: 'from-green-50 to-emerald-50',
+          textColor: 'text-green-900',
+          subtitleColor: 'text-green-700'
+        };
+      case 'no_habilitado':
+        return {
+          icon: <XCircle className="w-6 h-6 text-red-600" />,
+          title: 'Acceso Denegado',
+          bgColor: 'from-red-50 to-orange-50',
+          textColor: 'text-red-900',
+          subtitleColor: 'text-red-700'
+        };
+      case 'vencido':
+        return {
+          icon: <Clock className="w-6 h-6 text-yellow-600" />,
+          title: 'Beneficio Vencido',
+          bgColor: 'from-yellow-50 to-amber-50',
+          textColor: 'text-yellow-900',
+          subtitleColor: 'text-yellow-700'
+        };
+      case 'suspendido':
+        return {
+          icon: <AlertTriangle className="w-6 h-6 text-orange-600" />,
+          title: 'Cuenta Suspendida',
+          bgColor: 'from-orange-50 to-red-50',
+          textColor: 'text-orange-900',
+          subtitleColor: 'text-orange-700'
+        };
+      default:
+        return {
+          icon: <XCircle className="w-6 h-6 text-red-600" />,
+          title: 'Validación Fallida',
+          bgColor: 'from-red-50 to-orange-50',
+          textColor: 'text-red-900',
+          subtitleColor: 'text-red-700'
+        };
+    }
+  };
+
+  const statusInfo = getStatusInfo();
+
   const handleShare = async () => {
-    if (!data) return;
+    if (!data || !isSuccess) return;
 
     const shareData = {
       title: '¡Beneficio validado en Fidelya!',
@@ -78,7 +163,8 @@ export const ValidationResultModal: React.FC<ValidationResultModalProps> = ({
         await navigator.clipboard.writeText(
           `${shareData.text} - ${shareData.url}`
         );
-        // You could show a toast here
+        // Show success message
+        alert('Información copiada al portapapeles');
       }
     } catch (error) {
       console.error('Error sharing:', error);
@@ -86,17 +172,23 @@ export const ValidationResultModal: React.FC<ValidationResultModalProps> = ({
   };
 
   const handleDownloadReceipt = () => {
-    if (!data) return;
+    if (!data || !isSuccess) return;
 
     const receiptContent = `
 FIDELYA - COMPROBANTE DE BENEFICIO
 
 Comercio: ${data.comercio.nombre}
-Beneficio: ${data.beneficio?.titulo}
-Descuento: ${data.beneficio ? formatDiscount(data.beneficio) : ''}
+Categoría: ${data.comercio.categoria}
+${data.comercio.direccion ? `Dirección: ${data.comercio.direccion}` : ''}
+
+Beneficio: ${data.beneficio?.titulo || 'Beneficio especial'}
+Descuento: ${data.beneficio ? formatDiscount(data.beneficio) : 'N/A'}
+${data.beneficio?.descripcion ? `Descripción: ${data.beneficio.descripcion}` : ''}
+
 Fecha: ${data.validacion.fechaValidacion.toLocaleString('es-ES')}
 Código: ${data.validacion.codigoValidacion}
 Socio: ${data.socio.nombre} (#${data.socio.numeroSocio})
+${data.validacion.montoDescuento > 0 ? `Ahorro: ${formatCurrency(data.validacion.montoDescuento)}` : ''}
 
 ¡Gracias por usar Fidelya!
     `.trim();
@@ -131,32 +223,20 @@ Socio: ${data.socio.nombre} (#${data.socio.numeroSocio})
             className="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full"
           >
             {/* Header */}
-            <div className={`px-6 pt-6 pb-4 ${
-              isSuccess 
-                ? 'bg-gradient-to-r from-green-50 to-emerald-50' 
-                : 'bg-gradient-to-r from-red-50 to-orange-50'
-            }`}>
+            <div className={`px-6 pt-6 pb-4 bg-gradient-to-r ${statusInfo.bgColor}`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
                     isSuccess ? 'bg-green-100' : 'bg-red-100'
                   }`}>
-                    {isSuccess ? (
-                      <CheckCircle className="w-6 h-6 text-green-600" />
-                    ) : (
-                      <XCircle className="w-6 h-6 text-red-600" />
-                    )}
+                    {statusInfo.icon}
                   </div>
                   <div>
-                    <h3 className={`text-lg font-semibold ${
-                      isSuccess ? 'text-green-900' : 'text-red-900'
-                    }`}>
-                      {isSuccess ? '¡Beneficio Validado!' : 'Validación Fallida'}
+                    <h3 className={`text-lg font-semibold ${statusInfo.textColor}`}>
+                      {statusInfo.title}
                     </h3>
-                    <p className={`text-sm ${
-                      isSuccess ? 'text-green-700' : 'text-red-700'
-                    }`}>
-                      {result.message}
+                    <p className={`text-sm ${statusInfo.subtitleColor}`}>
+                      {result.message || result.motivo || 'Proceso completado'}
                     </p>
                   </div>
                 </div>
@@ -177,13 +257,17 @@ Socio: ${data.socio.nombre} (#${data.socio.numeroSocio})
                   {/* Comercio Info */}
                   <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-xl">
                     <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                      {data.comercio.logo ? (
                         <Image
-                          src={data.comercio.logo || '/placeholder.png'}
+                          src={data.comercio.logo}
                           alt={data.comercio.nombre}
                           width={32}
                           height={32}
                           className="w-8 h-8 rounded-lg object-cover"
                         />
+                      ) : (
+                        <Store className="w-6 h-6 text-blue-600" />
+                      )}
                     </div>
                     <div className="flex-1">
                       <h4 className="font-semibold text-gray-900">{data.comercio.nombre}</h4>
@@ -283,13 +367,67 @@ Socio: ${data.socio.nombre} (#${data.socio.numeroSocio})
                   <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <AlertTriangle className="w-8 h-8 text-red-600" />
                   </div>
-                  <p className="text-gray-700 mb-4">{result.message}</p>
                   
-                  {result.error && (
-                    <div className="p-3 bg-red-50 rounded-lg border border-red-200">
-                      <p className="text-sm text-red-800">{result.error}</p>
+                  <div className="space-y-3">
+                    <p className="text-gray-700 font-medium">
+                      {result.message || 'Ha ocurrido un error durante la validación'}
+                    </p>
+                    
+                    {result.motivo && result.motivo !== result.message && (
+                      <p className="text-sm text-gray-600">{result.motivo}</p>
+                    )}
+                    
+                    {result.error && result.error !== result.message && result.error !== result.motivo && (
+                      <div className="p-3 bg-red-50 rounded-lg border border-red-200">
+                        <p className="text-sm text-red-800">{result.error}</p>
+                      </div>
+                    )}
+
+                    {/* Comercio info even on error if available */}
+                    {data?.comercio && (
+                      <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center space-x-3">
+                          <Store className="w-5 h-5 text-gray-500" />
+                          <div className="text-left">
+                            <p className="text-sm font-medium text-gray-900">{data.comercio.nombre}</p>
+                            <p className="text-xs text-gray-600">{data.comercio.categoria}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Helpful suggestions based on error type */}
+                    <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                      <h4 className="text-sm font-medium text-blue-900 mb-2">¿Qué puedes hacer?</h4>
+                      <ul className="text-xs text-blue-800 space-y-1">
+                        {result.resultado === 'vencido' && (
+                          <>
+                            <li>• Verifica que tu membresía esté activa</li>
+                            <li>• Contacta a tu asociación para renovar</li>
+                          </>
+                        )}
+                        {result.resultado === 'no_habilitado' && (
+                          <>
+                            <li>• Verifica que tengas acceso a este comercio</li>
+                            <li>• Asegúrate de estar escaneando el QR correcto</li>
+                          </>
+                        )}
+                        {result.resultado === 'suspendido' && (
+                          <>
+                            <li>• Contacta al administrador de tu asociación</li>
+                            <li>• Verifica el estado de tu cuenta</li>
+                          </>
+                        )}
+                        {!result.resultado && (
+                          <>
+                            <li>• Verifica tu conexión a internet</li>
+                            <li>• Intenta escanear el QR nuevamente</li>
+                            <li>• Contacta al soporte técnico si persiste</li>
+                          </>
+                        )}
+                      </ul>
                     </div>
-                  )}
+                  </div>
                 </div>
               )}
             </div>
@@ -324,7 +462,14 @@ Socio: ${data.socio.nombre} (#${data.socio.numeroSocio})
                   </button>
                 </div>
               ) : (
-                <div className="flex justify-end">
+                <div className="flex justify-between">
+                  <button
+                    onClick={() => window.location.reload()}
+                    className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    Intentar de nuevo
+                  </button>
+                  
                   <button
                     onClick={onClose}
                     className="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-lg text-sm font-medium text-white hover:bg-gray-700 transition-colors"

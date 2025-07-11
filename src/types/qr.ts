@@ -1,23 +1,73 @@
 import { Timestamp } from 'firebase/firestore';
 
-export interface QRScan {
-  id: string;
+export interface QRData {
   comercioId: string;
-  socioId?: string;
-  fechaEscaneo: Timestamp;
-  ubicacion?: {
-    latitude: number;
-    longitude: number;
-    city?: string;
-    country?: string;
-  };
-  dispositivo?: string;
-  userAgent?: string;
-  ip?: string;
-  validado: boolean;
   beneficioId?: string;
-  creadoEn: Timestamp;
+  timestamp: number;
+  type: 'beneficio_validation' | 'comercio_info';
+  version?: string;
 }
+
+export interface QRValidationRequest {
+  socioId: string;
+  comercioId: string;
+  beneficioId?: string;
+  asociacionId?: string;
+  timestamp?: number;
+}
+
+export interface QRValidationResponse {
+  success: boolean;
+  message: string;
+  resultado: 'habilitado' | 'no_habilitado' | 'vencido' | 'suspendido';
+  data?: {
+    comercio: {
+      id: string;
+      nombre: string;
+      categoria: string;
+      direccion?: string;
+      logo?: string;
+    };
+    beneficio?: {
+      id: string;
+      titulo: string;
+      descripcion: string;
+      descuento: number;
+      tipo: 'porcentaje' | 'monto_fijo' | 'producto_gratis';
+      condiciones?: string;
+    };
+    socio: {
+      id: string;
+      nombre: string;
+      numeroSocio: string;
+      estadoMembresia: string;
+    };
+    validacion: {
+      id: string;
+      fechaValidacion: Date;
+      montoDescuento: number;
+      codigoValidacion: string;
+    };
+  };
+  error?: string;
+  motivo?: string;
+}
+
+export interface QRScannerConfig {
+  width?: number;
+  height?: number;
+  facingMode?: 'user' | 'environment';
+  aspectRatio?: number;
+  frameRate?: number;
+}
+
+export const DEFAULT_QR_CONFIG: QRScannerConfig = {
+  width: 1280,
+  height: 720,
+  facingMode: 'environment',
+  aspectRatio: 16/9,
+  frameRate: 30
+};
 
 export interface QRValidation {
   id: string;

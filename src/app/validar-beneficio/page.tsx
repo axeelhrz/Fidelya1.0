@@ -2,465 +2,418 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useSearchParams } from 'next/navigation';
-import { Button } from '@/components/ui/Button';
-import { useAuth } from '@/hooks/useAuth';
-import { qrValidationService, QRValidationResponse } from '@/services/qr-validation.service';
-import { 
-  QrCode, 
-  CheckCircle, 
-  AlertCircle, 
-  Gift,
-  Store,
-  User,
-  Calendar,
-  Percent,
-  ArrowRight,
-  Scan
-} from 'lucide-react';
-import toast from 'react-hot-toast';
+import { QrCode, Download, Copy, RefreshCw, Store, Gift, Users } from 'lucide-react';
+import { toast } from 'react-hot-toast';
+import Image from 'next/image';
+
+// Datos de ejemplo de comercios
+const comerciosEjemplo = [
+  {
+    id: 'comercio_001',
+    nombre: 'Restaurante El Buen Sabor',
+    categoria: 'Restaurantes',
+    direccion: 'Av. Principal 123',
+    beneficios: [
+      {
+        id: 'beneficio_001',
+        titulo: '20% de descuento en cena',
+        descripcion: 'Descuento válido de lunes a jueves',
+        tipo: 'porcentaje',
+        descuento: 20
+      },
+      {
+        id: 'beneficio_002',
+        titulo: 'Postre gratis',
+        descripcion: 'Postre gratis con cualquier plato principal',
+        tipo: 'producto_gratis',
+        descuento: 0
+      }
+    ]
+  },
+  {
+    id: 'comercio_002',
+    nombre: 'Farmacia San José',
+    categoria: 'Farmacia',
+    direccion: 'Calle Salud 456',
+    beneficios: [
+      {
+        id: 'beneficio_003',
+        titulo: '15% en medicamentos',
+        descripcion: 'Descuento en medicamentos de venta libre',
+        tipo: 'porcentaje',
+        descuento: 15
+      }
+    ]
+  },
+  {
+    id: 'comercio_003',
+    nombre: 'Tienda Deportiva Pro',
+    categoria: 'Deportes',
+    direccion: 'Centro Comercial Plaza',
+    beneficios: [
+      {
+        id: 'beneficio_004',
+        titulo: '$5000 de descuento',
+        descripcion: 'En compras superiores a $20000',
+        tipo: 'monto_fijo',
+        descuento: 5000
+      }
+    ]
+  }
+];
 
 export default function ValidarBeneficioPage() {
-  const { user } = useAuth();
-  const searchParams = useSearchParams();
-  const comercioId = searchParams.get('comercio');
-  
-  const [validationResult, setValidationResult] = useState<QRValidationResponse | null>(null);
+  const [selectedComercio, setSelectedComercio] = useState(comerciosEjemplo[0]);
+  const [selectedBeneficio, setSelectedBeneficio] = useState(comerciosEjemplo[0].beneficios[0]);
+  const [qrDataUrl, setQrDataUrl] = useState<string>('');
   const [loading, setLoading] = useState(false);
-  const [selectedBenefit, setSelectedBenefit] = useState<string | null>(null);
-  const [montoCompra, setMontoCompra] = useState<string>('');
 
-  const handleQRValidation = React.useCallback(async () => {
-    if (!comercioId || !user) return;
+  // Generar QR cuando cambie la selección
+  useEffect(() => {
+    const generateQR = async () => {
+      setLoading(true);
+      try {
+        // Importar QRCode dinámicamente
+        const QRCode = (await import('qrcode')).default;
+        
+        // Crear datos del QR
+        const qrData = {
+          comercioId: selectedComercio.id,
+          beneficioId: selectedBeneficio.id,
+          timestamp: Date.now(),
+          type: 'beneficio_validation'
+        };
 
+        // También crear URL format para compatibilidad
+        const urlFormat = `/validar-beneficio?comercio=${selectedComercio.id}&beneficio=${selectedBeneficio.id}`;
+        
+        // Generar QR con los datos JSON
+        const qrDataString = JSON.stringify(qrData);
+        const dataUrl = await QRCode.toDataURL(qrDataString, {
+          width: 300,
+          margin: 2,
+          color: {
+            dark: '#000000',
+            light: '#FFFFFF'
+          },
+          errorCorrectionLevel: 'M'
+        });
+
+        setQrDataUrl(dataUrl);
+        console.log('QR Data:', qrDataString);
+        console.log('URL Format:', urlFormat);
+      } catch (error) {
+        console.error('Error generating QR:', error);
+        toast.error('Error al generar código QR');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    generateQR();
+  }, [selectedComercio, selectedBeneficio]);
+
+  // Mover generateQR fuera del useEffect para el botón "Regenerar"
+  const generateQR = async () => {
     setLoading(true);
     try {
-      const qrData = `https://fidelya.app/validar-beneficio?comercio=${comercioId}`;
-      
-      const result = await qrValidationService.validateQRCode({
-        qrData,
-        socioId: user.uid,
-        location: await getCurrentLocation(),
-        device: getDeviceInfo(),
-        userAgent: navigator.userAgent,
+      const QRCode = (await import('qrcode')).default;
+      const qrData = {
+        comercioId: selectedComercio.id,
+        beneficioId: selectedBeneficio.id,
+        timestamp: Date.now(),
+        type: 'beneficio_validation'
+      };
+      const urlFormat = `/validar-beneficio?comercio=${selectedComercio.id}&beneficio=${selectedBeneficio.id}`;
+      const qrDataString = JSON.stringify(qrData);
+      const dataUrl = await QRCode.toDataURL(qrDataString, {
+        width: 300,
+        margin: 2,
+        color: {
+          dark: '#000000',
+          light: '#FFFFFF'
+        },
+        errorCorrectionLevel: 'M'
       });
 
-      setValidationResult(result);
-      
-      if (result.success) {
-        toast.success('¡Validación exitosa! Beneficios disponibles.');
-      } else {
-        toast.error(result.message);
-      }
+      setQrDataUrl(dataUrl);
+      console.log('QR Data:', qrDataString);
+      console.log('URL Format:', urlFormat);
     } catch (error) {
-      console.error('Error validating QR:', error);
-      toast.error('Error al validar el código QR');
+      console.error('Error generating QR:', error);
+      toast.error('Error al generar código QR');
     } finally {
       setLoading(false);
     }
-  }, [comercioId, user]);
+  };
 
-  useEffect(() => {
-    if (comercioId && user?.role === 'socio') {
-      handleQRValidation();
-    }
-  }, [comercioId, user, handleQRValidation]);
+  const handleComercioChange = (comercio: typeof comerciosEjemplo[0]) => {
+    setSelectedComercio(comercio);
+    setSelectedBeneficio(comercio.beneficios[0]);
+  };
 
-  const handleUseBenefit = async (beneficioId: string) => {
-    if (!validationResult?.data?.validacion.id) return;
-
-    setLoading(true);
+  const copyQRData = async () => {
     try {
-      const monto = parseFloat(montoCompra) || 0;
+      const qrData = {
+        comercioId: selectedComercio.id,
+        beneficioId: selectedBeneficio.id,
+        timestamp: Date.now(),
+        type: 'beneficio_validation'
+      };
       
-      const result = await qrValidationService.useBenefit(
-        validationResult.data.validacion.id,
-        beneficioId,
-        monto
-      );
-
-      if (result.success) {
-        toast.success('¡Beneficio aplicado exitosamente!');
-        // Refresh validation to show updated state
-        await handleQRValidation();
-      } else {
-        toast.error(result.message);
-      }
-    } catch (error) {
-      console.error('Error using benefit:', error);
-      toast.error('Error al aplicar el beneficio');
-    } finally {
-      setLoading(false);
+      await navigator.clipboard.writeText(JSON.stringify(qrData));
+      toast.success('Datos del QR copiados al portapapeles');
+    } catch {
+      toast.error('Error al copiar datos');
     }
   };
 
-  const getCurrentLocation = async (): Promise<{ latitude: number; longitude: number } | undefined> => {
-    return new Promise((resolve) => {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            resolve({
-              latitude: position.coords.latitude,
-              longitude: position.coords.longitude,
-            });
-          },
-          () => resolve(undefined)
-        );
-      } else {
-        resolve(undefined);
-      }
-    });
+  const downloadQR = () => {
+    if (!qrDataUrl) return;
+    
+    const link = document.createElement('a');
+    link.download = `qr-${selectedComercio.nombre.replace(/\s+/g, '-').toLowerCase()}.png`;
+    link.href = qrDataUrl;
+    link.click();
+    toast.success('Código QR descargado');
   };
 
-  const getDeviceInfo = (): string => {
-    const userAgent = navigator.userAgent;
-    if (userAgent.includes('iPhone')) return 'iPhone';
-    if (userAgent.includes('iPad')) return 'iPad';
-    if (userAgent.includes('Android')) return 'Android';
-    if (userAgent.includes('Windows')) return 'Windows';
-    if (userAgent.includes('Mac')) return 'Mac';
-    return 'Otro';
+  const formatDiscount = (beneficio: typeof selectedBeneficio) => {
+    switch (beneficio.tipo) {
+      case 'porcentaje':
+        return `${beneficio.descuento}% de descuento`;
+      case 'monto_fijo':
+        return `$${beneficio.descuento.toLocaleString()} de descuento`;
+      case 'producto_gratis':
+        return 'Producto gratis';
+      default:
+        return 'Beneficio especial';
+    }
   };
-
-  const formatCurrency = (amount: number): string => {
-    return new Intl.NumberFormat('es-AR', {
-      style: 'currency',
-      currency: 'ARS',
-    }).format(amount);
-  };
-
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
-          <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-            <User className="w-8 h-8 text-blue-600" />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">
-            Acceso Requerido
-          </h2>
-          <p className="text-gray-600 mb-6">
-            Debes iniciar sesión como socio para validar beneficios.
-          </p>
-          <Button
-            onClick={() => window.location.href = '/auth/login'}
-            className="w-full"
-          >
-            Iniciar Sesión
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  if (user.role !== 'socio') {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 to-pink-100 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
-          <div className="w-16 h-16 bg-red-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-            <AlertCircle className="w-8 h-8 text-red-600" />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">
-            Acceso Denegado
-          </h2>
-          <p className="text-gray-600 mb-6">
-            Solo los socios pueden validar beneficios mediante código QR.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
-          <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-            <Scan className="w-8 h-8 text-blue-600 animate-pulse" />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">
-            Validando QR...
-          </h2>
-          <p className="text-gray-600">
-            Verificando tu acceso a beneficios
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!validationResult) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
-          <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-            <QrCode className="w-8 h-8 text-gray-400" />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">
-            Código QR Requerido
-          </h2>
-          <p className="text-gray-600 mb-6">
-            Escanea un código QR válido para acceder a los beneficios.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!validationResult.success) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 to-pink-100 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
-          <div className="w-16 h-16 bg-red-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-            <AlertCircle className="w-8 h-8 text-red-600" />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">
-            Validación Fallida
-          </h2>
-          <p className="text-gray-600 mb-6">
-            {validationResult.message}
-          </p>
-          <Button
-            onClick={handleQRValidation}
-            variant="outline"
-            className="w-full"
-          >
-            Intentar Nuevamente
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  const { comercio, beneficios, socio, validacion } = validationResult.data!;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 p-4">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-violet-50 via-white to-purple-50">
+      <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <motion.div
-          className="bg-white rounded-2xl shadow-xl p-6 mb-6"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+          className="text-center mb-12"
         >
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                <CheckCircle className="w-6 h-6 text-green-600" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">
-                  ¡Validación Exitosa!
-                </h1>
-                <p className="text-gray-600">
-                  Código: {validacion.codigoValidacion}
-                </p>
-              </div>
-            </div>
-            <div className="text-right">
-              <div className="text-sm text-gray-500">Validado el</div>
-              <div className="font-medium text-gray-900">
-                {validacion.fechaValidacion.toLocaleString()}
-              </div>
-            </div>
+          <div className="w-16 h-16 bg-gradient-to-r from-violet-500 to-purple-600 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+            <QrCode size={32} className="text-white" />
           </div>
-
-          {/* Comercio Info */}
-          <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-xl">
-            <div className="w-16 h-16 bg-blue-100 rounded-xl flex items-center justify-center">
-              <Store className="w-8 h-8 text-blue-600" />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-lg font-semibold text-gray-900">
-                {comercio.nombre}
-              </h3>
-              <p className="text-gray-600">{comercio.categoria}</p>
-              {comercio.direccion && (
-                <p className="text-sm text-gray-500">{comercio.direccion}</p>
-              )}
-            </div>
-          </div>
-
-          {/* Socio Info */}
-          <div className="mt-4 p-4 bg-blue-50 rounded-xl">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                <User className="w-5 h-5 text-blue-600" />
-              </div>
-              <div>
-                <div className="font-medium text-gray-900">{socio.nombre}</div>
-                <div className="text-sm text-gray-600">
-                  {socio.numeroSocio && `Socio #${socio.numeroSocio} • `}
-                  Estado: {socio.estadoMembresia}
-                </div>
-              </div>
-            </div>
-          </div>
+          <h1 className="text-4xl font-black bg-gradient-to-r from-violet-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-4">
+            Generador de QR para Comercios
+          </h1>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Genera códigos QR para que los socios puedan escanear y acceder a los beneficios de tu comercio
+          </p>
         </motion.div>
 
-        {/* Beneficios Disponibles */}
-        <motion.div
-          className="bg-white rounded-2xl shadow-xl p-6"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
-          <div className="flex items-center space-x-3 mb-6">
-            <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-              <Gift className="w-5 h-5 text-purple-600" />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
+          {/* Configuración */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="space-y-6"
+          >
+            {/* Selección de Comercio */}
+            <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+              <div className="flex items-center gap-3 mb-4">
+                <Store className="w-5 h-5 text-violet-600" />
+                <h3 className="text-lg font-semibold text-gray-900">Seleccionar Comercio</h3>
+              </div>
+              
+              <div className="space-y-3">
+                {comerciosEjemplo.map((comercio) => (
+                  <button
+                    key={comercio.id}
+                    onClick={() => handleComercioChange(comercio)}
+                    className={`w-full p-4 rounded-xl text-left transition-all duration-200 ${
+                      selectedComercio.id === comercio.id
+                        ? 'bg-violet-50 border-2 border-violet-200 shadow-sm'
+                        : 'bg-gray-50 border-2 border-transparent hover:bg-gray-100'
+                    }`}
+                  >
+                    <div className="font-semibold text-gray-900">{comercio.nombre}</div>
+                    <div className="text-sm text-gray-600">{comercio.categoria}</div>
+                    <div className="text-xs text-gray-500">{comercio.direccion}</div>
+                  </button>
+                ))}
+              </div>
             </div>
-            <div>
-              <h2 className="text-xl font-bold text-gray-900">
-                Beneficios Disponibles
-              </h2>
-              <p className="text-gray-600">
-                {beneficios.length} beneficio{beneficios.length !== 1 ? 's' : ''} disponible{beneficios.length !== 1 ? 's' : ''}
-              </p>
+
+            {/* Selección de Beneficio */}
+            <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+              <div className="flex items-center gap-3 mb-4">
+                <Gift className="w-5 h-5 text-purple-600" />
+                <h3 className="text-lg font-semibold text-gray-900">Seleccionar Beneficio</h3>
+              </div>
+              
+              <div className="space-y-3">
+                {selectedComercio.beneficios.map((beneficio) => (
+                  <button
+                    key={beneficio.id}
+                    onClick={() => setSelectedBeneficio(beneficio)}
+                    className={`w-full p-4 rounded-xl text-left transition-all duration-200 ${
+                      selectedBeneficio.id === beneficio.id
+                        ? 'bg-purple-50 border-2 border-purple-200 shadow-sm'
+                        : 'bg-gray-50 border-2 border-transparent hover:bg-gray-100'
+                    }`}
+                  >
+                    <div className="font-semibold text-gray-900">{beneficio.titulo}</div>
+                    <div className="text-sm text-purple-600 font-medium">{formatDiscount(beneficio)}</div>
+                    <div className="text-xs text-gray-500 mt-1">{beneficio.descripcion}</div>
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
 
-          {/* Monto de Compra Input */}
-          <div className="mb-6 p-4 bg-gray-50 rounded-xl">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Monto de tu compra (opcional)
-            </label>
-            <input
-              type="number"
-              value={montoCompra}
-              onChange={(e) => setMontoCompra(e.target.value)}
-              placeholder="0.00"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              Ingresa el monto para calcular el descuento exacto
-            </p>
-          </div>
+            {/* Información del QR */}
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-200">
+              <div className="flex items-center gap-3 mb-4">
+                <Users className="w-5 h-5 text-blue-600" />
+                <h3 className="text-lg font-semibold text-blue-900">Información del QR</h3>
+              </div>
+              
+              <div className="space-y-3 text-sm">
+                <div>
+                  <span className="font-medium text-blue-800">Comercio ID:</span>
+                  <span className="ml-2 text-blue-700 font-mono">{selectedComercio.id}</span>
+                </div>
+                <div>
+                  <span className="font-medium text-blue-800">Beneficio ID:</span>
+                  <span className="ml-2 text-blue-700 font-mono">{selectedBeneficio.id}</span>
+                </div>
+                <div>
+                  <span className="font-medium text-blue-800">Formato:</span>
+                  <span className="ml-2 text-blue-700">JSON con validación</span>
+                </div>
+              </div>
+            </div>
+          </motion.div>
 
-          {/* Lista de Beneficios */}
-          <div className="space-y-4">
-            {beneficios.map((beneficio) => (
-              <motion.div
-                key={beneficio.id}
-                className={`border-2 rounded-xl p-4 cursor-pointer transition-all duration-200 ${
-                  selectedBenefit === beneficio.id
-                    ? 'border-blue-500 bg-blue-50'
-                    : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                }`}
-                onClick={() => setSelectedBenefit(beneficio.id)}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <h3 className="text-lg font-semibold text-gray-900">
-                        {beneficio.titulo}
-                      </h3>
-                      <div className="flex items-center space-x-1 px-2 py-1 bg-green-100 rounded-full">
-                        <Percent className="w-3 h-3 text-green-600" />
-                        <span className="text-xs font-medium text-green-600">
-                          {beneficio.descuento}
-                          {beneficio.tipo === 'descuento_porcentaje' ? '%' : ''}
-                          {beneficio.tipo === 'descuento_fijo' ? ' OFF' : ''}
-                          {beneficio.tipo === '2x1' ? ' 2x1' : ''}
-                        </span>
-                      </div>
+          {/* QR Code Display */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="space-y-6"
+          >
+            {/* QR Code */}
+            <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
+              <div className="text-center">
+                <h3 className="text-lg font-semibold text-gray-900 mb-6">Código QR Generado</h3>
+                
+                <div className="relative inline-block">
+                  {loading ? (
+                    <div className="w-72 h-72 bg-gray-100 rounded-2xl flex items-center justify-center">
+                      <RefreshCw className="w-8 h-8 text-gray-400 animate-spin" />
                     </div>
-                    
-                    <p className="text-gray-600 mb-3">{beneficio.descripcion}</p>
-                    
-                    {beneficio.condiciones && (
-                      <p className="text-sm text-gray-500 mb-3">
-                        <strong>Condiciones:</strong> {beneficio.condiciones}
-                      </p>
-                    )}
-                    
-                    <div className="flex items-center space-x-4 text-sm text-gray-500">
-                      <div className="flex items-center space-x-1">
-                        <Calendar className="w-4 h-4" />
-                        <span>Válido hasta {beneficio.fechaFin.toLocaleDateString()}</span>
-                      </div>
+                  ) : qrDataUrl ? (
+                      <Image
+                        src={qrDataUrl}
+                        alt="QR Code"
+                        width={256}
+                        height={256}
+                        className="w-64 h-64 mx-auto"
+                        unoptimized
+                        priority
+                      />
+                    ) : (
+                    <div className="w-72 h-72 bg-gray-100 rounded-2xl flex items-center justify-center">
+                      <span className="text-gray-500">Error generando QR</span>
                     </div>
-
-                    {/* Cálculo de descuento */}
-                    {montoCompra && parseFloat(montoCompra) > 0 && (
-                      <div className="mt-3 p-3 bg-green-50 rounded-lg">
-                        <div className="text-sm text-gray-700">
-                          <div className="flex justify-between">
-                            <span>Monto original:</span>
-                            <span>{formatCurrency(parseFloat(montoCompra))}</span>
-                          </div>
-                          <div className="flex justify-between text-green-600 font-medium">
-                            <span>Descuento:</span>
-                            <span>
-                              -{formatCurrency(
-                                beneficio.tipo === 'descuento_porcentaje'
-                                  ? (parseFloat(montoCompra) * beneficio.descuento) / 100
-                                  : beneficio.tipo === 'descuento_fijo'
-                                  ? Math.min(beneficio.descuento, parseFloat(montoCompra))
-                                  : beneficio.tipo === '2x1'
-                                  ? parseFloat(montoCompra) / 2
-                                  : 0
-                              )}
-                            </span>
-                          </div>
-                          <div className="flex justify-between text-lg font-bold text-gray-900 border-t pt-2">
-                            <span>Total a pagar:</span>
-                            <span>
-                              {formatCurrency(
-                                parseFloat(montoCompra) - (
-                                  beneficio.tipo === 'descuento_porcentaje'
-                                    ? (parseFloat(montoCompra) * beneficio.descuento) / 100
-                                    : beneficio.tipo === 'descuento_fijo'
-                                    ? Math.min(beneficio.descuento, parseFloat(montoCompra))
-                                    : beneficio.tipo === '2x1'
-                                    ? parseFloat(montoCompra) / 2
-                                    : 0
-                                )
-                              )}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  )}
                 </div>
 
-                {selectedBenefit === beneficio.id && (
-                  <motion.div
-                    className="mt-4 pt-4 border-t border-gray-200"
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    transition={{ duration: 0.3 }}
+                {/* Actions */}
+                <div className="flex gap-3 mt-6 justify-center">
+                  <button
+                    onClick={downloadQR}
+                    disabled={!qrDataUrl || loading}
+                    className="flex items-center gap-2 px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <Button
-                      onClick={() => handleUseBenefit(beneficio.id)}
-                      loading={loading}
-                      className="w-full"
-                      leftIcon={<ArrowRight size={16} />}
-                    >
-                      Usar Este Beneficio
-                    </Button>
-                  </motion.div>
-                )}
-              </motion.div>
-            ))}
-          </div>
-
-          {beneficios.length === 0 && (
-            <div className="text-center py-8">
-              <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <Gift className="w-8 h-8 text-gray-400" />
+                    <Download className="w-4 h-4" />
+                    Descargar
+                  </button>
+                  
+                  <button
+                    onClick={copyQRData}
+                    className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    <Copy className="w-4 h-4" />
+                    Copiar datos
+                  </button>
+                  
+                  <button
+                    onClick={generateQR}
+                    disabled={loading}
+                    className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+                  >
+                    <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                    Regenerar
+                  </button>
+                </div>
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                No hay beneficios disponibles
-              </h3>
-              <p className="text-gray-600">
-                Este comercio no tiene beneficios activos para tu asociación en este momento.
-              </p>
             </div>
-          )}
+
+            {/* Preview del Beneficio */}
+            <div className="bg-gradient-to-r from-violet-500 to-purple-600 rounded-2xl p-6 text-white shadow-lg">
+              <h4 className="text-lg font-semibold mb-4">Vista Previa del Beneficio</h4>
+              
+              <div className="bg-white/10 rounded-xl p-4 backdrop-blur-sm">
+                <div className="text-xl font-bold mb-2">{selectedBeneficio.titulo}</div>
+                <div className="text-lg font-semibold text-purple-100 mb-2">
+                  {formatDiscount(selectedBeneficio)}
+                </div>
+                <div className="text-sm text-purple-100 mb-3">
+                  {selectedBeneficio.descripcion}
+                </div>
+                <div className="text-xs text-purple-200">
+                  Válido en: {selectedComercio.nombre}
+                </div>
+              </div>
+            </div>
+
+            {/* Instrucciones */}
+            <div className="bg-amber-50 rounded-2xl p-6 border border-amber-200">
+              <h4 className="text-lg font-semibold text-amber-900 mb-4">Instrucciones de Uso</h4>
+              
+              <ol className="text-sm text-amber-800 space-y-2">
+                <li className="flex items-start gap-2">
+                  <span className="w-5 h-5 bg-amber-200 rounded-full flex items-center justify-center text-xs font-bold text-amber-800 flex-shrink-0 mt-0.5">1</span>
+                  <span>Descarga o imprime el código QR generado</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="w-5 h-5 bg-amber-200 rounded-full flex items-center justify-center text-xs font-bold text-amber-800 flex-shrink-0 mt-0.5">2</span>
+                  <span>Coloca el QR en un lugar visible en tu comercio</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="w-5 h-5 bg-amber-200 rounded-full flex items-center justify-center text-xs font-bold text-amber-800 flex-shrink-0 mt-0.5">3</span>
+                  <span>Los socios pueden escanear el QR con la app para acceder al beneficio</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="w-5 h-5 bg-amber-200 rounded-full flex items-center justify-center text-xs font-bold text-amber-800 flex-shrink-0 mt-0.5">4</span>
+                  <span>El sistema validará automáticamente el acceso al beneficio</span>
+                </li>
+              </ol>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Footer */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="text-center mt-12 text-gray-600"
+        >
+          <p className="text-sm">
+            Esta es una página de demostración para generar códigos QR de prueba.
+            <br />
+            En producción, los comercios generarían estos códigos desde su panel de administración.
+          </p>
         </motion.div>
       </div>
     </div>
