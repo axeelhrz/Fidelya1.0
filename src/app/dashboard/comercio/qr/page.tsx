@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
@@ -24,7 +24,8 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-export default function ComercioQRPage() {
+// Component that uses useSearchParams - needs to be wrapped in Suspense
+function ComercioQRContent() {
   const { signOut } = useAuth();
   const { comerciosVinculados, loading, generateQRCode, stats } = useComercios();
   const comercio = comerciosVinculados[0];
@@ -801,5 +802,40 @@ export default function ComercioQRPage() {
         </div>
       </motion.div>
     </DashboardLayout>
+  );
+}
+
+// Loading fallback component
+function ComercioQRLoading() {
+  return (
+    <DashboardLayout
+      activeSection="qr"
+      sidebarComponent={(props) => (
+        <ComercioSidebar
+          {...props}
+          onLogoutClick={() => {}}
+        />
+      )}
+    >
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="w-16 h-16 mx-auto mb-4 bg-green-100 rounded-2xl flex items-center justify-center">
+            <RefreshCw size={32} className="text-green-500 animate-spin" />
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            Cargando gestión de QR...
+          </h3>
+          <p className="text-gray-500">Preparando herramientas de código QR</p>
+        </div>
+      </div>
+    </DashboardLayout>
+  );
+}
+
+export default function ComercioQRPage() {
+  return (
+    <Suspense fallback={<ComercioQRLoading />}>
+      <ComercioQRContent />
+    </Suspense>
   );
 }

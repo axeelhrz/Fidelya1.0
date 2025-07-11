@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSearchParams } from 'next/navigation';
 import { 
@@ -175,7 +175,8 @@ const BeneficiosFiltradosSection: React.FC<{
   );
 };
 
-export default function ComercioBeneficiosPage() {
+// Component that uses useSearchParams - needs to be wrapped in Suspense
+function ComercioBeneficiosContent() {
   const searchParams = useSearchParams();
   const action = searchParams.get('action');
   const filter = searchParams.get('filter');
@@ -551,5 +552,40 @@ export default function ComercioBeneficiosPage() {
         />
       </motion.div>
     </DashboardLayout>
+  );
+}
+
+// Loading fallback component
+function ComercioBeneficiosLoading() {
+  return (
+    <DashboardLayout
+      activeSection="beneficios"
+      sidebarComponent={(props) => (
+        <ComercioSidebar
+          {...props}
+          onLogoutClick={() => {}}
+        />
+      )}
+    >
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="w-16 h-16 mx-auto mb-4 bg-purple-100 rounded-2xl flex items-center justify-center">
+            <RefreshCw size={32} className="text-purple-500 animate-spin" />
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            Cargando beneficios...
+          </h3>
+          <p className="text-gray-500">Preparando gestión de beneficios</p>
+        </div>
+      </div>
+    </DashboardLayout>
+  );
+}
+
+export default function ComercioBeneficiosPage() {
+  return (
+    <Suspense fallback={<ComercioBeneficiosLoading />}>
+      <ComercioBeneficiosContent />
+    </Suspense>
   );
 }

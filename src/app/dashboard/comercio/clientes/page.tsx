@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { ComercioSidebar } from '@/components/layout/ComercioSidebar';
@@ -15,7 +15,8 @@ import {
   RefreshCw,
 } from 'lucide-react';
 
-export default function ClientesPage() {
+// Component content that might indirectly use useSearchParams
+function ClientesPageContent() {
   const { user, signOut } = useAuth();
   const { stats, loading: statsLoading, refreshStats } = useClientes();
 
@@ -189,5 +190,40 @@ export default function ClientesPage() {
         </div>
       </div>
     </DashboardLayout>
+  );
+}
+
+// Loading fallback component
+function ClientesPageLoading() {
+  return (
+    <DashboardLayout
+      activeSection="clientes"
+      sidebarComponent={(props) => (
+        <ComercioSidebar
+          {...props}
+          onLogoutClick={() => {}}
+        />
+      )}
+    >
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 mx-auto mb-6 bg-gradient-to-br from-purple-500 to-violet-600 rounded-2xl flex items-center justify-center shadow-lg">
+            <RefreshCw size={32} className="text-white animate-spin" />
+          </div>
+          <h3 className="text-xl font-bold text-slate-900 mb-2">
+            Cargando clientes...
+          </h3>
+          <p className="text-slate-600">Obteniendo información de clientes</p>
+        </div>
+      </div>
+    </DashboardLayout>
+  );
+}
+
+export default function ClientesPage() {
+  return (
+    <Suspense fallback={<ClientesPageLoading />}>
+      <ClientesPageContent />
+    </Suspense>
   );
 }
