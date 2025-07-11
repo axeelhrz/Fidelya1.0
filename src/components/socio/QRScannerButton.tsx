@@ -30,7 +30,6 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [flashEnabled, setFlashEnabled] = useState(false);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
-  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -82,7 +81,6 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
         videoRef.current.srcObject = stream;
       }
       
-      setHasPermission(true);
       console.log('✅ Camera permission granted');
       return true;
     } catch (error: unknown) {
@@ -110,7 +108,6 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
         setError('Error al acceder a la cámara. Verifica que tu dispositivo tenga una cámara funcional.');
       }
 
-      setHasPermission(false);
       return false;
     }
   };
@@ -279,7 +276,6 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
       setIsScanning(false);
       setIsProcessing(false);
       setFlashEnabled(false);
-      setHasPermission(null);
       
       console.log('✅ QR scan stopped successfully');
     } catch (error) {
@@ -324,7 +320,6 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
 
   const handleRetry = () => {
     setError(null);
-    setHasPermission(null);
     startScanning();
   };
 

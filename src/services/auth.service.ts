@@ -415,7 +415,7 @@ class AuthService {
             password
           );
           targetUser = tempUserCredential.user;
-        } catch (signInError) {
+        } catch {
           return {
             success: false,
             error: 'Credenciales incorrectas. Verifica tu email y contraseña.'

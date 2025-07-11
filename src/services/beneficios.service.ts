@@ -637,7 +637,7 @@ export class BeneficiosService {
       let beneficios: Beneficio[] = [];
 
       // 1. Obtener beneficios de la asociación del socio
-      let qAsociacion = query(
+      const qAsociacion = query(
         collection(db, this.BENEFICIOS_COLLECTION),
         where('estado', '==', 'activo'),
         where('asociacionesDisponibles', 'array-contains', asociacionId),
