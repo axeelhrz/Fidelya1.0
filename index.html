@@ -619,53 +619,61 @@
                     <div class="videos__grid-overlay"></div>
                 </div>
                 
+                <!-- Nuevo reproductor de video simplificado -->
                 <div class="videos__player-container">
                     <div class="videos__player-frame">
-                        <video 
-                            class="videos__player" 
-                            id="main-video"
-                            preload="metadata"
-                            playsinline
-                            poster="./assets/video-poster.webp"
-                            aria-label="Video demostrativo completo de StarFlex"
-                        >
-                            <source src="./assets/StarFlex.mp4" type="video/mp4">
-                            <p data-translate="video-not-supported">Tu navegador no soporta videos HTML5. <a href="./assets/StarFlex.mp4">Descargar video</a>.</p>
-                        </video>
-                        
-                        <div class="videos__play-overlay" id="play-overlay">
-                            <div class="videos__play-button">
-                                <div class="videos__play-icon">
-                                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                        <path d="M8 5v14l11-7z"/>
-                                    </svg>
+                        <!-- Contenedor principal del video con estilo similar a la imagen de referencia -->
+                        <div class="video-player-simple">
+                            <div class="video-player-simple__header">
+                                <div class="video-player-simple__title">
+                                    <h3>STATIONS SECTION</h3>
                                 </div>
-                                <div class="videos__play-pulse"></div>
                             </div>
-                            <div class="videos__play-text">
-                                <span class="videos__play-title" data-translate="video-play-title">REPRODUCIR DEMO</span>
-                                <span class="videos__play-subtitle" data-translate="video-play-subtitle">Ver StarFlex en acción</span>
+                            
+                            <div class="video-player-simple__content">
+                                <p class="video-player-simple__description">
+                                    In the <span class="highlight">Stations</span> section, you can select your preferred stations and assign a minimum price per hour or per block <span class="highlight">individually</span> for each of them. You also have the possibility to define the duration of the blocks for each station and set the Anticipation as the arrival time, allowing you to <span class="highlight">calculate</span> the time needed to arrive at each station on time.
+                                </p>
+                                
+                                <!-- Botón de reproducción con ícono de YouTube -->
+                                <a href="https://www.youtube.com/watch?v=IeKGEAdEtYA" class="video-player-simple__play-button" target="_blank" rel="noopener noreferrer">
+                                    <div class="video-player-simple__play-icon">
+                                        <svg viewBox="0 0 68 48" fill="currentColor">
+                                            <path d="M66.52,7.74c-0.78-2.93-2.49-5.41-5.42-6.19C55.79,.13,34,0,34,0S12.21,.13,6.9,1.55 C3.97,2.33,2.27,4.81,1.48,7.74C0.06,13.05,0,24,0,24s0.06,10.95,1.48,16.26c0.78,2.93,2.49,5.41,5.42,6.19 C12.21,47.87,34,48,34,48s21.79-0.13,27.1-1.55c2.93-0.78,4.64-3.26,5.42-6.19C67.94,34.95,68,24,68,24S67.94,13.05,66.52,7.74z" fill="#f00"></path>
+                                            <path d="M 45,24 27,14 27,34" fill="#fff"></path>
+                                        </svg>
+                                    </div>
+                                </a>
                             </div>
-                        </div>
-
-                        <div class="videos__progress-indicators">
-                            <div class="videos__progress-bar">
-                                <div class="videos__progress-fill"></div>
+                            
+                            <!-- Imagen del teléfono a la derecha -->
+                            <div class="video-player-simple__phone">
+                                <img src="./assets/phones/Stations.avif" alt="Pantalla de estaciones en StarFlex" class="video-player-simple__phone-image">
                             </div>
-                            <div class="videos__time-display">
-                                <span class="videos__current-time">0:00</span>
-                                <span class="videos__duration">0:00</span>
+                            
+                            <!-- Footer con logos y enlaces -->
+                            <div class="video-player-simple__footer">
+                                <div class="video-player-simple__social">
+                                    <a href="https://www.instagram.com/starflexapp/" target="_blank" rel="noopener noreferrer" class="video-player-simple__social-link">
+                                        <svg viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                                        </svg>
+                                    </a>
+                                    <a href="https://t.me/starflexnews" target="_blank" rel="noopener noreferrer" class="video-player-simple__social-link">
+                                        <svg viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+                                        </svg>
+                                    </a>
+                                    <a href="https://www.whatsapp.com/channel/0029VaL0DdmIyPtQxdrlHm1d" target="_blank" rel="noopener noreferrer" class="video-player-simple__social-link">
+                                        <svg viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.488"/>
+                                        </svg>
+                                    </a>
+                                </div>
+                                <div class="video-player-simple__website">
+                                    <a href="https://starflexapp.com" target="_blank" rel="noopener noreferrer">starflexapp.com</a>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-
-                    <div class="videos__info">
-                        <div class="videos__info-main">
-                            <h3 class="videos__info-title" data-translate="video-info-title">StarFlex Demo Completo</h3>
-                            <p class="videos__info-description" data-translate="video-info-description">
-                                Observa cómo StarFlex automatiza completamente tu experiencia con Amazon Flex. 
-                                Desde la configuración inicial hasta la captura automática de bloques.
-                            </p>
                         </div>
                     </div>
                 </div>
