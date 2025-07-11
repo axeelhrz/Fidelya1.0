@@ -354,7 +354,7 @@
     transform: scale(1.1);
 }
 
-/* ===== ENLACES FUTURISTAS CON EFECTOS MEJORADOS ===== */
+/* ===== ENLACES FUTURISTAS CON EFECTOS MEJORADOS Y LÍNEA INFERIOR REFINADA ===== */
 .nav__link {
     position: relative;
     z-index: 2;
@@ -389,26 +389,25 @@
     transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-/* Línea roja debajo del enlace */
+/* Línea roja debajo del enlace - MEJORADA Y MÁS SUTIL */
 .nav__link::after {
     position: absolute;
-    bottom: -3px;
+    bottom: 2px;
     left: 50%;
     width: 0;
-    height: 4px;
+    height: 2px;
     content: '';
     background: linear-gradient(90deg,
-        var(--starflex-crimson-glow) 0%,
+        rgba(255, 45, 85, 0.6) 0%,
         var(--starflex-crimson-bright) 30%,
         var(--starflex-red) 50%,
         var(--starflex-crimson-bright) 70%,
-        var(--starflex-crimson-glow) 100%
+        rgba(255, 45, 85, 0.6) 100%
     );
-    border-radius: 3px;
+    border-radius: 2px;
     box-shadow:
-        0 0 12px var(--starflex-crimson-glow),
-        0 0 20px var(--starflex-crimson-bright),
-        0 2px 8px rgba(255, 45, 85, 0.4);
+        0 0 8px rgba(255, 45, 85, 0.4),
+        0 0 15px rgba(255, 69, 105, 0.25);
     opacity: 0;
     transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     transform: translateX(-50%);
@@ -427,7 +426,7 @@
 }
 
 .nav__link:hover::after {
-    width: 95%;
+    width: 80%;
     opacity: 1;
 }
 
@@ -448,17 +447,16 @@
 }
 
 .nav__link.active::after {
-    width: 95%;
+    width: 75%;
     opacity: 1;
     background: linear-gradient(90deg,
-        var(--starflex-crimson-bright) 0%,
-        var(--starflex-crimson-glow) 50%,
-        var(--starflex-crimson-bright) 100%
+        rgba(255, 45, 85, 0.7) 0%,
+        var(--starflex-crimson-bright) 50%,
+        rgba(255, 45, 85, 0.7) 100%
     );
     box-shadow:
-        0 0 15px var(--starflex-crimson-glow),
-        0 0 25px var(--starflex-crimson-bright),
-        0 3px 12px rgba(255, 45, 85, 0.5);
+        0 0 10px rgba(255, 45, 85, 0.5),
+        0 0 20px rgba(255, 69, 105, 0.3);
 }
 
 .nav__link:focus {
@@ -1960,3 +1958,4 @@ body.no-scroll .nav__logo,
         transform: scale(1);
     }
 }
+

@@ -45,22 +45,22 @@ const CONFIG = {
         },
         phones: {
             horario: {
-                avif: './assets/phones/Horario.avif'
+                avif: './assets/phones/Schedule.avif'
             },
             estaciones: {
-                avif: './assets/phones/Estaciones.avif'
+                avif: './assets/phones/Stations.avif'
             },
             calendario: {
-                avif: './assets/phones/Calendario.avif'
+                avif: './assets/phones/Calendar.avif'
             },
             registro: {
-                avif: './assets/phones/Registro.avif'
+                avif: './assets/phones/Log.avif'
             },
             notificaciones: {
-                avif: './assets/phones/Notificaciones.avif'
+                avif: './assets/phones/Notifications.avif'
             },
             referidos: {
-                avif: './assets/phones/Referidos.avif'
+                avif: './assets/phones/Referrals.avif'
             }
         },
         downloads: {
