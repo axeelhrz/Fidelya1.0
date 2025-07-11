@@ -14,9 +14,6 @@ import {
   LogOut,
   ChevronDown,
   Activity,
-  Star,
-  TrendingUp,
-  Award,
   AlertCircle,
   CheckCircle
 } from 'lucide-react';
@@ -228,7 +225,6 @@ export const SocioSidebar: React.FC<SocioSidebarProps> = ({
 
   const isSubmenuItemActive = (subItem: SubmenuItem) => {
     const currentPath = pathname;
-    const currentTab = searchParams.get('tab');
     
     // Direct route match
     if (currentPath === subItem.route) {

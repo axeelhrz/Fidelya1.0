@@ -12,6 +12,8 @@ import {
   CheckCircle
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+// Import media types to extend MediaTrackCapabilities
+import '../../../types/media';
 
 interface QRScannerButtonProps {
   onScan: (qrData: string) => void;
@@ -33,7 +35,7 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const scannerRef = useRef<any>(null);
+  const scannerRef = useRef<import('@zxing/library').BrowserQRCodeReader | null>(null);
   const animationFrameRef = useRef<number | null>(null);
 
   // Initialize QR scanner when component mounts
@@ -55,7 +57,6 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
     return () => {
       stopScanning();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const requestCameraPermission = async (): Promise<boolean> => {
@@ -84,21 +85,31 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
       setHasPermission(true);
       console.log('✅ Camera permission granted');
       return true;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('❌ Camera permission denied:', error);
-      
-      if (error.name === 'NotAllowedError') {
-        setError('Acceso a la cámara denegado. Por favor, permite el acceso a la cámara en la configuración de tu navegador.');
-      } else if (error.name === 'NotFoundError') {
-        setError('No se encontró una cámara disponible en tu dispositivo.');
-      } else if (error.name === 'NotReadableError') {
-        setError('La cámara está siendo usada por otra aplicación. Cierra otras aplicaciones que puedan estar usando la cámara.');
-      } else if (error.name === 'OverconstrainedError') {
-        setError('La configuración de cámara solicitada no es compatible con tu dispositivo.');
+
+      if (
+        typeof error === 'object' &&
+        error !== null &&
+        'name' in error &&
+        typeof (error as { name: string }).name === 'string'
+      ) {
+        const errorName = (error as { name: string }).name;
+        if (errorName === 'NotAllowedError') {
+          setError('Acceso a la cámara denegado. Por favor, permite el acceso a la cámara en la configuración de tu navegador.');
+        } else if (errorName === 'NotFoundError') {
+          setError('No se encontró una cámara disponible en tu dispositivo.');
+        } else if (errorName === 'NotReadableError') {
+          setError('La cámara está siendo usada por otra aplicación. Cierra otras aplicaciones que puedan estar usando la cámara.');
+        } else if (errorName === 'OverconstrainedError') {
+          setError('La configuración de cámara solicitada no es compatible con tu dispositivo.');
+        } else {
+          setError('Error al acceder a la cámara. Verifica que tu dispositivo tenga una cámara funcional.');
+        }
       } else {
         setError('Error al acceder a la cámara. Verifica que tu dispositivo tenga una cámara funcional.');
       }
-      
+
       setHasPermission(false);
       return false;
     }
@@ -151,15 +162,25 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
       // Start continuous scanning
       startContinuousScanning();
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('❌ Scanning error:', error);
-      
-      if (error.message.includes('Timeout')) {
-        setError('Tiempo de espera agotado. Verifica que la cámara esté funcionando correctamente.');
+
+      if (
+        typeof error === 'object' &&
+        error !== null &&
+        'message' in error &&
+        typeof (error as { message: string }).message === 'string'
+      ) {
+        const errorMessage = (error as { message: string }).message;
+        if (errorMessage.includes('Timeout')) {
+          setError('Tiempo de espera agotado. Verifica que la cámara esté funcionando correctamente.');
+        } else {
+          setError('Error al iniciar el escaneo. Intenta de nuevo.');
+        }
       } else {
         setError('Error al iniciar el escaneo. Intenta de nuevo.');
       }
-      
+
       stopScanning();
     }
   };
@@ -175,7 +196,13 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
           return;
         }
 
-        const result = await scannerRef.current.decodeOnceFromVideoDevice(undefined, videoRef.current);
+        let result = null;
+        if (scannerRef.current) {
+          result = await scannerRef.current.decodeOnceFromVideoDevice(
+            undefined,
+            videoRef.current ?? undefined
+          );
+        }
         
         if (result) {
           const qrText = result.getText();
@@ -201,7 +228,7 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
           
           return;
         }
-      } catch (error) {
+      } catch {
         // Ignore scanning errors and continue
         // console.log('Scanning frame, no QR detected');
       }
@@ -266,9 +293,10 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
         const videoTrack = streamRef.current.getVideoTracks()[0];
         const capabilities = videoTrack.getCapabilities();
         
-        if (capabilities.torch) {
+        // Check if torch capability exists and is supported
+        if (capabilities.torch === true) {
           await videoTrack.applyConstraints({
-            advanced: [{ torch: !flashEnabled } as any]
+            advanced: [{ torch: !flashEnabled } as MediaTrackConstraintSet]
           });
           setFlashEnabled(!flashEnabled);
           toast.success(flashEnabled ? 'Flash desactivado' : 'Flash activado');

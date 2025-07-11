@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { 
@@ -49,7 +49,6 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
   open,
   onToggle,
   onMenuClick,
-  onLogoutClick,
   activeSection
 }) => {
   const router = useRouter();
@@ -92,18 +91,8 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
     urgent?: boolean;
   };
   
-  // Enhanced menu structure for Commerce
-  const menuItems: Array<{
-    id: string;
-    label: string;
-    icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
-    description: string;
-    gradient: string;
-    route: string;
-    badge?: number;
-    urgent?: boolean;
-    submenu?: SubmenuItem[];
-  }> = [
+  // Enhanced menu structure for Commerce - memoized to prevent unnecessary re-renders
+  const menuItems = useMemo(() => [
     {
       id: 'dashboard',
       label: 'Dashboard',
@@ -125,7 +114,7 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
           label: 'Datos del Comercio', 
           icon: Store,
           route: '/dashboard/comercio/perfil'
-        }
+        } as SubmenuItem
       ]
     },
     {
@@ -143,26 +132,26 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
           icon: Gift,
           count: realtimeStats.beneficiosActivos,
           route: '/dashboard/comercio/beneficios'
-        },
+        } as SubmenuItem,
         { 
           id: 'beneficios-crear', 
           label: 'Crear Beneficio', 
           icon: Plus,
           route: '/dashboard/comercio/beneficios?action=crear'
-        },
+        } as SubmenuItem,
         { 
           id: 'beneficios-activos', 
           label: 'Beneficios Activos', 
           icon: CheckCircle,
           count: realtimeStats.beneficiosActivos,
           route: '/dashboard/comercio/beneficios?filter=activos'
-        },
+        } as SubmenuItem,
         { 
           id: 'beneficios-vencidos', 
           label: 'Beneficios Vencidos', 
           icon: Clock,
           route: '/dashboard/comercio/beneficios?filter=vencidos'
-        }
+        } as SubmenuItem
       ]
     },
     {
@@ -179,14 +168,14 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
           label: 'Generar QR', 
           icon: QrCode,
           route: '/dashboard/comercio/qr/generar'
-        },
+        } as SubmenuItem,
         { 
           id: 'qr-estadisticas', 
           label: 'Estadísticas de Uso', 
           icon: Activity,
           count: realtimeStats.qrEscaneos,
           route: '/dashboard/comercio/qr/estadisticas'
-        }
+        } as SubmenuItem
       ]
     },
     {
@@ -204,25 +193,25 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
           icon: Calendar,
           count: realtimeStats.validacionesHoy,
           route: '/dashboard/comercio/validaciones'
-        },
+        } as SubmenuItem,
         { 
           id: 'validaciones-historial', 
           label: 'Historial Completo', 
           icon: Activity,
           route: '/dashboard/comercio/validaciones?tab=historial'
-        },
+        } as SubmenuItem,
         { 
           id: 'validaciones-exitosas', 
           label: 'Exitosas', 
           icon: CheckCircle,
           route: '/dashboard/comercio/validaciones?filter=exitosas'
-        },
+        } as SubmenuItem,
         { 
           id: 'validaciones-fallidas', 
           label: 'Fallidas', 
           icon: AlertCircle,
           route: '/dashboard/comercio/validaciones?filter=fallidas'
-        }
+        } as SubmenuItem
       ]
     },
     {
@@ -240,13 +229,98 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
           icon: Users,
           count: realtimeStats.clientesUnicos,
           route: '/dashboard/comercio/clientes'
-        }
+        } as SubmenuItem
       ]
     }
-  ];
+  ], [realtimeStats]);
 
   // Auto-expand menu items that have active sub-items
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
+
+  // Enhanced active state detection - memoized
+  const isActive = useCallback((itemId: string) => {
+    return activeSection === itemId || activeSection.startsWith(itemId + '-');
+  }, [activeSection]);
+
+  const isSubmenuItemActive = useCallback((subItem: SubmenuItem) => {
+    const currentPath = pathname;
+    const currentFilter = searchParams.get('filter');
+    const currentTab = searchParams.get('tab');
+    const currentAction = searchParams.get('action');
+    
+    // Check if we're on the beneficios page
+    if (currentPath === '/dashboard/comercio/beneficios') {
+      if (subItem.id === 'beneficios-lista' && !currentFilter && !currentAction) {
+        return true;
+      }
+      if (subItem.id === 'beneficios-crear' && currentAction === 'crear') {
+        return true;
+      }
+      if (subItem.id === 'beneficios-activos' && currentFilter === 'activos') {
+        return true;
+      }
+      if (subItem.id === 'beneficios-vencidos' && currentFilter === 'vencidos') {
+        return true;
+      }
+    }
+    
+    // Check if we're on the validaciones page
+    if (currentPath === '/dashboard/comercio/validaciones') {
+      if (subItem.id === 'validaciones-recientes' && !currentTab && !currentFilter) {
+        return true;
+      }
+      if (subItem.id === 'validaciones-historial' && currentTab === 'historial') {
+        return true;
+      }
+      if (subItem.id === 'validaciones-exitosas' && currentFilter === 'exitosas') {
+        return true;
+      }
+      if (subItem.id === 'validaciones-fallidas' && currentFilter === 'fallidas') {
+        return true;
+      }
+    }
+
+    // Check if we're on the clientes page
+    if (currentPath === '/dashboard/comercio/clientes') {
+      if (subItem.id === 'clientes-lista') {
+        return true;
+      }
+    }
+
+    // Check if we're on the perfil page
+    if (currentPath === '/dashboard/comercio/perfil') {
+      if (subItem.id === 'perfil-datos') {
+        return true;
+      }
+    }
+
+    // Check if we're on the QR pages
+    if (currentPath === '/dashboard/comercio/qr/generar') {
+      if (subItem.id === 'qr-generar') {
+        return true;
+      }
+    }
+
+    if (currentPath === '/dashboard/comercio/qr/estadisticas') {
+      if (subItem.id === 'qr-estadisticas') {
+        return true;
+      }
+    }
+    
+    // For other submenu items, check if the current path matches the route
+    const routeParts = subItem.route.split('?');
+    const routePath = routeParts[0];
+    const routeParams = new URLSearchParams(routeParts[1] || '');
+    
+    if (currentPath !== routePath) return false;
+    
+    // Check if all route parameters match current parameters
+    for (const [key, value] of routeParams.entries()) {
+      if (searchParams.get(key) !== value) return false;
+    }
+    
+    return true;
+  }, [pathname, searchParams]);
 
   // Update expanded items based on current route
   useEffect(() => {
@@ -262,7 +336,7 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
     });
     
     setExpandedItems(newExpanded);
-  }, [pathname, searchParams]);
+  }, [pathname, searchParams, isActive, isSubmenuItemActive, menuItems]);
 
   // Real-time Firebase listeners
   useEffect(() => {
@@ -424,91 +498,6 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
     }
   };
 
-  // Enhanced active state detection
-  const isActive = (itemId: string) => {
-    return activeSection === itemId || activeSection.startsWith(itemId + '-');
-  };
-
-  const isSubmenuItemActive = (subItem: SubmenuItem) => {
-    const currentPath = pathname;
-    const currentFilter = searchParams.get('filter');
-    const currentTab = searchParams.get('tab');
-    const currentAction = searchParams.get('action');
-    
-    // Check if we're on the beneficios page
-    if (currentPath === '/dashboard/comercio/beneficios') {
-      if (subItem.id === 'beneficios-lista' && !currentFilter && !currentAction) {
-        return true;
-      }
-      if (subItem.id === 'beneficios-crear' && currentAction === 'crear') {
-        return true;
-      }
-      if (subItem.id === 'beneficios-activos' && currentFilter === 'activos') {
-        return true;
-      }
-      if (subItem.id === 'beneficios-vencidos' && currentFilter === 'vencidos') {
-        return true;
-      }
-    }
-    
-    // Check if we're on the validaciones page
-    if (currentPath === '/dashboard/comercio/validaciones') {
-      if (subItem.id === 'validaciones-recientes' && !currentTab && !currentFilter) {
-        return true;
-      }
-      if (subItem.id === 'validaciones-historial' && currentTab === 'historial') {
-        return true;
-      }
-      if (subItem.id === 'validaciones-exitosas' && currentFilter === 'exitosas') {
-        return true;
-      }
-      if (subItem.id === 'validaciones-fallidas' && currentFilter === 'fallidas') {
-        return true;
-      }
-    }
-
-    // Check if we're on the clientes page
-    if (currentPath === '/dashboard/comercio/clientes') {
-      if (subItem.id === 'clientes-lista') {
-        return true;
-      }
-    }
-
-    // Check if we're on the perfil page
-    if (currentPath === '/dashboard/comercio/perfil') {
-      if (subItem.id === 'perfil-datos') {
-        return true;
-      }
-    }
-
-    // Check if we're on the QR pages
-    if (currentPath === '/dashboard/comercio/qr/generar') {
-      if (subItem.id === 'qr-generar') {
-        return true;
-      }
-    }
-
-    if (currentPath === '/dashboard/comercio/qr/estadisticas') {
-      if (subItem.id === 'qr-estadisticas') {
-        return true;
-      }
-    }
-    
-    // For other submenu items, check if the current path matches the route
-    const routeParts = subItem.route.split('?');
-    const routePath = routeParts[0];
-    const routeParams = new URLSearchParams(routeParts[1] || '');
-    
-    if (currentPath !== routePath) return false;
-    
-    // Check if all route parameters match current parameters
-    for (const [key, value] of routeParams.entries()) {
-      if (searchParams.get(key) !== value) return false;
-    }
-    
-    return true;
-  };
-
   const getItemGradient = (item: typeof menuItems[0]) => {
     return item.gradient || 'from-gray-500 to-gray-600';
   };
@@ -650,11 +639,7 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
                     <div className="flex items-center space-x-2 relative z-10">
                       {item.badge !== undefined && item.badge > 0 && (
                         <motion.div
-                          className={`px-2 py-1 rounded-full text-xs font-bold ${
-                            item.urgent 
-                              ? 'bg-red-500 text-white animate-pulse' 
-                              : 'bg-purple-500 text-white'
-                          }`}
+                          className="px-2 py-1 rounded-full text-xs font-bold bg-purple-500 text-white"
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
                           transition={{ type: "spring", stiffness: 500, damping: 30 }}
