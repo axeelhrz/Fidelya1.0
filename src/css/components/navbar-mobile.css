@@ -48,11 +48,12 @@
     transition: all var(--mobile-animation-duration) var(--mobile-animation-easing);
 }
 
+/* Update the logo path in navbar-mobile.css */
 .mobile-nav__logo {
     position: relative;
     width: 100%;
     height: 100%;
-    background-image: url('../../assets/logo.avif');
+    background-image: url('../../../assets/logo.avif');
     background-size: contain;
     background-position: center;
     background-repeat: no-repeat;
@@ -329,10 +330,11 @@
     gap: clamp(0.5rem, 1.5vw, 0.75rem);
 }
 
+/* Update the logo path in mobile menu */
 .mobile-nav__logo-menu {
     width: clamp(24px, 5vw, 28px);
     height: clamp(24px, 5vw, 28px);
-    background-image: url('../../assets/logo.avif');
+    background-image: url('../../../assets/logo.avif');
     background-size: contain;
     background-position: center;
     background-repeat: no-repeat;
