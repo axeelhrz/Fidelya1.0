@@ -809,6 +809,7 @@ to {
 100% { transform: rotate(360deg); }
 }
 
+/* Animaciones de contacto aceleradas */
 @keyframes contact-fadeIn {
 from {
 opacity: 0;
