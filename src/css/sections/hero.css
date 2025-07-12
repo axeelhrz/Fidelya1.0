@@ -7,6 +7,8 @@
     justify-content: center;
     padding: calc(var(--navbar-height) + var(--space-6xl)) var(--section-padding-x) var(--section-padding-y);
     overflow: hidden;
+    
+    /* Fondo base */
     background: var(--bg-primary);
 }
 
@@ -19,6 +21,8 @@
     height: 100vh;
     z-index: 0;
     pointer-events: none;
+    
+    /* EFECTO DE ESTRELLAS EXPANDIDO PARA PANTALLAS SÚPER ANCHAS */
     background: 
         /* Capa 1 - Estrellas principales más grandes */
         radial-gradient(3px 3px at 20px 30px, #eee, transparent),
@@ -50,6 +54,7 @@
         
         var(--primary-bg);
     background-repeat: repeat;
+    /* Tamaño expandido para cubrir pantallas súper anchas */
     background-size: 400px 200px, 380px 180px, 420px 220px, 360px 160px, 390px 190px,
                     320px 120px, 340px 140px, 310px 110px, 330px 130px, 350px 150px,
                     280px 100px, 300px 120px, 270px 90px, 290px 110px, 320px 140px,
@@ -70,6 +75,7 @@
     z-index: 2;
     content: '';
     pointer-events: none;
+    /* Partículas expandidas para pantallas súper anchas */
     background-image: 
         /* Partículas principales */
         radial-gradient(1px 1px at 25px 25px, rgba(255,255,255,0.3), transparent),
@@ -95,6 +101,7 @@
         radial-gradient(1px 1px at 725px 25px, rgba(255,255,255,0.35), transparent),
         radial-gradient(0.5px 0.5px at 775px 125px, rgba(255,255,255,0.25), transparent);
     
+    /* Tamaños expandidos para cubrir pantallas súper anchas */
     background-size: 400px 400px, 380px 380px, 420px 420px, 360px 360px,
                     320px 320px, 340px 340px, 310px 310px, 330px 330px,
                     280px 280px, 300px 300px, 270px 270px, 290px 290px,
@@ -115,6 +122,8 @@
     z-index: 1;
     content: '';
     pointer-events: none;
+
+    /* Luces neón suaves en tonos rosa, rojo y naranja con efecto difuso MENOS OPACO */
     background:
         /* Blob neón rosa principal - efecto etéreo REDUCIDO */
         radial-gradient(ellipse 600px 450px at 15% 25%, var(--hero-neon-pink-bright) 0%, var(--hero-neon-pink) 20%, transparent 50%),
@@ -136,6 +145,8 @@
         radial-gradient(ellipse 400px 300px at 100% 0%, var(--hero-neon-orange) 0%, transparent 40%),
         radial-gradient(ellipse 400px 300px at 0% 100%, var(--hero-neon-red) 0%, transparent 40%),
         radial-gradient(ellipse 400px 300px at 100% 100%, var(--hero-neon-pink-bright) 0%, transparent 40%);
+
+    /* Animación suave de respiración para efecto inmersivo */
     animation: hero-neon-breathe 8s ease-in-out infinite;
 }
 
@@ -197,6 +208,7 @@
         
         /* Halo central difuso REDUCIDO */
         radial-gradient(ellipse 600px 300px at 50% 60%, var(--hero-halo-red) 0%, transparent 60%);
+
     animation: ambient-glow-pulse 12s ease-in-out infinite;
 }
 
@@ -324,7 +336,12 @@
     margin-bottom: var(--space-sm);
     font-weight: 900;
     text-shadow: 0 0 30px rgb(255 255 255 / 10%);
-    background: linear-gradient(135deg, #fff 0%, #f8fafc 30%, #e2e8f0 70%, #cbd5e1 100%);
+    background: linear-gradient(135deg,
+        #fff 0%,
+        #f8fafc 30%,
+        #e2e8f0 70%,
+        #cbd5e1 100%
+    );
     background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -336,7 +353,12 @@
     margin-bottom: var(--space-sm);
     font-weight: 900;
     text-shadow: var(--glow-medium);
-    background: linear-gradient(135deg, var(--starflex-crimson) 0%, var(--starflex-crimson-bright) 30%, var(--starflex-crimson-glow) 70%, #ff6b9d 100%);
+    background: linear-gradient(135deg,
+        var(--starflex-crimson) 0%,
+        var(--starflex-crimson-bright) 30%,
+        var(--starflex-crimson-glow) 70%,
+        #ff6b9d 100%
+    );
     filter: drop-shadow(0 0 20px rgb(255 69 105 / 40%));
     background-clip: text;
     -webkit-background-clip: text;
@@ -350,7 +372,11 @@
     width: 100%;
     height: 4px;
     content: '';
-    background: linear-gradient(90deg, var(--starflex-crimson) 0%, var(--starflex-crimson-bright) 50%, transparent 100%);
+    background: linear-gradient(90deg,
+        var(--starflex-crimson) 0%,
+        var(--starflex-crimson-bright) 50%,
+        transparent 100%
+    );
     border-radius: 2px;
     opacity: 0.8;
     animation: glow-line 6s ease-in-out infinite;
@@ -362,7 +388,12 @@
     font-family: var(--font-primary);
     font-weight: 900;
     text-shadow: 0 0 25px rgb(255 107 53 / 40%);
-    background: linear-gradient(135deg, var(--starflex-orange) 0%, var(--starflex-orange-bright) 30%, #ff8c42 70%, #ff4500 100%);
+    background: linear-gradient(135deg,
+        var(--starflex-orange) 0%,
+        var(--starflex-orange-bright) 30%,
+        #ff8c42 70%,
+        #ff4500 100%
+    );
     filter: drop-shadow(0 0 15px rgb(255 107 53 / 30%));
     background-clip: text;
     -webkit-background-clip: text;
@@ -546,7 +577,10 @@
     margin: var(--space-xl) auto 0;
     filter: drop-shadow(0 0 20px rgb(255 69 105 / 15%));
     border-radius: 20px;
-    box-shadow: 0 20px 60px rgb(0 0 0 / 40%), 0 8px 30px rgb(0 0 0 / 30%), 0 0 0 1px rgb(255 255 255 / 5%);
+    box-shadow:
+        0 20px 60px rgb(0 0 0 / 40%),
+        0 8px 30px rgb(0 0 0 / 30%),
+        0 0 0 1px rgb(255 255 255 / 5%);
 }
 
 .hero__mobile-video-player {
@@ -798,7 +832,12 @@
 /* ===== MODO ALTO CONTRASTE ===== */
 @media (prefers-contrast: high) {
     .hero {
-        background: linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #000000 100%);
+        background: 
+            linear-gradient(135deg, 
+                #000000 0%, 
+                #1a1a1a 50%, 
+                #000000 100%
+            );
     }
 
     .hero::before {
