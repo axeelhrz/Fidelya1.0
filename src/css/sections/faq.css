@@ -418,7 +418,9 @@ transform: scale(0);
 
 /* ===== RESPUESTA (CONTENIDO EXPANDIBLE) PROFESIONAL ===== */
 .faq__answer {
-max-height: 0;
+height: 0;
+visibility: hidden;
+opacity: 0;
 overflow: hidden;
 background: linear-gradient(135deg,
     rgba(0, 0, 0, 0.15) 0%,
@@ -426,21 +428,30 @@ background: linear-gradient(135deg,
     rgba(0, 0, 0, 0.15) 100%
 );
 /* Optimización crítica para la transición de expansión */
-transition: max-height 0.3s cubic-bezier(0.165, 0.84, 0.44, 1), 
-            padding 0.25s cubic-bezier(0.165, 0.84, 0.44, 1);
-contain: content;
+transition: height 0.2s ease-out, 
+            visibility 0s linear 0.2s,
+            opacity 0.2s ease-out,
+            padding 0.2s ease-out;
+transform: translateZ(0);
 }
 
 .faq__answer.active {
-/* Valor fijo para evitar cálculos dinámicos que causan trancado */
-max-height: 1000px;
+height: auto;
+visibility: visible;
+opacity: 1;
 padding: 0 var(--space-2xl) var(--space-2xl);
+transition: height 0.2s ease-out, 
+            visibility 0s linear 0s,
+            opacity 0.2s ease-out,
+            padding 0.2s ease-out;
 }
 
 .faq__answer-content {
 position: relative;
 padding-top: var(--space-lg);
 border-top: 1px solid rgba(255, 69, 105, 0.15);
+/* Pre-renderizado para evitar trancado */
+transform: translateZ(0);
 }
 
 /* Indicador visual de respuesta */
@@ -466,6 +477,8 @@ font-weight: 500;
 line-height: 1.7;
 color: var(--text-secondary);
 opacity: 0.95;
+/* Optimización para texto */
+transform: translateZ(0);
 }
 
 /* Highlights en las respuestas */
@@ -711,7 +724,17 @@ font-size: 1rem;
 }
 
 .faq__answer {
-    transition: max-height 0.2s ease, padding 0.2s ease !important;
+    transition: height 0.1s ease-out, 
+                visibility 0s linear 0.1s,
+                opacity 0.1s ease-out,
+                padding 0.1s ease-out !important;
+}
+
+.faq__answer.active {
+    transition: height 0.1s ease-out, 
+                visibility 0s linear 0s,
+                opacity 0.1s ease-out,
+                padding 0.1s ease-out !important;
 }
 
 .faq__title::after {
@@ -744,8 +767,9 @@ will-change: opacity, transform;
 
 /* Optimización específica para la expansión de respuestas */
 .faq__answer {
-will-change: max-height, padding;
+will-change: height, opacity, visibility;
 transform: translateZ(0);
+contain: content;
 }
 
 /* Optimización para reducir repaints */
@@ -759,6 +783,12 @@ will-change: transform, opacity;
 .faq__answer,
 .faq__icon {
 transform: translate3d(0, 0, 0);
+}
+
+/* Optimización para pre-renderizado de contenido */
+.faq__answer-content,
+.faq__answer-text {
+contain: content;
 }
 
 /* ===== ACCESIBILIDAD MEJORADA ===== */
