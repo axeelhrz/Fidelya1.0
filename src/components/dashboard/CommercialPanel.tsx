@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Target, 
@@ -15,11 +15,41 @@ import {
   CheckCircle,
   Zap,
   Star,
+  Wifi,
+  WifiOff,
+  Database,
+  Play,
+  Pause,
+  Eye,
+  Edit,
+  Filter,
+  Calendar,
+  ArrowUpRight,
+  ArrowDownRight,
+  Minus
 } from 'lucide-react';
-import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
+import { 
+  LineChart, 
+  Line, 
+  ResponsiveContainer, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
+  Area,
+  AreaChart
+} from 'recharts';
 import { useStyles } from '@/lib/useStyles';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
+import { useCommercialData, useLeadsData, useCampaignsData } from '@/hooks/useCommercialData';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface CommercialData {
   month: string;
@@ -36,7 +66,6 @@ interface TooltipPayloadEntry {
   color: string;
 }
 
-
 interface CommercialPanelProps {
   data?: CommercialData[];
   loading?: boolean;
@@ -45,42 +74,58 @@ interface CommercialPanelProps {
 }
 
 export default function CommercialPanel({ 
-  data = [], 
-  loading = false, 
+  data: propData = [], 
+  loading: propLoading = false, 
   onRefresh, 
   onExport 
 }: CommercialPanelProps) {
   const { theme } = useStyles();
+  const { user } = useAuth();
+  const { data: commercialData, loading: commercialLoading, error: commercialError, refresh } = useCommercialData();
+  const { leads, loading: leadsLoading, convertLead, assignLead } = useLeadsData();
+  const { campaigns, loading: campaignsLoading } = useCampaignsData();
+  
   const [selectedPeriod, setSelectedPeriod] = useState('month');
   const [selectedMetric, setSelectedMetric] = useState('cac');
   const [selectedCampaign, setSelectedCampaign] = useState<string | null>(null);
+  const [selectedChannel, setSelectedChannel] = useState<string | null>(null);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [dateRange, setDateRange] = useState({ start: '', end: '' });
 
-  // Mock data mejorado
-  const mockCommercialData: CommercialData[] = [
-    { month: 'Jul', cac: 58.2, ltv: 185.4, leads: 145, conversions: 32, roi: 2.8 },
-    { month: 'Ago', cac: 62.1, ltv: 192.1, leads: 156, conversions: 35, roi: 3.1 },
-    { month: 'Sep', cac: 59.8, ltv: 188.7, leads: 134, conversions: 28, roi: 2.9 },
-    { month: 'Oct', cac: 61.5, ltv: 195.2, leads: 167, conversions: 38, roi: 3.2 },
-    { month: 'Nov', cac: 58.9, ltv: 189.8, leads: 178, conversions: 42, roi: 3.4 },
-    { month: 'Dic', cac: 60.3, ltv: 192.4, leads: 189, conversions: 45, roi: 3.2 },
+  const loading = propLoading || commercialLoading || leadsLoading || campaignsLoading;
+  const error = commercialError;
+
+  // Usar datos reales de Firebase o datos de props como fallback
+  const chartData = propData.length > 0 ? propData : (commercialData?.monthlyTrends.map(trend => ({
+    month: new Date(trend.month + '-01').toLocaleDateString('es-ES', { month: 'short' }),
+    cac: trend.cac,
+    ltv: trend.ltv,
+    leads: trend.leads,
+    conversions: trend.conversions,
+    roi: trend.roas
+  })) || []);
+
+  // Generar datos de canales desde Firebase
+  const channelData = commercialData?.channelPerformance || [
+    { channel: 'Google Ads', leads: 145, conversions: 32, rate: 22.1, color: theme.colors.primary, trend: 'up', spent: 3200, cac: 100, roas: 2.8 },
+    { channel: 'Facebook', leads: 89, conversions: 18, rate: 20.2, color: theme.colors.info, trend: 'up', spent: 1800, cac: 100, roas: 3.1 },
+    { channel: 'Referidos', leads: 67, conversions: 28, rate: 41.8, color: theme.colors.success, trend: 'up', spent: 0, cac: 0, roas: 0 },
+    { channel: 'Orgánico', leads: 234, conversions: 45, rate: 19.2, color: theme.colors.warning, trend: 'stable', spent: 0, cac: 0, roas: 0 },
+    { channel: 'Email', leads: 56, conversions: 12, rate: 21.4, color: theme.colors.error, trend: 'down', spent: 450, cac: 37.5, roas: 2.4 },
   ];
 
-  const channelData = [
-    { channel: 'Google Ads', leads: 145, conversions: 32, rate: 22.1, color: theme.colors.primary, trend: 'up', spent: 3200 },
-    { channel: 'Facebook', leads: 89, conversions: 18, rate: 20.2, color: theme.colors.info, trend: 'up', spent: 1800 },
-    { channel: 'Referidos', leads: 67, conversions: 28, rate: 41.8, color: theme.colors.success, trend: 'up', spent: 0 },
-    { channel: 'Orgánico', leads: 234, conversions: 45, rate: 19.2, color: theme.colors.warning, trend: 'stable', spent: 0 },
-    { channel: 'Email', leads: 56, conversions: 12, rate: 21.4, color: theme.colors.error, trend: 'down', spent: 450 },
-  ];
-
-  const campaignData = [
-    { name: 'Ansiedad Jóvenes', spent: 2500, leads: 45, cac: 55.6, status: 'active', roi: 2.8, performance: 'excellent' },
-    { name: 'Terapia Parejas', spent: 1800, leads: 28, cac: 64.3, status: 'active', roi: 3.2, performance: 'excellent' },
-    { name: 'Depresión Adultos', spent: 3200, leads: 52, cac: 61.5, status: 'paused', roi: 2.1, performance: 'good' },
-    { name: 'Mindfulness', spent: 1200, leads: 18, cac: 66.7, status: 'active', roi: 3.5, performance: 'excellent' },
-  ];
-
-  const commercialData = data.length > 0 ? data : mockCommercialData;
+  // Generar datos de campañas desde Firebase
+  const campaignData = commercialData?.campaignPerformance || campaigns.slice(0, 4).map(campaign => ({
+    id: campaign.id,
+    name: campaign.name,
+    spent: campaign.budget?.spent || 0,
+    leads: campaign.metrics?.clicks || 0,
+    conversions: campaign.metrics?.conversions || 0,
+    cac: campaign.metrics?.cpa || 0,
+    status: campaign.status,
+    roi: campaign.metrics?.roas || 0,
+    performance: campaign.metrics?.roas >= 3 ? 'excellent' : campaign.metrics?.roas >= 2 ? 'good' : 'average'
+  })) || [];
 
   const styles = {
     container: {
@@ -108,12 +153,16 @@ export default function CommercialPanel({
     headerIcon: {
       width: '3rem',
       height: '3rem',
-      background: 'linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%)',
+      background: error 
+        ? 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)'
+        : 'linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%)',
       borderRadius: theme.borderRadius.lg,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      boxShadow: '0 4px 12px rgba(139, 92, 246, 0.3)',
+      boxShadow: error 
+        ? '0 4px 12px rgba(239, 68, 68, 0.3)'
+        : '0 4px 12px rgba(139, 92, 246, 0.3)',
     },
     
     headerContent: {
@@ -132,9 +181,12 @@ export default function CommercialPanel({
     
     subtitle: {
       fontSize: '0.875rem',
-      color: theme.colors.textSecondary,
+      color: error ? theme.colors.error : theme.colors.textSecondary,
       fontWeight: theme.fontWeights.medium,
       margin: 0,
+      display: 'flex',
+      alignItems: 'center',
+      gap: '0.5rem',
     },
     
     headerActions: {
@@ -142,6 +194,16 @@ export default function CommercialPanel({
       alignItems: 'center',
       gap: theme.spacing.sm,
       flexWrap: 'wrap' as const,
+    },
+    
+    connectionStatus: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '0.5rem',
+      padding: '0.5rem 1rem',
+      backgroundColor: error ? `${theme.colors.error}20` : `${theme.colors.success}20`,
+      borderRadius: theme.borderRadius.lg,
+      border: `1px solid ${error ? theme.colors.error : theme.colors.success}30`,
     },
     
     filterContainer: {
@@ -346,6 +408,8 @@ export default function CommercialPanel({
       gap: '0.75rem',
       position: 'relative' as const,
       overflow: 'hidden',
+      cursor: 'pointer',
+      transition: theme.animations.transition,
     },
 
     channelHeader: {
@@ -422,6 +486,62 @@ export default function CommercialPanel({
       backgroundColor: theme.colors.surfaceElevated,
       borderRadius: theme.borderRadius.md,
     },
+
+    campaignActions: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '0.5rem',
+      marginTop: '0.5rem',
+    },
+
+    actionButton: {
+      padding: '0.25rem 0.5rem',
+      borderRadius: theme.borderRadius.sm,
+      border: 'none',
+      backgroundColor: theme.colors.surfaceElevated,
+      color: theme.colors.textSecondary,
+      fontSize: '0.75rem',
+      cursor: 'pointer',
+      transition: theme.animations.transition,
+      display: 'flex',
+      alignItems: 'center',
+      gap: '0.25rem',
+    },
+
+    noDataContainer: {
+      display: 'flex',
+      flexDirection: 'column' as const,
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: theme.spacing.xl,
+      textAlign: 'center' as const,
+      gap: theme.spacing.md,
+    },
+
+    noDataIcon: {
+      width: '4rem',
+      height: '4rem',
+      backgroundColor: `${theme.colors.textSecondary}20`,
+      borderRadius: theme.borderRadius.lg,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+
+    noDataTitle: {
+      fontSize: '1.25rem',
+      fontWeight: theme.fontWeights.semibold,
+      color: theme.colors.textPrimary,
+      margin: 0,
+    },
+
+    noDataDescription: {
+      fontSize: '0.875rem',
+      color: theme.colors.textSecondary,
+      maxWidth: '400px',
+      lineHeight: '1.5',
+      margin: 0,
+    },
   };
 
   // Funciones de utilidad
@@ -429,7 +549,8 @@ export default function CommercialPanel({
     switch (status) {
       case 'active': return theme.colors.success;
       case 'paused': return theme.colors.warning;
-      case 'stopped': return theme.colors.error;
+      case 'completed': return theme.colors.info;
+      case 'draft': return theme.colors.textSecondary;
       default: return theme.colors.textSecondary;
     }
   };
@@ -438,7 +559,8 @@ export default function CommercialPanel({
     switch (status) {
       case 'active': return 'Activa';
       case 'paused': return 'Pausada';
-      case 'stopped': return 'Detenida';
+      case 'completed': return 'Completada';
+      case 'draft': return 'Borrador';
       default: return 'Desconocido';
     }
   };
@@ -447,48 +569,65 @@ export default function CommercialPanel({
     switch (performance) {
       case 'excellent': return <Star size={16} color={theme.colors.success} />;
       case 'good': return <TrendingUp size={16} color={theme.colors.warning} />;
+      case 'average': return <BarChart3 size={16} color={theme.colors.info} />;
       default: return <BarChart3 size={16} color={theme.colors.textSecondary} />;
     }
   };
 
   const getTrendIcon = (trend: string) => {
     switch (trend) {
-      case 'up': return <TrendingUp size={14} color={theme.colors.success} />;
-      case 'down': return <TrendingDown size={14} color={theme.colors.error} />;
-      default: return <div style={{ width: '14px', height: '14px', backgroundColor: theme.colors.textSecondary, borderRadius: '50%' }} />;
+      case 'up': return <ArrowUpRight size={14} color={theme.colors.success} />;
+      case 'down': return <ArrowDownRight size={14} color={theme.colors.error} />;
+      default: return <Minus size={14} color={theme.colors.textSecondary} />;
     }
   };
 
-  // Funciones de cálculo
+  // Funciones de cálculo desde datos reales
   const calculateTotalCAC = () => {
-    return commercialData.reduce((sum, item) => sum + item.cac, 0) / commercialData.length;
+    if (commercialData) {
+      return commercialData.averageCAC;
+    }
+    return chartData.reduce((sum, item) => sum + item.cac, 0) / Math.max(chartData.length, 1);
   };
 
   const calculateTotalLTV = () => {
-    return commercialData.reduce((sum, item) => sum + item.ltv, 0) / commercialData.length;
+    if (commercialData) {
+      return commercialData.averageLTV;
+    }
+    return chartData.reduce((sum, item) => sum + item.ltv, 0) / Math.max(chartData.length, 1);
   };
 
   const calculateLTVCACRatio = () => {
+    if (commercialData) {
+      return commercialData.ltvCacRatio;
+    }
     const avgLTV = calculateTotalLTV();
     const avgCAC = calculateTotalCAC();
-    return avgLTV / avgCAC;
+    return avgCAC > 0 ? avgLTV / avgCAC : 0;
   };
 
   const calculateTotalLeads = () => {
+    if (commercialData) {
+      return commercialData.totalLeads;
+    }
     return channelData.reduce((sum, item) => sum + item.leads, 0);
   };
 
   const calculateConversionRate = () => {
+    if (commercialData) {
+      return commercialData.conversionRate;
+    }
     const totalLeads = calculateTotalLeads();
     const totalConversions = channelData.reduce((sum, item) => sum + item.conversions, 0);
-    return (totalConversions / totalLeads) * 100;
+    return totalLeads > 0 ? (totalConversions / totalLeads) * 100 : 0;
   };
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('es-ES', {
       style: 'currency',
       currency: 'EUR',
-      minimumFractionDigits: 2,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
     }).format(value);
   };
 
@@ -505,6 +644,9 @@ export default function CommercialPanel({
         }}>
           <p style={{
             margin: '0 0 0.5rem 0',
+            fontSize: '0.875rem',
+            fontWeight: theme.fontWeights.semibold,
+            color: theme.colors.textPrimary,
           }}>
             {label}
           </p>
@@ -523,7 +665,8 @@ export default function CommercialPanel({
                 backgroundColor: entry.color,
                 borderRadius: '50%',
               }} />
-              {entry.name}: {entry.name === 'CAC' ? formatCurrency(entry.value) : entry.value}
+              {entry.name}: {entry.name.includes('CAC') || entry.name.includes('LTV') ? formatCurrency(entry.value) : 
+                           entry.name.includes('ROI') ? `${entry.value}x` : entry.value}
             </p>
           ))}
         </div>
@@ -531,6 +674,40 @@ export default function CommercialPanel({
     }
     return null;
   };
+
+  // Manejar error de conexión
+  if (error) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        style={styles.container}
+      >
+        <Card variant="default">
+          <div style={styles.noDataContainer}>
+            <div style={styles.noDataIcon}>
+              <WifiOff size={32} color={theme.colors.textSecondary} />
+            </div>
+            <h3 style={styles.noDataTitle}>Sin conexión a Firebase</h3>
+            <p style={styles.noDataDescription}>
+              No se pueden cargar los datos comerciales. Verifica la conexión a Firebase y que los datos estén sembrados correctamente.
+            </p>
+            <Button
+              variant="primary"
+              icon={RefreshCw}
+              onClick={() => {
+                refresh();
+                onRefresh?.();
+              }}
+            >
+              Reintentar conexión
+            </Button>
+          </div>
+        </Card>
+      </motion.div>
+    );
+  }
 
   return (
     <>
@@ -551,15 +728,29 @@ export default function CommercialPanel({
         <div style={styles.header}>
           <div style={styles.headerLeft}>
             <div style={styles.headerIcon}>
-              <Target size={24} color={theme.colors.textInverse} />
+              {error ? <WifiOff size={24} color={theme.colors.textInverse} /> : <Target size={24} color={theme.colors.textInverse} />}
             </div>
             <div style={styles.headerContent}>
               <h2 style={styles.title}>Pipeline Comercial & Marketing</h2>
-              <p style={styles.subtitle}>Análisis inteligente de conversión y adquisición</p>
+              <p style={styles.subtitle}>
+                {error ? <WifiOff size={16} /> : <Wifi size={16} />}
+                {error ? 'Conecta Firebase para ver datos en tiempo real' : 'Análisis inteligente desde Firebase'}
+              </p>
             </div>
           </div>
           
           <div style={styles.headerActions}>
+            <div style={styles.connectionStatus}>
+              {error ? <WifiOff size={16} color={theme.colors.error} /> : <Wifi size={16} color={theme.colors.success} />}
+              <span style={{ 
+                fontSize: '0.875rem', 
+                fontWeight: theme.fontWeights.semibold,
+                color: error ? theme.colors.error : theme.colors.success
+              }}>
+                {error ? 'Sin conexión' : 'Conectado a Firebase'}
+              </span>
+            </div>
+
             <div style={styles.filterContainer}>
               {['week', 'month', 'quarter', 'year'].map((period) => (
                 <button
@@ -576,12 +767,24 @@ export default function CommercialPanel({
                 </button>
               ))}
             </div>
+
+            <Button
+              variant="outline"
+              size="sm"
+              icon={Filter}
+              onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+            >
+              Filtros
+            </Button>
             
             <Button
               variant="secondary"
               size="sm"
               icon={RefreshCw}
-              onClick={onRefresh}
+              onClick={() => {
+                refresh();
+                onRefresh?.();
+              }}
               loading={loading}
             >
               Actualizar
@@ -592,13 +795,75 @@ export default function CommercialPanel({
               size="sm"
               icon={Download}
               onClick={onExport}
+              disabled={!commercialData}
             >
               Exportar
             </Button>
           </div>
         </div>
 
-        {/* Métricas Principales */}
+        {/* Filtros avanzados */}
+        {showAdvancedFilters && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            style={{
+              marginBottom: theme.spacing.lg,
+              padding: theme.spacing.md,
+              backgroundColor: theme.colors.surfaceElevated,
+              borderRadius: theme.borderRadius.lg,
+              border: `1px solid ${theme.colors.borderLight}`,
+            }}
+          >
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+              gap: theme.spacing.md,
+              alignItems: 'end'
+            }}>
+              <div>
+                <label style={{ fontSize: '0.875rem', color: theme.colors.textSecondary, marginBottom: '0.5rem', display: 'block' }}>
+                  Fecha inicio
+                </label>
+                <input
+                  type="date"
+                  value={dateRange.start}
+                  onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
+                  style={{
+                    width: '100%',
+                    padding: '0.5rem',
+                    borderRadius: theme.borderRadius.md,
+                    border: `1px solid ${theme.colors.borderLight}`,
+                    backgroundColor: theme.colors.surface,
+                  }}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: '0.875rem', color: theme.colors.textSecondary, marginBottom: '0.5rem', display: 'block' }}>
+                  Fecha fin
+                </label>
+                <input
+                  type="date"
+                  value={dateRange.end}
+                  onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
+                  style={{
+                    width: '100%',
+                    padding: '0.5rem',
+                    borderRadius: theme.borderRadius.md,
+                    border: `1px solid ${theme.colors.borderLight}`,
+                    backgroundColor: theme.colors.surface,
+                  }}
+                />
+              </div>
+              <Button variant="primary" size="sm">
+                Aplicar filtros
+              </Button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Métricas Principales desde Firebase */}
         <div style={styles.metricsGrid}>
           <Card variant="default" hover>
             <div style={styles.metricCard}>
@@ -618,7 +883,7 @@ export default function CommercialPanel({
                 </div>
               </div>
               <h3 style={styles.metricValue}>
-                {formatCurrency(calculateTotalCAC())}
+                {loading ? '...' : formatCurrency(calculateTotalCAC())}
               </h3>
               <p style={styles.metricLabel}>CAC Promedio</p>
             </div>
@@ -642,7 +907,7 @@ export default function CommercialPanel({
                 </div>
               </div>
               <h3 style={styles.metricValue}>
-                {formatCurrency(calculateTotalLTV())}
+                {loading ? '...' : formatCurrency(calculateTotalLTV())}
               </h3>
               <p style={styles.metricLabel}>LTV Promedio</p>
             </div>
@@ -666,7 +931,7 @@ export default function CommercialPanel({
                 </div>
               </div>
               <h3 style={styles.metricValue}>
-                {calculateLTVCACRatio().toFixed(1)}x
+                {loading ? '...' : `${calculateLTVCACRatio().toFixed(1)}x`}
               </h3>
               <p style={styles.metricLabel}>Ratio LTV/CAC</p>
             </div>
@@ -690,7 +955,7 @@ export default function CommercialPanel({
                 </div>
               </div>
               <h3 style={styles.metricValue}>
-                {calculateTotalLeads()}
+                {loading ? '...' : calculateTotalLeads().toLocaleString()}
               </h3>
               <p style={styles.metricLabel}>Total Leads</p>
             </div>
@@ -714,18 +979,32 @@ export default function CommercialPanel({
                 </div>
               </div>
               <h3 style={styles.metricValue}>
-                {calculateConversionRate().toFixed(1)}%
+                {loading ? '...' : `${calculateConversionRate().toFixed(1)}%`}
               </h3>
               <p style={styles.metricLabel}>Conversión</p>
             </div>
           </Card>
         </div>
 
-        {/* Rendimiento por Canal */}
+        {/* Rendimiento por Canal desde Firebase */}
         <div style={styles.channelGrid}>
           {channelData.map((channel) => (
-            <Card key={channel.channel} variant="default" hover>
-              <div style={styles.channelCard}>
+            <Card 
+              key={channel.channel} 
+              variant="default" 
+              hover
+              style={{
+                border: selectedChannel === channel.channel 
+                  ? `2px solid ${theme.colors.primary}` 
+                  : undefined
+              }}
+            >
+              <div 
+                style={styles.channelCard}
+                onClick={() => setSelectedChannel(
+                  selectedChannel === channel.channel ? null : channel.channel
+                )}
+              >
                 <div style={styles.channelHeader}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <div 
@@ -741,7 +1020,7 @@ export default function CommercialPanel({
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                     {getTrendIcon(channel.trend)}
                     <span style={{ fontSize: '0.75rem', color: theme.colors.textTertiary }}>
-                      Tendencia
+                      {channel.trend === 'up' ? '+' : channel.trend === 'down' ? '-' : ''}
                     </span>
                   </div>
                 </div>
@@ -761,9 +1040,31 @@ export default function CommercialPanel({
                   </div>
                   <div style={styles.channelStat}>
                     <div style={{ fontWeight: theme.fontWeights.bold, color: channel.color, fontSize: '1rem' }}>
-                      {channel.rate}%
+                      {channel.rate.toFixed(1)}%
                     </div>
                     <div style={{ color: theme.colors.textSecondary }}>Tasa</div>
+                  </div>
+                </div>
+
+                {/* Métricas adicionales */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, 1fr)',
+                  gap: '0.5rem',
+                  marginTop: '0.5rem',
+                  fontSize: '0.75rem'
+                }}>
+                  <div style={styles.channelStat}>
+                    <div style={{ fontWeight: theme.fontWeights.bold, color: theme.colors.textPrimary }}>
+                      {formatCurrency(channel.spent)}
+                    </div>
+                    <div style={{ color: theme.colors.textSecondary }}>Invertido</div>
+                  </div>
+                  <div style={styles.channelStat}>
+                    <div style={{ fontWeight: theme.fontWeights.bold, color: theme.colors.textPrimary }}>
+                      {channel.roas > 0 ? `${channel.roas.toFixed(1)}x` : 'N/A'}
+                    </div>
+                    <div style={{ color: theme.colors.textSecondary }}>ROAS</div>
                   </div>
                 </div>
               </div>
@@ -771,11 +1072,11 @@ export default function CommercialPanel({
           ))}
         </div>
 
-        {/* Campañas Activas */}
+        {/* Campañas Activas desde Firebase */}
         <div style={styles.campaignGrid}>
           {campaignData.map((campaign) => (
             <Card 
-              key={campaign.name} 
+              key={campaign.id || campaign.name} 
               variant="default" 
               hover
               style={{
@@ -843,19 +1144,67 @@ export default function CommercialPanel({
                       color: campaign.roi >= 3 ? theme.colors.success : 
                              campaign.roi >= 2 ? theme.colors.warning : theme.colors.error
                     }}>
-                      {campaign.roi}x
+                      {campaign.roi.toFixed(1)}x
                     </div>
                   </div>
+                </div>
+
+                {/* Acciones de campaña */}
+                <div style={styles.campaignActions}>
+                  <button
+                    style={{
+                      ...styles.actionButton,
+                      backgroundColor: campaign.status === 'active' ? `${theme.colors.warning}20` : `${theme.colors.success}20`,
+                      color: campaign.status === 'active' ? theme.colors.warning : theme.colors.success,
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      // Aquí iría la lógica para pausar/reanudar campaña
+                    }}
+                  >
+                    {campaign.status === 'active' ? <Pause size={12} /> : <Play size={12} />}
+                    {campaign.status === 'active' ? 'Pausar' : 'Activar'}
+                  </button>
+                  <button
+                    style={{
+                      ...styles.actionButton,
+                      backgroundColor: `${theme.colors.info}20`,
+                      color: theme.colors.info,
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      // Aquí iría la lógica para ver detalles
+                    }}
+                  >
+                    <Eye size={12} />
+                    Ver
+                  </button>
+                  <button
+                    style={{
+                      ...styles.actionButton,
+                      backgroundColor: `${theme.colors.primary}20`,
+                      color: theme.colors.primary,
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      // Aquí iría la lógica para editar
+                    }}
+                  >
+                    <Edit size={12} />
+                    Editar
+                  </button>
                 </div>
               </div>
             </Card>
           ))}
         </div>
 
-        {/* Gráfico de Evolución CAC */}
+        {/* Gráfico de Evolución desde datos reales */}
         <Card variant="default" style={styles.chartContainer}>
           <div style={styles.chartHeader}>
-            <h3 style={styles.chartTitle}>Evolución CAC - 6 meses</h3>
+            <h3 style={styles.chartTitle}>
+              Evolución {selectedMetric.toUpperCase()} - {chartData.length} meses
+            </h3>
             <div style={styles.chartControls}>
               <div style={styles.filterContainer}>
                 {['cac', 'ltv', 'roi'].map((metric) => (
@@ -879,11 +1228,16 @@ export default function CommercialPanel({
             {loading ? (
               <div style={styles.loadingContainer}>
                 <div style={styles.loadingSpinner} />
-                <span style={styles.loadingText}>Cargando datos comerciales...</span>
+                <span style={styles.loadingText}>Cargando datos desde Firebase...</span>
+              </div>
+            ) : chartData.length === 0 ? (
+              <div style={styles.loadingContainer}>
+                <Database size={32} color={theme.colors.textSecondary} />
+                <span style={styles.loadingText}>No hay datos disponibles</span>
               </div>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={commercialData}>
+                <AreaChart data={chartData}>
                   <defs>
                     <linearGradient id="colorCAC" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor={theme.colors.primary} stopOpacity={0.3}/>
@@ -892,6 +1246,10 @@ export default function CommercialPanel({
                     <linearGradient id="colorLTV" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor={theme.colors.success} stopOpacity={0.3}/>
                       <stop offset="95%" stopColor={theme.colors.success} stopOpacity={0}/>
+                    </linearGradient>
+                    <linearGradient id="colorROI" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={theme.colors.warning} stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor={theme.colors.warning} stopOpacity={0}/>
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke={theme.colors.borderLight} />
@@ -903,16 +1261,17 @@ export default function CommercialPanel({
                   <YAxis 
                     stroke={theme.colors.textSecondary}
                     fontSize={12}
-                    tickFormatter={(value) => selectedMetric === 'roi' ? `${value}x` : `€${value}`}
+                    tickFormatter={(value) => selectedMetric === 'roi' ? `${value}x` : formatCurrency(value)}
                   />
                   <Tooltip content={<CustomTooltip />} />
                   
                   {selectedMetric === 'cac' && (
-                    <Line
+                    <Area
                       type="monotone"
                       dataKey="cac"
                       stroke={theme.colors.primary}
                       strokeWidth={3}
+                      fill="url(#colorCAC)"
                       dot={{ fill: theme.colors.primary, strokeWidth: 0, r: 4 }}
                       activeDot={{ r: 6, fill: theme.colors.primary }}
                       name="CAC"
@@ -920,11 +1279,12 @@ export default function CommercialPanel({
                   )}
                   
                   {selectedMetric === 'ltv' && (
-                    <Line
+                    <Area
                       type="monotone"
                       dataKey="ltv"
                       stroke={theme.colors.success}
                       strokeWidth={3}
+                      fill="url(#colorLTV)"
                       dot={{ fill: theme.colors.success, strokeWidth: 0, r: 4 }}
                       activeDot={{ r: 6, fill: theme.colors.success }}
                       name="LTV"
@@ -932,23 +1292,131 @@ export default function CommercialPanel({
                   )}
                   
                   {selectedMetric === 'roi' && (
-                    <Line
+                    <Area
                       type="monotone"
                       dataKey="roi"
                       stroke={theme.colors.warning}
                       strokeWidth={3}
+                      fill="url(#colorROI)"
                       dot={{ fill: theme.colors.warning, strokeWidth: 0, r: 4 }}
                       activeDot={{ r: 6, fill: theme.colors.warning }}
                       name="ROI"
                     />
                   )}
-                </LineChart>
+                </AreaChart>
               </ResponsiveContainer>
             )}
           </div>
         </Card>
 
-        {/* Resumen y Recomendaciones */}
+        {/* Gráfico de distribución de leads por fuente */}
+        <Card variant="default" style={styles.chartContainer}>
+          <div style={styles.chartHeader}>
+            <h3 style={styles.chartTitle}>Distribución de Leads por Canal</h3>
+            <div style={styles.chartControls}>
+              <Button variant="outline" size="sm" icon={Eye}>
+                Ver detalles
+              </Button>
+            </div>
+          </div>
+          
+          <div style={styles.chartContent}>
+            {loading ? (
+              <div style={styles.loadingContainer}>
+                <div style={styles.loadingSpinner} />
+                <span style={styles.loadingText}>Cargando distribución...</span>
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={channelData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ channel, leads, percent }) => `${channel}: ${leads} (${(percent * 100).toFixed(0)}%)`}
+                    outerRadius={120}
+                    fill="#8884d8"
+                    dataKey="leads"
+                  >
+                    {channelData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    formatter={(value: number, name: string) => [value, 'Leads']}
+                    labelFormatter={(label) => `Canal: ${label}`}
+                  />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </Card>
+
+        {/* Análisis de conversión por embudo */}
+        <Card variant="default" style={styles.chartContainer}>
+          <div style={styles.chartHeader}>
+            <h3 style={styles.chartTitle}>Embudo de Conversión</h3>
+            <div style={styles.chartControls}>
+              <div style={styles.filterContainer}>
+                {channelData.slice(0, 3).map((channel) => (
+                  <button
+                    key={channel.channel}
+                    onClick={() => setSelectedChannel(
+                      selectedChannel === channel.channel ? null : channel.channel
+                    )}
+                    style={{
+                      ...styles.filterButton,
+                      ...(selectedChannel === channel.channel ? styles.filterButtonActive : {})
+                    }}
+                  >
+                    {channel.channel}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+          
+          <div style={styles.chartContent}>
+            {loading ? (
+              <div style={styles.loadingContainer}>
+                <div style={styles.loadingSpinner} />
+                <span style={styles.loadingText}>Cargando embudo...</span>
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart 
+                  data={channelData.filter(channel => 
+                    !selectedChannel || channel.channel === selectedChannel
+                  )}
+                  layout="horizontal"
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke={theme.colors.borderLight} />
+                  <XAxis type="number" stroke={theme.colors.textSecondary} fontSize={12} />
+                  <YAxis 
+                    type="category" 
+                    dataKey="channel" 
+                    stroke={theme.colors.textSecondary} 
+                    fontSize={12}
+                    width={100}
+                  />
+                  <Tooltip 
+                    formatter={(value: number, name: string) => [
+                      value, 
+                      name === 'leads' ? 'Leads' : 'Conversiones'
+                    ]}
+                  />
+                  <Legend />
+                  <Bar dataKey="leads" fill={theme.colors.info} name="Leads" />
+                  <Bar dataKey="conversions" fill={theme.colors.success} name="Conversiones" />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </Card>
+
+        {/* Resumen y Recomendaciones basadas en datos reales */}
         <div style={styles.summaryGrid}>
           <Card variant="default" hover>
             <div style={styles.summaryCard}>
@@ -957,24 +1425,20 @@ export default function CommercialPanel({
                 <h4 style={styles.summaryTitle}>Canales Exitosos</h4>
               </div>
               <div style={styles.summaryContent}>
-                <div style={styles.summaryItem}>
-                  <span style={styles.summaryItemLabel}>Referidos - Mejor conversión</span>
-                  <span style={{...styles.summaryItemValue, color: theme.colors.success}}>
-                    41.8%
-                  </span>
-                </div>
-                <div style={styles.summaryItem}>
-                  <span style={styles.summaryItemLabel}>Google Ads - Más volumen</span>
-                  <span style={{...styles.summaryItemValue, color: theme.colors.success}}>
-                    145 leads
-                  </span>
-                </div>
-                <div style={styles.summaryItem}>
-                  <span style={styles.summaryItemLabel}>Mindfulness - Mejor ROI</span>
-                  <span style={{...styles.summaryItemValue, color: theme.colors.success}}>
-                    3.5x
-                  </span>
-                </div>
+                {channelData
+                  .filter(channel => channel.rate > 20)
+                  .sort((a, b) => b.rate - a.rate)
+                  .slice(0, 3)
+                  .map((channel, index) => (
+                    <div key={index} style={styles.summaryItem}>
+                      <span style={styles.summaryItemLabel}>
+                        {channel.channel} - {channel.rate > 30 ? 'Excelente' : 'Buena'} conversión
+                      </span>
+                      <span style={{...styles.summaryItemValue, color: theme.colors.success}}>
+                        {channel.rate.toFixed(1)}%
+                      </span>
+                    </div>
+                  ))}
               </div>
             </div>
           </Card>
@@ -983,27 +1447,36 @@ export default function CommercialPanel({
             <div style={styles.summaryCard}>
               <div style={styles.summaryHeader}>
                 <AlertCircle size={20} color={theme.colors.warning} />
-                <h4 style={styles.summaryTitle}>Oportunidades</h4>
+                <h4 style={styles.summaryTitle}>Oportunidades de Mejora</h4>
               </div>
               <div style={styles.summaryContent}>
-                <div style={styles.summaryItem}>
-                  <span style={styles.summaryItemLabel}>Email marketing</span>
-                  <span style={{...styles.summaryItemValue, color: theme.colors.warning}}>
-                    Tendencia bajista
-                  </span>
-                </div>
-                <div style={styles.summaryItem}>
-                  <span style={styles.summaryItemLabel}>Depresión Adultos</span>
-                  <span style={{...styles.summaryItemValue, color: theme.colors.warning}}>
-                    ROI bajo (2.1x)
-                  </span>
-                </div>
-                <div style={styles.summaryItem}>
-                  <span style={styles.summaryItemLabel}>CAC promedio</span>
-                  <span style={{...styles.summaryItemValue, color: theme.colors.warning}}>
-                    Optimizable
-                  </span>
-                </div>
+                {channelData
+                  .filter(channel => channel.trend === 'down' || channel.rate < 15)
+                  .slice(0, 3)
+                  .map((channel, index) => (
+                    <div key={index} style={styles.summaryItem}>
+                      <span style={styles.summaryItemLabel}>
+                        {channel.channel} - {channel.trend === 'down' ? 'Tendencia bajista' : 'Baja conversión'}
+                      </span>
+                      <span style={{...styles.summaryItemValue, color: theme.colors.warning}}>
+                        {channel.trend === 'down' ? 'Revisar' : `${channel.rate.toFixed(1)}%`}
+                      </span>
+                    </div>
+                  ))}
+                
+                {campaignData
+                  .filter(campaign => campaign.roi < 2.5)
+                  .slice(0, 2)
+                  .map((campaign, index) => (
+                    <div key={`campaign-${index}`} style={styles.summaryItem}>
+                      <span style={styles.summaryItemLabel}>
+                        {campaign.name} - ROI bajo
+                      </span>
+                      <span style={{...styles.summaryItemValue, color: theme.colors.warning}}>
+                        {campaign.roi.toFixed(1)}x
+                      </span>
+                    </div>
+                  ))}
               </div>
             </div>
           </Card>
@@ -1015,28 +1488,256 @@ export default function CommercialPanel({
                 <h4 style={styles.summaryTitle}>Optimización Automática IA</h4>
               </div>
               <div style={styles.summaryContent}>
+                {/* Recomendaciones basadas en datos reales */}
+                {calculateLTVCACRatio() < 3 && (
+                  <div style={styles.summaryItem}>
+                    <span style={styles.summaryItemLabel}>Optimizar ratio LTV/CAC</span>
+                    <span style={{...styles.summaryItemValue, color: theme.colors.primary}}>
+                      +{((3 - calculateLTVCACRatio()) * 100).toFixed(0)}% ROI
+                    </span>
+                  </div>
+                )}
+                
+                {channelData.find(c => c.channel === 'Referidos' && c.rate > 30) && (
+                  <div style={styles.summaryItem}>
+                    <span style={styles.summaryItemLabel}>Programa incentivos referidos</span>
+                    <span style={{...styles.summaryItemValue, color: theme.colors.primary}}>
+                      +25% conversión
+                    </span>
+                  </div>
+                )}
+                
+                {channelData.find(c => c.trend === 'down') && (
+                  <div style={styles.summaryItem}>
+                    <span style={styles.summaryItemLabel}>Reactivar canales en declive</span>
+                    <span style={{...styles.summaryItemValue, color: theme.colors.primary}}>
+                      +15% leads
+                    </span>
+                  </div>
+                )}
+
+                {calculateConversionRate() < 20 && (
+                  <div style={styles.summaryItem}>
+                    <span style={styles.summaryItemLabel}>Optimizar landing pages</span>
+                    <span style={{...styles.summaryItemValue, color: theme.colors.primary}}>
+                      +{(20 - calculateConversionRate()).toFixed(1)}% conversión
+                    </span>
+                  </div>
+                )}
+
+                {campaignData.some(c => c.roi < 2) && (
+                  <div style={styles.summaryItem}>
+                    <span style={styles.summaryItemLabel}>Pausar campañas de bajo ROI</span>
+                    <span style={{...styles.summaryItemValue, color: theme.colors.primary}}>
+                      -30% CAC
+                    </span>
+                  </div>
+                )}
+
                 <div style={styles.summaryItem}>
-                  <span style={styles.summaryItemLabel}>Redirigir 30% presupuesto</span>
+                  <span style={styles.summaryItemLabel}>Redistribuir presupuesto automático</span>
                   <span style={{...styles.summaryItemValue, color: theme.colors.primary}}>
-                    +18% ROI
-                  </span>
-                </div>
-                <div style={styles.summaryItem}>
-                  <span style={styles.summaryItemLabel}>Programa incentivos referidos</span>
-                  <span style={{...styles.summaryItemValue, color: theme.colors.primary}}>
-                    +25% conversión
-                  </span>
-                </div>
-                <div style={styles.summaryItem}>
-                  <span style={styles.summaryItemLabel}>Optimizar email campaigns</span>
-                  <span style={{...styles.summaryItemValue, color: theme.colors.primary}}>
-                    +15% engagement
+                    +18% ROI general
                   </span>
                 </div>
               </div>
             </div>
           </Card>
         </div>
+
+        {/* Leads recientes desde Firebase */}
+        {leads.length > 0 && (
+          <Card variant="default" style={styles.chartContainer}>
+            <div style={styles.chartHeader}>
+              <h3 style={styles.chartTitle}>Leads Recientes</h3>
+              <div style={styles.chartControls}>
+                <Button variant="outline" size="sm">
+                  Ver todos
+                </Button>
+              </div>
+            </div>
+            
+            <div style={{ padding: theme.spacing.md }}>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+                gap: theme.spacing.sm,
+                maxHeight: '300px',
+                overflowY: 'auto'
+              }}>
+                {leads.slice(0, 6).map((lead) => (
+                  <div
+                    key={lead.id}
+                    style={{
+                      padding: theme.spacing.sm,
+                      backgroundColor: theme.colors.surfaceElevated,
+                      borderRadius: theme.borderRadius.md,
+                      border: `1px solid ${theme.colors.borderLight}`,
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
+                    }}
+                  >
+                    <div>
+                      <div style={{
+                        fontSize: '0.875rem',
+                        fontWeight: theme.fontWeights.semibold,
+                        color: theme.colors.textPrimary
+                      }}>
+                        {lead.firstName} {lead.lastName}
+                      </div>
+                      <div style={{
+                        fontSize: '0.75rem',
+                        color: theme.colors.textSecondary
+                      }}>
+                        {lead.source} • {lead.status}
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.25rem' }}>
+                      {lead.status === 'new' && (
+                        <button
+                          style={{
+                            ...styles.actionButton,
+                            backgroundColor: `${theme.colors.success}20`,
+                            color: theme.colors.success,
+                          }}
+                          onClick={() => convertLead(lead.id, 200, 'Convertido desde panel')}
+                        >
+                          Convertir
+                        </button>
+                      )}
+                      <button
+                        style={{
+                          ...styles.actionButton,
+                          backgroundColor: `${theme.colors.info}20`,
+                          color: theme.colors.info,
+                        }}
+                      >
+                        <Eye size={12} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Card>
+        )}
+
+        {/* Métricas de rendimiento en tiempo real */}
+        <Card variant="default" style={styles.chartContainer}>
+          <div style={styles.chartHeader}>
+            <h3 style={styles.chartTitle}>Rendimiento en Tiempo Real</h3>
+            <div style={styles.chartControls}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                fontSize: '0.75rem',
+                color: theme.colors.textSecondary
+              }}>
+                <div style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  backgroundColor: theme.colors.success,
+                  animation: 'pulse 2s infinite'
+                }} />
+                Actualizando cada 30s
+              </div>
+            </div>
+          </div>
+          
+          <div style={{
+            padding: theme.spacing.md,
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+            gap: theme.spacing.md
+          }}>
+            <div style={{
+              textAlign: 'center',
+              padding: theme.spacing.sm,
+              backgroundColor: theme.colors.surfaceElevated,
+              borderRadius: theme.borderRadius.md
+            }}>
+              <div style={{
+                fontSize: '1.5rem',
+                fontWeight: theme.fontWeights.bold,
+                color: theme.colors.success
+              }}>
+                {leads.filter(l => l.status === 'new').length}
+              </div>
+              <div style={{
+                fontSize: '0.75rem',
+                color: theme.colors.textSecondary
+              }}>
+                Leads nuevos hoy
+              </div>
+            </div>
+
+            <div style={{
+              textAlign: 'center',
+              padding: theme.spacing.sm,
+              backgroundColor: theme.colors.surfaceElevated,
+              borderRadius: theme.borderRadius.md
+            }}>
+              <div style={{
+                fontSize: '1.5rem',
+                fontWeight: theme.fontWeights.bold,
+                color: theme.colors.primary
+              }}>
+                {leads.filter(l => l.status === 'converted').length}
+              </div>
+              <div style={{
+                fontSize: '0.75rem',
+                color: theme.colors.textSecondary
+              }}>
+                Conversiones hoy
+              </div>
+            </div>
+
+            <div style={{
+              textAlign: 'center',
+              padding: theme.spacing.sm,
+              backgroundColor: theme.colors.surfaceElevated,
+              borderRadius: theme.borderRadius.md
+            }}>
+              <div style={{
+                fontSize: '1.5rem',
+                fontWeight: theme.fontWeights.bold,
+                color: theme.colors.warning
+              }}>
+                {campaigns.filter(c => c.status === 'active').length}
+              </div>
+              <div style={{
+                fontSize: '0.75rem',
+                color: theme.colors.textSecondary
+              }}>
+                Campañas activas
+              </div>
+            </div>
+
+            <div style={{
+              textAlign: 'center',
+              padding: theme.spacing.sm,
+              backgroundColor: theme.colors.surfaceElevated,
+              borderRadius: theme.borderRadius.md
+            }}>
+              <div style={{
+                fontSize: '1.5rem',
+                fontWeight: theme.fontWeights.bold,
+                color: commercialData ? theme.colors.info : theme.colors.textSecondary
+              }}>
+                {commercialData ? formatCurrency(commercialData.totalLeads * commercialData.averageCAC) : '€0'}
+              </div>
+              <div style={{
+                fontSize: '0.75rem',
+                color: theme.colors.textSecondary
+              }}>
+                Inversión total
+              </div>
+            </div>
+          </div>
+        </Card>
       </motion.div>
     </>
   );
