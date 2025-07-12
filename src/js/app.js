@@ -21,6 +21,8 @@ let isMobile = window.innerWidth <= 1023;
 let isReducedMotion = false;
 let performanceMode = false;
 
+// ... existing code ...
+
 // ===== CONFIGURACIÓN GLOBAL ULTRA-OPTIMIZADA =====
 const CONFIG = {
     // Configuración de animaciones ultra-optimizada
@@ -38,7 +40,7 @@ const CONFIG = {
     // Rutas de imágenes optimizadas
     IMAGE_PATHS: {
         hero: {
-            avif: './assets/phones/Hero.avif'
+            avif: './assets/phones/Hero.mp4' // Changed from .avif to .mp4
         },
         logo: {
             avif: './assets/logo.avif'
