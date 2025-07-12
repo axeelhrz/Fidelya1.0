@@ -1,6 +1,19 @@
 import { BaseFirebaseService, FirebaseDocument } from './firebaseService';
 import { COLLECTIONS } from '@/lib/firebase';
 import { Session } from './financialService';
+import { 
+  collection, 
+  query, 
+  where, 
+  orderBy, 
+  limit,
+  onSnapshot,
+  getDocs,
+  Timestamp,
+  doc,
+  getDoc
+} from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 // Interfaces para datos clínicos
 export interface Patient extends FirebaseDocument {
@@ -118,6 +131,11 @@ export interface ClinicalMetrics {
   therapistUtilization: { [therapistId: string]: number };
   waitingListSize: number;
   averageWaitTime: number;
+  lastUpdated: Date;
+  totalPatients: number;
+  totalTherapists: number;
+  totalSessions: number;
+  activeAlerts: number;
 }
 
 // Servicios especializados
@@ -163,6 +181,42 @@ class PatientService extends BaseFirebaseService<Patient> {
       patient.email.toLowerCase().includes(term) ||
       patient.phone.includes(term)
     );
+  }
+
+  // Suscripción en tiempo real para pacientes
+  subscribeToActivePatients(centerId: string, callback: (patients: Patient[]) => void): () => void {
+    try {
+      const q = query(
+        collection(db, COLLECTIONS.CENTERS, centerId, this.collectionName),
+        where('status', '==', 'active'),
+        orderBy('lastName', 'asc')
+      );
+
+      return onSnapshot(q, (snapshot) => {
+        const patients = snapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            ...data,
+            createdAt: data.createdAt?.toDate() || new Date(),
+            updatedAt: data.updatedAt?.toDate() || new Date(),
+            dateOfBirth: data.dateOfBirth?.toDate() || new Date(),
+            lastSession: data.lastSession?.toDate() || null,
+            insuranceInfo: data.insuranceInfo ? {
+              ...data.insuranceInfo,
+              validUntil: data.insuranceInfo.validUntil?.toDate() || null
+            } : undefined
+          } as Patient;
+        });
+        callback(patients);
+      }, (error) => {
+        console.error('Error in patients subscription:', error);
+        callback([]);
+      });
+    } catch (error) {
+      console.error('Failed to subscribe to patients:', error);
+      return () => {};
+    }
   }
 }
 
@@ -223,6 +277,36 @@ class TherapistService extends BaseFirebaseService<Therapist> {
       utilization,
       weeklyHours
     };
+  }
+
+  // Suscripción en tiempo real para terapeutas
+  subscribeToActiveTherapists(centerId: string, callback: (therapists: Therapist[]) => void): () => void {
+    try {
+      const q = query(
+        collection(db, COLLECTIONS.CENTERS, centerId, this.collectionName),
+        where('status', '==', 'active'),
+        orderBy('lastName', 'asc')
+      );
+
+      return onSnapshot(q, (snapshot) => {
+        const therapists = snapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            ...data,
+            createdAt: data.createdAt?.toDate() || new Date(),
+            updatedAt: data.updatedAt?.toDate() || new Date()
+          } as Therapist;
+        });
+        callback(therapists);
+      }, (error) => {
+        console.error('Error in therapists subscription:', error);
+        callback([]);
+      });
+    } catch (error) {
+      console.error('Failed to subscribe to therapists:', error);
+      return () => {};
+    }
   }
 }
 
@@ -325,6 +409,37 @@ class AssessmentService extends BaseFirebaseService<ClinicalAssessment> {
       return 0;
     }
   }
+
+  // Suscripción en tiempo real para evaluaciones
+  subscribeToAssessments(centerId: string, callback: (assessments: ClinicalAssessment[]) => void): () => void {
+    try {
+      const q = query(
+        collection(db, COLLECTIONS.CENTERS, centerId, this.collectionName),
+        orderBy('createdAt', 'desc'),
+        limit(100)
+      );
+
+      return onSnapshot(q, (snapshot) => {
+        const assessments = snapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            ...data,
+            createdAt: data.createdAt?.toDate() || new Date(),
+            updatedAt: data.updatedAt?.toDate() || new Date(),
+            nextAssessmentDate: data.nextAssessmentDate?.toDate() || null
+          } as ClinicalAssessment;
+        });
+        callback(assessments);
+      }, (error) => {
+        console.error('Error in assessments subscription:', error);
+        callback([]);
+      });
+    } catch (error) {
+      console.error('Failed to subscribe to assessments:', error);
+      return () => {};
+    }
+  }
 }
 
 class ClinicalAlertService extends BaseFirebaseService<ClinicalAlert> {
@@ -402,9 +517,44 @@ class SessionService extends BaseFirebaseService<Session> {
       orderBy: { field: 'date', direction: 'desc' }
     });
   }
+
+  // Suscripción en tiempo real para sesiones
+  subscribeToRecentSessions(centerId: string, callback: (sessions: Session[]) => void, days: number = 30): () => void {
+    try {
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - days);
+      
+      const q = query(
+        collection(db, COLLECTIONS.CENTERS, centerId, this.collectionName),
+        where('date', '>=', Timestamp.fromDate(startDate)),
+        orderBy('date', 'desc'),
+        limit(500)
+      );
+
+      return onSnapshot(q, (snapshot) => {
+        const sessions = snapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            ...data,
+            createdAt: data.createdAt?.toDate() || new Date(),
+            updatedAt: data.updatedAt?.toDate() || new Date(),
+            date: data.date?.toDate() || new Date()
+          } as Session;
+        });
+        callback(sessions);
+      }, (error) => {
+        console.error('Error in sessions subscription:', error);
+        callback([]);
+      });
+    } catch (error) {
+      console.error('Failed to subscribe to sessions:', error);
+      return () => {};
+    }
+  }
 }
 
-// Servicio principal para datos clínicos
+// Servicio principal para datos clínicos con capacidades en tiempo real
 export class ClinicalService {
   private patientService = new PatientService();
   private therapistService = new TherapistService();
@@ -412,10 +562,22 @@ export class ClinicalService {
   private alertService = new ClinicalAlertService();
   private sessionService = new SessionService();
 
-  async getClinicalMetrics(centerId: string): Promise<ClinicalMetrics> {
+  // Cache para métricas
+  private metricsCache: { [centerId: string]: { data: ClinicalMetrics; timestamp: number } } = {};
+  private readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
+
+  async getClinicalMetrics(centerId: string, useCache: boolean = true): Promise<ClinicalMetrics> {
+    // Verificar cache
+    if (useCache && this.metricsCache[centerId]) {
+      const cached = this.metricsCache[centerId];
+      if (Date.now() - cached.timestamp < this.CACHE_DURATION) {
+        return cached.data;
+      }
+    }
+
     try {
       // Obtener datos en paralelo
-      const [patients, therapists, sessions] = await Promise.all([
+      const [patients, therapists, sessions, assessments] = await Promise.all([
         this.patientService.getActivePatients(centerId),
         this.therapistService.getActiveTherapists(centerId),
         this.sessionService.getAllSessions(centerId),
@@ -489,7 +651,10 @@ export class ClinicalService {
         ? (dischargedPatients.length / (totalPatients + dischargedPatients.length)) * 100 
         : 0;
 
-      return {
+      // Obtener alertas activas
+      const activeAlerts = await this.alertService.getActiveAlerts(centerId);
+
+      const metrics: ClinicalMetrics = {
         occupancyRate,
         cancellationRate,
         noShowRate,
@@ -502,12 +667,83 @@ export class ClinicalService {
         dischargeRate,
         therapistUtilization,
         waitingListSize: 0, // Implementar lista de espera
-        averageWaitTime: 0 // Implementar tiempo de espera promedio
+        averageWaitTime: 0, // Implementar tiempo de espera promedio
+        lastUpdated: new Date(),
+        totalPatients,
+        totalTherapists: therapists.length,
+        totalSessions: totalScheduledSessions,
+        activeAlerts: activeAlerts.length
       };
+
+      // Actualizar cache
+      this.metricsCache[centerId] = {
+        data: metrics,
+        timestamp: Date.now()
+      };
+
+      return metrics;
     } catch (error) {
       console.error('Error getting clinical metrics:', error);
       throw error;
     }
+  }
+
+  // Suscripción en tiempo real para métricas clínicas
+  subscribeToMetrics(centerId: string, callback: (metrics: ClinicalMetrics) => void): () => void {
+    let unsubscribeFunctions: (() => void)[] = [];
+    let isSubscribed = true;
+
+    const updateMetrics = async () => {
+      if (!isSubscribed) return;
+      try {
+        const metrics = await this.getClinicalMetrics(centerId, false);
+        callback(metrics);
+      } catch (error) {
+        console.error('Error updating metrics:', error);
+      }
+    };
+
+    // Suscribirse a cambios en pacientes
+    const unsubscribePatients = this.patientService.subscribeToActivePatients(centerId, () => {
+      updateMetrics();
+    });
+
+    // Suscribirse a cambios en terapeutas
+    const unsubscribeTherapists = this.therapistService.subscribeToActiveTherapists(centerId, () => {
+      updateMetrics();
+    });
+
+    // Suscribirse a cambios en sesiones recientes
+    const unsubscribeSessions = this.sessionService.subscribeToRecentSessions(centerId, () => {
+      updateMetrics();
+    });
+
+    // Suscribirse a cambios en evaluaciones
+    const unsubscribeAssessments = this.assessmentService.subscribeToAssessments(centerId, () => {
+      updateMetrics();
+    });
+
+    unsubscribeFunctions = [
+      unsubscribePatients,
+      unsubscribeTherapists,
+      unsubscribeSessions,
+      unsubscribeAssessments
+    ];
+
+    // Cargar métricas iniciales
+    updateMetrics();
+
+    // Retornar función de limpieza
+    return () => {
+      isSubscribed = false;
+      unsubscribeFunctions.forEach(unsubscribe => {
+        try {
+          unsubscribe();
+        } catch (error) {
+          console.error('Error unsubscribing:', error);
+        }
+      });
+    };
   }
 
   async generateRiskAssessment(centerId: string, patientId: string): Promise<{
@@ -589,10 +825,7 @@ export class ClinicalService {
 
   // Métodos para suscripciones en tiempo real
   subscribeToPatients(centerId: string, callback: (patients: Patient[]) => void): () => void {
-    return this.patientService.subscribeToChanges(centerId, callback, {
-      where: [{ field: 'status', operator: '==', value: 'active' }],
-      orderBy: { field: 'lastName', direction: 'asc' }
-    });
+    return this.patientService.subscribeToActivePatients(centerId, callback);
   }
 
   subscribeToAlerts(centerId: string, callback: (alerts: ClinicalAlert[]) => void): () => void {
@@ -603,17 +836,20 @@ export class ClinicalService {
   }
 
   subscribeToTherapists(centerId: string, callback: (therapists: Therapist[]) => void): () => void {
-    return this.therapistService.subscribeToChanges(centerId, callback, {
-      where: [{ field: 'status', operator: '==', value: 'active' }],
-      orderBy: { field: 'lastName', direction: 'asc' }
-    });
+    return this.therapistService.subscribeToActiveTherapists(centerId, callback);
   }
 
   subscribeToSessions(centerId: string, callback: (sessions: Session[]) => void): () => void {
-    return this.sessionService.subscribeToChanges(centerId, callback, {
-      orderBy: { field: 'date', direction: 'desc' },
-      limit: 100
-    });
+    return this.sessionService.subscribeToRecentSessions(centerId, callback);
+  }
+
+  // Limpiar cache
+  clearCache(centerId?: string): void {
+    if (centerId) {
+      delete this.metricsCache[centerId];
+    } else {
+      this.metricsCache = {};
+    }
   }
 }
 
