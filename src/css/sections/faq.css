@@ -31,7 +31,7 @@ background:
     radial-gradient(ellipse 600px 300px at 75% 75%, rgba(184, 0, 46, 0.03) 0%, transparent 70%),
     radial-gradient(ellipse 500px 250px at 50% 50%, rgba(255, 107, 53, 0.02) 0%, transparent 80%);
 
-animation: faq-knowledge-flow 20s ease-in-out infinite;
+animation: faq-knowledge-flow 15s ease-in-out infinite;
 }
 
 /* Patrón de conocimiento profesional */
@@ -48,7 +48,7 @@ background-image:
     radial-gradient(circle at 75% 75%, rgba(255, 45, 85, 0.006) 1px, transparent 1px);
 background-size: 50px 50px, 30px 30px;
 opacity: 0.6;
-animation: knowledge-pattern-drift 25s linear infinite;
+animation: knowledge-pattern-drift 20s linear infinite;
 }
 
 /* ===== HEADER DE FAQ PROFESIONAL ===== */
@@ -60,7 +60,7 @@ margin: 0 auto var(--space-6xl);
 text-align: center;
 opacity: 0;
 transform: translateY(30px);
-animation: fadeInUp 1s ease-out 0.2s forwards;
+animation: fadeInUp 0.6s ease-out 0.2s forwards;
 }
 
 .faq__title {
@@ -102,7 +102,7 @@ background: linear-gradient(90deg,
 border-radius: 2px;
 transform: translateX(-50%);
 box-shadow: 0 0 15px rgba(255, 45, 85, 0.3);
-animation: knowledge-line-pulse 3s ease-in-out infinite;
+animation: knowledge-line-pulse 2s ease-in-out infinite;
 }
 
 .faq__subtitle {
@@ -122,7 +122,7 @@ max-width: 700px;
 margin: 0 auto var(--space-4xl);
 opacity: 0;
 transform: translateY(20px);
-animation: fadeInUp 1s ease-out 0.4s forwards;
+animation: fadeInUp 0.6s ease-out 0.3s forwards;
 }
 
 .faq__search {
@@ -151,7 +151,7 @@ box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.08);
 
 outline: none;
-transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 .faq__search::placeholder {
@@ -191,7 +191,7 @@ border-radius: 50%;
 box-shadow: 
     0 0 15px rgba(255, 45, 85, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
-transition: all 0.4s ease;
+transition: all 0.3s ease;
 transform: translateY(-50%);
 }
 
@@ -234,7 +234,7 @@ position: relative;
 overflow: hidden;
 opacity: 0;
 transform: translateY(30px);
-transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 
 /* Fondo profesional del item */
 background: linear-gradient(135deg,
@@ -246,20 +246,20 @@ backdrop-filter: blur(20px) saturate(150%);
 border: 1px solid rgba(255, 255, 255, 0.08);
 border-radius: 20px;
 
-animation: faq-item-appear 0.8s ease-out forwards;
+animation: faq-item-appear 0.5s ease-out forwards;
 }
 
 /* Delays escalonados para animación */
-.faq__item:nth-child(1) { animation-delay: 0.1s; }
-.faq__item:nth-child(2) { animation-delay: 0.15s; }
-.faq__item:nth-child(3) { animation-delay: 0.2s; }
-.faq__item:nth-child(4) { animation-delay: 0.25s; }
-.faq__item:nth-child(5) { animation-delay: 0.3s; }
-.faq__item:nth-child(6) { animation-delay: 0.35s; }
-.faq__item:nth-child(7) { animation-delay: 0.4s; }
-.faq__item:nth-child(8) { animation-delay: 0.45s; }
-.faq__item:nth-child(9) { animation-delay: 0.5s; }
-.faq__item:nth-child(10) { animation-delay: 0.55s; }
+.faq__item:nth-child(1) { animation-delay: 0.05s; }
+.faq__item:nth-child(2) { animation-delay: 0.1s; }
+.faq__item:nth-child(3) { animation-delay: 0.15s; }
+.faq__item:nth-child(4) { animation-delay: 0.2s; }
+.faq__item:nth-child(5) { animation-delay: 0.25s; }
+.faq__item:nth-child(6) { animation-delay: 0.3s; }
+.faq__item:nth-child(7) { animation-delay: 0.35s; }
+.faq__item:nth-child(8) { animation-delay: 0.4s; }
+.faq__item:nth-child(9) { animation-delay: 0.45s; }
+.faq__item:nth-child(10) { animation-delay: 0.5s; }
 
 /* Estados hover y activo */
 .faq__item:hover {
@@ -302,7 +302,7 @@ background: linear-gradient(90deg,
     transparent 100%
 );
 border-radius: 20px;
-transition: left 1s ease;
+transition: left 0.8s ease;
 }
 
 .faq__item:hover::before {
@@ -327,7 +327,7 @@ cursor: pointer;
 background: transparent;
 border: none;
 border-radius: 20px;
-transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 .faq__question:hover {
@@ -365,7 +365,7 @@ box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.2),
     inset 0 -1px 0 rgba(0, 0, 0, 0.1);
 
-transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 /* Líneas del icono más */
@@ -376,7 +376,7 @@ content: '';
 background: white;
 border-radius: 1px;
 box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 .faq__icon::before {
@@ -425,7 +425,7 @@ background: linear-gradient(135deg,
     rgba(10, 13, 20, 0.1) 50%,
     rgba(0, 0, 0, 0.15) 100%
 );
-transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 .faq__answer.active {
@@ -497,7 +497,7 @@ box-shadow:
 
 .faq__no-results.show {
 display: block;
-animation: fadeInUp 0.6s ease-out;
+animation: fadeInUp 0.4s ease-out;
 }
 
 .faq__no-results-text {
@@ -553,7 +553,7 @@ border-radius: 25px;
 box-shadow: 
     0 4px 15px rgba(0, 0, 0, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.05);
-transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 .faq__filter-btn:hover,
@@ -707,7 +707,7 @@ font-size: 1rem;
 }
 
 .faq__answer {
-    transition: max-height 0.4s ease, padding 0.4s ease !important;
+    transition: max-height 0.3s ease, padding 0.3s ease !important;
 }
 
 .faq__title::after {
@@ -716,7 +716,7 @@ font-size: 1rem;
 
 .faq__icon,
 .faq__search-icon {
-    transition: transform 0.3s ease !important;
+    transition: transform 0.2s ease !important;
 }
 }
 
@@ -729,6 +729,20 @@ transform: translateZ(0);
 will-change: transform;
 backface-visibility: hidden;
 contain: layout style paint;
+}
+
+/* Optimización adicional para animaciones */
+.faq__header,
+.faq__search-container,
+.faq__item,
+.faq__answer {
+will-change: opacity, transform;
+}
+
+/* Optimización para reducir repaints */
+.faq__icon::before,
+.faq__icon::after {
+will-change: transform, opacity;
 }
 
 /* ===== ACCESIBILIDAD MEJORADA ===== */
@@ -775,7 +789,7 @@ margin-right: var(--space-lg);
 border: 4px solid rgba(255, 255, 255, 0.1);
 border-top: 4px solid var(--starflex-red);
 border-radius: 50%;
-animation: faq-spinner 1s linear infinite;
+animation: faq-spinner 0.8s linear infinite;
 }
 
 /* ===== MODO ALTO CONTRASTE ===== */
