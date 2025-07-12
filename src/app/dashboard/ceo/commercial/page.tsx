@@ -17,19 +17,22 @@ import {
   CheckCircle,
   Clock,
   DollarSign,
-  Zap
+  Zap,
+  Settings
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import CommercialPanel from '@/components/dashboard/CommercialPanel';
-import { useCommercialData } from '@/hooks/useDashboardData';
+import DataSeeder from '@/components/admin/DataSeeder';
+import { useCommercialData } from '@/hooks/useCommercialData';
 import { useAuth } from '@/contexts/AuthContext';
 import Button from '@/components/ui/Button';
 
 export default function MarketingIntelligencePage() {
   const router = useRouter();
   const { user } = useAuth();
-  const { data, loading, error, refresh } = useCommercialData();
+  const { data, loading, error, refresh, lastUpdated, isConnected, retryCount } = useCommercialData();
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [showSeeder, setShowSeeder] = useState(false);
 
   // Actualizar tiempo cada segundo
   useEffect(() => {
@@ -51,7 +54,7 @@ export default function MarketingIntelligencePage() {
     return `${value.toFixed(1)}%`;
   };
 
-  // Calcular métricas en tiempo real
+  // Calcular métricas en tiempo real desde Firebase
   const getRealtimeMetrics = () => {
     if (!data) {
       return [
@@ -62,7 +65,7 @@ export default function MarketingIntelligencePage() {
       ];
     }
 
-    // Calcular ROI promedio
+    // Calcular ROI promedio desde datos reales
     const avgROI = data.monthlyTrends.length > 0 
       ? data.monthlyTrends.reduce((sum, trend) => sum + trend.roas, 0) / data.monthlyTrends.length
       : 0;
@@ -101,7 +104,7 @@ export default function MarketingIntelligencePage() {
 
   const realtimeMetrics = getRealtimeMetrics();
 
-  // Calcular salud comercial
+  // Calcular salud comercial desde datos reales de Firebase
   const getCommercialHealth = () => {
     if (!data) return { score: 0, status: 'unknown', message: 'Sin datos', insights: [] };
 
@@ -213,6 +216,54 @@ export default function MarketingIntelligencePage() {
     }
   };
 
+  if (showSeeder) {
+    return (
+      <div style={{ 
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #F9FAFB 0%, #EFF3FB 100%)',
+        position: 'relative',
+        overflow: 'hidden'
+      }}>
+        <div style={{ 
+          maxWidth: '1400px', 
+          margin: '0 auto', 
+          padding: '2rem'
+        }}>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            style={{ marginBottom: '2rem' }}
+          >
+            <button
+              onClick={() => setShowSeeder(false)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                padding: '0.75rem 1rem',
+                background: 'rgba(255, 255, 255, 0.8)',
+                backdropFilter: 'blur(12px)',
+                border: '1px solid rgba(229, 231, 235, 0.6)',
+                borderRadius: '12px',
+                cursor: 'pointer',
+                fontSize: '0.875rem',
+                fontWeight: 500,
+                color: '#6B7280',
+                transition: 'all 0.2s ease',
+                marginBottom: '2rem',
+                fontFamily: 'Inter, sans-serif'
+              }}
+            >
+              <ArrowLeft size={16} />
+              Volver a Marketing Inteligente
+            </button>
+          </motion.div>
+          <DataSeeder />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{ 
       minHeight: '100vh',
@@ -311,7 +362,8 @@ export default function MarketingIntelligencePage() {
               alignItems: 'center',
               justifyContent: 'center',
               gap: '1rem',
-              marginBottom: '1rem'
+              marginBottom: '1rem',
+              flexWrap: 'wrap'
             }}>
               <div style={{
                 display: 'flex',
@@ -328,7 +380,7 @@ export default function MarketingIntelligencePage() {
                   fontWeight: 600,
                   color: error ? '#EF4444' : '#10B981'
                 }}>
-                  {error ? 'Sin conexión' : 'Conectado a Firebase'}
+                  {error ? 'Sin conexión Firebase' : 'Conectado a Firebase'}
                 </span>
               </div>
               
@@ -349,10 +401,56 @@ export default function MarketingIntelligencePage() {
                 }}>
                   {currentTime.toLocaleTimeString('es-ES', { 
                     hour: '2-digit', 
-                    minute: '2-digit'
+                    minute: '2-digit',
+                    second: '2-digit'
                   })}
                 </span>
               </div>
+
+              {lastUpdated && (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '0.5rem 1rem',
+                  background: 'rgba(255, 255, 255, 0.8)',
+                  borderRadius: '1rem',
+                  border: '1px solid rgba(139, 92, 246, 0.2)'
+                }}>
+                  <Database size={16} color="#8B5CF6" />
+                  <span style={{ 
+                    fontSize: '0.875rem', 
+                    fontWeight: 600,
+                    color: '#6B46C1'
+                  }}>
+                    Actualizado: {lastUpdated.toLocaleTimeString('es-ES', { 
+                      hour: '2-digit', 
+                      minute: '2-digit'
+                    })}
+                  </span>
+                </div>
+              )}
+
+              {retryCount > 0 && (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '0.5rem 1rem',
+                  background: 'rgba(255, 255, 255, 0.8)',
+                  borderRadius: '1rem',
+                  border: '1px solid rgba(245, 158, 11, 0.2)'
+                }}>
+                  <RefreshCw size={16} color="#F59E0B" />
+                  <span style={{ 
+                    fontSize: '0.875rem', 
+                    fontWeight: 600,
+                    color: '#D97706'
+                  }}>
+                    Reintento {retryCount}/{3}
+                  </span>
+                </div>
+              )}
             </div>
             
             <p style={{ 
@@ -366,7 +464,7 @@ export default function MarketingIntelligencePage() {
             }}>
               {error 
                 ? 'Conecta Firebase para ver optimización automática de conversión'
-                : 'Optimización automática de conversión con análisis de comportamiento y estrategias predictivas'
+                : 'Optimización automática de conversión con análisis de comportamiento y estrategias predictivas desde Firebase'
               }
             </p>
 
@@ -395,7 +493,8 @@ export default function MarketingIntelligencePage() {
                     const exportData = {
                       ...data,
                       exportDate: new Date().toISOString(),
-                      centerId: user?.centerId
+                      centerId: user?.centerId,
+                      timestamp: currentTime.toISOString()
                     };
                     const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
                     const url = URL.createObjectURL(blob);
@@ -420,6 +519,16 @@ export default function MarketingIntelligencePage() {
               >
                 Firebase Console
               </Button>
+
+              {user?.role?.toString() === 'admin' && (
+                <Button
+                  variant="outline"
+                  icon={Settings}
+                  onClick={() => setShowSeeder(true)}
+                >
+                  Gestionar Datos
+                </Button>
+              )}
             </div>
 
             {/* Métricas en tiempo real */}
@@ -559,7 +668,7 @@ export default function MarketingIntelligencePage() {
                   ))}
                 </div>
 
-                {/* Métricas detalladas */}
+                {/* Métricas detalladas desde Firebase */}
                 <div style={{
                   display: 'grid',
                   gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
@@ -600,9 +709,25 @@ export default function MarketingIntelligencePage() {
                       Total leads
                     </div>
                   </div>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#1C1E21' }}>
+                      {data.totalConversions.toLocaleString()}
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>
+                      Conversiones
+                    </div>
+                  </div>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#1C1E21' }}>
+                      {formatCurrency(data.averageLTV)}
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>
+                      LTV promedio
+                    </div>
+                  </div>
                 </div>
 
-                {/* Recomendaciones de IA */}
+                {/* Recomendaciones de IA basadas en datos reales */}
                 {data.ltvCacRatio < 3 && (
                   <div style={{
                     marginTop: '1.5rem',
@@ -623,6 +748,27 @@ export default function MarketingIntelligencePage() {
                     </p>
                   </div>
                 )}
+
+                {data.conversionRate < 15 && (
+                  <div style={{
+                    marginTop: '1rem',
+                    padding: '1rem',
+                    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                    borderRadius: '1rem',
+                    border: '1px solid rgba(245, 158, 11, 0.2)'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                      <AlertCircle size={16} color="#F59E0B" />
+                      <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#F59E0B' }}>
+                        Oportunidad de Mejora
+                      </span>
+                    </div>
+                    <p style={{ fontSize: '0.875rem', color: '#6B7280', margin: 0 }}>
+                      La tasa de conversión ({formatPercentage(data.conversionRate)}) puede mejorarse. 
+                      Revisa el funnel de conversión y optimiza las páginas de destino.
+                    </p>
+                  </div>
+                )}
               </motion.div>
             )}
           </div>
@@ -634,7 +780,36 @@ export default function MarketingIntelligencePage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
         >
-          <CommercialPanel />
+          <CommercialPanel 
+            data={data ? data.monthlyTrends.map(trend => ({
+              month: trend.month.split('-')[1], // Extraer solo el mes
+              cac: trend.cac,
+              ltv: trend.ltv,
+              leads: trend.leads,
+              conversions: trend.conversions,
+              roi: trend.roas
+            })) : []}
+            loading={loading}
+            onRefresh={refresh}
+            onExport={() => {
+              if (data) {
+                const exportData = {
+                  ...data,
+                  exportDate: new Date().toISOString(),
+                  centerId: user?.centerId
+                };
+                const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `panel-comercial-${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+              }
+            }}
+          />
         </motion.div>
       </div>
     </div>
