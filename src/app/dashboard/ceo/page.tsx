@@ -14,6 +14,7 @@ import {
   AlertTriangle,
   Info,
   Clock,
+  Calendar,
   Star,
   Zap,
   Users,
@@ -26,8 +27,6 @@ import {
   ChevronRight,
   Database,
   Plus,
-  Menu,
-  X
 } from 'lucide-react';
 
 import FinancialPanel from '@/components/dashboard/FinancialPanel';
@@ -38,7 +37,7 @@ import DataSeeder from '@/components/admin/DataSeeder';
 import { useDashboardData, exportDashboardData } from '@/hooks/useDashboardData';
 import { useAuth } from '@/contexts/AuthContext';
 
-// Interfaces
+// Interfaces mejoradas
 interface QuickMetric {
   id: string;
   label: string;
@@ -49,6 +48,8 @@ interface QuickMetric {
   color: string;
   bgColor: string;
   loading?: boolean;
+  target?: number;
+  unit?: string;
 }
 
 interface AIInsight {
@@ -78,9 +79,8 @@ export default function CEODashboard() {
   const [activeView, setActiveView] = useState('overview');
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [selectedTimeframe, setSelectedTimeframe] = useState('month');
   const [showDataSeeder, setShowDataSeeder] = useState(false);
-  const [showSidebar, setShowSidebar] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
   
   // Usar el hook combinado para todos los datos
   const {
@@ -93,30 +93,15 @@ export default function CEODashboard() {
     refresh
   } = useDashboardData();
 
-  // Detectar tamaño de pantalla
+  // Actualizar tiempo cada segundo
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 1024);
-      if (window.innerWidth >= 1024) {
-        setShowSidebar(false);
-      }
-    };
-    
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Actualizar tiempo cada minuto en móvil, cada segundo en desktop
-  useEffect(() => {
-    const interval = isMobile ? 60000 : 1000;
     const timer = setInterval(() => {
       setCurrentTime(new Date());
-    }, interval);
+    }, 1000);
     return () => clearInterval(timer);
-  }, [isMobile]);
+  }, []);
 
-  // Calcular métricas reales
+  // Calcular métricas reales basadas en datos de Firebase
   const calculateRealMetrics = () => {
     const baseMetrics = {
       revenue: financialData?.totalRevenue || 0,
@@ -132,101 +117,167 @@ export default function CEODashboard() {
       conversion: commercialData?.conversionRate || 0,
       conversionGrowth: commercialData ? (commercialData.conversionRate - 18) / 18 * 100 : 0
     };
+
     return baseMetrics;
   };
 
   const metrics = calculateRealMetrics();
 
-  // Métricas principales optimizadas
+  // Métricas principales con datos reales
   const quickMetrics: QuickMetric[] = [
     {
       id: 'revenue',
-      label: 'Ingresos',
-      value: `€${(metrics.revenue / 1000).toFixed(0)}k`,
+      label: 'Ingresos del Mes',
+      value: `€${metrics.revenue.toLocaleString('es-ES')}`,
       change: metrics.revenueGrowth,
       trend: metrics.revenueGrowth > 0 ? 'up' : metrics.revenueGrowth < 0 ? 'down' : 'stable',
       icon: DollarSign,
       color: '#10B981',
       bgColor: '#ECFDF5',
-      loading: loading
+      loading: loading,
+      target: metrics.revenue * 1.15,
+      unit: '€'
     },
     {
       id: 'patients',
-      label: 'Pacientes',
+      label: 'Pacientes Activos',
       value: metrics.patients.toString(),
       change: metrics.patientsGrowth,
       trend: metrics.patientsGrowth > 0 ? 'up' : metrics.patientsGrowth < 0 ? 'down' : 'stable',
       icon: Users,
       color: '#3B82F6',
       bgColor: '#EFF6FF',
-      loading: loading
+      loading: loading,
+      target: 120
     },
     {
       id: 'occupancy',
       label: 'Ocupación',
-      value: `${metrics.occupancy.toFixed(0)}%`,
+      value: `${metrics.occupancy.toFixed(1)}%`,
       change: metrics.occupancyGrowth,
       trend: metrics.occupancyGrowth > 0 ? 'up' : metrics.occupancyGrowth < 0 ? 'down' : 'stable',
       icon: Activity,
       color: '#F59E0B',
       bgColor: '#FFFBEB',
-      loading: loading
+      loading: loading,
+      target: 85,
+      unit: '%'
     },
     {
       id: 'satisfaction',
       label: 'Satisfacción',
-      value: `${metrics.satisfaction.toFixed(0)}%`,
+      value: `${metrics.satisfaction.toFixed(1)}%`,
       change: metrics.satisfactionGrowth,
       trend: metrics.satisfactionGrowth > 0 ? 'up' : metrics.satisfactionGrowth < 0 ? 'down' : 'stable',
       icon: Star,
       color: '#8B5CF6',
       bgColor: '#F3E8FF',
-      loading: loading
+      loading: loading,
+      target: 95,
+      unit: '%'
+    },
+    {
+      id: 'sessions',
+      label: 'Sesiones del Mes',
+      value: metrics.sessions.toString(),
+      change: metrics.sessionsGrowth,
+      trend: metrics.sessionsGrowth > 0 ? 'up' : metrics.sessionsGrowth < 0 ? 'down' : 'stable',
+      icon: Calendar,
+      color: '#06B6D4',
+      bgColor: '#ECFEFF',
+      loading: loading,
+      target: 200
+    },
+    {
+      id: 'conversion',
+      label: 'Conversión',
+      value: `${metrics.conversion.toFixed(1)}%`,
+      change: metrics.conversionGrowth,
+      trend: metrics.conversionGrowth > 0 ? 'up' : metrics.conversionGrowth < 0 ? 'down' : 'stable',
+      icon: Target,
+      color: '#EF4444',
+      bgColor: '#FEF2F2',
+      loading: loading,
+      target: 25,
+      unit: '%'
     }
   ];
 
-  // Insights de IA optimizados
+  // Insights de IA basados en datos reales
   const generateAIInsights = (): AIInsight[] => {
     const insights: AIInsight[] = [];
 
+    // Insight basado en ocupación
     if (metrics.occupancy < 70) {
       insights.push({
         id: 'occupancy-low',
         type: 'recommendation',
-        title: 'Optimizar horarios',
-        description: `Ocupación del ${metrics.occupancy.toFixed(0)}%. Ajustar horarios para aumentar demanda.`,
+        title: 'Optimizar horarios disponibles',
+        description: `La ocupación actual es del ${metrics.occupancy.toFixed(1)}%. Considera ajustar horarios o promociones para aumentar la demanda.`,
         confidence: 85,
         impact: 'medium',
         timeframe: 'Esta semana',
-        value: `+${(85 - metrics.occupancy).toFixed(0)}%`,
+        value: `+${(85 - metrics.occupancy).toFixed(1)}% potencial`,
         actionable: true
       });
     }
 
+    // Insight basado en crecimiento financiero
     if (metrics.revenueGrowth > 10) {
       insights.push({
         id: 'growth-high',
         type: 'prediction',
-        title: 'Crecimiento acelerado',
-        description: `Crecimiento del ${metrics.revenueGrowth.toFixed(0)}%. Considerar expansión.`,
+        title: 'Crecimiento acelerado detectado',
+        description: `Con un crecimiento del ${metrics.revenueGrowth.toFixed(1)}%, considera expandir el equipo o las instalaciones.`,
         confidence: 92,
         impact: 'high',
         timeframe: 'Próximo trimestre',
-        value: `+${metrics.revenueGrowth.toFixed(0)}%`,
+        value: `+${metrics.revenueGrowth.toFixed(1)}% crecimiento`,
         actionable: true
       });
     }
 
+    // Insight basado en pagos pendientes
+    if (financialData && financialData.pendingPayments > 5000) {
+      insights.push({
+        id: 'payments-pending',
+        type: 'alert',
+        title: 'Pagos pendientes elevados',
+        description: `Hay €${financialData.pendingPayments.toLocaleString()} en pagos pendientes. Considera implementar recordatorios automáticos.`,
+        confidence: 95,
+        impact: 'high',
+        timeframe: 'Inmediato',
+        value: `€${financialData.pendingPayments.toLocaleString()} pendientes`,
+        actionable: true
+      });
+    }
+
+    // Insight basado en conversión comercial
+    if (metrics.conversion < 15) {
+      insights.push({
+        id: 'conversion-low',
+        type: 'optimization',
+        title: 'Oportunidad de mejora en conversión',
+        description: `La tasa de conversión actual es ${metrics.conversion.toFixed(1)}%. Optimizar el proceso de captación podría aumentar significativamente los ingresos.`,
+        confidence: 78,
+        impact: 'high',
+        timeframe: '2 semanas',
+        value: `+${(20 - metrics.conversion).toFixed(1)}% potencial`,
+        actionable: true
+      });
+    }
+
+    // Insight basado en satisfacción
     if (metrics.satisfaction > 90) {
       insights.push({
         id: 'satisfaction-high',
-        type: 'optimization',
-        title: 'Alta satisfacción',
-        description: `${metrics.satisfaction.toFixed(0)}% satisfacción. Momento ideal para referidos.`,
+        type: 'prediction',
+        title: 'Excelente satisfacción del paciente',
+        description: `Con ${metrics.satisfaction.toFixed(1)}% de satisfacción, es el momento ideal para implementar un programa de referidos.`,
         confidence: 88,
         impact: 'medium',
         timeframe: 'Este mes',
-        value: '+30% referidos',
+        value: `+30% referidos potenciales`,
         actionable: true
       });
     }
@@ -236,12 +287,12 @@ export default function CEODashboard() {
 
   const aiInsights = generateAIInsights();
 
-  // Secciones de vista
+  // Secciones de vista disponibles
   const viewSections: ViewSection[] = [
     {
       id: 'financial',
-      title: 'Financiero',
-      description: 'Ingresos y gastos',
+      title: 'Análisis Financiero',
+      description: 'Ingresos, gastos y proyecciones',
       icon: DollarSign,
       color: '#10B981',
       bgColor: '#ECFDF5',
@@ -249,8 +300,8 @@ export default function CEODashboard() {
     },
     {
       id: 'clinical',
-      title: 'Clínico',
-      description: 'Pacientes y sesiones',
+      title: 'Operaciones Clínicas',
+      description: 'Pacientes, sesiones y calidad',
       icon: Heart,
       color: '#EF4444',
       bgColor: '#FEF2F2',
@@ -258,8 +309,8 @@ export default function CEODashboard() {
     },
     {
       id: 'commercial',
-      title: 'Comercial',
-      description: 'Marketing y ventas',
+      title: 'Marketing y Ventas',
+      description: 'Conversión y adquisición',
       icon: Target,
       color: '#3B82F6',
       bgColor: '#EFF6FF',
@@ -281,6 +332,7 @@ export default function CEODashboard() {
       alert('No hay centro asignado');
       return;
     }
+
     try {
       await exportDashboardData(user.centerId);
     } catch (error) {
@@ -291,9 +343,12 @@ export default function CEODashboard() {
 
   const getTrendIcon = (trend: string) => {
     switch (trend) {
-      case 'up': return <ArrowUpRight size={14} color="#10B981" />;
-      case 'down': return <ArrowDownRight size={14} color="#EF4444" />;
-      default: return <Minus size={14} color="#6B7280" />;
+      case 'up':
+        return <ArrowUpRight size={16} color="#10B981" />;
+      case 'down':
+        return <ArrowDownRight size={16} color="#EF4444" />;
+      default:
+        return <Minus size={16} color="#6B7280" />;
     }
   };
 
@@ -316,76 +371,191 @@ export default function CEODashboard() {
     }
   };
 
-  // Header responsive
+  // Header compacto y organizado
   const renderHeader = () => (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
-      className="header-container"
+      style={{
+        background: 'linear-gradient(135deg, #E0F2FE 0%, #BAE6FD 50%, #7DD3FC 100%)',
+        borderRadius: '1.5rem',
+        padding: '1.5rem 2rem',
+        border: '1px solid rgba(14, 165, 233, 0.2)',
+        boxShadow: '0 8px 32px rgba(14, 165, 233, 0.15)',
+        marginBottom: '2rem',
+        position: 'relative',
+        overflow: 'hidden'
+      }}
     >
-      <div className="header-content">
+      {/* Efectos de fondo */}
+      <div
+        style={{
+          position: 'absolute',
+          top: '-50px',
+          right: '-50px',
+          width: '150px',
+          height: '150px',
+          background: 'radial-gradient(circle, rgba(14, 165, 233, 0.15) 0%, transparent 70%)',
+          borderRadius: '50%'
+        }}
+      />
+      
+      <div style={{ 
+        display: 'grid',
+        gridTemplateColumns: 'auto 1fr auto',
+        alignItems: 'center',
+        gap: '2rem',
+        position: 'relative',
+        zIndex: 1
+      }}>
         {/* Logo y título */}
-        <div className="header-main">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <motion.div
             animate={{ rotate: [0, 360] }}
             transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-            className="header-logo"
+            style={{
+              padding: '0.75rem',
+              background: 'linear-gradient(135deg, #0EA5E9 0%, #0284C7 100%)',
+              borderRadius: '1rem',
+              boxShadow: '0 8px 24px rgba(14, 165, 233, 0.4)',
+              border: '2px solid rgba(255, 255, 255, 0.3)'
+            }}
           >
-            <Sparkles size={isMobile ? 20 : 24} color="white" />
+            <Sparkles size={24} color="white" />
           </motion.div>
           
-          <div className="header-text">
-            <h1 className="header-title">
-              {isMobile ? 'Dashboard' : 'Dashboard Ejecutivo'}
+          <div>
+            <h1 style={{ 
+              fontSize: '1.75rem', 
+              fontWeight: 700,
+              fontFamily: 'Space Grotesk, sans-serif',
+              margin: 0,
+              lineHeight: 1.2,
+              color: '#0C4A6E',
+              textShadow: '0 2px 4px rgba(14, 165, 233, 0.1)'
+            }}>
+              Dashboard Ejecutivo
             </h1>
-            <p className="header-subtitle">
-              {user?.name?.split(' ')[0] || 'Dr. Mendoza'}
+            <p style={{ 
+              fontSize: '1rem',
+              color: '#0369A1',
+              fontWeight: 600,
+              margin: '0.25rem 0 0 0'
+            }}>
+              {user?.name || 'Dr. Carlos Mendoza'}
             </p>
           </div>
         </div>
         
-        {/* Estado y tiempo */}
-        <div className="header-status">
-          <div className="status-item">
-            <Shield size={14} color={error ? "#EF4444" : "#10B981"} />
-            <span className="status-text">
-              {error ? 'Offline' : 'Online'}
+        {/* Información de tiempo y estado */}
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center',
+          gap: '1rem'
+        }}>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '0.75rem',
+            padding: '0.75rem 1rem',
+            background: 'rgba(255, 255, 255, 0.7)',
+            backdropFilter: 'blur(10px)',
+            borderRadius: '1rem',
+            border: '1px solid rgba(14, 165, 233, 0.2)',
+            boxShadow: '0 4px 16px rgba(14, 165, 233, 0.1)'
+          }}>
+            <Clock size={16} color="#0EA5E9" />
+            <span style={{ 
+              fontSize: '0.875rem', 
+              fontWeight: 600, 
+              color: '#0C4A6E' 
+            }}>
+              {currentTime.toLocaleTimeString('es-ES', { 
+                hour: '2-digit', 
+                minute: '2-digit'
+              })}
+            </span>
+            <Calendar size={16} color="#0EA5E9" />
+            <span style={{ 
+              fontSize: '0.875rem', 
+              fontWeight: 600, 
+              color: '#0C4A6E' 
+            }}>
+              {currentTime.toLocaleDateString('es-ES', { 
+                day: 'numeric',
+                month: 'short'
+              })}
             </span>
           </div>
           
-          {!isMobile && (
-            <div className="status-item">
-              <Clock size={14} color="#0EA5E9" />
-              <span className="status-text">
-                {currentTime.toLocaleTimeString('es-ES', { 
-                  hour: '2-digit', 
-                  minute: '2-digit'
-                })}
-              </span>
-            </div>
-          )}
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '0.5rem',
+            padding: '0.75rem 1rem',
+            background: 'rgba(255, 255, 255, 0.7)',
+            backdropFilter: 'blur(10px)',
+            borderRadius: '1rem',
+            border: error ? '1px solid rgba(239, 68, 68, 0.2)' : '1px solid rgba(16, 185, 129, 0.2)'
+          }}>
+            <Shield size={16} color={error ? "#EF4444" : "#10B981"} />
+            <span style={{ 
+              fontSize: '0.875rem', 
+              fontWeight: 600, 
+              color: error ? '#991B1B' : '#065F46'
+            }}>
+              {error ? 'Desconectado' : 'Firebase'}
+            </span>
+          </div>
         </div>
 
         {/* Acciones */}
-        <div className="header-actions">
-          {isMobile && (
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setShowSidebar(!showSidebar)}
-              className="action-btn mobile-menu"
-            >
-              {showSidebar ? <X size={16} /> : <Menu size={16} />}
-            </motion.button>
-          )}
-          
+        <div style={{ 
+          display: 'flex', 
+          gap: '0.75rem',
+          alignItems: 'center'
+        }}>
+          <select
+            value={selectedTimeframe}
+            onChange={(e) => setSelectedTimeframe(e.target.value)}
+            style={{
+              padding: '0.5rem 0.75rem',
+              borderRadius: '0.75rem',
+              border: '1px solid rgba(14, 165, 233, 0.3)',
+              background: 'rgba(255, 255, 255, 0.8)',
+              color: '#0C4A6E',
+              fontSize: '0.875rem',
+              fontWeight: 600,
+              outline: 'none',
+              cursor: 'pointer'
+            }}
+          >
+            <option value="week">Semana</option>
+            <option value="month">Mes</option>
+            <option value="quarter">Trimestre</option>
+          </select>
+
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={handleRefresh}
             disabled={isRefreshing}
-            className="action-btn refresh-btn"
+            style={{
+              backgroundColor: 'rgba(255, 255, 255, 0.8)',
+              border: '1px solid rgba(16, 185, 129, 0.3)',
+              borderRadius: '0.75rem',
+              padding: '0.5rem 0.75rem',
+              color: '#065F46',
+              fontSize: '0.875rem',
+              fontWeight: 600,
+              cursor: isRefreshing ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              opacity: isRefreshing ? 0.7 : 1
+            }}
           >
             <motion.div
               animate={isRefreshing ? { rotate: 360 } : {}}
@@ -395,41 +565,66 @@ export default function CEODashboard() {
             </motion.div>
           </motion.button>
 
-          {!isMobile && (
-            <>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={handleExportReport}
-                className="action-btn export-btn"
-              >
-                <Download size={16} />
-              </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleExportReport}
+            style={{
+              backgroundColor: 'rgba(255, 255, 255, 0.8)',
+              border: '1px solid rgba(14, 165, 233, 0.3)',
+              borderRadius: '0.75rem',
+              padding: '0.5rem 0.75rem',
+              color: '#0C4A6E',
+              fontSize: '0.875rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}
+          >
+            <Download size={16} />
+          </motion.button>
 
-              {process.env.NODE_ENV === 'development' && (
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setShowDataSeeder(!showDataSeeder)}
-                  className="action-btn dev-btn"
-                >
-                  <Database size={16} />
-                </motion.button>
-              )}
-            </>
+          {process.env.NODE_ENV === 'development' && (
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setShowDataSeeder(!showDataSeeder)}
+              style={{
+                backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                border: '1px solid rgba(139, 92, 246, 0.3)',
+                borderRadius: '0.75rem',
+                padding: '0.5rem 0.75rem',
+                color: '#6B21A8',
+                fontSize: '0.875rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}
+            >
+              <Database size={16} />
+            </motion.button>
           )}
         </div>
       </div>
     </motion.div>
   );
 
-  // Métricas responsive
+  // Métricas principales organizadas en grid
   const renderMainMetrics = () => (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2 }}
-      className="metrics-grid"
+      style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(3, 1fr)',
+        gap: '1.5rem',
+        marginBottom: '2rem'
+      }}
     >
       {quickMetrics.map((metric, index) => (
         <motion.div
@@ -438,50 +633,119 @@ export default function CEODashboard() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 * index }}
           whileHover={{ y: -4, scale: 1.02 }}
-          className="metric-card"
+          style={{
+            background: 'rgba(255, 255, 255, 0.9)',
+            backdropFilter: 'blur(20px)',
+            borderRadius: '1.5rem',
+            padding: '1.5rem',
+            border: '1px solid rgba(229, 231, 235, 0.6)',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+            cursor: 'pointer',
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            position: 'relative',
+            overflow: 'hidden'
+          }}
         >
-          <div className="metric-header">
-            <div 
-              className="metric-icon"
-              style={{ backgroundColor: metric.bgColor }}
-            >
-              <metric.icon size={isMobile ? 18 : 20} color={metric.color} />
+          {/* Fondo decorativo */}
+          <div
+            style={{
+              position: 'absolute',
+              top: '-30px',
+              right: '-30px',
+              width: '80px',
+              height: '80px',
+              background: `${metric.color}10`,
+              borderRadius: '50%',
+              opacity: 0.5
+            }}
+          />
+          
+          <div style={{ position: 'relative', zIndex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+              <div
+                style={{
+                  padding: '0.75rem',
+                  borderRadius: '1rem',
+                  backgroundColor: metric.bgColor,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <metric.icon size={20} color={metric.color} />
+              </div>
+              
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                {metric.loading ? (
+                  <div style={{
+                    width: '16px',
+                    height: '16px',
+                    border: '2px solid #E5E7EB',
+                    borderTop: '2px solid #2463EB',
+                    borderRadius: '50%',
+                    animation: 'spin 1s linear infinite'
+                  }} />
+                ) : (
+                  <>
+                    {getTrendIcon(metric.trend)}
+                    <span style={{
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                      color: metric.trend === 'up' ? '#10B981' : metric.trend === 'down' ? '#EF4444' : '#6B7280'
+                    }}>
+                      {Math.abs(metric.change).toFixed(1)}%
+                    </span>
+                  </>
+                )}
+              </div>
             </div>
             
-            <div className="metric-trend">
-              {metric.loading ? (
-                <div className="loading-spinner" />
-              ) : (
-                <>
-                  {getTrendIcon(metric.trend)}
-                  <span className="trend-text">
-                    {Math.abs(metric.change).toFixed(0)}%
-                  </span>
-                </>
+            <div>
+              <h3 style={{
+                fontSize: '2rem',
+                fontWeight: 700,
+                color: '#1C1E21',
+                margin: '0 0 0.25rem 0',
+                fontFamily: 'Space Grotesk, sans-serif'
+              }}>
+                {metric.loading ? '...' : metric.value}
+              </h3>
+              <p style={{
+                fontSize: '0.875rem',
+                color: '#6B7280',
+                margin: 0,
+                fontWeight: 500
+              }}>
+                {metric.label}
+              </p>
+              {metric.target && (
+                <div style={{
+                  marginTop: '0.5rem',
+                  fontSize: '0.75rem',
+                  color: '#9CA3AF'
+                }}>
+                  Meta: {metric.target}{metric.unit || ''}
+                </div>
               )}
             </div>
-          </div>
-          
-          <div className="metric-content">
-            <h3 className="metric-value">
-              {metric.loading ? '...' : metric.value}
-            </h3>
-            <p className="metric-label">
-              {metric.label}
-            </p>
           </div>
         </motion.div>
       ))}
     </motion.div>
   );
 
-  // Navegación de secciones responsive
+  // Navegación de secciones en grid 1x3
   const renderSectionNavigation = () => (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.4 }}
-      className="sections-grid"
+      style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(3, 1fr)',
+        gap: '1.5rem',
+        marginBottom: '2rem'
+      }}
     >
       {viewSections.map((section, index) => (
         <motion.div
@@ -491,76 +755,130 @@ export default function CEODashboard() {
           transition={{ delay: 0.1 * index }}
           whileHover={{ y: -4, scale: 1.02 }}
           onClick={() => setActiveView(section.id)}
-          className={`section-card ${activeView === section.id ? 'active' : ''}`}
           style={{
-            borderColor: activeView === section.id ? section.color : 'transparent'
+            background: activeView === section.id 
+              ? 'rgba(255, 255, 255, 0.95)' 
+              : 'rgba(255, 255, 255, 0.7)',
+            backdropFilter: 'blur(20px)',
+            borderRadius: '1.5rem',
+            padding: '1.5rem',
+            border: activeView === section.id 
+              ? `2px solid ${section.color}` 
+              : '1px solid rgba(229, 231, 235, 0.6)',
+            boxShadow: activeView === section.id 
+              ? `0 8px 25px ${section.color}20` 
+              : '0 4px 12px rgba(0, 0, 0, 0.05)',
+            cursor: 'pointer',
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            textAlign: 'center'
           }}
         >
-          <div 
-            className="section-icon"
-            style={{ backgroundColor: section.bgColor }}
-          >
-            <section.icon size={isMobile ? 20 : 24} color={section.color} />
+          <div style={{
+            padding: '1rem',
+            borderRadius: '1rem',
+            backgroundColor: section.bgColor,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 1rem auto',
+            width: 'fit-content'
+          }}>
+            <section.icon size={24} color={section.color} />
           </div>
           
-          <div className="section-content">
-            <h3 className="section-title">
-              {section.title}
-            </h3>
-            {!isMobile && (
-              <p className="section-description">
-                {section.description}
-              </p>
-            )}
-          </div>
-          
-          <ChevronRight 
-            size={16} 
-            color={activeView === section.id ? section.color : '#9CA3AF'} 
-          />
+          <h3 style={{
+            fontSize: '1.125rem',
+            fontWeight: 600,
+            color: '#1C1E21',
+            margin: '0 0 0.5rem 0',
+            fontFamily: 'Space Grotesk, sans-serif'
+          }}>
+            {section.title}
+          </h3>
+          <p style={{
+            fontSize: '0.875rem',
+            color: '#6B7280',
+            margin: 0
+          }}>
+            {section.description}
+          </p>
         </motion.div>
       ))}
     </motion.div>
   );
 
-  // Insights de IA responsive
+  // Panel de insights de IA optimizado
   const renderAIInsights = () => (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.6 }}
-      className="insights-container"
+      style={{
+        background: 'rgba(255, 255, 255, 0.9)',
+        backdropFilter: 'blur(20px)',
+        borderRadius: '1.5rem',
+        padding: '2rem',
+        border: '1px solid rgba(229, 231, 235, 0.6)',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+        marginBottom: '2rem'
+      }}
       data-section="ai-insights"
     >
-      <div className="insights-header">
+      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
         <motion.div
           animate={{ scale: [1, 1.1, 1] }}
           transition={{ duration: 2, repeat: Infinity }}
-          className="insights-icon"
+          style={{
+            padding: '0.75rem',
+            borderRadius: '1rem',
+            background: 'linear-gradient(135deg, #8B5CF6 0%, #3B82F6 100%)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}
         >
-          <Brain size={isMobile ? 18 : 20} color="white" />
+          <Brain size={20} color="white" />
         </motion.div>
-        <div className="insights-text">
-          <h3 className="insights-title">
-            {isMobile ? 'IA Insights' : 'Insights Inteligentes'}
+        <div>
+          <h3 style={{ 
+            fontSize: '1.25rem', 
+            fontWeight: 600, 
+            color: '#1C1E21',
+            margin: 0,
+            fontFamily: 'Space Grotesk, sans-serif'
+          }}>
+            Insights Inteligentes
           </h3>
-          <p className="insights-subtitle">
-            {isMobile ? 'Análisis automático' : 'Análisis automático basado en datos reales'}
+          <p style={{
+            fontSize: '0.875rem',
+            color: '#6B7280',
+            margin: '0.25rem 0 0 0'
+          }}>
+            Análisis automático basado en datos reales
           </p>
         </div>
       </div>
 
-      <div className="insights-grid">
+      <div style={{ 
+        display: 'grid',
+        gridTemplateColumns: aiInsights.length > 2 ? 'repeat(2, 1fr)' : '1fr',
+        gap: '1rem' 
+      }}>
         {aiInsights.length === 0 ? (
-          <div className="insights-empty">
-            <Brain size={isMobile ? 32 : 48} color="#9CA3AF" />
-            <h4 className="empty-title">
-              {loading ? 'Analizando...' : 'Sin datos'}
+          <div style={{
+            textAlign: 'center',
+            padding: '2rem',
+            color: '#6B7280',
+            gridColumn: '1 / -1'
+          }}>
+            <Brain size={32} color="#9CA3AF" style={{ marginBottom: '0.5rem' }} />
+            <h4 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem' }}>
+              {loading ? 'Analizando datos...' : 'Conecta Firebase para insights'}
             </h4>
-            <p className="empty-description">
+            <p style={{ fontSize: '0.875rem', margin: 0 }}>
               {loading 
-                ? 'Generando insights...'
-                : 'Conecta Firebase para ver insights.'
+                ? 'Generando recomendaciones inteligentes...'
+                : 'Los insights aparecerán cuando tengas datos en Firebase.'
               }
             </p>
             {!loading && !error && (
@@ -568,10 +886,24 @@ export default function CEODashboard() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setShowDataSeeder(true)}
-                className="empty-action"
+                style={{
+                  marginTop: '1rem',
+                  padding: '0.5rem 1rem',
+                  backgroundColor: '#8B5CF6',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '0.5rem',
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  margin: '1rem auto 0'
+                }}
               >
                 <Plus size={14} />
-                Datos ejemplo
+                Datos de ejemplo
               </motion.button>
             )}
           </div>
@@ -585,49 +917,69 @@ export default function CEODashboard() {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.1 * index }}
                 whileHover={{ scale: 1.02 }}
-                className="insight-card"
                 style={{
                   background: `${getInsightColor(insight.impact)}05`,
-                  borderColor: `${getInsightColor(insight.impact)}20`
+                  border: `1px solid ${getInsightColor(insight.impact)}20`,
+                  borderRadius: '1rem',
+                  padding: '1rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease'
                 }}
               >
-                <div className="insight-content">
-                  <div 
-                    className="insight-icon"
-                    style={{ backgroundColor: `${getInsightColor(insight.impact)}15` }}
-                  >
-                    <IconComponent size={14} color={getInsightColor(insight.impact)} />
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
+                  <div style={{
+                    padding: '0.5rem',
+                    borderRadius: '0.5rem',
+                    backgroundColor: `${getInsightColor(insight.impact)}15`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <IconComponent size={16} color={getInsightColor(insight.impact)} />
                   </div>
                   
-                  <div className="insight-text">
-                    <div className="insight-header">
-                      <h4 className="insight-title">
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                      <h4 style={{ 
+                        fontSize: '0.875rem', 
+                        fontWeight: 600, 
+                        color: '#1C1E21',
+                        margin: 0,
+                        flex: 1
+                      }}>
                         {insight.title}
                       </h4>
-                      <span 
-                        className="insight-confidence"
-                        style={{
-                          backgroundColor: `${getInsightColor(insight.impact)}15`,
-                          color: getInsightColor(insight.impact)
-                        }}
-                      >
+                      <span style={{
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        color: getInsightColor(insight.impact),
+                        padding: '0.125rem 0.5rem',
+                        borderRadius: '0.25rem',
+                        backgroundColor: `${getInsightColor(insight.impact)}15`
+                      }}>
                         {insight.confidence}%
                       </span>
                     </div>
                     
-                    <p className="insight-description">
+                    <p style={{ 
+                      fontSize: '0.75rem', 
+                      color: '#6B7280', 
+                      marginBottom: '0.5rem',
+                      lineHeight: 1.4
+                    }}>
                       {insight.description}
                     </p>
                     
-                    <div className="insight-footer">
-                      <span className="insight-timeframe">
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span style={{ fontSize: '0.75rem', color: '#9CA3AF' }}>
                         {insight.timeframe}
                       </span>
                       {insight.value && (
-                        <span 
-                          className="insight-value"
-                          style={{ color: getInsightColor(insight.impact) }}
-                        >
+                        <span style={{ 
+                          fontSize: '0.75rem', 
+                          fontWeight: 600,
+                          color: getInsightColor(insight.impact)
+                        }}>
                           {insight.value}
                         </span>
                       )}
@@ -640,28 +992,6 @@ export default function CEODashboard() {
         )}
       </div>
     </motion.div>
-  );
-
-  // Sidebar responsive
-  const renderSidebar = () => (
-    <AnimatePresence>
-      {(showSidebar || !isMobile) && (
-        <motion.div
-          initial={isMobile ? { x: '100%' } : { opacity: 0, x: 40 }}
-          animate={isMobile ? { x: 0 } : { opacity: 1, x: 0 }}
-          exit={isMobile ? { x: '100%' } : { opacity: 0, x: 40 }}
-          transition={{ duration: 0.3 }}
-          className={`sidebar ${isMobile ? 'sidebar-mobile' : 'sidebar-desktop'}`}
-        >
-          {isMobile && (
-            <div className="sidebar-overlay" onClick={() => setShowSidebar(false)} />
-          )}
-          <div className="sidebar-content">
-            <AlertsTasksDock />
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
   );
 
   // Renderizar contenido según la vista activa
@@ -687,15 +1017,29 @@ export default function CEODashboard() {
           exit={{ opacity: 0, y: -20 }}
           transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
         >
-          <div className="back-button-container">
+          <div style={{ marginBottom: '1.5rem' }}>
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => setActiveView('overview')}
-              className="back-button"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                padding: '0.75rem 1.5rem',
+                background: 'rgba(255, 255, 255, 0.8)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(229, 231, 235, 0.6)',
+                borderRadius: '1rem',
+                cursor: 'pointer',
+                fontSize: '0.875rem',
+                fontWeight: 500,
+                color: '#6B7280',
+                transition: 'all 0.3s ease'
+              }}
             >
               <ChevronRight size={16} style={{ transform: 'rotate(180deg)' }} />
-              Volver
+              Volver al resumen
             </motion.button>
           </div>
           <Component />
@@ -707,9 +1051,22 @@ export default function CEODashboard() {
   };
 
   return (
-    <div className="dashboard-container">
+    <div style={{ 
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #F8FAFC 0%, #E2E8F0 100%)',
+      position: 'relative'
+    }}>
       {/* Efectos de fondo */}
-      <div className="background-effects" />
+      <div style={{
+        position: 'fixed',
+        inset: 0,
+        pointerEvents: 'none',
+        background: `
+          radial-gradient(circle at 20% 80%, rgba(59, 130, 246, 0.03) 0%, transparent 50%),
+          radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.03) 0%, transparent 50%),
+          radial-gradient(circle at 40% 40%, rgba(16, 185, 129, 0.02) 0%, transparent 50%)
+        `
+      }} />
 
       {/* DataSeeder Modal */}
       <AnimatePresence>
@@ -718,7 +1075,16 @@ export default function CEODashboard() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="modal-overlay"
+            style={{
+              position: 'fixed',
+              inset: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
+              zIndex: 1000,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '2rem'
+            }}
             onClick={() => setShowDataSeeder(false)}
           >
             <motion.div
@@ -726,7 +1092,12 @@ export default function CEODashboard() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="modal-content"
+              style={{
+                maxWidth: '800px',
+                width: '100%',
+                maxHeight: '90vh',
+                overflow: 'auto'
+              }}
             >
               <DataSeeder />
             </motion.div>
@@ -734,21 +1105,46 @@ export default function CEODashboard() {
         )}
       </AnimatePresence>
 
-      {/* Layout principal */}
-      <div className="main-layout">
+      {/* Layout principal optimizado */}
+      <div style={{ 
+        display: 'grid',
+        gridTemplateColumns: '1fr 380px',
+        gap: '2rem',
+        maxWidth: '1600px', 
+        margin: '0 auto', 
+        padding: '2rem',
+        minHeight: '100vh'
+      }}>
         {/* Columna principal */}
-        <div className="main-content">
+        <div style={{ 
+          display: 'flex',
+          flexDirection: 'column',
+          minWidth: 0
+        }}>
           {renderHeader()}
           
-          <div className="content-area">
+          {/* Contenido principal */}
+          <div style={{ flex: 1 }}>
             <AnimatePresence mode="wait">
               {renderActiveView()}
             </AnimatePresence>
           </div>
         </div>
 
-        {/* Sidebar */}
-        {renderSidebar()}
+        {/* Columna lateral - AlertsTasksDock */}
+        <div style={{ 
+          position: 'sticky',
+          top: '2rem',
+          height: 'fit-content'
+        }}>
+          <motion.div
+            initial={{ opacity: 0, x: 40 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3, duration: 0.8 }}
+          >
+            <AlertsTasksDock />
+          </motion.div>
+        </div>
       </div>
 
       {/* Botón flotante de IA */}
@@ -756,7 +1152,12 @@ export default function CEODashboard() {
         initial={{ opacity: 0, scale: 0 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 1.2, duration: 0.6 }}
-        className="ai-button"
+        style={{
+          position: 'fixed',
+          bottom: '2rem',
+          right: '2rem',
+          zIndex: 1000,
+        }}
       >
         <motion.button
           whileHover={{ scale: 1.1, y: -4 }}
@@ -767,14 +1168,25 @@ export default function CEODashboard() {
               insightsSection.scrollIntoView({ behavior: 'smooth' });
             }
           }}
-          className="ai-button-inner"
+          style={{
+            width: '60px',
+            height: '60px',
+            background: 'linear-gradient(135deg, #8B5CF6 0%, #3B82F6 100%)',
+            borderRadius: '50%',
+            border: 'none',
+            cursor: 'pointer',
+            boxShadow: '0 8px 32px rgba(139, 92, 246, 0.4)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}
           title="Asistente IA"
         >
           <motion.div
             animate={{ rotate: [0, 360] }}
             transition={{ duration: 10, repeat: Infinity }}
           >
-            <Brain size={isMobile ? 20 : 24} color="#FFFFFF" />
+            <Brain size={24} color="#FFFFFF" />
           </motion.div>
         </motion.button>
       </motion.div>
@@ -785,795 +1197,78 @@ export default function CEODashboard() {
           initial={{ opacity: 0, scale: 0 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 1.4, duration: 0.6 }}
-          className="notifications-indicator"
+          style={{
+            position: 'fixed',
+            top: '100px',
+            right: '2rem',
+            zIndex: 1000,
+          }}
         >
-          <div className="notification-content">
+          <div style={{
+            padding: '0.75rem 1rem',
+            borderRadius: '1rem',
+            background: 'rgba(239, 68, 68, 0.9)',
+            backdropFilter: 'blur(10px)',
+            color: 'white',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            minWidth: '100px',
+            boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)'
+          }}>
             <motion.div
               animate={{ scale: [1, 1.2, 1] }}
               transition={{ duration: 1, repeat: Infinity }}
             >
-              <Bell size={14} />
+              <Bell size={16} />
             </motion.div>
-            <span className="notification-count">
-              {alerts.filter(a => !a.isRead).length}
+            <span style={{ fontSize: '0.875rem', fontWeight: 600 }}>
+              {alerts.filter(a => !a.isRead).length} alertas
             </span>
           </div>
         </motion.div>
       )}
 
-      {/* Estilos CSS */}
+      {/* Estilos CSS adicionales */}
       <style jsx>{`
-        .dashboard-container {
-          min-height: 100vh;
-          background: linear-gradient(135deg, #F8FAFC 0%, #E2E8F0 100%);
-          position: relative;
-        }
-
-        .background-effects {
-          position: fixed;
-          inset: 0;
-          pointer-events: none;
-          background: 
-            radial-gradient(circle at 20% 80%, rgba(59, 130, 246, 0.03) 0%, transparent 50%),
-            radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.03) 0%, transparent 50%);
-        }
-
-        .main-layout {
-          display: flex;
-          max-width: 1600px;
-          margin: 0 auto;
-          padding: 1rem;
-          gap: 1.5rem;
-          min-height: 100vh;
-        }
-
-        .main-content {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          min-width: 0;
-        }
-
-        .content-area {
-          flex: 1;
-        }
-
-        /* Header Styles */
-        .header-container {
-          background: linear-gradient(135deg, #E0F2FE 0%, #BAE6FD 50%, #7DD3FC 100%);
-          border-radius: 1.5rem;
-          padding: 1rem 1.5rem;
-          border: 1px solid rgba(14, 165, 233, 0.2);
-          box-shadow: 0 8px 32px rgba(14, 165, 233, 0.15);
-          margin-bottom: 1.5rem;
-          position: relative;
-          overflow: hidden;
-        }
-
-        .header-content {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 1rem;
-          position: relative;
-          z-index: 1;
-        }
-
-        .header-main {
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-          flex: 1;
-          min-width: 0;
-        }
-
-        .header-logo {
-          padding: 0.5rem;
-          background: linear-gradient(135deg, #0EA5E9 0%, #0284C7 100%);
-          border-radius: 0.75rem;
-          box-shadow: 0 4px 16px rgba(14, 165, 233, 0.4);
-          border: 2px solid rgba(255, 255, 255, 0.3);
-          flex-shrink: 0;
-        }
-
-        .header-text {
-          min-width: 0;
-        }
-
-        .header-title {
-          font-size: 1.25rem;
-          font-weight: 700;
-          font-family: 'Space Grotesk', sans-serif;
-          margin: 0;
-          line-height: 1.2;
-          color: #0C4A6E;
-          text-shadow: 0 2px 4px rgba(14, 165, 233, 0.1);
-        }
-
-        .header-subtitle {
-          font-size: 0.875rem;
-          color: #0369A1;
-          font-weight: 600;
-          margin: 0.125rem 0 0 0;
-        }
-
-        .header-status {
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-        }
-
-        .status-item {
-          display: flex;
-          align-items: center;
-          gap: 0.375rem;
-          padding: 0.375rem 0.75rem;
-          background: rgba(255, 255, 255, 0.7);
-          backdrop-filter: blur(10px);
-          border-radius: 0.75rem;
-          border: 1px solid rgba(14, 165, 233, 0.2);
-        }
-
-        .status-text {
-          font-size: 0.75rem;
-          font-weight: 600;
-          color: #0C4A6E;
-        }
-
-        .header-actions {
-          display: flex;
-          gap: 0.5rem;
-          align-items: center;
-        }
-
-        .action-btn {
-          background: rgba(255, 255, 255, 0.8);
-          border: 1px solid rgba(14, 165, 233, 0.3);
-          border-radius: 0.75rem;
-          padding: 0.5rem;
-          color: #0C4A6E;
-          font-size: 0.875rem;
-          font-weight: 600;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          gap: 0.375rem;
-          transition: all 0.3s ease;
-        }
-
-        .action-btn:hover {
-          transform: scale(1.05);
-        }
-
-        .action-btn:disabled {
-          opacity: 0.7;
-          cursor: not-allowed;
-        }
-
-        .mobile-menu {
-          border-color: rgba(139, 92, 246, 0.3);
-          color: #6B21A8;
-        }
-
-        .refresh-btn {
-          border-color: rgba(16, 185, 129, 0.3);
-          color: #065F46;
-        }
-
-        .export-btn {
-          border-color: rgba(14, 165, 233, 0.3);
-          color: #0C4A6E;
-        }
-
-        .dev-btn {
-          border-color: rgba(139, 92, 246, 0.3);
-          color: #6B21A8;
-        }
-
-        /* Metrics Styles */
-        .metrics-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-          gap: 1rem;
-          margin-bottom: 1.5rem;
-        }
-
-        .metric-card {
-          background: rgba(255, 255, 255, 0.9);
-          backdrop-filter: blur(20px);
-          border-radius: 1rem;
-          padding: 1rem;
-          border: 1px solid rgba(229, 231, 235, 0.6);
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-          cursor: pointer;
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-          position: relative;
-          overflow: hidden;
-        }
-
-        .metric-card:hover {
-          transform: translateY(-4px) scale(1.02);
-        }
-
-        .metric-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          margin-bottom: 0.75rem;
-        }
-
-        .metric-icon {
-          padding: 0.5rem;
-          border-radius: 0.75rem;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .metric-trend {
-          display: flex;
-          align-items: center;
-          gap: 0.25rem;
-        }
-
-        .trend-text {
-          font-size: 0.75rem;
-          font-weight: 600;
-        }
-
-        .loading-spinner {
-          width: 14px;
-          height: 14px;
-          border: 2px solid #E5E7EB;
-          border-top: 2px solid #2463EB;
-          border-radius: 50%;
-          animation: spin 1s linear infinite;
-        }
-
-        .metric-content {
-          text-align: left;
-        }
-
-        .metric-value {
-          font-size: 1.75rem;
-          font-weight: 700;
-          color: #1C1E21;
-          margin: 0 0 0.25rem 0;
-          font-family: 'Space Grotesk', sans-serif;
-        }
-
-        .metric-label {
-          font-size: 0.875rem;
-          color: #6B7280;
-          margin: 0;
-          font-weight: 500;
-        }
-
-        /* Sections Styles */
-        .sections-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-          gap: 1rem;
-          margin-bottom: 1.5rem;
-        }
-
-        .section-card {
-          background: rgba(255, 255, 255, 0.7);
-          backdrop-filter: blur(20px);
-          border-radius: 1rem;
-          padding: 1rem;
-          border: 2px solid transparent;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-          cursor: pointer;
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-        }
-
-        .section-card:hover {
-          transform: translateY(-4px) scale(1.02);
-        }
-
-        .section-card.active {
-          background: rgba(255, 255, 255, 0.95);
-          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-        }
-
-        .section-icon {
-          padding: 0.75rem;
-          border-radius: 0.75rem;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-shrink: 0;
-        }
-
-        .section-content {
-          flex: 1;
-          min-width: 0;
-        }
-
-        .section-title {
-          font-size: 1rem;
-          font-weight: 600;
-          color: #1C1E21;
-          margin: 0 0 0.125rem 0;
-          font-family: 'Space Grotesk', sans-serif;
-        }
-
-        .section-description {
-          font-size: 0.75rem;
-          color: #6B7280;
-          margin: 0;
-        }
-
-        /* Insights Styles */
-        .insights-container {
-          background: rgba(255, 255, 255, 0.9);
-          backdrop-filter: blur(20px);
-          border-radius: 1rem;
-          padding: 1.5rem;
-          border: 1px solid rgba(229, 231, 235, 0.6);
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-          margin-bottom: 1.5rem;
-        }
-
-        .insights-header {
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-          margin-bottom: 1rem;
-        }
-
-        .insights-icon {
-          padding: 0.5rem;
-          border-radius: 0.75rem;
-          background: linear-gradient(135deg, #8B5CF6 0%, #3B82F6 100%);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .insights-text {
-          flex: 1;
-        }
-
-        .insights-title {
-          font-size: 1.125rem;
-          font-weight: 600;
-          color: #1C1E21;
-          margin: 0;
-          font-family: 'Space Grotesk', sans-serif;
-        }
-
-        .insights-subtitle {
-          font-size: 0.75rem;
-          color: #6B7280;
-          margin: 0.125rem 0 0 0;
-        }
-
-        .insights-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-          gap: 0.75rem;
-        }
-
-        .insights-empty {
-          text-align: center;
-          padding: 2rem;
-          color: #6B7280;
-          grid-column: 1 / -1;
-        }
-
-        .empty-title {
-          font-size: 1rem;
-          font-weight: 600;
-          margin: 0.5rem 0;
-        }
-
-        .empty-description {
-          font-size: 0.875rem;
-          margin: 0 0 1rem 0;
-        }
-
-        .empty-action {
-          padding: 0.5rem 1rem;
-          background: #8B5CF6;
-          color: white;
-          border: none;
-          border-radius: 0.5rem;
-          font-size: 0.875rem;
-          font-weight: 600;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          gap: 0.375rem;
-          margin: 0 auto;
-        }
-
-        .insight-card {
-          border: 1px solid;
-          border-radius: 0.75rem;
-          padding: 0.75rem;
-          cursor: pointer;
-          transition: all 0.3s ease;
-        }
-
-        .insight-card:hover {
-          transform: scale(1.02);
-        }
-
-        .insight-content {
-          display: flex;
-          align-items: flex-start;
-          gap: 0.5rem;
-        }
-
-        .insight-icon {
-          padding: 0.375rem;
-          border-radius: 0.375rem;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-shrink: 0;
-        }
-
-        .insight-text {
-          flex: 1;
-          min-width: 0;
-        }
-
-        .insight-header {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          margin-bottom: 0.375rem;
-        }
-
-        .insight-title {
-          font-size: 0.875rem;
-          font-weight: 600;
-          color: #1C1E21;
-          margin: 0;
-          flex: 1;
-        }
-
-        .insight-confidence {
-          font-size: 0.75rem;
-          font-weight: 600;
-          padding: 0.125rem 0.375rem;
-          border-radius: 0.25rem;
-        }
-
-        .insight-description {
-          font-size: 0.75rem;
-          color: #6B7280;
-          margin: 0 0 0.5rem 0;
-          line-height: 1.4;
-        }
-
-        .insight-footer {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-        }
-
-        .insight-timeframe {
-          font-size: 0.75rem;
-          color: #9CA3AF;
-        }
-
-        .insight-value {
-          font-size: 0.75rem;
-          font-weight: 600;
-        }
-
-        /* Sidebar Styles */
-        .sidebar-desktop {
-          width: 380px;
-          flex-shrink: 0;
-          position: sticky;
-          top: 1rem;
-          height: fit-content;
-        }
-
-        .sidebar-mobile {
-          position: fixed;
-          top: 0;
-          right: 0;
-          bottom: 0;
-          z-index: 1000;
-          width: 100%;
-          max-width: 400px;
-        }
-
-        .sidebar-overlay {
-          position: absolute;
-          inset: 0;
-          background: rgba(0, 0, 0, 0.5);
-          z-index: 1;
-        }
-
-        .sidebar-content {
-          position: relative;
-          z-index: 2;
-          height: 100%;
-          background: white;
-          border-radius: 1rem 0 0 1rem;
-          overflow: hidden;
-        }
-
-        /* Back Button */
-        .back-button-container {
-          margin-bottom: 1rem;
-        }
-
-        .back-button {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          padding: 0.75rem 1.5rem;
-          background: rgba(255, 255, 255, 0.8);
-          backdrop-filter: blur(10px);
-          border: 1px solid rgba(229, 231, 235, 0.6);
-          border-radius: 1rem;
-          cursor: pointer;
-          font-size: 0.875rem;
-          font-weight: 500;
-          color: #6B7280;
-          transition: all 0.3s ease;
-        }
-
-        .back-button:hover {
-          transform: scale(1.02);
-        }
-
-        /* Floating Buttons */
-        .ai-button {
-          position: fixed;
-          bottom: 1.5rem;
-          right: 1.5rem;
-          z-index: 1000;
-        }
-
-        .ai-button-inner {
-          width: 50px;
-          height: 50px;
-          background: linear-gradient(135deg, #8B5CF6 0%, #3B82F6 100%);
-          border-radius: 50%;
-          border: none;
-          cursor: pointer;
-          box-shadow: 0 8px 32px rgba(139, 92, 246, 0.4);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .notifications-indicator {
-          position: fixed;
-          top: 80px;
-          right: 1.5rem;
-          z-index: 1000;
-        }
-
-        .notification-content {
-          padding: 0.5rem 0.75rem;
-          border-radius: 0.75rem;
-          background: rgba(239, 68, 68, 0.9);
-          backdrop-filter: blur(10px);
-          color: white;
-          display: flex;
-          align-items: center;
-          gap: 0.375rem;
-          box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
-        }
-
-        .notification-count {
-          font-size: 0.75rem;
-          font-weight: 600;
-        }
-
-        /* Modal Styles */
-        .modal-overlay {
-          position: fixed;
-          inset: 0;
-          background: rgba(0, 0, 0, 0.5);
-          z-index: 1000;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 1rem;
-        }
-
-        .modal-content {
-          max-width: 800px;
-          width: 100%;
-          max-height: 90vh;
-          overflow: auto;
-        }
-
-        /* Animations */
         @keyframes spin {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
         }
-
-        /* Responsive Breakpoints */
+        
+        @media (max-width: 1400px) {
+          .dashboard-grid {
+            grid-template-columns: 1fr !important;
+          }
+          
+          .sidebar {
+            position: relative !important;
+            top: auto !important;
+          }
+        }
+        
         @media (max-width: 1024px) {
-          .main-layout {
-            flex-direction: column;
-            padding: 0.75rem;
-            gap: 1rem;
-          }
-
-          .header-container {
-            padding: 0.75rem 1rem;
-            border-radius: 1rem;
-          }
-
-          .header-title {
-            font-size: 1.125rem;
-          }
-
-          .header-subtitle {
-            font-size: 0.75rem;
-          }
-
           .metrics-grid {
-            grid-template-columns: repeat(2, 1fr);
-            gap: 0.75rem;
+            grid-template-columns: repeat(2, 1fr) !important;
           }
-
+          
           .sections-grid {
-            grid-template-columns: 1fr;
-            gap: 0.75rem;
-          }
-
-          .insights-grid {
-            grid-template-columns: 1fr;
-            gap: 0.5rem;
-          }
-
-          .ai-button {
-            bottom: 1rem;
-            right: 1rem;
-          }
-
-          .ai-button-inner {
-            width: 45px;
-            height: 45px;
-          }
-
-          .notifications-indicator {
-            top: 70px;
-            right: 1rem;
+            grid-template-columns: 1fr !important;
           }
         }
-
-        @media (max-width: 640px) {
-          .main-layout {
-            padding: 0.5rem;
-          }
-
-          .header-content {
-            flex-wrap: wrap;
-            gap: 0.75rem;
-          }
-
-          .header-main {
-            order: 1;
-            flex: 1 1 100%;
-          }
-
-          .header-status {
-            order: 2;
-            flex: 1;
-          }
-
-          .header-actions {
-            order: 3;
-            flex: 1;
-            justify-content: flex-end;
-          }
-
+        
+        @media (max-width: 768px) {
           .metrics-grid {
-            grid-template-columns: 1fr;
-            gap: 0.5rem;
+            grid-template-columns: 1fr !important;
           }
-
-          .metric-card {
-            padding: 0.75rem;
+          
+          .header-grid {
+            grid-template-columns: 1fr !important;
+            text-align: center;
           }
-
-          .metric-value {
-            font-size: 1.5rem;
-          }
-
-          .section-card {
-            padding: 0.75rem;
-          }
-
-          .insights-container {
-            padding: 1rem;
-          }
-
-          .insight-card {
-            padding: 0.5rem;
-          }
-
-          .ai-button {
-            bottom: 0.75rem;
-            right: 0.75rem;
-          }
-
-          .ai-button-inner {
-            width: 40px;
-            height: 40px;
-          }
-
-          .notifications-indicator {
-            top: 60px;
-            right: 0.75rem;
-          }
-
-          .notification-content {
-            padding: 0.375rem 0.5rem;
-          }
-        }
-
-        @media (max-width: 480px) {
-          .header-container {
-            padding: 0.5rem 0.75rem;
-          }
-
-          .status-item {
-            padding: 0.25rem 0.5rem;
-          }
-
-          .status-text {
-            font-size: 0.625rem;
-          }
-
-          .action-btn {
-            padding: 0.375rem;
-          }
-
-          .metric-card {
-            padding: 0.5rem;
-          }
-
-          .metric-value {
-            font-size: 1.25rem;
-          }
-
-          .metric-label {
-            font-size: 0.75rem;
-          }
-
-          .section-card {
-            padding: 0.5rem;
-            gap: 0.5rem;
-          }
-
-          .section-icon {
-            padding: 0.5rem;
-          }
-
-          .section-title {
-            font-size: 0.875rem;
-          }
-
-          .insights-container {
-            padding: 0.75rem;
-          }
-
-          .insights-title {
-            font-size: 1rem;
-          }
-
-          .insights-subtitle {
-            font-size: 0.625rem;
+          
+          .actions-grid {
+            justify-content: center;
           }
         }
       `}</style>
