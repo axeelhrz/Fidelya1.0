@@ -18,7 +18,17 @@ import {
   TrendingUp,
   Clock,
   Star,
-  X
+  X,
+  Wifi,
+  WifiOff,
+  Database,
+  RefreshCw,
+  Settings,
+  Eye,
+  Calendar,
+  Heart,
+  Brain,
+  Stethoscope
 } from 'lucide-react';
 import { ExtendedPatient } from '@/types/clinical';
 import { PatientCard } from '@/components/clinical/PatientCard';
@@ -26,9 +36,29 @@ import { PatientForm } from '@/components/clinical/patients/PatientForm';
 import { PatientTimeline } from '@/components/clinical/patients/PatientTimeline';
 import { PatientDocuments } from '@/components/clinical/patients/PatientDocuments';
 import { ClinicalCard } from '@/components/clinical/ClinicalCard';
+import { usePatientData } from '@/hooks/usePatientData';
+import { useAuth } from '@/contexts/AuthContext';
+import Button from '@/components/ui/Button';
+import Card from '@/components/ui/Card';
+import DataSeeder from '@/components/admin/DataSeeder';
 
 export default function PatientsPage() {
-  const [patients, setPatients] = useState<ExtendedPatient[]>([]);
+  const { user } = useAuth();
+  const { 
+    patients, 
+    loading, 
+    error, 
+    refresh, 
+    createPatient, 
+    updatePatient, 
+    deletePatient,
+    searchPatients,
+    filterPatients,
+    lastUpdated,
+    isConnected,
+    retryCount
+  } = usePatientData();
+
   const [filteredPatients, setFilteredPatients] = useState<ExtendedPatient[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilters, setSelectedFilters] = useState({
@@ -36,13 +66,15 @@ export default function PatientsPage() {
     riskLevel: 'all',
     therapist: 'all',
     ageGroup: 'all',
-    tags: 'all'
+    tags: 'all',
+    emotionalState: 'all'
   });
   const [selectedPatients, setSelectedPatients] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [sortOrder] = useState<'asc' | 'desc'>('asc');
-  const [sortBy] = useState<'name' | 'lastSession' | 'riskLevel' | 'totalSessions' | 'createdAt'>('name');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [sortBy, setSortBy] = useState<'name' | 'lastSession' | 'riskLevel' | 'totalSessions' | 'createdAt'>('name');
+  const [showSeeder, setShowSeeder] = useState(false);
   
   // Modal states
   const [showPatientForm, setShowPatientForm] = useState(false);
@@ -51,258 +83,7 @@ export default function PatientsPage() {
   const [showPatientDetails, setShowPatientDetails] = useState(false);
   const [detailsTab, setDetailsTab] = useState<'overview' | 'timeline' | 'documents'>('overview');
 
-  // Mock data para desarrollo
-  useEffect(() => {
-    const mockPatients: ExtendedPatient[] = [
-      {
-        id: '1',
-        firstName: 'María',
-        lastName: 'González',
-        email: 'maria.gonzalez@email.com',
-        phone: '+34 612 345 678',
-        dateOfBirth: new Date('1985-03-15'),
-        gender: 'female',
-        pronouns: 'ella/la',
-        identification: {
-          type: 'dni',
-          number: '12345678A',
-          expiryDate: new Date('2030-03-15')
-        },
-        address: {
-          street: 'Calle Mayor 123, 2º A',
-          city: 'Madrid',
-          state: 'Madrid',
-          zipCode: '28001',
-          country: 'España'
-        },
-        emergencyContact: {
-          name: 'Juan González',
-          phone: '+34 612 345 679',
-          relationship: 'esposo',
-          email: 'juan.gonzalez@email.com'
-        },
-        insurance: {
-          provider: 'Sanitas',
-          policyNumber: 'SAN123456789',
-          groupNumber: 'GRP001',
-          copay: 15
-        },
-        medicalInfo: {
-          allergies: ['Polen', 'Frutos secos'],
-          currentMedications: [
-            {
-              name: 'Sertralina',
-              dosage: '50mg',
-              frequency: '1 vez al día',
-              prescribedBy: 'Dr. Pérez',
-              startDate: new Date('2024-01-15'),
-              notes: 'Tomar por la mañana con el desayuno'
-            }
-          ],
-          medicalHistory: ['Episodio depresivo mayor (2023)', 'Trastorno de ansiedad generalizada'],
-          previousTherapy: true,
-          previousTherapyDetails: 'Terapia cognitivo-conductual durante 6 meses en 2023'
-        },
-        assignedTherapist: 'Dr. Ana Martín',
-        status: 'active',
-        tags: ['adulto', 'ansiedad', 'depresión', 'medicación'],
-        riskLevel: 'medium',
-        assessmentScores: {
-          phq9: 8,
-          gad7: 12,
-          custom: {}
-        },
-        referralSource: {
-          type: 'doctor',
-          details: 'Derivado por médico de cabecera',
-          referrerName: 'Dr. Pérez',
-          referrerContact: 'dr.perez@centrosalud.es'
-        },
-        consentForms: [
-          {
-            id: 'consent1',
-            type: 'Consentimiento Informado',
-            signed: true,
-            signedDate: new Date('2024-01-10'),
-            documentUrl: '/documents/consent1.pdf',
-            version: '1.0',
-            signedAt: new Date('2024-01-10')
-          }
-        ],
-        privacySettings: {
-          allowSMS: true,
-          allowEmail: true,
-          allowCalls: true,
-          shareWithFamily: false
-        },
-        createdAt: new Date('2024-01-15'),
-        updatedAt: new Date('2024-03-10'),
-        lastSession: new Date('2024-03-10'),
-        totalSessions: 12,
-        adherenceRate: 85,
-        feedback: [
-          {
-            id: 'feedback1',
-            date: new Date('2024-03-01'),
-            rating: 5,
-            comment: 'Muy satisfecha con el progreso',
-            anonymous: false
-          }
-        ]
-      },
-      {
-        id: '2',
-        firstName: 'Carlos',
-        lastName: 'Rodríguez',
-        email: 'carlos.rodriguez@email.com',
-        phone: '+34 623 456 789',
-        dateOfBirth: new Date('1992-07-22'),
-        gender: 'male',
-        pronouns: 'él/lo',
-        identification: {
-          type: 'dni',
-          number: '87654321B'
-        },
-        address: {
-          street: 'Avenida de la Paz 45',
-          city: 'Barcelona',
-          state: 'Barcelona',
-          zipCode: '08001',
-          country: 'España'
-        },
-        emergencyContact: {
-          name: 'Carmen Rodríguez',
-          phone: '+34 623 456 790',
-          relationship: 'madre'
-        },
-        insurance: {
-          provider: 'Adeslas',
-          policyNumber: 'ADE987654321',
-          copay: 20
-        },
-        medicalInfo: {
-          allergies: [],
-          currentMedications: [],
-          medicalHistory: ['Episodio depresivo mayor'],
-          previousTherapy: false,
-          previousTherapyDetails: ''
-        },
-        assignedTherapist: 'Dr. Luis Fernández',
-        status: 'active',
-        tags: ['adulto', 'depresión', 'primera-vez'],
-        riskLevel: 'high',
-        assessmentScores: {
-          phq9: 15,
-          gad7: 6,
-          custom: {}
-        },
-        referralSource: {
-          type: 'online',
-          details: 'Búsqueda en Google'
-        },
-        consentForms: [],
-        privacySettings: {
-          allowSMS: true,
-          allowEmail: true,
-          allowCalls: false,
-          shareWithFamily: true
-        },
-        createdAt: new Date('2024-02-01'),
-        updatedAt: new Date('2024-03-08'),
-        lastSession: new Date('2024-03-08'),
-        totalSessions: 8,
-        adherenceRate: 75,
-        feedback: []
-      },
-      {
-        id: '3',
-        firstName: 'Ana',
-        lastName: 'López',
-        email: 'ana.lopez@email.com',
-        phone: '+34 634 567 890',
-        dateOfBirth: new Date('2005-11-08'),
-        gender: 'female',
-        pronouns: 'ella/la',
-        identification: {
-          type: 'dni',
-          number: '11223344C'
-        },
-        address: {
-          street: 'Plaza del Sol 12',
-          city: 'Valencia',
-          state: 'Valencia',
-          zipCode: '46001',
-          country: 'España'
-        },
-        emergencyContact: {
-          name: 'Pedro López',
-          phone: '+34 634 567 891',
-          relationship: 'padre',
-          email: 'pedro.lopez@email.com'
-        },
-        insurance: {
-          provider: 'DKV',
-          policyNumber: 'DKV555666777',
-          copay: 10
-        },
-        medicalInfo: {
-          allergies: ['Lactosa'],
-          currentMedications: [],
-          medicalHistory: ['Anorexia nerviosa'],
-          previousTherapy: true,
-          previousTherapyDetails: 'Terapia familiar durante 1 año'
-        },
-        assignedTherapist: 'Dra. Isabel Moreno',
-        status: 'active',
-        tags: ['adolescente', 'trastorno-alimentario', 'familia'],
-        riskLevel: 'critical',
-        assessmentScores: {
-          phq9: 18,
-          gad7: 14,
-          custom: {}
-        },
-        referralSource: {
-          type: 'family',
-          details: 'Recomendación familiar'
-        },
-        consentForms: [
-          {
-            id: 'consent2',
-            type: 'Consentimiento Parental',
-            signed: true,
-            signedDate: new Date('2024-01-20'),
-            documentUrl: '/documents/consent2.pdf',
-            version: '1.0',
-            signedAt: new Date('2024-01-20')
-          }
-        ],
-        privacySettings: {
-          allowSMS: false,
-          allowEmail: true,
-          allowCalls: true,
-          shareWithFamily: true
-        },
-        createdAt: new Date('2024-01-20'),
-        updatedAt: new Date('2024-03-12'),
-        lastSession: new Date('2024-03-12'),
-        totalSessions: 15,
-        adherenceRate: 90,
-        feedback: [
-          {
-            id: 'feedback2',
-            date: new Date('2024-03-05'),
-            rating: 5,
-            comment: 'Me siento mucho mejor',
-            anonymous: false
-          }
-        ]
-      }
-    ];
-    setPatients(mockPatients);
-    setFilteredPatients(mockPatients);
-  }, []);
-
-  // Filtrar y buscar pacientes
+  // Filter and search patients
   useEffect(() => {
     const filtered = patients.filter(patient => {
       const matchesSearch = 
@@ -325,10 +106,13 @@ export default function PatientsPage() {
       const matchesTags = selectedFilters.tags === 'all' || 
         patient.tags.some(tag => tag.includes(selectedFilters.tags));
 
-      return matchesSearch && matchesStatus && matchesRisk && matchesTherapist && matchesAge && matchesTags;
+      const matchesEmotionalState = selectedFilters.emotionalState === 'all' || 
+        patient.emotionalState === selectedFilters.emotionalState;
+
+      return matchesSearch && matchesStatus && matchesRisk && matchesTherapist && matchesAge && matchesTags && matchesEmotionalState;
     });
 
-    // Ordenar
+    // Sort patients
     filtered.sort((a, b) => {
       let aValue, bValue;
       switch (sortBy) {
@@ -355,7 +139,7 @@ export default function PatientsPage() {
           break;
         default:
           aValue = a.firstName;
-          bValue = b.firstName;
+          bValue = a.firstName;
       }
 
       if (sortOrder === 'asc') {
@@ -390,33 +174,15 @@ export default function PatientsPage() {
   const handleSavePatient = async (patientData: Partial<ExtendedPatient>) => {
     try {
       if (formMode === 'create') {
-        // Create new patient
-        const newPatient: ExtendedPatient = {
-          ...patientData,
-          id: `patient-${Date.now()}`,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          totalSessions: 0,
-          adherenceRate: 0,
-          feedback: []
-        } as ExtendedPatient;
-        
-        setPatients(prev => [...prev, newPatient]);
+        await createPatient(patientData as Omit<ExtendedPatient, 'id' | 'createdAt' | 'updatedAt'>);
       } else if (selectedPatient) {
-        // Update existing patient
-        setPatients(prev => prev.map(p => 
-          p.id === selectedPatient.id 
-            ? { ...p, ...patientData, updatedAt: new Date() }
-            : p
-        ));
+        await updatePatient(selectedPatient.id, patientData);
       }
       setShowPatientForm(false);
     } catch (error) {
       console.error('Error saving patient:', error);
     }
   };
-
-
 
   const handleSelectAll = () => {
     if (selectedPatients.length === filteredPatients.length) {
@@ -426,26 +192,116 @@ export default function PatientsPage() {
     }
   };
 
-  const handleExport = () => {
-    console.log('Exportando pacientes seleccionados:', selectedPatients);
+  const handleExport = async () => {
+    try {
+      const selectedPatientsData = filteredPatients.filter(p => selectedPatients.includes(p.id));
+      const exportData = {
+        patients: selectedPatientsData,
+        exportDate: new Date().toISOString(),
+        centerId: user?.centerId,
+        exportedBy: user?.email
+      };
+      
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `pacientes-export-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error exporting patients:', error);
+    }
   };
 
-  const handleAnonymize = () => {
-    console.log('Anonimizando pacientes seleccionados:', selectedPatients);
+  const handleAnonymize = async () => {
+    if (confirm('¿Estás seguro de que quieres anonimizar los pacientes seleccionados? Esta acción no se puede deshacer.')) {
+      try {
+        // Implement anonymization logic here
+        console.log('Anonimizando pacientes seleccionados:', selectedPatients);
+      } catch (error) {
+        console.error('Error anonymizing patients:', error);
+      }
+    }
   };
 
-  // Calculate metrics
+  // Calculate metrics from real Firebase data
   const metrics = {
     total: patients.length,
     active: patients.filter(p => p.status === 'active').length,
     highRisk: patients.filter(p => p.riskLevel === 'high' || p.riskLevel === 'critical').length,
-    averageAdherence: patients.reduce((sum, p) => sum + p.adherenceRate, 0) / patients.length,
+    averageAdherence: patients.length > 0 ? patients.reduce((sum, p) => sum + p.adherenceRate, 0) / patients.length : 0,
     newThisMonth: patients.filter(p => {
       const now = new Date();
       const monthAgo = new Date(now.getFullYear(), now.getMonth(), 1);
       return p.createdAt >= monthAgo;
-    }).length
+    }).length,
+    averageAge: patients.length > 0 ? patients.reduce((sum, p) => {
+      const age = new Date().getFullYear() - p.dateOfBirth.getFullYear();
+      return sum + age;
+    }, 0) / patients.length : 0,
+    genderDistribution: {
+      male: patients.filter(p => p.gender === 'male').length,
+      female: patients.filter(p => p.gender === 'female').length,
+      other: patients.filter(p => p.gender === 'other' || p.gender === 'prefer-not-to-say').length
+    },
+    emotionalStates: {
+      improving: patients.filter(p => p.emotionalState === 'improving').length,
+      stable: patients.filter(p => p.emotionalState === 'stable').length,
+      struggling: patients.filter(p => p.emotionalState === 'struggling').length,
+      crisis: patients.filter(p => p.emotionalState === 'crisis').length
+    }
   };
+
+  if (showSeeder) {
+    return (
+      <div style={{ 
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #F9FAFB 0%, #EFF6FF 100%)',
+        position: 'relative',
+        overflow: 'hidden'
+      }}>
+        <div style={{ 
+          maxWidth: '1400px', 
+          margin: '0 auto', 
+          padding: '2rem'
+        }}>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            style={{ marginBottom: '2rem' }}
+          >
+            <button
+              onClick={() => setShowSeeder(false)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                padding: '0.75rem 1rem',
+                background: 'rgba(255, 255, 255, 0.8)',
+                backdropFilter: 'blur(12px)',
+                border: '1px solid rgba(229, 231, 235, 0.6)',
+                borderRadius: '12px',
+                cursor: 'pointer',
+                fontSize: '0.875rem',
+                fontWeight: 500,
+                color: '#6B7280',
+                transition: 'all 0.2s ease',
+                marginBottom: '2rem',
+                fontFamily: 'Inter, sans-serif'
+              }}
+            >
+              <X size={16} />
+              Volver a Gestión de Pacientes
+            </button>
+          </motion.div>
+          <DataSeeder />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ 
@@ -470,43 +326,113 @@ export default function PatientsPage() {
             }}>
               Gestión de Pacientes
             </h1>
-            <p style={{
-              fontSize: '1rem',
-              color: '#6B7280',
-              margin: '0.5rem 0 0 0',
-              fontFamily: 'Inter, sans-serif'
-            }}>
-              {filteredPatients.length} pacientes encontrados
-            </p>
-          </div>
-          
-          <div style={{ display: 'flex', gap: '1rem' }}>
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={handleCreatePatient}
-              style={{
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '0.5rem' }}>
+              <p style={{
+                fontSize: '1rem',
+                color: '#6B7280',
+                margin: 0,
+                fontFamily: 'Inter, sans-serif'
+              }}>
+                {filteredPatients.length} pacientes encontrados
+              </p>
+              
+              {/* Connection Status */}
+              <div style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: '0.5rem',
-                padding: '0.75rem 1.5rem',
-                backgroundColor: '#2563EB',
-                color: 'white',
-                border: 'none',
-                borderRadius: '0.75rem',
-                fontSize: '0.875rem',
-                fontWeight: 600,
-                cursor: 'pointer',
-                fontFamily: 'Inter, sans-serif'
-              }}
+                padding: '0.25rem 0.75rem',
+                backgroundColor: error ? '#FEF2F2' : '#ECFDF5',
+                borderRadius: '1rem',
+                border: `1px solid ${error ? '#FECACA' : '#D1FAE5'}`
+              }}>
+                {error ? <WifiOff size={14} color="#EF4444" /> : <Wifi size={14} color="#10B981" />}
+                <span style={{
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  color: error ? '#EF4444' : '#10B981',
+                  fontFamily: 'Inter, sans-serif'
+                }}>
+                  {error ? 'Sin conexión Firebase' : 'Conectado a Firebase'}
+                </span>
+              </div>
+
+              {lastUpdated && (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '0.25rem 0.75rem',
+                  backgroundColor: '#F3F4F6',
+                  borderRadius: '1rem'
+                }}>
+                  <Clock size={14} color="#6B7280" />
+                  <span style={{
+                    fontSize: '0.75rem',
+                    color: '#6B7280',
+                    fontFamily: 'Inter, sans-serif'
+                  }}>
+                    Actualizado: {lastUpdated.toLocaleTimeString('es-ES', { 
+                      hour: '2-digit', 
+                      minute: '2-digit' 
+                    })}
+                  </span>
+                </div>
+              )}
+
+              {retryCount > 0 && (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '0.25rem 0.75rem',
+                  backgroundColor: '#FFFBEB',
+                  borderRadius: '1rem'
+                }}>
+                  <RefreshCw size={14} color="#F59E0B" />
+                  <span style={{
+                    fontSize: '0.75rem',
+                    color: '#F59E0B',
+                    fontFamily: 'Inter, sans-serif'
+                  }}>
+                    Reintento {retryCount}/3
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+          
+          <div style={{ display: 'flex', gap: '1rem' }}>
+            <Button
+              variant="secondary"
+              icon={RefreshCw}
+              onClick={refresh}
+              loading={loading}
             >
-              <Plus size={18} />
+              Actualizar
+            </Button>
+
+            {user?.role?.toString() === 'admin' && (
+              <Button
+                variant="outline"
+                icon={Settings}
+                onClick={() => setShowSeeder(true)}
+              >
+                Gestionar Datos
+              </Button>
+            )}
+
+            <Button
+              variant="primary"
+              icon={Plus}
+              onClick={handleCreatePatient}
+            >
               Nuevo Paciente
-            </motion.button>
+            </Button>
           </div>
         </div>
 
-        {/* Metrics */}
+        {/* Enhanced Metrics with real Firebase data */}
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
@@ -518,7 +444,7 @@ export default function PatientsPage() {
             value={metrics.total}
             icon={Users}
             iconColor="#2563EB"
-            trend={{ value: 12, isPositive: true }}
+            trend={{ value: metrics.newThisMonth, isPositive: true }}
             size="small"
           />
           
@@ -554,9 +480,72 @@ export default function PatientsPage() {
             iconColor="#F59E0B"
             size="small"
           />
+
+          <ClinicalCard
+            title="Edad Promedio"
+            value={`${Math.round(metrics.averageAge)} años`}
+            icon={Calendar}
+            iconColor="#6366F1"
+            size="small"
+          />
         </div>
 
-        {/* Toolbar */}
+        {/* Additional metrics row */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+          gap: '1rem',
+          marginBottom: '2rem'
+        }}>
+          {/* Gender Distribution */}
+          <Card variant="default">
+            <div style={{ padding: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+                <User size={20} color="#6366F1" />
+                <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#374151', margin: 0 }}>
+                  Distribución por Género
+                </h3>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem' }}>
+                <span>Masculino: {metrics.genderDistribution.male}</span>
+                <span>Femenino: {metrics.genderDistribution.female}</span>
+                <span>Otro: {metrics.genderDistribution.other}</span>
+              </div>
+            </div>
+          </Card>
+
+          {/* Emotional States */}
+          <Card variant="default">
+            <div style={{ padding: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+                <Heart size={20} color="#EF4444" />
+                <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#374151', margin: 0 }}>
+                  Estados Emocionales
+                </h3>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', fontSize: '0.75rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10B981' }} />
+                  <span>Mejorando: {metrics.emotionalStates.improving}</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#6366F1' }} />
+                  <span>Estable: {metrics.emotionalStates.stable}</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#F59E0B' }} />
+                  <span>Dificultades: {metrics.emotionalStates.struggling}</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#EF4444' }} />
+                  <span>Crisis: {metrics.emotionalStates.crisis}</span>
+                </div>
+              </div>
+            </div>
+          </Card>
+        </div>
+
+        {/* Enhanced Toolbar */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
@@ -590,6 +579,40 @@ export default function PatientsPage() {
                 fontFamily: 'Inter, sans-serif'
               }}
             />
+          </div>
+
+          {/* Sort Controls */}
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as any)}
+              style={{
+                padding: '0.5rem',
+                border: '1px solid #E5E7EB',
+                borderRadius: '0.5rem',
+                fontSize: '0.875rem',
+                fontFamily: 'Inter, sans-serif'
+              }}
+            >
+              <option value="name">Nombre</option>
+              <option value="lastSession">Última sesión</option>
+              <option value="riskLevel">Nivel de riesgo</option>
+              <option value="totalSessions">Total sesiones</option>
+              <option value="createdAt">Fecha creación</option>
+            </select>
+            
+            <button
+              onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+              style={{
+                padding: '0.5rem',
+                border: '1px solid #E5E7EB',
+                borderRadius: '0.5rem',
+                backgroundColor: 'white',
+                cursor: 'pointer'
+              }}
+            >
+              {sortOrder === 'asc' ? '↑' : '↓'}
+            </button>
           </div>
 
           {/* View Mode Toggle */}
@@ -634,79 +657,41 @@ export default function PatientsPage() {
           </div>
 
           {/* Filters */}
-          <motion.button
+          <Button
+            variant={showFilters ? "primary" : "outline"}
+            icon={Filter}
             onClick={() => setShowFilters(!showFilters)}
-            whileHover={{ scale: 1.02 }}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              padding: '0.75rem 1rem',
-              border: '1px solid #E5E7EB',
-              borderRadius: '0.5rem',
-              backgroundColor: showFilters ? '#EFF6FF' : 'white',
-              cursor: 'pointer',
-              fontSize: '0.875rem',
-              fontFamily: 'Inter, sans-serif'
-            }}
           >
-            <Filter size={16} />
             Filtros
             <ChevronDown size={16} style={{
               transform: showFilters ? 'rotate(180deg)' : 'rotate(0deg)',
               transition: 'transform 0.2s'
             }} />
-          </motion.button>
+          </Button>
 
           {/* Bulk Actions */}
           {selectedPatients.length > 0 && (
             <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <motion.button
+              <Button
+                variant="secondary"
+                icon={Download}
                 onClick={handleExport}
-                whileHover={{ scale: 1.02 }}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  padding: '0.75rem 1rem',
-                  backgroundColor: '#10B981',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '0.5rem',
-                  fontSize: '0.875rem',
-                  cursor: 'pointer',
-                  fontFamily: 'Inter, sans-serif'
-                }}
               >
-                <Download size={16} />
                 Exportar ({selectedPatients.length})
-              </motion.button>
+              </Button>
               
-              <motion.button
+              <Button
+                variant="outline"
+                icon={Shield}
                 onClick={handleAnonymize}
-                whileHover={{ scale: 1.02 }}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  padding: '0.75rem 1rem',
-                  backgroundColor: '#F59E0B',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '0.5rem',
-                  fontSize: '0.875rem',
-                  cursor: 'pointer',
-                  fontFamily: 'Inter, sans-serif'
-                }}
               >
-                <Shield size={16} />
                 Anonimizar
-              </motion.button>
+              </Button>
             </div>
           )}
         </div>
 
-        {/* Filters Panel */}
+        {/* Enhanced Filters Panel */}
         <AnimatePresence>
           {showFilters && (
             <motion.div
@@ -753,7 +738,7 @@ export default function PatientsPage() {
                     <option value="all">Todos</option>
                     <option value="active">Activo</option>
                     <option value="inactive">Inactivo</option>
-                    <option value="on-hold">En pausa</option>
+                    <option value="pending">Pendiente</option>
                     <option value="discharged">Alta</option>
                   </select>
                 </div>
@@ -786,6 +771,37 @@ export default function PatientsPage() {
                     <option value="medium">Medio</option>
                     <option value="high">Alto</option>
                     <option value="critical">Crítico</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label style={{
+                    display: 'block',
+                    fontSize: '0.875rem',
+                    fontWeight: 600,
+                    color: '#374151',
+                    marginBottom: '0.5rem',
+                    fontFamily: 'Inter, sans-serif'
+                  }}>
+                    Estado Emocional
+                  </label>
+                  <select
+                    value={selectedFilters.emotionalState}
+                    onChange={(e) => setSelectedFilters(prev => ({ ...prev, emotionalState: e.target.value }))}
+                    style={{
+                      width: '100%',
+                      padding: '0.5rem',
+                      border: '1px solid #E5E7EB',
+                      borderRadius: '0.5rem',
+                      fontSize: '0.875rem',
+                      fontFamily: 'Inter, sans-serif'
+                    }}
+                  >
+                    <option value="all">Todos</option>
+                    <option value="improving">Mejorando</option>
+                    <option value="stable">Estable</option>
+                    <option value="struggling">Dificultades</option>
+                    <option value="crisis">Crisis</option>
                   </select>
                 </div>
 
@@ -843,9 +859,9 @@ export default function PatientsPage() {
                     }}
                   >
                     <option value="all">Todos</option>
-                    <option value="Dr. Ana Martín">Dr. Ana Martín</option>
-                    <option value="Dr. Luis Fernández">Dr. Luis Fernández</option>
-                    <option value="Dra. Isabel Moreno">Dra. Isabel Moreno</option>
+                    {Array.from(new Set(patients.map(p => p.assignedTherapist))).map(therapist => (
+                      <option key={therapist} value={therapist}>{therapist}</option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -854,66 +870,85 @@ export default function PatientsPage() {
         </AnimatePresence>
       </motion.div>
 
-      {/* Patients Grid/List */}
+      {/* Patients Grid/List with error handling */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
       >
-        {filteredPatients.length === 0 ? (
-          <div style={{
-            textAlign: 'center',
-            padding: '4rem 2rem',
-            backgroundColor: 'white',
-            borderRadius: '1rem',
-            border: '1px solid #E5E7EB'
-          }}>
-            <Users size={48} color="#D1D5DB" style={{ marginBottom: '1rem' }} />
-            <h3 style={{
-              fontSize: '1.25rem',
-              fontWeight: 600,
-              color: '#374151',
-              marginBottom: '0.5rem',
-              fontFamily: 'Space Grotesk, sans-serif'
+        {error ? (
+          <Card variant="default">
+            <div style={{
+              textAlign: 'center',
+              padding: '4rem 2rem'
             }}>
-              No se encontraron pacientes
-            </h3>
-            <p style={{
-              fontSize: '1rem',
-              color: '#6B7280',
-              marginBottom: '2rem',
-              fontFamily: 'Inter, sans-serif'
-            }}>
-              {searchQuery || Object.values(selectedFilters).some(f => f !== 'all') 
-                ? 'Intenta ajustar los filtros de búsqueda'
-                : 'Comienza agregando tu primer paciente'
-              }
-            </p>
-            {!searchQuery && Object.values(selectedFilters).every(f => f === 'all') && (
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={handleCreatePatient}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  padding: '0.75rem 1.5rem',
-                  backgroundColor: '#2563EB',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '0.75rem',
-                  fontSize: '0.875rem',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  fontFamily: 'Inter, sans-serif'
-                }}
+              <WifiOff size={48} color="#EF4444" style={{ marginBottom: '1rem' }} />
+              <h3 style={{
+                fontSize: '1.25rem',
+                fontWeight: 600,
+                color: '#374151',
+                marginBottom: '0.5rem',
+                fontFamily: 'Space Grotesk, sans-serif'
+              }}>
+                Sin conexión a Firebase
+              </h3>
+              <p style={{
+                fontSize: '1rem',
+                color: '#6B7280',
+                marginBottom: '2rem',
+                fontFamily: 'Inter, sans-serif'
+              }}>
+                No se pueden cargar los datos de pacientes. Verifica la conexión a Firebase.
+              </p>
+              <Button
+                variant="primary"
+                icon={RefreshCw}
+                onClick={refresh}
+                loading={loading}
               >
-                <Plus size={18} />
-                Crear Primer Paciente
-              </motion.button>
-            )}
-          </div>
+                Reintentar conexión
+              </Button>
+            </div>
+          </Card>
+        ) : filteredPatients.length === 0 ? (
+          <Card variant="default">
+            <div style={{
+              textAlign: 'center',
+              padding: '4rem 2rem'
+            }}>
+              <Users size={48} color="#D1D5DB" style={{ marginBottom: '1rem' }} />
+              <h3 style={{
+                fontSize: '1.25rem',
+                fontWeight: 600,
+                color: '#374151',
+                marginBottom: '0.5rem',
+                fontFamily: 'Space Grotesk, sans-serif'
+              }}>
+                {loading ? 'Cargando pacientes...' : 'No se encontraron pacientes'}
+              </h3>
+              <p style={{
+                fontSize: '1rem',
+                color: '#6B7280',
+                marginBottom: '2rem',
+                fontFamily: 'Inter, sans-serif'
+              }}>
+                {loading ? 'Conectando con Firebase...' :
+                 searchQuery || Object.values(selectedFilters).some(f => f !== 'all') 
+                  ? 'Intenta ajustar los filtros de búsqueda'
+                  : 'Comienza agregando tu primer paciente'
+                }
+              </p>
+              {!loading && !searchQuery && Object.values(selectedFilters).every(f => f === 'all') && (
+                <Button
+                  variant="primary"
+                  icon={Plus}
+                  onClick={handleCreatePatient}
+                >
+                  Crear Primer Paciente
+                </Button>
+              )}
+            </div>
+          </Card>
         ) : (
           <div style={{
             display: viewMode === 'grid' ? 'grid' : 'flex',
@@ -923,30 +958,29 @@ export default function PatientsPage() {
           }}>
             {/* Select All Checkbox for List View */}
             {viewMode === 'list' && (
-              <div style={{
-                padding: '1rem 1.5rem',
-                backgroundColor: 'white',
-                borderRadius: '1rem',
-                border: '1px solid #E5E7EB',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '1rem'
-              }}>
-                <input
-                  type="checkbox"
-                  checked={selectedPatients.length === filteredPatients.length && filteredPatients.length > 0}
-                  onChange={handleSelectAll}
-                  style={{ cursor: 'pointer' }}
-                />
-                <span style={{
-                  fontSize: '0.875rem',
-                  fontWeight: 600,
-                  color: '#374151',
-                  fontFamily: 'Inter, sans-serif'
+              <Card variant="default">
+                <div style={{
+                  padding: '1rem 1.5rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '1rem'
                 }}>
-                  Seleccionar todos los pacientes ({filteredPatients.length})
-                </span>
-              </div>
+                  <input
+                    type="checkbox"
+                    checked={selectedPatients.length === filteredPatients.length && filteredPatients.length > 0}
+                    onChange={handleSelectAll}
+                    style={{ cursor: 'pointer' }}
+                  />
+                  <span style={{
+                    fontSize: '0.875rem',
+                    fontWeight: 600,
+                    color: '#374151',
+                    fontFamily: 'Inter, sans-serif'
+                  }}>
+                    Seleccionar todos los pacientes ({filteredPatients.length})
+                  </span>
+                </div>
+              </Card>
             )}
 
             {filteredPatients.map((patient) => (
@@ -1049,35 +1083,21 @@ export default function PatientsPage() {
                 </div>
 
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                  <Button
+                    variant="outline"
+                    icon={Edit}
                     onClick={() => handleEditPatient(selectedPatient)}
-                    style={{
-                      padding: '0.5rem',
-                      backgroundColor: '#FFFBEB',
-                      border: '1px solid #FDE68A',
-                      borderRadius: '0.5rem',
-                      cursor: 'pointer'
-                    }}
                   >
-                    <Edit size={16} color="#F59E0B" />
-                  </motion.button>
+                    Editar
+                  </Button>
                   
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                  <Button
+                    variant="outline"
+                    icon={X}
                     onClick={() => setShowPatientDetails(false)}
-                    style={{
-                      padding: '0.5rem',
-                      backgroundColor: '#F3F4F6',
-                      border: '1px solid #E5E7EB',
-                      borderRadius: '0.5rem',
-                      cursor: 'pointer'
-                    }}
                   >
-                    <X size={16} color="#6B7280" />
-                  </motion.button>
+                    Cerrar
+                  </Button>
                 </div>
               </div>
 
@@ -1092,28 +1112,18 @@ export default function PatientsPage() {
                   { key: 'timeline', label: 'Timeline', icon: Clock },
                   { key: 'documents', label: 'Documentos', icon: FileText }
                 ].map(({ key, label, icon: Icon }) => (
-                  <motion.button
+                  <Button
                     key={key}
-                    whileHover={{ backgroundColor: '#F3F4F6' }}
+                    variant={detailsTab === key ? "primary" : "ghost"}
+                    icon={Icon}
                     onClick={() => setDetailsTab(key as 'overview' | 'timeline' | 'documents')}
                     style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem',
-                      padding: '1rem 1.5rem',
-                      backgroundColor: detailsTab === key ? 'white' : 'transparent',
-                      color: detailsTab === key ? '#2563EB' : '#6B7280',
-                      border: 'none',
-                      borderBottom: detailsTab === key ? '2px solid #2563EB' : '2px solid transparent',
-                      fontSize: '0.875rem',
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                      fontFamily: 'Inter, sans-serif'
+                      borderRadius: 0,
+                      borderBottom: detailsTab === key ? '2px solid #2563EB' : '2px solid transparent'
                     }}
                   >
-                    <Icon size={16} />
                     {label}
-                  </motion.button>
+                  </Button>
                 ))}
               </div>
 
