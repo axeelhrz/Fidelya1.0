@@ -1433,115 +1433,6 @@ function updateHeaderOnScroll() {
     }
 }
 
-// ===== REPRODUCTOR DE VIDEO ULTRA-OPTIMIZADO =====
-function initializeVideoPlayer() {
-    const video = document.getElementById('main-video');
-    const playOverlay = document.getElementById('play-overlay');
-    const progressBar = document.querySelector('.videos__progress-bar');
-    const progressFill = document.querySelector('.videos__progress-fill');
-    const currentTimeDisplay = document.querySelector('.videos__current-time');
-    const durationDisplay = document.querySelector('.videos__duration');
-    const progressIndicators = document.querySelector('.videos__progress-indicators');
-    
-    if (!video || !playOverlay) return;
-    
-    video.controls = false;
-    video.preload = isMobile ? 'none' : 'metadata';
-    
-    video.addEventListener('loadedmetadata', () => {
-        if (durationDisplay) {
-            durationDisplay.textContent = formatTime(video.duration);
-        }
-    });
-    
-    playOverlay.addEventListener('click', () => {
-        if (video.paused) {
-            video.play();
-            playOverlay.classList.add('hidden');
-            if (progressIndicators) {
-                progressIndicators.classList.add('visible');
-            }
-        }
-    });
-    
-    if (isMobile) {
-        playOverlay.addEventListener('touchstart', () => {
-            playOverlay.style.transform = 'scale(0.98)';
-        }, { passive: true });
-        playOverlay.addEventListener('touchend', () => {
-            playOverlay.style.transform = '';
-        }, { passive: true });
-    }
-    
-    video.addEventListener('click', () => {
-        if (!video.paused) {
-            video.pause();
-            playOverlay.classList.remove('hidden');
-            if (progressIndicators) {
-                progressIndicators.classList.remove('visible');
-            }
-        }
-    });
-    
-    video.addEventListener('timeupdate', () => {
-        if (video.duration) {
-            const progress = (video.currentTime / video.duration) * 100;
-            if (progressFill) {
-                progressFill.style.width = `${progress}%`;
-            }
-            if (currentTimeDisplay) {
-                currentTimeDisplay.textContent = formatTime(video.currentTime);
-            }
-        }
-    });
-    
-    if (progressBar) {
-        progressBar.addEventListener('click', (e) => {
-            const rect = progressBar.getBoundingClientRect();
-            const clickX = e.clientX - rect.left;
-            const width = rect.width;
-            const clickTime = (clickX / width) * video.duration;
-            video.currentTime = clickTime;
-        });
-    }
-    
-    video.addEventListener('ended', () => {
-        playOverlay.classList.remove('hidden');
-        if (progressIndicators) {
-            progressIndicators.classList.remove('visible');
-        }
-        if (progressFill) {
-            progressFill.style.width = '0%';
-        }
-        if (currentTimeDisplay) {
-            currentTimeDisplay.textContent = '0:00';
-        }
-    });
-    
-    video.addEventListener('error', () => {
-        showVideoError();
-    });
-}
-
-function formatTime(seconds) {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = Math.floor(seconds % 60);
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-}
-
-function showVideoError() {
-    const playOverlay = document.getElementById('play-overlay');
-    if (playOverlay) {
-        playOverlay.innerHTML = `
-            <div class="videos__error">
-                <div class="videos__error-icon">⚠️</div>
-                <div class="videos__error-text">Error al cargar el video</div>
-                <div class="videos__error-subtitle">Por favor, intenta recargar la página</div>
-            </div>
-        `;
-    }
-}
-
 // ===== FAQ ULTRA-OPTIMIZADO =====
 function initializeFAQ() {
     const faqItems = document.querySelectorAll('.faq__item');
@@ -1963,7 +1854,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeLanguageSwitcher();
     initializeNavigation();
     initializeScrollEffects();
-    initializeVideoPlayer();
     initializeFAQ();
     initializeHeroVideoFallback();
     initializeAccessibility();
