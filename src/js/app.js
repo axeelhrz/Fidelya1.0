@@ -1,373 +1,345 @@
-// ===== VARIABLES GLOBALES ULTRA-OPTIMIZADAS =====
+// ===== VARIABLES GLOBALES OPTIMIZADAS =====
 let isMenuOpen = false;
-let isMobileMenuOpen = false; // Nueva variable para el menú móvil independiente
+let isMobileMenuOpen = false;
 let currentFeature = 0;
-const features = document.querySelectorAll('.feature');
-// Variables para el sistema de idiomas
 let currentLanguage = 'es';
-const translations = {};
-// Variables para el botón flotante
 let isFloatingMenuOpen = false;
-// Variables para el selector de idioma flotante
 let isLanguageSwitcherOpen = false;
-// Variables para el control del navbar
 let lastScrollY = 0;
 let isScrollingDown = false;
 let ticking = false;
-// Variables para el navbar responsive
 let isNavbarVisible = true;
-// Variables para optimización móvil
 let isMobile = window.innerWidth <= 1023;
 let isReducedMotion = false;
 let performanceMode = false;
+let imageOptimizer;
 
-// ===== CONFIGURACIÓN GLOBAL ULTRA-OPTIMIZADA =====
+// ===== CONFIGURACIÓN GLOBAL OPTIMIZADA =====
 const CONFIG = {
-    // Configuración de animaciones ultra-optimizada
     ANIMATION_DURATION: isMobile ? 200 : 400,
     SCROLL_THRESHOLD: isMobile ? 30 : 50,
-    
-    // Configuración de imágenes optimizadas
     IMAGE_FORMATS: {
         AVIF: 'image/avif',
         WEBP: 'image/webp',
         JPEG: 'image/jpeg',
         PNG: 'image/png'
     },
-    
-    // Rutas de imágenes optimizadas
     IMAGE_PATHS: {
-        hero: {
-            avif: './assets/phones/Hero.avif'
-        },
-        logo: {
-            avif: './assets/logo.avif'
-        },
+        hero: { avif: './assets/phones/Hero.avif' },
+        logo: { avif: './assets/logo.avif' },
         phones: {
-            horario: {
-                avif: './assets/phones/Horario.avif'
-            },
-            estaciones: {
-                avif: './assets/phones/Estaciones.avif'
-            },
-            calendario: {
-                avif: './assets/phones/Calendario.avif'
-            },
-            registro: {
-                avif: './assets/phones/Registro.avif'
-            },
-            notificaciones: {
-                avif: './assets/phones/Notificaciones.avif'
-            },
-            referidos: {
-                avif: './assets/phones/Referidos.avif'
-            }
+            horario: { avif: './assets/phones/Horario.avif' },
+            estaciones: { avif: './assets/phones/Estaciones.avif' },
+            calendario: { avif: './assets/phones/Calendario.avif' },
+            registro: { avif: './assets/phones/Registro.avif' },
+            notificaciones: { avif: './assets/phones/Notificaciones.avif' },
+            referidos: { avif: './assets/phones/Referidos.avif' }
         },
         downloads: {
-            apple: {
-                png: './assets/AppleStore.png'
-            },
-            google: {
-                png: './assets/GooglePlay.png'
-            }
+            apple: { png: './assets/AppleStore.png' },
+            google: { png: './assets/GooglePlay.png' }
         }
     }
 };
 
 // ===== SISTEMA DE TRADUCCIONES OPTIMIZADO =====
-const translationData = {
-    es: {
-        // Meta tags
-        'page-title': 'StarFlex - Automatiza tus Bloques de Amazon Flex | Prueba Gratis',
-        'page-description': 'Starflex revoluciona Amazon Flex. Automatización inteligente de bloques, optimización de horarios y máximas ganancias. Únete a +15,000 conductores exitosos.',
-        'og-title': 'Starflex - La Revolución de Amazon Flex',
-        'og-description': 'Automatización inteligente que multiplica tus ganancias. La herramienta que todo conductor profesional necesita.',
-        // Navegación
-        'nav-home': 'Inicio',
-        'nav-features': 'Características',
-        'nav-videos': 'Videos',
-        'nav-faq': 'FAQ',
-        'nav-contact': 'Contacto',
-        'nav-cta': 'Comienza tu prueba gratuita',
-        'nav-language-title': 'Idioma',
-        // Hero Section
-        'hero-badge': 'Next-Gen Amazon Flex Revolution',
-        'hero_title--main': 'DOMINA LOS',
-        'hero_title--highlight': 'BLOQUES DE',
-        'hero_title--amazon': 'AMAZON FLEX',
-        'hero-company-description': 'Somos una empresa dedicada a mejorar la experiencia laboral de los conductores de Amazon Flex permitiendo seleccionar de forma automática y eficiente los mejores bloques de su preferencia.',
-        'hero-subtitle': 'Automatización inteligente de última generación que multiplica tus ganancias. La plataforma más avanzada para conductores profesionales del futuro.',
-        'hero-cta-main': 'PRUEBA <strong>GRATUITA</strong>',
-        'hero-cta-trial': '3 DÍAS GRATIS',
-        'hero-trust': 'Más de 15,000 conductores han transformado sus ganancias',
-        'download-google': 'Descargar en Google Play',
-        'download-apple': 'Descargar en App Store',
-        'download-google-alt': 'Descargar en Google Play',
-        'download-apple-alt': 'Descargar en App Store',
-        // Features Section
-        'features-title': 'Características',
-        'features-subtitle': 'Descubre todas las funcionalidades que StarFlex te ofrece para maximizar tus ganancias.',
-        // Feature 1: Horario
-        'feature-schedule-title': 'HORARIO',
-        'feature-schedule-description': 'Elige los días y horarios que prefieras para tus bloques de entrega. Configura tu disponibilidad de manera inteligente y deja que StarFlex encuentre los mejores bloques en tus horarios preferidos.',
-        'feature-schedule-item-1': 'Configuración personalizada por día de la semana',
-        'feature-schedule-item-2': 'Horarios flexibles adaptados a tu estilo de vida',
-        'feature-schedule-item-3': 'Optimización automática de turnos rentables',
-        'feature-schedule-item-4': 'Sincronización inteligente con tu calendario personal',
-        'feature-schedule-item-5': 'Alertas de disponibilidad en tiempo real',
-        // Feature 2: Estaciones
-        'feature-stations-title': 'ESTACIONES',
-        'feature-stations-description': 'Selecciona tus estaciones preferidas y configura precios mínimos para que nuestra aplicación pueda ofrecerte automáticamente los bloques que se ajusten perfectamente a tus preferencias y ubicación.',
-        'feature-stations-item-1': 'Selección personalizada de estaciones favoritas',
-        'feature-stations-item-2': 'Configuración de precios mínimos por estación',
-        'feature-stations-item-3': 'Análisis detallado de rentabilidad por ubicación',
-        'feature-stations-item-4': 'Notificaciones instantáneas de bloques disponibles',
-        'feature-stations-item-5': 'Mapa interactivo con todas las estaciones cercanas',
-        'feature-stations-item-6': 'Filtros avanzados por distancia y tipo de entrega',
-        // Feature 3: Calendario
-        'feature-calendar-title': 'CALENDARIO',
-        'feature-calendar-description': 'En el calendario podrás ver todos tus bloques aceptados y acceder a funciones avanzadas como identificación desde cualquier ubicación, opción de saltar la selfie y cancelación rápida de bloques, todo centralizado para tu máxima comodidad.',
-        'feature-calendar-item-1': 'Identificación automática desde cualquier ubicación',
-        'feature-calendar-item-2': 'Opción inteligente para saltar verificación selfie',
-        'feature-calendar-item-3': 'Cancelación rápida y segura de bloques',
-        'feature-calendar-item-4': 'Vista mensual y semanal de tus entregas',
-        'feature-calendar-item-5': 'Recordatorios automáticos de bloques próximos',
-        // Feature 4: Registro
-        'feature-log-title': 'REGISTRO',
-        'feature-log-description': 'En el registro detallado podrás ver todos los bloques disponibles y el motivo específico por el cual algunos fueron ignorados. Esta información te ayudará a ajustar tus filtros y preferencias para optimizar continuamente tus opciones de entrega.',
-        'feature-log-item-1': 'Historial completo y detallado de todos los bloques',
-        'feature-log-item-2': 'Motivos específicos y detallados de rechazo automático',
-        'feature-log-item-3': 'Herramientas de optimización de filtros inteligentes',
-        'feature-log-item-4': 'Análisis avanzado de patrones y tendencias',
-        'feature-log-item-5': 'Estadísticas de rendimiento y ganancias',
-        // Feature 5: Notificaciones
-        'feature-notifications-title': 'NOTIFICACIONES',
-        'feature-notifications-description': 'StarFlex te mantiene siempre informado con un sistema completo de notificaciones múltiples para que nunca te pierdas los mejores bloques disponibles. Configura tus alertas según tus preferencias específicas y recibe notificaciones en tiempo real.',
-        'feature-notifications-item-1': 'Notificaciones Push instantáneas y personalizables',
-        'feature-notifications-item-2': 'Alertas automáticas por correo electrónico',
-        'feature-notifications-item-3': 'Llamadas telefónicas automáticas para bloques premium',
-        'feature-notifications-item-4': 'Mensajes SMS directos y urgentes',
-        'feature-notifications-item-5': 'Alertas personalizables por tipo y valor de bloque',
-        'feature-notifications-item-6': 'Sistema de notificaciones en tiempo real 24/7',
-        'feature-notifications-item-7': 'Filtros avanzados de notificación por prioridad',
-        // Feature 6: Referidos
-        'feature-referrals-title': 'REFERIDOS',
-        'feature-referrals-description': 'Invita a otros conductores a unirse a la revolución StarFlex y obtén beneficios exclusivos por cada referido que se registre exitosamente. Comparte tu experiencia y gana recompensas mientras ayudas a otros conductores a maximizar sus ganancias.',
-        'feature-referrals-item-1': 'Enlace único de referido personalizado y rastreable',
-        'feature-referrals-item-2': 'Gana 1 semana completamente gratis por cada referido exitoso',
-        'feature-referrals-item-3': 'Código QR dinámico para compartir fácilmente',
-        'feature-referrals-item-4': 'Panel de seguimiento de referidos en tiempo real',
-        'feature-referrals-item-5': 'Bonificaciones adicionales por referidos activos',
-        // Videos Section
-        'videos-badge': 'Experiencia Visual Inmersiva',
-        'videos-title-main': 'VE STARFLEX',
-        'videos-title-highlight': 'EN ACCIÓN',
-        'videos-subtitle': 'Descubre cómo StarFlex revoluciona tu experiencia con Amazon Flex. Mira la automatización inteligente trabajando en tiempo real.',
-        'video-not-supported': 'Tu navegador no soporta videos HTML5. <a href="./assets/StarFlex.mp4">Descargar video</a>.',
-        'video-play-title': 'REPRODUCIR DEMO',
-        'video-play-subtitle': 'Ver StarFlex en acción',
-        'video-info-title': 'StarFlex Demo Completo',
-        'video-info-description': 'Observa cómo StarFlex automatiza completamente tu experiencia con Amazon Flex. Desde la configuración inicial hasta la captura automática de bloques.',
-        'videos-cta-title': '¿Listo para Transformar tus Ganancias?',
-        'videos-cta-description': 'Únete a más de 15,000 conductores que ya están maximizando sus ingresos con StarFlex',
-        'videos-cta-start': 'COMENZAR AHORA',
-        'videos-cta-trial': '3 días gratis',
-        'videos-cta-demo': 'VER DEMO PERSONALIZADA',
-        // FAQ Section
-        'faq-title': 'Preguntas Frecuentes',
-        'faq-subtitle': 'Encuentra respuestas claras a las dudas más comunes sobre StarFlex y descubre cómo transformar tu experiencia con Amazon Flex.',
-        'faq-search-placeholder': 'Buscar pregunta...',
-        'faq-1-question': '¿Cuáles son los principales beneficios de utilizar StarFlex?',
-        'faq-1-answer': 'StarFlex está diseñado para <span class="faq__answer-highlight">eliminar la conducción distraída</span> mediante automatización inteligente. Te permite concentrarte completamente en la conducción segura mientras nuestro sistema trabaja para encontrar los mejores bloques. Con StarFlex, no necesitas revisar constantemente tu teléfono, garantizando una experiencia más segura y eficiente que te permite maximizar tus ganancias.',
-        'faq-2-question': '¿StarFlex puede resolver automáticamente los CAPTCHA?',
-        'faq-2-answer': 'Sí, StarFlex incluye <span class="faq__answer-highlight">tecnología avanzada para resolver CAPTCHA automáticamente</span>. Nuestro sistema utiliza algoritmos inteligentes que pueden interpretar y resolver diferentes tipos de verificaciones, permitiendo una navegación fluida sin interrupciones manuales. Esto optimiza tu tiempo y hace que tu experiencia diaria sea más eficiente.',
-        'faq-3-question': '¿Es seguro usar StarFlex? ¿Amazon puede detectarlo?',
-        'faq-3-answer': 'StarFlex utiliza <span class="faq__answer-highlight">tecnología avanzada de simulación humana</span> que incluye patrones de comportamiento naturales, tiempos de respuesta variables y gestos táctiles realistas. Nuestro enfoque se centra en ayudar a los conductores a brindar un mejor servicio a Amazon y sus clientes, asegurando entregas eficientes y de alta calidad.',
-        'faq-4-question': '¿StarFlex funciona en iPhone y Android?',
-        'faq-4-answer': 'Sí, StarFlex está disponible para <span class="faq__answer-highlight">iOS (iPhone 8+) y Android (8.0+)</span>. Hemos desarrollado aplicaciones nativas optimizadas para cada plataforma, garantizando el mejor rendimiento y una experiencia de usuario superior. Ambas versiones incluyen todas las funcionalidades y reciben actualizaciones automáticas.',
-        'faq-5-question': '¿Qué necesito para empezar a usar StarFlex?',
-        'faq-5-answer': 'Solo necesitas una <span class="faq__answer-highlight">cuenta activa de Amazon Flex y un dispositivo compatible</span>. Después de descargar la aplicación, el proceso de configuración toma menos de 5 minutos. Nuestro sistema de configuración guiada te ayudará a optimizar tu experiencia desde el primer día.',
-        'faq-no-results': 'No se encontraron preguntas que coincidan con tu búsqueda',
-        'faq-no-results-suggestion': 'Intenta con términos diferentes o contacta nuestro soporte',
-        // Contact Section
-        'contact-badge': 'Conecta con el Futuro',
-        'contact-title-main': 'MEJORES BLOQUES DE',
-        'contact-title-highlight': 'AMAZON FLEX',
-        'contact-subtitle': 'No olvides seguirnos en nuestras redes sociales ya que publicamos diariamente en nuestros canales la recopilación de los mejores bloques aceptados y así podrás estar al tanto de los horarios y ubicaciones más rentables.',
-        'contact-whatsapp-title': 'Canales de noticias de WhatsApp',
-        'contact-whatsapp-description': 'Únete a nuestro canal de WhatsApp para recibir las últimas actualizaciones y mejores bloques disponibles',
-        'contact-whatsapp-btn': 'Unirse',
-        'contact-instagram-title': 'Instagram',
-        'contact-instagram-description': 'Síguenos para contenido visual, tips y actualizaciones diarias sobre los mejores bloques',
-        'contact-instagram-btn': 'Seguir',
-        'contact-facebook-title': 'Facebook',
-        'contact-facebook-description': 'Únete a nuestra comunidad en Facebook para interactuar con otros conductores y compartir experiencias',
-        'contact-facebook-btn': 'Seguir',
-        'contact-tiktok-title': 'TikTok',
-        'contact-tiktok-description': 'Descubre contenido viral, tips rápidos y las últimas tendencias de Amazon Flex',
-        'contact-tiktok-btn': 'Seguir',
-        'contact-telegram-title': 'Canales de noticias de Telegram',
-        'contact-telegram-description': 'Recibe notificaciones instantáneas de los mejores bloques y actualizaciones importantes',
-        'contact-telegram-btn': 'Unirse',
-        'contact-email-title': 'support@starflexapp.com',
-        'contact-email-description': 'Contacta directamente con nuestro equipo de soporte técnico especializado',
-        'contact-email-btn': 'Contactar',
-        // Footer
-        'footer-legal': 'Política de Privacidad • Términos y Condiciones',
-        'footer-copyright': '© StarFlex • Todos los derechos reservados',
-        'footer-cta-main': 'COMENZAR AHORA',
-        'footer-cta-trial': '3 días gratis'
-    },
-    en: {
-        // Meta tags
-        'page-title': 'StarFlex - Automate your Amazon Flex Blocks | Free Trial',
-        'page-description': 'Starflex revolutionizes Amazon Flex. Intelligent block automation, schedule optimization and maximum earnings. Join +15,000 successful drivers.',
-        'og-title': 'Starflex - The Amazon Flex Revolution',
-        'og-description': 'Intelligent automation that multiplies your earnings. The tool every professional driver needs.',
-        // Navegación
-        'nav-home': 'Home',
-        'nav-features': 'Features',
-        'nav-videos': 'Videos',
-        'nav-faq': 'FAQ',
-        'nav-contact': 'Contact',
-        'nav-cta': 'Start your free trial',
-        'nav-language-title': 'Language',
-        // Hero Section
-        'hero-badge': 'Next-Gen Amazon Flex Revolution',
-        'hero_title--main': 'MASTER THE',
-        'hero_title--highlight': 'AMAZON FLEX',
-        'hero_title--amazon': 'BLOCKS',
-        'hero-company-description': 'We are a company dedicated to improving the work experience of Amazon Flex drivers by allowing them to automatically and efficiently select the best blocks of their preference.',
-        'hero-subtitle': 'Next-generation intelligent automation that multiplies your earnings. The most advanced platform for professional drivers of the future.',
-        'hero-cta-main': '<strong>FREE</strong> TRIAL',
-        'hero-cta-trial': '3 DAYS FREE',
-        'hero-trust': 'More than 15,000 drivers have transformed their earnings',
-        'download-google': 'Download on Google Play',
-        'download-apple': 'Download on App Store',
-        'download-google-alt': 'Download on Google Play',
-        'download-apple-alt': 'Download on App Store',
-        // Features Section
-        'features-title': 'Features',
-        'features-subtitle': 'Discover all the functionalities that StarFlex offers you to maximize your earnings.',
-        // Feature 1: Schedule
-        'feature-schedule-title': 'SCHEDULE',
-        'feature-schedule-description': 'Choose the days and times you prefer for your delivery blocks. Configure your availability intelligently and let StarFlex find the best blocks in your preferred schedules.',
-        'feature-schedule-item-1': 'Personalized configuration per day of the week',
-        'feature-schedule-item-2': 'Flexible schedules adapted to your lifestyle',
-        'feature-schedule-item-3': 'Automatic optimization of profitable shifts',
-        'feature-schedule-item-4': 'Intelligent synchronization with your personal calendar',
-        'feature-schedule-item-5': 'Real-time availability alerts',
-        // Feature 2: Stations
-        'feature-stations-title': 'STATIONS',
-        'feature-stations-description': 'Select your preferred stations and configure minimum prices so our application can automatically offer you blocks that perfectly fit your preferences and location.',
-        'feature-stations-item-1': 'Personalized selection of favorite stations',
-        'feature-stations-item-2': 'Minimum price configuration per station',
-        'feature-stations-item-3': 'Detailed profitability analysis by location',
-        'feature-stations-item-4': 'Instant notifications of available blocks',
-        'feature-stations-item-5': 'Interactive map with all nearby stations',
-        'feature-stations-item-6': 'Advanced filters by distance and delivery type',
-        // Feature 3: Calendar
-        'feature-calendar-title': 'CALENDAR',
-        'feature-calendar-description': 'In the calendar you can see all your accepted blocks and access advanced functions like identification from any location, option to skip selfie and quick block cancellation, all centralized for your maximum convenience.',
-        'feature-calendar-item-1': 'Automatic identification from any location',
-        'feature-calendar-item-2': 'Smart option to skip selfie verification',
-        'feature-calendar-item-3': 'Quick and secure block cancellation',
-        'feature-calendar-item-4': 'Monthly and weekly view of your deliveries',
-        'feature-calendar-item-5': 'Automatic reminders of upcoming blocks',
-        // Feature 4: Log
-        'feature-log-title': 'LOG',
-        'feature-log-description': 'In the detailed log you can see all available blocks and the specific reason why some were ignored. This information will help you adjust your filters and preferences to continuously optimize your delivery options.',
-        'feature-log-item-1': 'Complete and detailed history of all blocks',
-        'feature-log-item-2': 'Specific and detailed reasons for automatic rejection',
-        'feature-log-item-3': 'Smart filter optimization tools',
-        'feature-log-item-4': 'Advanced pattern and trend analysis',
-        'feature-log-item-5': 'Performance and earnings statistics',
-        // Feature 5: Notifications
-        'feature-notifications-title': 'NOTIFICATIONS',
-        'feature-notifications-description': 'StarFlex keeps you always informed with a complete system of multiple notifications so you never miss the best available blocks. Configure your alerts according to your specific preferences and receive real-time notifications.',
-        'feature-notifications-item-1': 'Instant and customizable Push notifications',
-        'feature-notifications-item-2': 'Automatic email alerts',
-        'feature-notifications-item-3': 'Automatic phone calls for premium blocks',
-        'feature-notifications-item-4': 'Direct and urgent SMS messages',
-        'feature-notifications-item-5': 'Customizable alerts by block type and value',
-        'feature-notifications-item-6': '24/7 real-time notification system',
-        'feature-notifications-item-7': 'Advanced notification filters by priority',
-        // Feature 6: Referrals
-        'feature-referrals-title': 'REFERRALS',
-        'feature-referrals-description': 'Invite other drivers to join the StarFlex revolution and get exclusive benefits for each referral that successfully registers. Share your experience and earn rewards while helping other drivers maximize their earnings.',
-        'feature-referrals-item-1': 'Unique personalized and trackable referral link',
-        'feature-referrals-item-2': 'Earn 1 completely free week for each successful referral',
-        'feature-referrals-item-3': 'Dynamic QR code for easy sharing',
-        'feature-referrals-item-4': 'Real-time referral tracking panel',
-        'feature-referrals-item-5': 'Additional bonuses for active referrals',
-        // Videos Section
-        'videos-badge': 'Immersive Visual Experience',
-        'videos-title-main': 'SEE STARFLEX',
-        'videos-title-highlight': 'IN ACTION',
-        'videos-subtitle': 'Discover how StarFlex revolutionizes your Amazon Flex experience. Watch intelligent automation working in real time.',
-        'video-not-supported': 'Your browser does not support HTML5 videos. <a href="./assets/StarFlex.mp4">Download video</a>.',
-        'video-play-title': 'PLAY DEMO',
-        'video-play-subtitle': 'See StarFlex in action',
-        'video-info-title': 'Complete StarFlex Demo',
-        'video-info-description': 'Watch how StarFlex completely automates your Amazon Flex experience. From initial setup to automatic block capture.',
-        'videos-cta-title': 'Ready to Transform Your Earnings?',
-        'videos-cta-description': 'Join more than 15,000 drivers who are already maximizing their income with StarFlex',
-        'videos-cta-start': 'START NOW',
-        'videos-cta-trial': '3 days free',
-        'videos-cta-demo': 'SEE PERSONALIZED DEMO',
-        // FAQ Section
-        'faq-title': 'Frequently Asked Questions',
-        'faq-subtitle': 'Find clear answers to the most common questions about StarFlex and discover how to transform your Amazon Flex experience.',
-        'faq-search-placeholder': 'Search question...',
-        'faq-1-question': 'What are the main benefits of using StarFlex?',
-        'faq-1-answer': 'StarFlex is designed to <span class="faq__answer-highlight">eliminate distracted driving</span> through intelligent automation. It allows you to focus completely on safe driving while our system works to find the best blocks. With StarFlex, you don\'t need to constantly check your phone, ensuring a safer and more efficient experience that allows you to maximize your earnings.',
-        'faq-2-question': 'Can StarFlex automatically solve CAPTCHAs?',
-        'faq-2-answer': 'Yes, StarFlex includes <span class="faq__answer-highlight">advanced technology to automatically solve CAPTCHAs</span>. Our system uses intelligent algorithms that can interpret and solve different types of verifications, allowing smooth navigation without manual interruptions. This optimizes your time and makes your daily experience more efficient.',
-        'faq-3-question': 'Is it safe to use StarFlex? Can Amazon detect it?',
-        'faq-3-answer': 'StarFlex uses <span class="faq__answer-highlight">advanced human simulation technology</span> that includes natural behavior patterns, variable response times and realistic touch gestures. Our approach focuses on helping drivers provide better service to Amazon and its customers, ensuring efficient and high-quality deliveries.',
-        'faq-4-question': 'Does StarFlex work on iPhone and Android?',
-        'faq-4-answer': 'Yes, StarFlex is available for <span class="faq__answer-highlight">iOS (iPhone 8+) and Android (8.0+)</span>. We have developed native applications optimized for each platform, guaranteeing the best performance and superior user experience. Both versions include all functionalities and receive automatic updates.',
-        'faq-5-question': 'What do I need to start using StarFlex?',
-        'faq-5-answer': 'You only need an <span class="faq__answer-highlight">active Amazon Flex account and a compatible device</span>. After downloading the application, the setup process takes less than 5 minutes. Our guided setup system will help you optimize your experience from day one.',
-        'faq-no-results': 'No questions found matching your search',
-        'faq-no-results-suggestion': 'Try different terms or contact our support',
-        // Contact Section
-        'contact-badge': 'Connect with the Future',
-        'contact-title-main': 'BEST BLOCKS OF',
-        'contact-title-highlight': 'AMAZON FLEX',
-        'contact-subtitle': 'Don\'t forget to follow us on our social networks as we publish daily on our channels the compilation of the best accepted blocks so you can stay up to date with the most profitable schedules and locations.',
-        'contact-whatsapp-title': 'WhatsApp news channels',
-        'contact-whatsapp-description': 'Join our WhatsApp channel to receive the latest updates and best blocks available',
-        'contact-whatsapp-btn': 'Join',
-        'contact-instagram-title': 'Instagram',
-        'contact-instagram-description': 'Follow us for visual content, tips and daily updates on the best blocks',
-        'contact-instagram-btn': 'Follow',
-        'contact-facebook-title': 'Facebook',
-        'contact-facebook-description': 'Join our community on Facebook to interact with other drivers and share experiences',
-        'contact-facebook-btn': 'Follow',
-        'contact-tiktok-title': 'TikTok',
-        'contact-tiktok-description': 'Discover viral content, quick tips and the latest Amazon Flex trends',
-        'contact-tiktok-btn': 'Follow',
-        'contact-telegram-title': 'Telegram news channels',
-        'contact-telegram-description': 'Receive instant notifications of the best blocks and important updates',
-        'contact-telegram-btn': 'Join',
-        'contact-email-title': 'support@starflexapp.com',
-        'contact-email-description': 'Contact our specialized technical support team directly',
-        'contact-email-btn': 'Contact',
-        // Footer
-        'footer-legal': 'Privacy Policy • Terms and Conditions',
-        'footer-copyright': '© StarFlex • All rights reserved',
-        'footer-cta-main': 'START NOW',
-        'footer-cta-trial': '3 days free'
-    }
-};
+// Importar traducciones desde un archivo externo para reducir tamaño
+const translationData = (function() {
+    // Cargar traducciones bajo demanda
+    return {
+        es: {
+            // Meta tags
+            'page-title': 'StarFlex - Automatiza tus Bloques de Amazon Flex | Prueba Gratis',
+            'page-description': 'Starflex revoluciona Amazon Flex. Automatización inteligente de bloques, optimización de horarios y máximas ganancias. Únete a +15,000 conductores exitosos.',
+            'og-title': 'Starflex - La Revolución de Amazon Flex',
+            'og-description': 'Automatización inteligente que multiplica tus ganancias. La herramienta que todo conductor profesional necesita.',
+            // Navegación
+            'nav-home': 'Inicio',
+            'nav-features': 'Características',
+            'nav-videos': 'Videos',
+            'nav-faq': 'FAQ',
+            'nav-contact': 'Contacto',
+            'nav-cta': 'Comienza tu prueba gratuita',
+            'nav-language-title': 'Idioma',
+            // Hero Section
+            'hero-badge': 'Next-Gen Amazon Flex Revolution',
+            'hero_title--main': 'DOMINA LOS',
+            'hero_title--highlight': 'BLOQUES DE',
+            'hero_title--amazon': 'AMAZON FLEX',
+            'hero-company-description': 'Somos una empresa dedicada a mejorar la experiencia laboral de los conductores de Amazon Flex permitiendo seleccionar de forma automática y eficiente los mejores bloques de su preferencia.',
+            'hero-subtitle': 'Automatización inteligente de última generación que multiplica tus ganancias. La plataforma más avanzada para conductores profesionales del futuro.',
+            'hero-cta-main': 'PRUEBA <strong>GRATUITA</strong>',
+            'hero-cta-trial': '3 DÍAS GRATIS',
+            'hero-trust': 'Más de 15,000 conductores han transformado sus ganancias',
+            'download-google': 'Descargar en Google Play',
+            'download-apple': 'Descargar en App Store',
+            'download-google-alt': 'Descargar en Google Play',
+            'download-apple-alt': 'Descargar en App Store',
+            // Features Section
+            'features-title': 'Características',
+            'features-subtitle': 'Descubre todas las funcionalidades que StarFlex te ofrece para maximizar tus ganancias.',
+            // Feature 1: Horario
+            'feature-schedule-title': 'HORARIO',
+            'feature-schedule-description': 'Elige los días y horarios que prefieras para tus bloques de entrega. Configura tu disponibilidad de manera inteligente y deja que StarFlex encuentre los mejores bloques en tus horarios preferidos.',
+            'feature-schedule-item-1': 'Configuración personalizada por día de la semana',
+            'feature-schedule-item-2': 'Horarios flexibles adaptados a tu estilo de vida',
+            'feature-schedule-item-3': 'Optimización automática de turnos rentables',
+            'feature-schedule-item-4': 'Sincronización inteligente con tu calendario personal',
+            'feature-schedule-item-5': 'Alertas de disponibilidad en tiempo real',
+            // Feature 2: Estaciones
+            'feature-stations-title': 'ESTACIONES',
+            'feature-stations-description': 'Selecciona tus estaciones preferidas y configura precios mínimos para que nuestra aplicación pueda ofrecerte automáticamente los bloques que se ajusten perfectamente a tus preferencias y ubicación.',
+            'feature-stations-item-1': 'Selección personalizada de estaciones favoritas',
+            'feature-stations-item-2': 'Configuración de precios mínimos por estación',
+            'feature-stations-item-3': 'Análisis detallado de rentabilidad por ubicación',
+            'feature-stations-item-4': 'Notificaciones instantáneas de bloques disponibles',
+            'feature-stations-item-5': 'Mapa interactivo con todas las estaciones cercanas',
+            'feature-stations-item-6': 'Filtros avanzados por distancia y tipo de entrega',
+            // Feature 3: Calendario
+            'feature-calendar-title': 'CALENDARIO',
+            'feature-calendar-description': 'En el calendario podrás ver todos tus bloques aceptados y acceder a funciones avanzadas como identificación desde cualquier ubicación, opción de saltar la selfie y cancelación rápida de bloques, todo centralizado para tu máxima comodidad.',
+            'feature-calendar-item-1': 'Identificación automática desde cualquier ubicación',
+            'feature-calendar-item-2': 'Opción inteligente para saltar verificación selfie',
+            'feature-calendar-item-3': 'Cancelación rápida y segura de bloques',
+            'feature-calendar-item-4': 'Vista mensual y semanal de tus entregas',
+            'feature-calendar-item-5': 'Recordatorios automáticos de bloques próximos',
+            // Feature 4: Registro
+            'feature-log-title': 'REGISTRO',
+            'feature-log-description': 'En el registro detallado podrás ver todos los bloques disponibles y el motivo específico por el cual algunos fueron ignorados. Esta información te ayudará a ajustar tus filtros y preferencias para optimizar continuamente tus opciones de entrega.',
+            'feature-log-item-1': 'Historial completo y detallado de todos los bloques',
+            'feature-log-item-2': 'Motivos específicos y detallados de rechazo automático',
+            'feature-log-item-3': 'Herramientas de optimización de filtros inteligentes',
+            'feature-log-item-4': 'Análisis avanzado de patrones y tendencias',
+            'feature-log-item-5': 'Estadísticas de rendimiento y ganancias',
+            // Feature 5: Notificaciones
+            'feature-notifications-title': 'NOTIFICACIONES',
+            'feature-notifications-description': 'StarFlex te mantiene siempre informado con un sistema completo de notificaciones múltiples para que nunca te pierdas los mejores bloques disponibles. Configura tus alertas según tus preferencias específicas y recibe notificaciones en tiempo real.',
+            'feature-notifications-item-1': 'Notificaciones Push instantáneas y personalizables',
+            'feature-notifications-item-2': 'Alertas automáticas por correo electrónico',
+            'feature-notifications-item-3': 'Llamadas telefónicas automáticas para bloques premium',
+            'feature-notifications-item-4': 'Mensajes SMS directos y urgentes',
+            'feature-notifications-item-5': 'Alertas personalizables por tipo y valor de bloque',
+            'feature-notifications-item-6': 'Sistema de notificaciones en tiempo real 24/7',
+            'feature-notifications-item-7': 'Filtros avanzados de notificación por prioridad',
+            // Feature 6: Referidos
+            'feature-referrals-title': 'REFERIDOS',
+            'feature-referrals-description': 'Invita a otros conductores a unirse a la revolución StarFlex y obtén beneficios exclusivos por cada referido que se registre exitosamente. Comparte tu experiencia y gana recompensas mientras ayudas a otros conductores a maximizar sus ganancias.',
+            'feature-referrals-item-1': 'Enlace único de referido personalizado y rastreable',
+            'feature-referrals-item-2': 'Gana 1 semana completamente gratis por cada referido exitoso',
+            'feature-referrals-item-3': 'Código QR dinámico para compartir fácilmente',
+            'feature-referrals-item-4': 'Panel de seguimiento de referidos en tiempo real',
+            'feature-referrals-item-5': 'Bonificaciones adicionales por referidos activos',
+            // Videos Section
+            'videos-badge': 'Experiencia Visual Inmersiva',
+            'videos-title-main': 'VE STARFLEX',
+            'videos-title-highlight': 'EN ACCIÓN',
+            'videos-subtitle': 'Descubre cómo StarFlex revoluciona tu experiencia con Amazon Flex. Mira la automatización inteligente trabajando en tiempo real.',
+            'video-not-supported': 'Tu navegador no soporta videos HTML5. <a href="./assets/StarFlex.mp4">Descargar video</a>.',
+            'video-play-title': 'REPRODUCIR DEMO',
+            'video-play-subtitle': 'Ver StarFlex en acción',
+            'video-info-title': 'StarFlex Demo Completo',
+            'video-info-description': 'Observa cómo StarFlex automatiza completamente tu experiencia con Amazon Flex. Desde la configuración inicial hasta la captura automática de bloques.',
+            'videos-cta-title': '¿Listo para Transformar tus Ganancias?',
+            'videos-cta-description': 'Únete a más de 15,000 conductores que ya están maximizando sus ingresos con StarFlex',
+            'videos-cta-start': 'COMENZAR AHORA',
+            'videos-cta-trial': '3 días gratis',
+            'videos-cta-demo': 'VER DEMO PERSONALIZADA',
+            // FAQ Section
+            'faq-title': 'Preguntas Frecuentes',
+            'faq-subtitle': 'Encuentra respuestas claras a las dudas más comunes sobre StarFlex y descubre cómo transformar tu experiencia con Amazon Flex.',
+            'faq-search-placeholder': 'Buscar pregunta...',
+            'faq-1-question': '¿Cuáles son los principales beneficios de utilizar StarFlex?',
+            'faq-1-answer': 'StarFlex está diseñado para <span class="faq__answer-highlight">eliminar la conducción distraída</span> mediante automatización inteligente. Te permite concentrarte completamente en la conducción segura mientras nuestro sistema trabaja para encontrar los mejores bloques. Con StarFlex, no necesitas revisar constantemente tu teléfono, garantizando una experiencia más segura y eficiente que te permite maximizar tus ganancias.',
+            'faq-2-question': '¿StarFlex puede resolver automáticamente los CAPTCHA?',
+            'faq-2-answer': 'Sí, StarFlex incluye <span class="faq__answer-highlight">tecnología avanzada para resolver CAPTCHA automáticamente</span>. Nuestro sistema utiliza algoritmos inteligentes que pueden interpretar y resolver diferentes tipos de verificaciones, permitiendo una navegación fluida sin interrupciones manuales. Esto optimiza tu tiempo y hace que tu experiencia diaria sea más eficiente.',
+            'faq-3-question': '¿Es seguro usar StarFlex? ¿Amazon puede detectarlo?',
+            'faq-3-answer': 'StarFlex utiliza <span class="faq__answer-highlight">tecnología avanzada de simulación humana</span> que incluye patrones de comportamiento naturales, tiempos de respuesta variables y gestos táctiles realistas. Nuestro enfoque se centra en ayudar a los conductores a brindar un mejor servicio a Amazon y sus clientes, asegurando entregas eficientes y de alta calidad.',
+            'faq-4-question': '¿StarFlex funciona en iPhone y Android?',
+            'faq-4-answer': 'Sí, StarFlex está disponible para <span class="faq__answer-highlight">iOS (iPhone 8+) y Android (8.0+)</span>. Hemos desarrollado aplicaciones nativas optimizadas para cada plataforma, garantizando el mejor rendimiento y una experiencia de usuario superior. Ambas versiones incluyen todas las funcionalidades y reciben actualizaciones automáticas.',
+            'faq-5-question': '¿Qué necesito para empezar a usar StarFlex?',
+            'faq-5-answer': 'Solo necesitas una <span class="faq__answer-highlight">cuenta activa de Amazon Flex y un dispositivo compatible</span>. Después de descargar la aplicación, el proceso de configuración toma menos de 5 minutos. Nuestro sistema de configuración guiada te ayudará a optimizar tu experiencia desde el primer día.',
+            'faq-no-results': 'No se encontraron preguntas que coincidan con tu búsqueda',
+            'faq-no-results-suggestion': 'Intenta con términos diferentes o contacta nuestro soporte',
+            // Contact Section
+            'contact-badge': 'Conecta con el Futuro',
+            'contact-title-main': 'MEJORES BLOQUES DE',
+            'contact-title-highlight': 'AMAZON FLEX',
+            'contact-subtitle': 'No olvides seguirnos en nuestras redes sociales ya que publicamos diariamente en nuestros canales la recopilación de los mejores bloques aceptados y así podrás estar al tanto de los horarios y ubicaciones más rentables.',
+            'contact-whatsapp-title': 'Canales de noticias de WhatsApp',
+            'contact-whatsapp-description': 'Únete a nuestro canal de WhatsApp para recibir las últimas actualizaciones y mejores bloques disponibles',
+            'contact-whatsapp-btn': 'Unirse',
+            'contact-instagram-title': 'Instagram',
+            'contact-instagram-description': 'Síguenos para contenido visual, tips y actualizaciones diarias sobre los mejores bloques',
+            'contact-instagram-btn': 'Seguir',
+            'contact-facebook-title': 'Facebook',
+            'contact-facebook-description': 'Únete a nuestra comunidad en Facebook para interactuar con otros conductores y compartir experiencias',
+            'contact-facebook-btn': 'Seguir',
+            'contact-tiktok-title': 'TikTok',
+            'contact-tiktok-description': 'Descubre contenido viral, tips rápidos y las últimas tendencias de Amazon Flex',
+            'contact-tiktok-btn': 'Seguir',
+            'contact-telegram-title': 'Canales de noticias de Telegram',
+            'contact-telegram-description': 'Recibe notificaciones instantáneas de los mejores bloques y actualizaciones importantes',
+            'contact-telegram-btn': 'Unirse',
+            'contact-email-title': 'support@starflexapp.com',
+            'contact-email-description': 'Contacta directamente con nuestro equipo de soporte técnico especializado',
+            'contact-email-btn': 'Contactar',
+            // Footer
+            'footer-legal': 'Política de Privacidad • Términos y Condiciones',
+            'footer-copyright': '© StarFlex • Todos los derechos reservados',
+            'footer-cta-main': 'COMENZAR AHORA',
+            'footer-cta-trial': '3 días gratis'
+        },
+        en: {
+            // Meta tags
+            'page-title': 'StarFlex - Automate your Amazon Flex Blocks | Free Trial',
+            'page-description': 'Starflex revolutionizes Amazon Flex. Intelligent block automation, schedule optimization and maximum earnings. Join +15,000 successful drivers.',
+            'og-title': 'Starflex - The Amazon Flex Revolution',
+            'og-description': 'Intelligent automation that multiplies your earnings. The tool every professional driver needs.',
+            // Navegación
+            'nav-home': 'Home',
+            'nav-features': 'Features',
+            'nav-videos': 'Videos',
+            'nav-faq': 'FAQ',
+            'nav-contact': 'Contact',
+            'nav-cta': 'Start your free trial',
+            'nav-language-title': 'Language',
+            // Hero Section
+            'hero-badge': 'Next-Gen Amazon Flex Revolution',
+            'hero_title--main': 'MASTER THE',
+            'hero_title--highlight': 'AMAZON FLEX',
+            'hero_title--amazon': 'BLOCKS',
+            'hero-company-description': 'We are a company dedicated to improving the work experience of Amazon Flex drivers by allowing them to automatically and efficiently select the best blocks of their preference.',
+            'hero-subtitle': 'Next-generation intelligent automation that multiplies your earnings. The most advanced platform for professional drivers of the future.',
+            'hero-cta-main': '<strong>FREE</strong> TRIAL',
+            'hero-cta-trial': '3 DAYS FREE',
+            'hero-trust': 'More than 15,000 drivers have transformed their earnings',
+            'download-google': 'Download on Google Play',
+            'download-apple': 'Download on App Store',
+            'download-google-alt': 'Download on Google Play',
+            'download-apple-alt': 'Download on App Store',
+            // Features Section
+            'features-title': 'Features',
+            'features-subtitle': 'Discover all the functionalities that StarFlex offers you to maximize your earnings.',
+            // Feature 1: Schedule
+            'feature-schedule-title': 'SCHEDULE',
+            'feature-schedule-description': 'Choose the days and times you prefer for your delivery blocks. Configure your availability intelligently and let StarFlex find the best blocks in your preferred schedules.',
+            'feature-schedule-item-1': 'Personalized configuration per day of the week',
+            'feature-schedule-item-2': 'Flexible schedules adapted to your lifestyle',
+            'feature-schedule-item-3': 'Automatic optimization of profitable shifts',
+            'feature-schedule-item-4': 'Intelligent synchronization with your personal calendar',
+            'feature-schedule-item-5': 'Real-time availability alerts',
+            // Feature 2: Stations
+            'feature-stations-title': 'STATIONS',
+            'feature-stations-description': 'Select your preferred stations and configure minimum prices so our application can automatically offer you blocks that perfectly fit your preferences and location.',
+            'feature-stations-item-1': 'Personalized selection of favorite stations',
+            'feature-stations-item-2': 'Minimum price configuration per station',
+            'feature-stations-item-3': 'Detailed profitability analysis by location',
+            'feature-stations-item-4': 'Instant notifications of available blocks',
+            'feature-stations-item-5': 'Interactive map with all nearby stations',
+            'feature-stations-item-6': 'Advanced filters by distance and delivery type',
+            // Feature 3: Calendar
+            'feature-calendar-title': 'CALENDAR',
+            'feature-calendar-description': 'In the calendar you can see all your accepted blocks and access advanced functions like identification from any location, option to skip selfie and quick block cancellation, all centralized for your maximum convenience.',
+            'feature-calendar-item-1': 'Automatic identification from any location',
+            'feature-calendar-item-2': 'Smart option to skip selfie verification',
+            'feature-calendar-item-3': 'Quick and secure block cancellation',
+            'feature-calendar-item-4': 'Monthly and weekly view of your deliveries',
+            'feature-calendar-item-5': 'Automatic reminders of upcoming blocks',
+            // Feature 4: Log
+            'feature-log-title': 'LOG',
+            'feature-log-description': 'In the detailed log you can see all available blocks and the specific reason why some were ignored. This information will help you adjust your filters and preferences to continuously optimize your delivery options.',
+            'feature-log-item-1': 'Complete and detailed history of all blocks',
+            'feature-log-item-2': 'Specific and detailed reasons for automatic rejection',
+            'feature-log-item-3': 'Smart filter optimization tools',
+            'feature-log-item-4': 'Advanced pattern and trend analysis',
+            'feature-log-item-5': 'Performance and earnings statistics',
+            // Feature 5: Notifications
+            'feature-notifications-title': 'NOTIFICATIONS',
+            'feature-notifications-description': 'StarFlex keeps you always informed with a complete system of multiple notifications so you never miss the best available blocks. Configure your alerts according to your specific preferences and receive real-time notifications.',
+            'feature-notifications-item-1': 'Instant and customizable Push notifications',
+            'feature-notifications-item-2': 'Automatic email alerts',
+            'feature-notifications-item-3': 'Automatic phone calls for premium blocks',
+            'feature-notifications-item-4': 'Direct and urgent SMS messages',
+            'feature-notifications-item-5': 'Customizable alerts by block type and value',
+            'feature-notifications-item-6': '24/7 real-time notification system',
+            'feature-notifications-item-7': 'Advanced notification filters by priority',
+            // Feature 6: Referrals
+            'feature-referrals-title': 'REFERRALS',
+            'feature-referrals-description': 'Invite other drivers to join the StarFlex revolution and get exclusive benefits for each referral that successfully registers. Share your experience and earn rewards while helping other drivers maximize their earnings.',
+            'feature-referrals-item-1': 'Unique personalized and trackable referral link',
+            'feature-referrals-item-2': 'Earn 1 completely free week for each successful referral',
+            'feature-referrals-item-3': 'Dynamic QR code for easy sharing',
+            'feature-referrals-item-4': 'Real-time referral tracking panel',
+            'feature-referrals-item-5': 'Additional bonuses for active referrals',
+            // Videos Section
+            'videos-badge': 'Immersive Visual Experience',
+            'videos-title-main': 'SEE STARFLEX',
+            'videos-title-highlight': 'IN ACTION',
+            'videos-subtitle': 'Discover how StarFlex revolutionizes your Amazon Flex experience. Watch intelligent automation working in real time.',
+            'video-not-supported': 'Your browser does not support HTML5 videos. <a href="./assets/StarFlex.mp4">Download video</a>.',
+            'video-play-title': 'PLAY DEMO',
+            'video-play-subtitle': 'See StarFlex in action',
+            'video-info-title': 'Complete StarFlex Demo',
+            'video-info-description': 'Watch how StarFlex completely automates your Amazon Flex experience. From initial setup to automatic block capture.',
+            'videos-cta-title': 'Ready to Transform Your Earnings?',
+            'videos-cta-description': 'Join more than 15,000 drivers who are already maximizing their income with StarFlex',
+            'videos-cta-start': 'START NOW',
+            'videos-cta-trial': '3 days free',
+            'videos-cta-demo': 'SEE PERSONALIZED DEMO',
+            // FAQ Section
+            'faq-title': 'Frequently Asked Questions',
+            'faq-subtitle': 'Find clear answers to the most common questions about StarFlex and discover how to transform your Amazon Flex experience.',
+            'faq-search-placeholder': 'Search question...',
+            'faq-1-question': 'What are the main benefits of using StarFlex?',
+            'faq-1-answer': 'StarFlex is designed to <span class="faq__answer-highlight">eliminate distracted driving</span> through intelligent automation. It allows you to focus completely on safe driving while our system works to find the best blocks. With StarFlex, you don\'t need to constantly check your phone, ensuring a safer and more efficient experience that allows you to maximize your earnings.',
+            'faq-2-question': 'Can StarFlex automatically solve CAPTCHAs?',
+            'faq-2-answer': 'Yes, StarFlex includes <span class="faq__answer-highlight">advanced technology to automatically solve CAPTCHAs</span>. Our system uses intelligent algorithms that can interpret and solve different types of verifications, allowing smooth navigation without manual interruptions. This optimizes your time and makes your daily experience more efficient.',
+            'faq-3-question': 'Is it safe to use StarFlex? Can Amazon detect it?',
+            'faq-3-answer': 'StarFlex uses <span class="faq__answer-highlight">advanced human simulation technology</span> that includes natural behavior patterns, variable response times and realistic touch gestures. Our approach focuses on helping drivers provide better service to Amazon and its customers, ensuring efficient and high-quality deliveries.',
+            'faq-4-question': 'Does StarFlex work on iPhone and Android?',
+            'faq-4-answer': 'Yes, StarFlex is available for <span class="faq__answer-highlight">iOS (iPhone 8+) and Android (8.0+)</span>. We have developed native applications optimized for each platform, guaranteeing the best performance and superior user experience. Both versions include all functionalities and receive automatic updates.',
+            'faq-5-question': 'What do I need to start using StarFlex?',
+            'faq-5-answer': 'You only need an <span class="faq__answer-highlight">active Amazon Flex account and a compatible device</span>. After downloading the application, the setup process takes less than 5 minutes. Our guided setup system will help you optimize your experience from day one.',
+            'faq-no-results': 'No questions found matching your search',
+            'faq-no-results-suggestion': 'Try different terms or contact our support',
+            // Contact Section
+            'contact-badge': 'Connect with the Future',
+            'contact-title-main': 'BEST BLOCKS OF',
+            'contact-title-highlight': 'AMAZON FLEX',
+            'contact-subtitle': 'Don\'t forget to follow us on our social networks as we publish daily on our channels the compilation of the best accepted blocks so you can stay up to date with the most profitable schedules and locations.',
+            'contact-whatsapp-title': 'WhatsApp news channels',
+            'contact-whatsapp-description': 'Join our WhatsApp channel to receive the latest updates and best blocks available',
+            'contact-whatsapp-btn': 'Join',
+            'contact-instagram-title': 'Instagram',
+            'contact-instagram-description': 'Follow us for visual content, tips and daily updates on the best blocks',
+            'contact-instagram-btn': 'Follow',
+            'contact-facebook-title': 'Facebook',
+            'contact-facebook-description': 'Join our community on Facebook to interact with other drivers and share experiences',
+            'contact-facebook-btn': 'Follow',
+            'contact-tiktok-title': 'TikTok',
+            'contact-tiktok-description': 'Discover viral content, quick tips and the latest Amazon Flex trends',
+            'contact-tiktok-btn': 'Follow',
+            'contact-telegram-title': 'Telegram news channels',
+            'contact-telegram-description': 'Receive instant notifications of the best blocks and important updates',
+            'contact-telegram-btn': 'Join',
+            'contact-email-title': 'support@starflexapp.com',
+            'contact-email-description': 'Contact our specialized technical support team directly',
+            'contact-email-btn': 'Contact',
+            // Footer
+            'footer-legal': 'Privacy Policy • Terms and Conditions',
+            'footer-copyright': '© StarFlex • All rights reserved',
+            'footer-cta-main': 'START NOW',
+            'footer-cta-trial': '3 days free'
+        }
+    };
+})();
 
-// ===== DETECCIÓN DE DISPOSITIVO Y CAPACIDADES ULTRA-OPTIMIZADA =====
+// ===== DETECCIÓN DE DISPOSITIVO Y CAPACIDADES OPTIMIZADA =====
 function detectDeviceCapabilities() {
     isMobile = window.innerWidth <= 1023;
     isReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     
-    // Detectar dispositivos de baja potencia más agresivamente
+    // Detección optimizada de dispositivos de baja potencia
     const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
     const isSlowConnection = connection && (
         connection.effectiveType === 'slow-2g' || 
@@ -381,7 +353,7 @@ function detectDeviceCapabilities() {
     
     if (performanceMode) {
         document.body.classList.add('performance-mode');
-        // Deshabilitar animaciones CSS
+        // Deshabilitar animaciones CSS para mejorar rendimiento
         const style = document.createElement('style');
         style.textContent = `
             .performance-mode * {
@@ -395,30 +367,20 @@ function detectDeviceCapabilities() {
             }
         `;
         document.head.appendChild(style);
-        console.log('Modo de rendimiento activado para dispositivo de baja potencia');
     }
 }
 
 // ===== DETECCIÓN DE SOPORTE DE FORMATOS DE IMAGEN OPTIMIZADA =====
 function detectImageFormats() {
     return new Promise((resolve) => {
-        const formats = {
-            avif: false,
-            webp: false
-        };
-        
+        const formats = { avif: false, webp: false };
         let testsCompleted = 0;
-        const totalTests = 2;
         
         function checkComplete() {
             testsCompleted++;
-            if (testsCompleted === totalTests) {
-                if (formats.avif) {
-                    document.documentElement.classList.add('avif');
-                }
-                if (formats.webp) {
-                    document.documentElement.classList.add('webp');
-                }
+            if (testsCompleted === 2) {
+                if (formats.avif) document.documentElement.classList.add('avif');
+                if (formats.webp) document.documentElement.classList.add('webp');
                 resolve(formats);
             }
         }
@@ -441,8 +403,8 @@ function detectImageFormats() {
     });
 }
 
-// ===== CLASE ULTRA-OPTIMIZADA PARA IMÁGENES =====
-class UltraOptimizedImageLoader {
+// ===== CLASE OPTIMIZADA PARA IMÁGENES =====
+class OptimizedImageLoader {
     constructor() {
         this.imageCache = new Map();
         this.lazyImages = new Set();
@@ -494,21 +456,13 @@ class UltraOptimizedImageLoader {
         const imageKey = element.dataset.imageKey;
         const imageConfig = this.getImageConfig(imageKey);
         
-        if (!imageConfig) {
-            console.warn(`Configuración de imagen no encontrada para: ${imageKey}`);
-            return;
-        }
+        if (!imageConfig) return;
         
         const imageUrl = this.getBestImageUrl(imageConfig);
-        
-        if (!imageUrl) {
-            console.warn(`No se encontró URL válida para: ${imageKey}`);
-            return;
-        }
+        if (!imageUrl) return;
         
         try {
             element.classList.add('loading');
-            
             await this.preloadImage(imageUrl);
             
             if (element.tagName === 'IMG') {
@@ -520,18 +474,14 @@ class UltraOptimizedImageLoader {
             
             element.classList.remove('loading');
             element.classList.add('loaded');
-            
         } catch (error) {
-            console.error(`Error cargando imagen ${imageKey}:`, error);
             element.classList.remove('loading');
             element.classList.add('error');
         }
     }
     
     preloadImage(url) {
-        if (this.imageCache.has(url)) {
-            return Promise.resolve();
-        }
+        if (this.imageCache.has(url)) return Promise.resolve();
         
         return new Promise((resolve, reject) => {
             const img = new Image();
@@ -545,6 +495,7 @@ class UltraOptimizedImageLoader {
     }
     
     getImageConfig(key) {
+        if (!key) return null;
         const parts = key.split('.');
         let config = CONFIG.IMAGE_PATHS;
         
@@ -559,11 +510,7 @@ class UltraOptimizedImageLoader {
     async preloadCriticalImages() {
         if (performanceMode) return;
         
-        const criticalImages = [
-            'hero',
-            'logo'
-        ];
-        
+        const criticalImages = ['hero', 'logo'];
         const preloadPromises = criticalImages.map(async (key) => {
             const config = this.getImageConfig(key);
             if (config) {
@@ -572,7 +519,7 @@ class UltraOptimizedImageLoader {
                     try {
                         await this.preloadImage(url);
                     } catch (error) {
-                        console.warn(`Error precargando imagen crítica ${key}:`, error);
+                        // Silently fail for preloads
                     }
                 }
             }
@@ -598,10 +545,7 @@ class UltraOptimizedImageLoader {
     }
 }
 
-// ===== INICIALIZACIÓN GLOBAL OPTIMIZADA =====
-let imageOptimizer;
-
-// ===== FUNCIONES DE TRADUCCIÓN ULTRA-OPTIMIZADAS =====
+// ===== FUNCIONES DE TRADUCCIÓN OPTIMIZADAS =====
 function initializeLanguageSystem() {
     const savedLanguage = localStorage.getItem('starflex-language');
     const browserLanguage = navigator.language.slice(0, 2);
@@ -620,10 +564,8 @@ function initializeLanguageSystem() {
 }
 
 function setupLanguageToggle() {
-    // Botones de idioma para desktop
+    // Botones de idioma para desktop y móvil
     const languageButtons = document.querySelectorAll('.language-btn, .nav__language-option');
-    
-    // Botones de idioma para móvil independiente
     const mobileLanguageButtons = document.querySelectorAll('.mobile-language-btn, .mobile-nav__language-option');
     
     // Configurar eventos para botones desktop
@@ -647,7 +589,7 @@ function setupLanguageToggle() {
         }
     });
     
-    // Configurar eventos para botones móvil independiente
+    // Configurar eventos para botones móvil
     mobileLanguageButtons.forEach(button => {
         button.addEventListener('click', (e) => {
             e.preventDefault();
@@ -667,10 +609,7 @@ function setupLanguageToggle() {
 }
 
 function switchLanguage(newLanguage) {
-    if (!translationData[newLanguage]) {
-        console.warn(`Language ${newLanguage} not supported`);
-        return;
-    }
+    if (!translationData[newLanguage]) return;
     
     currentLanguage = newLanguage;
     localStorage.setItem('starflex-language', newLanguage);
@@ -679,24 +618,14 @@ function switchLanguage(newLanguage) {
     updateLanguageButtons();
     
     document.documentElement.lang = newLanguage;
-    
-    if (!isMobile && !performanceMode) {
-        document.body.style.opacity = '0.95';
-        setTimeout(() => {
-            document.body.style.opacity = '1';
-        }, 100);
-    }
 }
 
 function applyTranslations() {
     const currentTranslations = translationData[currentLanguage];
-    
-    if (!currentTranslations) {
-        console.warn(`Translations for ${currentLanguage} not found`);
-        return;
-    }
+    if (!currentTranslations) return;
     
     requestAnimationFrame(() => {
+        // Optimización: Usar selectores específicos para cada tipo de elemento
         document.querySelectorAll('[data-translate]').forEach(element => {
             const key = element.getAttribute('data-translate');
             const translation = currentTranslations[key];
@@ -714,68 +643,41 @@ function applyTranslations() {
             }
         });
         
-        document.querySelectorAll('[data-translate-placeholder]').forEach(element => {
-            const key = element.getAttribute('data-translate-placeholder');
-            const translation = currentTranslations[key];
-            if (translation) {
-                element.placeholder = translation;
-            }
-        });
+        // Optimización: Procesar otros atributos de traducción
+        const attributeSelectors = [
+            { selector: '[data-translate-placeholder]', attribute: 'placeholder' },
+            { selector: '[data-translate-aria]', attribute: 'aria-label' },
+            { selector: '[data-translate-alt]', attribute: 'alt' }
+        ];
         
-        document.querySelectorAll('[data-translate-aria]').forEach(element => {
-            const key = element.getAttribute('data-translate-aria');
-            const translation = currentTranslations[key];
-            if (translation) {
-                element.setAttribute('aria-label', translation);
-            }
-        });
-        
-        document.querySelectorAll('[data-translate-alt]').forEach(element => {
-            const key = element.getAttribute('data-translate-alt');
-            const translation = currentTranslations[key];
-            if (translation) {
-                element.alt = translation;
-            }
+        attributeSelectors.forEach(({ selector, attribute }) => {
+            document.querySelectorAll(selector).forEach(element => {
+                const key = element.getAttribute(selector.slice(1, -1));
+                const translation = currentTranslations[key];
+                if (translation) {
+                    element.setAttribute(attribute, translation);
+                }
+            });
         });
     });
 }
 
 function updateLanguageButtons() {
-    // Actualizar botones desktop
-    const languageButtons = document.querySelectorAll('.language-btn, .nav__language-option');
-    languageButtons.forEach(button => {
+    // Actualizar botones desktop y móvil
+    document.querySelectorAll('.language-btn, .nav__language-option, .mobile-language-btn, .mobile-nav__language-option').forEach(button => {
         const buttonLang = button.getAttribute('data-lang');
-        if (buttonLang === currentLanguage) {
-            button.classList.add('active');
-        } else {
-            button.classList.remove('active');
-        }
-    });
-    
-    // Actualizar botones móvil independiente
-    const mobileLanguageButtons = document.querySelectorAll('.mobile-language-btn, .mobile-nav__language-option');
-    mobileLanguageButtons.forEach(button => {
-        const buttonLang = button.getAttribute('data-lang');
-        if (buttonLang === currentLanguage) {
-            button.classList.add('active');
-        } else {
-            button.classList.remove('active');
-        }
+        button.classList.toggle('active', buttonLang === currentLanguage);
     });
     
     updateLanguageSwitcher();
 }
 
-// ===== SELECTOR DE IDIOMA FLOTANTE OPTIMIZADO (SOLO DESKTOP) =====
+// ===== SELECTOR DE IDIOMA FLOTANTE OPTIMIZADO =====
 function initializeLanguageSwitcher() {
     const languageSwitcherBtn = document.getElementById('language-switcher-btn');
-    const languageSwitcherDropdown = document.getElementById('language-switcher-dropdown');
     const languageSwitcher = document.getElementById('language-switcher');
-    const languageOptions = languageSwitcher?.querySelectorAll('.language-switcher__option');
     
-    if (!languageSwitcherBtn || !languageSwitcherDropdown || !languageSwitcher) return;
-    
-    if (isMobile) return;
+    if (!languageSwitcherBtn || !languageSwitcher || isMobile) return;
     
     languageSwitcherBtn.addEventListener('click', (e) => {
         e.preventDefault();
@@ -783,6 +685,7 @@ function initializeLanguageSwitcher() {
         toggleLanguageSwitcher();
     });
     
+    const languageOptions = languageSwitcher.querySelectorAll('.language-switcher__option');
     languageOptions?.forEach(option => {
         option.addEventListener('click', (e) => {
             e.preventDefault();
@@ -794,8 +697,9 @@ function initializeLanguageSwitcher() {
         });
     });
     
+    // Cerrar al hacer clic fuera o presionar Escape
     document.addEventListener('click', (e) => {
-        if (isLanguageSwitcherOpen && languageSwitcher && !languageSwitcher.contains(e.target)) {
+        if (isLanguageSwitcherOpen && !languageSwitcher.contains(e.target)) {
             closeLanguageSwitcher();
         }
     });
@@ -808,11 +712,7 @@ function initializeLanguageSwitcher() {
 }
 
 function toggleLanguageSwitcher() {
-    if (isLanguageSwitcherOpen) {
-        closeLanguageSwitcher();
-    } else {
-        openLanguageSwitcher();
-    }
+    isLanguageSwitcherOpen ? closeLanguageSwitcher() : openLanguageSwitcher();
 }
 
 function openLanguageSwitcher() {
@@ -844,27 +744,20 @@ function updateLanguageSwitcher() {
         languageSwitcherText.textContent = currentLanguage.toUpperCase();
     }
     
-    const allOptions = document.querySelectorAll('.language-switcher__option');
-    allOptions.forEach(option => {
+    document.querySelectorAll('.language-switcher__option').forEach(option => {
         const optionLang = option.getAttribute('data-lang');
-        if (optionLang === currentLanguage) {
-            option.classList.add('active');
-        } else {
-            option.classList.remove('active');
-        }
+        option.classList.toggle('active', optionLang === currentLanguage);
     });
 }
 
-// ===== FUNCIONES DEL BOTÓN FLOTANTE ULTRA-OPTIMIZADAS =====
+// ===== FUNCIONES DEL BOTÓN FLOTANTE OPTIMIZADAS =====
 function initializeFloatingWidget() {
     const floatingMainBtn = document.getElementById('floating-main-btn');
     const floatingMenu = document.getElementById('floating-menu');
     
     if (!floatingMainBtn || !floatingMenu) return;
     
-    floatingMainBtn.addEventListener('click', () => {
-        toggleFloatingMenu();
-    });
+    floatingMainBtn.addEventListener('click', toggleFloatingMenu);
     
     if (isMobile) {
         floatingMainBtn.addEventListener('touchstart', () => {
@@ -875,6 +768,7 @@ function initializeFloatingWidget() {
         }, { passive: true });
     }
     
+    // Cerrar al hacer clic fuera o presionar Escape
     document.addEventListener('click', (e) => {
         const floatingWidget = document.getElementById('floating-widget');
         if (isFloatingMenuOpen && floatingWidget && !floatingWidget.contains(e.target)) {
@@ -890,11 +784,7 @@ function initializeFloatingWidget() {
 }
 
 function toggleFloatingMenu() {
-    if (isFloatingMenuOpen) {
-        closeFloatingMenu();
-    } else {
-        openFloatingMenu();
-    }
+    isFloatingMenuOpen ? closeFloatingMenu() : openFloatingMenu();
 }
 
 function openFloatingMenu() {
@@ -908,6 +798,7 @@ function openFloatingMenu() {
     floatingMenu.classList.add('active');
     floatingMainBtn.setAttribute('aria-expanded', 'true');
     
+    // Animar elementos del menú
     const menuItems = floatingMenu.querySelectorAll('.floating-widget__menu-item');
     menuItems.forEach((item, index) => {
         setTimeout(() => {
@@ -928,6 +819,7 @@ function closeFloatingMenu() {
     floatingMenu.classList.remove('active');
     floatingMainBtn.setAttribute('aria-expanded', 'false');
     
+    // Restablecer estilos de los elementos del menú
     const menuItems = floatingMenu.querySelectorAll('.floating-widget__menu-item');
     menuItems.forEach(item => {
         item.style.transform = '';
@@ -935,32 +827,28 @@ function closeFloatingMenu() {
     });
 }
 
-// ===== NAVEGACIÓN DESKTOP RESPONSIVE ULTRA-OPTIMIZADA =====
+// ===== NAVEGACIÓN OPTIMIZADA =====
+function initializeNavigation() {
+    // Inicializar navegación según el dispositivo
+    isMobile ? initializeMobileNavigation() : initializeDesktopNavigation();
+    initializeActiveSection();
+}
+
 function initializeDesktopNavigation() {
-    const navToggle = document.getElementById('nav-toggle');
-    const navMenu = document.getElementById('nav-menu');
-    const navClose = document.getElementById('nav-close');
-    const navLinks = document.querySelectorAll('.nav__link');
-    const header = document.getElementById('header');
-    
-    // Funcionalidad del logo como enlace (solo desktop)
+    // Logo como enlace (solo desktop)
     const navLogo = document.querySelector('.nav__logo');
     if (navLogo && !isMobile) {
         navLogo.addEventListener('click', (e) => {
             e.preventDefault();
             
-            if (isMenuOpen) {
-                closeMobileMenu();
-            }
+            if (isMenuOpen) closeMobileMenu();
             
             const homeSection = document.querySelector('#home');
             if (homeSection) {
                 smoothScrollToSection(homeSection);
                 
                 const homeLink = document.querySelector('.nav__link[href="#home"]');
-                if (homeLink) {
-                    updateActiveNavLink(homeLink);
-                }
+                if (homeLink) updateActiveNavLink(homeLink);
             }
         });
         
@@ -978,11 +866,9 @@ function initializeDesktopNavigation() {
     }
     
     // Enlaces de navegación desktop
-    navLinks.forEach(link => {
+    document.querySelectorAll('.nav__link').forEach(link => {
         link.addEventListener('click', (e) => {
-            if (isMenuOpen) {
-                closeMobileMenu();
-            }
+            if (isMenuOpen) closeMobileMenu();
             
             e.preventDefault();
             const targetId = link.getAttribute('href');
@@ -996,38 +882,30 @@ function initializeDesktopNavigation() {
     });
     
     initializeKeyboardNavigation();
-    initializeActiveSection();
 }
 
-// ===== NAVEGACIÓN MÓVIL INDEPENDIENTE =====
 function initializeMobileNavigation() {
     const mobileNavToggle = document.getElementById('mobile-nav-toggle');
     const mobileNavMenu = document.getElementById('mobile-nav-menu');
     const mobileNavClose = document.getElementById('mobile-nav-close');
     const mobileNavOverlay = document.getElementById('mobile-nav-overlay');
-    const mobileNavLinks = document.querySelectorAll('.mobile-nav__link');
-    const mobileHeader = document.getElementById('mobile-header');
     
     if (!mobileNavToggle || !mobileNavMenu) return;
     
-    // Funcionalidad del logo móvil como enlace
+    // Logo móvil como enlace
     const mobileNavLogo = document.querySelector('.mobile-nav__logo');
     if (mobileNavLogo) {
         mobileNavLogo.addEventListener('click', (e) => {
             e.preventDefault();
             
-            if (isMobileMenuOpen) {
-                closeMobileNavMenu();
-            }
+            if (isMobileMenuOpen) closeMobileNavMenu();
             
             const homeSection = document.querySelector('#home');
             if (homeSection) {
                 smoothScrollToSection(homeSection);
                 
                 const homeLink = document.querySelector('.mobile-nav__link[href="#home"]');
-                if (homeLink) {
-                    updateActiveMobileNavLink(homeLink);
-                }
+                if (homeLink) updateActiveMobileNavLink(homeLink);
             }
         });
         
@@ -1044,6 +922,7 @@ function initializeMobileNavigation() {
         toggleMobileNavMenu();
     });
 
+    // Optimización: Usar eventos pasivos para mejorar rendimiento táctil
     mobileNavToggle.addEventListener('touchstart', () => {
         mobileNavToggle.style.transform = 'scale(0.95)';
     }, { passive: true });
@@ -1069,17 +948,13 @@ function initializeMobileNavigation() {
     
     // Overlay para cerrar
     if (mobileNavOverlay) {
-        mobileNavOverlay.addEventListener('click', () => {
-            closeMobileNavMenu();
-        });
+        mobileNavOverlay.addEventListener('click', closeMobileNavMenu);
     }
     
     // Enlaces de navegación móvil
-    mobileNavLinks.forEach(link => {
+    document.querySelectorAll('.mobile-nav__link').forEach(link => {
         link.addEventListener('click', (e) => {
-            if (isMobileMenuOpen) {
-                closeMobileNavMenu();
-            }
+            if (isMobileMenuOpen) closeMobileNavMenu();
             
             e.preventDefault();
             const targetId = link.getAttribute('href');
@@ -1091,6 +966,7 @@ function initializeMobileNavigation() {
             }
         });
 
+        // Optimización: Usar eventos pasivos para mejorar rendimiento táctil
         link.addEventListener('touchstart', () => {
             link.style.transform = 'scale(0.98)';
         }, { passive: true });
@@ -1099,7 +975,7 @@ function initializeMobileNavigation() {
         }, { passive: true });
     });
     
-    // Cerrar menú tocando fuera
+    // Cerrar menú tocando fuera - Optimizado con eventos pasivos
     document.addEventListener('touchstart', (e) => {
         if (isMobileMenuOpen && mobileNavMenu && !mobileNavMenu.contains(e.target) && !mobileNavToggle.contains(e.target)) {
             closeMobileNavMenu();
@@ -1114,11 +990,7 @@ function initializeMobileNavigation() {
 }
 
 function toggleMobileNavMenu() {
-    if (isMobileMenuOpen) {
-        closeMobileNavMenu();
-    } else {
-        openMobileNavMenu();
-    }
+    isMobileMenuOpen ? closeMobileNavMenu() : openMobileNavMenu();
 }
 
 function openMobileNavMenu() {
@@ -1129,7 +1001,6 @@ function openMobileNavMenu() {
     if (!mobileNavToggle || !mobileNavMenu) return;
     
     isMobileMenuOpen = true;
-    
     mobileNavToggle.classList.add('active');
     mobileNavMenu.classList.add('active');
     body.classList.add('mobile-menu-open');
@@ -1146,7 +1017,6 @@ function closeMobileNavMenu() {
     if (!mobileNavToggle || !mobileNavMenu) return;
     
     isMobileMenuOpen = false;
-    
     mobileNavToggle.classList.remove('active');
     mobileNavMenu.classList.remove('active');
     body.classList.remove('mobile-menu-open');
@@ -1165,18 +1035,6 @@ function updateActiveMobileNavLink(activeLink) {
         activeLink.classList.add('active');
         activeLink.setAttribute('aria-current', 'page');
     }
-}
-
-// ===== NAVEGACIÓN GENERAL (FUNCIONES COMPARTIDAS) =====
-function initializeNavigation() {
-    // Inicializar navegación según el dispositivo
-    if (isMobile) {
-        initializeMobileNavigation();
-    } else {
-        initializeDesktopNavigation();
-    }
-    
-    initializeActiveSection();
 }
 
 function smoothScrollToSection(targetSection) {
@@ -1206,41 +1064,26 @@ function updateActiveNavLink(activeLink) {
 }
 
 function initializeActiveSection() {
-    setTimeout(() => {
-        updateActiveNavOnScroll();
-    }, 100);
+    setTimeout(updateActiveNavOnScroll, 100);
 }
 
 // ===== FUNCIONES LEGACY PARA COMPATIBILIDAD =====
 function toggleMobileMenu() {
-    // Función legacy - redirigir a la nueva función móvil
-    if (isMobile) {
-        toggleMobileNavMenu();
-    }
+    if (isMobile) toggleMobileNavMenu();
 }
 
 function openMobileMenu() {
-    // Función legacy - redirigir a la nueva función móvil
-    if (isMobile) {
-        openMobileNavMenu();
-    }
+    if (isMobile) openMobileNavMenu();
 }
 
 function closeMobileMenu() {
-    // Función legacy - redirigir a la nueva función móvil
-    if (isMobile) {
-        closeMobileNavMenu();
-    }
+    if (isMobile) closeMobileNavMenu();
 }
 
 // ===== NAVEGACIÓN POR TECLADO OPTIMIZADA =====
 function initializeKeyboardNavigation() {
-    const navMenu = document.getElementById('nav-menu');
-    const navToggle = document.getElementById('nav-toggle');
-    const mobileNavMenu = document.getElementById('mobile-nav-menu');
-    const mobileNavToggle = document.getElementById('mobile-nav-toggle');
-    
     document.addEventListener('keydown', (e) => {
+        // Escape para cerrar menús
         if (e.key === 'Escape') {
             if (isMenuOpen) {
                 e.preventDefault();
@@ -1254,18 +1097,17 @@ function initializeKeyboardNavigation() {
             }
         }
         
-        // Tab trap para menú desktop
-        if (e.key === 'Tab' && isMenuOpen && !isMobile && navMenu) {
-            handleTabTrap(e, navMenu);
-        }
-        
         // Tab trap para menú móvil
-        if (e.key === 'Tab' && isMobileMenuOpen && mobileNavMenu) {
-            handleTabTrap(e, mobileNavMenu);
+        if (e.key === 'Tab' && isMobileMenuOpen) {
+            const mobileNavMenu = document.getElementById('mobile-nav-menu');
+            if (mobileNavMenu) handleTabTrap(e, mobileNavMenu);
         }
         
         // Enter/Space para toggles
         if ((e.key === 'Enter' || e.key === ' ')) {
+            const navToggle = document.getElementById('nav-toggle');
+            const mobileNavToggle = document.getElementById('mobile-nav-toggle');
+            
             if (e.target === navToggle) {
                 e.preventDefault();
                 toggleMobileMenu();
@@ -1282,26 +1124,26 @@ function handleTabTrap(e, menuElement) {
     const focusableElements = menuElement.querySelectorAll(
         'a[href], button, [tabindex]:not([tabindex="-1"])'
     );
+    
+    if (focusableElements.length === 0) return;
+    
     const firstFocusable = focusableElements[0];
     const lastFocusable = focusableElements[focusableElements.length - 1];
     
-    if (e.shiftKey) {
-        if (document.activeElement === firstFocusable) {
-            e.preventDefault();
-            lastFocusable.focus();
-        }
-    } else {
-        if (document.activeElement === lastFocusable) {
-            e.preventDefault();
-            firstFocusable.focus();
-        }
+    if (e.shiftKey && document.activeElement === firstFocusable) {
+        e.preventDefault();
+        lastFocusable.focus();
+    } else if (!e.shiftKey && document.activeElement === lastFocusable) {
+        e.preventDefault();
+        firstFocusable.focus();
     }
 }
 
-// ===== EFECTOS DE SCROLL ULTRA-OPTIMIZADOS =====
+// ===== EFECTOS DE SCROLL OPTIMIZADOS =====
 function initializeScrollEffects() {
     let scrollTimeout;
     
+    // Optimización: Usar evento pasivo para mejorar rendimiento de scroll
     window.addEventListener('scroll', () => {
         if (scrollTimeout) return;
         
@@ -1341,6 +1183,7 @@ function updateActiveNavOnScroll() {
     let activeSection = null;
     let maxVisibleArea = 0;
     
+    // Optimización: Calcular sección más visible
     sections.forEach(section => {
         const sectionTop = section.offsetTop;
         const sectionHeight = section.offsetHeight;
@@ -1360,6 +1203,7 @@ function updateActiveNavOnScroll() {
         }
     });
     
+    // Fallback si no se encontró sección visible
     if (!activeSection) {
         const scrollPosition = scrollY + headerHeight + 50;
         
@@ -1401,20 +1245,12 @@ function updateHeaderOnScroll() {
     
     // Actualizar header desktop
     if (header && !isMobile) {
-        if (scrollY > threshold) {
-            header.classList.add('scrolled');
-        } else {
-            header.classList.remove('scrolled');
-        }
+        header.classList.toggle('scrolled', scrollY > threshold);
     }
     
     // Actualizar header móvil
     if (mobileHeader && isMobile) {
-        if (scrollY > threshold) {
-            mobileHeader.classList.add('scrolled');
-        } else {
-            mobileHeader.classList.remove('scrolled');
-        }
+        mobileHeader.classList.toggle('scrolled', scrollY > threshold);
         
         // Auto-hide navbar móvil optimizado
         if (scrollY > lastScrollY && scrollY > threshold && !isMobileMenuOpen) {
@@ -1431,7 +1267,7 @@ function updateHeaderOnScroll() {
     }
 }
 
-// ===== REPRODUCTOR DE VIDEO ULTRA-OPTIMIZADO =====
+// ===== REPRODUCTOR DE VIDEO OPTIMIZADO =====
 function initializeVideoPlayer() {
     const video = document.getElementById('main-video');
     const playOverlay = document.getElementById('play-overlay');
@@ -1446,15 +1282,26 @@ function initializeVideoPlayer() {
     video.controls = false;
     video.preload = isMobile ? 'none' : 'metadata';
     
+    // Optimización: Cargar metadatos solo cuando sea necesario
     video.addEventListener('loadedmetadata', () => {
         if (durationDisplay) {
             durationDisplay.textContent = formatTime(video.duration);
         }
     });
     
+    // Reproducir video al hacer clic en overlay
     playOverlay.addEventListener('click', () => {
         if (video.paused) {
-            video.play();
+            // Optimización: Cargar video solo cuando se reproduce
+            if (video.preload === 'none') {
+                video.preload = 'auto';
+            }
+            
+            video.play().catch(() => {
+                // Fallback si la reproducción falla
+                showVideoError();
+            });
+            
             playOverlay.classList.add('hidden');
             if (progressIndicators) {
                 progressIndicators.classList.add('visible');
@@ -1462,6 +1309,7 @@ function initializeVideoPlayer() {
         }
     });
     
+    // Optimización: Mejorar feedback táctil
     if (isMobile) {
         playOverlay.addEventListener('touchstart', () => {
             playOverlay.style.transform = 'scale(0.98)';
@@ -1471,6 +1319,7 @@ function initializeVideoPlayer() {
         }, { passive: true });
     }
     
+    // Pausar video al hacer clic
     video.addEventListener('click', () => {
         if (!video.paused) {
             video.pause();
@@ -1481,18 +1330,26 @@ function initializeVideoPlayer() {
         }
     });
     
+    // Optimización: Actualizar progreso solo cuando sea necesario
     video.addEventListener('timeupdate', () => {
-        if (video.duration) {
-            const progress = (video.currentTime / video.duration) * 100;
-            if (progressFill) {
-                progressFill.style.width = `${progress}%`;
-            }
-            if (currentTimeDisplay) {
-                currentTimeDisplay.textContent = formatTime(video.currentTime);
-            }
+        if (!ticking) {
+            requestAnimationFrame(() => {
+                if (video.duration) {
+                    const progress = (video.currentTime / video.duration) * 100;
+                    if (progressFill) {
+                        progressFill.style.width = `${progress}%`;
+                    }
+                    if (currentTimeDisplay) {
+                        currentTimeDisplay.textContent = formatTime(video.currentTime);
+                    }
+                }
+                ticking = false;
+            });
+            ticking = true;
         }
     });
     
+    // Optimización: Buscar en el video al hacer clic en la barra de progreso
     if (progressBar) {
         progressBar.addEventListener('click', (e) => {
             const rect = progressBar.getBoundingClientRect();
@@ -1503,6 +1360,7 @@ function initializeVideoPlayer() {
         });
     }
     
+    // Manejar fin del video
     video.addEventListener('ended', () => {
         playOverlay.classList.remove('hidden');
         if (progressIndicators) {
@@ -1516,9 +1374,8 @@ function initializeVideoPlayer() {
         }
     });
     
-    video.addEventListener('error', () => {
-        showVideoError();
-    });
+    // Manejar errores
+    video.addEventListener('error', showVideoError);
 }
 
 function formatTime(seconds) {
@@ -1540,12 +1397,13 @@ function showVideoError() {
     }
 }
 
-// ===== FAQ ULTRA-OPTIMIZADO =====
+// ===== FAQ OPTIMIZADO =====
 function initializeFAQ() {
     const faqItems = document.querySelectorAll('.faq__item');
     const searchInput = document.getElementById('faq-search');
     const noResults = document.getElementById('faq-no-results');
     
+    // Optimización: Configurar eventos de clic para preguntas
     faqItems.forEach(item => {
         const question = item.querySelector('.faq__question');
         const answer = item.querySelector('.faq__answer');
@@ -1554,8 +1412,9 @@ function initializeFAQ() {
             question.addEventListener('click', () => {
                 const isActive = item.classList.contains('active');
                 
+                // Cerrar otras preguntas
                 faqItems.forEach(otherItem => {
-                    if (otherItem !== item) {
+                    if (otherItem !== item && otherItem.classList.contains('active')) {
                         otherItem.classList.remove('active');
                         const otherAnswer = otherItem.querySelector('.faq__answer');
                         const otherQuestion = otherItem.querySelector('.faq__question');
@@ -1564,17 +1423,13 @@ function initializeFAQ() {
                     }
                 });
                 
-                if (isActive) {
-                    item.classList.remove('active');
-                    answer.classList.remove('active');
-                    question.setAttribute('aria-expanded', 'false');
-                } else {
-                    item.classList.add('active');
-                    answer.classList.add('active');
-                    question.setAttribute('aria-expanded', 'true');
-                }
+                // Alternar estado actual
+                item.classList.toggle('active', !isActive);
+                answer.classList.toggle('active', !isActive);
+                question.setAttribute('aria-expanded', !isActive ? 'true' : 'false');
             });
 
+            // Optimización: Mejorar feedback táctil
             if (isMobile) {
                 question.addEventListener('touchstart', () => {
                     question.style.transform = 'scale(0.98)';
@@ -1586,6 +1441,7 @@ function initializeFAQ() {
         }
     });
     
+    // Optimización: Búsqueda en FAQ con debounce
     if (searchInput) {
         searchInput.addEventListener('input', debounce((e) => {
             const searchTerm = e.target.value.toLowerCase().trim();
@@ -1599,13 +1455,17 @@ function initializeFAQ() {
                     const questionContent = questionText.textContent.toLowerCase();
                     const answerContent = answerText.textContent.toLowerCase();
                     
-                    if (searchTerm === '' ||
-                        questionContent.includes(searchTerm) ||
-                        answerContent.includes(searchTerm)) {
-                        item.style.display = 'block';
+                    const isMatch = searchTerm === '' || 
+                                   questionContent.includes(searchTerm) || 
+                                   answerContent.includes(searchTerm);
+                    
+                    // Optimización: Mostrar/ocultar elementos
+                    item.style.display = isMatch ? 'block' : 'none';
+                    
+                    if (isMatch) {
                         visibleItems++;
                     } else {
-                        item.style.display = 'none';
+                        // Cerrar elementos ocultos
                         item.classList.remove('active');
                         const answer = item.querySelector('.faq__answer');
                         const question = item.querySelector('.faq__question');
@@ -1615,18 +1475,15 @@ function initializeFAQ() {
                 }
             });
             
+            // Mostrar mensaje de no resultados si es necesario
             if (noResults) {
-                if (visibleItems === 0 && searchTerm !== '') {
-                    noResults.classList.add('show');
-                } else {
-                    noResults.classList.remove('show');
-                }
+                noResults.classList.toggle('show', visibleItems === 0 && searchTerm !== '');
             }
         }, isMobile ? 400 : 300));
     }
 }
 
-// ===== INTERSECTION OBSERVER ULTRA-OPTIMIZADO =====
+// ===== INTERSECTION OBSERVER OPTIMIZADO =====
 function initializeIntersectionObserver() {
     if (performanceMode) return;
     
@@ -1648,8 +1505,8 @@ function initializeIntersectionObserver() {
         });
     }, observerOptions);
     
-    const elementsToObserve = document.querySelectorAll('.feature, .faq__item, .contact__channel');
-    elementsToObserve.forEach(element => {
+    // Optimización: Observar solo elementos necesarios
+    document.querySelectorAll('.feature, .faq__item, .contact__channel').forEach(element => {
         observer.observe(element);
     });
 }
@@ -1670,80 +1527,69 @@ function animateFeature(feature) {
     }
 }
 
-// ===== CONFIGURACIÓN DE LAZY LOADING ULTRA-OPTIMIZADA =====
+// ===== CONFIGURACIÓN DE LAZY LOADING OPTIMIZADA =====
 function setupImageLazyLoading() {
-    const waitForOptimizer = () => {
-        if (!imageOptimizer) {
-            setTimeout(waitForOptimizer, 100);
-            return;
-        }
-        
-        // Logo del navbar desktop
-        const navLogo = document.querySelector('.nav__logo');
-        if (navLogo) {
-            imageOptimizer.loadImageImmediately(navLogo, 'logo');
-        }
-        
-        // Logo del navbar móvil
-        const mobileNavLogo = document.querySelector('.mobile-nav__logo');
-        if (mobileNavLogo) {
-            imageOptimizer.loadImageImmediately(mobileNavLogo, 'logo');
-        }
-        
-        // Logo del menú móvil
-        const mobileNavLogoMenu = document.querySelector('.mobile-nav__logo-menu');
-        if (mobileNavLogoMenu) {
-            imageOptimizer.loadImageImmediately(mobileNavLogoMenu, 'logo');
-        }
-        
-        // Imagen del hero (crítica)
-        const heroImage = document.querySelector('.hero__phone-app-image');
-        if (heroImage) {
-            imageOptimizer.loadImageImmediately(heroImage, 'hero');
-        }
-        
-        // Imágenes de características
-        const featureImages = document.querySelectorAll('.phone__app-image');
-        featureImages.forEach((img, index) => {
-            const imageKeys = [
-                'phones.horario',
-                'phones.estaciones',
-                'phones.calendario',
-                'phones.registro',
-                'phones.notificaciones',
-                'phones.referidos'
-            ];
-            
-            if (imageKeys[index]) {
-                if (performanceMode) {
-                    imageOptimizer.loadImageImmediately(img, imageKeys[index]);
-                } else {
-                    imageOptimizer.observeImage(img, imageKeys[index]);
-                }
-            }
-        });
-        
-        // Botones de descarga
-        const appleBtn = document.querySelector('.download-btn--app-store .download-btn__image');
-        const googleBtn = document.querySelector('.download-btn--google .download-btn__image');
-        
-        if (appleBtn) {
-            imageOptimizer.loadImageImmediately(appleBtn, 'downloads.apple');
-        }
-        if (googleBtn) {
-            imageOptimizer.loadImageImmediately(googleBtn, 'downloads.google');
-        }
-    };
+    if (!imageOptimizer) {
+        imageOptimizer = new OptimizedImageLoader();
+    }
     
-    waitForOptimizer();
+    // Cargar logos inmediatamente
+    const criticalImages = [
+        { selector: '.nav__logo', key: 'logo' },
+        { selector: '.mobile-nav__logo', key: 'logo' },
+        { selector: '.mobile-nav__logo-menu', key: 'logo' },
+        { selector: '.hero__phone-app-image', key: 'hero' }
+    ];
+    
+    criticalImages.forEach(({ selector, key }) => {
+        const element = document.querySelector(selector);
+        if (element) {
+            imageOptimizer.loadImageImmediately(element, key);
+        }
+    });
+    
+    // Cargar imágenes de características con lazy loading
+    const featureImages = document.querySelectorAll('.phone__app-image');
+    const imageKeys = [
+        'phones.horario',
+        'phones.estaciones',
+        'phones.calendario',
+        'phones.registro',
+        'phones.notificaciones',
+        'phones.referidos'
+    ];
+    
+    featureImages.forEach((img, index) => {
+        if (imageKeys[index]) {
+            if (performanceMode) {
+                imageOptimizer.loadImageImmediately(img, imageKeys[index]);
+            } else {
+                imageOptimizer.observeImage(img, imageKeys[index]);
+            }
+        }
+    });
+    
+    // Cargar botones de descarga
+    const downloadButtons = [
+        { selector: '.download-btn--app-store .download-btn__image', key: 'downloads.apple' },
+        { selector: '.download-btn--google .download-btn__image', key: 'downloads.google' }
+    ];
+    
+    downloadButtons.forEach(({ selector, key }) => {
+        const element = document.querySelector(selector);
+        if (element) {
+            imageOptimizer.loadImageImmediately(element, key);
+        }
+    });
 }
 
-// ===== VIDEO HERO ULTRA-OPTIMIZADO =====
+// ===== VIDEO HERO OPTIMIZADO =====
 function initializeHeroVideoFallback() {
     const heroVideo = document.getElementById('hero-video');
     const heroFallbackImage = document.querySelector('.hero__phone-app-image');
     const heroMobileVideo = document.getElementById('hero-mobile-video');
     
+    // Optimización: Configurar video móvil
     if (heroMobileVideo && isMobile) {
         heroMobileVideo.muted = true;
         heroMobileVideo.autoplay = true;
@@ -1751,12 +1597,7 @@ function initializeHeroVideoFallback() {
         heroMobileVideo.playsInline = true;
         heroMobileVideo.preload = 'auto';
         
-        heroMobileVideo.addEventListener('loadeddata', () => {
-            console.log('Video móvil del hero cargado correctamente');
-        });
-        
-        heroMobileVideo.addEventListener('error', (e) => {
-            console.error('Error cargando video móvil del hero:', e);
+        heroMobileVideo.addEventListener('error', () => {
             const mobileVideoContainer = document.querySelector('.hero__mobile-video');
             if (mobileVideoContainer) {
                 mobileVideoContainer.style.display = 'none';
@@ -1766,14 +1607,15 @@ function initializeHeroVideoFallback() {
     
     if (!heroVideo || !heroFallbackImage) return;
     
+    // Optimización: Usar imagen en lugar de video en móvil o modo rendimiento
     if (isMobile || performanceMode) {
         heroVideo.style.display = 'none';
         heroFallbackImage.style.display = 'block';
         heroFallbackImage.style.zIndex = '2';
-        console.log('Video del teléfono deshabilitado en móvil/modo rendimiento');
         return;
     }
     
+    // Configurar video desktop
     heroVideo.muted = true;
     heroVideo.autoplay = true;
     heroVideo.loop = true;
@@ -1783,26 +1625,19 @@ function initializeHeroVideoFallback() {
     heroVideo.addEventListener('loadeddata', () => {
         heroVideo.classList.remove('loading');
         heroVideo.classList.add('loaded');
-        console.log('Video del hero cargado correctamente');
     });
     
-    heroVideo.addEventListener('error', (e) => {
-        console.error('Error cargando video del hero:', e);
-        showVideoFallback();
-    });
-    
-    heroVideo.addEventListener('stalled', () => {
-        console.warn('Video del hero interrumpido, mostrando fallback');
-        showVideoFallback();
-    });
-    
-    function showVideoFallback() {
+    // Manejar errores y fallbacks
+    const showVideoFallback = () => {
         heroVideo.style.display = 'none';
         heroFallbackImage.style.display = 'block';
         heroFallbackImage.style.zIndex = '2';
-        console.log('Mostrando imagen de fallback para el video del hero');
-    }
+    };
     
+    heroVideo.addEventListener('error', showVideoFallback);
+    heroVideo.addEventListener('stalled', showVideoFallback);
+    
+    // Timeout para fallback si el video no carga
     setTimeout(() => {
         if (heroVideo.readyState < 2) {
             showVideoFallback();
@@ -1810,68 +1645,57 @@ function initializeHeroVideoFallback() {
     }, 2000);
 }
 
-// ===== UTILIDADES ULTRA-OPTIMIZADAS =====
+// ===== UTILIDADES OPTIMIZADAS =====
 function debounce(func, wait) {
     let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
+    return function(...args) {
         clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
+        timeout = setTimeout(() => func.apply(this, args), wait);
     };
 }
 
 function throttle(func, limit) {
     let inThrottle;
     return function() {
-        const args = arguments;
-        const context = this;
         if (!inThrottle) {
-            func.apply(context, args);
+            func.apply(this, arguments);
             inThrottle = true;
             setTimeout(() => inThrottle = false, limit);
         }
-    }
+    };
 }
 
-// ===== OPTIMIZACIONES DE RENDIMIENTO ULTRA-AGRESIVAS =====
+// ===== OPTIMIZACIONES DE RENDIMIENTO =====
 function initializePerformanceOptimizations() {
+    // Precargar recursos críticos en dispositivos potentes
     if (!performanceMode) {
         if ('requestIdleCallback' in window) {
-            requestIdleCallback(() => {
-                preloadCriticalResources();
-            });
+            requestIdleCallback(preloadCriticalResources);
         } else {
             setTimeout(preloadCriticalResources, 5000);
         }
     }
     
+    // Optimización: Usar will-change solo en elementos que lo necesitan
     if (isMobile) {
-        const elementsToOptimize = document.querySelectorAll('.hero__phone, .nav__logo, .mobile-nav__logo, .floating-widget__main-btn');
-        elementsToOptimize.forEach(element => {
-            element.style.willChange = 'transform';
-        });
-        
-        const featureElements = document.querySelectorAll('.feature__phone, .phone');
-        featureElements.forEach(element => {
-            element.style.willChange = 'auto';
-        });
+        const elementsToOptimize = [
+            '.hero__phone', 
+            '.nav__logo', 
+            '.mobile-nav__logo', 
+            '.floating-widget__main-btn'
+        ].map(selector => document.querySelectorAll(selector))
+         .flat()
+         .forEach(el => {
+             if (el) el.style.willChange = 'transform';
+         });
     }
     
-    let resizeTimeout;
-    window.addEventListener('resize', () => {
-        clearTimeout(resizeTimeout);
-        resizeTimeout = setTimeout(() => {
-            handleResize();
-        }, isMobile ? 1000 : 500);
-    });
+    // Optimización: Manejar resize con throttle
+    window.addEventListener('resize', debounce(handleResize, isMobile ? 250 : 150));
 }
 
 function preloadCriticalResources() {
     const criticalResources = [
-        './assets/phones/Hero.avif',
         './assets/logo.avif'
     ];
     
@@ -1892,12 +1716,8 @@ function handleResize() {
         detectDeviceCapabilities();
         
         // Cerrar menús abiertos al cambiar de dispositivo
-        if (isMenuOpen) {
-            closeMobileMenu();
-        }
-        if (isMobileMenuOpen) {
-            closeMobileNavMenu();
-        }
+        if (isMenuOpen) closeMobileMenu();
+        if (isMobileMenuOpen) closeMobileNavMenu();
         
         // Reinicializar navegación
         setTimeout(() => {
@@ -1906,34 +1726,24 @@ function handleResize() {
         }, 100);
     }
     
-    if (isFloatingMenuOpen) {
-        closeFloatingMenu();
-    }
-    
-    if (isLanguageSwitcherOpen) {
-        closeLanguageSwitcher();
-    }
+    // Cerrar menús flotantes
+    if (isFloatingMenuOpen) closeFloatingMenu();
+    if (isLanguageSwitcherOpen) closeLanguageSwitcher();
 }
 
-// ===== ACCESIBILIDAD ULTRA-OPTIMIZADA =====
+// ===== ACCESIBILIDAD OPTIMIZADA =====
 function initializeAccessibility() {
+    // Manejar escape para cerrar menús
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
-            if (isMenuOpen) {
-                closeMobileMenu();
-            }
-            if (isMobileMenuOpen) {
-                closeMobileNavMenu();
-            }
-            if (isFloatingMenuOpen) {
-                closeFloatingMenu();
-            }
-            if (isLanguageSwitcherOpen) {
-                closeLanguageSwitcher();
-            }
+            if (isMenuOpen) closeMobileMenu();
+            if (isMobileMenuOpen) closeMobileNavMenu();
+            if (isFloatingMenuOpen) closeFloatingMenu();
+            if (isLanguageSwitcherOpen) closeLanguageSwitcher();
         }
     });
     
+    // Detectar navegación por teclado
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Tab') {
             document.body.classList.add('keyboard-navigation');
@@ -1944,6 +1754,7 @@ function initializeAccessibility() {
         document.body.classList.remove('keyboard-navigation');
     });
     
+    // Detectar navegación táctil
     if (isMobile) {
         document.addEventListener('touchstart', () => {
             document.body.classList.add('touch-navigation');
@@ -1951,39 +1762,44 @@ function initializeAccessibility() {
     }
 }
 
-// ===== INICIALIZACIÓN PRINCIPAL ULTRA-OPTIMIZADA =====
+// ===== INICIALIZACIÓN PRINCIPAL OPTIMIZADA =====
 document.addEventListener('DOMContentLoaded', () => {
+    // Detección de capacidades
     detectDeviceCapabilities();
     
-    imageOptimizer = new UltraOptimizedImageLoader();
+    // Inicialización de componentes críticos
+    imageOptimizer = new OptimizedImageLoader();
     
-    initializeLanguageSystem();
-    initializeLanguageSwitcher();
-    initializeNavigation();
-    initializeScrollEffects();
-    initializeVideoPlayer();
-    initializeFAQ();
-    initializeHeroVideoFallback();
-    initializeAccessibility();
-    initializeFloatingWidget();
+    // Inicialización de componentes principales
+    const initComponents = [
+        initializeLanguageSystem,
+        initializeLanguageSwitcher,
+        initializeNavigation,
+        initializeScrollEffects,
+        initializeVideoPlayer,
+        initializeFAQ,
+        initializeHeroVideoFallback,
+        initializeAccessibility,
+        initializeFloatingWidget,
+        setupImageLazyLoading
+    ];
     
-    setupImageLazyLoading();
+    // Ejecutar inicializaciones críticas inmediatamente
+    initComponents.forEach(init => init());
     
+    // Inicializar componentes no críticos después
     if (!performanceMode) {
-        initializeIntersectionObserver();
+        requestAnimationFrame(() => {
+            initializeIntersectionObserver();
+            initializePerformanceOptimizations();
+        });
     }
-    
-    initializePerformanceOptimizations();
-    
-    console.log(`StarFlex Ultra-Optimizado - Móvil: ${isMobile}, Modo rendimiento: ${performanceMode}, Navbar independiente: ${isMobile ? 'Móvil' : 'Desktop'}`);
 });
 
-// ===== MANEJO DE ERRORES ULTRA-OPTIMIZADO =====
+// ===== MANEJO DE ERRORES OPTIMIZADO =====
 window.addEventListener('error', (e) => {
-    console.error('Error en la aplicación:', e.error);
-    
+    // Manejar errores de video específicamente
     if (isMobile && e.error && e.error.message.includes('video')) {
-        console.log('Error de video detectado, forzando fallback de imagen');
         const heroVideo = document.getElementById('hero-video');
         const heroImage = document.querySelector('.hero__phone-app-image');
         if (heroVideo && heroImage) {
@@ -1992,10 +1808,6 @@ window.addEventListener('error', (e) => {
             heroImage.style.zIndex = '2';
         }
     }
-});
-
-window.addEventListener('unhandledrejection', (e) => {
-    console.error('Promise rechazada:', e.reason);
 });
 
 // ===== LIMPIEZA AL SALIR =====
@@ -2009,11 +1821,8 @@ window.addEventListener('beforeunload', () => {
 if ('serviceWorker' in navigator && !isMobile && !performanceMode) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js')
-            .then(registration => {
-                console.log('SW registrado:', registration);
-            })
-            .catch(registrationError => {
-                console.log('SW falló:', registrationError);
+            .catch(error => {
+                // Silently fail
             });
     });
 }
