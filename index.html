@@ -522,19 +522,16 @@
                     <div class="videos__grid-overlay"></div>
                 </div>
                 
-                <div class="videos__player-container">
-                    <div class="videos__player-frame">
-                        <video 
-                            class="videos__player" 
-                            id="main-video"
-                            preload="metadata"
-                            playsinline
-                            poster="./assets/video-poster.webp"
-                            aria-label="Video demostrativo completo de StarFlex"
-                        >
-                            <source src="./assets/StarFlex.mp4" type="video/mp4">
-                            <p data-translate="video-not-supported">Tu navegador no soporta videos HTML5. <a href="./assets/StarFlex.mp4">Descargar video</a>.</p>
-                        </video>
+<div class="videos__player-frame">
+    <iframe 
+        class="videos__youtube-player" 
+        src="https://www.youtube.com/embed/IeKGEAdEtYA?rel=0&showinfo=0&autoplay=0" 
+        title="StarFlex Demo Video"
+        frameborder="0" 
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+        allowfullscreen>
+    </iframe>
+</div>
                         
                         <div class="videos__play-overlay" id="play-overlay">
                             <div class="videos__play-button">
