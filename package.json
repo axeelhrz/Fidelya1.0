@@ -1,51 +1,18 @@
 {
-  "name": "centro-psicologico2",
-  "version": "0.1.0",
-  "private": true,
+  "name": "starflex2.0",
+  "version": "1.0.0",
+  "main": "index.js",
   "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "dependencies": {
-    "@emotion/react": "^11.14.0",
-    "@emotion/styled": "^11.14.0",
-    "@fontsource/inter": "^5.2.6",
-    "@fontsource/space-grotesk": "^5.2.8",
-    "@fullcalendar/core": "^6.1.18",
-    "@fullcalendar/daygrid": "^6.1.18",
-    "@fullcalendar/interaction": "^6.1.18",
-    "@fullcalendar/react": "^6.1.18",
-    "@fullcalendar/timegrid": "^6.1.18",
-    "@mui/icons-material": "^7.1.2",
-    "@mui/lab": "^7.0.0-beta.14",
-    "@mui/material": "^7.1.2",
-    "@mui/x-date-pickers": "^8.6.0",
-    "@types/uuid": "^10.0.0",
-    "date-fns": "^4.1.0",
-    "firebase": "^11.9.1",
-    "framer-motion": "^12.18.1",
-    "lucide-react": "^0.519.0",
-    "next": "15.3.4",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "recharts": "^2.15.4",
-    "uuid": "^11.1.0"
-  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
   "devDependencies": {
-    "@eslint/eslintrc": "^3",
-    "@tailwindcss/aspect-ratio": "^0.4.2",
-    "@tailwindcss/forms": "^0.5.7",
-    "@tailwindcss/typography": "^0.5.10",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
     "autoprefixer": "^10.4.21",
-    "eslint": "^9",
-    "eslint-config-next": "15.3.4",
-    "postcss": "^8.4.47",
-    "tailwindcss": "^3.4.0",
-    "typescript": "^5"
+    "cssnano": "^7.0.7",
+    "postcss-cli": "^11.0.1",
+    "purgecss": "^7.0.2"
   }
 }
