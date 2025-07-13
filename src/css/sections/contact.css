@@ -65,7 +65,7 @@
     text-align: center;
     opacity: 0;
     transform: translateY(30px);
-    animation: contact-fadeIn 0.5s ease-out 0.1s forwards;
+    animation: contact-fadeIn 1s ease-out 0.2s forwards;
 }
 
 /* Badge de conexión con animación de brillo rojizo igual que videos */
@@ -114,14 +114,14 @@
         transparent 100%
     );
     border-radius: 30px;
-    animation: badge-shimmer 2s ease-in-out infinite;
+    animation: badge-shimmer 4s ease-in-out infinite;
 }
 
 .contact__badge-icon {
     font-size: 1.2rem;
     color: var(--starflex-crimson-bright);
     text-shadow: 0 0 15px var(--starflex-crimson-glow);
-    animation: pulse-gentle 2s infinite;
+    animation: pulse-gentle 4s infinite;
 }
 
 .contact__title {
@@ -214,17 +214,17 @@
     border: 1px solid rgb(255 255 255 / 5%);
     border-radius: 20px;
     opacity: 0;
-    transition: all var(--transition-fast);
+    transition: all var(--transition);
     transform: translateY(40px);
-    animation: contact-slideUp 0.4s ease-out forwards;
+    animation: contact-slideUp 0.8s ease-out forwards;
 }
 
-.contact__channel:nth-child(1) { animation-delay: 0.05s; }
-.contact__channel:nth-child(2) { animation-delay: 0.1s; }
-.contact__channel:nth-child(3) { animation-delay: 0.15s; }
-.contact__channel:nth-child(4) { animation-delay: 0.2s; }
-.contact__channel:nth-child(5) { animation-delay: 0.25s; }
-.contact__channel:nth-child(6) { animation-delay: 0.3s; }
+.contact__channel:nth-child(1) { animation-delay: 0.1s; }
+.contact__channel:nth-child(2) { animation-delay: 0.2s; }
+.contact__channel:nth-child(3) { animation-delay: 0.3s; }
+.contact__channel:nth-child(4) { animation-delay: 0.4s; }
+.contact__channel:nth-child(5) { animation-delay: 0.5s; }
+.contact__channel:nth-child(6) { animation-delay: 0.6s; }
 
 .contact__channel:hover {
     background: rgb(255 255 255 / 5%);
@@ -244,7 +244,7 @@
     margin: 0 auto var(--space-xl) auto;
     border-radius: 20px;
     box-shadow: 0 10px 30px rgb(0 0 0 / 20%);
-    transition: all var(--transition-fast);
+    transition: all var(--transition);
     flex-shrink: 0;
 }
 
@@ -253,7 +253,7 @@
     height: 36px;
     color: white;
     filter: drop-shadow(0 2px 4px rgb(0 0 0 / 30%));
-    transition: all var(--transition-fast);
+    transition: all var(--transition);
     display: block;
     margin: 0 auto;
     position: relative;
@@ -340,7 +340,7 @@
     font-size: 1.4rem;
     font-weight: 700;
     color: var(--text-primary);
-    transition: all var(--transition-fast);
+    transition: all var(--transition);
     text-align: center;
     width: 100%;
 }
@@ -354,7 +354,7 @@
     font-size: 1rem;
     line-height: 1.5;
     color: var(--text-muted);
-    transition: all var(--transition-fast);
+    transition: all var(--transition);
     text-align: center;
     width: 100%;
 }
@@ -380,7 +380,7 @@
     border: 1px solid rgb(255 255 255 / 10%);
     border-radius: 25px;
     box-shadow: 0 4px 15px rgb(0 0 0 / 10%);
-    transition: all var(--transition-fast);
+    transition: all var(--transition);
     margin: 0 auto;
 }
 
@@ -395,7 +395,7 @@
 .contact__channel-arrow {
     font-size: 1rem;
     font-weight: bold;
-    transition: all var(--transition-fast);
+    transition: all var(--transition);
 }
 
 .contact__channel-btn:hover .contact__channel-arrow {
@@ -410,7 +410,7 @@
     overflow: visible;
     opacity: 0;
     transform: translateY(30px);
-    animation: contact-fadeIn 0.5s ease-out 0.5s forwards;
+    animation: contact-fadeIn 1s ease-out 1s forwards;
 }
 
 .contact__footer-content {
@@ -459,7 +459,7 @@
     box-shadow:
         0 10px 30px rgb(184 0 46 / 30%),
         inset 0 1px 0 rgb(255 255 255 / 10%);
-    transition: all var(--transition-fast);
+    transition: all var(--transition);
 }
 
 .btn--footer:hover {
