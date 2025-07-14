@@ -24,17 +24,232 @@
     <link rel="icon" type="image/png" href="./assets/icon.png">
     <link rel="apple-touch-icon" sizes="180x180" href="./assets/icon.png">
     
-    <!-- Preload critical resources -->
-    <link rel="preload" href="./assets/phones/Hero.mp4" as="video" type="video/mp4">
-    <link rel="preload" href="./assets/logo.avif" as="image" type="image/avif">
+    <!-- CRITICAL: LCP Optimizations - Preload hero content -->
+    <link rel="preload" href="./assets/logo.avif" as="image" type="image/avif" fetchpriority="high">
     
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <!-- Mobile-first: Preload mobile video for LCP -->
+    <link rel="preload" href="./assets/phones/Hero.mp4" as="video" type="video/mp4" media="(max-width: 1023px)" fetchpriority="high">
+    
+    <!-- Desktop: Preload hero image fallback -->
+    <link rel="preload" href="./assets/phones/Hero.avif" as="image" type="image/avif" media="(min-width: 1024px)" fetchpriority="high">
+    
+    <!-- Preload critical fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
     
-    <!-- CSS -->
-    <link rel="stylesheet" href="src/css/main.css">
+    <!-- Fallback for fonts -->
+    <noscript>
+        <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    </noscript>
+    
+    <!-- Critical CSS inline for LCP -->
+    <style>
+        /* Critical above-the-fold styles */
+        :root {
+            --primary-bg: #0a0d14;
+            --starflex-red: #FF2D55;
+            --starflex-crimson: #b8002e;
+            --starflex-crimson-bright: #ff4569;
+            --text-primary: #fff;
+            --text-secondary: #e2e8f0;
+            --space-lg: 1rem;
+            --space-xl: 1.25rem;
+            --space-2xl: 1.5rem;
+            --space-6xl: 4rem;
+            --navbar-height: 75px;
+            --navbar-height-mobile: 70px;
+            --section-padding-x: clamp(1rem, 5vw, 8rem);
+            --font-primary: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            font-family: var(--font-primary);
+            background: var(--primary-bg);
+            color: var(--text-primary);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        /* Critical hero styles for LCP */
+        .hero {
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: calc(var(--navbar-height) + var(--space-6xl)) var(--section-padding-x) var(--space-6xl);
+            overflow: hidden;
+            background: var(--primary-bg);
+        }
+        
+        .hero__container {
+            position: relative;
+            z-index: 10;
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: var(--space-6xl);
+            align-items: center;
+            width: 100%;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        
+        .hero__content {
+            position: relative;
+            z-index: 11;
+            width: 100%;
+        }
+        
+        .hero__title {
+            position: relative;
+            margin-bottom: var(--space-xl);
+            font-size: clamp(2.8rem, 8vw, 5.5rem);
+            font-weight: 900;
+            line-height: 0.9;
+            text-align: left;
+            letter-spacing: -0.03em;
+        }
+        
+        .hero__title--main {
+            display: block;
+            margin-bottom: var(--space-lg);
+            color: var(--text-primary);
+        }
+        
+        .hero__title--highlight {
+            display: block;
+            margin-bottom: var(--space-lg);
+            color: var(--starflex-crimson-bright);
+        }
+        
+        .hero__title--amazon {
+            display: block;
+            color: #ff6b35;
+        }
+        
+        /* Critical mobile hero styles */
+        @media (max-width: 1023px) {
+            .hero {
+                padding-top: calc(var(--navbar-height-mobile) + var(--space-lg));
+                padding-bottom: var(--space-lg);
+                min-height: calc(100vh - var(--space-6xl));
+                align-items: flex-start;
+                justify-content: flex-start;
+            }
+            
+            .hero__container {
+                grid-template-columns: 1fr;
+                gap: var(--space-2xl);
+                text-align: center;
+                padding-top: var(--space-lg);
+            }
+            
+            .hero__content {
+                order: 2;
+            }
+            
+            .hero__mobile-video {
+                display: block;
+                width: 100%;
+                max-width: 320px;
+                margin: var(--space-xl) auto 0;
+                border-radius: 12.8%;
+                box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+            }
+            
+            .hero__mobile-video-player {
+                display: block;
+                width: 100%;
+                height: auto;
+                object-fit: cover;
+                border-radius: 12.8%;
+            }
+            
+            .hero__media {
+                display: none;
+            }
+        }
+        
+        /* Desktop media */
+        .hero__media {
+            position: relative;
+            z-index: 11;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+        }
+        
+        .hero__phone-container {
+            position: relative;
+            transform: perspective(1200px) rotateY(-8deg) rotateX(2deg);
+        }
+        
+        .hero__phone {
+            position: relative;
+            width: 280px;
+            height: 560px;
+            border-radius: 40px;
+        }
+        
+        .hero__phone-screen {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            border-radius: 40px;
+        }
+        
+        .hero__phone-content {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            border-radius: 40px;
+        }
+        
+        .hero__phone-video,
+        .hero__phone-app-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 40px;
+        }
+        
+        .hero__phone-app-image {
+            z-index: 1;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+        
+        .hero__phone-video {
+            z-index: 2;
+        }
+        
+        /* Utility classes */
+        .mobile-only { display: none; }
+        .desktop-only { display: block; }
+        
+        @media (max-width: 1023px) {
+            .mobile-only { display: block !important; }
+            .desktop-only { display: none !important; }
+        }
+        
+        /* Loading states */
+        .loading { opacity: 0.7; }
+        .loaded { opacity: 1; }
+        .error { display: none; }
+    </style>
+    
+    <!-- Non-critical CSS -->
+    <link rel="stylesheet" href="src/css/main.css" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="src/css/main.css"></noscript>
     
     <!-- Mobile optimizations -->
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -189,7 +404,7 @@
                     <div class="mobile-nav__social">
                         <a href="https://www.whatsapp.com/channel/0029VaL0DdmIyPtQxdrlHm1d" target="_blank" rel="noopener noreferrer" class="mobile-nav__social-link" aria-label="WhatsApp">
                             <svg viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.488"/>
+                                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.488"/>
                             </svg>
                         </a>
                         <a href="https://t.me/starflexnews" target="_blank" rel="noopener noreferrer" class="mobile-nav__social-link" aria-label="Telegram">
@@ -211,7 +426,7 @@
         </div>
     </header>
 
-    <!-- Hero Section -->
+    <!-- Hero Section - OPTIMIZED FOR LCP -->
     <section class="hero" id="home">
         <div class="hero__container">
             <div class="hero__content">
@@ -244,11 +459,11 @@
                     
                     <div class="hero__download">
                         <a href="https://play.google.com/store/apps/details?id=com.minoka.starflex&pli=1" class="download-btn download-btn--google" data-translate-aria="download-google" aria-label="Descargar en Google Play" target="_blank" rel="noopener noreferrer">
-                            <img class="download-btn__image image-optimized" data-translate-alt="download-google-alt" alt="Descargar en Google Play" loading="eager">
+                            <img class="download-btn__image image-optimized" data-translate-alt="download-google-alt" alt="Descargar en Google Play" loading="eager" width="200" height="60">
                         </a>
                         
                         <a href="https://starflex.web.app/" class="download-btn download-btn--app-store" data-translate-aria="download-apple" aria-label="Descargar en App Store" target="_blank" rel="noopener noreferrer">
-                            <img class="download-btn__image image-optimized" data-translate-alt="download-apple-alt" alt="Descargar en App Store" loading="eager">
+                            <img class="download-btn__image image-optimized" data-translate-alt="download-apple-alt" alt="Descargar en App Store" loading="eager" width="200" height="60">
                         </a>
                     </div>
                     
@@ -256,25 +471,41 @@
                         Más de 15,000 conductores han transformado sus ganancias
                     </div>
                     
-                    <!-- Mobile video -->
+                    <!-- Mobile video - CRITICAL FOR LCP -->
                     <div class="hero__mobile-video mobile-only">
-                        <video class="hero__mobile-video-player" id="hero-mobile-video" autoplay muted loop playsinline preload="auto" aria-label="Video demostrativo de StarFlex en dispositivo móvil">
+                        <video class="hero__mobile-video-player" id="hero-mobile-video" 
+                               autoplay muted loop playsinline preload="metadata" 
+                               aria-label="Video demostrativo de StarFlex en dispositivo móvil"
+                               width="320" height="640"
+                               poster="./assets/phones/Hero.avif">
                             <source src="./assets/phones/Hero.mp4" type="video/mp4">
+                            <!-- Fallback image -->
+                            <img src="./assets/phones/Hero.avif" alt="StarFlex App Demo" width="320" height="640" style="width: 100%; height: auto; object-fit: cover; border-radius: 12.8%;">
                         </video>
                     </div>
                 </div>
             </div>
 
-            <!-- Desktop media -->
+            <!-- Desktop media - OPTIMIZED FOR LCP -->
             <div class="hero__media desktop-only">
                 <div class="hero__phone-container">
                     <div class="hero__phone">
                         <div class="hero__phone-screen">
                             <div class="hero__phone-content">
-                                <video class="hero__phone-video" id="hero-video" autoplay muted loop playsinline preload="auto" aria-label="Video demostrativo de StarFlex">
+                                <!-- Image fallback loads first for LCP -->
+                                <div class="hero__phone-app-image image-optimized" 
+                                     role="img" 
+                                     aria-label="Interfaz principal de StarFlex" 
+                                     style="background-image: url('./assets/phones/Hero.avif'); z-index: 1;"></div>
+                                
+                                <!-- Video loads after image for progressive enhancement -->
+                                <video class="hero__phone-video" id="hero-video" 
+                                       muted loop playsinline preload="none"
+                                       aria-label="Video demostrativo de StarFlex"
+                                       width="280" height="560"
+                                       style="z-index: 2;">
                                     <source src="./assets/phones/Hero.mp4" type="video/mp4">
                                 </video>
-                                <div class="hero__phone-app-image image-optimized" role="img" aria-label="Interfaz principal de StarFlex" loading="eager" style="display: none;"></div>
                             </div>
                         </div>
                     </div>
@@ -614,7 +845,6 @@
                     <div class="faq__answer" id="faq-answer-3">
                         <div class="faq__answer-content">
                             <p class="faq__answer-text" data-translate="faq-3-answer">
-                                StarFlex utiliza <span class="faq__answer-highlight">tecnología avanzada de simulación humana
                                 StarFlex utiliza <span class="faq__answer-highlight">tecnología avanzada de simulación humana</span> que incluye patrones de comportamiento naturales, tiempos de respuesta variables y gestos táctiles realistas. Nuestro enfoque se centra en ayudar a los conductores a brindar un mejor servicio a Amazon y sus clientes, asegurando entregas eficientes y de alta calidad.
                             </p>
                         </div>
@@ -707,7 +937,7 @@
             <div class="contact__channel" data-channel="instagram">
                 <div class="contact__channel-icon">
                     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                        <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                        <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
                     </svg>
                 </div>
                 <div class="contact__channel-content">
@@ -836,8 +1066,109 @@
         </div>
     </div>
 
-    <!-- Scripts -->
-    <script src="src/js/mobile-visibility-fix.js"></script>
-    <script src="src/js/app.js"></script>
+    <!-- Scripts - OPTIMIZED LOADING -->
+    <script>
+        // Critical LCP optimization script
+        (function() {
+            'use strict';
+            
+            // Detect device type immediately
+            const isMobile = window.innerWidth <= 1023;
+            const isLowEnd = navigator.hardwareConcurrency <= 4;
+            const conn = navigator.connection;
+            const isSlowConn = conn && ['slow-2g', '2g', '3g'].includes(conn.effectiveType);
+            const performanceMode = isMobile && (isSlowConn || isLowEnd);
+            
+            // Optimize video loading for LCP
+            function optimizeHeroVideo() {
+                if (isMobile) {
+                    const mobileVideo = document.getElementById('hero-mobile-video');
+                    if (mobileVideo) {
+                        // For mobile, ensure video starts loading immediately
+                        mobileVideo.preload = performanceMode ? 'none' : 'metadata';
+                        mobileVideo.autoplay = !performanceMode;
+                        
+                        // Add loading optimization
+                        mobileVideo.addEventListener('loadstart', function() {
+                            this.style.opacity = '0.8';
+                        });
+                        
+                        mobileVideo.addEventListener('loadeddata', function() {
+                            this.style.opacity = '1';
+                            this.classList.add('loaded');
+                        });
+                        
+                        mobileVideo.addEventListener('error', function() {
+                            // Fallback to poster image
+                            this.style.display = 'none';
+                            const fallback = document.createElement('img');
+                            fallback.src = './assets/phones/Hero.avif';
+                            fallback.alt = 'StarFlex App Demo';
+                            fallback.style.cssText = 'width: 100%; height: auto; object-fit: cover; border-radius: 12.8%;';
+                            this.parentNode.appendChild(fallback);
+                        });
+                    }
+                } else {
+                    // Desktop optimization
+                    const desktopVideo = document.getElementById('hero-video');
+                    const fallbackImage = document.querySelector('.hero__phone-app-image');
+                    
+                    if (desktopVideo && fallbackImage) {
+                        // Show image first for LCP
+                        fallbackImage.style.display = 'block';
+                        fallbackImage.style.zIndex = '2';
+                        desktopVideo.style.zIndex = '1';
+                        
+                        // Load video progressively
+                        if (!performanceMode) {
+                            setTimeout(function() {
+                                desktopVideo.preload = 'metadata';
+                                desktopVideo.autoplay = true;
+                                
+                                desktopVideo.addEventListener('loadeddata', function() {
+                                    this.style.zIndex = '2';
+                                    fallbackImage.style.zIndex = '1';
+                                    this.classList.add('loaded');
+                                });
+                                
+                                desktopVideo.addEventListener('error', function() {
+                                    fallbackImage.style.zIndex = '2';
+                                    this.style.display = 'none';
+                                });
+                            }, 1000);
+                        }
+                    }
+                }
+            }
+            
+            // Run optimization immediately
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', optimizeHeroVideo);
+            } else {
+                optimizeHeroVideo();
+            }
+            
+            // Preload critical images
+            function preloadCriticalImages() {
+                const criticalImages = [
+                    './assets/logo.avif',
+                    isMobile ? null : './assets/phones/Hero.avif'
+                ].filter(Boolean);
+                
+                criticalImages.forEach(function(src) {
+                    const img = new Image();
+                    img.src = src;
+                });
+            }
+            
+            // Preload after LCP
+            setTimeout(preloadCriticalImages, 100);
+            
+        })();
+    </script>
+    
+    <!-- Load non-critical scripts after LCP -->
+    <script src="src/js/mobile-visibility-fix.js" defer></script>
+    <script src="src/js/app.js" defer></script>
 </body>
 </html>
