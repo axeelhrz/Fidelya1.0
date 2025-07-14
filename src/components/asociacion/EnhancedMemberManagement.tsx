@@ -27,6 +27,7 @@ import { es } from 'date-fns/locale';
 import { Timestamp } from 'firebase/firestore';
 import { Socio, SocioFormData } from '@/types/socio';
 import toast from 'react-hot-toast';
+import Image from 'next/image';
 
 export const EnhancedMemberManagement = () => {
   const { 
@@ -37,7 +38,6 @@ export const EnhancedMemberManagement = () => {
     loadSocios,
     createSocio,
     updateSocio,
-    deleteSocio,
     importSocios
   } = useSocios();
 
@@ -71,7 +71,7 @@ export const EnhancedMemberManagement = () => {
     try {
       await Promise.all([loadSocios(), loadVinculados()]);
       toast.success('Datos actualizados');
-    } catch (err) {
+    } catch {
       toast.error('Error al actualizar los datos');
     } finally {
       setRefreshing(false);
@@ -101,7 +101,7 @@ export const EnhancedMemberManagement = () => {
   const handleSaveSocio = async (data: SocioFormData) => {
     try {
       // Convertir fechas al formato correcto
-      const processedData: Partial<SocioFormData> = {
+      const processedData: SocioFormData = {
         ...data,
         fechaNacimiento: convertDateToTimestamp(data.fechaNacimiento),
         fechaVencimiento: convertDateToTimestamp(data.fechaVencimiento)
@@ -115,23 +115,13 @@ export const EnhancedMemberManagement = () => {
         toast.success('Socio creado exitosamente');
       }
       await handleRefresh();
-    } catch (err) {
+    } catch {
       toast.error('Error al guardar el socio');
     }
   };
 
   // Función para eliminar socio
-  const handleDeleteSocio = async (socioId: string) => {
-    if (!confirm('¿Estás seguro de que deseas eliminar este socio?')) return;
 
-    try {
-      await deleteSocio(socioId);
-      toast.success('Socio eliminado exitosamente');
-      await handleRefresh();
-    } catch (err) {
-      toast.error('Error al eliminar el socio');
-    }
-  };
 
   // Función para desvincular socio
   const handleDesvincularSocio = async (socioId: string) => {
@@ -141,7 +131,7 @@ export const EnhancedMemberManagement = () => {
       await desvincularSocio(socioId);
       toast.success('Socio desvinculado exitosamente');
       await handleRefresh();
-    } catch (err) {
+    } catch {
       toast.error('Error al desvincular el socio');
     }
   };
@@ -202,7 +192,7 @@ export const EnhancedMemberManagement = () => {
       document.body.removeChild(link);
       
       toast.success('Datos exportados exitosamente');
-    } catch (err) {
+    } catch {
       toast.error('Error al exportar los datos');
     }
   };
@@ -222,7 +212,7 @@ export const EnhancedMemberManagement = () => {
       const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
       const sociosData = lines.slice(1).map(line => {
         const values = line.split(',').map(v => v.trim().replace(/"/g, ''));
-        const socio: any = {};
+        const socio: SocioFormData = {} as SocioFormData;
         
         headers.forEach((header, idx) => {
           const value = values[idx] || '';
@@ -245,13 +235,15 @@ export const EnhancedMemberManagement = () => {
               socio.numeroSocio = value;
               break;
             case 'estado':
-              socio.estado = value || 'activo';
+              socio.estado = (value as SocioFormData['estado']) || 'activo';
               break;
             case 'monto cuota':
               socio.montoCuota = parseFloat(value) || 0;
               break;
             default:
-              socio[header] = value;
+              if (header in socio) {
+                ((socio as unknown) as Record<string, unknown>)[header] = value;
+              }
           }
         });
         
@@ -261,7 +253,7 @@ export const EnhancedMemberManagement = () => {
       await importSocios(sociosData);
       toast.success('Datos importados exitosamente');
       await handleRefresh();
-    } catch (err) {
+    } catch {
       toast.error('Error al importar los datos');
     }
   };
@@ -606,19 +598,20 @@ export const EnhancedMemberManagement = () => {
                   <tr key={socio.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <div className="flex-shrink-0 h-10 w-10">
-                          {socio.avatar ? (
-                            <img
-                              className="h-10 w-10 rounded-full"
-                              src={socio.avatar}
-                              alt={socio.nombre}
-                            />
-                          ) : (
-                            <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center">
-                              <User className="h-6 w-6 text-purple-600" />
-                            </div>
-                          )}
-                        </div>
+                        {socio.avatar ? (
+                          <Image
+                            className="h-10 w-10 rounded-full"
+                            src={socio.avatar}
+                            alt={socio.nombre}
+                            width={40}
+                            height={40}
+                            style={{ objectFit: 'cover' }}
+                          />
+                        ) : (
+                          <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center">
+                            <User className="h-6 w-6 text-purple-600" />
+                          </div>
+                        )}
                         <div className="ml-4">
                           <div className="text-sm font-medium text-gray-900">
                             {socio.nombre}
