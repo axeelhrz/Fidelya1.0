@@ -1,4 +1,4 @@
-/* ===== SECCIÓN DE CONTACTO OPTIMIZADA ===== */
+/* ===== CONTACTO OPTIMIZADO ===== */
 .contact {
     position: relative;
     width: 100%;
@@ -13,15 +13,13 @@
     inset: 0;
     z-index: 1;
     content: '';
-    background:
-        radial-gradient(ellipse at 30% 20%, rgb(255 69 105 / 4%) 0%, transparent 60%),
-        radial-gradient(ellipse at 70% 80%, rgb(184 0 46 / 3%) 0%, transparent 60%);
+    background: radial-gradient(ellipse at 30% 20%, rgb(255 69 105 / 4%) 0%, transparent 60%), radial-gradient(ellipse at 70% 80%, rgb(184 0 46 / 3%) 0%, transparent 60%);
     contain: strict;
     transform: translateZ(0);
     backface-visibility: hidden;
 }
 
-/* EFECTOS DE FONDO CONSOLIDADOS */
+/* Efectos de fondo */
 .contact__bg-effects {
     position: absolute;
     inset: 0;
@@ -72,7 +70,7 @@
     animation-delay: 2s;
 }
 
-/* HEADER OPTIMIZADO */
+/* Header */
 .contact__header {
     position: relative;
     z-index: 3;
@@ -194,7 +192,7 @@
     contain: layout style;
 }
 
-/* GRID OPTIMIZADO */
+/* Grid */
 .contact__grid {
     position: relative;
     z-index: 3;
@@ -207,7 +205,7 @@
     contain: layout;
 }
 
-/* TARJETAS OPTIMIZADAS */
+/* Tarjetas */
 .contact__channel {
     position: relative;
     display: flex;
@@ -244,7 +242,7 @@
     transform: translate3d(0, -5px, 0);
 }
 
-/* ICONOS OPTIMIZADOS */
+/* Iconos */
 .contact__channel-icon {
     position: relative;
     display: flex;
@@ -283,66 +281,28 @@
     transform: translate3d(0, 0, 0) scale(1.05);
 }
 
-.contact__channel:hover .contact__channel-icon svg {
-    transform: translate3d(0, 0, 0) scale(1.02);
-}
+.contact__channel:hover .contact__channel-icon svg { transform: translate3d(0, 0, 0) scale(1.02); }
 
-/* ESTILOS ESPECÍFICOS CONSOLIDADOS */
-.contact__channel[data-channel="whatsapp"] .contact__channel-icon {
-    background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
-}
+/* Estilos específicos por canal */
+.contact__channel[data-channel="whatsapp"] .contact__channel-icon { background: linear-gradient(135deg, #25d366 0%, #128c7e 100%); }
+.contact__channel[data-channel="whatsapp"]:hover { border-color: rgb(37 211 102 / 25%); box-shadow: 0 15px 35px rgb(0 0 0 / 15%), 0 0 15px rgb(37 211 102 / 15%); }
 
-.contact__channel[data-channel="whatsapp"]:hover {
-    border-color: rgb(37 211 102 / 25%);
-    box-shadow: 0 15px 35px rgb(0 0 0 / 15%), 0 0 15px rgb(37 211 102 / 15%);
-}
+.contact__channel[data-channel="instagram"] .contact__channel-icon { background: linear-gradient(135deg, #e1306c 0%, #fd1d1d 50%, #fcb045 100%); }
+.contact__channel[data-channel="instagram"]:hover { border-color: rgb(225 48 108 / 25%); box-shadow: 0 15px 35px rgb(0 0 0 / 15%), 0 0 15px rgb(225 48 108 / 15%); }
 
-.contact__channel[data-channel="instagram"] .contact__channel-icon {
-    background: linear-gradient(135deg, #e1306c 0%, #fd1d1d 50%, #fcb045 100%);
-}
+.contact__channel[data-channel="facebook"] .contact__channel-icon { background: linear-gradient(135deg, #1877f2 0%, #42a5f5 100%); }
+.contact__channel[data-channel="facebook"]:hover { border-color: rgb(24 119 242 / 25%); box-shadow: 0 15px 35px rgb(0 0 0 / 15%), 0 0 15px rgb(24 119 242 / 15%); }
 
-.contact__channel[data-channel="instagram"]:hover {
-    border-color: rgb(225 48 108 / 25%);
-    box-shadow: 0 15px 35px rgb(0 0 0 / 15%), 0 0 15px rgb(225 48 108 / 15%);
-}
+.contact__channel[data-channel="tiktok"] .contact__channel-icon { background: linear-gradient(135deg, #ff0050 0%, #000 100%); }
+.contact__channel[data-channel="tiktok"]:hover { border-color: rgb(255 0 80 / 25%); box-shadow: 0 15px 35px rgb(0 0 0 / 15%), 0 0 15px rgb(255 0 80 / 15%); }
 
-.contact__channel[data-channel="facebook"] .contact__channel-icon {
-    background: linear-gradient(135deg, #1877f2 0%, #42a5f5 100%);
-}
+.contact__channel[data-channel="telegram"] .contact__channel-icon { background: linear-gradient(135deg, #08c 0%, #229ed9 100%); }
+.contact__channel[data-channel="telegram"]:hover { border-color: rgb(0 136 204 / 25%); box-shadow: 0 15px 35px rgb(0 0 0 / 15%), 0 0 15px rgb(0 136 204 / 15%); }
 
-.contact__channel[data-channel="facebook"]:hover {
-    border-color: rgb(24 119 242 / 25%);
-    box-shadow: 0 15px 35px rgb(0 0 0 / 15%), 0 0 15px rgb(24 119 242 / 15%);
-}
+.contact__channel[data-channel="email"] .contact__channel-icon { background: linear-gradient(135deg, var(--starflex-crimson) 0%, var(--starflex-crimson-bright) 100%); }
+.contact__channel[data-channel="email"]:hover { border-color: var(--border-crimson); box-shadow: 0 15px 35px rgb(0 0 0 / 15%), var(--glow-medium); }
 
-.contact__channel[data-channel="tiktok"] .contact__channel-icon {
-    background: linear-gradient(135deg, #ff0050 0%, #000 100%);
-}
-
-.contact__channel[data-channel="tiktok"]:hover {
-    border-color: rgb(255 0 80 / 25%);
-    box-shadow: 0 15px 35px rgb(0 0 0 / 15%), 0 0 15px rgb(255 0 80 / 15%);
-}
-
-.contact__channel[data-channel="telegram"] .contact__channel-icon {
-    background: linear-gradient(135deg, #08c 0%, #229ed9 100%);
-}
-
-.contact__channel[data-channel="telegram"]:hover {
-    border-color: rgb(0 136 204 / 25%);
-    box-shadow: 0 15px 35px rgb(0 0 0 / 15%), 0 0 15px rgb(0 136 204 / 15%);
-}
-
-.contact__channel[data-channel="email"] .contact__channel-icon {
-    background: linear-gradient(135deg, var(--starflex-crimson) 0%, var(--starflex-crimson-bright) 100%);
-}
-
-.contact__channel[data-channel="email"]:hover {
-    border-color: var(--border-crimson);
-    box-shadow: 0 15px 35px rgb(0 0 0 / 15%), var(--glow-medium);
-}
-
-/* CONTENIDO OPTIMIZADO */
+/* Contenido */
 .contact__channel-content {
     flex: 1;
     display: flex;
@@ -365,9 +325,7 @@
     transition: color 0.15s ease-out;
 }
 
-.contact__channel:hover .contact__channel-title {
-    color: var(--starflex-red);
-}
+.contact__channel:hover .contact__channel-title { color: var(--starflex-red); }
 
 .contact__channel-description {
     margin-bottom: var(--space-xl);
@@ -380,11 +338,9 @@
     transition: color 0.15s ease-out;
 }
 
-.contact__channel:hover .contact__channel-description {
-    color: var(--text-secondary);
-}
+.contact__channel:hover .contact__channel-description { color: var(--text-secondary); }
 
-/* BOTONES OPTIMIZADOS */
+/* Botones */
 .contact__channel-btn {
     display: inline-flex;
     gap: var(--space-sm);
@@ -426,11 +382,9 @@
     transition: transform 0.15s ease-out;
 }
 
-.contact__channel-btn:hover .contact__channel-arrow {
-    transform: translate3d(3px, 0, 0);
-}
+.contact__channel-btn:hover .contact__channel-arrow { transform: translate3d(3px, 0, 0); }
 
-/* FOOTER OPTIMIZADO */
+/* Footer */
 .contact__footer {
     position: relative;
     z-index: 3;
@@ -509,7 +463,7 @@
     text-align: center;
 }
 
-/* RESPONSIVE OPTIMIZADO */
+/* Responsive */
 @media (width <= 1023px) {
     .contact__grid {
         grid-template-columns: 1fr;
@@ -517,30 +471,25 @@
         max-width: 400px;
         margin: 0 auto var(--space-5xl) auto;
     }
-
     .contact__channel {
         padding: var(--space-xl);
         max-width: 100%;
         margin: 0 auto;
     }
-
     .contact__channel-icon {
         width: 65px;
         height: 65px;
         margin: 0 auto var(--space-lg) auto;
     }
-
     .contact__channel-icon svg {
         width: 30px;
         height: 30px;
     }
-
     .contact__footer-content {
         flex-direction: column;
         gap: var(--space-xl);
         text-align: center;
     }
-
     .btn--footer {
         width: 100%;
         max-width: 280px;
@@ -549,42 +498,24 @@
 }
 
 @media (width <= 480px) {
-    .contact__title {
-        font-size: clamp(2.2rem, 8vw, 3.5rem);
-    }
-
-    .contact__subtitle {
-        font-size: 1.1rem;
-    }
-
+    .contact__title { font-size: clamp(2.2rem, 8vw, 3.5rem); }
+    .contact__subtitle { font-size: 1.1rem; }
     .contact__grid {
         max-width: 320px;
         gap: var(--space-lg);
     }
-
-    .contact__channel {
-        padding: var(--space-lg);
-    }
-
+    .contact__channel { padding: var(--space-lg); }
     .contact__channel-icon {
         width: 55px;
         height: 55px;
         margin: 0 auto var(--space-md) auto;
     }
-
     .contact__channel-icon svg {
         width: 26px;
         height: 26px;
     }
-
-    .contact__channel-title {
-        font-size: 1.2rem;
-    }
-
-    .contact__channel-description {
-        font-size: 0.95rem;
-    }
-
+    .contact__channel-title { font-size: 1.2rem; }
+    .contact__channel-description { font-size: 0.95rem; }
     .btn--footer {
         min-width: 200px;
         padding: var(--space-md) var(--space-lg);
@@ -592,7 +523,7 @@
     }
 }
 
-/* ANIMACIONES RÁPIDAS Y LIMPIAS */
+/* Keyframes */
 @keyframes header-reveal {
     0% { opacity: 0; transform: translate3d(0, 15px, 0); }
     100% { opacity: 1; transform: translate3d(0, 0, 0); }
@@ -628,7 +559,7 @@
     50% { transform: translate3d(0, -8px, 0); opacity: 0.16; }
 }
 
-/* ACCESIBILIDAD Y TOUCH */
+/* Accesibilidad y touch */
 .contact__channel:focus,
 .contact__channel-btn:focus,
 .btn--footer:focus {
@@ -646,7 +577,7 @@
     user-select: none;
 }
 
-/* MODO REDUCIDO DE MOVIMIENTO */
+/* Modo reducido de movimiento */
 @media (prefers-reduced-motion: reduce) {
     .contact__header,
     .contact__footer,
@@ -659,11 +590,7 @@
         opacity: 1 !important;
         transform: none !important;
     }
-
-    .contact__channel:hover {
-        transform: none !important;
-    }
-
+    .contact__channel:hover { transform: none !important; }
     .contact__channel-btn,
     .btn--footer,
     .contact__channel-icon,
@@ -672,7 +599,7 @@
     }
 }
 
-/* OPTIMIZACIONES DE RENDIMIENTO */
+/* Optimizaciones de rendimiento */
 .contact__channel,
 .contact__channel-icon,
 .contact__channel-btn,
@@ -690,12 +617,6 @@
         filter: blur(40px);
         opacity: 0.08;
     }
-    
-    .contact__badge::before {
-        animation-duration: 2s;
-    }
-    
-    .contact__orb {
-        animation-duration: 6s;
-    }
+    .contact__badge::before { animation-duration: 2s; }
+    .contact__orb { animation-duration: 6s; }
 }
