@@ -41,7 +41,7 @@
     will-change: transform, opacity;
     transform: translateZ(0);
     backface-visibility: hidden;
-    animation: orb-float 8s ease-in-out infinite;
+    animation: orb-float 4s ease-in-out infinite;
 }
 
 .contact__orb--1 {
@@ -59,7 +59,7 @@
     width: 220px;
     height: 220px;
     background: radial-gradient(circle, rgb(184 0 46 / 40%) 0%, transparent 70%);
-    animation-delay: 2.5s;
+    animation-delay: 1s;
 }
 
 .contact__orb--3 {
@@ -69,7 +69,7 @@
     height: 180px;
     background: radial-gradient(circle, rgb(139 92 246 / 35%) 0%, transparent 70%);
     transform: translate3d(-50%, 0, 0);
-    animation-delay: 5s;
+    animation-delay: 2s;
 }
 
 /* HEADER OPTIMIZADO */
@@ -80,8 +80,8 @@
     text-align: center;
     contain: layout style;
     opacity: 0;
-    transform: translate3d(0, 20px, 0);
-    animation: header-reveal 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.1s forwards;
+    transform: translate3d(0, 15px, 0);
+    animation: header-reveal 0.3s ease-out forwards;
 }
 
 .contact__badge {
@@ -108,7 +108,7 @@
     border: 1px solid rgba(255, 45, 85, 0.25);
     border-radius: 30px;
     box-shadow: 0 8px 25px rgba(255, 45, 85, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    transition: all 0.2s ease-out;
 }
 
 .contact__badge::before {
@@ -123,7 +123,7 @@
     contain: strict;
     transform: translateZ(0);
     backface-visibility: hidden;
-    animation: badge-shimmer 3s ease-in-out infinite;
+    animation: badge-shimmer 1.5s ease-in-out infinite;
 }
 
 .contact__badge-icon {
@@ -133,7 +133,7 @@
     contain: strict;
     transform: translateZ(0);
     backface-visibility: hidden;
-    animation: icon-pulse 3s ease-in-out infinite;
+    animation: icon-pulse 1.5s ease-in-out infinite;
 }
 
 .contact__title {
@@ -181,7 +181,7 @@
     contain: strict;
     transform: translate3d(-50%, 0, 0);
     backface-visibility: hidden;
-    animation: line-glow 4s ease-in-out infinite;
+    animation: line-glow 2s ease-in-out infinite;
 }
 
 .contact__subtitle {
@@ -223,25 +223,25 @@
     border-radius: 18px;
     contain: layout style paint;
     will-change: transform, background, border-color, box-shadow;
-    transform: translate3d(0, 30px, 0);
+    transform: translate3d(0, 20px, 0);
     backface-visibility: hidden;
     opacity: 0;
-    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    animation: channel-reveal 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    transition: all 0.2s ease-out;
+    animation: channel-reveal 0.25s ease-out forwards;
 }
 
 .contact__channel:nth-child(1) { animation-delay: 0.05s; }
-.contact__channel:nth-child(2) { animation-delay: 0.1s; }
-.contact__channel:nth-child(3) { animation-delay: 0.15s; }
-.contact__channel:nth-child(4) { animation-delay: 0.2s; }
-.contact__channel:nth-child(5) { animation-delay: 0.25s; }
-.contact__channel:nth-child(6) { animation-delay: 0.3s; }
+.contact__channel:nth-child(2) { animation-delay: 0.08s; }
+.contact__channel:nth-child(3) { animation-delay: 0.11s; }
+.contact__channel:nth-child(4) { animation-delay: 0.14s; }
+.contact__channel:nth-child(5) { animation-delay: 0.17s; }
+.contact__channel:nth-child(6) { animation-delay: 0.2s; }
 
 .contact__channel:hover {
     background: rgb(255 255 255 / 4%);
     border-color: rgb(255 255 255 / 8%);
     box-shadow: 0 15px 35px rgb(0 0 0 / 15%);
-    transform: translate3d(0, -8px, 0);
+    transform: translate3d(0, -5px, 0);
 }
 
 /* ICONOS OPTIMIZADOS */
@@ -259,7 +259,7 @@
     will-change: transform, box-shadow;
     transform: translateZ(0);
     backface-visibility: hidden;
-    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    transition: all 0.2s ease-out;
     flex-shrink: 0;
 }
 
@@ -271,7 +271,7 @@
     contain: strict;
     transform: translateZ(0);
     backface-visibility: hidden;
-    transition: all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    transition: all 0.15s ease-out;
     display: block;
     margin: 0 auto;
     position: relative;
@@ -280,11 +280,11 @@
 
 .contact__channel:hover .contact__channel-icon {
     box-shadow: 0 12px 35px rgb(0 0 0 / 25%);
-    transform: translate3d(0, 0, 0) scale(1.08);
+    transform: translate3d(0, 0, 0) scale(1.05);
 }
 
 .contact__channel:hover .contact__channel-icon svg {
-    transform: translate3d(0, 0, 0) scale(1.03);
+    transform: translate3d(0, 0, 0) scale(1.02);
 }
 
 /* ESTILOS ESPECÍFICOS CONSOLIDADOS */
@@ -362,7 +362,7 @@
     text-align: center;
     width: 100%;
     contain: layout style;
-    transition: color 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    transition: color 0.15s ease-out;
 }
 
 .contact__channel:hover .contact__channel-title {
@@ -377,7 +377,7 @@
     text-align: center;
     width: 100%;
     contain: layout style;
-    transition: color 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    transition: color 0.15s ease-out;
 }
 
 .contact__channel:hover .contact__channel-description {
@@ -405,7 +405,7 @@
     will-change: transform, background, border-color, box-shadow, color;
     transform: translateZ(0);
     backface-visibility: hidden;
-    transition: all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    transition: all 0.15s ease-out;
     margin: 0 auto;
 }
 
@@ -423,7 +423,7 @@
     contain: strict;
     transform: translateZ(0);
     backface-visibility: hidden;
-    transition: transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    transition: transform 0.15s ease-out;
 }
 
 .contact__channel-btn:hover .contact__channel-arrow {
@@ -437,8 +437,8 @@
     padding: var(--space-2xl) 0;
     contain: layout style;
     opacity: 0;
-    transform: translate3d(0, 20px, 0);
-    animation: footer-reveal 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.8s forwards;
+    transform: translate3d(0, 15px, 0);
+    animation: footer-reveal 0.3s ease-out 0.4s forwards;
 }
 
 .contact__footer-content {
@@ -486,7 +486,7 @@
     will-change: transform, box-shadow;
     transform: translateZ(0);
     backface-visibility: hidden;
-    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    transition: all 0.2s ease-out;
 }
 
 .btn--footer:hover {
@@ -592,19 +592,19 @@
     }
 }
 
-/* ANIMACIONES CONSOLIDADAS */
+/* ANIMACIONES RÁPIDAS Y LIMPIAS */
 @keyframes header-reveal {
-    0% { opacity: 0; transform: translate3d(0, 20px, 0); }
+    0% { opacity: 0; transform: translate3d(0, 15px, 0); }
     100% { opacity: 1; transform: translate3d(0, 0, 0); }
 }
 
 @keyframes channel-reveal {
-    0% { opacity: 0; transform: translate3d(0, 30px, 0); }
+    0% { opacity: 0; transform: translate3d(0, 20px, 0); }
     100% { opacity: 1; transform: translate3d(0, 0, 0); }
 }
 
 @keyframes footer-reveal {
-    0% { opacity: 0; transform: translate3d(0, 20px, 0); }
+    0% { opacity: 0; transform: translate3d(0, 15px, 0); }
     100% { opacity: 1; transform: translate3d(0, 0, 0); }
 }
 
@@ -615,17 +615,17 @@
 
 @keyframes icon-pulse {
     0%, 100% { transform: translateZ(0) scale(1); opacity: 1; }
-    50% { transform: translateZ(0) scale(1.05); opacity: 0.9; }
+    50% { transform: translateZ(0) scale(1.03); opacity: 0.95; }
 }
 
 @keyframes line-glow {
     0%, 100% { opacity: 0.7; transform: translate3d(-50%, 0, 0) scaleX(1); }
-    50% { opacity: 1; transform: translate3d(-50%, 0, 0) scaleX(1.1); }
+    50% { opacity: 1; transform: translate3d(-50%, 0, 0) scaleX(1.05); }
 }
 
 @keyframes orb-float {
     0%, 100% { transform: translate3d(0, 0, 0); opacity: 0.12; }
-    50% { transform: translate3d(0, -10px, 0); opacity: 0.18; }
+    50% { transform: translate3d(0, -8px, 0); opacity: 0.16; }
 }
 
 /* ACCESIBILIDAD Y TOUCH */
@@ -668,7 +668,7 @@
     .btn--footer,
     .contact__channel-icon,
     .contact__channel-arrow {
-        transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease !important;
+        transition: background 0.1s ease, border-color 0.1s ease, color 0.1s ease !important;
     }
 }
 
@@ -692,10 +692,10 @@
     }
     
     .contact__badge::before {
-        animation-duration: 4s;
+        animation-duration: 2s;
     }
     
     .contact__orb {
-        animation-duration: 12s;
+        animation-duration: 6s;
     }
 }
