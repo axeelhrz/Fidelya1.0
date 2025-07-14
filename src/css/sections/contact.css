@@ -1,4 +1,4 @@
-/* ===== SECCIÓN DE CONTACTO ULTRA-OPTIMIZADA ===== */
+/* ===== SECCIÓN DE CONTACTO OPTIMIZADA ===== */
 .contact {
     position: relative;
     width: 100%;
@@ -6,7 +6,6 @@
     overflow: hidden;
     background: linear-gradient(180deg, var(--primary-bg) 0%, var(--secondary-bg) 100%);
     contain: layout style paint;
-    will-change: auto;
 }
 
 .contact::before {
@@ -18,19 +17,17 @@
         radial-gradient(ellipse at 30% 20%, rgb(255 69 105 / 4%) 0%, transparent 60%),
         radial-gradient(ellipse at 70% 80%, rgb(184 0 46 / 3%) 0%, transparent 60%);
     contain: strict;
-    will-change: auto;
     transform: translateZ(0);
     backface-visibility: hidden;
 }
 
-/* ===== EFECTOS DE FONDO OPTIMIZADOS ===== */
+/* EFECTOS DE FONDO CONSOLIDADOS */
 .contact__bg-effects {
     position: absolute;
     inset: 0;
     z-index: 1;
     pointer-events: none;
     contain: strict;
-    will-change: auto;
     transform: translateZ(0);
     backface-visibility: hidden;
 }
@@ -75,7 +72,7 @@
     animation-delay: 5s;
 }
 
-/* ===== HEADER DE CONTACTO OPTIMIZADO ===== */
+/* HEADER OPTIMIZADO */
 .contact__header {
     position: relative;
     z-index: 3;
@@ -87,7 +84,6 @@
     animation: header-reveal 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.1s forwards;
 }
 
-/* Badge optimizado con animación más fluida */
 .contact__badge {
     position: relative;
     display: inline-flex;
@@ -105,22 +101,13 @@
     pointer-events: none;
     user-select: none;
     contain: layout style;
-    will-change: transform;
     transform: translateZ(0);
     backface-visibility: hidden;
-
-    background: linear-gradient(135deg,
-        rgba(255, 45, 85, 0.12) 0%,
-        rgba(255, 45, 85, 0.08) 50%,
-        rgba(255, 45, 85, 0.12) 100%
-    );
+    background: linear-gradient(135deg, rgba(255, 45, 85, 0.12) 0%, rgba(255, 45, 85, 0.08) 50%, rgba(255, 45, 85, 0.12) 100%);
     backdrop-filter: blur(20px) saturate(180%);
     border: 1px solid rgba(255, 45, 85, 0.25);
     border-radius: 30px;
-    box-shadow: 
-        0 8px 25px rgba(255, 45, 85, 0.15),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    
+    box-shadow: 0 8px 25px rgba(255, 45, 85, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1);
     transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
@@ -131,14 +118,9 @@
     width: 100%;
     height: 100%;
     content: '';
-    background: linear-gradient(90deg,
-        transparent 0%,
-        rgba(255, 45, 85, 0.12) 50%,
-        transparent 100%
-    );
+    background: linear-gradient(90deg, transparent 0%, rgba(255, 45, 85, 0.12) 50%, transparent 100%);
     border-radius: 30px;
     contain: strict;
-    will-change: transform;
     transform: translateZ(0);
     backface-visibility: hidden;
     animation: badge-shimmer 3s ease-in-out infinite;
@@ -149,7 +131,6 @@
     color: var(--starflex-crimson-bright);
     text-shadow: 0 0 12px var(--starflex-crimson-glow);
     contain: strict;
-    will-change: transform;
     transform: translateZ(0);
     backface-visibility: hidden;
     animation: icon-pulse 3s ease-in-out infinite;
@@ -168,11 +149,7 @@
     display: block;
     margin-bottom: var(--space-sm);
     font-weight: 900;
-    background: linear-gradient(135deg,
-        #fff 0%,
-        #e2e8f0 50%,
-        #cbd5e1 100%
-    );
+    background: linear-gradient(135deg, #fff 0%, #e2e8f0 50%, #cbd5e1 100%);
     background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -183,10 +160,7 @@
     position: relative;
     display: block;
     font-weight: 900;
-    background: linear-gradient(135deg,
-        var(--starflex-red) 0%,
-        var(--starflex-crimson-glow) 100%
-    );
+    background: linear-gradient(135deg, var(--starflex-red) 0%, var(--starflex-crimson-glow) 100%);
     filter: drop-shadow(0 0 15px rgb(255 69 105 / 25%));
     background-clip: text;
     -webkit-background-clip: text;
@@ -201,15 +175,10 @@
     width: 60%;
     height: 2px;
     content: '';
-    background: linear-gradient(90deg,
-        transparent 0%,
-        var(--starflex-red) 50%,
-        transparent 100%
-    );
+    background: linear-gradient(90deg, transparent 0%, var(--starflex-red) 50%, transparent 100%);
     border-radius: 1px;
     opacity: 0.7;
     contain: strict;
-    will-change: transform;
     transform: translate3d(-50%, 0, 0);
     backface-visibility: hidden;
     animation: line-glow 4s ease-in-out infinite;
@@ -225,7 +194,7 @@
     contain: layout style;
 }
 
-/* ===== GRID DE CANALES ULTRA-OPTIMIZADO ===== */
+/* GRID OPTIMIZADO */
 .contact__grid {
     position: relative;
     z-index: 3;
@@ -238,7 +207,7 @@
     contain: layout;
 }
 
-/* ===== TARJETAS DE CONTACTO ULTRA-FLUIDAS ===== */
+/* TARJETAS OPTIMIZADAS */
 .contact__channel {
     position: relative;
     display: flex;
@@ -257,7 +226,6 @@
     transform: translate3d(0, 30px, 0);
     backface-visibility: hidden;
     opacity: 0;
-    
     transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     animation: channel-reveal 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
 }
@@ -276,7 +244,7 @@
     transform: translate3d(0, -8px, 0);
 }
 
-/* ===== ICONOS ULTRA-OPTIMIZADOS ===== */
+/* ICONOS OPTIMIZADOS */
 .contact__channel-icon {
     position: relative;
     display: flex;
@@ -301,7 +269,6 @@
     color: white;
     filter: drop-shadow(0 2px 4px rgb(0 0 0 / 25%));
     contain: strict;
-    will-change: transform;
     transform: translateZ(0);
     backface-visibility: hidden;
     transition: all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
@@ -320,7 +287,7 @@
     transform: translate3d(0, 0, 0) scale(1.03);
 }
 
-/* ===== ESTILOS ESPECÍFICOS OPTIMIZADOS ===== */
+/* ESTILOS ESPECÍFICOS CONSOLIDADOS */
 .contact__channel[data-channel="whatsapp"] .contact__channel-icon {
     background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
 }
@@ -375,7 +342,7 @@
     box-shadow: 0 15px 35px rgb(0 0 0 / 15%), var(--glow-medium);
 }
 
-/* ===== CONTENIDO OPTIMIZADO ===== */
+/* CONTENIDO OPTIMIZADO */
 .contact__channel-content {
     flex: 1;
     display: flex;
@@ -417,7 +384,7 @@
     color: var(--text-secondary);
 }
 
-/* ===== BOTONES ULTRA-FLUIDOS ===== */
+/* BOTONES OPTIMIZADOS */
 .contact__channel-btn {
     display: inline-flex;
     gap: var(--space-sm);
@@ -454,7 +421,6 @@
     font-size: 1rem;
     font-weight: bold;
     contain: strict;
-    will-change: transform;
     transform: translateZ(0);
     backface-visibility: hidden;
     transition: transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
@@ -464,7 +430,7 @@
     transform: translate3d(3px, 0, 0);
 }
 
-/* ===== FOOTER OPTIMIZADO ===== */
+/* FOOTER OPTIMIZADO */
 .contact__footer {
     position: relative;
     z-index: 3;
@@ -512,15 +478,10 @@
     font-weight: 700;
     color: #fff;
     text-decoration: none;
-    background: linear-gradient(135deg,
-        var(--starflex-crimson) 0%,
-        var(--starflex-crimson-bright) 100%
-    );
+    background: linear-gradient(135deg, var(--starflex-crimson) 0%, var(--starflex-crimson-bright) 100%);
     border: 1px solid rgb(255 69 105 / 25%);
     border-radius: 22px;
-    box-shadow:
-        0 8px 25px rgb(184 0 46 / 25%),
-        inset 0 1px 0 rgb(255 255 255 / 8%);
+    box-shadow: 0 8px 25px rgb(184 0 46 / 25%), inset 0 1px 0 rgb(255 255 255 / 8%);
     contain: layout style;
     will-change: transform, box-shadow;
     transform: translateZ(0);
@@ -529,10 +490,7 @@
 }
 
 .btn--footer:hover {
-    box-shadow:
-        0 12px 35px rgb(184 0 46 / 35%),
-        var(--glow-medium),
-        inset 0 1px 0 rgb(255 255 255 / 15%);
+    box-shadow: 0 12px 35px rgb(184 0 46 / 35%), var(--glow-medium), inset 0 1px 0 rgb(255 255 255 / 15%);
     transform: translate3d(0, -3px, 0);
 }
 
@@ -551,7 +509,7 @@
     text-align: center;
 }
 
-/* ===== RESPONSIVE OPTIMIZADO ===== */
+/* RESPONSIVE OPTIMIZADO */
 @media (width <= 1023px) {
     .contact__grid {
         grid-template-columns: 1fr;
@@ -634,83 +592,43 @@
     }
 }
 
-/* ===== ANIMACIONES ULTRA-FLUIDAS ===== */
+/* ANIMACIONES CONSOLIDADAS */
 @keyframes header-reveal {
-    0% {
-        opacity: 0;
-        transform: translate3d(0, 20px, 0);
-    }
-    100% {
-        opacity: 1;
-        transform: translate3d(0, 0, 0);
-    }
+    0% { opacity: 0; transform: translate3d(0, 20px, 0); }
+    100% { opacity: 1; transform: translate3d(0, 0, 0); }
 }
 
 @keyframes channel-reveal {
-    0% {
-        opacity: 0;
-        transform: translate3d(0, 30px, 0);
-    }
-    100% {
-        opacity: 1;
-        transform: translate3d(0, 0, 0);
-    }
+    0% { opacity: 0; transform: translate3d(0, 30px, 0); }
+    100% { opacity: 1; transform: translate3d(0, 0, 0); }
 }
 
 @keyframes footer-reveal {
-    0% {
-        opacity: 0;
-        transform: translate3d(0, 20px, 0);
-    }
-    100% {
-        opacity: 1;
-        transform: translate3d(0, 0, 0);
-    }
+    0% { opacity: 0; transform: translate3d(0, 20px, 0); }
+    100% { opacity: 1; transform: translate3d(0, 0, 0); }
 }
 
 @keyframes badge-shimmer {
-    0%, 100% {
-        transform: translate3d(-100%, 0, 0);
-    }
-    50% {
-        transform: translate3d(100%, 0, 0);
-    }
+    0%, 100% { transform: translate3d(-100%, 0, 0); }
+    50% { transform: translate3d(100%, 0, 0); }
 }
 
 @keyframes icon-pulse {
-    0%, 100% {
-        transform: translateZ(0) scale(1);
-        opacity: 1;
-    }
-    50% {
-        transform: translateZ(0) scale(1.05);
-        opacity: 0.9;
-    }
+    0%, 100% { transform: translateZ(0) scale(1); opacity: 1; }
+    50% { transform: translateZ(0) scale(1.05); opacity: 0.9; }
 }
 
 @keyframes line-glow {
-    0%, 100% {
-        opacity: 0.7;
-        transform: translate3d(-50%, 0, 0) scaleX(1);
-    }
-    50% {
-        opacity: 1;
-        transform: translate3d(-50%, 0, 0) scaleX(1.1);
-    }
+    0%, 100% { opacity: 0.7; transform: translate3d(-50%, 0, 0) scaleX(1); }
+    50% { opacity: 1; transform: translate3d(-50%, 0, 0) scaleX(1.1); }
 }
 
 @keyframes orb-float {
-    0%, 100% {
-        transform: translate3d(0, 0, 0);
-        opacity: 0.12;
-    }
-    50% {
-        transform: translate3d(0, -10px, 0);
-        opacity: 0.18;
-    }
+    0%, 100% { transform: translate3d(0, 0, 0); opacity: 0.12; }
+    50% { transform: translate3d(0, -10px, 0); opacity: 0.18; }
 }
 
-/* ===== ACCESIBILIDAD OPTIMIZADA ===== */
+/* ACCESIBILIDAD Y TOUCH */
 .contact__channel:focus,
 .contact__channel-btn:focus,
 .btn--footer:focus {
@@ -719,7 +637,6 @@
     border-radius: 6px;
 }
 
-/* ===== TOUCH OPTIMIZATIONS ===== */
 .contact__channel,
 .contact__channel-btn,
 .btn--footer {
@@ -729,7 +646,7 @@
     user-select: none;
 }
 
-/* ===== MODO REDUCIDO DE MOVIMIENTO ===== */
+/* MODO REDUCIDO DE MOVIMIENTO */
 @media (prefers-reduced-motion: reduce) {
     .contact__header,
     .contact__footer,
@@ -755,7 +672,7 @@
     }
 }
 
-/* ===== OPTIMIZACIONES DE RENDIMIENTO AVANZADAS ===== */
+/* OPTIMIZACIONES DE RENDIMIENTO */
 .contact__channel,
 .contact__channel-icon,
 .contact__channel-btn,
@@ -768,7 +685,6 @@
     backface-visibility: hidden;
 }
 
-/* Optimización para dispositivos de baja potencia */
 @media (max-resolution: 150dpi) {
     .contact__orb {
         filter: blur(40px);
