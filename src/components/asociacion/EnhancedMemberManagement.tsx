@@ -7,7 +7,6 @@ import {
   Search,
   Filter,
   Plus,
-  UserPlus,
   Download,
   Upload,
   RefreshCw,
@@ -15,7 +14,6 @@ import {
   CheckCircle,
   Clock,
   X,
-  FileText,
   Settings,
   User,
   DollarSign
@@ -26,6 +24,8 @@ import { SocioDialog } from './SocioDialog';
 import { AddRegisteredSocioButton } from './AddRegisteredSocioButton';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { Timestamp } from 'firebase/firestore';
+import { Socio, SocioFormData } from '@/types/socio';
 import toast from 'react-hot-toast';
 
 export const EnhancedMemberManagement = () => {
@@ -38,13 +38,11 @@ export const EnhancedMemberManagement = () => {
     createSocio,
     updateSocio,
     deleteSocio,
-    exportSocioData,
     importSocios
   } = useSocios();
 
   const {
     loadSocios: loadVinculados,
-    vincularSocio,
     desvincularSocio
   } = useSocioAsociacion();
 
@@ -58,7 +56,7 @@ export const EnhancedMemberManagement = () => {
     fechaHasta: ''
   });
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedSocio, setSelectedSocio] = useState(null);
+  const [selectedSocio, setSelectedSocio] = useState<Socio | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
   // Cargar datos iniciales
@@ -80,14 +78,40 @@ export const EnhancedMemberManagement = () => {
     }
   };
 
+  // Función para convertir fechas a formato compatible
+  const convertDateToTimestamp = (date: Date | Timestamp | string | undefined): Timestamp | undefined => {
+    if (!date) return undefined;
+    
+    if (date instanceof Date) {
+      return Timestamp.fromDate(date);
+    }
+    
+    if (date instanceof Timestamp) {
+      return date;
+    }
+    
+    if (typeof date === 'string') {
+      return Timestamp.fromDate(new Date(date));
+    }
+    
+    return undefined;
+  };
+
   // Función para crear/actualizar socio
-  const handleSaveSocio = async (data) => {
+  const handleSaveSocio = async (data: SocioFormData) => {
     try {
+      // Convertir fechas al formato correcto
+      const processedData: Partial<SocioFormData> = {
+        ...data,
+        fechaNacimiento: convertDateToTimestamp(data.fechaNacimiento),
+        fechaVencimiento: convertDateToTimestamp(data.fechaVencimiento)
+      };
+
       if (selectedSocio) {
-        await updateSocio(selectedSocio.id, data);
+        await updateSocio(selectedSocio.id, processedData);
         toast.success('Socio actualizado exitosamente');
       } else {
-        await createSocio(data);
+        await createSocio(processedData);
         toast.success('Socio creado exitosamente');
       }
       await handleRefresh();
@@ -97,7 +121,7 @@ export const EnhancedMemberManagement = () => {
   };
 
   // Función para eliminar socio
-  const handleDeleteSocio = async (socioId) => {
+  const handleDeleteSocio = async (socioId: string) => {
     if (!confirm('¿Estás seguro de que deseas eliminar este socio?')) return;
 
     try {
@@ -110,7 +134,7 @@ export const EnhancedMemberManagement = () => {
   };
 
   // Función para desvincular socio
-  const handleDesvincularSocio = async (socioId) => {
+  const handleDesvincularSocio = async (socioId: string) => {
     if (!confirm('¿Estás seguro de que deseas desvincular este socio?')) return;
 
     try {
@@ -122,11 +146,61 @@ export const EnhancedMemberManagement = () => {
     }
   };
 
-  // Función para exportar datos
+  // Función para exportar datos a CSV
   const handleExport = async () => {
     try {
-      const data = await exportSocioData();
-      // Aquí implementar la lógica para descargar el archivo
+      if (socios.length === 0) {
+        toast.error('No hay socios para exportar');
+        return;
+      }
+
+      // Crear encabezados CSV
+      const headers = [
+        'Nombre',
+        'Email',
+        'DNI',
+        'Teléfono',
+        'Número de Socio',
+        'Estado',
+        'Estado Membresía',
+        'Fecha de Ingreso',
+        'Fecha de Vencimiento',
+        'Monto Cuota',
+        'Beneficios Usados'
+      ];
+
+      // Convertir datos a formato CSV
+      const csvData = socios.map(socio => [
+        socio.nombre,
+        socio.email,
+        socio.dni,
+        socio.telefono || '',
+        socio.numeroSocio || '',
+        socio.estado,
+        socio.estadoMembresia,
+        format(socio.fechaIngreso.toDate(), 'dd/MM/yyyy'),
+        socio.fechaVencimiento ? format(socio.fechaVencimiento.toDate(), 'dd/MM/yyyy') : '',
+        socio.montoCuota || 0,
+        socio.beneficiosUsados || 0
+      ]);
+
+      // Crear contenido CSV
+      const csvContent = [
+        headers.join(','),
+        ...csvData.map(row => row.map(field => `"${field}"`).join(','))
+      ].join('\n');
+
+      // Crear y descargar archivo
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `socios_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
       toast.success('Datos exportados exitosamente');
     } catch (err) {
       toast.error('Error al exportar los datos');
@@ -134,9 +208,57 @@ export const EnhancedMemberManagement = () => {
   };
 
   // Función para importar datos
-  const handleImport = async (file) => {
+  const handleImport = async (file: File) => {
     try {
-      await importSocios(file);
+      const text = await file.text();
+      const lines = text.split('\n').filter(line => line.trim());
+      
+      if (lines.length < 2) {
+        toast.error('El archivo CSV debe tener al menos una fila de datos');
+        return;
+      }
+
+      // Parsear CSV simple (asumiendo formato estándar)
+      const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+      const sociosData = lines.slice(1).map(line => {
+        const values = line.split(',').map(v => v.trim().replace(/"/g, ''));
+        const socio: any = {};
+        
+        headers.forEach((header, idx) => {
+          const value = values[idx] || '';
+          switch (header.toLowerCase()) {
+            case 'nombre':
+              socio.nombre = value;
+              break;
+            case 'email':
+              socio.email = value;
+              break;
+            case 'dni':
+              socio.dni = value;
+              break;
+            case 'telefono':
+            case 'teléfono':
+              socio.telefono = value;
+              break;
+            case 'numero de socio':
+            case 'número de socio':
+              socio.numeroSocio = value;
+              break;
+            case 'estado':
+              socio.estado = value || 'activo';
+              break;
+            case 'monto cuota':
+              socio.montoCuota = parseFloat(value) || 0;
+              break;
+            default:
+              socio[header] = value;
+          }
+        });
+        
+        return socio;
+      });
+
+      await importSocios(sociosData);
       toast.success('Datos importados exitosamente');
       await handleRefresh();
     } catch (err) {
@@ -301,7 +423,7 @@ export const EnhancedMemberManagement = () => {
               </button>
 
               <button
-                onClick={() => document.getElementById('import-file').click()}
+                onClick={() => document.getElementById('import-file')?.click()}
                 className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
                 title="Importar datos"
               >
