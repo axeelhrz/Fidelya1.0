@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
 import { 
   Search,
   UserPlus,
@@ -15,8 +16,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSocioAsociacion } from '@/hooks/useSocioAsociacion';
-import { userSearchService } from '@/services/user-search.service';
-import { RegisteredUser } from '@/types/auth';
+import { userSearchService, RegisteredUser } from '@/services/user-search.service';
 import toast from 'react-hot-toast';
 
 interface VincularSocioDialogProps {
@@ -96,6 +96,7 @@ export const VincularSocioDialog: React.FC<VincularSocioDialogProps> = ({
       const success = await vincularSocio(selectedUser.id);
       
       if (success) {
+        toast.success('Socio vinculado exitosamente');
         onSuccess?.();
         onClose();
       }
@@ -198,21 +199,34 @@ export const VincularSocioDialog: React.FC<VincularSocioDialogProps> = ({
                   </div>
                 )}
 
-                <div className="space-y-2">
-                  {users.map((user) => (
-                    <div
-                      key={user.id}
-                      onClick={() => setSelectedUser(user)}
-                      className={`p-4 transition-colors border rounded-lg cursor-pointer ${
-                        selectedUser?.id === user.id
-                          ? 'border-purple-500 bg-purple-50'
-                          : 'border-gray-200 hover:bg-gray-50'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <div className="p-2 bg-gray-100 rounded-full">
-                            <User className="w-5 h-5 text-gray-600" />
+                {users.length > 0 && (
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium text-gray-700 mb-3">
+                      Usuarios encontrados ({users.length})
+                    </h4>
+                    {users.map((user) => (
+                      <div
+                        key={user.id}
+                        onClick={() => setSelectedUser(user)}
+                        className={`p-4 transition-colors border rounded-lg cursor-pointer ${
+                          selectedUser?.id === user.id
+                            ? 'border-purple-500 bg-purple-50'
+                            : 'border-gray-200 hover:bg-gray-50'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            {user.avatar ? (
+                              <Image
+                                src={user.avatar}
+                                alt={user.nombre}
+                                width={32}
+                                height={32}
+                                className="w-8 h-8 rounded-full"
+                              />
+                            ) : (
+                              <User className="w-5 h-5 text-gray-600" />
+                            )}
                           </div>
                           <div>
                             <h4 className="font-medium text-gray-900">{user.nombre}</h4>
@@ -228,15 +242,30 @@ export const VincularSocioDialog: React.FC<VincularSocioDialogProps> = ({
                                 </span>
                               )}
                             </div>
+                            {user.dni && (
+                              <div className="mt-1 text-sm text-gray-500">
+                                DNI: {user.dni}
+                              </div>
+                            )}
                           </div>
+                          {selectedUser?.id === user.id && (
+                            <CheckCircle className="w-5 h-5 text-purple-600" />
+                          )}
                         </div>
-                        {selectedUser?.id === user.id && (
-                          <CheckCircle className="w-5 h-5 text-purple-600" />
-                        )}
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
+
+                {searchTerm && !searching && users.length === 0 && !error && (
+                  <div className="text-center py-8">
+                    <User className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-500">No se encontraron usuarios</p>
+                    <p className="text-sm text-gray-400 mt-1">
+                      Intenta con otros términos de búsqueda
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
 

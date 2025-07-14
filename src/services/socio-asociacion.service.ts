@@ -2,7 +2,6 @@ import {
   collection,
   doc,
   getDoc,
-  updateDoc,
   query,
   where,
   getDocs,
@@ -157,7 +156,6 @@ class SocioAsociacionService {
    */
   async getSociosByAsociacion(
     asociacionId: string,
-    limit: number = 100
   ): Promise<Socio[]> {
     try {
       const q = query(
