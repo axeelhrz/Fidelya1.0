@@ -17,7 +17,8 @@ import {
   X,
   FileText,
   Settings,
-  User
+  User,
+  DollarSign
 } from 'lucide-react';
 import { useSocios } from '@/hooks/useSocios';
 import { useSocioAsociacion } from '@/hooks/useSocioAsociacion';
@@ -276,6 +277,7 @@ export const EnhancedMemberManagement = () => {
 
             <AddRegisteredSocioButton 
               onSocioAdded={handleRefresh}
+              className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
             />
 
             <button
@@ -422,25 +424,31 @@ export const EnhancedMemberManagement = () => {
           <div className="text-center py-12">
             <User className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              {socios.length === 0 ? 'No hay socios' : 'No se encontraron socios'}
+              {socios.length === 0 ? 'No hay socios vinculados' : 'No se encontraron socios'}
             </h3>
             <p className="text-gray-600 mb-4">
               {socios.length === 0 
-                ? 'Comienza agregando tu primer socio'
+                ? 'Comienza vinculando socios existentes o creando nuevos'
                 : 'Intenta ajustar los filtros de búsqueda'
               }
             </p>
             {socios.length === 0 && (
-              <button
-                onClick={() => {
-                  setSelectedSocio(null);
-                  setDialogOpen(true);
-                }}
-                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Agregar Primer Socio
-              </button>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <AddRegisteredSocioButton 
+                  onSocioAdded={handleRefresh}
+                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+                />
+                <button
+                  onClick={() => {
+                    setSelectedSocio(null);
+                    setDialogOpen(true);
+                  }}
+                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Crear Nuevo Socio
+                </button>
+              </div>
             )}
           </div>
         ) : (
@@ -544,12 +552,14 @@ export const EnhancedMemberManagement = () => {
                             setDialogOpen(true);
                           }}
                           className="text-purple-600 hover:text-purple-900"
+                          title="Editar socio"
                         >
                           <Settings className="w-5 h-5" />
                         </button>
                         <button
                           onClick={() => handleDesvincularSocio(socio.id)}
                           className="text-red-600 hover:text-red-900"
+                          title="Desvincular socio"
                         >
                           <X className="w-5 h-5" />
                         </button>
