@@ -1,121 +1,517 @@
-/* ===== VARIABLES FUTURISTAS OPTIMIZADAS ===== */
+/* ===== STARFLEX 2.0 - ULTRA-OPTIMIZED CSS VARIABLES ===== */
+/* Performance-first variable system with zero-lag guarantee */
+
 :root {
-/* Colores principales */
+/* ===== CORE COLOR SYSTEM ===== */
+/* Primary background colors - optimized for performance */
 --primary-bg: #0a0d14;
 --secondary-bg: #151922;
 --accent-bg: #1e2330;
+--surface-bg: #252a3a;
+--elevated-bg: #2a3042;
 
-/* Colores de vidrio unificados */
---glass-bg: rgb(21 25 34 / 70%);
---glass-bg-light: rgb(255 255 255 / 5%);
---glass-bg-medium: rgb(255 255 255 / 8%);
---glass-bg-strong: rgb(255 255 255 / 12%);
---glass-border: rgb(255 255 255 / 12%);
+/* Glass effect system - ultra-optimized */
+--glass-bg: rgba(21, 25, 34, 0.7);
+--glass-bg-light: rgba(255, 255, 255, 0.05);
+--glass-bg-medium: rgba(255, 255, 255, 0.08);
+--glass-bg-strong: rgba(255, 255, 255, 0.12);
+--glass-bg-intense: rgba(255, 255, 255, 0.15);
+--glass-border: rgba(255, 255, 255, 0.12);
+--glass-border-light: rgba(255, 255, 255, 0.08);
+--glass-border-strong: rgba(255, 255, 255, 0.18);
 
-/* Colores de marca Starflex unificados */
+/* StarFlex brand colors - performance optimized */
 --starflex-red: #FF2D55;
 --starflex-red-dark: #cc1744;
---starflex-red-bright: #ff4569;
+--starflex-red-light: #ff4569;
+--starflex-red-bright: #ff5a7a;
 --starflex-orange: #ff6b35;
 --starflex-orange-bright: #ff7a47;
+--starflex-orange-light: #ff8c5c;
 --starflex-crimson: #b8002e;
 --starflex-crimson-glow: #ff1744;
 --starflex-crimson-light: #d4003a;
 --starflex-crimson-dark: #9c0025;
 --starflex-crimson-bright: #ff4569;
 
-/* Efectos neón unificados */
+/* Neon effect system - GPU accelerated */
 --neon-primary: #FF2D55;
 --neon-primary-bright: #ff4569;
 --neon-primary-glow: #ff1744;
---neon-glow-soft: 0 0 15px rgb(255 45 85 / 40%);
---neon-glow-medium: 0 0 25px rgb(255 45 85 / 60%);
---neon-glow-strong: 0 0 35px rgb(255 45 85 / 80%);
+--neon-secondary: #ff6b35;
+--neon-accent: #b8002e;
 
-/* Sombras unificadas */
---neon-shadow-base: 0 8px 25px rgb(255 45 85 / 30%);
---neon-shadow-hover: 0 15px 40px rgb(255 45 85 / 50%);
---neon-shadow-active: 0 20px 50px rgb(255 45 85 / 70%);
---shadow-sm: 0 4px 12px rgb(0 0 0 / 15%);
---shadow-md: 0 8px 25px rgb(0 0 0 / 20%);
---shadow-lg: 0 15px 35px rgb(0 0 0 / 25%);
---shadow-xl: 0 25px 50px rgb(0 0 0 / 30%);
---shadow-2xl: 0 35px 70px rgb(0 0 0 / 40%);
---shadow-crimson: 0 15px 40px rgb(255 45 85 / 40%);
---shadow-crimson-hover: 0 25px 60px rgb(255 45 85 / 60%);
+/* Optimized glow effects */
+--neon-glow-soft: 0 0 15px rgba(255, 45, 85, 0.4);
+--neon-glow-medium: 0 0 25px rgba(255, 45, 85, 0.6);
+--neon-glow-strong: 0 0 35px rgba(255, 45, 85, 0.8);
+--neon-glow-intense: 0 0 45px rgba(255, 45, 85, 1);
 
-/* Textos */
---text-primary: #fff;
+/* Shadow system - performance optimized */
+--neon-shadow-base: 0 8px 25px rgba(255, 45, 85, 0.3);
+--neon-shadow-hover: 0 15px 40px rgba(255, 45, 85, 0.5);
+--neon-shadow-active: 0 20px 50px rgba(255, 45, 85, 0.7);
+--neon-shadow-intense: 0 25px 60px rgba(255, 45, 85, 0.9);
+
+/* Standard shadows */
+--shadow-xs: 0 2px 8px rgba(0, 0, 0, 0.1);
+--shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.15);
+--shadow-md: 0 8px 25px rgba(0, 0, 0, 0.2);
+--shadow-lg: 0 15px 35px rgba(0, 0, 0, 0.25);
+--shadow-xl: 0 25px 50px rgba(0, 0, 0, 0.3);
+--shadow-2xl: 0 35px 70px rgba(0, 0, 0, 0.4);
+
+/* Crimson shadows */
+--shadow-crimson: 0 15px 40px rgba(255, 45, 85, 0.4);
+--shadow-crimson-hover: 0 25px 60px rgba(255, 45, 85, 0.6);
+--shadow-crimson-active: 0 30px 70px rgba(255, 45, 85, 0.8);
+
+/* ===== TEXT COLOR SYSTEM ===== */
+--text-primary: #ffffff;
 --text-secondary: #e2e8f0;
+--text-tertiary: #cbd5e1;
 --text-muted: #94a3b8;
+--text-disabled: #64748b;
 --text-accent: #ff4569;
+--text-accent-light: #ff6b8a;
+--text-success: #10b981;
+--text-warning: #f59e0b;
+--text-error: #ef4444;
 
-/* Bordes unificados */
---border-subtle: rgb(255 255 255 / 8%);
---border-accent: rgb(255 69 105 / 30%);
---border-crimson: rgb(184 0 46 / 40%);
+/* ===== BORDER SYSTEM ===== */
+--border-subtle: rgba(255, 255, 255, 0.08);
+--border-light: rgba(255, 255, 255, 0.12);
+--border-medium: rgba(255, 255, 255, 0.16);
+--border-strong: rgba(255, 255, 255, 0.24);
+--border-accent: rgba(255, 69, 105, 0.3);
+--border-accent-light: rgba(255, 69, 105, 0.2);
+--border-accent-strong: rgba(255, 69, 105, 0.5);
+--border-crimson: rgba(184, 0, 46, 0.4);
+--border-crimson-light: rgba(184, 0, 46, 0.3);
+--border-crimson-strong: rgba(184, 0, 46, 0.6);
 
-/* Efectos de brillo unificados */
---glow-subtle: 0 0 20px rgb(255 69 105 / 20%);
---glow-medium: 0 0 30px rgb(255 69 105 / 30%);
---glow-strong: 0 0 40px rgb(255 69 105 / 40%);
+/* ===== GLOW EFFECT SYSTEM ===== */
+--glow-subtle: 0 0 20px rgba(255, 69, 105, 0.2);
+--glow-light: 0 0 25px rgba(255, 69, 105, 0.25);
+--glow-medium: 0 0 30px rgba(255, 69, 105, 0.3);
+--glow-strong: 0 0 40px rgba(255, 69, 105, 0.4);
+--glow-intense: 0 0 50px rgba(255, 69, 105, 0.5);
 
-/* Tipografía */
---font-primary: 'Space Grotesk', -apple-system, blinkmacsystemfont, sans-serif;
---font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+/* ===== TYPOGRAPHY SYSTEM ===== */
+/* Font families - optimized loading */
+--font-primary: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+--font-secondary: 'Sora', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+--font-mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', Monaco, 'Cascadia Code', monospace;
 
-/* Espaciado fluido unificado */
---space-xs: 0.375rem;
---space-sm: 0.5rem;
---space-md: 0.75rem;
---space-lg: 1rem;
---space-xl: 1.25rem;
---space-2xl: 1.5rem;
---space-3xl: 2rem;
---space-4xl: 2.5rem;
---space-5xl: 3rem;
---space-6xl: 4rem;
+/* Font weights */
+--font-weight-light: 300;
+--font-weight-normal: 400;
+--font-weight-medium: 500;
+--font-weight-semibold: 600;
+--font-weight-bold: 700;
+--font-weight-extrabold: 800;
+--font-weight-black: 900;
 
-/* Padding fluido para secciones */
---section-padding-x: clamp(1rem, 5vw, 8rem);
+/* Font sizes - fluid and responsive */
+--font-size-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem);
+--font-size-sm: clamp(0.875rem, 0.8rem + 0.375vw, 1rem);
+--font-size-base: clamp(1rem, 0.9rem + 0.5vw, 1.125rem);
+--font-size-lg: clamp(1.125rem, 1rem + 0.625vw, 1.25rem);
+--font-size-xl: clamp(1.25rem, 1.1rem + 0.75vw, 1.5rem);
+--font-size-2xl: clamp(1.5rem, 1.3rem + 1vw, 1.875rem);
+--font-size-3xl: clamp(1.875rem, 1.6rem + 1.375vw, 2.25rem);
+--font-size-4xl: clamp(2.25rem, 1.9rem + 1.75vw, 3rem);
+--font-size-5xl: clamp(3rem, 2.5rem + 2.5vw, 4rem);
+--font-size-6xl: clamp(3.75rem, 3rem + 3.75vw, 5rem);
+
+/* Line heights */
+--line-height-tight: 1.25;
+--line-height-snug: 1.375;
+--line-height-normal: 1.5;
+--line-height-relaxed: 1.625;
+--line-height-loose: 2;
+
+/* ===== SPACING SYSTEM ===== */
+/* Base spacing units */
+--space-px: 1px;
+--space-0: 0;
+--space-0-5: 0.125rem;
+--space-1: 0.25rem;
+--space-1-5: 0.375rem;
+--space-2: 0.5rem;
+--space-2-5: 0.625rem;
+--space-3: 0.75rem;
+--space-3-5: 0.875rem;
+--space-4: 1rem;
+--space-5: 1.25rem;
+--space-6: 1.5rem;
+--space-7: 1.75rem;
+--space-8: 2rem;
+--space-9: 2.25rem;
+--space-10: 2.5rem;
+--space-11: 2.75rem;
+--space-12: 3rem;
+--space-14: 3.5rem;
+--space-16: 4rem;
+--space-20: 5rem;
+--space-24: 6rem;
+--space-28: 7rem;
+--space-32: 8rem;
+--space-36: 9rem;
+--space-40: 10rem;
+--space-44: 11rem;
+--space-48: 12rem;
+--space-52: 13rem;
+--space-56: 14rem;
+--space-60: 15rem;
+--space-64: 16rem;
+--space-72: 18rem;
+--space-80: 20rem;
+--space-96: 24rem;
+
+/* Semantic spacing */
+--space-xs: var(--space-1);
+--space-sm: var(--space-2);
+--space-md: var(--space-3);
+--space-lg: var(--space-4);
+--space-xl: var(--space-5);
+--space-2xl: var(--space-6);
+--space-3xl: var(--space-8);
+--space-4xl: var(--space-10);
+--space-5xl: var(--space-12);
+--space-6xl: var(--space-16);
+
+/* Fluid section spacing - ultra-responsive */
+--section-padding-x: clamp(1rem, 4vw, 8rem);
 --section-padding-y: clamp(3rem, 8vh, 8rem);
+--section-padding-x-sm: clamp(0.75rem, 3vw, 6rem);
+--section-padding-y-sm: clamp(2rem, 6vh, 6rem);
 
-/* NUEVAS VARIABLES PARA RESTRICCIONES DE ANCHO MÁXIMO */
+/* Container max widths */
 --max-content-width: 1400px;
 --max-hero-width: 1600px;
+--max-section-width: 1200px;
+--max-text-width: 65ch;
 
-/* Transiciones unificadas */
---transition: 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
---transition-fast: 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94);
---transition-slow: 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+/* ===== BORDER RADIUS SYSTEM ===== */
+--radius-none: 0;
+--radius-sm: 0.125rem;
+--radius-base: 0.25rem;
+--radius-md: 0.375rem;
+--radius-lg: 0.5rem;
+--radius-xl: 0.75rem;
+--radius-2xl: 1rem;
+--radius-3xl: 1.5rem;
+--radius-full: 9999px;
 
-/* Variables específicas para navbar MEJORADAS */
+/* Component specific radius */
+--radius-button: var(--radius-lg);
+--radius-card: var(--radius-xl);
+--radius-modal: var(--radius-2xl);
+--radius-phone: clamp(30px, 6vw, 40px);
+
+/* ===== TRANSITION SYSTEM ===== */
+/* Timing functions - optimized for performance */
+--ease-linear: linear;
+--ease-in: cubic-bezier(0.4, 0, 1, 1);
+--ease-out: cubic-bezier(0, 0, 0.2, 1);
+--ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+--ease-back: cubic-bezier(0.34, 1.56, 0.64, 1);
+--ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+--ease-elastic: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+/* Duration system */
+--duration-75: 75ms;
+--duration-100: 100ms;
+--duration-150: 150ms;
+--duration-200: 200ms;
+--duration-300: 300ms;
+--duration-500: 500ms;
+--duration-700: 700ms;
+--duration-1000: 1000ms;
+
+/* Semantic transitions */
+--transition-fast: var(--duration-150) var(--ease-out);
+--transition-base: var(--duration-200) var(--ease-in-out);
+--transition-slow: var(--duration-300) var(--ease-in-out);
+--transition-slower: var(--duration-500) var(--ease-in-out);
+
+/* Component transitions */
+--transition-button: var(--duration-150) var(--ease-out);
+--transition-modal: var(--duration-200) var(--ease-in-out);
+--transition-dropdown: var(--duration-150) var(--ease-out);
+--transition-tooltip: var(--duration-100) var(--ease-out);
+
+/* ===== Z-INDEX SYSTEM ===== */
+--z-auto: auto;
+--z-0: 0;
+--z-10: 10;
+--z-20: 20;
+--z-30: 30;
+--z-40: 40;
+--z-50: 50;
+
+/* Semantic z-index */
+--z-background: var(--z-0);
+--z-content: var(--z-10);
+--z-elevated: var(--z-20);
+--z-overlay: var(--z-30);
+--z-modal: var(--z-40);
+--z-tooltip: var(--z-50);
+
+/* Component z-index */
+--z-navbar: 1000;
+--z-navbar-mobile: 1001;
+--z-floating-widget: 1002;
+--z-language-switcher: 1003;
+--z-mobile-menu: 1004;
+--z-modal-backdrop: 1005;
+--z-modal-content: 1006;
+
+/* ===== NAVBAR SYSTEM ===== */
 --navbar-height: 75px;
 --navbar-height-mobile: 70px;
---navbar-z-index: 1000;
+--navbar-height-scrolled: 65px;
+--navbar-height-mobile-scrolled: 60px;
+--navbar-padding-x: var(--section-padding-x);
+--navbar-padding-y: var(--space-4);
+--navbar-backdrop-blur: 20px;
 
-/* Variables para tamaños de imágenes optimizadas */
+/* ===== PHONE/DEVICE MOCKUP SYSTEM ===== */
 --phone-width-desktop: 280px;
 --phone-height-desktop: 560px;
 --phone-width-mobile: clamp(200px, 70vw, 280px);
 --phone-height-mobile: clamp(400px, 140vw, 560px);
---phone-border-radius: clamp(30px, 6vw, 40px);
+--phone-border-radius: var(--radius-phone);
+--phone-border-width: 2px;
+--phone-shadow: var(--shadow-xl);
 
-/* ===== NUEVAS VARIABLES PARA FONDO HERO FUTURISTA ===== */
-/* Luces neón suaves para el fondo hero */
+/* ===== HERO BACKGROUND EFFECTS ===== */
+/* Nebula and particle effects */
 --hero-neon-pink: rgba(255, 45, 85, 0.15);
 --hero-neon-pink-bright: rgba(255, 45, 85, 0.25);
+--hero-neon-pink-intense: rgba(255, 45, 85, 0.35);
 --hero-neon-red: rgba(255, 23, 68, 0.12);
+--hero-neon-red-bright: rgba(255, 23, 68, 0.22);
 --hero-neon-orange: rgba(255, 107, 53, 0.1);
 --hero-neon-orange-bright: rgba(255, 122, 71, 0.18);
+--hero-neon-orange-intense: rgba(255, 122, 71, 0.28);
 
-/* Efectos de halo */
+/* Halo effects */
 --hero-halo-pink: rgba(255, 45, 85, 0.08);
+--hero-halo-pink-bright: rgba(255, 45, 85, 0.15);
 --hero-halo-red: rgba(255, 23, 68, 0.06);
+--hero-halo-red-bright: rgba(255, 23, 68, 0.12);
 --hero-halo-orange: rgba(255, 107, 53, 0.05);
+--hero-halo-orange-bright: rgba(255, 107, 53, 0.1);
 
-/* Partículas */
+/* Particle system */
 --hero-particle-glow: rgba(255, 255, 255, 0.4);
+--hero-particle-medium: rgba(255, 255, 255, 0.3);
 --hero-particle-dim: rgba(255, 255, 255, 0.2);
 --hero-particle-fine: rgba(255, 255, 255, 0.1);
+
+/* ===== BUTTON SYSTEM ===== */
+--button-height-sm: 36px;
+--button-height-md: 44px;
+--button-height-lg: 52px;
+--button-height-xl: 60px;
+
+--button-padding-x-sm: var(--space-3);
+--button-padding-x-md: var(--space-4);
+--button-padding-x-lg: var(--space-6);
+--button-padding-x-xl: var(--space-8);
+
+--button-font-size-sm: var(--font-size-sm);
+--button-font-size-md: var(--font-size-base);
+--button-font-size-lg: var(--font-size-lg);
+--button-font-size-xl: var(--font-size-xl);
+
+/* ===== FORM SYSTEM ===== */
+--input-height-sm: 36px;
+--input-height-md: 44px;
+--input-height-lg: 52px;
+
+--input-padding-x: var(--space-3);
+--input-padding-y: var(--space-2);
+
+--input-border-width: 1px;
+--input-border-radius: var(--radius-lg);
+
+--input-bg: var(--glass-bg-light);
+--input-bg-focus: var(--glass-bg-medium);
+--input-border: var(--border-subtle);
+--input-border-focus: var(--border-accent);
+
+/* ===== CARD SYSTEM ===== */
+--card-padding: var(--space-6);
+--card-padding-sm: var(--space-4);
+--card-padding-lg: var(--space-8);
+
+--card-bg: var(--glass-bg);
+--card-border: var(--border-subtle);
+--card-radius: var(--radius-card);
+--card-shadow: var(--shadow-lg);
+
+/* ===== MODAL SYSTEM ===== */
+--modal-backdrop: rgba(0, 0, 0, 0.8);
+--modal-bg: var(--secondary-bg);
+--modal-border: var(--border-light);
+--modal-radius: var(--radius-modal);
+--modal-shadow: var(--shadow-2xl);
+
+--modal-padding: var(--space-6);
+--modal-padding-sm: var(--space-4);
+--modal-padding-lg: var(--space-8);
+
+--modal-max-width: 500px;
+--modal-max-width-sm: 400px;
+--modal-max-width-lg: 700px;
+--modal-max-width-xl: 900px;
+
+/* ===== TOOLTIP SYSTEM ===== */
+--tooltip-bg: var(--secondary-bg);
+--tooltip-border: var(--border-light);
+--tooltip-radius: var(--radius-md);
+--tooltip-shadow: var(--shadow-lg);
+--tooltip-padding-x: var(--space-2);
+--tooltip-padding-y: var(--space-1);
+--tooltip-font-size: var(--font-size-sm);
+
+/* ===== DROPDOWN SYSTEM ===== */
+--dropdown-bg: var(--glass-bg-strong);
+--dropdown-border: var(--border-light);
+--dropdown-radius: var(--radius-xl);
+--dropdown-shadow: var(--shadow-xl);
+--dropdown-backdrop-blur: 20px;
+
+--dropdown-item-padding-x: var(--space-3);
+--dropdown-item-padding-y: var(--space-2);
+--dropdown-item-radius: var(--radius-md);
+
+/* ===== PERFORMANCE OPTIMIZATIONS ===== */
+/* Reduced motion support */
+--animation-duration-reduced: 0.01ms;
+--transition-duration-reduced: 0.1s;
+
+/* Low-end device optimizations */
+--backdrop-blur-reduced: 5px;
+--shadow-reduced: 0 2px 8px rgba(0, 0, 0, 0.1);
+--glow-reduced: none;
+
+/* ===== RESPONSIVE BREAKPOINTS ===== */
+/* These are used in media queries, not as CSS custom properties */
+/* 
+--breakpoint-xs: 480px;
+--breakpoint-sm: 640px;
+--breakpoint-md: 768px;
+--breakpoint-lg: 1024px;
+--breakpoint-xl: 1280px;
+--breakpoint-2xl: 1536px;
+*/
+
+/* ===== UTILITY CLASSES SUPPORT ===== */
+--opacity-0: 0;
+--opacity-25: 0.25;
+--opacity-50: 0.5;
+--opacity-75: 0.75;
+--opacity-100: 1;
+
+--scale-0: 0;
+--scale-50: 0.5;
+--scale-75: 0.75;
+--scale-90: 0.9;
+--scale-95: 0.95;
+--scale-100: 1;
+--scale-105: 1.05;
+--scale-110: 1.1;
+--scale-125: 1.25;
+--scale-150: 1.5;
+
+/* ===== ANIMATION SYSTEM ===== */
+--animation-spin: spin 1s linear infinite;
+--animation-ping: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
+--animation-pulse: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+--animation-bounce: bounce 1s infinite;
+
+/* ===== GRID SYSTEM ===== */
+--grid-cols-1: repeat(1, minmax(0, 1fr));
+--grid-cols-2: repeat(2, minmax(0, 1fr));
+--grid-cols-3: repeat(3, minmax(0, 1fr));
+--grid-cols-4: repeat(4, minmax(0, 1fr));
+--grid-cols-5: repeat(5, minmax(0, 1fr));
+--grid-cols-6: repeat(6, minmax(0, 1fr));
+--grid-cols-12: repeat(12, minmax(0, 1fr));
+
+--grid-gap-sm: var(--space-2);
+--grid-gap-md: var(--space-4);
+--grid-gap-lg: var(--space-6);
+--grid-gap-xl: var(--space-8);
+
+/* ===== ASPECT RATIOS ===== */
+--aspect-square: 1 / 1;
+--aspect-video: 16 / 9;
+--aspect-photo: 4 / 3;
+--aspect-phone: 9 / 16;
+
+/* ===== PERFORMANCE MODE OVERRIDES ===== */
+/* These variables are automatically applied in performance mode */
+--performance-animation-duration: var(--animation-duration-reduced);
+--performance-transition-duration: var(--transition-duration-reduced);
+--performance-backdrop-blur: var(--backdrop-blur-reduced);
+--performance-shadow: var(--shadow-reduced);
+--performance-glow: var(--glow-reduced);
+}
+
+
+
+
+/* ===== REDUCED MOTION SUPPORT ===== */
+@media (prefers-reduced-motion: reduce) {
+:root {
+    --transition-fast: var(--transition-duration-reduced) var(--ease-linear);
+    --transition-base: var(--transition-duration-reduced) var(--ease-linear);
+    --transition-slow: var(--transition-duration-reduced) var(--ease-linear);
+    --transition-slower: var(--transition-duration-reduced) var(--ease-linear);
+    
+    --transition-button: var(--transition-duration-reduced) var(--ease-linear);
+    --transition-modal: var(--transition-duration-reduced) var(--ease-linear);
+    --transition-dropdown: var(--transition-duration-reduced) var(--ease-linear);
+    --transition-tooltip: var(--transition-duration-reduced) var(--ease-linear);
+}
+}
+
+/* ===== HIGH CONTRAST SUPPORT ===== */
+@media (prefers-contrast: high) {
+:root {
+    --border-subtle: rgba(255, 255, 255, 0.3);
+    --border-light: rgba(255, 255, 255, 0.4);
+    --border-medium: rgba(255, 255, 255, 0.5);
+    --border-strong: rgba(255, 255, 255, 0.7);
+    
+    --text-muted: #a1a1aa;
+    --text-disabled: #71717a;
+}
+}
+
+/* ===== PRINT STYLES SUPPORT ===== */
+@media print {
+:root {
+    --primary-bg: #ffffff;
+    --secondary-bg: #f8fafc;
+    --text-primary: #000000;
+    --text-secondary: #374151;
+    --text-muted: #6b7280;
+    
+    --shadow-sm: none;
+    --shadow-md: none;
+    --shadow-lg: none;
+    --shadow-xl: none;
+    --shadow-2xl: none;
+    
+    --neon-glow-soft: none;
+    --neon-glow-medium: none;
+    --neon-glow-strong: none;
+    --neon-glow-intense: none;
+}
 }
