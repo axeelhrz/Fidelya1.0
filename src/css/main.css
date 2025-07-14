@@ -1,4 +1,4 @@
-/* ===== STARFLEX 2.0 - MODULAR CSS ===== */
+/* ===== STARFLEX 2.0 - MODULAR CSS OPTIMIZADO ===== */
 
 /* Critical base styles - load first */
 @import url('./base/variables.css');
@@ -21,6 +21,5 @@
 /* Animations */
 @import url('./animations/keyframes.css');
 
-/* Mobile optimizations - must load last */
-@import url('./mobile-fixes.css');
-@import url('./mobile-scroll-fix.css');
+/* Mobile optimizations - consolidated and optimized */
+@import url('./mobile-optimized.css');

@@ -1,4 +1,4 @@
-/* ===== VARIABLES FUTURISTAS OPTIMIZADAS ===== */
+/* ===== VARIABLES FUTURISTAS OPTIMIZADAS PARA MÓVILES ===== */
 :root {
 /* Colores principales */
 --primary-bg: #0a0d14;
@@ -84,10 +84,15 @@
 --max-content-width: 1400px;
 --max-hero-width: 1600px;
 
-/* Transiciones unificadas */
---transition: 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
---transition-fast: 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94);
---transition-slow: 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+/* Transiciones optimizadas para móviles */
+--transition: 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+--transition-fast: 0.1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+--transition-slow: 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+/* Transiciones específicas para móviles */
+--transition-mobile: 0.15s ease;
+--transition-mobile-fast: 0.1s ease;
+--transition-mobile-slow: 0.25s ease;
 
 /* Variables específicas para navbar */
 --navbar-height: 75px;
@@ -113,4 +118,72 @@
 --hero-particle-glow: rgba(255, 255, 255, 0.4);
 --hero-particle-dim: rgba(255, 255, 255, 0.2);
 --hero-particle-fine: rgba(255, 255, 255, 0.1);
+
+/* Variables de rendimiento para móviles */
+--mobile-animation-duration: 0.15s;
+--mobile-scroll-threshold: 15px;
+--mobile-touch-target: 44px;
+--mobile-safe-area-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Media queries para optimizaciones específicas */
+@media (max-width: 1023px) {
+    :root {
+        /* Transiciones más rápidas en móviles */
+        --transition: var(--transition-mobile);
+        --transition-fast: var(--transition-mobile-fast);
+        --transition-slow: var(--transition-mobile-slow);
+        
+        /* Espaciado reducido para móviles */
+        --section-padding-x: clamp(1rem, 4vw, 2rem);
+        --section-padding-y: clamp(2rem, 6vh, 4rem);
+        
+        /* Sombras reducidas para mejor rendimiento */
+        --shadow-sm: 0 2px 8px rgb(0 0 0 / 10%);
+        --shadow-md: 0 4px 15px rgb(0 0 0 / 15%);
+        --shadow-lg: 0 8px 25px rgb(0 0 0 / 20%);
+        --shadow-xl: 0 12px 35px rgb(0 0 0 / 25%);
+        
+        /* Efectos neón reducidos */
+        --neon-glow-soft: 0 0 10px rgb(255 45 85 / 30%);
+        --neon-glow-medium: 0 0 15px rgb(255 45 85 / 40%);
+        --neon-glow-strong: 0 0 20px rgb(255 45 85 / 50%);
+    }
+}
+
+@media (max-width: 480px) {
+    :root {
+        /* Espaciado aún más reducido para móviles pequeños */
+        --section-padding-x: 1rem;
+        --section-padding-y: clamp(1.5rem, 4vh, 3rem);
+        
+        /* Transiciones mínimas para dispositivos lentos */
+        --transition: var(--transition-mobile-fast);
+        --transition-fast: 0.05s ease;
+        --transition-slow: var(--transition-mobile);
+    }
+}
+
+/* Variables para modo rendimiento */
+@media (max-width: 1023px) and (prefers-reduced-motion: reduce) {
+    :root {
+        --transition: none;
+        --transition-fast: none;
+        --transition-slow: none;
+        --mobile-animation-duration: 0s;
+    }
+}
+
+/* Variables para dispositivos de baja potencia */
+@media (max-width: 1023px) and (max-resolution: 1.5dppx) {
+    :root {
+        /* Efectos visuales reducidos */
+        --glass-bg: rgb(21 25 34 / 90%);
+        --shadow-sm: 0 1px 4px rgb(0 0 0 / 10%);
+        --shadow-md: 0 2px 8px rgb(0 0 0 / 15%);
+        --shadow-lg: 0 4px 15px rgb(0 0 0 / 20%);
+        --neon-glow-soft: none;
+        --neon-glow-medium: 0 0 8px rgb(255 45 85 / 20%);
+        --neon-glow-strong: 0 0 12px rgb(255 45 85 / 30%);
+    }
 }

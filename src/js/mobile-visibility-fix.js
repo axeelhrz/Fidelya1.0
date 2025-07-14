@@ -1,161 +1,196 @@
-// ===== CORRECCIÓN DE VISIBILIDAD MÓVIL PARA FOOTER =====
+// ===== MOBILE VISIBILITY FIX OPTIMIZADO =====
 (function() {
     'use strict';
     
-    // Función para forzar visibilidad del footer en móvil
-    function ensureFooterVisibility() {
-        const footer = document.querySelector('.contact__footer');
-        const footerContent = document.querySelector('.contact__footer-content');
-        const footerText = document.querySelector('.contact__footer-text');
-        const footerCta = document.querySelector('.contact__footer-cta');
-        const footerBtn = document.querySelector('.btn--footer');
-        
-        if (footer) {
-            // Forzar estilos de visibilidad
-            footer.style.display = 'block';
-            footer.style.visibility = 'visible';
-            footer.style.opacity = '1';
-            footer.style.transform = 'none';
-            footer.style.animation = 'none';
-            footer.style.position = 'relative';
-            footer.style.zIndex = '10';
-            
-            // Asegurar padding mínimo
-            if (window.innerWidth <= 1024) {
-                footer.style.padding = '2rem 1rem';
-                footer.style.marginTop = '1.5rem';
-                footer.style.minHeight = '120px';
-            }
-        }
-        
-        if (footerContent) {
-            footerContent.style.display = 'flex';
-            footerContent.style.visibility = 'visible';
-            footerContent.style.opacity = '1';
-            footerContent.style.transform = 'none';
-            footerContent.style.animation = 'none';
-            
-            if (window.innerWidth <= 1024) {
-                footerContent.style.flexDirection = 'column';
-                footerContent.style.gap = '1.5rem';
-                footerContent.style.textAlign = 'center';
-            }
-        }
-        
-        if (footerText) {
-            footerText.style.display = 'block';
-            footerText.style.visibility = 'visible';
-            footerText.style.opacity = '1';
-            
-            const h3 = footerText.querySelector('h3');
-            const p = footerText.querySelector('p');
-            
-            if (h3) {
-                h3.style.display = 'block';
-                h3.style.visibility = 'visible';
-                h3.style.opacity = '1';
-            }
-            
-            if (p) {
-                p.style.display = 'block';
-                p.style.visibility = 'visible';
-                p.style.opacity = '1';
-            }
-        }
-        
-        if (footerCta) {
-            footerCta.style.display = 'block';
-            footerCta.style.visibility = 'visible';
-            footerCta.style.opacity = '1';
-        }
-        
-        if (footerBtn) {
-            footerBtn.style.display = 'flex';
-            footerBtn.style.visibility = 'visible';
-            footerBtn.style.opacity = '1';
-            footerBtn.style.transform = 'none';
-            footerBtn.style.animation = 'none';
-            
-            if (window.innerWidth <= 1024) {
-                footerBtn.style.width = '100%';
-                footerBtn.style.maxWidth = '280px';
-                footerBtn.style.margin = '0 auto';
-            }
-        }
-    }
+    // Configuración optimizada
+    const CONFIG = {
+        MOBILE_BREAKPOINT: 1024,
+        RETRY_DELAY: 100,
+        MAX_RETRIES: 3,
+        OBSERVER_THROTTLE: 250
+    };
     
-    // Función para detectar si es dispositivo móvil
+    let retryCount = 0;
+    let isInitialized = false;
+    
+    // Detección de dispositivo optimizada
     function isMobileDevice() {
-        return window.innerWidth <= 1024 || 
+        return window.innerWidth <= CONFIG.MOBILE_BREAKPOINT || 
                /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     }
     
-    // Aplicar correcciones si es móvil
-    function applyMobileFixes() {
-        if (isMobileDevice()) {
-            ensureFooterVisibility();
+    // Función principal de corrección de visibilidad
+    function ensureVisibility() {
+        if (!isMobileDevice() || isInitialized) return;
+        
+        // Elementos críticos que deben ser visibles
+        const criticalSelectors = [
+            '.features', '.videos', '.faq', '.contact',
+            '.contact__footer', '.contact__footer-content',
+            '.contact__footer-text', '.contact__footer-cta',
+            '.btn--footer', '.contact__channel',
+            '.contact__channel-icon', '.contact__channel-content'
+        ];
+        
+        const elements = document.querySelectorAll(criticalSelectors.join(', '));
+        
+        if (elements.length === 0 && retryCount < CONFIG.MAX_RETRIES) {
+            retryCount++;
+            setTimeout(ensureVisibility, CONFIG.RETRY_DELAY * retryCount);
+            return;
+        }
+        
+        // Aplicar estilos de visibilidad de forma eficiente
+        const visibilityStyles = {
+            display: 'block',
+            visibility: 'visible',
+            opacity: '1',
+            transform: 'none',
+            animation: 'none',
+            position: 'relative'
+        };
+        
+        const flexElements = [
+            '.contact__footer-content', '.btn--footer', 
+            '.contact__channel', '.contact__channel-icon'
+        ];
+        
+        const gridElements = ['.contact__grid', '.features__grid', '.faq__list'];
+        
+        elements.forEach(element => {
+            // Aplicar estilos base
+            Object.assign(element.style, visibilityStyles);
             
-            // Forzar visibilidad de todas las secciones principales
-            const sections = document.querySelectorAll('.features, .videos, .faq, .contact');
-            sections.forEach(section => {
-                section.style.display = 'block';
-                section.style.visibility = 'visible';
-                section.style.opacity = '1';
+            // Aplicar display específico
+            if (flexElements.some(sel => element.matches(sel))) {
+                element.style.display = 'flex';
+            } else if (gridElements.some(sel => element.matches(sel))) {
+                element.style.display = 'grid';
+            }
+            
+            // Configuraciones específicas
+            if (element.matches('.contact__footer')) {
+                element.style.zIndex = '10';
+                element.style.minHeight = '120px';
+                element.style.padding = '2rem 1rem';
+                element.style.marginTop = '1.5rem';
+            }
+            
+            if (element.matches('.contact__footer-content')) {
+                element.style.flexDirection = 'column';
+                element.style.gap = '1.5rem';
+                element.style.textAlign = 'center';
+                element.style.alignItems = 'center';
+            }
+            
+            if (element.matches('.btn--footer')) {
+                element.style.width = '100%';
+                element.style.maxWidth = '280px';
+                element.style.margin = '0 auto';
+                element.style.alignItems = 'center';
+                element.style.justifyContent = 'center';
+                element.style.flexDirection = 'column';
+            }
+            
+            if (element.matches('.contact__channel')) {
+                element.style.flexDirection = 'column';
+                element.style.alignItems = 'center';
+                element.style.textAlign = 'center';
+            }
+            
+            if (element.matches('.contact__channel-icon')) {
+                element.style.alignItems = 'center';
+                element.style.justifyContent = 'center';
+                element.style.margin = '0 auto 1rem auto';
+            }
+        });
+        
+        isInitialized = true;
+    }
+    
+    // Función de inicialización optimizada
+    function initialize() {
+        if (!isMobileDevice()) return;
+        
+        ensureVisibility();
+        
+        // Observer optimizado solo si es necesario
+        if ('MutationObserver' in window && !isInitialized) {
+            const observer = new MutationObserver(function(mutations) {
+                let shouldUpdate = false;
+                
+                mutations.forEach(function(mutation) {
+                    if (mutation.type === 'childList' || 
+                        (mutation.type === 'attributes' && 
+                         ['style', 'class'].includes(mutation.attributeName))) {
+                        shouldUpdate = true;
+                    }
+                });
+                
+                if (shouldUpdate) {
+                    clearTimeout(observer.timeout);
+                    observer.timeout = setTimeout(ensureVisibility, CONFIG.OBSERVER_THROTTLE);
+                }
             });
             
-            // Forzar visibilidad de elementos del contacto
-            const contactElements = document.querySelectorAll('.contact__header, .contact__grid, .contact__channel');
-            contactElements.forEach(element => {
-                element.style.display = element.classList.contains('contact__grid') ? 'grid' : 
-                                       element.classList.contains('contact__channel') ? 'flex' : 'block';
-                element.style.visibility = 'visible';
-                element.style.opacity = '1';
+            // Observar solo elementos críticos
+            const footer = document.querySelector('.contact__footer');
+            const contact = document.querySelector('.contact');
+            
+            if (footer) {
+                observer.observe(footer, {
+                    attributes: true,
+                    childList: true,
+                    subtree: true,
+                    attributeFilter: ['style', 'class']
+                });
+            }
+            
+            if (contact) {
+                observer.observe(contact, {
+                    attributes: true,
+                    childList: true,
+                    subtree: false,
+                    attributeFilter: ['style', 'class']
+                });
+            }
+            
+            // Cleanup
+            window.addEventListener('beforeunload', function() {
+                observer.disconnect();
             });
         }
     }
     
-    // Ejecutar cuando el DOM esté listo
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', applyMobileFixes);
-    } else {
-        applyMobileFixes();
-    }
-    
-    // Ejecutar en resize para manejar cambios de orientación
+    // Resize handler optimizado
     let resizeTimeout;
-    window.addEventListener('resize', function() {
+    function handleResize() {
         clearTimeout(resizeTimeout);
-        resizeTimeout = setTimeout(applyMobileFixes, 250);
-    });
-    
-    // Ejecutar después de que todas las animaciones hayan tenido tiempo de cargar
-    setTimeout(applyMobileFixes, 2000);
-    
-    // Observer para detectar cambios en el DOM
-    const observer = new MutationObserver(function(mutations) {
-        mutations.forEach(function(mutation) {
-            if (mutation.type === 'childList' || mutation.type === 'attributes') {
-                if (isMobileDevice()) {
-                    setTimeout(ensureFooterVisibility, 100);
-                }
+        resizeTimeout = setTimeout(function() {
+            if (isMobileDevice()) {
+                ensureVisibility();
             }
-        });
-    });
-    
-    // Observar cambios en el footer
-    const footer = document.querySelector('.contact__footer');
-    if (footer) {
-        observer.observe(footer, {
-            attributes: true,
-            childList: true,
-            subtree: true,
-            attributeFilter: ['style', 'class']
-        });
+        }, CONFIG.OBSERVER_THROTTLE);
     }
     
-    // Limpiar observer cuando se cierre la página
-    window.addEventListener('beforeunload', function() {
-        observer.disconnect();
-    });
+    // Inicialización
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initialize);
+    } else {
+        initialize();
+    }
+    
+    // Event listeners optimizados
+    window.addEventListener('resize', handleResize, { passive: true });
+    window.addEventListener('orientationchange', function() {
+        setTimeout(initialize, 300);
+    }, { passive: true });
+    
+    // Fallback para casos extremos
+    setTimeout(function() {
+        if (isMobileDevice() && !isInitialized) {
+            ensureVisibility();
+        }
+    }, 2000);
     
 })();
