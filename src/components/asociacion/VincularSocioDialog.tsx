@@ -150,19 +150,28 @@ export const VincularSocioDialog: React.FC<VincularSocioDialogProps> = ({
     }
   };
 
+  // Manejar clic en el overlay (solo cerrar si se hace clic directamente en el overlay)
+  const handleOverlayClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
   if (!open) return null;
 
   return (
     <AnimatePresence>
       <div className="fixed inset-0 z-50 overflow-y-auto">
-        <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-          {/* Overlay */}
+        <div 
+          className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0"
+          onClick={handleOverlayClick}
+        >
+          {/* Overlay más sutil */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75"
-            onClick={onClose}
+            className="fixed inset-0 transition-opacity bg-black bg-opacity-25"
           />
 
           {/* Modal */}
@@ -170,20 +179,21 @@ export const VincularSocioDialog: React.FC<VincularSocioDialogProps> = ({
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="inline-block overflow-hidden text-left align-bottom transition-all transform bg-white rounded-lg shadow-xl sm:my-8 sm:align-middle sm:max-w-lg sm:w-full"
+            className="relative inline-block overflow-hidden text-left align-bottom transition-all transform bg-white rounded-xl shadow-2xl sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full border border-gray-200"
+            onClick={(e) => e.stopPropagation()}
           >
-            {/* Header */}
-            <div className="px-6 pt-6 pb-4">
+            {/* Header con gradiente */}
+            <div className="px-6 pt-6 pb-4 bg-gradient-to-r from-purple-50 to-blue-50 border-b border-gray-100">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-purple-100 rounded-lg">
+                  <div className="p-3 bg-white rounded-xl shadow-sm border border-purple-100">
                     <UserPlus className="w-6 h-6 text-purple-600" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900">
+                    <h3 className="text-xl font-bold text-gray-900">
                       Vincular Nuevo Socio
                     </h3>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-gray-600 mt-1">
                       Busca usuarios con role "socio" para vincular a la asociación
                     </p>
                   </div>
@@ -191,14 +201,14 @@ export const VincularSocioDialog: React.FC<VincularSocioDialogProps> = ({
                 <div className="flex items-center space-x-2">
                   <button
                     onClick={handleDebug}
-                    className="p-2 text-gray-400 transition-colors rounded-lg hover:text-gray-500 hover:bg-gray-100"
+                    className="p-2 text-gray-500 transition-all duration-200 rounded-lg hover:text-purple-600 hover:bg-white hover:shadow-sm"
                     title="Debug collections"
                   >
                     <Bug className="w-5 h-5" />
                   </button>
                   <button
                     onClick={onClose}
-                    className="p-2 text-gray-400 transition-colors rounded-lg hover:text-gray-500 hover:bg-gray-100"
+                    className="p-2 text-gray-500 transition-all duration-200 rounded-lg hover:text-red-600 hover:bg-white hover:shadow-sm"
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -207,8 +217,8 @@ export const VincularSocioDialog: React.FC<VincularSocioDialogProps> = ({
             </div>
 
             {/* Search Section */}
-            <div className="px-6 py-4">
-              <div className="flex space-x-2">
+            <div className="px-6 py-6">
+              <div className="flex space-x-3">
                 <div className="relative flex-1">
                   <Search className="absolute w-5 h-5 text-gray-400 transform -translate-y-1/2 left-3 top-1/2" />
                   <input
@@ -217,14 +227,14 @@ export const VincularSocioDialog: React.FC<VincularSocioDialogProps> = ({
                     onChange={(e) => setSearchTerm(e.target.value)}
                     onKeyPress={handleKeyPress}
                     placeholder="Buscar por nombre, email o DNI..."
-                    className="w-full py-2 pl-10 pr-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="w-full py-3 pl-10 pr-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 shadow-sm"
                     disabled={searching || vinculandoSocio}
                   />
                 </div>
                 <button
                   onClick={handleSearch}
                   disabled={!searchTerm.trim() || searching || vinculandoSocio}
-                  className="px-4 py-2 text-white transition-colors bg-purple-600 rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-6 py-3 text-white transition-all duration-200 bg-purple-600 rounded-xl hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
                 >
                   {searching ? (
                     <Loader2 className="w-5 h-5 animate-spin" />
@@ -236,11 +246,11 @@ export const VincularSocioDialog: React.FC<VincularSocioDialogProps> = ({
 
               {/* Debug info */}
               {debugMode && (
-                <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <p className="text-sm text-blue-700">
+                <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                  <p className="text-sm text-blue-700 font-medium">
                     🐛 Debug mode activado. Revisa la consola del navegador para información detallada.
                   </p>
-                  <p className="text-xs text-blue-600 mt-1">
+                  <p className="text-xs text-blue-600 mt-2">
                     Asociación ID: {user?.uid}
                   </p>
                 </div>
@@ -249,10 +259,10 @@ export const VincularSocioDialog: React.FC<VincularSocioDialogProps> = ({
               {/* Results Section */}
               <div className="mt-6">
                 {error && (
-                  <div className="p-4 mb-4 text-sm text-red-700 bg-red-100 rounded-lg">
+                  <div className="p-4 mb-4 text-sm text-red-700 bg-red-50 rounded-xl border border-red-200">
                     <div className="flex items-center">
-                      <AlertCircle className="w-4 h-4 mr-2" />
-                      {error}
+                      <AlertCircle className="w-5 h-5 mr-2 text-red-500" />
+                      <span className="font-medium">{error}</span>
                     </div>
                     <div className="mt-2 text-xs text-red-600">
                       💡 Tip: Asegúrate de que existan usuarios registrados con role "socio" en Firebase
@@ -261,66 +271,80 @@ export const VincularSocioDialog: React.FC<VincularSocioDialogProps> = ({
                 )}
 
                 {users.length > 0 && (
-                  <div className="space-y-2">
-                    <h4 className="text-sm font-medium text-gray-700 mb-3">
+                  <div className="space-y-3">
+                    <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                      <User className="w-4 h-4 mr-2 text-purple-600" />
                       Usuarios encontrados ({users.length})
                     </h4>
-                    {users.map((user) => (
-                      <div
-                        key={user.id}
-                        onClick={() => setSelectedUser(user)}
-                        className={`p-4 transition-colors border rounded-lg cursor-pointer ${
-                          selectedUser?.id === user.id
-                            ? 'border-purple-500 bg-purple-50'
-                            : 'border-gray-200 hover:bg-gray-50'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-3">
-                            <div className="p-2 bg-gray-100 rounded-full">
-                              {user.avatar ? (
-                                <img
-                                  src={user.avatar}
-                                  alt={user.nombre}
-                                  className="w-8 h-8 rounded-full"
-                                />
-                              ) : (
-                                <User className="w-5 h-5 text-gray-600" />
-                              )}
-                            </div>
-                            <div>
-                              <h4 className="font-medium text-gray-900">{user.nombre}</h4>
-                              <div className="flex items-center mt-1 space-x-4 text-sm text-gray-500">
-                                <span className="flex items-center">
-                                  <Mail className="w-4 h-4 mr-1" />
-                                  {user.email}
-                                </span>
-                                {user.telefono && (
-                                  <span className="flex items-center">
-                                    <Phone className="w-4 h-4 mr-1" />
-                                    {user.telefono}
-                                  </span>
+                    <div className="max-h-64 overflow-y-auto space-y-2">
+                      {users.map((user) => (
+                        <div
+                          key={user.id}
+                          onClick={() => setSelectedUser(user)}
+                          className={`p-4 transition-all duration-200 border rounded-xl cursor-pointer hover:shadow-md ${
+                            selectedUser?.id === user.id
+                              ? 'border-purple-500 bg-purple-50 shadow-md'
+                              : 'border-gray-200 hover:bg-gray-50'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-3">
+                              <div className="p-2 bg-gray-100 rounded-full">
+                                {user.avatar ? (
+                                  <img
+                                    src={user.avatar}
+                                    alt={user.nombre}
+                                    className="w-10 h-10 rounded-full object-cover"
+                                  />
+                                ) : (
+                                  <User className="w-6 h-6 text-gray-600" />
                                 )}
                               </div>
-                              <div className="mt-1 text-xs text-gray-400">
-                                Role: {user.role} | Estado: {user.estado}
-                                {user.dni && ` | DNI: ${user.dni}`}
+                              <div>
+                                <h4 className="font-semibold text-gray-900">{user.nombre}</h4>
+                                <div className="flex items-center mt-1 space-x-4 text-sm text-gray-500">
+                                  <span className="flex items-center">
+                                    <Mail className="w-4 h-4 mr-1" />
+                                    {user.email}
+                                  </span>
+                                  {user.telefono && (
+                                    <span className="flex items-center">
+                                      <Phone className="w-4 h-4 mr-1" />
+                                      {user.telefono}
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="mt-1 text-xs text-gray-400">
+                                  <span className="inline-flex items-center px-2 py-1 rounded-full bg-green-100 text-green-800 mr-2">
+                                    {user.role}
+                                  </span>
+                                  <span className="inline-flex items-center px-2 py-1 rounded-full bg-blue-100 text-blue-800">
+                                    {user.estado}
+                                  </span>
+                                  {user.dni && (
+                                    <span className="ml-2 text-gray-500">
+                                      DNI: {user.dni}
+                                    </span>
+                                  )}
+                                </div>
                               </div>
                             </div>
+                            {selectedUser?.id === user.id && (
+                              <CheckCircle className="w-6 h-6 text-purple-600" />
+                            )}
                           </div>
-                          {selectedUser?.id === user.id && (
-                            <CheckCircle className="w-5 h-5 text-purple-600" />
-                          )}
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
                 )}
 
                 {searchTerm && !searching && users.length === 0 && !error && (
-                  <div className="text-center py-8">
-                    <User className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-500">No se encontraron usuarios</p>
+                  <div className="text-center py-12">
+                    <div className="p-4 bg-gray-100 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                      <User className="w-8 h-8 text-gray-400" />
+                    </div>
+                    <p className="text-gray-500 font-medium">No se encontraron usuarios</p>
                     <p className="text-sm text-gray-400 mt-1">
                       Busca usuarios con role "socio" registrados en el sistema
                     </p>
@@ -330,19 +354,19 @@ export const VincularSocioDialog: React.FC<VincularSocioDialogProps> = ({
             </div>
 
             {/* Footer */}
-            <div className="px-6 py-4 bg-gray-50">
+            <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 rounded-b-xl">
               <div className="flex justify-end space-x-3">
                 <button
                   onClick={onClose}
                   disabled={vinculandoSocio}
-                  className="px-4 py-2 text-gray-700 transition-colors bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+                  className="px-6 py-2 text-gray-700 transition-all duration-200 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 shadow-sm hover:shadow-md"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={handleVincular}
                   disabled={!selectedUser || vinculandoSocio}
-                  className="flex items-center px-4 py-2 text-white transition-colors bg-purple-600 rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center px-6 py-2 text-white transition-all duration-200 bg-purple-600 rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
                 >
                   {vinculandoSocio ? (
                     <>
