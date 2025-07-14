@@ -47,6 +47,8 @@ export const useSocioAsociacion = () => {
       setLoading(true);
       setError(null);
       
+      console.log('🔗 Iniciando vinculación:', { socioId, targetAsociacionId });
+      
       const result = await socioAsociacionService.vincularSocioAsociacion(socioId, targetAsociacionId);
       
       if (result) {
@@ -116,6 +118,31 @@ export const useSocioAsociacion = () => {
     }
   }, [user]);
 
+  // Sincronizar asociación entre colecciones
+  const sincronizarAsociacion = useCallback(async (userId: string) => {
+    try {
+      setLoading(true);
+      const result = await socioAsociacionService.sincronizarAsociacionUsuario(userId);
+      
+      if (result) {
+        toast.success('Asociación sincronizada correctamente');
+      }
+      
+      return result;
+    } catch (err) {
+      console.error('Error sincronizando asociación:', err);
+      toast.error('Error al sincronizar la asociación');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Debug de vinculación
+  const debugVinculacion = useCallback(async (socioId: string) => {
+    await socioAsociacionService.debugSocioVinculacion(socioId);
+  }, []);
+
   // Limpiar error
   const clearError = useCallback(() => {
     setError(null);
@@ -132,6 +159,8 @@ export const useSocioAsociacion = () => {
     vincularSocio,
     desvincularSocio,
     verificarVinculacion,
+    sincronizarAsociacion,
+    debugVinculacion,
     clearError
   };
 };
