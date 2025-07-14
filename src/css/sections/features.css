@@ -10,7 +10,6 @@
         linear-gradient(180deg, var(--primary-bg) 0%, var(--secondary-bg) 30%, var(--primary-bg) 70%, var(--accent-bg) 100%);
 }
 
-/* Efectos de fondo consolidados */
 .features::before {
     position: absolute;
     inset: 0;
@@ -37,7 +36,7 @@
     opacity: 0.6;
 }
 
-/* HEADER OPTIMIZADO */
+/* HEADER */
 .features__header {
     position: relative;
     z-index: 3;
@@ -52,9 +51,7 @@
 .features__title {
     position: relative;
     margin-bottom: var(--space-2xl);
-    font-size: clamp(3rem, 7vw, 5rem);
-    font-weight: 800;
-    line-height: 0.9;
+    font: 800 clamp(3rem, 7vw, 5rem)/0.9 var(--font-primary);
     letter-spacing: -0.02em;
     background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 30%, var(--starflex-red) 70%, var(--starflex-crimson-glow) 100%);
     background-clip: text;
@@ -77,14 +74,12 @@
 .features__subtitle {
     max-width: 800px;
     margin: 0 auto;
-    font-size: 1.3rem;
-    font-weight: 400;
-    line-height: 1.6;
+    font: 400 1.3rem/1.6 var(--font-primary);
     color: var(--text-secondary);
     opacity: 0.9;
 }
 
-/* GRID OPTIMIZADO */
+/* GRID */
 .features__grid {
     position: relative;
     z-index: 3;
@@ -95,7 +90,7 @@
     margin: 0 auto;
 }
 
-/* CARACTERÍSTICAS CONSOLIDADAS */
+/* CARACTERÍSTICAS */
 .feature {
     position: relative;
     display: grid;
@@ -122,7 +117,6 @@
     transform: translateY(0);
 }
 
-/* Efectos de fondo consolidados por característica */
 .feature::before {
     position: absolute;
     inset: -2rem;
@@ -156,7 +150,7 @@
     background: radial-gradient(ellipse at center, rgba(184, 0, 46, 0.03) 0%, transparent 70%);
 }
 
-/* CONTENIDO OPTIMIZADO */
+/* CONTENIDO */
 .feature__content {
     position: relative;
     width: 100%;
@@ -166,10 +160,7 @@
 .feature__title {
     position: relative;
     margin-bottom: var(--space-2xl);
-    font-family: var(--font-primary);
-    font-size: clamp(2.2rem, 5vw, 3.2rem);
-    font-weight: 800;
-    line-height: 1.1;
+    font: 800 clamp(2.2rem, 5vw, 3.2rem)/1.1 var(--font-primary);
     letter-spacing: -0.01em;
     background: linear-gradient(135deg, var(--text-primary) 0%, var(--starflex-red) 100%);
     background-clip: text;
@@ -196,11 +187,8 @@
 }
 
 .feature__description {
-    max-width: none;
     margin-bottom: var(--space-2xl);
-    font-size: 1.2rem;
-    font-weight: 400;
-    line-height: 1.7;
+    font: 400 1.2rem/1.7 var(--font-primary);
     color: var(--text-secondary);
     opacity: 0.95;
 }
@@ -217,9 +205,7 @@
     gap: 12px;
     padding: 8px 0;
     margin-bottom: 12px;
-    font-size: 1.1rem;
-    font-weight: 500;
-    line-height: 1.6;
+    font: 500 1.1rem/1.6 var(--font-primary);
     color: var(--text-secondary);
     opacity: 0;
     transform: translateX(-20px);
@@ -240,7 +226,6 @@
     flex: 1;
 }
 
-/* Animación de aparición optimizada */
 .feature.in-view .feature__list-item {
     opacity: 1;
     transform: translateX(0);
@@ -264,7 +249,7 @@
     transform: scale(1.2);
 }
 
-/* TELÉFONOS OPTIMIZADOS */
+/* TELÉFONOS */
 .feature__phone {
     position: relative;
     width: var(--phone-width-desktop);
@@ -304,7 +289,6 @@
     transform: translateY(0) scale(1);
 }
 
-/* Efectos consolidados para todas las características */
 .feature[data-feature="schedule"].in-view .phone::before,
 .feature[data-feature="stations"].in-view .phone::before,
 .feature[data-feature="calendar"].in-view .phone::before,
@@ -322,7 +306,6 @@
 .feature[data-feature="notifications"].in-view .phone::before { transition-delay: 0.6s; }
 .feature[data-feature="referrals"].in-view .phone::before { transition-delay: 0.7s; }
 
-/* PANTALLA DEL TELÉFONO */
 .phone__screen {
     position: relative;
     width: 100%;
@@ -342,15 +325,22 @@
     border-radius: var(--phone-border-radius);
 }
 
-/* Sincronización de aparición consolidada */
-.feature[data-feature="schedule"].in-view .phone__screen { opacity: 1; transition-delay: 0.2s; }
-.feature[data-feature="stations"].in-view .phone__screen { opacity: 1; transition-delay: 0.3s; }
-.feature[data-feature="calendar"].in-view .phone__screen { opacity: 1; transition-delay: 0.4s; }
-.feature[data-feature="log"].in-view .phone__screen { opacity: 1; transition-delay: 0.5s; }
-.feature[data-feature="notifications"].in-view .phone__screen { opacity: 1; transition-delay: 0.6s; }
-.feature[data-feature="referrals"].in-view .phone__screen { opacity: 1; transition-delay: 0.7s; }
+.feature[data-feature="schedule"].in-view .phone__screen,
+.feature[data-feature="stations"].in-view .phone__screen,
+.feature[data-feature="calendar"].in-view .phone__screen,
+.feature[data-feature="log"].in-view .phone__screen,
+.feature[data-feature="notifications"].in-view .phone__screen,
+.feature[data-feature="referrals"].in-view .phone__screen {
+    opacity: 1;
+}
 
-/* IMÁGENES OPTIMIZADAS */
+.feature[data-feature="schedule"].in-view .phone__screen { transition-delay: 0.2s; }
+.feature[data-feature="stations"].in-view .phone__screen { transition-delay: 0.3s; }
+.feature[data-feature="calendar"].in-view .phone__screen { transition-delay: 0.4s; }
+.feature[data-feature="log"].in-view .phone__screen { transition-delay: 0.5s; }
+.feature[data-feature="notifications"].in-view .phone__screen { transition-delay: 0.6s; }
+.feature[data-feature="referrals"].in-view .phone__screen { transition-delay: 0.7s; }
+
 .phone__app-image {
     position: absolute;
     top: 0;
@@ -374,38 +364,37 @@
     transform: scale(1);
 }
 
-/* Configuración de imágenes consolidada */
 .feature[data-feature="schedule"] .phone__app-image {
-    background-image: url('../assets/phones/Horario.avif');
+    background-image: url('../assets/phones/Schedule.avif');
     transition-delay: 0.2s;
 }
 
 .feature[data-feature="stations"] .phone__app-image {
-    background-image: url('../assets/phones/Estaciones.avif');
+    background-image: url('../assets/phones/Stations.avif');
     transition-delay: 0.3s;
 }
 
 .feature[data-feature="calendar"] .phone__app-image {
-    background-image: url('../assets/phones/Calendario.avif');
+    background-image: url('../assets/phones/Calendar.avif');
     transition-delay: 0.4s;
 }
 
 .feature[data-feature="log"] .phone__app-image {
-    background-image: url('../assets/phones/Registro.avif');
+    background-image: url('../assets/phones/Log.avif');
     transition-delay: 0.5s;
 }
 
 .feature[data-feature="notifications"] .phone__app-image {
-    background-image: url('../assets/phones/Notificaciones.avif');
+    background-image: url('../assets/phones/Notifications.avif');
     transition-delay: 0.6s;
 }
 
 .feature[data-feature="referrals"] .phone__app-image {
-    background-image: url('../assets/phones/Referidos.avif');
+    background-image: url('../assets/phones/Referrals.avif');
     transition-delay: 0.7s;
 }
 
-/* RESPONSIVE OPTIMIZADO */
+/* RESPONSIVE */
 @media (width <= 1023px) {
     .features {
         padding: clamp(2rem, 6vh, 4rem) var(--section-padding-x) clamp(1.5rem, 4vh, 3rem);
@@ -441,7 +430,6 @@
 
     .feature__list {
         text-align: left;
-        max-width: 100%;
         margin: 0 auto;
     }
 
@@ -542,7 +530,7 @@
     }
 }
 
-/* MODO REDUCIDO DE MOVIMIENTO */
+/* ACCESIBILIDAD Y OPTIMIZACIONES */
 @media (prefers-reduced-motion: reduce) {
     .features::before,
     .phone::before {
@@ -569,7 +557,6 @@
     }
 }
 
-/* OPTIMIZACIONES DE RENDIMIENTO */
 .feature__phone,
 .phone,
 .phone__app-image {
@@ -579,7 +566,6 @@
     contain: layout style paint;
 }
 
-/* ACCESIBILIDAD */
 .feature__title:focus,
 .feature__list-item:focus {
     outline: 2px solid var(--starflex-red);
@@ -587,7 +573,6 @@
     border-radius: 4px;
 }
 
-/* MODO ALTO CONTRASTE */
 @media (prefers-contrast: high) {
     .features {
         background: linear-gradient(180deg, #000000 0%, #1a1a1a 50%, #000000 100%);
