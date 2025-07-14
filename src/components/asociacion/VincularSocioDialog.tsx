@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import Image from 'next/image';
 import { 
   Search,
   UserPlus,
@@ -12,7 +11,8 @@ import {
   User,
   AlertCircle,
   Loader2,
-  CheckCircle
+  CheckCircle,
+  Bug
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSocioAsociacion } from '@/hooks/useSocioAsociacion';
@@ -39,6 +39,7 @@ export const VincularSocioDialog: React.FC<VincularSocioDialogProps> = ({
   const [users, setUsers] = useState<RegisteredUser[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [selectedUser, setSelectedUser] = useState<RegisteredUser | null>(null);
+  const [debugMode, setDebugMode] = useState(false);
 
   // Efecto para limpiar la búsqueda cuando se abre/cierra el diálogo
   useEffect(() => {
@@ -47,34 +48,54 @@ export const VincularSocioDialog: React.FC<VincularSocioDialogProps> = ({
       setUsers([]);
       setError(null);
       setSelectedUser(null);
+      console.log('🔄 Dialog opened, cleared state');
     }
   }, [open]);
 
+  // Función para debug de colecciones
+  const handleDebug = async () => {
+    console.log('🐛 Starting debug...');
+    await userSearchService.debugCollections();
+    setDebugMode(true);
+    toast.success('Debug info logged to console');
+  };
+
   // Función para buscar usuarios
   const handleSearch = async () => {
-    if (!searchTerm.trim() || !user) return;
+    if (!searchTerm.trim() || !user) {
+      console.log('⚠️ Search term empty or no user');
+      return;
+    }
 
     try {
       setSearching(true);
       setError(null);
+      console.log('🔍 Starting search with term:', searchTerm);
+      console.log('👤 Current user:', { uid: user.uid, role: user.role });
 
       // Buscar usuarios que no estén ya vinculados a la asociación
       const result = await userSearchService.searchRegisteredUsers({
         search: searchTerm,
-        role: 'socio',
+        role: 'socio', // Buscar específicamente usuarios con role 'socio'
         estado: 'activo',
         excludeAsociacionId: user.uid
       });
 
+      console.log('📊 Search result:', result);
       setUsers(result.users);
 
       if (result.users.length === 0) {
-        setError('No se encontraron usuarios con los criterios especificados');
+        const errorMsg = 'No se encontraron usuarios con role "socio" que coincidan con la búsqueda';
+        setError(errorMsg);
+        console.log('❌', errorMsg);
+      } else {
+        console.log(`✅ Found ${result.users.length} users`);
       }
     } catch (err) {
-      console.error('Error buscando usuarios:', err);
-      setError('Error al buscar usuarios');
-      toast.error('Error al buscar usuarios');
+      console.error('❌ Error buscando usuarios:', err);
+      const errorMsg = 'Error al buscar usuarios. Revisa la consola para más detalles.';
+      setError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setSearching(false);
     }
@@ -82,26 +103,42 @@ export const VincularSocioDialog: React.FC<VincularSocioDialogProps> = ({
 
   // Función para vincular el socio seleccionado
   const handleVincular = async () => {
-    if (!selectedUser || !user) return;
+    if (!selectedUser || !user) {
+      console.log('⚠️ No selected user or current user');
+      return;
+    }
 
     try {
+      console.log('🔗 Starting vincular process:', {
+        selectedUser: selectedUser.id,
+        asociacion: user.uid
+      });
+
       // Verificar si el usuario puede ser agregado como socio
       const canAdd = await userSearchService.canAddAsSocio(selectedUser.id, user.uid);
+      console.log('✅ Can add check result:', canAdd);
       
       if (!canAdd.canAdd) {
-        toast.error(canAdd.reason || 'No se puede agregar este usuario como socio');
+        const errorMsg = canAdd.reason || 'No se puede agregar este usuario como socio';
+        toast.error(errorMsg);
+        console.log('❌ Cannot add user:', errorMsg);
         return;
       }
 
       const success = await vincularSocio(selectedUser.id);
+      console.log('🔗 Vincular result:', success);
       
       if (success) {
         toast.success('Socio vinculado exitosamente');
+        console.log('✅ Socio vinculado exitosamente');
         onSuccess?.();
         onClose();
+      } else {
+        toast.error('Error al vincular el socio');
+        console.log('❌ Error al vincular el socio');
       }
     } catch (err) {
-      console.error('Error vinculando socio:', err);
+      console.error('❌ Error vinculando socio:', err);
       toast.error('Error al vincular el socio');
     }
   };
@@ -147,16 +184,25 @@ export const VincularSocioDialog: React.FC<VincularSocioDialogProps> = ({
                       Vincular Nuevo Socio
                     </h3>
                     <p className="text-sm text-gray-500">
-                      Busca y vincula un usuario como socio de la asociación
+                      Busca usuarios con role "socio" para vincular a la asociación
                     </p>
                   </div>
                 </div>
-                <button
-                  onClick={onClose}
-                  className="p-2 text-gray-400 transition-colors rounded-lg hover:text-gray-500 hover:bg-gray-100"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={handleDebug}
+                    className="p-2 text-gray-400 transition-colors rounded-lg hover:text-gray-500 hover:bg-gray-100"
+                    title="Debug collections"
+                  >
+                    <Bug className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={onClose}
+                    className="p-2 text-gray-400 transition-colors rounded-lg hover:text-gray-500 hover:bg-gray-100"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -188,6 +234,18 @@ export const VincularSocioDialog: React.FC<VincularSocioDialogProps> = ({
                 </button>
               </div>
 
+              {/* Debug info */}
+              {debugMode && (
+                <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm text-blue-700">
+                    🐛 Debug mode activado. Revisa la consola del navegador para información detallada.
+                  </p>
+                  <p className="text-xs text-blue-600 mt-1">
+                    Asociación ID: {user?.uid}
+                  </p>
+                </div>
+              )}
+
               {/* Results Section */}
               <div className="mt-6">
                 {error && (
@@ -195,6 +253,9 @@ export const VincularSocioDialog: React.FC<VincularSocioDialogProps> = ({
                     <div className="flex items-center">
                       <AlertCircle className="w-4 h-4 mr-2" />
                       {error}
+                    </div>
+                    <div className="mt-2 text-xs text-red-600">
+                      💡 Tip: Asegúrate de que existan usuarios registrados con role "socio" en Firebase
                     </div>
                   </div>
                 )}
@@ -216,37 +277,36 @@ export const VincularSocioDialog: React.FC<VincularSocioDialogProps> = ({
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-3">
-                            {user.avatar ? (
-                              <Image
-                                src={user.avatar}
-                                alt={user.nombre}
-                                width={32}
-                                height={32}
-                                className="w-8 h-8 rounded-full"
-                              />
-                            ) : (
-                              <User className="w-5 h-5 text-gray-600" />
-                            )}
-                          </div>
-                          <div>
-                            <h4 className="font-medium text-gray-900">{user.nombre}</h4>
-                            <div className="flex items-center mt-1 space-x-4 text-sm text-gray-500">
-                              <span className="flex items-center">
-                                <Mail className="w-4 h-4 mr-1" />
-                                {user.email}
-                              </span>
-                              {user.telefono && (
-                                <span className="flex items-center">
-                                  <Phone className="w-4 h-4 mr-1" />
-                                  {user.telefono}
-                                </span>
+                            <div className="p-2 bg-gray-100 rounded-full">
+                              {user.avatar ? (
+                                <img
+                                  src={user.avatar}
+                                  alt={user.nombre}
+                                  className="w-8 h-8 rounded-full"
+                                />
+                              ) : (
+                                <User className="w-5 h-5 text-gray-600" />
                               )}
                             </div>
-                            {user.dni && (
-                              <div className="mt-1 text-sm text-gray-500">
-                                DNI: {user.dni}
+                            <div>
+                              <h4 className="font-medium text-gray-900">{user.nombre}</h4>
+                              <div className="flex items-center mt-1 space-x-4 text-sm text-gray-500">
+                                <span className="flex items-center">
+                                  <Mail className="w-4 h-4 mr-1" />
+                                  {user.email}
+                                </span>
+                                {user.telefono && (
+                                  <span className="flex items-center">
+                                    <Phone className="w-4 h-4 mr-1" />
+                                    {user.telefono}
+                                  </span>
+                                )}
                               </div>
-                            )}
+                              <div className="mt-1 text-xs text-gray-400">
+                                Role: {user.role} | Estado: {user.estado}
+                                {user.dni && ` | DNI: ${user.dni}`}
+                              </div>
+                            </div>
                           </div>
                           {selectedUser?.id === user.id && (
                             <CheckCircle className="w-5 h-5 text-purple-600" />
@@ -262,7 +322,7 @@ export const VincularSocioDialog: React.FC<VincularSocioDialogProps> = ({
                     <User className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                     <p className="text-gray-500">No se encontraron usuarios</p>
                     <p className="text-sm text-gray-400 mt-1">
-                      Intenta con otros términos de búsqueda
+                      Busca usuarios con role "socio" registrados en el sistema
                     </p>
                   </div>
                 )}
