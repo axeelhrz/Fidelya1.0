@@ -159,7 +159,8 @@ class UserSearchService {
       console.log('🔍 Getting user by ID:', userId);
       
       // Try to get user by document ID first
-      const userDoc = await getDoc(doc(db, this.usersCollection, userId));
+      const userDocRef = doc(db, this.usersCollection, userId);
+      const userDoc = await getDoc(userDocRef);
       
       if (userDoc.exists()) {
         const data = userDoc.data();
@@ -182,6 +183,7 @@ class UserSearchService {
       }
 
       // If not found by document ID, try by uid field
+      console.log('🔍 User not found by document ID, trying by uid field...');
       const userQuery = query(
         collection(db, this.usersCollection),
         where('uid', '==', userId),
@@ -191,17 +193,17 @@ class UserSearchService {
       const snapshot = await getDocs(userQuery);
       
       if (snapshot.empty) {
-        console.log('❌ User not found:', userId);
+        console.log('❌ User not found by uid field either:', userId);
         return null;
       }
 
-      const doc = snapshot.docs[0];
-      const data = doc.data();
+      const docSnapshot = snapshot.docs[0];
+      const data = docSnapshot.data();
       console.log('✅ Found user by uid field:', data.nombre);
 
       return {
-        id: doc.id,
-        uid: data.uid || doc.id,
+        id: docSnapshot.id,
+        uid: data.uid || docSnapshot.id,
         nombre: data.nombre || '',
         email: data.email || '',
         telefono: data.telefono,
@@ -284,7 +286,7 @@ class UserSearchService {
       );
 
       const snapshot = await getDocs(sociosQuery);
-      const emails = snapshot.docs.map(doc => doc.data().email?.toLowerCase() || '').filter(Boolean);
+      const emails = snapshot.docs.map(docSnapshot => docSnapshot.data().email?.toLowerCase() || '').filter(Boolean);
       
       console.log(`📧 Found ${emails.length} existing socios emails:`, emails);
       return emails;
@@ -315,11 +317,11 @@ class UserSearchService {
         return [];
       }
 
-      const users = snapshot.docs.map(doc => {
-        const data = doc.data();
+      const users = snapshot.docs.map(docSnapshot => {
+        const data = docSnapshot.data();
         return {
-          id: doc.id,
-          uid: data.uid || doc.id,
+          id: docSnapshot.id,
+          uid: data.uid || docSnapshot.id,
           nombre: data.nombre || '',
           email: data.email || '',
           telefono: data.telefono,
@@ -363,8 +365,8 @@ class UserSearchService {
       const usersSnapshot = await getDocs(usersQuery);
       console.log(`👥 Users collection: ${usersSnapshot.docs.length} documents`);
       
-      usersSnapshot.docs.forEach(doc => {
-        const data = doc.data();
+      usersSnapshot.docs.forEach(docSnapshot => {
+        const data = docSnapshot.data();
         console.log(`  - User: ${data.nombre} (${data.email}) - Role: ${data.role} - Estado: ${data.estado}`);
       });
 
@@ -373,13 +375,114 @@ class UserSearchService {
       const sociosSnapshot = await getDocs(sociosQuery);
       console.log(`👤 Socios collection: ${sociosSnapshot.docs.length} documents`);
       
-      sociosSnapshot.docs.forEach(doc => {
-        const data = doc.data();
+      sociosSnapshot.docs.forEach(docSnapshot => {
+        const data = docSnapshot.data();
         console.log(`  - Socio: ${data.nombre} (${data.email}) - AsociacionId: ${data.asociacionId}`);
       });
       
     } catch (error) {
       console.error('❌ Error in debug:', error);
+    }
+  }
+
+  /**
+   * Alternative method to get user data from socios collection if not found in users
+   */
+  async getUserFromSociosCollection(userId: string): Promise<RegisteredUser | null> {
+    try {
+      console.log('🔍 Trying to get user from socios collection:', userId);
+      
+      // Try by document ID first
+      const socioDocRef = doc(db, this.sociosCollection, userId);
+      const socioDoc = await getDoc(socioDocRef);
+      
+      if (socioDoc.exists()) {
+        const data = socioDoc.data();
+        console.log('✅ Found user in socios collection by document ID:', data.nombre);
+        
+        return {
+          id: socioDoc.id,
+          uid: data.uid || socioDoc.id,
+          nombre: data.nombre || '',
+          email: data.email || '',
+          telefono: data.telefono,
+          dni: data.dni,
+          role: 'socio', // Default role for socios collection
+          estado: data.estado || 'activo',
+          creadoEn: data.creadoEn?.toDate() || new Date(),
+          ultimoAcceso: data.ultimoAcceso?.toDate(),
+          avatar: data.avatar,
+          metadata: data.metadata,
+        } as RegisteredUser;
+      }
+
+      // Try by uid field
+      const socioQuery = query(
+        collection(db, this.sociosCollection),
+        where('uid', '==', userId),
+        limit(1)
+      );
+
+      const snapshot = await getDocs(socioQuery);
+      
+      if (!snapshot.empty) {
+        const docSnapshot = snapshot.docs[0];
+        const data = docSnapshot.data();
+        console.log('✅ Found user in socios collection by uid field:', data.nombre);
+
+        return {
+          id: docSnapshot.id,
+          uid: data.uid || docSnapshot.id,
+          nombre: data.nombre || '',
+          email: data.email || '',
+          telefono: data.telefono,
+          dni: data.dni,
+          role: 'socio',
+          estado: data.estado || 'activo',
+          creadoEn: data.creadoEn?.toDate() || new Date(),
+          ultimoAcceso: data.ultimoAcceso?.toDate(),
+          avatar: data.avatar,
+          metadata: data.metadata,
+        } as RegisteredUser;
+      }
+
+      console.log('❌ User not found in socios collection either');
+      return null;
+    } catch (error) {
+      console.error('❌ Error getting user from socios collection:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Enhanced getUserById that checks both collections
+   */
+  async getUserByIdEnhanced(userId: string): Promise<RegisteredUser | null> {
+    try {
+      console.log('🔍 Enhanced search for user ID:', userId);
+      
+      // First try users collection
+      let user = await this.getUserById(userId);
+      
+      if (user) {
+        console.log('✅ Found user in users collection');
+        return user;
+      }
+
+      // If not found, try socios collection
+      console.log('🔍 User not found in users collection, trying socios collection...');
+      user = await this.getUserFromSociosCollection(userId);
+      
+      if (user) {
+        console.log('✅ Found user in socios collection');
+        return user;
+      }
+
+      console.log('❌ User not found in any collection');
+      return null;
+    } catch (error) {
+      console.error('❌ Error in enhanced user search:', error);
+      return null;
     }
   }
 }

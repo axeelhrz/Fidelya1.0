@@ -114,6 +114,15 @@ export const VincularSocioDialog: React.FC<VincularSocioDialogProps> = ({
         asociacion: user.uid
       });
 
+      // Usar el método mejorado para verificar si el usuario puede ser agregado
+      const userExists = await userSearchService.getUserByIdEnhanced(selectedUser.id);
+      
+      if (!userExists) {
+        toast.error('Usuario no encontrado en el sistema');
+        console.log('❌ User not found in enhanced search');
+        return;
+      }
+
       // Verificar si el usuario puede ser agregado como socio
       const canAdd = await userSearchService.canAddAsSocio(selectedUser.id, user.uid);
       console.log('✅ Can add check result:', canAdd);
