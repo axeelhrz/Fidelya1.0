@@ -1,17 +1,9 @@
-// ===== STARFLEX 2.0 - OPTIMIZADO PARA MÓVILES =====
+// ===== STARFLEX 2.0 - OPTIMIZADO Y REDUCIDO =====
 const state = {
-    isMenuOpen: false,
-    isMobileMenuOpen: false,
-    currentLanguage: 'es',
-    isFloatingMenuOpen: false,
-    isLanguageSwitcherOpen: false,
-    lastScrollY: 0,
-    isScrollingDown: false,
-    ticking: false,
-    isNavbarVisible: true,
-    isMobile: window.innerWidth <= 1023,
-    isReducedMotion: false,
-    performanceMode: false
+    isMenuOpen: false, isMobileMenuOpen: false, currentLanguage: 'es',
+    isFloatingMenuOpen: false, isLanguageSwitcherOpen: false,
+    lastScrollY: 0, isScrollingDown: false, ticking: false, isNavbarVisible: true,
+    isMobile: window.innerWidth <= 1023, isReducedMotion: false, performanceMode: false
 };
 
 const CONFIG = {
@@ -87,7 +79,27 @@ const translations = {
     }
 };
 
-// ===== DETECCIÓN DE DISPOSITIVO OPTIMIZADA =====
+// ===== UTILIDADES =====
+const debounce = (func, wait) => {
+    let timeout;
+    return (...args) => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func(...args), wait);
+    };
+};
+
+const throttle = (func, limit) => {
+    let inThrottle;
+    return (...args) => {
+        if (!inThrottle) {
+            func.apply(this, args);
+            inThrottle = true;
+            setTimeout(() => inThrottle = false, limit);
+        }
+    };
+};
+
+// ===== DETECCIÓN DE DISPOSITIVO =====
 const detectDevice = () => {
     state.isMobile = window.innerWidth <= 1023;
     state.isReducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -111,35 +123,6 @@ const detectDevice = () => {
     }
 };
 
-// ===== DETECCIÓN DE FORMATOS DE IMAGEN OPTIMIZADA =====
-const detectImageFormats = () => {
-    if (state.performanceMode) {
-        return Promise.resolve({ avif: false, webp: false });
-    }
-    
-    return new Promise(resolve => {
-        const formats = { avif: false, webp: false };
-        let completed = 0;
-        
-        const check = () => {
-            if (++completed === 2) {
-                if (formats.avif) document.documentElement.classList.add('avif');
-                if (formats.webp) document.documentElement.classList.add('webp');
-                resolve(formats);
-            }
-        };
-        
-        const testImg = (format, data) => {
-            const img = new Image();
-            img.onload = img.onerror = () => { formats[format] = img.height === 2; check(); };
-            img.src = data;
-        };
-        
-        testImg('avif', 'data:image/avif;base64,AAAAIGZ0eXBhdmlmAAAAAGF2aWZtaWYxbWlhZk1BMUIAAADybWV0YQAAAAAAAAAoaGRscgAAAAAAAAAAcGljdAAAAAAAAAAAAAAAAGxpYmF2aWYAAAAADnBpdG0AAAAAAAEAAAAeaWxvYwAAAABEAAABAAEAAAABAAABGgAAAB0AAAAoaWluZgAAAAAAAQAAABppbmZlAgAAAAABAABhdjAxQ29sb3IAAAAAamlwcnAAAABLaXBjbwAAABRpc3BlAAAAAAAAAAIAAAACAAAAEHBpeGkAAAAAAwgICAAAAAxhdjFDgQ0MAAAAABNjb2xybmNseAACAAIAAYAAAAAXaXBtYQAAAAAAAAABAAEEAQKDBAAAACVtZGF0EgAKCBgABogQEAwgMg8f8D///8WfhwB8+ErK42A=');
-        testImg('webp', 'data:image/webp;base64,UklGRjoAAABXRUJQVlA4IC4AAACyAgCdASoCAAIALmk0mk0iIiIiIgBoSygABc6WWgAA/veff/0PP8bA//LwYAAA');
-    });
-};
-
 // ===== CLASE OPTIMIZADA PARA IMÁGENES =====
 class ImageLoader {
     constructor() {
@@ -149,9 +132,28 @@ class ImageLoader {
     }
     
     async init() {
-        this.formats = await detectImageFormats();
+        if (state.performanceMode) {
+            this.formats = { avif: false, webp: false };
+            return;
+        }
         
-        if ('IntersectionObserver' in window && (!state.isMobile || !state.performanceMode)) {
+        const formats = { avif: false, webp: false };
+        const testImg = (format, data) => new Promise(resolve => {
+            const img = new Image();
+            img.onload = img.onerror = () => resolve(img.height === 2);
+            img.src = data;
+        });
+        
+        [formats.avif, formats.webp] = await Promise.all([
+            testImg('avif', 'data:image/avif;base64,AAAAIGZ0eXBhdmlmAAAAAGF2aWZtaWYxbWlhZk1BMUIAAADybWV0YQAAAAAAAAAoaGRscgAAAAAAAAAAcGljdAAAAAAAAAAAAAAAAGxpYmF2aWYAAAAADnBpdG0AAAAAAAEAAAAeaWxvYwAAAABEAAABAAEAAAABAAABGgAAAB0AAAAoaWluZgAAAAAAAQAAABppbmZlAgAAAAABAABhdjAxQ29sb3IAAAAAamlwcnAAAABLaXBjbwAAABRpc3BlAAAAAAAAAAIAAAACAAAAEHBpeGkAAAAAAwgICAAAAAxhdjFDgQ0MAAAAABNjb2xybmNseAACAAIAAYAAAAAXaXBtYQAAAAAAAAABAAEEAQKDBAAAACVtZGF0EgAKCBgABogQEAwgMg8f8D///8WfhwB8+ErK42A='),
+            testImg('webp', 'data:image/webp;base64,UklGRjoAAABXRUJQVlA4IC4AAACyAgCdASoCAAIALmk0mk0iIiIiIgBoSygABc6WWgAA/veff/0PP8bA//LwYAAA')
+        ]);
+        
+        this.formats = formats;
+        if (formats.avif) document.documentElement.classList.add('avif');
+        if (formats.webp) document.documentElement.classList.add('webp');
+        
+        if ('IntersectionObserver' in window && !state.performanceMode) {
             this.observer = new IntersectionObserver(entries => {
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
@@ -159,10 +161,7 @@ class ImageLoader {
                         this.observer.unobserve(entry.target);
                     }
                 });
-            }, { 
-                rootMargin: state.isMobile ? '20px 0px' : '100px 0px', 
-                threshold: 0.01 
-            });
+            }, { rootMargin: state.isMobile ? '20px' : '100px', threshold: 0.01 });
         }
     }
     
@@ -173,44 +172,34 @@ class ImageLoader {
         return config.jpg || config.png || config.avif;
     }
     
+    getConfig(key) {
+        return key.split('.').reduce((config, part) => config?.[part], CONFIG.IMAGE_PATHS);
+    }
+    
     async loadImage(el) {
-        const key = el.dataset.imageKey;
-        const url = this.getBestUrl(this.getConfig(key));
+        const url = this.getBestUrl(this.getConfig(el.dataset.imageKey));
         if (!url) return;
         
         try {
             el.classList.add('loading');
-            
-            if (state.isMobile) {
-                el.tagName === 'IMG' ? el.src = url : el.style.backgroundImage = `url('${url}')`;
-                el.classList.replace('loading', 'loaded');
-            } else {
-                await this.preload(url);
-                el.tagName === 'IMG' ? el.src = url : el.style.backgroundImage = `url('${url}')`;
-                el.classList.replace('loading', 'loaded');
+            if (!state.isMobile && !this.cache.has(url)) {
+                await new Promise((resolve, reject) => {
+                    const img = new Image();
+                    img.onload = () => { this.cache.set(url, true); resolve(); };
+                    img.onerror = reject;
+                    img.src = url;
+                });
             }
+            el.tagName === 'IMG' ? el.src = url : el.style.backgroundImage = `url('${url}')`;
+            el.classList.replace('loading', 'loaded');
         } catch {
             el.classList.replace('loading', 'error');
         }
     }
     
-    preload(url) {
-        if (this.cache.has(url)) return Promise.resolve();
-        return new Promise((resolve, reject) => {
-            const img = new Image();
-            img.onload = () => { this.cache.set(url, true); resolve(); };
-            img.onerror = reject;
-            img.src = url;
-        });
-    }
-    
-    getConfig(key) {
-        return key.split('.').reduce((config, part) => config?.[part], CONFIG.IMAGE_PATHS);
-    }
-    
     observe(el, key) {
         el.dataset.imageKey = key;
-        this.observer && (!state.isMobile || !state.performanceMode) ? this.observer.observe(el) : this.loadImage(el);
+        this.observer && !state.performanceMode ? this.observer.observe(el) : this.loadImage(el);
     }
     
     loadNow(el, key) {
@@ -221,7 +210,7 @@ class ImageLoader {
 
 let imageLoader;
 
-// ===== SISTEMA DE TRADUCCIONES OPTIMIZADO =====
+// ===== SISTEMA DE TRADUCCIONES =====
 const initLanguage = () => {
     const saved = localStorage.getItem('starflex-language');
     const browser = navigator.language.slice(0, 2);
@@ -233,22 +222,20 @@ const initLanguage = () => {
 };
 
 const setupLanguageToggle = () => {
-    const buttons = document.querySelectorAll('.language-btn, .nav__language-option, .mobile-language-btn, .mobile-nav__language-option');
-    
-    buttons.forEach(btn => {
-        const handleClick = e => {
-            e.preventDefault();
-            const lang = btn.getAttribute('data-lang');
-            if (lang && lang !== state.currentLanguage) switchLanguage(lang);
-        };
-        
-        btn.addEventListener('click', handleClick);
-        
-        if (state.isMobile) {
-            btn.addEventListener('touchstart', () => btn.style.transform = 'scale(0.98)', { passive: true });
-            btn.addEventListener('touchend', () => btn.style.transform = '', { passive: true });
-        }
-    });
+    document.querySelectorAll('.language-btn, .nav__language-option, .mobile-language-btn, .mobile-nav__language-option')
+        .forEach(btn => {
+            const handleClick = e => {
+                e.preventDefault();
+                const lang = btn.getAttribute('data-lang');
+                if (lang && lang !== state.currentLanguage) switchLanguage(lang);
+            };
+            
+            btn.addEventListener('click', handleClick);
+            if (state.isMobile) {
+                btn.addEventListener('touchstart', () => btn.style.transform = 'scale(0.98)', { passive: true });
+                btn.addEventListener('touchend', () => btn.style.transform = '', { passive: true });
+            }
+        });
 };
 
 const switchLanguage = lang => {
@@ -271,8 +258,7 @@ const applyTranslations = () => {
     
     requestAnimationFrame(() => {
         document.querySelectorAll('[data-translate]').forEach(el => {
-            const key = el.getAttribute('data-translate');
-            const text = current[key];
+            const text = current[el.getAttribute('data-translate')];
             if (text) {
                 if (el.tagName === 'INPUT' && el.type === 'text') el.placeholder = text;
                 else if (el.tagName === 'META') el.content = text;
@@ -289,7 +275,7 @@ const updateLanguageButtons = () => {
     updateLanguageSwitcher();
 };
 
-// ===== SELECTOR DE IDIOMA FLOTANTE (SOLO DESKTOP) =====
+// ===== SELECTOR DE IDIOMA FLOTANTE =====
 const initLanguageSwitcher = () => {
     if (state.isMobile) return;
     
@@ -335,7 +321,7 @@ const updateLanguageSwitcher = () => {
         .forEach(opt => opt.classList.toggle('active', opt.getAttribute('data-lang') === state.currentLanguage));
 };
 
-// ===== WIDGET FLOTANTE OPTIMIZADO =====
+// ===== WIDGET FLOTANTE =====
 const initFloatingWidget = () => {
     const btn = document.getElementById('floating-main-btn');
     const menu = document.getElementById('floating-menu');
@@ -392,81 +378,63 @@ const closeFloatingMenu = () => {
     });
 };
 
-// ===== NAVEGACIÓN OPTIMIZADA =====
+// ===== NAVEGACIÓN UNIFICADA =====
 const initNavigation = () => {
-    state.isMobile ? initMobileNav() : initDesktopNav();
-    setTimeout(updateActiveNavOnScroll, 100);
-};
-
-const initDesktopNav = () => {
-    const logo = document.querySelector('.nav__logo');
-    if (logo) {
-        logo.addEventListener('click', e => {
-            e.preventDefault();
-            if (state.isMenuOpen) closeMobileMenu();
-            const home = document.querySelector('#home');
-            if (home) {
-                smoothScroll(home);
-                updateActiveNavLink(document.querySelector('.nav__link[href="#home"]'));
-            }
-        });
-        logo.style.cursor = 'pointer';
-    }
-    
-    document.querySelectorAll('.nav__link').forEach(link => {
-        link.addEventListener('click', e => {
-            if (state.isMenuOpen) closeMobileMenu();
-            e.preventDefault();
-            const target = document.querySelector(link.getAttribute('href'));
-            if (target) { smoothScroll(target); updateActiveNavLink(link); }
-        });
-    });
-};
-
-const initMobileNav = () => {
-    const toggle = document.getElementById('mobile-nav-toggle');
-    const menu = document.getElementById('mobile-nav-menu');
-    const close = document.getElementById('mobile-nav-close');
-    if (!toggle || !menu) return;
-    
-    const logo = document.querySelector('.mobile-nav__logo');
-    if (logo) {
-        logo.addEventListener('click', e => {
-            e.preventDefault();
-            if (state.isMobileMenuOpen) closeMobileNavMenu();
-            const home = document.querySelector('#home');
-            if (home) {
-                setTimeout(() => {
+    // Configurar logos
+    ['.nav__logo', '.mobile-nav__logo'].forEach(sel => {
+        const logo = document.querySelector(sel);
+        if (logo) {
+            logo.addEventListener('click', e => {
+                e.preventDefault();
+                if (state.isMobileMenuOpen) closeMobileNavMenu();
+                const home = document.querySelector('#home');
+                if (home) {
                     smoothScroll(home);
-                    updateActiveMobileNavLink(document.querySelector('.mobile-nav__link[href="#home"]'));
-                }, 150);
-            }
-        });
-        logo.style.cursor = 'pointer';
-    }
+                    updateActiveNavLink(document.querySelector('.nav__link[href="#home"], .mobile-nav__link[href="#home"]'));
+                }
+            });
+            logo.style.cursor = 'pointer';
+        }
+    });
     
-    toggle.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); toggleMobileNavMenu(); });
-    close?.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); closeMobileNavMenu(); });
-    
-    document.querySelectorAll('.mobile-nav__link').forEach(link => {
+    // Configurar enlaces de navegación
+    document.querySelectorAll('.nav__link, .mobile-nav__link').forEach(link => {
         const handleNav = e => {
             e.preventDefault();
-            e.stopPropagation();
-            const targetId = link.getAttribute('href');
             if (state.isMobileMenuOpen) closeMobileNavMenu();
-            const target = document.querySelector(targetId);
-            if (target) setTimeout(() => { smoothScroll(target); updateActiveMobileNavLink(link); }, 50);
+            const target = document.querySelector(link.getAttribute('href'));
+            if (target) {
+                setTimeout(() => {
+                    smoothScroll(target);
+                    updateActiveNavLink(link);
+                }, link.classList.contains('mobile-nav__link') ? 50 : 0);
+            }
         };
         
         link.addEventListener('click', handleNav);
-        link.addEventListener('touchend', e => { if (e.cancelable) e.preventDefault(); handleNav(e); });
-        link.addEventListener('touchstart', () => link.style.transform = 'scale(0.98)', { passive: true });
-        link.addEventListener('touchcancel', () => link.style.transform = '', { passive: true });
+        
+        if (link.classList.contains('mobile-nav__link')) {
+            link.addEventListener('touchend', e => { if (e.cancelable) e.preventDefault(); handleNav(e); });
+            link.addEventListener('touchstart', () => link.style.transform = 'scale(0.98)', { passive: true });
+            link.addEventListener('touchcancel', () => link.style.transform = '', { passive: true });
+        }
     });
     
-    document.addEventListener('touchstart', e => {
-        if (state.isMobileMenuOpen && menu && !menu.contains(e.target) && !toggle.contains(e.target)) closeMobileNavMenu();
-    }, { passive: true });
+    // Configurar menú móvil
+    const toggle = document.getElementById('mobile-nav-toggle');
+    const menu = document.getElementById('mobile-nav-menu');
+    const close = document.getElementById('mobile-nav-close');
+    
+    if (toggle && menu) {
+        toggle.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); toggleMobileNavMenu(); });
+        close?.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); closeMobileNavMenu(); });
+        
+        document.addEventListener('touchstart', e => {
+            if (state.isMobileMenuOpen && !menu.contains(e.target) && !toggle.contains(e.target)) closeMobileNavMenu();
+        }, { passive: true });
+    }
+    
+    setTimeout(updateActiveNavOnScroll, 100);
 };
 
 const toggleMobileNavMenu = () => state.isMobileMenuOpen ? closeMobileNavMenu() : openMobileNavMenu();
@@ -495,11 +463,6 @@ const closeMobileNavMenu = () => {
     toggle.setAttribute('aria-expanded', 'false');
 };
 
-const updateActiveMobileNavLink = activeLink => {
-    document.querySelectorAll('.mobile-nav__link').forEach(link => link.classList.remove('active'));
-    activeLink?.classList.add('active');
-};
-
 const smoothScroll = target => {
     if (!target) return;
     const headerHeight = state.isMobile ? 70 : 80;
@@ -513,7 +476,7 @@ const smoothScroll = target => {
 };
 
 const updateActiveNavLink = activeLink => {
-    document.querySelectorAll('.nav__link').forEach(link => link.classList.remove('active'));
+    document.querySelectorAll('.nav__link, .mobile-nav__link').forEach(link => link.classList.remove('active'));
     activeLink?.classList.add('active');
 };
 
@@ -524,24 +487,19 @@ const closeMobileMenu = () => state.isMobile && closeMobileNavMenu();
 
 // ===== EFECTOS DE SCROLL OPTIMIZADOS =====
 const initScrollEffects = () => {
-    let scrollTimeout;
-    const scrollDelay = state.isMobile ? 50 : 15;
+    const throttledScroll = throttle(() => {
+        if (!state.ticking) {
+            requestAnimationFrame(() => {
+                updateActiveNavOnScroll();
+                handleScrollDirection();
+                updateHeaderOnScroll();
+                state.ticking = false;
+            });
+            state.ticking = true;
+        }
+    }, state.isMobile ? 50 : 15);
     
-    window.addEventListener('scroll', () => {
-        if (scrollTimeout) return;
-        scrollTimeout = setTimeout(() => {
-            if (!state.ticking) {
-                requestAnimationFrame(() => {
-                    updateActiveNavOnScroll();
-                    handleScrollDirection();
-                    updateHeaderOnScroll();
-                    state.ticking = false;
-                });
-                state.ticking = true;
-            }
-            scrollTimeout = null;
-        }, scrollDelay);
-    }, { passive: true });
+    window.addEventListener('scroll', throttledScroll, { passive: true });
 };
 
 const handleScrollDirection = () => {
@@ -577,13 +535,9 @@ const updateActiveNavOnScroll = () => {
     });
     
     if (activeSection) {
-        const activeLink = document.querySelector(`.nav__link[href="#${activeSection}"]`);
-        const currentActiveLink = document.querySelector('.nav__link.active');
+        const activeLink = document.querySelector(`.nav__link[href="#${activeSection}"], .mobile-nav__link[href="#${activeSection}"]`);
+        const currentActiveLink = document.querySelector('.nav__link.active, .mobile-nav__link.active');
         if (activeLink && activeLink !== currentActiveLink) updateActiveNavLink(activeLink);
-        
-        const activeMobileLink = document.querySelector(`.mobile-nav__link[href="#${activeSection}"]`);
-        const currentActiveMobileLink = document.querySelector('.mobile-nav__link.active');
-        if (activeMobileLink && activeMobileLink !== currentActiveMobileLink) updateActiveMobileNavLink(activeMobileLink);
     }
 };
 
@@ -605,7 +559,7 @@ const updateHeaderOnScroll = () => {
     }
 };
 
-// ===== REPRODUCTOR DE VIDEO OPTIMIZADO =====
+// ===== REPRODUCTOR DE VIDEO =====
 const initVideoPlayer = () => {
     if (state.performanceMode) return;
     
@@ -644,7 +598,7 @@ const initVideoPlayer = () => {
     });
 };
 
-// ===== FAQ OPTIMIZADO =====
+// ===== FAQ =====
 const initFAQ = () => {
     const items = document.querySelectorAll('.faq__item');
     const search = document.getElementById('faq-search');
@@ -706,7 +660,7 @@ const initFAQ = () => {
     }
 };
 
-// ===== INTERSECTION OBSERVER OPTIMIZADO =====
+// ===== INTERSECTION OBSERVER =====
 const initIntersectionObserver = () => {
     if (state.performanceMode) return;
     
@@ -737,7 +691,7 @@ const animateFeature = feature => {
     });
 };
 
-// ===== LAZY LOADING DE IMÁGENES OPTIMIZADO =====
+// ===== LAZY LOADING DE IMÁGENES =====
 const setupImageLazyLoading = () => {
     const wait = () => {
         if (!imageLoader) return setTimeout(wait, 50);
@@ -762,7 +716,7 @@ const setupImageLazyLoading = () => {
     wait();
 };
 
-// ===== VIDEO HERO OPTIMIZADO =====
+// ===== VIDEO HERO =====
 const initHeroVideo = () => {
     const video = document.getElementById('hero-video');
     const fallback = document.querySelector('.hero__phone-app-image');
@@ -794,26 +748,6 @@ const initHeroVideo = () => {
     setTimeout(() => video.readyState < 2 && showFallback(), 1500);
 };
 
-// ===== UTILIDADES =====
-const debounce = (func, wait) => {
-    let timeout;
-    return (...args) => {
-        clearTimeout(timeout);
-        timeout = setTimeout(() => func(...args), wait);
-    };
-};
-
-const throttle = (func, limit) => {
-    let inThrottle;
-    return function(...args) {
-        if (!inThrottle) {
-            func.apply(this, args);
-            inThrottle = true;
-            setTimeout(() => inThrottle = false, limit);
-        }
-    };
-};
-
 // ===== OPTIMIZACIONES DE RENDIMIENTO =====
 const initPerformanceOptimizations = () => {
     if (!state.isMobile && !state.performanceMode) {
@@ -833,25 +767,23 @@ const initPerformanceOptimizations = () => {
             .forEach(el => el.style.willChange = 'transform');
     }
     
-    let resizeTimeout;
-    window.addEventListener('resize', () => {
-        clearTimeout(resizeTimeout);
-        resizeTimeout = setTimeout(() => {
-            const newIsMobile = window.innerWidth <= 1023;
-            if (newIsMobile !== state.isMobile) {
-                state.isMobile = newIsMobile;
-                detectDevice();
-                if (state.isMenuOpen) closeMobileMenu();
-                if (state.isMobileMenuOpen) closeMobileNavMenu();
-                setTimeout(() => { initNavigation(); updateActiveNavOnScroll(); }, 50);
-            }
-            if (state.isFloatingMenuOpen) closeFloatingMenu();
-            if (state.isLanguageSwitcherOpen) closeLanguageSwitcher();
-        }, state.isMobile ? 300 : 250);
-    });
+    const handleResize = debounce(() => {
+        const newIsMobile = window.innerWidth <= 1023;
+        if (newIsMobile !== state.isMobile) {
+            state.isMobile = newIsMobile;
+            detectDevice();
+            if (state.isMenuOpen) closeMobileMenu();
+            if (state.isMobileMenuOpen) closeMobileNavMenu();
+            setTimeout(() => { initNavigation(); updateActiveNavOnScroll(); }, 50);
+        }
+        if (state.isFloatingMenuOpen) closeFloatingMenu();
+        if (state.isLanguageSwitcherOpen) closeLanguageSwitcher();
+    }, state.isMobile ? 300 : 250);
+    
+    window.addEventListener('resize', handleResize);
 };
 
-// ===== ACCESIBILIDAD OPTIMIZADA =====
+// ===== ACCESIBILIDAD =====
 const initAccessibility = () => {
     document.addEventListener('keydown', e => {
         if (e.key === 'Escape') {
@@ -870,7 +802,7 @@ const initAccessibility = () => {
     }
 };
 
-// ===== INICIALIZACIÓN OPTIMIZADA =====
+// ===== INICIALIZACIÓN =====
 document.addEventListener('DOMContentLoaded', () => {
     detectDevice();
     imageLoader = new ImageLoader();
@@ -893,7 +825,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initPerformanceOptimizations();
 });
 
-// ===== MANEJO DE ERRORES OPTIMIZADO =====
+// ===== MANEJO DE ERRORES =====
 window.addEventListener('error', e => {
     if (state.isMobile && e.error?.message.includes('video')) {
         const video = document.getElementById('hero-video');
