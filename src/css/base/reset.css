@@ -10,6 +10,7 @@ html {
   height: 100%;
   font-size: 16px;
   overflow-x: hidden;
+  scroll-behavior: smooth;
 }
 
 body {
@@ -23,11 +24,44 @@ body {
   background: var(--primary-bg);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 /* ===== PREVENIR SCROLL HORIZONTAL GLOBAL ===== */
 html, body {
   max-width: 100vw;
+}
+
+/* ===== ELEMENTOS BÁSICOS ===== */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: inherit;
+  line-height: 1.2;
+}
+
+p, ul, ol, dl {
+  margin-bottom: 0;
+}
+
+ul, ol {
+  list-style: none;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+  font-size: inherit;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+input, textarea, select {
+  font-family: inherit;
+  font-size: inherit;
 }
 
 /* ===== CONTENEDORES CON RESTRICCIONES DE ANCHO MÁXIMO ===== */
@@ -67,13 +101,11 @@ html, body {
 
 /* ===== IMAGEN OPTIMIZADA ===== */
 .image-optimized {
-  image-rendering: -webkit-optimize-contrast;
   image-rendering: optimize-contrast;
   image-rendering: crisp-edges;
 }
 
 /* ===== PREVENIR DESBORDAMIENTOS ===== */
-/* Evitar que elementos flex o grid crezcan más del viewport */
 .flex, [class*="flex"], [class*="Flex"] {
   flex-wrap: wrap;
   min-width: 0;
@@ -85,15 +117,104 @@ html, body {
   max-width: 100%;
 }
 
-/* Evitar que las imágenes y videos rompan el layout */
 img, video {
   max-width: 100%;
   height: auto;
+  display: block;
 }
 
-
-/* Prevenir cualquier elemento que pueda causar scroll horizontal */
 * {
   max-width: 100%;
 }
 
+/* ===== ACCESIBILIDAD ===== */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ===== OPTIMIZACIONES DE RENDIMIENTO ===== */
+img, video, iframe {
+  content-visibility: auto;
+}
+
+/* ===== FOCUS VISIBLE ===== */
+:focus {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--starflex-red);
+  outline-offset: 2px;
+}
+
+/* ===== WEBKIT SCROLLBAR ===== */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 69, 105, 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 69, 105, 0.5);
+}
+
+/* ===== OPTIMIZACIONES MÓVILES ===== */
+@media (max-width: 768px) {
+  html {
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+  }
+  
+  body {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+  }
+  
+  input, textarea, select, button {
+    appearance: none;
+    -webkit-appearance: none;
+    border-radius: 0;
+  }
+}
+
+/* ===== PRINT STYLES ===== */
+@media print {
+  *, *::before, *::after {
+    background: transparent !important;
+    color: #000 !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+  
+  a, a:visited {
+    text-decoration: underline;
+  }
+  
+  img {
+    page-break-inside: avoid;
+  }
+  
+  h2, h3, p {
+    orphans: 3;
+    widows: 3;
+  }
+  
+  h2, h3 {
+    page-break-after: avoid;
+  }
+}
