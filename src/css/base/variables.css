@@ -1,155 +1,189 @@
-/* ===== VARIABLES CSS OPTIMIZADAS ===== */
+/* ===== VARIABLES FUTURISTAS OPTIMIZADAS PARA MÓVILES ===== */
 :root {
-    /* COLORES PRINCIPALES */
-    --starflex-crimson: #ff4569;
-    --starflex-crimson-bright: #ff6b9d;
-    --starflex-crimson-glow: #ff8fb3;
-    --starflex-orange: #ff6b35;
-    --starflex-orange-bright: #ff8c42;
-    --starflex-red: #ff4444;
-    
-    /* COLORES DE FONDO */
-    --bg-primary: #0a0a0f;
-    --bg-secondary: #12121a;
-    --bg-tertiary: #1a1a25;
-    --primary-bg: var(--bg-primary);
-    
-    /* COLORES DE VIDRIO */
-    --glass-bg: rgba(255, 255, 255, 0.05);
-    --glass-bg-light: rgba(255, 255, 255, 0.08);
-    --glass-bg-dark: rgba(0, 0, 0, 0.3);
-    --glass-bg-crimson: rgba(255, 69, 105, 0.1);
-    
-    /* COLORES DE TEXTO */
-    --text-primary: #ffffff;
-    --text-secondary: #b8bcc8;
-    --text-muted: #6b7280;
-    --text-accent: var(--starflex-crimson);
-    
-    /* COLORES DE BORDE */
-    --border-subtle: rgba(255, 255, 255, 0.1);
-    --border-primary: rgba(255, 255, 255, 0.2);
-    --border-accent: var(--starflex-crimson);
-    
-    /* SOMBRAS */
-    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2);
-    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
-    --shadow-lg: 0 8px 25px rgba(0, 0, 0, 0.4);
-    --shadow-xl: 0 12px 35px rgba(0, 0, 0, 0.5);
-    --shadow-2xl: 0 20px 50px rgba(0, 0, 0, 0.6);
-    
-    /* BRILLOS */
-    --glow-subtle: 0 0 10px rgba(255, 69, 105, 0.3);
-    --glow-medium: 0 0 20px rgba(255, 69, 105, 0.4);
-    --glow-strong: 0 0 30px rgba(255, 69, 105, 0.5);
-    
-    /* TIPOGRAFÍA */
-    --font-primary: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    --font-mono: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
-    --font-accent: 'Sora', var(--font-primary);
-    
-    /* ESPACIADO */
-    --space-xs: 0.25rem;
-    --space-sm: 0.5rem;
-    --space-md: 0.75rem;
-    --space-lg: 1rem;
-    --space-xl: 1.5rem;
-    --space-2xl: 2rem;
-    --space-3xl: 3rem;
-    --space-4xl: 4rem;
-    --space-5xl: 5rem;
-    --space-6xl: 6rem;
-    --space-7xl: 8rem;
-    
-    /* DIMENSIONES */
-    --max-width: 1400px;
-    --max-hero-width: 1200px;
-    --navbar-height: 80px;
-    --navbar-height-mobile: 70px;
-    --section-padding-x: 2rem;
-    --section-padding-y: 4rem;
-    
-    /* TELÉFONO */
-    --phone-width-desktop: 280px;
-    --phone-height-desktop: 560px;
-    --phone-border-radius: 24px;
-    
-    /* TRANSICIONES */
-    --transition: 0.3s ease;
-    --transition-fast: 0.2s ease;
-    --transition-slow: 0.5s ease;
-    
-    /* TOOLTIPS */
-    --bg-tooltip: rgba(0, 0, 0, 0.9);
-    
-    /* Z-INDEX */
-    --z-dropdown: 1000;
-    --z-sticky: 1020;
-    --z-fixed: 1030;
-    --z-modal-backdrop: 1040;
-    --z-modal: 1050;
-    --z-popover: 1060;
-    --z-tooltip: 1070;
+/* Colores principales */
+--primary-bg: #0a0d14;
+--secondary-bg: #151922;
+--accent-bg: #1e2330;
+
+/* Colores de vidrio unificados */
+--glass-bg: rgb(21 25 34 / 70%);
+--glass-bg-light: rgb(255 255 255 / 5%);
+--glass-bg-medium: rgb(255 255 255 / 8%);
+--glass-bg-strong: rgb(255 255 255 / 12%);
+--glass-border: rgb(255 255 255 / 12%);
+
+/* Colores de marca Starflex unificados */
+--starflex-red: #FF2D55;
+--starflex-red-dark: #cc1744;
+--starflex-red-bright: #ff4569;
+--starflex-orange: #ff6b35;
+--starflex-orange-bright: #ff7a47;
+--starflex-crimson: #b8002e;
+--starflex-crimson-glow: #ff1744;
+--starflex-crimson-light: #d4003a;
+--starflex-crimson-dark: #9c0025;
+--starflex-crimson-bright: #ff4569;
+
+/* Efectos neón unificados */
+--neon-primary: #FF2D55;
+--neon-primary-bright: #ff4569;
+--neon-primary-glow: #ff1744;
+--neon-glow-soft: 0 0 15px rgb(255 45 85 / 40%);
+--neon-glow-medium: 0 0 25px rgb(255 45 85 / 60%);
+--neon-glow-strong: 0 0 35px rgb(255 45 85 / 80%);
+
+/* Sombras unificadas */
+--neon-shadow-base: 0 8px 25px rgb(255 45 85 / 30%);
+--neon-shadow-hover: 0 15px 40px rgb(255 45 85 / 50%);
+--neon-shadow-active: 0 20px 50px rgb(255 45 85 / 70%);
+--shadow-sm: 0 4px 12px rgb(0 0 0 / 15%);
+--shadow-md: 0 8px 25px rgb(0 0 0 / 20%);
+--shadow-lg: 0 15px 35px rgb(0 0 0 / 25%);
+--shadow-xl: 0 25px 50px rgb(0 0 0 / 30%);
+--shadow-2xl: 0 35px 70px rgb(0 0 0 / 40%);
+--shadow-crimson: 0 15px 40px rgb(255 45 85 / 40%);
+--shadow-crimson-hover: 0 25px 60px rgb(255 45 85 / 60%);
+
+/* Textos */
+--text-primary: #fff;
+--text-secondary: #e2e8f0;
+--text-muted: #94a3b8;
+--text-accent: #ff4569;
+
+/* Bordes unificados */
+--border-subtle: rgb(255 255 255 / 8%);
+--border-accent: rgb(255 69 105 / 30%);
+--border-crimson: rgb(184 0 46 / 40%);
+
+/* Efectos de brillo unificados */
+--glow-subtle: 0 0 20px rgb(255 69 105 / 20%);
+--glow-medium: 0 0 30px rgb(255 69 105 / 30%);
+--glow-strong: 0 0 40px rgb(255 69 105 / 40%);
+
+/* Tipografía */
+--font-primary: 'Space Grotesk', -apple-system, blinkmacsystemfont, sans-serif;
+--font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+/* Espaciado fluido unificado */
+--space-xs: 0.375rem;
+--space-sm: 0.5rem;
+--space-md: 0.75rem;
+--space-lg: 1rem;
+--space-xl: 1.25rem;
+--space-2xl: 1.5rem;
+--space-3xl: 2rem;
+--space-4xl: 2.5rem;
+--space-5xl: 3rem;
+--space-6xl: 4rem;
+
+/* Padding fluido para secciones */
+--section-padding-x: clamp(1rem, 5vw, 8rem);
+--section-padding-y: clamp(3rem, 8vh, 8rem);
+
+/* Restricciones de ancho máximo */
+--max-content-width: 1400px;
+--max-hero-width: 1600px;
+
+/* Transiciones optimizadas para móviles */
+--transition: 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+--transition-fast: 0.1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+--transition-slow: 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+/* Transiciones específicas para móviles */
+--transition-mobile: 0.15s ease;
+--transition-mobile-fast: 0.1s ease;
+--transition-mobile-slow: 0.25s ease;
+
+/* Variables específicas para navbar */
+--navbar-height: 75px;
+--navbar-height-mobile: 70px;
+--navbar-z-index: 1000;
+
+/* Variables para tamaños de imágenes optimizadas */
+--phone-width-desktop: 280px;
+--phone-height-desktop: 560px;
+--phone-width-mobile: clamp(200px, 70vw, 280px);
+--phone-height-mobile: clamp(400px, 140vw, 560px);
+--phone-border-radius: clamp(30px, 6vw, 40px);
+
+/* Variables para fondo hero futurista */
+--hero-neon-pink: rgba(255, 45, 85, 0.15);
+--hero-neon-pink-bright: rgba(255, 45, 85, 0.25);
+--hero-neon-red: rgba(255, 23, 68, 0.12);
+--hero-neon-orange: rgba(255, 107, 53, 0.1);
+--hero-neon-orange-bright: rgba(255, 122, 71, 0.18);
+--hero-halo-pink: rgba(255, 45, 85, 0.08);
+--hero-halo-red: rgba(255, 23, 68, 0.06);
+--hero-halo-orange: rgba(255, 107, 53, 0.05);
+--hero-particle-glow: rgba(255, 255, 255, 0.4);
+--hero-particle-dim: rgba(255, 255, 255, 0.2);
+--hero-particle-fine: rgba(255, 255, 255, 0.1);
+
+/* Variables de rendimiento para móviles */
+--mobile-animation-duration: 0.15s;
+--mobile-scroll-threshold: 15px;
+--mobile-touch-target: 44px;
+--mobile-safe-area-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-/* VARIABLES RESPONSIVE */
-@media (max-width: 1200px) {
+/* Media queries para optimizaciones específicas */
+@media (max-width: 1023px) {
     :root {
-        --section-padding-x: 1.5rem;
-        --section-padding-y: 3rem;
-        --max-width: 1200px;
-    }
-}
-
-@media (max-width: 768px) {
-    :root {
-        --section-padding-x: 1rem;
-        --section-padding-y: 2rem;
-        --space-6xl: 4rem;
-        --space-7xl: 5rem;
+        /* Transiciones más rápidas en móviles */
+        --transition: var(--transition-mobile);
+        --transition-fast: var(--transition-mobile-fast);
+        --transition-slow: var(--transition-mobile-slow);
+        
+        /* Espaciado reducido para móviles */
+        --section-padding-x: clamp(1rem, 4vw, 2rem);
+        --section-padding-y: clamp(2rem, 6vh, 4rem);
+        
+        /* Sombras reducidas para mejor rendimiento */
+        --shadow-sm: 0 2px 8px rgb(0 0 0 / 10%);
+        --shadow-md: 0 4px 15px rgb(0 0 0 / 15%);
+        --shadow-lg: 0 8px 25px rgb(0 0 0 / 20%);
+        --shadow-xl: 0 12px 35px rgb(0 0 0 / 25%);
+        
+        /* Efectos neón reducidos */
+        --neon-glow-soft: 0 0 10px rgb(255 45 85 / 30%);
+        --neon-glow-medium: 0 0 15px rgb(255 45 85 / 40%);
+        --neon-glow-strong: 0 0 20px rgb(255 45 85 / 50%);
     }
 }
 
 @media (max-width: 480px) {
     :root {
-        --section-padding-x: 0.75rem;
-        --section-padding-y: 1.5rem;
-        --navbar-height-mobile: 60px;
-        --space-5xl: 3rem;
-        --space-6xl: 3.5rem;
-        --space-7xl: 4rem;
+        /* Espaciado aún más reducido para móviles pequeños */
+        --section-padding-x: 1rem;
+        --section-padding-y: clamp(1.5rem, 4vh, 3rem);
+        
+        /* Transiciones mínimas para dispositivos lentos */
+        --transition: var(--transition-mobile-fast);
+        --transition-fast: 0.05s ease;
+        --transition-slow: var(--transition-mobile);
     }
 }
 
-/* MODO PERFORMANCE */
-.performance-mode {
-    --transition: 0.1s ease;
-    --transition-fast: 0.05s ease;
-    --transition-slow: 0.15s ease;
-}
-
-/* PREFERENCIAS DE USUARIO */
-@media (prefers-reduced-motion: reduce) {
+/* Variables para modo rendimiento */
+@media (max-width: 1023px) and (prefers-reduced-motion: reduce) {
     :root {
-        --transition: 0.01ms;
-        --transition-fast: 0.01ms;
-        --transition-slow: 0.01ms;
+        --transition: none;
+        --transition-fast: none;
+        --transition-slow: none;
+        --mobile-animation-duration: 0s;
     }
 }
 
-@media (prefers-color-scheme: light) {
+/* Variables para dispositivos de baja potencia */
+@media (max-width: 1023px) and (max-resolution: 1.5dppx) {
     :root {
-        --bg-primary: #ffffff;
-        --bg-secondary: #f8fafc;
-        --bg-tertiary: #f1f5f9;
-        --text-primary: #1a202c;
-        --text-secondary: #4a5568;
-        --text-muted: #718096;
-        --glass-bg: rgba(0, 0, 0, 0.05);
-        --glass-bg-light: rgba(0, 0, 0, 0.08);
-        --glass-bg-dark: rgba(255, 255, 255, 0.9);
-        --border-subtle: rgba(0, 0, 0, 0.1);
-        --border-primary: rgba(0, 0, 0, 0.2);
-        --bg-tooltip: rgba(255, 255, 255, 0.95);
+        /* Efectos visuales reducidos */
+        --glass-bg: rgb(21 25 34 / 90%);
+        --shadow-sm: 0 1px 4px rgb(0 0 0 / 10%);
+        --shadow-md: 0 2px 8px rgb(0 0 0 / 15%);
+        --shadow-lg: 0 4px 15px rgb(0 0 0 / 20%);
+        --neon-glow-soft: none;
+        --neon-glow-medium: 0 0 8px rgb(255 45 85 / 20%);
+        --neon-glow-strong: 0 0 12px rgb(255 45 85 / 30%);
     }
 }
