@@ -1,5 +1,5 @@
 // ===== STARFLEX 2.0 - OPTIMIZADO PARA MÓVILES =====
-let state = {
+const state = {
     isMenuOpen: false,
     isMobileMenuOpen: false,
     currentLanguage: 'es',
@@ -92,7 +92,6 @@ const detectDevice = () => {
     state.isMobile = window.innerWidth <= 1023;
     state.isReducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
     
-    // Detección simplificada para móviles
     if (state.isMobile) {
         const isLowEnd = navigator.hardwareConcurrency <= 4;
         const conn = navigator.connection;
@@ -102,7 +101,6 @@ const detectDevice = () => {
         
         if (state.performanceMode) {
             document.body.classList.add('performance-mode');
-            // Inyectar CSS de rendimiento solo si es necesario
             if (!document.getElementById('perf-css')) {
                 const style = document.createElement('style');
                 style.id = 'perf-css';
@@ -153,7 +151,6 @@ class ImageLoader {
     async init() {
         this.formats = await detectImageFormats();
         
-        // Solo usar Intersection Observer en desktop o dispositivos potentes
         if ('IntersectionObserver' in window && (!state.isMobile || !state.performanceMode)) {
             this.observer = new IntersectionObserver(entries => {
                 entries.forEach(entry => {
@@ -184,7 +181,6 @@ class ImageLoader {
         try {
             el.classList.add('loading');
             
-            // En móviles, cargar directamente sin preload para ahorrar memoria
             if (state.isMobile) {
                 el.tagName === 'IMG' ? el.src = url : el.style.backgroundImage = `url('${url}')`;
                 el.classList.replace('loading', 'loaded');
@@ -248,7 +244,6 @@ const setupLanguageToggle = () => {
         
         btn.addEventListener('click', handleClick);
         
-        // Optimización táctil solo para móviles
         if (state.isMobile) {
             btn.addEventListener('touchstart', () => btn.style.transform = 'scale(0.98)', { passive: true });
             btn.addEventListener('touchend', () => btn.style.transform = '', { passive: true });
@@ -264,7 +259,6 @@ const switchLanguage = lang => {
     updateLanguageButtons();
     document.documentElement.lang = lang;
     
-    // Efecto visual solo en desktop
     if (!state.isMobile && !state.performanceMode) {
         document.body.style.opacity = '0.95';
         setTimeout(() => document.body.style.opacity = '1', 50);
@@ -297,7 +291,7 @@ const updateLanguageButtons = () => {
 
 // ===== SELECTOR DE IDIOMA FLOTANTE (SOLO DESKTOP) =====
 const initLanguageSwitcher = () => {
-    if (state.isMobile) return; // Skip en móviles
+    if (state.isMobile) return;
     
     const btn = document.getElementById('language-switcher-btn');
     const switcher = document.getElementById('language-switcher');
@@ -349,13 +343,11 @@ const initFloatingWidget = () => {
     
     btn.addEventListener('click', toggleFloatingMenu);
     
-    // Optimización táctil solo para móviles
     if (state.isMobile) {
         btn.addEventListener('touchstart', () => btn.style.transform = 'scale(0.95)', { passive: true });
         btn.addEventListener('touchend', () => btn.style.transform = '', { passive: true });
     }
     
-    // Event listener optimizado
     document.addEventListener('click', e => {
         const widget = document.getElementById('floating-widget');
         if (state.isFloatingMenuOpen && widget && !widget.contains(e.target)) closeFloatingMenu();
@@ -374,7 +366,6 @@ const openFloatingMenu = () => {
     menu.classList.add('active');
     btn.setAttribute('aria-expanded', 'true');
     
-    // Animación solo en desktop o dispositivos potentes
     if (!state.performanceMode) {
         menu.querySelectorAll('.floating-widget__menu-item').forEach((item, i) => {
             setTimeout(() => {
@@ -514,7 +505,6 @@ const smoothScroll = target => {
     const headerHeight = state.isMobile ? 70 : 80;
     const pos = target.offsetTop - headerHeight;
     
-    // Scroll suave solo en desktop o dispositivos potentes
     if ('scrollBehavior' in document.documentElement.style && !state.performanceMode) {
         window.scrollTo({ top: pos, behavior: 'smooth' });
     } else {
@@ -617,7 +607,6 @@ const updateHeaderOnScroll = () => {
 
 // ===== REPRODUCTOR DE VIDEO OPTIMIZADO =====
 const initVideoPlayer = () => {
-    // Skip video player en modo rendimiento
     if (state.performanceMode) return;
     
     const video = document.getElementById('main-video');
@@ -719,7 +708,6 @@ const initFAQ = () => {
 
 // ===== INTERSECTION OBSERVER OPTIMIZADO =====
 const initIntersectionObserver = () => {
-    // Skip en modo rendimiento o móviles lentos
     if (state.performanceMode) return;
     
     const observer = new IntersectionObserver(entries => {
@@ -757,12 +745,10 @@ const setupImageLazyLoading = () => {
         const loadNow = (sel, key) => { const el = document.querySelector(sel); if (el) imageLoader.loadNow(el, key); };
         const observe = (sel, key) => { const el = document.querySelector(sel); if (el) imageLoader.observe(el, key); };
         
-        // Cargar imágenes críticas inmediatamente
         loadNow('.nav__logo', 'logo');
         loadNow('.mobile-nav__logo', 'logo');
         loadNow('.hero__phone-app-image', 'hero');
         
-        // Para móviles, cargar todas las imágenes inmediatamente para evitar layout shifts
         const keys = ['phones.horario', 'phones.estaciones', 'phones.calendario', 'phones.registro', 'phones.notificaciones', 'phones.referidos'];
         document.querySelectorAll('.phone__app-image').forEach((img, i) => {
             if (keys[i]) {
@@ -783,7 +769,6 @@ const initHeroVideo = () => {
     const mobileVideo = document.getElementById('hero-mobile-video');
     
     if (mobileVideo && state.isMobile) {
-        // En móviles, usar configuración más conservadora
         Object.assign(mobileVideo, { 
             muted: true, 
             autoplay: !state.performanceMode, 
@@ -801,7 +786,6 @@ const initHeroVideo = () => {
         fallback.style.zIndex = '2';
     };
     
-    // En móviles o modo rendimiento, usar imagen estática
     if (state.isMobile || state.performanceMode) return showFallback();
     
     Object.assign(video, { muted: true, autoplay: true, loop: true, playsInline: true, preload: 'metadata' });
@@ -832,7 +816,6 @@ const throttle = (func, limit) => {
 
 // ===== OPTIMIZACIONES DE RENDIMIENTO =====
 const initPerformanceOptimizations = () => {
-    // Preload solo en desktop y dispositivos potentes
     if (!state.isMobile && !state.performanceMode) {
         const preload = () => {
             ['./assets/phones/Hero.avif', './assets/logo.avif'].forEach(src => {
@@ -845,13 +828,11 @@ const initPerformanceOptimizations = () => {
         'requestIdleCallback' in window ? requestIdleCallback(preload) : setTimeout(preload, 3000);
     }
     
-    // Will-change solo para elementos que realmente lo necesitan
     if (!state.performanceMode) {
         document.querySelectorAll('.hero__phone, .nav__logo, .mobile-nav__logo, .floating-widget__main-btn')
             .forEach(el => el.style.willChange = 'transform');
     }
     
-    // Resize handler optimizado
     let resizeTimeout;
     window.addEventListener('resize', () => {
         clearTimeout(resizeTimeout);
@@ -904,7 +885,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initFloatingWidget();
     setupImageLazyLoading();
     
-    // Funciones costosas solo en desktop o dispositivos potentes
     if (!state.performanceMode) {
         initVideoPlayer();
         initIntersectionObserver();
