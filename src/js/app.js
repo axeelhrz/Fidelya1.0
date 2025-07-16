@@ -17,14 +17,32 @@ const CONFIG = {
     ANIMATION_DURATION: state.isMobile ? 0 : 250,
     SCROLL_THRESHOLD: state.isMobile ? 15 : 30,
     IMAGE_PATHS: {
-        logo: { avif: './assets/logo.avif' },
+        hero: { 
+            mp4: './assets/phones/Hero.mp4'
+        },
+        logo: { 
+            webp: './assets/logo.webp',
+            avif: './assets/logo.avif'
+        },
         phones: {
-            horario: { webp: './assets/phones/Schedule.webp' },
-            estaciones: { webp: './assets/phones/Stations.webp' },
-            calendario: { webp: './assets/phones/Calendar.webp' },
-            registro: { webp: './assets/phones/Log.webp' },
-            notificaciones: { webp: './assets/phones/Notifications.webp' },
-            referidos: { webp: './assets/phones/Referrals.webp' }
+            horario: { 
+                webp: './assets/phones/Schedule.webp'
+            },
+            estaciones: { 
+                webp: './assets/phones/Stations.webp'
+            },
+            calendario: { 
+                webp: './assets/phones/Calendar.webp'
+            },
+            registro: { 
+                webp: './assets/phones/Log.webp'
+            },
+            notificaciones: { 
+                webp: './assets/phones/Notifications.webp'
+            },
+            referidos: { 
+                webp: './assets/phones/Referrals.webp'
+            }
         },
         downloads: {
             apple: { png: './assets/AppleStore.png' },
@@ -137,9 +155,10 @@ class UltraImageLoader {
     
     async init() {
         if (state.isMobile) {
+            // Detección simple para móviles
             const img = new Image();
-            img.onload = img.onerror = () => this.formats.avif = img.height === 2;
-            img.src = 'data:image/avif;base64,AAAAIGZ0eXBhdmlmAAAAAGF2aWZtaWYxbWlhZk1BMUIAAADybWV0YQ==';
+            img.onload = img.onerror = () => this.formats.webp = img.height === 2;
+            img.src = 'data:image/webp;base64,UklGRjoAAABXRUJQVlA4IC4AAACyAgCdASoCAAIALmk0mk0iIiIiIgBoSygABc6WWgAA/veff/0PP8bA//LwYAAA';
             return;
         }
         
@@ -149,10 +168,15 @@ class UltraImageLoader {
             img.src = data;
         });
         
-        [this.formats.avif, this.formats.webp] = await Promise.all([
-            testImg('data:image/avif;base64,AAAAIGZ0eXBhdmlmAAAAAGF2aWZtaWYxbWlhZk1BMUIAAADybWV0YQAAAAAAAAAoaGRscgAAAAAAAAAAcGljdAAAAAAAAAAAAAAAAGxpYmF2aWYAAAAADnBpdG0AAAAAAAEAAAAeaWxvYwAAAABEAAABAAEAAAABAAABGgAAAB0AAAAoaWluZgAAAAAAAQAAABppbmZlAgAAAAABAABhdjAxQ29sb3IAAAAAamlwcnAAAABLaXBjbwAAABRpc3BlAAAAAAAAAAIAAAACAAAAEHBpeGkAAAAAAwgICAAAAAxhdjFDgQ0MAAAAABNjb2xybmNseAACAAIAAYAAAAAXaXBtYQAAAAAAAAABAAEEAQKDBAAAACVtZGF0EgAKCBgABogQEAwgMg8f8D///8WfhwB8+ErK42A='),
-            testImg('data:image/webp;base64,UklGRjoAAABXRUJQVlA4IC4AAACyAgCdASoCAAIALmk0mk0iIiIiIgBoSygABc6WWgAA/veff/0PP8bA//LwYAAA')
-        ]);
+        try {
+            [this.formats.avif, this.formats.webp] = await Promise.all([
+                testImg('data:image/avif;base64,AAAAIGZ0eXBhdmlmAAAAAGF2aWZtaWYxbWlhZk1BMUIAAADybWV0YQAAAAAAAAAoaGRscgAAAAAAAAAAcGljdAAAAAAAAAAAAAAAAGxpYmF2aWYAAAAADnBpdG0AAAAAAAEAAAAeaWxvYwAAAABEAAABAAEAAAABAAABGgAAAB0AAAAoaWluZgAAAAAAAQAAABppbmZlAgAAAAABAABhdjAxQ29sb3IAAAAAamlwcnAAAABLaXBjbwAAABRpc3BlAAAAAAAAAAIAAAACAAAAEHBpeGkAAAAAAwgICAAAAAxhdjFDgQ0MAAAAABNjb2xybmNseAACAAIAAYAAAAAXaXBtYQAAAAAAAAABAAEEAQKDBAAAACVtZGF0EgAKCBgABogQEAwgMg8f8D///8WfhwB8+ErK42A='),
+                testImg('data:image/webp;base64,UklGRjoAAABXRUJQVlA4IC4AAACyAgCdASoCAAIALmk0mk0iIiIiIgBoSygABc6WWgAA/veff/0PP8bA//LwYAAA')
+            ]);
+        } catch (error) {
+            console.warn('Error detecting image formats:', error);
+            this.formats.webp = true; // Fallback seguro
+        }
         
         if (this.formats.avif) document.documentElement.classList.add('avif');
         if (this.formats.webp) document.documentElement.classList.add('webp');
@@ -171,9 +195,13 @@ class UltraImageLoader {
     
     getBestUrl(config) {
         if (!config) return null;
-        if (this.formats.avif && config.avif) return config.avif;
-        if (this.formats.webp && config.webp) return config.webp;
-        return config.jpg || config.png || config.avif;
+        
+        // Para logo: priorizar WebP si está soportado, sino AVIF
+        if (config.webp && this.formats.webp) return config.webp;
+        if (config.avif && this.formats.avif) return config.avif;
+        
+        // Fallbacks
+        return config.mp4 || config.png || config.jpg || config.webp || config.avif;
     }
     
     getConfig(key) {
@@ -831,7 +859,7 @@ const initHeroVideo = () => {
 const initPerformanceOptimizations = () => {
     if (!state.isMobile && !state.performanceMode) {
         const preload = () => {
-            ['./assets/phones/Hero.mp4', './assets/logo.avif'].forEach(src => {
+            ['./assets/phones/Hero.mp4', './assets/logo.webp'].forEach(src => {
                 const link = document.createElement('link');
                 Object.assign(link, { rel: 'preload', as: 'image', href: src });
                 document.head.appendChild(link);
@@ -909,6 +937,17 @@ const initAccessibility = () => {
 document.addEventListener('DOMContentLoaded', () => {
     detectDevice();
     imageLoader = new UltraImageLoader();
+    
+    // Debug para verificar formatos soportados
+    setTimeout(() => {
+        console.log('Formatos soportados:', imageLoader.formats);
+        console.log('WebP soportado:', imageLoader.formats.webp);
+        console.log('AVIF soportado:', imageLoader.formats.avif);
+        
+        // Verificar URLs que se están usando
+        console.log('Logo URL:', imageLoader.getBestUrl(imageLoader.getConfig('logo')));
+        console.log('Schedule URL:', imageLoader.getBestUrl(imageLoader.getConfig('phones.horario')));
+    }, 1000);
     
     initLanguage();
     initLanguageSwitcher();
@@ -1030,10 +1069,14 @@ if (state.isMobile) {
         `;
         document.head.appendChild(lowEndStyle);
         
+        // Simplificar configuración de imágenes para dispositivos de gama baja
         CONFIG.IMAGE_PATHS = Object.fromEntries(
             Object.entries(CONFIG.IMAGE_PATHS).map(([key, value]) => [
                 key, 
-                typeof value === 'object' ? { jpg: value.avif || value.webp || value.jpg } : value
+                typeof value === 'object' ? { 
+                    png: value.png || value.jpg,
+                    webp: value.webp 
+                } : value
             ])
         );
     }

@@ -1,4 +1,4 @@
-/* ===== RESET OPTIMIZADO ===== */
+/* ===== RESET MOBILE-FIRST OPTIMIZADO ===== */
 *, *::before, *::after {
     box-sizing: border-box;
     margin: 0;
@@ -10,8 +10,8 @@ html {
     height: 100%;
     font-size: 16px;
     overflow-x: hidden;
-    scroll-behavior: smooth;
     -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
 }
 
 body {
@@ -20,7 +20,7 @@ body {
     font-family: var(--font-primary);
     line-height: 1.6;
     color: var(--text-primary);
-    background: var(--bg-primary);
+    background: var(--primary-bg);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
@@ -41,7 +41,7 @@ ul, ol {
     list-style: none;
 }
 
-/* INTERACTIVOS */
+/* INTERACTIVOS - MOBILE FIRST */
 a, button, input, textarea, select {
     color: inherit;
     font-family: inherit;
@@ -50,10 +50,15 @@ a, button, input, textarea, select {
     background: transparent;
     border: none;
     text-decoration: none;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: rgba(255, 69, 105, 0.2);
+    -webkit-touch-callout: none;
 }
 
 button {
     cursor: pointer;
+    min-height: 44px; /* Tamaño mínimo táctil */
+    min-width: 44px;
 }
 
 /* MEDIOS */
@@ -78,19 +83,52 @@ table {
     background: var(--starflex-crimson);
 }
 
-/* DESKTOP - SCROLLBAR Y FOCUS AVANZADO */
+/* MOBILE - OPTIMIZACIONES TÁCTILES */
+* {
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+/* Permitir selección en elementos de texto */
+p, span, h1, h2, h3, h4, h5, h6, li, td, th, input, textarea {
+    -webkit-user-select: text;
+    user-select: text;
+}
+
+/* Focus simplificado para móviles */
+:focus-visible, a:focus, button:focus, input:focus, textarea:focus, select:focus {
+    outline: 2px solid var(--starflex-crimson);
+    outline-offset: 2px;
+}
+
+/* Scrollbar nativo en móviles */
+::-webkit-scrollbar {
+    display: none;
+}
+
+/* DESKTOP - MEJORAS PROGRESIVAS */
 @media (min-width: 1024px) {
+    html {
+        scroll-behavior: smooth;
+    }
+    
+    button {
+        min-height: auto;
+        min-width: auto;
+    }
+    
     ::-webkit-scrollbar {
+        display: block;
         width: 8px;
         height: 8px;
     }
 
     ::-webkit-scrollbar-track {
-        background: var(--bg-secondary);
+        background: var(--secondary-bg);
     }
 
     ::-webkit-scrollbar-thumb {
-        background: var(--border-primary);
+        background: var(--border-subtle);
         border-radius: 4px;
     }
 
@@ -98,46 +136,15 @@ table {
         background: var(--starflex-crimson);
     }
 
-    :focus-visible, .keyboard-navigation *:focus {
-        outline: 2px solid var(--starflex-crimson);
-        outline-offset: 2px;
-    }
-
-    a:focus, button:focus, input:focus, textarea:focus, select:focus {
-        outline: 2px solid var(--starflex-crimson);
-        outline-offset: 2px;
-    }
-}
-
-/* MOBILE - OPTIMIZACIONES TÁCTILES */
-@media (max-width: 1023px) {
-    html {
-        -ms-text-size-adjust: 100%;
-        -webkit-text-size-adjust: 100%;
-    }
-
     * {
-        -webkit-tap-highlight-color: rgba(255, 69, 105, 0.2);
-        -webkit-touch-callout: none;
-        -webkit-user-select: none;
-        user-select: none;
+        -webkit-user-select: auto;
+        user-select: auto;
+        -webkit-tap-highlight-color: transparent;
     }
-
-    /* Permitir selección en elementos de texto */
+    
     p, span, h1, h2, h3, h4, h5, h6, li, td, th, input, textarea {
         -webkit-user-select: text;
         user-select: text;
-    }
-
-    /* Focus simplificado para móviles */
-    :focus-visible, a:focus, button:focus, input:focus, textarea:focus, select:focus {
-        outline: 1px solid var(--starflex-crimson);
-        outline-offset: 1px;
-    }
-
-    /* Scrollbar nativo en móviles */
-    ::-webkit-scrollbar {
-        display: none;
     }
 }
 

@@ -1,4 +1,4 @@
-/* ===== STARFLEX 2.0 - MODULAR CSS OPTIMIZADO ===== */
+/* ===== STARFLEX 2.0 - CSS MOBILE-FIRST OPTIMIZADO ===== */
 
 /* Critical base styles - load first */
 @import url('./base/variables.css');
@@ -17,7 +17,37 @@
 @import url('./sections/faq.css');
 @import url('./sections/contact.css');
 
-/* Animations */
+/* Animations - solo para desktop */
 @import url('./animations/keyframes.css');
-@import url('./mobile-scroll-fix.css');
-@import url('./mobile-fixes.css');
+
+/* Global mobile-first styles */
+html, body {
+    overflow-x: hidden;
+}
+
+/* Ensure all sections are visible by default */
+.features,
+.videos,
+.faq,
+.contact {
+    display: block;
+    visibility: visible;
+    opacity: 1;
+    position: relative;
+    z-index: auto;
+}
+
+/* Performance optimizations */
+@media (max-width: 1023px) {
+    /* Disable complex animations on mobile */
+    * {
+        animation-duration: 0.15s !important;
+        transition-duration: 0.15s !important;
+    }
+    
+    /* Simplify transforms */
+    *[class*="animate-"] {
+        animation: none !important;
+        transform: none !important;
+    }
+}
