@@ -1,9 +1,16 @@
 // ===== STARFLEX 2.0 - OPTIMIZADO Y REDUCIDO =====
 const state = {
-    isMenuOpen: false, isMobileMenuOpen: false, currentLanguage: 'es',
-    isFloatingMenuOpen: false, isLanguageSwitcherOpen: false,
-    lastScrollY: 0, isScrollingDown: false, ticking: false, isNavbarVisible: true,
-    isMobile: window.innerWidth <= 1023, isReducedMotion: false, performanceMode: false
+    isMenuOpen: false, 
+    currentLanguage: 'es',
+    isFloatingMenuOpen: false, 
+    isLanguageSwitcherOpen: false,
+    lastScrollY: 0, 
+    isScrollingDown: false, 
+    ticking: false, 
+    isNavbarVisible: true,
+    isMobile: window.innerWidth <= 768, 
+    isReducedMotion: false, 
+    performanceMode: false
 };
 
 const CONFIG = {
@@ -101,7 +108,7 @@ const throttle = (func, limit) => {
 
 // ===== DETECCIÓN DE DISPOSITIVO =====
 const detectDevice = () => {
-    state.isMobile = window.innerWidth <= 1023;
+    state.isMobile = window.innerWidth <= 768;
     state.isReducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
     
     if (state.isMobile) {
@@ -222,7 +229,7 @@ const initLanguage = () => {
 };
 
 const setupLanguageToggle = () => {
-    document.querySelectorAll('.language-btn, .nav__language-option, .mobile-language-btn, .mobile-nav__language-option')
+    document.querySelectorAll('.nav__language-option')
         .forEach(btn => {
             const handleClick = e => {
                 e.preventDefault();
@@ -270,27 +277,29 @@ const applyTranslations = () => {
 };
 
 const updateLanguageButtons = () => {
-    document.querySelectorAll('.language-btn, .nav__language-option, .mobile-language-btn, .mobile-nav__language-option')
+    document.querySelectorAll('.nav__language-option')
         .forEach(btn => btn.classList.toggle('active', btn.getAttribute('data-lang') === state.currentLanguage));
     updateLanguageSwitcher();
 };
 
 // ===== SELECTOR DE IDIOMA FLOTANTE =====
 const initLanguageSwitcher = () => {
-    if (state.isMobile) return;
-    
     const btn = document.getElementById('language-switcher-btn');
     const switcher = document.getElementById('language-switcher');
     if (!btn || !switcher) return;
     
-    btn.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); toggleLanguageSwitcher(); });
-    switcher.querySelectorAll('.language-switcher__option').forEach(opt => {
-        opt.addEventListener('click', e => {
-            e.preventDefault();
-            const lang = opt.getAttribute('data-lang');
-            if (lang && lang !== state.currentLanguage) { switchLanguage(lang); closeLanguageSwitcher(); }
-        });
+    btn.addEventListener('click', e => { 
+        e.preventDefault(); 
+        e.stopPropagation(); 
+        toggleLanguageSwitcher(); 
     });
+    
+    document.addEventListener('click', e => {
+        if (state.isLanguageSwitcherOpen && !switcher.contains(e.target)) {
+            closeLanguageSwitcher();
+        }
+    });
+    
     document.addEventListener('keydown', e => e.key === 'Escape' && state.isLanguageSwitcherOpen && closeLanguageSwitcher());
 };
 
@@ -317,7 +326,7 @@ const closeLanguageSwitcher = () => {
 const updateLanguageSwitcher = () => {
     const text = document.getElementById('language-switcher-text');
     if (text) text.textContent = state.currentLanguage.toUpperCase();
-    document.querySelectorAll('.language-switcher__option')
+    document.querySelectorAll('.nav__language-option')
         .forEach(opt => opt.classList.toggle('active', opt.getAttribute('data-lang') === state.currentLanguage));
 };
 
@@ -378,88 +387,93 @@ const closeFloatingMenu = () => {
     });
 };
 
-// ===== NAVEGACIÓN UNIFICADA =====
+// ===== NAVEGACIÓN RESPONSIVE =====
 const initNavigation = () => {
-    // Configurar logos
-    ['.nav__logo', '.mobile-nav__logo'].forEach(sel => {
-        const logo = document.querySelector(sel);
-        if (logo) {
-            logo.addEventListener('click', e => {
-                e.preventDefault();
-                if (state.isMobileMenuOpen) closeMobileNavMenu();
-                const home = document.querySelector('#home');
-                if (home) {
-                    smoothScroll(home);
-                    updateActiveNavLink(document.querySelector('.nav__link[href="#home"], .mobile-nav__link[href="#home"]'));
-                }
-            });
-            logo.style.cursor = 'pointer';
-        }
-    });
+    // Configurar logo
+    const logo = document.querySelector('.nav__logo');
+    if (logo) {
+        logo.addEventListener('click', e => {
+            e.preventDefault();
+            if (state.isMenuOpen) closeNavMenu();
+            const home = document.querySelector('#home');
+            if (home) {
+                smoothScroll(home);
+                updateActiveNavLink(document.querySelector('.nav__link[href="#home"]'));
+            }
+        });
+        logo.style.cursor = 'pointer';
+    }
     
     // Configurar enlaces de navegación
-    document.querySelectorAll('.nav__link, .mobile-nav__link').forEach(link => {
+    document.querySelectorAll('.nav__link').forEach(link => {
         const handleNav = e => {
             e.preventDefault();
-            if (state.isMobileMenuOpen) closeMobileNavMenu();
+            if (state.isMenuOpen) closeNavMenu();
             const target = document.querySelector(link.getAttribute('href'));
             if (target) {
                 setTimeout(() => {
                     smoothScroll(target);
                     updateActiveNavLink(link);
-                }, link.classList.contains('mobile-nav__link') ? 50 : 0);
+                }, state.isMobile ? 50 : 0);
             }
         };
         
         link.addEventListener('click', handleNav);
         
-        if (link.classList.contains('mobile-nav__link')) {
-            link.addEventListener('touchend', e => { if (e.cancelable) e.preventDefault(); handleNav(e); });
+        if (state.isMobile) {
+            link.addEventListener('touchend', e => { 
+                if (e.cancelable) e.preventDefault(); 
+                handleNav(e); 
+            });
             link.addEventListener('touchstart', () => link.style.transform = 'scale(0.98)', { passive: true });
             link.addEventListener('touchcancel', () => link.style.transform = '', { passive: true });
         }
     });
     
-    // Configurar menú móvil
-    const toggle = document.getElementById('mobile-nav-toggle');
-    const menu = document.getElementById('mobile-nav-menu');
-    const close = document.getElementById('mobile-nav-close');
+    // Configurar toggle del menú móvil
+    const toggle = document.getElementById('nav-toggle');
+    const menu = document.getElementById('nav-menu');
     
     if (toggle && menu) {
-        toggle.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); toggleMobileNavMenu(); });
-        close?.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); closeMobileNavMenu(); });
+        toggle.addEventListener('click', e => { 
+            e.preventDefault(); 
+            e.stopPropagation(); 
+            toggleNavMenu(); 
+        });
         
-        document.addEventListener('touchstart', e => {
-            if (state.isMobileMenuOpen && !menu.contains(e.target) && !toggle.contains(e.target)) closeMobileNavMenu();
-        }, { passive: true });
+        document.addEventListener('click', e => {
+            if (state.isMenuOpen && !menu.contains(e.target) && !toggle.contains(e.target)) {
+                closeNavMenu();
+            }
+        });
     }
     
     setTimeout(updateActiveNavOnScroll, 100);
 };
 
-const toggleMobileNavMenu = () => state.isMobileMenuOpen ? closeMobileNavMenu() : openMobileNavMenu();
+const toggleNavMenu = () => state.isMenuOpen ? closeNavMenu() : openNavMenu();
 
-const openMobileNavMenu = () => {
-    const toggle = document.getElementById('mobile-nav-toggle');
-    const menu = document.getElementById('mobile-nav-menu');
+const openNavMenu = () => {
+    const toggle = document.getElementById('nav-toggle');
+    const menu = document.getElementById('nav-menu');
     if (!toggle || !menu) return;
     
-    state.isMobileMenuOpen = true;
+    state.isMenuOpen = true;
     toggle.classList.add('active');
     menu.classList.add('active');
-    document.body.classList.add('mobile-menu-open');
+    document.body.classList.add('nav-menu-open');
     toggle.setAttribute('aria-expanded', 'true');
 };
 
-const closeMobileNavMenu = () => {
-    const toggle = document.getElementById('mobile-nav-toggle');
-    const menu = document.getElementById('mobile-nav-menu');
+const closeNavMenu = () => {
+    const toggle = document.getElementById('nav-toggle');
+    const menu = document.getElementById('nav-menu');
     if (!toggle || !menu) return;
     
-    state.isMobileMenuOpen = false;
+    state.isMenuOpen = false;
     toggle.classList.remove('active');
     menu.classList.remove('active');
-    document.body.classList.remove('mobile-menu-open');
+    document.body.classList.remove('nav-menu-open');
     toggle.setAttribute('aria-expanded', 'false');
 };
 
@@ -476,14 +490,9 @@ const smoothScroll = target => {
 };
 
 const updateActiveNavLink = activeLink => {
-    document.querySelectorAll('.nav__link, .mobile-nav__link').forEach(link => link.classList.remove('active'));
+    document.querySelectorAll('.nav__link').forEach(link => link.classList.remove('active'));
     activeLink?.classList.add('active');
 };
-
-// Funciones legacy
-const toggleMobileMenu = () => state.isMobile && toggleMobileNavMenu();
-const openMobileMenu = () => state.isMobile && openMobileNavMenu();
-const closeMobileMenu = () => state.isMobile && closeMobileNavMenu();
 
 // ===== EFECTOS DE SCROLL OPTIMIZADOS =====
 const initScrollEffects = () => {
@@ -535,14 +544,14 @@ const updateActiveNavOnScroll = () => {
     });
     
     if (activeSection) {
-        const activeLink = document.querySelector(`.nav__link[href="#${activeSection}"], .mobile-nav__link[href="#${activeSection}"]`);
-        const currentActiveLink = document.querySelector('.nav__link.active, .mobile-nav__link.active');
+        const activeLink = document.querySelector(`.nav__link[href="#${activeSection}"]`);
+        const currentActiveLink = document.querySelector('.nav__link.active');
         if (activeLink && activeLink !== currentActiveLink) updateActiveNavLink(activeLink);
     }
 };
 
 const updateHeaderOnScroll = () => {
-    const header = document.getElementById(state.isMobile ? 'mobile-header' : 'header');
+    const header = document.getElementById('header');
     const scrollY = window.scrollY;
     const threshold = state.isMobile ? 20 : 50;
     
@@ -550,7 +559,7 @@ const updateHeaderOnScroll = () => {
         header.classList.toggle('scrolled', scrollY > threshold);
         
         if (state.isMobile) {
-            const shouldHide = scrollY > state.lastScrollY && scrollY > threshold && !state.isMobileMenuOpen;
+            const shouldHide = scrollY > state.lastScrollY && scrollY > threshold && !state.isMenuOpen;
             if (shouldHide !== !state.isNavbarVisible) {
                 header.style.transform = shouldHide ? 'translateY(-100%)' : 'translateY(0)';
                 state.isNavbarVisible = !shouldHide;
@@ -700,7 +709,6 @@ const setupImageLazyLoading = () => {
         const observe = (sel, key) => { const el = document.querySelector(sel); if (el) imageLoader.observe(el, key); };
         
         loadNow('.nav__logo', 'logo');
-        loadNow('.mobile-nav__logo', 'logo');
         loadNow('.hero__phone-app-image', 'hero');
         
         const keys = ['phones.horario', 'phones.estaciones', 'phones.calendario', 'phones.registro', 'phones.notificaciones', 'phones.referidos'];
@@ -763,17 +771,16 @@ const initPerformanceOptimizations = () => {
     }
     
     if (!state.performanceMode) {
-        document.querySelectorAll('.hero__phone, .nav__logo, .mobile-nav__logo, .floating-widget__main-btn')
+        document.querySelectorAll('.hero__phone, .nav__logo, .floating-widget__main-btn')
             .forEach(el => el.style.willChange = 'transform');
     }
     
     const handleResize = debounce(() => {
-        const newIsMobile = window.innerWidth <= 1023;
+        const newIsMobile = window.innerWidth <= 768;
         if (newIsMobile !== state.isMobile) {
             state.isMobile = newIsMobile;
             detectDevice();
-            if (state.isMenuOpen) closeMobileMenu();
-            if (state.isMobileMenuOpen) closeMobileNavMenu();
+            if (state.isMenuOpen) closeNavMenu();
             setTimeout(() => { initNavigation(); updateActiveNavOnScroll(); }, 50);
         }
         if (state.isFloatingMenuOpen) closeFloatingMenu();
@@ -787,8 +794,7 @@ const initPerformanceOptimizations = () => {
 const initAccessibility = () => {
     document.addEventListener('keydown', e => {
         if (e.key === 'Escape') {
-            if (state.isMenuOpen) closeMobileMenu();
-            if (state.isMobileMenuOpen) closeMobileNavMenu();
+            if (state.isMenuOpen) closeNavMenu();
             if (state.isFloatingMenuOpen) closeFloatingMenu();
             if (state.isLanguageSwitcherOpen) closeLanguageSwitcher();
         }
@@ -851,3 +857,8 @@ if ('serviceWorker' in navigator && !state.isMobile && !state.performanceMode) {
             .catch(err => console.log('SW falló:', err));
     });
 }
+
+// ===== FUNCIONES LEGACY PARA COMPATIBILIDAD =====
+const toggleMobileMenu = () => state.isMobile && toggleNavMenu();
+const openMobileMenu = () => state.isMobile && openNavMenu();
+const closeMobileMenu = () => state.isMobile && closeNavMenu();
