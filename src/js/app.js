@@ -14,7 +14,7 @@ const state = {
 };
 
 const CONFIG = {
-    ANIMATION_DURATION: state.isMobile ? 100 : 250,
+    ANIMATION_DURATION: state.isMobile ? 0 : 250, // Cambio a 0 para móviles
     SCROLL_THRESHOLD: state.isMobile ? 15 : 30,
     IMAGE_PATHS: {
         hero: { avif: './assets/phones/Hero.avif' },
@@ -108,24 +108,30 @@ const throttle = (func, limit) => {
 
 // ===== DETECCIÓN DE DISPOSITIVO =====
 const detectDevice = () => {
-    state.isMobile = window.innerWidth <= 768;
+    state.isMobile = window.innerWidth <= 768 || 
+                     /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     state.isReducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
     
     if (state.isMobile) {
-        const isLowEnd = navigator.hardwareConcurrency <= 4;
-        const conn = navigator.connection;
-        const isSlowConn = conn && ['slow-2g', '2g', '3g'].includes(conn.effectiveType);
+        // Siempre activar el modo de rendimiento en dispositivos móviles
+        state.performanceMode = true;
+        document.body.classList.add('performance-mode');
         
-        state.performanceMode = isSlowConn || isLowEnd || state.isReducedMotion;
-        
-        if (state.performanceMode) {
-            document.body.classList.add('performance-mode');
-            if (!document.getElementById('perf-css')) {
-                const style = document.createElement('style');
-                style.id = 'perf-css';
-                style.textContent = '.performance-mode *{animation-duration:0.1s!important;transition-duration:0.1s!important}';
-                document.head.appendChild(style);
-            }
+        // Agregar estilos inline para asegurar que las animaciones estén desactivadas
+        if (!document.getElementById('perf-css')) {
+            const style = document.createElement('style');
+            style.id = 'perf-css';
+            style.textContent = `
+                .performance-mode * {
+                    animation-duration: 0s !important;
+                    animation-delay: 0s !important;
+                    transition-duration: 0s !important;
+                    transition-delay: 0s !important;
+                    animation: none !important;
+                    transition: none !important;
+                }
+            `;
+            document.head.appendChild(style);
         }
     }
 };
@@ -253,6 +259,7 @@ const switchLanguage = lang => {
     updateLanguageButtons();
     document.documentElement.lang = lang;
     
+    // Eliminar animación de transición en móviles
     if (!state.isMobile && !state.performanceMode) {
         document.body.style.opacity = '0.95';
         setTimeout(() => document.body.style.opacity = '1', 50);
@@ -448,12 +455,18 @@ const openFloatingMenu = () => {
     menu.classList.add('active');
     btn.setAttribute('aria-expanded', 'true');
     
-    if (!state.performanceMode) {
+    // Mostrar elementos inmediatamente en móviles
+    if (state.isMobile || state.performanceMode) {
+        menu.querySelectorAll('.floating-widget__menu-item').forEach(item => {
+            item.style.transform = 'translateY(0) scale(1)';
+            item.style.opacity = '1';
+        });
+    } else {
         menu.querySelectorAll('.floating-widget__menu-item').forEach((item, i) => {
             setTimeout(() => {
                 item.style.transform = 'translateY(0) scale(1)';
                 item.style.opacity = '1';
-            }, i * (state.isMobile ? 20 : 50));
+            }, i * 50);
         });
     }
 };
@@ -516,7 +529,10 @@ const smoothScroll = target => {
     const headerHeight = state.isMobile ? 70 : 80;
     const pos = target.offsetTop - headerHeight;
     
-    if ('scrollBehavior' in document.documentElement.style && !state.performanceMode) {
+    // En móviles, usar scroll instantáneo
+    if (state.isMobile || state.performanceMode) {
+        window.scrollTo(0, pos);
+    } else if ('scrollBehavior' in document.documentElement.style) {
         window.scrollTo({ top: pos, behavior: 'smooth' });
     } else {
         window.scrollTo(0, pos);
@@ -666,7 +682,21 @@ const initFAQ = () => {
 
 // ===== INTERSECTION OBSERVER =====
 const initIntersectionObserver = () => {
-    if (state.performanceMode) return;
+    // No usar animaciones en móviles
+    if (state.isMobile || state.performanceMode) {
+        // Mostrar todos los elementos inmediatamente
+        document.querySelectorAll('.feature, .faq__item, .contact__channel').forEach(el => {
+            el.classList.add('in-view');
+            if (el.classList.contains('feature')) {
+                const content = el.querySelector('.feature__content');
+                content?.querySelectorAll('.feature__list-item').forEach(item => {
+                    item.style.opacity = '1';
+                    item.style.transform = 'translateX(0)';
+                });
+            }
+        });
+        return;
+    }
     
     const observer = new IntersectionObserver(entries => {
         entries.forEach(entry => {
@@ -710,7 +740,8 @@ const setupImageLazyLoading = () => {
         const keys = ['phones.horario', 'phones.estaciones', 'phones.calendario', 'phones.registro', 'phones.notificaciones', 'phones.referidos'];
         document.querySelectorAll('.phone__app-image').forEach((img, i) => {
             if (keys[i]) {
-                state.isMobile ? imageLoader.loadNow(img, keys[i]) : imageLoader.observe(img, keys[i]);
+                // Cargar todas las imágenes inmediatamente en móviles
+                imageLoader.loadNow(img, keys[i]);
             }
         });
         
@@ -831,7 +862,8 @@ const initPerformanceOptimizations = () => {
     }
     
     const handleResize = debounce(() => {
-        const newIsMobile = window.innerWidth <= 768;
+        const newIsMobile = window.innerWidth <= 768 || 
+                           /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         if (newIsMobile !== state.isMobile) {
             state.isMobile = newIsMobile;
             detectDevice();
@@ -899,8 +931,21 @@ document.addEventListener('DOMContentLoaded', () => {
     initFloatingWidget();
     setupImageLazyLoading();
     
+    // Solo inicializar el observer si no estamos en modo de rendimiento
     if (!state.performanceMode) {
         initIntersectionObserver();
+    } else {
+        // En modo de rendimiento, mostrar todos los elementos inmediatamente
+        document.querySelectorAll('.feature, .faq__item, .contact__channel').forEach(el => {
+            el.classList.add('in-view');
+            if (el.classList.contains('feature')) {
+                const content = el.querySelector('.feature__content');
+                content?.querySelectorAll('.feature__list-item').forEach(item => {
+                    item.style.opacity = '1';
+                    item.style.transform = 'translateX(0)';
+                });
+            }
+        });
     }
     
     initPerformanceOptimizations();
