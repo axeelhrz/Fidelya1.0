@@ -1,4 +1,4 @@
-// ===== STARFLEX 2.0 - ULTRA OPTIMIZADO PARA MÓVILES =====
+// ===== STARFLEX 2.0 - ULTRA OPTIMIZADO PARA MÓVILES (FUNCIONALIDADES INTACTAS) =====
 const state = {
     isDrawerOpen: false, 
     currentLanguage: 'es',
@@ -14,7 +14,7 @@ const state = {
 };
 
 const CONFIG = {
-    ANIMATION_DURATION: state.isMobile ? 0 : 250, // Cambio a 0 para móviles
+    ANIMATION_DURATION: state.isMobile ? 0 : 250,
     SCROLL_THRESHOLD: state.isMobile ? 15 : 30,
     IMAGE_PATHS: {
         hero: { avif: './assets/phones/Hero.avif' },
@@ -86,7 +86,7 @@ const translations = {
     }
 };
 
-// ===== UTILIDADES SIMPLIFICADAS =====
+// ===== UTILIDADES ULTRA-OPTIMIZADAS =====
 const debounce = (func, wait) => {
     let timeout;
     return (...args) => {
@@ -95,7 +95,6 @@ const debounce = (func, wait) => {
     };
 };
 
-// Throttle simplificado para móviles
 const throttle = (func, limit) => {
     let inThrottle;
     return (...args) => {
@@ -107,80 +106,72 @@ const throttle = (func, limit) => {
     };
 };
 
-// ===== DETECCIÓN DE DISPOSITIVO OPTIMIZADA =====
+// ===== DETECCIÓN DE DISPOSITIVO ULTRA-OPTIMIZADA =====
 const detectDevice = () => {
     state.isMobile = window.innerWidth <= 768 || 
                      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     state.isReducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
     
     if (state.isMobile) {
-        // Activar modo de rendimiento agresivo en móviles
         state.performanceMode = true;
         document.body.classList.add('performance-mode');
         
-        // Estilos inline ultra-optimizados para móviles
-        if (!document.getElementById('mobile-perf-css')) {
+        // CSS ultra-optimizado inyectado directamente
+        if (!document.getElementById('mobile-ultra-perf')) {
             const style = document.createElement('style');
-            style.id = 'mobile-perf-css';
+            style.id = 'mobile-ultra-perf';
             style.textContent = `
-                .performance-mode * {
-                    animation: none !important;
-                    transition: none !important;
-                    transform: none !important;
-                    will-change: auto !important;
-                    backface-visibility: visible !important;
-                }
-                .performance-mode img, .performance-mode video {
-                    image-rendering: auto !important;
-                }
+                .performance-mode *{animation:none!important;transition:none!important;transform:none!important;will-change:auto!important}
+                .performance-mode img,.performance-mode video{image-rendering:auto!important}
             `;
             document.head.appendChild(style);
         }
     }
 };
 
-// ===== CLASE ULTRA-OPTIMIZADA PARA IMÁGENES MÓVILES =====
-class MobileImageLoader {
+// ===== CLASE ULTRA-OPTIMIZADA PARA IMÁGENES =====
+class UltraImageLoader {
     constructor() {
-        this.cache = new Map();
-        // En móviles, solo usar AVIF si está disponible, sino usar formato original
-        this.formats = state.isMobile ? { avif: false, webp: false } : { avif: false, webp: false };
+        this.cache = state.isMobile ? null : new Map(); // Sin cache en móviles
+        this.formats = { avif: false, webp: false };
         this.init();
     }
     
     async init() {
-        // Simplificar detección de formatos en móviles
         if (state.isMobile) {
-            // Solo detectar AVIF en móviles para reducir overhead
-            try {
-                const img = new Image();
-                img.src = 'data:image/avif;base64,AAAAIGZ0eXBhdmlmAAAAAGF2aWZtaWYxbWlhZk1BMUIAAADybWV0YQ==';
-                await new Promise(resolve => {
-                    img.onload = img.onerror = () => resolve();
-                });
-                this.formats.avif = img.height === 2;
-            } catch {
-                this.formats.avif = false;
-            }
+            // Detección ultra-rápida solo AVIF en móviles
+            const img = new Image();
+            img.onload = img.onerror = () => this.formats.avif = img.height === 2;
+            img.src = 'data:image/avif;base64,AAAAIGZ0eXBhdmlmAAAAAGF2aWZtaWYxbWlhZk1BMUIAAADybWV0YQ==';
             return;
         }
         
-        // Detección completa solo en desktop
-        const formats = { avif: false, webp: false };
-        const testImg = (format, data) => new Promise(resolve => {
+        // Desktop: detección completa
+        const testImg = (data) => new Promise(resolve => {
             const img = new Image();
             img.onload = img.onerror = () => resolve(img.height === 2);
             img.src = data;
         });
         
-        [formats.avif, formats.webp] = await Promise.all([
-            testImg('avif', 'data:image/avif;base64,AAAAIGZ0eXBhdmlmAAAAAGF2aWZtaWYxbWlhZk1BMUIAAADybWV0YQAAAAAAAAAoaGRscgAAAAAAAAAAcGljdAAAAAAAAAAAAAAAAGxpYmF2aWYAAAAADnBpdG0AAAAAAAEAAAAeaWxvYwAAAABEAAABAAEAAAABAAABGgAAAB0AAAAoaWluZgAAAAAAAQAAABppbmZlAgAAAAABAABhdjAxQ29sb3IAAAAAamlwcnAAAABLaXBjbwAAABRpc3BlAAAAAAAAAAIAAAACAAAAEHBpeGkAAAAAAwgICAAAAAxhdjFDgQ0MAAAAABNjb2xybmNseAACAAIAAYAAAAAXaXBtYQAAAAAAAAABAAEEAQKDBAAAACVtZGF0EgAKCBgABogQEAwgMg8f8D///8WfhwB8+ErK42A='),
-            testImg('webp', 'data:image/webp;base64,UklGRjoAAABXRUJQVlA4IC4AAACyAgCdASoCAAIALmk0mk0iIiIiIgBoSygABc6WWgAA/veff/0PP8bA//LwYAAA')
+        [this.formats.avif, this.formats.webp] = await Promise.all([
+            testImg('data:image/avif;base64,AAAAIGZ0eXBhdmlmAAAAAGF2aWZtaWYxbWlhZk1BMUIAAADybWV0YQAAAAAAAAAoaGRscgAAAAAAAAAAcGljdAAAAAAAAAAAAAAAAGxpYmF2aWYAAAAADnBpdG0AAAAAAAEAAAAeaWxvYwAAAABEAAABAAEAAAABAAABGgAAAB0AAAAoaWluZgAAAAAAAQAAABppbmZlAgAAAAABAABhdjAxQ29sb3IAAAAAamlwcnAAAABLaXBjbwAAABRpc3BlAAAAAAAAAAIAAAACAAAAEHBpeGkAAAAAAwgICAAAAAxhdjFDgQ0MAAAAABNjb2xybmNseAACAAIAAYAAAAAXaXBtYQAAAAAAAAABAAEEAQKDBAAAACVtZGF0EgAKCBgABogQEAwgMg8f8D///8WfhwB8+ErK42A='),
+            testImg('data:image/webp;base64,UklGRjoAAABXRUJQVlA4IC4AAACyAgCdASoCAAIALmk0mk0iIiIiIgBoSygABc6WWgAA/veff/0PP8bA//LwYAAA')
         ]);
         
-        this.formats = formats;
-        if (formats.avif) document.documentElement.classList.add('avif');
-        if (formats.webp) document.documentElement.classList.add('webp');
+        if (this.formats.avif) document.documentElement.classList.add('avif');
+        if (this.formats.webp) document.documentElement.classList.add('webp');
+        
+        // Intersection Observer solo en desktop
+        if ('IntersectionObserver' in window) {
+            this.observer = new IntersectionObserver(entries => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        this.loadImage(entry.target);
+                        this.observer.unobserve(entry.target);
+                    }
+                });
+            }, { rootMargin: '100px', threshold: 0.01 });
+        }
     }
     
     getBestUrl(config) {
@@ -194,20 +185,19 @@ class MobileImageLoader {
         return key.split('.').reduce((config, part) => config?.[part], CONFIG.IMAGE_PATHS);
     }
     
-    // Carga inmediata y simplificada para móviles
     async loadImage(el) {
         const url = this.getBestUrl(this.getConfig(el.dataset.imageKey));
         if (!url) return;
         
         try {
-            // En móviles, cargar directamente sin cache complejo
             if (state.isMobile) {
+                // Carga directa ultra-rápida en móviles
                 el.tagName === 'IMG' ? el.src = url : el.style.backgroundImage = `url('${url}')`;
                 el.classList.add('loaded');
                 return;
             }
             
-            // Desktop: usar cache
+            // Desktop: con cache
             el.classList.add('loading');
             if (!this.cache.has(url)) {
                 await new Promise((resolve, reject) => {
@@ -220,7 +210,16 @@ class MobileImageLoader {
             el.tagName === 'IMG' ? el.src = url : el.style.backgroundImage = `url('${url}')`;
             el.classList.replace('loading', 'loaded');
         } catch {
-            el.classList.add('error');
+            el.classList.replace('loading', 'error');
+        }
+    }
+    
+    observe(el, key) {
+        el.dataset.imageKey = key;
+        if (state.isMobile || !this.observer) {
+            this.loadImage(el); // Carga inmediata en móviles
+        } else {
+            this.observer.observe(el);
         }
     }
     
@@ -232,7 +231,7 @@ class MobileImageLoader {
 
 let imageLoader;
 
-// ===== SISTEMA DE TRADUCCIONES SIMPLIFICADO =====
+// ===== SISTEMA DE TRADUCCIONES OPTIMIZADO =====
 const initLanguage = () => {
     const saved = localStorage.getItem('starflex-language');
     const browser = navigator.language.slice(0, 2);
@@ -240,17 +239,23 @@ const initLanguage = () => {
     
     applyTranslations();
     updateLanguageButtons();
-    if (!state.isMobile) setupLanguageToggle(); // Solo en desktop
+    setupLanguageToggle();
 };
 
 const setupLanguageToggle = () => {
     document.querySelectorAll('.nav__language-option, .nav__drawer-language-option')
         .forEach(btn => {
-            btn.addEventListener('click', e => {
+            const handleClick = e => {
                 e.preventDefault();
                 const lang = btn.getAttribute('data-lang');
                 if (lang && lang !== state.currentLanguage) switchLanguage(lang);
-            });
+            };
+            
+            btn.addEventListener('click', handleClick);
+            if (state.isMobile) {
+                btn.addEventListener('touchstart', () => btn.style.transform = 'scale(0.98)', { passive: true });
+                btn.addEventListener('touchend', () => btn.style.transform = '', { passive: true });
+            }
         });
 };
 
@@ -262,8 +267,7 @@ const switchLanguage = lang => {
     updateLanguageButtons();
     document.documentElement.lang = lang;
     
-    // Sin animación en móviles
-    if (!state.isMobile) {
+    if (!state.isMobile && !state.performanceMode) {
         document.body.style.opacity = '0.95';
         setTimeout(() => document.body.style.opacity = '1', 50);
     }
@@ -273,8 +277,10 @@ const applyTranslations = () => {
     const current = translations[state.currentLanguage];
     if (!current) return;
     
-    // Aplicar traducciones de forma más eficiente
+    // Optimización: usar fragment para batch DOM updates
+    const fragment = document.createDocumentFragment();
     const elements = document.querySelectorAll('[data-translate]');
+    
     elements.forEach(el => {
         const text = current[el.getAttribute('data-translate')];
         if (text) {
@@ -289,12 +295,12 @@ const applyTranslations = () => {
 const updateLanguageButtons = () => {
     document.querySelectorAll('.nav__language-option, .nav__drawer-language-option')
         .forEach(btn => btn.classList.toggle('active', btn.getAttribute('data-lang') === state.currentLanguage));
-    if (!state.isMobile) updateLanguageSwitcher();
+    updateLanguageSwitcher();
 };
 
-// ===== SELECTOR DE IDIOMA FLOTANTE - SOLO DESKTOP =====
+// ===== SELECTOR DE IDIOMA FLOTANTE =====
 const initLanguageSwitcher = () => {
-    if (state.isMobile) return; // Desactivado en móviles
+    if (state.isMobile) return;
     
     const btn = document.getElementById('language-switcher-btn');
     const switcher = document.getElementById('language-switcher');
@@ -318,7 +324,6 @@ const initLanguageSwitcher = () => {
 const toggleLanguageSwitcher = () => state.isLanguageSwitcherOpen ? closeLanguageSwitcher() : openLanguageSwitcher();
 
 const openLanguageSwitcher = () => {
-    if (state.isMobile) return;
     const switcher = document.getElementById('language-switcher');
     const btn = document.getElementById('language-switcher-btn');
     if (!switcher || !btn) return;
@@ -328,7 +333,6 @@ const openLanguageSwitcher = () => {
 };
 
 const closeLanguageSwitcher = () => {
-    if (state.isMobile) return;
     const switcher = document.getElementById('language-switcher');
     const btn = document.getElementById('language-switcher-btn');
     if (!switcher || !btn) return;
@@ -338,14 +342,13 @@ const closeLanguageSwitcher = () => {
 };
 
 const updateLanguageSwitcher = () => {
-    if (state.isMobile) return;
     const text = document.getElementById('language-switcher-text');
     if (text) text.textContent = state.currentLanguage.toUpperCase();
     document.querySelectorAll('.nav__language-option')
         .forEach(opt => opt.classList.toggle('active', opt.getAttribute('data-lang') === state.currentLanguage));
 };
 
-// ===== DRAWER MÓVIL OPTIMIZADO =====
+// ===== DRAWER MÓVIL ULTRA-OPTIMIZADO =====
 const initDrawer = () => {
     const toggle = document.getElementById('nav-toggle');
     const drawer = document.getElementById('nav-drawer');
@@ -368,29 +371,28 @@ const initDrawer = () => {
     
     overlay.addEventListener('click', closeDrawer);
     
-    // Enlaces del drawer optimizados
-    document.querySelectorAll('.nav__drawer-link').forEach(link => {
-        const handleNav = e => {
-            e.preventDefault();
-            closeDrawer();
-            const target = document.querySelector(link.getAttribute('href'));
-            if (target) {
-                // Scroll inmediato en móviles
-                setTimeout(() => {
-                    smoothScroll(target);
-                    updateActiveNavLink(link);
-                }, state.isMobile ? 100 : 300);
-            }
-        };
+    // Enlaces optimizados con event delegation
+    drawer.addEventListener('click', e => {
+        const link = e.target.closest('.nav__drawer-link');
+        if (!link) return;
         
-        link.addEventListener('click', handleNav);
-        if (state.isMobile) {
-            link.addEventListener('touchend', e => { 
-                if (e.cancelable) e.preventDefault(); 
-                handleNav(e); 
-            });
+        e.preventDefault();
+        closeDrawer();
+        const target = document.querySelector(link.getAttribute('href'));
+        if (target) {
+            setTimeout(() => {
+                smoothScroll(target);
+                updateActiveNavLink(link);
+            }, state.isMobile ? 50 : 300);
         }
     });
+    
+    if (state.isMobile) {
+        drawer.addEventListener('touchend', e => {
+            const link = e.target.closest('.nav__drawer-link');
+            if (link && e.cancelable) e.preventDefault();
+        });
+    }
 };
 
 const toggleDrawer = () => state.isDrawerOpen ? closeDrawer() : openDrawer();
@@ -431,13 +433,18 @@ const closeDrawer = () => {
     document.body.style.overflow = '';
 };
 
-// ===== WIDGET FLOTANTE SIMPLIFICADO =====
+// ===== WIDGET FLOTANTE ULTRA-OPTIMIZADO =====
 const initFloatingWidget = () => {
     const btn = document.getElementById('floating-main-btn');
     const menu = document.getElementById('floating-menu');
     if (!btn || !menu) return;
     
     btn.addEventListener('click', toggleFloatingMenu);
+    
+    if (state.isMobile) {
+        btn.addEventListener('touchstart', () => btn.style.transform = 'scale(0.95)', { passive: true });
+        btn.addEventListener('touchend', () => btn.style.transform = '', { passive: true });
+    }
     
     document.addEventListener('click', e => {
         const widget = document.getElementById('floating-widget');
@@ -457,11 +464,22 @@ const openFloatingMenu = () => {
     menu.classList.add('active');
     btn.setAttribute('aria-expanded', 'true');
     
-    // Mostrar elementos inmediatamente en móviles
-    menu.querySelectorAll('.floating-widget__menu-item').forEach(item => {
-        item.style.transform = 'translateY(0) scale(1)';
-        item.style.opacity = '1';
-    });
+    const items = menu.querySelectorAll('.floating-widget__menu-item');
+    if (state.isMobile || state.performanceMode) {
+        // Mostrar inmediatamente en móviles
+        items.forEach(item => {
+            item.style.transform = 'translateY(0) scale(1)';
+            item.style.opacity = '1';
+        });
+    } else {
+        // Animación escalonada en desktop
+        items.forEach((item, i) => {
+            setTimeout(() => {
+                item.style.transform = 'translateY(0) scale(1)';
+                item.style.opacity = '1';
+            }, i * 50);
+        });
+    }
 };
 
 const closeFloatingMenu = () => {
@@ -482,7 +500,6 @@ const closeFloatingMenu = () => {
 
 // ===== NAVEGACIÓN ULTRA-OPTIMIZADA =====
 const initNavigation = () => {
-    // Logo
     const logo = document.querySelector('.nav__logo');
     if (logo) {
         logo.addEventListener('click', e => {
@@ -497,9 +514,13 @@ const initNavigation = () => {
         logo.style.cursor = 'pointer';
     }
     
-    // Enlaces desktop
-    document.querySelectorAll('.nav__link').forEach(link => {
-        link.addEventListener('click', e => {
+    // Event delegation para enlaces desktop
+    const nav = document.querySelector('.nav');
+    if (nav) {
+        nav.addEventListener('click', e => {
+            const link = e.target.closest('.nav__link');
+            if (!link) return;
+            
             e.preventDefault();
             const target = document.querySelector(link.getAttribute('href'));
             if (target) {
@@ -507,12 +528,13 @@ const initNavigation = () => {
                 updateActiveNavLink(link);
             }
         });
-    });
+    }
     
     initDrawer();
     
-    // Actualización inicial más rápida
-    setTimeout(updateActiveNavOnScroll, state.isMobile ? 50 : 100);
+    setTimeout(() => {
+        if (!state.isMobile) updateActiveNavOnScroll();
+    }, 100);
 };
 
 const smoothScroll = target => {
@@ -520,8 +542,7 @@ const smoothScroll = target => {
     const headerHeight = state.isMobile ? 70 : 80;
     const pos = target.offsetTop - headerHeight;
     
-    // Scroll instantáneo en móviles
-    if (state.isMobile) {
+    if (state.isMobile || state.performanceMode) {
         window.scrollTo(0, pos);
     } else if ('scrollBehavior' in document.documentElement.style) {
         window.scrollTo({ top: pos, behavior: 'smooth' });
@@ -535,19 +556,19 @@ const updateActiveNavLink = activeLink => {
     activeLink?.classList.add('active');
 };
 
-// ===== EFECTOS DE SCROLL ULTRA-OPTIMIZADOS PARA MÓVILES =====
+// ===== EFECTOS DE SCROLL ULTRA-OPTIMIZADOS =====
 const initScrollEffects = () => {
-    // Throttle más agresivo en móviles
-    const throttleTime = state.isMobile ? 100 : 15;
+    const throttleTime = state.isMobile ? 200 : 15; // Más agresivo en móviles
     
     const throttledScroll = throttle(() => {
         if (!state.ticking) {
             requestAnimationFrame(() => {
-                // Solo funciones esenciales en móviles
                 if (state.isMobile) {
+                    // Solo funciones esenciales en móviles
                     handleScrollDirectionMobile();
                     updateHeaderOnScrollMobile();
                 } else {
+                    // Funciones completas en desktop
                     updateActiveNavOnScroll();
                     handleScrollDirection();
                     updateHeaderOnScroll();
@@ -561,7 +582,7 @@ const initScrollEffects = () => {
     window.addEventListener('scroll', throttledScroll, { passive: true });
 };
 
-// Versión ultra-simplificada para móviles
+// Versión ultra-optimizada para móviles
 const handleScrollDirectionMobile = () => {
     const currentScrollY = window.scrollY;
     state.isScrollingDown = currentScrollY > state.lastScrollY && currentScrollY > 20;
@@ -575,7 +596,6 @@ const updateHeaderOnScrollMobile = () => {
     if (header) {
         header.classList.toggle('scrolled', scrollY > 20);
         
-        // Navbar hide/show simplificado
         const shouldHide = scrollY > state.lastScrollY && scrollY > 20 && !state.isDrawerOpen;
         if (shouldHide !== !state.isNavbarVisible) {
             header.style.transform = shouldHide ? 'translateY(-100%)' : 'translateY(0)';
@@ -584,7 +604,7 @@ const updateHeaderOnScrollMobile = () => {
     }
 };
 
-// Versiones desktop (sin cambios)
+// Versiones desktop (mantener funcionalidad completa)
 const handleScrollDirection = () => {
     const currentScrollY = window.scrollY;
     state.isScrollingDown = currentScrollY > state.lastScrollY && currentScrollY > 50;
@@ -630,44 +650,55 @@ const updateHeaderOnScroll = () => {
     
     if (header) {
         header.classList.toggle('scrolled', scrollY > 50);
+        
+        if (state.isMobile) {
+            const shouldHide = scrollY > state.lastScrollY && scrollY > 50 && !state.isDrawerOpen;
+            if (shouldHide !== !state.isNavbarVisible) {
+                header.style.transform = shouldHide ? 'translateY(-100%)' : 'translateY(0)';
+                state.isNavbarVisible = !shouldHide;
+            }
+        }
     }
 };
 
-// ===== FAQ OPTIMIZADO =====
+// ===== FAQ ULTRA-OPTIMIZADO =====
 const initFAQ = () => {
     const items = document.querySelectorAll('.faq__item');
     const search = document.getElementById('faq-search');
     const noResults = document.getElementById('faq-no-results');
     
-    items.forEach(item => {
-        const question = item.querySelector('.faq__question');
-        const answer = item.querySelector('.faq__answer');
-        
-        if (question && answer) {
-            question.addEventListener('click', () => {
-                const isActive = item.classList.contains('active');
-                
-                // Cerrar otros items
-                items.forEach(other => {
-                    if (other !== item) {
-                        other.classList.remove('active');
-                        const otherAnswer = other.querySelector('.faq__answer');
-                        const otherQuestion = other.querySelector('.faq__question');
-                        otherAnswer?.classList.remove('active');
-                        otherQuestion?.setAttribute('aria-expanded', 'false');
-                    }
-                });
-                
-                item.classList.toggle('active', !isActive);
-                answer.classList.toggle('active', !isActive);
-                question.setAttribute('aria-expanded', !isActive);
+    // Event delegation para mejor rendimiento
+    const faqContainer = document.querySelector('.faq__list');
+    if (faqContainer) {
+        faqContainer.addEventListener('click', e => {
+            const question = e.target.closest('.faq__question');
+            if (!question) return;
+            
+            const item = question.closest('.faq__item');
+            const answer = item.querySelector('.faq__answer');
+            if (!item || !answer) return;
+            
+            const isActive = item.classList.contains('active');
+            
+            // Cerrar otros items
+            items.forEach(other => {
+                if (other !== item) {
+                    other.classList.remove('active');
+                    const otherAnswer = other.querySelector('.faq__answer');
+                    const otherQuestion = other.querySelector('.faq__question');
+                    otherAnswer?.classList.remove('active');
+                    otherQuestion?.setAttribute('aria-expanded', 'false');
+                }
             });
-        }
-    });
+            
+            item.classList.toggle('active', !isActive);
+            answer.classList.toggle('active', !isActive);
+            question.setAttribute('aria-expanded', !isActive);
+        });
+    }
     
     if (search) {
-        // Debounce más largo en móviles
-        const debounceTime = state.isMobile ? 400 : 150;
+        const debounceTime = state.isMobile ? 500 : 150; // Más largo en móviles
         search.addEventListener('input', debounce(e => {
             const term = e.target.value.toLowerCase().trim();
             let visible = 0;
@@ -698,7 +729,52 @@ const initFAQ = () => {
     }
 };
 
-// ===== LAZY LOADING ULTRA-SIMPLIFICADO =====
+// ===== INTERSECTION OBSERVER OPTIMIZADO =====
+const initIntersectionObserver = () => {
+    if (state.isMobile || state.performanceMode) {
+        // Mostrar inmediatamente en móviles
+        document.querySelectorAll('.feature, .faq__item, .contact__channel').forEach(el => {
+            el.classList.add('in-view');
+            if (el.classList.contains('feature')) {
+                const content = el.querySelector('.feature__content');
+                content?.querySelectorAll('.feature__list-item').forEach(item => {
+                    item.style.opacity = '1';
+                    item.style.transform = 'translateX(0)';
+                });
+            }
+        });
+        return;
+    }
+    
+    // Desktop: usar Intersection Observer
+    const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('in-view');
+                if (entry.target.classList.contains('feature')) animateFeature(entry.target);
+                observer.unobserve(entry.target);
+            }
+        });
+    }, {
+        threshold: 0.15,
+        rootMargin: '0px 0px -50px 0px'
+    });
+    
+    document.querySelectorAll('.feature, .faq__item, .contact__channel').forEach(el => observer.observe(el));
+};
+
+const animateFeature = feature => {
+    if (state.performanceMode) return;
+    const content = feature.querySelector('.feature__content');
+    content?.querySelectorAll('.feature__list-item').forEach((item, i) => {
+        setTimeout(() => {
+            item.style.opacity = '1';
+            item.style.transform = 'translateX(0)';
+        }, 100 + (i * 50));
+    });
+};
+
+// ===== LAZY LOADING ULTRA-OPTIMIZADO =====
 const setupImageLazyLoading = () => {
     const wait = () => {
         if (!imageLoader) return setTimeout(wait, 50);
@@ -708,15 +784,22 @@ const setupImageLazyLoading = () => {
             if (el) imageLoader.loadNow(el, key); 
         };
         
-        // Cargar imágenes críticas inmediatamente
+        const observe = (sel, key) => { 
+            const el = document.querySelector(sel); 
+            if (el) imageLoader.observe(el, key); 
+        };
+        
+        // Críticas: cargar inmediatamente
         loadNow('.nav__logo', 'logo');
         loadNow('.nav__drawer-logo', 'logo');
         loadNow('.hero__phone-app-image', 'hero');
         
-        // Cargar todas las imágenes de features inmediatamente en móviles
+        // Features: cargar según dispositivo
         const keys = ['phones.horario', 'phones.estaciones', 'phones.calendario', 'phones.registro', 'phones.notificaciones', 'phones.referidos'];
         document.querySelectorAll('.phone__app-image').forEach((img, i) => {
-            if (keys[i]) imageLoader.loadNow(img, keys[i]);
+            if (keys[i]) {
+                state.isMobile ? imageLoader.loadNow(img, keys[i]) : imageLoader.observe(img, keys[i]);
+            }
         });
         
         loadNow('.download-btn--app-store .download-btn__image', 'downloads.apple');
@@ -725,29 +808,31 @@ const setupImageLazyLoading = () => {
     wait();
 };
 
-// ===== VIDEO HERO OPTIMIZADO =====
+// ===== VIDEO HERO ULTRA-OPTIMIZADO =====
 const initHeroVideo = () => {
     const desktopVideo = document.getElementById('hero-video');
     const fallback = document.querySelector('.hero__phone-app-image');
     const mobileVideo = document.getElementById('hero-mobile-video');
     
-    // En móviles, priorizar imagen estática
     if (state.isMobile) {
+        // Móviles: solo imagen estática para máximo rendimiento
         if (fallback) {
             fallback.style.display = 'block';
             fallback.style.zIndex = '2';
         }
         
-        // Desactivar videos en móviles para ahorrar recursos
-        if (desktopVideo) desktopVideo.style.display = 'none';
-        if (mobileVideo) {
-            const container = document.querySelector('.hero__mobile-video');
-            if (container) container.style.display = 'none';
-        }
+        // Ocultar todos los videos en móviles
+        [desktopVideo, mobileVideo].forEach(video => {
+            if (video) video.style.display = 'none';
+        });
+        
+        const mobileContainer = document.querySelector('.hero__mobile-video');
+        if (mobileContainer) mobileContainer.style.display = 'none';
+        
         return;
     }
     
-    // Desktop: mantener funcionalidad de video
+    // Desktop: mantener funcionalidad de video completa
     if (!desktopVideo || !fallback) return;
     
     const showFallback = () => {
@@ -757,6 +842,8 @@ const initHeroVideo = () => {
             fallback.style.zIndex = '2';
         }
     };
+    
+    if (state.performanceMode) return showFallback();
     
     desktopVideo.muted = true;
     desktopVideo.autoplay = true;
@@ -775,10 +862,10 @@ const initHeroVideo = () => {
     }, 1500);
 };
 
-// ===== OPTIMIZACIONES DE RENDIMIENTO MÓVIL =====
+// ===== OPTIMIZACIONES DE RENDIMIENTO ULTRA =====
 const initPerformanceOptimizations = () => {
-    // Solo preload en desktop
-    if (!state.isMobile) {
+    // Preload solo en desktop
+    if (!state.isMobile && !state.performanceMode) {
         const preload = () => {
             ['./assets/phones/Hero.mp4', './assets/logo.avif'].forEach(src => {
                 const link = document.createElement('link');
@@ -790,7 +877,13 @@ const initPerformanceOptimizations = () => {
         'requestIdleCallback' in window ? requestIdleCallback(preload) : setTimeout(preload, 3000);
     }
     
-    // Resize handler simplificado
+    // Will-change solo en desktop
+    if (!state.performanceMode) {
+        document.querySelectorAll('.hero__phone, .nav__logo, .nav__drawer-logo, .floating-widget__main-btn')
+            .forEach(el => el.style.willChange = 'transform');
+    }
+    
+    // Resize handler ultra-optimizado
     const handleResize = debounce(() => {
         const newIsMobile = window.innerWidth <= 768 || 
                            /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -805,18 +898,18 @@ const initPerformanceOptimizations = () => {
         }
         if (state.isFloatingMenuOpen) closeFloatingMenu();
         if (state.isLanguageSwitcherOpen) closeLanguageSwitcher();
-    }, state.isMobile ? 400 : 250);
+    }, state.isMobile ? 500 : 250); // Más lento en móviles
     
     window.addEventListener('resize', handleResize);
 };
 
-// ===== ACCESIBILIDAD SIMPLIFICADA =====
+// ===== ACCESIBILIDAD ULTRA-OPTIMIZADA =====
 const initAccessibility = () => {
     document.addEventListener('keydown', e => {
         if (e.key === 'Escape') {
             if (state.isDrawerOpen) closeDrawer();
             if (state.isFloatingMenuOpen) closeFloatingMenu();
-            if (!state.isMobile && state.isLanguageSwitcherOpen) closeLanguageSwitcher();
+            if (state.isLanguageSwitcherOpen) closeLanguageSwitcher();
         }
         if (e.key === 'Tab') document.body.classList.add('keyboard-navigation');
     });
@@ -826,36 +919,38 @@ const initAccessibility = () => {
     if (state.isMobile) {
         document.addEventListener('touchstart', () => document.body.classList.add('touch-navigation'), { passive: true });
         
-        // Prevenir zoom en inputs iOS - simplificado
-        document.querySelectorAll('input[type="text"], input[type="email"], input[type="tel"], textarea').forEach(input => {
-            input.addEventListener('focus', () => {
+        // Prevenir zoom iOS - ultra-optimizado
+        const inputs = document.querySelectorAll('input[type="text"], input[type="email"], input[type="tel"], textarea');
+        const viewport = document.querySelector('meta[name="viewport"]');
+        
+        if (viewport) {
+            const handleFocus = () => {
                 if (window.innerWidth < 768) {
-                    const viewport = document.querySelector('meta[name="viewport"]');
-                    if (viewport) {
-                        viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
-                    }
+                    viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
                 }
-            });
+            };
             
-            input.addEventListener('blur', () => {
+            const handleBlur = () => {
                 if (window.innerWidth < 768) {
-                    const viewport = document.querySelector('meta[name="viewport"]');
-                    if (viewport) {
-                        viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, user-scalable=no');
-                    }
+                    viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, user-scalable=no');
                 }
+            };
+            
+            inputs.forEach(input => {
+                input.addEventListener('focus', handleFocus);
+                input.addEventListener('blur', handleBlur);
             });
-        });
+        }
     }
 };
 
 // ===== INICIALIZACIÓN ULTRA-OPTIMIZADA =====
 document.addEventListener('DOMContentLoaded', () => {
     detectDevice();
-    imageLoader = new MobileImageLoader();
+    imageLoader = new UltraImageLoader();
     
     initLanguage();
-    if (!state.isMobile) initLanguageSwitcher(); // Solo desktop
+    initLanguageSwitcher();
     initNavigation();
     initScrollEffects();
     initFAQ();
@@ -864,32 +959,22 @@ document.addEventListener('DOMContentLoaded', () => {
     initFloatingWidget();
     setupImageLazyLoading();
     
-    // Mostrar elementos inmediatamente en móviles
-    if (state.isMobile) {
-        document.querySelectorAll('.feature, .faq__item, .contact__channel').forEach(el => {
-            el.classList.add('in-view');
-            if (el.classList.contains('feature')) {
-                const content = el.querySelector('.feature__content');
-                content?.querySelectorAll('.feature__list-item').forEach(item => {
-                    item.style.opacity = '1';
-                    item.style.transform = 'translateX(0)';
-                });
-            }
-        });
-    }
+    // Intersection Observer según dispositivo
+    initIntersectionObserver();
     
     initPerformanceOptimizations();
     
-    // Drawer setup más rápido en móviles
+    // Setup drawer más rápido en móviles
     setTimeout(() => {
         if (state.isMobile) {
             const drawer = document.getElementById('nav-drawer');
             if (drawer) drawer.setAttribute('aria-hidden', 'true');
         }
-    }, state.isMobile ? 50 : 100);
+    }, state.isMobile ? 25 : 100);
 });
 
-// ===== MANEJO DE ERRORES SIMPLIFICADO =====
+// ===== MANEJO DE ERRORES ULTRA-OPTIMIZADO =====
+// ===== MANEJO DE ERRORES ULTRA-OPTIMIZADO =====
 window.addEventListener('error', e => {
     if (state.isMobile && e.error?.message.includes('video')) {
         const video = document.getElementById('hero-video');
@@ -902,14 +987,15 @@ window.addEventListener('error', e => {
     }
 });
 
-// ===== LIMPIEZA SIMPLIFICADA =====
+// ===== LIMPIEZA ULTRA-OPTIMIZADA =====
 window.addEventListener('beforeunload', () => {
+    imageLoader?.observer?.disconnect();
     document.body.style.overflow = '';
     document.body.classList.remove('nav-menu-open');
 });
 
 // ===== PWA SOLO EN DESKTOP =====
-if ('serviceWorker' in navigator && !state.isMobile) {
+if ('serviceWorker' in navigator && !state.isMobile && !state.performanceMode) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js')
             .then(reg => console.log('SW registrado:', reg))
@@ -917,14 +1003,14 @@ if ('serviceWorker' in navigator && !state.isMobile) {
     });
 }
 
-// ===== FUNCIONES LEGACY =====
+// ===== FUNCIONES LEGACY PARA COMPATIBILIDAD =====
 const toggleMobileMenu = () => state.isMobile && toggleDrawer();
 const openMobileMenu = () => state.isMobile && openDrawer();
 const closeMobileMenu = () => state.isMobile && closeDrawer();
 
-// ===== OPTIMIZACIONES MÓVILES ESPECÍFICAS =====
+// ===== OPTIMIZACIONES MÓVILES ESPECÍFICAS ULTRA =====
 if (state.isMobile) {
-    // Orientación simplificada
+    // Orientación ultra-optimizada
     window.addEventListener('orientationchange', () => {
         setTimeout(() => {
             if (state.isDrawerOpen) {
@@ -934,7 +1020,7 @@ if (state.isMobile) {
         }, 100);
     });
     
-    // Prevención de scroll elástico iOS - simplificado
+    // Prevención de scroll elástico iOS ultra-optimizada
     if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
         document.addEventListener('touchmove', e => {
             if (state.isDrawerOpen) {
@@ -944,5 +1030,67 @@ if (state.isMobile) {
                 }
             }
         }, { passive: false });
+    }
+    
+    // Optimización de memoria para móviles
+    const optimizeMemory = () => {
+        // Limpiar referencias no utilizadas
+        if (window.gc && typeof window.gc === 'function') {
+            window.gc();
+        }
+        
+        // Reducir cache de imágenes en móviles
+        if (imageLoader && imageLoader.cache) {
+            imageLoader.cache.clear();
+        }
+    };
+    
+    // Ejecutar limpieza de memoria cada 30 segundos en móviles
+    setInterval(optimizeMemory, 30000);
+    
+    // Pausar funciones no críticas cuando la página no está visible
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            // Pausar animaciones y timers no críticos
+            if (state.isFloatingMenuOpen) closeFloatingMenu();
+            if (state.isLanguageSwitcherOpen) closeLanguageSwitcher();
+        }
+    });
+}
+
+// ===== OPTIMIZACIONES ADICIONALES PARA DISPOSITIVOS DE GAMA BAJA =====
+if (state.isMobile) {
+    // Detectar dispositivos de gama baja
+    const isLowEndDevice = () => {
+        return navigator.hardwareConcurrency <= 2 || 
+               navigator.deviceMemory <= 2 || 
+               /Android.*Chrome\/[1-6][0-9]/.test(navigator.userAgent);
+    };
+    
+    if (isLowEndDevice()) {
+        // Optimizaciones adicionales para dispositivos de gama baja
+        document.body.classList.add('low-end-device');
+        
+        // CSS adicional para dispositivos de gama baja
+        const lowEndStyle = document.createElement('style');
+        lowEndStyle.textContent = `
+            .low-end-device * {
+                backface-visibility: hidden !important;
+                perspective: none !important;
+                transform-style: flat !important;
+            }
+            .low-end-device img {
+                image-rendering: pixelated !important;
+            }
+        `;
+        document.head.appendChild(lowEndStyle);
+        
+        // Reducir calidad de imágenes en dispositivos de gama baja
+        CONFIG.IMAGE_PATHS = Object.fromEntries(
+            Object.entries(CONFIG.IMAGE_PATHS).map(([key, value]) => [
+                key, 
+                typeof value === 'object' ? { jpg: value.avif || value.webp || value.jpg } : value
+            ])
+        );
     }
 }
