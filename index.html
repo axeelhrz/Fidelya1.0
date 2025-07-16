@@ -69,12 +69,13 @@
             </div>
             
             <!-- Mobile Toggle Button -->
-            <button class="nav__toggle" id="nav-toggle" aria-label="Abrir menú de navegación" aria-expanded="false" aria-controls="nav-menu">
+            <button class="nav__toggle" id="nav-toggle" aria-label="Abrir menú de navegación" aria-expanded="false" aria-controls="nav-drawer">
                 <span class="nav__toggle-line"></span>
                 <span class="nav__toggle-line"></span>
                 <span class="nav__toggle-line"></span>
             </button>
             
+            <!-- Desktop Navigation -->
             <div class="nav__menu" id="nav-menu">
                 <ul class="nav__list" role="navigation" aria-label="Navegación principal">
                     <li><a href="#home" class="nav__link" data-translate="nav-home">Inicio</a></li>
@@ -118,6 +119,99 @@
             </div>
         </nav>
     </header>
+
+    <!-- Mobile Drawer -->
+    <div class="nav__drawer-overlay" id="nav-drawer-overlay"></div>
+    <div class="nav__drawer" id="nav-drawer" role="dialog" aria-labelledby="nav-drawer-title" aria-hidden="true">
+        <div class="nav__drawer-header">
+            <div class="nav__drawer-brand">
+                <div class="nav__drawer-logo"></div>
+                <h2 class="nav__drawer-title" id="nav-drawer-title">StarFlex</h2>
+            </div>
+            <button class="nav__drawer-close" id="nav-drawer-close" aria-label="Cerrar menú de navegación">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                </svg>
+            </button>
+        </div>
+        
+        <div class="nav__drawer-content">
+            <nav class="nav__drawer-navigation">
+                <ul class="nav__drawer-list" role="navigation" aria-label="Navegación principal móvil">
+                    <li>
+                        <a href="#home" class="nav__drawer-link" data-translate="nav-home">
+                            <div class="nav__drawer-link-icon">
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+                                </svg>
+                            </div>
+                            Inicio
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#features" class="nav__drawer-link" data-translate="nav-features">
+                            <div class="nav__drawer-link-icon">
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                </svg>
+                            </div>
+                            Características
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#videos" class="nav__drawer-link" data-translate="nav-videos">
+                            <div class="nav__drawer-link-icon">
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M8 5v14l11-7z"/>
+                                </svg>
+                            </div>
+                            Videos
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#faq" class="nav__drawer-link" data-translate="nav-faq">
+                            <div class="nav__drawer-link-icon">
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/>
+                                </svg>
+                            </div>
+                            FAQ
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#contact" class="nav__drawer-link" data-translate="nav-contact">
+                            <div class="nav__drawer-link-icon">
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                                </svg>
+                            </div>
+                            Contacto
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            
+            <div class="nav__drawer-language">
+                <div class="nav__drawer-language-title" data-translate="nav-language-title">Idioma</div>
+                <div class="nav__drawer-language-options">
+                    <button class="nav__drawer-language-option" data-lang="es" aria-label="Cambiar idioma a Español">
+                        <span class="nav__drawer-language-flag">🇪🇸</span>
+                        <span>ES</span>
+                    </button>
+                    <button class="nav__drawer-language-option" data-lang="en" aria-label="Cambiar idioma a Inglés">
+                        <span class="nav__drawer-language-flag">🇺🇸</span>
+                        <span>EN</span>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="nav__drawer-cta">
+                <a href="https://starflex.web.app/" class="nav__drawer-cta-btn" data-translate="nav-cta" aria-label="Comenzar prueba gratuita de StarFlex">
+                    Comienza tu prueba gratuita
+                </a>
+            </div>
+        </div>
+    </div>
 
     <!-- Hero Section -->
     <section class="hero" id="home">
@@ -748,4 +842,3 @@
     <script src="src/js/app.js"></script>
 </body>
 </html>
-
