@@ -722,41 +722,100 @@ const setupImageLazyLoading = () => {
 
 // ===== VIDEO HERO =====
 const initHeroVideo = () => {
-    const video = document.getElementById('hero-video');
+    const desktopVideo = document.getElementById('hero-video');
     const fallback = document.querySelector('.hero__phone-app-image');
     const mobileVideo = document.getElementById('hero-mobile-video');
     
+    // Manejo del video móvil
     if (mobileVideo && state.isMobile) {
-        Object.assign(mobileVideo, { 
-            muted: true, 
-            autoplay: !state.performanceMode, 
-            loop: true, 
-            playsInline: true, 
-            preload: state.performanceMode ? 'none' : 'metadata' 
+        // Asegurar que el video móvil sea visible
+        const mobileVideoContainer = document.querySelector('.hero__mobile-video');
+        if (mobileVideoContainer) {
+            mobileVideoContainer.style.display = 'block';
+            mobileVideoContainer.style.visibility = 'visible';
+            mobileVideoContainer.style.opacity = '1';
+        }
+        
+        // Configurar atributos del video móvil
+        mobileVideo.muted = true;
+        mobileVideo.autoplay = true;
+        mobileVideo.loop = true;
+        mobileVideo.playsInline = true;
+        mobileVideo.preload = 'auto';
+        
+        // Forzar la reproducción del video móvil
+        const playMobileVideo = () => {
+            mobileVideo.play().catch(err => {
+                console.log('Error al reproducir video móvil:', err);
+                // Intentar nuevamente después de interacción del usuario
+                document.addEventListener('touchstart', () => {
+                    mobileVideo.play().catch(() => {});
+                }, { once: true, passive: true });
+            });
+        };
+        
+        // Intentar reproducir inmediatamente
+        playMobileVideo();
+        
+        // También intentar reproducir cuando el documento esté completamente cargado
+        if (document.readyState === 'complete') {
+            playMobileVideo();
+        } else {
+            window.addEventListener('load', playMobileVideo);
+        }
+        
+        // Intentar reproducir después de un breve retraso
+        setTimeout(playMobileVideo, 1000);
+        
+        // Manejar errores específicos de iOS
+        mobileVideo.addEventListener('error', (e) => {
+            console.log('Error en video móvil:', e);
+            if (mobileVideoContainer) {
+                mobileVideoContainer.style.display = 'none';
+            }
         });
+        
+        return; // Salir temprano para dispositivos móviles
     }
     
-    if (!video || !fallback) return;
+    // Manejo del video desktop (código existente)
+    if (!desktopVideo || !fallback) return;
     
     const showFallback = () => {
-        video.style.display = 'none';
-        fallback.style.display = 'block';
-        fallback.style.zIndex = '2';
+        if (desktopVideo) desktopVideo.style.display = 'none';
+        if (fallback) {
+            fallback.style.display = 'block';
+            fallback.style.zIndex = '2';
+        }
     };
     
     if (state.isMobile || state.performanceMode) return showFallback();
     
-    Object.assign(video, { muted: true, autoplay: true, loop: true, playsInline: true, preload: 'metadata' });
-    video.addEventListener('loadeddata', () => video.classList.replace('loading', 'loaded'));
-    video.addEventListener('error', showFallback);
-    setTimeout(() => video.readyState < 2 && showFallback(), 1500);
+    if (desktopVideo) {
+        desktopVideo.muted = true;
+        desktopVideo.autoplay = true;
+        desktopVideo.loop = true;
+        desktopVideo.playsInline = true;
+        desktopVideo.preload = 'metadata';
+        
+        desktopVideo.addEventListener('loadeddata', () => {
+            desktopVideo.classList.replace('loading', 'loaded');
+        });
+        
+        desktopVideo.addEventListener('error', showFallback);
+        
+        // Mostrar fallback si el video no carga en un tiempo razonable
+        setTimeout(() => {
+            if (desktopVideo.readyState < 2) showFallback();
+        }, 1500);
+    }
 };
 
 // ===== OPTIMIZACIONES DE RENDIMIENTO =====
 const initPerformanceOptimizations = () => {
     if (!state.isMobile && !state.performanceMode) {
         const preload = () => {
-            ['./assets/phones/Hero.avif', './assets/logo.avif'].forEach(src => {
+            ['./assets/phones/Hero.mp4', './assets/logo.avif'].forEach(src => {
                 const link = document.createElement('link');
                 Object.assign(link, { rel: 'preload', as: 'image', href: src });
                 document.head.appendChild(link);
@@ -917,4 +976,3 @@ if (state.isMobile && /iPad|iPhone|iPod/.test(navigator.userAgent)) {
         }
     }, { passive: false });
 }
-
