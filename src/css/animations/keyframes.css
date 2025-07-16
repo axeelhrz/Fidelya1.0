@@ -98,7 +98,7 @@ img, video {
 
 /* ===== ANIMACIONES OPTIMIZADAS ===== */
 
-/* ANIMACIONES PRINCIPALES */
+/* ANIMACIONES PRINCIPALES - SOLO DESKTOP */
 @keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
@@ -190,7 +190,7 @@ img, video {
     }
 }
 
-/* ANIMACIONES DE PULSO */
+/* ANIMACIONES DE PULSO - SOLO DESKTOP */
 @keyframes pulse {
     0%, 100% { transform: scale(1); }
     50% { transform: scale(1.05); }
@@ -216,7 +216,7 @@ img, video {
     }
 }
 
-/* ANIMACIONES DE ROTACIÓN */
+/* ANIMACIONES DE ROTACIÓN - SOLO DESKTOP */
 @keyframes spin {
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
@@ -227,7 +227,7 @@ img, video {
     to { transform: rotate(360deg); }
 }
 
-/* ANIMACIONES DE REBOTE */
+/* ANIMACIONES DE REBOTE - SOLO DESKTOP */
 @keyframes bounce {
     0%, 20%, 53%, 80%, 100% {
         transform: translateY(0);
@@ -248,7 +248,7 @@ img, video {
     50% { transform: translateY(-5px); }
 }
 
-/* ANIMACIONES DE FLOTACIÓN */
+/* ANIMACIONES DE FLOTACIÓN - SOLO DESKTOP */
 @keyframes float {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-10px); }
@@ -265,7 +265,7 @@ img, video {
     }
 }
 
-/* ANIMACIONES DE BRILLO */
+/* ANIMACIONES DE BRILLO - SOLO DESKTOP */
 @keyframes glow-line {
     0%, 100% {
         opacity: 0.8;
@@ -286,7 +286,7 @@ img, video {
     }
 }
 
-/* ANIMACIONES DE ONDAS */
+/* ANIMACIONES DE ONDAS - SOLO DESKTOP */
 @keyframes wave {
     0%, 100% { transform: rotate(0deg); }
     25% { transform: rotate(5deg); }
@@ -304,7 +304,7 @@ img, video {
     }
 }
 
-/* ANIMACIONES DE TYPING */
+/* ANIMACIONES DE TYPING - SOLO DESKTOP */
 @keyframes typing {
     from { width: 0; }
     to { width: 100%; }
@@ -315,14 +315,14 @@ img, video {
     51%, 100% { border-color: currentColor; }
 }
 
-/* ANIMACIONES DE GRADIENTE */
+/* ANIMACIONES DE GRADIENTE - SOLO DESKTOP */
 @keyframes gradient-shift {
     0% { background-position: 0% 50%; }
     50% { background-position: 100% 50%; }
     100% { background-position: 0% 50%; }
 }
 
-/* ANIMACIONES DE PARTÍCULAS */
+/* ANIMACIONES DE PARTÍCULAS - SOLO DESKTOP */
 @keyframes particle-float {
     0% {
         transform: translateY(0) translateX(0) rotate(0deg);
@@ -340,56 +340,145 @@ img, video {
     }
 }
 
-/* CLASES DE ANIMACIÓN */
-.animate-fadeIn { animation: fadeIn 0.5s ease-out; }
-.animate-fadeInUp { animation: fadeInUp 0.6s ease-out; }
-.animate-fadeInDown { animation: fadeInDown 0.6s ease-out; }
-.animate-fadeInLeft { animation: fadeInLeft 0.6s ease-out; }
-.animate-fadeInRight { animation: fadeInRight 0.6s ease-out; }
-.animate-slideInUp { animation: slideInUp 0.4s ease-out; }
-.animate-slideInDown { animation: slideInDown 0.4s ease-out; }
-.animate-slideInLeft { animation: slideInLeft 0.4s ease-out; }
-.animate-slideInRight { animation: slideInRight 0.4s ease-out; }
-.animate-scaleIn { animation: scaleIn 0.3s ease-out; }
-.animate-pulse { animation: pulse 2s infinite; }
-.animate-pulse-gentle { animation: pulse-gentle 3s infinite; }
-.animate-spin { animation: spin 1s linear infinite; }
-.animate-spin-slow { animation: spin-slow 3s linear infinite; }
-.animate-bounce { animation: bounce 1s infinite; }
-.animate-bounce-gentle { animation: bounce-gentle 2s infinite; }
-.animate-float { animation: float 3s ease-in-out infinite; }
-.animate-shimmer { animation: shimmer 2s linear infinite; }
-.animate-wave { animation: wave 2s ease-in-out infinite; }
+/* ===== CLASES DE ANIMACIÓN - DESKTOP ONLY ===== */
+@media (min-width: 1024px) {
+    .animate-fadeIn { animation: fadeIn 0.5s ease-out; }
+    .animate-fadeInUp { animation: fadeInUp 0.6s ease-out; }
+    .animate-fadeInDown { animation: fadeInDown 0.6s ease-out; }
+    .animate-fadeInLeft { animation: fadeInLeft 0.6s ease-out; }
+    .animate-fadeInRight { animation: fadeInRight 0.6s ease-out; }
+    .animate-slideInUp { animation: slideInUp 0.4s ease-out; }
+    .animate-slideInDown { animation: slideInDown 0.4s ease-out; }
+    .animate-slideInLeft { animation: slideInLeft 0.4s ease-out; }
+    .animate-slideInRight { animation: slideInRight 0.4s ease-out; }
+    .animate-scaleIn { animation: scaleIn 0.3s ease-out; }
+    .animate-pulse { animation: pulse 2s infinite; }
+    .animate-pulse-gentle { animation: pulse-gentle 3s infinite; }
+    .animate-spin { animation: spin 1s linear infinite; }
+    .animate-spin-slow { animation: spin-slow 3s linear infinite; }
+    .animate-bounce { animation: bounce 1s infinite; }
+    .animate-bounce-gentle { animation: bounce-gentle 2s infinite; }
+    .animate-float { animation: float 3s ease-in-out infinite; }
+    .animate-shimmer { animation: shimmer 2s linear infinite; }
+    .animate-wave { animation: wave 2s ease-in-out infinite; }
+    
+    /* DELAYS - SOLO DESKTOP */
+    .animate-delay-100 { animation-delay: 0.1s; }
+    .animate-delay-200 { animation-delay: 0.2s; }
+    .animate-delay-300 { animation-delay: 0.3s; }
+    .animate-delay-500 { animation-delay: 0.5s; }
+    .animate-delay-700 { animation-delay: 0.7s; }
+    .animate-delay-1000 { animation-delay: 1s; }
 
-/* DELAYS */
-.animate-delay-100 { animation-delay: 0.1s; }
-.animate-delay-200 { animation-delay: 0.2s; }
-.animate-delay-300 { animation-delay: 0.3s; }
-.animate-delay-500 { animation-delay: 0.5s; }
-.animate-delay-700 { animation-delay: 0.7s; }
-.animate-delay-1000 { animation-delay: 1s; }
+    /* DURACIONES - SOLO DESKTOP */
+    .animate-duration-75 { animation-duration: 75ms; }
+    .animate-duration-100 { animation-duration: 100ms; }
+    .animate-duration-150 { animation-duration: 150ms; }
+    .animate-duration-200 { animation-duration: 200ms; }
+    .animate-duration-300 { animation-duration: 300ms; }
+    .animate-duration-500 { animation-duration: 500ms; }
+    .animate-duration-700 { animation-duration: 700ms; }
+    .animate-duration-1000 { animation-duration: 1000ms; }
+}
 
-/* DURACIONES */
-.animate-duration-75 { animation-duration: 75ms; }
-.animate-duration-100 { animation-duration: 100ms; }
-.animate-duration-150 { animation-duration: 150ms; }
-.animate-duration-200 { animation-duration: 200ms; }
-.animate-duration-300 { animation-duration: 300ms; }
-.animate-duration-500 { animation-duration: 500ms; }
-.animate-duration-700 { animation-duration: 700ms; }
-.animate-duration-1000 { animation-duration: 1000ms; }
+/* ===== MOBILE OPTIMIZATION - DESACTIVAR ANIMACIONES PESADAS ===== */
+@media (max-width: 1023px) {
+    /* Desactivar todas las animaciones complejas en móviles */
+    .animate-fadeIn,
+    .animate-fadeInUp,
+    .animate-fadeInDown,
+    .animate-fadeInLeft,
+    .animate-fadeInRight,
+    .animate-slideInUp,
+    .animate-slideInDown,
+    .animate-slideInLeft,
+    .animate-slideInRight,
+    .animate-scaleIn {
+        /* Solo mantener fadeIn básico y rápido */
+        animation: fadeIn 0.15s ease-out;
+    }
+    
+    /* Desactivar completamente animaciones continuas pesadas */
+    .animate-pulse,
+    .animate-pulse-gentle,
+    .animate-spin,
+    .animate-spin-slow,
+    .animate-bounce,
+    .animate-bounce-gentle,
+    .animate-float,
+    .animate-shimmer,
+    .animate-wave {
+        animation: none !important;
+        transform: none !important;
+    }
+    
+    /* Desactivar delays y duraciones personalizadas en móviles */
+    .animate-delay-100,
+    .animate-delay-200,
+    .animate-delay-300,
+    .animate-delay-500,
+    .animate-delay-700,
+    .animate-delay-1000 {
+        animation-delay: 0s !important;
+    }
+    
+    .animate-duration-75,
+    .animate-duration-100,
+    .animate-duration-150,
+    .animate-duration-200,
+    .animate-duration-300,
+    .animate-duration-500,
+    .animate-duration-700,
+    .animate-duration-1000 {
+        animation-duration: 0.15s !important;
+    }
+    
+    /* Desactivar animaciones de partículas y efectos complejos */
+    *[class*="particle"],
+    *[class*="glow"],
+    *[class*="shimmer"],
+    *[class*="gradient"],
+    *[class*="ripple"],
+    *[class*="wave"],
+    *[class*="float"] {
+        animation: none !important;
+        transform: none !important;
+        background-position: center !important;
+    }
+    
+    /* Optimizar transiciones en móviles */
+    * {
+        transition-duration: 0.15s !important;
+        transition-delay: 0s !important;
+    }
+    
+    /* Desactivar will-change en móviles para ahorrar memoria */
+    * {
+        will-change: auto !important;
+    }
+}
 
-/* PERFORMANCE MODE - DESACTIVAR ANIMACIONES */
+/* ===== PERFORMANCE MODE - DESACTIVAR TODAS LAS ANIMACIONES ===== */
 .performance-mode * {
     animation-duration: 0.01ms !important;
     animation-delay: 0.01ms !important;
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0.01ms !important;
+    transition: none !important;
+    transform: none !important;
+    will-change: auto !important;
 }
 
-/* REDUCED MOTION */
+/* ===== REDUCED MOTION - ACCESIBILIDAD ===== */
 @media (prefers-reduced-motion: reduce) {
     * {
         animation-duration: 0.01ms !important;
         animation-delay: 0.01ms !important;
+        animation: none !important;
+        transition-duration: 0.01ms !important;
+        transition-delay: 0.01ms !important;
+        transition: none !important;
     }
     
     .animate-fadeIn,
@@ -414,6 +503,31 @@ img, video {
     .animate-float,
     .animate-shimmer,
     .animate-wave {
-        animation: none;
+        animation: none !important;
+        transform: none !important;
+    }
+}
+
+/* ===== MOBILE TOUCH OPTIMIZATION ===== */
+@media (max-width: 1023px) and (hover: none) and (pointer: coarse) {
+    /* Optimizaciones específicas para dispositivos táctiles */
+    * {
+        -webkit-tap-highlight-color: transparent;
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        user-select: none;
+    }
+    
+    /* Permitir selección solo en elementos de texto */
+    p, span, h1, h2, h3, h4, h5, h6, li, td, th {
+        -webkit-user-select: text;
+        user-select: text;
+    }
+    
+    /* Desactivar hover effects en móviles */
+    *:hover {
+        animation: none !important;
+        transform: none !important;
+        transition: none !important;
     }
 }
