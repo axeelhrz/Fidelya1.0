@@ -1,4 +1,4 @@
-// ===== STARFLEX 2.0 - OPTIMIZADO CON DRAWER MÓVIL =====
+// ===== STARFLEX 2.0 - ULTRA OPTIMIZADO PARA MÓVILES =====
 const state = {
     isDrawerOpen: false, 
     currentLanguage: 'es',
@@ -86,7 +86,7 @@ const translations = {
     }
 };
 
-// ===== UTILIDADES =====
+// ===== UTILIDADES SIMPLIFICADAS =====
 const debounce = (func, wait) => {
     let timeout;
     return (...args) => {
@@ -95,6 +95,7 @@ const debounce = (func, wait) => {
     };
 };
 
+// Throttle simplificado para móviles
 const throttle = (func, limit) => {
     let inThrottle;
     return (...args) => {
@@ -106,29 +107,31 @@ const throttle = (func, limit) => {
     };
 };
 
-// ===== DETECCIÓN DE DISPOSITIVO =====
+// ===== DETECCIÓN DE DISPOSITIVO OPTIMIZADA =====
 const detectDevice = () => {
     state.isMobile = window.innerWidth <= 768 || 
                      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     state.isReducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
     
     if (state.isMobile) {
-        // Siempre activar el modo de rendimiento en dispositivos móviles
+        // Activar modo de rendimiento agresivo en móviles
         state.performanceMode = true;
         document.body.classList.add('performance-mode');
         
-        // Agregar estilos inline para asegurar que las animaciones estén desactivadas
-        if (!document.getElementById('perf-css')) {
+        // Estilos inline ultra-optimizados para móviles
+        if (!document.getElementById('mobile-perf-css')) {
             const style = document.createElement('style');
-            style.id = 'perf-css';
+            style.id = 'mobile-perf-css';
             style.textContent = `
                 .performance-mode * {
-                    animation-duration: 0s !important;
-                    animation-delay: 0s !important;
-                    transition-duration: 0s !important;
-                    transition-delay: 0s !important;
                     animation: none !important;
                     transition: none !important;
+                    transform: none !important;
+                    will-change: auto !important;
+                    backface-visibility: visible !important;
+                }
+                .performance-mode img, .performance-mode video {
+                    image-rendering: auto !important;
                 }
             `;
             document.head.appendChild(style);
@@ -136,20 +139,33 @@ const detectDevice = () => {
     }
 };
 
-// ===== CLASE OPTIMIZADA PARA IMÁGENES =====
-class ImageLoader {
+// ===== CLASE ULTRA-OPTIMIZADA PARA IMÁGENES MÓVILES =====
+class MobileImageLoader {
     constructor() {
         this.cache = new Map();
-        this.formats = { avif: false, webp: false };
+        // En móviles, solo usar AVIF si está disponible, sino usar formato original
+        this.formats = state.isMobile ? { avif: false, webp: false } : { avif: false, webp: false };
         this.init();
     }
     
     async init() {
-        if (state.performanceMode) {
-            this.formats = { avif: false, webp: false };
+        // Simplificar detección de formatos en móviles
+        if (state.isMobile) {
+            // Solo detectar AVIF en móviles para reducir overhead
+            try {
+                const img = new Image();
+                img.src = 'data:image/avif;base64,AAAAIGZ0eXBhdmlmAAAAAGF2aWZtaWYxbWlhZk1BMUIAAADybWV0YQ==';
+                await new Promise(resolve => {
+                    img.onload = img.onerror = () => resolve();
+                });
+                this.formats.avif = img.height === 2;
+            } catch {
+                this.formats.avif = false;
+            }
             return;
         }
         
+        // Detección completa solo en desktop
         const formats = { avif: false, webp: false };
         const testImg = (format, data) => new Promise(resolve => {
             const img = new Image();
@@ -165,17 +181,6 @@ class ImageLoader {
         this.formats = formats;
         if (formats.avif) document.documentElement.classList.add('avif');
         if (formats.webp) document.documentElement.classList.add('webp');
-        
-        if ('IntersectionObserver' in window && !state.performanceMode) {
-            this.observer = new IntersectionObserver(entries => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        this.loadImage(entry.target);
-                        this.observer.unobserve(entry.target);
-                    }
-                });
-            }, { rootMargin: state.isMobile ? '20px' : '100px', threshold: 0.01 });
-        }
     }
     
     getBestUrl(config) {
@@ -189,13 +194,22 @@ class ImageLoader {
         return key.split('.').reduce((config, part) => config?.[part], CONFIG.IMAGE_PATHS);
     }
     
+    // Carga inmediata y simplificada para móviles
     async loadImage(el) {
         const url = this.getBestUrl(this.getConfig(el.dataset.imageKey));
         if (!url) return;
         
         try {
+            // En móviles, cargar directamente sin cache complejo
+            if (state.isMobile) {
+                el.tagName === 'IMG' ? el.src = url : el.style.backgroundImage = `url('${url}')`;
+                el.classList.add('loaded');
+                return;
+            }
+            
+            // Desktop: usar cache
             el.classList.add('loading');
-            if (!state.isMobile && !this.cache.has(url)) {
+            if (!this.cache.has(url)) {
                 await new Promise((resolve, reject) => {
                     const img = new Image();
                     img.onload = () => { this.cache.set(url, true); resolve(); };
@@ -206,13 +220,8 @@ class ImageLoader {
             el.tagName === 'IMG' ? el.src = url : el.style.backgroundImage = `url('${url}')`;
             el.classList.replace('loading', 'loaded');
         } catch {
-            el.classList.replace('loading', 'error');
+            el.classList.add('error');
         }
-    }
-    
-    observe(el, key) {
-        el.dataset.imageKey = key;
-        this.observer && !state.performanceMode ? this.observer.observe(el) : this.loadImage(el);
     }
     
     loadNow(el, key) {
@@ -223,7 +232,7 @@ class ImageLoader {
 
 let imageLoader;
 
-// ===== SISTEMA DE TRADUCCIONES =====
+// ===== SISTEMA DE TRADUCCIONES SIMPLIFICADO =====
 const initLanguage = () => {
     const saved = localStorage.getItem('starflex-language');
     const browser = navigator.language.slice(0, 2);
@@ -231,23 +240,17 @@ const initLanguage = () => {
     
     applyTranslations();
     updateLanguageButtons();
-    setupLanguageToggle();
+    if (!state.isMobile) setupLanguageToggle(); // Solo en desktop
 };
 
 const setupLanguageToggle = () => {
     document.querySelectorAll('.nav__language-option, .nav__drawer-language-option')
         .forEach(btn => {
-            const handleClick = e => {
+            btn.addEventListener('click', e => {
                 e.preventDefault();
                 const lang = btn.getAttribute('data-lang');
                 if (lang && lang !== state.currentLanguage) switchLanguage(lang);
-            };
-            
-            btn.addEventListener('click', handleClick);
-            if (state.isMobile) {
-                btn.addEventListener('touchstart', () => btn.style.transform = 'scale(0.98)', { passive: true });
-                btn.addEventListener('touchend', () => btn.style.transform = '', { passive: true });
-            }
+            });
         });
 };
 
@@ -259,8 +262,8 @@ const switchLanguage = lang => {
     updateLanguageButtons();
     document.documentElement.lang = lang;
     
-    // Eliminar animación de transición en móviles
-    if (!state.isMobile && !state.performanceMode) {
+    // Sin animación en móviles
+    if (!state.isMobile) {
         document.body.style.opacity = '0.95';
         setTimeout(() => document.body.style.opacity = '1', 50);
     }
@@ -270,28 +273,28 @@ const applyTranslations = () => {
     const current = translations[state.currentLanguage];
     if (!current) return;
     
-    requestAnimationFrame(() => {
-        document.querySelectorAll('[data-translate]').forEach(el => {
-            const text = current[el.getAttribute('data-translate')];
-            if (text) {
-                if (el.tagName === 'INPUT' && el.type === 'text') el.placeholder = text;
-                else if (el.tagName === 'META') el.content = text;
-                else if (el.tagName === 'TITLE') el.textContent = text;
-                else el.innerHTML = text;
-            }
-        });
+    // Aplicar traducciones de forma más eficiente
+    const elements = document.querySelectorAll('[data-translate]');
+    elements.forEach(el => {
+        const text = current[el.getAttribute('data-translate')];
+        if (text) {
+            if (el.tagName === 'INPUT' && el.type === 'text') el.placeholder = text;
+            else if (el.tagName === 'META') el.content = text;
+            else if (el.tagName === 'TITLE') el.textContent = text;
+            else el.innerHTML = text;
+        }
     });
 };
 
 const updateLanguageButtons = () => {
     document.querySelectorAll('.nav__language-option, .nav__drawer-language-option')
         .forEach(btn => btn.classList.toggle('active', btn.getAttribute('data-lang') === state.currentLanguage));
-    updateLanguageSwitcher();
+    if (!state.isMobile) updateLanguageSwitcher();
 };
 
-// ===== SELECTOR DE IDIOMA FLOTANTE =====
+// ===== SELECTOR DE IDIOMA FLOTANTE - SOLO DESKTOP =====
 const initLanguageSwitcher = () => {
-    if (state.isMobile) return;
+    if (state.isMobile) return; // Desactivado en móviles
     
     const btn = document.getElementById('language-switcher-btn');
     const switcher = document.getElementById('language-switcher');
@@ -315,6 +318,7 @@ const initLanguageSwitcher = () => {
 const toggleLanguageSwitcher = () => state.isLanguageSwitcherOpen ? closeLanguageSwitcher() : openLanguageSwitcher();
 
 const openLanguageSwitcher = () => {
+    if (state.isMobile) return;
     const switcher = document.getElementById('language-switcher');
     const btn = document.getElementById('language-switcher-btn');
     if (!switcher || !btn) return;
@@ -324,6 +328,7 @@ const openLanguageSwitcher = () => {
 };
 
 const closeLanguageSwitcher = () => {
+    if (state.isMobile) return;
     const switcher = document.getElementById('language-switcher');
     const btn = document.getElementById('language-switcher-btn');
     if (!switcher || !btn) return;
@@ -333,13 +338,14 @@ const closeLanguageSwitcher = () => {
 };
 
 const updateLanguageSwitcher = () => {
+    if (state.isMobile) return;
     const text = document.getElementById('language-switcher-text');
     if (text) text.textContent = state.currentLanguage.toUpperCase();
     document.querySelectorAll('.nav__language-option')
         .forEach(opt => opt.classList.toggle('active', opt.getAttribute('data-lang') === state.currentLanguage));
 };
 
-// ===== DRAWER MÓVIL =====
+// ===== DRAWER MÓVIL OPTIMIZADO =====
 const initDrawer = () => {
     const toggle = document.getElementById('nav-toggle');
     const drawer = document.getElementById('nav-drawer');
@@ -362,25 +368,28 @@ const initDrawer = () => {
     
     overlay.addEventListener('click', closeDrawer);
     
-    // Configurar enlaces del drawer
+    // Enlaces del drawer optimizados
     document.querySelectorAll('.nav__drawer-link').forEach(link => {
         const handleNav = e => {
             e.preventDefault();
             closeDrawer();
             const target = document.querySelector(link.getAttribute('href'));
             if (target) {
+                // Scroll inmediato en móviles
                 setTimeout(() => {
                     smoothScroll(target);
                     updateActiveNavLink(link);
-                }, 300);
+                }, state.isMobile ? 100 : 300);
             }
         };
         
         link.addEventListener('click', handleNav);
-        link.addEventListener('touchend', e => { 
-            if (e.cancelable) e.preventDefault(); 
-            handleNav(e); 
-        });
+        if (state.isMobile) {
+            link.addEventListener('touchend', e => { 
+                if (e.cancelable) e.preventDefault(); 
+                handleNav(e); 
+            });
+        }
     });
 };
 
@@ -401,7 +410,6 @@ const openDrawer = () => {
     toggle.setAttribute('aria-expanded', 'true');
     drawer.setAttribute('aria-hidden', 'false');
     
-    // Prevenir scroll del body
     document.body.style.overflow = 'hidden';
 };
 
@@ -420,22 +428,16 @@ const closeDrawer = () => {
     toggle.setAttribute('aria-expanded', 'false');
     drawer.setAttribute('aria-hidden', 'true');
     
-    // Restaurar scroll del body
     document.body.style.overflow = '';
 };
 
-// ===== WIDGET FLOTANTE =====
+// ===== WIDGET FLOTANTE SIMPLIFICADO =====
 const initFloatingWidget = () => {
     const btn = document.getElementById('floating-main-btn');
     const menu = document.getElementById('floating-menu');
     if (!btn || !menu) return;
     
     btn.addEventListener('click', toggleFloatingMenu);
-    
-    if (state.isMobile) {
-        btn.addEventListener('touchstart', () => btn.style.transform = 'scale(0.95)', { passive: true });
-        btn.addEventListener('touchend', () => btn.style.transform = '', { passive: true });
-    }
     
     document.addEventListener('click', e => {
         const widget = document.getElementById('floating-widget');
@@ -456,19 +458,10 @@ const openFloatingMenu = () => {
     btn.setAttribute('aria-expanded', 'true');
     
     // Mostrar elementos inmediatamente en móviles
-    if (state.isMobile || state.performanceMode) {
-        menu.querySelectorAll('.floating-widget__menu-item').forEach(item => {
-            item.style.transform = 'translateY(0) scale(1)';
-            item.style.opacity = '1';
-        });
-    } else {
-        menu.querySelectorAll('.floating-widget__menu-item').forEach((item, i) => {
-            setTimeout(() => {
-                item.style.transform = 'translateY(0) scale(1)';
-                item.style.opacity = '1';
-            }, i * 50);
-        });
-    }
+    menu.querySelectorAll('.floating-widget__menu-item').forEach(item => {
+        item.style.transform = 'translateY(0) scale(1)';
+        item.style.opacity = '1';
+    });
 };
 
 const closeFloatingMenu = () => {
@@ -487,9 +480,9 @@ const closeFloatingMenu = () => {
     });
 };
 
-// ===== NAVEGACIÓN RESPONSIVE =====
+// ===== NAVEGACIÓN ULTRA-OPTIMIZADA =====
 const initNavigation = () => {
-    // Configurar logo
+    // Logo
     const logo = document.querySelector('.nav__logo');
     if (logo) {
         logo.addEventListener('click', e => {
@@ -504,24 +497,22 @@ const initNavigation = () => {
         logo.style.cursor = 'pointer';
     }
     
-    // Configurar enlaces de navegación desktop
+    // Enlaces desktop
     document.querySelectorAll('.nav__link').forEach(link => {
-        const handleNav = e => {
+        link.addEventListener('click', e => {
             e.preventDefault();
             const target = document.querySelector(link.getAttribute('href'));
             if (target) {
                 smoothScroll(target);
                 updateActiveNavLink(link);
             }
-        };
-        
-        link.addEventListener('click', handleNav);
+        });
     });
     
-    // Inicializar drawer móvil
     initDrawer();
     
-    setTimeout(updateActiveNavOnScroll, 100);
+    // Actualización inicial más rápida
+    setTimeout(updateActiveNavOnScroll, state.isMobile ? 50 : 100);
 };
 
 const smoothScroll = target => {
@@ -529,8 +520,8 @@ const smoothScroll = target => {
     const headerHeight = state.isMobile ? 70 : 80;
     const pos = target.offsetTop - headerHeight;
     
-    // En móviles, usar scroll instantáneo
-    if (state.isMobile || state.performanceMode) {
+    // Scroll instantáneo en móviles
+    if (state.isMobile) {
         window.scrollTo(0, pos);
     } else if ('scrollBehavior' in document.documentElement.style) {
         window.scrollTo({ top: pos, behavior: 'smooth' });
@@ -544,33 +535,66 @@ const updateActiveNavLink = activeLink => {
     activeLink?.classList.add('active');
 };
 
-// ===== EFECTOS DE SCROLL OPTIMIZADOS =====
+// ===== EFECTOS DE SCROLL ULTRA-OPTIMIZADOS PARA MÓVILES =====
 const initScrollEffects = () => {
+    // Throttle más agresivo en móviles
+    const throttleTime = state.isMobile ? 100 : 15;
+    
     const throttledScroll = throttle(() => {
         if (!state.ticking) {
             requestAnimationFrame(() => {
-                updateActiveNavOnScroll();
-                handleScrollDirection();
-                updateHeaderOnScroll();
+                // Solo funciones esenciales en móviles
+                if (state.isMobile) {
+                    handleScrollDirectionMobile();
+                    updateHeaderOnScrollMobile();
+                } else {
+                    updateActiveNavOnScroll();
+                    handleScrollDirection();
+                    updateHeaderOnScroll();
+                }
                 state.ticking = false;
             });
             state.ticking = true;
         }
-    }, state.isMobile ? 50 : 15);
+    }, throttleTime);
     
     window.addEventListener('scroll', throttledScroll, { passive: true });
 };
 
+// Versión ultra-simplificada para móviles
+const handleScrollDirectionMobile = () => {
+    const currentScrollY = window.scrollY;
+    state.isScrollingDown = currentScrollY > state.lastScrollY && currentScrollY > 20;
+    state.lastScrollY = currentScrollY;
+};
+
+const updateHeaderOnScrollMobile = () => {
+    const header = document.getElementById('header');
+    const scrollY = window.scrollY;
+    
+    if (header) {
+        header.classList.toggle('scrolled', scrollY > 20);
+        
+        // Navbar hide/show simplificado
+        const shouldHide = scrollY > state.lastScrollY && scrollY > 20 && !state.isDrawerOpen;
+        if (shouldHide !== !state.isNavbarVisible) {
+            header.style.transform = shouldHide ? 'translateY(-100%)' : 'translateY(0)';
+            state.isNavbarVisible = !shouldHide;
+        }
+    }
+};
+
+// Versiones desktop (sin cambios)
 const handleScrollDirection = () => {
     const currentScrollY = window.scrollY;
-    state.isScrollingDown = currentScrollY > state.lastScrollY && currentScrollY > (state.isMobile ? 20 : 50);
+    state.isScrollingDown = currentScrollY > state.lastScrollY && currentScrollY > 50;
     state.lastScrollY = currentScrollY;
 };
 
 const updateActiveNavOnScroll = () => {
     const sections = document.querySelectorAll('section[id]');
     const scrollY = window.scrollY;
-    const headerHeight = state.isMobile ? 80 : 100;
+    const headerHeight = 100;
     
     let activeSection = null;
     let maxVisibleArea = 0;
@@ -603,22 +627,13 @@ const updateActiveNavOnScroll = () => {
 const updateHeaderOnScroll = () => {
     const header = document.getElementById('header');
     const scrollY = window.scrollY;
-    const threshold = state.isMobile ? 20 : 50;
     
     if (header) {
-        header.classList.toggle('scrolled', scrollY > threshold);
-        
-        if (state.isMobile) {
-            const shouldHide = scrollY > state.lastScrollY && scrollY > threshold && !state.isDrawerOpen;
-            if (shouldHide !== !state.isNavbarVisible) {
-                header.style.transform = shouldHide ? 'translateY(-100%)' : 'translateY(0)';
-                state.isNavbarVisible = !shouldHide;
-            }
-        }
+        header.classList.toggle('scrolled', scrollY > 50);
     }
 };
 
-// ===== FAQ =====
+// ===== FAQ OPTIMIZADO =====
 const initFAQ = () => {
     const items = document.querySelectorAll('.faq__item');
     const search = document.getElementById('faq-search');
@@ -632,6 +647,7 @@ const initFAQ = () => {
             question.addEventListener('click', () => {
                 const isActive = item.classList.contains('active');
                 
+                // Cerrar otros items
                 items.forEach(other => {
                     if (other !== item) {
                         other.classList.remove('active');
@@ -650,6 +666,8 @@ const initFAQ = () => {
     });
     
     if (search) {
+        // Debounce más largo en móviles
+        const debounceTime = state.isMobile ? 400 : 150;
         search.addEventListener('input', debounce(e => {
             const term = e.target.value.toLowerCase().trim();
             let visible = 0;
@@ -676,73 +694,29 @@ const initFAQ = () => {
             });
             
             noResults?.classList.toggle('show', visible === 0 && term !== '');
-        }, state.isMobile ? 300 : 150));
+        }, debounceTime));
     }
 };
 
-// ===== INTERSECTION OBSERVER =====
-const initIntersectionObserver = () => {
-    // No usar animaciones en móviles
-    if (state.isMobile || state.performanceMode) {
-        // Mostrar todos los elementos inmediatamente
-        document.querySelectorAll('.feature, .faq__item, .contact__channel').forEach(el => {
-            el.classList.add('in-view');
-            if (el.classList.contains('feature')) {
-                const content = el.querySelector('.feature__content');
-                content?.querySelectorAll('.feature__list-item').forEach(item => {
-                    item.style.opacity = '1';
-                    item.style.transform = 'translateX(0)';
-                });
-            }
-        });
-        return;
-    }
-    
-    const observer = new IntersectionObserver(entries => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('in-view');
-                if (entry.target.classList.contains('feature')) animateFeature(entry.target);
-                observer.unobserve(entry.target);
-            }
-        });
-    }, {
-        threshold: state.isMobile ? 0.05 : 0.15,
-        rootMargin: state.isMobile ? '0px 0px -20px 0px' : '0px 0px -50px 0px'
-    });
-    
-    document.querySelectorAll('.feature, .faq__item, .contact__channel').forEach(el => observer.observe(el));
-};
-
-const animateFeature = feature => {
-    if (state.performanceMode) return;
-    const content = feature.querySelector('.feature__content');
-    content?.querySelectorAll('.feature__list-item').forEach((item, i) => {
-        setTimeout(() => {
-            item.style.opacity = '1';
-            item.style.transform = 'translateX(0)';
-        }, 100 + (i * (state.isMobile ? 15 : 50)));
-    });
-};
-
-// ===== LAZY LOADING DE IMÁGENES =====
+// ===== LAZY LOADING ULTRA-SIMPLIFICADO =====
 const setupImageLazyLoading = () => {
     const wait = () => {
         if (!imageLoader) return setTimeout(wait, 50);
         
-        const loadNow = (sel, key) => { const el = document.querySelector(sel); if (el) imageLoader.loadNow(el, key); };
-        const observe = (sel, key) => { const el = document.querySelector(sel); if (el) imageLoader.observe(el, key); };
+        const loadNow = (sel, key) => { 
+            const el = document.querySelector(sel); 
+            if (el) imageLoader.loadNow(el, key); 
+        };
         
+        // Cargar imágenes críticas inmediatamente
         loadNow('.nav__logo', 'logo');
         loadNow('.nav__drawer-logo', 'logo');
         loadNow('.hero__phone-app-image', 'hero');
         
+        // Cargar todas las imágenes de features inmediatamente en móviles
         const keys = ['phones.horario', 'phones.estaciones', 'phones.calendario', 'phones.registro', 'phones.notificaciones', 'phones.referidos'];
         document.querySelectorAll('.phone__app-image').forEach((img, i) => {
-            if (keys[i]) {
-                // Cargar todas las imágenes inmediatamente en móviles
-                imageLoader.loadNow(img, keys[i]);
-            }
+            if (keys[i]) imageLoader.loadNow(img, keys[i]);
         });
         
         loadNow('.download-btn--app-store .download-btn__image', 'downloads.apple');
@@ -751,65 +725,29 @@ const setupImageLazyLoading = () => {
     wait();
 };
 
-// ===== VIDEO HERO =====
+// ===== VIDEO HERO OPTIMIZADO =====
 const initHeroVideo = () => {
     const desktopVideo = document.getElementById('hero-video');
     const fallback = document.querySelector('.hero__phone-app-image');
     const mobileVideo = document.getElementById('hero-mobile-video');
     
-    // Manejo del video móvil
-    if (mobileVideo && state.isMobile) {
-        // Asegurar que el video móvil sea visible
-        const mobileVideoContainer = document.querySelector('.hero__mobile-video');
-        if (mobileVideoContainer) {
-            mobileVideoContainer.style.display = 'block';
-            mobileVideoContainer.style.visibility = 'visible';
-            mobileVideoContainer.style.opacity = '1';
+    // En móviles, priorizar imagen estática
+    if (state.isMobile) {
+        if (fallback) {
+            fallback.style.display = 'block';
+            fallback.style.zIndex = '2';
         }
         
-        // Configurar atributos del video móvil
-        mobileVideo.muted = true;
-        mobileVideo.autoplay = true;
-        mobileVideo.loop = true;
-        mobileVideo.playsInline = true;
-        mobileVideo.preload = 'auto';
-        
-        // Forzar la reproducción del video móvil
-        const playMobileVideo = () => {
-            mobileVideo.play().catch(err => {
-                console.log('Error al reproducir video móvil:', err);
-                // Intentar nuevamente después de interacción del usuario
-                document.addEventListener('touchstart', () => {
-                    mobileVideo.play().catch(() => {});
-                }, { once: true, passive: true });
-            });
-        };
-        
-        // Intentar reproducir inmediatamente
-        playMobileVideo();
-        
-        // También intentar reproducir cuando el documento esté completamente cargado
-        if (document.readyState === 'complete') {
-            playMobileVideo();
-        } else {
-            window.addEventListener('load', playMobileVideo);
+        // Desactivar videos en móviles para ahorrar recursos
+        if (desktopVideo) desktopVideo.style.display = 'none';
+        if (mobileVideo) {
+            const container = document.querySelector('.hero__mobile-video');
+            if (container) container.style.display = 'none';
         }
-        
-        // Intentar reproducir después de un breve retraso
-        setTimeout(playMobileVideo, 1000);
-        
-        // Manejar errores específicos de iOS
-        mobileVideo.addEventListener('error', (e) => {
-            console.log('Error en video móvil:', e);
-            if (mobileVideoContainer) {
-                mobileVideoContainer.style.display = 'none';
-            }
-        });
-        
-        return; // Salir temprano para dispositivos móviles
+        return;
     }
     
-    // Manejo del video desktop (código existente)
+    // Desktop: mantener funcionalidad de video
     if (!desktopVideo || !fallback) return;
     
     const showFallback = () => {
@@ -820,31 +758,27 @@ const initHeroVideo = () => {
         }
     };
     
-    if (state.isMobile || state.performanceMode) return showFallback();
+    desktopVideo.muted = true;
+    desktopVideo.autoplay = true;
+    desktopVideo.loop = true;
+    desktopVideo.playsInline = true;
+    desktopVideo.preload = 'metadata';
     
-    if (desktopVideo) {
-        desktopVideo.muted = true;
-        desktopVideo.autoplay = true;
-        desktopVideo.loop = true;
-        desktopVideo.playsInline = true;
-        desktopVideo.preload = 'metadata';
-        
-        desktopVideo.addEventListener('loadeddata', () => {
-            desktopVideo.classList.replace('loading', 'loaded');
-        });
-        
-        desktopVideo.addEventListener('error', showFallback);
-        
-        // Mostrar fallback si el video no carga en un tiempo razonable
-        setTimeout(() => {
-            if (desktopVideo.readyState < 2) showFallback();
-        }, 1500);
-    }
+    desktopVideo.addEventListener('loadeddata', () => {
+        desktopVideo.classList.replace('loading', 'loaded');
+    });
+    
+    desktopVideo.addEventListener('error', showFallback);
+    
+    setTimeout(() => {
+        if (desktopVideo.readyState < 2) showFallback();
+    }, 1500);
 };
 
-// ===== OPTIMIZACIONES DE RENDIMIENTO =====
+// ===== OPTIMIZACIONES DE RENDIMIENTO MÓVIL =====
 const initPerformanceOptimizations = () => {
-    if (!state.isMobile && !state.performanceMode) {
+    // Solo preload en desktop
+    if (!state.isMobile) {
         const preload = () => {
             ['./assets/phones/Hero.mp4', './assets/logo.avif'].forEach(src => {
                 const link = document.createElement('link');
@@ -856,11 +790,7 @@ const initPerformanceOptimizations = () => {
         'requestIdleCallback' in window ? requestIdleCallback(preload) : setTimeout(preload, 3000);
     }
     
-    if (!state.performanceMode) {
-        document.querySelectorAll('.hero__phone, .nav__logo, .nav__drawer-logo, .floating-widget__main-btn')
-            .forEach(el => el.style.willChange = 'transform');
-    }
-    
+    // Resize handler simplificado
     const handleResize = debounce(() => {
         const newIsMobile = window.innerWidth <= 768 || 
                            /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -868,22 +798,25 @@ const initPerformanceOptimizations = () => {
             state.isMobile = newIsMobile;
             detectDevice();
             if (state.isDrawerOpen) closeDrawer();
-            setTimeout(() => { initNavigation(); updateActiveNavOnScroll(); }, 50);
+            setTimeout(() => { 
+                initNavigation(); 
+                if (!state.isMobile) updateActiveNavOnScroll(); 
+            }, 50);
         }
         if (state.isFloatingMenuOpen) closeFloatingMenu();
         if (state.isLanguageSwitcherOpen) closeLanguageSwitcher();
-    }, state.isMobile ? 300 : 250);
+    }, state.isMobile ? 400 : 250);
     
     window.addEventListener('resize', handleResize);
 };
 
-// ===== ACCESIBILIDAD =====
+// ===== ACCESIBILIDAD SIMPLIFICADA =====
 const initAccessibility = () => {
     document.addEventListener('keydown', e => {
         if (e.key === 'Escape') {
             if (state.isDrawerOpen) closeDrawer();
             if (state.isFloatingMenuOpen) closeFloatingMenu();
-            if (state.isLanguageSwitcherOpen) closeLanguageSwitcher();
+            if (!state.isMobile && state.isLanguageSwitcherOpen) closeLanguageSwitcher();
         }
         if (e.key === 'Tab') document.body.classList.add('keyboard-navigation');
     });
@@ -893,7 +826,7 @@ const initAccessibility = () => {
     if (state.isMobile) {
         document.addEventListener('touchstart', () => document.body.classList.add('touch-navigation'), { passive: true });
         
-        // Prevenir zoom en inputs en iOS
+        // Prevenir zoom en inputs iOS - simplificado
         document.querySelectorAll('input[type="text"], input[type="email"], input[type="tel"], textarea').forEach(input => {
             input.addEventListener('focus', () => {
                 if (window.innerWidth < 768) {
@@ -916,13 +849,13 @@ const initAccessibility = () => {
     }
 };
 
-// ===== INICIALIZACIÓN =====
+// ===== INICIALIZACIÓN ULTRA-OPTIMIZADA =====
 document.addEventListener('DOMContentLoaded', () => {
     detectDevice();
-    imageLoader = new ImageLoader();
+    imageLoader = new MobileImageLoader();
     
     initLanguage();
-    initLanguageSwitcher();
+    if (!state.isMobile) initLanguageSwitcher(); // Solo desktop
     initNavigation();
     initScrollEffects();
     initFAQ();
@@ -931,11 +864,8 @@ document.addEventListener('DOMContentLoaded', () => {
     initFloatingWidget();
     setupImageLazyLoading();
     
-    // Solo inicializar el observer si no estamos en modo de rendimiento
-    if (!state.performanceMode) {
-        initIntersectionObserver();
-    } else {
-        // En modo de rendimiento, mostrar todos los elementos inmediatamente
+    // Mostrar elementos inmediatamente en móviles
+    if (state.isMobile) {
         document.querySelectorAll('.feature, .faq__item, .contact__channel').forEach(el => {
             el.classList.add('in-view');
             if (el.classList.contains('feature')) {
@@ -950,16 +880,16 @@ document.addEventListener('DOMContentLoaded', () => {
     
     initPerformanceOptimizations();
     
-    // Inicializar drawer después de que todo esté listo
+    // Drawer setup más rápido en móviles
     setTimeout(() => {
         if (state.isMobile) {
             const drawer = document.getElementById('nav-drawer');
             if (drawer) drawer.setAttribute('aria-hidden', 'true');
         }
-    }, 100);
+    }, state.isMobile ? 50 : 100);
 });
 
-// ===== MANEJO DE ERRORES =====
+// ===== MANEJO DE ERRORES SIMPLIFICADO =====
 window.addEventListener('error', e => {
     if (state.isMobile && e.error?.message.includes('video')) {
         const video = document.getElementById('hero-video');
@@ -972,17 +902,14 @@ window.addEventListener('error', e => {
     }
 });
 
-// ===== LIMPIEZA =====
+// ===== LIMPIEZA SIMPLIFICADA =====
 window.addEventListener('beforeunload', () => {
-    imageLoader?.observer?.disconnect();
-    
-    // Limpiar estilos del body
     document.body.style.overflow = '';
     document.body.classList.remove('nav-menu-open');
 });
 
 // ===== PWA SOLO EN DESKTOP =====
-if ('serviceWorker' in navigator && !state.isMobile && !state.performanceMode) {
+if ('serviceWorker' in navigator && !state.isMobile) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js')
             .then(reg => console.log('SW registrado:', reg))
@@ -990,34 +917,32 @@ if ('serviceWorker' in navigator && !state.isMobile && !state.performanceMode) {
     });
 }
 
-// ===== FUNCIONES LEGACY PARA COMPATIBILIDAD =====
+// ===== FUNCIONES LEGACY =====
 const toggleMobileMenu = () => state.isMobile && toggleDrawer();
 const openMobileMenu = () => state.isMobile && openDrawer();
 const closeMobileMenu = () => state.isMobile && closeDrawer();
 
-// ===== GESTIÓN DE ORIENTACIÓN MÓVIL =====
+// ===== OPTIMIZACIONES MÓVILES ESPECÍFICAS =====
 if (state.isMobile) {
+    // Orientación simplificada
     window.addEventListener('orientationchange', () => {
         setTimeout(() => {
             if (state.isDrawerOpen) {
-                // Reajustar drawer después del cambio de orientación
                 const drawer = document.getElementById('nav-drawer');
-                if (drawer) {
-                    drawer.style.height = '100vh';
-                }
+                if (drawer) drawer.style.height = '100vh';
             }
         }, 100);
     });
-}
-
-// ===== PREVENCIÓN DE SCROLL ELÁSTICO EN iOS =====
-if (state.isMobile && /iPad|iPhone|iPod/.test(navigator.userAgent)) {
-    document.addEventListener('touchmove', e => {
-        if (state.isDrawerOpen) {
-            const drawer = document.getElementById('nav-drawer');
-            if (drawer && !drawer.contains(e.target)) {
-                e.preventDefault();
+    
+    // Prevención de scroll elástico iOS - simplificado
+    if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+        document.addEventListener('touchmove', e => {
+            if (state.isDrawerOpen) {
+                const drawer = document.getElementById('nav-drawer');
+                if (drawer && !drawer.contains(e.target)) {
+                    e.preventDefault();
+                }
             }
-        }
-    }, { passive: false });
+        }, { passive: false });
+    }
 }
