@@ -1,6 +1,6 @@
-// ===== STARFLEX 2.0 - OPTIMIZADO Y REDUCIDO =====
+// ===== STARFLEX 2.0 - OPTIMIZADO CON DRAWER MÓVIL =====
 const state = {
-    isMenuOpen: false, 
+    isDrawerOpen: false, 
     currentLanguage: 'es',
     isFloatingMenuOpen: false, 
     isLanguageSwitcherOpen: false,
@@ -40,7 +40,7 @@ const translations = {
         'page-title': 'StarFlex - Automatiza tus Bloques de Amazon Flex | Prueba Gratis',
         'page-description': 'Starflex revoluciona Amazon Flex. Automatización inteligente de bloques, optimización de horarios y máximas ganancias. Únete a +15,000 conductores exitosos.',
         'nav-home': 'Inicio', 'nav-features': 'Características', 'nav-videos': 'Videos', 'nav-faq': 'FAQ', 'nav-contact': 'Contacto',
-        'nav-cta': 'Comienza tu prueba gratuita', 'hero-badge': 'Next-Gen Amazon Flex Revolution',
+        'nav-cta': 'Comienza tu prueba gratuita', 'nav-language-title': 'Idioma', 'hero-badge': 'Next-Gen Amazon Flex Revolution',
         'hero_title--main': 'DOMINA LOS', 'hero_title--highlight': 'BLOQUES DE', 'hero_title--amazon': 'AMAZON FLEX',
         'hero-company-description': 'Somos una empresa dedicada a mejorar la experiencia laboral de los conductores de Amazon Flex permitiendo seleccionar de forma automática y eficiente los mejores bloques de su preferencia.',
         'hero-subtitle': 'Automatización inteligente de última generación que multiplica tus ganancias. La plataforma más avanzada para conductores profesionales del futuro.',
@@ -64,7 +64,7 @@ const translations = {
         'page-title': 'StarFlex - Automate your Amazon Flex Blocks | Free Trial',
         'page-description': 'Starflex revolutionizes Amazon Flex. Intelligent block automation, schedule optimization and maximum earnings. Join +15,000 successful drivers.',
         'nav-home': 'Home', 'nav-features': 'Features', 'nav-videos': 'Videos', 'nav-faq': 'FAQ', 'nav-contact': 'Contact',
-        'nav-cta': 'Start your free trial', 'hero-badge': 'Next-Gen Amazon Flex Revolution',
+        'nav-cta': 'Start your free trial', 'nav-language-title': 'Language', 'hero-badge': 'Next-Gen Amazon Flex Revolution',
         'hero_title--main': 'MASTER THE', 'hero_title--highlight': 'AMAZON FLEX', 'hero_title--amazon': 'BLOCKS',
         'hero-company-description': 'We are a company dedicated to improving the work experience of Amazon Flex drivers by allowing them to automatically and efficiently select the best blocks of their preference.',
         'hero-subtitle': 'Next-generation intelligent automation that multiplies your earnings. The most advanced platform for professional drivers of the future.',
@@ -229,7 +229,7 @@ const initLanguage = () => {
 };
 
 const setupLanguageToggle = () => {
-    document.querySelectorAll('.nav__language-option')
+    document.querySelectorAll('.nav__language-option, .nav__drawer-language-option')
         .forEach(btn => {
             const handleClick = e => {
                 e.preventDefault();
@@ -277,13 +277,15 @@ const applyTranslations = () => {
 };
 
 const updateLanguageButtons = () => {
-    document.querySelectorAll('.nav__language-option')
+    document.querySelectorAll('.nav__language-option, .nav__drawer-language-option')
         .forEach(btn => btn.classList.toggle('active', btn.getAttribute('data-lang') === state.currentLanguage));
     updateLanguageSwitcher();
 };
 
 // ===== SELECTOR DE IDIOMA FLOTANTE =====
 const initLanguageSwitcher = () => {
+    if (state.isMobile) return;
+    
     const btn = document.getElementById('language-switcher-btn');
     const switcher = document.getElementById('language-switcher');
     if (!btn || !switcher) return;
@@ -328,6 +330,91 @@ const updateLanguageSwitcher = () => {
     if (text) text.textContent = state.currentLanguage.toUpperCase();
     document.querySelectorAll('.nav__language-option')
         .forEach(opt => opt.classList.toggle('active', opt.getAttribute('data-lang') === state.currentLanguage));
+};
+
+// ===== DRAWER MÓVIL =====
+const initDrawer = () => {
+    const toggle = document.getElementById('nav-toggle');
+    const drawer = document.getElementById('nav-drawer');
+    const overlay = document.getElementById('nav-drawer-overlay');
+    const close = document.getElementById('nav-drawer-close');
+    
+    if (!toggle || !drawer || !overlay || !close) return;
+    
+    toggle.addEventListener('click', e => { 
+        e.preventDefault(); 
+        e.stopPropagation(); 
+        toggleDrawer(); 
+    });
+    
+    close.addEventListener('click', e => { 
+        e.preventDefault(); 
+        e.stopPropagation(); 
+        closeDrawer(); 
+    });
+    
+    overlay.addEventListener('click', closeDrawer);
+    
+    // Configurar enlaces del drawer
+    document.querySelectorAll('.nav__drawer-link').forEach(link => {
+        const handleNav = e => {
+            e.preventDefault();
+            closeDrawer();
+            const target = document.querySelector(link.getAttribute('href'));
+            if (target) {
+                setTimeout(() => {
+                    smoothScroll(target);
+                    updateActiveNavLink(link);
+                }, 300);
+            }
+        };
+        
+        link.addEventListener('click', handleNav);
+        link.addEventListener('touchend', e => { 
+            if (e.cancelable) e.preventDefault(); 
+            handleNav(e); 
+        });
+    });
+};
+
+const toggleDrawer = () => state.isDrawerOpen ? closeDrawer() : openDrawer();
+
+const openDrawer = () => {
+    const toggle = document.getElementById('nav-toggle');
+    const drawer = document.getElementById('nav-drawer');
+    const overlay = document.getElementById('nav-drawer-overlay');
+    
+    if (!toggle || !drawer || !overlay) return;
+    
+    state.isDrawerOpen = true;
+    toggle.classList.add('active');
+    drawer.classList.add('active');
+    overlay.classList.add('active');
+    document.body.classList.add('nav-menu-open');
+    toggle.setAttribute('aria-expanded', 'true');
+    drawer.setAttribute('aria-hidden', 'false');
+    
+    // Prevenir scroll del body
+    document.body.style.overflow = 'hidden';
+};
+
+const closeDrawer = () => {
+    const toggle = document.getElementById('nav-toggle');
+    const drawer = document.getElementById('nav-drawer');
+    const overlay = document.getElementById('nav-drawer-overlay');
+    
+    if (!toggle || !drawer || !overlay) return;
+    
+    state.isDrawerOpen = false;
+    toggle.classList.remove('active');
+    drawer.classList.remove('active');
+    overlay.classList.remove('active');
+    document.body.classList.remove('nav-menu-open');
+    toggle.setAttribute('aria-expanded', 'false');
+    drawer.setAttribute('aria-hidden', 'true');
+    
+    // Restaurar scroll del body
+    document.body.style.overflow = '';
 };
 
 // ===== WIDGET FLOTANTE =====
@@ -394,87 +481,34 @@ const initNavigation = () => {
     if (logo) {
         logo.addEventListener('click', e => {
             e.preventDefault();
-            if (state.isMenuOpen) closeNavMenu();
+            if (state.isDrawerOpen) closeDrawer();
             const home = document.querySelector('#home');
             if (home) {
                 smoothScroll(home);
-                updateActiveNavLink(document.querySelector('.nav__link[href="#home"]'));
+                updateActiveNavLink(document.querySelector('.nav__link[href="#home"], .nav__drawer-link[href="#home"]'));
             }
         });
         logo.style.cursor = 'pointer';
     }
     
-    // Configurar enlaces de navegación
+    // Configurar enlaces de navegación desktop
     document.querySelectorAll('.nav__link').forEach(link => {
         const handleNav = e => {
             e.preventDefault();
-            if (state.isMenuOpen) closeNavMenu();
             const target = document.querySelector(link.getAttribute('href'));
             if (target) {
-                setTimeout(() => {
-                    smoothScroll(target);
-                    updateActiveNavLink(link);
-                }, state.isMobile ? 50 : 0);
+                smoothScroll(target);
+                updateActiveNavLink(link);
             }
         };
         
         link.addEventListener('click', handleNav);
-        
-        if (state.isMobile) {
-            link.addEventListener('touchend', e => { 
-                if (e.cancelable) e.preventDefault(); 
-                handleNav(e); 
-            });
-            link.addEventListener('touchstart', () => link.style.transform = 'scale(0.98)', { passive: true });
-            link.addEventListener('touchcancel', () => link.style.transform = '', { passive: true });
-        }
     });
     
-    // Configurar toggle del menú móvil
-    const toggle = document.getElementById('nav-toggle');
-    const menu = document.getElementById('nav-menu');
-    
-    if (toggle && menu) {
-        toggle.addEventListener('click', e => { 
-            e.preventDefault(); 
-            e.stopPropagation(); 
-            toggleNavMenu(); 
-        });
-        
-        document.addEventListener('click', e => {
-            if (state.isMenuOpen && !menu.contains(e.target) && !toggle.contains(e.target)) {
-                closeNavMenu();
-            }
-        });
-    }
+    // Inicializar drawer móvil
+    initDrawer();
     
     setTimeout(updateActiveNavOnScroll, 100);
-};
-
-const toggleNavMenu = () => state.isMenuOpen ? closeNavMenu() : openNavMenu();
-
-const openNavMenu = () => {
-    const toggle = document.getElementById('nav-toggle');
-    const menu = document.getElementById('nav-menu');
-    if (!toggle || !menu) return;
-    
-    state.isMenuOpen = true;
-    toggle.classList.add('active');
-    menu.classList.add('active');
-    document.body.classList.add('nav-menu-open');
-    toggle.setAttribute('aria-expanded', 'true');
-};
-
-const closeNavMenu = () => {
-    const toggle = document.getElementById('nav-toggle');
-    const menu = document.getElementById('nav-menu');
-    if (!toggle || !menu) return;
-    
-    state.isMenuOpen = false;
-    toggle.classList.remove('active');
-    menu.classList.remove('active');
-    document.body.classList.remove('nav-menu-open');
-    toggle.setAttribute('aria-expanded', 'false');
 };
 
 const smoothScroll = target => {
@@ -490,7 +524,7 @@ const smoothScroll = target => {
 };
 
 const updateActiveNavLink = activeLink => {
-    document.querySelectorAll('.nav__link').forEach(link => link.classList.remove('active'));
+    document.querySelectorAll('.nav__link, .nav__drawer-link').forEach(link => link.classList.remove('active'));
     activeLink?.classList.add('active');
 };
 
@@ -544,8 +578,8 @@ const updateActiveNavOnScroll = () => {
     });
     
     if (activeSection) {
-        const activeLink = document.querySelector(`.nav__link[href="#${activeSection}"]`);
-        const currentActiveLink = document.querySelector('.nav__link.active');
+        const activeLink = document.querySelector(`.nav__link[href="#${activeSection}"], .nav__drawer-link[href="#${activeSection}"]`);
+        const currentActiveLink = document.querySelector('.nav__link.active, .nav__drawer-link.active');
         if (activeLink && activeLink !== currentActiveLink) updateActiveNavLink(activeLink);
     }
 };
@@ -559,52 +593,13 @@ const updateHeaderOnScroll = () => {
         header.classList.toggle('scrolled', scrollY > threshold);
         
         if (state.isMobile) {
-            const shouldHide = scrollY > state.lastScrollY && scrollY > threshold && !state.isMenuOpen;
+            const shouldHide = scrollY > state.lastScrollY && scrollY > threshold && !state.isDrawerOpen;
             if (shouldHide !== !state.isNavbarVisible) {
                 header.style.transform = shouldHide ? 'translateY(-100%)' : 'translateY(0)';
                 state.isNavbarVisible = !shouldHide;
             }
         }
     }
-};
-
-// ===== REPRODUCTOR DE VIDEO =====
-const initVideoPlayer = () => {
-    if (state.performanceMode) return;
-    
-    const video = document.getElementById('main-video');
-    const overlay = document.getElementById('play-overlay');
-    const progressBar = document.querySelector('.videos__progress-bar');
-    const progressFill = document.querySelector('.videos__progress-fill');
-    
-    if (!video || !overlay) return;
-    
-    video.controls = false;
-    video.preload = state.isMobile ? 'none' : 'metadata';
-    
-    overlay.addEventListener('click', () => {
-        if (video.paused) { video.play(); overlay.classList.add('hidden'); }
-    });
-    
-    video.addEventListener('click', () => {
-        if (!video.paused) { video.pause(); overlay.classList.remove('hidden'); }
-    });
-    
-    video.addEventListener('timeupdate', () => {
-        if (video.duration && progressFill) {
-            progressFill.style.width = `${(video.currentTime / video.duration) * 100}%`;
-        }
-    });
-    
-    progressBar?.addEventListener('click', e => {
-        const rect = progressBar.getBoundingClientRect();
-        video.currentTime = ((e.clientX - rect.left) / rect.width) * video.duration;
-    });
-    
-    video.addEventListener('ended', () => {
-        overlay.classList.remove('hidden');
-        if (progressFill) progressFill.style.width = '0%';
-    });
 };
 
 // ===== FAQ =====
@@ -709,6 +704,7 @@ const setupImageLazyLoading = () => {
         const observe = (sel, key) => { const el = document.querySelector(sel); if (el) imageLoader.observe(el, key); };
         
         loadNow('.nav__logo', 'logo');
+        loadNow('.nav__drawer-logo', 'logo');
         loadNow('.hero__phone-app-image', 'hero');
         
         const keys = ['phones.horario', 'phones.estaciones', 'phones.calendario', 'phones.registro', 'phones.notificaciones', 'phones.referidos'];
@@ -771,7 +767,7 @@ const initPerformanceOptimizations = () => {
     }
     
     if (!state.performanceMode) {
-        document.querySelectorAll('.hero__phone, .nav__logo, .floating-widget__main-btn')
+        document.querySelectorAll('.hero__phone, .nav__logo, .nav__drawer-logo, .floating-widget__main-btn')
             .forEach(el => el.style.willChange = 'transform');
     }
     
@@ -780,7 +776,7 @@ const initPerformanceOptimizations = () => {
         if (newIsMobile !== state.isMobile) {
             state.isMobile = newIsMobile;
             detectDevice();
-            if (state.isMenuOpen) closeNavMenu();
+            if (state.isDrawerOpen) closeDrawer();
             setTimeout(() => { initNavigation(); updateActiveNavOnScroll(); }, 50);
         }
         if (state.isFloatingMenuOpen) closeFloatingMenu();
@@ -794,7 +790,7 @@ const initPerformanceOptimizations = () => {
 const initAccessibility = () => {
     document.addEventListener('keydown', e => {
         if (e.key === 'Escape') {
-            if (state.isMenuOpen) closeNavMenu();
+            if (state.isDrawerOpen) closeDrawer();
             if (state.isFloatingMenuOpen) closeFloatingMenu();
             if (state.isLanguageSwitcherOpen) closeLanguageSwitcher();
         }
@@ -805,6 +801,27 @@ const initAccessibility = () => {
     
     if (state.isMobile) {
         document.addEventListener('touchstart', () => document.body.classList.add('touch-navigation'), { passive: true });
+        
+        // Prevenir zoom en inputs en iOS
+        document.querySelectorAll('input[type="text"], input[type="email"], input[type="tel"], textarea').forEach(input => {
+            input.addEventListener('focus', () => {
+                if (window.innerWidth < 768) {
+                    const viewport = document.querySelector('meta[name="viewport"]');
+                    if (viewport) {
+                        viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+                    }
+                }
+            });
+            
+            input.addEventListener('blur', () => {
+                if (window.innerWidth < 768) {
+                    const viewport = document.querySelector('meta[name="viewport"]');
+                    if (viewport) {
+                        viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, user-scalable=no');
+                    }
+                }
+            });
+        });
     }
 };
 
@@ -824,11 +841,18 @@ document.addEventListener('DOMContentLoaded', () => {
     setupImageLazyLoading();
     
     if (!state.performanceMode) {
-        initVideoPlayer();
         initIntersectionObserver();
     }
     
     initPerformanceOptimizations();
+    
+    // Inicializar drawer después de que todo esté listo
+    setTimeout(() => {
+        if (state.isMobile) {
+            const drawer = document.getElementById('nav-drawer');
+            if (drawer) drawer.setAttribute('aria-hidden', 'true');
+        }
+    }, 100);
 });
 
 // ===== MANEJO DE ERRORES =====
@@ -847,6 +871,10 @@ window.addEventListener('error', e => {
 // ===== LIMPIEZA =====
 window.addEventListener('beforeunload', () => {
     imageLoader?.observer?.disconnect();
+    
+    // Limpiar estilos del body
+    document.body.style.overflow = '';
+    document.body.classList.remove('nav-menu-open');
 });
 
 // ===== PWA SOLO EN DESKTOP =====
@@ -859,6 +887,34 @@ if ('serviceWorker' in navigator && !state.isMobile && !state.performanceMode) {
 }
 
 // ===== FUNCIONES LEGACY PARA COMPATIBILIDAD =====
-const toggleMobileMenu = () => state.isMobile && toggleNavMenu();
-const openMobileMenu = () => state.isMobile && openNavMenu();
-const closeMobileMenu = () => state.isMobile && closeNavMenu();
+const toggleMobileMenu = () => state.isMobile && toggleDrawer();
+const openMobileMenu = () => state.isMobile && openDrawer();
+const closeMobileMenu = () => state.isMobile && closeDrawer();
+
+// ===== GESTIÓN DE ORIENTACIÓN MÓVIL =====
+if (state.isMobile) {
+    window.addEventListener('orientationchange', () => {
+        setTimeout(() => {
+            if (state.isDrawerOpen) {
+                // Reajustar drawer después del cambio de orientación
+                const drawer = document.getElementById('nav-drawer');
+                if (drawer) {
+                    drawer.style.height = '100vh';
+                }
+            }
+        }, 100);
+    });
+}
+
+// ===== PREVENCIÓN DE SCROLL ELÁSTICO EN iOS =====
+if (state.isMobile && /iPad|iPhone|iPod/.test(navigator.userAgent)) {
+    document.addEventListener('touchmove', e => {
+        if (state.isDrawerOpen) {
+            const drawer = document.getElementById('nav-drawer');
+            if (drawer && !drawer.contains(e.target)) {
+                e.preventDefault();
+            }
+        }
+    }, { passive: false });
+}
+
