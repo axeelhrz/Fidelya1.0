@@ -1,4 +1,4 @@
-// ===== STARFLEX 2.0 - ULTRA OPTIMIZADO PARA MÓVILES (FUNCIONALIDADES INTACTAS) =====
+// ===== STARFLEX 2.0 - ULTRA OPTIMIZADO =====
 const state = {
     isDrawerOpen: false, 
     currentLanguage: 'es',
@@ -17,15 +17,14 @@ const CONFIG = {
     ANIMATION_DURATION: state.isMobile ? 0 : 250,
     SCROLL_THRESHOLD: state.isMobile ? 15 : 30,
     IMAGE_PATHS: {
-        hero: { avif: './assets/phones/Hero.avif' },
         logo: { avif: './assets/logo.avif' },
         phones: {
-            horario: { avif: './assets/phones/Schedule.avif' },
-            estaciones: { avif: './assets/phones/Stations.avif' },
-            calendario: { avif: './assets/phones/Calendar.avif' },
-            registro: { avif: './assets/phones/Log.avif' },
-            notificaciones: { avif: './assets/phones/Notifications.avif' },
-            referidos: { avif: './assets/phones/Referrals.avif' }
+            horario: { webp: './assets/phones/Schedule.webp' },
+            estaciones: { webp: './assets/phones/Stations.webp' },
+            calendario: { webp: './assets/phones/Calendar.webp' },
+            registro: { webp: './assets/phones/Log.webp' },
+            notificaciones: { webp: './assets/phones/Notifications.webp' },
+            referidos: { webp: './assets/phones/Referrals.webp' }
         },
         downloads: {
             apple: { png: './assets/AppleStore.png' },
@@ -86,7 +85,7 @@ const translations = {
     }
 };
 
-// ===== UTILIDADES ULTRA-OPTIMIZADAS =====
+// ===== UTILIDADES OPTIMIZADAS =====
 const debounce = (func, wait) => {
     let timeout;
     return (...args) => {
@@ -106,7 +105,7 @@ const throttle = (func, limit) => {
     };
 };
 
-// ===== DETECCIÓN DE DISPOSITIVO ULTRA-OPTIMIZADA =====
+// ===== DETECCIÓN DE DISPOSITIVO =====
 const detectDevice = () => {
     state.isMobile = window.innerWidth <= 768 || 
                      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -116,7 +115,6 @@ const detectDevice = () => {
         state.performanceMode = true;
         document.body.classList.add('performance-mode');
         
-        // CSS ultra-optimizado inyectado directamente
         if (!document.getElementById('mobile-ultra-perf')) {
             const style = document.createElement('style');
             style.id = 'mobile-ultra-perf';
@@ -129,24 +127,22 @@ const detectDevice = () => {
     }
 };
 
-// ===== CLASE ULTRA-OPTIMIZADA PARA IMÁGENES =====
+// ===== CLASE OPTIMIZADA PARA IMÁGENES =====
 class UltraImageLoader {
     constructor() {
-        this.cache = state.isMobile ? null : new Map(); // Sin cache en móviles
+        this.cache = state.isMobile ? null : new Map();
         this.formats = { avif: false, webp: false };
         this.init();
     }
     
     async init() {
         if (state.isMobile) {
-            // Detección ultra-rápida solo AVIF en móviles
             const img = new Image();
             img.onload = img.onerror = () => this.formats.avif = img.height === 2;
             img.src = 'data:image/avif;base64,AAAAIGZ0eXBhdmlmAAAAAGF2aWZtaWYxbWlhZk1BMUIAAADybWV0YQ==';
             return;
         }
         
-        // Desktop: detección completa
         const testImg = (data) => new Promise(resolve => {
             const img = new Image();
             img.onload = img.onerror = () => resolve(img.height === 2);
@@ -161,7 +157,6 @@ class UltraImageLoader {
         if (this.formats.avif) document.documentElement.classList.add('avif');
         if (this.formats.webp) document.documentElement.classList.add('webp');
         
-        // Intersection Observer solo en desktop
         if ('IntersectionObserver' in window) {
             this.observer = new IntersectionObserver(entries => {
                 entries.forEach(entry => {
@@ -191,13 +186,11 @@ class UltraImageLoader {
         
         try {
             if (state.isMobile) {
-                // Carga directa ultra-rápida en móviles
                 el.tagName === 'IMG' ? el.src = url : el.style.backgroundImage = `url('${url}')`;
                 el.classList.add('loaded');
                 return;
             }
             
-            // Desktop: con cache
             el.classList.add('loading');
             if (!this.cache.has(url)) {
                 await new Promise((resolve, reject) => {
@@ -217,7 +210,7 @@ class UltraImageLoader {
     observe(el, key) {
         el.dataset.imageKey = key;
         if (state.isMobile || !this.observer) {
-            this.loadImage(el); // Carga inmediata en móviles
+            this.loadImage(el);
         } else {
             this.observer.observe(el);
         }
@@ -231,7 +224,7 @@ class UltraImageLoader {
 
 let imageLoader;
 
-// ===== SISTEMA DE TRADUCCIONES OPTIMIZADO =====
+// ===== SISTEMA DE TRADUCCIONES =====
 const initLanguage = () => {
     const saved = localStorage.getItem('starflex-language');
     const browser = navigator.language.slice(0, 2);
@@ -277,11 +270,7 @@ const applyTranslations = () => {
     const current = translations[state.currentLanguage];
     if (!current) return;
     
-    // Optimización: usar fragment para batch DOM updates
-    const fragment = document.createDocumentFragment();
-    const elements = document.querySelectorAll('[data-translate]');
-    
-    elements.forEach(el => {
+    document.querySelectorAll('[data-translate]').forEach(el => {
         const text = current[el.getAttribute('data-translate')];
         if (text) {
             if (el.tagName === 'INPUT' && el.type === 'text') el.placeholder = text;
@@ -298,7 +287,7 @@ const updateLanguageButtons = () => {
     updateLanguageSwitcher();
 };
 
-// ===== SELECTOR DE IDIOMA FLOTANTE =====
+// ===== SELECTOR DE IDIOMA FLOTANTE - SOLO DESKTOP =====
 const initLanguageSwitcher = () => {
     if (state.isMobile) return;
     
@@ -348,7 +337,7 @@ const updateLanguageSwitcher = () => {
         .forEach(opt => opt.classList.toggle('active', opt.getAttribute('data-lang') === state.currentLanguage));
 };
 
-// ===== DRAWER MÓVIL ULTRA-OPTIMIZADO =====
+// ===== DRAWER MÓVIL =====
 const initDrawer = () => {
     const toggle = document.getElementById('nav-toggle');
     const drawer = document.getElementById('nav-drawer');
@@ -371,7 +360,6 @@ const initDrawer = () => {
     
     overlay.addEventListener('click', closeDrawer);
     
-    // Enlaces optimizados con event delegation
     drawer.addEventListener('click', e => {
         const link = e.target.closest('.nav__drawer-link');
         if (!link) return;
@@ -386,13 +374,6 @@ const initDrawer = () => {
             }, state.isMobile ? 50 : 300);
         }
     });
-    
-    if (state.isMobile) {
-        drawer.addEventListener('touchend', e => {
-            const link = e.target.closest('.nav__drawer-link');
-            if (link && e.cancelable) e.preventDefault();
-        });
-    }
 };
 
 const toggleDrawer = () => state.isDrawerOpen ? closeDrawer() : openDrawer();
@@ -433,7 +414,7 @@ const closeDrawer = () => {
     document.body.style.overflow = '';
 };
 
-// ===== WIDGET FLOTANTE ULTRA-OPTIMIZADO =====
+// ===== WIDGET FLOTANTE =====
 const initFloatingWidget = () => {
     const btn = document.getElementById('floating-main-btn');
     const menu = document.getElementById('floating-menu');
@@ -466,13 +447,11 @@ const openFloatingMenu = () => {
     
     const items = menu.querySelectorAll('.floating-widget__menu-item');
     if (state.isMobile || state.performanceMode) {
-        // Mostrar inmediatamente en móviles
         items.forEach(item => {
             item.style.transform = 'translateY(0) scale(1)';
             item.style.opacity = '1';
         });
     } else {
-        // Animación escalonada en desktop
         items.forEach((item, i) => {
             setTimeout(() => {
                 item.style.transform = 'translateY(0) scale(1)';
@@ -498,7 +477,7 @@ const closeFloatingMenu = () => {
     });
 };
 
-// ===== NAVEGACIÓN ULTRA-OPTIMIZADA =====
+// ===== NAVEGACIÓN =====
 const initNavigation = () => {
     const logo = document.querySelector('.nav__logo');
     if (logo) {
@@ -514,7 +493,6 @@ const initNavigation = () => {
         logo.style.cursor = 'pointer';
     }
     
-    // Event delegation para enlaces desktop
     const nav = document.querySelector('.nav');
     if (nav) {
         nav.addEventListener('click', e => {
@@ -556,19 +534,17 @@ const updateActiveNavLink = activeLink => {
     activeLink?.classList.add('active');
 };
 
-// ===== EFECTOS DE SCROLL ULTRA-OPTIMIZADOS =====
+// ===== EFECTOS DE SCROLL =====
 const initScrollEffects = () => {
-    const throttleTime = state.isMobile ? 200 : 15; // Más agresivo en móviles
+    const throttleTime = state.isMobile ? 200 : 15;
     
     const throttledScroll = throttle(() => {
         if (!state.ticking) {
             requestAnimationFrame(() => {
                 if (state.isMobile) {
-                    // Solo funciones esenciales en móviles
                     handleScrollDirectionMobile();
                     updateHeaderOnScrollMobile();
                 } else {
-                    // Funciones completas en desktop
                     updateActiveNavOnScroll();
                     handleScrollDirection();
                     updateHeaderOnScroll();
@@ -582,7 +558,6 @@ const initScrollEffects = () => {
     window.addEventListener('scroll', throttledScroll, { passive: true });
 };
 
-// Versión ultra-optimizada para móviles
 const handleScrollDirectionMobile = () => {
     const currentScrollY = window.scrollY;
     state.isScrollingDown = currentScrollY > state.lastScrollY && currentScrollY > 20;
@@ -604,7 +579,6 @@ const updateHeaderOnScrollMobile = () => {
     }
 };
 
-// Versiones desktop (mantener funcionalidad completa)
 const handleScrollDirection = () => {
     const currentScrollY = window.scrollY;
     state.isScrollingDown = currentScrollY > state.lastScrollY && currentScrollY > 50;
@@ -661,13 +635,12 @@ const updateHeaderOnScroll = () => {
     }
 };
 
-// ===== FAQ ULTRA-OPTIMIZADO =====
+// ===== FAQ =====
 const initFAQ = () => {
     const items = document.querySelectorAll('.faq__item');
     const search = document.getElementById('faq-search');
     const noResults = document.getElementById('faq-no-results');
     
-    // Event delegation para mejor rendimiento
     const faqContainer = document.querySelector('.faq__list');
     if (faqContainer) {
         faqContainer.addEventListener('click', e => {
@@ -680,7 +653,6 @@ const initFAQ = () => {
             
             const isActive = item.classList.contains('active');
             
-            // Cerrar otros items
             items.forEach(other => {
                 if (other !== item) {
                     other.classList.remove('active');
@@ -698,7 +670,7 @@ const initFAQ = () => {
     }
     
     if (search) {
-        const debounceTime = state.isMobile ? 500 : 150; // Más largo en móviles
+        const debounceTime = state.isMobile ? 500 : 150;
         search.addEventListener('input', debounce(e => {
             const term = e.target.value.toLowerCase().trim();
             let visible = 0;
@@ -729,10 +701,9 @@ const initFAQ = () => {
     }
 };
 
-// ===== INTERSECTION OBSERVER OPTIMIZADO =====
+// ===== INTERSECTION OBSERVER =====
 const initIntersectionObserver = () => {
     if (state.isMobile || state.performanceMode) {
-        // Mostrar inmediatamente en móviles
         document.querySelectorAll('.feature, .faq__item, .contact__channel').forEach(el => {
             el.classList.add('in-view');
             if (el.classList.contains('feature')) {
@@ -746,7 +717,6 @@ const initIntersectionObserver = () => {
         return;
     }
     
-    // Desktop: usar Intersection Observer
     const observer = new IntersectionObserver(entries => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
@@ -774,7 +744,7 @@ const animateFeature = feature => {
     });
 };
 
-// ===== LAZY LOADING ULTRA-OPTIMIZADO =====
+// ===== LAZY LOADING =====
 const setupImageLazyLoading = () => {
     const wait = () => {
         if (!imageLoader) return setTimeout(wait, 50);
@@ -789,12 +759,10 @@ const setupImageLazyLoading = () => {
             if (el) imageLoader.observe(el, key); 
         };
         
-        // Críticas: cargar inmediatamente
         loadNow('.nav__logo', 'logo');
         loadNow('.nav__drawer-logo', 'logo');
         loadNow('.hero__phone-app-image', 'hero');
         
-        // Features: cargar según dispositivo
         const keys = ['phones.horario', 'phones.estaciones', 'phones.calendario', 'phones.registro', 'phones.notificaciones', 'phones.referidos'];
         document.querySelectorAll('.phone__app-image').forEach((img, i) => {
             if (keys[i]) {
@@ -808,20 +776,18 @@ const setupImageLazyLoading = () => {
     wait();
 };
 
-// ===== VIDEO HERO ULTRA-OPTIMIZADO =====
+// ===== VIDEO HERO =====
 const initHeroVideo = () => {
     const desktopVideo = document.getElementById('hero-video');
     const fallback = document.querySelector('.hero__phone-app-image');
     const mobileVideo = document.getElementById('hero-mobile-video');
     
     if (state.isMobile) {
-        // Móviles: solo imagen estática para máximo rendimiento
         if (fallback) {
             fallback.style.display = 'block';
             fallback.style.zIndex = '2';
         }
         
-        // Ocultar todos los videos en móviles
         [desktopVideo, mobileVideo].forEach(video => {
             if (video) video.style.display = 'none';
         });
@@ -832,7 +798,6 @@ const initHeroVideo = () => {
         return;
     }
     
-    // Desktop: mantener funcionalidad de video completa
     if (!desktopVideo || !fallback) return;
     
     const showFallback = () => {
@@ -862,9 +827,8 @@ const initHeroVideo = () => {
     }, 1500);
 };
 
-// ===== OPTIMIZACIONES DE RENDIMIENTO ULTRA =====
+// ===== OPTIMIZACIONES DE RENDIMIENTO =====
 const initPerformanceOptimizations = () => {
-    // Preload solo en desktop
     if (!state.isMobile && !state.performanceMode) {
         const preload = () => {
             ['./assets/phones/Hero.mp4', './assets/logo.avif'].forEach(src => {
@@ -877,13 +841,11 @@ const initPerformanceOptimizations = () => {
         'requestIdleCallback' in window ? requestIdleCallback(preload) : setTimeout(preload, 3000);
     }
     
-    // Will-change solo en desktop
     if (!state.performanceMode) {
         document.querySelectorAll('.hero__phone, .nav__logo, .nav__drawer-logo, .floating-widget__main-btn')
             .forEach(el => el.style.willChange = 'transform');
     }
     
-    // Resize handler ultra-optimizado
     const handleResize = debounce(() => {
         const newIsMobile = window.innerWidth <= 768 || 
                            /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -898,12 +860,12 @@ const initPerformanceOptimizations = () => {
         }
         if (state.isFloatingMenuOpen) closeFloatingMenu();
         if (state.isLanguageSwitcherOpen) closeLanguageSwitcher();
-    }, state.isMobile ? 500 : 250); // Más lento en móviles
+    }, state.isMobile ? 500 : 250);
     
     window.addEventListener('resize', handleResize);
 };
 
-// ===== ACCESIBILIDAD ULTRA-OPTIMIZADA =====
+// ===== ACCESIBILIDAD =====
 const initAccessibility = () => {
     document.addEventListener('keydown', e => {
         if (e.key === 'Escape') {
@@ -919,7 +881,6 @@ const initAccessibility = () => {
     if (state.isMobile) {
         document.addEventListener('touchstart', () => document.body.classList.add('touch-navigation'), { passive: true });
         
-        // Prevenir zoom iOS - ultra-optimizado
         const inputs = document.querySelectorAll('input[type="text"], input[type="email"], input[type="tel"], textarea');
         const viewport = document.querySelector('meta[name="viewport"]');
         
@@ -944,7 +905,7 @@ const initAccessibility = () => {
     }
 };
 
-// ===== INICIALIZACIÓN ULTRA-OPTIMIZADA =====
+// ===== INICIALIZACIÓN =====
 document.addEventListener('DOMContentLoaded', () => {
     detectDevice();
     imageLoader = new UltraImageLoader();
@@ -958,13 +919,9 @@ document.addEventListener('DOMContentLoaded', () => {
     initAccessibility();
     initFloatingWidget();
     setupImageLazyLoading();
-    
-    // Intersection Observer según dispositivo
     initIntersectionObserver();
-    
     initPerformanceOptimizations();
     
-    // Setup drawer más rápido en móviles
     setTimeout(() => {
         if (state.isMobile) {
             const drawer = document.getElementById('nav-drawer');
@@ -973,8 +930,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }, state.isMobile ? 25 : 100);
 });
 
-// ===== MANEJO DE ERRORES ULTRA-OPTIMIZADO =====
-// ===== MANEJO DE ERRORES ULTRA-OPTIMIZADO =====
+// ===== MANEJO DE ERRORES =====
 window.addEventListener('error', e => {
     if (state.isMobile && e.error?.message.includes('video')) {
         const video = document.getElementById('hero-video');
@@ -987,7 +943,7 @@ window.addEventListener('error', e => {
     }
 });
 
-// ===== LIMPIEZA ULTRA-OPTIMIZADA =====
+// ===== LIMPIEZA =====
 window.addEventListener('beforeunload', () => {
     imageLoader?.observer?.disconnect();
     document.body.style.overflow = '';
@@ -1003,14 +959,13 @@ if ('serviceWorker' in navigator && !state.isMobile && !state.performanceMode) {
     });
 }
 
-// ===== FUNCIONES LEGACY PARA COMPATIBILIDAD =====
+// ===== FUNCIONES LEGACY =====
 const toggleMobileMenu = () => state.isMobile && toggleDrawer();
 const openMobileMenu = () => state.isMobile && openDrawer();
 const closeMobileMenu = () => state.isMobile && closeDrawer();
 
-// ===== OPTIMIZACIONES MÓVILES ESPECÍFICAS ULTRA =====
+// ===== OPTIMIZACIONES MÓVILES ESPECÍFICAS =====
 if (state.isMobile) {
-    // Orientación ultra-optimizada
     window.addEventListener('orientationchange', () => {
         setTimeout(() => {
             if (state.isDrawerOpen) {
@@ -1020,7 +975,6 @@ if (state.isMobile) {
         }, 100);
     });
     
-    // Prevención de scroll elástico iOS ultra-optimizada
     if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
         document.addEventListener('touchmove', e => {
             if (state.isDrawerOpen) {
@@ -1032,35 +986,28 @@ if (state.isMobile) {
         }, { passive: false });
     }
     
-    // Optimización de memoria para móviles
     const optimizeMemory = () => {
-        // Limpiar referencias no utilizadas
         if (window.gc && typeof window.gc === 'function') {
             window.gc();
         }
         
-        // Reducir cache de imágenes en móviles
         if (imageLoader && imageLoader.cache) {
             imageLoader.cache.clear();
         }
     };
     
-    // Ejecutar limpieza de memoria cada 30 segundos en móviles
     setInterval(optimizeMemory, 30000);
     
-    // Pausar funciones no críticas cuando la página no está visible
     document.addEventListener('visibilitychange', () => {
         if (document.hidden) {
-            // Pausar animaciones y timers no críticos
             if (state.isFloatingMenuOpen) closeFloatingMenu();
             if (state.isLanguageSwitcherOpen) closeLanguageSwitcher();
         }
     });
 }
 
-// ===== OPTIMIZACIONES ADICIONALES PARA DISPOSITIVOS DE GAMA BAJA =====
+// ===== OPTIMIZACIONES PARA DISPOSITIVOS DE GAMA BAJA =====
 if (state.isMobile) {
-    // Detectar dispositivos de gama baja
     const isLowEndDevice = () => {
         return navigator.hardwareConcurrency <= 2 || 
                navigator.deviceMemory <= 2 || 
@@ -1068,10 +1015,8 @@ if (state.isMobile) {
     };
     
     if (isLowEndDevice()) {
-        // Optimizaciones adicionales para dispositivos de gama baja
         document.body.classList.add('low-end-device');
         
-        // CSS adicional para dispositivos de gama baja
         const lowEndStyle = document.createElement('style');
         lowEndStyle.textContent = `
             .low-end-device * {
@@ -1085,7 +1030,6 @@ if (state.isMobile) {
         `;
         document.head.appendChild(lowEndStyle);
         
-        // Reducir calidad de imágenes en dispositivos de gama baja
         CONFIG.IMAGE_PATHS = Object.fromEntries(
             Object.entries(CONFIG.IMAGE_PATHS).map(([key, value]) => [
                 key, 
