@@ -1,17 +1,16 @@
-/* ===== STARFLEX 2.0 - CSS MODULAR COMPLETO ===== */
+/* ===== STARFLEX 2.0 - MODULAR CSS OPTIMIZADO ===== */
 
-/* Base */
+/* Critical base styles - load first */
 @import url('./base/variables.css');
 @import url('./base/reset.css');
 @import url('./base/utilities.css');
 
-/* Components */
+/* Core components */
 @import url('./components/buttons.css');
 @import url('./components/navbar.css');
-@import url('./components/navbar-mobile.css');
 @import url('./components/floating-widget.css');
 
-/* Sections */
+/* Page sections */
 @import url('./sections/hero.css');
 @import url('./sections/features.css');
 @import url('./sections/videos.css');
@@ -20,15 +19,5 @@
 
 /* Animations */
 @import url('./animations/keyframes.css');
-
-/* Mobile Fixes - IMPORTANTE: debe ir al final para sobrescribir otros estilos */
-@import url('./mobile-fixes.css');
-
-/* Mobile Scroll Fix - CRÍTICO: debe ir al final para prevenir scroll horizontal */
 @import url('./mobile-scroll-fix.css');
-
-/* ===== SISTEMA CSS MODULAR COMPLETADO ===== */
-/* Todas las secciones han sido modularizadas exitosamente */
-/* Correcciones de visibilidad móvil aplicadas */
-/* Corrección de scroll horizontal móvil aplicada */
-/* Navbar móvil independiente agregado */
+@import url('./mobile-fixes.css');
