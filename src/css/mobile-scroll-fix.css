@@ -1,0 +1,22 @@
+/* ===== MOBILE SCROLL FIX OPTIMIZADO ===== */
+
+@media (width <= 1023px) {
+    /* Global horizontal scroll prevention */
+    html, body {
+        overflow-x: hidden !important;
+    }
+    
+    /* Visual effects elements that may overflow horizontally */
+    .videos__orb, .contact__orb, .light-blobs, 
+    .light-particles, .nebula-layer, .nav__menu,
+    .videos__player-container, .videos__player-frame {
+        overflow-x: hidden !important;
+    }
+}
+
+/* Additional fix for very small screens */
+@media (width <= 480px) {
+    html, body {
+        overflow-x: hidden !important;
+    }
+}
