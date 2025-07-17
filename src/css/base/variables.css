@@ -124,33 +124,34 @@
 /* OPTIMIZACIONES MÓVILES */
 @media (max-width: 1023px) {
     :root {
-        /* Transiciones rápidas */
-        --transition: 0.15s ease;
-        --transition-fast: 0.1s ease;
-        --transition-slow: 0.25s ease;
-        
-        /* Espaciado reducido */
-        --section-padding-x: clamp(1rem, 4vw, 2rem);
-        --section-padding-y: clamp(2rem, 6vh, 4rem);
-        
-        /* Sombras optimizadas */
-        --shadow-sm: 0 2px 8px rgb(0 0 0 / 10%);
-        --shadow-md: 0 4px 15px rgb(0 0 0 / 15%);
-        --shadow-lg: 0 8px 25px rgb(0 0 0 / 20%);
-        --shadow-xl: 0 12px 35px rgb(0 0 0 / 25%);
-        --shadow-2xl: 0 15px 40px rgb(0 0 0 / 30%);
-        
-        /* Neón reducido */
-        --neon-glow-soft: 0 0 10px rgb(255 45 85 / 30%);
-        --neon-glow-medium: 0 0 15px rgb(255 45 85 / 40%);
-        --neon-glow-strong: 0 0 20px rgb(255 45 85 / 50%);
-        
-        /* Brillos simplificados */
-        --glow-subtle: 0 0 15px rgb(255 69 105 / 15%);
-        --glow-medium: 0 0 20px rgb(255 69 105 / 25%);
-        --glow-strong: 0 0 25px rgb(255 69 105 / 35%);
+        /* Transiciones más rápidas y minimalistas */
+        --transition: 0.08s ease;
+        --transition-fast: 0.05s ease;
+        --transition-slow: 0.12s ease;
+
+        /* Padding más pequeño (reduce repaints en scroll) */
+        --section-padding-x: clamp(0.75rem, 4vw, 1.5rem);
+        --section-padding-y: clamp(1.5rem, 5vh, 3rem);
+
+        /* Sombras ultra simplificadas (menos blur) */
+        --shadow-sm: 0 1px 4px rgb(0 0 0 / 10%);
+        --shadow-md: 0 2px 6px rgb(0 0 0 / 12%);
+        --shadow-lg: 0 4px 10px rgb(0 0 0 / 15%);
+        --shadow-xl: 0 6px 12px rgb(0 0 0 / 20%);
+        --shadow-2xl: 0 8px 15px rgb(0 0 0 / 25%);
+
+        /* Neón casi eliminado en mobile */
+        --neon-glow-soft: none;
+        --neon-glow-medium: none;
+        --neon-glow-strong: none;
+
+        /* Brillos simplificados a nada */
+        --glow-subtle: none;
+        --glow-medium: none;
+        --glow-strong: none;
     }
 }
+
 
 /* MÓVILES PEQUEÑOS */
 @media (max-width: 480px) {

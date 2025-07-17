@@ -378,7 +378,7 @@ img, video {
     .animate-slideInLeft,
     .animate-slideInRight,
     .animate-scaleIn {
-        animation: fadeIn 0.15s ease-out;
+        animation: fadeIn 0.1s linear;
     }
     
     /* Desactivar animaciones continuas */
@@ -403,12 +403,12 @@ img, video {
     *[class*="animate-delay"],
     *[class*="animate-duration"] {
         animation-delay: 0s !important;
-        animation-duration: 0.15s !important;
+        animation-duration: 0.1s !important;
     }
     
     /* Optimizar transiciones */
     * {
-        transition-duration: 0.15s !important;
+        transition-duration: 0.08s !important;
         transition-delay: 0s !important;
         will-change: auto !important;
         -webkit-tap-highlight-color: transparent;

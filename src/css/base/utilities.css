@@ -1,4 +1,4 @@
-/* ===== UTILIDADES MOBILE-FIRST ===== */
+/* ===== UTILIDADES MOBILE-FIRST OPTIMIZADAS ===== */
 
 /* VISIBILIDAD - MOBILE FIRST */
 .desktop-only {
@@ -13,7 +13,7 @@
     .desktop-only {
         display: block;
     }
-    
+
     .mobile-only {
         display: none;
     }
@@ -30,6 +30,12 @@
 @media (min-width: 1024px) {
     .container {
         max-width: var(--max-content-width);
+    }
+}
+
+@media (min-width: 1440px) {
+    .container {
+        max-width: calc(var(--max-content-width) + 2rem);
     }
 }
 
@@ -50,7 +56,7 @@
     .grid--3 {
         grid-template-columns: repeat(3, 1fr);
     }
-    
+
     .grid--4 {
         grid-template-columns: repeat(4, 1fr);
     }
@@ -90,9 +96,19 @@
 .text-left { text-align: left; }
 .text-right { text-align: right; }
 
+/* UTILIDADES EXTRA */
+.hidden {
+    display: none !important;
+}
+
+.no-scroll {
+    overflow: hidden !important;
+    height: 100vh !important;
+}
+
 /* OPTIMIZACIONES DE RENDIMIENTO */
 .optimized {
-    contain: layout style paint;
+    contain: content;
     will-change: transform;
     transform: translateZ(0);
     backface-visibility: hidden;
@@ -109,6 +125,12 @@
     clip: rect(0, 0, 0, 0);
     white-space: nowrap;
     border: 0;
+}
+
+/* FOCUS VISIBLE (ACCESIBILIDAD) */
+:focus-visible {
+    outline: 2px solid var(--neon-primary);
+    outline-offset: 2px;
 }
 
 /* TOUCH OPTIMIZATIONS */
