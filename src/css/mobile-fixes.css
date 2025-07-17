@@ -1,0 +1,178 @@
+/* ===== MOBILE FIXES FOR IMAGE VISIBILITY ===== */
+
+/* Forzar visualización de imágenes críticas en móviles */
+@media (max-width: 768px) {
+    /* Botones de descarga */
+    .download-btn__image {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        width: auto !important;
+        height: 60px !important;
+        max-width: 200px !important;
+        min-width: 180px !important;
+        object-fit: contain !important;
+        object-position: center !important;
+        background-image: none !important;
+        background-size: contain !important;
+        background-repeat: no-repeat !important;
+        background-position: center !important;
+        image-rendering: -webkit-optimize-contrast !important;
+        image-rendering: optimize-contrast !important;
+        filter: brightness(1.02) contrast(1.05) saturate(1.08) !important;
+        transform: translateZ(0) !important;
+        backface-visibility: hidden !important;
+    }
+    
+    /* Logo en navegación */
+    .nav__logo, .nav__drawer-logo {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        width: 40px !important;
+        height: 40px !important;
+        background-size: contain !important;
+        background-repeat: no-repeat !important;
+        background-position: center !important;
+        image-rendering: -webkit-optimize-contrast !important;
+        image-rendering: optimize-contrast !important;
+    }
+    
+    /* Imágenes de características */
+    .phone__app-image {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        width: 100% !important;
+        height: 100% !important;
+        background-size: cover !important;
+        background-repeat: no-repeat !important;
+        background-position: center !important;
+        image-rendering: -webkit-optimize-contrast !important;
+        image-rendering: optimize-contrast !important;
+    }
+    
+    /* Imagen del hero phone */
+    .hero__phone-app-image {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        width: 100% !important;
+        height: 100% !important;
+        background-size: cover !important;
+        background-repeat: no-repeat !important;
+        background-position: center !important;
+        image-rendering: -webkit-optimize-contrast !important;
+        image-rendering: optimize-contrast !important;
+    }
+    
+    /* Asegurar que las imágenes no se oculten por performance mode */
+    .performance-mode .download-btn__image,
+    .performance-mode .nav__logo,
+    .performance-mode .nav__drawer-logo,
+    .performance-mode .phone__app-image,
+    .performance-mode .hero__phone-app-image {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        background-image: none !important;
+    }
+    
+    /* Asegurar que las imágenes no se oculten por lazy loading */
+    .image-optimized {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    
+    .image-optimized.loading {
+        opacity: 1 !important;
+    }
+    
+    .image-optimized.loaded {
+        opacity: 1 !important;
+    }
+    
+    /* Específico para dispositivos Android de alta densidad */
+    @media (-webkit-min-device-pixel-ratio: 2) {
+        .download-btn__image,
+        .nav__logo,
+        .nav__drawer-logo,
+        .phone__app-image,
+        .hero__phone-app-image {
+            image-rendering: -webkit-optimize-contrast !important;
+            image-rendering: optimize-contrast !important;
+        }
+    }
+    
+    /* Específico para Pixel 6 Pro y dispositivos similares */
+    @media screen and (min-width: 412px) and (max-width: 915px) and (-webkit-device-pixel-ratio: 3) {
+        .download-btn__image {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            background-image: none !important;
+            image-rendering: pixelated !important;
+        }
+    }
+}
+
+/* Específico para dispositivos con problemas de WebP */
+@media (max-width: 768px) {
+    .nav__logo {
+        background-image: url('../assets/logo.webp') !important;
+    }
+    
+    .nav__drawer-logo {
+        background-image: url('../assets/logo.webp') !important;
+    }
+    
+    .phone__app-image:nth-child(1) {
+        background-image: url('../assets/phones/Schedule.webp') !important;
+    }
+    
+    .phone__app-image:nth-child(2) {
+        background-image: url('../assets/phones/Stations.webp') !important;
+    }
+    
+    .phone__app-image:nth-child(3) {
+        background-image: url('../assets/phones/Calendar.webp') !important;
+    }
+    
+    .phone__app-image:nth-child(4) {
+        background-image: url('../assets/phones/Log.webp') !important;
+    }
+    
+    .phone__app-image:nth-child(5) {
+        background-image: url('../assets/phones/Notifications.webp') !important;
+    }
+    
+    .phone__app-image:nth-child(6) {
+        background-image: url('../assets/phones/Referrals.webp') !important;
+    }
+}
+
+/* Fallback para navegadores que no soportan WebP */
+@supports not (background-image: url('data:image/webp;base64,UklGRjoAAABXRUJQVlA4IC4AAACyAgCdASoCAAIALmk0mk0iIiIiIgBoSygABc6WWgAA/veff/0PP8bA//LwYAAA')) {
+    @media (max-width: 768px) {
+        .nav__logo,
+        .nav__drawer-logo {
+            background-image: url('../assets/logo.png') !important;
+        }
+    }
+}
+
+/* Asegurar que las imágenes se carguen incluso con JavaScript deshabilitado */
+.no-js .download-btn__image {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+.no-js .download-btn--google .download-btn__image {
+    content: url('../assets/GooglePlay.png');
+}
+
+.no-js .download-btn--app-store .download-btn__image {
+    content: url('../assets/AppleStore.png');
+}

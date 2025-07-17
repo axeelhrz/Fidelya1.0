@@ -20,6 +20,9 @@
 /* Animations - solo para desktop */
 @import url('./animations/keyframes.css');
 
+/* Mobile fixes - load last to override other styles */
+@import url('./mobile-fixes.css');
+
 /* Global mobile-first styles */
 html, body {
     overflow-x: hidden;

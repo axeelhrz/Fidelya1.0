@@ -244,7 +244,8 @@
 }
 
 .download-btn__image {
-    display: block;
+    display: block !important;
+    visibility: visible !important;
     width: auto;
     max-width: 200px;
     height: 60px;
@@ -255,6 +256,7 @@
     transition: none;
     transform: translateZ(0);
     backface-visibility: hidden;
+    opacity: 1 !important;
 }
 
 .download-btn--google .download-btn__image,
@@ -268,12 +270,48 @@
     background-size: contain;
 }
 
-.download-btn--google .download-btn__image {
-    background-image: url('../assets/GooglePlay.png');
+/* Fallback con background-image para desktop */
+@media (min-width: 769px) {
+    .download-btn--google .download-btn__image {
+        background-image: url('../../assets/GooglePlay.png');
+    }
+
+    .download-btn--app-store .download-btn__image {
+        background-image: url('../../assets/AppleStore.png');
+    }
 }
 
-.download-btn--app-store .download-btn__image {
-    background-image: url('../assets/AppleStore.png');
+/* Forzar src para móviles */
+@media (max-width: 768px) {
+    .download-btn__image {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        background-image: none !important;
+        width: auto !important;
+        height: 60px !important;
+        max-width: 200px !important;
+        object-fit: contain !important;
+        object-position: center !important;
+        image-rendering: -webkit-optimize-contrast !important;
+        image-rendering: optimize-contrast !important;
+    }
+    
+    /* Asegurar que las imágenes no se oculten por performance mode */
+    .performance-mode .download-btn__image {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        background-image: none !important;
+    }
+    
+    /* Específico para dispositivos Android de alta densidad */
+    @media (-webkit-min-device-pixel-ratio: 2) {
+        .download-btn__image {
+            image-rendering: -webkit-optimize-contrast !important;
+            image-rendering: optimize-contrast !important;
+        }
+    }
 }
 
 .hero__trust {
