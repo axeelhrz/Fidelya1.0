@@ -27,18 +27,30 @@
     <link rel="preload" href="./assets/phones/Hero.mp4" as="video" type="video/mp4">
     <link rel="preload" href="./assets/logo.webp" as="image" type="image/webp">
     
-    <!-- Fonts -->
+    <!-- Optimized Fonts with preconnect and preload -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&family=Sora:wght@300;400;500;600;700;800&display=swap">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" media="all" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&family=Sora:wght@300;400;500;600;700;800&display=swap"></noscript>
     
-    <!-- CSS -->
-    <link rel="stylesheet" href="src/css/main.css">
+    <!-- Optimized CSS with preload -->
+    <link rel="preload" as="style" href="src/css/main.css">
+    <link rel="stylesheet" href="src/css/main.css" media="all">
     
     <!-- Mobile optimizations -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="format-detection" content="telephone=no">
+    
+    <!-- Google Analytics 4 (Asynchronous) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-XXXXXXXXXX');
+    </script>
 </head>
 
 <body>
@@ -246,11 +258,11 @@
                     
                     <div class="hero__download">
                         <a href="https://play.google.com/store/apps/details?id=com.minoka.starflex&pli=1" class="download-btn download-btn--google" data-translate-aria="download-google" aria-label="Descargar en Google Play" target="_blank" rel="noopener noreferrer">
-                            <img class="download-btn__image image-optimized" data-translate-alt="download-google-alt" alt="Descargar en Google Play" loading="eager">
+                            <img class="download-btn__image image-optimized" data-translate-alt="download-google-alt" alt="Descargar en Google Play">
                         </a>
                         
                         <a href="https://starflex.web.app/" class="download-btn download-btn--app-store" data-translate-aria="download-apple" aria-label="Descargar en App Store" target="_blank" rel="noopener noreferrer">
-                            <img class="download-btn__image image-optimized" data-translate-alt="download-apple-alt" alt="Descargar en App Store" loading="eager">
+                            <img class="download-btn__image image-optimized" data-translate-alt="download-apple-alt" alt="Descargar en App Store">
                         </a>
                     </div>
                     
@@ -276,7 +288,7 @@
                                 <video class="hero__phone-video" id="hero-video" autoplay muted loop playsinline preload="auto" aria-label="Video demostrativo de StarFlex">
                                     <source src="./assets/phones/Hero.mp4" type="video/mp4">
                                 </video>
-                                <div class="hero__phone-app-image image-optimized" role="img" aria-label="Interfaz principal de StarFlex" loading="eager" style="display: none;"></div>
+                                <div class="hero__phone-app-image image-optimized" role="img" aria-label="Interfaz principal de StarFlex" style="display: none;"></div>
                             </div>
                         </div>
                     </div>
@@ -837,8 +849,8 @@
         </div>
     </div>
 
-    <!-- Scripts -->
-    <script src="src/js/app.js"></script>
+    <!-- Deferred JavaScript -->
+    <script src="src/js/app.js" defer></script>
 </body>
 </html>
 
