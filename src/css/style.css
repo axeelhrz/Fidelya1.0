@@ -5079,3 +5079,30 @@ html, body {
         transform: none !important;
     }
 }
+/* Ocultar botón flotante cuando el drawer móvil está abierto */
+.floating-widget.hidden-by-drawer {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(20px) scale(0.8);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+}
+
+/* Asegurar que el botón flotante esté visible por defecto */
+.floating-widget {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: auto;
+}
+
+/* En desktop, siempre mantener el botón flotante visible */
+@media (min-width: 1024px) {
+    .floating-widget.hidden-by-drawer {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0) scale(1);
+        pointer-events: auto;
+    }
+}

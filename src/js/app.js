@@ -400,6 +400,7 @@ function detectDeviceCapabilities() {
         console.log('Modo de rendimiento activado para dispositivo de baja potencia');
     }
 }
+
 // ===== DETECCIÓN DE SOPORTE DE FORMATOS DE IMAGEN OPTIMIZADA =====
 function detectImageFormats() {
     return new Promise((resolve) => {
@@ -968,7 +969,7 @@ function initializeDesktopNavigation() {
     initializeActiveSection();
 }
 
-// ===== NAVEGACIÓN MÓVIL CON DRAWER - COMPLETAMENTE CORREGIDA =====
+// ===== NAVEGACIÓN MÓVIL CON DRAWER - ACTUALIZADA PARA OCULTAR BOTÓN FLOTANTE =====
 function initializeMobileNavigation() {
     console.log('🔧 Inicializando navegación móvil con drawer...');
     
@@ -1158,6 +1159,7 @@ function openMobileMenu() {
     const navToggle = document.getElementById('nav-toggle');
     const navDrawer = document.getElementById('nav-drawer');
     const navDrawerOverlay = document.getElementById('nav-drawer-overlay');
+    const floatingWidget = document.getElementById('floating-widget');
     const body = document.body;
     
     if (!navToggle || !navDrawer) {
@@ -1172,6 +1174,12 @@ function openMobileMenu() {
     if (navDrawerOverlay) navDrawerOverlay.classList.add('active');
     body.classList.add('drawer-open');
     
+    // Ocultar botón flotante cuando se abre el drawer móvil
+    if (floatingWidget && isMobile) {
+        floatingWidget.classList.add('hidden-by-drawer');
+        console.log('🔄 Botón flotante ocultado por drawer móvil');
+    }
+    
     navToggle.setAttribute('aria-expanded', 'true');
     navDrawer.setAttribute('aria-hidden', 'false');
     
@@ -1183,6 +1191,7 @@ function closeMobileMenu() {
     const navToggle = document.getElementById('nav-toggle');
     const navDrawer = document.getElementById('nav-drawer');
     const navDrawerOverlay = document.getElementById('nav-drawer-overlay');
+    const floatingWidget = document.getElementById('floating-widget');
     const body = document.body;
     
     if (!navToggle || !navDrawer) {
@@ -1196,6 +1205,12 @@ function closeMobileMenu() {
     navDrawer.classList.remove('active');
     if (navDrawerOverlay) navDrawerOverlay.classList.remove('active');
     body.classList.remove('drawer-open');
+    
+    // Mostrar botón flotante cuando se cierra el drawer móvil
+    if (floatingWidget && isMobile) {
+        floatingWidget.classList.remove('hidden-by-drawer');
+        console.log('🔄 Botón flotante mostrado al cerrar drawer móvil');
+    }
     
     navToggle.setAttribute('aria-expanded', 'false');
     navDrawer.setAttribute('aria-hidden', 'true');
@@ -1701,7 +1716,7 @@ function setupImageLazyLoading() {
         }
         
         // Logo del navbar desktop
-                const navLogo = document.querySelector('.nav__logo');
+        const navLogo = document.querySelector('.nav__logo');
         if (navLogo) {
             imageOptimizer.loadImageImmediately(navLogo, 'logo');
         }
@@ -1916,6 +1931,18 @@ function handleResize() {
             closeMobileMenu();
         }
         
+        // Manejar visibilidad del botón flotante según el dispositivo
+        const floatingWidget = document.getElementById('floating-widget');
+        if (floatingWidget) {
+            if (!isMobile) {
+                // En desktop, siempre mostrar el botón flotante
+                floatingWidget.classList.remove('hidden-by-drawer');
+            } else if (isMobileMenuOpen) {
+                // En móvil, ocultar si el drawer está abierto
+                floatingWidget.classList.add('hidden-by-drawer');
+            }
+        }
+        
         // Reinicializar navegación
         setTimeout(() => {
             initializeNavigation();
@@ -2036,4 +2063,3 @@ if ('serviceWorker' in navigator && !isMobile && !performanceMode) {
             });
     });
 }
-
