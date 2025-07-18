@@ -1,622 +1,1400 @@
-// ===== STARFLEX 2.0 - ULTRA OPTIMIZADO =====
-const state = {
-    isDrawerOpen: false, 
-    currentLanguage: 'es',
-    isFloatingMenuOpen: false, 
-    isLanguageSwitcherOpen: false,
-    lastScrollY: 0, 
-    isScrollingDown: false, 
-    ticking: false, 
-    isNavbarVisible: true,
-    isMobile: window.innerWidth <= 768, 
-    isReducedMotion: false, 
-    performanceMode: false
-};
+// ===== VARIABLES GLOBALES ULTRA-OPTIMIZADAS =====
+let isMenuOpen = false;
+let isMobileMenuOpen = false; // Nueva variable para el menú móvil independiente
+let currentFeature = 0;
+const features = document.querySelectorAll('.feature');
+// Variables para el sistema de idiomas
+let currentLanguage = 'es';
+const translations = {};
+// Variables para el botón flotante
+let isFloatingMenuOpen = false;
+// Variables para el selector de idioma flotante
+let isLanguageSwitcherOpen = false;
+// Variables para el control del navbar
+let lastScrollY = 0;
+let isScrollingDown = false;
+let ticking = false;
+// Variables para el navbar responsive
+let isNavbarVisible = true;
+// Variables para optimización móvil
+let isMobile = window.innerWidth <= 1023;
+let isReducedMotion = false;
+let performanceMode = false;
 
+// ===== CONFIGURACIÓN GLOBAL ULTRA-OPTIMIZADA =====
 const CONFIG = {
-    ANIMATION_DURATION: state.isMobile ? 0 : 250,
-    SCROLL_THRESHOLD: state.isMobile ? 15 : 30,
+    // Configuración de animaciones ultra-optimizada
+    ANIMATION_DURATION: isMobile ? 200 : 400,
+    SCROLL_THRESHOLD: isMobile ? 30 : 50,
+    
+    // Configuración de imágenes optimizadas
+    IMAGE_FORMATS: {
+        WEBP: 'image/webp',
+        PNG: 'image/png',
+        JPEG: 'image/jpeg'
+    },
+    
+    // Rutas de imágenes optimizadas - ACTUALIZADO PARA USAR SOLO WEBP Y PNG
     IMAGE_PATHS: {
-        hero: { 
-            mp4: './assets/phones/Hero.mp4'
+        hero: {
+            webp: './assets/phones/Hero.webp'
         },
-        logo: { 
-            webp: './assets/logo.webp',
-            avif: './assets/logo.avif'
+        logo: {
+            webp: './assets/logo.webp'
         },
         phones: {
-            horario: { 
+            horario: {
                 webp: './assets/phones/Schedule.webp'
             },
-            estaciones: { 
+            estaciones: {
                 webp: './assets/phones/Stations.webp'
             },
-            calendario: { 
+            calendario: {
                 webp: './assets/phones/Calendar.webp'
             },
-            registro: { 
+            registro: {
                 webp: './assets/phones/Log.webp'
             },
-            notificaciones: { 
+            notificaciones: {
                 webp: './assets/phones/Notifications.webp'
             },
-            referidos: { 
+            referidos: {
                 webp: './assets/phones/Referrals.webp'
             }
         },
         downloads: {
-            apple: { png: './assets/AppleStore.png' },
-            google: { png: './assets/GooglePlay.png' }
+            apple: {
+                png: './assets/AppleStore.png'
+            },
+            google: {
+                png: './assets/GooglePlay.png'
+            }
+        },
+        videoPoster: {
+            webp: './assets/video-poster.webp'
         }
     }
 };
 
-// ===== TRADUCCIONES COMPACTAS =====
-const translations = {
+// ===== SISTEMA DE TRADUCCIONES OPTIMIZADO =====
+const translationData = {
     es: {
+        // Meta tags
         'page-title': 'StarFlex - Automatiza tus Bloques de Amazon Flex | Prueba Gratis',
         'page-description': 'Starflex revoluciona Amazon Flex. Automatización inteligente de bloques, optimización de horarios y máximas ganancias. Únete a +15,000 conductores exitosos.',
-        'nav-home': 'Inicio', 'nav-features': 'Características', 'nav-videos': 'Videos', 'nav-faq': 'FAQ', 'nav-contact': 'Contacto',
-        'nav-cta': 'Comienza tu prueba gratuita', 'nav-language-title': 'Idioma', 'hero-badge': 'Next-Gen Amazon Flex Revolution',
-        'hero_title--main': 'DOMINA LOS', 'hero_title--highlight': 'BLOQUES DE', 'hero_title--amazon': 'AMAZON FLEX',
+        'og-title': 'Starflex - La Revolución de Amazon Flex',
+        'og-description': 'Automatización inteligente que multiplica tus ganancias. La herramienta que todo conductor profesional necesita.',
+        // Navegación
+        'nav-home': 'Inicio',
+        'nav-features': 'Características',
+        'nav-videos': 'Videos',
+        'nav-faq': 'FAQ',
+        'nav-contact': 'Contacto',
+        'nav-cta': 'Comienza tu prueba gratuita',
+        'nav-language-title': 'Idioma',
+        // Hero Section
+        'hero-badge': 'Next-Gen Amazon Flex Revolution',
+        'hero_title--main': 'DOMINA LOS',
+        'hero_title--highlight': 'BLOQUES DE',
+        'hero_title--amazon': 'AMAZON FLEX',
         'hero-company-description': 'Somos una empresa dedicada a mejorar la experiencia laboral de los conductores de Amazon Flex permitiendo seleccionar de forma automática y eficiente los mejores bloques de su preferencia.',
         'hero-subtitle': 'Automatización inteligente de última generación que multiplica tus ganancias. La plataforma más avanzada para conductores profesionales del futuro.',
-        'hero-cta-main': 'PRUEBA <strong>GRATUITA</strong>', 'hero-cta-trial': '3 DÍAS GRATIS',
+        'hero-cta-main': 'PRUEBA <strong>GRATUITA</strong>',
+        'hero-cta-trial': '3 DÍAS GRATIS',
         'hero-trust': 'Más de 15,000 conductores han transformado sus ganancias',
-        'features-title': 'Características', 'features-subtitle': 'Descubre todas las funcionalidades que StarFlex te ofrece para maximizar tus ganancias.',
-        'feature-schedule-title': 'HORARIO', 'feature-schedule-description': 'Elige los días y horarios que prefieras para tus bloques de entrega. Configura tu disponibilidad de manera inteligente y deja que StarFlex encuentre los mejores bloques en tus horarios preferidos.',
-        'feature-stations-title': 'ESTACIONES', 'feature-stations-description': 'Selecciona tus estaciones preferidas y configura precios mínimos para que nuestra aplicación pueda ofrecerte automáticamente los bloques que se ajusten perfectamente a tus preferencias y ubicación.',
-        'feature-calendar-title': 'CALENDARIO', 'feature-calendar-description': 'En el calendario podrás ver todos tus bloques aceptados y acceder a funciones avanzadas como identificación desde cualquier ubicación, opción de saltar la selfie y cancelación rápida de bloques.',
-        'feature-log-title': 'REGISTRO', 'feature-log-description': 'En el registro detallado podrás ver todos los bloques disponibles y el motivo específico por el cual algunos fueron ignorados.',
-        'feature-notifications-title': 'NOTIFICACIONES', 'feature-notifications-description': 'StarFlex te mantiene siempre informado con un sistema completo de notificaciones múltiples para que nunca te pierdas los mejores bloques disponibles.',
-        'feature-referrals-title': 'REFERIDOS', 'feature-referrals-description': 'Invita a otros conductores a unirse a la revolución StarFlex y obtén beneficios exclusivos por cada referido que se registre exitosamente.',
-        'videos-title-main': 'VE STARFLEX', 'videos-title-highlight': 'EN ACCIÓN',
+        'download-google': 'Descargar en Google Play',
+        'download-apple': 'Descargar en App Store',
+        'download-google-alt': 'Descargar en Google Play',
+        'download-apple-alt': 'Descargar en App Store',
+        // Features Section
+        'features-title': 'Características',
+        'features-subtitle': 'Descubre todas las funcionalidades que StarFlex te ofrece para maximizar tus ganancias.',
+        // Feature 1: Horario
+        'feature-schedule-title': 'HORARIO',
+        'feature-schedule-description': 'Elige los días y horarios que prefieras para tus bloques de entrega. Configura tu disponibilidad de manera inteligente y deja que StarFlex encuentre los mejores bloques en tus horarios preferidos.',
+        'feature-schedule-item-1': 'Configuración personalizada por día de la semana',
+        'feature-schedule-item-2': 'Horarios flexibles adaptados a tu estilo de vida',
+        'feature-schedule-item-3': 'Optimización automática de turnos rentables',
+        'feature-schedule-item-4': 'Sincronización inteligente con tu calendario personal',
+        'feature-schedule-item-5': 'Alertas de disponibilidad en tiempo real',
+        // Feature 2: Estaciones
+        'feature-stations-title': 'ESTACIONES',
+        'feature-stations-description': 'Selecciona tus estaciones preferidas y configura precios mínimos para que nuestra aplicación pueda ofrecerte automáticamente los bloques que se ajusten perfectamente a tus preferencias y ubicación.',
+        'feature-stations-item-1': 'Selección personalizada de estaciones favoritas',
+        'feature-stations-item-2': 'Configuración de precios mínimos por estación',
+        'feature-stations-item-3': 'Análisis detallado de rentabilidad por ubicación',
+        'feature-stations-item-4': 'Notificaciones instantáneas de bloques disponibles',
+        'feature-stations-item-5': 'Mapa interactivo con todas las estaciones cercanas',
+        'feature-stations-item-6': 'Filtros avanzados por distancia y tipo de entrega',
+        // Feature 3: Calendario
+        'feature-calendar-title': 'CALENDARIO',
+        'feature-calendar-description': 'En el calendario podrás ver todos tus bloques aceptados y acceder a funciones avanzadas como identificación desde cualquier ubicación, opción de saltar la selfie y cancelación rápida de bloques, todo centralizado para tu máxima comodidad.',
+        'feature-calendar-item-1': 'Identificación automática desde cualquier ubicación',
+        'feature-calendar-item-2': 'Opción inteligente para saltar verificación selfie',
+        'feature-calendar-item-3': 'Cancelación rápida y segura de bloques',
+        'feature-calendar-item-4': 'Vista mensual y semanal de tus entregas',
+        'feature-calendar-item-5': 'Recordatorios automáticos de bloques próximos',
+        // Feature 4: Registro
+        'feature-log-title': 'REGISTRO',
+        'feature-log-description': 'En el registro detallado podrás ver todos los bloques disponibles y el motivo específico por el cual algunos fueron ignorados. Esta información te ayudará a ajustar tus filtros y preferencias para optimizar continuamente tus opciones de entrega.',
+        'feature-log-item-1': 'Historial completo y detallado de todos los bloques',
+        'feature-log-item-2': 'Motivos específicos y detallados de rechazo automático',
+        'feature-log-item-3': 'Herramientas de optimización de filtros inteligentes',
+        'feature-log-item-4': 'Análisis avanzado de patrones y tendencias',
+        'feature-log-item-5': 'Estadísticas de rendimiento y ganancias',
+        // Feature 5: Notificaciones
+        'feature-notifications-title': 'NOTIFICACIONES',
+        'feature-notifications-description': 'StarFlex te mantiene siempre informado con un sistema completo de notificaciones múltiples para que nunca te pierdas los mejores bloques disponibles. Configura tus alertas según tus preferencias específicas y recibe notificaciones en tiempo real.',
+        'feature-notifications-item-1': 'Notificaciones Push instantáneas y personalizables',
+        'feature-notifications-item-2': 'Alertas automáticas por correo electrónico',
+        'feature-notifications-item-3': 'Llamadas telefónicas automáticas para bloques premium',
+        'feature-notifications-item-4': 'Mensajes SMS directos y urgentes',
+        'feature-notifications-item-5': 'Alertas personalizables por tipo y valor de bloque',
+        'feature-notifications-item-6': 'Sistema de notificaciones en tiempo real 24/7',
+        'feature-notifications-item-7': 'Filtros avanzados de notificación por prioridad',
+        // Feature 6: Referidos
+        'feature-referrals-title': 'REFERIDOS',
+        'feature-referrals-description': 'Invita a otros conductores a unirse a la revolución StarFlex y obtén beneficios exclusivos por cada referido que se registre exitosamente. Comparte tu experiencia y gana recompensas mientras ayudas a otros conductores a maximizar sus ganancias.',
+        'feature-referrals-item-1': 'Enlace único de referido personalizado y rastreable',
+        'feature-referrals-item-2': 'Gana 1 semana completamente gratis por cada referido exitoso',
+        'feature-referrals-item-3': 'Código QR dinámico para compartir fácilmente',
+        'feature-referrals-item-4': 'Panel de seguimiento de referidos en tiempo real',
+        'feature-referrals-item-5': 'Bonificaciones adicionales por referidos activos',
+        // Videos Section
+        'videos-badge': 'Experiencia Visual Inmersiva',
+        'videos-title-main': 'VE STARFLEX',
+        'videos-title-highlight': 'EN ACCIÓN',
         'videos-subtitle': 'Descubre cómo StarFlex revoluciona tu experiencia con Amazon Flex. Mira la automatización inteligente trabajando en tiempo real.',
-        'faq-title': 'Preguntas Frecuentes', 'faq-subtitle': 'Encuentra respuestas claras a las dudas más comunes sobre StarFlex y descubre cómo transformar tu experiencia con Amazon Flex.',
-        'faq-search-placeholder': 'Buscar pregunta...', 'contact-title-main': 'MEJORES BLOQUES DE', 'contact-title-highlight': 'AMAZON FLEX',
-        'contact-subtitle': 'No olvides seguirnos en nuestras redes sociales ya que publicamos diariamente en nuestros canales la recopilación de los mejores bloques aceptados.',
-        'footer-cta-main': 'COMENZAR AHORA', 'footer-cta-trial': '3 días gratis'
+        'video-not-supported': 'Tu navegador no soporta videos HTML5. <a href="./assets/StarFlex.mp4">Descargar video</a>.',
+        'video-play-title': 'REPRODUCIR DEMO',
+        'video-play-subtitle': 'Ver StarFlex en acción',
+        'video-info-title': 'StarFlex Demo Completo',
+        'video-info-description': 'Observa cómo StarFlex automatiza completamente tu experiencia con Amazon Flex. Desde la configuración inicial hasta la captura automática de bloques.',
+        'videos-cta-title': '¿Listo para Transformar tus Ganancias?',
+        'videos-cta-description': 'Únete a más de 15,000 conductores que ya están maximizando sus ingresos con StarFlex',
+        'videos-cta-start': 'COMENZAR AHORA',
+        'videos-cta-trial': '3 días gratis',
+        'videos-cta-demo': 'VER DEMO PERSONALIZADA',
+        // FAQ Section
+        'faq-title': 'Preguntas Frecuentes',
+        'faq-subtitle': 'Encuentra respuestas claras a las dudas más comunes sobre StarFlex y descubre cómo transformar tu experiencia con Amazon Flex.',
+        'faq-search-placeholder': 'Buscar pregunta...',
+        'faq-1-question': '¿Cuáles son los principales beneficios de utilizar StarFlex?',
+        'faq-1-answer': 'StarFlex está diseñado para <span class="faq__answer-highlight">eliminar la conducción distraída</span> mediante automatización inteligente. Te permite concentrarte completamente en la conducción segura mientras nuestro sistema trabaja para encontrar los mejores bloques. Con StarFlex, no necesitas revisar constantemente tu teléfono, garantizando una experiencia más segura y eficiente que te permite maximizar tus ganancias.',
+        'faq-2-question': '¿StarFlex puede resolver automáticamente los CAPTCHA?',
+        'faq-2-answer': 'Sí, StarFlex incluye <span class="faq__answer-highlight">tecnología avanzada para resolver CAPTCHA automáticamente</span>. Nuestro sistema utiliza algoritmos inteligentes que pueden interpretar y resolver diferentes tipos de verificaciones, permitiendo una navegación fluida sin interrupciones manuales. Esto optimiza tu tiempo y hace que tu experiencia diaria sea más eficiente.',
+        'faq-3-question': '¿Es seguro usar StarFlex? ¿Amazon puede detectarlo?',
+        'faq-3-answer': 'StarFlex utiliza <span class="faq__answer-highlight">tecnología avanzada de simulación humana</span> que incluye patrones de comportamiento naturales, tiempos de respuesta variables y gestos táctiles realistas. Nuestro enfoque se centra en ayudar a los conductores a brindar un mejor servicio a Amazon y sus clientes, asegurando entregas eficientes y de alta calidad.',
+        'faq-4-question': '¿StarFlex funciona en iPhone y Android?',
+         'faq-4-answer': 'Sí, StarFlex está disponible para <span class="faq__answer-highlight">iOS (iPhone 8+) y Android (8.0+)</span>. Hemos desarrollado aplicaciones nativas optimizadas para cada plataforma, garantizando el mejor rendimiento y una experiencia de usuario superior. Ambas versiones incluyen todas las funcionalidades y reciben actualizaciones automáticas.',
+        'faq-5-question': '¿Qué necesito para empezar a usar StarFlex?',
+        'faq-5-answer': 'Solo necesitas una <span class="faq__answer-highlight">cuenta activa de Amazon Flex y un dispositivo compatible</span>. Después de descargar la aplicación, el proceso de configuración toma menos de 5 minutos. Nuestro sistema de configuración guiada te ayudará a optimizar tu experiencia desde el primer día.',
+        'faq-no-results': 'No se encontraron preguntas que coincidan con tu búsqueda',
+        'faq-no-results-suggestion': 'Intenta con términos diferentes o contacta nuestro soporte',
+        // Contact Section
+        'contact-badge': 'Conecta con el Futuro',
+        'contact-title-main': 'MEJORES BLOQUES DE',
+        'contact-title-highlight': 'AMAZON FLEX',
+        'contact-subtitle': 'No olvides seguirnos en nuestras redes sociales ya que publicamos diariamente en nuestros canales la recopilación de los mejores bloques aceptados y así podrás estar al tanto de los horarios y ubicaciones más rentables.',
+        'contact-whatsapp-title': 'Canales de noticias de WhatsApp',
+        'contact-whatsapp-description': 'Únete a nuestro canal de WhatsApp para recibir las últimas actualizaciones y mejores bloques disponibles',
+        'contact-whatsapp-btn': 'Unirse',
+        'contact-instagram-title': 'Instagram',
+        'contact-instagram-description': 'Síguenos para contenido visual, tips y actualizaciones diarias sobre los mejores bloques',
+        'contact-instagram-btn': 'Seguir',
+        'contact-facebook-title': 'Facebook',
+        'contact-facebook-description': 'Únete a nuestra comunidad en Facebook para interactuar con otros conductores y compartir experiencias',
+        'contact-facebook-btn': 'Seguir',
+        'contact-tiktok-title': 'TikTok',
+        'contact-tiktok-description': 'Descubre contenido viral, tips rápidos y las últimas tendencias de Amazon Flex',
+        'contact-tiktok-btn': 'Seguir',
+        'contact-telegram-title': 'Canales de noticias de Telegram',
+        'contact-telegram-description': 'Recibe notificaciones instantáneas de los mejores bloques y actualizaciones importantes',
+        'contact-telegram-btn': 'Unirse',
+        'contact-email-title': 'support@starflexapp.com',
+        'contact-email-description': 'Contacta directamente con nuestro equipo de soporte técnico especializado',
+        'contact-email-btn': 'Contactar',
+        // Footer
+        'footer-legal': 'Política de Privacidad • Términos y Condiciones',
+        'footer-copyright': '© StarFlex • Todos los derechos reservados',
+        'footer-cta-main': 'COMENZAR AHORA',
+        'footer-cta-trial': '3 días gratis'
     },
     en: {
+        // Meta tags
         'page-title': 'StarFlex - Automate your Amazon Flex Blocks | Free Trial',
         'page-description': 'Starflex revolutionizes Amazon Flex. Intelligent block automation, schedule optimization and maximum earnings. Join +15,000 successful drivers.',
-        'nav-home': 'Home', 'nav-features': 'Features', 'nav-videos': 'Videos', 'nav-faq': 'FAQ', 'nav-contact': 'Contact',
-        'nav-cta': 'Start your free trial', 'nav-language-title': 'Language', 'hero-badge': 'Next-Gen Amazon Flex Revolution',
-        'hero_title--main': 'MASTER THE', 'hero_title--highlight': 'AMAZON FLEX', 'hero_title--amazon': 'BLOCKS',
+        'og-title': 'Starflex - The Amazon Flex Revolution',
+        'og-description': 'Intelligent automation that multiplies your earnings. The tool every professional driver needs.',
+        // Navegación
+        'nav-home': 'Home',
+        'nav-features': 'Features',
+        'nav-videos': 'Videos',
+        'nav-faq': 'FAQ',
+        'nav-contact': 'Contact',
+        'nav-cta': 'Start your free trial',
+        'nav-language-title': 'Language',
+        // Hero Section
+        'hero-badge': 'Next-Gen Amazon Flex Revolution',
+        'hero_title--main': 'MASTER THE',
+        'hero_title--highlight': 'AMAZON FLEX',
+        'hero_title--amazon': 'BLOCKS',
         'hero-company-description': 'We are a company dedicated to improving the work experience of Amazon Flex drivers by allowing them to automatically and efficiently select the best blocks of their preference.',
         'hero-subtitle': 'Next-generation intelligent automation that multiplies your earnings. The most advanced platform for professional drivers of the future.',
-        'hero-cta-main': '<strong>FREE</strong> TRIAL', 'hero-cta-trial': '3 DAYS FREE',
+        'hero-cta-main': '<strong>FREE</strong> TRIAL',
+        'hero-cta-trial': '3 DAYS FREE',
         'hero-trust': 'More than 15,000 drivers have transformed their earnings',
-        'features-title': 'Features', 'features-subtitle': 'Discover all the functionalities that StarFlex offers you to maximize your earnings.',
-        'feature-schedule-title': 'SCHEDULE', 'feature-schedule-description': 'Choose the days and times you prefer for your delivery blocks. Configure your availability intelligently and let StarFlex find the best blocks in your preferred schedules.',
-        'feature-stations-title': 'STATIONS', 'feature-stations-description': 'Select your preferred stations and configure minimum prices so our application can automatically offer you blocks that perfectly fit your preferences and location.',
-        'feature-calendar-title': 'CALENDAR', 'feature-calendar-description': 'In the calendar you can see all your accepted blocks and access advanced functions like identification from any location, option to skip selfie and quick block cancellation.',
-        'feature-log-title': 'LOG', 'feature-log-description': 'In the detailed log you can see all available blocks and the specific reason why some were ignored.',
-        'feature-notifications-title': 'NOTIFICATIONS', 'feature-notifications-description': 'StarFlex keeps you always informed with a complete system of multiple notifications so you never miss the best available blocks.',
-        'feature-referrals-title': 'REFERRALS', 'feature-referrals-description': 'Invite other drivers to join the StarFlex revolution and get exclusive benefits for each referral that successfully registers.',
-        'videos-title-main': 'SEE STARFLEX', 'videos-title-highlight': 'IN ACTION',
+        'download-google': 'Download on Google Play',
+        'download-apple': 'Download on App Store',
+        'download-google-alt': 'Download on Google Play',
+        'download-apple-alt': 'Download on App Store',
+        // Features Section
+        'features-title': 'Features',
+        'features-subtitle': 'Discover all the functionalities that StarFlex offers you to maximize your earnings.',
+        // Feature 1: Schedule
+        'feature-schedule-title': 'SCHEDULE',
+        'feature-schedule-description': 'Choose the days and times you prefer for your delivery blocks. Configure your availability intelligently and let StarFlex find the best blocks in your preferred schedules.',
+        'feature-schedule-item-1': 'Personalized configuration per day of the week',
+        'feature-schedule-item-2': 'Flexible schedules adapted to your lifestyle',
+        'feature-schedule-item-3': 'Automatic optimization of profitable shifts',
+        'feature-schedule-item-4': 'Intelligent synchronization with your personal calendar',
+        'feature-schedule-item-5': 'Real-time availability alerts',
+        // Feature 2: Stations
+        'feature-stations-title': 'STATIONS',
+        'feature-stations-description': 'Select your preferred stations and configure minimum prices so our application can automatically offer you blocks that perfectly fit your preferences and location.',
+        'feature-stations-item-1': 'Personalized selection of favorite stations',
+        'feature-stations-item-2': 'Minimum price configuration per station',
+        'feature-stations-item-3': 'Detailed profitability analysis by location',
+        'feature-stations-item-4': 'Instant notifications of available blocks',
+        'feature-stations-item-5': 'Interactive map with all nearby stations',
+        'feature-stations-item-6': 'Advanced filters by distance and delivery type',
+        // Feature 3: Calendar
+        'feature-calendar-title': 'CALENDAR',
+        'feature-calendar-description': 'In the calendar you can see all your accepted blocks and access advanced functions like identification from any location, option to skip selfie and quick block cancellation, all centralized for your maximum convenience.',
+        'feature-calendar-item-1': 'Automatic identification from any location',
+        'feature-calendar-item-2': 'Smart option to skip selfie verification',
+        'feature-calendar-item-3': 'Quick and secure block cancellation',
+        'feature-calendar-item-4': 'Monthly and weekly view of your deliveries',
+        'feature-calendar-item-5': 'Automatic reminders of upcoming blocks',
+        // Feature 4: Log
+        'feature-log-title': 'LOG',
+        'feature-log-description': 'In the detailed log you can see all available blocks and the specific reason why some were ignored. This information will help you adjust your filters and preferences to continuously optimize your delivery options.',
+        'feature-log-item-1': 'Complete and detailed history of all blocks',
+        'feature-log-item-2': 'Specific and detailed reasons for automatic rejection',
+        'feature-log-item-3': 'Smart filter optimization tools',
+        'feature-log-item-4': 'Advanced pattern and trend analysis',
+        'feature-log-item-5': 'Performance and earnings statistics',
+        // Feature 5: Notifications
+        'feature-notifications-title': 'NOTIFICATIONS',
+        'feature-notifications-description': 'StarFlex keeps you always informed with a complete system of multiple notifications so you never miss the best available blocks. Configure your alerts according to your specific preferences and receive real-time notifications.',
+        'feature-notifications-item-1': 'Instant and customizable Push notifications',
+        'feature-notifications-item-2': 'Automatic email alerts',
+        'feature-notifications-item-3': 'Automatic phone calls for premium blocks',
+        'feature-notifications-item-4': 'Direct and urgent SMS messages',
+        'feature-notifications-item-5': 'Customizable alerts by block type and value',
+        'feature-notifications-item-6': '24/7 real-time notification system',
+        'feature-notifications-item-7': 'Advanced notification filters by priority',
+        // Feature 6: Referrals
+        'feature-referrals-title': 'REFERRALS',
+        'feature-referrals-description': 'Invite other drivers to join the StarFlex revolution and get exclusive benefits for each referral that successfully registers. Share your experience and earn rewards while helping other drivers maximize their earnings.',
+        'feature-referrals-item-1': 'Unique personalized and trackable referral link',
+        'feature-referrals-item-2': 'Earn 1 completely free week for each successful referral',
+        'feature-referrals-item-3': 'Dynamic QR code for easy sharing',
+        'feature-referrals-item-4': 'Real-time referral tracking panel',
+        'feature-referrals-item-5': 'Additional bonuses for active referrals',
+        // Videos Section
+        'videos-badge': 'Immersive Visual Experience',
+        'videos-title-main': 'SEE STARFLEX',
+        'videos-title-highlight': 'IN ACTION',
         'videos-subtitle': 'Discover how StarFlex revolutionizes your Amazon Flex experience. Watch intelligent automation working in real time.',
-        'faq-title': 'Frequently Asked Questions', 'faq-subtitle': 'Find clear answers to the most common questions about StarFlex and discover how to transform your Amazon Flex experience.',
-        'faq-search-placeholder': 'Search question...', 'contact-title-main': 'BEST BLOCKS OF', 'contact-title-highlight': 'AMAZON FLEX',
-        'contact-subtitle': 'Don\'t forget to follow us on our social networks as we publish daily on our channels the compilation of the best accepted blocks.',
-        'footer-cta-main': 'START NOW', 'footer-cta-trial': '3 days free'
+        'video-not-supported': 'Your browser does not support HTML5 videos. <a href="./assets/StarFlex.mp4">Download video</a>.',
+        'video-play-title': 'PLAY DEMO',
+        'video-play-subtitle': 'See StarFlex in action',
+        'video-info-title': 'Complete StarFlex Demo',
+        'video-info-description': 'Watch how StarFlex completely automates your Amazon Flex experience. From initial setup to automatic block capture.',
+        'videos-cta-title': 'Ready to Transform Your Earnings?',
+        'videos-cta-description': 'Join more than 15,000 drivers who are already maximizing their income with StarFlex',
+        'videos-cta-start': 'START NOW',
+        'videos-cta-trial': '3 days free',
+        'videos-cta-demo': 'SEE PERSONALIZED DEMO',
+        // FAQ Section
+        'faq-title': 'Frequently Asked Questions',
+        'faq-subtitle': 'Find clear answers to the most common questions about StarFlex and discover how to transform your Amazon Flex experience.',
+        'faq-search-placeholder': 'Search question...',
+        'faq-1-question': 'What are the main benefits of using StarFlex?',
+        'faq-1-answer': 'StarFlex is designed to <span class="faq__answer-highlight">eliminate distracted driving</span> through intelligent automation. It allows you to focus completely on safe driving while our system works to find the best blocks. With StarFlex, you don\'t need to constantly check your phone, ensuring a safer and more efficient experience that allows you to maximize your earnings.',
+        'faq-2-question': 'Can StarFlex automatically solve CAPTCHAs?',
+        'faq-2-answer': 'Yes, StarFlex includes <span class="faq__answer-highlight">advanced technology to automatically solve CAPTCHAs</span>. Our system uses intelligent algorithms that can interpret and solve different types of verifications, allowing smooth navigation without manual interruptions. This optimizes your time and makes your daily experience more efficient.',
+        'faq-3-question': 'Is it safe to use StarFlex? Can Amazon detect it?',
+        'faq-3-answer': 'StarFlex uses <span class="faq__answer-highlight">advanced human simulation technology</span> that includes natural behavior patterns, variable response times and realistic touch gestures. Our approach focuses on helping drivers provide better service to Amazon and its customers, ensuring efficient and high-quality deliveries.',
+        'faq-4-question': 'Does StarFlex work on iPhone and Android?',
+        'faq-4-answer': 'Yes, StarFlex is available for <span class="faq__answer-highlight">iOS (iPhone 8+) and Android (8.0+)</span>. We have developed native applications optimized for each platform, guaranteeing the best performance and superior user experience. Both versions include all functionalities and receive automatic updates.',
+        'faq-5-question': 'What do I need to start using StarFlex?',
+        'faq-5-answer': 'You only need an <span class="faq__answer-highlight">active Amazon Flex account and a compatible device</span>. After downloading the application, the setup process takes less than 5 minutes. Our guided setup system will help you optimize your experience from day one.',
+        'faq-no-results': 'No questions found matching your search',
+        'faq-no-results-suggestion': 'Try different terms or contact our support',
+        // Contact Section
+        'contact-badge': 'Connect with the Future',
+        'contact-title-main': 'BEST BLOCKS OF',
+        'contact-title-highlight': 'AMAZON FLEX',
+        'contact-subtitle': 'Don\'t forget to follow us on our social networks as we publish daily on our channels the compilation of the best accepted blocks so you can stay up to date with the most profitable schedules and locations.',
+        'contact-whatsapp-title': 'WhatsApp news channels',
+        'contact-whatsapp-description': 'Join our WhatsApp channel to receive the latest updates and best blocks available',
+        'contact-whatsapp-btn': 'Join',
+        'contact-instagram-title': 'Instagram',
+        'contact-instagram-description': 'Follow us for visual content, tips and daily updates on the best blocks',
+        'contact-instagram-btn': 'Follow',
+        'contact-facebook-title': 'Facebook',
+        'contact-facebook-description': 'Join our community on Facebook to interact with other drivers and share experiences',
+        'contact-facebook-btn': 'Follow',
+        'contact-tiktok-title': 'TikTok',
+        'contact-tiktok-description': 'Discover viral content, quick tips and the latest Amazon Flex trends',
+        'contact-tiktok-btn': 'Follow',
+        'contact-telegram-title': 'Telegram news channels',
+        'contact-telegram-description': 'Receive instant notifications of the best blocks and important updates',
+        'contact-telegram-btn': 'Join',
+        'contact-email-title': 'support@starflexapp.com',
+        'contact-email-description': 'Contact our specialized technical support team directly',
+        'contact-email-btn': 'Contact',
+        // Footer
+        'footer-legal': 'Privacy Policy • Terms and Conditions',
+        'footer-copyright': '© StarFlex • All rights reserved',
+        'footer-cta-main': 'START NOW',
+        'footer-cta-trial': '3 days free'
     }
 };
 
-// ===== UTILIDADES OPTIMIZADAS =====
-const debounce = (func, wait) => {
-    let timeout;
-    return (...args) => {
-        clearTimeout(timeout);
-        timeout = setTimeout(() => func(...args), wait);
-    };
-};
-
-const throttle = (func, limit) => {
-    let inThrottle;
-    return (...args) => {
-        if (!inThrottle) {
-            func.apply(this, args);
-            inThrottle = true;
-            setTimeout(() => inThrottle = false, limit);
-        }
-    };
-};
-
-// ===== DETECCIÓN DE DISPOSITIVO =====
-const detectDevice = () => {
-    state.isMobile = window.innerWidth <= 768 || 
-                     /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    state.isReducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+// ===== DETECCIÓN DE DISPOSITIVO Y CAPACIDADES ULTRA-OPTIMIZADA =====
+function detectDeviceCapabilities() {
+    isMobile = window.innerWidth <= 1023;
+    isReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     
-    if (state.isMobile) {
-        state.performanceMode = true;
+    // Detectar dispositivos de baja potencia más agresivamente
+    const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    const isSlowConnection = connection && (
+        connection.effectiveType === 'slow-2g' || 
+        connection.effectiveType === '2g' || 
+        connection.effectiveType === '3g'
+    );
+    const isLowEndDevice = navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4;
+    const isLowMemory = navigator.deviceMemory && navigator.deviceMemory <= 4;
+    
+    performanceMode = isMobile && (isSlowConnection || isLowEndDevice || isReducedMotion || isLowMemory);
+    
+    if (performanceMode) {
         document.body.classList.add('performance-mode');
-        
-        if (!document.getElementById('mobile-ultra-perf')) {
-            const style = document.createElement('style');
-            style.id = 'mobile-ultra-perf';
-            style.textContent = `
-                .performance-mode *{animation:none!important;transition:none!important;transform:none!important;will-change:auto!important}
-                .performance-mode img,.performance-mode video{image-rendering:auto!important}
-            `;
-            document.head.appendChild(style);
-        }
+        // Deshabilitar animaciones CSS
+        const style = document.createElement('style');
+        style.textContent = `
+            .performance-mode * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.1s !important;
+            }
+            .performance-mode .features::before,
+            .performance-mode .features::after {
+                display: none !important;
+            }
+        `;
+        document.head.appendChild(style);
+        console.log('Modo de rendimiento activado para dispositivo de baja potencia');
     }
-};
+}
 
-// ===== CLASE OPTIMIZADA PARA IMÁGENES =====
-class UltraImageLoader {
+// ===== DETECCIÓN DE SOPORTE DE FORMATOS DE IMAGEN OPTIMIZADA =====
+function detectImageFormats() {
+    return new Promise((resolve) => {
+        const formats = {
+            webp: false
+        };
+        
+        // Test WebP
+        const webpImg = new Image();
+        webpImg.onload = webpImg.onerror = function() {
+            formats.webp = webpImg.height === 2;
+            if (formats.webp) {
+                document.documentElement.classList.add('webp');
+            }
+            resolve(formats);
+        };
+        webpImg.src = 'data:image/webp;base64,UklGRjoAAABXRUJQVlA4IC4AAACyAgCdASoCAAIALmk0mk0iIiIiIgBoSygABc6WWgAA/veff/0PP8bA//LwYAAA';
+    });
+}
+
+// ===== CLASE ULTRA-OPTIMIZADA PARA IMÁGENES =====
+class UltraOptimizedImageLoader {
     constructor() {
-        this.cache = state.isMobile ? null : new Map();
-        this.formats = { avif: false, webp: false };
+        this.imageCache = new Map();
+        this.lazyImages = new Set();
+        this.intersectionObserver = null;
+        this.supportedFormats = { webp: false };
         this.init();
     }
     
     async init() {
-        if (state.isMobile) {
-            // Detección simple para móviles
-            const img = new Image();
-            img.onload = img.onerror = () => this.formats.webp = img.height === 2;
-            img.src = 'data:image/webp;base64,UklGRjoAAABXRUJQVlA4IC4AAACyAgCdASoCAAIALmk0mk0iIiIiIgBoSygABc6WWgAA/veff/0PP8bA//LwYAAA';
+        this.supportedFormats = await detectImageFormats();
+        this.setupLazyLoading();
+        this.preloadCriticalImages();
+    }
+    
+    setupLazyLoading() {
+        if ('IntersectionObserver' in window && !performanceMode) {
+            this.intersectionObserver = new IntersectionObserver(
+                (entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            this.loadImage(entry.target);
+                            this.intersectionObserver.unobserve(entry.target);
+                        }
+                    });
+                },
+                {
+                    rootMargin: isMobile ? '50px 0px' : '100px 0px',
+                    threshold: 0.01
+                }
+            );
+        }
+    }
+    
+    getBestImageUrl(imageConfig) {
+        if (!imageConfig) return null;
+        
+        // Priorizar WebP si está soportado
+        if (this.supportedFormats.webp && imageConfig.webp) {
+            return imageConfig.webp;
+        }
+        
+        // Fallback a PNG o JPG
+        return imageConfig.png || imageConfig.jpg || imageConfig.jpeg || imageConfig.webp;
+    }
+    
+    async loadImage(element) {
+        const imageKey = element.dataset.imageKey;
+        const imageConfig = this.getImageConfig(imageKey);
+        
+        if (!imageConfig) {
+            console.warn(`Configuración de imagen no encontrada para: ${imageKey}`);
             return;
         }
         
-        const testImg = (data) => new Promise(resolve => {
-            const img = new Image();
-            img.onload = img.onerror = () => resolve(img.height === 2);
-            img.src = data;
-        });
+        const imageUrl = this.getBestImageUrl(imageConfig);
         
-        try {
-            [this.formats.avif, this.formats.webp] = await Promise.all([
-                testImg('data:image/avif;base64,AAAAIGZ0eXBhdmlmAAAAAGF2aWZtaWYxbWlhZk1BMUIAAADybWV0YQAAAAAAAAAoaGRscgAAAAAAAAAAcGljdAAAAAAAAAAAAAAAAGxpYmF2aWYAAAAADnBpdG0AAAAAAAEAAAAeaWxvYwAAAABEAAABAAEAAAABAAABGgAAAB0AAAAoaWluZgAAAAAAAQAAABppbmZlAgAAAAABAABhdjAxQ29sb3IAAAAAamlwcnAAAABLaXBjbwAAABRpc3BlAAAAAAAAAAIAAAACAAAAEHBpeGkAAAAAAwgICAAAAAxhdjFDgQ0MAAAAABNjb2xybmNseAACAAIAAYAAAAAXaXBtYQAAAAAAAAABAAEEAQKDBAAAACVtZGF0EgAKCBgABogQEAwgMg8f8D///8WfhwB8+ErK42A='),
-                testImg('data:image/webp;base64,UklGRjoAAABXRUJQVlA4IC4AAACyAgCdASoCAAIALmk0mk0iIiIiIgBoSygABc6WWgAA/veff/0PP8bA//LwYAAA')
-            ]);
-        } catch (error) {
-            console.warn('Error detecting image formats:', error);
-            this.formats.webp = true; // Fallback seguro
+        if (!imageUrl) {
+            console.warn(`No se encontró URL válida para: ${imageKey}`);
+            return;
         }
         
-        if (this.formats.avif) document.documentElement.classList.add('avif');
-        if (this.formats.webp) document.documentElement.classList.add('webp');
-        
-        if ('IntersectionObserver' in window) {
-            this.observer = new IntersectionObserver(entries => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        this.loadImage(entry.target);
-                        this.observer.unobserve(entry.target);
-                    }
-                });
-            }, { rootMargin: '100px', threshold: 0.01 });
-        }
-    }
-    
-    getBestUrl(config) {
-        if (!config) return null;
-        
-        // Para logo: priorizar WebP si está soportado, sino AVIF
-        if (config.webp && this.formats.webp) return config.webp;
-        if (config.avif && this.formats.avif) return config.avif;
-        
-        // Fallbacks
-        return config.mp4 || config.png || config.jpg || config.webp || config.avif;
-    }
-    
-    getConfig(key) {
-        return key.split('.').reduce((config, part) => config?.[part], CONFIG.IMAGE_PATHS);
-    }
-    
-    async loadImage(el) {
-        const url = this.getBestUrl(this.getConfig(el.dataset.imageKey));
-        if (!url) return;
-        
         try {
-            if (state.isMobile) {
-                el.tagName === 'IMG' ? el.src = url : el.style.backgroundImage = `url('${url}')`;
-                el.classList.add('loaded');
-                return;
+            element.classList.add('loading');
+            
+            await this.preloadImage(imageUrl);
+            
+            if (element.tagName === 'IMG') {
+                element.src = imageUrl;
+                element.alt = element.dataset.alt || '';
+            } else {
+                element.style.backgroundImage = `url('${imageUrl}')`;
             }
             
-            el.classList.add('loading');
-            if (!this.cache.has(url)) {
-                await new Promise((resolve, reject) => {
-                    const img = new Image();
-                    img.onload = () => { this.cache.set(url, true); resolve(); };
-                    img.onerror = reject;
-                    img.src = url;
-                });
+            element.classList.remove('loading');
+            element.classList.add('loaded');
+            
+        } catch (error) {
+            console.error(`Error cargando imagen ${imageKey}:`, error);
+            element.classList.remove('loading');
+            element.classList.add('error');
+        }
+    }
+    
+    preloadImage(url) {
+        if (this.imageCache.has(url)) {
+            return Promise.resolve();
+        }
+        
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => {
+                this.imageCache.set(url, true);
+                resolve();
+            };
+            img.onerror = reject;
+            img.src = url;
+        });
+    }
+    
+    getImageConfig(key) {
+        const parts = key.split('.');
+        let config = CONFIG.IMAGE_PATHS;
+        
+        for (const part of parts) {
+            config = config[part];
+            if (!config) return null;
+        }
+        
+        return config;
+    }
+    
+    async preloadCriticalImages() {
+        if (performanceMode) return;
+        
+        const criticalImages = [
+            'logo'
+        ];
+        
+        const preloadPromises = criticalImages.map(async (key) => {
+            const config = this.getImageConfig(key);
+            if (config) {
+                const url = this.getBestImageUrl(config);
+                if (url) {
+                    try {
+                        await this.preloadImage(url);
+                    } catch (error) {
+                        console.warn(`Error precargando imagen crítica ${key}:`, error);
+                    }
+                }
             }
-            el.tagName === 'IMG' ? el.src = url : el.style.backgroundImage = `url('${url}')`;
-            el.classList.replace('loading', 'loaded');
-        } catch {
-            el.classList.replace('loading', 'error');
-        }
+        });
+        
+        await Promise.all(preloadPromises);
     }
     
-    observe(el, key) {
-        el.dataset.imageKey = key;
-        if (state.isMobile || !this.observer) {
-            this.loadImage(el);
+    observeImage(element, imageKey) {
+        element.dataset.imageKey = imageKey;
+        this.lazyImages.add(element);
+        
+        if (this.intersectionObserver && !performanceMode) {
+            this.intersectionObserver.observe(element);
         } else {
-            this.observer.observe(el);
+            this.loadImage(element);
         }
     }
     
-    loadNow(el, key) {
-        el.dataset.imageKey = key;
-        this.loadImage(el);
+    loadImageImmediately(element, imageKey) {
+        element.dataset.imageKey = imageKey;
+        this.loadImage(element);
     }
 }
 
-let imageLoader;
+// ===== INICIALIZACIÓN GLOBAL OPTIMIZADA =====
+let imageOptimizer;
 
-// ===== SISTEMA DE TRADUCCIONES =====
-const initLanguage = () => {
-    const saved = localStorage.getItem('starflex-language');
-    const browser = navigator.language.slice(0, 2);
-    state.currentLanguage = (saved && translations[saved]) ? saved : translations[browser] ? browser : 'es';
+// ===== FUNCIONES DE TRADUCCIÓN ULTRA-OPTIMIZADAS =====
+function initializeLanguageSystem() {
+    const savedLanguage = localStorage.getItem('starflex-language');
+    const browserLanguage = navigator.language.slice(0, 2);
+    
+    if (savedLanguage && translationData[savedLanguage]) {
+        currentLanguage = savedLanguage;
+    } else if (translationData[browserLanguage]) {
+        currentLanguage = browserLanguage;
+    } else {
+        currentLanguage = 'es';
+    }
     
     applyTranslations();
     updateLanguageButtons();
     setupLanguageToggle();
-};
+}
 
-const setupLanguageToggle = () => {
-    document.querySelectorAll('.nav__language-option, .nav__drawer-language-option')
-        .forEach(btn => {
-            const handleClick = e => {
-                e.preventDefault();
-                const lang = btn.getAttribute('data-lang');
-                if (lang && lang !== state.currentLanguage) switchLanguage(lang);
-            };
-            
-            btn.addEventListener('click', handleClick);
-            if (state.isMobile) {
-                btn.addEventListener('touchstart', () => btn.style.transform = 'scale(0.98)', { passive: true });
-                btn.addEventListener('touchend', () => btn.style.transform = '', { passive: true });
+function setupLanguageToggle() {
+    // Botones de idioma para desktop
+    const languageButtons = document.querySelectorAll('.language-btn, .nav__language-option');
+    
+    // Botones de idioma para móvil independiente
+    const mobileLanguageButtons = document.querySelectorAll('.mobile-language-btn, .mobile-nav__language-option');
+    
+    // Configurar eventos para botones desktop
+    languageButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+            e.preventDefault();
+            const selectedLanguage = button.getAttribute('data-lang');
+            if (selectedLanguage && selectedLanguage !== currentLanguage) {
+                switchLanguage(selectedLanguage);
             }
         });
-};
 
-const switchLanguage = lang => {
-    if (!translations[lang]) return;
-    state.currentLanguage = lang;
-    localStorage.setItem('starflex-language', lang);
-    applyTranslations();
-    updateLanguageButtons();
-    document.documentElement.lang = lang;
-    
-    if (!state.isMobile && !state.performanceMode) {
-        document.body.style.opacity = '0.95';
-        setTimeout(() => document.body.style.opacity = '1', 50);
-    }
-};
-
-const applyTranslations = () => {
-    const current = translations[state.currentLanguage];
-    if (!current) return;
-    
-    document.querySelectorAll('[data-translate]').forEach(el => {
-        const text = current[el.getAttribute('data-translate')];
-        if (text) {
-            if (el.tagName === 'INPUT' && el.type === 'text') el.placeholder = text;
-            else if (el.tagName === 'META') el.content = text;
-            else if (el.tagName === 'TITLE') el.textContent = text;
-            else el.innerHTML = text;
+        // Mejorar feedback táctil en móvil
+        if (isMobile) {
+            button.addEventListener('touchstart', () => {
+                button.style.transform = 'scale(0.98)';
+            }, { passive: true });
+            button.addEventListener('touchend', () => {
+                button.style.transform = '';
+            }, { passive: true });
         }
     });
-};
-
-const updateLanguageButtons = () => {
-    document.querySelectorAll('.nav__language-option, .nav__drawer-language-option')
-        .forEach(btn => btn.classList.toggle('active', btn.getAttribute('data-lang') === state.currentLanguage));
-    updateLanguageSwitcher();
-};
-
-// ===== SELECTOR DE IDIOMA FLOTANTE - SOLO DESKTOP =====
-const initLanguageSwitcher = () => {
-    if (state.isMobile) return;
     
-    const btn = document.getElementById('language-switcher-btn');
-    const switcher = document.getElementById('language-switcher');
-    if (!btn || !switcher) return;
+    // Configurar eventos para botones móvil independiente
+    mobileLanguageButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+            e.preventDefault();
+            const selectedLanguage = button.getAttribute('data-lang');
+            if (selectedLanguage && selectedLanguage !== currentLanguage) {
+                switchLanguage(selectedLanguage);
+            }
+        });
+
+        button.addEventListener('touchstart', () => {
+            button.style.transform = 'scale(0.98)';
+        }, { passive: true });
+        button.addEventListener('touchend', () => {
+            button.style.transform = '';
+        }, { passive: true });
+    });
+}
+
+function switchLanguage(newLanguage) {
+    if (!translationData[newLanguage]) {
+        console.warn(`Language ${newLanguage} not supported`);
+        return;
+    }
     
-    btn.addEventListener('click', e => { 
-        e.preventDefault(); 
-        e.stopPropagation(); 
-        toggleLanguageSwitcher(); 
+    currentLanguage = newLanguage;
+    localStorage.setItem('starflex-language', newLanguage);
+    
+    applyTranslations();
+    updateLanguageButtons();
+    
+    document.documentElement.lang = newLanguage;
+    
+    if (!isMobile && !performanceMode) {
+        document.body.style.opacity = '0.95';
+        setTimeout(() => {
+            document.body.style.opacity = '1';
+        }, 100);
+    }
+}
+
+function applyTranslations() {
+    const currentTranslations = translationData[currentLanguage];
+    
+    if (!currentTranslations) {
+        console.warn(`Translations for ${currentLanguage} not found`);
+        return;
+    }
+    
+    requestAnimationFrame(() => {
+        document.querySelectorAll('[data-translate]').forEach(element => {
+            const key = element.getAttribute('data-translate');
+            const translation = currentTranslations[key];
+            
+            if (translation) {
+                if (element.tagName === 'INPUT' && element.type === 'text') {
+                    element.placeholder = translation;
+                } else if (element.tagName === 'META') {
+                    element.content = translation;
+                } else if (element.tagName === 'TITLE') {
+                    element.textContent = translation;
+                } else {
+                    element.innerHTML = translation;
+                }
+            }
+        });
+        
+        document.querySelectorAll('[data-translate-placeholder]').forEach(element => {
+            const key = element.getAttribute('data-translate-placeholder');
+            const translation = currentTranslations[key];
+            if (translation) {
+                element.placeholder = translation;
+            }
+        });
+        
+        document.querySelectorAll('[data-translate-aria]').forEach(element => {
+            const key = element.getAttribute('data-translate-aria');
+            const translation = currentTranslations[key];
+            if (translation) {
+                element.setAttribute('aria-label', translation);
+            }
+        });
+        
+        document.querySelectorAll('[data-translate-alt]').forEach(element => {
+            const key = element.getAttribute('data-translate-alt');
+            const translation = currentTranslations[key];
+            if (translation) {
+                element.alt = translation;
+            }
+        });
+    });
+}
+
+function updateLanguageButtons() {
+    // Actualizar botones desktop
+    const languageButtons = document.querySelectorAll('.language-btn, .nav__language-option');
+    languageButtons.forEach(button => {
+        const buttonLang = button.getAttribute('data-lang');
+        if (buttonLang === currentLanguage) {
+            button.classList.add('active');
+        } else {
+            button.classList.remove('active');
+        }
     });
     
-    document.addEventListener('click', e => {
-        if (state.isLanguageSwitcherOpen && !switcher.contains(e.target)) {
+    // Actualizar botones móvil independiente
+    const mobileLanguageButtons = document.querySelectorAll('.mobile-language-btn, .mobile-nav__language-option');
+    mobileLanguageButtons.forEach(button => {
+        const buttonLang = button.getAttribute('data-lang');
+        if (buttonLang === currentLanguage) {
+            button.classList.add('active');
+        } else {
+            button.classList.remove('active');
+        }
+    });
+    
+    updateLanguageSwitcher();
+}
+
+// ===== SELECTOR DE IDIOMA FLOTANTE OPTIMIZADO (SOLO DESKTOP) =====
+function initializeLanguageSwitcher() {
+    const languageSwitcherBtn = document.getElementById('language-switcher-btn');
+    const languageSwitcherDropdown = document.getElementById('language-switcher-dropdown');
+    const languageSwitcher = document.getElementById('language-switcher');
+    const languageOptions = languageSwitcher?.querySelectorAll('.language-switcher__option');
+    
+    if (!languageSwitcherBtn || !languageSwitcherDropdown || !languageSwitcher) return;
+    
+    if (isMobile) return;
+    
+    languageSwitcherBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleLanguageSwitcher();
+    });
+    
+    languageOptions?.forEach(option => {
+        option.addEventListener('click', (e) => {
+            e.preventDefault();
+            const selectedLanguage = option.getAttribute('data-lang');
+            if (selectedLanguage && selectedLanguage !== currentLanguage) {
+                switchLanguage(selectedLanguage);
+                closeLanguageSwitcher();
+            }
+        });
+    });
+    
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && isLanguageSwitcherOpen) {
             closeLanguageSwitcher();
         }
     });
-    
-    document.addEventListener('keydown', e => e.key === 'Escape' && state.isLanguageSwitcherOpen && closeLanguageSwitcher());
-};
+}
 
-const toggleLanguageSwitcher = () => state.isLanguageSwitcherOpen ? closeLanguageSwitcher() : openLanguageSwitcher();
+function toggleLanguageSwitcher() {
+    if (isLanguageSwitcherOpen) {
+        closeLanguageSwitcher();
+    } else {
+        openLanguageSwitcher();
+    }
+}
 
-const openLanguageSwitcher = () => {
-    const switcher = document.getElementById('language-switcher');
-    const btn = document.getElementById('language-switcher-btn');
-    if (!switcher || !btn) return;
-    state.isLanguageSwitcherOpen = true;
-    switcher.classList.add('active');
-    btn.setAttribute('aria-expanded', 'true');
-};
+function openLanguageSwitcher() {
+    const languageSwitcher = document.getElementById('language-switcher');
+    const languageSwitcherBtn = document.getElementById('language-switcher-btn');
+    
+    if (!languageSwitcher || !languageSwitcherBtn) return;
+    
+    isLanguageSwitcherOpen = true;
+    languageSwitcher.classList.add('active');
+    languageSwitcherBtn.setAttribute('aria-expanded', 'true');
+}
 
-const closeLanguageSwitcher = () => {
-    const switcher = document.getElementById('language-switcher');
-    const btn = document.getElementById('language-switcher-btn');
-    if (!switcher || !btn) return;
-    state.isLanguageSwitcherOpen = false;
-    switcher.classList.remove('active');
-    btn.setAttribute('aria-expanded', 'false');
-};
+function closeLanguageSwitcher() {
+    const languageSwitcher = document.getElementById('language-switcher');
+    const languageSwitcherBtn = document.getElementById('language-switcher-btn');
+    
+    if (!languageSwitcher || !languageSwitcherBtn) return;
+    
+    isLanguageSwitcherOpen = false;
+    languageSwitcher.classList.remove('active');
+    languageSwitcherBtn.setAttribute('aria-expanded', 'false');
+}
 
-const updateLanguageSwitcher = () => {
-    const text = document.getElementById('language-switcher-text');
-    if (text) text.textContent = state.currentLanguage.toUpperCase();
-    document.querySelectorAll('.nav__language-option')
-        .forEach(opt => opt.classList.toggle('active', opt.getAttribute('data-lang') === state.currentLanguage));
-};
-
-// ===== DRAWER MÓVIL =====
-const initDrawer = () => {
-    const toggle = document.getElementById('nav-toggle');
-    const drawer = document.getElementById('nav-drawer');
-    const overlay = document.getElementById('nav-drawer-overlay');
-    const close = document.getElementById('nav-drawer-close');
+function updateLanguageSwitcher() {
+    const languageSwitcherText = document.getElementById('language-switcher-text');
     
-    if (!toggle || !drawer || !overlay || !close) return;
+    if (languageSwitcherText) {
+        languageSwitcherText.textContent = currentLanguage.toUpperCase();
+    }
     
-    toggle.addEventListener('click', e => { 
-        e.preventDefault(); 
-        e.stopPropagation(); 
-        toggleDrawer(); 
-    });
-    
-    close.addEventListener('click', e => { 
-        e.preventDefault(); 
-        e.stopPropagation(); 
-        closeDrawer(); 
-    });
-    
-    overlay.addEventListener('click', closeDrawer);
-    
-    drawer.addEventListener('click', e => {
-        const link = e.target.closest('.nav__drawer-link');
-        if (!link) return;
-        
-        e.preventDefault();
-        closeDrawer();
-        const target = document.querySelector(link.getAttribute('href'));
-        if (target) {
-            setTimeout(() => {
-                smoothScroll(target);
-                updateActiveNavLink(link);
-            }, state.isMobile ? 50 : 300);
+    const allOptions = document.querySelectorAll('.language-switcher__option');
+    allOptions.forEach(option => {
+        const optionLang = option.getAttribute('data-lang');
+        if (optionLang === currentLanguage) {
+            option.classList.add('active');
+        } else {
+            option.classList.remove('active');
         }
     });
-};
+}
 
-const toggleDrawer = () => state.isDrawerOpen ? closeDrawer() : openDrawer();
-
-const openDrawer = () => {
-    const toggle = document.getElementById('nav-toggle');
-    const drawer = document.getElementById('nav-drawer');
-    const overlay = document.getElementById('nav-drawer-overlay');
+// ===== FUNCIONES DEL BOTÓN FLOTANTE ULTRA-OPTIMIZADAS =====
+function initializeFloatingWidget() {
+    const floatingMainBtn = document.getElementById('floating-main-btn');
+    const floatingMenu = document.getElementById('floating-menu');
     
-    if (!toggle || !drawer || !overlay) return;
+    if (!floatingMainBtn || !floatingMenu) return;
     
-    state.isDrawerOpen = true;
-    toggle.classList.add('active');
-    drawer.classList.add('active');
-    overlay.classList.add('active');
-    document.body.classList.add('nav-menu-open');
-    toggle.setAttribute('aria-expanded', 'true');
-    drawer.setAttribute('aria-hidden', 'false');
+    floatingMainBtn.addEventListener('click', () => {
+        toggleFloatingMenu();
+    });
     
-    document.body.style.overflow = 'hidden';
-};
-
-const closeDrawer = () => {
-    const toggle = document.getElementById('nav-toggle');
-    const drawer = document.getElementById('nav-drawer');
-    const overlay = document.getElementById('nav-drawer-overlay');
-    
-    if (!toggle || !drawer || !overlay) return;
-    
-    state.isDrawerOpen = false;
-    toggle.classList.remove('active');
-    drawer.classList.remove('active');
-    overlay.classList.remove('active');
-    document.body.classList.remove('nav-menu-open');
-    toggle.setAttribute('aria-expanded', 'false');
-    drawer.setAttribute('aria-hidden', 'true');
-    
-    document.body.style.overflow = '';
-};
-
-// ===== WIDGET FLOTANTE =====
-const initFloatingWidget = () => {
-    const btn = document.getElementById('floating-main-btn');
-    const menu = document.getElementById('floating-menu');
-    if (!btn || !menu) return;
-    
-    btn.addEventListener('click', toggleFloatingMenu);
-    
-    if (state.isMobile) {
-        btn.addEventListener('touchstart', () => btn.style.transform = 'scale(0.95)', { passive: true });
-        btn.addEventListener('touchend', () => btn.style.transform = '', { passive: true });
+    if (isMobile) {
+        floatingMainBtn.addEventListener('touchstart', () => {
+            floatingMainBtn.style.transform = 'scale(0.95)';
+        }, { passive: true });
+        floatingMainBtn.addEventListener('touchend', () => {
+            floatingMainBtn.style.transform = '';
+        }, { passive: true });
     }
     
-    document.addEventListener('click', e => {
-        const widget = document.getElementById('floating-widget');
-        if (state.isFloatingMenuOpen && widget && !widget.contains(e.target)) closeFloatingMenu();
-    }, { passive: true });
-};
-
-const toggleFloatingMenu = () => state.isFloatingMenuOpen ? closeFloatingMenu() : openFloatingMenu();
-
-const openFloatingMenu = () => {
-    const btn = document.getElementById('floating-main-btn');
-    const menu = document.getElementById('floating-menu');
-    if (!btn || !menu) return;
+    document.addEventListener('click', (e) => {
+        const floatingWidget = document.getElementById('floating-widget');
+        if (isFloatingMenuOpen && floatingWidget && !floatingWidget.contains(e.target)) {
+            closeFloatingMenu();
+        }
+    });
     
-    state.isFloatingMenuOpen = true;
-    btn.classList.add('active');
-    menu.classList.add('active');
-    btn.setAttribute('aria-expanded', 'true');
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && isFloatingMenuOpen) {
+            closeFloatingMenu();
+        }
+    });
+}
+
+function toggleFloatingMenu() {
+    if (isFloatingMenuOpen) {
+        closeFloatingMenu();
+    } else {
+        openFloatingMenu();
+    }
+}
+
+function openFloatingMenu() {
+    const floatingMainBtn = document.getElementById('floating-main-btn');
+    const floatingMenu = document.getElementById('floating-menu');
     
-    const items = menu.querySelectorAll('.floating-widget__menu-item');
-    if (state.isMobile || state.performanceMode) {
-        items.forEach(item => {
+    if (!floatingMainBtn || !floatingMenu) return;
+    
+    isFloatingMenuOpen = true;
+    floatingMainBtn.classList.add('active');
+    floatingMenu.classList.add('active');
+    floatingMainBtn.setAttribute('aria-expanded', 'true');
+    
+    const menuItems = floatingMenu.querySelectorAll('.floating-widget__menu-item');
+    menuItems.forEach((item, index) => {
+        setTimeout(() => {
             item.style.transform = 'translateY(0) scale(1)';
             item.style.opacity = '1';
-        });
-    } else {
-        items.forEach((item, i) => {
-            setTimeout(() => {
-                item.style.transform = 'translateY(0) scale(1)';
-                item.style.opacity = '1';
-            }, i * 50);
-        });
-    }
-};
+        }, index * (isMobile ? 60 : 100));
+    });
+}
 
-const closeFloatingMenu = () => {
-    const btn = document.getElementById('floating-main-btn');
-    const menu = document.getElementById('floating-menu');
-    if (!btn || !menu) return;
+function closeFloatingMenu() {
+    const floatingMainBtn = document.getElementById('floating-main-btn');
+    const floatingMenu = document.getElementById('floating-menu');
     
-    state.isFloatingMenuOpen = false;
-    btn.classList.remove('active');
-    menu.classList.remove('active');
-    btn.setAttribute('aria-expanded', 'false');
+    if (!floatingMainBtn || !floatingMenu) return;
     
-    menu.querySelectorAll('.floating-widget__menu-item').forEach(item => {
+    isFloatingMenuOpen = false;
+    floatingMainBtn.classList.remove('active');
+    floatingMenu.classList.remove('active');
+    floatingMainBtn.setAttribute('aria-expanded', 'false');
+    
+    const menuItems = floatingMenu.querySelectorAll('.floating-widget__menu-item');
+    menuItems.forEach(item => {
         item.style.transform = '';
         item.style.opacity = '';
     });
-};
+}
 
-// ===== NAVEGACIÓN =====
-const initNavigation = () => {
-    const logo = document.querySelector('.nav__logo');
-    if (logo) {
-        logo.addEventListener('click', e => {
+// ===== NAVEGACIÓN DESKTOP RESPONSIVE ULTRA-OPTIMIZADA =====
+function initializeDesktopNavigation() {
+    const navToggle = document.getElementById('nav-toggle');
+    const navMenu = document.getElementById('nav-menu');
+    const navClose = document.getElementById('nav-close');
+    const navLinks = document.querySelectorAll('.nav__link');
+    const header = document.getElementById('header');
+    
+    // Funcionalidad del logo como enlace (solo desktop)
+    const navLogo = document.querySelector('.nav__logo');
+    if (navLogo && !isMobile) {
+        navLogo.addEventListener('click', (e) => {
             e.preventDefault();
-            if (state.isDrawerOpen) closeDrawer();
-            const home = document.querySelector('#home');
-            if (home) {
-                smoothScroll(home);
-                updateActiveNavLink(document.querySelector('.nav__link[href="#home"], .nav__drawer-link[href="#home"]'));
+            
+            if (isMenuOpen) {
+                closeMobileMenu();
+            }
+            
+            const homeSection = document.querySelector('#home');
+            if (homeSection) {
+                smoothScrollToSection(homeSection);
+                
+                const homeLink = document.querySelector('.nav__link[href="#home"]');
+                if (homeLink) {
+                    updateActiveNavLink(homeLink);
+                }
             }
         });
-        logo.style.cursor = 'pointer';
+        
+        navLogo.style.cursor = 'pointer';
+        navLogo.setAttribute('tabindex', '0');
+        navLogo.setAttribute('role', 'button');
+        navLogo.setAttribute('aria-label', 'Ir al inicio');
+        
+        navLogo.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                navLogo.click();
+            }
+        });
     }
     
-    const nav = document.querySelector('.nav');
-    if (nav) {
-        nav.addEventListener('click', e => {
-            const link = e.target.closest('.nav__link');
-            if (!link) return;
+    // Enlaces de navegación desktop
+    navLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            if (isMenuOpen) {
+                closeMobileMenu();
+            }
             
             e.preventDefault();
-            const target = document.querySelector(link.getAttribute('href'));
-            if (target) {
-                smoothScroll(target);
+            const targetId = link.getAttribute('href');
+            const targetSection = document.querySelector(targetId);
+            
+            if (targetSection) {
+                smoothScrollToSection(targetSection);
                 updateActiveNavLink(link);
             }
         });
+    });
+    
+    initializeKeyboardNavigation();
+    initializeActiveSection();
+}
+
+// ===== NAVEGACIÓN MÓVIL INDEPENDIENTE - COMPLETAMENTE CORREGIDA =====
+function initializeMobileNavigation() {
+    console.log('🔧 Inicializando navegación móvil...');
+    
+    const mobileNavToggle = document.getElementById('mobile-nav-toggle');
+    const mobileNavMenu = document.getElementById('mobile-nav-menu');
+    const mobileNavClose = document.getElementById('mobile-nav-close');
+    const mobileNavOverlay = document.getElementById('mobile-nav-overlay');
+    const mobileHeader = document.getElementById('mobile-header');
+    
+    // CRÍTICO: Buscar enlaces móviles con el selector correcto
+    const mobileNavLinks = document.querySelectorAll('.mobile-nav__link');
+    
+    console.log(`📱 Enlaces móviles encontrados: ${mobileNavLinks.length}`);
+    
+    if (!mobileNavToggle || !mobileNavMenu) {
+        console.error('❌ Elementos de navegación móvil no encontrados');
+        return;
     }
     
-    initDrawer();
+    if (mobileNavLinks.length === 0) {
+        console.error('❌ No se encontraron enlaces de navegación móvil');
+        return;
+    }
     
-    setTimeout(() => {
-        if (!state.isMobile) updateActiveNavOnScroll();
-    }, 100);
-};
+    // Funcionalidad del logo móvil como enlace
+    const mobileNavLogo = document.querySelector('.mobile-nav__logo');
+    if (mobileNavLogo) {
+        mobileNavLogo.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log('🏠 Click en logo móvil');
+            
+            if (isMobileMenuOpen) {
+                closeMobileNavMenu();
+            }
+            
+            const homeSection = document.querySelector('#home');
+            if (homeSection) {
+                setTimeout(() => {
+                    smoothScrollToSection(homeSection);
+                    const homeLink = document.querySelector('.mobile-nav__link[href="#home"]');
+                    if (homeLink) {
+                        updateActiveMobileNavLink(homeLink);
+                    }
+                }, 300);
+            }
+        });
+        
+        mobileNavLogo.style.cursor = 'pointer';
+        mobileNavLogo.setAttribute('tabindex', '0');
+        mobileNavLogo.setAttribute('role', 'button');
+        mobileNavLogo.setAttribute('aria-label', 'Ir al inicio');
+    }
+    
+    // Toggle hamburguesa móvil
+    mobileNavToggle.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('🍔 Toggle hamburguesa móvil');
+        toggleMobileNavMenu();
+    });
 
-const smoothScroll = target => {
-    if (!target) return;
-    const headerHeight = state.isMobile ? 70 : 80;
-    const pos = target.offsetTop - headerHeight;
+    mobileNavToggle.addEventListener('touchstart', () => {
+        mobileNavToggle.style.transform = 'scale(0.95)';
+    }, { passive: true });
+    mobileNavToggle.addEventListener('touchend', () => {
+        mobileNavToggle.style.transform = '';
+    }, { passive: true });
     
-    if (state.isMobile || state.performanceMode) {
-        window.scrollTo(0, pos);
-    } else if ('scrollBehavior' in document.documentElement.style) {
-        window.scrollTo({ top: pos, behavior: 'smooth' });
+    // Botón cerrar móvil
+    if (mobileNavClose) {
+        mobileNavClose.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('❌ Botón cerrar móvil');
+            closeMobileNavMenu();
+        });
+
+        mobileNavClose.addEventListener('touchstart', () => {
+            mobileNavClose.style.transform = 'scale(0.95)';
+        }, { passive: true });
+        mobileNavClose.addEventListener('touchend', () => {
+            mobileNavClose.style.transform = '';
+        }, { passive: true });
+    }
+    
+    // Overlay para cerrar
+    if (mobileNavOverlay) {
+        mobileNavOverlay.addEventListener('click', () => {
+            console.log('🔄 Click en overlay móvil');
+            closeMobileNavMenu();
+        });
+    }
+    
+    // ===== ENLACES DE NAVEGACIÓN MÓVIL - LÓGICA CORREGIDA =====
+    mobileNavLinks.forEach((link, index) => {
+        console.log(`🔗 Configurando enlace móvil ${index + 1}: ${link.getAttribute('href')}`);
+        
+        // Función principal de navegación
+        const handleNavigation = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const targetId = link.getAttribute('href');
+            console.log(`🎯 Navegando a: ${targetId}`);
+            
+            // Cerrar el menú inmediatamente
+            if (isMobileMenuOpen) {
+                console.log('📱 Cerrando menú móvil...');
+                closeMobileNavMenu();
+            }
+            
+            // Buscar la sección objetivo
+            const targetSection = document.querySelector(targetId);
+            if (targetSection) {
+                console.log(`✅ Sección encontrada: ${targetId}`);
+                
+                // Hacer scroll con un pequeño delay para que se cierre el menú
+                setTimeout(() => {
+                    console.log(`🚀 Haciendo scroll a: ${targetId}`);
+                    smoothScrollToSection(targetSection);
+                    updateActiveMobileNavLink(link);
+                }, 100);
+            } else {
+                console.error(`❌ Sección no encontrada: ${targetId}`);
+            }
+        };
+        
+        // Agregar event listeners para máxima compatibilidad
+        link.addEventListener('click', handleNavigation);
+        link.addEventListener('touchend', (e) => {
+            // Prevenir doble activación
+            if (e.cancelable) {
+                e.preventDefault();
+            }
+            handleNavigation(e);
+        });
+        
+        // Efectos táctiles mejorados
+        link.addEventListener('touchstart', (e) => {
+            link.style.transform = 'scale(0.98)';
+            link.style.transition = 'transform 0.1s ease';
+            console.log(`👆 Touch start en: ${link.getAttribute('href')}`);
+        }, { passive: true });
+        
+        link.addEventListener('touchcancel', () => {
+            link.style.transform = '';
+        }, { passive: true });
+        
+        // Resetear transform después del touch
+        setTimeout(() => {
+            link.addEventListener('touchend', () => {
+                setTimeout(() => {
+                    link.style.transform = '';
+                }, 150);
+            }, { passive: true });
+        }, 100);
+    });
+    
+    // Cerrar menú tocando fuera - mejorado
+    document.addEventListener('touchstart', (e) => {
+        if (isMobileMenuOpen && mobileNavMenu && !mobileNavMenu.contains(e.target) && !mobileNavToggle.contains(e.target)) {
+            console.log('🔄 Touch fuera del menú móvil');
+            closeMobileNavMenu();
+        }
+    }, { passive: true });
+    
+    document.addEventListener('click', (e) => {
+        if (isMobileMenuOpen && mobileNavMenu && !mobileNavMenu.contains(e.target) && !mobileNavToggle.contains(e.target)) {
+            console.log('🔄 Click fuera del menú móvil');
+            closeMobileNavMenu();
+        }
+    });
+    
+    console.log('✅ Navegación móvil inicializada correctamente');
+}
+
+function toggleMobileNavMenu() {
+    console.log(`🔄 Toggle menú móvil - Estado actual: ${isMobileMenuOpen ? 'abierto' : 'cerrado'}`);
+    if (isMobileMenuOpen) {
+        closeMobileNavMenu();
     } else {
-        window.scrollTo(0, pos);
+        openMobileNavMenu();
     }
-};
+}
 
-const updateActiveNavLink = activeLink => {
-    document.querySelectorAll('.nav__link, .nav__drawer-link').forEach(link => link.classList.remove('active'));
-    activeLink?.classList.add('active');
-};
-
-// ===== EFECTOS DE SCROLL =====
-const initScrollEffects = () => {
-    const throttleTime = state.isMobile ? 200 : 15;
+function openMobileNavMenu() {
+    console.log('📱 Abriendo menú móvil...');
+    const mobileNavToggle = document.getElementById('mobile-nav-toggle');
+    const mobileNavMenu = document.getElementById('mobile-nav-menu');
+    const body = document.body;
     
-    const throttledScroll = throttle(() => {
-        if (!state.ticking) {
-            requestAnimationFrame(() => {
-                if (state.isMobile) {
-                    handleScrollDirectionMobile();
-                    updateHeaderOnScrollMobile();
-                } else {
+    if (!mobileNavToggle || !mobileNavMenu) {
+        console.error('❌ Elementos del menú móvil no encontrados');
+        return;
+    }
+    
+    isMobileMenuOpen = true;
+    
+    mobileNavToggle.classList.add('active');
+    mobileNavMenu.classList.add('active');
+    body.classList.add('mobile-menu-open');
+    
+    mobileNavToggle.setAttribute('aria-expanded', 'true');
+    mobileNavMenu.setAttribute('aria-hidden', 'false');
+    
+    console.log('✅ Menú móvil abierto');
+}
+
+function closeMobileNavMenu() {
+    console.log('📱 Cerrando menú móvil...');
+    const mobileNavToggle = document.getElementById('mobile-nav-toggle');
+    const mobileNavMenu = document.getElementById('mobile-nav-menu');
+    const body = document.body;
+    
+    if (!mobileNavToggle || !mobileNavMenu) {
+        console.error('❌ Elementos del menú móvil no encontrados');
+        return;
+    }
+    
+    isMobileMenuOpen = false;
+    
+    mobileNavToggle.classList.remove('active');
+    mobileNavMenu.classList.remove('active');
+    body.classList.remove('mobile-menu-open');
+    
+    mobileNavToggle.setAttribute('aria-expanded', 'false');
+    mobileNavMenu.setAttribute('aria-hidden', 'true');
+    
+    console.log('✅ Menú móvil cerrado');
+}
+
+function updateActiveMobileNavLink(activeLink) {
+    console.log(`🎯 Actualizando enlace activo móvil: ${activeLink ? activeLink.getAttribute('href') : 'ninguno'}`);
+    
+    document.querySelectorAll('.mobile-nav__link').forEach(link => {
+        link.classList.remove('active');
+        link.setAttribute('aria-current', 'false');
+    });
+    
+    if (activeLink) {
+        activeLink.classList.add('active');
+        activeLink.setAttribute('aria-current', 'page');
+    }
+}
+
+// ===== NAVEGACIÓN GENERAL (FUNCIONES COMPARTIDAS) =====
+function initializeNavigation() {
+    console.log(`🚀 Inicializando navegación - Dispositivo: ${isMobile ? 'móvil' : 'desktop'}`);
+    
+    // Inicializar navegación según el dispositivo
+    if (isMobile) {
+        initializeMobileNavigation();
+    } else {
+        initializeDesktopNavigation();
+    }
+    
+    initializeActiveSection();
+}
+
+function smoothScrollToSection(targetSection) {
+    if (!targetSection) {
+        console.error('❌ Sección objetivo no válida para scroll');
+        return;
+    }
+    
+    const headerHeight = isMobile ? 70 : 80;
+    const targetPosition = targetSection.offsetTop - headerHeight;
+    
+    console.log(`🚀 Scroll suave a: ${targetSection.id}, posición: ${targetPosition}`);
+    
+    if ('scrollBehavior' in document.documentElement.style && !performanceMode) {
+        window.scrollTo({
+            top: targetPosition,
+            behavior: 'smooth'
+        });
+    } else {
+        window.scrollTo(0, targetPosition);
+    }
+}
+
+function updateActiveNavLink(activeLink) {
+    document.querySelectorAll('.nav__link').forEach(link => {
+        link.classList.remove('active');
+        link.setAttribute('aria-current', 'false');
+    });
+    
+    if (activeLink) {
+        activeLink.classList.add('active');
+        activeLink.setAttribute('aria-current', 'page');
+    }
+}
+
+function initializeActiveSection() {
+    setTimeout(() => {
+        updateActiveNavOnScroll();
+    }, 100);
+}
+
+// ===== FUNCIONES LEGACY PARA COMPATIBILIDAD =====
+function toggleMobileMenu() {
+    // Función legacy - redirigir a la nueva función móvil
+    if (isMobile) {
+        toggleMobileNavMenu();
+    }
+}
+
+function openMobileMenu() {
+    // Función legacy - redirigir a la nueva función móvil
+    if (isMobile) {
+        openMobileNavMenu();
+    }
+}
+
+function closeMobileMenu() {
+    // Función legacy - redirigir a la nueva función móvil
+    if (isMobile) {
+        closeMobileNavMenu();
+    }
+}
+
+// ===== NAVEGACIÓN POR TECLADO OPTIMIZADA =====
+function initializeKeyboardNavigation() {
+    const navMenu = document.getElementById('nav-menu');
+    const navToggle = document.getElementById('nav-toggle');
+    const mobileNavMenu = document.getElementById('mobile-nav-menu');
+    const mobileNavToggle = document.getElementById('mobile-nav-toggle');
+    
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            if (isMenuOpen) {
+                e.preventDefault();
+                closeMobileMenu();
+                return;
+            }
+            if (isMobileMenuOpen) {
+                e.preventDefault();
+                closeMobileNavMenu();
+                return;
+            }
+        }
+        
+        // Tab trap para menú desktop
+        if (e.key === 'Tab' && isMenuOpen && !isMobile && navMenu) {
+            handleTabTrap(e, navMenu);
+        }
+        
+        // Tab trap para menú móvil
+        if (e.key === 'Tab' && isMobileMenuOpen && mobileNavMenu) {
+            handleTabTrap(e, mobileNavMenu);
+        }
+        
+        // Enter/Space para toggles
+        if ((e.key === 'Enter' || e.key === ' ')) {
+            if (e.target === navToggle) {
+                e.preventDefault();
+                toggleMobileMenu();
+            }
+            if (e.target === mobileNavToggle) {
+                e.preventDefault();
+                toggleMobileNavMenu();
+            }
+        }
+    });
+}
+
+function handleTabTrap(e, menuElement) {
+    const focusableElements = menuElement.querySelectorAll(
+        'a[href], button, [tabindex]:not([tabindex="-1"])'
+    );
+    const firstFocusable = focusableElements[0];
+    const lastFocusable = focusableElements[focusableElements.length - 1];
+    
+    if (e.shiftKey) {
+        if (document.activeElement === firstFocusable) {
+            e.preventDefault();
+            lastFocusable.focus();
+        }
+    } else {
+        if (document.activeElement === lastFocusable) {
+            e.preventDefault();
+            firstFocusable.focus();
+        }
+    }
+}
+
+// ===== EFECTOS DE SCROLL ULTRA-OPTIMIZADOS =====
+function initializeScrollEffects() {
+    let scrollTimeout;
+    
+    window.addEventListener('scroll', () => {
+        if (scrollTimeout) return;
+        
+        scrollTimeout = setTimeout(() => {
+            if (!ticking) {
+                requestAnimationFrame(() => {
                     updateActiveNavOnScroll();
                     handleScrollDirection();
                     updateHeaderOnScroll();
-                }
-                state.ticking = false;
-            });
-            state.ticking = true;
-        }
-    }, throttleTime);
-    
-    window.addEventListener('scroll', throttledScroll, { passive: true });
-};
+                    ticking = false;
+                });
+                ticking = true;
+            }
+            scrollTimeout = null;
+        }, isMobile ? 50 : 25);
+    }, { passive: true });
+}
 
-const handleScrollDirectionMobile = () => {
+function handleScrollDirection() {
     const currentScrollY = window.scrollY;
-    state.isScrollingDown = currentScrollY > state.lastScrollY && currentScrollY > 20;
-    state.lastScrollY = currentScrollY;
-};
-
-const updateHeaderOnScrollMobile = () => {
-    const header = document.getElementById('header');
-    const scrollY = window.scrollY;
     
-    if (header) {
-        header.classList.toggle('scrolled', scrollY > 20);
-        
-        const shouldHide = scrollY > state.lastScrollY && scrollY > 20 && !state.isDrawerOpen;
-        if (shouldHide !== !state.isNavbarVisible) {
-            header.style.transform = shouldHide ? 'translateY(-100%)' : 'translateY(0)';
-            state.isNavbarVisible = !shouldHide;
-        }
+    if (currentScrollY > lastScrollY && currentScrollY > (isMobile ? 50 : 100)) {
+        isScrollingDown = true;
+    } else {
+        isScrollingDown = false;
     }
-};
+    
+    lastScrollY = currentScrollY;
+}
 
-const handleScrollDirection = () => {
-    const currentScrollY = window.scrollY;
-    state.isScrollingDown = currentScrollY > state.lastScrollY && currentScrollY > 50;
-    state.lastScrollY = currentScrollY;
-};
-
-const updateActiveNavOnScroll = () => {
+function updateActiveNavOnScroll() {
     const sections = document.querySelectorAll('section[id]');
     const scrollY = window.scrollY;
-    const headerHeight = 100;
+    const headerHeight = isMobile ? 80 : 100;
+    const windowHeight = window.innerHeight;
     
     let activeSection = null;
     let maxVisibleArea = 0;
@@ -624,13 +1402,14 @@ const updateActiveNavOnScroll = () => {
     sections.forEach(section => {
         const sectionTop = section.offsetTop;
         const sectionHeight = section.offsetHeight;
+        const sectionBottom = sectionTop + sectionHeight;
         const sectionId = section.getAttribute('id');
         
         const viewportTop = scrollY + headerHeight;
-        const viewportBottom = scrollY + window.innerHeight;
+        const viewportBottom = scrollY + windowHeight;
         
         const visibleTop = Math.max(viewportTop, sectionTop);
-        const visibleBottom = Math.min(viewportBottom, sectionTop + sectionHeight);
+        const visibleBottom = Math.min(viewportBottom, sectionBottom);
         const visibleArea = Math.max(0, visibleBottom - visibleTop);
         
         if (visibleArea > maxVisibleArea && visibleArea > 50) {
@@ -639,445 +1418,663 @@ const updateActiveNavOnScroll = () => {
         }
     });
     
-    if (activeSection) {
-        const activeLink = document.querySelector(`.nav__link[href="#${activeSection}"], .nav__drawer-link[href="#${activeSection}"]`);
-        const currentActiveLink = document.querySelector('.nav__link.active, .nav__drawer-link.active');
-        if (activeLink && activeLink !== currentActiveLink) updateActiveNavLink(activeLink);
-    }
-};
-
-const updateHeaderOnScroll = () => {
-    const header = document.getElementById('header');
-    const scrollY = window.scrollY;
-    
-    if (header) {
-        header.classList.toggle('scrolled', scrollY > 50);
+    if (!activeSection) {
+        const scrollPosition = scrollY + headerHeight + 50;
         
-        if (state.isMobile) {
-            const shouldHide = scrollY > state.lastScrollY && scrollY > 50 && !state.isDrawerOpen;
-            if (shouldHide !== !state.isNavbarVisible) {
-                header.style.transform = shouldHide ? 'translateY(-100%)' : 'translateY(0)';
-                state.isNavbarVisible = !shouldHide;
+        sections.forEach(section => {
+            const sectionTop = section.offsetTop;
+            const sectionHeight = section.offsetHeight;
+            const sectionId = section.getAttribute('id');
+            
+            if (scrollPosition >= sectionTop && scrollPosition < sectionTop + sectionHeight) {
+                activeSection = sectionId;
             }
-        }
-    }
-};
-
-// ===== FAQ =====
-const initFAQ = () => {
-    const items = document.querySelectorAll('.faq__item');
-    const search = document.getElementById('faq-search');
-    const noResults = document.getElementById('faq-no-results');
-    
-    const faqContainer = document.querySelector('.faq__list');
-    if (faqContainer) {
-        faqContainer.addEventListener('click', e => {
-            const question = e.target.closest('.faq__question');
-            if (!question) return;
-            
-            const item = question.closest('.faq__item');
-            const answer = item.querySelector('.faq__answer');
-            if (!item || !answer) return;
-            
-            const isActive = item.classList.contains('active');
-            
-            items.forEach(other => {
-                if (other !== item) {
-                    other.classList.remove('active');
-                    const otherAnswer = other.querySelector('.faq__answer');
-                    const otherQuestion = other.querySelector('.faq__question');
-                    otherAnswer?.classList.remove('active');
-                    otherQuestion?.setAttribute('aria-expanded', 'false');
-                }
-            });
-            
-            item.classList.toggle('active', !isActive);
-            answer.classList.toggle('active', !isActive);
-            question.setAttribute('aria-expanded', !isActive);
         });
     }
     
-    if (search) {
-        const debounceTime = state.isMobile ? 500 : 150;
-        search.addEventListener('input', debounce(e => {
-            const term = e.target.value.toLowerCase().trim();
-            let visible = 0;
+    if (activeSection) {
+        // Actualizar enlaces desktop
+        const activeLink = document.querySelector(`.nav__link[href="#${activeSection}"]`);
+        const currentActiveLink = document.querySelector('.nav__link.active');
+        
+        if (activeLink && activeLink !== currentActiveLink) {
+            updateActiveNavLink(activeLink);
+        }
+        
+        // Actualizar enlaces móvil
+        const activeMobileLink = document.querySelector(`.mobile-nav__link[href="#${activeSection}"]`);
+        const currentActiveMobileLink = document.querySelector('.mobile-nav__link.active');
+        
+        if (activeMobileLink && activeMobileLink !== currentActiveMobileLink) {
+            updateActiveMobileNavLink(activeMobileLink);
+        }
+    }
+}
+
+function updateHeaderOnScroll() {
+    const header = document.getElementById('header');
+    const mobileHeader = document.getElementById('mobile-header');
+    const scrollY = window.scrollY;
+    const threshold = isMobile ? 50 : 100;
+    
+    // Actualizar header desktop
+    if (header && !isMobile) {
+        if (scrollY > threshold) {
+            header.classList.add('scrolled');
+        } else {
+            header.classList.remove('scrolled');
+        }
+    }
+    
+    // Actualizar header móvil
+    if (mobileHeader && isMobile) {
+        if (scrollY > threshold) {
+            mobileHeader.classList.add('scrolled');
+        } else {
+            mobileHeader.classList.remove('scrolled');
+        }
+        
+        // Auto-hide navbar móvil optimizado
+        if (scrollY > lastScrollY && scrollY > threshold && !isMobileMenuOpen) {
+            if (isNavbarVisible) {
+                mobileHeader.style.transform = 'translateY(-100%)';
+                isNavbarVisible = false;
+            }
+        } else {
+            if (!isNavbarVisible) {
+                mobileHeader.style.transform = 'translateY(0)';
+                isNavbarVisible = true;
+            }
+        }
+    }
+}
+
+// ===== REPRODUCTOR DE VIDEO ULTRA-OPTIMIZADO =====
+function initializeVideoPlayer() {
+    const video = document.getElementById('main-video');
+    const playOverlay = document.getElementById('play-overlay');
+    const progressBar = document.querySelector('.videos__progress-bar');
+    const progressFill = document.querySelector('.videos__progress-fill');
+    const currentTimeDisplay = document.querySelector('.videos__current-time');
+    const durationDisplay = document.querySelector('.videos__duration');
+    const progressIndicators = document.querySelector('.videos__progress-indicators');
+    
+    if (!video || !playOverlay) return;
+    
+    video.controls = false;
+    video.preload = isMobile ? 'none' : 'metadata';
+    
+    video.addEventListener('loadedmetadata', () => {
+        if (durationDisplay) {
+            durationDisplay.textContent = formatTime(video.duration);
+        }
+    });
+    
+    playOverlay.addEventListener('click', () => {
+        if (video.paused) {
+            video.play();
+            playOverlay.classList.add('hidden');
+            if (progressIndicators) {
+                progressIndicators.classList.add('visible');
+            }
+        }
+    });
+    
+    if (isMobile) {
+        playOverlay.addEventListener('touchstart', () => {
+            playOverlay.style.transform = 'scale(0.98)';
+        }, { passive: true });
+        playOverlay.addEventListener('touchend', () => {
+            playOverlay.style.transform = '';
+        }, { passive: true });
+    }
+    
+    video.addEventListener('click', () => {
+        if (!video.paused) {
+            video.pause();
+            playOverlay.classList.remove('hidden');
+            if (progressIndicators) {
+                progressIndicators.classList.remove('visible');
+            }
+        }
+    });
+    
+    video.addEventListener('timeupdate', () => {
+        if (video.duration) {
+            const progress = (video.currentTime / video.duration) * 100;
+            if (progressFill) {
+                progressFill.style.width = `${progress}%`;
+            }
+            if (currentTimeDisplay) {
+                currentTimeDisplay.textContent = formatTime(video.currentTime);
+            }
+        }
+    });
+    
+    if (progressBar) {
+        progressBar.addEventListener('click', (e) => {
+            const rect = progressBar.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const width = rect.width;
+            const clickTime = (clickX / width) * video.duration;
+            video.currentTime = clickTime;
+        });
+    }
+    
+    video.addEventListener('ended', () => {
+        playOverlay.classList.remove('hidden');
+        if (progressIndicators) {
+            progressIndicators.classList.remove('visible');
+        }
+        if (progressFill) {
+            progressFill.style.width = '0%';
+        }
+        if (currentTimeDisplay) {
+            currentTimeDisplay.textContent = '0:00';
+        }
+    });
+    
+    video.addEventListener('error', () => {
+        showVideoError();
+    });
+}
+
+function formatTime(seconds) {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+}
+
+function showVideoError() {
+    const playOverlay = document.getElementById('play-overlay');
+    if (playOverlay) {
+        playOverlay.innerHTML = `
+            <div class="videos__error">
+                <div class="videos__error-icon">⚠️</div>
+                <div class="videos__error-text">Error al cargar el video</div>
+                <div class="videos__error-subtitle">Por favor, intenta recargar la página</div>
+            </div>
+        `;
+    }
+}
+
+// ===== FAQ ULTRA-OPTIMIZADO =====
+function initializeFAQ() {
+    const faqItems = document.querySelectorAll('.faq__item');
+    const searchInput = document.getElementById('faq-search');
+    const noResults = document.getElementById('faq-no-results');
+    
+    faqItems.forEach(item => {
+        const question = item.querySelector('.faq__question');
+        const answer = item.querySelector('.faq__answer');
+        
+        if (question && answer) {
+            question.addEventListener('click', () => {
+                const isActive = item.classList.contains('active');
+                
+                faqItems.forEach(otherItem => {
+                    if (otherItem !== item) {
+                        otherItem.classList.remove('active');
+                        const otherAnswer = otherItem.querySelector('.faq__answer');
+                        const otherQuestion = otherItem.querySelector('.faq__question');
+                        if (otherAnswer) otherAnswer.classList.remove('active');
+                        if (otherQuestion) otherQuestion.setAttribute('aria-expanded', 'false');
+                    }
+                });
+                
+                if (isActive) {
+                    item.classList.remove('active');
+                    answer.classList.remove('active');
+                    question.setAttribute('aria-expanded', 'false');
+                } else {
+                    item.classList.add('active');
+                    answer.classList.add('active');
+                    question.setAttribute('aria-expanded', 'true');
+                }
+            });
+
+            if (isMobile) {
+                question.addEventListener('touchstart', () => {
+                    question.style.transform = 'scale(0.98)';
+                }, { passive: true });
+                question.addEventListener('touchend', () => {
+                    question.style.transform = '';
+                }, { passive: true });
+            }
+        }
+    });
+    
+    if (searchInput) {
+        searchInput.addEventListener('input', debounce((e) => {
+            const searchTerm = e.target.value.toLowerCase().trim();
+            let visibleItems = 0;
             
-            items.forEach(item => {
+            faqItems.forEach(item => {
                 const questionText = item.querySelector('.faq__question-text');
                 const answerText = item.querySelector('.faq__answer-text');
                 
                 if (questionText && answerText) {
-                    const matches = term === '' || 
-                        questionText.textContent.toLowerCase().includes(term) || 
-                        answerText.textContent.toLowerCase().includes(term);
+                    const questionContent = questionText.textContent.toLowerCase();
+                    const answerContent = answerText.textContent.toLowerCase();
                     
-                    item.style.display = matches ? 'block' : 'none';
-                    if (matches) visible++;
-                    else {
+                    if (searchTerm === '' ||
+                        questionContent.includes(searchTerm) ||
+                        answerContent.includes(searchTerm)) {
+                        item.style.display = 'block';
+                        visibleItems++;
+                    } else {
+                        item.style.display = 'none';
                         item.classList.remove('active');
                         const answer = item.querySelector('.faq__answer');
                         const question = item.querySelector('.faq__question');
-                        answer?.classList.remove('active');
-                        question?.setAttribute('aria-expanded', 'false');
+                        if (answer) answer.classList.remove('active');
+                        if (question) question.setAttribute('aria-expanded', 'false');
                     }
                 }
             });
             
-            noResults?.classList.toggle('show', visible === 0 && term !== '');
-        }, debounceTime));
-    }
-};
-
-// ===== INTERSECTION OBSERVER =====
-const initIntersectionObserver = () => {
-    if (state.isMobile || state.performanceMode) {
-        document.querySelectorAll('.feature, .faq__item, .contact__channel').forEach(el => {
-            el.classList.add('in-view');
-            if (el.classList.contains('feature')) {
-                const content = el.querySelector('.feature__content');
-                content?.querySelectorAll('.feature__list-item').forEach(item => {
-                    item.style.opacity = '1';
-                    item.style.transform = 'translateX(0)';
-                });
+            if (noResults) {
+                if (visibleItems === 0 && searchTerm !== '') {
+                    noResults.classList.add('show');
+                } else {
+                    noResults.classList.remove('show');
+                }
             }
-        });
-        return;
+        }, isMobile ? 400 : 300));
     }
+}
+
+// ===== INTERSECTION OBSERVER ULTRA-OPTIMIZADO =====
+function initializeIntersectionObserver() {
+    if (performanceMode) return;
     
-    const observer = new IntersectionObserver(entries => {
+    const observerOptions = {
+        threshold: isMobile ? 0.1 : 0.15,
+        rootMargin: isMobile ? '0px 0px -50px 0px' : '0px 0px -100px 0px'
+    };
+    
+    const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 entry.target.classList.add('in-view');
-                if (entry.target.classList.contains('feature')) animateFeature(entry.target);
+                if (entry.target.classList.contains('feature')) {
+                    animateFeature(entry.target);
+                }
+                // Desconectar el elemento una vez que se ha animado
                 observer.unobserve(entry.target);
             }
         });
-    }, {
-        threshold: 0.15,
-        rootMargin: '0px 0px -50px 0px'
-    });
+    }, observerOptions);
     
-    document.querySelectorAll('.feature, .faq__item, .contact__channel').forEach(el => observer.observe(el));
-};
-
-const animateFeature = feature => {
-    if (state.performanceMode) return;
-    const content = feature.querySelector('.feature__content');
-    content?.querySelectorAll('.feature__list-item').forEach((item, i) => {
-        setTimeout(() => {
-            item.style.opacity = '1';
-            item.style.transform = 'translateX(0)';
-        }, 100 + (i * 50));
+    const elementsToObserve = document.querySelectorAll('.feature, .faq__item, .contact__channel');
+    elementsToObserve.forEach(element => {
+        observer.observe(element);
     });
-};
+}
 
-// ===== LAZY LOADING =====
-const setupImageLazyLoading = () => {
-    const wait = () => {
-        if (!imageLoader) return setTimeout(wait, 50);
+function animateFeature(feature) {
+    if (performanceMode) return;
+    
+    const content = feature.querySelector('.feature__content');
+    
+    if (content) {
+        const listItems = content.querySelectorAll('.feature__list-item');
+        listItems.forEach((item, index) => {
+            setTimeout(() => {
+                item.style.opacity = '1';
+                item.style.transform = 'translateX(0)';
+            }, 200 + (index * (isMobile ? 50 : 100)));
+        });
+    }
+}
+
+// ===== CONFIGURACIÓN DE LAZY LOADING ULTRA-OPTIMIZADA =====
+function setupImageLazyLoading() {
+    const waitForOptimizer = () => {
+        if (!imageOptimizer) {
+            setTimeout(waitForOptimizer, 100);
+            return;
+        }
         
-        const loadNow = (sel, key) => { 
-            const el = document.querySelector(sel); 
-            if (el) imageLoader.loadNow(el, key); 
-        };
+        // Logo del navbar desktop
+        const navLogo = document.querySelector('.nav__logo');
+        if (navLogo) {
+            imageOptimizer.loadImageImmediately(navLogo, 'logo');
+        }
         
-        const observe = (sel, key) => { 
-            const el = document.querySelector(sel); 
-            if (el) imageLoader.observe(el, key); 
-        };
+        // Logo del navbar móvil
+        const mobileNavLogo = document.querySelector('.mobile-nav__logo');
+        if (mobileNavLogo) {
+            imageOptimizer.loadImageImmediately(mobileNavLogo, 'logo');
+        }
         
-        loadNow('.nav__logo', 'logo');
-        loadNow('.nav__drawer-logo', 'logo');
-        loadNow('.hero__phone-app-image', 'hero');
+        // Logo del menú móvil
+        const mobileNavLogoMenu = document.querySelector('.mobile-nav__logo-menu');
+        if (mobileNavLogoMenu) {
+            imageOptimizer.loadImageImmediately(mobileNavLogoMenu, 'logo');
+        }
         
-        const keys = ['phones.horario', 'phones.estaciones', 'phones.calendario', 'phones.registro', 'phones.notificaciones', 'phones.referidos'];
-        document.querySelectorAll('.phone__app-image').forEach((img, i) => {
-            if (keys[i]) {
-                state.isMobile ? imageLoader.loadNow(img, keys[i]) : imageLoader.observe(img, keys[i]);
+        // Imagen del hero (crítica) - Nota: Hero usa video, no imagen estática
+        const heroImage = document.querySelector('.hero__phone-app-image');
+        if (heroImage) {
+            // Usar video-poster como fallback para hero
+            imageOptimizer.loadImageImmediately(heroImage, 'videoPoster');
+        }
+        
+        // Imágenes de características
+        const featureImages = document.querySelectorAll('.phone__app-image');
+        featureImages.forEach((img, index) => {
+            const imageKeys = [
+                'phones.horario',
+                'phones.estaciones',
+                'phones.calendario',
+                'phones.registro',
+                'phones.notificaciones',
+                'phones.referidos'
+            ];
+            
+            if (imageKeys[index]) {
+                if (performanceMode) {
+                    imageOptimizer.loadImageImmediately(img, imageKeys[index]);
+                } else {
+                    imageOptimizer.observeImage(img, imageKeys[index]);
+                }
             }
         });
         
-        loadNow('.download-btn--app-store .download-btn__image', 'downloads.apple');
-        loadNow('.download-btn--google .download-btn__image', 'downloads.google');
-    };
-    wait();
-};
-
-// ===== VIDEO HERO =====
-const initHeroVideo = () => {
-    const desktopVideo = document.getElementById('hero-video');
-    const fallback = document.querySelector('.hero__phone-app-image');
-    const mobileVideo = document.getElementById('hero-mobile-video');
-    
-    if (state.isMobile) {
-        if (fallback) {
-            fallback.style.display = 'block';
-            fallback.style.zIndex = '2';
-        }
+        // Botones de descarga
+        const appleBtn = document.querySelector('.download-btn--app-store .download-btn__image');
+        const googleBtn = document.querySelector('.download-btn--google .download-btn__image');
         
-        [desktopVideo, mobileVideo].forEach(video => {
-            if (video) video.style.display = 'none';
+        if (appleBtn) {
+            imageOptimizer.loadImageImmediately(appleBtn, 'downloads.apple');
+        }
+        if (googleBtn) {
+            imageOptimizer.loadImageImmediately(googleBtn, 'downloads.google');
+        }
+    };
+    
+    waitForOptimizer();
+}
+
+// ===== VIDEO HERO ULTRA-OPTIMIZADO =====
+function initializeHeroVideoFallback() {
+    const heroVideo = document.getElementById('hero-video');
+    const heroFallbackImage = document.querySelector('.hero__phone-app-image');
+    const heroMobileVideo = document.getElementById('hero-mobile-video');
+    
+    if (heroMobileVideo && isMobile) {
+        heroMobileVideo.muted = true;
+        heroMobileVideo.autoplay = true;
+        heroMobileVideo.loop = true;
+        heroMobileVideo.playsInline = true;
+        heroMobileVideo.preload = 'auto';
+        
+        heroMobileVideo.addEventListener('loadeddata', () => {
+            console.log('Video móvil del hero cargado correctamente');
         });
         
-        const mobileContainer = document.querySelector('.hero__mobile-video');
-        if (mobileContainer) mobileContainer.style.display = 'none';
-        
+        heroMobileVideo.addEventListener('error', (e) => {
+            console.error('Error cargando video móvil del hero:', e);
+            const mobileVideoContainer = document.querySelector('.hero__mobile-video');
+            if (mobileVideoContainer) {
+                mobileVideoContainer.style.display = 'none';
+            }
+        });
+    }
+    
+    if (!heroVideo || !heroFallbackImage) return;
+    
+    if (isMobile || performanceMode) {
+        heroVideo.style.display = 'none';
+        heroFallbackImage.style.display = 'block';
+        heroFallbackImage.style.zIndex = '2';
+        console.log('Video del teléfono deshabilitado en móvil/modo rendimiento');
         return;
     }
     
-    if (!desktopVideo || !fallback) return;
+    heroVideo.muted = true;
+    heroVideo.autoplay = true;
+    heroVideo.loop = true;
+    heroVideo.playsInline = true;
+    heroVideo.preload = 'auto';
     
-    const showFallback = () => {
-        if (desktopVideo) desktopVideo.style.display = 'none';
-        if (fallback) {
-            fallback.style.display = 'block';
-            fallback.style.zIndex = '2';
-        }
-    };
-    
-    if (state.performanceMode) return showFallback();
-    
-    desktopVideo.muted = true;
-    desktopVideo.autoplay = true;
-    desktopVideo.loop = true;
-    desktopVideo.playsInline = true;
-    desktopVideo.preload = 'metadata';
-    
-    desktopVideo.addEventListener('loadeddata', () => {
-        desktopVideo.classList.replace('loading', 'loaded');
+    heroVideo.addEventListener('loadeddata', () => {
+        heroVideo.classList.remove('loading');
+        heroVideo.classList.add('loaded');
+        console.log('Video del hero cargado correctamente');
     });
     
-    desktopVideo.addEventListener('error', showFallback);
+    heroVideo.addEventListener('error', (e) => {
+        console.error('Error cargando video del hero:', e);
+        showVideoFallback();
+    });
+    
+    heroVideo.addEventListener('stalled', () => {
+        console.warn('Video del hero interrumpido, mostrando fallback');
+        showVideoFallback();
+    });
+    
+    function showVideoFallback() {
+        heroVideo.style.display = 'none';
+        heroFallbackImage.style.display = 'block';
+        heroFallbackImage.style.zIndex = '2';
+        console.log('Mostrando imagen de fallback para el video del hero');
+    }
     
     setTimeout(() => {
-        if (desktopVideo.readyState < 2) showFallback();
-    }, 1500);
-};
+        if (heroVideo.readyState < 2) {
+            showVideoFallback();
+        }
+    }, 2000);
+}
 
-// ===== OPTIMIZACIONES DE RENDIMIENTO =====
-const initPerformanceOptimizations = () => {
-    if (!state.isMobile && !state.performanceMode) {
-        const preload = () => {
-            ['./assets/phones/Hero.mp4', './assets/logo.webp'].forEach(src => {
-                const link = document.createElement('link');
-                Object.assign(link, { rel: 'preload', as: 'image', href: src });
-                document.head.appendChild(link);
-            });
+// ===== UTILIDADES ULTRA-OPTIMIZADAS =====
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
         };
-        
-        'requestIdleCallback' in window ? requestIdleCallback(preload) : setTimeout(preload, 3000);
-    }
-    
-    if (!state.performanceMode) {
-        document.querySelectorAll('.hero__phone, .nav__logo, .nav__drawer-logo, .floating-widget__main-btn')
-            .forEach(el => el.style.willChange = 'transform');
-    }
-    
-    const handleResize = debounce(() => {
-        const newIsMobile = window.innerWidth <= 768 || 
-                           /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        if (newIsMobile !== state.isMobile) {
-            state.isMobile = newIsMobile;
-            detectDevice();
-            if (state.isDrawerOpen) closeDrawer();
-            setTimeout(() => { 
-                initNavigation(); 
-                if (!state.isMobile) updateActiveNavOnScroll(); 
-            }, 50);
-        }
-        if (state.isFloatingMenuOpen) closeFloatingMenu();
-        if (state.isLanguageSwitcherOpen) closeLanguageSwitcher();
-    }, state.isMobile ? 500 : 250);
-    
-    window.addEventListener('resize', handleResize);
-};
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
 
-// ===== ACCESIBILIDAD =====
-const initAccessibility = () => {
-    document.addEventListener('keydown', e => {
-        if (e.key === 'Escape') {
-            if (state.isDrawerOpen) closeDrawer();
-            if (state.isFloatingMenuOpen) closeFloatingMenu();
-            if (state.isLanguageSwitcherOpen) closeLanguageSwitcher();
+function throttle(func, limit) {
+    let inThrottle;
+    return function() {
+        const args = arguments;
+        const context = this;
+        if (!inThrottle) {
+            func.apply(context, args);
+            inThrottle = true;
+            setTimeout(() => inThrottle = false, limit);
         }
-        if (e.key === 'Tab') document.body.classList.add('keyboard-navigation');
+    }
+}
+
+// ===== OPTIMIZACIONES DE RENDIMIENTO ULTRA-AGRESIVAS =====
+function initializePerformanceOptimizations() {
+    if (!performanceMode) {
+        if ('requestIdleCallback' in window) {
+            requestIdleCallback(() => {
+                preloadCriticalResources();
+            });
+        } else {
+            setTimeout(preloadCriticalResources, 5000);
+        }
+    }
+    
+    if (isMobile) {
+        const elementsToOptimize = document.querySelectorAll('.hero__phone, .nav__logo, .mobile-nav__logo, .floating-widget__main-btn');
+        elementsToOptimize.forEach(element => {
+            element.style.willChange = 'transform';
+        });
+        
+        const featureElements = document.querySelectorAll('.feature__phone, .phone');
+        featureElements.forEach(element => {
+            element.style.willChange = 'auto';
+        });
+    }
+    
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+            handleResize();
+        }, isMobile ? 1000 : 500);
+    });
+}
+
+function preloadCriticalResources() {
+    const criticalResources = [
+        './assets/logo.webp',
+        './assets/video-poster.webp'
+    ];
+    
+    criticalResources.forEach(src => {
+        const link = document.createElement('link');
+        link.rel = 'preload';
+        link.as = 'image';
+        link.href = src;
+        document.head.appendChild(link);
+    });
+}
+
+function handleResize() {
+    const newIsMobile = window.innerWidth <= 1023;
+    
+    if (newIsMobile !== isMobile) {
+        isMobile = newIsMobile;
+        detectDeviceCapabilities();
+        
+        // Cerrar menús abiertos al cambiar de dispositivo
+        if (isMenuOpen) {
+            closeMobileMenu();
+        }
+        if (isMobileMenuOpen) {
+            closeMobileNavMenu();
+        }
+        
+        // Reinicializar navegación
+        setTimeout(() => {
+            initializeNavigation();
+            updateActiveNavOnScroll();
+        }, 100);
+    }
+    
+    if (isFloatingMenuOpen) {
+        closeFloatingMenu();
+    }
+    
+    if (isLanguageSwitcherOpen) {
+        closeLanguageSwitcher();
+    }
+}
+
+// ===== ACCESIBILIDAD ULTRA-OPTIMIZADA =====
+function initializeAccessibility() {
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            if (isMenuOpen) {
+                closeMobileMenu();
+            }
+            if (isMobileMenuOpen) {
+                closeMobileNavMenu();
+            }
+            if (isFloatingMenuOpen) {
+                closeFloatingMenu();
+            }
+            if (isLanguageSwitcherOpen) {
+                closeLanguageSwitcher();
+            }
+        }
     });
     
-    document.addEventListener('mousedown', () => document.body.classList.remove('keyboard-navigation'));
-    
-    if (state.isMobile) {
-        document.addEventListener('touchstart', () => document.body.classList.add('touch-navigation'), { passive: true });
-        
-        const inputs = document.querySelectorAll('input[type="text"], input[type="email"], input[type="tel"], textarea');
-        const viewport = document.querySelector('meta[name="viewport"]');
-        
-        if (viewport) {
-            const handleFocus = () => {
-                if (window.innerWidth < 768) {
-                    viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
-                }
-            };
-            
-            const handleBlur = () => {
-                if (window.innerWidth < 768) {
-                    viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, user-scalable=no');
-                }
-            };
-            
-            inputs.forEach(input => {
-                input.addEventListener('focus', handleFocus);
-                input.addEventListener('blur', handleBlur);
-            });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Tab') {
+            document.body.classList.add('keyboard-navigation');
         }
+    });
+    
+    document.addEventListener('mousedown', () => {
+        document.body.classList.remove('keyboard-navigation');
+    });
+    
+    if (isMobile) {
+        document.addEventListener('touchstart', () => {
+            document.body.classList.add('touch-navigation');
+        }, { passive: true });
     }
-};
+}
 
-// ===== INICIALIZACIÓN =====
+// ===== INICIALIZACIÓN PRINCIPAL ULTRA-OPTIMIZADA =====
 document.addEventListener('DOMContentLoaded', () => {
-    detectDevice();
-    imageLoader = new UltraImageLoader();
+    console.log('🚀 Iniciando StarFlex...');
     
-    // Debug para verificar formatos soportados
-    setTimeout(() => {
-        console.log('Formatos soportados:', imageLoader.formats);
-        console.log('WebP soportado:', imageLoader.formats.webp);
-        console.log('AVIF soportado:', imageLoader.formats.avif);
-        
-        // Verificar URLs que se están usando
-        console.log('Logo URL:', imageLoader.getBestUrl(imageLoader.getConfig('logo')));
-        console.log('Schedule URL:', imageLoader.getBestUrl(imageLoader.getConfig('phones.horario')));
-    }, 1000);
+    detectDeviceCapabilities();
     
-    initLanguage();
-    initLanguageSwitcher();
-    initNavigation();
-    initScrollEffects();
-    initFAQ();
-    initHeroVideo();
-    initAccessibility();
-    initFloatingWidget();
+    imageOptimizer = new UltraOptimizedImageLoader();
+    
+    initializeLanguageSystem();
+    initializeLanguageSwitcher();
+    initializeNavigation();
+    initializeScrollEffects();
+    initializeVideoPlayer();
+    initializeFAQ();
+    initializeHeroVideoFallback();
+    initializeAccessibility();
+    initializeFloatingWidget();
+    
     setupImageLazyLoading();
-    initIntersectionObserver();
-    initPerformanceOptimizations();
     
-    setTimeout(() => {
-        if (state.isMobile) {
-            const drawer = document.getElementById('nav-drawer');
-            if (drawer) drawer.setAttribute('aria-hidden', 'true');
-        }
-    }, state.isMobile ? 25 : 100);
+    if (!performanceMode) {
+        initializeIntersectionObserver();
+    }
+    
+    initializePerformanceOptimizations();
+    
+    console.log(`✅ StarFlex Ultra-Optimizado - Móvil: ${isMobile}, Modo rendimiento: ${performanceMode}, Navbar independiente: ${isMobile ? 'Móvil' : 'Desktop'}`);
 });
 
-// ===== MANEJO DE ERRORES =====
-window.addEventListener('error', e => {
-    if (state.isMobile && e.error?.message.includes('video')) {
-        const video = document.getElementById('hero-video');
-        const image = document.querySelector('.hero__phone-app-image');
-        if (video && image) {
-            video.style.display = 'none';
-            image.style.display = 'block';
-            image.style.zIndex = '2';
+// ===== MANEJO DE ERRORES ULTRA-OPTIMIZADO =====
+window.addEventListener('error', (e) => {
+    console.error('Error en la aplicación:', e.error);
+    
+    if (isMobile && e.error && e.error.message.includes('video')) {
+        console.log('Error de video detectado, forzando fallback de imagen');
+        const heroVideo = document.getElementById('hero-video');
+        const heroImage = document.querySelector('.hero__phone-app-image');
+        if (heroVideo && heroImage) {
+            heroVideo.style.display = 'none';
+            heroImage.style.display = 'block';
+            heroImage.style.zIndex = '2';
         }
     }
 });
 
-// ===== LIMPIEZA =====
-window.addEventListener('beforeunload', () => {
-    imageLoader?.observer?.disconnect();
-    document.body.style.overflow = '';
-    document.body.classList.remove('nav-menu-open');
+window.addEventListener('unhandledrejection', (e) => {
+    console.error('Promise rechazada:', e.reason);
 });
 
-// ===== PWA SOLO EN DESKTOP =====
-if ('serviceWorker' in navigator && !state.isMobile && !state.performanceMode) {
+// ===== LIMPIEZA AL SALIR =====
+window.addEventListener('beforeunload', () => {
+    if (imageOptimizer && imageOptimizer.intersectionObserver) {
+        imageOptimizer.intersectionObserver.disconnect();
+    }
+});
+
+// ===== SOPORTE PARA PWA OPTIMIZADO =====
+if ('serviceWorker' in navigator && !isMobile && !performanceMode) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js')
-            .then(reg => console.log('SW registrado:', reg))
-            .catch(err => console.log('SW falló:', err));
+            .then(registration => {
+                console.log('SW registrado:', registration);
+            })
+            .catch(registrationError => {
+                console.log('SW falló:', registrationError);
+            });
     });
-}
-
-// ===== FUNCIONES LEGACY =====
-const toggleMobileMenu = () => state.isMobile && toggleDrawer();
-const openMobileMenu = () => state.isMobile && openDrawer();
-const closeMobileMenu = () => state.isMobile && closeDrawer();
-
-// ===== OPTIMIZACIONES MÓVILES ESPECÍFICAS =====
-if (state.isMobile) {
-    window.addEventListener('orientationchange', () => {
-        setTimeout(() => {
-            if (state.isDrawerOpen) {
-                const drawer = document.getElementById('nav-drawer');
-                if (drawer) drawer.style.height = '100vh';
-            }
-        }, 100);
-    });
-    
-    if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
-        document.addEventListener('touchmove', e => {
-            if (state.isDrawerOpen) {
-                const drawer = document.getElementById('nav-drawer');
-                if (drawer && !drawer.contains(e.target)) {
-                    e.preventDefault();
-                }
-            }
-        }, { passive: false });
-    }
-    
-    const optimizeMemory = () => {
-        if (window.gc && typeof window.gc === 'function') {
-            window.gc();
-        }
-        
-        if (imageLoader && imageLoader.cache) {
-            imageLoader.cache.clear();
-        }
-    };
-    
-    setInterval(optimizeMemory, 30000);
-    
-    document.addEventListener('visibilitychange', () => {
-        if (document.hidden) {
-            if (state.isFloatingMenuOpen) closeFloatingMenu();
-            if (state.isLanguageSwitcherOpen) closeLanguageSwitcher();
-        }
-    });
-}
-
-// ===== OPTIMIZACIONES PARA DISPOSITIVOS DE GAMA BAJA =====
-if (state.isMobile) {
-    const isLowEndDevice = () => {
-        return navigator.hardwareConcurrency <= 2 || 
-               navigator.deviceMemory <= 2 || 
-               /Android.*Chrome\/[1-6][0-9]/.test(navigator.userAgent);
-    };
-    
-    if (isLowEndDevice()) {
-        document.body.classList.add('low-end-device');
-        
-        const lowEndStyle = document.createElement('style');
-        lowEndStyle.textContent = `
-            .low-end-device * {
-                backface-visibility: hidden !important;
-                perspective: none !important;
-                transform-style: flat !important;
-            }
-            .low-end-device img {
-                image-rendering: pixelated !important;
-            }
-        `;
-        document.head.appendChild(lowEndStyle);
-        
-        // Simplificar configuración de imágenes para dispositivos de gama baja
-        CONFIG.IMAGE_PATHS = Object.fromEntries(
-            Object.entries(CONFIG.IMAGE_PATHS).map(([key, value]) => [
-                key, 
-                typeof value === 'object' ? { 
-                    png: value.png || value.jpg,
-                    webp: value.webp 
-                } : value
-            ])
-        );
-    }
 }
