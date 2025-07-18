@@ -302,7 +302,6 @@ p, span, h1, h2, h3, h4, h5, h6, li, td, th, input, textarea {
         scroll-behavior: auto !important;
     }
 }
-
 /* ===== UTILIDADES MOBILE-FIRST OPTIMIZADAS ===== */
 .desktop-only {
     display: none;
@@ -446,6 +445,7 @@ p, span, h1, h2, h3, h4, h5, h6, li, td, th, input, textarea {
         transition: none !important;
     }
 }
+
 /* ===== ANIMACIONES PRINCIPALES - SOLO DESKTOP ===== */
 @keyframes fadeIn {
     from { opacity: 0; }
@@ -716,7 +716,6 @@ p, span, h1, h2, h3, h4, h5, h6, li, td, th, input, textarea {
         animation: fadeIn 0.01ms;
     }
 }
-
 /* === BOTONES BASE OPTIMIZADOS === */
 .btn {
     position: relative;
@@ -949,6 +948,7 @@ p, span, h1, h2, h3, h4, h5, h6, li, td, th, input, textarea {
 .performance-mode .btn:hover {
     transform: none;
 }
+
 /* === FLOATING WIDGET OPTIMIZADO === */
 .floating-widget {
     position: fixed;
@@ -1246,7 +1246,6 @@ p, span, h1, h2, h3, h4, h5, h6, li, td, th, input, textarea {
         transition: opacity 0.2s ease;
     }
 }
-
 /* ===== NAVBAR HORIZONTAL ULTRA-OPTIMIZADO ===== */
 .header {
     position: fixed;
@@ -1303,7 +1302,7 @@ p, span, h1, h2, h3, h4, h5, h6, li, td, th, input, textarea {
 .nav__logo {
     width: 45px;
     height: 45px;
-    background-image: url('../../assets/logo.avif');
+    background-image: url('../../assets/logo.webp');
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
@@ -1636,7 +1635,7 @@ p, span, h1, h2, h3, h4, h5, h6, li, td, th, input, textarea {
 .nav__drawer-logo {
     width: 36px;
     height: 36px;
-    background-image: url('../../assets/logo.avif');
+    background-image: url('../../assets/logo.webp');
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
@@ -1896,7 +1895,6 @@ p, span, h1, h2, h3, h4, h5, h6, li, td, th, input, textarea {
         width: min(90%, 350px);
     }
 }
-
 /* EFECTOS HOVER SOLO EN DESKTOP */
 @media (min-width: 1024px) {
     .header.scrolled {
@@ -1965,7 +1963,9 @@ p, span, h1, h2, h3, h4, h5, h6, li, td, th, input, textarea {
 .nav__drawer-language-option:focus {
     outline: 2px solid var(--neon-primary);
     outline-offset: 2px;
+    border-radius: 8px;
 }
+
 /* ===== SECCIÓN HERO OPTIMIZADA ===== */
 .hero {
     position: relative;
@@ -2351,7 +2351,6 @@ p, span, h1, h2, h3, h4, h5, h6, li, td, th, input, textarea {
     z-index: 2;
     display: block;
 }
-
 /* OPTIMIZACIONES MÓVILES CONSOLIDADAS */
 @media (max-width: 1023px) {
     .hero {
@@ -2802,35 +2801,34 @@ p, span, h1, h2, h3, h4, h5, h6, li, td, th, input, textarea {
 }
 
 .feature[data-feature="schedule"] .phone__app-image { 
-    background-image: url('../assets/phones/Horario.avif'); 
+    background-image: url('../../assets/phones/Schedule.webp'); 
     transition-delay: 0.2s; 
 }
 
 .feature[data-feature="stations"] .phone__app-image { 
-    background-image: url('../assets/phones/Estaciones.avif'); 
+    background-image: url('../../assets/phones/Stations.webp'); 
     transition-delay: 0.3s; 
 }
 
 .feature[data-feature="calendar"] .phone__app-image { 
-    background-image: url('../assets/phones/Calendario.avif'); 
+    background-image: url('../../assets/phones/Calendar.webp'); 
     transition-delay: 0.4s; 
 }
 
 .feature[data-feature="log"] .phone__app-image { 
-    background-image: url('../assets/phones/Registro.avif'); 
+    background-image: url('../../assets/phones/Log.webp'); 
     transition-delay: 0.5s; 
 }
 
 .feature[data-feature="notifications"] .phone__app-image { 
-    background-image: url('../assets/phones/Notificaciones.avif'); 
+    background-image: url('../../assets/phones/Notifications.webp'); 
     transition-delay: 0.6s; 
 }
 
 .feature[data-feature="referrals"] .phone__app-image { 
-    background-image: url('../assets/phones/Referidos.avif'); 
+    background-image: url('../../assets/phones/Referrals.webp'); 
     transition-delay: 0.7s; 
 }
-
 /* RESPONSIVE ULTRA-OPTIMIZADO */
 @media (width <= 1023px) {
     .features {
@@ -2993,6 +2991,7 @@ p, span, h1, h2, h3, h4, h5, h6, li, td, th, input, textarea {
     outline-offset: 4px;
     border-radius: 4px;
 }
+
 /* ===== SECCIÓN FAQ OPTIMIZADA ===== */
 .faq {
     position: relative;
@@ -3384,7 +3383,6 @@ p, span, h1, h2, h3, h4, h5, h6, li, td, th, input, textarea {
     outline-offset: 3px;
     border-radius: 8px;
 }
-
 /* ===== CONTACT MOBILE-FIRST ===== */
 .contact {
     position: relative;
@@ -3756,7 +3754,6 @@ p, span, h1, h2, h3, h4, h5, h6, li, td, th, input, textarea {
     outline: 2px solid var(--starflex-red);
     outline-offset: 2px;
 }
-
 /* ===== MOBILE FIXES - FORZAR VISIBILIDAD ===== */
 @media (width <= 1023px) {
     .features,
