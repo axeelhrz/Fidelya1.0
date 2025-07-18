@@ -34,7 +34,7 @@ const CONFIG = {
         JPEG: 'image/jpeg'
     },
     
-    // Rutas de imágenes optimizadas - ACTUALIZADO PARA USAR SOLO WEBP Y PNG
+    // Rutas de imágenes optimizadas - CORREGIDAS PARA COINCIDIR CON ARCHIVOS REALES
     IMAGE_PATHS: {
         hero: {
             webp: './assets/phones/Hero.webp'
@@ -43,22 +43,22 @@ const CONFIG = {
             webp: './assets/logo.webp'
         },
         phones: {
-            horario: {
+            schedule: {
                 webp: './assets/phones/Schedule.webp'
             },
-            estaciones: {
+            stations: {
                 webp: './assets/phones/Stations.webp'
             },
-            calendario: {
+            calendar: {
                 webp: './assets/phones/Calendar.webp'
             },
-            registro: {
+            log: {
                 webp: './assets/phones/Log.webp'
             },
-            notificaciones: {
+            notifications: {
                 webp: './assets/phones/Notifications.webp'
             },
-            referidos: {
+            referrals: {
                 webp: './assets/phones/Referrals.webp'
             }
         },
@@ -435,6 +435,7 @@ class UltraOptimizedImageLoader {
         this.supportedFormats = await detectImageFormats();
         this.setupLazyLoading();
         this.preloadCriticalImages();
+        this.forceLoadFeatureImages(); // Nueva función para forzar carga de imágenes de características
     }
     
     setupLazyLoading() {
@@ -556,6 +557,49 @@ class UltraOptimizedImageLoader {
         });
         
         await Promise.all(preloadPromises);
+    }
+    
+    // Nueva función para forzar la carga de imágenes de características
+    forceLoadFeatureImages() {
+        console.log('🖼️ Forzando carga de imágenes de características...');
+        
+        // Mapeo de data-feature a imagen
+        const featureImageMap = {
+            'schedule': 'phones.schedule',
+            'stations': 'phones.stations',
+            'calendar': 'phones.calendar',
+            'log': 'phones.log',
+            'notifications': 'phones.notifications',
+            'referrals': 'phones.referrals'
+        };
+        
+        // Buscar todas las características y cargar sus imágenes inmediatamente
+        const features = document.querySelectorAll('.feature[data-feature]');
+        features.forEach((feature, index) => {
+            const featureType = feature.getAttribute('data-feature');
+            const phoneImage = feature.querySelector('.phone__app-image');
+            
+            if (phoneImage && featureImageMap[featureType]) {
+                const imageKey = featureImageMap[featureType];
+                console.log(`📱 Cargando imagen para característica ${featureType}: ${imageKey}`);
+                
+                // Cargar imagen inmediatamente
+                this.loadImageImmediately(phoneImage, imageKey);
+                
+                // También establecer la imagen de fondo directamente como fallback
+                const imageConfig = this.getImageConfig(imageKey);
+                if (imageConfig) {
+                    const imageUrl = this.getBestImageUrl(imageConfig);
+                    if (imageUrl) {
+                        phoneImage.style.backgroundImage = `url('${imageUrl}')`;
+                        phoneImage.style.backgroundSize = 'cover';
+                        phoneImage.style.backgroundPosition = 'center';
+                        phoneImage.style.backgroundRepeat = 'no-repeat';
+                        console.log(`✅ Imagen establecida para ${featureType}: ${imageUrl}`);
+                    }
+                }
+            }
+        });
     }
     
     observeImage(element, imageKey) {
@@ -1715,6 +1759,8 @@ function setupImageLazyLoading() {
             return;
         }
         
+        console.log('🖼️ Configurando lazy loading de imágenes...');
+        
         // Logo del navbar desktop
         const navLogo = document.querySelector('.nav__logo');
         if (navLogo) {
@@ -1734,19 +1780,22 @@ function setupImageLazyLoading() {
             imageOptimizer.loadImageImmediately(heroImage, 'videoPoster');
         }
         
-        // Imágenes de características
+        // Imágenes de características - CORREGIDAS
         const featureImages = document.querySelectorAll('.phone__app-image');
+        console.log(`📱 Encontradas ${featureImages.length} imágenes de características`);
+        
         featureImages.forEach((img, index) => {
             const imageKeys = [
-                'phones.horario',
-                'phones.estaciones',
-                'phones.calendario',
-                'phones.registro',
-                'phones.notificaciones',
-                'phones.referidos'
+                'phones.schedule',
+                'phones.stations',
+                'phones.calendar',
+                'phones.log',
+                'phones.notifications',
+                'phones.referrals'
             ];
             
             if (imageKeys[index]) {
+                console.log(`🔄 Cargando imagen ${index + 1}: ${imageKeys[index]}`);
                 if (performanceMode) {
                     imageOptimizer.loadImageImmediately(img, imageKeys[index]);
                 } else {
@@ -1765,6 +1814,8 @@ function setupImageLazyLoading() {
         if (googleBtn) {
             imageOptimizer.loadImageImmediately(googleBtn, 'downloads.google');
         }
+        
+        console.log('✅ Lazy loading configurado correctamente');
     };
     
     waitForOptimizer();
@@ -2063,3 +2114,288 @@ if ('serviceWorker' in navigator && !isMobile && !performanceMode) {
             });
     });
 }
+
+// ===== FUNCIONES ADICIONALES PARA DEBUGGING Y MONITOREO =====
+function debugImageLoading() {
+    console.log('🔍 Estado del cargador de imágenes:');
+    console.log('- Formatos soportados:', imageOptimizer?.supportedFormats);
+    console.log('- Imágenes en caché:', imageOptimizer?.imageCache.size);
+    console.log('- Imágenes lazy:', imageOptimizer?.lazyImages.size);
+    
+    // Verificar imágenes de características
+    const featureImages = document.querySelectorAll('.phone__app-image');
+    console.log(`📱 Imágenes de características encontradas: ${featureImages.length}`);
+    
+    featureImages.forEach((img, index) => {
+        const feature = img.closest('.feature');
+        const featureType = feature?.getAttribute('data-feature');
+        const backgroundImage = window.getComputedStyle(img).backgroundImage;
+        const hasBackground = backgroundImage && backgroundImage !== 'none';
+        
+        console.log(`  ${index + 1}. ${featureType}: ${hasBackground ? '✅ Cargada' : '❌ Sin cargar'}`);
+        if (hasBackground) {
+            console.log(`     URL: ${backgroundImage}`);
+        }
+    });
+}
+
+// Exponer función de debug globalmente para testing
+window.debugImageLoading = debugImageLoading;
+
+// ===== FUNCIÓN PARA FORZAR RECARGA DE IMÁGENES =====
+function forceReloadImages() {
+    console.log('🔄 Forzando recarga de todas las imágenes...');
+    
+    if (imageOptimizer) {
+        // Limpiar caché
+        imageOptimizer.imageCache.clear();
+        
+        // Recargar imágenes de características
+        imageOptimizer.forceLoadFeatureImages();
+        
+        // Recargar logos
+        const navLogo = document.querySelector('.nav__logo');
+        const drawerLogo = document.querySelector('.nav__drawer-logo');
+        
+        if (navLogo) {
+            imageOptimizer.loadImageImmediately(navLogo, 'logo');
+        }
+        if (drawerLogo) {
+            imageOptimizer.loadImageImmediately(drawerLogo, 'logo');
+        }
+        
+        console.log('✅ Recarga de imágenes completada');
+    }
+}
+
+// Exponer función de recarga globalmente
+window.forceReloadImages = forceReloadImages;
+
+// ===== MONITOREO DE RENDIMIENTO =====
+function monitorPerformance() {
+    if ('performance' in window) {
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const perfData = performance.getEntriesByType('navigation')[0];
+                const loadTime = perfData.loadEventEnd - perfData.loadEventStart;
+                const domContentLoaded = perfData.domContentLoadedEventEnd - perfData.domContentLoadedEventStart;
+                
+                console.log('📊 Métricas de rendimiento:');
+                console.log(`- Tiempo de carga: ${loadTime}ms`);
+                console.log(`- DOM Content Loaded: ${domContentLoaded}ms`);
+                console.log(`- Modo rendimiento: ${performanceMode ? 'Activado' : 'Desactivado'}`);
+                console.log(`- Dispositivo móvil: ${isMobile ? 'Sí' : 'No'}`);
+                
+                // Verificar imágenes cargadas
+                const images = document.querySelectorAll('img, [style*="background-image"]');
+                const loadedImages = Array.from(images).filter(img => {
+                    if (img.tagName === 'IMG') {
+                        return img.complete && img.naturalHeight !== 0;
+                    } else {
+                        const bg = window.getComputedStyle(img).backgroundImage;
+                        return bg && bg !== 'none';
+                    }
+                });
+                
+                console.log(`- Imágenes cargadas: ${loadedImages.length}/${images.length}`);
+            }, 1000);
+        });
+    }
+}
+
+// Inicializar monitoreo
+monitorPerformance();
+
+// ===== FALLBACK PARA IMÁGENES NO CARGADAS =====
+function setupImageFallbacks() {
+    // Verificar imágenes después de un tiempo
+    setTimeout(() => {
+        const featureImages = document.querySelectorAll('.phone__app-image');
+        
+        featureImages.forEach((img, index) => {
+            const backgroundImage = window.getComputedStyle(img).backgroundImage;
+            const hasBackground = backgroundImage && backgroundImage !== 'none';
+            
+            if (!hasBackground) {
+                const feature = img.closest('.feature');
+                const featureType = feature?.getAttribute('data-feature');
+                
+                console.warn(`⚠️ Imagen no cargada para característica: ${featureType}`);
+                
+                // Intentar cargar manualmente
+                if (imageOptimizer && featureType) {
+                    const imageKeys = {
+                        'schedule': 'phones.schedule',
+                        'stations': 'phones.stations',
+                        'calendar': 'phones.calendar',
+                        'log': 'phones.log',
+                        'notifications': 'phones.notifications',
+                        'referrals': 'phones.referrals'
+                    };
+                    
+                    const imageKey = imageKeys[featureType];
+                    if (imageKey) {
+                        console.log(`🔄 Reintentando carga de imagen: ${imageKey}`);
+                        imageOptimizer.loadImageImmediately(img, imageKey);
+                    }
+                }
+            }
+        });
+    }, 3000);
+}
+
+// Configurar fallbacks
+setupImageFallbacks();
+
+// ===== OPTIMIZACIÓN ADICIONAL PARA MÓVILES =====
+if (isMobile) {
+    // Optimizar scroll en móviles
+    let ticking = false;
+    
+    function optimizeScrollPerformance() {
+        if (!ticking) {
+            requestAnimationFrame(() => {
+                // Lógica de scroll optimizada ya implementada
+                ticking = false;
+            });
+            ticking = true;
+        }
+    }
+    
+    // Reducir frecuencia de eventos en móvil
+    window.addEventListener('scroll', optimizeScrollPerformance, { passive: true });
+    
+    // Optimizar touch events
+    document.addEventListener('touchstart', () => {
+        // Preparar para interacción táctil
+    }, { passive: true });
+    
+    // Prevenir zoom accidental en inputs
+    const inputs = document.querySelectorAll('input, textarea, select');
+    inputs.forEach(input => {
+        input.addEventListener('focus', () => {
+            if (window.innerWidth < 768) {
+                const viewport = document.querySelector('meta[name="viewport"]');
+                if (viewport) {
+                    viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+                }
+            }
+        });
+        
+        input.addEventListener('blur', () => {
+            if (window.innerWidth < 768) {
+                const viewport = document.querySelector('meta[name="viewport"]');
+                if (viewport) {
+                    viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, user-scalable=no');
+                }
+            }
+        });
+    });
+}
+
+// ===== GESTIÓN DE MEMORIA =====
+function cleanupResources() {
+    // Limpiar event listeners innecesarios
+    if (imageOptimizer && imageOptimizer.intersectionObserver) {
+        imageOptimizer.intersectionObserver.disconnect();
+    }
+    
+    // Limpiar timeouts y intervals
+    const highestTimeoutId = setTimeout(() => {}, 0);
+    for (let i = 0; i < highestTimeoutId; i++) {
+        clearTimeout(i);
+    }
+    
+    const highestIntervalId = setInterval(() => {}, 9999);
+    for (let i = 0; i < highestIntervalId; i++) {
+        clearInterval(i);
+    }
+    
+    console.log('🧹 Recursos limpiados');
+}
+
+// Limpiar recursos al salir
+window.addEventListener('beforeunload', cleanupResources);
+
+// ===== DETECCIÓN DE CONEXIÓN LENTA =====
+function handleSlowConnection() {
+    const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    
+    if (connection) {
+        function updateConnectionStatus() {
+            const isSlowConnection = connection.effectiveType === 'slow-2g' || 
+                                   connection.effectiveType === '2g' || 
+                                   connection.effectiveType === '3g';
+            
+            if (isSlowConnection && !performanceMode) {
+                console.log('🐌 Conexión lenta detectada, activando optimizaciones');
+                document.body.classList.add('slow-connection');
+                
+                // Reducir calidad de imágenes o diferir cargas no críticas
+                const nonCriticalImages = document.querySelectorAll('.phone__app-image:not(.loaded)');
+                nonCriticalImages.forEach(img => {
+                    img.style.filter = 'blur(2px)';
+                    img.style.transition = 'filter 0.3s ease';
+                });
+            } else {
+                document.body.classList.remove('slow-connection');
+            }
+        }
+        
+        connection.addEventListener('change', updateConnectionStatus);
+        updateConnectionStatus();
+    }
+}
+
+// Inicializar detección de conexión
+handleSlowConnection();
+
+// ===== LOGGING MEJORADO =====
+const Logger = {
+    info: (message, data = null) => {
+        console.log(`ℹ️ [StarFlex] ${message}`, data || '');
+    },
+    warn: (message, data = null) => {
+        console.warn(`⚠️ [StarFlex] ${message}`, data || '');
+    },
+    error: (message, error = null) => {
+        console.error(`❌ [StarFlex] ${message}`, error || '');
+    },
+    success: (message, data = null) => {
+        console.log(`✅ [StarFlex] ${message}`, data || '');
+    }
+};
+
+// Reemplazar console.log en funciones críticas
+window.StarFlexLogger = Logger;
+
+// ===== INICIALIZACIÓN FINAL =====
+Logger.info('StarFlex inicializado correctamente', {
+    version: '2.0.0',
+    mobile: isMobile,
+    performanceMode: performanceMode,
+    timestamp: new Date().toISOString()
+});
+
+// ===== EXPOSICIÓN DE API PARA DEBUGGING =====
+window.StarFlex = {
+    version: '2.0.0',
+    isMobile,
+    performanceMode,
+    imageOptimizer,
+    debugImageLoading,
+    forceReloadImages,
+    Logger,
+    // Funciones de navegación
+    openMobileMenu,
+    closeMobileMenu,
+    toggleMobileMenu,
+    // Funciones de idioma
+    switchLanguage,
+    currentLanguage,
+    // Utilidades
+    detectDeviceCapabilities,
+    initializeNavigation
+};
+
+Logger.success('API de StarFlex expuesta globalmente como window.StarFlex');
