@@ -815,6 +815,13 @@ function initializeLanguageSwitcher() {
         });
     });
     
+    // Cerrar cuando se hace clic fuera del selector
+    document.addEventListener('click', (e) => {
+        if (isLanguageSwitcherOpen && languageSwitcher && !languageSwitcher.contains(e.target)) {
+            closeLanguageSwitcher();
+        }
+    });
+    
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && isLanguageSwitcherOpen) {
             closeLanguageSwitcher();
