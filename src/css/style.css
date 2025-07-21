@@ -12,7 +12,7 @@
 --section-padding-x: clamp(1rem, 4vw, 1.5rem); --section-padding-y: clamp(1.5rem, 4vh, 3rem);
 --max-content-width: 1400px; --max-hero-width: 1600px;
 --transition: none; --transition-fast: none; --transition-slow: none;
---navbar-height: 75px; --navbar-height-mobile: 70px; --navbar-z-index: 1000;
+--navbar-height: var(--navbar-height-mobile); --navbar-height-mobile: 70px; --navbar-z-index: 1000;
 --phone-width-desktop: 280px; --phone-height-desktop: 560px; --phone-width-mobile: clamp(200px, 70vw, 280px); --phone-height-mobile: clamp(400px, 140vw, 560px); --phone-border-radius: clamp(30px, 6vw, 40px);
 --mobile-animation-duration: 0s; --mobile-scroll-threshold: 15px; --mobile-touch-target: 44px; --mobile-safe-area-bottom: env(safe-area-inset-bottom, 0px);
 }
@@ -89,6 +89,7 @@ p,span,h1,h2,h3,h4,h5,h6,li,td,th,input,textarea{-webkit-user-select:text;user-s
 @keyframes pulse-gentle{0%,100%{opacity:0.8;transform:scale(1)}50%{opacity:1;transform:scale(1.05)}}
 @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 @keyframes glow-line{0%,100%{opacity:0.8;transform:scaleX(1)}50%{opacity:1;transform:scaleX(1.05)}}
+@keyframes pulse-glow{0%,100%{opacity:0.5;transform:translate(-50%, -50%) scale(1)}50%{opacity:1;transform:translate(-50%, -50%) scale(1.2)}}
 
 .animate-fadeIn{animation:fadeIn 0.3s ease-out}.animate-fadeInUp{animation:fadeInUp 0.4s ease-out}.animate-fadeInDown{animation:fadeInDown 0.4s ease-out}.animate-fadeInLeft{animation:fadeInLeft 0.4s ease-out}.animate-fadeInRight{animation:fadeInRight 0.4s ease-out}.animate-pulse{animation:pulse 2s infinite}.animate-pulse-gentle{animation:pulse-gentle 3s infinite}.animate-spin{animation:spin 1s linear infinite}
 }
@@ -219,7 +220,7 @@ p,span,h1,h2,h3,h4,h5,h6,li,td,th,input,textarea{-webkit-user-select:text;user-s
 .nav__toggle.active .nav__toggle-line{background:var(--neon-primary)}
 
 /* Primera línea - se convierte en la parte superior de la X */
-.nav__toggle.active .nav__toggle-line:nth-child(1){transform:rotate(45deg) translate(5px, 5px);background:var(--neon-primary)}
+.nav__toggle.active .nav__toggle-line:nth-child(1){transform:rotate(45deg) translate(6px, 6px);background:var(--neon-primary)}
 
 .nav__toggle.active .nav__toggle-line:nth-child(1)::before{transform:scaleX(1.1);background:var(--neon-primary-bright)}
 
@@ -227,18 +228,16 @@ p,span,h1,h2,h3,h4,h5,h6,li,td,th,input,textarea{-webkit-user-select:text;user-s
 .nav__toggle.active .nav__toggle-line:nth-child(2){opacity:0;transform:scale(0) rotate(180deg);background:var(--neon-primary)}
 
 /* Tercera línea - se convierte en la parte inferior de la X */
-.nav__toggle.active .nav__toggle-line:nth-child(3){transform:rotate(-45deg) translate(7px, -6px);background:var(--neon-primary)}
+.nav__toggle.active .nav__toggle-line:nth-child(3){transform:rotate(-45deg) translate(6px, -6px);background:var(--neon-primary)}
 
 .nav__toggle.active .nav__toggle-line:nth-child(3)::before{transform:scaleX(1.1);background:var(--neon-primary-bright)}
 
 /* Efecto de brillo cuando está activo */
 .nav__toggle.active::before{content:'';position:absolute;top:50%;left:50%;width:100%;height:100%;background:radial-gradient(circle, rgba(255, 69, 105, 0.1) 0%, transparent 70%);border-radius:50%;transform:translate(-50%, -50%);animation:pulse-glow 2s infinite}
 
-@keyframes pulse-glow{0%,100%{opacity:0.5;transform:translate(-50%, -50%) scale(1)}50%{opacity:1;transform:translate(-50%, -50%) scale(1.2)}}
-
 /* Navegación desktop y móvil */
 .nav__menu,.nav__right-section{display:none}
-@media (min-width: 769px) {
+@media (min-width: 1024px) {
 .nav__toggle{display:none}
 .nav__menu,.nav__right-section{display:flex}
 .nav__menu{align-items:center;justify-content:space-between;flex:1;overflow:visible;max-width:calc(100% - 280px);margin-left:clamp(var(--space-md), 1.5vw, var(--space-2xl));margin-right:clamp(var(--space-xl), 3vw, var(--space-3xl))}
@@ -350,6 +349,7 @@ p,span,h1,h2,h3,h4,h5,h6,li,td,th,input,textarea{-webkit-user-select:text;user-s
 .nav__drawer-link-icon{width:18px;height:18px;opacity:0.7;flex-shrink:0}
 
 .nav-menu-open{overflow:hidden}
+
 /* DESKTOP DRAWER HOVER */
 @media (min-width: 1024px) {
 .nav__drawer-link{transition:all var(--transition)}
@@ -367,7 +367,6 @@ p,span,h1,h2,h3,h4,h5,h6,li,td,th,input,textarea{-webkit-user-select:text;user-s
 .nav__drawer-language{padding:var(--space-md) var(--space-lg)}
 .nav__drawer-navigation{padding:0 var(--space-lg);padding-top:var(--space-md)}
 }
-
 /* ===== HERO MÓVIL OPTIMIZADO ===== */
 .hero{position:relative;min-height:calc(100vh - var(--navbar-height-mobile));display:flex;align-items:flex-start;justify-content:flex-start;padding:calc(var(--navbar-height-mobile) + var(--space-lg)) var(--section-padding-x) var(--space-lg);overflow:hidden;background:var(--primary-bg)}
 
@@ -425,6 +424,7 @@ p,span,h1,h2,h3,h4,h5,h6,li,td,th,input,textarea{-webkit-user-select:text;user-s
 .hero__container{padding-top:var(--space-md);gap:var(--space-lg)}
 .hero__mobile-video{max-width:280px}
 }
+
 /* DESKTOP HERO COMPLETO */
 @media (min-width: 1024px) {
 .hero{min-height:100vh;align-items:center;justify-content:center;padding:calc(var(--navbar-height) + var(--space-6xl)) var(--section-padding-x) var(--section-padding-y)}
@@ -453,7 +453,6 @@ p,span,h1,h2,h3,h4,h5,h6,li,td,th,input,textarea{-webkit-user-select:text;user-s
 .download-btn--app-store .download-btn__image{background-image:url('../../assets/AppleStore.png')}
 .download-btn--google .download-btn__image,.download-btn--app-store .download-btn__image{width:auto;min-width:180px;max-width:200px;height:60px;background-repeat:no-repeat;background-position:center;background-size:contain}
 }
-
 /* ===== CARACTERÍSTICAS MÓVIL OPTIMIZADO ===== */
 .features{position:relative;width:100%;padding:clamp(2rem, 6vh, 4rem) var(--section-padding-x) clamp(1.5rem, 4vh, 3rem);overflow:hidden;background:radial-gradient(ellipse at 20% 10%, var(--secondary-bg) 0%, transparent 60%), radial-gradient(ellipse at 80% 90%, var(--accent-bg) 0%, transparent 60%), linear-gradient(180deg, var(--primary-bg) 0%, var(--secondary-bg) 30%, var(--primary-bg) 70%, var(--accent-bg) 100%)}
 
@@ -507,6 +506,7 @@ p,span,h1,h2,h3,h4,h5,h6,li,td,th,input,textarea{-webkit-user-select:text;user-s
 .feature__list-item{gap:10px!important;padding:4px 0!important;margin-bottom:6px!important;font-size:0.9rem!important}
 .feature__bullet{width:6px!important;height:6px!important}
 }
+
 /* DESKTOP FEATURES COMPLETO */
 @media (min-width: 1024px) {
 .features{padding:clamp(4rem, 12vh, 8rem) var(--section-padding-x) clamp(3rem, 8vh, 6rem)}
@@ -560,7 +560,6 @@ p,span,h1,h2,h3,h4,h5,h6,li,td,th,input,textarea{-webkit-user-select:text;user-s
 .feature[data-feature="log"] .phone__app-image{background-image:url('../../assets/phones/Log.webp');transition-delay:0.5s}
 .feature[data-feature="notifications"] .phone__app-image{background-image:url('../../assets/phones/Notifications.webp');transition-delay:0.6s}
 .feature[data-feature="referrals"] .phone__app-image{background-image:url('../../assets/phones/Referrals.webp');transition-delay:0.7s}
-
 /* ===== FAQ MÓVIL OPTIMIZADO ===== */
 .faq{position:relative;width:100%;padding:clamp(2rem, 6vh, 4rem) var(--section-padding-x) clamp(1.5rem, 4vh, 3rem);overflow:hidden;background:var(--primary-bg)}
 
@@ -619,6 +618,7 @@ p,span,h1,h2,h3,h4,h5,h6,li,td,th,input,textarea{-webkit-user-select:text;user-s
 
 .faq__no-results-text{margin-bottom:var(--space-lg);font:700 1.1rem var(--font-primary);color:var(--starflex-red)}
 .faq__no-results-suggestion{font:400 1rem var(--font-primary);color:var(--text-secondary)}
+
 @media (max-width: 480px){
 .faq__search{padding:var(--space-sm) var(--space-md) var(--space-sm) 45px;font-size:0.9rem}
 .faq__search-icon{left:15px;width:18px;height:18px;font-size:11px}
@@ -653,7 +653,6 @@ p,span,h1,h2,h3,h4,h5,h6,li,td,th,input,textarea{-webkit-user-select:text;user-s
 .faq__list{gap:var(--space-xl)}
 .faq__question:focus,.faq__search:focus{outline:2px solid var(--starflex-red);outline-offset:3px;border-radius:8px}
 }
-
 /* ===== CONTACT MÓVIL OPTIMIZADO - CARDS MÁS ANCHAS ===== */
 .contact{position:relative;width:100%;padding:var(--section-padding-y) var(--section-padding-x);background:var(--primary-bg);overflow:hidden}
 
@@ -724,6 +723,7 @@ p,span,h1,h2,h3,h4,h5,h6,li,td,th,input,textarea{-webkit-user-select:text;user-s
 
 .btn--footer span{font-size:0.95rem!important;font-weight:800;letter-spacing:1px;text-align:center!important}
 .btn--footer small{font-size:0.8rem;text-transform:uppercase;letter-spacing:1.5px;opacity:0.9;text-align:center!important}
+
 /* MEDIA QUERIES PARA CONTACT CARDS */
 @media (min-width: 768px){
 .contact__grid{grid-template-columns:repeat(2, 1fr)!important;max-width:900px!important}
@@ -767,7 +767,6 @@ p,span,h1,h2,h3,h4,h5,h6,li,td,th,input,textarea{-webkit-user-select:text;user-s
 .btn--footer{width:auto!important;min-width:200px!important;transition:all 0.2s ease}
 .btn--footer:hover{box-shadow:var(--shadow-xl);transform:translateY(-2px)}
 }
-
 /* ===== MOBILE FIXES CRÍTICOS ===== */
 .features,.faq,.contact{display:block!important;visibility:visible!important;opacity:1!important;position:relative;z-index:auto}
 
@@ -775,10 +774,17 @@ p,span,h1,h2,h3,h4,h5,h6,li,td,th,input,textarea{-webkit-user-select:text;user-s
 
 html,body{overflow-x:hidden}
 
-/* PERFORMANCE OPTIMIZATIONS MÓVIL */
+/* PERFORMANCE OPTIMIZATIONS MÓVIL - ACTUALIZADO CON EXCEPCIÓN PARA HAMBURGUESA */
 @media (max-width: 1023px) {
 *{animation-duration:0s!important;transition-duration:0s!important;will-change:auto!important}
 *[class*="animate-"]{animation:none!important;transform:none!important}
+
+/* EXCEPCIÓN: Permitir animación del botón hamburguesa */
+.nav__toggle, .nav__toggle-line{transition-duration:0.4s!important;animation-duration:0.4s!important}
+.nav__toggle.active .nav__toggle-line:nth-child(1){transform:rotate(45deg) translate(6px, 6px)!important}
+.nav__toggle.active .nav__toggle-line:nth-child(2){opacity:0!important;transform:scale(0) rotate(180deg)!important}
+.nav__toggle.active .nav__toggle-line:nth-child(3){transform:rotate(-45deg) translate(6px, -6px)!important}
+
 .hero__phone,.hero__phone-container,.hero__phone-screen,.hero__phone-content,.hero__phone-video,.hero__phone-app-image{display:none!important;visibility:hidden!important;opacity:0!important}
 .hero__mobile-video{display:block!important;visibility:visible!important;opacity:1!important}
 .hero__mobile-video-player{display:block!important;visibility:visible!important;opacity:1!important}
@@ -787,8 +793,13 @@ html,body{overflow-x:hidden}
 
 .performance-mode *{animation:none!important;transition:none!important;transform:none!important;will-change:auto!important}
 
+/* EXCEPCIÓN PARA PERFORMANCE MODE - Permitir hamburguesa */
+.performance-mode .nav__toggle, .performance-mode .nav__toggle-line{transition:all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55)!important}
+
 @media (prefers-reduced-motion: reduce){
 *{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+/* Mantener hamburguesa incluso con reduced motion */
+.nav__toggle, .nav__toggle-line{transition:all 0.2s ease!important}
 }
 
 /* CRITICAL FOCUS STYLES */
@@ -812,7 +823,7 @@ html,body{overflow-x:hidden}
 }
 
 /* DESKTOP PERFORMANCE MODE */
-.performance-mode .nav__link,.performance-mode .nav__language-btn,.performance-mode .nav__language-option,.performance-mode .nav__toggle,.performance-mode .nav__drawer-link,.performance-mode .nav__drawer-language-option{transition:none}
+.performance-mode .nav__link,.performance-mode .nav__language-btn,.performance-mode .nav__language-option,.performance-mode .nav__drawer-link,.performance-mode .nav__drawer-language-option{transition:none}
 .performance-mode .header.scrolled{box-shadow:var(--shadow-lg)}
 .performance-mode .btn{transition:none}
 .performance-mode .btn:hover{transform:none}
@@ -821,8 +832,12 @@ html,body{overflow-x:hidden}
 .performance-mode .faq::before{display:none}
 .performance-mode .faq__item:hover{transform:none}
 
-/* FINAL MOBILE OVERRIDES CRÍTICOS */
+/* FINAL MOBILE OVERRIDES CRÍTICOS - ACTUALIZADO */
 @media (max-width: 1023px){
+/* Excepción para animación hamburguesa */
+.nav__toggle, .nav__toggle *, .nav__toggle-line{transition:all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55)!important}
+.nav__toggle.active{background:linear-gradient(135deg, var(--glass-bg-medium) 0%, var(--glass-bg-strong) 100%)!important;border-color:var(--neon-primary)!important;box-shadow:0 0 20px rgba(255, 69, 105, 0.3)!important}
+
 .hero__phone,.hero__phone-container,.hero__phone-screen,.hero__phone-content,.hero__phone-video,.hero__phone-app-image{display:none!important;visibility:hidden!important;opacity:0!important}
 .hero__mobile-video{display:block!important;visibility:visible!important;opacity:1!important}
 .hero__mobile-video-player{display:block!important;visibility:visible!important;opacity:1!important}
@@ -850,8 +865,8 @@ html,body{overflow-x:hidden}
 
 /* OPTIMIZACIONES CRÍTICAS FINALES */
 @media (max-width: 1023px) {
-/* Eliminar todas las animaciones y transiciones en móvil */
-*,*::before,*::after{animation:none!important;transition:none!important;transform:none!important}
+/* Eliminar todas las animaciones y transiciones en móvil EXCEPTO hamburguesa */
+*:not(.nav__toggle):not(.nav__toggle-line),*:not(.nav__toggle)::before,*:not(.nav__toggle)::after{animation:none!important;transition:none!important;transform:none!important}
 
 /* Forzar visibilidad de elementos críticos */
 .features,.faq,.contact,.hero{display:block!important;visibility:visible!important;opacity:1!important}
@@ -879,7 +894,7 @@ img,video{image-rendering:-webkit-optimize-contrast;image-rendering:optimize-con
 /* Asegurar que no hay elementos ocultos por error */
 .hero__mobile-video,.hero__mobile-video-player,.download-btn__image{display:block!important;visibility:visible!important;opacity:1!important}
 
-/* Eliminar cualquier transform que pueda causar problemas */
+/* Eliminar cualquier transform que pueda causar problemas EXCEPTO hamburguesa */
 .hero__content,.hero__media,.feature,.feature__phone,.phone__app-image{transform:none!important}
 
 /* Optimizar z-index para evitar problemas de apilamiento */
@@ -889,36 +904,15 @@ img,video{image-rendering:-webkit-optimize-contrast;image-rendering:optimize-con
 /* ÚLTIMO OVERRIDE PARA GARANTIZAR FUNCIONAMIENTO */
 .features *,.faq *,.contact *,.hero *{visibility:visible!important;opacity:1!important}
 
+/* ANIMACIÓN ESPECÍFICA PARA HAMBURGUESA EN MÓVILES */
+@media (max-width: 1023px) {
+.nav__toggle{transition:all 0.3s cubic-bezier(0.4, 0, 0.2, 1)!important}
+.nav__toggle-line{transition:all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55)!important}
+.nav__toggle-line::before{transition:all 0.3s ease!important}
+.nav__toggle.active::before{animation:pulse-glow 2s infinite!important}
+}
+
 ::selection {
   color: var(--text-primary);
   background: var(--starflex-crimson);
-}
-/* PERFORMANCE OPTIMIZATIONS MÓVIL */
-@media (max-width: 1023px) {
-*{animation-duration:0s!important;transition-duration:0s!important;will-change:auto!important}
-*[class*="animate-"]{animation:none!important;transform:none!important}
-
-/* EXCEPCIÓN: Permitir animación del botón hamburguesa */
-.nav__toggle, .nav__toggle-line{transition-duration:0.3s!important;animation-duration:0.3s!important}
-.nav__toggle.active .nav__toggle-line:nth-child(1){transform:rotate(45deg) translate(6px, 6px)!important}
-.nav__toggle.active .nav__toggle-line:nth-child(2){opacity:0!important;transform:scale(0)!important}
-.nav__toggle.active .nav__toggle-line:nth-child(3){transform:rotate(-45deg) translate(6px, -6px)!important}
-
-.hero__phone,.hero__phone-container,.hero__phone-screen,.hero__phone-content,.hero__phone-video,.hero__phone-app-image{display:none!important;visibility:hidden!important;opacity:0!important}
-.hero__mobile-video{display:block!important;visibility:visible!important;opacity:1!important}
-.hero__mobile-video-player{display:block!important;visibility:visible!important;opacity:1!important}
-.download-btn__image{display:block!important;visibility:visible!important;opacity:1!important;background-image:none!important}
-}
-/* FINAL MOBILE OVERRIDES CRÍTICOS */
-@media (max-width: 1023px){
-/* Excepción para animación hamburguesa */
-.nav__toggle, .nav__toggle *, .nav__toggle-line{transition:all 0.3s cubic-bezier(0.4, 0, 0.2, 1)!important}
-
-.hero__phone,.hero__phone-container,.hero__phone-screen,.hero__phone-content,.hero__phone-video,.hero__phone-app-image{display:none!important;visibility:hidden!important;opacity:0!important}
-.hero__mobile-video{display:block!important;visibility:visible!important;opacity:1!important}
-.hero__mobile-video-player{display:block!important;visibility:visible!important;opacity:1!important}
-.download-btn__image{display:block!important;visibility:visible!important;opacity:1!important;background-image:none!important}
-.hero__title--highlight::after{animation:none!important}
-.hero__trust::before{animation:none!important}
-.hero__content,.hero__media{animation:fadeIn 0.1s ease-out!important}
 }
