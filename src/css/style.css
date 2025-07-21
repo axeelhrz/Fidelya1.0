@@ -280,8 +280,6 @@ p,span,h1,h2,h3,h4,h5,h6,li,td,th,input,textarea{-webkit-user-select:text;user-s
 .nav__language-btn[aria-expanded="true"] .nav__language-arrow{transform:rotate(180deg);color:var(--neon-primary)}
 .nav__language-btn:hover{color:var(--text-primary);background:linear-gradient(135deg, var(--glass-bg-light) 0%, var(--glass-bg-medium) 100%);border-color:var(--neon-primary);transform:translateY(-1px);box-shadow:var(--shadow-md)}
 .nav__language-option:hover{color:var(--text-primary);background:linear-gradient(135deg, var(--glass-bg-light) 0%, var(--glass-bg-medium) 100%);transform:translateX(3px)}
-
-
 /* MOBILE DRAWER SIN X */
 .nav__drawer{position:fixed;top:0;right:-100%;width:min(90%, 350px);height:100vh;background:rgba(15, 18, 25, 0.98);backdrop-filter:blur(20px);border-left:1px solid var(--border-subtle);box-shadow:-10px 0 50px rgba(0, 0, 0, 0.5);z-index:999;overflow:hidden;padding-top:var(--navbar-height-mobile);display:flex;flex-direction:column}
 
@@ -301,17 +299,8 @@ p,span,h1,h2,h3,h4,h5,h6,li,td,th,input,textarea{-webkit-user-select:text;user-s
 
 .nav__drawer-content{padding:var(--space-md) 0;display:flex;flex-direction:column;flex:1;overflow:hidden}
 
-.nav__drawer-navigation{flex:1;padding:0 var(--space-xl);display:flex;flex-direction:column;justify-content:center}
-
-.nav__drawer-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:var(--space-md)}
-
-.nav__drawer-link{display:flex;align-items:center;gap:var(--space-md);padding:var(--space-md) var(--space-lg);font-family:var(--font-primary);font-size:1rem;font-weight:600;color:var(--text-secondary);text-decoration:none;text-transform:uppercase;letter-spacing:0.5px;background:var(--glass-bg);border:1px solid var(--border-subtle);border-radius:12px;position:relative;min-height:44px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;touch-action:manipulation}
-
-.nav__drawer-link.active{color:var(--neon-primary);background:rgba(255, 45, 85, 0.1);box-shadow:inset 3px 0 0 var(--neon-primary)}
-
-.nav__drawer-link-icon{width:18px;height:18px;opacity:0.7;flex-shrink:0}
-
-.nav__drawer-language{padding:var(--space-md) var(--space-xl);border-top:1px solid var(--border-subtle);flex-shrink:0}
+/* SELECTOR DE IDIOMA REPOSICIONADO - AHORA VA ARRIBA */
+.nav__drawer-language{padding:var(--space-lg) var(--space-xl);border-bottom:1px solid var(--border-subtle);flex-shrink:0;order:-1}
 
 .nav__drawer-language-title{font-family:var(--font-primary);font-size:0.85rem;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:1px;margin-bottom:var(--space-sm);opacity:0.8}
 
@@ -323,12 +312,24 @@ p,span,h1,h2,h3,h4,h5,h6,li,td,th,input,textarea{-webkit-user-select:text;user-s
 
 .nav__drawer-language-flag{font-size:1rem;line-height:1;flex-shrink:0}
 
+.nav__drawer-navigation{flex:1;padding:0 var(--space-xl);display:flex;flex-direction:column;justify-content:flex-start;padding-top:var(--space-lg)}
+
+.nav__drawer-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:var(--space-md)}
+
+.nav__drawer-link{display:flex;align-items:center;gap:var(--space-md);padding:var(--space-md) var(--space-lg);font-family:var(--font-primary);font-size:1rem;font-weight:600;color:var(--text-secondary);text-decoration:none;text-transform:uppercase;letter-spacing:0.5px;background:var(--glass-bg);border:1px solid var(--border-subtle);border-radius:12px;position:relative;min-height:44px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;touch-action:manipulation}
+
+.nav__drawer-link.active{color:var(--neon-primary);background:rgba(255, 45, 85, 0.1);box-shadow:inset 3px 0 0 var(--neon-primary)}
+
+.nav__drawer-link-icon{width:18px;height:18px;opacity:0.7;flex-shrink:0}
+
 .nav-menu-open{overflow:hidden}
 
 /* DESKTOP DRAWER HOVER */
 @media (min-width: 1024px) {
 .nav__drawer-link{transition:all var(--transition)}
 .nav__drawer-link:hover{color:var(--text-primary);background:var(--glass-bg-light);border-color:var(--neon-primary);transform:translateX(3px)}
+.nav__drawer-language-option{transition:all var(--transition)}
+.nav__drawer-language-option:hover{color:var(--text-primary);background:var(--glass-bg-light);border-color:var(--neon-primary);transform:scale(1.02)}
 }
 
 @media (max-width: 480px){
@@ -337,6 +338,8 @@ p,span,h1,h2,h3,h4,h5,h6,li,td,th,input,textarea{-webkit-user-select:text;user-s
 .nav__toggle{width:44px;height:44px}
 .nav__toggle-line{width:20px}
 .nav__drawer{width:min(90%, 350px)}
+.nav__drawer-language{padding:var(--space-md) var(--space-lg)}
+.nav__drawer-navigation{padding:0 var(--space-lg);padding-top:var(--space-md)}
 }
 /* ===== HERO MÓVIL OPTIMIZADO ===== */
 .hero{position:relative;min-height:calc(100vh - var(--navbar-height-mobile));display:flex;align-items:flex-start;justify-content:flex-start;padding:calc(var(--navbar-height-mobile) + var(--space-lg)) var(--section-padding-x) var(--space-lg);overflow:hidden;background:var(--primary-bg)}
@@ -532,52 +535,6 @@ p,span,h1,h2,h3,h4,h5,h6,li,td,th,input,textarea{-webkit-user-select:text;user-s
 .feature[data-feature="log"] .phone__app-image{background-image:url('../../assets/phones/Log.webp');transition-delay:0.5s}
 .feature[data-feature="notifications"] .phone__app-image{background-image:url('../../assets/phones/Notifications.webp');transition-delay:0.6s}
 .feature[data-feature="referrals"] .phone__app-image{background-image:url('../../assets/phones/Referrals.webp');transition-delay:0.7s}
-
-/* OPTIMIZACIONES CRÍTICAS FINALES */
-@media (max-width: 1023px) {
-/* Eliminar todas las animaciones y transiciones en móvil */
-*,*::before,*::after{animation:none!important;transition:none!important;transform:none!important}
-
-/* Forzar visibilidad de elementos críticos */
-.features,.faq,.contact,.hero{display:block!important;visibility:visible!important;opacity:1!important}
-
-/* Optimizar rendimiento de imágenes */
-img,video{image-rendering:-webkit-optimize-contrast;image-rendering:optimize-contrast;transform:translateZ(0);backface-visibility:hidden}
-
-/* Reducir repaints y reflows */
-.container,.hero__container,.features__grid,.faq__container,.contact__grid{contain:layout style}
-}
-
-/* TOUCH OPTIMIZATIONS */
-@media (hover: none) and (pointer: coarse) {
-.btn,.nav__toggle,.nav__drawer-link,.faq__question,.contact__channel-btn{-webkit-tap-highlight-color:rgba(255, 69, 105, 0.2);}
-}
-
-/* SAFE AREA INSETS */
-@supports (padding: max(0px)) {
-.contact__footer{padding-bottom:max(var(--space-2xl), calc(env(safe-area-inset-bottom, 0px) + var(--space-xl)))!important}
-.floating-widget{bottom:max(20px, calc(env(safe-area-inset-bottom, 0px) + 20px))}
-}
-
-/* FINAL CRITICAL OVERRIDES */
-@media (max-width: 1023px) {
-/* Asegurar que no hay elementos ocultos por error */
-.hero__mobile-video,.hero__mobile-video-player,.download-btn__image{display:block!important;visibility:visible!important;opacity:1!important}
-
-/* Eliminar cualquier transform que pueda causar problemas */
-.hero__content,.hero__media,.feature,.feature__phone,.phone__app-image{transform:none!important}
-
-/* Optimizar z-index para evitar problemas de apilamiento */
-.header{z-index:1000}.nav__drawer{z-index:999}.nav__drawer-overlay{z-index:998}.floating-widget{z-index:997}
-}
-
-/* ÚLTIMO OVERRIDE PARA GARANTIZAR FUNCIONAMIENTO */
-.features *,.faq *,.contact *,.hero *{visibility:visible!important;opacity:1!important}
-::selection {
-  color: var(--text-primary);
-  background: var(--starflex-crimson);
-}
-
 /* ===== FAQ MÓVIL OPTIMIZADO ===== */
 .faq{position:relative;width:100%;padding:clamp(2rem, 6vh, 4rem) var(--section-padding-x) clamp(1.5rem, 4vh, 3rem);overflow:hidden;background:var(--primary-bg)}
 
@@ -762,7 +719,6 @@ img,video{image-rendering:-webkit-optimize-contrast;image-rendering:optimize-con
 .btn--footer{width:auto!important;min-width:200px!important;transition:all 0.2s ease}
 .btn--footer:hover{box-shadow:var(--shadow-xl);transform:translateY(-2px)}
 }
-
 /* ===== MOBILE FIXES CRÍTICOS ===== */
 .features,.faq,.contact{display:block!important;visibility:visible!important;opacity:1!important;position:relative;z-index:auto}
 
@@ -841,4 +797,49 @@ html,body{overflow-x:hidden}
 .feature.in-view .phone__app-image{opacity:1!important;transform:scale(1)!important}
 .phone__screen{opacity:1!important}
 .feature__phone{opacity:1!important;transform:translateY(0) scale(1)!important}
+}
+
+/* OPTIMIZACIONES CRÍTICAS FINALES */
+@media (max-width: 1023px) {
+/* Eliminar todas las animaciones y transiciones en móvil */
+*,*::before,*::after{animation:none!important;transition:none!important;transform:none!important}
+
+/* Forzar visibilidad de elementos críticos */
+.features,.faq,.contact,.hero{display:block!important;visibility:visible!important;opacity:1!important}
+
+/* Optimizar rendimiento de imágenes */
+img,video{image-rendering:-webkit-optimize-contrast;image-rendering:optimize-contrast;transform:translateZ(0);backface-visibility:hidden}
+
+/* Reducir repaints y reflows */
+.container,.hero__container,.features__grid,.faq__container,.contact__grid{contain:layout style}
+}
+
+/* TOUCH OPTIMIZATIONS */
+@media (hover: none) and (pointer: coarse) {
+.btn,.nav__toggle,.nav__drawer-link,.faq__question,.contact__channel-btn{-webkit-tap-highlight-color:rgba(255, 69, 105, 0.2);}
+}
+
+/* SAFE AREA INSETS */
+@supports (padding: max(0px)) {
+.contact__footer{padding-bottom:max(var(--space-2xl), calc(env(safe-area-inset-bottom, 0px) + var(--space-xl)))!important}
+.floating-widget{bottom:max(20px, calc(env(safe-area-inset-bottom, 0px) + 20px))}
+}
+
+/* FINAL CRITICAL OVERRIDES */
+@media (max-width: 1023px) {
+/* Asegurar que no hay elementos ocultos por error */
+.hero__mobile-video,.hero__mobile-video-player,.download-btn__image{display:block!important;visibility:visible!important;opacity:1!important}
+
+/* Eliminar cualquier transform que pueda causar problemas */
+.hero__content,.hero__media,.feature,.feature__phone,.phone__app-image{transform:none!important}
+
+/* Optimizar z-index para evitar problemas de apilamiento */
+.header{z-index:1000}.nav__drawer{z-index:999}.nav__drawer-overlay{z-index:998}.floating-widget{z-index:997}
+}
+
+/* ÚLTIMO OVERRIDE PARA GARANTIZAR FUNCIONAMIENTO */
+.features *,.faq *,.contact *,.hero *{visibility:visible!important;opacity:1!important}
+::selection {
+  color: var(--text-primary);
+  background: var(--starflex-crimson);
 }
