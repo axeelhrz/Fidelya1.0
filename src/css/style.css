@@ -893,3 +893,32 @@ img,video{image-rendering:-webkit-optimize-contrast;image-rendering:optimize-con
   color: var(--text-primary);
   background: var(--starflex-crimson);
 }
+/* PERFORMANCE OPTIMIZATIONS MÓVIL */
+@media (max-width: 1023px) {
+*{animation-duration:0s!important;transition-duration:0s!important;will-change:auto!important}
+*[class*="animate-"]{animation:none!important;transform:none!important}
+
+/* EXCEPCIÓN: Permitir animación del botón hamburguesa */
+.nav__toggle, .nav__toggle-line{transition-duration:0.3s!important;animation-duration:0.3s!important}
+.nav__toggle.active .nav__toggle-line:nth-child(1){transform:rotate(45deg) translate(6px, 6px)!important}
+.nav__toggle.active .nav__toggle-line:nth-child(2){opacity:0!important;transform:scale(0)!important}
+.nav__toggle.active .nav__toggle-line:nth-child(3){transform:rotate(-45deg) translate(6px, -6px)!important}
+
+.hero__phone,.hero__phone-container,.hero__phone-screen,.hero__phone-content,.hero__phone-video,.hero__phone-app-image{display:none!important;visibility:hidden!important;opacity:0!important}
+.hero__mobile-video{display:block!important;visibility:visible!important;opacity:1!important}
+.hero__mobile-video-player{display:block!important;visibility:visible!important;opacity:1!important}
+.download-btn__image{display:block!important;visibility:visible!important;opacity:1!important;background-image:none!important}
+}
+/* FINAL MOBILE OVERRIDES CRÍTICOS */
+@media (max-width: 1023px){
+/* Excepción para animación hamburguesa */
+.nav__toggle, .nav__toggle *, .nav__toggle-line{transition:all 0.3s cubic-bezier(0.4, 0, 0.2, 1)!important}
+
+.hero__phone,.hero__phone-container,.hero__phone-screen,.hero__phone-content,.hero__phone-video,.hero__phone-app-image{display:none!important;visibility:hidden!important;opacity:0!important}
+.hero__mobile-video{display:block!important;visibility:visible!important;opacity:1!important}
+.hero__mobile-video-player{display:block!important;visibility:visible!important;opacity:1!important}
+.download-btn__image{display:block!important;visibility:visible!important;opacity:1!important;background-image:none!important}
+.hero__title--highlight::after{animation:none!important}
+.hero__trust::before{animation:none!important}
+.hero__content,.hero__media{animation:fadeIn 0.1s ease-out!important}
+}
