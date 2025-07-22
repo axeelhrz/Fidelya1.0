@@ -654,6 +654,11 @@ function setupLanguageToggle() {
             const selectedLanguage = button.getAttribute('data-lang');
             if (selectedLanguage && selectedLanguage !== currentLanguage) {
                 switchLanguage(selectedLanguage);
+                
+                // Cerrar el selector de idioma después de seleccionar
+                if (isLanguageSwitcherOpen) {
+                    closeLanguageSwitcher();
+                }
             }
         });
 
@@ -668,13 +673,24 @@ function setupLanguageToggle() {
         }
     });
     
-    // Configurar eventos para botones del drawer móvil
+    // Configurar eventos para botones del drawer móvil - CORREGIDO PARA CERRAR DRAWER
     drawerLanguageButtons.forEach(button => {
         button.addEventListener('click', (e) => {
             e.preventDefault();
             const selectedLanguage = button.getAttribute('data-lang');
             if (selectedLanguage && selectedLanguage !== currentLanguage) {
+                console.log(`🌐 Cambiando idioma a: ${selectedLanguage} desde drawer móvil`);
+                
+                // Cambiar idioma
                 switchLanguage(selectedLanguage);
+                
+                // Cerrar el drawer móvil después de seleccionar idioma
+                if (isMobileMenuOpen) {
+                    console.log('📱 Cerrando drawer móvil después de cambio de idioma');
+                    setTimeout(() => {
+                        closeMobileMenu();
+                    }, 100); // Pequeño delay para que se vea el cambio
+                }
             }
         });
 
@@ -792,7 +808,8 @@ function initializeLanguageSwitcher() {
     const languageSwitcherBtn = document.getElementById('language-switcher-btn');
     const languageSwitcherDropdown = document.getElementById('language-switcher-dropdown');
     const languageSwitcher = document.getElementById('language-switcher');
-    const languageOptions = languageSwitcher?.querySelectorAll('.language-switcher__option');
+    // CORREGIDO: Usar el selector correcto que existe en el HTML
+    const languageOptions = languageSwitcher?.querySelectorAll('.nav__language-option');
     
     if (!languageSwitcherBtn || !languageSwitcherDropdown || !languageSwitcher) return;
     
@@ -804,14 +821,29 @@ function initializeLanguageSwitcher() {
         toggleLanguageSwitcher();
     });
     
+    // CORREGIDO: Configurar eventos para las opciones de idioma del dropdown
     languageOptions?.forEach(option => {
         option.addEventListener('click', (e) => {
             e.preventDefault();
+            e.stopPropagation();
             const selectedLanguage = option.getAttribute('data-lang');
             if (selectedLanguage && selectedLanguage !== currentLanguage) {
+                console.log(`🌐 Cambiando idioma a: ${selectedLanguage} desde selector desktop`);
                 switchLanguage(selectedLanguage);
+                // Cerrar el selector automáticamente después de seleccionar
                 closeLanguageSwitcher();
             }
+        });
+
+        // Mejorar feedback visual en hover y click
+        option.addEventListener('mouseenter', () => {
+            if (!option.classList.contains('active')) {
+                option.style.transform = 'translateX(3px)';
+            }
+        });
+        
+        option.addEventListener('mouseleave', () => {
+            option.style.transform = '';
         });
     });
     
@@ -866,7 +898,8 @@ function updateLanguageSwitcher() {
         languageSwitcherText.textContent = currentLanguage.toUpperCase();
     }
     
-    const allOptions = document.querySelectorAll('.language-switcher__option');
+    // CORREGIDO: Usar el selector correcto para las opciones
+    const allOptions = document.querySelectorAll('.nav__language-option');
     allOptions.forEach(option => {
         const optionLang = option.getAttribute('data-lang');
         if (optionLang === currentLanguage) {
@@ -1020,7 +1053,7 @@ function initializeDesktopNavigation() {
     initializeActiveSection();
 }
 
-// ===== NAVEGACIÓN MÓVIL CON DRAWER - ACTUALIZADA PARA OCULTAR BOTÓN FLOTANTE =====
+// ===== NAVEGACIÓN MÓVIL CON DRAWER - ACTUALIZADA PARA PREVENIR SCROLL =====
 function initializeMobileNavigation() {
     console.log('🔧 Inicializando navegación móvil con drawer...');
     
@@ -1223,7 +1256,18 @@ function openMobileMenu() {
     navToggle.classList.add('active');
     navDrawer.classList.add('active');
     if (navDrawerOverlay) navDrawerOverlay.classList.add('active');
+    
+    // ===== PREVENIR SCROLL DE LA PÁGINA SIN MOVER LA POSICIÓN =====
+    // Guardar la posición actual del scroll ANTES de hacer cambios
+    const scrollPosition = window.scrollY;
+    body.dataset.scrollPosition = scrollPosition.toString();
+    
+    // Aplicar estilos para prevenir scroll sin cambiar la posición visual
     body.classList.add('drawer-open');
+    body.style.overflow = 'hidden';
+    body.style.position = 'fixed';
+    body.style.width = '100%';
+    body.style.top = `-${scrollPosition}px`;
     
     // Ocultar botón flotante cuando se abre el drawer móvil
     if (floatingWidget && isMobile) {
@@ -1234,7 +1278,7 @@ function openMobileMenu() {
     navToggle.setAttribute('aria-expanded', 'true');
     navDrawer.setAttribute('aria-hidden', 'false');
     
-    console.log('✅ Drawer móvil abierto');
+    console.log('✅ Drawer móvil abierto - Scroll de página bloqueado en posición:', scrollPosition);
 }
 
 function closeMobileMenu() {
@@ -1255,7 +1299,22 @@ function closeMobileMenu() {
     navToggle.classList.remove('active');
     navDrawer.classList.remove('active');
     if (navDrawerOverlay) navDrawerOverlay.classList.remove('active');
+    
+    // ===== RESTAURAR SCROLL DE LA PÁGINA A LA POSICIÓN ORIGINAL =====
+    const scrollPosition = parseInt(body.dataset.scrollPosition || '0');
+    
+    // Remover estilos que previenen el scroll
     body.classList.remove('drawer-open');
+    body.style.overflow = '';
+    body.style.position = '';
+    body.style.top = '';
+    body.style.width = '';
+    
+    // Restaurar la posición del scroll exactamente donde estaba
+    window.scrollTo(0, scrollPosition);
+    
+    // Limpiar el dataset
+    delete body.dataset.scrollPosition;
     
     // Mostrar botón flotante cuando se cierra el drawer móvil
     if (floatingWidget && isMobile) {
@@ -1266,7 +1325,7 @@ function closeMobileMenu() {
     navToggle.setAttribute('aria-expanded', 'false');
     navDrawer.setAttribute('aria-hidden', 'true');
     
-    console.log('✅ Drawer móvil cerrado');
+    console.log('✅ Drawer móvil cerrado - Scroll de página restaurado a posición:', scrollPosition);
 }
 
 function updateActiveDrawerLink(activeLink) {
@@ -2401,8 +2460,5 @@ window.StarFlex = {
     switchLanguage,
     currentLanguage,
     // Utilidades
-    detectDeviceCapabilities,
-    initializeNavigation
+    detectDeviceCapabilities
 };
-
-Logger.success('API de StarFlex expuesta globalmente como window.StarFlex');
