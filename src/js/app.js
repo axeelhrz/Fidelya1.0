@@ -322,7 +322,7 @@ const translationData = {
         'faq-subtitle': 'Find clear answers to the most common questions about StarFlex and discover how to transform your Amazon Flex experience.',
         'faq-search-placeholder': 'Search question...',
         'faq-1-question': 'What are the main benefits of using StarFlex?',
-        'faq-1-answer': 'StarFlex is designed to <span class="faq__answer-highlight">eliminate distracted driving</span> through intelligent automation. It allows you to focus completely on safe driving while our system works to find the best blocks. With StarFlex, you don\'t need to constantly check your phone, ensuring a safer and more efficient experience that allows you to maximize your earnings.',
+        'faq-1-answer': 'StarFlex is designed to <span class="faq__answer-highlight">eliminate distracted driving</span> through intelligent automation. It allows you to focus completely on safe driving while our system works to find the best blocks. With StarFlex, you don\'t need to constantly check your phone, ensuring a safer and more efficient experience        that allows you to maximize your earnings.',
         'faq-2-question': 'Can StarFlex automatically solve CAPTCHAs?',
         'faq-2-answer': 'Yes, StarFlex includes <span class="faq__answer-highlight">advanced technology to automatically solve CAPTCHAs</span>. Our system uses intelligent algorithms that can interpret and solve different types of verifications, allowing smooth navigation without manual interruptions. This optimizes your time and makes your daily experience more efficient.',
         'faq-3-question': 'Is it safe to use StarFlex? Can Amazon detect it?',
@@ -997,38 +997,78 @@ function initializeDesktopNavigation() {
     const navLinks = document.querySelectorAll('.nav__link');
     const header = document.getElementById('header');
     
-    // Funcionalidad del logo como enlace (solo desktop)
+    // ===== FUNCIONALIDAD DEL LOGO COMO ENLACE (DESKTOP Y MÓVIL) =====
     const navLogo = document.querySelector('.nav__logo');
-    if (navLogo && !isMobile) {
+    if (navLogo) {
+        // CAMBIO PRINCIPAL: Remover la condición !isMobile para que funcione en ambos dispositivos
         navLogo.addEventListener('click', (e) => {
             e.preventDefault();
             
+            console.log(`🏠 Click en logo del header - Dispositivo: ${isMobile ? 'móvil' : 'desktop'}`);
+            
+            // Cerrar menús abiertos si están activos
             if (isMenuOpen) {
+                closeMobileMenu();
+            }
+            if (isMobileMenuOpen) {
                 closeMobileMenu();
             }
             
             const homeSection = document.querySelector('#home');
             if (homeSection) {
-                smoothScrollToSection(homeSection);
+                // En móvil, agregar un pequeño delay para que se cierre el menú si estaba abierto
+                const scrollDelay = isMobile && isMobileMenuOpen ? 300 : 0;
                 
-                const homeLink = document.querySelector('.nav__link[href="#home"]');
-                if (homeLink) {
-                    updateActiveNavLink(homeLink);
-                }
+                setTimeout(() => {
+                    smoothScrollToSection(homeSection);
+                    
+                    const homeLink = document.querySelector('.nav__link[href="#home"]');
+                    if (homeLink) {
+                        updateActiveNavLink(homeLink);
+                    }
+                    
+                    // También actualizar el enlace activo del drawer móvil si existe
+                    const homeDrawerLink = document.querySelector('.nav__drawer-link[href="#home"]');
+                    if (homeDrawerLink) {
+                        updateActiveDrawerLink(homeDrawerLink);
+                    }
+                }, scrollDelay);
             }
         });
         
+        // Configurar estilos y accesibilidad para ambos dispositivos
         navLogo.style.cursor = 'pointer';
         navLogo.setAttribute('tabindex', '0');
         navLogo.setAttribute('role', 'button');
         navLogo.setAttribute('aria-label', 'Ir al inicio');
         
+        // Soporte para navegación por teclado
         navLogo.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
                 navLogo.click();
             }
         });
+        
+        // Efectos táctiles mejorados para móvil
+        if (isMobile) {
+            navLogo.addEventListener('touchstart', () => {
+                navLogo.style.transform = 'scale(0.95)';
+                navLogo.style.transition = 'transform 0.1s ease';
+            }, { passive: true });
+            
+            navLogo.addEventListener('touchend', () => {
+                setTimeout(() => {
+                    navLogo.style.transform = '';
+                }, 150);
+            }, { passive: true });
+            
+            navLogo.addEventListener('touchcancel', () => {
+                navLogo.style.transform = '';
+            }, { passive: true });
+        }
+        
+        console.log(`✅ Logo del header configurado para navegación - Dispositivo: ${isMobile ? 'móvil' : 'desktop'}`);
     }
     
     // Enlaces de navegación desktop
@@ -1077,12 +1117,12 @@ function initializeMobileNavigation() {
         return;
     }
     
-    // Funcionalidad del logo del drawer como enlace
+    // ===== FUNCIONALIDAD DEL LOGO DEL DRAWER COMO ENLACE (MÓVIL) =====
     const drawerLogo = document.querySelector('.nav__drawer-logo');
     if (drawerLogo) {
         drawerLogo.addEventListener('click', (e) => {
             e.preventDefault();
-            console.log('🏠 Click en logo del drawer');
+            console.log('🏠 Click en logo del drawer móvil');
             
             if (isMobileMenuOpen) {
                 closeMobileMenu();
@@ -1096,6 +1136,11 @@ function initializeMobileNavigation() {
                     if (homeLink) {
                         updateActiveDrawerLink(homeLink);
                     }
+                    // También actualizar el enlace desktop
+                    const homeDesktopLink = document.querySelector('.nav__link[href="#home"]');
+                    if (homeDesktopLink) {
+                        updateActiveNavLink(homeDesktopLink);
+                    }
                 }, 300);
             }
         });
@@ -1104,6 +1149,24 @@ function initializeMobileNavigation() {
         drawerLogo.setAttribute('tabindex', '0');
         drawerLogo.setAttribute('role', 'button');
         drawerLogo.setAttribute('aria-label', 'Ir al inicio');
+        
+        // Efectos táctiles para el logo del drawer
+        drawerLogo.addEventListener('touchstart', () => {
+            drawerLogo.style.transform = 'scale(0.95)';
+            drawerLogo.style.transition = 'transform 0.1s ease';
+        }, { passive: true });
+        
+        drawerLogo.addEventListener('touchend', () => {
+            setTimeout(() => {
+                drawerLogo.style.transform = '';
+            }, 150);
+        }, { passive: true });
+        
+        drawerLogo.addEventListener('touchcancel', () => {
+            drawerLogo.style.transform = '';
+        }, { passive: true });
+        
+        console.log('✅ Logo del drawer móvil configurado para navegación');
     }
     
     // Toggle hamburguesa móvil
@@ -1174,6 +1237,12 @@ function initializeMobileNavigation() {
                     console.log(`🚀 Haciendo scroll a: ${targetId}`);
                     smoothScrollToSection(targetSection);
                     updateActiveDrawerLink(link);
+                    
+                    // También actualizar el enlace desktop correspondiente
+                    const desktopLink = document.querySelector(`.nav__link[href="${targetId}"]`);
+                    if (desktopLink) {
+                        updateActiveNavLink(desktopLink);
+                    }
                 }, 100);
             } else {
                 console.error(`❌ Sección no encontrada: ${targetId}`);
@@ -2365,212 +2434,6 @@ function forceReloadImages() {
 // Exponer función de recarga globalmente
 window.forceReloadImages = forceReloadImages;
 
-// ===== MONITOREO DE RENDIMIENTO =====
-function monitorPerformance() {
-    if ('performance' in window) {
-        window.addEventListener('load', () => {
-            setTimeout(() => {
-                const perfData = performance.getEntriesByType('navigation')[0];
-                const loadTime = perfData.loadEventEnd - perfData.loadEventStart;
-                const domContentLoaded = perfData.domContentLoadedEventEnd - perfData.domContentLoadedEventStart;
-                
-                console.log('📊 Métricas de rendimiento:');
-                console.log(`- Tiempo de carga: ${loadTime}ms`);
-                console.log(`- DOM Content Loaded: ${domContentLoaded}ms`);
-                console.log(`- Modo rendimiento: ${performanceMode ? 'Activado' : 'Desactivado'}`);
-                console.log(`- Dispositivo móvil: ${isMobile ? 'Sí' : 'No'}`);
-                
-                // Verificar imágenes cargadas
-                const images = document.querySelectorAll('img, [style*="background-image"]');
-                const loadedImages = Array.from(images).filter(img => {
-                    if (img.tagName === 'IMG') {
-                        return img.complete && img.naturalHeight !== 0;
-                    } else {
-                        const bg = window.getComputedStyle(img).backgroundImage;
-                        return bg && bg !== 'none';
-                    }
-                });
-                
-                console.log(`- Imágenes cargadas: ${loadedImages.length}/${images.length}`);
-            }, 1000);
-        });
-    }
-}
-
-// Inicializar monitoreo
-monitorPerformance();
-
-// ===== FALLBACK PARA IMÁGENES NO CARGADAS =====
-function setupImageFallbacks() {
-    // Verificar imágenes después de un tiempo
-    setTimeout(() => {
-        const featureImages = document.querySelectorAll('.phone__app-image');
-        
-        featureImages.forEach((img, index) => {
-            const backgroundImage = window.getComputedStyle(img).backgroundImage;
-            const hasBackground = backgroundImage && backgroundImage !== 'none';
-            
-            if (!hasBackground) {
-                const feature = img.closest('.feature');
-                const featureType = feature?.getAttribute('data-feature');
-                
-                console.warn(`⚠️ Imagen no cargada para característica: ${featureType}`);
-                
-                // Intentar cargar manualmente
-                if (imageOptimizer && featureType) {
-                    const imageKeys = {
-                        'schedule': 'phones.schedule',
-                        'stations': 'phones.stations',
-                        'calendar': 'phones.calendar',
-                        'log': 'phones.log',
-                        'notifications': 'phones.notifications',
-                        'referrals': 'phones.referrals'
-                    };
-                    
-                    const imageKey = imageKeys[featureType];
-                    if (imageKey) {
-                        console.log(`🔄 Reintentando carga de imagen: ${imageKey}`);
-                        imageOptimizer.loadImageImmediately(img, imageKey);
-                    }
-                }
-            }
-        });
-    }, 3000);
-}
-
-// Configurar fallbacks
-setupImageFallbacks();
-
-// ===== OPTIMIZACIÓN ADICIONAL PARA MÓVILES =====
-if (isMobile) {
-    // Optimizar scroll en móviles
-    let ticking = false;
-    
-    function optimizeScrollPerformance() {
-        if (!ticking) {
-            requestAnimationFrame(() => {
-                // Lógica de scroll optimizada ya implementada
-                ticking = false;
-            });
-            ticking = true;
-        }
-    }
-    
-    // Reducir frecuencia de eventos en móvil
-    window.addEventListener('scroll', optimizeScrollPerformance, { passive: true });
-    
-    // Optimizar touch events
-    document.addEventListener('touchstart', () => {
-        // Preparar para interacción táctil
-    }, { passive: true });
-    
-    // Prevenir zoom accidental en inputs
-    const inputs = document.querySelectorAll('input, textarea, select');
-    inputs.forEach(input => {
-        input.addEventListener('focus', () => {
-            if (window.innerWidth < 768) {
-                const viewport = document.querySelector('meta[name="viewport"]');
-                if (viewport) {
-                    viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
-                }
-            }
-        });
-        
-        input.addEventListener('blur', () => {
-            if (window.innerWidth < 768) {
-                const viewport = document.querySelector('meta[name="viewport"]');
-                if (viewport) {
-                    viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, user-scalable=no');
-                }
-            }
-        });
-    });
-}
-
-// ===== GESTIÓN DE MEMORIA =====
-function cleanupResources() {
-    // Limpiar event listeners innecesarios
-    if (imageOptimizer && imageOptimizer.intersectionObserver) {
-        imageOptimizer.intersectionObserver.disconnect();
-    }
-    
-    // Limpiar timeouts y intervals
-    const highestTimeoutId = setTimeout(() => {}, 0);
-    for (let i = 0; i < highestTimeoutId; i++) {
-        clearTimeout(i);
-    }
-    
-    const highestIntervalId = setInterval(() => {}, 9999);
-    for (let i = 0; i < highestIntervalId; i++) {
-        clearInterval(i);
-    }
-    
-    console.log('🧹 Recursos limpiados');
-}
-
-// Limpiar recursos al salir
-window.addEventListener('beforeunload', cleanupResources);
-
-// ===== DETECCIÓN DE CONEXIÓN LENTA =====
-function handleSlowConnection() {
-    const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-    
-    if (connection) {
-        function updateConnectionStatus() {
-            const isSlowConnection = connection.effectiveType === 'slow-2g' || 
-                                   connection.effectiveType === '2g' || 
-                                   connection.effectiveType === '3g';
-            
-            if (isSlowConnection && !performanceMode) {
-                console.log('🐌 Conexión lenta detectada, activando optimizaciones');
-                document.body.classList.add('slow-connection');
-                
-                // Reducir calidad de imágenes o diferir cargas no críticas
-                const nonCriticalImages = document.querySelectorAll('.phone__app-image:not(.loaded)');
-                nonCriticalImages.forEach(img => {
-                    img.style.filter = 'blur(2px)';
-                    img.style.transition = 'filter 0.3s ease';
-                });
-            } else {
-                document.body.classList.remove('slow-connection');
-            }
-        }
-        
-        connection.addEventListener('change', updateConnectionStatus);
-        updateConnectionStatus();
-    }
-}
-
-// Inicializar detección de conexión
-handleSlowConnection();
-
-// ===== LOGGING MEJORADO =====
-const Logger = {
-    info: (message, data = null) => {
-        console.log(`ℹ️ [StarFlex] ${message}`, data || '');
-    },
-    warn: (message, data = null) => {
-        console.warn(`⚠️ [StarFlex] ${message}`, data || '');
-    },
-    error: (message, error = null) => {
-        console.error(`❌ [StarFlex] ${message}`, error || '');
-    },
-    success: (message, data = null) => {
-        console.log(`✅ [StarFlex] ${message}`, data || '');
-    }
-};
-
-// Reemplazar console.log en funciones críticas
-window.StarFlexLogger = Logger;
-
-// ===== INICIALIZACIÓN FINAL =====
-Logger.info('StarFlex inicializado correctamente', {
-    version: '2.0.0',
-    mobile: isMobile,
-    performanceMode: performanceMode,
-    timestamp: new Date().toISOString()
-});
-
 // ===== EXPOSICIÓN DE API PARA DEBUGGING =====
 window.StarFlex = {
     version: '2.0.0',
@@ -2579,7 +2442,6 @@ window.StarFlex = {
     imageOptimizer,
     debugImageLoading,
     forceReloadImages,
-    Logger,
     // Funciones de navegación
     openMobileMenu,
     closeMobileMenu,
@@ -2590,3 +2452,4 @@ window.StarFlex = {
     // Utilidades
     detectDeviceCapabilities
 };
+
