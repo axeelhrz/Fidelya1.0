@@ -20,6 +20,8 @@ let isNavbarVisible = true;
 let isMobile = window.innerWidth <= 1023;
 let isReducedMotion = false;
 let performanceMode = false;
+// Variables para el sistema de routing
+let currentRoute = '';
 
 // ===== CONFIGURACIÓN GLOBAL ULTRA-OPTIMIZADA =====
 const CONFIG = {
@@ -215,10 +217,46 @@ const translationData = {
         'contact-email-description': 'Contacta directamente con nuestro equipo de soporte técnico especializado',
         'contact-email-btn': 'Contactar',
         // Footer
-        'footer-legal': 'Política de Privacidad • Términos y Condiciones',
+        'footer-privacy-link': 'Política de Privacidad',
+        'footer-terms-link': 'Términos y Condiciones',
         'footer-copyright': '© StarFlex • Todos los derechos reservados',
         'footer-cta-main': 'COMENZAR AHORA',
-        'footer-cta-trial': '3 días gratis'
+        'footer-cta-trial': '3 días gratis',
+        // Legal Pages
+        'privacy-policy-title': 'Política de Privacidad',
+        'terms-conditions-title': 'Términos y Condiciones',
+        'back-to-home': 'Volver al Inicio',
+        'last-updated': 'Última actualización: 15 de diciembre de 2024',
+        // Privacy Policy Content
+        'privacy-section-1-title': '1. Información que Recopilamos',
+        'privacy-section-1-content': 'En StarFlex, recopilamos información necesaria para proporcionar nuestros servicios de automatización para Amazon Flex. Esto incluye información de cuenta, datos de uso de la aplicación, y información técnica del dispositivo para optimizar el rendimiento.',
+        'privacy-section-2-title': '2. Cómo Utilizamos su Información',
+        'privacy-section-2-content': 'Utilizamos la información recopilada para proporcionar, mantener y mejorar nuestros servicios, personalizar su experiencia, procesar transacciones, enviar comunicaciones importantes, y garantizar la seguridad de nuestra plataforma.',
+        'privacy-section-3-title': '3. Compartir Información',
+        'privacy-section-3-content': 'No vendemos, alquilamos ni compartimos su información personal con terceros para fines comerciales. Solo compartimos información cuando es necesario para proporcionar nuestros servicios, cumplir con obligaciones legales, o proteger nuestros derechos.',
+        'privacy-section-4-title': '4. Seguridad de Datos',
+        'privacy-section-4-content': 'Implementamos medidas de seguridad técnicas y organizativas apropiadas para proteger su información personal contra acceso no autorizado, alteración, divulgación o destrucción.',
+        'privacy-section-5-title': '5. Sus Derechos',
+        'privacy-section-5-content': 'Usted tiene derecho a acceder, actualizar, corregir o eliminar su información personal. También puede optar por no recibir comunicaciones promocionales en cualquier momento.',
+        'privacy-section-6-title': '6. Contacto',
+        'privacy-section-6-content': 'Si tiene preguntas sobre esta Política de Privacidad, puede contactarnos en support@starflexapp.com.',
+        // Terms and Conditions Content
+        'terms-section-1-title': '1. Aceptación de los Términos',
+        'terms-section-1-content': 'Al acceder y utilizar StarFlex, usted acepta estar sujeto a estos Términos y Condiciones. Si no está de acuerdo con alguna parte de estos términos, no debe utilizar nuestro servicio.',
+        'terms-section-2-title': '2. Descripción del Servicio',
+        'terms-section-2-content': 'StarFlex es una aplicación de automatización diseñada para ayudar a los conductores de Amazon Flex a optimizar su experiencia de trabajo mediante la automatización inteligente de la selección de bloques de entrega.',
+        'terms-section-3-title': '3. Uso Aceptable',
+        'terms-section-3-content': 'Usted se compromete a utilizar StarFlex de manera responsable y de acuerdo con todas las leyes aplicables. No debe usar el servicio para actividades ilegales, dañinas o que violen los términos de servicio de Amazon Flex.',
+        'terms-section-4-title': '4. Cuenta de Usuario',
+        'terms-section-4-content': 'Usted es responsable de mantener la confidencialidad de su cuenta y contraseña, y de todas las actividades que ocurran bajo su cuenta. Debe notificarnos inmediatamente sobre cualquier uso no autorizado.',
+        'terms-section-5-title': '5. Pagos y Suscripciones',
+        'terms-section-5-content': 'Los pagos por suscripciones son procesados de forma segura. Las suscripciones se renuevan automáticamente a menos que se cancelen antes del período de renovación. Ofrecemos un período de prueba gratuito para nuevos usuarios.',
+        'terms-section-6-title': '6. Limitación de Responsabilidad',
+        'terms-section-6-content': 'StarFlex se proporciona "tal como está" sin garantías de ningún tipo. No seremos responsables por daños indirectos, incidentales, especiales o consecuentes que resulten del uso de nuestro servicio.',
+        'terms-section-7-title': '7. Modificaciones',
+        'terms-section-7-content': 'Nos reservamos el derecho de modificar estos términos en cualquier momento. Los cambios entrarán en vigor inmediatamente después de su publicación en nuestra aplicación.',
+        'terms-section-8-title': '8. Contacto',
+        'terms-section-8-content': 'Para preguntas sobre estos Términos y Condiciones, puede contactarnos en support@starflexapp.com.'
     },
     en: {
         // Meta tags
@@ -357,12 +395,247 @@ const translationData = {
         'contact-email-description': 'Contact our specialized technical support team directly',
         'contact-email-btn': 'Contact',
         // Footer
-        'footer-legal': 'Privacy Policy • Terms and Conditions',
+        'footer-privacy-link': 'Privacy Policy',
+        'footer-terms-link': 'Terms and Conditions',
         'footer-copyright': '© StarFlex • All rights reserved',
         'footer-cta-main': 'START NOW',
-        'footer-cta-trial': '3 days free'
+        'footer-cta-trial': '3 days free',
+        // Legal Pages
+        'privacy-policy-title': 'Privacy Policy',
+        'terms-conditions-title': 'Terms and Conditions',
+        'back-to-home': 'Back to Home',
+        'last-updated': 'Last updated: December 15, 2024',
+        // Privacy Policy Content
+        'privacy-section-1-title': '1. Information We Collect',
+        'privacy-section-1-content': 'At StarFlex, we collect information necessary to provide our automation services for Amazon Flex. This includes account information, app usage data, and technical device information to optimize performance.',
+        'privacy-section-2-title': '2. How We Use Your Information',
+        'privacy-section-2-content': 'We use the collected information to provide, maintain and improve our services, personalize your experience, process transactions, send important communications, and ensure the security of our platform.',
+        'privacy-section-3-title': '3. Information Sharing',
+        'privacy-section-3-content': 'We do not sell, rent or share your personal information with third parties for commercial purposes. We only share information when necessary to provide our services, comply with legal obligations, or protect our rights.',
+        'privacy-section-4-title': '4. Data Security',
+        'privacy-section-4-content': 'We implement appropriate technical and organizational security measures to protect your personal information against unauthorized access, alteration, disclosure or destruction.',
+        'privacy-section-5-title': '5. Your Rights',
+        'privacy-section-5-content': 'You have the right to access, update, correct or delete your personal information. You can also opt out of receiving promotional communications at any time.',
+        'privacy-section-6-title': '6. Contact',
+        'privacy-section-6-content': 'If you have questions about this Privacy Policy, you can contact us at support@starflexapp.com.',
+        // Terms and Conditions Content
+        'terms-section-1-title': '1. Acceptance of Terms',
+        'terms-section-1-content': 'By accessing and using StarFlex, you agree to be bound by these Terms and Conditions. If you do not agree with any part of these terms, you should not use our service.',
+        'terms-section-2-title': '2. Service Description',
+        'terms-section-2-content': 'StarFlex is an automation application designed to help Amazon Flex drivers optimize their work experience through intelligent automation of delivery block selection.',
+        'terms-section-3-title': '3. Acceptable Use',
+        'terms-section-3-content': 'You agree to use StarFlex responsibly and in accordance with all applicable laws. You must not use the service for illegal, harmful activities or that violate Amazon Flex terms of service.',
+        'terms-section-4-title': '4. User Account',
+        'terms-section-4-content': 'You are responsible for maintaining the confidentiality of your account and password, and for all activities that occur under your account. You must notify us immediately of any unauthorized use.',
+        'terms-section-5-title': '5. Payments and Subscriptions',
+        'terms-section-5-content': 'Subscription payments are processed securely. Subscriptions renew automatically unless canceled before the renewal period. We offer a free trial period for new users.',
+        'terms-section-6-title': '6. Limitation of Liability',
+        'terms-section-6-content': 'StarFlex is provided "as is" without warranties of any kind. We will not be liable for indirect, incidental, special or consequential damages resulting from the use of our service.',
+        'terms-section-7-title': '7. Modifications',
+        'terms-section-7-content': 'We reserve the right to modify these terms at any time. Changes will take effect immediately after posting in our application.',
+        'terms-section-8-title': '8. Contact',
+        'terms-section-8-content': 'For questions about these Terms and Conditions, you can contact us at support@starflexapp.com.'
     }
 };
+
+// ===== SISTEMA DE ROUTING PARA PÁGINAS LEGALES =====
+function initializeRouting() {
+    console.log('🔗 Inicializando sistema de routing...');
+    
+    // Manejar cambios en el hash de la URL
+    window.addEventListener('hashchange', handleRouteChange);
+    
+    // Manejar la ruta inicial
+    handleRouteChange();
+    
+    // Configurar enlaces de páginas legales
+    setupLegalLinks();
+    
+    console.log('✅ Sistema de routing inicializado');
+}
+
+function handleRouteChange() {
+    const hash = window.location.hash;
+    console.log(`🔗 Cambio de ruta detectado: ${hash}`);
+    
+    // Ocultar todas las páginas
+    hideAllPages();
+    
+    switch (hash) {
+        case '#/privacypolicy':
+            showPrivacyPolicy();
+            break;
+        case '#/terms':
+            showTermsConditions();
+            break;
+        default:
+            showMainContent();
+            break;
+    }
+}
+
+function hideAllPages() {
+    const mainContent = document.getElementById('main-content');
+    const privacyPage = document.getElementById('privacy-policy-page');
+    const termsPage = document.getElementById('terms-conditions-page');
+    
+    if (mainContent) mainContent.style.display = 'none';
+    if (privacyPage) privacyPage.style.display = 'none';
+    if (termsPage) termsPage.style.display = 'none';
+}
+
+function showMainContent() {
+    console.log('🏠 Mostrando contenido principal');
+    const mainContent = document.getElementById('main-content');
+    if (mainContent) {
+        mainContent.style.display = 'block';
+    }
+    
+    // Actualizar título de la página
+    document.title = translationData[currentLanguage]['page-title'];
+    
+    // Cerrar menús si están abiertos
+    if (isMobileMenuOpen) {
+        closeMobileMenu();
+    }
+    if (isFloatingMenuOpen) {
+        closeFloatingMenu();
+    }
+}
+
+function showPrivacyPolicy() {
+    console.log('📋 Mostrando Política de Privacidad');
+    const privacyPage = document.getElementById('privacy-policy-page');
+    if (privacyPage) {
+        privacyPage.style.display = 'block';
+        
+        // Scroll al inicio de la página
+        window.scrollTo(0, 0);
+        
+        // Actualizar título de la página
+        document.title = `${translationData[currentLanguage]['privacy-policy-title']} - StarFlex`;
+        
+        // Cerrar menús si están abiertos
+        if (isMobileMenuOpen) {
+            closeMobileMenu();
+        }
+        if (isFloatingMenuOpen) {
+            closeFloatingMenu();
+        }
+    }
+}
+
+function showTermsConditions() {
+    console.log('📋 Mostrando Términos y Condiciones');
+    const termsPage = document.getElementById('terms-conditions-page');
+    if (termsPage) {
+        termsPage.style.display = 'block';
+        
+        // Scroll al inicio de la página
+        window.scrollTo(0, 0);
+        
+        // Actualizar título de la página
+        document.title = `${translationData[currentLanguage]['terms-conditions-title']} - StarFlex`;
+        
+        // Cerrar menús si están abiertos
+        if (isMobileMenuOpen) {
+            closeMobileMenu();
+        }
+        if (isFloatingMenuOpen) {
+            closeFloatingMenu();
+        }
+    }
+}
+
+function setupLegalLinks() {
+    console.log('🔗 Configurando enlaces legales...');
+    
+    // Enlaces del footer
+    const privacyLinks = document.querySelectorAll('a[href="#/privacypolicy"]');
+    const termsLinks = document.querySelectorAll('a[href="#/terms"]');
+    
+    // Botones de regreso
+    const privacyBackBtn = document.getElementById('privacy-back-btn');
+    const termsBackBtn = document.getElementById('terms-back-btn');
+    
+    // Configurar eventos para enlaces de privacidad
+    privacyLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log('🔗 Click en enlace de Política de Privacidad');
+            window.location.hash = '#/privacypolicy';
+        });
+        
+        // Efectos táctiles para móvil
+        if (isMobile) {
+            link.addEventListener('touchstart', () => {
+                link.style.transform = 'scale(0.98)';
+            }, { passive: true });
+            link.addEventListener('touchend', () => {
+                link.style.transform = '';
+            }, { passive: true });
+        }
+    });
+    
+    // Configurar eventos para enlaces de términos
+    termsLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log('🔗 Click en enlace de Términos y Condiciones');
+            window.location.hash = '#/terms';
+        });
+        
+        // Efectos táctiles para móvil
+        if (isMobile) {
+            link.addEventListener('touchstart', () => {
+                link.style.transform = 'scale(0.98)';
+            }, { passive: true });
+            link.addEventListener('touchend', () => {
+                link.style.transform = '';
+            }, { passive: true });
+        }
+    });
+    
+    // Configurar botones de regreso
+    if (privacyBackBtn) {
+        privacyBackBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log('🏠 Regresando al inicio desde Política de Privacidad');
+            window.location.hash = '';
+        });
+        
+        if (isMobile) {
+            privacyBackBtn.addEventListener('touchstart', () => {
+                privacyBackBtn.style.transform = 'scale(0.98)';
+            }, { passive: true });
+            privacyBackBtn.addEventListener('touchend', () => {
+                privacyBackBtn.style.transform = '';
+            }, { passive: true });
+        }
+    }
+    
+    if (termsBackBtn) {
+        termsBackBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log('🏠 Regresando al inicio desde Términos y Condiciones');
+            window.location.hash = '';
+        });
+        
+        if (isMobile) {
+            termsBackBtn.addEventListener('touchstart', () => {
+                termsBackBtn.style.transform = 'scale(0.98)';
+            }, { passive: true });
+            termsBackBtn.addEventListener('touchend', () => {
+                termsBackBtn.style.transform = '';
+            }, { passive: true });
+        }
+    }
+    
+    console.log(`✅ Enlaces legales configurados: ${privacyLinks.length} enlaces de privacidad, ${termsLinks.length} enlaces de términos`);
+}
+
+// ===== RESTO DEL CÓDIGO EXISTENTE (sin cambios) =====
+// ... (todo el código existente permanece igual)
 
 // ===== DETECCIÓN DE DISPOSITIVO Y CAPACIDADES ULTRA-OPTIMIZADA =====
 function detectDeviceCapabilities() {
@@ -717,6 +990,16 @@ function switchLanguage(newLanguage) {
     
     document.documentElement.lang = newLanguage;
     
+    // Actualizar título según la página actual
+    const hash = window.location.hash;
+    if (hash === '#/privacypolicy') {
+        document.title = `${translationData[currentLanguage]['privacy-policy-title']} - StarFlex`;
+    } else if (hash === '#/terms') {
+        document.title = `${translationData[currentLanguage]['terms-conditions-title']} - StarFlex`;
+    } else {
+        document.title = translationData[currentLanguage]['page-title'];
+    }
+    
     if (!isMobile && !performanceMode) {
         document.body.style.opacity = '0.95';
         setTimeout(() => {
@@ -1021,26 +1304,8 @@ function initializeDesktopNavigation() {
                 closeLanguageSwitcher();
             }
             
-            const homeSection = document.querySelector('#home');
-            if (homeSection) {
-                // En móvil, agregar un pequeño delay para que se cierre el menú si estaba abierto
-                const scrollDelay = (isMobile && isMobileMenuOpen) ? 300 : 0;
-                
-                setTimeout(() => {
-                    smoothScrollToSection(homeSection);
-                    
-                    const homeLink = document.querySelector('.nav__link[href="#home"]');
-                    if (homeLink) {
-                        updateActiveNavLink(homeLink);
-                    }
-                    
-                    // También actualizar el enlace activo del drawer móvil si existe
-                    const homeDrawerLink = document.querySelector('.nav__drawer-link[href="#home"]');
-                    if (homeDrawerLink) {
-                        updateActiveDrawerLink(homeDrawerLink);
-                    }
-                }, scrollDelay);
-            }
+            // Navegar al inicio
+            window.location.hash = '';
         });
         
         // MEJORADO: Soporte táctil específico para móviles
@@ -1098,11 +1363,26 @@ function initializeDesktopNavigation() {
             
             e.preventDefault();
             const targetId = link.getAttribute('href');
-            const targetSection = document.querySelector(targetId);
             
-            if (targetSection) {
-                smoothScrollToSection(targetSection);
-                updateActiveNavLink(link);
+            // Si es un enlace a una sección, navegar normalmente
+            if (targetId.startsWith('#') && !targetId.includes('/')) {
+                // Asegurar que estamos en la página principal
+                if (window.location.hash.includes('/')) {
+                    window.location.hash = '';
+                    setTimeout(() => {
+                        const targetSection = document.querySelector(targetId);
+                        if (targetSection) {
+                            smoothScrollToSection(targetSection);
+                            updateActiveNavLink(link);
+                        }
+                    }, 100);
+                } else {
+                    const targetSection = document.querySelector(targetId);
+                    if (targetSection) {
+                        smoothScrollToSection(targetSection);
+                        updateActiveNavLink(link);
+                    }
+                }
             }
         });
     });
@@ -1146,21 +1426,8 @@ function initializeMobileNavigation() {
                 closeMobileMenu();
             }
             
-            const homeSection = document.querySelector('#home');
-            if (homeSection) {
-                setTimeout(() => {
-                    smoothScrollToSection(homeSection);
-                    const homeLink = document.querySelector('.nav__drawer-link[href="#home"]');
-                    if (homeLink) {
-                        updateActiveDrawerLink(homeLink);
-                    }
-                    // También actualizar el enlace desktop
-                    const homeDesktopLink = document.querySelector('.nav__link[href="#home"]');
-                    if (homeDesktopLink) {
-                        updateActiveNavLink(homeDesktopLink);
-                    }
-                }, 300);
-            }
+            // Navegar al inicio
+            window.location.hash = '';
         });
         
         drawerLogo.style.cursor = 'pointer';
@@ -1245,25 +1512,39 @@ function initializeMobileNavigation() {
                 closeMobileMenu();
             }
             
-            // Buscar la sección objetivo
-            const targetSection = document.querySelector(targetId);
-            if (targetSection) {
-                console.log(`✅ Sección encontrada: ${targetId}`);
-                
-                // Hacer scroll con un pequeño delay para que se cierre el drawer
-                setTimeout(() => {
-                    console.log(`🚀 Haciendo scroll a: ${targetId}`);
-                    smoothScrollToSection(targetSection);
-                    updateActiveDrawerLink(link);
-                    
-                    // También actualizar el enlace desktop correspondiente
-                    const desktopLink = document.querySelector(`.nav__link[href="${targetId}"]`);
-                    if (desktopLink) {
-                        updateActiveNavLink(desktopLink);
+            // Si es un enlace a una sección, navegar normalmente
+            if (targetId.startsWith('#') && !targetId.includes('/')) {
+                // Asegurar que estamos en la página principal
+                if (window.location.hash.includes('/')) {
+                    window.location.hash = '';
+                    setTimeout(() => {
+                        const targetSection = document.querySelector(targetId);
+                        if (targetSection) {
+                            smoothScrollToSection(targetSection);
+                            updateActiveDrawerLink(link);
+                            
+                            // También actualizar el enlace desktop correspondiente
+                            const desktopLink = document.querySelector(`.nav__link[href="${targetId}"]`);
+                            if (desktopLink) {
+                                updateActiveNavLink(desktopLink);
+                            }
+                        }
+                    }, 300);
+                } else {
+                    const targetSection = document.querySelector(targetId);
+                    if (targetSection) {
+                        setTimeout(() => {
+                            smoothScrollToSection(targetSection);
+                            updateActiveDrawerLink(link);
+                            
+                            // También actualizar el enlace desktop correspondiente
+                            const desktopLink = document.querySelector(`.nav__link[href="${targetId}"]`);
+                            if (desktopLink) {
+                                updateActiveNavLink(desktopLink);
+                            }
+                        }, 100);
                     }
-                }, 100);
-            } else {
-                console.error(`❌ Sección no encontrada: ${targetId}`);
+                }
             }
         };
         
@@ -1674,6 +1955,11 @@ function handleScrollDirection() {
 }
 
 function updateActiveNavOnScroll() {
+    // Solo actualizar si estamos en la página principal
+    if (window.location.hash.includes('/')) {
+        return;
+    }
+    
     const sections = document.querySelectorAll('section[id]');
     // Usar la posición guardada si el drawer está abierto, sino usar la posición actual
     const scrollY = isMobileMenuOpen && document.body.dataset.scrollPosition ? 
@@ -1740,15 +2026,12 @@ function updateActiveNavOnScroll() {
         activeSection = closestSection;
     }
     
-    console.log(`🎯 Sección activa detectada: ${activeSection}, Scroll: ${scrollY}`);
-    
     if (activeSection) {
         // Actualizar enlaces desktop (LÓGICA ORIGINAL)
         const activeLink = document.querySelector(`.nav__link[href="#${activeSection}"]`);
         const currentActiveLink = document.querySelector('.nav__link.active');
         
         if (activeLink && activeLink !== currentActiveLink) {
-            console.log(`🖥️ Actualizando enlace desktop activo: ${activeSection}`);
             updateActiveNavLink(activeLink);
         }
         
@@ -1757,7 +2040,6 @@ function updateActiveNavOnScroll() {
         const currentActiveDrawerLink = document.querySelector('.nav__drawer-link.active');
         
         if (activeDrawerLink && activeDrawerLink !== currentActiveDrawerLink) {
-            console.log(`📱 Actualizando enlace drawer móvil activo: ${activeSection}`);
             updateActiveDrawerLink(activeDrawerLink);
         }
     }
@@ -2385,10 +2667,11 @@ document.addEventListener('DOMContentLoaded', () => {
     
     initializeLanguageSystem();
     initializeLanguageSwitcher();
+    initializeRouting(); // Nueva función para el sistema de routing
     initializeNavigation();
     initializeScrollEffects();
     initializeVideoPlayer();
-    initializeYouTubePlayer(); // Nueva función para YouTube
+    initializeYouTubePlayer();
     initializeFAQ();
     initializeHeroVideoFallback();
     initializeAccessibility();
@@ -2402,7 +2685,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     initializePerformanceOptimizations();
     
-    console.log(`✅ StarFlex Ultra-Optimizado - Móvil: ${isMobile}, Modo rendimiento: ${performanceMode}, Drawer móvil: ${isMobile ? 'Activo' : 'Inactivo'}`);
+    console.log(`✅ StarFlex Ultra-Optimizado - Móvil: ${isMobile}, Modo rendimiento: ${performanceMode}, Drawer móvil: ${isMobile ? 'Activo' : 'Inactivo'}, Routing: Activo`);
 });
 
 // ===== MANEJO DE ERRORES ULTRA-OPTIMIZADO =====
@@ -2519,6 +2802,12 @@ window.StarFlex = {
     // Funciones de video
     initializeYouTubePlayer,
     loadYouTubeVideo,
+    // Funciones de routing
+    initializeRouting,
+    handleRouteChange,
+    showMainContent,
+    showPrivacyPolicy,
+    showTermsConditions,
     // Utilidades
     detectDeviceCapabilities
 };
