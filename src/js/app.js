@@ -322,7 +322,7 @@ const translationData = {
         'faq-subtitle': 'Find clear answers to the most common questions about StarFlex and discover how to transform your Amazon Flex experience.',
         'faq-search-placeholder': 'Search question...',
         'faq-1-question': 'What are the main benefits of using StarFlex?',
-        'faq-1-answer': 'StarFlex is designed to <span class="faq__answer-highlight">eliminate distracted driving</span> through intelligent automation. It allows you to focus completely on safe driving while our system works to find the best blocks. With StarFlex, you don\'t need to constantly check your phone, ensuring a safer and more efficient experience        that allows you to maximize your earnings.',
+        'faq-1-answer': 'StarFlex is designed to <span class="faq__answer-highlight">eliminate distracted driving</span> through intelligent automation. It allows you to focus completely on safe driving while our system works to find the best blocks. With StarFlex, you don\'t need to constantly check your phone, ensuring a safer and more efficient experience that allows you to maximize your earnings.',
         'faq-2-question': 'Can StarFlex automatically solve CAPTCHAs?',
         'faq-2-answer': 'Yes, StarFlex includes <span class="faq__answer-highlight">advanced technology to automatically solve CAPTCHAs</span>. Our system uses intelligent algorithms that can interpret and solve different types of verifications, allowing smooth navigation without manual interruptions. This optimizes your time and makes your daily experience more efficient.',
         'faq-3-question': 'Is it safe to use StarFlex? Can Amazon detect it?',
@@ -1000,9 +1000,10 @@ function initializeDesktopNavigation() {
     // ===== FUNCIONALIDAD DEL LOGO COMO ENLACE (DESKTOP Y MÓVIL) =====
     const navLogo = document.querySelector('.nav__logo');
     if (navLogo) {
-        // CAMBIO PRINCIPAL: Remover la condición !isMobile para que funcione en ambos dispositivos
+        // CORREGIDO: Funciona en todos los dispositivos sin restricciones
         navLogo.addEventListener('click', (e) => {
             e.preventDefault();
+            e.stopPropagation(); // Prevenir propagación del evento
             
             console.log(`🏠 Click en logo del header - Dispositivo: ${isMobile ? 'móvil' : 'desktop'}`);
             
@@ -1013,11 +1014,17 @@ function initializeDesktopNavigation() {
             if (isMobileMenuOpen) {
                 closeMobileMenu();
             }
+            if (isFloatingMenuOpen) {
+                closeFloatingMenu();
+            }
+            if (isLanguageSwitcherOpen) {
+                closeLanguageSwitcher();
+            }
             
             const homeSection = document.querySelector('#home');
             if (homeSection) {
                 // En móvil, agregar un pequeño delay para que se cierre el menú si estaba abierto
-                const scrollDelay = isMobile && isMobileMenuOpen ? 300 : 0;
+                const scrollDelay = (isMobile && isMobileMenuOpen) ? 300 : 0;
                 
                 setTimeout(() => {
                     smoothScrollToSection(homeSection);
@@ -1036,8 +1043,37 @@ function initializeDesktopNavigation() {
             }
         });
         
+        // MEJORADO: Soporte táctil específico para móviles
+        navLogo.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            navLogo.style.transform = 'scale(0.95)';
+            navLogo.style.transition = 'transform 0.1s ease';
+            console.log('👆 Touch start en logo del header');
+        }, { passive: false });
+        
+        navLogo.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Resetear transform
+            setTimeout(() => {
+                navLogo.style.transform = '';
+            }, 150);
+            
+            // Ejecutar la navegación
+            console.log('👆 Touch end en logo del header - ejecutando navegación');
+            navLogo.click();
+        }, { passive: false });
+        
+        navLogo.addEventListener('touchcancel', () => {
+            navLogo.style.transform = '';
+        }, { passive: true });
+        
         // Configurar estilos y accesibilidad para ambos dispositivos
         navLogo.style.cursor = 'pointer';
+        navLogo.style.userSelect = 'none';
+        navLogo.style.webkitUserSelect = 'none';
+        navLogo.style.webkitTouchCallout = 'none';
         navLogo.setAttribute('tabindex', '0');
         navLogo.setAttribute('role', 'button');
         navLogo.setAttribute('aria-label', 'Ir al inicio');
@@ -1049,24 +1085,6 @@ function initializeDesktopNavigation() {
                 navLogo.click();
             }
         });
-        
-        // Efectos táctiles mejorados para móvil
-        if (isMobile) {
-            navLogo.addEventListener('touchstart', () => {
-                navLogo.style.transform = 'scale(0.95)';
-                navLogo.style.transition = 'transform 0.1s ease';
-            }, { passive: true });
-            
-            navLogo.addEventListener('touchend', () => {
-                setTimeout(() => {
-                    navLogo.style.transform = '';
-                }, 150);
-            }, { passive: true });
-            
-            navLogo.addEventListener('touchcancel', () => {
-                navLogo.style.transform = '';
-            }, { passive: true });
-        }
         
         console.log(`✅ Logo del header configurado para navegación - Dispositivo: ${isMobile ? 'móvil' : 'desktop'}`);
     }
@@ -1382,8 +1400,6 @@ function forceUpdateActiveDrawerLink() {
         const visibleTop = Math.max(viewportTop, sectionTop);
         const visibleBottom = Math.min(viewportBottom, sectionBottom);
         const visibleArea = Math.max(0, visibleBottom - visibleTop);
-        
-        console.log(`📊 Sección ${sectionId}: top=${sectionTop}, height=${sectionHeight}, visibleArea=${visibleArea}`);
         
         // Considerar una sección como activa si tiene suficiente área visible
         if (visibleArea > maxVisibleArea && visibleArea > 50) {
@@ -1865,6 +1881,56 @@ function initializeVideoPlayer() {
     });
 }
 
+// ===== REPRODUCTOR DE YOUTUBE ULTRA-OPTIMIZADO =====
+function initializeYouTubePlayer() {
+    const youtubeContainer = document.getElementById('youtube-video-container');
+    const youtubePlaceholder = document.getElementById('youtube-video-placeholder');
+    
+    if (!youtubeContainer || !youtubePlaceholder) {
+        console.log('🎥 Elementos del reproductor de YouTube no encontrados');
+        return;
+    }
+    
+    console.log('🎥 Inicializando reproductor de YouTube...');
+    
+    // ID del video de YouTube extraído de la URL
+    const videoId = '8NpUvQFdDZE';
+    
+    youtubePlaceholder.addEventListener('click', () => {
+        console.log('▶️ Click en placeholder de YouTube');
+        loadYouTubeVideo(videoId, youtubeContainer);
+    });
+
+    if (isMobile) {
+        youtubePlaceholder.addEventListener('touchstart', () => {
+            youtubePlaceholder.style.transform = 'scale(0.98)';
+        }, { passive: true });
+        youtubePlaceholder.addEventListener('touchend', () => {
+            youtubePlaceholder.style.transform = '';
+        }, { passive: true });
+    }
+    
+    console.log('✅ Reproductor de YouTube inicializado correctamente');
+}
+
+function loadYouTubeVideo(videoId, container) {
+    console.log(`🎬 Cargando video de YouTube: ${videoId}`);
+    
+    const iframe = document.createElement('iframe');
+    iframe.className = 'youtube-video-iframe';
+    iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&playsinline=1`;
+    iframe.frameBorder = '0';
+    iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+    iframe.allowFullscreen = true;
+    iframe.title = 'StarFlex Demo Video';
+    
+    // Limpiar el contenedor y agregar el iframe
+    container.innerHTML = '';
+    container.appendChild(iframe);
+    
+    console.log('✅ Video de YouTube cargado:', videoId);
+}
+
 function formatTime(seconds) {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = Math.floor(seconds % 60);
@@ -1992,7 +2058,7 @@ function initializeIntersectionObserver() {
         });
     }, observerOptions);
     
-    const elementsToObserve = document.querySelectorAll('.feature, .faq__item, .contact__channel');
+    const elementsToObserve = document.querySelectorAll('.feature, .faq__item, .contact__channel, .videos');
     elementsToObserve.forEach(element => {
         observer.observe(element);
     });
@@ -2116,7 +2182,7 @@ function initializeHeroVideoFallback() {
         heroVideo.style.display = 'none';
         heroFallbackImage.style.display = 'block';
         heroFallbackImage.style.zIndex = '2';
-        console.log('Video del teléfono deshabilitado en móvil/modo rendimiento');
+        console.log('Video del teléfono deshabilitado enmóvil/modo rendimiento');
         return;
     }
     
@@ -2322,6 +2388,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeNavigation();
     initializeScrollEffects();
     initializeVideoPlayer();
+    initializeYouTubePlayer(); // Nueva función para YouTube
     initializeFAQ();
     initializeHeroVideoFallback();
     initializeAccessibility();
@@ -2449,7 +2516,9 @@ window.StarFlex = {
     // Funciones de idioma
     switchLanguage,
     currentLanguage,
+    // Funciones de video
+    initializeYouTubePlayer,
+    loadYouTubeVideo,
     // Utilidades
     detectDeviceCapabilities
 };
-
