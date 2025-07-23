@@ -223,23 +223,39 @@ const translationData = {
         'footer-cta-main': 'COMENZAR AHORA',
         'footer-cta-trial': '3 días gratis',
         // Legal Pages
-        'privacy-policy-title': 'Política de Privacidad',
+        'privacy-policy-title': 'POLÍTICA DE PRIVACIDAD DE STARFLEX',
         'terms-conditions-title': 'Términos y Condiciones',
         'back-to-home': 'Volver al Inicio',
         'last-updated': 'Última actualización: 15 de diciembre de 2024',
-        // Privacy Policy Content
-        'privacy-section-1-title': '1. Información que Recopilamos',
-        'privacy-section-1-content': 'En StarFlex, recopilamos información necesaria para proporcionar nuestros servicios de automatización para Amazon Flex. Esto incluye información de cuenta, datos de uso de la aplicación, y información técnica del dispositivo para optimizar el rendimiento.',
-        'privacy-section-2-title': '2. Cómo Utilizamos su Información',
-        'privacy-section-2-content': 'Utilizamos la información recopilada para proporcionar, mantener y mejorar nuestros servicios, personalizar su experiencia, procesar transacciones, enviar comunicaciones importantes, y garantizar la seguridad de nuestra plataforma.',
-        'privacy-section-3-title': '3. Compartir Información',
-        'privacy-section-3-content': 'No vendemos, alquilamos ni compartimos su información personal con terceros para fines comerciales. Solo compartimos información cuando es necesario para proporcionar nuestros servicios, cumplir con obligaciones legales, o proteger nuestros derechos.',
-        'privacy-section-4-title': '4. Seguridad de Datos',
-        'privacy-section-4-content': 'Implementamos medidas de seguridad técnicas y organizativas apropiadas para proteger su información personal contra acceso no autorizado, alteración, divulgación o destrucción.',
-        'privacy-section-5-title': '5. Sus Derechos',
-        'privacy-section-5-content': 'Usted tiene derecho a acceder, actualizar, corregir o eliminar su información personal. También puede optar por no recibir comunicaciones promocionales en cualquier momento.',
-        'privacy-section-6-title': '6. Contacto',
-        'privacy-section-6-content': 'Si tiene preguntas sobre esta Política de Privacidad, puede contactarnos en support@starflexapp.com.',
+        // Privacy Policy Content - ACTUALIZADO CON EL CONTENIDO ESPECÍFICO
+        'privacy-intro': 'En StarFlex, valoramos su privacidad y nos comprometemos a protegerla en todo momento. Nuestra política de privacidad garantiza la confidencialidad y seguridad de cualquier información que nos proporcione a través de nuestro sitio web y otros servicios que ofrecemos.',
+        'privacy-section-1-title': '1. RECOPILACIÓN DE INFORMACIÓN',
+        'privacy-section-1-content': 'Recopilamos información personal solo cuando es absolutamente necesaria para brindarle nuestros servicios. Esta recopilación se realiza de manera justa, legal y con su conocimiento y consentimiento. Le informamos claramente sobre el propósito de dicha recopilación y cómo se utilizará.',
+        'privacy-section-2-title': '2. USO DE LA INFORMACIÓN',
+        'privacy-section-2-content': 'La información personal se utiliza exclusivamente para:',
+        'privacy-section-2-item-1': 'Ofrecer y mejorar nuestros servicios',
+        'privacy-section-2-item-2': 'Personalizar su experiencia en la plataforma',
+        'privacy-section-2-item-3': 'Comunicarnos con usted sobre actualizaciones, notificaciones o soporte',
+        'privacy-section-2-item-4': '• Cumplir con los requisitos legales si es aplicable',
+        'privacy-section-3-title': '3. RETENCIÓN DE DATOS',
+        'privacy-section-3-content': 'Conservamos su información solo durante el tiempo necesario para cumplir los propósitos para los que fue recopilada. Posteriormente, será eliminada de forma segura.',
+        'privacy-section-4-title': '4. SEGURIDAD DE LA INFORMACIÓN',
+        'privacy-section-4-content': 'Implementamos medidas de seguridad razonables y comercialmente aceptables técnicas y organizacionales para proteger su información personal contra acceso no autorizado, pérdida, mal uso o divulgación.',
+        'privacy-section-5-title': '5. DIVULGACIÓN A TERCEROS',
+        'privacy-section-5-content': 'No compartimos su información personal con terceros, a menos que:',
+        'privacy-section-5-item-1': 'Sea requerido por ley',
+        'privacy-section-5-item-2': 'Sea estrictamente necesario para brindarle nuestros servicios (ej. servicios de email, procesamiento de pagos, etc.)',
+        'privacy-section-6-title': '6. ENLACES A SITIOS DE TERCEROS',
+        'privacy-section-6-content': 'Nuestro sitio puede contener enlaces a sitios web externos. No somos responsables de sus prácticas de privacidad o su contenido. Le recomendamos revisar las políticas de privacidad de esos sitios antes de interactuar con ellos.',
+        'privacy-section-7-title': '7. SUS DERECHOS',
+        'privacy-section-7-content': 'Usted tiene derecho a:',
+        'privacy-section-7-item-1': 'Acceder, corregir o eliminar su información personal',
+        'privacy-section-7-item-2': 'Retirar su consentimiento para el uso de sus datos',
+        'privacy-section-7-item-3': 'Negarse a proporcionar información personal (aunque esto puede limitar el acceso a ciertas funciones)',
+        'privacy-section-8-title': '8. ACEPTACIÓN DE ESTA POLÍTICA',
+        'privacy-section-8-content': 'Al continuar usando nuestro sitio web, se considera que acepta nuestra política de privacidad y el manejo de su información de acuerdo con ella.',
+        'privacy-section-9-title': '9. CONTACTO',
+        'privacy-section-9-content': 'Si tiene alguna pregunta, solicitud o inquietud con respecto a esta política de privacidad, puede contactarnos en: support@starflexapp.com',
         // Terms and Conditions Content
         'terms-section-1-title': '1. Aceptación de los Términos',
         'terms-section-1-content': 'Al acceder y utilizar StarFlex, usted acepta estar sujeto a estos Términos y Condiciones. Si no está de acuerdo con alguna parte de estos términos, no debe utilizar nuestro servicio.',
@@ -401,23 +417,39 @@ const translationData = {
         'footer-cta-main': 'START NOW',
         'footer-cta-trial': '3 days free',
         // Legal Pages
-        'privacy-policy-title': 'Privacy Policy',
+        'privacy-policy-title': 'STARFLEX PRIVACY POLICY',
         'terms-conditions-title': 'Terms and Conditions',
         'back-to-home': 'Back to Home',
         'last-updated': 'Last updated: December 15, 2024',
-        // Privacy Policy Content
-        'privacy-section-1-title': '1. Information We Collect',
-        'privacy-section-1-content': 'At StarFlex, we collect information necessary to provide our automation services for Amazon Flex. This includes account information, app usage data, and technical device information to optimize performance.',
-        'privacy-section-2-title': '2. How We Use Your Information',
-        'privacy-section-2-content': 'We use the collected information to provide, maintain and improve our services, personalize your experience, process transactions, send important communications, and ensure the security of our platform.',
-        'privacy-section-3-title': '3. Information Sharing',
-        'privacy-section-3-content': 'We do not sell, rent or share your personal information with third parties for commercial purposes. We only share information when necessary to provide our services, comply with legal obligations, or protect our rights.',
-        'privacy-section-4-title': '4. Data Security',
-        'privacy-section-4-content': 'We implement appropriate technical and organizational security measures to protect your personal information against unauthorized access, alteration, disclosure or destruction.',
-        'privacy-section-5-title': '5. Your Rights',
-        'privacy-section-5-content': 'You have the right to access, update, correct or delete your personal information. You can also opt out of receiving promotional communications at any time.',
-        'privacy-section-6-title': '6. Contact',
-        'privacy-section-6-content': 'If you have questions about this Privacy Policy, you can contact us at support@starflexapp.com.',
+        // Privacy Policy Content - ENGLISH VERSION
+        'privacy-intro': 'At StarFlex, we value your privacy and are committed to protecting it at all times. Our privacy policy ensures the confidentiality and security of any information you provide to us through our website and other services we offer.',
+        'privacy-section-1-title': '1. INFORMATION COLLECTION',
+        'privacy-section-1-content': 'We collect personal information only when it is absolutely necessary to provide you with our services. This collection is carried out fairly, legally and with your knowledge and consent. We clearly inform you about the purpose of such collection and how it will be used.',
+        'privacy-section-2-title': '2. USE OF INFORMATION',
+        'privacy-section-2-content': 'Personal information is used exclusively to:',
+        'privacy-section-2-item-1': 'Offer and improve our services',
+        'privacy-section-2-item-2': 'Personalize your experience on the platform',
+        'privacy-section-2-item-3': 'Communicate with you about updates, notifications or support',
+        'privacy-section-2-item-4': 'Comply with legal requirements if applicable',
+        'privacy-section-3-title': '3. DATA RETENTION',
+        'privacy-section-3-content': 'We retain your information only for as long as necessary to fulfill the purposes for which it was collected. Afterwards, it will be securely deleted.',
+        'privacy-section-4-title': '4. INFORMATION SECURITY',
+        'privacy-section-4-content': 'We implement reasonable and commercially acceptable technical and organizational security measures to protect your personal information against unauthorized access, loss, misuse or disclosure.',
+        'privacy-section-5-title': '5. DISCLOSURE TO THIRD PARTIES',
+        'privacy-section-5-content': 'We do not share your personal information with third parties, unless:',
+        'privacy-section-5-item-1': 'It is required by law',
+        'privacy-section-5-item-2': 'It is strictly necessary to provide you with our services (e.g. email services, payment processing, etc.)',
+        'privacy-section-6-title': '6. LINKS TO THIRD-PARTY SITES',
+        'privacy-section-6-content': 'Our site may contain links to external websites. We are not responsible for their privacy practices or their content. We recommend reviewing the privacy policies of those sites before interacting with them.',
+        'privacy-section-7-title': '7. YOUR RIGHTS',
+        'privacy-section-7-content': 'You have the right to:',
+        'privacy-section-7-item-1': 'Access, correct or delete your personal information',
+        'privacy-section-7-item-2': 'Withdraw your consent for the use of your data',
+        'privacy-section-7-item-3': 'Refuse to provide personal information (although this may limit access to certain features)',
+        'privacy-section-8-title': '8. ACCEPTANCE OF THIS POLICY',
+        'privacy-section-8-content': 'By continuing to use our website, you are deemed to accept our privacy policy and the handling of your information in accordance with it.',
+        'privacy-section-9-title': '9. CONTACT',
+        'privacy-section-9-content': 'If you have any questions, requests or concerns regarding this privacy policy, you can contact us at: support@starflexapp.com',
         // Terms and Conditions Content
         'terms-section-1-title': '1. Acceptance of Terms',
         'terms-section-1-content': 'By accessing and using StarFlex, you agree to be bound by these Terms and Conditions. If you do not agree with any part of these terms, you should not use our service.',
@@ -1656,96 +1688,6 @@ function openMobileMenu() {
     console.log('✅ Drawer móvil abierto - Scroll de página bloqueado en posición:', scrollPosition);
 }
 
-// ===== NUEVA FUNCIÓN PARA FORZAR ACTUALIZACIÓN DEL DRAWER =====
-function forceUpdateActiveDrawerLink() {
-    const sections = document.querySelectorAll('section[id]');
-    const scrollY = parseInt(document.body.dataset.scrollPosition || window.scrollY.toString());
-    const headerHeight = isMobile ? 80 : 100;
-    const windowHeight = window.innerHeight;
-    
-    let activeSection = null;
-    let maxVisibleArea = 0;
-    
-    console.log(`🔍 Detectando sección activa con scroll: ${scrollY}`);
-    
-    // Método mejorado para detectar la sección activa
-    sections.forEach(section => {
-        const sectionTop = section.offsetTop;
-        const sectionHeight = section.offsetHeight;
-        const sectionBottom = sectionTop + sectionHeight;
-        const sectionId = section.getAttribute('id');
-        
-        const viewportTop = scrollY + headerHeight;
-        const viewportBottom = scrollY + windowHeight;
-        
-        const visibleTop = Math.max(viewportTop, sectionTop);
-        const visibleBottom = Math.min(viewportBottom, sectionBottom);
-        const visibleArea = Math.max(0, visibleBottom - visibleTop);
-        
-        // Considerar una sección como activa si tiene suficiente área visible
-        if (visibleArea > maxVisibleArea && visibleArea > 50) {
-            maxVisibleArea = visibleArea;
-            activeSection = sectionId;
-        }
-    });
-    
-    // Fallback: si no hay sección con suficiente área visible, usar posición del scroll
-    if (!activeSection) {
-        const scrollPosition = scrollY + headerHeight + 50;
-        
-        sections.forEach(section => {
-            const sectionTop = section.offsetTop;
-            const sectionHeight = section.offsetHeight;
-            const sectionId = section.getAttribute('id');
-            
-            if (scrollPosition >= sectionTop && scrollPosition < sectionTop + sectionHeight) {
-                activeSection = sectionId;
-            }
-        });
-    }
-    
-    // Si aún no hay sección activa, determinar por proximidad
-    if (!activeSection && sections.length > 0) {
-        let closestSection = null;
-        let minDistance = Infinity;
-        
-        sections.forEach(section => {
-            const sectionTop = section.offsetTop;
-            const sectionId = section.getAttribute('id');
-            const distance = Math.abs(scrollY + headerHeight - sectionTop);
-            
-            if (distance < minDistance) {
-                minDistance = distance;
-                closestSection = sectionId;
-            }
-        });
-        
-        activeSection = closestSection;
-    }
-    
-    console.log(`✅ Sección activa final detectada: ${activeSection}`);
-    
-    if (activeSection) {
-        // Actualizar enlaces desktop
-        const activeLink = document.querySelector(`.nav__link[href="#${activeSection}"]`);
-        const currentActiveLink = document.querySelector('.nav__link.active');
-        
-        if (activeLink && activeLink !== currentActiveLink) {
-            console.log(`🖥️ Actualizando enlace desktop activo: ${activeSection}`);
-            updateActiveNavLink(activeLink);
-        }
-        
-        // Actualizar enlaces del drawer móvil
-        const activeDrawerLink = document.querySelector(`.nav__drawer-link[href="#${activeSection}"]`);
-        const currentActiveDrawerLink = document.querySelector('.nav__drawer-link.active');
-        
-        if (activeDrawerLink && activeDrawerLink !== currentActiveDrawerLink) {
-            console.log(`📱 Actualizando enlace drawer móvil activo: ${activeSection}`);
-            updateActiveDrawerLink(activeDrawerLink);
-        }
-    }
-}
-
 function closeMobileMenu() {
     console.log('📱 Cerrando drawer móvil...');
     const navToggle = document.getElementById('nav-toggle');
@@ -2811,3 +2753,4 @@ window.StarFlex = {
     // Utilidades
     detectDeviceCapabilities
 };
+
