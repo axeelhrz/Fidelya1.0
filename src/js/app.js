@@ -4,7 +4,7 @@ let isMobileMenuOpen = false; // Variable para el drawer móvil
 let currentFeature = 0;
 const features = document.querySelectorAll('.feature');
 // Variables para el sistema de idiomas
-let currentLanguage = 'es';
+let currentLanguage = 'en'; // CAMBIADO: Inglés como idioma por defecto
 const translations = {};
 // Variables para el botón flotante
 let isFloatingMenuOpen = false;
@@ -80,200 +80,6 @@ const CONFIG = {
 
 // ===== SISTEMA DE TRADUCCIÓN OPTIMIZADO =====
 const translationData = {
-    es: {
-        // Meta tags
-        'page-title': 'StarFlex - Automatiza tus Bloques de Amazon Flex | Prueba Gratis',
-        'page-description': 'Starflex revoluciona Amazon Flex. Automatización inteligente de bloques, optimización de horarios y máximas ganancias. Únete a +15,000 conductores exitosos.',
-        'og-title': 'Starflex - La Revolución de Amazon Flex',
-        'og-description': 'Automatización inteligente que multiplica tus ganancias. La herramienta que todo conductor profesional necesita.',
-        // Navegación
-        'nav-home': 'Inicio',
-        'nav-features': 'Características',
-        'nav-videos': 'Videos',
-        'nav-faq': 'FAQ',
-        'nav-contact': 'Contacto',
-        'nav-cta': 'Comienza tu prueba gratuita',
-        'nav-language-title': 'Idioma',
-        // Hero Section
-        'hero-badge': 'Next-Gen Amazon Flex Revolution',
-        'hero_title--main': 'DOMINA LOS',
-        'hero_title--highlight': 'BLOQUES DE',
-        'hero_title--amazon': 'AMAZON FLEX',
-        'hero-company-description': 'Somos una empresa dedicada a mejorar la experiencia laboral de los conductores de Amazon Flex permitiendo seleccionar de forma automática y eficiente los mejores bloques de su preferencia.',
-        'hero-subtitle': 'Automatización inteligente de última generación que multiplica tus ganancias. La plataforma más avanzada para conductores profesionales del futuro.',
-        'hero-cta-main': 'PRUEBA <strong>GRATUITA</strong>',
-        'hero-cta-trial': '3 DÍAS GRATIS',
-        'hero-trust': 'Más de 15,000 conductores han transformado sus ganancias',
-        'download-google': 'Descargar en Google Play',
-        'download-apple': 'Descargar en App Store',
-        'download-google-alt': 'Descargar en Google Play',
-        'download-apple-alt': 'Descargar en App Store',
-        // Features Section
-        'features-title': 'Características',
-        'features-subtitle': 'Descubre todas las funcionalidades que StarFlex te ofrece para maximizar tus ganancias.',
-        // Feature 1: Horario
-        'feature-schedule-title': 'HORARIO',
-        'feature-schedule-description': 'Elige los días y horarios que prefieras para tus bloques de entrega. Configura tu disponibilidad de manera inteligente y deja que StarFlex encuentre los mejores bloques en tus horarios preferidos.',
-        'feature-schedule-item-1': 'Configuración personalizada por día de la semana',
-        'feature-schedule-item-2': 'Horarios flexibles adaptados a tu estilo de vida',
-        'feature-schedule-item-3': 'Optimización automática de turnos rentables',
-        'feature-schedule-item-4': 'Sincronización inteligente con tu calendario personal',
-        'feature-schedule-item-5': 'Alertas de disponibilidad en tiempo real',
-        // Feature 2: Estaciones
-        'feature-stations-title': 'ESTACIONES',
-        'feature-stations-description': 'Selecciona tus estaciones preferidas y configura precios mínimos para que nuestra aplicación pueda ofrecerte automáticamente los bloques que se ajusten perfectamente a tus preferencias y ubicación.',
-        'feature-stations-item-1': 'Selección personalizada de estaciones favoritas',
-        'feature-stations-item-2': 'Configuración de precios mínimos por estación',
-        'feature-stations-item-3': 'Análisis detallado de rentabilidad por ubicación',
-        'feature-stations-item-4': 'Notificaciones instantáneas de bloques disponibles',
-        'feature-stations-item-5': 'Mapa interactivo con todas las estaciones cercanas',
-        'feature-stations-item-6': 'Filtros avanzados por distancia y tipo de entrega',
-        // Feature 3: Calendario
-        'feature-calendar-title': 'CALENDARIO',
-        'feature-calendar-description': 'En el calendario podrás ver todos tus bloques aceptados y acceder a funciones avanzadas como identificación desde cualquier ubicación, opción de saltar la selfie y cancelación rápida de bloques, todo centralizado para tu máxima comodidad.',
-        'feature-calendar-item-1': 'Identificación automática desde cualquier ubicación',
-        'feature-calendar-item-2': 'Opción inteligente para saltar verificación selfie',
-        'feature-calendar-item-3': 'Cancelación rápida y segura de bloques',
-        'feature-calendar-item-4': 'Vista mensual y semanal de tus entregas',
-        'feature-calendar-item-5': 'Recordatorios automáticos de bloques próximos',
-        // Feature 4: Registro
-        'feature-log-title': 'REGISTRO',
-        'feature-log-description': 'En el registro detallado podrás ver todos los bloques disponibles y el motivo específico por el cual algunos fueron ignorados. Esta información te ayudará a ajustar tus filtros y preferencias para optimizar continuamente tus opciones de entrega.',
-        'feature-log-item-1': 'Historial completo y detallado de todos los bloques',
-        'feature-log-item-2': 'Motivos específicos y detallados de rechazo automático',
-        'feature-log-item-3': 'Herramientas de optimización de filtros inteligentes',
-        'feature-log-item-4': 'Análisis avanzado de patrones y tendencias',
-        'feature-log-item-5': 'Estadísticas de rendimiento y ganancias',
-        // Feature 5: Notificaciones
-        'feature-notifications-title': 'NOTIFICACIONES',
-        'feature-notifications-description': 'StarFlex te mantiene siempre informado con un sistema completo de notificaciones múltiples para que nunca te pierdas los mejores bloques disponibles. Configura tus alertas según tus preferencias específicas y recibe notificaciones en tiempo real.',
-        'feature-notifications-item-1': 'Notificaciones Push instantáneas y personalizables',
-        'feature-notifications-item-2': 'Alertas automáticas por correo electrónico',
-        'feature-notifications-item-3': 'Llamadas telefónicas automáticas para bloques premium',
-        'feature-notifications-item-4': 'Mensajes SMS directos y urgentes',
-        'feature-notifications-item-5': 'Alertas personalizables por tipo y valor de bloque',
-        'feature-notifications-item-6': 'Sistema de notificaciones en tiempo real 24/7',
-        'feature-notifications-item-7': 'Filtros avanzados de notificación por prioridad',
-        // Feature 6: Referidos
-        'feature-referrals-title': 'REFERIDOS',
-        'feature-referrals-description': 'Invita a otros conductores a unirse a la revolución StarFlex y obtén beneficios exclusivos por cada referido que se registre exitosamente. Comparte tu experiencia y gana recompensas mientras ayudas a otros conductores a maximizar sus ganancias.',
-        'feature-referrals-item-1': 'Enlace único de referido personalizado y rastreable',
-        'feature-referrals-item-2': 'Gana 1 semana completamente gratis por cada referido exitoso',
-        'feature-referrals-item-3': 'Código QR dinámico para compartir fácilmente',
-        'feature-referrals-item-4': 'Panel de seguimiento de referidos en tiempo real',
-        'feature-referrals-item-5': 'Bonificaciones adicionales por referidos activos',
-        // Videos Section
-        'videos-badge': 'Experiencia Visual Inmersiva',
-        'videos-title-main': 'VE STARFLEX',
-        'videos-title-highlight': 'EN ACCIÓN',
-        'videos-subtitle': 'Descubre cómo StarFlex revoluciona tu experiencia con Amazon Flex. Mira la automatización inteligente trabajando en tiempo real.',
-        'video-not-supported': 'Tu navegador no soporta videos HTML5. <a href="./assets/StarFlex.mp4">Descargar video</a>.',
-        'video-play-title': 'REPRODUCIR DEMO',
-        'video-play-subtitle': 'Ver StarFlex en acción',
-        'video-info-title': 'StarFlex Demo Completo',
-        'video-info-description': 'Observa cómo StarFlex automatiza completamente tu experiencia con Amazon Flex. Desde la configuración inicial hasta la captura automática de bloques.',
-        'videos-cta-title': '¿Listo para Transformar tus Ganancias?',
-        'videos-cta-description': 'Únete a más de 15,000 conductores que ya están maximizando sus ingresos con StarFlex',
-        'videos-cta-start': 'COMENZAR AHORA',
-        'videos-cta-trial': '3 días gratis',
-        'videos-cta-demo': 'VER DEMO PERSONALIZADA',
-        // FAQ Section
-        'faq-title': 'Preguntas Frecuentes',
-        'faq-subtitle': 'Encuentra respuestas claras a las dudas más comunes sobre StarFlex y descubre cómo transformar tu experiencia con Amazon Flex.',
-        'faq-search-placeholder': 'Buscar pregunta...',
-        'faq-1-question': '¿Cuáles son los principales beneficios de utilizar StarFlex?',
-        'faq-1-answer': 'StarFlex está diseñado para <span class="faq__answer-highlight">eliminar la conducción distraída</span> mediante automatización inteligente. Te permite concentrarte completamente en la conducción segura mientras nuestro sistema trabaja para encontrar los mejores bloques. Con StarFlex, no necesitas revisar constantemente tu teléfono, garantizando una experiencia más segura y eficiente que te permite maximizar tus ganancias.',
-        'faq-2-question': '¿StarFlex puede resolver automáticamente los CAPTCHA?',
-        'faq-2-answer': 'Sí, StarFlex incluye <span class="faq__answer-highlight">tecnología avanzada para resolver CAPTCHA automáticamente</span>. Nuestro sistema utiliza algoritmos inteligentes que pueden interpretar y resolver diferentes tipos de verificaciones, permitiendo una navegación fluida sin interrupciones manuales. Esto optimiza tu tiempo y hace que tu experiencia diaria sea más eficiente.',
-        'faq-3-question': '¿Es seguro usar StarFlex? ¿Amazon puede detectarlo?',
-        'faq-3-answer': 'StarFlex utiliza <span class="faq__answer-highlight">tecnología avanzada de simulación humana</span> que incluye patrones de comportamiento naturales, tiempos de respuesta variables y gestos táctiles realistas. Nuestro enfoque se centra en ayudar a los conductores a brindar un mejor servicio a Amazon y sus clientes, asegurando entregas eficientes y de alta calidad.',
-        'faq-4-question': '¿StarFlex funciona en iPhone y Android?',
-         'faq-4-answer': 'Sí, StarFlex está disponible para <span class="faq__answer-highlight">iOS (iPhone 8+) y Android (8.0+)</span>. Hemos desarrollado aplicaciones nativas optimizadas para cada plataforma, garantizando el mejor rendimiento y una experiencia de usuario superior. Ambas versiones incluyen todas las funcionalidades y reciben actualizaciones automáticas.',
-        'faq-5-question': '¿Qué necesito para empezar a usar StarFlex?',
-        'faq-5-answer': 'Solo necesitas una <span class="faq__answer-highlight">cuenta activa de Amazon Flex y un dispositivo compatible</span>. Después de descargar la aplicación, el proceso de configuración toma menos de 5 minutos. Nuestro sistema de configuración guiada te ayudará a optimizar tu experiencia desde el primer día.',
-        'faq-no-results': 'No se encontraron preguntas que coincidan con tu búsqueda',
-        'faq-no-results-suggestion': 'Intenta con términos diferentes o contacta nuestro soporte',
-        // Contact Section
-        'contact-badge': 'Conecta con el Futuro',
-        'contact-title-main': 'MEJORES BLOQUES DE',
-        'contact-title-highlight': 'AMAZON FLEX',
-        'contact-subtitle': 'No olvides seguirnos en nuestras redes sociales ya que publicamos diariamente en nuestros canales la recopilación de los mejores bloques aceptados y así podrás estar al tanto de los horarios y ubicaciones más rentables.',
-        'contact-whatsapp-title': 'Canales de noticias de WhatsApp',
-        'contact-whatsapp-description': 'Únete a nuestro canal de WhatsApp para recibir las últimas actualizaciones y mejores bloques disponibles',
-        'contact-whatsapp-btn': 'Unirse',
-        'contact-instagram-title': 'Instagram',
-        'contact-instagram-description': 'Síguenos para contenido visual, tips y actualizaciones diarias sobre los mejores bloques',
-        'contact-instagram-btn': 'Seguir',
-        'contact-facebook-title': 'Facebook',
-        'contact-facebook-description': 'Únete a nuestra comunidad en Facebook para interactuar con otros conductores y compartir experiencias',
-        'contact-facebook-btn': 'Seguir',
-        'contact-tiktok-title': 'TikTok',
-        'contact-tiktok-description': 'Descubre contenido viral, tips rápidos y las últimas tendencias de Amazon Flex',
-        'contact-tiktok-btn': 'Seguir',
-        'contact-telegram-title': 'Canales de noticias de Telegram',
-        'contact-telegram-description': 'Recibe notificaciones instantáneas de los mejores bloques y actualizaciones importantes',
-        'contact-telegram-btn': 'Unirse',
-        'contact-email-title': 'support@starflexapp.com',
-        'contact-email-description': 'Contacta directamente con nuestro equipo de soporte técnico especializado',
-        'contact-email-btn': 'Contactar',
-        // Footer
-        'footer-privacy-link': 'Política de Privacidad',
-        'footer-terms-link': 'Términos y Condiciones',
-        'footer-copyright': '© StarFlex • Todos los derechos reservados',
-        'footer-cta-main': 'COMENZAR AHORA',
-        'footer-cta-trial': '3 días gratis',
-        // Legal Pages
-        'privacy-policy-title': 'POLÍTICA DE PRIVACIDAD DE STARFLEX',
-        'terms-conditions-title': 'Términos y Condiciones',
-        'back-to-home': 'Volver al Inicio',
-        'last-updated': 'Última actualización: 15 de diciembre de 2024',
-        // Privacy Policy Content - ACTUALIZADO CON EL CONTENIDO ESPECÍFICO
-        'privacy-intro': 'En StarFlex, valoramos su privacidad y nos comprometemos a protegerla en todo momento. Nuestra política de privacidad garantiza la confidencialidad y seguridad de cualquier información que nos proporcione a través de nuestro sitio web y otros servicios que ofrecemos.',
-        'privacy-section-1-title': '1. RECOPILACIÓN DE INFORMACIÓN',
-        'privacy-section-1-content': 'Recopilamos información personal solo cuando es absolutamente necesaria para brindarle nuestros servicios. Esta recopilación se realiza de manera justa, legal y con su conocimiento y consentimiento. Le informamos claramente sobre el propósito de dicha recopilación y cómo se utilizará.',
-        'privacy-section-2-title': '2. USO DE LA INFORMACIÓN',
-        'privacy-section-2-content': 'La información personal se utiliza exclusivamente para:',
-        'privacy-section-2-item-1': 'Ofrecer y mejorar nuestros servicios',
-        'privacy-section-2-item-2': 'Personalizar su experiencia en la plataforma',
-        'privacy-section-2-item-3': 'Comunicarnos con usted sobre actualizaciones, notificaciones o soporte',
-        'privacy-section-2-item-4': '• Cumplir con los requisitos legales si es aplicable',
-        'privacy-section-3-title': '3. RETENCIÓN DE DATOS',
-        'privacy-section-3-content': 'Conservamos su información solo durante el tiempo necesario para cumplir los propósitos para los que fue recopilada. Posteriormente, será eliminada de forma segura.',
-        'privacy-section-4-title': '4. SEGURIDAD DE LA INFORMACIÓN',
-        'privacy-section-4-content': 'Implementamos medidas de seguridad razonables y comercialmente aceptables técnicas y organizacionales para proteger su información personal contra acceso no autorizado, pérdida, mal uso o divulgación.',
-        'privacy-section-5-title': '5. DIVULGACIÓN A TERCEROS',
-        'privacy-section-5-content': 'No compartimos su información personal con terceros, a menos que:',
-        'privacy-section-5-item-1': 'Sea requerido por ley',
-        'privacy-section-5-item-2': 'Sea estrictamente necesario para brindarle nuestros servicios (ej. servicios de email, procesamiento de pagos, etc.)',
-        'privacy-section-6-title': '6. ENLACES A SITIOS DE TERCEROS',
-        'privacy-section-6-content': 'Nuestro sitio puede contener enlaces a sitios web externos. No somos responsables de sus prácticas de privacidad o su contenido. Le recomendamos revisar las políticas de privacidad de esos sitios antes de interactuar con ellos.',
-        'privacy-section-7-title': '7. SUS DERECHOS',
-        'privacy-section-7-content': 'Usted tiene derecho a:',
-        'privacy-section-7-item-1': 'Acceder, corregir o eliminar su información personal',
-        'privacy-section-7-item-2': 'Retirar su consentimiento para el uso de sus datos',
-        'privacy-section-7-item-3': 'Negarse a proporcionar información personal (aunque esto puede limitar el acceso a ciertas funciones)',
-        'privacy-section-8-title': '8. ACEPTACIÓN DE ESTA POLÍTICA',
-        'privacy-section-8-content': 'Al continuar usando nuestro sitio web, se considera que acepta nuestra política de privacidad y el manejo de su información de acuerdo con ella.',
-        'privacy-section-9-title': '9. CONTACTO',
-        'privacy-section-9-content': 'Si tiene alguna pregunta, solicitud o inquietud con respecto a esta política de privacidad, puede contactarnos en: support@starflexapp.com',
-        // Terms and Conditions Content
-        'terms-section-1-title': '1. Aceptación de los Términos',
-        'terms-section-1-content': 'Al acceder y utilizar StarFlex, usted acepta estar sujeto a estos Términos y Condiciones. Si no está de acuerdo con alguna parte de estos términos, no debe utilizar nuestro servicio.',
-        'terms-section-2-title': '2. Descripción del Servicio',
-        'terms-section-2-content': 'StarFlex es una aplicación de automatización diseñada para ayudar a los conductores de Amazon Flex a optimizar su experiencia de trabajo mediante la automatización inteligente de la selección de bloques de entrega.',
-        'terms-section-3-title': '3. Uso Aceptable',
-        'terms-section-3-content': 'Usted se compromete a utilizar StarFlex de manera responsable y de acuerdo con todas las leyes aplicables. No debe usar el servicio para actividades ilegales, dañinas o que violen los términos de servicio de Amazon Flex.',
-        'terms-section-4-title': '4. Cuenta de Usuario',
-        'terms-section-4-content': 'Usted es responsable de mantener la confidencialidad de su cuenta y contraseña, y de todas las actividades que ocurran bajo su cuenta. Debe notificarnos inmediatamente sobre cualquier uso no autorizado.',
-        'terms-section-5-title': '5. Pagos y Suscripciones',
-        'terms-section-5-content': 'Los pagos por suscripciones son procesados de forma segura. Las suscripciones se renuevan automáticamente a menos que se cancelen antes del período de renovación. Ofrecemos un período de prueba gratuito para nuevos usuarios.',
-        'terms-section-6-title': '6. Limitación de Responsabilidad',
-        'terms-section-6-content': 'StarFlex se proporciona "tal como está" sin garantías de ningún tipo. No seremos responsables por daños indirectos, incidentales, especiales o consecuentes que resulten del uso de nuestro servicio.',
-        'terms-section-7-title': '7. Modificaciones',
-        'terms-section-7-content': 'Nos reservamos el derecho de modificar estos términos en cualquier momento. Los cambios entrarán en vigor inmediatamente después de su publicación en nuestra aplicación.',
-        'terms-section-8-title': '8. Contacto',
-        'terms-section-8-content': 'Para preguntas sobre estos Términos y Condiciones, puede contactarnos en support@starflexapp.com.'
-    },
     en: {
         // Meta tags
         'page-title': 'StarFlex - Automate your Amazon Flex Blocks | Free Trial',
@@ -467,15 +273,209 @@ const translationData = {
         'terms-section-7-content': 'We reserve the right to modify these terms at any time. Changes will take effect immediately after posting in our application.',
         'terms-section-8-title': '8. Contact',
         'terms-section-8-content': 'For questions about these Terms and Conditions, you can contact us at support@starflexapp.com.'
+    },
+    es: {
+        // Meta tags
+        'page-title': 'StarFlex - Automatiza tus Bloques de Amazon Flex | Prueba Gratis',
+        'page-description': 'Starflex revoluciona Amazon Flex. Automatización inteligente de bloques, optimización de horarios y máximas ganancias. Únete a +15,000 conductores exitosos.',
+        'og-title': 'Starflex - La Revolución de Amazon Flex',
+        'og-description': 'Automatización inteligente que multiplica tus ganancias. La herramienta que todo conductor profesional necesita.',
+        // Navegación
+        'nav-home': 'Inicio',
+        'nav-features': 'Características',
+        'nav-videos': 'Videos',
+        'nav-faq': 'FAQ',
+        'nav-contact': 'Contacto',
+        'nav-cta': 'Comienza tu prueba gratuita',
+        'nav-language-title': 'Idioma',
+        // Hero Section
+        'hero-badge': 'Next-Gen Amazon Flex Revolution',
+        'hero_title--main': 'DOMINA LOS',
+        'hero_title--highlight': 'BLOQUES DE',
+        'hero_title--amazon': 'AMAZON FLEX',
+        'hero-company-description': 'Somos una empresa dedicada a mejorar la experiencia laboral de los conductores de Amazon Flex permitiendo seleccionar de forma automática y eficiente los mejores bloques de su preferencia.',
+        'hero-subtitle': 'Automatización inteligente de última generación que multiplica tus ganancias. La plataforma más avanzada para conductores profesionales del futuro.',
+        'hero-cta-main': 'PRUEBA <strong>GRATUITA</strong>',
+        'hero-cta-trial': '3 DÍAS GRATIS',
+        'hero-trust': 'Más de 15,000 conductores han transformado sus ganancias',
+        'download-google': 'Descargar en Google Play',
+        'download-apple': 'Descargar en App Store',
+        'download-google-alt': 'Descargar en Google Play',
+        'download-apple-alt': 'Descargar en App Store',
+        // Features Section
+        'features-title': 'Características',
+        'features-subtitle': 'Descubre todas las funcionalidades que StarFlex te ofrece para maximizar tus ganancias.',
+        // Feature 1: Horario
+        'feature-schedule-title': 'HORARIO',
+        'feature-schedule-description': 'Elige los días y horarios que prefieras para tus bloques de entrega. Configura tu disponibilidad de manera inteligente y deja que StarFlex encuentre los mejores bloques en tus horarios preferidos.',
+        'feature-schedule-item-1': 'Configuración personalizada por día de la semana',
+        'feature-schedule-item-2': 'Horarios flexibles adaptados a tu estilo de vida',
+        'feature-schedule-item-3': 'Optimización automática de turnos rentables',
+        'feature-schedule-item-4': 'Sincronización inteligente con tu calendario personal',
+        'feature-schedule-item-5': 'Alertas de disponibilidad en tiempo real',
+        // Feature 2: Estaciones
+        'feature-stations-title': 'ESTACIONES',
+        'feature-stations-description': 'Selecciona tus estaciones preferidas y configura precios mínimos para que nuestra aplicación pueda ofrecerte automáticamente los bloques que se ajusten perfectamente a tus preferencias y ubicación.',
+        'feature-stations-item-1': 'Selección personalizada de estaciones favoritas',
+        'feature-stations-item-2': 'Configuración de precios mínimos por estación',
+        'feature-stations-item-3': 'Análisis detallado de rentabilidad por ubicación',
+        'feature-stations-item-4': 'Notificaciones instantáneas de bloques disponibles',
+        'feature-stations-item-5': 'Mapa interactivo con todas las estaciones cercanas',
+        'feature-stations-item-6': 'Filtros avanzados por distancia y tipo de entrega',
+        // Feature 3: Calendario
+        'feature-calendar-title': 'CALENDARIO',
+        'feature-calendar-description': 'En el calendario podrás ver todos tus bloques aceptados y acceder a funciones avanzadas como identificación desde cualquier ubicación, opción de saltar la selfie y cancelación rápida de bloques, todo centralizado para tu máxima comodidad.',
+        'feature-calendar-item-1': 'Identificación automática desde cualquier ubicación',
+        'feature-calendar-item-2': 'Opción inteligente para saltar verificación selfie',
+        'feature-calendar-item-3': 'Cancelación rápida y segura de bloques',
+        'feature-calendar-item-4': 'Vista mensual y semanal de tus entregas',
+        'feature-calendar-item-5': 'Recordatorios automáticos de bloques próximos',
+        // Feature 4: Registro
+        'feature-log-title': 'REGISTRO',
+        'feature-log-description': 'En el registro detallado podrás ver todos los bloques disponibles y el motivo específico por el cual algunos fueron ignorados. Esta información te ayudará a ajustar tus filtros y preferencias para optimizar continuamente tus opciones de entrega.',
+        'feature-log-item-1': 'Historial completo y detallado de todos los bloques',
+        'feature-log-item-2': 'Motivos específicos y detallados de rechazo automático',
+        'feature-log-item-3': 'Herramientas de optimización de filtros inteligentes',
+        'feature-log-item-4': 'Análisis avanzado de patrones y tendencias',
+        'feature-log-item-5': 'Estadísticas de rendimiento y ganancias',
+        // Feature 5: Notificaciones
+        'feature-notifications-title': 'NOTIFICACIONES',
+        'feature-notifications-description': 'StarFlex te mantiene siempre informado con un sistema completo de notificaciones múltiples para que nunca te pierdas los mejores bloques disponibles. Configura tus alertas según tus preferencias específicas y recibe notificaciones en tiempo real.',
+        'feature-notifications-item-1': 'Notificaciones Push instantáneas y personalizables',
+        'feature-notifications-item-2': 'Alertas automáticas por correo electrónico',
+        'feature-notifications-item-3': 'Llamadas telefónicas automáticas para bloques premium',
+        'feature-notifications-item-4': 'Mensajes SMS directos y urgentes',
+        'feature-notifications-item-5': 'Alertas personalizables por tipo y valor de bloque',
+        'feature-notifications-item-6': 'Sistema de notificaciones en tiempo real 24/7',
+        'feature-notifications-item-7': 'Filtros avanzados de notificación por prioridad',
+        // Feature 6: Referidos
+        'feature-referrals-title': 'REFERIDOS',
+        'feature-referrals-description': 'Invita a otros conductores a unirse a la revolución StarFlex y obtén beneficios exclusivos por cada referido que se registre exitosamente. Comparte tu experiencia y gana recompensas mientras ayudas a otros conductores a maximizar sus ganancias.',
+        'feature-referrals-item-1': 'Enlace único de referido personalizado y rastreable',
+        'feature-referrals-item-2': 'Gana 1 semana completamente gratis por cada referido exitoso',
+        'feature-referrals-item-3': 'Código QR dinámico para compartir fácilmente',
+        'feature-referrals-item-4': 'Panel de seguimiento de referidos en tiempo real',
+        'feature-referrals-item-5': 'Bonificaciones adicionales por referidos activos',
+        // Videos Section
+        'videos-badge': 'Experiencia Visual Inmersiva',
+        'videos-title-main': 'VE STARFLEX',
+        'videos-title-highlight': 'EN ACCIÓN',
+        'videos-subtitle': 'Descubre cómo StarFlex revoluciona tu experiencia con Amazon Flex. Mira la automatización inteligente trabajando en tiempo real.',
+        'video-not-supported': 'Tu navegador no soporta videos HTML5. <a href="./assets/StarFlex.mp4">Descargar video</a>.',
+        'video-play-title': 'REPRODUCIR DEMO',
+        'video-play-subtitle': 'Ver StarFlex en acción',
+        'video-info-title': 'StarFlex Demo Completo',
+        'video-info-description': 'Observa cómo StarFlex automatiza completamente tu experiencia con Amazon Flex. Desde la configuración inicial hasta la captura automática de bloques.',
+        'videos-cta-title': '¿Listo para Transformar tus Ganancias?',
+        'videos-cta-description': 'Únete a más de 15,000 conductores que ya están maximizando sus ingresos con StarFlex',
+        'videos-cta-start': 'COMENZAR AHORA',
+        'videos-cta-trial': '3 días gratis',
+        'videos-cta-demo': 'VER DEMO PERSONALIZADA',
+        // FAQ Section
+        'faq-title': 'Preguntas Frecuentes',
+        'faq-subtitle': 'Encuentra respuestas claras a las dudas más comunes sobre StarFlex y descubre cómo transformar tu experiencia con Amazon Flex.',
+        'faq-search-placeholder': 'Buscar pregunta...',
+        'faq-1-question': '¿Cuáles son los principales beneficios de utilizar StarFlex?',
+        'faq-1-answer': 'StarFlex está diseñado para <span class="faq__answer-highlight">eliminar la conducción distraída</span> mediante automatización inteligente. Te permite concentrarte completamente en la conducción segura mientras nuestro sistema trabaja para encontrar los mejores bloques. Con StarFlex, no necesitas revisar constantemente tu teléfono, garantizando una experiencia más segura y eficiente que te permite maximizar tus ganancias.',
+        'faq-2-question': '¿StarFlex puede resolver automáticamente los CAPTCHA?',
+        'faq-2-answer': 'Sí, StarFlex incluye <span class="faq__answer-highlight">tecnología avanzada para resolver CAPTCHA automáticamente</span>. Nuestro sistema utiliza algoritmos inteligentes que pueden interpretar y resolver diferentes tipos de verificaciones, permitiendo una navegación fluida sin interrupciones manuales. Esto optimiza tu tiempo y hace que tu experiencia diaria sea más eficiente.',
+        'faq-3-question': '¿Es seguro usar StarFlex? ¿Amazon puede detectarlo?',
+        'faq-3-answer': 'StarFlex utiliza <span class="faq__answer-highlight">tecnología avanzada de simulación humana</span> que incluye patrones de comportamiento naturales, tiempos de respuesta variables y gestos táctiles realistas. Nuestro enfoque se centra en ayudar a los conductores a brindar un mejor servicio a Amazon y sus clientes, asegurando entregas eficientes y de alta calidad.',
+        'faq-4-question': '¿StarFlex funciona en iPhone y Android?',
+         'faq-4-answer': 'Sí, StarFlex está disponible para <span class="faq__answer-highlight">iOS (iPhone 8+) y Android (8.0+)</span>. Hemos desarrollado aplicaciones nativas optimizadas para cada plataforma, garantizando el mejor rendimiento y una experiencia de usuario superior. Ambas versiones incluyen todas las funcionalidades y reciben actualizaciones automáticas.',
+        'faq-5-question': '¿Qué necesito para empezar a usar StarFlex?',
+        'faq-5-answer': 'Solo necesitas una <span class="faq__answer-highlight">cuenta activa de Amazon Flex y un dispositivo compatible</span>. Después de descargar la aplicación, el proceso de configuración toma menos de 5 minutos. Nuestro sistema de configuración guiada te ayudará a optimizar tu experiencia desde el primer día.',
+        'faq-no-results': 'No se encontraron preguntas que coincidan con tu búsqueda',
+        'faq-no-results-suggestion': 'Intenta con términos diferentes o contacta nuestro soporte',
+        // Contact Section
+        'contact-badge': 'Conecta con el Futuro',
+        'contact-title-main': 'MEJORES BLOQUES DE',
+        'contact-title-highlight': 'AMAZON FLEX',
+        'contact-subtitle': 'No olvides seguirnos en nuestras redes sociales ya que publicamos diariamente en nuestros canales la recopilación de los mejores bloques aceptados y así podrás estar al tanto de los horarios y ubicaciones más rentables.',
+        'contact-whatsapp-title': 'Canales de noticias de WhatsApp',
+        'contact-whatsapp-description': 'Únete a nuestro canal de WhatsApp para recibir las últimas actualizaciones y mejores bloques disponibles',
+        'contact-whatsapp-btn': 'Unirse',
+        'contact-instagram-title': 'Instagram',
+        'contact-instagram-description': 'Síguenos para contenido visual, tips y actualizaciones diarias sobre los mejores bloques',
+        'contact-instagram-btn': 'Seguir',
+        'contact-facebook-title': 'Facebook',
+        'contact-facebook-description': 'Únete a nuestra comunidad en Facebook para interactuar con otros conductores y compartir experiencias',
+        'contact-facebook-btn': 'Seguir',
+        'contact-tiktok-title': 'TikTok',
+        'contact-tiktok-description': 'Descubre contenido viral, tips rápidos y las últimas tendencias de Amazon Flex',
+        'contact-tiktok-btn': 'Seguir',
+        'contact-telegram-title': 'Canales de noticias de Telegram',
+        'contact-telegram-description': 'Recibe notificaciones instantáneas de los mejores bloques y actualizaciones importantes',
+        'contact-telegram-btn': 'Unirse',
+        'contact-email-title': 'support@starflexapp.com',
+        'contact-email-description': 'Contacta directamente con nuestro equipo de soporte técnico especializado',
+        'contact-email-btn': 'Contactar',
+        // Footer
+        'footer-privacy-link': 'Política de Privacidad',
+        'footer-terms-link': 'Términos y Condiciones',
+        'footer-copyright': '© StarFlex • Todos los derechos reservados',
+        'footer-cta-main': 'COMENZAR AHORA',
+        'footer-cta-trial': '3 días gratis',
+        // Legal Pages
+        'privacy-policy-title': 'POLÍTICA DE PRIVACIDAD DE STARFLEX',
+        'terms-conditions-title': 'Términos y Condiciones',
+        'back-to-home': 'Volver al Inicio',
+        'last-updated': 'Última actualización: 15 de diciembre de 2024',
+        // Privacy Policy Content - ACTUALIZADO CON EL CONTENIDO ESPECÍFICO
+        'privacy-intro': 'En StarFlex, valoramos su privacidad y nos comprometemos a protegerla en todo momento. Nuestra política de privacidad garantiza la confidencialidad y seguridad de cualquier información que nos proporcione a través de nuestro sitio web y otros servicios que ofrecemos.',
+        'privacy-section-1-title': '1. RECOPILACIÓN DE INFORMACIÓN',
+        'privacy-section-1-content': 'Recopilamos información personal solo cuando es absolutamente necesaria para brindarle nuestros servicios. Esta recopilación se realiza de manera justa, legal y con su conocimiento y consentimiento. Le informamos claramente sobre el propósito de dicha recopilación y cómo se utilizará.',
+        'privacy-section-2-title': '2. USO DE LA INFORMACIÓN',
+        'privacy-section-2-content': 'La información personal se utiliza exclusivamente para:',
+        'privacy-section-2-item-1': 'Ofrecer y mejorar nuestros servicios',
+        'privacy-section-2-item-2': 'Personalizar su experiencia en la plataforma',
+        'privacy-section-2-item-3': 'Comunicarnos con usted sobre actualizaciones, notificaciones o soporte',
+        'privacy-section-2-item-4': '• Cumplir con los requisitos legales si es aplicable',
+        'privacy-section-3-title': '3. RETENCIÓN DE DATOS',
+        'privacy-section-3-content': 'Conservamos su información solo durante el tiempo necesario para cumplir los propósitos para los que fue recopilada. Posteriormente, será eliminada de forma segura.',
+        'privacy-section-4-title': '4. SEGURIDAD DE LA INFORMACIÓN',
+        'privacy-section-4-content': 'Implementamos medidas de seguridad razonables y comercialmente aceptables técnicas y organizacionales para proteger su información personal contra acceso no autorizado, pérdida, mal uso o divulgación.',
+        'privacy-section-5-title': '5. DIVULGACIÓN A TERCEROS',
+        'privacy-section-5-content': 'No compartimos su información personal con terceros, a menos que:',
+        'privacy-section-5-item-1': 'Sea requerido por ley',
+        'privacy-section-5-item-2': 'Sea estrictamente necesario para brindarle nuestros servicios (ej. servicios de email, procesamiento de pagos, etc.)',
+        'privacy-section-6-title': '6. ENLACES A SITIOS DE TERCEROS',
+        'privacy-section-6-content': 'Nuestro sitio puede contener enlaces a sitios web externos. No somos responsables de sus prácticas de privacidad o su contenido. Le recomendamos revisar las políticas de privacidad de esos sitios antes de interactuar con ellos.',
+        'privacy-section-7-title': '7. SUS DERECHOS',
+        'privacy-section-7-content': 'Usted tiene derecho a:',
+        'privacy-section-7-item-1': 'Acceder, corregir o eliminar su información personal',
+        'privacy-section-7-item-2': 'Retirar su consentimiento para el uso de sus datos',
+        'privacy-section-7-item-3': 'Negarse a proporcionar información personal (aunque esto puede limitar el acceso a ciertas funciones)',
+        'privacy-section-8-title': '8. ACEPTACIÓN DE ESTA POLÍTICA',
+        'privacy-section-8-content': 'Al continuar usando nuestro sitio web, se considera que acepta nuestra política de privacidad y el manejo de su información de acuerdo con ella.',
+        'privacy-section-9-title': '9. CONTACTO',
+        'privacy-section-9-content': 'Si tiene alguna pregunta, solicitud o inquietud con respecto a esta política de privacidad, puede contactarnos en: support@starflexapp.com',
+        // Terms and Conditions Content
+        'terms-section-1-title': '1. Aceptación de los Términos',
+        'terms-section-1-content': 'Al acceder y utilizar StarFlex, usted acepta estar sujeto a estos Términos y Condiciones. Si no está de acuerdo con alguna parte de estos términos, no debe utilizar nuestro servicio.',
+        'terms-section-2-title': '2. Descripción del Servicio',
+        'terms-section-2-content': 'StarFlex es una aplicación de automatización diseñada para ayudar a los conductores de Amazon Flex a optimizar su experiencia de trabajo mediante la automatización inteligente de la selección de bloques de entrega.',
+        'terms-section-3-title': '3. Uso Aceptable',
+        'terms-section-3-content': 'Usted se compromete a utilizar StarFlex de manera responsable y de acuerdo con todas las leyes aplicables. No debe usar el servicio para actividades ilegales, dañinas o que violen los términos de servicio de Amazon Flex.',
+        'terms-section-4-title': '4. Cuenta de Usuario',
+        'terms-section-4-content': 'Usted es responsable de mantener la confidencialidad de su cuenta y contraseña, y de todas las actividades que ocurran bajo su cuenta. Debe notificarnos inmediatamente sobre cualquier uso no autorizado.',
+        'terms-section-5-title': '5. Pagos y Suscripciones',
+        'terms-section-5-content': 'Los pagos por suscripciones son procesados de forma segura. Las suscripciones se renuevan automáticamente a menos que se cancelen antes del período de renovación. Ofrecemos un período de prueba gratuito para nuevos usuarios.',
+        'terms-section-6-title': '6. Limitación de Responsabilidad',
+        'terms-section-6-content': 'StarFlex se proporciona "tal como está" sin garantías de ningún tipo. No seremos responsables por daños indirectos, incidentales, especiales o consecuentes que resulten del uso de nuestro servicio.',
+        'terms-section-7-title': '7. Modificaciones',
+        'terms-section-7-content': 'Nos reservamos el derecho de modificar estos términos en cualquier momento. Los cambios entrarán en vigor inmediatamente después de su publicación en nuestra aplicación.',
+        'terms-section-8-title': '8. Contacto',
+        'terms-section-8-content': 'Para preguntas sobre estos Términos y Condiciones, puede contactarnos en support@starflexapp.com.'
     }
 };
 
-// ===== SISTEMA DE ROUTING PARA PÁGINAS LEGALES =====
+// ===== SISTEMA DE ROUTING PARA IDIOMAS Y PÁGINAS LEGALES =====
 function initializeRouting() {
-    console.log('🔗 Inicializando sistema de routing...');
+    console.log('🔗 Inicializando sistema de routing con soporte para idiomas...');
     
-    // Manejar cambios en el hash de la URL
-    window.addEventListener('hashchange', handleRouteChange);
+    // Manejar cambios en el pathname y hash de la URL
+    window.addEventListener('popstate', handleRouteChange);
     
     // Manejar la ruta inicial
     handleRouteChange();
@@ -483,26 +483,57 @@ function initializeRouting() {
     // Configurar enlaces de páginas legales
     setupLegalLinks();
     
-    console.log('✅ Sistema de routing inicializado');
+    console.log('✅ Sistema de routing con idiomas inicializado');
 }
 
 function handleRouteChange() {
+    const pathname = window.location.pathname;
     const hash = window.location.hash;
-    console.log(`🔗 Cambio de ruta detectado: ${hash}`);
+    
+    console.log(`🔗 Cambio de ruta detectado - Pathname: ${pathname}, Hash: ${hash}`);
+    
+    // Determinar idioma basado en la ruta
+    let detectedLanguage = 'en'; // Inglés por defecto para "/"
+    let isLegalPage = false;
+    let legalPageType = null;
+    
+    // Detectar idioma desde la URL
+    if (pathname === '/es' || pathname.startsWith('/es/')) {
+        detectedLanguage = 'es';
+    } else if (pathname === '/' || pathname === '') {
+        detectedLanguage = 'en';
+    }
+    
+    // Detectar páginas legales
+    if (hash === '#/privacypolicy') {
+        isLegalPage = true;
+        legalPageType = 'privacy';
+    } else if (hash === '#/terms') {
+        isLegalPage = true;
+        legalPageType = 'terms';
+    }
+    
+    // Cambiar idioma si es necesario
+    if (detectedLanguage !== currentLanguage) {
+        console.log(`🌐 Cambiando idioma de ${currentLanguage} a ${detectedLanguage} basado en URL`);
+        currentLanguage = detectedLanguage;
+        applyTranslations();
+        updateLanguageButtons();
+        document.documentElement.lang = currentLanguage;
+    }
     
     // Ocultar todas las páginas
     hideAllPages();
     
-    switch (hash) {
-        case '#/privacypolicy':
+    // Mostrar la página apropiada
+    if (isLegalPage) {
+        if (legalPageType === 'privacy') {
             showPrivacyPolicy();
-            break;
-        case '#/terms':
+        } else if (legalPageType === 'terms') {
             showTermsConditions();
-            break;
-        default:
-            showMainContent();
-            break;
+        }
+    } else {
+        showMainContent();
     }
 }
 
@@ -534,6 +565,8 @@ function showMainContent() {
         closeFloatingMenu();
     }
 }
+
+// ... existing code continues from showPrivacyPolicy function
 
 function showPrivacyPolicy() {
     console.log('📋 Mostrando Política de Privacidad');
@@ -633,7 +666,7 @@ function setupLegalLinks() {
         privacyBackBtn.addEventListener('click', (e) => {
             e.preventDefault();
             console.log('🏠 Regresando al inicio desde Política de Privacidad');
-            window.location.hash = '';
+            navigateToLanguageRoute(currentLanguage);
         });
         
         if (isMobile) {
@@ -650,7 +683,7 @@ function setupLegalLinks() {
         termsBackBtn.addEventListener('click', (e) => {
             e.preventDefault();
             console.log('🏠 Regresando al inicio desde Términos y Condiciones');
-            window.location.hash = '';
+            navigateToLanguageRoute(currentLanguage);
         });
         
         if (isMobile) {
@@ -666,8 +699,239 @@ function setupLegalLinks() {
     console.log(`✅ Enlaces legales configurados: ${privacyLinks.length} enlaces de privacidad, ${termsLinks.length} enlaces de términos`);
 }
 
+// ===== FUNCIONES DE NAVEGACIÓN POR IDIOMAS =====
+function navigateToLanguageRoute(language) {
+    console.log(`🌐 Navegando a ruta de idioma: ${language}`);
+    
+    if (language === 'es') {
+        window.history.pushState({}, '', '/es');
+    } else {
+        window.history.pushState({}, '', '/');
+    }
+    
+    // Limpiar hash si existe
+    if (window.location.hash) {
+        window.location.hash = '';
+    }
+    
+    handleRouteChange();
+}
+
+function detectInitialLanguage() {
+    const pathname = window.location.pathname;
+    const browserLanguage = navigator.language.slice(0, 2);
+    
+    console.log(`🔍 Detectando idioma inicial - Pathname: ${pathname}, Browser: ${browserLanguage}`);
+    
+    // Si ya hay una ruta específica, respetarla
+    if (pathname === '/es' || pathname.startsWith('/es/')) {
+        return 'es';
+    } else if (pathname === '/' || pathname === '') {
+        // Si está en la raíz, verificar si debería redirigir a español
+        if (browserLanguage === 'es') {
+            console.log('🔄 Redirigiendo a /es basado en idioma del navegador');
+            window.history.replaceState({}, '', '/es');
+            return 'es';
+        }
+        return 'en';
+    }
+    
+    // Por defecto, inglés
+    return 'en';
+}
+
+// ===== FUNCIONES DE TRADUCCIÓN ULTRA-OPTIMIZADAS (ACTUALIZADAS) =====
+function initializeLanguageSystem() {
+    // Detectar idioma basado en la URL y navegador
+    currentLanguage = detectInitialLanguage();
+    
+    console.log(`🌐 Sistema de idiomas inicializado con: ${currentLanguage}`);
+    
+    applyTranslations();
+    updateLanguageButtons();
+    setupLanguageToggle();
+}
+
+function setupLanguageToggle() {
+    // Botones de idioma para desktop
+    const languageButtons = document.querySelectorAll('.language-btn, .nav__language-option');
+    
+    // Botones de idioma para drawer móvil
+    const drawerLanguageButtons = document.querySelectorAll('.nav__drawer-language-option');
+    
+    // Configurar eventos para botones desktop
+    languageButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+            e.preventDefault();
+            const selectedLanguage = button.getAttribute('data-lang');
+            if (selectedLanguage && selectedLanguage !== currentLanguage) {
+                console.log(`🌐 Cambiando idioma a: ${selectedLanguage} desde selector desktop`);
+                switchLanguage(selectedLanguage);
+                
+                // Cerrar el selector de idioma después de seleccionar
+                if (isLanguageSwitcherOpen) {
+                    closeLanguageSwitcher();
+                }
+            }
+        });
+
+        // Mejorar feedback táctil en móvil
+        if (isMobile) {
+            button.addEventListener('touchstart', () => {
+                button.style.transform = 'scale(0.98)';
+            }, { passive: true });
+            button.addEventListener('touchend', () => {
+                button.style.transform = '';
+            }, { passive: true });
+        }
+    });
+    
+    // Configurar eventos para botones del drawer móvil
+    drawerLanguageButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+            e.preventDefault();
+            const selectedLanguage = button.getAttribute('data-lang');
+            if (selectedLanguage && selectedLanguage !== currentLanguage) {
+                console.log(`🌐 Cambiando idioma a: ${selectedLanguage} desde drawer móvil`);
+                
+                // Cambiar idioma
+                switchLanguage(selectedLanguage);
+                
+                // Cerrar el drawer móvil después de seleccionar idioma
+                if (isMobileMenuOpen) {
+                    console.log('📱 Cerrando drawer móvil después de cambio de idioma');
+                    setTimeout(() => {
+                        closeMobileMenu();
+                    }, 100);
+                }
+            }
+        });
+
+        button.addEventListener('touchstart', () => {
+            button.style.transform = 'scale(0.98)';
+        }, { passive: true });
+        button.addEventListener('touchend', () => {
+            button.style.transform = '';
+        }, { passive: true });
+    });
+}
+
+function switchLanguage(newLanguage) {
+    if (!translationData[newLanguage]) {
+        console.warn(`Language ${newLanguage} not supported`);
+        return;
+    }
+    
+    console.log(`🔄 Cambiando idioma de ${currentLanguage} a ${newLanguage}`);
+    
+    currentLanguage = newLanguage;
+    
+    // Navegar a la ruta correcta del idioma
+    navigateToLanguageRoute(newLanguage);
+    
+    applyTranslations();
+    updateLanguageButtons();
+    
+    document.documentElement.lang = newLanguage;
+    
+    // Actualizar título según la página actual
+    const hash = window.location.hash;
+    if (hash === '#/privacypolicy') {
+        document.title = `${translationData[currentLanguage]['privacy-policy-title']} - StarFlex`;
+    } else if (hash === '#/terms') {
+        document.title = `${translationData[currentLanguage]['terms-conditions-title']} - StarFlex`;
+    } else {
+        document.title = translationData[currentLanguage]['page-title'];
+    }
+    
+    if (!isMobile && !performanceMode) {
+        document.body.style.opacity = '0.95';
+        setTimeout(() => {
+            document.body.style.opacity = '1';
+        }, 100);
+    }
+}
+
+function applyTranslations() {
+    const currentTranslations = translationData[currentLanguage];
+    
+    if (!currentTranslations) {
+        console.warn(`Translations for ${currentLanguage} not found`);
+        return;
+    }
+    
+    requestAnimationFrame(() => {
+        document.querySelectorAll('[data-translate]').forEach(element => {
+            const key = element.getAttribute('data-translate');
+            const translation = currentTranslations[key];
+            
+            if (translation) {
+                if (element.tagName === 'INPUT' && element.type === 'text') {
+                    element.placeholder = translation;
+                } else if (element.tagName === 'META') {
+                    element.content = translation;
+                } else if (element.tagName === 'TITLE') {
+                    element.textContent = translation;
+                } else {
+                    element.innerHTML = translation;
+                }
+            }
+        });
+        
+        document.querySelectorAll('[data-translate-placeholder]').forEach(element => {
+            const key = element.getAttribute('data-translate-placeholder');
+            const translation = currentTranslations[key];
+            if (translation) {
+                element.placeholder = translation;
+            }
+        });
+        
+        document.querySelectorAll('[data-translate-aria]').forEach(element => {
+            const key = element.getAttribute('data-translate-aria');
+            const translation = currentTranslations[key];
+            if (translation) {
+                element.setAttribute('aria-label', translation);
+            }
+        });
+        
+        document.querySelectorAll('[data-translate-alt]').forEach(element => {
+            const key = element.getAttribute('data-translate-alt');
+            const translation = currentTranslations[key];
+            if (translation) {
+                element.alt = translation;
+            }
+        });
+    });
+}
+
+function updateLanguageButtons() {
+    // Actualizar botones desktop
+    const languageButtons = document.querySelectorAll('.language-btn, .nav__language-option');
+    languageButtons.forEach(button => {
+        const buttonLang = button.getAttribute('data-lang');
+        if (buttonLang === currentLanguage) {
+            button.classList.add('active');
+        } else {
+            button.classList.remove('active');
+        }
+    });
+    
+    // Actualizar botones del drawer móvil
+    const drawerLanguageButtons = document.querySelectorAll('.nav__drawer-language-option');
+    drawerLanguageButtons.forEach(button => {
+        const buttonLang = button.getAttribute('data-lang');
+        if (buttonLang === currentLanguage) {
+            button.classList.add('active');
+        } else {
+            button.classList.remove('active');
+        }
+    });
+    
+    updateLanguageSwitcher();
+}
+
 // ===== RESTO DEL CÓDIGO EXISTENTE (sin cambios) =====
-// ... (todo el código existente permanece igual)
+// ... (todo el código existente permanece igual desde aquí)
 
 // ===== DETECCIÓN DE DISPOSITIVO Y CAPACIDADES ULTRA-OPTIMIZADA =====
 function detectDeviceCapabilities() {
@@ -927,197 +1191,6 @@ class UltraOptimizedImageLoader {
 // ===== INICIALIZACIÓN GLOBAL OPTIMIZADA =====
 let imageOptimizer;
 
-// ===== FUNCIONES DE TRADUCCIÓN ULTRA-OPTIMIZADAS =====
-function initializeLanguageSystem() {
-    const savedLanguage = localStorage.getItem('starflex-language');
-    const browserLanguage = navigator.language.slice(0, 2);
-    
-    if (savedLanguage && translationData[savedLanguage]) {
-        currentLanguage = savedLanguage;
-    } else if (translationData[browserLanguage]) {
-        currentLanguage = browserLanguage;
-    } else {
-        currentLanguage = 'es';
-    }
-    
-    applyTranslations();
-    updateLanguageButtons();
-    setupLanguageToggle();
-}
-
-function setupLanguageToggle() {
-    // Botones de idioma para desktop
-    const languageButtons = document.querySelectorAll('.language-btn, .nav__language-option');
-    
-    // Botones de idioma para drawer móvil
-    const drawerLanguageButtons = document.querySelectorAll('.nav__drawer-language-option');
-    
-    // Configurar eventos para botones desktop
-    languageButtons.forEach(button => {
-        button.addEventListener('click', (e) => {
-            e.preventDefault();
-            const selectedLanguage = button.getAttribute('data-lang');
-            if (selectedLanguage && selectedLanguage !== currentLanguage) {
-                switchLanguage(selectedLanguage);
-                
-                // Cerrar el selector de idioma después de seleccionar
-                if (isLanguageSwitcherOpen) {
-                    closeLanguageSwitcher();
-                }
-            }
-        });
-
-        // Mejorar feedback táctil en móvil
-        if (isMobile) {
-            button.addEventListener('touchstart', () => {
-                button.style.transform = 'scale(0.98)';
-            }, { passive: true });
-            button.addEventListener('touchend', () => {
-                button.style.transform = '';
-            }, { passive: true });
-        }
-    });
-    
-    // Configurar eventos para botones del drawer móvil - CORREGIDO PARA CERRAR DRAWER
-    drawerLanguageButtons.forEach(button => {
-        button.addEventListener('click', (e) => {
-            e.preventDefault();
-            const selectedLanguage = button.getAttribute('data-lang');
-            if (selectedLanguage && selectedLanguage !== currentLanguage) {
-                console.log(`🌐 Cambiando idioma a: ${selectedLanguage} desde drawer móvil`);
-                
-                // Cambiar idioma
-                switchLanguage(selectedLanguage);
-                
-                // Cerrar el drawer móvil después de seleccionar idioma
-                if (isMobileMenuOpen) {
-                    console.log('📱 Cerrando drawer móvil después de cambio de idioma');
-                    setTimeout(() => {
-                        closeMobileMenu();
-                    }, 100); // Pequeño delay para que se vea el cambio
-                }
-            }
-        });
-
-        button.addEventListener('touchstart', () => {
-            button.style.transform = 'scale(0.98)';
-        }, { passive: true });
-        button.addEventListener('touchend', () => {
-            button.style.transform = '';
-        }, { passive: true });
-    });
-}
-
-function switchLanguage(newLanguage) {
-    if (!translationData[newLanguage]) {
-        console.warn(`Language ${newLanguage} not supported`);
-        return;
-    }
-    
-    currentLanguage = newLanguage;
-    localStorage.setItem('starflex-language', newLanguage);
-    
-    applyTranslations();
-    updateLanguageButtons();
-    
-    document.documentElement.lang = newLanguage;
-    
-    // Actualizar título según la página actual
-    const hash = window.location.hash;
-    if (hash === '#/privacypolicy') {
-        document.title = `${translationData[currentLanguage]['privacy-policy-title']} - StarFlex`;
-    } else if (hash === '#/terms') {
-        document.title = `${translationData[currentLanguage]['terms-conditions-title']} - StarFlex`;
-    } else {
-        document.title = translationData[currentLanguage]['page-title'];
-    }
-    
-    if (!isMobile && !performanceMode) {
-        document.body.style.opacity = '0.95';
-        setTimeout(() => {
-            document.body.style.opacity = '1';
-        }, 100);
-    }
-}
-
-function applyTranslations() {
-    const currentTranslations = translationData[currentLanguage];
-    
-    if (!currentTranslations) {
-        console.warn(`Translations for ${currentLanguage} not found`);
-        return;
-    }
-    
-    requestAnimationFrame(() => {
-        document.querySelectorAll('[data-translate]').forEach(element => {
-            const key = element.getAttribute('data-translate');
-            const translation = currentTranslations[key];
-            
-            if (translation) {
-                if (element.tagName === 'INPUT' && element.type === 'text') {
-                    element.placeholder = translation;
-                } else if (element.tagName === 'META') {
-                    element.content = translation;
-                } else if (element.tagName === 'TITLE') {
-                    element.textContent = translation;
-                } else {
-                    element.innerHTML = translation;
-                }
-            }
-        });
-        
-        document.querySelectorAll('[data-translate-placeholder]').forEach(element => {
-            const key = element.getAttribute('data-translate-placeholder');
-            const translation = currentTranslations[key];
-            if (translation) {
-                element.placeholder = translation;
-            }
-        });
-        
-        document.querySelectorAll('[data-translate-aria]').forEach(element => {
-            const key = element.getAttribute('data-translate-aria');
-            const translation = currentTranslations[key];
-            if (translation) {
-                element.setAttribute('aria-label', translation);
-            }
-        });
-        
-        document.querySelectorAll('[data-translate-alt]').forEach(element => {
-            const key = element.getAttribute('data-translate-alt');
-            const translation = currentTranslations[key];
-            if (translation) {
-                element.alt = translation;
-            }
-        });
-    });
-}
-
-function updateLanguageButtons() {
-    // Actualizar botones desktop
-    const languageButtons = document.querySelectorAll('.language-btn, .nav__language-option');
-    languageButtons.forEach(button => {
-        const buttonLang = button.getAttribute('data-lang');
-        if (buttonLang === currentLanguage) {
-            button.classList.add('active');
-        } else {
-            button.classList.remove('active');
-        }
-    });
-    
-    // Actualizar botones del drawer móvil
-    const drawerLanguageButtons = document.querySelectorAll('.nav__drawer-language-option');
-    drawerLanguageButtons.forEach(button => {
-        const buttonLang = button.getAttribute('data-lang');
-        if (buttonLang === currentLanguage) {
-            button.classList.add('active');
-        } else {
-            button.classList.remove('active');
-        }
-    });
-    
-    updateLanguageSwitcher();
-}
-
 // ===== SELECTOR DE IDIOMA FLOTANTE OPTIMIZADO (SOLO DESKTOP) =====
 function initializeLanguageSwitcher() {
     const languageSwitcherBtn = document.getElementById('language-switcher-btn');
@@ -1336,8 +1409,8 @@ function initializeDesktopNavigation() {
                 closeLanguageSwitcher();
             }
             
-            // Navegar al inicio
-            window.location.hash = '';
+            // Navegar al inicio manteniendo el idioma actual
+            navigateToLanguageRoute(currentLanguage);
         });
         
         // MEJORADO: Soporte táctil específico para móviles
@@ -1400,7 +1473,7 @@ function initializeDesktopNavigation() {
             if (targetId.startsWith('#') && !targetId.includes('/')) {
                 // Asegurar que estamos en la página principal
                 if (window.location.hash.includes('/')) {
-                    window.location.hash = '';
+                    navigateToLanguageRoute(currentLanguage);
                     setTimeout(() => {
                         const targetSection = document.querySelector(targetId);
                         if (targetSection) {
@@ -1458,8 +1531,8 @@ function initializeMobileNavigation() {
                 closeMobileMenu();
             }
             
-            // Navegar al inicio
-            window.location.hash = '';
+            // Navegar al inicio manteniendo el idioma actual
+            navigateToLanguageRoute(currentLanguage);
         });
         
         drawerLogo.style.cursor = 'pointer';
@@ -1548,7 +1621,7 @@ function initializeMobileNavigation() {
             if (targetId.startsWith('#') && !targetId.includes('/')) {
                 // Asegurar que estamos en la página principal
                 if (window.location.hash.includes('/')) {
-                    window.location.hash = '';
+                    navigateToLanguageRoute(currentLanguage);
                     setTimeout(() => {
                         const targetSection = document.querySelector(targetId);
                         if (targetSection) {
@@ -1687,6 +1760,8 @@ function openMobileMenu() {
     
     console.log('✅ Drawer móvil abierto - Scroll de página bloqueado en posición:', scrollPosition);
 }
+
+// ... continuing from closeMobileMenu function
 
 function closeMobileMenu() {
     console.log('📱 Cerrando drawer móvil...');
@@ -2601,7 +2676,7 @@ function initializeAccessibility() {
 
 // ===== INICIALIZACIÓN PRINCIPAL ULTRA-OPTIMIZADA =====
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('🚀 Iniciando StarFlex...');
+    console.log('🚀 Iniciando StarFlex con sistema de rutas por idiomas...');
     
     detectDeviceCapabilities();
     
@@ -2609,7 +2684,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     initializeLanguageSystem();
     initializeLanguageSwitcher();
-    initializeRouting(); // Nueva función para el sistema de routing
+    initializeRouting(); // Sistema de routing con soporte para idiomas
     initializeNavigation();
     initializeScrollEffects();
     initializeVideoPlayer();
@@ -2627,7 +2702,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     initializePerformanceOptimizations();
     
-    console.log(`✅ StarFlex Ultra-Optimizado - Móvil: ${isMobile}, Modo rendimiento: ${performanceMode}, Drawer móvil: ${isMobile ? 'Activo' : 'Inactivo'}, Routing: Activo`);
+    console.log(`✅ StarFlex Ultra-Optimizado con rutas por idiomas - Móvil: ${isMobile}, Modo rendimiento: ${performanceMode}, Idioma actual: ${currentLanguage}, Ruta: ${window.location.pathname}`);
 });
 
 // ===== MANEJO DE ERRORES ULTRA-OPTIMIZADO =====
@@ -2741,6 +2816,8 @@ window.StarFlex = {
     // Funciones de idioma
     switchLanguage,
     currentLanguage,
+    navigateToLanguageRoute,
+    detectInitialLanguage,
     // Funciones de video
     initializeYouTubePlayer,
     loadYouTubeVideo,
@@ -2753,4 +2830,3 @@ window.StarFlex = {
     // Utilidades
     detectDeviceCapabilities
 };
-
