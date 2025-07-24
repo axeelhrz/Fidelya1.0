@@ -470,12 +470,12 @@ const translationData = {
     }
 };
 
-// ===== SISTEMA DE ROUTING PARA IDIOMAS Y PÁGINAS LEGALES =====
+// ===== SISTEMA DE ROUTING PARA IDIOMAS Y PÁGINAS LEGALES (BASADO EN HASH) =====
 function initializeRouting() {
-    console.log('🔗 Inicializando sistema de routing con soporte para idiomas...');
+    console.log('🔗 Inicializando sistema de routing basado en hash...');
     
-    // Manejar cambios en el pathname y hash de la URL
-    window.addEventListener('popstate', handleRouteChange);
+    // Manejar cambios en el hash de la URL
+    window.addEventListener('hashchange', handleRouteChange);
     
     // Manejar la ruta inicial
     handleRouteChange();
@@ -483,39 +483,42 @@ function initializeRouting() {
     // Configurar enlaces de páginas legales
     setupLegalLinks();
     
-    console.log('✅ Sistema de routing con idiomas inicializado');
+    console.log('✅ Sistema de routing basado en hash inicializado');
 }
 
 function handleRouteChange() {
-    const pathname = window.location.pathname;
     const hash = window.location.hash;
     
-    console.log(`🔗 Cambio de ruta detectado - Pathname: ${pathname}, Hash: ${hash}`);
+    console.log(`🔗 Cambio de ruta detectado - Hash: ${hash}`);
     
-    // Determinar idioma basado en la ruta
-    let detectedLanguage = 'en'; // Inglés por defecto para "/"
+    // Determinar idioma y página basado en el hash
+    let detectedLanguage = 'en'; // Inglés por defecto
     let isLegalPage = false;
     let legalPageType = null;
     
-    // Detectar idioma desde la URL
-    if (pathname === '/es' || pathname.startsWith('/es/')) {
+    // Detectar idioma desde el hash
+    if (hash === '#es' || hash.startsWith('#es/')) {
         detectedLanguage = 'es';
-    } else if (pathname === '/' || pathname === '') {
+    } else if (hash === '' || hash === '#' || hash.startsWith('#en') || (!hash.includes('es') && !hash.includes('privacypolicy') && !hash.includes('terms'))) {
         detectedLanguage = 'en';
     }
     
     // Detectar páginas legales
-    if (hash === '#/privacypolicy') {
+    if (hash.includes('/privacypolicy')) {
         isLegalPage = true;
         legalPageType = 'privacy';
-    } else if (hash === '#/terms') {
+        // Mantener el idioma actual para páginas legales
+        detectedLanguage = currentLanguage;
+    } else if (hash.includes('/terms')) {
         isLegalPage = true;
         legalPageType = 'terms';
+        // Mantener el idioma actual para páginas legales
+        detectedLanguage = currentLanguage;
     }
     
     // Cambiar idioma si es necesario
     if (detectedLanguage !== currentLanguage) {
-        console.log(`🌐 Cambiando idioma de ${currentLanguage} a ${detectedLanguage} basado en URL`);
+        console.log(`🌐 Cambiando idioma de ${currentLanguage} a ${detectedLanguage} basado en hash`);
         currentLanguage = detectedLanguage;
         applyTranslations();
         updateLanguageButtons();
@@ -547,6 +550,8 @@ function hideAllPages() {
     if (termsPage) termsPage.style.display = 'none';
 }
 
+// ... continuing from showMainContent function
+
 function showMainContent() {
     console.log('🏠 Mostrando contenido principal');
     const mainContent = document.getElementById('main-content');
@@ -565,8 +570,6 @@ function showMainContent() {
         closeFloatingMenu();
     }
 }
-
-// ... existing code continues from showPrivacyPolicy function
 
 function showPrivacyPolicy() {
     console.log('📋 Mostrando Política de Privacidad');
@@ -628,7 +631,8 @@ function setupLegalLinks() {
         link.addEventListener('click', (e) => {
             e.preventDefault();
             console.log('🔗 Click en enlace de Política de Privacidad');
-            window.location.hash = '#/privacypolicy';
+            const languagePrefix = currentLanguage === 'es' ? '#es' : '#';
+            window.location.hash = `${languagePrefix}/privacypolicy`;
         });
         
         // Efectos táctiles para móvil
@@ -647,7 +651,8 @@ function setupLegalLinks() {
         link.addEventListener('click', (e) => {
             e.preventDefault();
             console.log('🔗 Click en enlace de Términos y Condiciones');
-            window.location.hash = '#/terms';
+            const languagePrefix = currentLanguage === 'es' ? '#es' : '#';
+            window.location.hash = `${languagePrefix}/terms`;
         });
         
         // Efectos táctiles para móvil
@@ -699,38 +704,33 @@ function setupLegalLinks() {
     console.log(`✅ Enlaces legales configurados: ${privacyLinks.length} enlaces de privacidad, ${termsLinks.length} enlaces de términos`);
 }
 
-// ===== FUNCIONES DE NAVEGACIÓN POR IDIOMAS =====
+// ===== FUNCIONES DE NAVEGACIÓN POR IDIOMAS (BASADAS EN HASH) =====
 function navigateToLanguageRoute(language) {
     console.log(`🌐 Navegando a ruta de idioma: ${language}`);
     
     if (language === 'es') {
-        window.history.pushState({}, '', '/es');
+        window.location.hash = '#es';
     } else {
-        window.history.pushState({}, '', '/');
-    }
-    
-    // Limpiar hash si existe
-    if (window.location.hash) {
-        window.location.hash = '';
+        window.location.hash = '#';
     }
     
     handleRouteChange();
 }
 
 function detectInitialLanguage() {
-    const pathname = window.location.pathname;
+    const hash = window.location.hash;
     const browserLanguage = navigator.language.slice(0, 2);
     
-    console.log(`🔍 Detectando idioma inicial - Pathname: ${pathname}, Browser: ${browserLanguage}`);
+    console.log(`🔍 Detectando idioma inicial - Hash: ${hash}, Browser: ${browserLanguage}`);
     
-    // Si ya hay una ruta específica, respetarla
-    if (pathname === '/es' || pathname.startsWith('/es/')) {
+    // Si ya hay un hash específico de idioma, respetarlo
+    if (hash === '#es' || hash.startsWith('#es/')) {
         return 'es';
-    } else if (pathname === '/' || pathname === '') {
-        // Si está en la raíz, verificar si debería redirigir a español
-        if (browserLanguage === 'es') {
-            console.log('🔄 Redirigiendo a /es basado en idioma del navegador');
-            window.history.replaceState({}, '', '/es');
+    } else if (hash === '#' || hash === '' || hash.startsWith('#en') || hash.includes('privacypolicy') || hash.includes('terms')) {
+        // Si está en la raíz o en inglés, verificar si debería redirigir a español
+        if (browserLanguage === 'es' && (hash === '' || hash === '#')) {
+            console.log('🔄 Redirigiendo a #es basado en idioma del navegador');
+            window.location.hash = '#es';
             return 'es';
         }
         return 'en';
@@ -742,7 +742,7 @@ function detectInitialLanguage() {
 
 // ===== FUNCIONES DE TRADUCCIÓN ULTRA-OPTIMIZADAS (ACTUALIZADAS) =====
 function initializeLanguageSystem() {
-    // Detectar idioma basado en la URL y navegador
+    // Detectar idioma basado en el hash y navegador
     currentLanguage = detectInitialLanguage();
     
     console.log(`🌐 Sistema de idiomas inicializado con: ${currentLanguage}`);
@@ -826,7 +826,7 @@ function switchLanguage(newLanguage) {
     
     currentLanguage = newLanguage;
     
-    // Navegar a la ruta correcta del idioma
+    // Navegar a la ruta correcta del idioma usando hash
     navigateToLanguageRoute(newLanguage);
     
     applyTranslations();
@@ -836,9 +836,9 @@ function switchLanguage(newLanguage) {
     
     // Actualizar título según la página actual
     const hash = window.location.hash;
-    if (hash === '#/privacypolicy') {
+    if (hash.includes('/privacypolicy')) {
         document.title = `${translationData[currentLanguage]['privacy-policy-title']} - StarFlex`;
-    } else if (hash === '#/terms') {
+    } else if (hash.includes('/terms')) {
         document.title = `${translationData[currentLanguage]['terms-conditions-title']} - StarFlex`;
     } else {
         document.title = translationData[currentLanguage]['page-title'];
@@ -1711,6 +1711,8 @@ function toggleMobileMenu() {
     }
 }
 
+// ... continuing from openMobileMenu function
+
 function openMobileMenu() {
     console.log('📱 Abriendo drawer móvil...');
     const navToggle = document.getElementById('nav-toggle');
@@ -1760,8 +1762,6 @@ function openMobileMenu() {
     
     console.log('✅ Drawer móvil abierto - Scroll de página bloqueado en posición:', scrollPosition);
 }
-
-// ... continuing from closeMobileMenu function
 
 function closeMobileMenu() {
     console.log('📱 Cerrando drawer móvil...');
@@ -2676,7 +2676,7 @@ function initializeAccessibility() {
 
 // ===== INICIALIZACIÓN PRINCIPAL ULTRA-OPTIMIZADA =====
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('🚀 Iniciando StarFlex con sistema de rutas por idiomas...');
+    console.log('🚀 Iniciando StarFlex con sistema de rutas basado en hash...');
     
     detectDeviceCapabilities();
     
@@ -2684,7 +2684,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     initializeLanguageSystem();
     initializeLanguageSwitcher();
-    initializeRouting(); // Sistema de routing con soporte para idiomas
+    initializeRouting(); // Sistema de routing basado en hash
     initializeNavigation();
     initializeScrollEffects();
     initializeVideoPlayer();
@@ -2702,7 +2702,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     initializePerformanceOptimizations();
     
-    console.log(`✅ StarFlex Ultra-Optimizado con rutas por idiomas - Móvil: ${isMobile}, Modo rendimiento: ${performanceMode}, Idioma actual: ${currentLanguage}, Ruta: ${window.location.pathname}`);
+    console.log(`✅ StarFlex Ultra-Optimizado con rutas basadas en hash - Móvil: ${isMobile}, Modo rendimiento: ${performanceMode}, Idioma actual: ${currentLanguage}, Hash: ${window.location.hash}`);
 });
 
 // ===== MANEJO DE ERRORES ULTRA-OPTIMIZADO =====
