@@ -94,6 +94,8 @@ const translationData = {
         'nav-contact': 'Contact',
         'nav-cta': 'Start your free trial',
         'nav-language-title': 'Language',
+        'nav-drawer-cta-main': 'START NOW',
+        'nav-drawer-cta-trial': '3 days free',
         // Hero Section
         'hero-badge': 'Next-Gen Amazon Flex Revolution',
         'hero_title--main': 'MASTER THE',
@@ -288,7 +290,9 @@ const translationData = {
         'nav-contact': 'Contacto',
         'nav-cta': 'Comienza tu prueba gratuita',
         'nav-language-title': 'Idioma',
-        // Hero Section
+        'nav-drawer-cta-main': 'COMENZAR AHORA',
+        'nav-drawer-cta-trial': '3 días gratis',
+ // Hero Section
         'hero-badge': 'Next-Gen Amazon Flex Revolution',
         'hero_title--main': 'DOMINA LOS',
         'hero_title--highlight': 'BLOQUES DE',
