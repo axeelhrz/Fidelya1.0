@@ -18,6 +18,7 @@ import {
   Trash2,
   Unlink,
   FileText,
+  FileSpreadsheet
 } from 'lucide-react';
 import { useSocios } from '@/hooks/useSocios';
 import { useSocioAsociacion } from '@/hooks/useSocioAsociacion';
@@ -31,6 +32,7 @@ import { Timestamp } from 'firebase/firestore';
 import { Socio, SocioFormData } from '@/types/socio';
 import toast from 'react-hot-toast';
 import Image from 'next/image';
+import * as XLSX from 'xlsx';
 
 export const EnhancedMemberManagement = () => {
   const { 
@@ -204,12 +206,202 @@ export const EnhancedMemberManagement = () => {
     setSocioToUnlink(null);
   };
 
-  // Función optimizada para exportar datos a CSV
-  const handleExport = async () => {
+  // Función mejorada para exportar datos a Excel con diseño atractivo
+  const handleExportExcel = async () => {
     if (exporting) return;
     
     setExporting(true);
-    const loadingToast = toast.loading('Preparando exportación...');
+    const loadingToast = toast.loading('Preparando exportación Excel...');
+    
+    try {
+      if (socios.length === 0) {
+        toast.dismiss(loadingToast);
+        toast.error('No hay socios para exportar');
+        return;
+      }
+
+      // Crear un nuevo libro de trabajo
+      const workbook = XLSX.utils.book_new();
+
+      // Función para formatear fechas de manera segura
+      const formatDate = (date: Date | Timestamp | undefined): string => {
+        try {
+          if (!date) return '';
+          if (date instanceof Timestamp) {
+            return format(date.toDate(), 'dd/MM/yyyy', { locale: es });
+          }
+          if (date instanceof Date) {
+            return format(date, 'dd/MM/yyyy', { locale: es });
+          }
+          return '';
+        } catch {
+          return '';
+        }
+      };
+
+      // Preparar datos para la hoja principal
+      const sociosData = socios.map((socio, index) => ({
+        '#': index + 1,
+        'Nombre Completo': socio.nombre || '',
+        'Correo Electrónico': socio.email || '',
+        'DNI/Documento': socio.dni || '',
+        'Teléfono': socio.telefono || '',
+        'Número de Socio': socio.numeroSocio || '',
+        'Estado': socio.estado || '',
+        'Estado de Membresía': socio.estadoMembresia || '',
+        'Fecha de Ingreso': formatDate(socio.fechaIngreso),
+        'Fecha de Vencimiento': formatDate(socio.fechaVencimiento),
+        'Monto de Cuota': socio.montoCuota || 0,
+        'Beneficios Utilizados': socio.beneficiosUsados || 0,
+        'Dirección': socio.direccion || '',
+        'Fecha de Nacimiento': formatDate(socio.fechaNacimiento)
+      }));
+
+      // Crear hoja principal con datos de socios
+      const mainSheet = XLSX.utils.json_to_sheet(sociosData);
+
+      // Configurar anchos de columna
+      const columnWidths = [
+        { wch: 5 },   // #
+        { wch: 25 },  // Nombre
+        { wch: 30 },  // Email
+        { wch: 15 },  // DNI
+        { wch: 18 },  // Teléfono
+        { wch: 15 },  // Número Socio
+        { wch: 12 },  // Estado
+        { wch: 18 },  // Estado Membresía
+        { wch: 15 },  // Fecha Ingreso
+        { wch: 15 },  // Fecha Vencimiento
+        { wch: 12 },  // Monto Cuota
+        { wch: 15 },  // Beneficios
+        { wch: 30 },  // Dirección
+        { wch: 15 }   // Fecha Nacimiento
+      ];
+      mainSheet['!cols'] = columnWidths;
+
+      // Agregar la hoja principal al libro
+      XLSX.utils.book_append_sheet(workbook, mainSheet, 'Socios');
+
+      // Crear hoja de resumen/estadísticas
+      const statsData = [
+        ['RESUMEN EJECUTIVO', ''],
+        ['', ''],
+        ['Total de Socios', stats?.total || 0],
+        ['Socios Activos', stats?.activos || 0],
+        ['Socios Vencidos', stats?.vencidos || 0],
+        ['Socios Inactivos', (stats?.total || 0) - (stats?.activos || 0) - (stats?.vencidos || 0)],
+        ['', ''],
+        ['DISTRIBUCIÓN POR ESTADO', ''],
+        ['', ''],
+      ];
+
+      // Agregar distribución por estado
+      const estadosCount = socios.reduce((acc, socio) => {
+        acc[socio.estado] = (acc[socio.estado] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+
+      Object.entries(estadosCount).forEach(([estado, count]) => {
+        statsData.push([`${estado.charAt(0).toUpperCase() + estado.slice(1)}`, count]);
+      });
+
+      statsData.push(['', '']);
+      statsData.push(['DISTRIBUCIÓN POR MEMBRESÍA', '']);
+      statsData.push(['', '']);
+
+      // Agregar distribución por membresía
+      const membresiaCount = socios.reduce((acc, socio) => {
+        acc[socio.estadoMembresia] = (acc[socio.estadoMembresia] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+
+      Object.entries(membresiaCount).forEach(([membresia, count]) => {
+        statsData.push([`${membresia.charAt(0).toUpperCase() + membresia.slice(1)}`, count]);
+      });
+
+      // Agregar información de exportación
+      statsData.push(['', '']);
+      statsData.push(['INFORMACIÓN DE EXPORTACIÓN', '']);
+      statsData.push(['', '']);
+      statsData.push(['Fecha de Exportación', format(new Date(), 'dd/MM/yyyy HH:mm:ss', { locale: es })]);
+      statsData.push(['Total de Registros', socios.length]);
+      statsData.push(['Exportado por', 'Sistema Fidelya']);
+
+      const statsSheet = XLSX.utils.aoa_to_sheet(statsData);
+      
+      // Configurar anchos para la hoja de estadísticas
+      statsSheet['!cols'] = [{ wch: 25 }, { wch: 15 }];
+
+      // Agregar la hoja de estadísticas
+      XLSX.utils.book_append_sheet(workbook, statsSheet, 'Resumen');
+
+      // Crear hoja de plantilla para importación
+      const templateData = [
+        ['PLANTILLA PARA IMPORTACIÓN DE SOCIOS', '', '', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', '', '', ''],
+        ['Instrucciones:', '', '', '', '', '', '', '', ''],
+        ['1. Complete los datos en las filas siguientes', '', '', '', '', '', '', '', ''],
+        ['2. No modifique los encabezados de las columnas', '', '', '', '', '', '', '', ''],
+        ['3. Los campos marcados con * son obligatorios', '', '', '', '', '', '', '', ''],
+        ['4. Estados válidos: activo, inactivo, suspendido, pendiente', '', '', '', '', '', '', '', ''],
+        ['5. Estados de membresía válidos: al_dia, vencido, pendiente', '', '', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', '', '', ''],
+        [
+          'Nombre Completo *',
+          'Correo Electrónico *',
+          'DNI/Documento',
+          'Teléfono',
+          'Número de Socio',
+          'Estado',
+          'Estado de Membresía',
+          'Monto de Cuota',
+          'Dirección'
+        ],
+        [
+          'Juan Pérez',
+          'juan.perez@email.com',
+          '12345678',
+          '+54 9 11 1234-5678',
+          'SOC001',
+          'activo',
+          'al_dia',
+          '1500',
+          'Av. Corrientes 1234, CABA'
+        ]
+      ];
+
+      const templateSheet = XLSX.utils.aoa_to_sheet(templateData);
+      templateSheet['!cols'] = [
+        { wch: 25 }, { wch: 30 }, { wch: 15 }, { wch: 18 },
+        { wch: 15 }, { wch: 12 }, { wch: 18 }, { wch: 12 }, { wch: 30 }
+      ];
+
+      XLSX.utils.book_append_sheet(workbook, templateSheet, 'Plantilla');
+
+      // Generar el archivo Excel
+      const timestamp = format(new Date(), 'yyyy-MM-dd_HH-mm-ss');
+      const filename = `Socios_Export_${timestamp}.xlsx`;
+      
+      // Escribir el archivo
+      XLSX.writeFile(workbook, filename);
+      
+      toast.dismiss(loadingToast);
+      toast.success(`Archivo Excel exportado exitosamente (${socios.length} socios)`);
+    } catch (error) {
+      console.error('Error en exportación Excel:', error);
+      toast.dismiss(loadingToast);
+      toast.error('Error al exportar el archivo Excel. Inténtalo de nuevo.');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  // Función optimizada para exportar datos a CSV (mantener como opción alternativa)
+  const handleExportCSV = async () => {
+    if (exporting) return;
+    
+    setExporting(true);
+    const loadingToast = toast.loading('Preparando exportación CSV...');
     
     try {
       if (socios.length === 0) {
@@ -228,6 +420,7 @@ export const EnhancedMemberManagement = () => {
         'Estado',
         'Estado de Membresía',
         'Monto de Cuota',
+        'Beneficios Utilizados',
         'Dirección',
         'Fecha de Nacimiento'
       ];
@@ -236,7 +429,6 @@ export const EnhancedMemberManagement = () => {
       const escapeCSV = (value: unknown): string => {
         if (value === null || value === undefined) return '';
         const str = String(value);
-        // Si contiene comas, comillas o saltos de línea, envolver en comillas
         if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
           return `"${str.replace(/"/g, '""')}"`;
         }
@@ -279,7 +471,7 @@ export const EnhancedMemberManagement = () => {
           console.error('Error procesando socio:', socio.id, error);
           return '';
         }
-      }).filter(row => row !== ''); // Filtrar filas vacías por errores
+      }).filter(row => row !== '');
 
       // Crear contenido CSV con BOM para mejor compatibilidad con Excel
       const BOM = '\uFEFF';
@@ -317,73 +509,73 @@ export const EnhancedMemberManagement = () => {
     }
   };
 
-  // Función optimizada para importar datos
-  const handleImport = async (file: File) => {
+  // Función optimizada para importar datos desde Excel
+  const handleImportExcel = async (file: File) => {
     if (importing) return;
     
     setImporting(true);
-    const loadingToast = toast.loading('Procesando archivo...');
+    const loadingToast = toast.loading('Procesando archivo Excel...');
     
     try {
       // Validar tipo de archivo
-      if (!file.name.toLowerCase().endsWith('.csv')) {
+      const validExtensions = ['.xlsx', '.xls'];
+      const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+      
+      if (!validExtensions.includes(fileExtension)) {
         toast.dismiss(loadingToast);
-        toast.error('Por favor selecciona un archivo CSV válido');
+        toast.error('Por favor selecciona un archivo Excel válido (.xlsx o .xls)');
         return;
       }
 
-      // Validar tamaño del archivo (máximo 5MB)
-      if (file.size > 5 * 1024 * 1024) {
+      // Validar tamaño del archivo (máximo 10MB para Excel)
+      if (file.size > 10 * 1024 * 1024) {
         toast.dismiss(loadingToast);
-        toast.error('El archivo es demasiado grande. Máximo 5MB permitido.');
+        toast.error('El archivo es demasiado grande. Máximo 10MB permitido.');
         return;
       }
 
-      const text = await file.text();
+      // Leer el archivo Excel
+      const arrayBuffer = await file.arrayBuffer();
+      const workbook = XLSX.read(arrayBuffer, { type: 'array' });
       
-      // Remover BOM si existe
-      const cleanText = text.replace(/^\uFEFF/, '');
-      const lines = cleanText.split(/\r?\n/).filter(line => line.trim());
+      // Obtener la primera hoja
+      const firstSheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[firstSheetName];
       
-      if (lines.length < 2) {
+      // Convertir a JSON
+      const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as string[][];
+      
+      if (jsonData.length < 2) {
         toast.dismiss(loadingToast);
-        toast.error('El archivo CSV debe tener al menos una fila de encabezados y una fila de datos');
+        toast.error('El archivo Excel debe tener al menos una fila de encabezados y una fila de datos');
         return;
       }
 
       toast.dismiss(loadingToast);
       const processingToast = toast.loading('Procesando datos...');
 
-      // Función para parsear CSV de manera más robusta
-      const parseCSVLine = (line: string): string[] => {
-        const result: string[] = [];
-        let current = '';
-        let inQuotes = false;
-        
-        for (let i = 0; i < line.length; i++) {
-          const char = line[i];
-          
-          if (char === '"') {
-            if (inQuotes && line[i + 1] === '"') {
-              current += '"';
-              i++; // Skip next quote
-            } else {
-              inQuotes = !inQuotes;
-            }
-          } else if (char === ',' && !inQuotes) {
-            result.push(current.trim());
-            current = '';
-          } else {
-            current += char;
-          }
+      // Encontrar la fila de encabezados (buscar la primera fila que contenga "Nombre" o "Email")
+      let headerRowIndex = -1;
+      for (let i = 0; i < Math.min(10, jsonData.length); i++) {
+        const row = jsonData[i];
+        if (row && row.some((cell: string) => 
+          typeof cell === 'string' && 
+          (cell.toLowerCase().includes('nombre') || cell.toLowerCase().includes('email'))
+        )) {
+          headerRowIndex = i;
+          break;
         }
-        
-        result.push(current.trim());
-        return result;
-      };
+      }
 
-      // Parsear encabezados
-      const headers = parseCSVLine(lines[0]).map(h => h.toLowerCase().trim());
+      if (headerRowIndex === -1) {
+        toast.dismiss(processingToast);
+        toast.error('No se encontraron encabezados válidos en el archivo');
+        return;
+      }
+
+      const headers = jsonData[headerRowIndex].map((h: string) => 
+        typeof h === 'string' ? h.toLowerCase().trim() : ''
+      );
       
       // Mapeo de encabezados posibles
       const headerMap: Record<string, string> = {
@@ -429,11 +621,11 @@ export const EnhancedMemberManagement = () => {
       const sociosData: SocioFormData[] = [];
       const errors: string[] = [];
 
-      for (let i = 1; i < lines.length; i++) {
+      for (let i = headerRowIndex + 1; i < jsonData.length; i++) {
         try {
-          const values = parseCSVLine(lines[i]);
+          const values = jsonData[i];
           
-          if (values.length === 0 || values.every(v => !v.trim())) {
+          if (!values || values.length === 0 || values.every((v: string) => !v)) {
             continue; // Saltar líneas vacías
           }
 
@@ -441,7 +633,7 @@ export const EnhancedMemberManagement = () => {
           
           headers.forEach((header, idx) => {
             const mappedField = headerMap[header] || header;
-            const value = values[idx]?.trim() || '';
+            const value = values[idx] ? String(values[idx]).trim() : '';
             
             if (!value) return;
 
@@ -450,7 +642,6 @@ export const EnhancedMemberManagement = () => {
                 socio.nombre = value;
                 break;
               case 'email':
-                // Validar formato de email básico
                 if (value.includes('@') && value.includes('.')) {
                   socio.email = value.toLowerCase();
                 } else {
@@ -472,7 +663,7 @@ export const EnhancedMemberManagement = () => {
                 if (validStates.includes(normalizedState)) {
                   socio.estado = normalizedState as SocioFormData['estado'];
                 } else {
-                  socio.estado = 'activo'; // Default
+                  socio.estado = 'activo';
                 }
                 break;
               case 'estadoMembresia':
@@ -481,7 +672,7 @@ export const EnhancedMemberManagement = () => {
                 if (validMembershipStates.includes(normalizedMembership)) {
                   socio.estadoMembresia = normalizedMembership as SocioFormData['estadoMembresia'];
                 } else {
-                  socio.estadoMembresia = 'al_dia'; // Default
+                  socio.estadoMembresia = 'al_dia';
                 }
                 break;
               case 'montoCuota':
@@ -523,6 +714,8 @@ export const EnhancedMemberManagement = () => {
         }
       }
 
+      toast.dismiss(processingToast);
+
       if (sociosData.length === 0) {
         toast.error('No se encontraron datos válidos para importar');
         return;
@@ -559,9 +752,9 @@ export const EnhancedMemberManagement = () => {
       }
 
     } catch (error) {
-      console.error('Error en importación:', error);
+      console.error('Error en importación Excel:', error);
       toast.dismiss(loadingToast);
-      toast.error('Error al procesar el archivo. Verifica que sea un CSV válido.');
+      toast.error('Error al procesar el archivo Excel. Verifica que sea un archivo válido.');
     } finally {
       setImporting(false);
       // Limpiar el input file
@@ -572,8 +765,320 @@ export const EnhancedMemberManagement = () => {
     }
   };
 
-  // Función para descargar plantilla CSV
-  const downloadTemplate = () => {
+  // Función para manejar la importación (detecta automáticamente el tipo de archivo)
+  const handleImport = async (file: File) => {
+    const fileName = file.name.toLowerCase();
+    
+    if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) {
+      await handleImportExcel(file);
+    } else if (fileName.endsWith('.csv')) {
+      // Mantener la función CSV existente para compatibilidad
+      await handleImportCSV(file);
+    } else {
+      toast.error('Formato de archivo no soportado. Use Excel (.xlsx, .xls) o CSV (.csv)');
+    }
+  };
+
+  // Función CSV original (mantener para compatibilidad)
+  const handleImportCSV = async (file: File) => {
+    if (importing) return;
+    
+    setImporting(true);
+    const loadingToast = toast.loading('Procesando archivo CSV...');
+    
+    try {
+      const text = await file.text();
+      const cleanText = text.replace(/^\uFEFF/, '');
+      const lines = cleanText.split(/\r?\n/).filter(line => line.trim());
+      
+      if (lines.length < 2) {
+        toast.dismiss(loadingToast);
+        toast.error('El archivo CSV debe tener al menos una fila de encabezados y una fila de datos');
+        return;
+      }
+
+      toast.dismiss(loadingToast);
+      const processingToast = toast.loading('Procesando datos...');
+
+      // Función para parsear CSV de manera más robusta
+      const parseCSVLine = (line: string): string[] => {
+        const result: string[] = [];
+        let current = '';
+        let inQuotes = false;
+        
+        for (let i = 0; i < line.length; i++) {
+          const char = line[i];
+          
+          if (char === '"') {
+            if (inQuotes && line[i + 1] === '"') {
+              current += '"';
+              i++;
+            } else {
+              inQuotes = !inQuotes;
+            }
+          } else if (char === ',' && !inQuotes) {
+            result.push(current.trim());
+            current = '';
+          } else {
+            current += char;
+          }
+        }
+        
+        result.push(current.trim());
+        return result;
+      };
+
+      const headers = parseCSVLine(lines[0]).map(h => h.toLowerCase().trim());
+      
+      const headerMap: Record<string, string> = {
+        'nombre': 'nombre',
+        'nombre completo': 'nombre',
+        'email': 'email',
+        'correo': 'email',
+        'correo electrónico': 'email',
+        'correo electronico': 'email',
+        'dni': 'dni',
+        'documento': 'dni',
+        'dni/documento': 'dni',
+        'telefono': 'telefono',
+        'teléfono': 'telefono',
+        'numero de socio': 'numeroSocio',
+        'número de socio': 'numeroSocio',
+        'numero socio': 'numeroSocio',
+        'estado': 'estado',
+        'estado membresia': 'estadoMembresia',
+        'estado de membresía': 'estadoMembresia',
+        'estado de membresia': 'estadoMembresia',
+        'monto cuota': 'montoCuota',
+        'monto de cuota': 'montoCuota',
+        'cuota': 'montoCuota',
+        'direccion': 'direccion',
+        'dirección': 'direccion'
+      };
+
+      const requiredFields = ['nombre', 'email'];
+      const mappedHeaders = headers.map(h => headerMap[h] || h);
+      const missingFields = requiredFields.filter(field => 
+        !mappedHeaders.includes(field)
+      );
+
+      if (missingFields.length > 0) {
+        toast.dismiss(processingToast);
+        toast.error(`Faltan campos obligatorios: ${missingFields.join(', ')}`);
+        return;
+      }
+
+      const sociosData: SocioFormData[] = [];
+      const errors: string[] = [];
+
+      for (let i = 1; i < lines.length; i++) {
+        try {
+          const values = parseCSVLine(lines[i]);
+          
+          if (values.length === 0 || values.every(v => !v.trim())) {
+            continue;
+          }
+
+          const socio: Partial<SocioFormData> = {};
+          
+          headers.forEach((header, idx) => {
+            const mappedField = headerMap[header] || header;
+            const value = values[idx]?.trim() || '';
+            
+            if (!value) return;
+
+            switch (mappedField) {
+              case 'nombre':
+                socio.nombre = value;
+                break;
+              case 'email':
+                if (value.includes('@') && value.includes('.')) {
+                  socio.email = value.toLowerCase();
+                } else {
+                  errors.push(`Línea ${i + 1}: Email inválido "${value}"`);
+                }
+                break;
+              case 'dni':
+                socio.dni = value;
+                break;
+              case 'telefono':
+                socio.telefono = value;
+                break;
+              case 'numeroSocio':
+                socio.numeroSocio = value;
+                break;
+              case 'estado':
+                const validStates = ['activo', 'inactivo', 'suspendido', 'pendiente'];
+                const normalizedState = value.toLowerCase();
+                if (validStates.includes(normalizedState)) {
+                  socio.estado = normalizedState as SocioFormData['estado'];
+                } else {
+                  socio.estado = 'activo';
+                }
+                break;
+              case 'estadoMembresia':
+                const validMembershipStates = ['al_dia', 'vencido', 'pendiente'];
+                const normalizedMembership = value.toLowerCase().replace(/\s+/g, '_');
+                if (validMembershipStates.includes(normalizedMembership)) {
+                  socio.estadoMembresia = normalizedMembership as SocioFormData['estadoMembresia'];
+                } else {
+                  socio.estadoMembresia = 'al_dia';
+                }
+                break;
+              case 'montoCuota':
+                const amount = parseFloat(value.replace(/[^\d.,]/g, '').replace(',', '.'));
+                if (!isNaN(amount) && amount >= 0) {
+                  socio.montoCuota = amount;
+                }
+                break;
+              case 'direccion':
+                socio.direccion = value;
+                break;
+            }
+          });
+
+          if (!socio.nombre || !socio.email) {
+            errors.push(`Línea ${i + 1}: Faltan campos obligatorios (nombre o email)`);
+            continue;
+          }
+
+          const completeSocio: SocioFormData = {
+            nombre: socio.nombre,
+            email: socio.email,
+            dni: socio.dni || '',
+            telefono: socio.telefono || '',
+            numeroSocio: socio.numeroSocio || '',
+            estado: socio.estado || 'activo',
+            estadoMembresia: socio.estadoMembresia || 'al_dia',
+            montoCuota: socio.montoCuota || 0,
+            direccion: socio.direccion || '',
+            fechaNacimiento: undefined,
+            fechaVencimiento: undefined
+          };
+
+          sociosData.push(completeSocio);
+        } catch (error) {
+          errors.push(`Línea ${i + 1}: Error procesando datos - ${error}`);
+        }
+      }
+
+      toast.dismiss(processingToast);
+
+      if (sociosData.length === 0) {
+        toast.error('No se encontraron datos válidos para importar');
+        return;
+      }
+
+      if (errors.length > 0) {
+        const proceed = window.confirm(
+          `Se encontraron ${errors.length} errores en el archivo.\n` +
+          `Se importarán ${sociosData.length} socios válidos.\n` +
+          `¿Deseas continuar?`
+        );
+        
+        if (!proceed) {
+          toast('Importación cancelada');
+          return;
+        }
+      }
+
+      const importingToast = toast.loading(`Importando ${sociosData.length} socios...`);
+
+      try {
+        await importSocios(sociosData);
+        toast.dismiss(importingToast);
+        toast.success(
+          `Importación completada: ${sociosData.length} socios importados` +
+          (errors.length > 0 ? ` (${errors.length} errores omitidos)` : '')
+        );
+        await handleRefresh();
+      } catch (importError) {
+        toast.dismiss(importingToast);
+        toast.error('Error durante la importación. Algunos datos pueden no haberse guardado.');
+        console.error('Import error:', importError);
+      }
+
+    } catch (error) {
+      console.error('Error en importación CSV:', error);
+      toast.dismiss(loadingToast);
+      toast.error('Error al procesar el archivo CSV. Verifica que sea un CSV válido.');
+    } finally {
+      setImporting(false);
+      const fileInput = document.getElementById('import-file') as HTMLInputElement;
+      if (fileInput) {
+        fileInput.value = '';
+      }
+    }
+  };
+
+  // Función para descargar plantilla Excel
+  const downloadExcelTemplate = () => {
+    const workbook = XLSX.utils.book_new();
+
+    // Crear datos de la plantilla
+    const templateData = [
+      ['PLANTILLA PARA IMPORTACIÓN DE SOCIOS', '', '', '', '', '', '', '', ''],
+      ['', '', '', '', '', '', '', '', ''],
+      ['Instrucciones:', '', '', '', '', '', '', '', ''],
+      ['1. Complete los datos en las filas siguientes', '', '', '', '', '', '', '', ''],
+      ['2. No modifique los encabezados de las columnas', '', '', '', '', '', '', '', ''],
+      ['3. Los campos marcados con * son obligatorios', '', '', '', '', '', '', '', ''],
+      ['4. Estados válidos: activo, inactivo, suspendido, pendiente', '', '', '', '', '', '', '', ''],
+      ['5. Estados de membresía válidos: al_dia, vencido, pendiente', '', '', '', '', '', '', '', ''],
+      ['6. Guarde el archivo como Excel (.xlsx) antes de importar', '', '', '', '', '', '', '', ''],
+      ['', '', '', '', '', '', '', '', ''],
+      [
+        'Nombre Completo *',
+        'Correo Electrónico *',
+        'DNI/Documento',
+        'Teléfono',
+        'Número de Socio',
+        'Estado',
+        'Estado de Membresía',
+        'Monto de Cuota',
+        'Dirección'
+      ],
+      [
+        'Juan Pérez',
+        'juan.perez@email.com',
+        '12345678',
+        '+54 9 11 1234-5678',
+        'SOC001',
+        'activo',
+        'al_dia',
+        1500,
+        'Av. Corrientes 1234, CABA'
+      ],
+      [
+        'María García',
+        'maria.garcia@email.com',
+        '87654321',
+        '+54 9 11 8765-4321',
+        'SOC002',
+        'activo',
+        'al_dia',
+        2000,
+        'Av. Santa Fe 5678, CABA'
+      ]
+    ];
+
+    const worksheet = XLSX.utils.aoa_to_sheet(templateData);
+    
+    // Configurar anchos de columna
+    worksheet['!cols'] = [
+      { wch: 25 }, { wch: 30 }, { wch: 15 }, { wch: 18 },
+      { wch: 15 }, { wch: 12 }, { wch: 18 }, { wch: 12 }, { wch: 30 }
+    ];
+
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Plantilla');
+
+    // Generar y descargar el archivo
+    XLSX.writeFile(workbook, 'Plantilla_Socios.xlsx');
+    toast.success('Plantilla Excel descargada exitosamente');
+  };
+
+  // Función para descargar plantilla CSV (mantener para compatibilidad)
+  const downloadCSVTemplate = () => {
     const headers = [
       'Nombre Completo',
       'Correo Electrónico',
@@ -614,7 +1119,7 @@ export const EnhancedMemberManagement = () => {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
     
-    toast.success('Plantilla descargada exitosamente');
+    toast.success('Plantilla CSV descargada exitosamente');
   };
 
   // Filtrar socios
@@ -753,38 +1258,78 @@ export const EnhancedMemberManagement = () => {
             </button>
 
             <div className="flex items-center gap-2">
-              {/* Botón de plantilla */}
-              <button
-                onClick={downloadTemplate}
-                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-                title="Descargar plantilla CSV"
-              >
-                <FileText className="w-5 h-5" />
-              </button>
+              {/* Menú desplegable para plantillas */}
+              <div className="relative group">
+                <button
+                  className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                  title="Descargar plantillas"
+                >
+                  <FileText className="w-5 h-5" />
+                </button>
+                <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
+                  <div className="py-1">
+                    <button
+                      onClick={downloadExcelTemplate}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                    >
+                      <FileSpreadsheet className="w-4 h-4 text-green-600" />
+                      Plantilla Excel
+                    </button>
+                    <button
+                      onClick={downloadCSVTemplate}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                    >
+                      <FileText className="w-4 h-4 text-blue-600" />
+                      Plantilla CSV
+                    </button>
+                  </div>
+                </div>
+              </div>
 
-              {/* Botón de exportar */}
-              <button
-                onClick={handleExport}
-                disabled={exporting || socios.length === 0}
-                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                title="Exportar datos"
-              >
-                <Download className={`w-5 h-5 ${exporting ? 'animate-pulse' : ''}`} />
-              </button>
+              {/* Menú desplegable para exportar */}
+              <div className="relative group">
+                <button
+                  disabled={exporting || socios.length === 0}
+                  className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Exportar datos"
+                >
+                  <Download className={`w-5 h-5 ${exporting ? 'animate-pulse' : ''}`} />
+                </button>
+                <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
+                  <div className="py-1">
+                    <button
+                      onClick={handleExportExcel}
+                      disabled={exporting || socios.length === 0}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <FileSpreadsheet className="w-4 h-4 text-green-600" />
+                      Exportar Excel
+                    </button>
+                    <button
+                      onClick={handleExportCSV}
+                      disabled={exporting || socios.length === 0}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <FileText className="w-4 h-4 text-blue-600" />
+                      Exportar CSV
+                    </button>
+                  </div>
+                </div>
+              </div>
 
               {/* Botón de importar */}
               <button
                 onClick={() => document.getElementById('import-file')?.click()}
                 disabled={importing}
                 className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                title="Importar datos"
+                title="Importar datos (Excel o CSV)"
               >
                 <Upload className={`w-5 h-5 ${importing ? 'animate-pulse' : ''}`} />
               </button>
               <input
                 id="import-file"
                 type="file"
-                accept=".csv"
+                accept=".xlsx,.xls,.csv"
                 className="hidden"
                 onChange={(e) => {
                   if (e.target.files?.[0]) {
