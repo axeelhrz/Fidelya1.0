@@ -780,6 +780,8 @@ transition:all 0.2s ease;
 
 .feature__title{position:relative;margin-bottom:var(--space-lg);font-family:var(--font-primary);font-size:clamp(1.8rem, 6vw, 2.5rem);font-weight:800;line-height:1.1;letter-spacing:-0.01em;background:linear-gradient(135deg, var(--text-primary) 0%, var(--starflex-red) 100%);background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 
+.feature__title::after{position:absolute;bottom:-12px;left:50%;width:80px;height:3px;content:'';background:linear-gradient(90deg, transparent 0%, var(--starflex-red) 20%, var(--starflex-crimson-glow) 50%, var(--starflex-red) 80%, transparent 100%);border-radius:2px;transform:translateX(-50%)}
+
 .feature__description{max-width:none;margin-bottom:var(--space-lg);font-size:1rem;font-weight:400;line-height:1.7;color:var(--text-secondary);opacity:0.95}
 
 .feature__list{padding:0;margin:0;list-style:none;text-align:left;max-width:100%;margin:0 auto}
@@ -838,6 +840,7 @@ transition:all 0.2s ease;
 .feature[data-feature="referrals"]::before{background:radial-gradient(ellipse at center, rgba(255, 45, 85, 0.02) 0%, transparent 70%)}
 .feature__content{order:1;text-align:left;padding:clamp(1rem, 3vh, 2rem)}
 .feature__title{font-size:clamp(2.2rem, 5vw, 3.2rem);margin-bottom:var(--space-2xl)}
+.feature__title::after{left:0;transform:none}
 .feature__description{font-size:1.2rem;margin-bottom:var(--space-2xl)}
 .feature__list-item{font-size:1.1rem!important;padding:8px 0!important;margin-bottom:12px!important;opacity:0;transform:translateX(-15px);transition:all 0.4s ease}
 .feature.in-view .feature__list-item{opacity:1;transform:translateX(0)}
@@ -1320,6 +1323,7 @@ img,video{image-rendering:-webkit-optimize-contrast;image-rendering:optimize-con
   color: var(--text-primary);
   background: var(--starflex-crimson);
 }
+
 /* ===== SECCIÓN DE VIDEOS MINIMALISTA Y ESTÉTICA ===== */
 .videos {
 position: relative;
@@ -1648,6 +1652,7 @@ border-color: rgba(255, 255, 255, 0.2);
 background: rgba(0, 0, 0, 0.8);
 }
 }
+
 /* ===== ESTILOS PARA ENLACES LEGALES DEL FOOTER ===== */
 .footer-legal-links {
     display: flex;
@@ -2010,6 +2015,7 @@ background: rgba(0, 0, 0, 0.8);
 .legal-page::-webkit-scrollbar-thumb:hover {
     background: linear-gradient(135deg, #ff3399 0%, #ff6666 100%);
 }
+
 /* ===== BOTÓN CTA DEL DRAWER MÓVIL ===== */
 .nav__drawer-cta {
     padding: var(--space-lg) var(--space-xl);
@@ -2205,4 +2211,6 @@ background: rgba(0, 0, 0, 0.8);
         box-shadow: 0 0 20px var(--neon-red-shadow-bright), 0 0 40px var(--neon-red-glow-bright);
     }
 }
+
+
 
