@@ -466,16 +466,17 @@ const translationData = {
         'terms-section-7-title': '7. Modificaciones',
         'terms-section-7-content': 'Nos reservamos el derecho de modificar estos términos en cualquier momento. Los cambios entrarán en vigor inmediatamente después de su publicación en nuestra aplicación.',
         'terms-section-8-title': '8. Contacto',
-        'terms-section-8-content': 'Para preguntas sobre estos Términos y Condiciones, puede contactarnos en support@starflexapp.com.'
+        'terms-section-8-content': 'Para preguntas sobre estos Términos y Condiciones, puede contactarnos en support@starflexapp.com'
+
     }
 };
 
-// ===== SISTEMA DE ROUTING PARA IDIOMAS Y PÁGINAS LEGALES (BASADO EN HASH) =====
+// ===== SISTEMA DE ROUTING PARA IDIOMAS Y PÁGINAS LEGALES (BASADO EN PATHNAME) =====
 function initializeRouting() {
-    console.log('🔗 Inicializando sistema de routing basado en hash...');
+    console.log('🔗 Inicializando sistema de routing basado en pathname...');
     
-    // Manejar cambios en el hash de la URL
-    window.addEventListener('hashchange', handleRouteChange);
+    // Manejar cambios en el pathname y hash de la URL
+    window.addEventListener('popstate', handleRouteChange);
     
     // Manejar la ruta inicial
     handleRouteChange();
@@ -483,42 +484,39 @@ function initializeRouting() {
     // Configurar enlaces de páginas legales
     setupLegalLinks();
     
-    console.log('✅ Sistema de routing basado en hash inicializado');
+    console.log('✅ Sistema de routing basado en pathname inicializado');
 }
 
 function handleRouteChange() {
+    const pathname = window.location.pathname;
     const hash = window.location.hash;
     
-    console.log(`🔗 Cambio de ruta detectado - Hash: ${hash}`);
+    console.log(`🔗 Cambio de ruta detectado - Pathname: ${pathname}, Hash: ${hash}`);
     
-    // Determinar idioma y página basado en el hash
-    let detectedLanguage = 'en'; // Inglés por defecto
+    // Determinar idioma y página basado en el pathname y hash
+    let detectedLanguage = 'en'; // Inglés por defecto para "/"
     let isLegalPage = false;
     let legalPageType = null;
     
-    // Detectar idioma desde el hash
-    if (hash === '#es' || hash.startsWith('#es/')) {
+    // Detectar idioma desde la URL
+    if (pathname === '/es' || pathname.startsWith('/es/')) {
         detectedLanguage = 'es';
-    } else if (hash === '' || hash === '#' || hash.startsWith('#en') || (!hash.includes('es') && !hash.includes('privacypolicy') && !hash.includes('terms'))) {
+    } else if (pathname === '/' || pathname === '') {
         detectedLanguage = 'en';
     }
     
     // Detectar páginas legales
-    if (hash.includes('/privacypolicy')) {
+    if (hash === '#/privacypolicy') {
         isLegalPage = true;
         legalPageType = 'privacy';
-        // Mantener el idioma actual para páginas legales
-        detectedLanguage = currentLanguage;
-    } else if (hash.includes('/terms')) {
+    } else if (hash === '#/terms') {
         isLegalPage = true;
         legalPageType = 'terms';
-        // Mantener el idioma actual para páginas legales
-        detectedLanguage = currentLanguage;
     }
     
     // Cambiar idioma si es necesario
     if (detectedLanguage !== currentLanguage) {
-        console.log(`🌐 Cambiando idioma de ${currentLanguage} a ${detectedLanguage} basado en hash`);
+        console.log(`🌐 Cambiando idioma de ${currentLanguage} a ${detectedLanguage} basado en URL`);
         currentLanguage = detectedLanguage;
         applyTranslations();
         updateLanguageButtons();
@@ -549,8 +547,6 @@ function hideAllPages() {
     if (privacyPage) privacyPage.style.display = 'none';
     if (termsPage) termsPage.style.display = 'none';
 }
-
-// ... continuing from showMainContent function
 
 function showMainContent() {
     console.log('🏠 Mostrando contenido principal');
@@ -631,8 +627,7 @@ function setupLegalLinks() {
         link.addEventListener('click', (e) => {
             e.preventDefault();
             console.log('🔗 Click en enlace de Política de Privacidad');
-            const languagePrefix = currentLanguage === 'es' ? '#es' : '#';
-            window.location.hash = `${languagePrefix}/privacypolicy`;
+            window.location.hash = '#/privacypolicy';
         });
         
         // Efectos táctiles para móvil
@@ -651,8 +646,7 @@ function setupLegalLinks() {
         link.addEventListener('click', (e) => {
             e.preventDefault();
             console.log('🔗 Click en enlace de Términos y Condiciones');
-            const languagePrefix = currentLanguage === 'es' ? '#es' : '#';
-            window.location.hash = `${languagePrefix}/terms`;
+            window.location.hash = '#/terms';
         });
         
         // Efectos táctiles para móvil
@@ -704,33 +698,38 @@ function setupLegalLinks() {
     console.log(`✅ Enlaces legales configurados: ${privacyLinks.length} enlaces de privacidad, ${termsLinks.length} enlaces de términos`);
 }
 
-// ===== FUNCIONES DE NAVEGACIÓN POR IDIOMAS (BASADAS EN HASH) =====
+// ===== FUNCIONES DE NAVEGACIÓN POR IDIOMAS (BASADAS EN PATHNAME) =====
 function navigateToLanguageRoute(language) {
     console.log(`🌐 Navegando a ruta de idioma: ${language}`);
     
     if (language === 'es') {
-        window.location.hash = '#es';
+        window.history.pushState({}, '', '/es');
     } else {
-        window.location.hash = '#';
+        window.history.pushState({}, '', '/');
+    }
+    
+    // Limpiar hash si existe
+    if (window.location.hash) {
+        window.location.hash = '';
     }
     
     handleRouteChange();
 }
 
 function detectInitialLanguage() {
-    const hash = window.location.hash;
+    const pathname = window.location.pathname;
     const browserLanguage = navigator.language.slice(0, 2);
     
-    console.log(`🔍 Detectando idioma inicial - Hash: ${hash}, Browser: ${browserLanguage}`);
+    console.log(`🔍 Detectando idioma inicial - Pathname: ${pathname}, Browser: ${browserLanguage}`);
     
-    // Si ya hay un hash específico de idioma, respetarlo
-    if (hash === '#es' || hash.startsWith('#es/')) {
+    // Si ya hay una ruta específica, respetarla
+    if (pathname === '/es' || pathname.startsWith('/es/')) {
         return 'es';
-    } else if (hash === '#' || hash === '' || hash.startsWith('#en') || hash.includes('privacypolicy') || hash.includes('terms')) {
-        // Si está en la raíz o en inglés, verificar si debería redirigir a español
-        if (browserLanguage === 'es' && (hash === '' || hash === '#')) {
-            console.log('🔄 Redirigiendo a #es basado en idioma del navegador');
-            window.location.hash = '#es';
+    } else if (pathname === '/' || pathname === '') {
+        // Si está en la raíz, verificar si debería redirigir a español
+        if (browserLanguage === 'es') {
+            console.log('🔄 Redirigiendo a /es basado en idioma del navegador');
+            window.history.replaceState({}, '', '/es');
             return 'es';
         }
         return 'en';
@@ -742,7 +741,7 @@ function detectInitialLanguage() {
 
 // ===== FUNCIONES DE TRADUCCIÓN ULTRA-OPTIMIZADAS (ACTUALIZADAS) =====
 function initializeLanguageSystem() {
-    // Detectar idioma basado en el hash y navegador
+    // Detectar idioma basado en la URL y navegador
     currentLanguage = detectInitialLanguage();
     
     console.log(`🌐 Sistema de idiomas inicializado con: ${currentLanguage}`);
@@ -826,7 +825,7 @@ function switchLanguage(newLanguage) {
     
     currentLanguage = newLanguage;
     
-    // Navegar a la ruta correcta del idioma usando hash
+    // Navegar a la ruta correcta del idioma
     navigateToLanguageRoute(newLanguage);
     
     applyTranslations();
@@ -836,9 +835,9 @@ function switchLanguage(newLanguage) {
     
     // Actualizar título según la página actual
     const hash = window.location.hash;
-    if (hash.includes('/privacypolicy')) {
+    if (hash === '#/privacypolicy') {
         document.title = `${translationData[currentLanguage]['privacy-policy-title']} - StarFlex`;
-    } else if (hash.includes('/terms')) {
+    } else if (hash === '#/terms') {
         document.title = `${translationData[currentLanguage]['terms-conditions-title']} - StarFlex`;
     } else {
         document.title = translationData[currentLanguage]['page-title'];
@@ -1692,6 +1691,8 @@ function initializeMobileNavigation() {
         }
     }, { passive: true });
     
+// ... continuing from initializeMobileNavigation function
+
     document.addEventListener('click', (e) => {
         if (isMobileMenuOpen && navDrawer && !navDrawer.contains(e.target) && !navToggle.contains(e.target)) {
             console.log('🔄 Click fuera del drawer móvil');
@@ -1710,8 +1711,6 @@ function toggleMobileMenu() {
         openMobileMenu();
     }
 }
-
-// ... continuing from openMobileMenu function
 
 function openMobileMenu() {
     console.log('📱 Abriendo drawer móvil...');
@@ -2676,7 +2675,7 @@ function initializeAccessibility() {
 
 // ===== INICIALIZACIÓN PRINCIPAL ULTRA-OPTIMIZADA =====
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('🚀 Iniciando StarFlex con sistema de rutas basado en hash...');
+    console.log('🚀 Iniciando StarFlex con sistema de rutas basado en pathname...');
     
     detectDeviceCapabilities();
     
@@ -2684,7 +2683,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     initializeLanguageSystem();
     initializeLanguageSwitcher();
-    initializeRouting(); // Sistema de routing basado en hash
+    initializeRouting(); // Sistema de routing basado en pathname
     initializeNavigation();
     initializeScrollEffects();
     initializeVideoPlayer();
@@ -2702,7 +2701,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     initializePerformanceOptimizations();
     
-    console.log(`✅ StarFlex Ultra-Optimizado con rutas basadas en hash - Móvil: ${isMobile}, Modo rendimiento: ${performanceMode}, Idioma actual: ${currentLanguage}, Hash: ${window.location.hash}`);
+    console.log(`✅ StarFlex Ultra-Optimizado con rutas basadas en pathname - Móvil: ${isMobile}, Modo rendimiento: ${performanceMode}, Idioma actual: ${currentLanguage}, Pathname: ${window.location.pathname}`);
 });
 
 // ===== MANEJO DE ERRORES ULTRA-OPTIMIZADO =====

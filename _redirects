@@ -1,0 +1,20 @@
+# Netlify redirects para manejar rutas de idioma
+# Redirigir todas las rutas que no sean archivos al index.html
+
+# Rutas de idioma específicas
+/es/* /index.html 200
+/en/* /index.html 200
+
+# Páginas legales con hash routing
+/privacypolicy /index.html 200
+/terms /index.html 200
+
+# Fallback para cualquier otra ruta
+/* /index.html 200
+
+# Headers de seguridad
+/*
+  X-Frame-Options: DENY
+  X-XSS-Protection: 1; mode=block
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
