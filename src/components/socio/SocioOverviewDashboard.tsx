@@ -17,7 +17,6 @@ import {
   Minus,
   Award,
   Eye,
-  Store,
   User,
   Star,
   Target,
@@ -434,48 +433,23 @@ const ModernSocioStatusCard: React.FC<{
 // Modern Quick Stats Component
 const ModernQuickStats: React.FC<{
   beneficiosUsados: number;
-  comerciosVisitados: number;
   loading: boolean;
-}> = ({ beneficiosUsados, comerciosVisitados, loading }) => {
-  const stats = [
-    {
-      label: 'Beneficios Usados',
-      value: beneficiosUsados,
-      icon: <Gift className="w-6 h-6" />,
-      gradient: 'bg-gradient-to-r from-emerald-500 to-green-500',
-      bgGradient: 'from-emerald-50 to-green-50',
-      borderColor: 'border-emerald-200'
-    },
-    {
-      label: 'Comercios Visitados',
-      value: comerciosVisitados,
-      icon: <Store className="w-6 h-6" />,
-      gradient: 'bg-gradient-to-r from-blue-500 to-cyan-500',
-      bgGradient: 'from-blue-50 to-cyan-50',
-      borderColor: 'border-blue-200'
-    }
-  ];
-
+}> = ({ beneficiosUsados, loading }) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-      {stats.map((stat) => (
-        <div
-          key={stat.label}
-          className={`bg-gradient-to-r ${stat.bgGradient} rounded-3xl shadow-lg border ${stat.borderColor} p-6 transition-all duration-300 hover:shadow-xl hover:-translate-y-1`}
-        >
-          <div className="flex items-center space-x-4">
-            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-lg ${stat.gradient}`}>
-              {stat.icon}
-            </div>
-            <div>
-              <p className="text-sm font-bold text-slate-600 uppercase tracking-wider">{stat.label}</p>
-              <p className="text-3xl font-black text-slate-900">
-                {loading ? '...' : stat.value}
-              </p>
-            </div>
+    <div className="grid grid-cols-1 gap-6 mb-8">
+      <div className="bg-gradient-to-r from-emerald-50 to-green-50 rounded-3xl shadow-lg border border-emerald-200 p-6 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+        <div className="flex items-center space-x-4">
+          <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-lg bg-gradient-to-r from-emerald-500 to-green-500">
+            <Gift className="w-6 h-6" />
+          </div>
+          <div>
+            <p className="text-sm font-bold text-slate-600 uppercase tracking-wider">Beneficios Usados</p>
+            <p className="text-3xl font-black text-slate-900">
+              {loading ? '...' : beneficiosUsados}
+            </p>
           </div>
         </div>
-      ))}
+      </div>
     </div>
   );
 };
@@ -509,7 +483,7 @@ const SocioOverviewDashboard: React.FC<SocioOverviewDashboardProps> = ({
     }
   }), [socio, user, estadisticas]);
 
-  // Enhanced stats without savings
+  // Enhanced stats without comercios visitados
   const enhancedStats = useMemo(() => {
     const creadoEnDate = profileData.creadoEn instanceof Timestamp
       ? profileData.creadoEn.toDate()
@@ -518,13 +492,12 @@ const SocioOverviewDashboard: React.FC<SocioOverviewDashboardProps> = ({
     
     return {
       beneficiosUsados: estadisticas.totalValidaciones || 0,
-      comerciosVisitados: estadisticas.comerciosFavoritos?.length || 0,
       tiempoComoSocio,
       beneficiosEsteMes: estadisticas.validacionesPorMes?.[0]?.validaciones || 0,
     };
   }, [estadisticas, profileData.creadoEn]);
 
-  // Calculate socio health without savings
+  // Calculate socio health
   const socioHealth = useMemo<SocioHealth>(() => {
     const membershipStatus = profileData.estado === 'activo' ? 'active' : 
                            profileData.estado === 'vencido' ? 'expired' : 'pending';
@@ -580,18 +553,15 @@ const SocioOverviewDashboard: React.FC<SocioOverviewDashboardProps> = ({
     return () => unsubscribe();
   }, [user]);
 
-  // Calculate growth metrics without savings
+  // Calculate growth metrics
   const growthMetrics = useMemo(() => {
     const beneficiosUsados = enhancedStats.beneficiosUsados;
-    const comerciosVisitados = enhancedStats.comerciosVisitados;
     
     // Calculate growth rates (mock data for now)
     const benefitsGrowth = beneficiosUsados > 0 ? 15 : 0;
-    const commerceGrowth = comerciosVisitados > 0 ? 8 : 0;
 
     return {
       benefitsGrowth,
-      commerceGrowth,
     };
   }, [enhancedStats]);
 
@@ -608,23 +578,23 @@ const SocioOverviewDashboard: React.FC<SocioOverviewDashboardProps> = ({
       loading: socioLoading
     },
     {
-      title: 'Comercios Visitados',
-      value: enhancedStats.comerciosVisitados.toString(),
-      change: growthMetrics.commerceGrowth,
-      icon: <Store className="w-7 h-7" />,
-      gradient: 'bg-gradient-to-r from-blue-500 to-cyan-500',
-      subtitle: 'Establecimientos únicos',
-      trend: growthMetrics.commerceGrowth > 0 ? 'up' as const : 'neutral' as const,
-      onClick: () => onNavigate?.('beneficios'),
-      loading: socioLoading
-    },
-    {
       title: 'Nivel Actual',
       value: profileData.nivel.nivel,
       change: 0,
       icon: <Trophy className="w-7 h-7" />,
       gradient: 'bg-gradient-to-r from-purple-500 to-pink-500',
       subtitle: `${profileData.nivel.puntos} puntos`,
+      trend: 'neutral' as const,
+      onClick: () => onNavigate?.('perfil'),
+      loading: socioLoading
+    },
+    {
+      title: 'Días como Socio',
+      value: enhancedStats.tiempoComoSocio.toString(),
+      change: 0,
+      icon: <Calendar className="w-7 h-7" />,
+      gradient: 'bg-gradient-to-r from-blue-500 to-cyan-500',
+      subtitle: 'Tiempo de membresía',
       trend: 'neutral' as const,
       onClick: () => onNavigate?.('perfil'),
       loading: socioLoading
@@ -688,10 +658,9 @@ const SocioOverviewDashboard: React.FC<SocioOverviewDashboardProps> = ({
         </div>
       </div>
 
-      {/* Modern Quick Stats */}
+      {/* Modern Quick Stats (Only Benefits Used) */}
       <ModernQuickStats
         beneficiosUsados={enhancedStats.beneficiosUsados}
-        comerciosVisitados={enhancedStats.comerciosVisitados}
         loading={socioLoading}
       />
 

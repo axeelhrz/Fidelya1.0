@@ -9,7 +9,7 @@ import { AsociacionSidebar } from '@/components/layout/AsociacionSidebar';
 import { LogoutModal } from '@/components/ui/LogoutModal';
 import { ComercioManagement } from '@/components/asociacion/ComercioManagement';
 import { useAuth } from '@/hooks/useAuth';
-import { Store, Sparkles, TrendingUp, Zap, Activity, Users } from 'lucide-react';
+import { Store, Sparkles, TrendingUp} from 'lucide-react';
 
 // Enhanced Sidebar with logout functionality
 const AsociacionSidebarWithLogout: React.FC<{

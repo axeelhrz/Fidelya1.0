@@ -16,7 +16,6 @@ import {
   Building2,
   Sparkles,
   TrendingUp,
-  Users,
   Gift
 } from 'lucide-react';
 
