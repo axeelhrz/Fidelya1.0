@@ -37,6 +37,7 @@ import {
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/hooks/useAuth';
 import { useSocioProfile } from '@/hooks/useSocioProfile';
+import { useBeneficios } from '@/hooks/useBeneficios';
 import { format, differenceInDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -438,9 +439,15 @@ const SocioOverviewDashboard: React.FC<SocioOverviewDashboardProps> = ({
   const { user } = useAuth();
   const { 
     socio, 
-    estadisticas, 
     loading: socioLoading
   } = useSocioProfile();
+  
+  // CAMBIO PRINCIPAL: Usar el hook de beneficios para obtener datos consistentes
+  const { 
+    beneficiosUsados, 
+    estadisticasRapidas, 
+    loading: beneficiosLoading 
+  } = useBeneficios();
   
   const [activities, setActivities] = useState<ActivityLog[]>([]);
   const [loading, setLoading] = useState(true);
@@ -453,13 +460,13 @@ const SocioOverviewDashboard: React.FC<SocioOverviewDashboardProps> = ({
     numeroSocio: socio?.numeroSocio || '',
     nivel: {
       nivel: 'Bronze' as const,
-      puntos: Math.floor(estadisticas.totalValidaciones * 10),
+      puntos: Math.floor(estadisticasRapidas.usados * 10),
       puntosParaProximoNivel: 1000,
       proximoNivel: 'Silver',
     }
-  }), [socio, user, estadisticas]);
+  }), [socio, user, estadisticasRapidas.usados]);
 
-  // Enhanced stats
+  // Enhanced stats usando datos de beneficios
   const enhancedStats = useMemo(() => {
     const creadoEnDate = profileData.creadoEn instanceof Timestamp
       ? profileData.creadoEn.toDate()
@@ -467,11 +474,16 @@ const SocioOverviewDashboard: React.FC<SocioOverviewDashboardProps> = ({
     const tiempoComoSocio = creadoEnDate ? differenceInDays(new Date(), creadoEnDate) : 0;
     
     return {
-      beneficiosUsados: estadisticas.totalValidaciones || 0,
+      beneficiosUsados: estadisticasRapidas.usados || 0,
       tiempoComoSocio,
-      beneficiosEsteMes: estadisticas.validacionesPorMes?.[0]?.validaciones || 0,
+      beneficiosEsteMes: estadisticasRapidas.ahorroEsteMes > 0 ? 
+        beneficiosUsados.filter(uso => {
+          const fechaUso = uso.fechaUso.toDate();
+          const ahora = new Date();
+          return fechaUso.getMonth() === ahora.getMonth() && fechaUso.getFullYear() === ahora.getFullYear();
+        }).length : 0,
     };
-  }, [estadisticas, profileData.creadoEn]);
+  }, [estadisticasRapidas, profileData.creadoEn, beneficiosUsados]);
 
   // Calculate socio health
   const socioHealth = useMemo<SocioHealth>(() => {
@@ -497,15 +509,15 @@ const SocioOverviewDashboard: React.FC<SocioOverviewDashboardProps> = ({
     };
   }, [profileData, enhancedStats]);
 
-  // Fetch real-time activities from Firebase
+  // Fetch real-time activities from Firebase - ACTUALIZADO para usar beneficio_usos
   useEffect(() => {
     if (!user) return;
 
-    const activitiesRef = collection(db, 'validaciones');
+    const activitiesRef = collection(db, 'beneficio_usos');
     const activitiesQuery = query(
       activitiesRef,
       where('socioId', '==', user.uid),
-      orderBy('fechaValidacion', 'desc'),
+      orderBy('fechaUso', 'desc'),
       limit(10)
     );
 
@@ -517,7 +529,7 @@ const SocioOverviewDashboard: React.FC<SocioOverviewDashboardProps> = ({
           type: 'benefit_used' as const,
           title: 'Beneficio utilizado',
           description: `${data.beneficioTitulo} en ${data.comercioNombre}`,
-          timestamp: data.fechaValidacion || Timestamp.now(),
+          timestamp: data.fechaUso || Timestamp.now(),
           metadata: data
         };
       }) as ActivityLog[];
@@ -551,7 +563,7 @@ const SocioOverviewDashboard: React.FC<SocioOverviewDashboardProps> = ({
       subtitle: 'Total acumulado',
       trend: growthMetrics.benefitsGrowth > 0 ? 'up' as const : 'neutral' as const,
       onClick: () => onNavigate?.('historial'),
-      loading: socioLoading
+      loading: beneficiosLoading
     },
     {
       title: 'Nivel Actual',
@@ -575,7 +587,7 @@ const SocioOverviewDashboard: React.FC<SocioOverviewDashboardProps> = ({
       onClick: () => onNavigate?.('perfil'),
       loading: socioLoading
     }
-  ], [enhancedStats, growthMetrics, profileData.nivel, socioLoading, onNavigate]);
+  ], [enhancedStats, growthMetrics, profileData.nivel, socioLoading, beneficiosLoading, onNavigate]);
 
   const quickActions = [
     {

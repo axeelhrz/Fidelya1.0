@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, Suspense } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import { 
@@ -25,7 +25,18 @@ import {
   Sparkles,
   ArrowRight,
   Shield,
-  UserCheck
+  UserCheck,
+  Camera,
+  Smartphone,
+  Award,
+  Flame,
+  ChevronRight,
+  Eye,
+  BarChart3,
+  Wallet,
+  MapPin,
+  Timer,
+  Coins
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { SocioSidebar } from '@/components/layout/SocioSidebar';
@@ -37,7 +48,6 @@ import { validacionesService as ValidacionesService } from '@/services/validacio
 import { ValidacionResponse } from '@/types/validacion';
 import { BeneficiosService } from '@/services/beneficios.service';
 import { Beneficio } from '@/types/beneficio';
-// Import Timestamp if using Firebase
 import { Timestamp } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 
@@ -78,6 +88,7 @@ interface StatsCardProps {
   change?: number;
   subtitle?: string;
   onClick?: () => void;
+  trend?: 'up' | 'down' | 'neutral';
 }
 
 // Animation variants
@@ -86,17 +97,36 @@ const containerVariants = {
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.1
+      staggerChildren: 0.1,
+      delayChildren: 0.2
     }
   }
 };
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0 }
+  hidden: { opacity: 0, y: 30, scale: 0.95 },
+  visible: { 
+    opacity: 1, 
+    y: 0, 
+    scale: 1,
+    transition: {
+      type: "spring",
+      stiffness: 100,
+      damping: 15
+    }
+  }
 };
 
-// Stats Card Component
+const cardHoverVariants = {
+  hover: { 
+    y: -8, 
+    scale: 1.02,
+    transition: { type: "spring", stiffness: 300, damping: 20 }
+  },
+  tap: { scale: 0.98 }
+};
+
+// Enhanced Stats Card Component
 const StatsCard: React.FC<StatsCardProps> = ({ 
   title, 
   value, 
@@ -104,49 +134,215 @@ const StatsCard: React.FC<StatsCardProps> = ({
   gradient, 
   change, 
   subtitle, 
-  onClick 
+  onClick,
+  trend = 'neutral'
 }) => (
   <motion.div
     className={cn(
-      "bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-white/40 shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden group",
-      onClick && "cursor-pointer hover:-translate-y-1"
+      "group relative overflow-hidden rounded-3xl p-6 border border-white/20 shadow-xl backdrop-blur-xl",
+      "bg-gradient-to-br from-white/90 via-white/80 to-white/70",
+      "hover:shadow-2xl transition-all duration-500",
+      onClick && "cursor-pointer"
     )}
-    whileHover={{ y: onClick ? -4 : 0 }}
-    onClick={onClick}
     variants={itemVariants}
+    whileHover="hover"
+    whileTap="tap"
+    onClick={onClick}
   >
-    {/* Background gradient */}
-    <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-5 group-hover:opacity-10 transition-opacity duration-300`}></div>
+    {/* Animated background gradient */}
+    <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-5 group-hover:opacity-10 transition-opacity duration-500`} />
+    
+    {/* Floating particles effect */}
+    <div className="absolute inset-0 overflow-hidden">
+      <div className="absolute top-2 right-2 w-2 h-2 bg-white/30 rounded-full animate-pulse" />
+      <div className="absolute bottom-4 left-4 w-1 h-1 bg-white/40 rounded-full animate-bounce" style={{ animationDelay: '1s' }} />
+      <div className="absolute top-1/2 right-1/4 w-1.5 h-1.5 bg-white/20 rounded-full animate-ping" style={{ animationDelay: '2s' }} />
+    </div>
     
     {/* Shine effect */}
-    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 transform -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%]"></div>
+    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 transform -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%]" />
     
     <div className="relative z-10">
-      <div className="flex items-center justify-between mb-4">
-        <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center text-white shadow-lg`}>
+      <div className="flex items-start justify-between mb-4">
+        <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${gradient} flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform duration-300`}>
           {icon}
         </div>
         {change !== undefined && (
-          <div className={cn(
-            "flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-bold",
-            change >= 0 ? "text-emerald-600 bg-emerald-50" : "text-red-600 bg-red-50"
-          )}>
-            <TrendingUp size={12} className={change >= 0 ? "text-emerald-600" : "text-red-600 rotate-180"} />
+          <motion.div 
+            className={cn(
+              "flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm",
+              trend === 'up' ? "text-emerald-700 bg-emerald-50 border border-emerald-200" : 
+              trend === 'down' ? "text-red-700 bg-red-50 border border-red-200" :
+              "text-gray-700 bg-gray-50 border border-gray-200"
+            )}
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.3 }}
+          >
+            <TrendingUp size={12} className={cn(
+              trend === 'up' ? "text-emerald-600" : 
+              trend === 'down' ? "text-red-600 rotate-180" : 
+              "text-gray-600"
+            )} />
             {Math.abs(change)}%
-          </div>
+          </motion.div>
         )}
       </div>
       
-      <div className="space-y-1">
-        <div className="text-2xl font-black text-gray-900">{value}</div>
-        <div className="text-sm font-semibold text-gray-600">{title}</div>
+      <div className="space-y-2">
+        <motion.div 
+          className="text-3xl font-black text-gray-900 group-hover:text-gray-800 transition-colors"
+          initial={{ scale: 0.8 }}
+          animate={{ scale: 1 }}
+          transition={{ delay: 0.2 }}
+        >
+          {value}
+        </motion.div>
+        <div className="text-sm font-bold text-gray-700 group-hover:text-gray-800 transition-colors">
+          {title}
+        </div>
         {subtitle && (
-          <div className="text-xs text-gray-500">{subtitle}</div>
+          <div className="text-xs text-gray-500 font-medium">{subtitle}</div>
         )}
       </div>
+      
+      {onClick && (
+        <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <ChevronRight size={16} className="text-gray-400" />
+        </div>
+      )}
     </div>
   </motion.div>
 );
+
+// Quick Action Card Component
+const QuickActionCard: React.FC<{
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  onClick: () => void;
+  gradient: string;
+}> = ({ title, description, icon, onClick, gradient }) => (
+  <motion.button
+    onClick={onClick}
+    className={cn(
+      "group relative overflow-hidden rounded-2xl p-6 text-left w-full",
+      "bg-gradient-to-br from-white/90 to-white/70 backdrop-blur-xl",
+      "border border-white/30 shadow-lg hover:shadow-xl",
+      "transition-all duration-300"
+    )}
+    variants={itemVariants}
+    whileHover={{ y: -4, scale: 1.02 }}
+    whileTap={{ scale: 0.98 }}
+  >
+    <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-5 group-hover:opacity-10 transition-opacity duration-300`} />
+    
+    <div className="relative z-10 flex items-start gap-4">
+      <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+        {icon}
+      </div>
+      <div className="flex-1">
+        <h3 className="font-bold text-gray-900 mb-1 group-hover:text-gray-800 transition-colors">
+          {title}
+        </h3>
+        <p className="text-sm text-gray-600 group-hover:text-gray-700 transition-colors">
+          {description}
+        </p>
+      </div>
+      <ArrowRight size={16} className="text-gray-400 group-hover:text-gray-600 group-hover:translate-x-1 transition-all duration-300" />
+    </div>
+  </motion.button>
+);
+
+// Recent Validation Item Component
+const RecentValidationItem: React.FC<{
+  validation: ValidacionResponse;
+  index: number;
+}> = ({ validation, index }) => {
+  const getResultIcon = (resultado: string) => {
+    switch (resultado) {
+      case 'habilitado':
+        return <CheckCircle className="text-emerald-500" size={16} />;
+      case 'no_habilitado':
+        return <AlertCircle className="text-red-500" size={16} />;
+      case 'vencido':
+        return <Clock className="text-amber-500" size={16} />;
+      default:
+        return <Info className="text-gray-500" size={16} />;
+    }
+  };
+
+  const getResultColor = (resultado: string) => {
+    switch (resultado) {
+      case 'habilitado':
+        return 'from-emerald-50 to-green-50 border-emerald-200 text-emerald-900';
+      case 'no_habilitado':
+        return 'from-red-50 to-rose-50 border-red-200 text-red-900';
+      case 'vencido':
+        return 'from-amber-50 to-yellow-50 border-amber-200 text-amber-900';
+      default:
+        return 'from-gray-50 to-slate-50 border-gray-200 text-gray-900';
+    }
+  };
+
+  const formatDate = (date: Date) => {
+    return new Intl.DateTimeFormat('es-AR', {
+      day: '2-digit',
+      month: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(date);
+  };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('es-AR', {
+      style: 'currency',
+      currency: 'ARS'
+    }).format(amount);
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay: 0.1 * index }}
+      className={cn(
+        "p-4 rounded-2xl border bg-gradient-to-r transition-all duration-300 hover:shadow-md group",
+        getResultColor(validation.resultado)
+      )}
+    >
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-3">
+          {getResultIcon(validation.resultado)}
+          <span className="font-bold text-sm truncate max-w-[120px]">
+            {validation.comercioNombre || 'Comercio'}
+          </span>
+        </div>
+        <span className="text-xs opacity-75 font-medium">
+          {validation.fechaHora && typeof (validation.fechaHora as Timestamp | { toDate?: () => Date }) !== 'string' && typeof (validation.fechaHora as Timestamp | { toDate?: () => Date }).toDate === 'function'
+            ? formatDate((validation.fechaHora as Timestamp).toDate())
+            : formatDate(new Date(validation.fechaHora as Date))
+          }
+        </span>
+      </div>
+      
+      {validation.beneficioTitulo && (
+        <p className="text-xs opacity-80 mb-2 font-medium truncate">
+          {validation.beneficioTitulo}
+        </p>
+      )}
+      
+      {validation.montoDescuento && validation.resultado === 'habilitado' && (
+        <div className="flex items-center gap-2">
+          <Coins size={12} className="text-emerald-600" />
+          <p className="text-xs font-bold text-emerald-700">
+            Ahorro: {formatCurrency(validation.montoDescuento)}
+          </p>
+        </div>
+      )}
+    </motion.div>
+  );
+};
 
 const SocioValidarContent: React.FC = () => {
   const router = useRouter();
@@ -157,7 +353,7 @@ const SocioValidarContent: React.FC = () => {
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
 
-  // Estados para validación - Fixed typing
+  // Estados para validación
   const [validationResult, setValidationResult] = useState<ValidacionResponse | null>(null);
   const [validationModalOpen, setValidationModalOpen] = useState(false);
   const [scannerLoading, setScannerLoading] = useState(false);
@@ -176,7 +372,7 @@ const SocioValidarContent: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Cargar datos iniciales con manejo de errores mejorado - FIXED method name
+  // Cargar datos iniciales con manejo de errores mejorado
   const loadInitialData = useCallback(async () => {
     if (!user) {
       console.log('❌ Usuario no disponible');
@@ -185,7 +381,7 @@ const SocioValidarContent: React.FC = () => {
     }
     
     try {
-      console.log('🔄 Cargando datos iniciales para:', user.uid, 'asociación:', user.asociacionId || 'independiente');
+      console.log('🔄 Cargando datos iniciales');
       setLoading(true);
       setError(null);
       
@@ -195,19 +391,17 @@ const SocioValidarContent: React.FC = () => {
       );
 
       const dataPromises = [
-        // FIXED: Usar el nombre correcto del método
         BeneficiosService.obtenerBeneficiosDisponibles(user.uid, user.asociacionId)
           .catch(error => {
             console.warn('⚠️ Error cargando beneficios, usando datos por defecto:', error);
-            return []; // Retornar array vacío en caso de error
+            return [];
           }),
         
-        // Cargar historial de validaciones con manejo de errores específico
         ValidacionesService.getHistorialValidaciones(user.uid)
           .then(result => result.validaciones)
           .catch(error => {
             console.warn('⚠️ Error cargando historial, usando datos por defecto:', error);
-            return []; // Retornar array vacío en caso de error
+            return [];
           })
       ];
 
@@ -221,13 +415,12 @@ const SocioValidarContent: React.FC = () => {
         historial: historial.length 
       });
 
-      // Cast historial to ExtendedValidacionResponse for type safety
       const typedHistorial = historial.map(v => ({
         ...v,
         resultado: v.resultado as 'habilitado' | 'no_habilitado' | 'vencido' | 'suspendido'
       }));
 
-      setRecentValidations(typedHistorial.slice(0, 5)); // Mostrar solo las 5 más recientes
+      setRecentValidations(typedHistorial.slice(0, 5));
 
       // Calcular estadísticas de forma segura
       const today = new Date();
@@ -253,7 +446,6 @@ const SocioValidarContent: React.FC = () => {
 
       const validacionesExitosas = typedHistorial.filter(v => v.resultado === 'habilitado').length;
       
-      // Calcular ahorro total de forma segura
       const ahorroTotal = typedHistorial
         .filter(v => v.resultado === 'habilitado')
         .reduce((total, v) => total + (v.montoDescuento || 0), 0);
@@ -267,10 +459,7 @@ const SocioValidarContent: React.FC = () => {
             : new Date(typedHistorial[0].fechaHora as string | Date))
         : null;
 
-      // Calcular racha actual (días consecutivos con validaciones)
       const rachaActual = calculateCurrentStreak(typedHistorial);
-      
-      // Calcular promedio de ahorro
       const promedioAhorro = validacionesExitosas > 0 ? ahorroTotal / validacionesExitosas : 0;
 
       setStats({
@@ -289,7 +478,6 @@ const SocioValidarContent: React.FC = () => {
       setError(errorMessage);
       toast.error(errorMessage);
       
-      // Establecer datos por defecto en caso de error
       setStats({
         validacionesHoy: 0,
         validacionesExitosas: 0,
@@ -313,7 +501,7 @@ const SocioValidarContent: React.FC = () => {
     let streak = 0;
     const currentDate = new Date(today);
     
-    for (let i = 0; i < 30; i++) { // Revisar últimos 30 días
+    for (let i = 0; i < 30; i++) {
       const hasValidationOnDate = validations.some(v => {
         try {
           const validationDateRaw = v.fechaHora;
@@ -334,7 +522,7 @@ const SocioValidarContent: React.FC = () => {
       if (hasValidationOnDate) {
         streak++;
       } else if (streak > 0) {
-        break; // Romper la racha si no hay validación en un día
+        break;
       }
       
       currentDate.setDate(currentDate.getDate() - 1);
@@ -355,7 +543,6 @@ const SocioValidarContent: React.FC = () => {
       try {
         console.log('🔍 Procesando QR escaneado:', qrData);
         
-        // Parse QR data
         const parsedData = ValidacionesService.parseQRData(qrData);
         if (!parsedData) {
           throw new Error('Código QR inválido o formato no reconocido');
@@ -363,17 +550,15 @@ const SocioValidarContent: React.FC = () => {
 
         console.log('✅ QR parseado correctamente:', parsedData);
 
-        // Validate access - UPDATED to support socios without association
         const result = await ValidacionesService.validarAcceso({
           socioId: user.uid,
           comercioId: parsedData.comercioId,
           beneficioId: parsedData.beneficioId,
-          asociacionId: user.asociacionId // Can be undefined for independent socios
+          asociacionId: user.asociacionId
         });
 
         console.log('🎯 Resultado de validación:', result);
 
-        // Cast result to ExtendedValidacionResponse for type safety
         const typedResult: ValidacionResponse = {
           ...result,
           resultado: ((result as unknown) as ValidacionResponse).resultado as 'habilitado' | 'no_habilitado' | 'vencido' | 'suspendido',
@@ -386,7 +571,6 @@ const SocioValidarContent: React.FC = () => {
         
         if (typedResult.resultado === 'habilitado') {
           toast.success('¡Validación exitosa! Beneficio activado');
-          // Recargar datos después de una validación exitosa
           loadInitialData();
         } else {
           toast.error(`Validación fallida: ${typedResult.motivo || 'Error desconocido'}`);
@@ -416,12 +600,11 @@ const SocioValidarContent: React.FC = () => {
     }
   }, [searchParams, user, handleQRScan]);
 
-  // Cargar datos iniciales - UPDATED to support socios without association
+  // Cargar datos iniciales
   useEffect(() => {
     if (user && user.role === 'socio') {
       loadInitialData();
     } else if (user && user.role !== 'socio') {
-      // Redirigir si no es socio
       console.log('❌ Usuario no es socio, redirigiendo...');
       router.push('/dashboard');
     }
@@ -454,7 +637,6 @@ const SocioValidarContent: React.FC = () => {
     setValidationModalOpen(false);
     setValidationResult(null);
     
-    // Clear QR parameter from URL if present
     if (searchParams.get('qr')) {
       const newUrl = new URL(window.location.href);
       newUrl.searchParams.delete('qr');
@@ -484,32 +666,6 @@ const SocioValidarContent: React.FC = () => {
     }).format(date);
   };
 
-  const getResultIcon = (resultado: string) => {
-    switch (resultado) {
-      case 'habilitado':
-        return <CheckCircle className="text-green-500" size={16} />;
-      case 'no_habilitado':
-        return <AlertCircle className="text-red-500" size={16} />;
-      case 'vencido':
-        return <Clock className="text-yellow-500" size={16} />;
-      default:
-        return <Info className="text-gray-500" size={16} />;
-    }
-  };
-
-  const getResultColor = (resultado: string) => {
-    switch (resultado) {
-      case 'habilitado':
-        return 'text-green-600 bg-green-50 border-green-200';
-      case 'no_habilitado':
-        return 'text-red-600 bg-red-50 border-red-200';
-      case 'vencido':
-        return 'text-yellow-600 bg-yellow-50 border-yellow-200';
-      default:
-        return 'text-gray-600 bg-gray-50 border-gray-200';
-    }
-  };
-
   // Mostrar error si hay problemas
   if (error && !loading) {
     return (
@@ -522,26 +678,28 @@ const SocioValidarContent: React.FC = () => {
           />
         )}
       >
-        <div className="p-4 md:p-8 max-w-7xl mx-auto min-h-screen relative">
-          {/* Background Elements */}
-          <div className="absolute inset-0 bg-gradient-to-br from-red-50/50 via-white to-orange-50/30 -z-10"></div>
+        <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-rose-50 relative overflow-hidden">
+          {/* Background decorations */}
+          <div className="absolute inset-0 bg-grid-pattern opacity-30" />
+          <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-red-100/30 to-transparent rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-rose-100/30 to-transparent rounded-full blur-3xl" />
           
-          <div className="flex items-center justify-center min-h-[400px]">
+          <div className="relative z-10 flex items-center justify-center min-h-screen p-4">
             <motion.div 
               className="text-center max-w-md"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
             >
-              <div className="w-20 h-20 bg-gradient-to-r from-red-500 to-orange-600 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg">
-                <AlertCircle size={32} className="text-white" />
+              <div className="w-24 h-24 bg-gradient-to-r from-red-500 to-rose-600 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-2xl">
+                <AlertCircle size={40} className="text-white" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">Error al cargar datos</h3>
-              <p className="text-gray-600 mb-6">{error}</p>
+              <h3 className="text-3xl font-black text-gray-900 mb-4">Error al cargar datos</h3>
+              <p className="text-gray-600 mb-8 text-lg">{error}</p>
               <button
                 onClick={handleRetry}
-                className="bg-gradient-to-r from-red-500 to-orange-600 hover:from-red-600 hover:to-orange-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl"
+                className="bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white px-8 py-4 rounded-2xl font-bold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
               >
-                <RefreshCw size={16} className="inline mr-2" />
+                <RefreshCw size={20} className="inline mr-3" />
                 Reintentar
               </button>
             </motion.div>
@@ -563,21 +721,30 @@ const SocioValidarContent: React.FC = () => {
           />
         )}
       >
-        <div className="p-4 md:p-8 max-w-7xl mx-auto min-h-screen relative">
-          {/* Background Elements */}
-          <div className="absolute inset-0 bg-gradient-to-br from-sky-50/50 via-white to-violet-50/30 -z-10"></div>
+        <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-violet-50 relative overflow-hidden">
+          {/* Background decorations */}
+          <div className="absolute inset-0 bg-grid-pattern opacity-20" />
+          <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-violet-100/30 to-transparent rounded-full blur-3xl animate-pulse" />
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-sky-100/30 to-transparent rounded-full blur-3xl animate-pulse" />
           
-          <div className="flex items-center justify-center min-h-[400px]">
+          <div className="relative z-10 flex items-center justify-center min-h-screen p-4">
             <motion.div 
               className="text-center"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
             >
-              <div className="w-20 h-20 bg-gradient-to-r from-sky-500 to-violet-600 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg">
-                <RefreshCw size={32} className="text-white animate-spin" />
+              <div className="w-24 h-24 bg-gradient-to-r from-sky-500 to-violet-600 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-2xl">
+                <RefreshCw size={40} className="text-white animate-spin" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">Cargando datos...</h3>
-              <p className="text-gray-500">Preparando tu experiencia de validación</p>
+              <h3 className="text-3xl font-black text-gray-900 mb-4">Cargando datos...</h3>
+              <p className="text-gray-600 text-lg">Preparando tu experiencia de validación</p>
+              
+              {/* Loading skeleton */}
+              <div className="mt-8 space-y-3">
+                <div className="h-4 bg-gray-200 rounded-full animate-pulse mx-auto w-3/4" />
+                <div className="h-4 bg-gray-200 rounded-full animate-pulse mx-auto w-1/2" />
+                <div className="h-4 bg-gray-200 rounded-full animate-pulse mx-auto w-2/3" />
+              </div>
             </motion.div>
           </div>
         </div>
@@ -596,348 +763,379 @@ const SocioValidarContent: React.FC = () => {
           />
         )}
       >
-        <motion.div
-          className="p-4 md:p-8 max-w-7xl mx-auto min-h-screen relative"
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-        >
-          {/* Background Elements */}
-          <div className="absolute inset-0 bg-gradient-to-br from-sky-50/50 via-white to-violet-50/30 -z-10"></div>
-          <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-violet-100/20 to-transparent rounded-full blur-3xl -z-10"></div>
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-sky-100/20 to-transparent rounded-full blur-3xl -z-10"></div>
+        <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-violet-50 relative overflow-hidden">
+          {/* Enhanced background decorations */}
+          <div className="absolute inset-0 bg-grid-pattern opacity-20" />
+          <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-bl from-violet-100/40 to-transparent rounded-full blur-3xl animate-pulse" />
+          <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-sky-100/40 to-transparent rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-r from-purple-50/20 to-blue-50/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
           
-          {/* Floating Elements */}
-          <div className="absolute top-20 right-20 w-3 h-3 bg-violet-400 rounded-full animate-pulse -z-10"></div>
-          <div className="absolute top-40 left-16 w-2 h-2 bg-sky-400 rounded-full animate-ping -z-10"></div>
-          <div className="absolute bottom-32 right-32 w-2.5 h-2.5 bg-purple-400 rounded-full animate-bounce -z-10"></div>
+          {/* Floating elements */}
+          <div className="absolute top-20 right-20 w-4 h-4 bg-violet-400/60 rounded-full animate-bounce" />
+          <div className="absolute top-40 left-16 w-3 h-3 bg-sky-400/60 rounded-full animate-ping" />
+          <div className="absolute bottom-32 right-32 w-5 h-5 bg-purple-400/60 rounded-full animate-pulse" />
+          <div className="absolute top-60 right-60 w-2 h-2 bg-pink-400/60 rounded-full animate-bounce" style={{ animationDelay: '0.5s' }} />
 
-          {/* Header */}
-          <motion.div className="mb-8" variants={itemVariants}>
-            <div className="flex items-center gap-6 mb-8">
-              <div className="w-16 h-16 bg-gradient-to-r from-sky-500 to-violet-600 rounded-3xl flex items-center justify-center shadow-lg">
-                <QrCode size={32} className="text-white" />
-              </div>
-              <div>
-                <h1 className="text-3xl md:text-4xl font-black bg-gradient-to-r from-sky-600 via-violet-600 to-purple-700 bg-clip-text text-transparent mb-2">
-                  Validar Beneficios
-                </h1>
-                <p className="text-lg text-gray-600 font-medium">
-                  Escanea códigos QR para acceder a beneficios {user?.asociacionId ? 'de tu asociación y comercios afiliados' : 'públicos y directos'}
-                </p>
-              </div>
-            </div>
-
-            {/* Status indicator for socio type */}
-            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold ${
-              user?.asociacionId 
-                ? 'bg-blue-50 text-blue-700 border border-blue-200' 
-                : 'bg-green-50 text-green-700 border border-green-200'
-            }`}>
-              {user?.asociacionId ? (
-                <>
-                  <Users size={16} />
-                  Socio con Asociación
-                </>
-              ) : (
-                <>
-                  <UserCheck size={16} />
-                  Socio Independiente
-                </>
-              )}
-            </div>
-          </motion.div>
-
-          {/* Stats Grid */}
-          <motion.div 
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 md:gap-6 mb-8"
+          <motion.div
+            className="relative z-10 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto"
             variants={containerVariants}
+            initial="hidden"
+            animate="visible"
           >
-            <StatsCard
-              title="Validaciones Hoy"
-              value={stats.validacionesHoy}
-              icon={<Activity size={24} />}
-              gradient="from-blue-500 to-indigo-600"
-              subtitle="Hoy"
-            />
-            
-            <StatsCard
-              title="Exitosas"
-              value={stats.validacionesExitosas}
-              icon={<CheckCircle size={24} />}
-              gradient="from-emerald-500 to-teal-600"
-              subtitle="Total"
-            />
-            
-            <StatsCard
-              title="Ahorro Total"
-              value={formatCurrency(stats.ahorroTotal)}
-              icon={<DollarSign size={24} />}
-              gradient="from-green-500 to-emerald-600"
-              subtitle="Acumulado"
-            />
-            
-            <StatsCard
-              title="Racha Actual"
-              value={`${stats.rachaActual} días`}
-              icon={<Zap size={24} />}
-              gradient="from-orange-500 to-red-600"
-              subtitle="Consecutivos"
-            />
-            
-            <StatsCard
-              title="Beneficios"
-              value={stats.beneficiosDisponibles}
-              icon={<Gift size={24} />}
-              gradient="from-purple-500 to-pink-600"
-              subtitle="Disponibles"
-            />
-            
-            <StatsCard
-              title="Promedio Ahorro"
-              value={formatCurrency(stats.promedioAhorro)}
-              icon={<Target size={24} />}
-              gradient="from-indigo-500 to-purple-600"
-              subtitle="Por validación"
-            />
-          </motion.div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
-            {/* Scanner Section */}
-            <motion.div
-              className="lg:col-span-2 space-y-6"
-              variants={itemVariants}
-            >
-              {/* Main Scanner Card */}
-              <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 border border-white/40 shadow-lg">
-                <div className="text-center mb-8">
-                  <div className="w-24 h-24 bg-gradient-to-r from-sky-500 to-violet-600 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl">
-                    <Scan size={40} className="text-white" />
+            {/* Enhanced Header */}
+            <motion.div className="mb-8 lg:mb-12" variants={itemVariants}>
+              <div className="flex flex-col lg:flex-row lg:items-center gap-6 lg:gap-8 mb-8">
+                <div className="flex items-center gap-6">
+                  <div className="w-16 h-16 lg:w-20 lg:h-20 bg-gradient-to-r from-sky-500 to-violet-600 rounded-3xl flex items-center justify-center shadow-2xl">
+                    <QrCode size={32} className="text-white lg:w-10 lg:h-10" />
                   </div>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-3">Escanear Código QR</h2>
-                  <p className="text-gray-600 max-w-md mx-auto">
-                    Apunta tu cámara al código QR del comercio para validar y acceder a tus beneficios {user?.asociacionId ? 'exclusivos' : 'disponibles'}
-                  </p>
-                </div>
-
-                <div className="max-w-sm mx-auto mb-8">
-                  <QRScannerButton
-                    onScan={handleQRScan}
-                    loading={scannerLoading}
-                  />
-                </div>
-
-                {/* Instructions */}
-                <div className="bg-gradient-to-r from-sky-50 to-violet-50 rounded-2xl p-6 border border-sky-200">
-                  <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 bg-gradient-to-r from-sky-500 to-violet-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                      <Info size={20} className="text-white" />
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
-                        <Sparkles size={16} className="text-violet-600" />
-                        ¿Cómo funciona?
-                      </h3>
-                      <ul className="text-sm text-gray-700 space-y-2">
-                        <li className="flex items-center gap-2">
-                          <div className="w-1.5 h-1.5 bg-sky-500 rounded-full"></div>
-                          Solicita al comercio que muestre su código QR
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <div className="w-1.5 h-1.5 bg-violet-500 rounded-full"></div>
-                          Presiona &quot;Escanear Código QR&quot; y permite el acceso a la cámara
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <div className="w-1.5 h-1.5 bg-purple-500 rounded-full"></div>
-                          Apunta la cámara al código QR hasta que se detecte
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <div className="w-1.5 h-1.5 bg-pink-500 rounded-full"></div>
-                          ¡Disfruta tu beneficio validado!
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Quick Actions */}
-              <div className="bg-gradient-to-r from-violet-500 to-purple-600 rounded-2xl p-6 text-white shadow-lg">
-                <div className="flex items-center gap-3 mb-6">
-                  <Zap size={24} />
-                  <h3 className="text-xl font-bold">Acciones Rápidas</h3>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <button
-                    onClick={() => router.push('/dashboard/socio/beneficios')}
-                    className="bg-white/20 hover:bg-white/30 rounded-xl p-4 text-left transition-all duration-200 group"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <Gift size={20} />
-                        <div>
-                          <div className="font-semibold">Ver Beneficios</div>
-                          <div className="text-sm opacity-75">Explora ofertas disponibles</div>
-                        </div>
-                      </div>
-                      <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-                    </div>
-                  </button>
-
-                  <button
-                    onClick={() => router.push('/dashboard/socio/perfil')}
-                    className="bg-white/20 hover:bg-white/30 rounded-xl p-4 text-left transition-all duration-200 group"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <Users size={20} />
-                        <div>
-                          <div className="font-semibold">Mi Perfil</div>
-                          <div className="text-sm opacity-75">Gestiona tu cuenta</div>
-                        </div>
-                      </div>
-                      <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-                    </div>
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Sidebar */}
-            <motion.div 
-              className="space-y-6"
-              variants={itemVariants}
-            >
-              {/* Recent Validations */}
-              <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-white/40 shadow-lg">
-                <div className="flex items-center gap-3 mb-6">
-                  <History size={20} className="text-gray-600" />
-                  <h3 className="font-bold text-gray-900">Validaciones Recientes</h3>
-                </div>
-
-                {recentValidations.length > 0 ? (
-                  <div className="space-y-3">
-                    {recentValidations.map((validation, index) => (
-                      <motion.div
-                        key={validation.id || index}
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.4 + index * 0.1 }}
-                        className={`p-4 rounded-xl border ${getResultColor(validation.resultado)} transition-all duration-200 hover:shadow-md`}
-                      >
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                            {getResultIcon(validation.resultado)}
-                            <span className="font-semibold text-sm">
-                              {validation.comercioNombre || 'Comercio'}
-                            </span>
-                          </div>
-                          <span className="text-xs opacity-75">
-                            {validation.fechaHora && typeof (validation.fechaHora as Timestamp | { toDate?: () => Date }) !== 'string' && typeof (validation.fechaHora as Timestamp | { toDate?: () => Date }).toDate === 'function'
-                              ? formatDate((validation.fechaHora as Timestamp).toDate())
-                              : formatDate(new Date(validation.fechaHora as Date))
-                            }
-                          </span>
-                        </div>
-                        {validation.beneficioTitulo && (
-                          <p className="text-xs opacity-75 mb-1">{validation.beneficioTitulo}</p>
-                        )}
-                        {validation.montoDescuento && validation.resultado === 'habilitado' && (
-                          <p className="text-xs font-semibold">
-                            Ahorro: {formatCurrency(validation.montoDescuento)}
-                          </p>
-                        )}
-                      </motion.div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                      <History size={24} className="text-gray-400" />
-                    </div>
-                    <p className="text-sm text-gray-500 mb-2">No hay validaciones recientes</p>
-                    <p className="text-xs text-gray-400">¡Escanea tu primer QR para comenzar!</p>
-                  </div>
-                )}
-              </div>
-
-              {/* Quick Stats */}
-              <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-white/40 shadow-lg">
-                <div className="flex items-center gap-3 mb-6">
-                  <TrendingUp size={20} className="text-gray-600" />
-                  <h3 className="font-bold text-gray-900">Resumen</h3>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                    <div className="flex items-center gap-3">
-                      <Calendar size={16} className="text-gray-500" />
-                      <span className="text-sm font-medium text-gray-700">Última validación</span>
-                    </div>
-                    <span className="text-sm font-bold text-gray-900">
-                      {stats.ultimaValidacion 
-                        ? formatDate(stats.ultimaValidacion)
-                        : 'Nunca'
-                      }
-                    </span>
-                  </div>
-                  
-                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                    <div className="flex items-center gap-3">
-                      <Target size={16} className="text-gray-500" />
-                      <span className="text-sm font-medium text-gray-700">Tasa de éxito</span>
-                    </div>
-                    <span className="text-sm font-bold text-gray-900">
-                      {recentValidations.length > 0 
-                        ? Math.round((stats.validacionesExitosas / recentValidations.length) * 100)
-                        : 0
-                      }%
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                    <div className="flex items-center gap-3">
-                      <Shield size={16} className="text-gray-500" />
-                      <span className="text-sm font-medium text-gray-700">Beneficios activos</span>
-                    </div>
-                    <span className="text-sm font-bold text-gray-900">
-                      {stats.beneficiosDisponibles}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                    <div className="flex items-center gap-3">
-                      {user?.asociacionId ? <Users size={16} className="text-gray-500" /> : <UserCheck size={16} className="text-gray-500" />}
-                      <span className="text-sm font-medium text-gray-700">Tipo de socio</span>
-                    </div>
-                    <span className="text-sm font-bold text-gray-900">
-                      {user?.asociacionId ? 'Con Asociación' : 'Independiente'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Achievement Badge */}
-              {stats.rachaActual > 0 && (
-                <div className="bg-gradient-to-r from-amber-500 to-orange-600 rounded-2xl p-6 text-white shadow-lg">
-                  <div className="text-center">
-                    <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                      <Star size={24} />
-                    </div>
-                    <h3 className="font-bold text-lg mb-2">¡Racha Activa!</h3>
-                    <p className="text-sm opacity-90 mb-3">
-                      Llevas {stats.rachaActual} días consecutivos validando beneficios
+                  <div>
+                    <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black bg-gradient-to-r from-sky-600 via-violet-600 to-purple-700 bg-clip-text text-transparent mb-2 leading-tight">
+                      Validar Beneficios
+                    </h1>
+                    <p className="text-base sm:text-lg lg:text-xl text-gray-600 font-semibold max-w-2xl">
+                      Escanea códigos QR para acceder a beneficios {user?.asociacionId ? 'de tu asociación y comercios afiliados' : 'públicos y directos'}
                     </p>
-                    <div className="bg-white/20 rounded-xl p-2">
-                      <span className="text-xs font-semibold">¡Sigue así para mantener tu racha!</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Enhanced status indicator */}
+              <motion.div 
+                className={cn(
+                  "inline-flex items-center gap-3 px-6 py-3 rounded-2xl text-sm font-bold shadow-lg backdrop-blur-xl border",
+                  user?.asociacionId 
+                    ? 'bg-gradient-to-r from-blue-50/80 to-indigo-50/80 text-blue-800 border-blue-200/50' 
+                    : 'bg-gradient-to-r from-emerald-50/80 to-green-50/80 text-emerald-800 border-emerald-200/50'
+                )}
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.5 }}
+              >
+                {user?.asociacionId ? (
+                  <>
+                    <Users size={18} />
+                    <span>Socio con Asociación</span>
+                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
+                  </>
+                ) : (
+                  <>
+                    <UserCheck size={18} />
+                    <span>Socio Independiente</span>
+                    <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                  </>
+                )}
+              </motion.div>
+            </motion.div>
+
+            {/* Enhanced Stats Grid */}
+            <motion.div 
+              className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 lg:gap-6 mb-8 lg:mb-12"
+              variants={containerVariants}
+            >
+              <StatsCard
+                title="Hoy"
+                value={stats.validacionesHoy}
+                icon={<Activity size={24} />}
+                gradient="from-blue-500 to-indigo-600"
+                subtitle="Validaciones"
+                trend={stats.validacionesHoy > 0 ? 'up' : 'neutral'}
+              />
+              
+              <StatsCard
+                title="Exitosas"
+                value={stats.validacionesExitosas}
+                icon={<CheckCircle size={24} />}
+                gradient="from-emerald-500 to-teal-600"
+                subtitle="Total"
+                trend="up"
+              />
+              
+              <StatsCard
+                title="Ahorro Total"
+                value={formatCurrency(stats.ahorroTotal)}
+                icon={<Wallet size={24} />}
+                gradient="from-green-500 to-emerald-600"
+                subtitle="Acumulado"
+                trend="up"
+              />
+              
+              <StatsCard
+                title="Racha"
+                value={`${stats.rachaActual}`}
+                icon={<Flame size={24} />}
+                gradient="from-orange-500 to-red-600"
+                subtitle="Días consecutivos"
+                trend={stats.rachaActual > 0 ? 'up' : 'neutral'}
+              />
+              
+              <StatsCard
+                title="Beneficios"
+                value={stats.beneficiosDisponibles}
+                icon={<Gift size={24} />}
+                gradient="from-purple-500 to-pink-600"
+                subtitle="Disponibles"
+                onClick={() => router.push('/dashboard/socio/beneficios')}
+              />
+              
+              <StatsCard
+                title="Promedio"
+                value={formatCurrency(stats.promedioAhorro)}
+                icon={<Target size={24} />}
+                gradient="from-indigo-500 to-purple-600"
+                subtitle="Por validación"
+              />
+            </motion.div>
+
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8">
+              {/* Enhanced Scanner Section */}
+              <motion.div
+                className="xl:col-span-2 space-y-6 lg:space-y-8"
+                variants={itemVariants}
+              >
+                {/* Main Scanner Card */}
+                <div className="bg-gradient-to-br from-white/90 via-white/80 to-white/70 backdrop-blur-xl rounded-3xl p-6 lg:p-8 border border-white/30 shadow-2xl relative overflow-hidden">
+                  {/* Card background effects */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-sky-500/5 to-violet-600/5" />
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-violet-200/20 to-transparent rounded-full blur-2xl" />
+                  
+                  <div className="relative z-10">
+                    <div className="text-center mb-8">
+                      <motion.div 
+                        className="w-24 h-24 lg:w-28 lg:h-28 bg-gradient-to-r from-sky-500 to-violet-600 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl"
+                        whileHover={{ scale: 1.05, rotate: 5 }}
+                        transition={{ type: "spring", stiffness: 300 }}
+                      >
+                        <Scan size={40} className="text-white lg:w-12 lg:h-12" />
+                      </motion.div>
+                      <h2 className="text-2xl lg:text-3xl font-black text-gray-900 mb-4">Escanear Código QR</h2>
+                      <p className="text-gray-600 max-w-md mx-auto text-base lg:text-lg leading-relaxed">
+                        Apunta tu cámara al código QR del comercio para validar y acceder a tus beneficios {user?.asociacionId ? 'exclusivos' : 'disponibles'}
+                      </p>
+                    </div>
+
+                    <div className="max-w-sm mx-auto mb-8">
+                      <QRScannerButton
+                        onScan={handleQRScan}
+                        loading={scannerLoading}
+                      />
+                    </div>
+
+                    {/* Enhanced Instructions */}
+                    <div className="bg-gradient-to-r from-sky-50/80 to-violet-50/80 backdrop-blur-xl rounded-2xl p-6 border border-sky-200/50 relative overflow-hidden">
+                      <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-bl from-violet-200/30 to-transparent rounded-full blur-xl" />
+                      
+                      <div className="relative z-10 flex items-start gap-4">
+                        <div className="w-12 h-12 bg-gradient-to-r from-sky-500 to-violet-600 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg">
+                          <Info size={20} className="text-white" />
+                        </div>
+                        <div>
+                          <h3 className="font-black text-gray-900 mb-4 flex items-center gap-2 text-lg">
+                            <Sparkles size={18} className="text-violet-600" />
+                            ¿Cómo funciona?
+                          </h3>
+                          <ul className="text-sm text-gray-700 space-y-3">
+                            <li className="flex items-center gap-3">
+                              <div className="w-2 h-2 bg-sky-500 rounded-full flex-shrink-0" />
+                              <span className="font-medium">Solicita al comercio que muestre su código QR</span>
+                            </li>
+                            <li className="flex items-center gap-3">
+                              <div className="w-2 h-2 bg-violet-500 rounded-full flex-shrink-0" />
+                              <span className="font-medium">Presiona "Escanear Código QR" y permite el acceso a la cámara</span>
+                            </li>
+                            <li className="flex items-center gap-3">
+                              <div className="w-2 h-2 bg-purple-500 rounded-full flex-shrink-0" />
+                              <span className="font-medium">Apunta la cámara al código QR hasta que se detecte</span>
+                            </li>
+                            <li className="flex items-center gap-3">
+                              <div className="w-2 h-2 bg-pink-500 rounded-full flex-shrink-0" />
+                              <span className="font-medium">¡Disfruta tu beneficio validado!</span>
+                            </li>
+                          </ul>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
-              )}
-            </motion.div>
-          </div>
-        </motion.div>
+
+                {/* Enhanced Quick Actions */}
+                <div className="bg-gradient-to-r from-violet-500 to-purple-600 rounded-3xl p-6 lg:p-8 text-white shadow-2xl relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent" />
+                  <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-bl from-white/20 to-transparent rounded-full blur-2xl" />
+                  
+                  <div className="relative z-10">
+                    <div className="flex items-center gap-4 mb-6 lg:mb-8">
+                      <Zap size={28} className="text-yellow-300" />
+                      <h3 className="text-xl lg:text-2xl font-black">Acciones Rápidas</h3>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
+                      <QuickActionCard
+                        title="Ver Beneficios"
+                        description="Explora todas las ofertas disponibles para ti"
+                        icon={<Gift size={20} />}
+                        onClick={() => router.push('/dashboard/socio/beneficios')}
+                        gradient="from-emerald-500 to-teal-600"
+                      />
+
+                      <QuickActionCard
+                        title="Mi Perfil"
+                        description="Gestiona tu cuenta y configuración"
+                        icon={<Users size={20} />}
+                        onClick={() => router.push('/dashboard/socio/perfil')}
+                        gradient="from-blue-500 to-indigo-600"
+                      />
+
+                      <QuickActionCard
+                        title="Historial"
+                        description="Revisa tus validaciones anteriores"
+                        icon={<History size={20} />}
+                        onClick={() => router.push('/dashboard/socio/historial')}
+                        gradient="from-purple-500 to-pink-600"
+                      />
+
+                      <QuickActionCard
+                        title="Estadísticas"
+                        description="Analiza tu actividad y ahorros"
+                        icon={<BarChart3 size={20} />}
+                        onClick={() => router.push('/dashboard/socio')}
+                        gradient="from-orange-500 to-red-600"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Enhanced Sidebar */}
+              <motion.div 
+                className="space-y-6 lg:space-y-8"
+                variants={itemVariants}
+              >
+                {/* Recent Validations */}
+                <div className="bg-gradient-to-br from-white/90 via-white/80 to-white/70 backdrop-blur-xl rounded-3xl p-6 border border-white/30 shadow-2xl relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-purple-200/20 to-transparent rounded-full blur-xl" />
+                  
+                  <div className="relative z-10">
+                    <div className="flex items-center gap-3 mb-6">
+                      <History size={22} className="text-gray-600" />
+                      <h3 className="font-black text-gray-900 text-lg">Validaciones Recientes</h3>
+                    </div>
+
+                    {recentValidations.length > 0 ? (
+                      <div className="space-y-3">
+                        {recentValidations.map((validation, index) => (
+                          <RecentValidationItem
+                            key={validation.id || index}
+                            validation={validation}
+                            index={index}
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8">
+                        <div className="w-16 h-16 bg-gray-100 rounded-3xl flex items-center justify-center mx-auto mb-4">
+                          <History size={24} className="text-gray-400" />
+                        </div>
+                        <p className="text-sm text-gray-500 mb-2 font-semibold">No hay validaciones recientes</p>
+                        <p className="text-xs text-gray-400">¡Escanea tu primer QR para comenzar!</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Enhanced Quick Stats */}
+                <div className="bg-gradient-to-br from-white/90 via-white/80 to-white/70 backdrop-blur-xl rounded-3xl p-6 border border-white/30 shadow-2xl relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-blue-200/20 to-transparent rounded-full blur-xl" />
+                  
+                  <div className="relative z-10">
+                    <div className="flex items-center gap-3 mb-6">
+                      <TrendingUp size={22} className="text-gray-600" />
+                      <h3 className="font-black text-gray-900 text-lg">Resumen</h3>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50/80 to-gray-100/80 rounded-2xl backdrop-blur-sm border border-gray-200/50">
+                        <div className="flex items-center gap-3">
+                          <Calendar size={16} className="text-gray-500" />
+                          <span className="text-sm font-bold text-gray-700">Última validación</span>
+                        </div>
+                        <span className="text-sm font-black text-gray-900">
+                          {stats.ultimaValidacion 
+                            ? formatDate(stats.ultimaValidacion).split(' ')[0]
+                            : 'Nunca'
+                          }
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50/80 to-gray-100/80 rounded-2xl backdrop-blur-sm border border-gray-200/50">
+                        <div className="flex items-center gap-3">
+                          <Target size={16} className="text-gray-500" />
+                          <span className="text-sm font-bold text-gray-700">Tasa de éxito</span>
+                        </div>
+                        <span className="text-sm font-black text-gray-900">
+                          {recentValidations.length > 0 
+                            ? Math.round((stats.validacionesExitosas / recentValidations.length) * 100)
+                            : 0
+                          }%
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50/80 to-gray-100/80 rounded-2xl backdrop-blur-sm border border-gray-200/50">
+                        <div className="flex items-center gap-3">
+                          <Shield size={16} className="text-gray-500" />
+                          <span className="text-sm font-bold text-gray-700">Beneficios activos</span>
+                        </div>
+                        <span className="text-sm font-black text-gray-900">
+                          {stats.beneficiosDisponibles}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50/80 to-gray-100/80 rounded-2xl backdrop-blur-sm border border-gray-200/50">
+                        <div className="flex items-center gap-3">
+                          {user?.asociacionId ? <Users size={16} className="text-gray-500" /> : <UserCheck size={16} className="text-gray-500" />}
+                          <span className="text-sm font-bold text-gray-700">Tipo de socio</span>
+                        </div>
+                        <span className="text-sm font-black text-gray-900">
+                          {user?.asociacionId ? 'Asociación' : 'Independiente'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Enhanced Achievement Badge */}
+                {stats.rachaActual > 0 && (
+                  <motion.div 
+                    className="bg-gradient-to-r from-amber-500 to-orange-600 rounded-3xl p-6 text-white shadow-2xl relative overflow-hidden"
+                    initial={{ scale: 0, rotate: -10 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={{ type: "spring", stiffness: 200, delay: 0.8 }}
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-yellow-300/30 to-transparent rounded-full blur-2xl" />
+                    
+                    <div className="relative z-10 text-center">
+                      <motion.div 
+                        className="w-20 h-20 bg-gradient-to-r from-yellow-400 to-amber-300 rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-2xl"
+                        animate={{ rotate: [0, 10, -10, 0] }}
+                        transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+                      >
+                        <Award size={32} className="text-amber-800" />
+                      </motion.div>
+                      <h3 className="font-black text-xl mb-3">¡Racha Activa!</h3>
+                      <p className="text-sm opacity-90 mb-4 font-semibold">
+                        Llevas <span className="text-2xl font-black">{stats.rachaActual}</span> días consecutivos validando beneficios
+                      </p>
+                      <div className="bg-white/20 rounded-2xl p-3 backdrop-blur-sm border border-white/30">
+                        <span className="text-xs font-black">¡Sigue así para mantener tu racha!</span>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </motion.div>
+            </div>
+          </motion.div>
+        </div>
       </DashboardLayout>
 
       {/* Modal de Logout */}
@@ -978,15 +1176,15 @@ export default function SocioValidarPage() {
           />
         )}
       >
-        <div className="p-4 md:p-8 max-w-7xl mx-auto min-h-screen relative">
-          <div className="absolute inset-0 bg-gradient-to-br from-sky-50/50 via-white to-violet-50/30 -z-10"></div>
-          <div className="flex items-center justify-center min-h-[400px]">
+        <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-violet-50 relative overflow-hidden">
+          <div className="absolute inset-0 bg-grid-pattern opacity-20" />
+          <div className="flex items-center justify-center min-h-screen p-4">
             <div className="text-center">
-              <div className="w-20 h-20 bg-gradient-to-r from-sky-500 to-violet-600 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg">
-                <RefreshCw size={32} className="text-white animate-spin" />
+              <div className="w-24 h-24 bg-gradient-to-r from-sky-500 to-violet-600 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-2xl">
+                <RefreshCw size={40} className="text-white animate-spin" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">Cargando...</h3>
-              <p className="text-gray-500">Preparando validación</p>
+              <h3 className="text-3xl font-black text-gray-900 mb-4">Cargando...</h3>
+              <p className="text-gray-600 text-lg">Preparando validación</p>
             </div>
           </div>
         </div>
