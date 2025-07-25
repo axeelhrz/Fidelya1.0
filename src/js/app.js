@@ -492,6 +492,199 @@ function scrollToTop() {
     console.log('✅ Scroll hacia arriba completado');
 }
 
+// ===== FUNCIONALIDAD DEL LOGO COMO ENLACE (DESKTOP Y MÓVIL) - VERSIÓN CORREGIDA =====
+function initializeLogoNavigation() {
+    console.log('🔧 Inicializando navegación del logo...');
+    
+    // Buscar todos los posibles elementos del logo
+    const navLogo = document.querySelector('.nav__logo');
+    const navBrand = document.querySelector('.nav__brand');
+    const navLogoContainer = document.querySelector('.nav__logo-container');
+    const drawerLogo = document.querySelector('.nav__drawer-logo');
+    
+    // Configurar logo principal (header)
+    if (navLogo || navBrand || navLogoContainer) {
+        const logoElement = navBrand || navLogoContainer || navLogo;
+        setupLogoEvents(logoElement, 'header');
+    }
+    
+    // Configurar logo del drawer
+    if (drawerLogo) {
+        setupLogoEvents(drawerLogo, 'drawer');
+    }
+    
+    console.log('✅ Navegación del logo inicializada');
+}
+
+function setupLogoEvents(logoElement, type) {
+    if (!logoElement) return;
+    
+    console.log(`🔧 Configurando eventos para logo ${type}:`, logoElement.className);
+    
+    // Variables para manejar el estado del touch
+    let touchStartTime = 0;
+    let touchMoved = false;
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let isProcessing = false;
+    
+    // Función principal de navegación
+    const handleLogoNavigation = () => {
+        if (isProcessing) return;
+        isProcessing = true;
+        
+        console.log(`🏠 Navegación del logo ${type} activada - Dispositivo: ${isMobile ? 'móvil' : 'desktop'}`);
+        
+        // Cerrar menús abiertos si están activos
+        if (isMenuOpen) {
+            closeMobileMenu();
+        }
+        if (isMobileMenuOpen) {
+            closeMobileMenu();
+        }
+        if (isFloatingMenuOpen) {
+            closeFloatingMenu();
+        }
+        if (isLanguageSwitcherOpen) {
+            closeLanguageSwitcher();
+        }
+        
+        // Verificar si estamos en la página principal
+        const hash = window.location.hash;
+        const isOnMainPage = !hash.includes('/');
+        
+        if (isOnMainPage) {
+            console.log('🔝 Ya en página principal, haciendo scroll hacia arriba');
+            scrollToTop();
+        } else {
+            console.log('📄 En página legal, navegando al inicio');
+            navigateToLanguageRoute(currentLanguage);
+            setTimeout(() => {
+                scrollToTop();
+            }, 100);
+        }
+        
+        // Resetear flag después de un delay
+        setTimeout(() => {
+            isProcessing = false;
+        }, 500);
+    };
+    
+    // EVENTO CLICK MEJORADO (para desktop y como fallback)
+    logoElement.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        console.log(`🖱️ Click en logo ${type}`);
+        
+        // En móvil, solo procesar si no hubo touch events recientes
+        if (isMobile && touchStartTime > 0 && (Date.now() - touchStartTime) < 1000) {
+            console.log('⏭️ Ignorando click, touch event reciente detectado');
+            return;
+        }
+        
+        handleLogoNavigation();
+    });
+    
+    // EVENTOS TÁCTILES MEJORADOS PARA MÓVIL
+    if (isMobile) {
+        logoElement.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            
+            touchStartTime = Date.now();
+            touchMoved = false;
+            
+            const touch = e.touches[0];
+            touchStartX = touch.clientX;
+            touchStartY = touch.clientY;
+            
+            // Aplicar efecto visual inmediatamente
+            logoElement.style.transform = 'scale(0.95)';
+            logoElement.style.transition = 'transform 0.1s ease';
+            logoElement.classList.add('touching');
+            
+            console.log(`👆 Touch start en logo ${type}`);
+        }, { passive: false });
+        
+        logoElement.addEventListener('touchmove', (e) => {
+            if (touchStartTime === 0) return;
+            
+            const touch = e.touches[0];
+            const deltaX = Math.abs(touch.clientX - touchStartX);
+            const deltaY = Math.abs(touch.clientY - touchStartY);
+            
+            // Si el usuario se movió más de 15px, considerar como movimiento
+            if (deltaX > 15 || deltaY > 15) {
+                touchMoved = true;
+                // Resetear el efecto visual si se movió
+                logoElement.style.transform = '';
+                logoElement.classList.remove('touching');
+                console.log(`👆 Movimiento detectado en logo ${type}`);
+            }
+        }, { passive: false });
+        
+        logoElement.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const touchEndTime = Date.now();
+            const touchDuration = touchEndTime - touchStartTime;
+            
+            // Resetear transform después de un breve delay
+            setTimeout(() => {
+                logoElement.style.transform = '';
+                logoElement.classList.remove('touching');
+            }, 150);
+            
+            // Solo procesar si:
+            // 1. El touch duró menos de 800ms (no fue un long press)
+            // 2. No hubo movimiento significativo
+            // 3. El touchstart fue registrado correctamente
+            if (touchStartTime > 0 && touchDuration < 800 && !touchMoved) {
+                console.log(`👆 Touch end válido en logo ${type} - ejecutando navegación`);
+                
+                // Pequeño delay para asegurar que la animación se complete
+                setTimeout(() => {
+                    handleLogoNavigation();
+                }, 100);
+            } else {
+                console.log(`👆 Touch end cancelado en logo ${type} - movimiento: ${touchMoved}, duración: ${touchDuration}ms`);
+            }
+            
+            // Resetear variables
+            touchStartTime = 0;
+            touchMoved = false;
+        }, { passive: false });
+        
+        logoElement.addEventListener('touchcancel', () => {
+            console.log(`👆 Touch cancelado en logo ${type}`);
+            logoElement.style.transform = '';
+            logoElement.classList.remove('touching');
+            touchStartTime = 0;
+            touchMoved = false;
+        }, { passive: true });
+    }
+    
+    // Configurar estilos y accesibilidad
+    logoElement.style.cursor = 'pointer';
+    logoElement.style.userSelect = 'none';
+    logoElement.style.webkitUserSelect = 'none';
+    logoElement.style.webkitTouchCallout = 'none';
+    logoElement.setAttribute('tabindex', '0');
+    logoElement.setAttribute('role', 'button');
+    logoElement.setAttribute('aria-label', 'Ir al inicio');
+    
+    // Soporte para navegación por teclado
+    logoElement.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleLogoNavigation();
+        }
+    });
+    
+    console.log(`✅ Logo ${type} configurado para navegación y scroll`);
+}
+
 // ===== SISTEMA DE ROUTING PARA IDIOMAS Y PÁGINAS LEGALES (BASADO EN PATHNAME) =====
 function initializeRouting() {
     console.log('🔗 Inicializando sistema de routing basado en pathname...');
@@ -1402,159 +1595,6 @@ function initializeDesktopNavigation() {
     const navLinks = document.querySelectorAll('.nav__link');
     const header = document.getElementById('header');
     
-    // ===== FUNCIONALIDAD DEL LOGO COMO ENLACE (DESKTOP Y MÓVIL) - CORREGIDA =====
-    const navLogo = document.querySelector('.nav__logo');
-    if (navLogo) {
-        // Variables para manejar el estado del touch
-        let touchStartTime = 0;
-        let touchMoved = false;
-        let touchStartX = 0;
-        let touchStartY = 0;
-        
-        // Función principal de navegación
-        const handleLogoNavigation = () => {
-            console.log(`🏠 Navegación del logo activada - Dispositivo: ${isMobile ? 'móvil' : 'desktop'}`);
-            
-            // Cerrar menús abiertos si están activos
-            if (isMenuOpen) {
-                closeMobileMenu();
-            }
-            if (isMobileMenuOpen) {
-                closeMobileMenu();
-            }
-            if (isFloatingMenuOpen) {
-                closeFloatingMenu();
-            }
-            if (isLanguageSwitcherOpen) {
-                closeLanguageSwitcher();
-            }
-            
-            // NUEVA LÓGICA: Verificar si estamos en la página principal
-            const hash = window.location.hash;
-            const isOnMainPage = !hash.includes('/'); // No estamos en páginas legales
-            
-            if (isOnMainPage) {
-                // Si ya estamos en la página principal, hacer scroll hacia arriba
-                console.log('🔝 Ya en página principal, haciendo scroll hacia arriba');
-                scrollToTop();
-            } else {
-                // Si estamos en una página legal, navegar al inicio y luego scroll
-                console.log('📄 En página legal, navegando al inicio');
-                navigateToLanguageRoute(currentLanguage);
-                // Pequeño delay para asegurar que la navegación se complete antes del scroll
-                setTimeout(() => {
-                    scrollToTop();
-                }, 100);
-            }
-        };
-        
-        // EVENTO CLICK MEJORADO (para desktop y como fallback)
-        navLogo.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            // En móvil, solo procesar si no hubo touch events
-            if (isMobile && touchStartTime > 0) {
-                return; // El touch event se encargará
-            }
-            
-            handleLogoNavigation();
-        });
-        
-        // EVENTOS TÁCTILES MEJORADOS PARA MÓVIL
-        if (isMobile) {
-            navLogo.addEventListener('touchstart', (e) => {
-                e.preventDefault(); // Prevenir comportamiento por defecto
-                
-                touchStartTime = Date.now();
-                touchMoved = false;
-                
-                const touch = e.touches[0];
-                touchStartX = touch.clientX;
-                touchStartY = touch.clientY;
-                
-                // Aplicar efecto visual inmediatamente
-                navLogo.style.transform = 'scale(0.95)';
-                navLogo.style.transition = 'transform 0.1s ease';
-                
-                console.log('👆 Touch start en logo del header');
-            }, { passive: false });
-            
-            navLogo.addEventListener('touchmove', (e) => {
-                if (touchStartTime === 0) return;
-                
-                const touch = e.touches[0];
-                const deltaX = Math.abs(touch.clientX - touchStartX);
-                const deltaY = Math.abs(touch.clientY - touchStartY);
-                
-                // Si el usuario se movió más de 10px, considerar como movimiento
-                if (deltaX > 10 || deltaY > 10) {
-                    touchMoved = true;
-                    // Resetear el efecto visual si se movió
-                    navLogo.style.transform = '';
-                }
-            }, { passive: false });
-            
-            navLogo.addEventListener('touchend', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                const touchEndTime = Date.now();
-                const touchDuration = touchEndTime - touchStartTime;
-                
-                // Resetear transform después de un breve delay
-                setTimeout(() => {
-                    navLogo.style.transform = '';
-                }, 150);
-                
-                // Solo procesar si:
-                // 1. El touch duró menos de 500ms (no fue un long press)
-                // 2. No hubo movimiento significativo
-                // 3. El touchstart fue registrado correctamente
-                if (touchStartTime > 0 && touchDuration < 500 && !touchMoved) {
-                    console.log('👆 Touch end válido en logo del header - ejecutando navegación');
-                    
-                    // Pequeño delay para asegurar que la animación se complete
-                    setTimeout(() => {
-                        handleLogoNavigation();
-                    }, 50);
-                } else {
-                    console.log('👆 Touch end cancelado - movimiento detectado o duración excesiva');
-                }
-                
-                // Resetear variables
-                touchStartTime = 0;
-                touchMoved = false;
-            }, { passive: false });
-            
-            navLogo.addEventListener('touchcancel', () => {
-                console.log('👆 Touch cancelado en logo del header');
-                navLogo.style.transform = '';
-                touchStartTime = 0;
-                touchMoved = false;
-            }, { passive: true });
-        }
-        
-        // Configurar estilos y accesibilidad para ambos dispositivos
-        navLogo.style.cursor = 'pointer';
-        navLogo.style.userSelect = 'none';
-        navLogo.style.webkitUserSelect = 'none';
-        navLogo.style.webkitTouchCallout = 'none';
-        navLogo.setAttribute('tabindex', '0');
-        navLogo.setAttribute('role', 'button');
-        navLogo.setAttribute('aria-label', 'Ir al inicio');
-        
-        // Soporte para navegación por teclado
-        navLogo.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                handleLogoNavigation();
-            }
-        });
-        
-        console.log(`✅ Logo del header configurado para navegación y scroll - Dispositivo: ${isMobile ? 'móvil' : 'desktop'}`);
-    }
-    
     // Enlaces de navegación desktop
     navLinks.forEach(link => {
         link.addEventListener('click', (e) => {
@@ -1616,59 +1656,6 @@ function initializeMobileNavigation() {
     if (drawerLinks.length === 0) {
         console.error('❌ No se encontraron enlaces del drawer móvil');
         return;
-    }
-    
-    // ===== FUNCIONALIDAD DEL LOGO DEL DRAWER COMO ENLACE (MÓVIL) - MEJORADA =====
-    const drawerLogo = document.querySelector('.nav__drawer-logo');
-    if (drawerLogo) {
-        drawerLogo.addEventListener('click', (e) => {
-            e.preventDefault();
-            console.log('🏠 Click en logo del drawer móvil');
-            
-            if (isMobileMenuOpen) {
-                closeMobileMenu();
-            }
-            
-            // NUEVA LÓGICA: Verificar si estamos en la página principal
-            const hash = window.location.hash;
-            const isOnMainPage = !hash.includes('/');
-            
-            if (isOnMainPage) {
-                // Si ya estamos en la página principal, hacer scroll hacia arriba
-                console.log('🔝 Ya en página principal, haciendo scroll hacia arriba desde drawer');
-                scrollToTop();
-            } else {
-                // Si estamos en una página legal, navegar al inicio y luego scroll
-                console.log('📄 En página legal, navegando al inicio desde drawer');
-                navigateToLanguageRoute(currentLanguage);
-                setTimeout(() => {
-                    scrollToTop();
-                }, 100);
-            }
-        });
-        
-        drawerLogo.style.cursor = 'pointer';
-        drawerLogo.setAttribute('tabindex', '0');
-        drawerLogo.setAttribute('role', 'button');
-        drawerLogo.setAttribute('aria-label', 'Ir al inicio');
-        
-        // Efectos táctiles para el logo del drawer
-        drawerLogo.addEventListener('touchstart', () => {
-            drawerLogo.style.transform = 'scale(0.95)';
-            drawerLogo.style.transition = 'transform 0.1s ease';
-        }, { passive: true });
-        
-        drawerLogo.addEventListener('touchend', () => {
-            setTimeout(() => {
-                drawerLogo.style.transform = '';
-            }, 150);
-        }, { passive: true });
-        
-        drawerLogo.addEventListener('touchcancel', () => {
-            drawerLogo.style.transform = '';
-        }, { passive: true });
-        
-        console.log('✅ Logo del drawer móvil configurado para navegación y scroll');
     }
     
     // Toggle hamburguesa móvil
@@ -1805,8 +1792,7 @@ function initializeMobileNavigation() {
     }, { passive: true });
     
     document.addEventListener('click', (e) => {
-        if (isMobileMenuOpen && navDrawer && !navDrawer.contains(e.target) && !navToggle.contains(e.target)) {
-            console.log('🔄 Click fuera del drawer móvil');
+        if (isMobileMenuOpen && navDrawer && !navDrawer.contains(e.target) && !navToggle.contains(e.target)) {            console.log('🔄 Click fuera del drawer móvil');
             closeMobileMenu();
         }
     });
@@ -1944,6 +1930,9 @@ function initializeNavigation() {
     } else {
         initializeDesktopNavigation();
     }
+    
+    // Inicializar navegación del logo
+    initializeLogoNavigation();
     
     initializeActiveSection();
 }
@@ -2942,3 +2931,4 @@ window.StarFlex = {
     // Utilidades
     detectDeviceCapabilities
 };
+
