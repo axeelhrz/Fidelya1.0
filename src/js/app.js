@@ -496,22 +496,26 @@ function scrollToTop() {
 function initializeLogoNavigation() {
     console.log('🔧 Inicializando navegación del logo...');
     
-    // Buscar todos los posibles elementos del logo
-    const navLogo = document.querySelector('.nav__logo');
-    const navBrand = document.querySelector('.nav__brand');
-    const navLogoContainer = document.querySelector('.nav__logo-container');
-    const drawerLogo = document.querySelector('.nav__drawer-logo');
+    // Buscar TODOS los posibles elementos del logo con selectores más específicos
+    const logoSelectors = [
+        '.nav__logo',
+        '.nav__brand', 
+        '.nav__logo-container',
+        '.nav__drawer-logo',
+        '[role="button"][aria-label*="logo"]',
+        '[role="button"][aria-label*="Logo"]'
+    ];
     
-    // Configurar logo principal (header)
-    if (navLogo || navBrand || navLogoContainer) {
-        const logoElement = navBrand || navLogoContainer || navLogo;
-        setupLogoEvents(logoElement, 'header');
-    }
-    
-    // Configurar logo del drawer
-    if (drawerLogo) {
-        setupLogoEvents(drawerLogo, 'drawer');
-    }
+    logoSelectors.forEach(selector => {
+        const elements = document.querySelectorAll(selector);
+        elements.forEach((element, index) => {
+            if (element) {
+                const type = selector.includes('drawer') ? 'drawer' : `header-${index}`;
+                console.log(`🎯 Configurando logo encontrado: ${selector} (${type})`);
+                setupLogoEvents(element, type);
+            }
+        });
+    });
     
     console.log('✅ Navegación del logo inicializada');
 }
@@ -521,33 +525,18 @@ function setupLogoEvents(logoElement, type) {
     
     console.log(`🔧 Configurando eventos para logo ${type}:`, logoElement.className);
     
-    // Variables para manejar el estado del touch
-    let touchStartTime = 0;
-    let touchMoved = false;
-    let touchStartX = 0;
-    let touchStartY = 0;
-    let isProcessing = false;
-    
-    // Función principal de navegación
-    const handleLogoNavigation = () => {
-        if (isProcessing) return;
-        isProcessing = true;
+    // Función principal de navegación - SIMPLIFICADA
+    const handleLogoNavigation = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
         
         console.log(`🏠 Navegación del logo ${type} activada - Dispositivo: ${isMobile ? 'móvil' : 'desktop'}`);
         
-        // Cerrar menús abiertos si están activos
-        if (isMenuOpen) {
-            closeMobileMenu();
-        }
-        if (isMobileMenuOpen) {
-            closeMobileMenu();
-        }
-        if (isFloatingMenuOpen) {
-            closeFloatingMenu();
-        }
-        if (isLanguageSwitcherOpen) {
-            closeLanguageSwitcher();
-        }
+        // Cerrar menús abiertos
+        if (isMenuOpen) closeMobileMenu();
+        if (isMobileMenuOpen) closeMobileMenu();
+        if (isFloatingMenuOpen) closeFloatingMenu();
+        if (isLanguageSwitcherOpen) closeLanguageSwitcher();
         
         // Verificar si estamos en la página principal
         const hash = window.location.hash;
@@ -559,110 +548,46 @@ function setupLogoEvents(logoElement, type) {
         } else {
             console.log('📄 En página legal, navegando al inicio');
             navigateToLanguageRoute(currentLanguage);
-            setTimeout(() => {
-                scrollToTop();
-            }, 100);
+            setTimeout(() => scrollToTop(), 100);
         }
-        
-        // Resetear flag después de un delay
-        setTimeout(() => {
-            isProcessing = false;
-        }, 500);
     };
     
-    // EVENTO CLICK MEJORADO (para desktop y como fallback)
-    logoElement.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        console.log(`🖱️ Click en logo ${type}`);
-        
-        // En móvil, solo procesar si no hubo touch events recientes
-        if (isMobile && touchStartTime > 0 && (Date.now() - touchStartTime) < 1000) {
-            console.log('⏭️ Ignorando click, touch event reciente detectado');
-            return;
-        }
-        
-        handleLogoNavigation();
-    });
-    
-    // EVENTOS TÁCTILES MEJORADOS PARA MÓVIL
+    // EVENTOS SIMPLIFICADOS - SIN LÓGICA COMPLEJA DE TOUCH
     if (isMobile) {
+        // Para móvil: usar touchend con prevención de doble activación
+        let touchProcessed = false;
+        
         logoElement.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            
-            touchStartTime = Date.now();
-            touchMoved = false;
-            
-            const touch = e.touches[0];
-            touchStartX = touch.clientX;
-            touchStartY = touch.clientY;
-            
-            // Aplicar efecto visual inmediatamente
+            touchProcessed = false;
             logoElement.style.transform = 'scale(0.95)';
             logoElement.style.transition = 'transform 0.1s ease';
-            logoElement.classList.add('touching');
-            
-            console.log(`👆 Touch start en logo ${type}`);
-        }, { passive: false });
-        
-        logoElement.addEventListener('touchmove', (e) => {
-            if (touchStartTime === 0) return;
-            
-            const touch = e.touches[0];
-            const deltaX = Math.abs(touch.clientX - touchStartX);
-            const deltaY = Math.abs(touch.clientY - touchStartY);
-            
-            // Si el usuario se movió más de 15px, considerar como movimiento
-            if (deltaX > 15 || deltaY > 15) {
-                touchMoved = true;
-                // Resetear el efecto visual si se movió
-                logoElement.style.transform = '';
-                logoElement.classList.remove('touching');
-                console.log(`👆 Movimiento detectado en logo ${type}`);
-            }
-        }, { passive: false });
+        }, { passive: true });
         
         logoElement.addEventListener('touchend', (e) => {
             e.preventDefault();
             e.stopPropagation();
             
-            const touchEndTime = Date.now();
-            const touchDuration = touchEndTime - touchStartTime;
-            
-            // Resetear transform después de un breve delay
+            // Resetear transform
             setTimeout(() => {
                 logoElement.style.transform = '';
-                logoElement.classList.remove('touching');
             }, 150);
             
-            // Solo procesar si:
-            // 1. El touch duró menos de 800ms (no fue un long press)
-            // 2. No hubo movimiento significativo
-            // 3. El touchstart fue registrado correctamente
-            if (touchStartTime > 0 && touchDuration < 800 && !touchMoved) {
-                console.log(`👆 Touch end válido en logo ${type} - ejecutando navegación`);
-                
-                // Pequeño delay para asegurar que la animación se complete
-                setTimeout(() => {
-                    handleLogoNavigation();
-                }, 100);
-            } else {
-                console.log(`👆 Touch end cancelado en logo ${type} - movimiento: ${touchMoved}, duración: ${touchDuration}ms`);
+            // Procesar solo una vez
+            if (!touchProcessed) {
+                touchProcessed = true;
+                console.log(`👆 Touch válido en logo ${type}`);
+                handleLogoNavigation(e);
             }
-            
-            // Resetear variables
-            touchStartTime = 0;
-            touchMoved = false;
         }, { passive: false });
         
         logoElement.addEventListener('touchcancel', () => {
-            console.log(`👆 Touch cancelado en logo ${type}`);
             logoElement.style.transform = '';
-            logoElement.classList.remove('touching');
-            touchStartTime = 0;
-            touchMoved = false;
+            touchProcessed = true;
         }, { passive: true });
+        
+    } else {
+        // Para desktop: usar click normal
+        logoElement.addEventListener('click', handleLogoNavigation);
     }
     
     // Configurar estilos y accesibilidad
@@ -678,7 +603,7 @@ function setupLogoEvents(logoElement, type) {
     logoElement.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
-            handleLogoNavigation();
+            handleLogoNavigation(e);
         }
     });
     
@@ -2931,4 +2856,3 @@ window.StarFlex = {
     // Utilidades
     detectDeviceCapabilities
 };
-

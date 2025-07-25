@@ -1,23 +1,19 @@
 {
   "rewrites": [
     {
+      "source": "/es/terms",
+      "destination": "/terms.html"
+    },
+    {
+      "source": "/es/privacypolicy",
+      "destination": "/privacy.html"
+    },
+    {
       "source": "/es",
       "destination": "/index.html"
     },
     {
-      "source": "/es/(.*)",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/en",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/en/(.*)",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/((?!api|_next|_static|favicon.ico|assets|src).*)",
+      "source": "/",
       "destination": "/index.html"
     }
   ],
@@ -36,24 +32,6 @@
         {
           "key": "X-XSS-Protection",
           "value": "1; mode=block"
-        }
-      ]
-    },
-    {
-      "source": "/assets/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
-        }
-      ]
-    },
-    {
-      "source": "/src/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
         }
       ]
     }

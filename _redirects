@@ -1,20 +1,16 @@
-# Netlify redirects para manejar rutas de idioma
-# Redirigir todas las rutas que no sean archivos al index.html
+# Netlify redirects file for StarFlex
 
-# Rutas de idioma específicas
-/es/* /index.html 200
-/en/* /index.html 200
+# Spanish terms page
+/es/terms /terms.html 200
 
-# Páginas legales con hash routing
-/privacypolicy /index.html 200
-/terms /index.html 200
+# Spanish privacy policy page (if you want to create it later)
+/es/privacypolicy /privacy.html 200
 
-# Fallback para cualquier otra ruta
+# Spanish main page
+/es /index.html 200
+
+# English main page (default)
+/ /index.html 200
+
+# Fallback for any other routes
 /* /index.html 200
-
-# Headers de seguridad
-/*
-  X-Frame-Options: DENY
-  X-XSS-Protection: 1; mode=block
-  X-Content-Type-Options: nosniff
-  Referrer-Policy: strict-origin-when-cross-origin
