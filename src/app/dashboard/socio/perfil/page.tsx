@@ -38,6 +38,7 @@ import { Input } from '@/components/ui/Input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/Dialog';
 import { LogoutModal } from '@/components/ui/LogoutModal';
 import { useSocioProfile } from '@/hooks/useSocioProfile';
+import { useBeneficios } from '@/hooks/useBeneficios';
 import { useAuth } from '@/hooks/useAuth';
 import { format, differenceInDays } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -198,11 +199,18 @@ export default function SocioPerfilPage() {
   const { user, signOut } = useAuth();
   const { 
     socio, 
-    estadisticas, 
-    loading, 
+    loading: socioLoading, 
     updateProfile, 
     refreshData,
   } = useSocioProfile();
+
+  // CAMBIO PRINCIPAL: Usar el hook de beneficios para estadísticas consistentes
+  const { 
+    beneficiosUsados, 
+    estadisticasRapidas, 
+    loading: beneficiosLoading,
+    refrescar
+  } = useBeneficios();
 
   // Modal states
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -212,6 +220,30 @@ export default function SocioPerfilPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+
+  // Calcular beneficios más usados desde beneficiosUsados
+  const beneficiosMasUsados = useMemo(() => {
+    const beneficiosCount: { [key: string]: { titulo: string; usos: number } } = {};
+    
+    beneficiosUsados.forEach(uso => {
+      const key = uso.beneficioTitulo || 'Beneficio';
+      if (beneficiosCount[key]) {
+        beneficiosCount[key].usos++;
+      } else {
+        beneficiosCount[key] = { titulo: key, usos: 1 };
+      }
+    });
+
+    return Object.values(beneficiosCount)
+      .sort((a, b) => b.usos - a.usos)
+      .slice(0, 5);
+  }, [beneficiosUsados]);
+
+  // Calcular comercios únicos visitados
+  const comerciosUnicos = useMemo(() => {
+    const comerciosSet = new Set(beneficiosUsados.map(uso => uso.comercioId));
+    return comerciosSet.size;
+  }, [beneficiosUsados]);
 
   // Profile data with safe fallbacks
   const profileData = useMemo(() => {
@@ -230,25 +262,32 @@ export default function SocioPerfilPage() {
       numeroSocio: socio?.numeroSocio || '',
       nivel: {
         nivel: 'Bronze' as const,
-        puntos: Math.floor(estadisticas.totalValidaciones * 10),
+        puntos: Math.floor(estadisticasRapidas.usados * 10),
         puntosParaProximoNivel: 1000,
         proximoNivel: 'Silver',
       }
     };
-  }, [socio, user, estadisticas]);
+  }, [socio, user, estadisticasRapidas.usados]);
 
-  // Enhanced stats without savings
+  // Enhanced stats usando datos de beneficios consistentes
   const enhancedStats = useMemo(() => {
     const creadoEnDate = convertToDate(profileData.creadoEn);
     const tiempoComoSocio = creadoEnDate ? differenceInDays(new Date(), creadoEnDate) : 0;
     
+    // Calcular beneficios este mes
+    const beneficiosEsteMes = beneficiosUsados.filter(uso => {
+      const fechaUso = uso.fechaUso.toDate();
+      const ahora = new Date();
+      return fechaUso.getMonth() === ahora.getMonth() && fechaUso.getFullYear() === ahora.getFullYear();
+    }).length;
+    
     return {
-      beneficiosUsados: estadisticas.totalValidaciones || 0,
-      comerciosVisitados: estadisticas.comerciosFavoritos?.length || 0,
+      beneficiosUsados: estadisticasRapidas.usados || 0,
+      comerciosVisitados: comerciosUnicos,
       tiempoComoSocio,
-      beneficiosEsteMes: estadisticas.validacionesPorMes?.[0]?.validaciones || 0,
+      beneficiosEsteMes,
     };
-  }, [estadisticas, profileData.creadoEn]);
+  }, [estadisticasRapidas, profileData.creadoEn, beneficiosUsados, comerciosUnicos]);
 
   const [formData, setFormData] = useState<ProfileFormData>({
     nombre: profileData.nombre,
@@ -282,7 +321,10 @@ export default function SocioPerfilPage() {
     
     setRefreshing(true);
     try {
-      await refreshData();
+      await Promise.all([
+        refreshData(),
+        refrescar()
+      ]);
       toast.success('Datos actualizados');
     } catch (error) {
       console.error('Error refreshing:', error);
@@ -290,7 +332,7 @@ export default function SocioPerfilPage() {
     } finally {
       setTimeout(() => setRefreshing(false), 1000);
     }
-  }, [refreshData, refreshing]);
+  }, [refreshData, refrescar, refreshing]);
 
   const handleSaveProfile = useCallback(async () => {
     setUpdating(true);
@@ -338,6 +380,9 @@ export default function SocioPerfilPage() {
   const handleLogoutCancel = () => {
     setLogoutModalOpen(false);
   };
+
+  // Loading state combinado
+  const loading = socioLoading || beneficiosLoading;
 
   // Modern loading state
   if (loading) {
@@ -641,9 +686,9 @@ export default function SocioPerfilPage() {
                   <h3 className="text-2xl font-bold text-gray-900">Actividad Reciente</h3>
                 </div>
                 
-                {estadisticas.beneficiosMasUsados && estadisticas.beneficiosMasUsados.length > 0 ? (
+                {beneficiosMasUsados && beneficiosMasUsados.length > 0 ? (
                   <div className="space-y-4">
-                    {estadisticas.beneficiosMasUsados.slice(0, 5).map((beneficio, index) => (
+                    {beneficiosMasUsados.slice(0, 5).map((beneficio, index) => (
                       <div key={index} className="flex items-center gap-4 p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl border border-gray-200/50 hover:shadow-md transition-all duration-300">
                         <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center text-white font-black shadow-lg">
                           {beneficio.usos}
