@@ -15,13 +15,12 @@ import {
   Settings,
   TrendingUp,
   Menu,
-  X,
-  Crown
+  X
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSocios } from '@/hooks/useSocios';
 import { useComercios } from '@/hooks/useComercios';
-import { collection, query, where, onSnapshot, orderBy, limit } from 'firebase/firestore';
+import { collection, query, where, onSnapshot} from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useSidebarNavigation } from '@/hooks/useSidebarNavigation';
 
@@ -204,7 +203,6 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
 
   return (
     <div className="flex flex-col h-full bg-white">
-      {/* Modern Header */}
       <div className="relative px-6 py-6 border-b border-gray-100">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
@@ -243,49 +241,6 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
         </div>
       </div>
 
-      {/* Collapsed State - Beautiful Vertical Text */}
-      {!open && (
-        <div className="flex-1 flex flex-col items-center justify-center px-2 py-8">
-          {/* Vertical Association Indicator */}
-          <div className="relative mb-8">
-            <div className="w-16 h-16 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 rounded-2xl flex items-center justify-center shadow-xl">
-              <Crown className="w-8 h-8 text-white" />
-            </div>
-            <div className="absolute -bottom-2 -right-2 w-6 h-6 bg-emerald-500 rounded-full border-3 border-white shadow-lg flex items-center justify-center">
-              <Activity className="w-3 h-3 text-white" />
-            </div>
-          </div>
-          
-          {/* Vertical Text */}
-          <div className="writing-mode-vertical text-orientation-mixed transform rotate-180">
-            <div className="flex flex-col items-center space-y-2">
-              <span className="text-lg font-bold text-gray-800 tracking-wider">ASOCIACIÓN</span>
-              <div className="w-1 h-8 bg-gradient-to-b from-blue-500 to-indigo-600 rounded-full"></div>
-              <span className="text-sm font-medium text-gray-500 tracking-wide">PANEL</span>
-            </div>
-          </div>
-          
-          {/* Mini Stats Indicators */}
-          <div className="mt-8 space-y-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200 flex flex-col items-center justify-center">
-              <Users className="w-4 h-4 text-blue-600 mb-1" />
-              <span className="text-xs font-bold text-blue-800">{realtimeStats.totalSocios}</span>
-            </div>
-            
-            <div className="w-12 h-12 bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl border border-emerald-200 flex flex-col items-center justify-center">
-              <Store className="w-4 h-4 text-emerald-600 mb-1" />
-              <span className="text-xs font-bold text-emerald-800">{realtimeStats.comerciosActivos}</span>
-            </div>
-            
-            <div className="w-12 h-12 bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl border border-orange-200 flex flex-col items-center justify-center">
-              <Gift className="w-4 h-4 text-orange-600 mb-1" />
-              <span className="text-xs font-bold text-orange-800">{realtimeStats.beneficiosActivos}</span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Expanded Stats Dashboard */}
       {open && (
         <div className="px-6 py-4 border-b border-gray-100">
           <div className="grid grid-cols-2 gap-3 mb-4">
@@ -340,8 +295,7 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
         </div>
       )}
 
-      {/* Navigation */}
-      <nav className={`flex-1 px-4 py-4 space-y-2 overflow-y-auto ${!open && 'px-2'}`}>
+      <nav className="flex-1 px-4 py-4 space-y-2 overflow-y-auto">
         {menuItems.map((item) => {
           const isActive = isActiveItem(item);
           
@@ -355,35 +309,22 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
                   ? 'bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 shadow-md border border-blue-200 scale-[1.02]' 
                   : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 hover:scale-[1.01]'
                 }
-                ${!open && 'justify-center px-3 py-4'}
+                ${!open && 'justify-center px-3'}
               `}
-              title={!open ? item.label : undefined}
             >
               <div className={`
-                relative flex items-center justify-center rounded-xl transition-all duration-300
-                ${open ? 'w-10 h-10' : 'w-12 h-12'}
+                relative flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-300
                 ${isActive 
                   ? `bg-gradient-to-br ${item.color} shadow-lg` 
                   : 'bg-gray-100 group-hover:bg-gray-200'
                 }
               `}>
-                <item.icon className={`transition-colors duration-300 ${
-                  open ? 'w-5 h-5' : 'w-6 h-6'
-                } ${
+                <item.icon className={`w-5 h-5 transition-colors duration-300 ${
                   isActive ? 'text-white' : 'text-gray-600 group-hover:text-gray-700'
                 }`} />
                 
                 {item.isNew && (
                   <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></div>
-                )}
-                
-                {/* Badge for collapsed state */}
-                {!open && item.badge !== undefined && item.badge > 0 && (
-                  <div className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center border-2 border-white">
-                    <span className="text-xs font-bold text-white">
-                      {item.badge > 9 ? '9+' : item.badge}
-                    </span>
-                  </div>
                 )}
               </div>
               
@@ -414,7 +355,6 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
         })}
       </nav>
 
-      {/* Quick Actions - Only when expanded */}
       {open && (
         <div className="px-4 py-4 border-t border-gray-100">
           <div className="grid grid-cols-2 gap-2">
@@ -431,8 +371,7 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
         </div>
       )}
 
-      {/* User Section */}
-      <div className={`px-4 py-4 border-t border-gray-100 ${!open && 'px-2'}`}>
+      <div className="px-4 py-4 border-t border-gray-100">
         {open ? (
           <div className="space-y-3">
             <div className="flex items-center space-x-3 p-3 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border border-gray-200">
@@ -463,28 +402,13 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
             </button>
           </div>
         ) : (
-          <div className="space-y-4">
-            {/* Collapsed User Avatar */}
-            <div className="flex justify-center">
-              <div className="relative">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl flex items-center justify-center shadow-lg">
-                  <span className="text-white font-bold text-sm">
-                    {user?.nombre?.charAt(0).toUpperCase() || 'A'}
-                  </span>
-                </div>
-                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white"></div>
-              </div>
-            </div>
-            
-            {/* Collapsed Logout */}
-            <button
-              onClick={handleLogout}
-              className="w-full flex items-center justify-center p-3 text-red-600 hover:bg-red-50 rounded-xl transition-colors duration-200"
-              title="Cerrar Sesión"
-            >
-              <LogOut className="w-5 h-5" />
-            </button>
-          </div>
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center justify-center p-3 text-red-600 hover:bg-red-50 rounded-xl transition-colors duration-200"
+            title="Cerrar Sesión"
+          >
+            <LogOut className="w-5 h-5" />
+          </button>
         )}
       </div>
     </div>

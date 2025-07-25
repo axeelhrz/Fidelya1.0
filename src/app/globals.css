@@ -160,50 +160,6 @@
   .typing-cursor {
     @apply animate-pulse;
   }
-
-  /* Vertical Text Styles for Sidebar */
-  .vertical-text {
-    writing-mode: vertical-rl;
-    text-orientation: mixed;
-    transform: rotate(180deg);
-  }
-  
-  .vertical-text-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-  }
-  
-  /* Collapsed Sidebar Styles */
-  .collapsed-sidebar-indicator {
-    @apply flex flex-col items-center justify-center space-y-4 py-8;
-  }
-  
-  .collapsed-brand-icon {
-    @apply w-16 h-16 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 rounded-2xl flex items-center justify-center shadow-xl relative;
-  }
-  
-  .collapsed-brand-icon::after {
-    content: '';
-    @apply absolute -bottom-2 -right-2 w-6 h-6 bg-emerald-500 rounded-full border-3 border-white shadow-lg;
-  }
-  
-  .collapsed-vertical-text {
-    writing-mode: vertical-rl;
-    text-orientation: mixed;
-    transform: rotate(180deg);
-    @apply flex flex-col items-center space-y-2;
-  }
-  
-  .collapsed-stats-mini {
-    @apply space-y-3 mt-8;
-  }
-  
-  .collapsed-stat-card {
-    @apply w-12 h-12 rounded-xl border flex flex-col items-center justify-center;
-  }
 }
 
 /* Utilidades personalizadas mejoradas */
@@ -424,72 +380,6 @@
     line-height: 1.1 !important;
     padding: 0.2em 0 !important;
     margin: 0.1em 0 !important;
-  }
-
-  /* Vertical Text Utilities for Collapsed Sidebar */
-  .writing-mode-vertical {
-    writing-mode: vertical-rl;
-  }
-  
-  .text-orientation-mixed {
-    text-orientation: mixed;
-  }
-  
-  .vertical-text-rotate {
-    transform: rotate(180deg);
-  }
-  
-  /* Collapsed Sidebar Specific Utilities */
-  .collapsed-sidebar-content {
-    @apply flex flex-col items-center justify-center px-2 py-8 h-full;
-  }
-  
-  .collapsed-brand-container {
-    @apply relative mb-8;
-  }
-  
-  .collapsed-brand-icon {
-    @apply w-16 h-16 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 rounded-2xl flex items-center justify-center shadow-xl;
-  }
-  
-  .collapsed-brand-badge {
-    @apply absolute -bottom-2 -right-2 w-6 h-6 bg-emerald-500 rounded-full border-3 border-white shadow-lg flex items-center justify-center;
-  }
-  
-  .collapsed-vertical-text {
-    writing-mode: vertical-rl;
-    text-orientation: mixed;
-    transform: rotate(180deg);
-  }
-  
-  .collapsed-text-container {
-    @apply flex flex-col items-center space-y-2;
-  }
-  
-  .collapsed-divider {
-    @apply w-1 h-8 bg-gradient-to-b from-blue-500 to-indigo-600 rounded-full;
-  }
-  
-  .collapsed-mini-stats {
-    @apply mt-8 space-y-3;
-  }
-  
-  .collapsed-mini-stat {
-    @apply w-12 h-12 rounded-xl border flex flex-col items-center justify-center;
-  }
-  
-  /* Enhanced border utilities */
-  .border-3 {
-    border-width: 3px;
-  }
-  
-  /* Enhanced shadow utilities for collapsed state */
-  .shadow-collapsed {
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  }
-  
-  .shadow-collapsed-lg {
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   }
 }
 
