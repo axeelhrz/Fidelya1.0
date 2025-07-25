@@ -16,6 +16,7 @@ import {
   X,
   AlertTriangle,
   Users,
+  BarChart3,
   ArrowRight,
   Edit,
   Trash2,
@@ -31,9 +32,11 @@ import {
   Percent,
   DollarSign,
   Package,
+  Calendar,
   Eye,
   ChevronDown,
   ChevronUp,
+  Sparkles,
   TrendingUp,
   Activity,
   Zap
@@ -386,7 +389,7 @@ const RejectionModal: React.FC<{
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity" />
+        <div className="fixed inset-0 backdrop-blur-md bg-white/30 transition-opacity" />
 
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
@@ -767,27 +770,14 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
   };
 
   // Función para generar QR desde el modal
-  const handleGenerateQRFromModal = async (
-    comercioId: string
-  ): Promise<{ qrCode: string; qrCodeUrl: string }> => {
-    const result: string | { qrCode: string; qrCodeUrl: string } | null = await generateQRCode(comercioId);
-    if (result === null) {
-      // If generateQRCode returns null, return an empty QR code object
-      return { qrCode: '', qrCodeUrl: '' };
-    }
+  const handleGenerateQRFromModal = async (comercioId: string) => {
+    const result = await generateQRCode(comercioId);
     if (typeof result === 'string') {
       // If generateQRCode returns a string, wrap it in the expected object
       return { qrCode: result, qrCodeUrl: result };
     }
     // If generateQRCode already returns the correct object, just return it
-    if (
-      typeof (result as { qrCode: string }).qrCode === 'string' &&
-      typeof (result as { qrCodeUrl: string }).qrCodeUrl === 'string'
-    ) {
-      return result as { qrCode: string; qrCodeUrl: string };
-    }
-    // Fallback: return an empty QR code object to satisfy the type
-    return { qrCode: '', qrCodeUrl: '' };
+    return result;
   };
 
   // Manejar generación de QR masiva
@@ -1941,11 +1931,12 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
         loading={loading}
       />
 
-      {/* Enhanced Unlink Confirmation Dialog */}
+      {/* FIXED Unlink Confirmation Dialog - NO BLUR ON MODAL */}
       {comercioToUnlink && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity" />
+            {/* Only blur the backdrop, not the modal */}
+            <div className="fixed inset-0 backdrop-blur-md bg-white/30 transition-opacity" />
 
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
@@ -1995,11 +1986,12 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
         </div>
       )}
 
-      {/* Enhanced Delete Confirmation Dialog */}
+      {/* FIXED Delete Confirmation Dialog - NO BLUR ON MODAL */}
       {comercioToDelete && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity" />
+            {/* Only blur the backdrop, not the modal */}
+            <div className="fixed inset-0 backdrop-blur-md bg-white/30 transition-opacity" />
 
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
