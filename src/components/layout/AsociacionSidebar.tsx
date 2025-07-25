@@ -15,13 +15,14 @@ import {
   Settings,
   TrendingUp,
   Menu,
-  X
+  X,
+  Zap,
+  Target
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSocios } from '@/hooks/useSocios';
 import { useComercios } from '@/hooks/useComercios';
-import { collection, query, where, onSnapshot} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { useBeneficiosAsociacion } from '@/hooks/useBeneficios';
 import { useSidebarNavigation } from '@/hooks/useSidebarNavigation';
 
 interface AsociacionSidebarProps {
@@ -39,8 +40,9 @@ interface RealtimeStats {
   sociosVencidos: number;
   totalComercios: number;
   comerciosActivos: number;
-  solicitudesPendientes: number;
   beneficiosActivos: number;
+  beneficiosUsadosHoy: number;
+  ingresosMensuales: number;
 }
 
 interface MenuItem {
@@ -52,6 +54,7 @@ interface MenuItem {
   isNew?: boolean;
   description?: string;
   color: string;
+  priority?: number;
 }
 
 export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
@@ -64,8 +67,9 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
 }) => {
   const pathname = usePathname();
   const { user, signOut } = useAuth();
-  const { stats } = useSocios();
-  const { stats: comerciosStats } = useComercios();
+  const { stats: sociosStats, loading: sociosLoading } = useSocios();
+  const { stats: comerciosStats, loading: comerciosLoading } = useComercios();
+  const { stats: beneficiosStats, loading: beneficiosLoading } = useBeneficiosAsociacion();
   
   const { navigate } = useSidebarNavigation({
     onMenuClick,
@@ -78,9 +82,27 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
     sociosVencidos: 0,
     totalComercios: 0,
     comerciosActivos: 0,
-    solicitudesPendientes: 0,
-    beneficiosActivos: 0
+    beneficiosActivos: 0,
+    beneficiosUsadosHoy: 0,
+    ingresosMensuales: 0
   });
+
+  // Calcular estadísticas consolidadas
+  const consolidatedStats = useMemo(() => {
+    return {
+      totalSocios: sociosStats?.total || 0,
+      sociosActivos: sociosStats?.activos || 0,
+      sociosVencidos: sociosStats?.vencidos || 0,
+      sociosAlDia: sociosStats?.alDia || 0,
+      totalComercios: comerciosStats?.totalComercios || 0,
+      comerciosActivos: comerciosStats?.comerciosActivos || 0,
+      beneficiosActivos: beneficiosStats?.totalActivos || 0,
+      beneficiosUsadosHoy: beneficiosStats?.usosHoy || 0,
+      beneficiosUsadosMes: beneficiosStats?.usosMes || 0,
+      ingresosMensuales: sociosStats?.ingresosMensuales || 0,
+      beneficiosUsados: sociosStats?.beneficiosUsados || 0
+    };
+  }, [sociosStats, comerciosStats, beneficiosStats]);
 
   const menuItems: MenuItem[] = useMemo(() => [
     {
@@ -89,34 +111,38 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
       icon: Home,
       route: '/dashboard/asociacion',
       description: 'Vista general del sistema',
-      color: 'from-blue-500 to-blue-600'
+      color: 'from-blue-500 to-blue-600',
+      priority: 1
     },
     {
       id: 'socios',
       label: 'Socios',
       icon: Users,
       route: '/dashboard/asociacion/socios',
-      badge: realtimeStats.totalSocios,
-      description: 'Gestión de miembros',
-      color: 'from-emerald-500 to-emerald-600'
+      badge: consolidatedStats.totalSocios,
+      description: `${consolidatedStats.sociosActivos} activos de ${consolidatedStats.totalSocios} total`,
+      color: 'from-emerald-500 to-emerald-600',
+      priority: 2
     },
     {
       id: 'comercios',
       label: 'Comercios',
       icon: Store,
       route: '/dashboard/asociacion/comercios',
-      badge: realtimeStats.comerciosActivos,
-      description: 'Red de comercios afiliados',
-      color: 'from-purple-500 to-purple-600'
+      badge: consolidatedStats.comerciosActivos,
+      description: `${consolidatedStats.comerciosActivos} comercios afiliados`,
+      color: 'from-purple-500 to-purple-600',
+      priority: 3
     },
     {
       id: 'beneficios',
       label: 'Beneficios',
       icon: Gift,
       route: '/dashboard/asociacion/beneficios',
-      badge: realtimeStats.beneficiosActivos,
-      description: 'Ofertas y promociones',
-      color: 'from-orange-500 to-orange-600'
+      badge: consolidatedStats.beneficiosActivos,
+      description: `${consolidatedStats.beneficiosUsadosMes} usos este mes`,
+      color: 'from-orange-500 to-orange-600',
+      priority: 4
     },
     {
       id: 'analytics',
@@ -125,58 +151,25 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
       route: '/dashboard/asociacion/analytics',
       isNew: true,
       description: 'Métricas y análisis avanzado',
-      color: 'from-indigo-500 to-indigo-600'
+      color: 'from-indigo-500 to-indigo-600',
+      priority: 5
     }
-  ], [realtimeStats]);
+  ], [consolidatedStats]);
 
-  const memoizedStats = useMemo(() => ({
-    totalSocios: stats?.total || 0,
-    sociosActivos: stats?.activos || 0,
-    sociosVencidos: stats?.vencidos || 0,
-    totalComercios: comerciosStats?.totalComercios || 0,
-    comerciosActivos: comerciosStats?.comerciosActivos || 0,
-    solicitudesPendientes: comerciosStats?.solicitudesPendientes || 0,
-    beneficiosActivos: 0
-  }), [stats, comerciosStats]);
-
+  // Actualizar estadísticas en tiempo real
   useEffect(() => {
     setRealtimeStats(prev => ({
       ...prev,
-      ...memoizedStats
+      totalSocios: consolidatedStats.totalSocios,
+      sociosActivos: consolidatedStats.sociosActivos,
+      sociosVencidos: consolidatedStats.sociosVencidos,
+      totalComercios: consolidatedStats.totalComercios,
+      comerciosActivos: consolidatedStats.comerciosActivos,
+      beneficiosActivos: consolidatedStats.beneficiosActivos,
+      beneficiosUsadosHoy: consolidatedStats.beneficiosUsadosHoy,
+      ingresosMensuales: consolidatedStats.ingresosMensuales
     }));
-  }, [memoizedStats]);
-
-  useEffect(() => {
-    if (!user?.uid) return;
-
-    const unsubscribers: (() => void)[] = [];
-
-    try {
-      const beneficiosRef = collection(db, 'beneficios');
-      const beneficiosQuery = query(
-        beneficiosRef, 
-        where('asociacionesDisponibles', 'array-contains', user.uid),
-        where('estado', '==', 'activo')
-      );
-      
-      const unsubscribeBeneficios = onSnapshot(beneficiosQuery, (snapshot) => {
-        setRealtimeStats(prev => ({
-          ...prev,
-          beneficiosActivos: snapshot.docs.length
-        }));
-      }, (error) => {
-        console.error('Error listening to beneficios:', error);
-      });
-      unsubscribers.push(unsubscribeBeneficios);
-
-    } catch (error) {
-      console.error('Error setting up Firebase listeners:', error);
-    }
-
-    return () => {
-      unsubscribers.forEach(unsubscribe => unsubscribe());
-    };
-  }, [user?.uid]);
+  }, [consolidatedStats]);
 
   const isActiveItem = useCallback((item: MenuItem) => {
     return pathname === item.route || activeSection === item.id;
@@ -201,8 +194,29 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
     }
   };
 
+  // Indicador de carga
+  const isLoadingStats = sociosLoading || comerciosLoading || beneficiosLoading;
+
+  // Formatear números grandes
+  const formatNumber = (num: number) => {
+    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
+    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
+    return num.toString();
+  };
+
+  // Formatear moneda
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('es-AR', {
+      style: 'currency',
+      currency: 'ARS',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount);
+  };
+
   return (
     <div className="flex flex-col h-full bg-white">
+      {/* Header */}
       <div className="relative px-6 py-6 border-b border-gray-100">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
@@ -210,7 +224,11 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
               <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl flex items-center justify-center shadow-lg">
                 <Building2 className="w-6 h-6 text-white" />
               </div>
-              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white shadow-sm"></div>
+              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white shadow-sm">
+                {isLoadingStats && (
+                  <div className="w-full h-full bg-emerald-500 rounded-full animate-pulse"></div>
+                )}
+              </div>
             </div>
             
             {open && (
@@ -241,6 +259,7 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
         </div>
       </div>
 
+      {/* Stats Cards */}
       {open && (
         <div className="px-6 py-4 border-b border-gray-100">
           <div className="grid grid-cols-2 gap-3 mb-4">
@@ -250,7 +269,9 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
                   <Users className="w-4 h-4 text-white" />
                 </div>
                 <div className="text-right">
-                  <p className="text-lg font-bold text-blue-900">{realtimeStats.totalSocios}</p>
+                  <p className="text-lg font-bold text-blue-900">
+                    {isLoadingStats ? '...' : formatNumber(realtimeStats.totalSocios)}
+                  </p>
                   <p className="text-xs text-blue-600 font-medium">Socios</p>
                 </div>
               </div>
@@ -262,39 +283,67 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
                   <Store className="w-4 h-4 text-white" />
                 </div>
                 <div className="text-right">
-                  <p className="text-lg font-bold text-emerald-900">{realtimeStats.comerciosActivos}</p>
+                  <p className="text-lg font-bold text-emerald-900">
+                    {isLoadingStats ? '...' : formatNumber(realtimeStats.comerciosActivos)}
+                  </p>
                   <p className="text-xs text-emerald-600 font-medium">Comercios</p>
                 </div>
               </div>
             </div>
           </div>
           
+          {/* Enhanced Activity Summary */}
           <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-4 border border-gray-200">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center space-x-2">
                 <TrendingUp className="w-4 h-4 text-gray-600" />
-                <span className="text-sm font-semibold text-gray-700">Resumen de Actividad</span>
+                <span className="text-sm font-semibold text-gray-700">Actividad del Sistema</span>
               </div>
+              {realtimeStats.beneficiosUsadosHoy > 0 && (
+                <div className="flex items-center space-x-1">
+                  <Zap className="w-3 h-3 text-yellow-500" />
+                  <span className="text-xs text-yellow-600 font-medium">Activo</span>
+                </div>
+              )}
             </div>
             
             <div className="grid grid-cols-3 gap-3 text-center">
               <div>
-                <p className="text-lg font-bold text-gray-900">{realtimeStats.sociosActivos}</p>
+                <p className="text-lg font-bold text-gray-900">
+                  {isLoadingStats ? '...' : formatNumber(realtimeStats.sociosActivos)}
+                </p>
                 <p className="text-xs text-gray-600">Activos</p>
               </div>
               <div>
-                <p className="text-lg font-bold text-gray-900">{realtimeStats.beneficiosActivos}</p>
+                <p className="text-lg font-bold text-gray-900">
+                  {isLoadingStats ? '...' : formatNumber(realtimeStats.beneficiosActivos)}
+                </p>
                 <p className="text-xs text-gray-600">Beneficios</p>
               </div>
               <div>
-                <p className="text-lg font-bold text-gray-900">{realtimeStats.solicitudesPendientes}</p>
-                <p className="text-xs text-gray-600">Pendientes</p>
+                <p className="text-lg font-bold text-gray-900">
+                  {isLoadingStats ? '...' : formatNumber(consolidatedStats.beneficiosUsadosMes)}
+                </p>
+                <p className="text-xs text-gray-600">Usos/Mes</p>
               </div>
             </div>
+
+            {/* Revenue indicator */}
+            {realtimeStats.ingresosMensuales > 0 && (
+              <div className="mt-3 pt-3 border-t border-gray-200">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-600">Ingresos del mes</span>
+                  <span className="text-sm font-bold text-green-700">
+                    {formatCurrency(realtimeStats.ingresosMensuales)}
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
 
+      {/* Navigation Menu */}
       <nav className="flex-1 px-4 py-4 space-y-2 overflow-y-auto">
         {menuItems.map((item) => {
           const isActive = isActiveItem(item);
@@ -344,7 +393,7 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
                           : 'bg-gray-200 text-gray-700 group-hover:bg-gray-300'
                         }
                       `}>
-                        {item.badge > 99 ? '99+' : item.badge}
+                        {item.badge > 99 ? '99+' : formatNumber(item.badge)}
                       </div>
                     )}
                   </div>
@@ -355,10 +404,14 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
         })}
       </nav>
 
+      {/* Quick Actions */}
       {open && (
         <div className="px-4 py-4 border-t border-gray-100">
           <div className="grid grid-cols-2 gap-2">
-            <button className="flex items-center justify-center space-x-2 px-3 py-2.5 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-all duration-200 border border-gray-200 hover:border-gray-300">
+            <button 
+              onClick={() => handleMenuClick('notificaciones', '/dashboard/asociacion/notificaciones')}
+              className="flex items-center justify-center space-x-2 px-3 py-2.5 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-all duration-200 border border-gray-200 hover:border-gray-300"
+            >
               <Bell className="w-4 h-4" />
               <span className="text-sm font-medium">Alertas</span>
             </button>
@@ -371,6 +424,7 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
         </div>
       )}
 
+      {/* User Profile & Logout */}
       <div className="px-4 py-4 border-t border-gray-100">
         {open ? (
           <div className="space-y-3">
