@@ -493,16 +493,57 @@ transition:all 0.2s ease;
 
 .nav{position:relative;display:flex;align-items:center;justify-content:space-between;width:100%;max-width:none;margin:0;padding:0;height:auto;min-height:auto;background:transparent}
 
-/* Logo flotante con transición */
-.nav__brand{position:fixed;top:var(--space-lg);left:var(--space-lg);z-index:1002;background:rgba(21, 25, 34, 0.95);backdrop-filter:blur(20px);border:1px solid rgba(255, 255, 255, 0.1);border-radius:20px;padding:var(--space-md);box-shadow:0 8px 32px rgba(0, 0, 0, 0.3), 0 0 20px rgba(255, 69, 105, 0.1);transition:all var(--transition-slow)}
+/* Logo flotante con transición MEJORADA PARA MÓVIL */
+.nav__brand{position:fixed;top:var(--space-lg);left:var(--space-lg);z-index:1002;background:rgba(21, 25, 34, 0.95);backdrop-filter:blur(20px);border:1px solid rgba(255, 255, 255, 0.1);border-radius:20px;padding:var(--space-md);box-shadow:0 8px 32px rgba(0, 0, 0, 0.3), 0 0 20px rgba(255, 69, 105, 0.1);transition:all var(--transition-slow);
+/* MEJORADO: Asegurar que sea clickeable en móvil */
+cursor:pointer;
+-webkit-tap-highlight-color:rgba(255, 69, 105, 0.2);
+-webkit-touch-callout:none;
+-webkit-user-select:none;
+user-select:none;
+/* MEJORADO: Área táctil mínima para móvil */
+min-width:56px;
+min-height:56px;
+display:flex;
+align-items:center;
+justify-content:center;
+}
 
-.nav__brand:active{transform:translateY(-1px) scale(0.98);box-shadow:0 12px 40px rgba(0, 0, 0, 0.4), 0 0 30px rgba(255, 69, 105, 0.2);border-color:rgba(255, 69, 105, 0.3)}
+.nav__brand:active{transform:translateY(-1px) scale(0.98);box-shadow:0 12px 40px rgba(0, 0, 0, 0.4), 0 0 30px rgba(255, 69, 105, 0.2);border-color:rgba(255, 69, 105, 0.3);transition:all 0.1s ease}
 
-.nav__logo-container{min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center}
+.nav__logo-container{min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;
+/* MEJORADO: Asegurar que sea clickeable */
+cursor:pointer;
+-webkit-tap-highlight-color:rgba(255, 69, 105, 0.2);
+-webkit-touch-callout:none;
+-webkit-user-select:none;
+user-select:none;
+position:relative;
+}
 
-.nav__logo{width:44px;height:44px;background-image:url('../../assets/logo.webp');background-size:contain;background-repeat:no-repeat;background-position:center;filter:brightness(1.2) contrast(1.1);transition:all var(--transition)}
+.nav__logo{width:44px;height:44px;background-image:url('../../assets/logo.webp');background-size:contain;background-repeat:no-repeat;background-position:center;filter:brightness(1.2) contrast(1.1);transition:all var(--transition);
+/* MEJORADO: Asegurar que sea clickeable y táctil */
+cursor:pointer;
+-webkit-tap-highlight-color:rgba(255, 69, 105, 0.2);
+-webkit-touch-callout:none;
+-webkit-user-select:none;
+user-select:none;
+/* MEJORADO: Área táctil completa */
+display:block;
+position:relative;
+z-index:1;
+}
 
-.nav__brand:active .nav__logo{transform:scale(1.05);filter:brightness(1.3) contrast(1.2)}
+/* MEJORADO: Efectos táctiles más responsivos */
+.nav__brand:active .nav__logo{transform:scale(1.05);filter:brightness(1.3) contrast(1.2);transition:all 0.1s ease}
+
+/* MEJORADO: Estados de focus para accesibilidad */
+.nav__brand:focus-visible,
+.nav__logo:focus-visible{
+outline:2px solid var(--starflex-crimson);
+outline-offset:2px;
+border-radius:20px;
+}
 
 /* Botón hamburguesa flotante con transiciones mejoradas */
 .nav__toggle{position:fixed;top:var(--space-lg);right:var(--space-lg);z-index:1002;display:flex;flex-direction:column;justify-content:center;align-items:center;width:56px;height:56px;background:rgba(21, 25, 34, 0.95);backdrop-filter:blur(20px);border:1px solid rgba(255, 255, 255, 0.1);border-radius:20px;cursor:pointer;overflow:hidden;flex-shrink:0;min-width:56px;min-height:56px;touch-action:manipulation;box-shadow:0 8px 32px rgba(0, 0, 0, 0.3), 0 0 20px rgba(255, 69, 105, 0.1);transition:all 0.4s cubic-bezier(0.4, 0, 0.2, 1)}
@@ -604,62 +645,6 @@ transition:all 0.2s ease;
 .nav__language-flag{font-size:1.1rem;line-height:1;transition:transform var(--transition);flex-shrink:0;user-select:none;-webkit-user-select:none}
 .nav__language-name{font-family:var(--font-primary);font-weight:600;letter-spacing:0.5px;white-space:nowrap;user-select:none;-webkit-user-select:none}
 .nav__language-option:hover{color:var(--text-primary);background:linear-gradient(135deg, var(--glass-bg-light) 0%, var(--glass-bg-medium) 100%);transform:translateX(3px)}
-}
-
-/* MOBILE DRAWER CON TRANSICIONES MEJORADAS */
-.nav__drawer{position:fixed;top:0;right:-100%;width:min(90%, 350px);height:100vh;background:rgba(15, 18, 25, 0.98);backdrop-filter:blur(20px);border-left:1px solid var(--border-subtle);box-shadow:-10px 0 50px rgba(0, 0, 0, 0.5);z-index:999;overflow:hidden;padding-top:calc(var(--space-6xl) + var(--space-lg));display:flex;flex-direction:column;transition:right 0.4s cubic-bezier(0.4, 0, 0.2, 1)}
-
-.nav__drawer.active{right:0}
-
-.nav__drawer-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0, 0, 0, 0.6);backdrop-filter:blur(3px);opacity:0;visibility:hidden;z-index:998;transition:all var(--transition-slow)}
-
-.nav__drawer-overlay.active{opacity:1;visibility:visible}
-
-.nav__drawer-header{display:flex;align-items:center;justify-content:center;padding:var(--space-lg) var(--space-xl);border-bottom:1px solid var(--border-subtle);min-height:70px;flex-shrink:0}
-
-.nav__drawer-brand{display:flex;align-items:center;gap:var(--space-md);justify-content:center}
-
-.nav__drawer-logo{width:36px;height:36px;background-image:url('../../assets/logo.webp');background-size:contain;background-repeat:no-repeat;background-position:center;filter:brightness(1.2);flex-shrink:0}
-
-.nav__drawer-title{font-family:var(--font-primary);font-size:1.3rem;font-weight:700;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-
-.nav__drawer-content{padding:var(--space-md) 0;display:flex;flex-direction:column;flex:1;overflow:hidden}
-
-/* SELECTOR DE IDIOMA REPOSICIONADO - AHORA VA ARRIBA CON TRANSICIONES */
-.nav__drawer-language{padding:var(--space-lg) var(--space-xl);border-bottom:1px solid var(--border-subtle);flex-shrink:0;order:-1}
-
-.nav__drawer-language-title{font-family:var(--font-primary);font-size:0.85rem;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:1px;margin-bottom:var(--space-sm);opacity:0.8}
-
-.nav__drawer-language-options{display:flex;gap:var(--space-sm)}
-
-.nav__drawer-language-option{flex:1;display:flex;align-items:center;justify-content:center;gap:var(--space-sm);padding:var(--space-sm) var(--space-md);font-size:0.85rem;font-weight:600;color:var(--text-secondary);background:var(--glass-bg);border:1px solid var(--border-subtle);border-radius:12px;cursor:pointer;min-height:36px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;touch-action:manipulation;transition:all var(--transition)}
-
-.nav__drawer-language-option.active{color:var(--neon-primary);background:rgba(255, 45, 85, 0.1);border-color:var(--neon-primary)}
-
-.nav__drawer-language-option:active{transform:scale(0.95);transition:all 0.1s ease}
-
-.nav__drawer-language-flag{font-size:1rem;line-height:1;flex-shrink:0}
-
-.nav__drawer-navigation{flex:1;padding:0 var(--space-xl);display:flex;flex-direction:column;justify-content:flex-start;padding-top:var(--space-lg)}
-
-.nav__drawer-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:var(--space-md)}
-
-.nav__drawer-link{display:flex;align-items:center;gap:var(--space-md);padding:var(--space-md) var(--space-lg);font-family:var(--font-primary);font-size:1rem;font-weight:600;color:var(--text-secondary);text-decoration:none;text-transform:uppercase;letter-spacing:0.5px;background:var(--glass-bg);border:1px solid var(--border-subtle);border-radius:12px;position:relative;min-height:44px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;touch-action:manipulation;transition:all var(--transition)}
-
-.nav__drawer-link.active{color:var(--neon-primary);background:rgba(255, 45, 85, 0.1);box-shadow:inset 3px 0 0 var(--neon-primary)}
-
-.nav__drawer-link:active{transform:scale(0.98);transition:all 0.1s ease}
-
-.nav__drawer-link-icon{width:18px;height:18px;opacity:0.7;flex-shrink:0}
-
-.nav-menu-open{overflow:hidden}
-
-/* DESKTOP DRAWER HOVER */
-@media (min-width: 1024px) {
-.nav__drawer-link{transition:all var(--transition)}
-.nav__drawer-link:hover{color:var(--text-primary);background:var(--glass-bg-light);border-color:var(--neon-primary);transform:translateX(3px)}
-.nav__drawer-language-option{transition:all var(--transition)}
-.nav__drawer-language-option:hover{color:var(--text-primary);background:var(--glass-bg-light);border-color:var(--neon-primary);transform:scale(1.02)}
 }
 
 @media (max-width: 480px){
@@ -1109,7 +1094,6 @@ z-index:1;
 .contact__channel{padding:var(--space-2xl);cursor:pointer;transition:all 0.2s ease}
 .contact__channel:hover{background:rgba(255, 255, 255, 0.04);border-color:rgba(255, 255, 255, 0.1);box-shadow:var(--shadow-xl);transform:translateY(-3px)}
 .contact__channel-icon{width:75px!important;height:75px!important}
-.contact__channel-icon svg{width:34px!important;height:34px!important}
 .contact__channel:hover .contact__channel-icon{box-shadow:var(--shadow-2xl);transform:scale(1.05)}
 .contact__channel-title{font-size:1.4rem}
 .contact__channel:hover .contact__channel-title{color:var(--starflex-crimson)}
@@ -1395,11 +1379,14 @@ color: var(--text-primary);
 display: block;
 background: linear-gradient(135deg,
 var(--starflex-crimson) 0%,
-var(--starflex-crimson-bright) 100%
+var(--starflex-crimson-bright) 30%,
+var(--starflex-crimson-glow) 70%,
+#ff6b9d 100%
 );
 background-clip: text;
 -webkit-background-clip: text;
 -webkit-text-fill-color: transparent;
+filter: drop-shadow(0 0 20px rgba(255, 69, 105, 0.4));
 }
 
 .videos__subtitle {
@@ -1729,7 +1716,7 @@ background: rgba(0, 0, 0, 0.8);
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    background: linear-gradient(135deg, rgba(255, 0, 150, 0.1) 0%, rgba(255, 20, 100, 0.15) 100%);
+    background: linear-gradient(135deg, rgba(255, 0, 150, 0.1) 0%, transparent 70%);
     border: 1px solid rgba(255, 0, 150, 0.3);
     color: #ff0096;
     padding: 0.75rem 1.5rem;
@@ -2037,34 +2024,57 @@ background: rgba(0, 0, 0, 0.8);
     background: linear-gradient(135deg, var(--neon-red-base) 0%, var(--neon-red-soft) 100%);
     border: 1px solid var(--neon-red-soft);
     border-radius: 16px;
-    box-shadow: 0 0 15px var(--neon-red-shadow-soft), 0 0 30px var(--neon-red-glow-soft), 0 4px 12px rgba(0, 0, 0, 0.25);
-    text-shadow: 0 0 8px var(--neon-red-glow-soft);
-    min-height: 44px;
-    touch-action: manipulation;
-    margin: 0 auto !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    transform: none !important;
-    transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    position: relative;
-    overflow: hidden;
+    cursor:pointer;
+    overflow:hidden;
+    min-height:44px;
+    touch-action:manipulation;
+    transition:all var(--transition);
 }
 
-/* EFECTO DE BRILLO SUTIL PARA EL BOTÓN CTA DEL DRAWER */
-.nav__drawer-cta-btn::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(45deg, transparent 30%, var(--neon-red-glow-soft) 40%, var(--neon-red-glow-medium) 50%, var(--neon-red-glow-soft) 60%, transparent 70%);
-    opacity: 0;
-    transition: opacity 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    border-radius: 14px;
-    pointer-events: none;
-    z-index: 1;
+/* EFECTO DE BRILLO INTERNO SUTIL */
+.nav__drawer-cta-btn::before{
+content:'';
+position:absolute;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:linear-gradient(90deg, 
+    transparent, 
+    var(--neon-red-glow-soft), 
+    var(--neon-red-glow-medium), 
+    var(--neon-red-glow-soft), 
+    transparent
+);
+transition:left 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+z-index:1;
+pointer-events:none;
+opacity:0.6;
 }
+
+/* EFECTO DE AURA EXTERNA SUTIL */
+.nav__drawer-cta-btn::after{
+content:'';
+position:absolute;
+top:-2px;
+left:-2px;
+right:-2px;
+bottom:-2px;
+background:linear-gradient(45deg, 
+    var(--neon-red-base), 
+    var(--neon-red-soft), 
+    var(--neon-red-medium), 
+    var(--neon-red-soft), 
+    var(--neon-red-base)
+);
+border-radius:16px;
+z-index:-1;
+opacity:0.3;
+filter:blur(8px);
+transition:all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.nav__drawer-cta-btn:active{transform:translateY(-1px) scale(0.98);transition:all 0.1s ease;opacity:0.8}
 
 .nav__drawer-cta-content {
     display: flex !important;
@@ -2098,10 +2108,10 @@ background: rgba(0, 0, 0, 0.8);
 .nav__drawer-cta-icon {
     width: 24px !important;
     height: 24px !important;
+    opacity: 0.7;
     flex-shrink: 0;
     position: relative;
     z-index: 2;
-    opacity: 0.9;
     transition: all var(--transition);
 }
 
@@ -2113,10 +2123,9 @@ background: rgba(0, 0, 0, 0.8);
 }
 
 /* EFECTOS TÁCTILES PARA MÓVIL */
-.nav__drawer-cta-btn:active {
-    transform: translateY(-1px) scale(0.98) !important;
-    transition: all 0.1s ease !important;
-    box-shadow: 0 0 20px var(--neon-red-shadow-medium), 0 0 40px var(--neon-red-glow-medium), 0 6px 18px rgba(0, 0, 0, 0.3);
+.nav__drawer-cta-btn:active{
+transform:translateY(-1px) scale(0.98);
+transition:all 0.1s ease;
 }
 
 .nav__drawer-cta-btn:active .nav__drawer-cta-icon {
@@ -2125,92 +2134,308 @@ background: rgba(0, 0, 0, 0.8);
 
 /* EFECTOS HOVER PARA DESKTOP */
 @media (min-width: 1024px) {
-    .nav__drawer-cta-btn:hover {
-        transform: translateY(-2px) scale(1.01);
-        background: linear-gradient(135deg, var(--neon-red-soft) 0%, var(--neon-red-medium) 100%);
-        box-shadow: 0 0 25px var(--neon-red-shadow-bright), 0 0 50px var(--neon-red-glow-bright), 0 8px 20px rgba(0, 0, 0, 0.35);
-        text-shadow: 0 0 12px var(--neon-red-glow-medium), 0 0 24px var(--neon-red-shadow-medium);
-        border-color: var(--neon-red-medium);
-        color: #ffffff !important;
-        transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    }
-
-    .nav__drawer-cta-btn:hover::before {
-        opacity: 0.6;
-    }
-
-    .nav__drawer-cta-btn:hover .nav__drawer-cta-icon {
-        transform: scale(1.1);
-        opacity: 1;
-    }
-
-    .nav__drawer-cta-btn:hover .nav__drawer-cta-main,
-    .nav__drawer-cta-btn:hover .nav__drawer-cta-trial {
-        color: #ffffff !important;
-    }
+.nav__drawer-cta-btn{transition:all var(--transition)}
+.nav__drawer-cta-btn:hover{color:var(--text-primary);background:var(--glass-bg-light);border-color:var(--neon-primary);transform:translateX(3px)}
+.nav__drawer-cta-btn:hover .nav__drawer-cta-icon{transform:scale(1.1);opacity:1}
+.nav__drawer-cta-btn:hover .nav__drawer-cta-main,
+.nav__drawer-cta-btn:hover .nav__drawer-cta-trial{color:#ffffff !important}
 }
 
-/* RESPONSIVE PARA PANTALLAS PEQUEÑAS */
-@media (max-width: 480px) {
-    .nav__drawer-cta {
-        padding: var(--space-md) var(--space-lg);
-    }
-
-    .nav__drawer-cta-btn {
-        padding: var(--space-md) var(--space-lg);
-    }
-
-    .nav__drawer-cta-main {
-        font-size: 1rem !important;
-    }
-
-    .nav__drawer-cta-trial {
-        font-size: 0.8rem;
-    }
-
-    .nav__drawer-cta-icon {
-        width: 20px !important;
-        height: 20px !important;
-    }
+@media (max-width: 480px){
+.nav__drawer-cta{padding:var(--space-md) var(--space-lg);}
+.nav__drawer-cta-btn{padding:var(--space-md) var(--space-lg);}
+.nav__drawer-cta-main{font-size:1rem !important;}
+.nav__drawer-cta-trial{font-size:0.8rem;}
+.nav__drawer-cta-icon{width:20px !important;height:20px !important;}
 }
 
-/* MODO RENDIMIENTO - DESHABILITAR ANIMACIONES COMPLEJAS */
-.performance-mode .nav__drawer-cta-btn {
-    transition: all 0.2s ease !important;
-    animation: none !important;
+/* ===== MOBILE DRAWER CON TRANSICIONES MEJORADAS ===== */
+.nav__drawer{position:fixed;top:0;right:-100%;width:min(90%, 350px);height:100vh;background:rgba(15, 18, 25, 0.98);backdrop-filter:blur(20px);border-left:1px solid var(--border-subtle);box-shadow:-10px 0 50px rgba(0, 0, 0, 0.5);z-index:999;overflow:hidden;padding-top:calc(var(--space-6xl) + var(--space-lg));display:flex;flex-direction:column;transition:right 0.4s cubic-bezier(0.4, 0, 0.2, 1)}
+
+.nav__drawer.active{right:0}
+
+.nav__drawer-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0, 0, 0, 0.6);backdrop-filter:blur(3px);opacity:0;visibility:hidden;z-index:998;transition:all var(--transition-slow)}
+
+.nav__drawer-overlay.active{opacity:1;visibility:visible}
+
+.nav__drawer-header{display:flex;align-items:center;justify-content:center;padding:var(--space-lg) var(--space-xl);border-bottom:1px solid var(--border-subtle);min-height:70px;flex-shrink:0}
+
+.nav__drawer-brand{display:flex;align-items:center;gap:var(--space-md);justify-content:center}
+
+.nav__drawer-logo{width:36px;height:36px;background-image:url('../../assets/logo.webp');background-size:contain;background-repeat:no-repeat;background-position:center;filter:brightness(1.2);flex-shrink:0}
+
+.nav__drawer-title{font-family:var(--font-primary);font-size:1.3rem;font-weight:700;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.nav__drawer-content{padding:var(--space-md) 0;display:flex;flex-direction:column;flex:1;overflow:hidden}
+
+/* SELECTOR DE IDIOMA REPOSICIONADO - AHORA VA ARRIBA CON TRANSICIONES */
+.nav__drawer-language{padding:var(--space-lg) var(--space-xl);border-bottom:1px solid var(--border-subtle);flex-shrink:0;order:-1}
+
+.nav__drawer-language-title{font-family:var(--font-primary);font-size:0.85rem;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:1px;margin-bottom:var(--space-sm);opacity:0.8}
+
+.nav__drawer-language-options{display:flex;gap:var(--space-sm)}
+
+.nav__drawer-language-option{flex:1;display:flex;align-items:center;justify-content:center;gap:var(--space-sm);padding:var(--space-sm) var(--space-md);font-size:0.85rem;font-weight:600;color:var(--text-secondary);background:var(--glass-bg);border:1px solid var(--border-subtle);border-radius:12px;cursor:pointer;min-height:36px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;touch-action:manipulation;transition:all var(--transition)}
+
+.nav__drawer-language-option.active{color:var(--neon-primary);background:rgba(255, 45, 85, 0.1);border-color:var(--neon-primary)}
+
+.nav__drawer-language-option:active{transform:scale(0.95);transition:all 0.1s ease}
+
+.nav__drawer-language-flag{font-size:1rem;line-height:1;flex-shrink:0}
+
+.nav__drawer-navigation{flex:1;padding:0 var(--space-xl);display:flex;flex-direction:column;justify-content:flex-start;padding-top:var(--space-lg)}
+
+.nav__drawer-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:var(--space-md)}
+
+.nav__drawer-link{display:flex;align-items:center;gap:var(--space-md);padding:var(--space-md) var(--space-lg);font-family:var(--font-primary);font-size:1rem;font-weight:600;color:var(--text-secondary);text-decoration:none;text-transform:uppercase;letter-spacing:0.5px;background:var(--glass-bg);border:1px solid var(--border-subtle);border-radius:12px;position:relative;min-height:44px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;touch-action:manipulation;transition:all var(--transition)}
+
+.nav__drawer-link.active{color:var(--neon-primary);background:rgba(255, 45, 85, 0.1);box-shadow:inset 3px 0 0 var(--neon-primary)}
+
+.nav__drawer-link:active{transform:scale(0.98);transition:all 0.1s ease}
+
+.nav__drawer-link-icon{width:18px;height:18px;opacity:0.7;flex-shrink:0}
+
+.nav-menu-open{overflow:hidden}
+
+/* DESKTOP DRAWER HOVER */
+@media (min-width: 1024px) {
+.nav__drawer-link{transition:all var(--transition)}
+.nav__drawer-link:hover{color:var(--text-primary);background:var(--glass-bg-light);border-color:var(--neon-primary);transform:translateX(3px)}
+.nav__drawer-language-option{transition:all var(--transition)}
+.nav__drawer-language-option:hover{color:var(--text-primary);background:var(--glass-bg-light);border-color:var(--neon-primary);transform:scale(1.02)}
 }
 
-.performance-mode .nav__drawer-cta-btn::before {
-    display: none !important;
+@media (max-width: 480px){
+.nav__brand{top:var(--space-md);left:var(--space-md);padding:var(--space-sm)}
+.nav__logo{width:40px;height:40px}
+.nav__toggle{top:var(--space-md);right:var(--space-md);width:52px;height:52px}
+.nav__toggle-line{width:22px;height:2.5px;margin:2.5px 0}
+.nav__drawer{width:min(95%, 320px)}
+.nav__drawer-language{padding:var(--space-md) var(--space-lg)}
+.nav__drawer-navigation{padding:0 var(--space-lg);padding-top:var(--space-md)}
 }
 
-/* MODO REDUCIDO DE MOVIMIENTO */
-@media (prefers-reduced-motion: reduce) {
-    .nav__drawer-cta-btn {
-        transition: all 0.2s ease !important;
-        animation: none !important;
-    }
+/* ===== BOTÓN CTA DEL DRAWER MÓVIL ===== */
+.nav__drawer-cta{padding:var(--space-lg) var(--space-xl);border-bottom:1px solid var(--border-subtle);flex-shrink:0;order:-1}
 
-    .nav__drawer-cta-btn::before {
-        display: none !important;
-    }
+.nav__drawer-cta-btn{display:flex;align-items:center;gap:var(--space-sm);width:100%;padding:var(--space-lg) var(--space-xl);font-family:var(--font-primary);font-weight:700;color:#ffffff !important;text-decoration:none;background:linear-gradient(135deg, var(--neon-red-base) 0%, var(--neon-red-soft) 100%);border:1px solid var(--neon-red-soft);border-radius:16px;box-shadow:0 0 15px var(--neon-red-shadow-soft), 0 0 30px var(--neon-red-glow-soft), 0 4px 12px rgba(0, 0, 0, 0.25);text-shadow:0 0 8px var(--neon-red-glow-soft);min-height:44px;touch-action:manipulation;transition:all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);position:relative;overflow:hidden}
 
-    .nav__drawer-cta-btn:hover {
-        transform: none !important;
-    }
+.nav__drawer-cta-btn::before{content:'';position:absolute;top:0;left:0;width:100%;height:100%;background:linear-gradient(90deg, 
+    transparent, 
+    var(--neon-red-glow-soft), 
+    var(--neon-red-glow-medium), 
+    var(--neon-red-glow-soft), 
+    transparent
+);transition:left 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);z-index:1;pointer-events:none;opacity:0.6;border-radius:14px;}
 
-    .nav__drawer-cta-btn:active {
-        transform: scale(0.98) !important;
-    }
+.nav__drawer-cta-btn::after{content:'';position:absolute;top:-2px;left:-2px;right:-2px;bottom:-2px;background:linear-gradient(45deg, 
+    var(--neon-red-base), 
+    var(--neon-red-soft), 
+    var(--neon-red-medium), 
+    var(--neon-red-soft), 
+    var(--neon-red-base)
+);border-radius:16px;z-index:-1;opacity:0.3;filter:blur(8px);transition:all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);}
+
+.nav__drawer-cta-btn:active{transform:translateY(-1px) scale(0.98);transition:all 0.1s ease;opacity:0.8}
+
+.nav__drawer-cta-content{display:flex;flex-direction:column;align-items:flex-start;flex:1;position:relative;z-index:2}
+
+.nav__drawer-cta-main{font-size:1.1rem;font-weight:800;letter-spacing:1px;text-align:left;color:#ffffff !important;line-height:1.2;margin-bottom:2px}
+
+.nav__drawer-cta-trial{font-size:0.85rem;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;opacity:0.9;color:#ffffff !important;text-align:left}
+
+.nav__drawer-cta-icon{width:24px;height:24px;opacity:0.9;flex-shrink:0;position:relative;z-index:2;transition:all var(--transition)}
+
+.nav__drawer-cta-icon svg{width:100%;height:100%;color:#ffffff !important;filter:drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));}
+
+/* EFECTOS TÁCTILES PARA MÓVIL */
+.nav__drawer-cta-btn:active{transform:translateY(-1px) scale(0.98);transition:all 0.1s ease;opacity:0.8}
+
+.nav__drawer-cta-btn:active .nav__drawer-cta-icon{transform:scale(0.95);}
+
+/* EFECTOS HOVER PARA DESKTOP */
+@media (min-width: 1024px) {
+.nav__drawer-cta-btn:hover{transform:translateY(-2px) scale(1.01);background:linear-gradient(135deg, var(--neon-red-soft) 0%, var(--neon-red-medium) 100%);box-shadow:0 0 25px var(--neon-red-shadow-bright), 0 0 50px var(--neon-red-glow-bright), 0 8px 20px rgba(0, 0, 0, 0.35);text-shadow:0 0 12px var(--neon-red-glow-medium), 0 0 24px var(--neon-red-shadow-medium);border-color:var(--neon-red-bright);color:#ffffff !important;transition:all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);}
+.nav__drawer-cta-btn:hover::before{opacity:0.8;}
+.nav__drawer-cta-btn:hover .nav__drawer-cta-icon{transform:scale(1.1);opacity:1;}
+.nav__drawer-cta-btn:hover .nav__drawer-cta-main,
+.nav__drawer-cta-btn:hover .nav__drawer-cta-trial{color:#ffffff !important;}
 }
 
-/* MODO ALTO CONTRASTE */
-@media (prefers-contrast: high) {
-    .nav__drawer-cta-btn {
-        border-width: 2px;
-        box-shadow: 0 0 20px var(--neon-red-shadow-bright), 0 0 40px var(--neon-red-glow-bright);
-    }
+@media (max-width: 480px){
+.nav__drawer-cta{padding:var(--space-md) var(--space-lg);}
+.nav__drawer-cta-btn{padding:var(--space-md) var(--space-lg);}
+.nav__drawer-cta-main{font-size:1rem !important;}
+.nav__drawer-cta-trial{font-size:0.8rem;}
+.nav__drawer-cta-icon{width:20px !important;height:20px !important;}
 }
 
+/* ===== BOTÓN CTA DEL DRAWER MÓVIL ===== */
+.nav__drawer-cta{padding:var(--space-lg) var(--space-xl);border-bottom:1px solid var(--border-subtle);flex-shrink:0;order:-1}
 
+.nav__drawer-cta-btn{display:flex;align-items:center;gap:var(--space-sm);width:100%;padding:var(--space-lg) var(--space-xl);font-family:var(--font-primary);font-weight:700;color:#ffffff !important;text-decoration:none;background:linear-gradient(135deg, var(--neon-red-base) 0%, var(--neon-red-soft) 100%);border:1px solid var(--neon-red-soft);border-radius:16px;box-shadow:0 0 15px var(--neon-red-shadow-soft), 0 0 30px var(--neon-red-glow-soft), 0 4px 12px rgba(0, 0, 0, 0.25);text-shadow:0 0 8px var(--neon-red-glow-soft);min-height:44px;touch-action:manipulation;transition:all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);position:relative;overflow:hidden}
 
+.nav__drawer-cta-btn::before{content:'';position:absolute;top:0;left:0;width:100%;height:100%;background:linear-gradient(90deg, 
+    transparent, 
+    var(--neon-red-glow-soft), 
+    var(--neon-red-glow-medium), 
+    var(--neon-red-glow-soft), 
+    transparent
+);transition:left 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);z-index:1;pointer-events:none;opacity:0.6;border-radius:14px;}
+
+.nav__drawer-cta-btn::after{content:'';position:absolute;top:-2px;left:-2px;right:-2px;bottom:-2px;background:linear-gradient(45deg, 
+    var(--neon-red-base), 
+    var(--neon-red-soft), 
+    var(--neon-red-medium), 
+    var(--neon-red-soft), 
+    var(--neon-red-base)
+);border-radius:16px;z-index:-1;opacity:0.3;filter:blur(8px);transition:all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);}
+
+.nav__drawer-cta-btn:active{transform:translateY(-1px) scale(0.98);transition:all 0.1s ease;opacity:0.8}
+
+.nav__drawer-cta-content{display:flex;flex-direction:column;align-items:flex-start;flex:1;position:relative;z-index:2}
+
+.nav__drawer-cta-main{font-size:1.1rem;font-weight:800;letter-spacing:1px;text-align:left;color:#ffffff !important;line-height:1.2;margin-bottom:2px}
+
+.nav__drawer-cta-trial{font-size:0.85rem;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;opacity:0.9;color:#ffffff !important;text-align:left}
+
+.nav__drawer-cta-icon{width:24px;height:24px;opacity:0.9;flex-shrink:0;position:relative;z-index:2;transition:all var(--transition)}
+
+.nav__drawer-cta-icon svg{width:100%;height:100%;color:#ffffff !important;filter:drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));}
+
+/* EFECTOS TÁCTILES PARA MÓVIL */
+.nav__drawer-cta-btn:active{transform:translateY(-1px) scale(0.98);transition:all 0.1s ease;opacity:0.8}
+
+.nav__drawer-cta-btn:active .nav__drawer-cta-icon{transform:scale(0.95);}
+
+/* EFECTOS HOVER PARA DESKTOP */
+@media (min-width: 1024px) {
+.nav__drawer-cta-btn:hover{transform:translateY(-2px) scale(1.01);background:linear-gradient(135deg, var(--neon-red-soft) 0%, var(--neon-red-medium) 100%);box-shadow:0 0 25px var(--neon-red-shadow-bright), 0 0 50px var(--neon-red-glow-bright), 0 8px 20px rgba(0, 0, 0, 0.35);text-shadow:0 0 12px var(--neon-red-glow-medium), 0 0 24px var(--neon-red-shadow-medium);border-color:var(--neon-red-bright);color:#ffffff !important;transition:all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);}
+.nav__drawer-cta-btn:hover::before{opacity:0.8;}
+.nav__drawer-cta-btn:hover .nav__drawer-cta-icon{transform:scale(1.1);opacity:1;}
+.nav__drawer-cta-btn:hover .nav__drawer-cta-main,
+.nav__drawer-cta-btn:hover .nav__drawer-cta-trial{color:#ffffff !important;}
+}
+
+@media (max-width: 480px){
+.nav__drawer-cta{padding:var(--space-md) var(--space-lg);}
+.nav__drawer-cta-btn{padding:var(--space-md) var(--space-lg);}
+.nav__drawer-cta-main{font-size:1rem !important;}
+.nav__drawer-cta-trial{font-size:0.8rem;}
+.nav__drawer-cta-icon{width:20px !important;height:20px !important;}
+}
+
+/* ===== BOTÓN CTA DEL DRAWER MÓVIL ===== */
+.nav__drawer-cta{padding:var(--space-lg) var(--space-xl);border-bottom:1px solid var(--border-subtle);flex-shrink:0;order:-1}
+
+.nav__drawer-cta-btn{display:flex;align-items:center;gap:var(--space-sm);width:100%;padding:var(--space-lg) var(--space-xl);font-family:var(--font-primary);font-weight:700;color:#ffffff !important;text-decoration:none;background:linear-gradient(135deg, var(--neon-red-base) 0%, var(--neon-red-soft) 100%);border:1px solid var(--neon-red-soft);border-radius:16px;box-shadow:0 0 15px var(--neon-red-shadow-soft), 0 0 30px var(--neon-red-glow-soft), 0 4px 12px rgba(0, 0, 0, 0.25);text-shadow:0 0 8px var(--neon-red-glow-soft);min-height:44px;touch-action:manipulation;transition:all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);position:relative;overflow:hidden}
+
+.nav__drawer-cta-btn::before{content:'';position:absolute;top:0;left:0;width:100%;height:100%;background:linear-gradient(90deg, 
+    transparent, 
+    var(--neon-red-glow-soft), 
+    var(--neon-red-glow-medium), 
+    var(--neon-red-glow-soft), 
+    transparent
+);transition:left 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);z-index:1;pointer-events:none;opacity:0.6;border-radius:14px;}
+
+.nav__drawer-cta-btn::after{content:'';position:absolute;top:-2px;left:-2px;right:-2px;bottom:-2px;background:linear-gradient(45deg, 
+    var(--neon-red-base), 
+    var(--neon-red-soft), 
+    var(--neon-red-medium), 
+    var(--neon-red-soft), 
+    var(--neon-red-base)
+);border-radius:16px;z-index:-1;opacity:0.3;filter:blur(8px);transition:all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);}
+
+.nav__drawer-cta-btn:active{transform:translateY(-1px) scale(0.98);transition:all 0.1s ease;opacity:0.8}
+
+.nav__drawer-cta-content{display:flex;flex-direction:column;align-items:flex-start;flex:1;position:relative;z-index:2}
+
+.nav__drawer-cta-main{font-size:1.1rem;font-weight:800;letter-spacing:1px;text-align:left;color:#ffffff !important;line-height:1.2;margin-bottom:2px}
+
+.nav__drawer-cta-trial{font-size:0.85rem;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;opacity:0.9;color:#ffffff !important;text-align:left}
+
+.nav__drawer-cta-icon{width:24px;height:24px;opacity:0.9;flex-shrink:0;position:relative;z-index:2;transition:all var(--transition)}
+
+.nav__drawer-cta-icon svg{width:100%;height:100%;color:#ffffff !important;filter:drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));}
+
+/* EFECTOS TÁCTILES PARA MÓVIL */
+.nav__drawer-cta-btn:active{transform:translateY(-1px) scale(0.98);transition:all 0.1s ease;opacity:0.8}
+
+.nav__drawer-cta-btn:active .nav__drawer-cta-icon{transform:scale(0.95);}
+
+/* EFECTOS HOVER PARA DESKTOP */
+@media (min-width: 1024px) {
+.nav__drawer-cta-btn:hover{transform:translateY(-2px) scale(1.01);background:linear-gradient(135deg, var(--neon-red-soft) 0%, var(--neon-red-medium) 100%);box-shadow:0 0 25px var(--neon-red-shadow-bright), 0 0 50px var(--neon-red-glow-bright), 0 8px 20px rgba(0, 0, 0, 0.35);text-shadow:0 0 12px var(--neon-red-glow-medium), 0 0 24px var(--neon-red-shadow-medium);border-color:var(--neon-red-bright);color:#ffffff !important;transition:all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);}
+.nav__drawer-cta-btn:hover::before{opacity:0.8;}
+.nav__drawer-cta-btn:hover .nav__drawer-cta-icon{transform:scale(1.1);opacity:1;}
+.nav__drawer-cta-btn:hover .nav__drawer-cta-main,
+.nav__drawer-cta-btn:hover .nav__drawer-cta-trial{color:#ffffff !important;}
+}
+
+@media (max-width: 480px){
+.nav__drawer-cta{padding:var(--space-md) var(--space-lg);}
+.nav__drawer-cta-btn{padding:var(--space-md) var(--space-lg);}
+.nav__drawer-cta-main{font-size:1rem !important;}
+.nav__drawer-cta-trial{font-size:0.8rem;}
+.nav__drawer-cta-icon{width:20px !important;height:20px !important;}
+}
+
+/* ===== BOTÓN CTA DEL DRAWER MÓVIL ===== */
+.nav__drawer-cta{padding:var(--space-lg) var(--space-xl);border-bottom:1px solid var(--border-subtle);flex-shrink:0;order:-1}
+
+.nav__drawer-cta-btn{display:flex;align-items:center;gap:var(--space-sm);width:100%;padding:var(--space-lg) var(--space-xl);font-family:var(--font-primary);font-weight:700;color:#ffffff !important;text-decoration:none;background:linear-gradient(135deg, var(--neon-red-base) 0%, var(--neon-red-soft) 100%);border:1px solid var(--neon-red-soft);border-radius:16px;box-shadow:0 0 15px var(--neon-red-shadow-soft), 0 0 30px var(--neon-red-glow-soft), 0 4px 12px rgba(0, 0, 0, 0.25);text-shadow:0 0 8px var(--neon-red-glow-soft);min-height:44px;touch-action:manipulation;transition:all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);position:relative;overflow:hidden}
+
+.nav__drawer-cta-btn::before{content:'';position:absolute;top:0;left:0;width:100%;height:100%;background:linear-gradient(90deg, 
+    transparent, 
+    var(--neon-red-glow-soft), 
+    var(--neon-red-glow-medium), 
+    var(--neon-red-glow-soft), 
+    transparent
+);transition:left 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);z-index:1;pointer-events:none;opacity:0.6;border-radius:14px;}
+
+.nav__drawer-cta-btn::after{content:'';position:absolute;top:-2px;left:-2px;right:-2px;bottom:-2px;background:linear-gradient(45deg, 
+    var(--neon-red-base), 
+    var(--neon-red-soft), 
+    var(--neon-red-medium), 
+    var(--neon-red-soft), 
+    var(--neon-red-base)
+);border-radius:16px;z-index:-1;opacity:0.3;filter:blur(8px);transition:all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);}
+
+.nav__drawer-cta-btn:active{transform:translateY(-1px) scale(0.98);transition:all 0.1s ease;opacity:0.8}
+
+.nav__drawer-cta-content{display:flex;flex-direction:column;align-items:flex-start;flex:1;position:relative;z-index:2}
+
+.nav__drawer-cta-main{font-size:1.1rem;font-weight:800;letter-spacing:1px;text-align:left;color:#ffffff !important;line-height:1.2;margin-bottom:2px}
+
+.nav__drawer-cta-trial{font-size:0.85rem;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;opacity:0.9;color:#ffffff !important;text-align:left}
+
+.nav__drawer-cta-icon{width:24px;height:24px;opacity:0.9;flex-shrink:0;position:relative;z-index:2;transition:all var(--transition)}
+
+.nav__drawer-cta-icon svg{width:100%;height:100%;color:#ffffff !important;filter:drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));}
+
+/* EFECTOS TÁCTILES PARA MÓVIL */
+.nav__drawer-cta-btn:active{transform:translateY(-1px) scale(0.98);transition:all 0.1s ease;opacity:0.8}
+
+.nav__drawer-cta-btn:active .nav__drawer-cta-icon{transform:scale(0.95);}
+
+/* EFECTOS HOVER PARA DESKTOP */
+@media (min-width: 1024px) {
+.nav__drawer-cta-btn:hover{transform:translateY(-2px) scale(1.01);background:linear-gradient(135deg, var(--neon-red-soft) 0%, var(--neon-red-medium) 100%);box-shadow:0 0 25px var(--neon-red-shadow-bright), 0 0 50px var(--neon-red-glow-bright), 0 8px 20px rgba(0, 0, 0, 0.35);text-shadow:0 0 12px var(--neon-red-glow-medium), 0 0 24px var(--neon-red-shadow-medium);border-color:var(--neon-red-bright);color:#ffffff !important;transition:all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);}
+.nav__drawer-cta-btn:hover::before{opacity:0.8;}
+.nav__drawer-cta-btn:hover .nav__drawer-cta-icon{transform:scale(1.1);opacity:1;}
+.nav__drawer-cta-btn:hover .nav__drawer-cta-main,
+.nav__drawer-cta-btn:hover .nav__drawer-cta-trial{color:#ffffff !important;}
+}
+
+@media (max-width: 480px){
+.nav__drawer-cta{padding:var(--space-md) var(--space-lg);}
+.nav__drawer-cta-btn{padding:var(--space-md) var(--space-lg);}
+.nav__drawer-cta-main{font-size:1rem !important;}
+.nav__drawer-cta-trial{font-size:0.8rem;}
+.nav__drawer-cta-icon{width:20px !important;height:20px !important;}
+}
+
+/* ===== BOTÓN CTA DEL DRAWER MÓVIL ===== */
+.nav__drawer-cta{padding:var(--space-lg) var(--space-xl);border-bottom:1px solid var(--border-subtle);flex-shrink:0;order:-1}
+
+.nav__drawer-cta-btn{display:flex;align-items:center;gap:var(--space-sm);width:100%;padding
