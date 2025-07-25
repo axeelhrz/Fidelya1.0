@@ -89,6 +89,11 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
 
   // Calcular estadísticas consolidadas
   const consolidatedStats = useMemo(() => {
+    // Calcular usos del mes actual de beneficios
+    const now = new Date();
+    const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const usosEsteMes = beneficiosStats?.usosPorMes?.find(mes => mes.mes === currentMonth)?.usos || 0;
+    
     return {
       totalSocios: sociosStats?.total || 0,
       sociosActivos: sociosStats?.activos || 0,
@@ -96,11 +101,14 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
       sociosAlDia: sociosStats?.alDia || 0,
       totalComercios: comerciosStats?.totalComercios || 0,
       comerciosActivos: comerciosStats?.comerciosActivos || 0,
-      beneficiosActivos: beneficiosStats?.totalActivos || 0,
-      beneficiosUsadosHoy: beneficiosStats?.usosHoy || 0,
-      beneficiosUsadosMes: beneficiosStats?.usosMes || 0,
+      beneficiosActivos: beneficiosStats?.beneficiosActivos || 0,
+      beneficiosUsadosHoy: 0, // No tenemos esta métrica específica
+      beneficiosUsadosMes: usosEsteMes,
+      beneficiosUsadosTotal: beneficiosStats?.beneficiosUsados || 0,
       ingresosMensuales: sociosStats?.ingresosMensuales || 0,
-      beneficiosUsados: sociosStats?.beneficiosUsados || 0
+      beneficiosUsados: sociosStats?.beneficiosUsados || 0,
+      ahorroTotal: beneficiosStats?.ahorroTotal || 0,
+      ahorroEsteMes: beneficiosStats?.ahorroEsteMes || 0
     };
   }, [sociosStats, comerciosStats, beneficiosStats]);
 
@@ -214,6 +222,14 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
     }).format(amount);
   };
 
+  // Debug: mostrar estadísticas en consola
+  useEffect(() => {
+    if (beneficiosStats) {
+      console.log('📊 Estadísticas de beneficios:', beneficiosStats);
+      console.log('📊 Estadísticas consolidadas:', consolidatedStats);
+    }
+  }, [beneficiosStats, consolidatedStats]);
+
   return (
     <div className="flex flex-col h-full bg-white">
       {/* Header */}
@@ -299,7 +315,7 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
                 <TrendingUp className="w-4 h-4 text-gray-600" />
                 <span className="text-sm font-semibold text-gray-700">Actividad del Sistema</span>
               </div>
-              {realtimeStats.beneficiosUsadosHoy > 0 && (
+              {consolidatedStats.beneficiosUsadosMes > 0 && (
                 <div className="flex items-center space-x-1">
                   <Zap className="w-3 h-3 text-yellow-500" />
                   <span className="text-xs text-yellow-600 font-medium">Activo</span>
@@ -328,15 +344,25 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
               </div>
             </div>
 
-            {/* Revenue indicator */}
-            {realtimeStats.ingresosMensuales > 0 && (
-              <div className="mt-3 pt-3 border-t border-gray-200">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-600">Ingresos del mes</span>
-                  <span className="text-sm font-bold text-green-700">
-                    {formatCurrency(realtimeStats.ingresosMensuales)}
-                  </span>
-                </div>
+            {/* Revenue and savings indicators */}
+            {(realtimeStats.ingresosMensuales > 0 || consolidatedStats.ahorroEsteMes > 0) && (
+              <div className="mt-3 pt-3 border-t border-gray-200 space-y-2">
+                {realtimeStats.ingresosMensuales > 0 && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-600">Ingresos del mes</span>
+                    <span className="text-sm font-bold text-green-700">
+                      {formatCurrency(realtimeStats.ingresosMensuales)}
+                    </span>
+                  </div>
+                )}
+                {consolidatedStats.ahorroEsteMes > 0 && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-600">Ahorro generado</span>
+                    <span className="text-sm font-bold text-orange-700">
+                      {formatCurrency(consolidatedStats.ahorroEsteMes)}
+                    </span>
+                  </div>
+                )}
               </div>
             )}
           </div>

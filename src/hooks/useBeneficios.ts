@@ -140,9 +140,11 @@ export const useBeneficios = (options: UseBeneficiosOptions = {}) => {
         filtros.asociacionId = user.asociacionId;
       }
 
+      console.log('🔍 Cargando estadísticas con filtros:', filtros);
       const estadisticas = await BeneficiosService.obtenerEstadisticas(filtros);
       if (mountedRef.current) {
         setStats(estadisticas);
+        console.log('✅ Estadísticas cargadas:', estadisticas);
       }
     } catch (err) {
       console.error('Error cargando estadísticas:', err);
