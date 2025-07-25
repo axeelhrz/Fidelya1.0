@@ -19,10 +19,7 @@ import {
   ArrowUpRight,
   Shield,
   Minus,
-  Sparkles,
-  Eye,
-  Calendar,
-  Target
+  Eye
 } from 'lucide-react';
 import {
   collection,
@@ -676,37 +673,6 @@ const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
     ];
   }, [stats, growthMetrics, sociosLoading, onNavigate]);
 
-  const quickActions = [
-    {
-      title: 'Nuevo Socio',
-      description: 'Agregar nuevo miembro',
-      icon: <UserPlus className="w-5 h-5" />,
-      gradient: 'from-emerald-500 to-teal-500',
-      onClick: onAddMember,
-    },
-    {
-      title: 'Analytics',
-      description: 'Ver métricas detalladas',
-      icon: <BarChart3 className="w-5 h-5" />,
-      gradient: 'from-purple-500 to-violet-500',
-      onClick: () => onNavigate('analytics'),
-    },
-    {
-      title: 'Reportes',
-      description: 'Generar informes',
-      icon: <Target className="w-5 h-5" />,
-      gradient: 'from-blue-500 to-cyan-500',
-      onClick: () => onNavigate('reportes'),
-    },
-    {
-      title: 'Calendario',
-      description: 'Eventos y fechas',
-      icon: <Calendar className="w-5 h-5" />,
-      gradient: 'from-orange-500 to-amber-500',
-      onClick: () => onNavigate('calendario'),
-    }
-  ];
-
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -786,49 +752,6 @@ const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
           />
         </div>
       </div>
-
-      {/* Quick Actions */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
-        className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-white/20 p-6 lg:p-8"
-      >
-        <div className="flex items-center space-x-4 mb-8">
-          <div className="w-14 h-14 bg-gradient-to-br from-slate-600 to-slate-800 rounded-2xl flex items-center justify-center shadow-lg">
-            <Sparkles className="w-7 h-7 text-white" />
-          </div>
-          <div>
-            <h3 className="text-xl lg:text-2xl font-bold text-slate-900">Acciones Rápidas</h3>
-            <p className="text-slate-600">Herramientas de gestión</p>
-          </div>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-6">
-          {quickActions.map((action, index) => (
-            <motion.button
-              key={index}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 + index * 0.1 }}
-              whileHover={{ scale: 1.02, y: -2 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={action.onClick}
-              className={`p-6 rounded-2xl lg:rounded-3xl text-white transition-all duration-300 hover:shadow-2xl bg-gradient-to-br ${action.gradient} group overflow-hidden relative`}
-            >
-              {/* Background effect */}
-              <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl lg:rounded-3xl" />
-              
-              <div className="relative z-10 text-center">
-                <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
-                  {action.icon}
-                </div>
-                <h4 className="font-bold text-lg mb-2">{action.title}</h4>
-                <p className="text-sm opacity-90">{action.description}</p>
-              </div>
-            </motion.button>
-          ))}
-        </div>
-      </motion.div>
     </div>
   );
 };
