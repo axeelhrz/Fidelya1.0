@@ -13,7 +13,6 @@ import {
   Award,
   TrendingUp,
   Gift,
-  DollarSign,
   Store,
   Zap,
   Star,
@@ -23,7 +22,14 @@ import {
   Save,
   X,
   RefreshCw,
-  BarChart3
+  BarChart3,
+  Camera,
+  Upload,
+  CheckCircle,
+  Clock,
+  Target,
+  Trophy,
+  Activity
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { SocioSidebar } from '@/components/layout/SocioSidebar';
@@ -52,13 +58,13 @@ interface ProfileFormData {
 const getStatusColor = (estado: string) => {
   switch (estado) {
     case 'activo':
-      return 'bg-emerald-500';
+      return 'bg-gradient-to-r from-emerald-500 to-green-500';
     case 'vencido':
-      return 'bg-amber-500';
+      return 'bg-gradient-to-r from-amber-500 to-orange-500';
     case 'pendiente':
-      return 'bg-blue-500';
+      return 'bg-gradient-to-r from-blue-500 to-cyan-500';
     default:
-      return 'bg-gray-500';
+      return 'bg-gradient-to-r from-gray-500 to-slate-500';
   }
 };
 
@@ -78,17 +84,17 @@ const getStatusText = (estado: string) => {
 const getNivelIcon = (nivel: string) => {
   switch (nivel) {
     case 'Bronze':
-      return <Award className="w-4 h-4 text-amber-600" />;
+      return <Award className="w-5 h-5 text-white" />;
     case 'Silver':
-      return <Star className="w-4 h-4 text-gray-500" />;
+      return <Star className="w-5 h-5 text-white" />;
     case 'Gold':
-      return <Crown className="w-4 h-4 text-yellow-500" />;
+      return <Crown className="w-5 h-5 text-white" />;
     case 'Platinum':
-      return <Sparkles className="w-4 h-4 text-purple-500" />;
+      return <Sparkles className="w-5 h-5 text-white" />;
     case 'Diamond':
-      return <Zap className="w-4 h-4 text-blue-500" />;
+      return <Zap className="w-5 h-5 text-white" />;
     default:
-      return <Award className="w-4 h-4 text-gray-400" />;
+      return <Award className="w-5 h-5 text-white" />;
   }
 };
 
@@ -126,40 +132,43 @@ const convertToDate = (value: Date | Timestamp | string | undefined): Date | und
   return undefined;
 };
 
-// Stats Card Component
-const StatsCard: React.FC<{
+// Modern Stats Card Component
+const ModernStatsCard: React.FC<{
   title: string;
   value: string | number;
   icon: React.ReactNode;
-  color: string;
+  gradient: string;
   change?: number;
   subtitle?: string;
-}> = ({ title, value, icon, color, change, subtitle }) => (
+  onClick?: () => void;
+}> = ({ title, value, icon, gradient, change, subtitle, onClick }) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
-    className="bg-white rounded-xl p-4 border border-gray-100 hover:shadow-md transition-all duration-200"
+    whileHover={{ scale: 1.02, y: -4 }}
+    className={`bg-white/80 backdrop-blur-sm rounded-3xl p-6 border border-white/20 shadow-lg cursor-pointer transition-all duration-300 hover:shadow-xl ${onClick ? 'hover:bg-white/90' : ''}`}
+    onClick={onClick}
   >
-    <div className="flex items-center justify-between mb-3">
-      <div className={`w-10 h-10 rounded-lg ${color} flex items-center justify-center text-white`}>
+    <div className="flex items-center justify-between mb-4">
+      <div className={`w-14 h-14 rounded-2xl ${gradient} flex items-center justify-center shadow-lg`}>
         {icon}
       </div>
       {change !== undefined && (
         <div className={cn(
-          "flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium",
-          change >= 0 ? "text-emerald-600 bg-emerald-50" : "text-red-600 bg-red-50"
+          "flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold",
+          change >= 0 ? "text-emerald-600 bg-emerald-100" : "text-red-600 bg-red-100"
         )}>
-          <TrendingUp size={10} className={change >= 0 ? "text-emerald-600" : "text-red-600 rotate-180"} />
+          <TrendingUp size={12} className={change >= 0 ? "text-emerald-600" : "text-red-600 rotate-180"} />
           {Math.abs(change)}%
         </div>
       )}
     </div>
     
-    <div className="space-y-1">
-      <div className="text-xl font-bold text-gray-900">{value}</div>
-      <div className="text-xs font-medium text-gray-600">{title}</div>
+    <div className="space-y-2">
+      <div className="text-3xl font-black text-gray-900">{value}</div>
+      <div className="text-sm font-bold text-gray-600 uppercase tracking-wider">{title}</div>
       {subtitle && (
-        <div className="text-xs text-gray-500">{subtitle}</div>
+        <div className="text-xs text-gray-500 font-medium">{subtitle}</div>
       )}
     </div>
   </motion.div>
@@ -228,18 +237,16 @@ export default function SocioPerfilPage() {
     };
   }, [socio, user, estadisticas]);
 
-  // Enhanced stats with real Firebase data
+  // Enhanced stats without savings
   const enhancedStats = useMemo(() => {
     const creadoEnDate = convertToDate(profileData.creadoEn);
     const tiempoComoSocio = creadoEnDate ? differenceInDays(new Date(), creadoEnDate) : 0;
     
     return {
       beneficiosUsados: estadisticas.totalValidaciones || 0,
-      ahorroTotal: estadisticas.ahorroTotal || 0,
       comerciosVisitados: estadisticas.comerciosFavoritos?.length || 0,
       tiempoComoSocio,
       beneficiosEsteMes: estadisticas.validacionesPorMes?.[0]?.validaciones || 0,
-      ahorroEsteMes: estadisticas.validacionesPorMes?.[0]?.ahorro || 0,
     };
   }, [estadisticas, profileData.creadoEn]);
 
@@ -332,7 +339,7 @@ export default function SocioPerfilPage() {
     setLogoutModalOpen(false);
   };
 
-  // Loading state
+  // Modern loading state
   if (loading) {
     return (
       <DashboardLayout
@@ -344,15 +351,23 @@ export default function SocioPerfilPage() {
           />
         )}
       >
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-          <div className="text-center">
-            <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-gray-400" />
-            <h2 className="text-lg font-medium text-gray-900 mb-2">
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-100/20 flex items-center justify-center p-4">
+          <div className="text-center max-w-md mx-auto">
+            <div className="relative mb-8">
+              <div className="w-20 h-20 border-4 border-slate-200 border-t-blue-500 rounded-full animate-spin mx-auto" />
+              <div className="absolute inset-0 w-20 h-20 border-4 border-transparent border-r-indigo-300 rounded-full animate-pulse mx-auto" />
+            </div>
+            <h2 className="text-2xl font-bold text-slate-900 mb-3">
               Cargando perfil
             </h2>
-            <p className="text-gray-600">
+            <p className="text-slate-600 text-lg">
               Obteniendo tu información...
             </p>
+            <div className="mt-6 flex justify-center space-x-1">
+              <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+              <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+              <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+            </div>
           </div>
         </div>
       </DashboardLayout>
@@ -370,26 +385,32 @@ export default function SocioPerfilPage() {
           />
         )}
       >
-        <div className="min-h-screen bg-gray-50">
-          <div className="max-w-7xl mx-auto p-6 space-y-6">
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-100/20">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8 max-w-7xl space-y-8">
             
-            {/* Header Section */}
+            {/* Modern Header Section */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden"
+              className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-lg border border-white/20 overflow-hidden"
             >
-              {/* Header Background */}
-              <div className="h-32 bg-gradient-to-r from-blue-600 to-purple-600 relative">
+              {/* Header Background with Gradient */}
+              <div className="h-40 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 relative overflow-hidden">
                 <div className="absolute inset-0 bg-black/10"></div>
-                <div className="absolute top-4 right-4">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+                
+                {/* Floating elements */}
+                <div className="absolute top-4 left-4 w-20 h-20 bg-white/10 rounded-full blur-xl"></div>
+                <div className="absolute bottom-4 right-4 w-32 h-32 bg-white/5 rounded-full blur-2xl"></div>
+                
+                <div className="absolute top-6 right-6">
                   <Button
                     variant="outline"
                     size="sm"
                     leftIcon={<RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />}
                     onClick={handleRefresh}
                     disabled={refreshing}
-                    className="bg-white/20 border-white/30 text-white hover:bg-white/30"
+                    className="bg-white/20 border-white/30 text-white hover:bg-white/30 backdrop-blur-sm font-bold"
                   >
                     {refreshing ? 'Actualizando...' : 'Actualizar'}
                   </Button>
@@ -397,101 +418,121 @@ export default function SocioPerfilPage() {
               </div>
 
               {/* Profile Content */}
-              <div className="px-6 pb-6">
-                <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between -mt-16 mb-6">
-                  <div className="flex items-end space-x-4">
-                    {/* Avatar */}
-                    <div className="relative">
-                      <div className="w-24 h-24 bg-white rounded-2xl shadow-lg flex items-center justify-center border-4 border-white">
-                        <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
-                          <User size={32} className="text-white" />
+              <div className="px-6 sm:px-8 pb-8">
+                <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between -mt-20 mb-8">
+                  <div className="flex flex-col sm:flex-row sm:items-end space-y-4 sm:space-y-0 sm:space-x-6">
+                    {/* Modern Avatar */}
+                    <div className="relative group">
+                      <div className="w-32 h-32 bg-white rounded-3xl shadow-2xl flex items-center justify-center border-4 border-white">
+                        <div className="w-28 h-28 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-2xl flex items-center justify-center relative overflow-hidden">
+                          <User size={48} className="text-white z-10" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
                         </div>
                       </div>
-                      <div className={`absolute -bottom-1 -right-1 w-6 h-6 ${getStatusColor(profileData.estado)} rounded-full border-2 border-white`}></div>
+                      <div className={`absolute -bottom-2 -right-2 w-8 h-8 ${getStatusColor(profileData.estado)} rounded-2xl border-4 border-white shadow-lg flex items-center justify-center`}>
+                        <CheckCircle className="w-4 h-4 text-white" />
+                      </div>
+                      
+                      {/* Upload overlay */}
+                      <div className="absolute inset-0 bg-black/50 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center cursor-pointer">
+                        <div className="text-center text-white">
+                          <Camera className="w-6 h-6 mx-auto mb-1" />
+                          <span className="text-xs font-medium">Cambiar</span>
+                        </div>
+                      </div>
                     </div>
 
                     {/* Profile Info */}
                     <div className="pb-2">
-                      <h1 className="text-2xl font-bold text-gray-900 mb-1">
+                      <h1 className="text-3xl lg:text-4xl font-black text-gray-900 mb-2">
                         {profileData.nombre}
                       </h1>
-                      <div className="flex items-center space-x-3 mb-2">
-                        <span className="text-sm text-gray-600">
+                      <div className="flex flex-wrap items-center gap-3 mb-4">
+                        <span className="text-lg text-gray-600 font-medium">
                           Socio #{profileData.numeroSocio}
                         </span>
-                        <span className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded-full">
+                        <span className={`px-3 py-1 rounded-2xl text-white text-sm font-bold shadow-lg ${getStatusColor(profileData.estado)}`}>
                           {getStatusText(profileData.estado)}
                         </span>
                       </div>
-                      <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-gradient-to-r ${getNivelGradient(profileData.nivel.nivel)} text-white text-sm font-medium shadow-sm`}>
+                      <div className={`inline-flex items-center gap-3 px-4 py-2 rounded-2xl bg-gradient-to-r ${getNivelGradient(profileData.nivel.nivel)} text-white font-bold shadow-lg`}>
                         {getNivelIcon(profileData.nivel.nivel)}
-                        <span>{profileData.nivel.nivel}</span>
+                        <span className="text-lg">Nivel {profileData.nivel.nivel}</span>
                       </div>
                     </div>
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="flex space-x-3 mt-4 sm:mt-0">
+                  <div className="flex flex-wrap gap-3 mt-6 lg:mt-0">
                     <Button
-                      size="sm"
-                      leftIcon={<Edit3 size={16} />}
+                      size="lg"
+                      leftIcon={<Edit3 size={20} />}
                       onClick={() => setEditModalOpen(true)}
+                      className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold shadow-lg hover:shadow-xl transition-all duration-300"
                     >
                       Editar Perfil
                     </Button>
                   </div>
                 </div>
 
-                {/* Level Progress */}
-                <div className="bg-gray-50 rounded-xl p-4 mb-6">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-700">
-                      Progreso a {profileData.nivel.proximoNivel}
-                    </span>
-                    <span className="text-sm text-gray-600">
+                {/* Modern Level Progress */}
+                <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-3xl p-6 mb-8 border border-gray-200/50">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center space-x-3">
+                      <div className={`w-10 h-10 rounded-xl bg-gradient-to-r ${getNivelGradient(profileData.nivel.proximoNivel)} flex items-center justify-center shadow-lg`}>
+                        <Target className="w-5 h-5 text-white" />
+                      </div>
+                      <span className="text-lg font-bold text-gray-700">
+                        Progreso a {profileData.nivel.proximoNivel}
+                      </span>
+                    </div>
+                    <span className="text-lg font-bold text-gray-600">
                       {profileData.nivel.puntos} / {profileData.nivel.puntosParaProximoNivel} pts
                     </span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="w-full bg-gray-200 rounded-full h-4 shadow-inner">
                     <motion.div 
-                      className={`h-2 rounded-full bg-gradient-to-r ${getNivelGradient(profileData.nivel.proximoNivel)}`}
+                      className={`h-4 rounded-full bg-gradient-to-r ${getNivelGradient(profileData.nivel.proximoNivel)} shadow-lg`}
                       initial={{ width: 0 }}
                       animate={{ 
                         width: `${(profileData.nivel.puntos / profileData.nivel.puntosParaProximoNivel) * 100}%` 
                       }}
-                      transition={{ duration: 1, delay: 0.5 }}
+                      transition={{ duration: 1.5, delay: 0.5, ease: "easeOut" }}
                     />
                   </div>
+                  <p className="text-sm text-gray-600 mt-2 font-medium">
+                    {profileData.nivel.puntosParaProximoNivel - profileData.nivel.puntos} puntos restantes
+                  </p>
                 </div>
 
-                {/* Quick Stats */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  <StatsCard
+                {/* Modern Quick Stats */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+                  <ModernStatsCard
                     title="Beneficios Usados"
                     value={enhancedStats.beneficiosUsados}
-                    icon={<Gift size={20} />}
-                    color="bg-emerald-500"
-                    subtitle="Total"
+                    icon={<Gift className="w-7 h-7 text-white" />}
+                    gradient="bg-gradient-to-r from-emerald-500 to-green-500"
+                    subtitle="Total acumulado"
                   />
-                  <StatsCard
-                    title="Ahorro Total"
-                    value={`$${enhancedStats.ahorroTotal.toLocaleString()}`}
-                    icon={<DollarSign size={20} />}
-                    color="bg-green-500"
-                    subtitle="Acumulado"
-                  />
-                  <StatsCard
-                    title="Comercios"
+                  <ModernStatsCard
+                    title="Comercios Visitados"
                     value={enhancedStats.comerciosVisitados}
-                    icon={<Store size={20} />}
-                    color="bg-blue-500"
-                    subtitle="Visitados"
+                    icon={<Store className="w-7 h-7 text-white" />}
+                    gradient="bg-gradient-to-r from-blue-500 to-cyan-500"
+                    subtitle="Establecimientos únicos"
                   />
-                  <StatsCard
+                  <ModernStatsCard
+                    title="Beneficios Este Mes"
+                    value={enhancedStats.beneficiosEsteMes}
+                    icon={<Calendar className="w-7 h-7 text-white" />}
+                    gradient="bg-gradient-to-r from-purple-500 to-pink-500"
+                    subtitle="Mes actual"
+                  />
+                  <ModernStatsCard
                     title="Días como Socio"
                     value={enhancedStats.tiempoComoSocio}
-                    icon={<Calendar size={20} />}
-                    color="bg-purple-500"
+                    icon={<Trophy className="w-7 h-7 text-white" />}
+                    gradient="bg-gradient-to-r from-amber-500 to-orange-500"
                     subtitle="Desde registro"
                   />
                 </div>
@@ -499,71 +540,86 @@ export default function SocioPerfilPage() {
             </motion.div>
 
             {/* Main Content Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
               
               {/* Personal Information */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-                className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+                className="xl:col-span-2 bg-white/80 backdrop-blur-sm rounded-3xl shadow-lg border border-white/20 p-8"
               >
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900">Información Personal</h3>
+                <div className="flex items-center justify-between mb-8">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center shadow-lg">
+                      <User className="w-6 h-6 text-white" />
+                    </div>
+                    <h3 className="text-2xl font-bold text-gray-900">Información Personal</h3>
+                  </div>
                   <Button
                     variant="outline"
-                    size="sm"
                     leftIcon={<Edit3 size={16} />}
                     onClick={() => setEditModalOpen(true)}
+                    className="font-bold"
                   >
                     Editar
                   </Button>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  <div className="space-y-6">
                     <div>
-                      <label className="text-sm font-medium text-gray-700 mb-2 block">Email</label>
-                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                        <Mail size={16} className="text-gray-500" />
-                        <span className="text-gray-900">{profileData.email}</span>
+                      <label className="text-sm font-bold text-gray-700 mb-3 block uppercase tracking-wider">Email</label>
+                      <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl border border-gray-200/50">
+                        <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg">
+                          <Mail size={18} className="text-white" />
+                        </div>
+                        <span className="text-gray-900 font-medium">{profileData.email}</span>
                       </div>
                     </div>
                     
                     <div>
-                      <label className="text-sm font-medium text-gray-700 mb-2 block">Teléfono</label>
-                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                        <Phone size={16} className="text-gray-500" />
-                        <span className="text-gray-900">{profileData.telefono || 'No especificado'}</span>
+                      <label className="text-sm font-bold text-gray-700 mb-3 block uppercase tracking-wider">Teléfono</label>
+                      <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl border border-gray-200/50">
+                        <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg">
+                          <Phone size={18} className="text-white" />
+                        </div>
+                        <span className="text-gray-900 font-medium">{profileData.telefono || 'No especificado'}</span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="space-y-4">
+                  <div className="space-y-6">
                     <div>
-                      <label className="text-sm font-medium text-gray-700 mb-2 block">DNI</label>
-                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                        <Shield size={16} className="text-gray-500" />
-                        <span className="text-gray-900">{profileData.dni || 'No especificado'}</span>
+                      <label className="text-sm font-bold text-gray-700 mb-3 block uppercase tracking-wider">DNI</label>
+                      <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl border border-gray-200/50">
+                        <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
+                          <Shield size={18} className="text-white" />
+                        </div>
+                        <span className="text-gray-900 font-medium">{profileData.dni || 'No especificado'}</span>
                       </div>
                     </div>
                     
                     <div>
-                      <label className="text-sm font-medium text-gray-700 mb-2 block">Dirección</label>
-                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                        <MapPin size={16} className="text-gray-500" />
-                        <span className="text-gray-900">{profileData.direccion || 'No especificado'}</span>
+                      <label className="text-sm font-bold text-gray-700 mb-3 block uppercase tracking-wider">Dirección</label>
+                      <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl border border-gray-200/50">
+                        <div className="w-10 h-10 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl flex items-center justify-center shadow-lg">
+                          <MapPin size={18} className="text-white" />
+                        </div>
+                        <span className="text-gray-900 font-medium">{profileData.direccion || 'No especificado'}</span>
                       </div>
                     </div>
                   </div>
                 </div>
 
                 {profileData.fechaNacimiento && (
-                  <div className="mt-4">
-                    <label className="text-sm font-medium text-gray-700 mb-2 block">Fecha de Nacimiento</label>
-                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                      <Calendar size={16} className="text-gray-500" />
-                      <span className="text-gray-900">
+                  <div className="mt-8">
+                    <label className="text-sm font-bold text-gray-700 mb-3 block uppercase tracking-wider">Fecha de Nacimiento</label>
+                    <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl border border-gray-200/50">
+                      <div className="w-10 h-10 bg-gradient-to-r from-indigo-500 to-blue-500 rounded-xl flex items-center justify-center shadow-lg">
+                        <Calendar size={18} className="text-white" />
+                      </div>
+                      <span className="text-gray-900 font-medium">
                         {format(profileData.fechaNacimiento, 'dd/MM/yyyy', { locale: es })}
                       </span>
                     </div>
@@ -571,34 +627,41 @@ export default function SocioPerfilPage() {
                 )}
               </motion.div>
 
-              {/* Sidebar - Activity */}
+              {/* Activity Sidebar */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+                className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-lg border border-white/20 p-8"
               >
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Actividad Reciente</h3>
+                <div className="flex items-center space-x-4 mb-8">
+                  <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-green-500 rounded-2xl flex items-center justify-center shadow-lg">
+                    <Activity className="w-6 h-6 text-white" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-gray-900">Actividad Reciente</h3>
+                </div>
                 
-                {estadisticas.beneficiosMasUsados.length > 0 ? (
-                  <div className="space-y-3">
+                {estadisticas.beneficiosMasUsados && estadisticas.beneficiosMasUsados.length > 0 ? (
+                  <div className="space-y-4">
                     {estadisticas.beneficiosMasUsados.slice(0, 5).map((beneficio, index) => (
-                      <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                        <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center text-white text-sm font-bold">
+                      <div key={index} className="flex items-center gap-4 p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl border border-gray-200/50 hover:shadow-md transition-all duration-300">
+                        <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center text-white font-black shadow-lg">
                           {beneficio.usos}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="font-medium text-gray-900 text-sm truncate">{beneficio.titulo}</div>
-                          <div className="text-xs text-gray-500">{beneficio.usos} usos</div>
+                          <div className="font-bold text-gray-900 truncate">{beneficio.titulo}</div>
+                          <div className="text-sm text-gray-500 font-medium">{beneficio.usos} usos</div>
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-8">
-                    <BarChart3 className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                    <p className="text-gray-600 text-sm">No hay actividad reciente</p>
-                    <p className="text-gray-500 text-xs mt-1">Comienza a usar beneficios para ver tu actividad</p>
+                  <div className="text-center py-12">
+                    <div className="w-20 h-20 bg-gradient-to-r from-gray-100 to-gray-200 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                      <BarChart3 className="w-10 h-10 text-gray-400" />
+                    </div>
+                    <p className="text-gray-600 font-bold text-lg">No hay actividad reciente</p>
+                    <p className="text-gray-500 mt-2">Comienza a usar beneficios para ver tu actividad</p>
                   </div>
                 )}
               </motion.div>
@@ -606,17 +669,19 @@ export default function SocioPerfilPage() {
           </div>
         </div>
 
-        {/* Edit Profile Modal */}
+        {/* Modern Edit Profile Modal */}
         <Dialog open={editModalOpen} onClose={() => setEditModalOpen(false)}>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-lg">
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-3">
-                <Edit3 size={20} />
+              <DialogTitle className="flex items-center gap-3 text-xl">
+                <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl flex items-center justify-center">
+                  <Edit3 size={20} className="text-white" />
+                </div>
                 Editar Perfil
               </DialogTitle>
             </DialogHeader>
 
-            <div className="space-y-4">
+            <div className="space-y-6">
               <Input
                 label="Nombre completo"
                 value={formData.nombre}
@@ -666,6 +731,7 @@ export default function SocioPerfilPage() {
                 onClick={handleSaveProfile}
                 loading={updating}
                 leftIcon={<Save size={16} />}
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
               >
                 Guardar Cambios
               </Button>
