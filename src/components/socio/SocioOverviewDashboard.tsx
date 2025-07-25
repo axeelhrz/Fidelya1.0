@@ -430,30 +430,6 @@ const ModernSocioStatusCard: React.FC<{
   );
 };
 
-// Modern Quick Stats Component
-const ModernQuickStats: React.FC<{
-  beneficiosUsados: number;
-  loading: boolean;
-}> = ({ beneficiosUsados, loading }) => {
-  return (
-    <div className="grid grid-cols-1 gap-6 mb-8">
-      <div className="bg-gradient-to-r from-emerald-50 to-green-50 rounded-3xl shadow-lg border border-emerald-200 p-6 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
-        <div className="flex items-center space-x-4">
-          <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-lg bg-gradient-to-r from-emerald-500 to-green-500">
-            <Gift className="w-6 h-6" />
-          </div>
-          <div>
-            <p className="text-sm font-bold text-slate-600 uppercase tracking-wider">Beneficios Usados</p>
-            <p className="text-3xl font-black text-slate-900">
-              {loading ? '...' : beneficiosUsados}
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 // Main Component
 const SocioOverviewDashboard: React.FC<SocioOverviewDashboardProps> = ({
   onNavigate,
@@ -483,7 +459,7 @@ const SocioOverviewDashboard: React.FC<SocioOverviewDashboardProps> = ({
     }
   }), [socio, user, estadisticas]);
 
-  // Enhanced stats without comercios visitados
+  // Enhanced stats
   const enhancedStats = useMemo(() => {
     const creadoEnDate = profileData.creadoEn instanceof Timestamp
       ? profileData.creadoEn.toDate()
@@ -657,12 +633,6 @@ const SocioOverviewDashboard: React.FC<SocioOverviewDashboardProps> = ({
           </div>
         </div>
       </div>
-
-      {/* Modern Quick Stats (Only Benefits Used) */}
-      <ModernQuickStats
-        beneficiosUsados={enhancedStats.beneficiosUsados}
-        loading={socioLoading}
-      />
 
       {/* Modern KPI Cards */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
