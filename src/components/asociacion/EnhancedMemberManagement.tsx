@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Users,
   Search,
@@ -18,7 +18,22 @@ import {
   Trash2,
   Unlink,
   FileText,
-  FileSpreadsheet
+  FileSpreadsheet,
+  MoreVertical,
+  Eye,
+  UserPlus,
+  TrendingUp,
+  Calendar,
+  Mail,
+  Phone,
+  MapPin,
+  CreditCard,
+  Award,
+  Settings,
+  Grid3X3,
+  List,
+  SlidersHorizontal,
+  X
 } from 'lucide-react';
 import { useSocios } from '@/hooks/useSocios';
 import { useSocioAsociacion } from '@/hooks/useSocioAsociacion';
@@ -55,6 +70,7 @@ export const EnhancedMemberManagement = () => {
   // Estados locales
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
   const [filters, setFilters] = useState({
     estado: '',
     estadoMembresia: '',
@@ -98,6 +114,7 @@ export const EnhancedMemberManagement = () => {
     }
   };
 
+  // ... (keeping all the existing functions for data handling)
   // Función para convertir fechas a formato compatible
   const convertDateToTimestamp = (date: Date | Timestamp | string | undefined): Timestamp | undefined => {
     if (!date) return undefined;
@@ -206,6 +223,7 @@ export const EnhancedMemberManagement = () => {
     setSocioToUnlink(null);
   };
 
+  // ... (keeping all export/import functions as they are well implemented)
   // Función mejorada para exportar datos a Excel con diseño atractivo
   const handleExportExcel = async () => {
     if (exporting) return;
@@ -1150,11 +1168,23 @@ export const EnhancedMemberManagement = () => {
   // Renderizar estado de carga
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-purple-200 border-t-purple-500 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Cargando socios...</p>
-        </div>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center"
+        >
+          <div className="relative mb-6">
+            <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-500 rounded-full animate-spin mx-auto" />
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+              className="absolute inset-0 w-16 h-16 border-4 border-transparent border-r-indigo-400 rounded-full mx-auto"
+            />
+          </div>
+          <h3 className="text-xl font-semibold text-slate-800 mb-2">Cargando socios...</h3>
+          <p className="text-slate-600">Preparando la información de tu comunidad</p>
+        </motion.div>
       </div>
     );
   }
@@ -1162,460 +1192,725 @@ export const EnhancedMemberManagement = () => {
   // Renderizar estado de error
   if (error) {
     return (
-      <div className="text-center py-12">
-        <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Error al cargar los socios</h3>
-        <p className="text-gray-600 mb-4">{error}</p>
-        <button
-          onClick={handleRefresh}
-          className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
-        >
-          <RefreshCw className="w-5 h-5 mr-2" />
-          Reintentar
-        </button>
-      </div>
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="text-center py-12"
+      >
+        <div className="bg-red-50 border border-red-200 rounded-2xl p-8 max-w-md mx-auto">
+          <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-red-900 mb-2">Error al cargar los socios</h3>
+          <p className="text-red-700 mb-4">{error}</p>
+          <button
+            onClick={handleRefresh}
+            className="inline-flex items-center px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors font-medium"
+          >
+            <RefreshCw className="w-5 h-5 mr-2" />
+            Reintentar
+          </button>
+        </div>
+      </motion.div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Estadísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Total Socios</p>
-              <p className="text-2xl font-bold text-gray-900">{stats?.total || 0}</p>
+      {/* Modern Statistics Cards */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6"
+      >
+        {/* Total Socios */}
+        <div className="group relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-indigo-500/10 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300" />
+          <div className="relative bg-white/80 backdrop-blur-xl rounded-2xl p-6 border border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-slate-600 mb-1">Total Socios</p>
+                <p className="text-3xl font-bold text-slate-900">{stats?.total || 0}</p>
+                <div className="flex items-center mt-2">
+                  <TrendingUp className="w-4 h-4 text-blue-500 mr-1" />
+                  <span className="text-sm text-blue-600 font-medium">Comunidad activa</span>
+                </div>
+              </div>
+              <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
+                <Users className="w-7 h-7 text-white" />
+              </div>
             </div>
-            <Users className="w-8 h-8 text-purple-500" />
           </div>
         </div>
 
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Socios Activos</p>
-              <p className="text-2xl font-bold text-green-600">{stats?.activos || 0}</p>
+        {/* Socios Activos */}
+        <div className="group relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-green-500/10 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300" />
+          <div className="relative bg-white/80 backdrop-blur-xl rounded-2xl p-6 border border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-slate-600 mb-1">Socios Activos</p>
+                <p className="text-3xl font-bold text-emerald-600">{stats?.activos || 0}</p>
+                <div className="flex items-center mt-2">
+                  <CheckCircle className="w-4 h-4 text-emerald-500 mr-1" />
+                  <span className="text-sm text-emerald-600 font-medium">Al día</span>
+                </div>
+              </div>
+              <div className="w-14 h-14 bg-gradient-to-br from-emerald-500 to-green-600 rounded-2xl flex items-center justify-center shadow-lg">
+                <CheckCircle className="w-7 h-7 text-white" />
+              </div>
             </div>
-            <CheckCircle className="w-8 h-8 text-green-500" />
           </div>
         </div>
 
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Socios Vencidos</p>
-              <p className="text-2xl font-bold text-red-600">{stats?.vencidos || 0}</p>
+        {/* Socios Vencidos */}
+        <div className="group relative sm:col-span-2 lg:col-span-1">
+          <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 to-pink-500/10 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300" />
+          <div className="relative bg-white/80 backdrop-blur-xl rounded-2xl p-6 border border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-slate-600 mb-1">Socios Vencidos</p>
+                <p className="text-3xl font-bold text-red-600">{stats?.vencidos || 0}</p>
+                <div className="flex items-center mt-2">
+                  <Clock className="w-4 h-4 text-red-500 mr-1" />
+                  <span className="text-sm text-red-600 font-medium">Requieren atención</span>
+                </div>
+              </div>
+              <div className="w-14 h-14 bg-gradient-to-br from-red-500 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg">
+                <Clock className="w-7 h-7 text-white" />
+              </div>
             </div>
-            <Clock className="w-8 h-8 text-red-500" />
           </div>
         </div>
-      </div>
+      </motion.div>
 
-      {/* Controles */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          {/* Búsqueda */}
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <input
-              type="text"
-              placeholder="Buscar socios..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-            />
-          </div>
+      {/* Modern Control Panel */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.1 }}
+        className="relative"
+      >
+        <div className="absolute inset-0 bg-gradient-to-r from-white/40 to-blue-50/40 rounded-3xl blur-2xl" />
+        <div className="relative bg-white/80 backdrop-blur-xl rounded-3xl border border-white/20 shadow-2xl p-6">
+          {/* Top Controls */}
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
+            {/* Search Bar */}
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
+              <input
+                type="text"
+                placeholder="Buscar socios por nombre, email, DNI..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-12 pr-4 py-3 bg-white/70 backdrop-blur-sm border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-slate-700 placeholder-slate-400"
+              />
+            </div>
 
-          {/* Acciones */}
-          <div className="flex flex-wrap items-center gap-3">
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
-                showFilters 
-                  ? 'bg-purple-50 border-purple-200 text-purple-700' 
-                  : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
-              }`}
-            >
-              <Filter className="w-4 h-4" />
-              Filtros
-            </button>
-
-            <AddRegisteredSocioButton 
-              onSocioAdded={handleRefresh}
-              className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-            />
-
-            <button
-              onClick={() => {
-                setSelectedSocio(null);
-                setDialogOpen(true);
-              }}
-              className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
-            >
-              <Plus className="w-4 h-4" />
-              Nuevo Socio
-            </button>
-
-            <div className="flex items-center gap-2">
-              {/* Menú desplegable para plantillas */}
-              <div className="relative group">
+            {/* Action Buttons */}
+            <div className="flex flex-wrap items-center gap-3">
+              {/* View Mode Toggle */}
+              <div className="flex items-center bg-slate-100 rounded-xl p-1">
                 <button
-                  className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-                  title="Descargar plantillas"
+                  onClick={() => setViewMode('list')}
+                  className={`p-2 rounded-lg transition-all duration-200 ${
+                    viewMode === 'list' 
+                      ? 'bg-white shadow-sm text-blue-600' 
+                      : 'text-slate-500 hover:text-slate-700'
+                  }`}
+                  title="Vista de lista"
                 >
-                  <FileText className="w-5 h-5" />
+                  <List className="w-4 h-4" />
                 </button>
-                <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
-                  <div className="py-1">
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={`p-2 rounded-lg transition-all duration-200 ${
+                    viewMode === 'grid' 
+                      ? 'bg-white shadow-sm text-blue-600' 
+                      : 'text-slate-500 hover:text-slate-700'
+                  }`}
+                  title="Vista de cuadrícula"
+                >
+                  <Grid3X3 className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Filters Toggle */}
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border transition-all duration-200 font-medium ${
+                  showFilters 
+                    ? 'bg-blue-50 border-blue-200 text-blue-700 shadow-sm' 
+                    : 'bg-white/70 border-slate-200 text-slate-700 hover:bg-white hover:shadow-sm'
+                }`}
+              >
+                <SlidersHorizontal className="w-4 h-4" />
+                <span className="hidden sm:inline">Filtros</span>
+                {showFilters && <X className="w-4 h-4" />}
+              </button>
+
+              {/* Add Registered Socio */}
+              <AddRegisteredSocioButton 
+                onSocioAdded={handleRefresh}
+                className="flex items-center gap-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-4 py-2.5 rounded-xl hover:from-indigo-600 hover:to-purple-700 transition-all duration-200 font-medium shadow-lg hover:shadow-xl"
+              />
+
+              {/* New Socio Button */}
+              <button
+                onClick={() => {
+                  setSelectedSocio(null);
+                  setDialogOpen(true);
+                }}
+                className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-4 py-2.5 rounded-xl hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 font-medium shadow-lg hover:shadow-xl"
+              >
+                <Plus className="w-4 h-4" />
+                <span className="hidden sm:inline">Nuevo Socio</span>
+              </button>
+
+              {/* More Actions Dropdown */}
+              <div className="relative group">
+                <button className="p-2.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-all duration-200">
+                  <MoreVertical className="w-5 h-5" />
+                </button>
+                <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-slate-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-20">
+                  <div className="p-2">
+                    {/* Templates Section */}
+                    <div className="px-3 py-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                      Plantillas
+                    </div>
                     <button
                       onClick={downloadExcelTemplate}
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                      className="w-full text-left px-3 py-2.5 text-sm text-slate-700 hover:bg-slate-50 rounded-xl flex items-center gap-3 transition-colors"
                     >
-                      <FileSpreadsheet className="w-4 h-4 text-green-600" />
-                      Plantilla Excel
+                      <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+                      <span>Descargar Excel</span>
                     </button>
                     <button
                       onClick={downloadCSVTemplate}
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                      className="w-full text-left px-3 py-2.5 text-sm text-slate-700 hover:bg-slate-50 rounded-xl flex items-center gap-3 transition-colors"
                     >
                       <FileText className="w-4 h-4 text-blue-600" />
-                      Plantilla CSV
+                      <span>Descargar CSV</span>
                     </button>
-                  </div>
-                </div>
-              </div>
 
-              {/* Menú desplegable para exportar */}
-              <div className="relative group">
-                <button
-                  disabled={exporting || socios.length === 0}
-                  className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  title="Exportar datos"
-                >
-                  <Download className={`w-5 h-5 ${exporting ? 'animate-pulse' : ''}`} />
-                </button>
-                <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
-                  <div className="py-1">
+                    <div className="h-px bg-slate-200 my-2" />
+
+                    {/* Export Section */}
+                    <div className="px-3 py-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                      Exportar
+                    </div>
                     <button
                       onClick={handleExportExcel}
                       disabled={exporting || socios.length === 0}
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full text-left px-3 py-2.5 text-sm text-slate-700 hover:bg-slate-50 rounded-xl flex items-center gap-3 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <FileSpreadsheet className="w-4 h-4 text-green-600" />
-                      Exportar Excel
+                      <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+                      <span>Exportar Excel</span>
+                      {exporting && <div className="w-3 h-3 border border-slate-300 border-t-slate-600 rounded-full animate-spin ml-auto" />}
                     </button>
                     <button
                       onClick={handleExportCSV}
                       disabled={exporting || socios.length === 0}
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full text-left px-3 py-2.5 text-sm text-slate-700 hover:bg-slate-50 rounded-xl flex items-center gap-3 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <FileText className="w-4 h-4 text-blue-600" />
-                      Exportar CSV
+                      <span>Exportar CSV</span>
+                      {exporting && <div className="w-3 h-3 border border-slate-300 border-t-slate-600 rounded-full animate-spin ml-auto" />}
+                    </button>
+
+                    <div className="h-px bg-slate-200 my-2" />
+
+                    {/* Import and Refresh */}
+                    <button
+                      onClick={() => document.getElementById('import-file')?.click()}
+                      disabled={importing}
+                      className="w-full text-left px-3 py-2.5 text-sm text-slate-700 hover:bg-slate-50 rounded-xl flex items-center gap-3 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Upload className="w-4 h-4 text-indigo-600" />
+                      <span>Importar datos</span>
+                      {importing && <div className="w-3 h-3 border border-slate-300 border-t-slate-600 rounded-full animate-spin ml-auto" />}
+                    </button>
+                    <button
+                      onClick={handleRefresh}
+                      disabled={refreshing}
+                      className="w-full text-left px-3 py-2.5 text-sm text-slate-700 hover:bg-slate-50 rounded-xl flex items-center gap-3 transition-colors disabled:opacity-50"
+                    >
+                      <RefreshCw className={`w-4 h-4 text-slate-600 ${refreshing ? 'animate-spin' : ''}`} />
+                      <span>Actualizar datos</span>
                     </button>
                   </div>
                 </div>
               </div>
-
-              {/* Botón de importar */}
-              <button
-                onClick={() => document.getElementById('import-file')?.click()}
-                disabled={importing}
-                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                title="Importar datos (Excel o CSV)"
-              >
-                <Upload className={`w-5 h-5 ${importing ? 'animate-pulse' : ''}`} />
-              </button>
-              <input
-                id="import-file"
-                type="file"
-                accept=".xlsx,.xls,.csv"
-                className="hidden"
-                onChange={(e) => {
-                  if (e.target.files?.[0]) {
-                    handleImport(e.target.files[0]);
-                  }
-                }}
-              />
-
-              <button
-                onClick={handleRefresh}
-                disabled={refreshing}
-                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
-                title="Actualizar datos"
-              >
-                <RefreshCw className={`w-5 h-5 ${refreshing ? 'animate-spin' : ''}`} />
-              </button>
             </div>
           </div>
-        </div>
 
-        {/* Filtros */}
-        {showFilters && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="mt-4 pt-4 border-t border-gray-200"
-          >
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Estado
-                </label>
-                <select
-                  value={filters.estado}
-                  onChange={(e) => setFilters(prev => ({ ...prev, estado: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                >
-                  <option value="">Todos</option>
-                  <option value="activo">Activo</option>
-                  <option value="inactivo">Inactivo</option>
-                  <option value="suspendido">Suspendido</option>
-                  <option value="pendiente">Pendiente</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Estado de Membresía
-                </label>
-                <select
-                  value={filters.estadoMembresia}
-                  onChange={(e) => setFilters(prev => ({ ...prev, estadoMembresia: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                >
-                  <option value="">Todos</option>
-                  <option value="al_dia">Al día</option>
-                  <option value="vencido">Vencido</option>
-                  <option value="pendiente">Pendiente</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Fecha Desde
-                </label>
-                <input
-                  type="date"
-                  value={filters.fechaDesde}
-                  onChange={(e) => setFilters(prev => ({ ...prev, fechaDesde: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Fecha Hasta
-                </label>
-                <input
-                  type="date"
-                  value={filters.fechaHasta}
-                  onChange={(e) => setFilters(prev => ({ ...prev, fechaHasta: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                />
-              </div>
-            </div>
-
-            <div className="mt-4 flex justify-end">
-              <button
-                onClick={() => {
-                  setFilters({
-                    estado: '',
-                    estadoMembresia: '',
-                    fechaDesde: '',
-                    fechaHasta: ''
-                  });
-                  setSearchTerm('');
-                }}
-                className="text-sm text-gray-600 hover:text-gray-900"
+          {/* Advanced Filters */}
+          <AnimatePresence>
+            {showFilters && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="overflow-hidden"
               >
-                Limpiar filtros
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </div>
+                <div className="pt-6 border-t border-slate-200">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">
+                        Estado
+                      </label>
+                      <select
+                        value={filters.estado}
+                        onChange={(e) => setFilters(prev => ({ ...prev, estado: e.target.value }))}
+                        className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                      >
+                        <option value="">Todos los estados</option>
+                        <option value="activo">Activo</option>
+                        <option value="inactivo">Inactivo</option>
+                        <option value="suspendido">Suspendido</option>
+                        <option value="pendiente">Pendiente</option>
+                      </select>
+                    </div>
 
-      {/* Lista de Socios */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        {filteredSocios.length === 0 ? (
-          <div className="text-center py-12">
-            <User className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              {socios.length === 0 ? 'No hay socios vinculados' : 'No se encontraron socios'}
-            </h3>
-            <p className="text-gray-600 mb-4">
-              {socios.length === 0 
-                ? 'Comienza vinculando socios existentes o creando nuevos'
-                : 'Intenta ajustar los filtros de búsqueda'
-              }
-            </p>
-            {socios.length === 0 && (
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <AddRegisteredSocioButton 
-                  onSocioAdded={handleRefresh}
-                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
-                />
-                <button
-                  onClick={() => {
-                    setSelectedSocio(null);
-                    setDialogOpen(true);
-                  }}
-                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Crear Nuevo Socio
-                </button>
-              </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">
+                        Estado de Membresía
+                      </label>
+                      <select
+                        value={filters.estadoMembresia}
+                        onChange={(e) => setFilters(prev => ({ ...prev, estadoMembresia: e.target.value }))}
+                        className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                      >
+                        <option value="">Todas las membresías</option>
+                        <option value="al_dia">Al día</option>
+                        <option value="vencido">Vencido</option>
+                        <option value="pendiente">Pendiente</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">
+                        Fecha Desde
+                      </label>
+                      <input
+                        type="date"
+                        value={filters.fechaDesde}
+                        onChange={(e) => setFilters(prev => ({ ...prev, fechaDesde: e.target.value }))}
+                        className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">
+                        Fecha Hasta
+                      </label>
+                      <input
+                        type="date"
+                        value={filters.fechaHasta}
+                        onChange={(e) => setFilters(prev => ({ ...prev, fechaHasta: e.target.value }))}
+                        className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-4 flex justify-between items-center">
+                    <button
+                      onClick={() => {
+                        setFilters({
+                          estado: '',
+                          estadoMembresia: '',
+                          fechaDesde: '',
+                          fechaHasta: ''
+                        });
+                        setSearchTerm('');
+                      }}
+                      className="text-sm text-slate-600 hover:text-slate-900 font-medium"
+                    >
+                      Limpiar todos los filtros
+                    </button>
+                    <div className="text-sm text-slate-600">
+                      Mostrando {filteredSocios.length} de {socios.length} socios
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
             )}
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Socio
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Número
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Estado
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Fecha de Ingreso
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Vencimiento
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Acciones
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredSocios.map((socio) => (
-                  <tr key={socio.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        {socio.avatar ? (
-                          <Image
-                            className="h-10 w-10 rounded-full"
-                            src={socio.avatar}
-                            alt={socio.nombre}
-                            width={40}
-                            height={40}
-                            style={{ objectFit: 'cover' }}
-                          />
-                        ) : (
-                          <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center">
-                            <User className="h-6 w-6 text-purple-600" />
+          </AnimatePresence>
+        </div>
+      </motion.div>
+
+      {/* Hidden file input */}
+      <input
+        id="import-file"
+        type="file"
+        accept=".xlsx,.xls,.csv"
+        className="hidden"
+        onChange={(e) => {
+          if (e.target.files?.[0]) {
+            handleImport(e.target.files[0]);
+          }
+        }}
+      />
+
+      {/* Content Area */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.2 }}
+        className="relative"
+      >
+        <div className="absolute inset-0 bg-gradient-to-br from-white/40 to-slate-50/40 rounded-3xl blur-2xl" />
+        <div className="relative bg-white/80 backdrop-blur-xl rounded-3xl border border-white/20 shadow-2xl overflow-hidden">
+          {filteredSocios.length === 0 ? (
+            <div className="text-center py-16 px-6">
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.5 }}
+              >
+                <div className="w-24 h-24 bg-gradient-to-br from-slate-100 to-slate-200 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                  <User className="w-12 h-12 text-slate-400" />
+                </div>
+                <h3 className="text-2xl font-bold text-slate-900 mb-3">
+                  {socios.length === 0 ? 'No hay socios vinculados' : 'No se encontraron socios'}
+                </h3>
+                <p className="text-slate-600 mb-8 max-w-md mx-auto">
+                  {socios.length === 0 
+                    ? 'Comienza vinculando socios existentes o creando nuevos miembros para tu asociación'
+                    : 'Intenta ajustar los filtros de búsqueda para encontrar los socios que buscas'
+                  }
+                </p>
+                {socios.length === 0 && (
+                  <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                    <AddRegisteredSocioButton 
+                      onSocioAdded={handleRefresh}
+                      className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl hover:from-indigo-600 hover:to-purple-700 transition-all duration-200 font-medium shadow-lg"
+                    />
+                    <button
+                      onClick={() => {
+                        setSelectedSocio(null);
+                        setDialogOpen(true);
+                      }}
+                      className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 font-medium shadow-lg"
+                    >
+                      <Plus className="w-5 h-5 mr-2" />
+                      Crear Nuevo Socio
+                    </button>
+                  </div>
+                )}
+              </motion.div>
+            </div>
+          ) : viewMode === 'grid' ? (
+            // Grid View
+            <div className="p-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {filteredSocios.map((socio, index) => (
+                  <motion.div
+                    key={socio.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: index * 0.05 }}
+                    className="group relative"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-indigo-500/5 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300" />
+                    <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl border border-white/50 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 p-6">
+                      {/* Avatar and Status */}
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="relative">
+                          {socio.avatar ? (
+                            <Image
+                              className="w-12 h-12 rounded-xl object-cover"
+                              src={socio.avatar}
+                              alt={socio.nombre}
+                              width={48}
+                              height={48}
+                            />
+                          ) : (
+                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+                              <User className="w-6 h-6 text-white" />
+                            </div>
+                          )}
+                          <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${
+                            socio.estado === 'activo' ? 'bg-emerald-500' :
+                            socio.estado === 'inactivo' ? 'bg-slate-400' :
+                            socio.estado === 'suspendido' ? 'bg-red-500' : 'bg-yellow-500'
+                          }`} />
+                        </div>
+                        <span className={`px-2 py-1 text-xs font-semibold rounded-lg ${
+                          socio.estadoMembresia === 'al_dia' ? 'bg-emerald-100 text-emerald-700' :
+                          socio.estadoMembresia === 'vencido' ? 'bg-red-100 text-red-700' :
+                          'bg-yellow-100 text-yellow-700'
+                        }`}>
+                          {socio.estadoMembresia === 'al_dia' ? 'Al día' :
+                           socio.estadoMembresia === 'vencido' ? 'Vencido' : 'Pendiente'}
+                        </span>
+                      </div>
+
+                      {/* Member Info */}
+                      <div className="mb-4">
+                        <h3 className="font-semibold text-slate-900 mb-1 truncate">{socio.nombre}</h3>
+                        <p className="text-sm text-slate-600 truncate">{socio.email}</p>
+                        {socio.numeroSocio && (
+                          <p className="text-xs text-slate-500 mt-1">#{socio.numeroSocio}</p>
+                        )}
+                      </div>
+
+                      {/* Quick Info */}
+                      <div className="space-y-2 mb-4">
+                        {socio.telefono && (
+                          <div className="flex items-center text-xs text-slate-600">
+                            <Phone className="w-3 h-3 mr-2" />
+                            <span className="truncate">{socio.telefono}</span>
                           </div>
                         )}
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">
-                            {socio.nombre}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {socio.email}
-                          </div>
+                        <div className="flex items-center text-xs text-slate-600">
+                          <Calendar className="w-3 h-3 mr-2" />
+                          <span>Ingreso: {format(socio.fechaIngreso.toDate(), 'dd/MM/yyyy', { locale: es })}</span>
                         </div>
+                        {socio.montoCuota > 0 && (
+                          <div className="flex items-center text-xs text-slate-600">
+                            <CreditCard className="w-3 h-3 mr-2" />
+                            <span>${socio.montoCuota}</span>
+                          </div>
+                        )}
                       </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {socio.numeroSocio || '-'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        socio.estado === 'activo'
-                          ? 'bg-green-100 text-green-800'
-                          : socio.estado === 'inactivo'
-                          ? 'bg-gray-100 text-gray-800'
-                          : socio.estado === 'suspendido'
-                          ? 'bg-red-100 text-red-800'
-                          : 'bg-yellow-100 text-yellow-800'
-                      }`}>
-                        {socio.estado.charAt(0).toUpperCase() + socio.estado.slice(1)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {format(socio.fechaIngreso.toDate(), 'dd/MM/yyyy', { locale: es })}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {socio.fechaVencimiento
-                        ? format(socio.fechaVencimiento.toDate(), 'dd/MM/yyyy', { locale: es })
-                        : '-'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="flex items-center justify-end space-x-2">
+
+                      {/* Actions */}
+                      <div className="flex items-center gap-2">
                         <button
                           onClick={() => {
                             setSelectedSocio(socio);
                             setDialogOpen(true);
                           }}
-                          className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
-                          title="Editar socio"
+                          className="flex-1 flex items-center justify-center gap-1 px-3 py-2 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
                         >
-                          <Edit3 className="w-4 h-4 mr-1" />
+                          <Edit3 className="w-3 h-3" />
                           Editar
                         </button>
                         <button
                           onClick={() => handleDeleteClick(socio)}
-                          className="text-red-600 hover:text-red-900 p-1.5 rounded-md hover:bg-red-50 transition-colors duration-200"
-                          title="Eliminar socio"
+                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Eliminar"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="w-3 h-3" />
                         </button>
                         <button
                           onClick={() => handleUnlinkClick(socio)}
-                          className="text-orange-600 hover:text-orange-900 p-1.5 rounded-md hover:bg-orange-50 transition-colors duration-200"
-                          title="Desvincular socio"
+                          className="p-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
+                          title="Desvincular"
                         >
-                          <Unlink className="w-4 h-4" />
+                          <Unlink className="w-3 h-3" />
                         </button>
                       </div>
-                    </td>
-                  </tr>
+                    </div>
+                  </motion.div>
                 ))}
-              </tbody>
-            </table>
-          </div>
+              </div>
+            </div>
+          ) : (
+            // List View (Table)
+            <div className="overflow-x-auto">
+              <table className="min-w-full">
+                <thead className="bg-slate-50/80 backdrop-blur-sm">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      Socio
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider hidden sm:table-cell">
+                      Número
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      Estado
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider hidden lg:table-cell">
+                      Fecha de Ingreso
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider hidden lg:table-cell">
+                      Vencimiento
+                    </th>
+                    <th className="px-6 py-4 text-right text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      Acciones
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {filteredSocios.map((socio, index) => (
+                    <motion.tr 
+                      key={socio.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.3, delay: index * 0.02 }}
+                      className="hover:bg-slate-50/50 transition-colors group"
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="relative">
+                            {socio.avatar ? (
+                              <Image
+                                className="h-12 w-12 rounded-xl object-cover"
+                                src={socio.avatar}
+                                alt={socio.nombre}
+                                width={48}
+                                height={48}
+                              />
+                            ) : (
+                              <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+                                <User className="h-6 w-6 text-white" />
+                              </div>
+                            )}
+                            <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${
+                              socio.estado === 'activo' ? 'bg-emerald-500' :
+                              socio.estado === 'inactivo' ? 'bg-slate-400' :
+                              socio.estado === 'suspendido' ? 'bg-red-500' : 'bg-yellow-500'
+                            }`} />
+                          </div>
+                          <div className="ml-4">
+                            <div className="text-sm font-semibold text-slate-900">
+                              {socio.nombre}
+                            </div>
+                            <div className="text-sm text-slate-600 flex items-center gap-1">
+                              <Mail className="w-3 h-3" />
+                              {socio.email}
+                            </div>
+                            {socio.telefono && (
+                              <div className="text-xs text-slate-500 flex items-center gap-1 mt-1">
+                                <Phone className="w-3 h-3" />
+                                {socio.telefono}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 hidden sm:table-cell">
+                        {socio.numeroSocio ? (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800">
+                            #{socio.numeroSocio}
+                          </span>
+                        ) : (
+                          <span className="text-slate-400">-</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex flex-col gap-1">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                            socio.estado === 'activo'
+                              ? 'bg-emerald-100 text-emerald-800'
+                              : socio.estado === 'inactivo'
+                              ? 'bg-slate-100 text-slate-800'
+                              : socio.estado === 'suspendido'
+                              ? 'bg-red-100 text-red-800'
+                              : 'bg-yellow-100 text-yellow-800'
+                          }`}>
+                            {socio.estado.charAt(0).toUpperCase() + socio.estado.slice(1)}
+                          </span>
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            socio.estadoMembresia === 'al_dia'
+                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                              : socio.estadoMembresia === 'vencido'
+                              ? 'bg-red-50 text-red-700 border border-red-200'
+                              : 'bg-yellow-50 text-yellow-700 border border-yellow-200'
+                          }`}>
+                            {socio.estadoMembresia === 'al_dia' ? 'Al día' :
+                             socio.estadoMembresia === 'vencido' ? 'Vencido' : 'Pendiente'}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 hidden lg:table-cell">
+                        <div className="flex items-center gap-1">
+                          <Calendar className="w-4 h-4 text-slate-400" />
+                          {format(socio.fechaIngreso.toDate(), 'dd/MM/yyyy', { locale: es })}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 hidden lg:table-cell">
+                        {socio.fechaVencimiento ? (
+                          <div className="flex items-center gap-1">
+                            <Clock className="w-4 h-4 text-slate-400" />
+                            {format(socio.fechaVencimiento.toDate(), 'dd/MM/yyyy', { locale: es })}
+                          </div>
+                        ) : (
+                          <span className="text-slate-400">-</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => {
+                              setSelectedSocio(socio);
+                              setDialogOpen(true);
+                            }}
+                            className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
+                            title="Editar socio"
+                          >
+                            <Edit3 className="w-4 h-4 mr-1" />
+                            <span className="hidden sm:inline">Editar</span>
+                          </button>
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => handleDeleteClick(socio)}
+                              className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all duration-200"
+                              title="Eliminar socio"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleUnlinkClick(socio)}
+                              className="p-2 text-orange-600 hover:text-orange-700 hover:bg-orange-50 rounded-lg transition-all duration-200"
+                              title="Desvincular socio"
+                            >
+                              <Unlink className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      </td>
+                    </motion.tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </motion.div>
+
+      {/* Enhanced Dialogs */}
+      <AnimatePresence>
+        {/* Socio Dialog */}
+        {dialogOpen && (
+          <SocioDialog
+            open={dialogOpen}
+            onClose={() => setDialogOpen(false)}
+            onSave={handleSaveSocio}
+            socio={selectedSocio}
+          />
         )}
-      </div>
 
-      {/* Diálogo de Socio */}
-      <SocioDialog
-        open={dialogOpen}
-        onClose={() => setDialogOpen(false)}
-        onSave={handleSaveSocio}
-        socio={selectedSocio}
-      />
+        {/* Delete Confirmation Dialog */}
+        {deleteDialogOpen && (
+          <DeleteConfirmDialog
+            open={deleteDialogOpen}
+            onClose={handleDeleteCancel}
+            onConfirm={handleDeleteConfirm}
+            title="Eliminar Socio"
+            message={`¿Estás seguro de que deseas eliminar al socio "${socioToDelete?.nombre}"? Esta acción eliminará permanentemente todos los datos del socio, incluyendo su historial de beneficios y validaciones.`}
+            confirmText="Eliminar Socio"
+            cancelText="Cancelar"
+            loading={deleting}
+          />
+        )}
 
-      {/* Diálogo de Confirmación de Eliminación */}
-      <DeleteConfirmDialog
-        open={deleteDialogOpen}
-        onClose={handleDeleteCancel}
-        onConfirm={handleDeleteConfirm}
-        title="Eliminar Socio"
-        message={`¿Estás seguro de que deseas eliminar al socio "${socioToDelete?.nombre}"? Esta acción eliminará permanentemente todos los datos del socio, incluyendo su historial de beneficios y validaciones.`}
-        confirmText="Eliminar Socio"
-        cancelText="Cancelar"
-        loading={deleting}
-      />
-
-      {/* Diálogo de Confirmación de Desvinculación */}
-      <UnlinkConfirmDialog
-        open={unlinkDialogOpen}
-        onClose={handleUnlinkCancel}
-        onConfirm={handleUnlinkConfirm}
-        title="Desvincular Socio"
-        message={`¿Estás seguro de que deseas desvincular al socio "${socioToUnlink?.nombre}" de esta asociación? El socio mantendrá su cuenta pero perderá acceso a los beneficios de esta asociación.`}
-        confirmText="Desvincular"
-        cancelText="Cancelar"
-        loading={unlinking}
-      />
+        {/* Unlink Confirmation Dialog */}
+        {unlinkDialogOpen && (
+          <UnlinkConfirmDialog
+            open={unlinkDialogOpen}
+            onClose={handleUnlinkCancel}
+            onConfirm={handleUnlinkConfirm}
+            title="Desvincular Socio"
+            message={`¿Estás seguro de que deseas desvincular al socio "${socioToUnlink?.nombre}" de esta asociación? El socio mantendrá su cuenta pero perderá acceso a los beneficios de esta asociación.`}
+            confirmText="Desvincular"
+            cancelText="Cancelar"
+            loading={unlinking}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };
