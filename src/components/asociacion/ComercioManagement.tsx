@@ -767,14 +767,27 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
   };
 
   // Función para generar QR desde el modal
-  const handleGenerateQRFromModal = async (comercioId: string) => {
-    const result = await generateQRCode(comercioId);
+  const handleGenerateQRFromModal = async (
+    comercioId: string
+  ): Promise<{ qrCode: string; qrCodeUrl: string }> => {
+    const result: string | { qrCode: string; qrCodeUrl: string } | null = await generateQRCode(comercioId);
+    if (result === null) {
+      // If generateQRCode returns null, return an empty QR code object
+      return { qrCode: '', qrCodeUrl: '' };
+    }
     if (typeof result === 'string') {
       // If generateQRCode returns a string, wrap it in the expected object
       return { qrCode: result, qrCodeUrl: result };
     }
     // If generateQRCode already returns the correct object, just return it
-    return result;
+    if (
+      typeof (result as { qrCode: string }).qrCode === 'string' &&
+      typeof (result as { qrCodeUrl: string }).qrCodeUrl === 'string'
+    ) {
+      return result as { qrCode: string; qrCodeUrl: string };
+    }
+    // Fallback: return an empty QR code object to satisfy the type
+    return { qrCode: '', qrCodeUrl: '' };
   };
 
   // Manejar generación de QR masiva
