@@ -1931,114 +1931,223 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
         loading={loading}
       />
 
-      {/* FIXED Unlink Confirmation Dialog - NO BLUR ON MODAL */}
+      {/* FIXED Unlink Confirmation Dialog - COMPLETELY CLEAR MODAL */}
       {comercioToUnlink && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            {/* Only blur the backdrop, not the modal */}
-            <div className="fixed inset-0 backdrop-blur-md bg-white/30 transition-opacity" />
-
+        <AnimatePresence>
+          <div className="fixed inset-0 z-50 overflow-y-auto">
+            {/* Blurred backdrop only */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full"
-            >
-              <div className="bg-white px-6 pt-6 pb-4">
-                <div className="sm:flex sm:items-start">
-                  <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-xl bg-orange-100 sm:mx-0 sm:h-10 sm:w-10">
-                    <Unlink className="h-6 w-6 text-orange-600" />
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 backdrop-blur-md bg-white/30"
+              onClick={() => setComercioToUnlink(null)}
+            />
+
+            {/* Clear, unblurred modal */}
+            <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                transition={{ type: "spring", duration: 0.5 }}
+                className="relative inline-block align-bottom bg-white rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-white/20"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Header with gradient */}
+                <div className="relative bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 px-8 py-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                        <Unlink className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-2xl font-bold text-white">
+                          Desvincular Comercio
+                        </h3>
+                        <p className="text-orange-100">
+                          Esta acción no se puede deshacer
+                        </p>
+                      </div>
+                    </div>
+                    <motion.button
+                      whileHover={{ scale: 1.1, rotate: 90 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => setComercioToUnlink(null)}
+                      className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center text-white hover:bg-white/30 transition-all duration-200"
+                    >
+                      <X className="w-5 h-5" />
+                    </motion.button>
                   </div>
-                  <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                    <h3 className="text-lg leading-6 font-semibold text-slate-900">
-                      Desvincular Comercio
-                    </h3>
-                    <div className="mt-2">
-                      <p className="text-sm text-slate-600">
-                        ¿Estás seguro de que deseas desvincular a{' '}
-                        <strong className="text-slate-900">{comercioToUnlink.nombreComercio}</strong> de tu asociación?
-                        El comercio seguirá existiendo pero ya no estará vinculado a tu asociación.
+                  
+                  {/* Decorative elements */}
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16" />
+                  <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-12 -translate-x-12" />
+                </div>
+
+                {/* Content */}
+                <div className="bg-white px-8 py-6">
+                  <div className="text-center mb-6">
+                    <div className="w-16 h-16 bg-gradient-to-br from-orange-100 to-amber-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                      <AlertTriangle className="w-8 h-8 text-orange-600" />
+                    </div>
+                    <h4 className="text-lg font-semibold text-slate-900 mb-2">
+                      ¿Confirmar desvinculación?
+                    </h4>
+                    <p className="text-slate-600">
+                      ¿Estás seguro de que deseas desvincular a{' '}
+                      <strong className="text-slate-900">{comercioToUnlink.nombreComercio}</strong> de tu asociación?
+                    </p>
+                    <div className="mt-4 p-4 bg-amber-50 rounded-xl border border-amber-200">
+                      <p className="text-sm text-amber-800">
+                        <strong>Nota:</strong> El comercio seguirá existiendo pero ya no estará vinculado a tu asociación. 
+                        Los beneficios activos se mantendrán pero no podrán crear nuevos beneficios para tu asociación.
                       </p>
                     </div>
                   </div>
                 </div>
-              </div>
-              <div className="bg-slate-50 px-6 py-4 sm:flex sm:flex-row-reverse">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => handleDesvincular(comercioToUnlink)}
-                  disabled={loading}
-                  className="w-full inline-flex justify-center rounded-xl border border-transparent shadow-sm px-4 py-2 bg-orange-600 text-base font-medium text-white hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 transition-all duration-200"
-                >
-                  {loading ? 'Desvinculando...' : 'Desvincular'}
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setComercioToUnlink(null)}
-                  className="mt-3 w-full inline-flex justify-center rounded-xl border border-slate-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-all duration-200"
-                >
-                  Cancelar
-                </motion.button>
-              </div>
-            </motion.div>
+
+                {/* Footer */}
+                <div className="bg-slate-50 px-8 py-6 sm:flex sm:flex-row-reverse">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => handleDesvincular(comercioToUnlink)}
+                    disabled={loading}
+                    className="w-full inline-flex justify-center rounded-xl border border-transparent shadow-sm px-6 py-3 bg-orange-600 text-base font-medium text-white hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 transition-all duration-200"
+                  >
+                    {loading ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        Desvinculando...
+                      </>
+                    ) : (
+                      'Sí, Desvincular'
+                    )}
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setComercioToUnlink(null)}
+                    className="mt-3 w-full inline-flex justify-center rounded-xl border border-slate-300 shadow-sm px-6 py-3 bg-white text-base font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-all duration-200"
+                  >
+                    Cancelar
+                  </motion.button>
+                </div>
+              </motion.div>
+            </div>
           </div>
-        </div>
+        </AnimatePresence>
       )}
 
-      {/* FIXED Delete Confirmation Dialog - NO BLUR ON MODAL */}
+      {/* FIXED Delete Confirmation Dialog - COMPLETELY CLEAR MODAL */}
       {comercioToDelete && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            {/* Only blur the backdrop, not the modal */}
-            <div className="fixed inset-0 backdrop-blur-md bg-white/30 transition-opacity" />
-
+        <AnimatePresence>
+          <div className="fixed inset-0 z-50 overflow-y-auto">
+            {/* Blurred backdrop only */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full"
-            >
-              <div className="bg-white px-6 pt-6 pb-4">
-                <div className="sm:flex sm:items-start">
-                  <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-xl bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
-                    <Trash2 className="h-6 w-6 text-red-600" />
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 backdrop-blur-md bg-white/30"
+              onClick={() => setComercioToDelete(null)}
+            />
+
+            {/* Clear, unblurred modal */}
+            <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                transition={{ type: "spring", duration: 0.5 }}
+                className="relative inline-block align-bottom bg-white rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-white/20"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Header with gradient */}
+                <div className="relative bg-gradient-to-r from-red-500 via-red-600 to-red-700 px-8 py-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                        <Trash2 className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-2xl font-bold text-white">
+                          Eliminar Comercio
+                        </h3>
+                        <p className="text-red-100">
+                          Esta acción es permanente
+                        </p>
+                      </div>
+                    </div>
+                    <motion.button
+                      whileHover={{ scale: 1.1, rotate: 90 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => setComercioToDelete(null)}
+                      className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center text-white hover:bg-white/30 transition-all duration-200"
+                    >
+                      <X className="w-5 h-5" />
+                    </motion.button>
                   </div>
-                  <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                    <h3 className="text-lg leading-6 font-semibold text-slate-900">
-                      Eliminar Comercio
-                    </h3>
-                    <div className="mt-2">
-                      <p className="text-sm text-slate-600">
-                        ¿Estás seguro de que deseas eliminar a{' '}
-                        <strong className="text-slate-900">{comercioToDelete.nombreComercio}</strong>?
-                        Esta acción desactivará el comercio permanentemente. Esta acción no se puede deshacer.
+                  
+                  {/* Decorative elements */}
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16" />
+                  <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-12 -translate-x-12" />
+                </div>
+
+                {/* Content */}
+                <div className="bg-white px-8 py-6">
+                  <div className="text-center mb-6">
+                    <div className="w-16 h-16 bg-gradient-to-br from-red-100 to-red-200 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                      <AlertTriangle className="w-8 h-8 text-red-600" />
+                    </div>
+                    <h4 className="text-lg font-semibold text-slate-900 mb-2">
+                      ¿Confirmar eliminación?
+                    </h4>
+                    <p className="text-slate-600">
+                      ¿Estás seguro de que deseas eliminar a{' '}
+                      <strong className="text-slate-900">{comercioToDelete.nombreComercio}</strong>?
+                    </p>
+                    <div className="mt-4 p-4 bg-red-50 rounded-xl border border-red-200">
+                      <p className="text-sm text-red-800">
+                        <strong>¡Atención!</strong> Esta acción desactivará el comercio permanentemente. 
+                        Todos los beneficios asociados se marcarán como inactivos y no se podrán recuperar. 
+                        Esta acción no se puede deshacer.
                       </p>
                     </div>
                   </div>
                 </div>
-              </div>
-              <div className="bg-slate-50 px-6 py-4 sm:flex sm:flex-row-reverse">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => handleDelete(comercioToDelete)}
-                  disabled={loading}
-                  className="w-full inline-flex justify-center rounded-xl border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 transition-all duration-200"
-                >
-                  {loading ? 'Eliminando...' : 'Eliminar'}
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setComercioToDelete(null)}
-                  className="mt-3 w-full inline-flex justify-center rounded-xl border border-slate-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-all duration-200"
-                >
-                  Cancelar
-                </motion.button>
-              </div>
-            </motion.div>
+
+                {/* Footer */}
+                <div className="bg-slate-50 px-8 py-6 sm:flex sm:flex-row-reverse">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => handleDelete(comercioToDelete)}
+                    disabled={loading}
+                    className="w-full inline-flex justify-center rounded-xl border border-transparent shadow-sm px-6 py-3 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 transition-all duration-200"
+                  >
+                    {loading ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        Eliminando...
+                      </>
+                    ) : (
+                      'Sí, Eliminar'
+                    )}
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setComercioToDelete(null)}
+                    className="mt-3 w-full inline-flex justify-center rounded-xl border border-slate-300 shadow-sm px-6 py-3 bg-white text-base font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-all duration-200"
+                  >
+                    Cancelar
+                  </motion.button>
+                </div>
+              </motion.div>
+            </div>
           </div>
-        </div>
+        </AnimatePresence>
       )}
     </div>
   );
