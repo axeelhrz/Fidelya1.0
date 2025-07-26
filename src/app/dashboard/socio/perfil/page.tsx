@@ -18,7 +18,6 @@ import {
   Star,
   Crown,
   Sparkles,
-  Loader2,
   Save,
   X,
   RefreshCw,
@@ -26,13 +25,11 @@ import {
   Camera,
   Upload,
   CheckCircle,
-  Clock,
   Target,
   Trophy,
   Activity,
   Image as ImageIcon,
   AlertCircle,
-  Check
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { SocioSidebar } from '@/components/layout/SocioSidebar';
@@ -467,37 +464,46 @@ const ModernEditProfileModal: React.FC<{
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-6">
                 <div>
-                  <Input
-                    label="Nombre completo"
-                    value={formData.nombre}
-                    onChange={(e) => setFormData(prev => ({ ...prev, nombre: e.target.value }))}
-                    placeholder="Tu nombre completo"
-                    required
-                    error={errors.nombre}
-                    leftIcon={<User size={18} />}
-                  />
+                  <div className="relative">
+                    <User size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" />
+                    <Input
+                      label="Nombre completo"
+                      value={formData.nombre}
+                      onChange={(e) => setFormData(prev => ({ ...prev, nombre: e.target.value }))}
+                      placeholder="Tu nombre completo"
+                      required
+                      error={errors.nombre}
+                      style={{ paddingLeft: '2.5rem' }}
+                    />
+                  </div>
                 </div>
 
                 <div>
-                  <Input
-                    label="Teléfono"
-                    value={formData.telefono}
-                    onChange={(e) => setFormData(prev => ({ ...prev, telefono: e.target.value }))}
-                    placeholder="+54 11 1234-5678"
-                    error={errors.telefono}
-                    leftIcon={<Phone size={18} />}
-                  />
+                  <div className="relative">
+                    <Phone size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" />
+                    <Input
+                      label="Teléfono"
+                      value={formData.telefono}
+                      onChange={(e) => setFormData(prev => ({ ...prev, telefono: e.target.value }))}
+                      placeholder="+54 11 1234-5678"
+                      error={errors.telefono}
+                      style={{ paddingLeft: '2.5rem' }}
+                    />
+                  </div>
                 </div>
 
                 <div>
-                  <Input
-                    label="DNI"
-                    value={formData.dni}
-                    onChange={(e) => setFormData(prev => ({ ...prev, dni: e.target.value }))}
-                    placeholder="12345678"
-                    error={errors.dni}
-                    leftIcon={<Shield size={18} />}
-                  />
+                  <div className="relative">
+                    <Shield size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" />
+                    <Input
+                      label="DNI"
+                      value={formData.dni}
+                      onChange={(e) => setFormData(prev => ({ ...prev, dni: e.target.value }))}
+                      placeholder="12345678"
+                      error={errors.dni}
+                      style={{ paddingLeft: '2.5rem' }}
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -508,7 +514,6 @@ const ModernEditProfileModal: React.FC<{
                     value={formData.direccion}
                     onChange={(e) => setFormData(prev => ({ ...prev, direccion: e.target.value }))}
                     placeholder="Tu dirección completa"
-                    leftIcon={<MapPin size={18} />}
                   />
                 </div>
 
@@ -518,7 +523,6 @@ const ModernEditProfileModal: React.FC<{
                     type="date"
                     value={formData.fechaNacimiento}
                     onChange={(e) => setFormData(prev => ({ ...prev, fechaNacimiento: e.target.value }))}
-                    leftIcon={<Calendar size={18} />}
                   />
                 </div>
 

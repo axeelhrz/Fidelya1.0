@@ -132,6 +132,7 @@ export interface Socio {
     descuentoAdicional: number;
   };
   pagos?: Pago[];
+  fotoPerfil?: string; // URL de la foto de perfil
   
   // Relaciones bidireccionales con asociaciones
   asociaciones?: string[]; // IDs de asociaciones vinculadas
@@ -252,6 +253,7 @@ export interface UpdateSocioProfileData {
   direccion?: string;
   fechaNacimiento?: Date | Timestamp | string;
   avatar?: string;
+  fotoPerfil?: string; // Added to match the Socio interface
   configuracion?: Partial<SocioConfiguration>;
 }
 
