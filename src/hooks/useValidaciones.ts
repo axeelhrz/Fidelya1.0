@@ -28,7 +28,7 @@ export const useValidaciones = (): UseValidacionesReturn => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
-  const [lastDoc, setLastDoc] = useState<DocumentSnapshot<DocumentData> | null>(null);
+  const [lastDoc, setLastDoc] = useState<DocumentSnapshot<DocumentData> | undefined>(undefined);
 
   // Transform HistorialValidacion to Validacion
   const transformHistorialToValidacion = useCallback((historial: HistorialValidacion): Validacion => {
@@ -85,7 +85,8 @@ export const useValidaciones = (): UseValidacionesReturn => {
         setValidaciones(prev => [...prev, ...transformedValidaciones]);
       }
       
-      setLastDoc(result.lastDoc || null);
+      // Convert null to undefined to match the expected type
+      setLastDoc(result.lastDoc || undefined);
       setHasMore(result.hasMore);
     } catch (err) {
       console.error('Error loading validaciones:', err);
@@ -152,7 +153,7 @@ export const useValidaciones = (): UseValidacionesReturn => {
   }, [user]);
 
   const refrescar = useCallback(async () => {
-    setLastDoc(null); // Reset pagination
+    setLastDoc(undefined); // Reset pagination
     await cargarValidaciones(true);
   }, [cargarValidaciones]);
 
