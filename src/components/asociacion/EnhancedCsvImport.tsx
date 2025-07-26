@@ -157,23 +157,6 @@ export const EnhancedCsvImport: React.FC<EnhancedCsvImportProps> = ({
   }, []);
 
   // Manejo de archivos
-  const handleFileSelect = useCallback((selectedFile: File) => {
-    if (!selectedFile) return;
-
-    if (!selectedFile.name.endsWith('.csv')) {
-      toast.error('Por favor selecciona un archivo CSV válido');
-      return;
-    }
-
-    if (selectedFile.size > 10 * 1024 * 1024) { // 10MB limit
-      toast.error('El archivo es demasiado grande. Máximo 10MB permitido');
-      return;
-    }
-
-    setFile(selectedFile);
-    parseCSV(selectedFile);
-  }, []);
-
   const parseCSV = useCallback((file: File) => {
     setIsProcessing(true);
     
@@ -221,6 +204,23 @@ export const EnhancedCsvImport: React.FC<EnhancedCsvImportProps> = ({
 
     reader.readAsText(file);
   }, [nextStep, generateColumnMappings]);
+
+  const handleFileSelect = useCallback((selectedFile: File) => {
+    if (!selectedFile) return;
+
+    if (!selectedFile.name.endsWith('.csv')) {
+      toast.error('Por favor selecciona un archivo CSV válido');
+      return;
+    }
+
+    if (selectedFile.size > 10 * 1024 * 1024) { // 10MB limit
+      toast.error('El archivo es demasiado grande. Máximo 10MB permitido');
+      return;
+    }
+
+    setFile(selectedFile);
+    parseCSV(selectedFile);
+  }, [parseCSV]);
 
   // Validación de datos
   const validateData = useCallback(() => {

@@ -13,6 +13,7 @@ import {
   Zap
 } from 'lucide-react';
 import QRCodeLib from 'qrcode';
+import Image from 'next/image';
 
 interface QRGeneratorModalProps {
   open: boolean;
@@ -255,17 +256,14 @@ export const QRGeneratorModal: React.FC<QRGeneratorModalProps> = ({
                   {/* QR Code Display */}
                   <div className="bg-gradient-to-br from-slate-50 to-white rounded-2xl p-8 border border-slate-200 text-center">
                     <div className="inline-block p-4 bg-white rounded-2xl shadow-lg">
-                      {qrData?.qrCode || comercio.qrCode ? (
-                        <img
-                          src={qrData?.qrCode || comercio.qrCode}
-                          alt="QR Code"
-                          className="w-48 h-48 mx-auto"
-                        />
-                      ) : (
-                        <div className="w-48 h-48 bg-slate-100 rounded-lg flex items-center justify-center">
-                          <QrCode className="w-16 h-16 text-slate-400" />
-                        </div>
-                      )}
+                      <Image
+                        src={qrData?.qrCode || comercio.qrCode || ''}
+                        alt="QR Code"
+                        width={192}
+                        height={192}
+                        className="w-48 h-48 mx-auto"
+                        unoptimized
+                      />
                     </div>
                     
                     <div className="mt-4">

@@ -146,7 +146,7 @@ export const useValidaciones = (): UseValidacionesReturn => {
       console.error('Error validating QR:', err);
       throw err;
     }
-  }, [user]);
+  }, [user, refrescar]);
 
   const refrescar = useCallback(async () => {
     setLastDoc(undefined); // Reset pagination
