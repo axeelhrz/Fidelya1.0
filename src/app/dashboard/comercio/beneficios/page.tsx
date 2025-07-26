@@ -307,6 +307,7 @@ function ComercioBeneficiosContent() {
 
   const {
     beneficios,
+    beneficiosUsados,
     stats,
     loading,
     error,
@@ -607,33 +608,34 @@ function ComercioBeneficiosContent() {
           />
         </motion.div>
 
-        {/* Estadísticas detalladas */}
-        {stats && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.7 }}
-            className="mt-12"
-          >
-            <div className="bg-white rounded-2xl p-8 border border-gray-100 shadow-lg">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl flex items-center justify-center">
-                  <BarChart3 className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-2xl font-bold text-gray-900">Estadísticas Detalladas</h3>
-                  <p className="text-gray-600">Análisis completo de rendimiento</p>
-                </div>
+        {/* Estadísticas detalladas - AHORA CON DATOS REALES */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.7 }}
+          className="mt-12"
+        >
+          <div className="bg-white rounded-2xl p-8 border border-gray-100 shadow-lg">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl flex items-center justify-center">
+                <BarChart3 className="w-6 h-6 text-white" />
               </div>
-              
-              <BeneficiosStats
-                stats={stats}
-                loading={loading}
-                userRole="comercio"
-              />
+              <div>
+                <h3 className="text-2xl font-bold text-gray-900">Estadísticas Detalladas</h3>
+                <p className="text-gray-600">Análisis completo de rendimiento</p>
+              </div>
             </div>
-          </motion.div>
-        )}
+            
+            <BeneficiosStats
+              stats={stats}
+              loading={loading}
+              userRole="comercio"
+              beneficios={beneficios}
+              beneficiosUsados={beneficiosUsados}
+              estadisticasRapidas={estadisticasRapidas}
+            />
+          </div>
+        </motion.div>
 
         {/* Formulario de beneficio (modal mejorado) */}
         <BeneficioForm
