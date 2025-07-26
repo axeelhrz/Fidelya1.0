@@ -11,7 +11,7 @@ import {
   BeneficioFilter 
 } from '@/types/beneficio';
 import { useAuth } from './useAuth';
-import { useDebouncedCallback } from './useDebounce';
+import { useDebounce } from './useDebounce';
 import { optimizedNotifications } from '@/lib/optimized-notifications';
 
 interface UseBeneficiosOptions {
@@ -50,7 +50,7 @@ export const useBeneficios = (options: UseBeneficiosOptions = {}) => {
   });
 
   // Debounced update functions para evitar actualizaciones muy frecuentes
-  const debouncedSetBeneficios = useDebouncedCallback((newBeneficios: Beneficio[]) => {
+  const debouncedSetBeneficios = useDebounce((newBeneficios: Beneficio[]) => {
     if (!mountedRef.current) return;
     
     // Solo actualizar si realmente cambió
@@ -63,7 +63,7 @@ export const useBeneficios = (options: UseBeneficiosOptions = {}) => {
     }
   }, 500);
 
-  const debouncedSetBeneficiosUsados = useDebouncedCallback((newUsados: BeneficioUso[]) => {
+  const debouncedSetBeneficiosUsados = useDebounce((newUsados: BeneficioUso[]) => {
     if (!mountedRef.current) return;
     
     const currentStr = JSON.stringify(lastDataRef.current.beneficiosUsados);
@@ -75,7 +75,7 @@ export const useBeneficios = (options: UseBeneficiosOptions = {}) => {
     }
   }, 500);
 
-  const debouncedSetStats = useDebouncedCallback((newStats: BeneficioStats | null) => {
+  const debouncedSetStats = useDebounce((newStats: BeneficioStats | null) => {
     if (!mountedRef.current) return;
     
     const currentStr = JSON.stringify(lastDataRef.current.stats);

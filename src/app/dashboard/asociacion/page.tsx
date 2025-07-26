@@ -190,8 +190,14 @@ const DashboardLoading = memo(() => (
 DashboardLoading.displayName = 'DashboardLoading';
 
 // Dashboard Content Component
+interface User {
+  nombre?: string;
+  role?: string;
+  // Add other properties as needed
+}
+
 const DashboardContent = memo<{
-  user: any;
+  user: User | null;
   onNavigate: (section: string) => void;
   onAddMember: () => void;
 }>(({ user, onNavigate, onAddMember }) => {
@@ -321,12 +327,6 @@ export default function OptimizedAsociacionDashboard() {
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
 
-  // Redirect if not authenticated or not association
-  if (!authLoading && (!user || user.role !== 'asociacion')) {
-    router.push('/auth/login');
-    return null;
-  }
-
   // Logout handlers
   const handleLogoutClick = useCallback(() => {
     setLogoutModalOpen(true);
@@ -376,6 +376,12 @@ export default function OptimizedAsociacionDashboard() {
   const handleAddMember = useCallback(() => {
     router.push('/dashboard/asociacion/socios');
   }, [router]);
+
+  // Redirect if not authenticated or not association
+  if (!authLoading && (!user || user.role !== 'asociacion')) {
+    router.push('/auth/login');
+    return null;
+  }
 
   // Loading state
   if (authLoading) {
