@@ -615,7 +615,7 @@ export const BeneficioForm: React.FC<BeneficioFormProps> = ({
                     <p className="text-sm text-gray-600">
                       Selecciona las asociaciones donde estará disponible este beneficio:
                     </p>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-48 overflow-y-auto">
                       {asociacionesDisponibles.map((asociacion) => (
                         <motion.label
                           key={asociacion.id}
@@ -782,8 +782,9 @@ export const BeneficioForm: React.FC<BeneficioFormProps> = ({
 
   return (
     <Dialog open={open} onClose={onClose}>
-      <DialogContent className="max-w-5xl max-h-[95vh] overflow-hidden">
-        <DialogHeader>
+      <DialogContent className="max-w-6xl w-full mx-4 h-[90vh] flex flex-col">
+        {/* Header fijo */}
+        <DialogHeader className="flex-shrink-0 pb-4 border-b border-gray-200">
           <DialogTitle className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div 
@@ -814,21 +815,26 @@ export const BeneficioForm: React.FC<BeneficioFormProps> = ({
         </DialogHeader>
 
         <form onSubmit={handleSubmit(handleFormSubmit)} className="flex flex-col h-full">
-          <div className="flex-1 overflow-y-auto py-6">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={currentStep}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.3 }}
-              >
-                {renderStep()}
-              </motion.div>
-            </AnimatePresence>
+          {/* Contenido scrolleable */}
+          <div className="flex-1 overflow-y-auto py-6 px-1">
+            <div className="max-h-full">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={currentStep}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3 }}
+                  className="h-full"
+                >
+                  {renderStep()}
+                </motion.div>
+              </AnimatePresence>
+            </div>
           </div>
 
-          <DialogFooter className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-gray-200">
+          {/* Footer fijo */}
+          <DialogFooter className="flex-shrink-0 pt-6 border-t border-gray-200 bg-white">
             <div className="flex justify-between w-full">
               <div className="flex gap-2">
                 {currentStep > 1 && (
