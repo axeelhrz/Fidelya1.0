@@ -199,16 +199,6 @@ const PhotoUploadModal: React.FC<{
     }
   }, []);
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleFileSelect(e.dataTransfer.files[0]);
-    }
-  }, []);
-
   const handleFileSelect = useCallback((file: File) => {
     const validation = validateImageFile(file);
     if (!validation.valid) {
@@ -220,6 +210,16 @@ const PhotoUploadModal: React.FC<{
     const url = URL.createObjectURL(file);
     setPreviewUrl(url);
   }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleFileSelect(e.dataTransfer.files[0]);
+    }
+  }, [handleFileSelect]);
 
   const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
