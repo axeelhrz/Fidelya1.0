@@ -128,9 +128,9 @@ export const useValidaciones = (): UseValidacionesReturn => {
         montoDescuento: result.data?.validacion?.montoDescuento || 0,
         beneficioTitulo: result.data?.beneficio?.titulo,
         comercioNombre: result.data?.comercio?.nombre,
-        socio: result.data?.socio || {
-          nombre: user.nombre || 'Usuario',
-          estado: 'activo',
+        socio: {
+          nombre: result.data?.socio?.nombre || user.nombre || 'Usuario',
+          estado: result.data?.socio?.estadoMembresia || 'activo',
           asociacion: user.asociacionId || 'independiente'
         },
         id: result.data?.validacion?.id
